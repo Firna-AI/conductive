@@ -186,8 +186,8 @@ The pull request of that change keeps its record.
   was rejected, because it is a larger build.
 - The create takes the choices of the Capabilities control with the first
   message: the pre-approved secrets and Mac access. Without a choice, the
-  new workspace pre-approves no secret, and its Mac access is on
-  (secrets decision 9 A).
+  new workspace pre-approves no secret, and its Mac access is off
+  (secrets decision 18 A).
 
 ## The branch and the name
 
@@ -259,8 +259,8 @@ The pull request of that change keeps its record.
   says (decision 182).
 - A create call of an agent can give the workspace a name, as
   [Create and list calls](agent-tools.md#create-and-list-calls) says.
-- [Messages](messages-and-attachments.md#messages) says how a title from
-  the first message then names the workspace.
+- [The title of a new workspace](workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says how a title from the first message then names the workspace.
 
 ## A failed first start
 

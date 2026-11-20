@@ -18,9 +18,12 @@ the Help row of the command palette opens.
 - Only the GitHub App step comes from that reply. The org step and the org
   of Get started follow the orgs that are not deleted, as the address `/`
   does. A person whose orgs are all deleted gets Create org again, and
-  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account. So a leave of
+  Get started lists those orgs with Restore before its steps. The agent step follows the logins of the account, and the org
+  logins that the account names as default logins of the orgs of the
+  person (org login decision 4). So a leave of
   the last org offers Create org again, and a connect on Account completes
-  its step at once. `setupSteps` in `setup-steps.ts` derives them, and each
+  its step at once. An accepted invitation to an org whose org login
+  serves the person completes it after one read of the account. `setupSteps` in `setup-steps.ts` derives them, and each
   screen reads them through `AppModel.getStarted`.
 - Once the org exists, the org step shows its cloud computer from the
   builds of the org, as
@@ -56,8 +59,19 @@ the Help row of the command palette opens.
   `AccountModel.repositories`, before the org exists. The create sends the
   GitHub IDs of the chosen ones. Create org stays off until the person
   chooses at least one, also while the list is empty or did not load.
+- Create org of an operator also offers the provider account of the org:
+  By weights, the default, or a configured account by its ID, from the
+  operator's providers reply. Only a chosen account goes into the create.
+  The create does not wait for that reply. Nobody else sees the choice or
+  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
+- The tile of the open org shows the colour of the org in its initials
+  and its outline. An org without a colour, or with a colour that this
+  copy of the app does not know, shows Blue. An admin picks the colour on
+  General, and a choice saves at once. A failed save shows a toast and the
+  saved colour again.
 - The rail and the org switcher show the orgs in the person's own order.
   The person moves an org tile by drag, by its tile menu with Move up and
   Move down, or by Alt and Up or Down on a focused tile. On a phone, a
@@ -235,7 +249,8 @@ the Help row of the command palette opens.
 - New workspace sends and uploads one at a time: the create waits for the
   files, and the paperclip is off while the create runs. Send, Create, Try
   again, and Enter read one readiness: the text outside the chips of its
-  files, the files of its chips, the agent login, the image of the org, the
+  files, the files of its chips, a login that serves the agent in the org,
+  the own login or the org login, the image of the org, the
   repository and its build, the model, and an org that is not suspended.
   In a suspended org, the refused bar takes the place of the composer of
   the dialog, as on the page.
@@ -286,18 +301,18 @@ the Help row of the command palette opens.
   [Attached files of a draft](../chat/draft-files.md) says.
 - The page and the dialog have the Capabilities icon, the Blocks icon with
   its label as a native tooltip (secrets decision 6 G). On a computer the
-  page shows it after the attach button, and the dialog before it. Its
-  control opens above the icon. On a phone, one + button, "More options",
+  page and the dialog show it after the attach button. Its control opens
+  above the icon. On a phone, one + button, "More options",
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each
-  one for the new workspace, and the switch of Mac access, on by default.
+  one for the new workspace, and the switch of Mac access, off by default.
   A secret for all agents stays checked and off. The draft keeps the
   choices, the create sends them, and a create that succeeds ends them, so
   the next draft starts again from the defaults. The create leaves out
   each pre-approved secret that the last read no longer lists, and a
   refusal of a missing secret reads the secrets again for Try again.
-- The Secrets tab of the org settings follows Cloud computer (secrets
+- The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and
   deletes only the secrets that the member added, and an admin replaces

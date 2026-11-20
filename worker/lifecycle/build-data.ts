@@ -4,7 +4,7 @@ import type {
   ImageBuild,
 } from '../../src/shared/org-settings'
 import { HttpError } from '../http'
-import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { readOrgImage } from './org-image-data'
 import type { CommandStatus } from '../sandbox/provider'
 import { readImageSoftware, type ImageSoftwareArtifact } from './image-software'
@@ -14,6 +14,7 @@ import { decodeBuildJob, type StoredBuildJob } from './build-job-codec'
 import type { ProviderRetryState } from './provider-retry'
 import type { SavedScript } from './saved-script'
 import { readBuildChanges } from './build-changes-data'
+import { writeBuildEnd } from './build-end-data'
 
 export type BuildPhase =
   | 'create'
@@ -130,18 +131,26 @@ export async function assignBuildSandbox(
     .run()
 }
 
+export function buildSnapshotStatement(
+  db: D1Database,
+  buildId: string,
+  snapshotName: string,
+  providerAccount: string,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
+    )
+    .bind(snapshotName, providerAccount, buildId)
+}
+
 export async function assignBuildSnapshot(
   db: D1Database,
   buildId: string,
   snapshotName: string,
   providerAccount: string,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_builds SET snapshot_name = ?, provider_account = ? WHERE id = ?',
-    )
-    .bind(snapshotName, providerAccount, buildId)
-    .run()
+  await buildSnapshotStatement(db, buildId, snapshotName, providerAccount).run()
 }
 
 export async function saveBuildOutput(
@@ -177,21 +186,14 @@ export async function failBuild(
   message: string,
   now: number,
 ): Promise<void> {
-  await db.batch([
-    db
-      .prepare(
-        "UPDATE image_builds SET state = 'failed', completed_at = ?, error = ?, provider_retry_json = NULL WHERE id = ? AND state = 'running'",
-      )
-      .bind(now, message, buildId),
-    ...buildLogStatements(db, buildId, message, now),
-  ])
+  await writeBuildEnd(db, { state: 'failed', buildId, message }, now)
 }
 
 export async function readBuildHistory(
   db: D1Database,
   orgId: string,
-  providerAccount = DEFAULT_PROVIDER_ACCOUNT,
 ): Promise<BuildsResponse> {
+  const providerAccount = await readOrgProviderAccount(db, orgId)
   const { results } = await db
     .prepare(
       `SELECT ${buildColumns} FROM image_builds WHERE org_id = ? ORDER BY started_at DESC, id DESC`,

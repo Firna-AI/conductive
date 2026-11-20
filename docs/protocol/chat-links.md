@@ -69,8 +69,9 @@ a decision of the change that reads Markdown with one parser, as
 - A bare address is a web address with no Markdown around it. It shows as
   the text has it.
 - A bare address ends at a space or an angle bracket. Punctuation, quotes,
-  `*`, `_`, `~`, and `]` at its end stay out of it. A `)` at its end stays
-  in only when it closes a `(` inside the address, as on GitHub.
+  `*`, `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
+  stays in only when it closes a `(` or a `[` inside the address. GitHub
+  uses the same rule for a `)`.
 - In an agent message, an address in angle brackets, such as
   `<https://example.com/a>`, is a link when the address is a link by the
   rules of this doc. It shows without its brackets, as the text has it.
@@ -109,17 +110,17 @@ a decision of the change that reads Markdown with one parser, as
   typed it.
 - A Markdown link whose address stays text shows as typed, also in an
   agent message. A file target instead opens its file, as
-  [Files in answers](file-mentions.md#files-in-answers) says.
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
 - In an agent message, the Markdown of an image, such as
-  `![alt](address)`, shows its alt text, and no picture loads (Markdown
-  parser decision 5 A, 17 November 2026).
+  `![alt](address)`, shows its alt text, and no picture at a web address
+  loads (Markdown parser decision 5 A, 17 November 2026).
 - When the address of the image is a link by the rules of this doc, the
   alt text is a link to that address, with the rules of a label. So alt
   text that reads as an address, or that shows nothing, shows the address
   in its place. Otherwise only the alt text shows.
 - An image of a file of the workspace instead shows its alt text as a link
-  that opens that file, as
-  [Files in answers](file-mentions.md#files-in-answers) says.
+  that opens that file, or a picture of that file, as
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
 - An image inside the label of a Markdown link shows its alt text as words
   of that label.
 - Reason: a picture at a web address makes the browser of each reader

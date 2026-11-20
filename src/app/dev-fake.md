@@ -33,9 +33,15 @@ option overrides this default, including queued chats that show no spinner.
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices, and its custom initials
-  stay through rename, delete, and restore. Settings changes during the
+  and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- Acme also holds Postcode lookup for the shipping and billing forms,
+  `postcode-lookup`, which a member archived 3 weeks before the clock of
+  the fake starts. Its 14 days ended, so the workspace list and the
+  palette leave it out. The list route still sends it, as the Worker does,
+  so its link and its chip still open its read-only chat, at
+  `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and
@@ -92,7 +98,11 @@ option overrides this default, including queued chats that show no spinner.
   `<GitHub login>@example.com`, and each send answers 204.
   `?feedback=no-email` gives a reply without an address.
   `?feedback=fail` fails the first send of the page with
-  `502 feedback_email_failed`, so a retry sends. With `?waiting=1`, both
+  `502 feedback_email_failed`, so a retry sends.
+  `?feedback=limit` refuses the first send of the page with
+  `429 feedback_send_limit`, as the send limit does. Its `retryAt` is
+  23 minutes and 40 seconds after the clock of the fake. A retry sends.
+  With `?waiting=1`, both
   routes refuse with `access_required`. The fake sends no email and keeps
   no copy.
 - `?operator=1` makes the dev user an operator, so the rail and the org
@@ -104,7 +114,12 @@ option overrides this default, including queued chats that show no spinner.
   write of that org with `org_suspended`. The open app does not read its orgs again, so its pages
   of that org show the suspension only after such a refusal. Without the
   option, each operator request gets `operator_required`, as the Worker
-  does.
+  does. The provider accounts are `boat` and `e2b`, with every new org on
+  `boat`. `?providers=one`, `?providers=three`, or `?providers=fail` gives
+  `boat` only, a third account, or a failed read, and `?providerSave=fail`
+  fails each save of the weights. An org that Create org makes joins the
+  operator section with its account: the choice of an operator, or a draw
+  from the weights.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
@@ -159,6 +174,11 @@ option overrides this default, including queued chats that show no spinner.
   Worker does. Its author filter knows the members of the org and a few
   bots, such as `dependabot[bot]`. Any other login gets the refusal of a
   login that names no GitHub account, with its trigger and its list.
+  Each reply of one automation names the login of its runs, as the
+  Worker does: the default login of the person signed in for an own
+  automation. The fake knows no logins of other people, so the runs of
+  another owner use the org login while `?orgLogin=every-member` turns its
+  switch on, and else the own login of that owner.
 - Run now makes the workspace of the run as Create workspace does, in the
   section of the automation, and the run takes the state of that workspace.
   Without the agent login of the automation's model, as with `?login=none`,
@@ -188,8 +208,12 @@ option overrides this default, including queued chats that show no spinner.
   of a new turn. A value for this workspace joins the list of the
   workspace, and Save adds a secret of the org. `?secrets=<state>` puts a
   state into the session of `checkout-autocomplete`, from
-  `dev/secret-request-seed.ts`. `waiting`, `value`, and `mixed` wait for an
-  answer above the composer, so use them with `conversation=running`.
+  `dev/secret-request-seed.ts`. `waiting`, `value`, `mixed`,
+  `invalid-name`, and `mixed-invalid-name` wait for an answer above the
+  composer, so use them with `conversation=running`. `invalid-name` asks
+  for a value of Google Places key, a name that a new secret cannot take,
+  so Save as secret is off. `mixed-invalid-name` adds that name to a mixed
+  request.
   `late`, `late-value`, `results`, and `ended` sit in a short turn after
   the recorded one: a late request, a late request for a value, the runs
   with a denied request and a late Allow with its line, and a request that
@@ -203,6 +227,38 @@ The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.
 Workspace readers keep the number and link that the Worker supplies.
 
+The development fake keeps the org logins in its state, `orgLogins` of
+`DevState`, and serves them through `dev/org-login-routes.ts`, as the
+Worker does. Each member reads them, and
+only an admin of an active org gets the model list of an own endpoint. Only
+an admin saves, changes the switch "Use for every member", removes, or
+refreshes. The saves and Refresh use the fake hosts of the account above,
+so a save of `https://no-models.example.test` shows the warning, and a Codex
+save of `https://v1-only.example.test` shows the `/v1` note.
+`?orgLogin=endpoint` gives Acme an org login of Claude on its gateway, whose
+last model list names every Claude model. `?orgLogin=unlisted` gives a list
+without the last Claude model. `?orgLogin=every-member` gives the login of
+`endpoint` with its switch on. With `?shareSave=fail`, each change of the
+switch fails. A reload starts again from the options.
+
+Each read of the account names the default login of each org and agent,
+from the own logins and the org logins of the state, as the resolver of
+the Worker does. `dev/default-logins.ts` works out the order, because the
+fake stands in for the Worker. So `?login=none&orgLogin=endpoint` gives a
+person whose new Claude sessions in Acme take the org login. Each read of
+the org logins of an org names the default logins of that org in the same
+way, as the Worker does.
+`?sessionLogin=org` makes each session of `checkout-autocomplete` run on the
+org login of Acme, as after a first message on it. `?sessionLogin=removed`
+says in each record that an admin removed that login later.
+`?sessionLogin=empty` adds an empty session of Cal after the recorded
+sessions. Its record names the default login of Cal as `defaultLogin`,
+which its first message takes, from the logins of Cal in the fixtures and
+the org logins of the state, as the Worker does. So
+`?role=member&orgLogin=every-member&sessionLogin=empty` gives Priya an
+empty session of Cal whose composer names "Acme's login".
+`dev/session-login-routes.ts` changes the recorded sessions in this way.
+
 The development fake saves shortcut batches through `dev/shortcut-routes.ts`.
 It checks the whole batch with the shared reader before it changes state.
 It keeps each keyboard separate, preserves empty key lists, and removes
@@ -212,4 +268,6 @@ The next account read returns both keyboards.
 The Stats tab of the account reads its counts from `dev/account-stats.ts`.
 It counts the orgs of the fake that are not deleted, the workspaces and
 the automations that the person owns in them, and the automation runs of the
-person that were not skipped, by the rules of the Worker.
+person that were not skipped, by the rules of the Worker. Its reply keeps
+the removed workspaces in `archived` and counts them again in `removed`,
+as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.

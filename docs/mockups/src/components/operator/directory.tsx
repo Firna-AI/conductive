@@ -53,6 +53,14 @@ export function NameCell(props: {
 }
 
 /**
+ * The provider account of an org by its ID, in the monospace font, in a
+ * cell or in the line under a name. It takes the colour of its place.
+ */
+export function AccountId(props: { id: string }) {
+  return <span className={styles.account}>{props.id}</span>
+}
+
+/**
  * The results of a search, or the newest targets: a table with a line
  * that counts them, and Show more while more results wait. With no
  * result, the box says so in place of the table.

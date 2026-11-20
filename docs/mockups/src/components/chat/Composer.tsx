@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Paperclip } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
@@ -79,9 +80,9 @@ export type ComposerState = {
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
   /**
-   * The agent login of another member that the session uses: the login of
-   * its starter. A label in the bar names it. A message on the own login of
-   * the viewer has no label.
+   * The agent login that a message uses when it is not the own login of the
+   * viewer: the login of another member, or the org login. A label in the
+   * bar names it. A message on the own login of the viewer has no label.
    */
   sessionLogin?: SessionLogin
   /**
@@ -94,6 +95,11 @@ export type ComposerState = {
    * of the text.
    */
   pointer?: boolean
+  /**
+   * A picker in place of the model picker, for a page that draws another
+   * menu of the model, such as `app/model-favourites`.
+   */
+  pickerPart?: ReactNode
   /**
    * The Capabilities icon beside the attach button, and its control when
    * it is open (secrets decisions 6 and 8).
@@ -185,13 +191,15 @@ export function Composer(props: ComposerState & { lines?: number }) {
                 ) : null}
               </>
             )}
-            <ModelPicker
-              choice={props.choice}
-              fastKey={props.fastKey}
-              hiddenModels={props.hiddenModels}
-              open={props.picker}
-              sessionAgent={props.sessionAgent}
-            />
+            {props.pickerPart ?? (
+              <ModelPicker
+                choice={props.choice}
+                fastKey={props.fastKey}
+                hiddenModels={props.hiddenModels}
+                open={props.picker}
+                sessionAgent={props.sessionAgent}
+              />
+            )}
             {props.sessionLogin ? (
               <SessionLoginLabel {...props.sessionLogin} />
             ) : null}

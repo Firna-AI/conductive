@@ -12,6 +12,7 @@ Each handler returns `null` for a path that it does not own. The
 | --- | --- |
 | `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
+| `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
@@ -27,6 +28,7 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
+The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -56,15 +58,41 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- Account and org-login reads include additive `defaultLogins` entries for
+  each current org and agent. [`default-agent-logins.ts`](default-agent-logins.ts)
+  uses the common login access query and default order from `worker/chat/`.
+  Each entry names the selected personal or org owner, or null when neither serves.
+  An endpoint entry includes the model availability used by member pickers.
+  Its separate `orgModelList` serves fixed org sessions even when the default is personal.
+  Suspended orgs give no usable default or model list. Deleted orgs are absent.
 - `GET /api/account/stats` returns `AccountStats` from the
   [account contract](../../src/shared/account.ts) for the signed-in user
   only. [`account-stats.ts`](account-stats.ts) reads every count from D1 in
   one batch, with the windows and the state SQL of the operator Overview
-  from [`workspace-counts.ts`](../operator/workspace-counts.ts). It leaves
-  out deleted orgs and skipped automation runs. A run counts for the
-  `owner_user_id` of its row. The route keeps no history and calls no
-  sandbox provider.
+  from [`workspace-counts.ts`](../operator/workspace-counts.ts). As the
+  Overview reply does, `archived` counts every archived workspace, removed
+  ones included, so an older app that reads four states still adds up to
+  the total. `removed` counts the removed ones again, and the app takes
+  them out of Archived. It leaves out deleted orgs and skipped automation
+  runs. A run counts for the `owner_user_id` of its row. The route keeps no
+  history and calls no sandbox provider.
   [Account stats](../../docs/protocol/account-stats.md) states the rules.
+- Org login routes use the paths in `org-settings.ts` and the contracts in
+  [`org-agent-logins.ts`](../../src/shared/org-agent-logins.ts).
+  [`org-agent-login-save.ts`](org-agent-login-save.ts) reuses the endpoint
+  address rule, model discovery, and authenticated encryption helpers.
+  A personal owner keeps its existing encryption context. An org owner
+  uses `org-agent-login:<orgId>:<agent>`.
+  [`org-agent-login-data.ts`](org-agent-login-data.ts) guards each write
+  with the current active admin predicate in the same SQL statement.
+  Replace keeps the switch across kinds. A switch write changes no login
+  version. [`org-agent-login-read.ts`](org-agent-login-read.ts) returns
+  metadata for both agents, with a disconnected entry for an absent login.
+  Only an admin of an active org receives `agentLogins.modelList`.
+  The selected default's model availability also serves member pickers. No reply holds
+  ciphertext, a key, or a full address. Save and Refresh report model read
+  failures. Endpoint saves also report whether they added `/v1`.
+  [Org logins](../../docs/protocol/org-logins.md) states the requirements.
 - An own endpoint save uses `readEndpointAddress` from
   [`endpoint-address.ts`](../../src/shared/endpoint-address.ts). It encrypts
   one JSON value with the normalized endpoint and the whitespace-free key,
@@ -144,8 +172,13 @@ View writes cannot change this branch.
   A connected Codex login can carry `unusableCause` after a refused renewal.
   Reconnect clears the failure and its refresh claim.
 - Get started has only the steps `github-app`, `org`, and `agent-login`.
+  The agent step completes with a usable personal login or an org login.
+  `get-started-data.ts` uses the same default resolver as message admission.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
+  The [assignment service](../provider-assignment/README.md) selects and saves
+  the fixed provider account before that build. Only an operator can supply
+  a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
@@ -234,6 +267,9 @@ The machine tools use the configured app origin instead.
   workspace takes 0. So it lists first, as the
   [mockups](../../docs/mockups/src/components/workspaces/sections.ts)
   show. A position can be negative.
+  [`workspace-insert-data.ts`](../lifecycle/workspace-insert-data.ts) checks
+  the parent's depth in the same batch as the insert. It refuses a create
+  whose parent moved to the deepest depth after the tool's first check.
 - The [app](../../src/app/list-changes.ts) and its
   [dev fake](../../src/app/dev/create-routes.ts) also show a new workspace
   first.
@@ -248,10 +284,19 @@ The machine tools use the configured app origin instead.
   archived ancestors and the default section for an unknown section.
   A move writes every descendant's section, including archived descendants.
   `RETURNING` gives the workspace IDs for metadata publication after the batch.
-  A move of a nested row changes no placement or activity time.
+  A section-only move of a nested row changes no placement or activity time.
   A name write still works for a nested row.
   A tool move to the current section also changes nothing, as checked
   inside the batch. `readWorkspaceMove` reads only the tool reply's notice.
+- Agent move targets use `writeWorkspaceParentChange` in
+  [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts).
+  The shared metadata writer waits for a target parent's creation admission.
+  The batch checks the target, depth, pending creates, archive state, and
+  current membership before it writes. It changes the root parent link,
+  each descendant's section, and the top-level places together. A target
+  equal to the current place writes nothing. The shared recursive readers
+  stop at repeated workspace IDs. [Parent changes](../../docs/protocol/parent-changes.md)
+  states the requirements.
 - A section move request holds `position`, the index in the section list.
   Each index counts the rows without the moved row.
 - A section create request can hold `afterSectionId`. The insert and a
@@ -269,7 +314,7 @@ The machine tools use the configured app origin instead.
   Each other row of that section above that position, live or archived,
   gains the promoted count minus one. With zero or one promoted row,
   no other row changes position. All other stored positions stay.
-  `writeWorkspaceTree` selects these descendants inside the Archive batch.
+  `markWorkspaceArchived` selects these descendants inside its Archive batch.
   Its single position write follows Archive and checks `changes()`.
   It runs only when Archive wrote. Promoted top-level rows then keep their
   initial places and can move independently. Restore shows them under
@@ -294,6 +339,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   model variables.
 - [`shortcuts-data.ts`](shortcuts-data.ts): account shortcut reads and
   atomic batch saves, checked with the shared shortcut readers.
+- [`org-agent-logins.ts`](org-agent-logins.ts): member reads and admin
+  writes for org logins. Its save, read, and data modules keep discovery,
+  public metadata, and guarded SQL separate.
 - [`codex-device.ts`](codex-device.ts): the account routes for ChatGPT
   device sign-in, over the [Codex auth service](../codex-auth/README.md).
 - [`get-started-github.ts`](get-started-github.ts):
@@ -307,6 +355,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
   request body and gives the start and each poll to the workspace object.
+- [`repository-change.ts`](repository-change.ts): `repositoryChangeRoute`,
+  which checks the `ChangeRepositoryRequest` body and gives the start and
+  each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
@@ -319,16 +370,25 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   it with the sender as the user.
 - [`workspace-metadata.ts`](workspace-metadata.ts):
   `changeWorkspaceMetadata`, the rename and the move of a workspace tree. It
-  checks the member and the archive state, runs `updateShellWorkspace`, and
+  checks the member and the archive state, runs the section or parent write, and
   publishes the metadata of each moved workspace. `feature-workspaces.ts` and the
   [agent workspace tools](../tools/workspaces.md#rename-and-move) both call
   it. A tool move to the current section of a workspace changes nothing.
+- [`shell-guard.ts`](shell-guard.ts): `guardedStatement` inserts the current
+  shell member check at each `shellGuard` token and appends its org and user
+  bindings. Guarded SQL uses numbered placeholders. `GuardedStatement`
+  limits `guardedBatch` and `guardedRun` to statements from the builder.
+  `shellRead` prepares a single `SELECT` for reads in the writer files.
+- [`workspace-parent-change-data.ts`](workspace-parent-change-data.ts):
+  `writeWorkspaceParentChange`, the guarded parent change and tree placement
+  in one D1 batch, including creates in flight under the moved tree.
 - [`feature-workspaces-data.ts`](feature-workspaces-data.ts):
   `readWorkspaceTree` and `readWorkspaceMove` read the org's tree and its
   shown places for reads and notices. `updateShellWorkspace` prepares the
-  guarded metadata write. `writeWorkspaceTree` saves tree moves and Archive
-  promotions in one D1 batch, with current membership and places.
-  [`archive-data.ts`](archive-data.ts) guards Archive and its promoted rows.
+  guarded metadata write. `writeWorkspaceTree` saves tree moves in one D1
+  batch, with current membership and places.
+  [`archive-data.ts`](archive-data.ts) keeps Archive, descendant promotion,
+  and token revocation in one batch with its owner-or-admin access check.
   [`feature-sections-data.ts`](feature-sections-data.ts): the
   section writes `insertShellSection`, `updateShellSection`, and
   `deleteShellSection`. [List order](#list-order) gives their rules.
@@ -342,9 +402,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
-  [`feedback-data.ts`](feedback-data.ts), and
-  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
-  body, the reply email and reachable IDs, and the email.
+  [`feedback-data.ts`](feedback-data.ts),
+  [`feedback-mail.ts`](feedback-mail.ts), and
+  [`feedback-quota-data.ts`](feedback-quota-data.ts): the feedback routes,
+  the checked body, the reply email and reachable IDs, the email, and the
+  send limit.
   [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs

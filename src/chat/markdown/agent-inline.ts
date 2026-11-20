@@ -1,5 +1,5 @@
 import type { Token } from 'markdown-it'
-import { linkTail } from '../../markdown/parser'
+import { imageSource, linkTail } from '../../markdown/parser'
 import { showsInline } from './agent-breaks'
 
 /** A mark of agent text: bold text, emphasis, or strikethrough. */
@@ -18,11 +18,16 @@ export interface InlineLink {
   typed: { open: string; close: string }
 }
 
-/** A Markdown image: its address and its alt text. No picture loads. */
+/**
+ * A Markdown image: its address, its alt text, and its Markdown as the
+ * agent wrote it, such as `![Phone view](shots/after.png)`. A copy of the
+ * picture of a workspace file gives that Markdown.
+ */
 export interface InlineImage {
   kind: 'image'
   href: string
   alt: readonly InlineNode[]
+  source: string
 }
 
 /**
@@ -86,6 +91,7 @@ function imageOf(token: Token): InlineImage {
     kind: 'image',
     href: typeof href === 'string' ? href : '',
     alt: nodesOf(token.children ?? []),
+    source: imageSource(token),
   }
 }
 

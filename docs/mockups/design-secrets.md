@@ -10,15 +10,16 @@ chat. They come from the secrets decisions of 13 November 2026.
 A secret is a named value of an org: its name, its description, its
 encrypted value, its creator, and the mark for all agents. An agent runs
 one command with a secret through the workspace tools, after a member
-allows it. The agent gets only the name, and no screen shows a value,
-except to an admin who reveals one.
+allows it. The agent gets the name and the variable name of the secret,
+never its value. No screen shows a value, except to an admin who reveals
+one.
 
 ## The Secrets tab
 
-- `SecretsTab` in `src/components/secrets/` draws the tab, after Cloud
-  computer in the tabs of the org settings. One section holds the list,
-  its notes, and Add secret. A phone puts the five tabs of the org
-  settings in three columns, on two lines.
+- `SecretsTab` in `src/components/secrets/` draws the tab, after Agents
+  in the tabs of the org settings. One section holds the list, its notes,
+  and Add secret. A phone puts the six tabs of the org settings in three
+  columns, on two lines.
 - `SecretRow` draws each secret: its name in the monospace font, its
   description, who added it, and the record of its last reveal. Then come
   the mark for all agents, the value as dots, and the actions. A narrow
@@ -41,6 +42,12 @@ except to an admin who reveals one.
 - Add secret opens the form under the list: the name, the description, and
   the value, each with its hint. The form of an admin ends with the switch
   for all agents, which starts off.
+- The hint of the name says to use only letters, digits, and underscores.
+  When Save secret refuses a name with other characters, the error of the
+  name shows in the place of its hint, and each field keeps what the
+  member typed. A secret with an older name, such as Cloudflare
+  (read-only), keeps its name. Its row shows like the others, and Replace
+  has no name field. `secretNameCopy.ts` holds the words of the name rule.
 - The notes under the list say what the mark for all agents does and, for
   a member, which secrets the member can change. The last line says to use
   the environment variables of the Cloud computer tab for values that every
@@ -52,9 +59,9 @@ except to an admin who reveals one.
 - `CapabilitiesButton` in `src/components/capabilities/` draws the small
   Capabilities icon, the Blocks icon of lucide, with its label as the
   tooltip. On a computer it stands right after the attach button in the bar
-  of every composer, and right before the attach button in the footer of
-  the New workspace dialog. A press opens the control, which a computer
-  draws above the icon, as an open menu of the app.
+  of every composer and in the footer of the New workspace dialog. A press
+  opens the control, which a computer draws above the icon, as an open menu
+  of the app.
 - A phone has one + button in place of the attach button and the
   Capabilities icon, from `ComposerMenu` in `src/components/chat/`. Its
   menu opens above it, as the menu of the model picker does, with Attach
@@ -77,7 +84,7 @@ except to an admin who reveals one.
   sessions, each with its session, who allowed it, and when, and each value
   for this workspace, with who gave it. Each has Remove. `GrantList` draws
   them, and a group without grants hides.
-- The Mac access part is a switch at the end of its title, on by default.
+- The Mac access part is a switch at the end of its title, off by default.
 - `capabilitiesCopy.ts` holds the words of the control.
 
 ## Requests and results in the chat
@@ -102,6 +109,11 @@ except to an admin who reveals one.
   the agent as its description. Deny and Allow follow the choices, and
   Allow stays off until each value is typed. `RequestActions` holds the
   actions.
+- Save as secret is off when a name that the org does not have holds
+  characters other than letters, digits, and underscores. A line under the
+  choices says what Save as secret needs. One choice covers every value,
+  so one such name turns it off for the whole answer. 15 minutes and This
+  workspace stay.
 - A phone keeps a request for a value short: the card shows Deny and Give
   a value, which opens a sheet with each value field, the choice of how
   long the values last, and Allow. The `value-sheet` overlay of the
@@ -124,9 +136,13 @@ except to an admin who reveals one.
   member, from `lateAnswerWords`, and never a value. When that turn cannot
   run, the app sends nothing. When the starter does not share the login
   with that sender, the line of the request says that the agent learns of
-  the answer at the next message. When the login of the starter is gone,
-  the line names the action that gets the agent going again, such as "The
-  agent learns of it when Cal connects Claude again".
+  the answer at the next message. When the login of the session is gone,
+  the line names the action that gets the agent going again: a connect of
+  that login. For a personal login, and for an older session whose record
+  names no login, the starter connects it, such as "The agent learns of it
+  when Cal connects Claude again". For the org login, an admin connects
+  it, such as "The agent learns of it when an admin connects Acme's Claude
+  login again".
 - An Archive of the workspace, or a suspension of its org, ends each open
   request as Not answered, with no choices, and Needs input ends. Its line
   says what ended it.

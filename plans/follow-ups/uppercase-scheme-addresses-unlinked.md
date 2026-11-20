@@ -25,6 +25,6 @@
 - **Left out:** A rule in `docs/protocol/chat-links.md` that only lowercase schemes count fails the goal that a member opens each address with one press. A rewrite of the text breaks the rule that a bare address shows as the text has it.
 - **Wider fix:** C. The reader then has no case rule of its own.
 - **Previous examples:** None found. On `main` before this change the old reader was lowercase only too, but only workspace chips depended on it.
-- **Related:** `plans/follow-ups/bare-address-closing-bracket-cut.md` changes the end of `bareAddressAt`, and this item changes its start. One change can apply both, with one test for both ends of a bare address. Option D of this item is option B of that item: one `linkify-it` reader would fix both.
+- **Related:** The fix of the closed item [Bare addresses lose a closing square bracket](https://github.com/Firna-AI/conductive/blob/664462e438f31e6834fd7b4bb88806c689949c4f/plans/follow-ups/bare-address-closing-bracket-cut.md) uses the same shared reader. That fix changes only the end of a bare address. The recognition of the scheme stays separate, and this item still covers it.
 - **Recommendation:** B. It accepts each spelling of `http` and `https` at Small effort, and one shared start test stops the two readers from drifting apart.
 - **Action:** fix after merge, apply B, because uppercase schemes are unusual input.

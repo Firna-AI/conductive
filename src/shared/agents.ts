@@ -8,6 +8,23 @@ export interface ModelsResponse {
   models: readonly AgentModel[]
 }
 
+const choiceEqualities: {
+  readonly [K in keyof AgentChoice]-?: (
+    a: AgentChoice,
+    b: AgentChoice,
+  ) => boolean
+} = {
+  agent: (a, b) => a.agent === b.agent,
+  model: (a, b) => a.model === b.model,
+  effort: (a, b) => a.effort === b.effort,
+  fast: (a, b) => a.fast === b.fast,
+}
+
+/** Whether every field of two choices is equal. */
+export function sameChoice(a: AgentChoice, b: AgentChoice): boolean {
+  return Object.values(choiceEqualities).every((equal) => equal(a, b))
+}
+
 /** The effort levels from the lowest, with the words that the picker shows. */
 export const effortLabels: Readonly<Record<Effort, string>> = {
   none: 'None',

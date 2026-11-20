@@ -1,6 +1,12 @@
 import { productDomain, productName } from '../docs/mockups/src/brand'
 import type { CheckedImage, ImageKind } from '../src/shared/images'
 import type { AppEnv, HttpFetch } from './env'
+import { outboundRequest } from './http/outbound-request'
+import {
+  type MailFailure,
+  readMailRefusal,
+  requestErrorType,
+} from './mail-diagnostics'
 
 interface MailMessage {
   sender?: { name: string; mailbox: 'invites' | 'feedback' }
@@ -10,7 +16,21 @@ interface MailMessage {
   subject: string
   text: string
   deliveryKey: (body: string) => Promise<string>
+  beforeSend?: (deliveryKey: string) => Promise<boolean>
   developmentLog: string
+}
+
+export type MailDeliveryOutcome = 'sent' | 'rejected' | 'uncertain'
+
+export class MailDeliveryError extends Error {
+  readonly outcome: MailDeliveryOutcome
+  readonly diagnostic: MailFailure
+
+  constructor(outcome: MailDeliveryOutcome, diagnostic: MailFailure) {
+    super('Email delivery failed')
+    this.outcome = outcome
+    this.diagnostic = diagnostic
+  }
 }
 
 export function createMailSender(
@@ -22,11 +42,12 @@ export function createMailSender(
   )
   return {
     async send(message: MailMessage): Promise<void> {
-      if (local) {
+      if (local && !message.beforeSend) {
         console.info(message.developmentLog)
         return
       }
-      if (!env.RESEND_API_KEY) throw new Error('Mail sender is not configured')
+      if (!local && !env.RESEND_API_KEY)
+        throw new MailDeliveryError('rejected', { reason: 'not_configured' })
       const sender = message.sender ?? { name: productName, mailbox: 'invites' }
       const body = JSON.stringify({
         from: `${sender.name} <${sender.mailbox}@mail.${productDomain}>`,
@@ -40,26 +61,55 @@ export function createMailSender(
           content: imageBase64(image.bytes),
         })),
       })
-      const response = await fetch(
-        new Request('https://api.resend.com/emails', {
+      const deliveryKey = await message.deliveryKey(body)
+      if (message.beforeSend && !(await message.beforeSend(deliveryKey))) return
+      if (local) {
+        console.info(message.developmentLog)
+        return
+      }
+      let request: Request
+      let response: Response
+      try {
+        request = outboundRequest('https://api.resend.com/emails', {
           method: 'POST',
-          // The Workers runtime throws a TypeError for 'error'. A redirect
-          // is not ok, so the send still fails without following it.
-          redirect: 'manual',
           signal: AbortSignal.timeout(30_000),
           headers: {
-            // Resend requires a User-Agent, and the Workers runtime adds none.
-            'User-Agent': productName,
             Authorization: `Bearer ${env.RESEND_API_KEY}`,
             'Content-Type': 'application/json',
-            'Idempotency-Key': await message.deliveryKey(body),
+            'Idempotency-Key': deliveryKey,
           },
           body,
-        }),
-      )
-      const accepted = response.ok
-      await response.body?.cancel()
-      if (!accepted) throw new Error('Email was refused')
+        })
+        response = await fetch(request)
+      } catch (error) {
+        throw new MailDeliveryError('uncertain', {
+          reason: 'request_failed',
+          status: null,
+          errorType: requestErrorType(error),
+        })
+      }
+      const outcome = response.ok
+        ? 'sent'
+        : response.status === 408 ||
+            response.status === 409 ||
+            response.status >= 500
+          ? 'uncertain'
+          : 'rejected'
+      if (!response.ok)
+        throw new MailDeliveryError(outcome, {
+          reason: 'provider_refused',
+          status: response.status,
+          ...(await readMailRefusal(response, request.signal)),
+        })
+      try {
+        await response.body?.cancel()
+      } catch (error) {
+        throw new MailDeliveryError(outcome, {
+          reason: 'request_failed',
+          status: response.status,
+          errorType: requestErrorType(error),
+        })
+      }
     },
   }
 }

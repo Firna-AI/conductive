@@ -1,6 +1,9 @@
 import { memo } from 'react'
 import { useTextLinks } from '../../shell/ui/text-links'
-import { FileLink, LinkChip, useEntryLookup } from '../links/LinkedText'
+import { samePlainData } from '../components/same-data'
+import { FileLink } from '../links/FileChips'
+import { FilePicture, type AnswerPictures } from '../links/FilePicture'
+import { LinkChip, useEntryLookup } from '../links/LinkedText'
 import { useChatLinks } from '../links/LinksContext'
 import { CodeText, ChatWebLink } from '../links/WebLinkText'
 import { useRepositoryFolder } from '../mentions/MentionsContext'
@@ -12,7 +15,6 @@ import {
   type AnswerReading,
 } from './answer-parts'
 import { FileTextLink } from './FileTextLink'
-import { sameData } from './same-data'
 
 /**
  * The element of each mark. Their look comes from the `prose` class of
@@ -20,6 +22,15 @@ import { sameData } from './same-data'
  * shares, such as the weight of bold text.
  */
 const markTags = { strong: 'strong', emphasis: 'em', strike: 'del' } as const
+
+/**
+ * How a text draws: in a message line or not, and with the pictures of its
+ * message or without them.
+ */
+interface Drawing {
+  line: boolean
+  pictures?: AnswerPictures
+}
 
 /**
  * What the chat reads the text with: the workspaces of the chat, the web
@@ -32,6 +43,21 @@ function useAnswerReading(text: InlineText): AnswerReading {
   const root = useRepositoryFolder()
   const { linkOf } = useTextLinks()
   return { links, web: linkOf, files: find ? { find, root } : undefined }
+}
+
+/**
+ * The label of a picture as plain text, for its alternative text and for
+ * its box: the words of the label without their marks, with a space for
+ * each line break, as the file preview shows alt text.
+ */
+function plainLabel(parts: readonly AnswerPart[]): string {
+  return parts
+    .map((part) => {
+      if (part.kind === 'text' || part.kind === 'code') return part.text
+      if (part.kind === 'mark') return plainLabel(part.parts)
+      return part.kind === 'break' ? ' ' : ''
+    })
+    .join('')
 }
 
 /**
@@ -49,21 +75,53 @@ function LineBreak(props: { line: boolean }) {
   )
 }
 
+/**
+ * A Markdown link or image to a file of the tree. With the pictures of its
+ * message, the image of a picture file shows as its picture, else as its
+ * link.
+ */
+function TreeFileLink(props: {
+  part: Extract<AnswerPart, { kind: 'file-link' }>
+  drawing: Drawing
+}) {
+  const { part, drawing } = props
+  const { entry, lines, picture } = part
+  const label = <AnswerParts drawing={drawing} parts={part.label} />
+  if (!picture || !drawing.pictures) {
+    return (
+      <FileTextLink entry={entry} lines={lines}>
+        {label}
+      </FileTextLink>
+    )
+  }
+  return (
+    <FilePicture
+      entry={entry}
+      label={plainLabel(part.label)}
+      lines={lines}
+      message={drawing.pictures.message}
+      source={picture.source}
+    >
+      {label}
+    </FilePicture>
+  )
+}
+
 /** Draws one part of the text of an agent message. */
-function Part(props: { part: AnswerPart; line: boolean }) {
-  const { part, line } = props
+function Part(props: { part: AnswerPart; drawing: Drawing }) {
+  const { part, drawing } = props
   switch (part.kind) {
     case 'text':
       return part.text
     case 'code':
       return <CodeText part={part} />
     case 'break':
-      return <LineBreak line={line} />
+      return <LineBreak line={drawing.line} />
     case 'mark': {
       const Mark = markTags[part.mark]
       return (
         <Mark>
-          <AnswerParts line={line} parts={part.parts} />
+          <AnswerParts drawing={drawing} parts={part.parts} />
         </Mark>
       )
     }
@@ -72,31 +130,35 @@ function Part(props: { part: AnswerPart; line: boolean }) {
     case 'link':
       return (
         <ChatWebLink link={part.link}>
-          <AnswerParts line={line} parts={part.words} />
+          <AnswerParts drawing={drawing} parts={part.words} />
         </ChatWebLink>
       )
     case 'file':
       return <FileLink part={part} />
     case 'file-link':
-      return (
-        <FileTextLink entry={part.entry} lines={part.lines}>
-          <AnswerParts line={line} parts={part.label} />
-        </FileTextLink>
-      )
+      return <TreeFileLink drawing={drawing} part={part} />
   }
 }
 
 /** Draws the parts of the text of an agent message in order. */
-function AnswerParts(props: { parts: readonly AnswerPart[]; line: boolean }) {
+function AnswerParts(props: {
+  parts: readonly AnswerPart[]
+  drawing: Drawing
+}) {
   return props.parts.map((part, index) => (
-    <Part key={index} line={props.line} part={part} />
+    <Part drawing={props.drawing} key={index} part={part} />
   ))
 }
 
-/** The inline text of a block, and whether it draws in a message line. */
+/**
+ * The inline text of a block, whether it draws in a message line, and the
+ * pictures of its message, where its images of picture files show as their
+ * pictures.
+ */
 interface AnswerTextProps {
   text: InlineText
   line?: boolean
+  pictures?: AnswerPictures
 }
 
 /**
@@ -106,17 +168,19 @@ interface AnswerTextProps {
  * a workspace as a chip, each mention and each inline path of the tree as
  * a file chip, and each web link, as `answerParts` reads them. `line`
  * draws the text of a message line, whose closed line shows each line
- * break as a space.
+ * break as a space. With `pictures`, as in a paragraph or a list item, the
+ * Markdown image of a picture file shows as its picture. A heading and a
+ * table cell give no `pictures`, so the image keeps its link there.
  *
  * A text draws again when its data changes, or when what the chat reads it
  * with changes: the workspaces, the tree, or the links of the screen. So a
  * live update draws only the texts that changed.
  */
-export const AnswerText = memo(
-  function AnswerText(props: AnswerTextProps) {
-    const parts = answerParts(props.text, useAnswerReading(props.text))
-    return <AnswerParts line={props.line ?? false} parts={parts} />
-  },
-  (before, after) =>
-    before.line === after.line && sameData(before.text, after.text),
-)
+export const AnswerText = memo(function AnswerText(props: AnswerTextProps) {
+  const parts = answerParts(props.text, useAnswerReading(props.text))
+  const drawing: Drawing = {
+    line: props.line ?? false,
+    pictures: props.pictures,
+  }
+  return <AnswerParts drawing={drawing} parts={parts} />
+}, samePlainData)

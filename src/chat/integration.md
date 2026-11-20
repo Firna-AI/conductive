@@ -37,8 +37,9 @@ mount the chat.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
-  [Messages](../../docs/protocol/messages-and-attachments.md#messages) says. Each
-  other session takes the first line of its first message with text as its
+  [The title of a new workspace](../../docs/protocol/workspace-and-session-names.md#the-title-of-a-new-workspace)
+  says. Each other session takes the first line of its first message with
+  text as its
   title, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
   says. A name that a member set never changes. The development page does
   the same.
@@ -160,7 +161,12 @@ mount the chat.
   so the list of `@` lies just above the box. A dialog or a sheet covers
   the nearest positioned frame: the app frame. The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
-  position, because the row clips what it holds.
+  position, because the row clips what it holds. The model menu, the
+  session history on desktop, and the menu of Allow open beside their
+  button, in the top layer, on
+  [`PopoverSurface`](../shell/ui/PopoverSurface.tsx). So no box of the host
+  cuts them, as `app/chat/menu-placement` in
+  [the mockups](../../docs/mockups/catalogue-chat-and-automations.md) shows.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
@@ -175,10 +181,12 @@ mount the chat.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `rowOf` with the sessions of `tabSessions` and the
-  shown tab of `shownTab`, and the session history from `historySessions`
-  with the times of `endedAt`, so an archived workspace navigates without a
-  write. It gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which
-  needs a toast provider above it, such as `ChatToasts`.
+  shown tab of `shownTab`, and the session history from `chatHistory`, so
+  an archived workspace navigates without a write. `chatHistory` puts the
+  local close order of a read-only workspace before the stored end times,
+  as [Read-only chats](loads-and-sends.md#read-only-chats) says. The app
+  gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which needs a
+  toast provider above it, such as `ChatToasts`.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at
@@ -217,9 +225,11 @@ members, and the workspace list of the org from the models of the app.
   ends the subscriptions. `hide` and `show` keep them.
 - A chat without sources reads the four values at each load.
 - The workspace list gives the chips their workspaces, with the archived
-  ones. The chat watches it from `start` or `show` until `hide` or `stop`,
-  through `watchWorkspaces`, which the app connects to
-  `OrgModel.watch('list')`. So the chips stay current on a phone, where no
-  list is on the screen, and a hidden chat reads nothing. A chat without
-  sources reads the list itself while it shows, with the wait of a shown
-  list of the app, in `state/workspace-list.ts`.
+  ones, also the removed ones that left the list. So the chip of a removed
+  workspace still opens its read-only chat. The chat watches the list from
+  `start` or `show` until `hide` or `stop`, through `watchWorkspaces`,
+  which the app connects to `OrgModel.watch('list')`. So the chips stay
+  current on a phone, where no list is on the screen, and a hidden chat
+  reads nothing. A chat without sources reads the list itself while it
+  shows, with the wait of a shown list of the app, in
+  `state/workspace-list.ts`.

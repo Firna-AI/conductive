@@ -136,13 +136,14 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
                 .to_string(),
             request(json!("discovery"), "tools/list", json!({})),
             call("list", "list_workspaces", json!({})),
+            call("removed", "list_workspaces", json!({"removed":"true"})),
         ],
         false,
     )
     .await?;
     assert_eq!(status, 0);
     assert_eq!(errors, Vec::<String>::new());
-    assert_eq!(replies.len(), 10);
+    assert_eq!(replies.len(), 11);
     let by_id = |id: Value| {
         replies
             .iter()
@@ -170,6 +171,14 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
             .ok_or(Error::Reply { mac: false })?;
         assert_eq!(tool["inputSchema"]["properties"]["fast"]["type"], "boolean");
     }
+    let list = tools
+        .iter()
+        .find(|tool| tool["name"] == "list_workspaces")
+        .ok_or(Error::Reply { mac: false })?;
+    assert_eq!(
+        list["inputSchema"]["properties"]["removed"]["type"],
+        "boolean"
+    );
     let mac = tools
         .iter()
         .find(|tool| tool["name"] == "run_mac_command")
@@ -193,6 +202,10 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
     assert_eq!(
         by_id(json!("list"))?["result"],
         json!({"isError":false,"structuredContent":{"workspaces":[]},"content":[{"type":"text","text":"{\"workspaces\":[]}"}]})
+    );
+    assert_eq!(
+        by_id(json!("removed"))?["result"],
+        json!({"isError":true,"content":[{"type":"text","text":"Choose true or false for removed workspaces."}]})
     );
     Ok(())
 }

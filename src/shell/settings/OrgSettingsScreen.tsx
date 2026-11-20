@@ -6,6 +6,7 @@ import { useOrgAccess } from '../context'
 import { Page } from '../layout/Page'
 import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
+import { AgentsTab } from './AgentsTab'
 import { ComputerTab } from './ComputerTab'
 import { GeneralTab } from './GeneralTab'
 import { MembersSettings } from './MembersSettings'
@@ -17,6 +18,7 @@ const tabs = [
   { tab: 'general', label: 'General' },
   { tab: 'repositories', label: 'Repositories' },
   { tab: 'cloud-computer', label: 'Cloud computer' },
+  { tab: 'agents', label: 'Agents' },
   { tab: 'secrets', label: 'Secrets' },
   { tab: 'members', label: 'Members' },
 ] as const satisfies readonly { tab: SettingsTab; label: string }[]
@@ -29,6 +31,8 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
       return <RepositoriesTab org={props.org} />
     case 'cloud-computer':
       return <ComputerTab org={props.org} />
+    case 'agents':
+      return <AgentsTab org={props.org} />
     case 'secrets':
       return <SecretsTab org={props.org} user={props.user} />
     case 'members':
@@ -38,11 +42,11 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 
 /**
  * The settings of an org: its name, its repositories, its cloud computer,
- * its secrets, and its members. Each tab is a link with its own address. A
- * member sees every tab without its edit actions, except Secrets, where
- * every member adds secrets and changes the own ones. A suspended org shows
- * its notice above every tab, and every person sees the tabs without edit
- * actions.
+ * its org logins of the agents, its secrets, and its members. Each tab is
+ * a link with its own address. A member sees every tab without its edit
+ * actions, except Secrets, where every member adds secrets and changes the
+ * own ones. A suspended org shows its notice above every tab, and every
+ * person sees the tabs without edit actions.
  */
 export function OrgSettingsScreen(props: {
   org: OrgSummary

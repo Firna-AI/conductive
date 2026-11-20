@@ -80,8 +80,8 @@ const typedAnswer: readonly AgentBlock[] = [
 /**
  * An answer with three pictures: one at a web address, which shows its alt
  * text as a link, one at a path that names no file of the tree, which
- * shows its alt text only, and the screenshot in the workspace, whose link
- * opens its file.
+ * shows its alt text only, and the screenshot in the workspace, which
+ * shows as its picture and opens its file.
  */
 const imagesAnswer: readonly AgentBlock[] = [
   'The guide of the places API draws the flow of one session of lookups:',

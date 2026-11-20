@@ -133,6 +133,7 @@ describe('the repository notice on the Repositories tab of an admin', () => {
       orgSettingsPaths.builds(org),
       imageBuilds([running], added),
     )
+    click(byRole('button', 'Edit', view))
     click(byRole('button', 'Add acme/admin-dashboard', view))
     await settle()
     expect({ before, after: noticesOf(view) }).toEqual({

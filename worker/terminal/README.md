@@ -1,26 +1,69 @@
 # Terminal backend
 
 This area connects the app terminal to a private ttyd port. It also keeps
-the workspace shell: one tmux session for each workspace, which outlives
-each connection.
+the workspace shells: one tmux session for each terminal, which outlives
+each connection. The workspace object owns the shared list of terminals.
 This area owns the ttyd and tmux package install and the terminal script sources.
 The [sandbox software](../../image/README.md) packages those scripts and their
 systemd units in each release.
 
-The production Worker forwards both terminal paths to the workspace object.
+The production Worker forwards terminal state, list writes, and both socket routes to the workspace object.
 Its feature handler keeps one terminal connection owner.
 The browser uses the [shared terminal contract](../../src/shared/terminal.ts).
 
-Call `createTerminalHandler(env, dependencies).fetch(request)` for both
-shared terminal paths. The handler runs the app gate on each request and
+Call `createTerminalHandler(env, dependencies, terminals).fetch(request)` for
+the shared terminal paths. The object's `WorkspaceTerminals` owner is required.
+The handler runs the app gate on each request and
 each upgrade. Its default socket runtime uses Cloudflare WebSocket pairs.
 Tests can inject `dependencies.sockets` at that boundary.
-A socket open for a workspace whose owner is suspended gets 403
+A create, close, or socket open for a workspace whose owner is suspended gets 403
 `user_suspended`. The status read still answers.
+
+`GET terminal` includes the list, the cached `several` support value, and `eventNumber`.
+The list and current workspace event number are read together in the workspace queue.
+It keeps the legacy state, protocol, and socket path fields.
+The new shared response fields are optional for existing response readers.
+The Worker always sends them.
+`POST terminal/terminals` creates an entry without starting a shell.
+`DELETE terminal/terminals/<terminalId>` ends its shell and removes the entry.
+Each write reply includes the event number of its committed `terminals.updated` event.
+Both writes need a running workspace and a trusted app or desktop origin.
+They use the same JSON request gate as the other tools.
+
+`TerminalList` stores IDs and numbers at `terminals:list` in object storage.
+An absent record reads as Terminal 1 with ID `workspace`.
+Its writes and full-list `terminals.updated` events share the chat transaction.
+The common workspace stream publishes only after that transaction commits.
+Replayed creates with the same ID and repeated removals add no second event.
+After Restart changes cached support, the same event path commits one
+full-list event with `several`. An unchanged support value emits no event.
+`WorkspaceTerminals` keeps closing marks in memory while provider calls wait.
+It prevents concurrent closes from removing the last available terminal.
+A failed close clears its mark and keeps its entry.
+The list stays through Stop and resume. The existing payload purge deletes it.
+
+`GET terminal/terminals/<terminalId>/socket` opens one listed terminal.
+An invalid, absent, or closing ID gets 404 `terminal_not_found` before any
+upstream connection. `GET terminal/socket` selects the first entry in number
+order, including after the original Terminal 1 closes. The state response
+keeps that legacy path in `socketPath`.
+
+`WorkspaceTerminals.openSocket` checks the list and registers a socket lease
+in the same queue that marks closes. A close cancels its pending and open
+leases before it ends the shell. A cancelled lease stays cancelled after
+the closing mark clears. The socket handler checks the lease before the
+upstream call and after its upgrade returns. It closes a late upstream
+socket without creating a browser connection. The lease also owns the
+bridge's close callback, so a close during the last access check ends both
+sides before any later browser handshake can reach ttyd.
 
 The handler opens the `/ws` path of the private ttyd port with the shared
 `portRequest` of the [preview backend](../previews/README.md). That request
-carries no browser cookie, header, or query. It carries the
+carries no browser cookie, header, or query. After that request is built,
+the terminal handler adds only `arg=<terminalId>` from the selected stored
+entry. The fixed `workspace` ID of Terminal 1 adds no argument, including
+on older software. A later terminal numbered 1 still carries its own ID.
+The request carries the
 [port credential](../sandbox/README.md#port-credentials) of the client, Basic
 auth with the workspace password, and the `tty` subprotocol.
 
@@ -31,11 +74,19 @@ The detached build command streams its output to the build log.
 The release installer supplies both terminal units and their scripts.
 It enables the ttyd unit, which requires the shell server unit.
 It starts nothing and puts no password in the image.
+The shell server unit sets `OOMPolicy=continue`. So an out-of-memory kill of
+one command ends only that command, as
+[Out of memory](../../docs/protocol/terminal-shell.md#out-of-memory) says.
+The default policy, `stop`, would stop the unit and end every shell.
 
 Release updates bring terminal script and unit changes to existing workspaces.
 The program downloads them in the background. The runner applies them at a
 later start, or in place when its workspace is idle. The running terminal
-services keep their old units and scripts until their next start. But each
+services keep their old scripts until their next start.
+[Release installation](../../image/install.md#release-installation) says when
+a changed unit applies. Restart
+of the workspace software restarts ttyd after the runner applies the release.
+It keeps the shell server running. But each
 new terminal connection runs the bridge from `/opt/conductive/current` at
 once, under the old ttyd command line. So the bridge keeps its command-line
 arguments compatible across releases. A workspace without the program
@@ -47,6 +98,12 @@ The system release includes the terminal bridge at
 so that its relative imports work. The private Node runs its TypeScript
 files directly. A workspace that has not applied this release keeps its
 plain tmux client until the software update applies.
+
+The release also includes the executable `terminal-attach` beside `terminal`,
+`terminal-password`, and `terminal-sessions` in its system folder.
+The launcher embeds that attach program in ttyd's arguments at start.
+A later apply or rollback can change the active release path while ttyd
+keeps running. Its captured attach program stays the same.
 
 For an existing shell, `tmux set-option -g mouse on` enables scrolling
 immediately. Run it inside that workspace's Terminal tab. The setting lasts
@@ -75,14 +132,34 @@ prompt escape to its folder-name escape. This keeps the prompt's colours
 and other text, while showing only the current folder name.
 
 The launcher loads the same variables, moves to the repository folder, and
-checks the password before it runs ttyd. For each connection, ttyd runs the
-attach program, which runs the terminal bridge with the private Node of the
+checks the password before it runs ttyd with `--url-arg`.
+For each connection, ttyd runs the attach program with the repository path
+as its first, internal argument. It then adds each URL argument.
+The attach program runs the terminal bridge with the private Node of the
 image. It removes `NODE_OPTIONS` and `NODE_PATH` of the workspace variables
-first, because they could make Node load other code. The bridge attaches
-to the session `workspace`, which is the workspace shell. When that session
-does not exist, the bridge creates it with a login Bash shell in the
+first, because they could make Node load other code. With no URL argument,
+the attach program selects `workspace`, the shell of Terminal 1.
+One URL argument must be exactly 32 lowercase hexadecimal characters.
+It selects the session `terminal-<id>`. Each other argument list exits
+with code 2 before it runs the bridge or a shell.
+The Worker chooses these arguments from the stored terminal list.
+When the selected session does not exist, the bridge creates it with a login Bash shell in the
 repository folder. It gives tmux the path of that folder, not its own
 current folder.
+
+After a [repository change](../lifecycle/repository-change.md#publication),
+the ttyd and tmux services still have the start variables of the old
+folder, and only a resume rewrites them. So the Worker writes the new
+folder to `/run/conductive/repository`, and sets
+`CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment for each new
+shell. `terminalFolder` in [`bridge/folder.ts`](bridge/folder.ts) reads
+that file when the bridge creates the session. It takes the folder only
+when it is a folder under `/home/user/code` that exists. Otherwise it
+takes the folder of its command line. A session that runs keeps its
+folder. The startup command deletes the file at each start, because the
+start variables then name the folder of the new repository. A bridge of
+an older release, and the plain tmux client, ignore the file, so a new
+session there starts in the old folder until the software update.
 
 When the private Node or the bridge is missing, or the bridge exits with
 code 3 because tmux exited before the bridge attached, the attach program
@@ -111,6 +188,9 @@ without the marker. The agent runner reads the same marker to watch the
 live repository folder again, as the [runner guide](../../runner/README.md)
 says. The path lives in
 [`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
+E2B boots from the saved disk and omits the optional `hydrated` field.
+The common restore check then writes this marker as soon as the sandbox reports ready.
+It needs no delayed repair of a retired disk view.
 
 Bash runs the prompt hook before each prompt. Its folder check waits until
 the restore marker exists. At the first prompt after that, it checks the
@@ -159,7 +239,7 @@ these limits:
   than about a minute before a stop that does not wait for idle time, such
   as an Archive, can still be lost. This is not confirmed.
 
-So every connection of a workspace attaches to the same session, with its
+So every connection of a terminal attaches to the same session, with its
 running commands and its screen. Concurrent connections share it too. A
 dropped socket ends only its own bridge and its tmux client. The tmux server runs in the
 shell server unit, so a restart of the ttyd unit also keeps the session.
@@ -168,6 +248,13 @@ The session ends when its last shell exits. The next connection then
 creates a new session. A stop of the sandbox ends both units and the
 session. `/run` is temporary memory storage, so the next start begins with
 no session.
+
+Call `closeWorkspaceTerminal(provider, sandboxId, terminalId)` to end a
+terminal's session. It validates the ID before it sends one fixed command.
+It runs tmux as `user` on the private socket, with an exact session target.
+An absent session or server succeeds. Other failures and command timeouts
+throw a provider error. Terminal 1's fixed ID selects the exact target
+`=workspace`. The close route uses this helper for every terminal.
 
 The workspace lifecycle starts the terminal in two phases of the start,
 after the workspace startup script succeeds at create and at each resume.
@@ -179,8 +266,24 @@ retention restart.
 
 First, the lifecycle runs the setup command, `terminalStartCommand()`, as a
 detached command, so that each alarm can check the start time limit. The
-command writes the enable marker and starts the ttyd unit. systemd starts
-the shell server unit first.
+command writes the enable marker and removes the old support marker before
+it starts the ttyd unit. systemd starts the shell server unit first.
+
+The command then writes `/run/conductive-terminal/several`, a nonsecret
+support marker. Its content is `1` and a newline when the installed attach
+program exists and the running ttyd has `--url-arg` and `terminal-attach-v1`
+in its captured arguments. Its content is `0` and a newline when the
+release has no attach program, or the confirmed ttyd lacks those arguments.
+An unconfirmed probe leaves the support marker absent.
+The command polls for ttyd before it checks these arguments.
+It reads the unit's main process ID again on each of at most 50 checks,
+with a 0.1-second pause between checks. It waits for `/proc/<pid>/exe`
+to name the configured ttyd executable, because the launcher shell runs first.
+This also handles a changed process ID after a service restart.
+The poll stops at ttyd, or leaves no marker when its checks run out.
+Unreadable ttyd arguments also leave no marker.
+It prints no process arguments. A newly applied release alone does not prove that
+the running ttyd can select a terminal.
 
 The synchronous `ExecStartPre` step of the ttyd unit creates a random
 password locally under `/run`. It keeps an existing valid password on
@@ -189,9 +292,10 @@ runtime folder, with the password and the tmux socket, when a unit stops
 or restarts. The setup command writes no password to its output or to the
 command history.
 
-The provider's file API reads only under `/home/user` or `/tmp`, and both
-are on disk. So the setup command binds the memory folder
+Boat's file API reads only under `/home/user` or `/tmp`, and both
+are on disk. So the shared setup command binds the memory folder
 `/run/conductive-terminal` at `/home/user/.conductive-terminal`.
+E2B can read `/run` directly. It keeps the same bind mount through the shared setup hook.
 
 After the setup command exits with code 0, the lifecycle calls
 `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)`. This
@@ -204,6 +308,24 @@ hexadecimal characters. It caches that password encrypted in D1. The cache
 update checks that the workspace still owns the same sandbox.
 It also checks the provider account. A read returns the password only for
 that sandbox ID and account.
+
+The same start read also gets the support marker with a two-byte limit.
+Only the exact content `1` and a newline means several terminals.
+A missing file, odd content, or read failure means one terminal and does
+not fail the password read. D1 stores the result as `terminal_credentials.several`
+beside the encrypted password. Existing rows default to `0`.
+`terminalSeveral` reads it for the current sandbox and provider account.
+
+Restart shares the start probe and the bounded file reader. It removes
+the old support marker before it restarts only `conductive-terminal.service`.
+A failed service restart or probe prints a warning and leaves no marker,
+without failing Restart. A release with no attach program writes `0`.
+The workspace object then refreshes the encrypted password and support for
+the sandbox ID and provider account captured before Restart. A failed
+read, including a missing support marker, warns and keeps the cached values.
+It emits no terminal list event. The cache comparison and update
+run in the workspace queue with the terminal list event. That event lets
+an open app learn new support even if the runner became ready first.
 
 The app supplies no extra terminal secret at start. The workspace token
 keeps its existing scope and does not authenticate terminal access.
@@ -234,18 +356,24 @@ Each terminal socket is a bridge. `bridgeSocket` joins the browser socket to an 
 Such a bridge keeps its workspace object active, also while it is idle, as [Work that keeps the object active](../README.md#work-that-keeps-the-object-active) says.
 So the access timers of the terminal stay in memory.
 
-`scripts.ts` builds the exact password program, launcher, and shell server
-installed in the image. Its trusted options select paths, account names,
+`scripts.ts` builds the exact password program, attach program, launcher,
+and shell server installed in the image. Its trusted options select paths, account names,
 and executables, such as ttyd and tmux. The password program captures
 entropy before conversion and commits a complete password through a
 temporary file. The launcher checks the password before it executes ttyd.
 `terminalPromptCommand(restoreMarker)` builds the prompt hook, with the
 folder check for the path of the restore marker and the history append.
 
-Tests execute the three programs with fake ttyd and tmux in isolated
+Tests execute the programs with fake ttyd and tmux in isolated
 runtime folders. The launcher tests check the attach program with a fake
 Node: the bridge without the Node variables, and the fallback to the plain
-tmux client. One test runs the folder hook in a real interactive Bash.
+tmux client. They reject invalid, empty, and multiple terminal IDs before either path.
+The start tests inspect controlled process records for the support marker.
+They check a delayed ttyd start and a launcher that stays through the poll limit.
+Their fake sleep command records the poll pauses without a real delay.
+The service tests check bounded marker reads and the cached sandbox identity.
+The close tests check exact targets, absent sessions, failures, and timeouts.
+One test runs the folder hook in a real interactive Bash.
 It moves the folder of the shell as a restore does, and it writes the
 marker later. It checks that the shell stays in the old view until the
 marker exists, moves once, keeps `OLDPWD`, and stays at a later move of
@@ -274,7 +402,7 @@ to the tmux session in control mode, where tmux sends the raw output of the
 shell as messages and draws no screen. So the screen gets every byte that
 the shell writes, and xterm.js keeps the output history itself. A plain tmux
 client sends only the lines that end on its screen, so fast output never
-reached the screen in full. [Terminal](../../docs/protocol/workspace-tools.md#terminal)
+reached the screen in full. [The screen](../../docs/protocol/terminal.md#the-screen)
 gives the requirements.
 
 - **Connect.** The bridge attaches with the client flag `ignore-size`, and
@@ -345,22 +473,32 @@ device of Python's `pty` module, and replay its output in
 `@xterm/headless`. They are skipped when the machine has no tmux, except in
 CI, which installs tmux. Run them with `npm run test -- worker/terminal/bridge`.
 
-An org suspension refuses new sockets with 403 `org_suspended`.
+An org suspension refuses creates, closes, and new sockets with 403 `org_suspended`.
 The shared sandbox rule closes existing sockets at their next access check.
 Terminal status reads remain available.
 
 ### Key Code
 
 - [handler.ts](handler.ts) exports `createTerminalHandler`.
+- [request.ts](request.ts) checks terminal paths through the app request gate.
+- [socket.ts](socket.ts) opens the selected terminal with trusted ttyd arguments and keeps the sandbox connection checks.
+- [socket-lease.ts](socket-lease.ts) cancels a pending or open terminal socket when its close starts.
+- [mutations.ts](mutations.ts) applies running and support checks to terminal writes.
+- [workspace.ts](workspace.ts) owns list snapshots with event numbers, closing marks, and socket leases beside the chat queue.
+- [list-store.ts](list-store.ts) stores the list and emits its events through [chat/store.ts](../chat/store.ts).
 - [connections.ts](connections.ts) owns terminal registration, expiry, and scheduled access checks.
 - [The shared connection reader](../security/connection-access.ts) reads each session, membership, and sandbox identity in one batch.
-- [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password read `startWorkspaceTerminal`, the marker writer `markTerminalRestoreEnded`.
-- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`.
-- [scripts.ts](scripts.ts) builds the password program, the launcher, and the shell server with `credentialScript`, `launcherScript`, and `sessionServerScript`. It also holds the marker path `TERMINAL_RESTORE_MARKER`, and it builds the prompt hook with `terminalPromptCommand`.
+- [service.ts](service.ts) exports `terminalPackagesCommand`, which installs the apt packages without replacing release files. It also exports the setup command `terminalStartCommand`, the password and support read `startWorkspaceTerminal`, and the marker writer `markTerminalRestoreEnded`.
+- [support.ts](support.ts) shares the bounded support probe between start and Restart, and builds the terminal-only restart command.
+- [service-files.ts](service-files.ts) reads and validates the bounded password and support files.
+- [refresh.ts](refresh.ts) refreshes the cache after Restart and publishes changed support through the list owner.
+- [close.ts](close.ts) exports `closeWorkspaceTerminal`, which ends one terminal's session.
+- [The shared terminal contract](../../src/shared/terminal.ts) owns `TERMINAL_PORT`, `FIRST_TERMINAL_ID`, `TERMINAL_LIMIT`, `TERMINAL_ID_PATTERN`, and `isTerminalId`.
+- [scripts.ts](scripts.ts) builds the password program, attach program, launcher, and shell server with `credentialScript`, `attachScript`, `launcherScript`, and `sessionServerScript`. It also owns the terminal paths and attach program name, and builds the prompt hook with `terminalPromptCommand`.
 - [bridge/main.ts](bridge/main.ts) is the terminal bridge, and [bridge-files.ts](bridge-files.ts) lists its files for the system release packager.
 - [The shared bridge messages](../../src/shared/terminal-bridge.ts) give the private messages between the bridge and the screen, and the limits.
-- [credentials.ts](credentials.ts) encrypts the locally generated workspace password.
-- [store.ts](store.ts) binds each cached password to its current sandbox ID and provider account.
+- [credentials.ts](credentials.ts) encrypts the locally generated workspace password and exports `terminalPassword` and `terminalSeveral`.
+- [store.ts](store.ts) binds each cached password and support value to its current sandbox ID and provider account.
 - [privileged.ts](privileged.ts) quotes installation and service control commands.
 - [protocol.ts](protocol.ts) adds server authentication to ttyd's first JSON message. It passes each later frame through unchanged.
 - [scripts.test.ts](scripts.test.ts) and [install.test.ts](install.test.ts) run the scripts and package command with fakes. They also read the release units.
@@ -369,4 +507,4 @@ Terminal status reads remain available.
 - [The workspace lifecycle](../lifecycle/README.md) runs the package command in each build. After the startup script of each create and resume, it runs the setup command and then the password read. Its restore watch calls `markTerminalRestoreEnded`.
 
 See [terminal, previews, and desktop](../../docs/protocol/terminal-previews-and-desktop.md#terminal) and
-[workspace tools](../../docs/protocol/workspace-tools.md#terminal).
+[terminal](../../docs/protocol/terminal.md).

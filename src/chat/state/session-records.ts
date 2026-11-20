@@ -3,6 +3,7 @@ import type { SessionsResponse } from '../../shared/sessions'
 import type { ChatSnapshot } from './chat-snapshot'
 import { withTranscript, type ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
+import { withView } from './saved-view'
 import type { ChatEnvelope } from '../../shared/transcript/session-events'
 import {
   SessionLog,
@@ -141,7 +142,10 @@ export function confirmSessions(
     const openRecords = records.filter((item) => item.closedAt === null)
     // The complete list gives each open session a place in the saved order,
     // and drops the places of sessions that are not open.
-    const view = withSessionPlaces(current.view, openRecords)
+    const placed = withView(current, (view) =>
+      withSessionPlaces(view, openRecords),
+    )
+    const { view } = placed
     const open = orderSessions(openRecords, view)
     // A local tab of a read-only workspace can show a closed session, as
     // `showLocally` says. That session stays shown too.
@@ -150,8 +154,7 @@ export function confirmSessions(
       open.some((item) => item.id === active) ||
       (active !== null && (current.archiveTabs ?? []).includes(active))
     let next: ChatSnapshot = {
-      ...current,
-      view,
+      ...placed,
       sessions: open,
       history: sortHistory(records.filter((item) => item.closedAt !== null)),
       activeSessionId: shown ? current.activeSessionId : pickActive(open, view),

@@ -90,7 +90,7 @@ it('draws again only the blocks whose text changed while the agent writes, and t
     <LinkOpeningProvider value={opening}>
       <LinksProvider value={links}>
         <MentionsProvider root={null} value={files.mentions}>
-          <AgentText live text={`${text}${more}`} />
+          <AgentText id="agent:1" live text={`${text}${more}`} />
         </MentionsProvider>
       </LinksProvider>
     </LinkOpeningProvider>

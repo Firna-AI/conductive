@@ -25,7 +25,10 @@ The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An e2b decision number names a
+decision of the change that adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## Workspace tools
 
@@ -78,8 +81,8 @@ decision number names a decision of the change that adds
 - Older tools keep working with the Worker until their update applies.
   They offer only their own calls.
 - The app sets no limit of its own on the workspaces that agents create
-  (decision 8). The plan limits of the app's Boat account apply, as
-  [The provider](workspaces-and-sandboxes.md#the-provider) says.
+  (decision 8). The plan limits of the provider account of the org apply,
+  as [The provider](workspaces-and-sandboxes.md#the-provider) says.
   [No limit](session-calls.md#no-limit) states the same for sessions.
 - A workspace that an agent creates starts with no approval step in the
   app.
@@ -128,10 +131,11 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 ### Who gets a request
 
 - A request goes only to the Mac of the sender of the turn that asks.
-- The agent login belongs to the starter of the session (decision 105). A
-  request still goes to the Mac of the sender of the turn. A request to the
-  Mac of the workspace owner was rejected, because one member could then ask
-  for commands on the Mac of another member.
+- The turn runs on the login of its session, which can belong to the
+  starter or to the org (decision 105). A request still goes to the Mac of
+  the sender of the turn. A request to the Mac of the workspace owner was
+  rejected, because one member could then ask for commands on the Mac of
+  another member.
 - The first turn of a workspace that a create call made has the sender of
   the calling turn. So does each new turn that a message of the
   [session calls](session-calls.md#the-sender) starts. The requests of
@@ -228,9 +232,16 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 
 ## Computer tools
 
-- The agents keep Boat's computer tools: the MCP server `computer` that
-  every sandbox has (decision 36).
-- The agent runner gives these tools to the agents.
+- On Boat, the agents keep Boat's computer tools: the MCP server
+  `computer` that every Boat sandbox has (decision 36).
+- On E2B, the agents get the same computer tools (e2b decision 216, changed
+  to B on 19 November 2026). The E2B template installs the Cua Driver and
+  registers it as the MCP server `computer`. The tools act on display `:0`,
+  with Chrome, as on Boat.
+- An E2B org image has the tools only when it comes from a template build
+  that has them. Until then, its agents keep the workspace tools only.
+- The agent runner gives the computer tools to the agents when the
+  sandbox has them.
 - The agents use the computer tools for browser work on the desktop of the
   sandbox.
 - The Desktop tool can show the same desktop, so the user can watch the

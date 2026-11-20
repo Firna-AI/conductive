@@ -1,4 +1,5 @@
 import type { Session } from '../../shared/generated/Session'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
@@ -12,13 +13,14 @@ import type { MessageDraft } from '../../shared/messages'
 import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
-import { readContinued } from './read-continued'
+import { readContinued, readRepositoryChanged } from './read-continued'
 import {
   count,
   flag,
   list,
   nullable,
   oneOf,
+  optional,
   record,
   text,
   UnreadableResponse,
@@ -132,8 +134,26 @@ export function readDraft(value: unknown): MessageDraft {
   }
 }
 
+const readLoginType = oneOf<SessionLogin['type']>({ personal: true, org: true })
+
+/** The owner of the login of a session: a member, or the org. */
+export function readSessionLogin(value: unknown): SessionLogin {
+  const source = record(value, 'session login')
+  return readLoginType(source.type) === 'org'
+    ? { type: 'org', orgId: text(source.orgId) }
+    : { type: 'personal', userId: text(source.userId) }
+}
+
+/**
+ * A session record. An empty session and an older record have no `login`,
+ * so the record then has none either. An empty session names the default
+ * login of its starter as `defaultLogin`, which its first message takes,
+ * while a login serves that starter. An older record names none.
+ */
 export function readSession(value: unknown): Session {
   const source = record(value, 'session')
+  const login = optional(nullable(readSessionLogin))(source.login)
+  const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -145,6 +165,8 @@ export function readSession(value: unknown): Session {
     activeTurnStartedAt: nullable(count)(source.activeTurnStartedAt),
     retryMessageId: nullable(text)(source.retryMessageId),
     startedBy: nullable(readSender)(source.startedBy),
+    ...(login === undefined ? {} : { login }),
+    ...(defaultLogin === undefined ? {} : { defaultLogin }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),
@@ -173,6 +195,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
   switch (source.type) {
     case 'workspace.continued':
       return readContinued(source)
+    case 'workspace.repository-changed':
+      return readRepositoryChanged(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

@@ -11,9 +11,14 @@ sees it. Its child pages:
 - `reveal` has the value of PROD_DATABASE_URL that Cal revealed, with Copy
   and Hide, and the new record of the reveal.
 - `add` has the Add secret form of an admin, with the switch for all
-  agents.
+  agents. The hint of the name gives the characters that a new name can
+  use. Its `invalid-name` variant has the form after Save secret refused
+  the name "Linear API key": the error of the name, and each field as Cal
+  typed it.
 - `replace` has the Replace form of VERCEL_TOKEN, a secret that Priya
   added: its description to change, and an empty field of a new value.
+  Its `invalid-name` variant lists Cloudflare (read-only), a secret with an
+  older name, and has its Replace form, which keeps the name.
 - `delete` has the question before Delete of VERCEL_TOKEN.
 - `member` has the tab as Priya, a member, sees it: each value as dots, no
   Reveal, and Replace and Delete only on her own secrets. Its `add` variant
@@ -21,12 +26,12 @@ sees it. Its child pages:
   has the Replace form of one of her secrets.
 - `empty` has Firna, a new org, without secrets.
 
-The `secrets` variant of `app/orgs/suspended/settings` has the tab of a
+The child page `app/orgs/suspended/settings/secrets` has the tab of a
 suspended org, with no action.
 
 `app/new-workspace/capabilities` has the Capabilities control open on the
 New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
-Mac access on. A phone opens it as a sheet from the menu of the + button.
+Mac access off. A phone opens it as a sheet from the menu of the + button.
 Its `no-secrets` variant has Firna without secrets, and its `menu` variant
 has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
 the same control in the dialog.
@@ -49,7 +54,10 @@ composer, while the tool call waits. Its child pages:
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet
     that Give a value opens. Its `workspace` and `saved` variants have the
-    other two choices.
+    other two choices. Its `invalid-name` variant has Google Places key, a
+    name with spaces, so Save as secret is off. Its `mixed-invalid-name`
+    variant adds that name to a mixed request, and Save as secret is off
+    for every value.
   - `late` has the request after the turn ended, with no value yet. Its
     `value` variant has the value that Priya types later, and its `given`
     variant has her answer for this workspace and the line of the app that
@@ -66,7 +74,10 @@ composer, while the tool call waits. Its child pages:
     because Cal stopped sharing his login, so the agent learns of it at the
     next message. Its `login-gone` variant has the same Allow after Cal
     removed his login, so the line says that the agent learns of it when
-    Cal connects Claude again.
+    Cal connects Claude again. Its `org-login-gone` variant has the same
+    Allow in a session on the Claude login of Acme, after an admin removed
+    that login. Its line says that the agent learns of it when an admin
+    connects Acme's Claude login again.
   - `denied` has a late deny, which sends nothing.
   - `not-answered` has the request that ended when Cal archived the
     workspace.

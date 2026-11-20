@@ -1,5 +1,6 @@
 import { activeAdminPredicate } from '../members/org-data'
 import { secretEditorPredicate, secretMemberPredicate } from './access'
+import { requireSecretName } from './names'
 
 export async function insertSecret(
   db: D1Database,
@@ -14,6 +15,7 @@ export async function insertSecret(
     now: number
   },
 ): Promise<boolean> {
+  requireSecretName(input.name)
   const row = await db
     .prepare(
       `INSERT INTO org_secrets (id, org_id, name, description, value_ciphertext,

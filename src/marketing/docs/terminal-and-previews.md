@@ -23,13 +23,17 @@ A preview shows a web server that runs there too.
 1. Open **Terminal** in the workspace.
 2. Enter the command you want to run.
 
-On a computer, select the **Terminal** tab to give the terminal focus.
+On a computer, select the **Terminal** tab to give the terminal keyboard focus.
 **Go to Terminal** in the command palette does the same.
 So does its keyboard shortcut, by default **⌘J** on a Mac or **Ctrl+J** on another computer.
 If the terminal is still connecting, it gets focus when it appears.
 On a phone, or after you select something else, select the terminal area to give it focus.
 
-The shell starts in the workspace's repository folder.
+A new workspace starts with **Terminal 1**.
+Each terminal starts its own shell in the workspace's repository folder.
+After a repository change, each new shell starts in the folder of the new repository.
+Each idle shell in the old folder also moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command stays in its folder.
 Its prompt shows the current folder name.
 Use `pwd` to see the full path.
 For a quick check, you can run:
@@ -50,16 +54,75 @@ A local address, such as `http://localhost:3000`, opens **Preview** at its port.
 Other links open in a new browser tab.
 When a program shows a link with a label, its hint names the website that it opens.
 
-The shell keeps running when its connection drops.
-Reconnect to return to the same shell and running commands.
-**Restart** in the workspace header also drops the connection until the agents are back.
-A stop of the cloud computer ends those commands.
-After a resume, start any needed server again.
+Each terminal's shell keeps running when its connection drops.
+When the connection drops, such as during an update of Conductive, the terminal connects again once by itself.
+If that does not work, it shows **Disconnected**, and the terminal keeps its last output so that you can copy it.
+Select **Reconnect** to return to the same shell and running commands.
+**Restart** in the workspace header drops terminal connections until the agents are back.
+It keeps the shells and their commands running.
+If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
+Stopping the cloud computer ends every terminal's shell and running commands.
+The terminal tabs stay after a resume.
+Start any needed server again in its terminal.
+After a repository change, a server that already runs keeps the old folder, so start it again in the new folder.
 
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.
 A command that still runs at the stop, such as a server, is not kept.
-A workspace with older cloud computer software gets this with an automatic software update at a later start.
+After an automatic software update, an older cloud computer gets the new terminal software at **Restart** or a later computer start.
+
+## Use terminal tabs
+
+The row above the terminal shows tabs named **Terminal 1** to **Terminal 10**.
+Every member sees the same terminals on each device.
+Use one terminal for a development server and another for tests.
+
+1. Select **+**, named **New terminal**, at the end of the row.
+2. Run a command in the new terminal.
+3. Select another terminal's tab to switch to it.
+
+On a computer, **+**, **New terminal** in the palette, and a click on a terminal tab give the shown terminal keyboard focus.
+When you move along the tabs with the keyboard, focus stays on the row.
+
+Switching tabs keeps the other shells and their commands running.
+On a phone, the tabs appear at the top of **Terminal**.
+Scroll the row sideways if a tab is out of view.
+A new terminal takes the lowest free number.
+
+On a computer, you can also use the command palette while the right column shows:
+
+1. Select **Search** above the workspace list.
+2. Search for `terminal`.
+3. Select **New terminal**.
+
+The palette offers this action only while the right column shows, the cloud computer runs with terminal tabs, and the workspace has fewer than 10 terminals.
+A phone does not offer it in the palette, so use **+** there.
+**New terminal** has no default keyboard shortcut.
+
+At the workspace limit, **+** turns off.
+The line below the tabs says:
+
+> A workspace holds up to 10 terminals. Close one to open another.
+
+## Close a terminal
+
+1. Select the **×** on the terminal's tab.
+2. Read the confirmation for that terminal.
+3. Select **Close terminal** to confirm.
+
+Closing a terminal ends its shell and running commands for every member of the workspace.
+Its tab closes on every device.
+The last terminal has no close button.
+
+## Use an older cloud computer
+
+An older cloud computer can show one terminal with no tab row or **+** button.
+Its existing terminal still works.
+After an automatic software update, select **Restart** in the workspace header to get terminal tabs.
+A later start of the cloud computer also brings them.
+
+- [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
+
 
 ## Copy output
 
@@ -77,7 +140,7 @@ Another panel can show smaller text, or empty space after the terminal.
 Type in a panel to give the terminal its size.
 
 A workspace with older cloud computer software shows only the visible screen when you drag.
-An automatic software update brings the newer terminal at a later start.
+After an automatic software update, **Restart** or a later cloud computer start brings the newer terminal.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
 
 ## Know which GitHub account a command uses
@@ -88,7 +151,7 @@ The CLI is ready to use without a separate login step.
 | Where the command runs | GitHub account |
 | --- | --- |
 | In an agent turn | The person whose message started the turn |
-| In the shared Terminal | The workspace owner |
+| In any workspace terminal | The workspace owner |
 | GitHub CLI outside an agent turn | The workspace owner |
 
 Commits name the person in the table as both author and committer.
@@ -101,14 +164,15 @@ Each commit uses their private GitHub no-reply address, `<id>+<login>@users.nore
 Here, `<id>` is their GitHub user ID and `<login>` is their GitHub login.
 GitHub links the commit to their account without showing their private email.
 
-Every member connected to that Terminal uses the same owner identity.
+Every member connected to a workspace terminal uses the same owner identity.
 An explicit `GH_TOKEN` or `GITHUB_TOKEN` value can replace the supplied CLI login.
 
 The token can reach repositories that both that person and the GitHub App can access.
 This can include repositories outside the Conductive org.
 
-**Merge** and **Continue** in the pull request bar use the GitHub account of the member who selects them.
-The shared Terminal still uses the workspace owner's account.
+**Merge**, **Ready for review**, and **Continue** in the pull request bar use the GitHub account of the member who selects them.
+A repository change fetches with the GitHub account of the member who changes the repository.
+All workspace terminals still use the workspace owner's account.
 
 - [Use pull request actions](/docs/pull-requests)
 
@@ -143,7 +207,8 @@ Use the port of your server when it reports a different one.
 
 An older cloud computer can show only the **Port** field.
 Use the manual steps there.
-If Preview says it needs newer cloud computer software, an automatic update brings the required preview support at a later start.
+If Preview asks for newer software, select **Restart** in the workspace header.
+A later computer start also applies the update.
 An existing workspace also gets the server list with an automatic software update.
 
 - [Understand cloud computer software updates](/docs/cloud-computer#apply-setup-changes)
@@ -194,8 +259,8 @@ Use **Open** if only the framed view fails.
 
 ## Understand access to the computer
 
-The terminal is shared with members of the org.
-Its output does not hide secrets.
+Every terminal is shared with members of the org.
+Terminal output does not hide secrets.
 Members with terminal access can also obtain GitHub credentials available to the workspace.
 
 Conductive offers **Terminal** and **Preview** as workspace tools.

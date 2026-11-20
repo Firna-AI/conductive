@@ -11,6 +11,7 @@ import { listToolWorkspaces } from './workspace-data'
 import { workspaceToolMethods } from './workspace-routes'
 import { workspaceListInput } from './workspace-input'
 import { HttpError } from '../http'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'
 import { isAgentSessionPath } from './session-routes'
@@ -61,6 +62,7 @@ export async function listFromTool(
   caller: CallingWorkspace,
   services: AgentToolServices,
   origin: string,
+  now: number,
 ): Promise<
   | AgentListWorkspacesResponse
   | AgentListRepositoriesResponse
@@ -69,7 +71,11 @@ export async function listFromTool(
 > {
   switch (url.pathname) {
     case MACHINE_PATHS.repositories: {
-      const repositories = await readImageRepositories(db, caller.orgId)
+      const repositories = await readImageRepositories(
+        db,
+        caller.orgId,
+        await readOrgProviderAccount(db, caller.orgId),
+      )
       repositories.sort(
         (a, b) =>
           compareText(a.fullName.toLowerCase(), b.fullName.toLowerCase()) ||
@@ -101,6 +107,7 @@ export async function listFromTool(
         caller.orgId,
         origin,
         workspaceListInput(url.searchParams),
+        now,
       )
   }
 }

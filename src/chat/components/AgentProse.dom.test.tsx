@@ -35,7 +35,9 @@ const answer = [
 
 it('draws quotes with their blocks, rules, emphasis, strikethrough, and line breaks in an answer, with the shared prose style', () => {
   const page = document.createElement('div')
-  page.innerHTML = renderToStaticMarkup(<AgentText text={answer} />)
+  page.innerHTML = renderToStaticMarkup(
+    <AgentText id="agent:1" text={answer} />,
+  )
   const root = page.firstElementChild
   if (!root) throw new Error('The answer has no element')
   expect({
@@ -72,7 +74,7 @@ it('draws quotes with their blocks, rules, emphasis, strikethrough, and line bre
 })
 
 it('shows a quote, a rule, and a line break of a message line in the line, closed and open, as spans with a space before each break', async () => {
-  const view = await mount(<MessageLine text={answer} />)
+  const view = await mount(<MessageLine id="agent:1" text={answer} />)
   const details = view.container.querySelector('details')
   const summary = details?.querySelector('summary')
   if (!details || !summary) throw new Error('The message has no line')
@@ -122,7 +124,7 @@ it('opens a quote that holds the first table of a message under its line, and ke
     '',
     '---',
   ].join('\n')
-  const view = await mount(<MessageLine text={text} />)
+  const view = await mount(<MessageLine id="agent:1" text={text} />)
   const summary = view.container.querySelector('summary')
   if (!summary) throw new Error('The message has no line')
   const closed = textOf(summary)

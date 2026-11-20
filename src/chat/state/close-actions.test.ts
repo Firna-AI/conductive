@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { sessionPaths } from '../../shared/sessions'
+import type { WorkspaceTab } from '../../shared/workspace-view'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { chatFor } from './test-kit'
 
@@ -100,6 +101,55 @@ describe('closing a session tab', () => {
       tabs: [id, 'debounce'],
     })
     expect(chat.controller.getSnapshot().notice).toMatchObject({
+      sessionId: null,
+      title: "The session didn't close",
+    })
+  })
+
+  it('keeps the Preview tab and the last chat session after a failed close', async () => {
+    const chat = chatFor({
+      conversation: 'history',
+      hold: isClose,
+      answer: async (request) =>
+        isClose(request)
+          ? Response.json({ error: 'The server failed.' }, { status: 503 })
+          : null,
+    })
+    await chat.controller.start()
+    expect(tabsOf(chat)).toMatchObject({
+      open: [id, 'debounce'],
+      shown: id,
+      tabs: [id, 'debounce'],
+    })
+    const closing = chat.controller.requestClose(id)
+    await vi.waitFor(() => expect(chat.held).toHaveLength(1), shortly)
+    expect(tabsOf(chat)).toMatchObject({
+      open: ['debounce'],
+      shown: 'debounce',
+      tabs: ['debounce'],
+    })
+    const preview: WorkspaceTab = { kind: 'preview', port: 3000 }
+    chat.controller.updateView((view) => ({
+      ...view,
+      tabs: [...view.tabs, preview],
+      activeTab: preview,
+    }))
+    chat.held.splice(0, 1)[0]()
+    await closing
+    const snapshot = chat.controller.getSnapshot()
+    expect({
+      activeTab: snapshot.view?.activeTab,
+      activeSessionId: snapshot.activeSessionId,
+    }).toEqual({
+      activeTab: { kind: 'preview', port: 3000 },
+      activeSessionId: 'debounce',
+    })
+    expect(snapshot.view?.tabs).toEqual([
+      { kind: 'session', sessionId: id },
+      { kind: 'session', sessionId: 'debounce' },
+      { kind: 'preview', port: 3000 },
+    ])
+    expect(snapshot.notice).toMatchObject({
       sessionId: null,
       title: "The session didn't close",
     })

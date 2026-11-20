@@ -85,8 +85,15 @@ streams, and the order of the runner commands.
   in the queue, and its commands wait. When Continue ends, the waiting
   commands go out with the new branches, as
   [Continue](../lifecycle/continue.md#the-reservation) says.
-- A `workspace.continued` note names its session, so the history of that
-  session holds it, also after the session closes and reopens.
+- A [repository change](../lifecycle/repository-change.md#the-reservation)
+  holds each turn in the same way. After it ends, the turns wait until the
+  runner names the folder of the new repository in a new hello, as
+  [Key code](key-code.md) says for `runner-repository-move.ts`.
+- A `workspace.continued` note and a `workspace.repository-changed` note
+  name their session, so the history of that session holds them, also
+  after the session closes and reopens. An app that does not know the
+  `workspace.repository-changed` type skips it, because `readEnvelope`
+  keeps the event number of an event that it cannot read.
 - The internal `StoredTurn.started` marker keeps dispatch evidence after an end.
 - Stop, a close that stops a turn, and a tool stop or close store and push
   `turn.stop-requested` before they interrupt the runner. The event names

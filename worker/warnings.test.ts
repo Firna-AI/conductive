@@ -2,7 +2,12 @@ import { afterEach, expect, it, vi } from 'vitest'
 
 import { HttpError } from './http'
 import { ProviderError } from './sandbox/errors'
-import { errorSummary, WarningId } from './warning-values'
+import {
+  errorSummary,
+  WarningId,
+  WarningStreamId,
+  warningTurnEndState,
+} from './warning-values'
 import { CommandFailed, warnWorker } from './warnings'
 
 const marker = 'private_command_output'
@@ -118,4 +123,60 @@ it('logs only declared fields when a typed warning has extra caller fields', () 
       },
     ],
   ])
+})
+
+it('keeps checked runner identities and strips private fields and invalid diagnostic values', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  const productionId = 'abcdefghijklmnopqrstuvwxyz0123456789_-ABCDE'
+  const streamId = '12345678-1234-4234-8234-123456789abc'
+  const processStartId = 'abcdef01-2345-4678-89ab-cdef01234567'
+  const warning = {
+    kind: 'runner_connected' as const,
+    workspaceId: WarningId.checked(productionId),
+    connectionId: WarningId.checked(productionId),
+    streamId: WarningStreamId.checked(streamId),
+    processStartId: WarningStreamId.checked(processStartId),
+    protocolVersion: 2,
+    token: marker,
+    message: marker,
+    fileContent: marker,
+    closeReason: marker,
+  }
+  warnWorker(warning)
+  warnWorker({
+    ...warning,
+    kind: 'turn_ended_without_stop_request',
+    turnId: WarningId.checked(marker),
+    state: 'failed',
+    streamId: WarningStreamId.checked(marker),
+    processStartId: WarningStreamId.checked(marker),
+    protocolVersion: Number.POSITIVE_INFINITY,
+  })
+  expect(warn.mock.calls).toEqual([
+    [
+      {
+        kind: 'runner_connected',
+        message: 'The runner of a workspace connected.',
+        workspaceId: productionId,
+        connectionId: productionId,
+        streamId,
+        processStartId,
+        protocolVersion: 2,
+      },
+    ],
+    [
+      {
+        kind: 'turn_ended_without_stop_request',
+        message: 'A turn ended without a Stop request.',
+        workspaceId: productionId,
+        connectionId: productionId,
+        streamId: 'unknown',
+        processStartId: 'unknown',
+        protocolVersion: null,
+        turnId: 'unknown',
+        state: 'failed',
+      },
+    ],
+  ])
+  expect(warningTurnEndState(marker)).toBe('unknown')
 })

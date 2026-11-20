@@ -146,7 +146,7 @@ fn rejects_invalid_shared_write_and_resource_fields() -> Result<()> {
 #[test]
 fn preserves_list_filters_and_safe_transcript_boundaries() -> Result<()> {
     let filters = json!({"ownerId":"member", "parentId":"parent", "repositoryId":"repo", "state":"ready", "query":"", "updatedSince":-1,
-        "archived":false, "limit":100, "offset":9007199254740991u64});
+        "archived":false, "removed":true, "limit":100, "offset":9007199254740991u64});
     assert_eq!(
         body(parsed(Name::ListWorkspaces, filters.clone()).internal()?)?,
         filters
@@ -200,6 +200,21 @@ fn rejects_invalid_filters_and_transcript_positions() -> Result<()> {
             Name::ListWorkspaces,
             json!({"archived":"false"}),
             InputError::Archived,
+        ),
+        (
+            Name::ListWorkspaces,
+            json!({"removed":"true"}),
+            InputError::Removed,
+        ),
+        (
+            Name::ListWorkspaces,
+            json!({"removed":1}),
+            InputError::Removed,
+        ),
+        (
+            Name::ListWorkspaces,
+            json!({"removed":null}),
+            InputError::Removed,
         ),
         (Name::ListWorkspaces, json!({"query":7}), InputError::Query),
         (

@@ -5,19 +5,38 @@ of the terminal, the port previews, and the desktop. It also covers the
 proxies to a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
-[Tools of a workspace](workspace-tools.md) states what these tools show.
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Tools of a workspace](workspace-tools.md) and [Terminal](terminal.md)
+state what these tools show. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A terminal tabs decision number names a decision of the change that
+adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
 
 ## Terminal
 
-- The terminal socket runs on `app.conductive.build`, behind its gate.
+- The socket of each terminal runs on `app.conductive.build`, behind its
+  gate.
 - The terminal listens on a private port of the sandbox. The Worker
-  connects to it with Boat's port cookie and a password for each
-  workspace.
+  connects to it with the port credential of the provider and a password
+  for each workspace.
 - Reason: sandbox code can make a port public, and the password still
   guards the terminal.
+- Only the Worker chooses the shell that a socket reaches. It chooses a
+  terminal from the list of terminals of the workspace (terminal tabs
+  decision 1).
+- The sandbox also checks the terminal that the Worker names. It opens no
+  shell for a name that is not valid.
+- Reason: the browser then passes no value of its own to a program in the
+  sandbox. The password of each workspace still guards each terminal.
+- A socket for a terminal that is not in the list of the workspace gets no
+  shell. A socket for a terminal whose close has started gets no shell
+  either.
+- Reason: a reconnect during a close would otherwise start a shell that no
+  tab shows.
+- The open and the close of a terminal pass the same checks as its
+  socket. So the sandbox must run, and neither the workspace owner nor the
+  org may be suspended.
+- Reason: the Terminal tool shows only while the sandbox runs.
 
 ## Port previews
 
@@ -148,8 +167,11 @@ decision number names a dated record, as
   `Origin` gets none.
 - Reason: some servers, such as `mokly serve`, refuse a request whose
   `Origin` does not match its `Host`.
-- The preview proxy adds Boat's `_port_auth` cookie on the server side. It
-  drops any `_port_auth` cookie that the browser sends.
+- The preview proxy adds the port credential of the provider on the server
+  side. On Boat, it is the `_port_auth` cookie. On E2B, it is the traffic
+  token of the sandbox, in the `e2b-traffic-access-token` header.
+- The proxy drops each such cookie or header that the browser sends. The
+  browser never gets a port credential.
 - The preview proxy forwards the cookies of the previewed app. It never
   sends a credential cookie to a sandbox. It drops each credential cookie
   that a sandbox response sets.
@@ -210,9 +232,10 @@ decision number names a dated record, as
   either protection.
 - The relay forwards a request only to a port of its own sandbox. Reason:
   each process in the sandbox can reach these ports already.
-- A request through the relay reaches the previewed server without Boat's
-  `_port_auth` cookie. Reason: with that cookie, a request can reach each
-  port of the sandbox through the relay, with no check by the Worker.
+- A request through the relay reaches the previewed server without its
+  provider's port credential. This includes Boat's `_port_auth` cookie and
+  E2B's traffic-token header. Reason: with that credential, a request can
+  reach each port of the sandbox with no check by the Worker.
 - A request through the relay reaches the previewed server with no
   `Forwarded` or `X-Forwarded-*` header. Reason: the server must see one
   consistent local request. For example, Next.js compares `Origin` with
@@ -220,8 +243,12 @@ decision number names a dated record, as
 
 ## Desktop
 
-- The Worker asks Boat for a new desktop URL on each page load. The URL
-  works for 10 minutes and carries its token in the fragment.
+- Only a sandbox on Boat has a desktop stream. The Worker asks Boat for a
+  new desktop URL on each page load. The URL works for 10 minutes and
+  carries its token in the fragment.
+- A sandbox on E2B has no desktop, and the Worker gives it no desktop URL.
+  Reason: the app hides the Desktop tool, as
+  [Desktop](workspace-tools.md#desktop) says.
 - An open desktop stream does not pass through the Worker. So it can keep
   playing after its user loses access, until the sandbox stops. This is
   the one exception to the 30-second rule of decision 70 (decision 117).

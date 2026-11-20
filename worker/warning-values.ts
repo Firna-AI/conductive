@@ -1,4 +1,10 @@
+import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
 import { HttpError } from './http'
+import {
+  type MailDiagnosticFields,
+  mailDiagnosticFields,
+} from './mail-diagnostics'
+import { MailDeliveryError } from './mail-sender'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
 
@@ -21,6 +27,51 @@ export class WarningId {
   }
 }
 
+/** Production runner streams use UUIDs and retain them across process starts. */
+export class WarningStreamId {
+  private readonly value: string
+
+  private constructor(value: string) {
+    this.value = value
+  }
+
+  static checked(value: string): WarningStreamId {
+    return new WarningStreamId(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(
+        value,
+      )
+        ? value
+        : 'unknown',
+    )
+  }
+
+  get text(): string {
+    return this.value
+  }
+}
+
+/** A diagnostic value cannot reject a hello or prevent saved connection restore. */
+export function warningProcessStartId(value: unknown): string | null {
+  if (value === undefined || value === null) return null
+  return WarningStreamId.checked(typeof value === 'string' ? value : 'unknown')
+    .text
+}
+
+export function warningProtocolVersion(value: number | null): number | null {
+  return value !== null && Number.isSafeInteger(value) && value > 0
+    ? value
+    : null
+}
+
+const TURN_END_STATES = ['finished', 'stopped', 'failed'] as const
+export type WarningTurnEndState = (typeof TURN_END_STATES)[number]
+
+export function warningTurnEndState(
+  value: string,
+): WarningTurnEndState | 'unknown' {
+  return TURN_END_STATES.find((state) => state === value) ?? 'unknown'
+}
+
 const PROVIDER_CODES = [
   'invalid_path',
   'invalid_name',
@@ -36,6 +87,8 @@ const HTTP_CODES = [
   'org_suspended',
   'user_suspended',
   'workspace_archived',
+  'nesting_cycle',
+  'nesting_limit',
   'workspace_start_failed',
   'workspace_start_stopped',
   'image_build_failed',
@@ -49,6 +102,9 @@ const HTTP_CODES = [
   'current_turn_required',
   'github_reconnect_required',
   'github_refresh_failed',
+  'attachment_copy_failed',
+  'attachment_missing',
+  'attachment_not_found',
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'
@@ -86,10 +142,14 @@ export type ErrorSummary =
       exitCode: number | null
       timedOut: boolean
     }
+  | { kind: 'd1'; reason: D1ErrorReason }
+  | ({ kind: 'mail' } & MailDiagnosticFields)
   | { kind: 'error' | 'unknown' }
 
 /** Keep fixed error kinds, allowlisted codes and states, and numeric outcomes. */
 export function errorSummary(error: unknown): ErrorSummary {
+  if (error instanceof MailDeliveryError)
+    return { kind: 'mail', ...mailDiagnosticFields(error.diagnostic) }
   if (error instanceof ProviderError)
     return {
       kind: 'provider',
@@ -107,5 +167,7 @@ export function errorSummary(error: unknown): ErrorSummary {
       exitCode: error.exitCode,
       timedOut: error.timedOut,
     }
+  const reason = d1ErrorReason(error)
+  if (reason) return { kind: 'd1', reason }
   return { kind: error instanceof Error ? 'error' : 'unknown' }
 }

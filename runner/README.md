@@ -1,7 +1,7 @@
 # Agent runner
 
 The agent runner is the program of Conductive in each cloud computer, a
-Boat sandbox. It runs the agents powered by Claude and Codex for one
+sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
 repository and the listening ports.
 
@@ -19,6 +19,20 @@ says.
 The `hello` advertises every login kind that this runner can run.
 The Worker checks that list before dispatching a turn or message.
 A login kind that a runner does not advertise gets no command, and the turn fails with recovery steps.
+
+The `hello` also names the repository folder of the runner, as
+`repositoryFolder`. Only such a runner gets `repository.move`, because an
+older runner closes its socket on an unknown command. The runner then moves
+to that folder in the same process, after its turns end, and sends a new
+`hello`. It refuses a folder that is not a repository folder of the sandbox.
+[Agent input](agent-input.md#the-repository-line) gives the repository line
+of each later message. The [runner library](../crates/cnd-runner/README.md)
+gives the move.
+
+The `hello` also offers complete tool details, as `completeToolDetails`.
+Only after a `welcome` that accepts them does the runner send a long tool
+detail whole, in private parts, as [Event limits](event-limits.md) says.
+A Worker without that support omits the field, so the runner keeps its cut.
 
 The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
@@ -57,7 +71,9 @@ receipts, and the listening-port scan and scheduling boundaries.
 
 The [preview relay guide](preview-relay.md) gives what the relay does, its
 entry points, how it listens, its build, and its separate service with
-socket activation.
+socket activation. It also gives the private ingress checks, the HTTP and
+WebSocket forwarding, and the tests.
+The relay preserves `Host: localhost:<port>` for the previewed app.
 
 ## Commands
 

@@ -1,5 +1,6 @@
 import MarkdownIt, { type Env, type Token } from 'markdown-it'
 import { limitBlockDepth } from './block-depth'
+import { joinEmptyItemLists } from './empty-item-lists'
 import { limitInlineDepth } from './inline-depth'
 import { sparseTable } from './table-rule'
 import { bareAddressAt } from './web-links'
@@ -57,6 +58,11 @@ markdownParser.core.ruler.after('block', 'table_budget', (state) => {
   state.tokens = []
   state.md.block.parse(state.src, state.md, state.env, state.tokens)
 })
+markdownParser.core.ruler.after(
+  'table_budget',
+  'empty_item_lists',
+  joinEmptyItemLists,
+)
 
 markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
   if (state.src[state.pos] !== '<') return false
@@ -131,6 +137,15 @@ inlineRules.at('image', (state, silent) => {
 export function linkTail(token: Token): string | null {
   const tail = token.meta?.tail
   return typeof tail === 'string' ? tail : null
+}
+
+/**
+ * The source text of an image token, as the text wrote it, such as
+ * `![Login](shots/login.png)`. A copy of a picture in the chat gives it.
+ */
+export function imageSource(token: Token): string {
+  const source = token.meta?.source
+  return typeof source === 'string' ? source : token.content
 }
 
 /** Parses blocks, keeping the original source lines for depth and table tails. */

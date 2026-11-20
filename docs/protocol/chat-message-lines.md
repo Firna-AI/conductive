@@ -51,6 +51,10 @@ boxes at `app/chat/lists/tasks-work`.
   rule after the first table shows as in an answer.
 - Reason: the closed line stays one line, as for a table. The colour shows
   where a quote ends, so the words after it read as new text.
+- A closed message line shows the Markdown image of a picture file of the
+  workspace as its link. An open message line shows its picture, as
+  [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
+  says.
 - A closed message line shows each task box as a fixed check box in the
   line, before the words of its task (Markdown parser decision 14 B,
   18 November 2026). An open message line shows each task box as an

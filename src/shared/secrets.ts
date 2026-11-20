@@ -73,6 +73,16 @@ export interface WorkspaceCapabilities {
   macAccess: boolean
 }
 
+/**
+ * The capabilities of a new workspace without a choice, as
+ * [Mac access](../../docs/protocol/secrets.md#mac-access) says. The draft
+ * of New workspace, the Worker, and the dev fake all start from it.
+ */
+export const NEW_WORKSPACE_CAPABILITIES: WorkspaceCapabilities = {
+  preapprovedSecretIds: [],
+  macAccess: false,
+}
+
 export interface SessionSecretApproval {
   secretId: string
   sessionId: string

@@ -2,13 +2,18 @@ import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import type { WorkspaceEvent } from '../shared/events'
 import type { TerminalResponse } from '../shared/terminal'
 
-import type { ReadyTerminal } from './terminalApi'
+import {
+  readyReducer,
+  readyTerminals,
+  type ReadyTerminals,
+  type ReadyTerminalsAction,
+} from './readyTerminals'
 import type { ToolError, ToolResult } from './tool-parts/request'
 
 type TerminalView =
   | { state: 'loading' | 'starting' | 'stopped' }
   | { state: 'error'; error: ToolError }
-  | { state: 'ready'; terminal: ReadyTerminal; ended: boolean }
+  | ReadyTerminals
 
 export interface TerminalReadiness {
   view: TerminalView
@@ -19,7 +24,7 @@ export interface TerminalReadiness {
 export type TerminalReadinessAction =
   | { type: 'answer'; read: number; result: ToolResult<TerminalResponse> }
   | { type: 'retry' }
-  | { type: 'ended' }
+  | ReadyTerminalsAction
 
 export const initialReadiness: TerminalReadiness = {
   view: { state: 'loading' },
@@ -41,10 +46,18 @@ function nextRead(state: TerminalReadiness): TerminalReadiness {
 function answered(result: ToolResult<TerminalResponse>): TerminalView {
   if (!result.ok) return { state: 'error', error: result.error }
   const terminal = result.value
-  if (terminal.state === 'ready') {
-    return { state: 'ready', terminal, ended: false }
-  }
+  if (terminal.state === 'ready') return readyTerminals(terminal)
   return { state: terminal.state }
+}
+
+/** Gives an action of the tool to its ready terminals, if they show. */
+function onReady(
+  state: TerminalReadiness,
+  change: (ready: ReadyTerminals) => ReadyTerminals,
+): TerminalReadiness {
+  if (state.view.state !== 'ready') return state
+  const view = change(state.view)
+  return view === state.view ? state : { ...state, view }
 }
 
 /**
@@ -72,12 +85,26 @@ export function readinessReducer(
       const runs = running.has(action.workspace.state)
       return waiting && runs ? nextRead(state) : state
     }
+    case 'listed':
+      // The answer of a read that runs can hold the list from before the
+      // change, so the change needs a new read. A ready tool takes the list
+      // when its event is newer than the list that shows.
+      if (state.view.state === 'loading') return nextRead(state)
+      // A workspace always has a terminal, so an empty list changes nothing.
+      if (action.terminals.length === 0) return state
+      return onReady(state, (ready) => readyReducer(ready, action))
     case 'retry':
       return nextRead(state)
+    case 'shown':
     case 'ended':
-      return state.view.state === 'ready'
-        ? { ...state, view: { ...state.view, ended: true } }
-        : state
+    case 'reconnect':
+    case 'open':
+    case 'opened':
+    case 'open-failed':
+    case 'close':
+    case 'closed':
+    case 'close-failed':
+      return onReady(state, (ready) => readyReducer(ready, action))
     default:
       // The other events of the workspace leave the terminal as it is.
       return state

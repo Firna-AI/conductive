@@ -1,5 +1,6 @@
 //! Private Node child with bounded JSON framing and process-group cleanup.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::process::Stdio;
 use std::sync::Arc;
@@ -12,6 +13,7 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{ChildStdin, ChildStdout, Command};
 use tokio::sync::{Mutex, watch};
 
+use crate::config::Configuration;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::json::codec;
 
@@ -24,12 +26,34 @@ pub struct NodeHelpers {
     pub node: PathBuf,
     /// Helper bundle of that release.
     pub program: PathBuf,
+    /// Variables that replace inherited values, such as the folder after a move.
+    pub environment: BTreeMap<String, String>,
+}
+
+impl NodeHelpers {
+    /// The folder and branch variables of a configuration, for agent commands.
+    pub fn workspace_environment(configuration: &Configuration) -> BTreeMap<String, String> {
+        let folder = configuration.cwd.to_string_lossy().into_owned();
+        let mut environment = BTreeMap::from([
+            ("CONDUCTIVE_REPOSITORY".to_owned(), folder.clone()),
+            ("CONDUCTIVE_REPOSITORY_DIR".to_owned(), folder),
+            (
+                "CONDUCTIVE_DEFAULT_BRANCH".to_owned(),
+                configuration.default_branch.clone(),
+            ),
+        ]);
+        if let Some(branch) = &configuration.workspace_branch {
+            environment.insert("CONDUCTIVE_WORKSPACE_BRANCH".to_owned(), branch.clone());
+        }
+        environment
+    }
 }
 
 impl HelperPorts for NodeHelpers {
     fn port(&self) -> Result<Arc<dyn HelperPort>> {
         let mut child = Command::new(&self.node)
             .arg(&self.program)
+            .envs(&self.environment)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())

@@ -37,6 +37,10 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   the picture of an image file that holds bytes, with a `data:` address
   of those bytes, or, for each other file, the text or the binary mark of
   `fileText` in `model/file-text.ts`.
+- `page/picture-reads.ts`: `createPictureReads`, a picture reader for one
+  open chat, and its `ChatPictures` and `PictureRead` types. It shares
+  file reads, limits them to two at once, and keeps each path's result.
+  Its unit tests cover queue order, cached results, failures, and aborts.
 - `page/FileBody.tsx`: `FileContent`, the body of a file page. It draws
   a picture through the mockups' `ImageView`, named by the file name of
   the label of its path. `page/decode-picture.ts` gives `decodePicture`,

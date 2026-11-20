@@ -100,6 +100,34 @@ Adding a repository starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 
+## Connect an org agent login
+
+An admin can connect one API key or own endpoint for each agent on the org's **Agents** tab.
+Open **Settings**, then **Agents**, after **Cloud computer**.
+Other members can read the login's kind, an endpoint's host, and the **Use for every member** setting.
+They cannot change the login or see its saved key or full endpoint address.
+
+Your usable personal login comes first unless an admin turns on **Use for every member**.
+Without a usable personal login, new sessions use the org login when available.
+You need no personal login when the org login serves you.
+Automation runs follow the same rule for their owner.
+The org login stays when the admin who connected it leaves.
+
+- [Connect and manage an org login](/docs/agent-logins#use-an-org-login)
+
+## Choose the org colour
+
+The org list shows the open org in its colour.
+Give each org its own colour to tell your orgs apart at a glance.
+Only an admin can change the colour.
+
+1. Open the org's **Settings**.
+2. Open **General**.
+3. Select a colour under **Colour**.
+
+The colour saves at once.
+An org that has no chosen colour shows blue.
+
 ## Invite a member
 
 Only an admin can invite members.
@@ -146,7 +174,9 @@ An org has two roles: **Admin** and **Member**.
 | Read workspaces and chats | All workspaces in the org | All workspaces in the org |
 | Send messages | Under the session's login rules | Under the session's login rules |
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
+| Change the repository of a workspace | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
+| Mark a draft ready for review from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings, except secrets | Yes | Read-only |
 | Add a secret | Yes | Yes |
 | Replace or delete a secret | Any secret | Their own secrets |
@@ -161,15 +191,23 @@ An org can have several admins.
 Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
 Restore ends after 14 days, even while Conductive retries deleting the computer.
 Archived chats stay read-only until Restore.
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+Conductive keeps its chat history until the org is deleted.
+
+The workspace counts in **Members** leave out removed workspaces.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
 Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
 That account needs read access to the repository.
+A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
+**Ready for review** also uses the clicking member's GitHub account.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 - [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
 
 To reassign a workspace, select its owner in the workspace header.
@@ -181,7 +219,9 @@ It does not move an existing session to the new owner's agent login.
 
 Every member can see every workspace and chat in the org.
 Sessions share the files and branch of their workspace.
-Each session uses its starter's agent login under that login's share setting.
+Each session keeps its starter's personal login or the org login.
+The personal login's share setting controls whether other members can use it in that session.
+Every member can send messages on a session's org login.
 
 Members with terminal access can read credentials available on the computer.
 Work with people you trust with your agent and GitHub logins.
@@ -194,6 +234,7 @@ Work with people you trust with your agent and GitHub logins.
 An admin can remove another member from **Members**.
 That member loses ordinary access to the org.
 Their workspaces stay in the org and move to the admin who removed them.
+This includes removed workspaces, although the member's workspace count leaves them out.
 
 If you need to leave an active org, ask another admin to remove your membership.
 The last active admin must arrange another active admin or delete the org.
@@ -229,10 +270,13 @@ It lists each deleted org with **Restore** above its steps.
 Restoring brings back its workspaces, chats, and settings.
 Archived workspaces stay archived after the org returns.
 Their existing Restore deadlines continue to apply.
+Workspaces archived at least 14 days ago stay out of **Archived** and the command palette.
+Their read-only chat still opens by direct link or chat link.
 Deleting the org does not extend a workspace's 14 days of Restore.
 Other stopped workspaces start their computers when you open them.
 
 After the org's restore window, deletion removes its remaining data and computers.
+This includes its org agent logins.
 An archived workspace's computer can be deleted earlier when its own Restore window ends.
 
 Keep important work in GitHub before you delete an org.

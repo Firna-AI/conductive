@@ -52,6 +52,11 @@ export type AgentWorkspaceDetail = {
    */
   restoreUntil: Timestamp | null
   /**
+   * When the workspace left the list, 14 days after its archive. Null
+   * until then.
+   */
+  removedAt: Timestamp | null
+  /**
    * Parent workspace, or null for a top-level workspace.
    */
   parentId: string | null

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Large. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-10, from item 6 of the work on branch `calummoore/openai-subscription-token-support` (pull request #177). On 11 November 2026 the user chose not to decide it now.
-- **Location:** the share rules in `docs/protocol/isolation.md`, `src/shell/account/LoginShareSetting.tsx`, `worker/chat/login-access.ts`, and the column `agent_logins.no_reuse`.
+- **Location:** the share rules in `docs/protocol/share-setting.md`, `src/shell/account/LoginShareSetting.tsx`, `worker/chat/login-access.ts`, and the column `agent_logins.no_reuse`.
 - **Reason:** the user asked to remove the switch, and then chose on 11 November 2026 to leave the timing open.
 
 - **Terms:**

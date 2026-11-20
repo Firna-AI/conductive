@@ -63,3 +63,19 @@ it('reads a task box only as typed at the start of the first paragraph of an ite
     },
   ])
 })
+
+it('keeps the text after a blank line under a task box with no words in its item, as CommonMark does', () => {
+  expect(previewDocument('- [ ]\n\n  Continue.').blocks).toEqual([
+    {
+      kind: 'list',
+      ordered: false,
+      start: 1,
+      items: [
+        {
+          checked: false,
+          blocks: [{ kind: 'paragraph', text: [text('Continue.')] }],
+        },
+      ],
+    },
+  ])
+})

@@ -75,8 +75,10 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   },
   'fix-checks': { mac: ['Alt+Meta+X'], other: ['Alt+Shift+X'] },
   'resolve-conflicts': { mac: [], other: [] },
+  'merge-latest': { mac: [], other: [] },
   'address-review': { mac: [], other: [] },
   'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
+  'mark-ready-for-review': { mac: [], other: [] },
   'merge-pull-request': { mac: ['Shift+Meta+M'], other: ['Ctrl+Shift+M'] },
   'continue-after-merge': { mac: [], other: [] },
   'open-pull-request': { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
@@ -85,6 +87,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'go-to-checks': { mac: [], other: [] },
   'go-to-terminal': { mac: ['Meta+J'], other: ['Ctrl+J'] },
   'go-to-preview': { mac: [], other: [] },
+  'new-terminal': { mac: [], other: [] },
   'new-session': {
     mac: ['Meta+T', 'Alt+Meta+T'],
     other: ['Ctrl+T', 'Alt+Shift+T'],

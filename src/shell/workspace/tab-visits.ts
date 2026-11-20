@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent } from 'react'
-import { routeOf, useNavigation } from '../../app/navigation'
+import { routeOf, useNavigation, type Navigation } from '../../app/navigation'
 import type { WorkspaceContext } from './features'
 import { filesPlace, tabOf } from './files/files-address'
 import { toolPlace } from './tools/tool-address'
@@ -31,6 +31,23 @@ function tabAt(
     : null
 }
 
+/** The address that `replaceWithoutVisit` puts in place, during its call. */
+let restoring: string | null = null
+
+/**
+ * Replaces the address with `to`, as the address of the first show of the
+ * screen, so that the move is no visit. The restore of the saved tab moves
+ * the address in this way.
+ */
+export function replaceWithoutVisit(navigation: Navigation, to: string): void {
+  restoring = to
+  try {
+    navigation.replace(to)
+  } finally {
+    restoring = null
+  }
+}
+
 /**
  * Calls `onOpen` with the key of the tab at each visit that opens a file,
  * diff, or Preview tab of the workspace. A visit opens a tab when it moves
@@ -38,7 +55,8 @@ function tabAt(
  * second click on the tab, on its file, or on its port does. Each click,
  * link, and move back or forward is a visit. A switch between the preview
  * and the source of one file keeps its tab. The address of the screen at
- * its first show calls nothing.
+ * its first show calls nothing, and nor does an address that
+ * `replaceWithoutVisit` puts in its place.
  */
 export function useTabVisits(
   context: WorkspaceContext,
@@ -54,7 +72,9 @@ export function useTabVisits(
     return navigation.subscribe(() => {
       const visited = navigation.href()
       const opened = tabAt(visited, org.id, workspace.id, desktop)
-      const opens = opened !== null && (opened !== tab || visited === href)
+      const restored = restoring !== null && visited === restoring
+      const opens =
+        !restored && opened !== null && (opened !== tab || visited === href)
       href = visited
       tab = opened
       if (opened !== null && opens) open(opened)

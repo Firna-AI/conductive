@@ -65,10 +65,11 @@ export function barReplacesComposer(
 /**
  * What the bar of an archived workspace offers: Restore until its last day,
  * to every member of an org that is not suspended, or no Restore in a
- * suspended org. After its last day, the bar gives the day when Restore
- * ended while a failed delete of the cloud computer can still try again,
- * and claims no delete. Without a kept cloud computer, nothing comes back.
- * `ended` says that the clock of the page reached `restoreUntil`.
+ * suspended org. After its last day, while a failed delete of the cloud
+ * computer can still try again, the bar says that the cloud computer is
+ * being deleted, and claims no delete. Without a kept cloud computer,
+ * nothing comes back. `ended` says that the clock of the page reached
+ * `restoreUntil`.
  */
 export function archivedRestore(
   workspace: Workspace,
@@ -104,6 +105,12 @@ export function sandboxView(input: {
   firstStart: boolean
   /** What an archived workspace offers, as `archivedRestore` says. */
   restore?: ArchiveRestore
+  /**
+   * The archived workspace left the list: the clock of the page reached
+   * the end of its Restore, as `listEndOf` says, also without a kept cloud
+   * computer.
+   */
+  removed?: boolean
   /** The open of this visit ended, as `WorkspaceModel.opened` says. */
   opened: boolean
 }): SandboxView {
@@ -125,7 +132,11 @@ export function sandboxView(input: {
       : sandbox === 'ready' || sandbox === 'starting'
         ? null
         : sandbox === 'archived'
-          ? { problem: 'archived', restore: input.restore }
+          ? {
+              problem: 'archived',
+              restore: input.restore,
+              removed: input.removed,
+            }
           : { problem: sandbox })
   // The cases of `resumesAtOpen`: a stopped sandbox, and a later start that
   // failed. A refusal starts nothing, so it shows at once.

@@ -63,7 +63,8 @@ Its variants:
   tags, which show as text.
 - `pictures` has a picture at a web address, which shows its alt text as
   a link, a picture at a path that no file has, which shows its alt text
-  only, and the screenshot of the workspace, whose link opens its file.
+  only, and the screenshot of the workspace, which shows as its picture
+  and opens its file, as `app/file-mentions/answers` shows.
 
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,
@@ -111,7 +112,10 @@ session of Cal, the picker shows the models of the app without Fable 5.1,
 because the model list of Cal's proxy does not name it. Its `not-served`
 variant has a stopped turn on Fable 5.1, which the session kept as its
 model, and the notice names the model ID and no host. Its `member`
-variant has the same notice as Priya sees it.
+variant has the same notice as Priya sees it. Its `org` variant has the
+open picker of Priya in a session on the org login of Acme, without Fable
+5.1, because the model list of the gateway of Acme does not name it, from
+decision 3 A of the org logins plan of 16 November 2026.
 
 `app/chat/background-limit` draws a turn that waited for the background
 work of its agent, a watch of the checks of pull request #482. The checks
@@ -130,12 +134,24 @@ software". Its `stopped` variant has a stopped turn, whose line ends with
 the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
+`app/chat/menu-placement` draws menus that show whole over a box that
+scrolls. Its canonical screen has the model menu over the requests that
+wait above the composer. Its `history` variant has the session history
+beside a full tab row. Its `allow` variant has More ways to allow of the
+first of four requests in the Mac app. The app opens these menus in the
+top layer, so no box cuts them.
+
 `app/automations` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:
 
 - `app/automations/empty` has an org without automations.
 - `app/automations/automation` has the owner's view of a saved automation. Its
-  child pages: `new` has a new automation, `member` the view of a member,
+  child pages: `new` has a new automation, whose `org-login` variant has a
+  new automation of Priya whose runs use the org login of Acme, from decision
+  5 A of the org logins plan, and whose `org-models` variant has its open
+  model picker without Fable 5.1, from decision 3 A. `member` has the view
+  of a member, whose `org-login` variant has the runs of Cal on the org
+  login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
   `admin` the view of an admin with Turn off and Delete, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned

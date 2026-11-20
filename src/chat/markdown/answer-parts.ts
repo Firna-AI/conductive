@@ -1,3 +1,4 @@
+import { pictureType } from '../../files/page/file-view'
 import { markdownParser } from '../../markdown/parser'
 import { labelHidesAddress, type WebLink } from '../../markdown/web-links'
 import type { FilePart } from '../links/chat-parts'
@@ -36,6 +37,15 @@ interface AnswerLink {
 interface FileLinkPart extends FileTarget {
   kind: 'file-link'
   label: readonly AnswerPart[]
+  /**
+   * Set for the Markdown image of a PNG, JPEG, GIF, or WebP file, such as
+   * `![Phone view](shots/after.png)`, which can show as its picture, as
+   * "Pictures in answers" of `file-mentions-answers.md` says. `source` is
+   * the image as the agent wrote it, which a copy of the picture gives. The
+   * file tab shows the same files as pictures, so the image of an SVG file
+   * and a link without `!` stay links.
+   */
+  picture: { source: string } | null
 }
 
 /**
@@ -136,7 +146,19 @@ function fileLink(
     shownText(label).trim() === ''
       ? [{ kind: 'text', text: target.entry.name }]
       : labelParts(label)
-  return { kind: 'file-link', ...target, label: shown }
+  return { kind: 'file-link', ...target, label: shown, picture: null }
+}
+
+/** The picture of an image whose target is a picture file, or null. */
+function pictureOf(
+  target: FileTarget,
+  image: InlineImage,
+): FileLinkPart['picture'] {
+  const { entry } = target
+  if (entry.kind !== 'file' || pictureType(entry.path) === undefined) {
+    return null
+  }
+  return { source: image.source }
 }
 
 /**
@@ -159,14 +181,15 @@ function linkParts(node: InlineLink, reading: AnswerReading): AnswerPart[] {
 }
 
 /**
- * A Markdown image. No picture loads, as `chat-links.md` says: an
- * image of a file of the tree is a link that opens it, an image at a web
- * address shows its alt text as a link, by the rules of a label, and
- * another image shows its alt text only.
+ * A Markdown image, as `chat-links.md` and `file-mentions-answers.md` say:
+ * an image of a file of the tree is a link that opens it, and the image of
+ * a picture file can show as its picture there. An image at a web address
+ * shows its alt text as a link, by the rules of a label, and loads no
+ * picture. Another image shows its alt text only.
  */
 function imageParts(node: InlineImage, reading: AnswerReading): AnswerPart[] {
   const file = fileLink(node.alt, node.href, reading)
-  if (file) return [file]
+  if (file) return [{ ...file, picture: pictureOf(file, node) }]
   const link = reading.web(node.href)
   if (link)
     return [{ kind: 'link', link, words: linkWords(node.alt, node.href) }]

@@ -41,9 +41,9 @@ test('an open menu stops the drag regions, so a press on a top bar closes it', a
     await expect.poll(() => region(header)).toBe('no-drag')
     await expect.poll(() => region(controls)).toBe('no-drag')
 
-    await page
-      .getByRole('heading', { name: workspaceTitle, exact: true })
-      .click()
+    // The name in the bar is a button of its own, so the press goes to the
+    // repository, which is no control.
+    await header.getByText(/storefront$/).click()
     await expect(menu).toBeHidden()
     await expect(owner).toHaveAttribute('aria-expanded', 'false')
     await expect.poll(() => region(header)).toBe('drag')

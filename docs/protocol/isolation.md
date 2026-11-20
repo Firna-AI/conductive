@@ -2,27 +2,36 @@
 
 This doc holds the requirements and the decisions in force for the isolation
 of orgs and sandboxes. It covers the checks that keep the orgs apart, the
-app's Boat key, what a sandbox holds, what its workspace tools reach, and
-the agent logins and the turn tokens in a sandbox. It belongs to
-[Access and security](access-and-security.md), which covers sign-in, the
-gates of the Worker, the request bodies, and the content security policy.
+app's Boat and E2B keys, what a sandbox holds, what its workspace tools
+reach, and the agent logins and the turn tokens in a sandbox. Linked pages
+cover [the share setting](share-setting.md) of a personal login, and
+[the version pins](version-pins.md) with the risks of the turn token. It
+belongs to [Access and security](access-and-security.md), which covers
+sign-in, the gates of the Worker, the request bodies, and the content
+security policy.
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A gateway
 decision number names a decision of the change that adds the
 [model gateway](model-gateway.md), as that doc says. An own endpoint
 decision number names a decision of the change that adds the own endpoint
-logins, as [Tokens and secrets](tokens-and-secrets.md) says. A secrets
-decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+logins, as [Tokens and secrets](tokens-and-secrets.md) says. An org login
+decision number names a decision of the change that adds the org logins,
+as that doc also says. A secrets decision number names a decision of the
+change that adds [secrets](secrets.md), as that doc says. An e2b decision
+number names a decision of the change that adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## Orgs and workspaces
 
-- One Boat key reaches the sandboxes and the saved snapshots of all orgs
-  (decision 80). So the key does not keep the orgs apart. The checks in
-  this section do.
+- The key of each provider account reaches the sandboxes and the saved
+  snapshots of all orgs on that account (decision 80). So no key keeps the
+  orgs apart. The checks in this section do.
 - A request reaches an org, its workspaces, and their sandboxes only for a
   member of that org.
+- An org login serves only the members of its org, in the workspaces of
+  that org, as [Org logins](org-logins.md) says.
 - The workspace token of a sandbox reaches the workspaces of its own org
   through the agent tools, as
   [What the workspace tools reach](#what-the-workspace-tools-reach) says.
@@ -30,7 +39,8 @@ decision number names a decision of the change that adds
   user or org, as [Operator actions](operator-actions.md) says. In the
   [operator section](operator-section.md#what-the-section-shows), an
   operator also reads counts, names, IDs, dates, roles, states, and codes
-  across every org (decisions 142, 144, 147, and 160).
+  across every org (decisions 142, 144, 147, and 160). An operator also
+  reads the provider account of each org (e2b decision 221).
 - The operator section shows no chat, file, env value, agent login, or
   email address. Its org search takes the ID of a cloud computer or a
   preview address only to find its org.
@@ -60,42 +70,36 @@ decision number names a decision of the change that adds
   file gets the same refusal.
 - Before each sandbox call, the Worker checks in its records that the
   sandbox belongs to a workspace or a build of that org.
-- The Worker calls only a fixed list of Boat routes. It has no general
-  pass-through to Boat.
+- The Worker calls only a fixed list of routes of each provider. It has
+  no general pass-through to a provider.
 - The Worker gives the token of an attachment download only to the sandbox
   that the workspace of the file names. The token gives only that one
   file, as [Hostnames and gates](access-and-security.md#hostnames-and-gates)
   says.
-- Lifecycle, saved snapshot, file metadata, and error replies from Boat
-  can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
-- A successful command reply from Boat can contain at most 18 MiB, or
-  18,874,368 bytes. The limit includes the whole JSON body.
-- A reply above these budgets gets HTTP 502, even when Boat permits it.
-  For a command reply, the error says "The command output is too large."
+- Lifecycle, saved snapshot, file metadata, and error replies from a
+  provider can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
+- A successful command reply from a provider can contain at most 18 MiB,
+  or 18,874,368 bytes. The limit includes the whole body of the reply.
+- A reply above these budgets gets HTTP 502, even when the provider
+  permits it. For a command reply, the error says "The command output is
+  too large."
 - [Orgs and members](orgs-and-members.md#members-and-roles) states the
   rules of each role.
 
 ## The app's Boat key
 
-- One Boat key, the app's own, runs every sandbox and every org image
-  (decision 80). The Worker holds it as a Worker secret.
-- The key never goes to the browser, into a sandbox, into a log, or into
-  a saved snapshot. Reason: the key reaches the sandboxes of every org.
-- The key is limited to one Boat environment and to the actions that the
-  app uses.
-- The app's Boat account is a Boat organization of its own. It holds no
-  other Boat work of the operator (decisions 5 and 80).
-- Every Boat call names that organization. A Boat user can reach several
-  organizations, so a change of the active one in Boat moves no work of
-  the app.
-- The deploy run never gets the key. It asks the Worker to build the
-  [software image](org-image.md#the-software-image) with a token of its
-  own.
+[The app's Boat key](provider-keys.md#the-apps-boat-key) holds these
+requirements.
+
+## The app's E2B key
+
+[The app's E2B key](provider-keys.md#the-apps-e2b-key) holds these
+requirements.
 
 ## What a sandbox holds
 
-- Every sandbox starts with Boat's `noEnv` setting, so it gets none of the
-  secrets of the app's Boat account.
+- A sandbox gets none of the secrets of the app's provider accounts. On
+  Boat, every sandbox starts with Boat's `noEnv` setting for that reason.
 - At a start, a sandbox gets only two secrets: its workspace token and the
   env vars of its org.
 - The sandbox gets them at create and at each resume. A changed secret
@@ -104,6 +108,9 @@ decision number names a decision of the change that adds
   [Stop and resume](workspace-life.md#stop-and-resume) says.
 - No saved snapshot holds these secrets. Builds and refreshes get none of
   them.
+- A saved snapshot on E2B keeps only the disk of its sandbox, never its
+  memory. Reason: the memory of a build can hold a secret, such as the
+  token of a repository copy.
 - The software image holds no org data and no secret, because every org
   uses it. Its build sandbox starts with no env var, no token, and no
   repository.
@@ -139,10 +146,10 @@ decision number names a decision of the change that adds
   sessions and turns. It can do so in each workspace of the org that is
   not archived.
 - Each such turn goes in the name of the sender of the running turn. It
-  runs on the login of the starter of its session.
+  runs on the login of its session.
 - Risk: such a message also starts the cloud computer of a workspace that
   does not run, as an open does. Each start counts toward the starts that
-  all orgs share.
+  the orgs of its provider account share.
 - Risk: while a turn of its workspace runs, such a process can also
   rename, move, and archive workspaces, close and stop sessions, change the
   sections, and open and close previews in the whole org. It acts with the
@@ -166,28 +173,31 @@ decision number names a decision of the change that adds
 
 ## Agent logins in a sandbox
 
-- Each session runs on the agent login of its starter, the member who
-  started the session (decision 105). Each turn of the session uses that
-  login, whoever sends its messages.
+- Each session runs on its login: the personal login of its starter, or
+  the org login of its org, as [Agents](agents-and-sessions.md#agents)
+  says. Each turn of the session uses that login, whoever sends its
+  messages.
 - The GitHub token of a turn and its Mac requests still follow its sender,
   as [GitHub tokens](tokens-and-secrets.md#github-tokens) and
   [Mac commands](agent-tools.md#mac-commands) say.
-- An automation run uses its owner's agent login and GitHub token while no
-  person watches. Its sandbox follows the same rules below.
+- An automation run uses the default login and the GitHub token of its
+  owner while no person watches. Its sandbox follows the same rules below.
   [Risks that stay open](automations.md#risks-that-stay-open) states the
   risks of automations.
-- With each turn, the agent runner gets a turn token for the login of the
-  starter, over its connection to the Durable Object. Reason: the sandbox
+- With each turn, the agent runner gets a turn token for the login of its
+  session, over its connection to the Durable Object. Reason: the sandbox
   gets its secrets only at a start, and the sessions of one sandbox can
-  have different starters.
+  run on different logins.
 - No agent login reaches a sandbox, whatever the version pin of its
-  workspace (decision 120). The [model gateway](model-gateway.md) adds the
-  login of the starter to each model request of the turn.
+  workspace (decision 120). This holds for the org login too. The
+  [model gateway](model-gateway.md) adds the login of the session to each
+  model request of the turn.
 - The runner follows the [sandbox software update rules](sandbox-software.md#updates).
   A workspace accepts only a runner of a supported protocol version, as
   [Runner versions](version-pins.md#runner-versions) says.
-- An own endpoint login never reaches a sandbox. The gateway keeps its
-  address and its key in the Worker (gateway decision 10).
+- An own endpoint login never reaches a sandbox, also when it is the org
+  login. The gateway keeps its address and its key in the Worker (gateway
+  decision 10).
 - Before a turn or a later message reaches a runner, the app checks
   that the runner can use its login kind (decision 174).
 - A ChatGPT turn needs a runner that declares support for that sign-in.
@@ -196,39 +206,27 @@ decision number names a decision of the change that adds
   and no credential. The turn fails once with a recovery cause.
 - The cause offers a new workspace after an admin rebuilds the org
   image, or an OpenAI API key. A reconnect does not send the failed turn again.
-- The workspace gives the credential of a turn to the runner only while
-  the starter is a member of the org.
-  [Messages](messages-and-attachments.md#messages) says what a message of another
-  member does when the login of the starter cannot be used.
-- Each agent login has a share setting (decision 116). It says whether the
-  messages of other members can run on that login.
-- The kind of a login sets the default of its share setting. A new Claude
-  subscription login does not let other members use it. A new ChatGPT
-  sign-in does not let them use it either (decisions 171 and 175). A new
-  API key or own endpoint login lets them use it (own endpoint decision 4).
-- Reason: Anthropic's consumer terms and OpenAI's terms forbid making an
-  account available to anyone else. The owner of an API key may let a team
-  use it. Sharing every login by default was rejected for these reasons.
-- Risk: an own endpoint can stand for personal subscriptions, such as a
-  proxy that pools them. Other members can spend those subscriptions until
-  the owner turns sharing off. Their terms can forbid that use.
-- A replaced login keeps its share setting while its kind stays the same. A
-  login whose kind changes gets the default of its new kind. Reason: a key
-  rotation keeps the choice of its owner.
-- The account page shows the share setting of each connected login. Its
-  owner can change the setting there at any time.
-- When the starter does not share the login, a message of another member
-  starts a new session on that member's own login. A Try again of another
-  member does the same. [Messages](messages-and-attachments.md#messages) states the
-  rules of such a new session.
-- The workspace checks the share setting when it accepts each message, and
-  again before it gives the credential of the turn to the runner. So a
-  waiting message of another member never runs on a login that its owner
-  stopped sharing.
+- On a personal login, the workspace gives the credential of a turn to the
+  runner only while the starter is a member of the org.
+- A session on the org login serves each member of the org, also after its
+  starter leaves the org. Reason: the org login belongs to the org, not to
+  the starter.
+- [Messages](messages-and-attachments.md#messages) says what a message
+  does when the login of its session cannot be used.
+- The org login has no share setting. Each message of a member of the org
+  in a session on the org login runs on it.
+- Each personal login has a share setting (decision 116).
+  [The share setting](share-setting.md) states when the messages of other
+  members can run on that login, and its default, its checks, and its
+  risks.
+- The workspace checks the login of the session when it accepts each
+  message. It checks it again before it gives the credential of the turn
+  to the runner.
 - A message of a sender who left the org never reaches the agent, also
-  while the login of the starter works.
-- The session record shows whether the login of its starter can be used,
-  and whether the starter shares it. It holds no part of the login.
+  while the login of the session works.
+- The session record shows whether the login of the session can be used,
+  and whether the starter shares a personal login. It holds no part of the
+  login.
 - A record that names the host of an own endpoint was rejected, because
   the members of an org trust each other with their logins (own endpoint
   decision 5).
@@ -237,10 +235,9 @@ decision number names a decision of the change that adds
 - Risk: hooks and MCP commands from those rules run in the sandbox of
   the org. Its members trust that ChatGPT workspace admin with their code
   and the credentials that the sandbox can reach.
-- Risk: while the starter shares the login, the other members of a session
-  spend it. Anthropic's rules for hosted products ask each end user to sign
-  in with their own credentials. So a shared Claude subscription stays a
-  risk (decisions 105 and 116).
+- Risk: each member of the org spends the org login in each session on it.
+  The account of its key or of its endpoint pays, as
+  [Risks](org-logins.md#risks) says (org login decision 1 B).
 - Risk: while a turn runs, each process in the sandbox can get the
   sender's GitHub App user token. Each member with a terminal there can
   get it too, for example with `git credential fill`. A copied token keeps

@@ -25,22 +25,18 @@ export function ApproveDialog(props: {
   const approve = useQuestion(props.approve, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={approve.pending} onPress={approve.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={approve.pending}
-            icon={Check}
-            onPress={() => approve.run()}
-            tone="primary"
-          >
-            Approve
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={approve.pending}
+          icon={Check}
+          onPress={() => approve.run()}
+          tone="primary"
+        >
+          Approve
+        </ActionButton>
       }
-      close={approve.dismiss}
+      busy={approve.pending}
+      close={props.close}
       title={approveTitle(person.login)}
     >
       {approveQuestion(person).map((text) => (

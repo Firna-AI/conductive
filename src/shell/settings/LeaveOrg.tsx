@@ -3,8 +3,10 @@ import { LogOut } from 'lucide-react'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import type { ApiError } from '../../app/api/client'
+import { useListTime } from '../../app/deadlines'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
+import { listedWorkspaces } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgModel } from '../context'
@@ -45,7 +47,9 @@ function LeaveRefusal(props: { orgName: string; error: ApiError }) {
 /**
  * The question before a person leaves a suspended org. The person's
  * workspaces stay in the org, with the owner that the rules of a leave
- * choose. After the leave, the app opens the person's other workspaces.
+ * choose. The question counts those that the list shows, so it leaves
+ * out the removed ones. After the leave, the app opens the person's other
+ * workspaces.
  */
 function LeaveOrgDialog(props: {
   org: OrgSummary
@@ -57,27 +61,30 @@ function LeaveOrgDialog(props: {
   const go = useGo()
   const model = useOrgModel(org.id)
   const workspaces = valueOf(useStore(model.workspaces))
+  const listTime = useListTime(workspaces ?? [])
   useEffect(() => model.watch('list'), [model])
   const leave = useAction(async () => {
     await app.leaveOrg(org.id)
     go(routes.home())
   })
-  const owned = workspaces?.filter((item) => item.owner.id === user.id).length
+  const owned = workspaces
+    ? listedWorkspaces(workspaces, listTime).filter(
+        (item) => item.owner.id === user.id,
+      ).length
+    : undefined
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={props.close}>Cancel</ActionButton>
-          <ActionButton
-            busy={leave.pending}
-            icon={LogOut}
-            onPress={() => leave.run()}
-            tone="danger"
-          >
-            Leave org
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={leave.pending}
+          icon={LogOut}
+          onPress={() => leave.run()}
+          tone="danger"
+        >
+          Leave org
+        </ActionButton>
       }
+      busy={leave.pending}
       close={props.close}
       title={`Leave ${org.name}?`}
     >

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-11, from branch `calummoore/markdown-heading-support`, review round 2, finding 3. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser replaced the chat reader.
-- **Location:** `src/chat/markdown/agent-blocks.ts:87` (`heading`), `src/chat/markdown/answer-parts.ts:162` (`imageParts`), `src/chat/components/AgentText.tsx:52`, `src/chat/components/LineBlocks.tsx:97`, and `src/chat/components/MessageLine.tsx:73`.
+- **Location:** `src/chat/markdown/agent-paragraphs.ts:68` (`heading`), `src/chat/markdown/answer-parts.ts:190` (`imageParts`), `src/chat/components/AgentText.tsx:73`, `src/chat/components/LineBlocks.tsx:153`, and `src/chat/components/MessageLine.tsx:82`.
 - **Reason:** only a heading of an image with no alt text that opens nothing, or of inline code of spaces, meets it, and the fix costs the same later.
 
 - **Source:** Review. **Category:** Product bug.
@@ -15,8 +15,8 @@
   - The chat reads each agent message with the shared `markdown-it` parser, through `agentBlocks`. `answerParts` then makes the parts that the chat draws.
   - `docs/protocol/chat-markdown.md` requires that a heading with no text shows nothing and still ends the paragraph above it. Reason: a screen reader meets no empty heading.
   - `agentBlocks` leaves out a heading whose inline tree has no node after the line-break rule. It counts nodes, not the words that the parts show.
-  - No picture loads in the chat, as `docs/protocol/chat-links.md` says. When the alt text of an image is empty, an image of a file of the tree shows the file name. An image at a web address shows its address in that case. Any other image shows its alt text only.
-  - An open message line gets a hidden copy of its closed text as its name only when no block comes before its first table, at `MessageLine.tsx:73`.
+  - A heading shows no picture, as "Pictures in answers" of `docs/protocol/file-mentions-answers.md` says, and no picture at a web address loads, as `docs/protocol/chat-links.md` says. When the alt text of an image is empty, an image of a file of the tree shows the file name. An image at a web address shows its address in that case. Any other image shows its alt text only.
+  - An open message line gets a hidden copy of its closed text as its name only when no block comes before its first table, at `MessageLine.tsx:82`.
 - **Problem:**
   - The inputs of the first report now show text, as CommonMark reads an unpaired mark: `## **`, `` ## ` ``, and `**` above `---` give a heading of `**` or of a backtick.
   - `## ![](x)` draws an empty `h2` when `x` is no file of the tree and no web address. An image of a file draws an empty `h2` while the chat has no tree.
@@ -36,7 +36,9 @@
   - CSS cannot name the open line, and `:empty` misses a code box with a space.
 - **Wider fix:** B. One reader of the shown words keeps each renderer and the name check from drawing or counting an empty block.
 - **Previous examples:** The old chat reader drew `## **` as an empty heading, until the shared parser read the unpaired mark as text. Commit `712afd8f` added the earlier block-count name check.
-- **Related:** `plans/follow-ups/message-line-unreadable-name.md` covers the same unnamed control when a paragraph or a code block comes before the table. B can serve both items.
+- **Related:**
+  - `plans/follow-ups/message-line-unreadable-name.md` covers the same unnamed control when a paragraph or a code block comes before the table. B can serve both items.
+  - The fix of the closed item [The chat splits Markdown only at line feeds](https://github.com/Firna-AI/conductive/blob/6fa9e75c70f26df8d279521e54ab0f8feab54454/plans/follow-ups/markdown-line-endings.md) made the chat split lines at CRLF, CR, and LF. The shared parser splits them in the same way, so a heading line holds no carriage return. That fix changed no empty check, so this item still applies.
 - **Recommendation:** B. One reader decides emptiness for both renderers and the name check, also for an image whose words depend on the tree. The first review recommended B, and the first record recommended D.
 - **Action:** fix after merge, apply B, because only an unusual heading meets it, and the fix costs the same later.
 

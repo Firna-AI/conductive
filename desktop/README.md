@@ -244,7 +244,7 @@ Run it after the desktop build with `npm --prefix desktop run test:electron -- t
 Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
 [Releases](RELEASES.md#releases) names the runners.
 It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
-It builds DMG and ZIP files with publishing disabled.
+It builds DMG and ZIP files with publishing disabled, for the architecture of each runner.
 Mac jobs run only when changed files match these paths:
 
 - `desktop/**`
@@ -264,10 +264,12 @@ npm --prefix desktop run test:packaged
 
 `iconutil` compiles the unchanged [approved iconset](../docs/brand/conductive.iconset/).
 The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
-electron-builder makes DMG and ZIP packages for both Mac architectures.
+The `package` command makes DMG and ZIP packages for the architecture of the Mac that runs it.
+The packaged tests run only that package.
+The `package:release` command makes the packages for both Mac architectures, or for the one that its `--arm64` or `--x64` flag names.
 The `package` command uses an ad-hoc signature.
 PR builds force this same ad-hoc signing mode without certificate credentials.
-The package command verifies both app bundles with `codesign --verify --deep --strict`.
+The package command verifies the app bundle with `codesign --verify --deep --strict`.
 It also requires `Signature=adhoc` in the signature display.
 CI logs and `.context/boat-native-remote-workspaces/desktop-signatures.json` keep the signature evidence.
 Generated bundles, icons, packages, and test output stay ignored.
@@ -285,6 +287,8 @@ The package includes only `dist/app/` and `dist/bundle/`.
 ### Key Code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
+- [Install location](src/install-location.ts) decides at launch whether to offer the move into Applications.
+  It tests for a read-only volume next to the app, and keeps the version that Not now dismissed.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
 - [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
   It supplies the Mac keyboard and the fixed Mac app host for shortcuts.

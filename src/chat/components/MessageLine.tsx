@@ -11,7 +11,7 @@ import { agentBlocks, type TextBlock } from '../markdown/agent-blocks'
 import { MentionsProvider } from '../mentions/MentionsContext'
 import { AgentBlocks } from './AgentText'
 import local from './chat.module.css'
-import { LineBlocks } from './LineBlocks'
+import { closedLine, LineBlocks, type LineState } from './LineBlocks'
 import { useFold } from './useFold'
 
 /**
@@ -47,15 +47,24 @@ function holdsTable(block: TextBlock): boolean {
  * holds no link that the keyboard can reach while nobody sees it. A press
  * on a link in the line opens the link, as on a chip, and the line stays
  * open or closed.
+ *
+ * The closed line shows the Markdown image of a picture file as its link,
+ * so the line stays one line. The open line shows its picture, read for
+ * the message with the ID `id`, the ID of its item in the transcript. A
+ * press on the picture opens the file, and the line stays open. The line
+ * parses the text again only when the text changes, not when it opens.
  */
-export function MessageLine(props: { text: string }) {
+export function MessageLine(props: { id: string; text: string }) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
-  const blocks = useMemo(() => agentBlocks(props.text), [props.text])
+  const { id, text } = props
+  const blocks = useMemo(() => agentBlocks(text), [text])
+  const pictures = useMemo(() => ({ message: id }), [id])
   const firstTable = blocks.findIndex(holdsTable)
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
+  const state: LineState = open ? { open, pictures } : closedLine
   return (
     <details
       className={classes(
@@ -69,13 +78,13 @@ export function MessageLine(props: { text: string }) {
       <summary className={styles.messageLine} {...fold.line}>
         <MessageSquareText aria-hidden className={styles.icon} size={13} />
         <span className={styles.messageText}>
-          <LineBlocks blocks={lead} open={open} />
+          <LineBlocks blocks={lead} state={state} />
           {split && lead.length === 0 ? (
             <span className={a11y.hidden}>
               <LinksProvider value={plainLinks}>
                 <PlainLinks>
                   <MentionsProvider value={null}>
-                    <LineBlocks blocks={body} open={false} />
+                    <LineBlocks blocks={body} state={closedLine} />
                   </MentionsProvider>
                 </PlainLinks>
               </LinksProvider>
@@ -85,7 +94,7 @@ export function MessageLine(props: { text: string }) {
       </summary>
       {split ? (
         <div className={classes(styles.messageBody, local.messageBody)}>
-          <AgentBlocks blocks={body} />
+          <AgentBlocks blocks={body} pictures={state.pictures} />
         </div>
       ) : null}
     </details>

@@ -1,3 +1,4 @@
+import { pictureType } from '../../../../../src/files/page/file-view'
 import { webAddressParts } from '../../../../../src/markdown/web-links'
 import { breakItems, keptBreaks } from '../common/markdownBreaks'
 import {
@@ -16,12 +17,16 @@ import { webCodePart, type TextPart } from './workspaceLinks'
 
 /**
  * A Markdown link or image of an answer to an entry of the tree. It shows
- * as a normal link with its label, which opens the file.
+ * as a normal link with its label, which opens the file. `picture` marks
+ * the Markdown image of a PNG, JPEG, GIF, or WebP file, which can show as
+ * its picture (screenshot decision 2). The file tab shows the same files
+ * as pictures, so an SVG file stays a link.
  */
 export type FileLinkPart = {
   kind: 'file-link'
   label: string
   source: string
+  picture: boolean
 } & PathTarget
 
 /**
@@ -96,7 +101,17 @@ function fileLinkItems(text: string): AnswerItem[] {
     items.push(...webLinkItems(text.slice(end, match.index)))
     const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
     const [source] = match
-    items.push(unit({ kind: 'file-link', label, source, ...target }, source))
+    const { folder, path } = target.entry
+    const picture =
+      source.startsWith('!') && !folder && pictureType(path) !== undefined
+    const part: FileLinkPart = {
+      kind: 'file-link',
+      label,
+      source,
+      picture,
+      ...target,
+    }
+    items.push(unit(part, source))
     end = match.index + source.length
   }
   return [...items, ...webLinkItems(text.slice(end))]

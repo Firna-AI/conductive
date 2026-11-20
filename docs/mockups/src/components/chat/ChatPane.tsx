@@ -6,13 +6,11 @@ import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
-import { SandboxBar } from '../workspace/SandboxNotice'
-import {
-  replacesComposer,
-  type SandboxNoticeState,
-} from '../workspace/sandboxNoticeState'
+import { SandboxBar, type BarNotice } from '../workspace/SandboxNotice'
+import { replacesComposer } from '../workspace/sandboxNoticeState'
 import { StartingCard } from '../workspace/StartingCard'
 import { ChatItemView } from './ChatItemView'
+import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { isPendingCommand, PendingCommand } from './PendingCommand'
@@ -41,9 +39,9 @@ export function ChatPane(props: {
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
    * still queue messages. A failed start carries its saved message, and a
-   * refused start its reason.
+   * refused start its reason, and an archived workspace its days.
    */
-  problem?: SandboxNoticeState
+  problem?: BarNotice
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -56,6 +54,11 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The reads of the pictures of the answers. The chat reads pictures only
+   * while the cloud computer runs. Without reads, each shows as its link.
+   */
+  pictures?: PictureRead
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -83,35 +86,37 @@ export function ChatPane(props: {
           data-mokly-scroll="chat-transcript"
         >
           <div className={styles.transcript}>
-            {groupItems(transcript).map((entry) => {
-              switch (entry.kind) {
-                case 'tools':
-                  return (
-                    <ToolGroup
-                      calls={entry.calls}
-                      open={entry.open}
-                      key={entry.id}
-                    />
-                  )
-                case 'work':
-                  return (
-                    <WorkFold
-                      key={entry.id}
-                      state={fold}
-                      steps={entry.steps}
-                      viewer={props.viewer}
-                    />
-                  )
-                case 'item':
-                  return (
-                    <ChatItemView
-                      item={entry.item}
-                      key={entry.item.id}
-                      viewer={props.viewer}
-                    />
-                  )
-              }
-            })}
+            <ChatPictures read={props.pictures}>
+              {groupItems(transcript).map((entry) => {
+                switch (entry.kind) {
+                  case 'tools':
+                    return (
+                      <ToolGroup
+                        calls={entry.calls}
+                        open={entry.open}
+                        key={entry.id}
+                      />
+                    )
+                  case 'work':
+                    return (
+                      <WorkFold
+                        key={entry.id}
+                        state={fold}
+                        steps={entry.steps}
+                        viewer={props.viewer}
+                      />
+                    )
+                  case 'item':
+                    return (
+                      <ChatItemView
+                        item={entry.item}
+                        key={entry.item.id}
+                        viewer={props.viewer}
+                      />
+                    )
+                }
+              })}
+            </ChatPictures>
             {props.starting ? <StartingCard log={props.starting} /> : null}
           </div>
         </div>

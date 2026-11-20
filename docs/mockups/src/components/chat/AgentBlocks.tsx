@@ -35,8 +35,10 @@ function HeadingView(props: { heading: MessageHeading }) {
  * text in a paragraph, and the list follows it inside the item, as the app
  * draws a Markdown list that the agent indents under an item. A task item
  * shows its fixed check box in the place of its bullet (item 14 B).
+ * `pictures` shows the pictures of its items.
  */
-function ListView(props: { list: MessageList }) {
+function ListView(props: { list: MessageList; pictures: boolean }) {
+  const { pictures } = props
   const items = props.list.items.map((item, index) => {
     const { text, checked } = taskText(item.text)
     const box = checked === null ? null : <TaskBox checked={checked} />
@@ -46,14 +48,14 @@ function ListView(props: { list: MessageList }) {
           <>
             <p>
               {box}
-              <AnswerText text={text} />
+              <AnswerText pictures={pictures} text={text} />
             </p>
-            <ListView list={item.list} />
+            <ListView list={item.list} pictures={pictures} />
           </>
         ) : (
           <>
             {box}
-            <AnswerText text={text} />
+            <AnswerText pictures={pictures} text={text} />
           </>
         )}
       </li>
@@ -74,11 +76,18 @@ function ListView(props: { list: MessageList }) {
  * them, and its `prose` class gives quotes and rules their look. `live`
  * marks a message that the agent still writes: a mark that opens in its
  * last paragraph and has no pair yet closes at its end (item 9 C).
+ *
+ * With `pictures`, the Markdown image of a picture file in a paragraph or a
+ * list item shows as its picture (screenshot decision 2), also in a quote.
+ * A heading and a table cell keep its link, because a picture breaks the
+ * layout of the heading or of the row.
  */
 export function AgentBlocks(props: {
   blocks: readonly AgentBlock[]
   live?: boolean
+  pictures?: boolean
 }) {
+  const pictures = props.pictures === true
   const last = props.blocks.length - 1
   return props.blocks.map((block, index) => {
     if (typeof block === 'string') {
@@ -86,20 +95,22 @@ export function AgentBlocks(props: {
       if (nodes.length === 0) return null
       return (
         <p key={index}>
-          <AnswerNodes nodes={nodes} />
+          <AnswerNodes nodes={nodes} pictures={pictures} />
         </p>
       )
     }
     if (block.kind === 'heading') {
       return <HeadingView heading={block} key={index} />
     }
-    if (block.kind === 'list') return <ListView key={index} list={block} />
+    if (block.kind === 'list') {
+      return <ListView key={index} list={block} pictures={pictures} />
+    }
     if (block.kind === 'code')
       return <CodeBlock key={index} text={block.text} />
     if (block.kind === 'quote') {
       return (
         <blockquote key={index}>
-          <AgentBlocks blocks={block.blocks} />
+          <AgentBlocks blocks={block.blocks} pictures={pictures} />
         </blockquote>
       )
     }

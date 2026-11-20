@@ -5,8 +5,10 @@ import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
+  startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { answerShot } from '../fixtures/answerFiles'
 import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
 import { previewTabLabel } from '../components/tools/previewCopy'
@@ -27,6 +29,15 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
+ * A workspace with one session, whose tab takes the title of the
+ * workspace: a new one, and the removed Postcode lookup for the shipping
+ * and billing forms, which kept the one session that made it.
+ */
+function oneSession(state: WorkspaceState): boolean {
+  return isNew(state) || state.workspace === 'postcode-lookup'
+}
+
+/**
  * The states after the second session sent a message to the first session
  * and to Saved carts. Each session tab then leads to the chat of its session
  * at that time.
@@ -37,6 +48,15 @@ function sessionLinkStates(state: WorkspaceState): boolean {
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
+}
+
+/**
+ * Whether the open session has no message yet: a new session of the viewer,
+ * or an empty session that another member started. Its chat shows the
+ * empty state of a new session.
+ */
+export function noMessages(state: WorkspaceState): boolean {
+  return state.tab === 'new-session' || state.tab === 'started-session'
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -62,10 +82,10 @@ export function workspaceName(
 
 /**
  * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, or the copy of an attached
- * screenshot. A picture takes the icon that All files gives each other
- * file. A read of the copy names it by its file name, because no list
- * names it.
+ * an image whose bytes the browser cannot draw, the copy of an attached
+ * screenshot, or the screenshot of the agent. A picture takes the icon that
+ * All files gives each other file. A read of the copy names it by its file
+ * name, because no list names it.
  */
 function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
   const tab = (key: string, path: string, to: string): WorkspaceTab => ({
@@ -82,6 +102,8 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
       return tab('image', branchPictures.damaged, paths.imageNotDrawn)
     case 'attachment':
       return tab('copy', screenshotCopy.path, paths.attachmentOpen)
+    case 'screenshot':
+      return tab('screenshot', answerShot, paths.imageFromAnswer)
     default:
       return undefined
   }
@@ -115,21 +137,23 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * opens, and a move puts the code file between the two sessions. A tab
  * whose file name the app does not know shows "File". The one session of a
  * new workspace takes the title of the workspace, so its tab shows the same
- * name as the header, Untitled before the title comes. While the login of
- * the starter of the first session is not available, that first session
- * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, the first session leads
- * to that view. After the second session sent its messages, the second
- * session can show, and each session tab leads to its chat of that time.
- * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it. The Preview tabs show after the code file.
+ * name as the header, Untitled before the title comes, as `oneSession`
+ * says. While the login of the starter of the first session is not
+ * available, that first session leads to its view for the member, beside
+ * the linked session. While the starter keeps the login for their own
+ * messages, or after an admin removed the org login of the session, the
+ * first session leads to that view. After the second session sent its
+ * messages, the second session can show, and each session tab leads to its
+ * chat of that time. The file or the diff that the state opens can be the
+ * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
+ * after the code file.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
   running = false,
 ): WorkspaceTab[] {
-  if (isNew(state)) {
+  if (oneSession(state)) {
     const title = workspaceName(state, workspace)
     return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
@@ -139,6 +163,9 @@ export function tabsFor(
   const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (state.composer === 'no-starter-login' && state.login === 'org') {
+    firstPath = paths.orgLoginRemoved
+  }
   if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {
@@ -163,6 +190,8 @@ export function tabsFor(
       selected: state.tab === 'code' || state.tab === 'code-lines',
     },
   ]
+  // A repository change closes the file tabs of the old repository.
+  if (state.repositoryMove === 'changed') tabs.pop()
   if (state.tabRow === 'full') tabs.push(...moreTabs)
   if (state.tab === 'markdown') {
     const to = paths.markdown
@@ -215,6 +244,16 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(title),
       to: paths.linkedSession,
+      selected: true,
+    })
+  }
+  if (state.tab === 'started-session') {
+    const { key, title } = startedSession
+    tabs.push({
+      key,
+      kind: 'session',
+      title: nameLabel(title),
+      to: paths.orgLoginStartedSession,
       selected: true,
     })
   }

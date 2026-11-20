@@ -5,6 +5,7 @@ import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import { HttpError } from '../http'
 import { workspaceTokenAccessPredicate } from '../data/workspace-token-access'
 import { hash } from '../security/crypto'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import { choice, record, text } from './input'
 import { messageSender } from './workspace-replies'
 import {
@@ -125,7 +126,11 @@ export async function requireRepository(
   orgId: string,
   repositoryId: string,
 ): Promise<void> {
-  const repositories = await readImageRepositories(db, orgId)
+  const repositories = await readImageRepositories(
+    db,
+    orgId,
+    await readOrgProviderAccount(db, orgId),
+  )
   if (!repositories.some((repository) => repository.id === repositoryId)) {
     throw await imageAdmissionError(
       db,

@@ -6,7 +6,9 @@ Only a turn token authorizes a request.
 Before it obtains a workspace endpoint, the gateway checks in D1 that the workspace is live and its resources remain accessible.
 An unknown or unavailable workspace gets `turn_token_invalid` without a Durable Object call.
 The gateway calls `checkTurnToken` through the trusted workspace runtime before each upstream request.
-It replaces the token with the starter's real login.
+It replaces the token with the fixed personal or org login of the session.
+Both owners use the common access query in `worker/chat/login-access-data.ts`.
+An org session checks the current sender without checking its starter's membership.
 Runner delivery gives a token in each `turn` command. No runner command carries a real login.
 Own endpoint turns use the API-key credential mode with a turn token.
 Their real address and key stay in Worker-only `AgentLogin` values.
@@ -207,6 +209,12 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [route.ts](route.ts): `routeModelGateway` selects a route, checks the Claude markers, checks its turn, replaces authentication, and forwards one request.
 - [workspace-access.ts](workspace-access.ts): `gatewayWorkspaceAllowed` checks the workspace and resource predicates in D1 before object access.
 - [paths.ts](paths.ts): gateway base matching and the fixed model method and suffix list.
+- [endpoint-model-refresh.ts](endpoint-model-refresh.ts) and
+  [endpoint-model-data.ts](endpoint-model-data.ts): model discovery for a
+  personal owner string or an org owner `{ orgId }`. Claims keep the
+  ten-minute background limit. Saves compare ciphertext and attempt ID,
+  and leave the login version intact. Org reads also check active org
+  state. An admin Refresh supplies `adminId` for SQL role checks.
 - [codex-upstream.ts](codex-upstream.ts): ChatGPT metadata forwarding and model routing in the Worker.
 - [codex-request-auth.ts](codex-request-auth.ts): binds ChatGPT credential tasks to the active request and turn.
 - [codex-auth.ts](codex-auth.ts): fresh credentials, one 401 renewal, observation of concurrent rotation, and the redaction set for the request.
@@ -229,7 +237,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Its caller holds the chat queue, as runner dispatch does.
   It fails the turn and gives no token when the login is missing or changed since the first token.
   It does the same for a login of another kind than the dispatch read.
-  `check` returns the current starter login or a stable refusal reason.
+  `check` returns the current session login or a stable refusal reason.
+  Replacement keeps that owner and fails the running turn with the changed-login cause.
+  A preference switch changes no credential version and ends no turn.
   Without a claim, it first reads the turn, the session, and the login outside that queue, and returns when that read accepts the token.
   Every other check enters the queue. Only the queued check refuses a token, fails a turn, or saves a claim.
   It refuses a token whose prefix does not match the login kind.
@@ -240,8 +250,9 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
   Web Crypto verifies the signature in constant time.
   The turn keeps a random nonce and the login version for this derivation.
   Separate booleans record whether its Codex 401 recovery was used and remains pending.
-- [login.ts](login.ts): `gatewayLogin` checks starter access and reads the login row with its `updated_at` version.
+- [login.ts](login.ts): `gatewayLogin` checks the session owner's access and reads its login row with its `updated_at` version.
   It accepts native-provider and own endpoint login kinds.
+  An org owner accepts only an API key or endpoint and uses the org encryption context.
   `decryptGatewayLogin` releases the login only after the turn check accepts that version.
 - [types.ts](types.ts): `TurnTokenCheck` and `TurnTokenEndpoint` define the trusted check result and RPC method.
 - [../workspace-lifecycle.ts](../workspace-lifecycle.ts): `checkTurnToken` selects the workspace from stored chat metadata.
@@ -255,6 +266,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [delivery-runtime.test.ts](delivery-runtime.test.ts): the same `turn` command after an eviction of the workspace object, with only the nonce and the login version in SQLite.
 - [../chat/gateway-dispatch.test.ts](../chat/gateway-dispatch.test.ts): a failed send keeps the token state, so the resend carries the same token before the waiting message.
 - [workspace.test.ts](workspace.test.ts) and [login.test.ts](login.test.ts): token lifetime, login changes, Stop across a disconnect, event order, late data, and retry.
+- [org-logins.test.ts](org-logins.test.ts): starter departure, switch stability, replacement failure, retry with the new key, and current-sender suspension.
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
 - [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.

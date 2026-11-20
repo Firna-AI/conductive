@@ -2,7 +2,7 @@ import type {
   FirstWorkspaceMessage,
   WorkspaceRuntime,
 } from '../lifecycle/workspace-runtime'
-import { readAgentLogin } from '../chat/queries'
+import { resolveDefaultLogin } from '../chat/default-login'
 import { HttpError } from '../http'
 import { createWorkspace } from '../lifecycle/workspaces'
 import { freshGitHubUserToken } from '../security/github-tokens'
@@ -69,7 +69,14 @@ export async function startAutomationRun(
       return
     }
     if (!attempt) {
-      if (!(await readAgentLogin(env, admission.owner.id, choice.agent)))
+      if (
+        !(await resolveDefaultLogin(
+          env,
+          { orgId },
+          admission.owner.id,
+          choice.agent,
+        ))
+      )
         throw new HttpError(
           409,
           'agent_login_required',
@@ -104,7 +111,6 @@ export async function startAutomationRun(
         },
       },
       admission.owner,
-      undefined,
       run.trigger.kind === 'pull-request'
         ? {
             branch:

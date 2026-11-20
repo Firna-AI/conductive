@@ -11,7 +11,8 @@ requirements. Two linked guides hold the rest of the code:
 - [Message lines](message-lines.md) gives the code of a message line in
   the work of a turn.
 - [Text links](text-links.md) gives the web links, the workspace chips,
-  and the file chips of sent messages and answers.
+  and the file chips of sent messages and answers, and the pictures of
+  answers.
 
 ## The chat adapter
 
@@ -20,7 +21,11 @@ of `src/markdown/parser.ts`. Its modules are pure functions and import no
 React.
 
 - `agentBlocks` in `markdown/agent-blocks.ts` reads the whole text of a
-  message at each update. It gives a `TextBlock` for each paragraph,
+  message at each change of the text. The parser splits the text at each
+  line ending of CommonMark: CRLF, CR, and LF. It does not split at U+2028
+  or U+2029, because CommonMark reads them as text. So a CRLF that arrives
+  in two live updates still counts as one line ending. A fenced code block
+  keeps its tabs. It gives a `TextBlock` for each paragraph,
   heading, list, code block, quote, rule, and table. A paragraph, a
   heading, and a table cell hold `InlineText`, the inline tree of
   `markdown/agent-inline.ts`. `markdown/agent-paragraphs.ts` reads the
@@ -84,12 +89,15 @@ React.
 ## Drawing
 
 - `AgentText` in `components/AgentText.tsx` draws an answer. It parses the
-  text once for each text and `live`, with `useMemo`. `AgentBlocks` draws
-  the blocks in order, and the open body of `MessageLine` shares it.
-- `ItemView` of `components/TranscriptItem.tsx` gives `live` to the
-  answer that the agent writes now. `TranscriptView` names it: the newest
-  item of the running turn, when that item is an agent message that is not
-  complete. `agentItem` of `src/shared/transcript/turn-events.ts` marks a
+  text once for each text and `live`, with `useMemo`. `MessageLine` keeps
+  its blocks in the same way, so a render for another change, such as a
+  line that opens, reads no text again. `AgentBlocks` draws the blocks in
+  order, and the open body of `MessageLine` shares it.
+- `ItemRow` of `components/transcript-rows.tsx` gives `live` to the answer
+  that the agent writes now, through `ItemView` of
+  `components/TranscriptItem.tsx`. `TranscriptRows` of
+  `components/TranscriptView.tsx` names it: the newest item of the running
+  turn, when that item is an agent message that is not complete. `agentItem` of `src/shared/transcript/turn-events.ts` marks a
   message `complete` at its `assistant.completed` event. A later step of
   the turn, such as a tool call, or the end of the turn also shows that
   the message is complete.
@@ -110,7 +118,9 @@ React.
   a heading, a list item, and a table cell: `strong`, `em`, and `del` for
   the marks, `br` for a line break, and the chips and links of
   `answerParts`. With `line`, as in a message line, a space comes before
-  each `br`.
+  each `br`. With `pictures`, the image of a picture file shows as its
+  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
+  says.
 - A numbered list counts up from the number of its first item, as
   Markdown numbers it. `AgentText` gives that number to the `start` of the
   `ol`. A message line writes each number from it. As in CommonMark, a
@@ -131,8 +141,8 @@ React.
 - Each live update parses the whole message, and draws again only the
   blocks whose data changed. `AgentText` draws nothing again while its
   text and `live` stay the same. Each block and each `AnswerText` compares
-  its new data with its last data, with `sameData` of
-  `markdown/same-data.ts`, and draws again only on a change. `AnswerText`
+  its new data with its last data, with `samePlainData` of
+  `components/same-data.ts`, and draws again only on a change. `AnswerText`
   reads the workspaces, the tree, and the links of the screen itself, so
   a change of them still draws its chips and links again. For an answer of
   100 KiB, the parse takes about 15 ms in Node. `answer=long` of
@@ -145,6 +155,10 @@ messages and the file preview share their list rules, the list rules of
 CommonMark. Both views read their lists through the shared parser of
 `src/markdown/parser.ts`:
 
+- `src/markdown/empty-item-lists.ts` keeps a later item in the list of an
+  empty item, also after two or more blank lines, as CommonMark does.
+  `markdown-it` 15.0.3 starts a new list there. The rule joins such a list
+  to the list before it, which is then loose.
 - `maxDepth` of `src/markdown/parser.ts` is the depth limit of 16 that
   both views apply to lists and quotes. Deeper content shows as paragraph
   text. `src/markdown/block-depth.ts` keeps the parser one level past that

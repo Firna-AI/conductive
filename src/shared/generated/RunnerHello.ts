@@ -24,7 +24,20 @@ export type RunnerHello = {
    */
   streamId: string
   /**
+   * One runner program start, retained across reconnections and fresh links.
+   */
+  processStartId?: string
+  /**
    * loginKinds.
    */
   loginKinds?: ReadonlyVec<RunnerLoginKind>
+  /**
+   * The runner's repository folder. Its presence means that the runner
+   * accepts repository.move. Older runners omit it.
+   */
+  repositoryFolder?: string
+  /**
+   * Offer complete tool sources in private numbered parts.
+   */
+  completeToolDetails?: boolean
 }

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-11, from branch `calummoore/markdown-heading-support`, the independent check of review round 2, finding 3. Updated on 2026-11-17 on branch `calummoore/output-summary-f7sm`, after the shared Markdown parser replaced the chat reader.
-- **Location:** `src/chat/components/MessageLine.tsx:73`, the condition `split && lead.length === 0`.
+- **Location:** `src/chat/components/MessageLine.tsx:82`, the condition `split && lead.length === 0`.
 - **Reason:** The same control-name gap exists on `origin/main` before the heading change.
 
 - **Source:** Review. **Category:** Product bug.

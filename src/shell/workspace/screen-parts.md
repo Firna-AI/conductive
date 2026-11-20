@@ -38,17 +38,31 @@ says.
   request, so no keyboard opens on its own.
 - On desktop, the chat shows the file, diff, and Preview tabs of the
   saved view among the session tabs, in the one order of the tab row.
-  [Preview tabs](#preview-tabs) gives the Preview tabs. A file or diff
-  tab moves by drag and with its tab menu, as a session tab does, as
-  [the chat](../../chat/README.md#rules-for-this-code) says. The file or
-  diff tab of the address shows in place of the chat of the session, and
-  the tabs stay. No session tab is the current one then, and the row keeps
-  the tab of the address in view. The temporary tab of the saved view shows
-  its title in italics, and a screen reader hears "temporary" after its
-  name.
+  [Preview tabs](tools-part.md#preview-tabs) gives the Preview tabs. A
+  file or diff tab moves by drag and with its tab menu, as a session tab
+  does, as [the chat](../../chat/README.md#rules-for-this-code) says. The
+  file or diff tab of the address shows in place of the chat of the
+  session, and the tabs stay. No session tab is the current one then, and
+  the row keeps the tab of the address in view. The temporary tab of the
+  saved view shows its title in italics, and a screen reader hears
+  "temporary" after its name.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
+- `RestoreShownTab` of `restore-tab.tsx` shows the active tab of the
+  saved view again when the screen opens at the address of the workspace
+  alone, as a click on its row in the list does. When that tab is a file,
+  diff, or Preview tab, its address replaces the address of the workspace.
+  It decides once, when the chat first knows the view, so a later move to
+  the address of the workspace, such as a click on a session tab, shows
+  the chat. Such a later move, such as a move back in the browser
+  history, also saves the shown session as the active tab. An address that names a
+  view or a session, a move of the address before the view is known, a
+  phone, and an archived workspace keep the address, as
+  [The tab row](../../../docs/protocol/tab-row.md#the-shown-tab-at-a-return)
+  says. The screen keeps the arrival address in a `TabRestore` for its
+  whole show, so a switch between the phone and the desktop layout
+  restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
   temporary tab also clears its mark.
@@ -63,6 +77,13 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- A record of the workspace with another repository closes each file and
+  diff tab of the view, because its path belongs to the old folder, as
+  [After the change](../../../docs/protocol/repository-change.md#after-the-change)
+  says. The chat then shows the chat of its session, and it saves the
+  view. `LeaveMovedFiles` of `files/moved-files.tsx` replaces a file or
+  diff address with the chat on desktop, and with the Files tab on a
+  phone.
 - The screen gives each of its parts one link opener, `WorkspaceLinks` of
   `link-opening.tsx`, through `LinkOpeningProvider` of
   `../ui/text-links.tsx`. So the links of chat text open as
@@ -191,10 +212,16 @@ Each folder of a path is a part of the address. Another address under
   Resume.
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
-  there either, because the open of the workspace resumes the sandbox.
+  there either, because the open of the workspace resumes the sandbox. The
+  address of a restored tab counts as that first address, through
+  `replaceWithoutVisit` of `tab-visits.ts`, so it starts nothing too.
 - A Restore moves no address, so it starts nothing, also while the address
   names a file or diff tab. The next visit that opens a tab resumes the
   sandbox.
+- After a repository change, the kept files mark the tree as unavailable,
+  drop the changes, and read the changes again, as
+  [Store rules](../../files/store.md) says. The reports of the new folder
+  then replace both lists.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 - The tabs of All files, Changes, and Checks name the keys of Go to All
@@ -204,127 +231,9 @@ Each folder of a path is a part of the address. Another address under
 
 ## The tools part
 
-The shell gives its own Terminal and Preview tools, with the
-[terminal](../../terminal/README.md) and the
-[previews](../../previews/README.md). It keeps the
-[Desktop tool](../../desktop/README.md) hidden, as
-[Desktop](../../../docs/protocol/workspace-tools.md#desktop) says. A
-`tools` part of the host takes their place. An archived workspace has no
-tools.
-
-- While the sandbox does not run, the tools show its state: starting,
-  stopped, failed, or refused. On desktop the panel keeps its tabs around
-  the state. A phone shows the state on the tool page. No tool mounts then,
-  so no tool reads its route or opens the terminal.
-- A `tools` part of the host shows only while the sandbox runs. The shell
-  shows the state of the sandbox in its place.
-
-| Address | What shows |
-| ------- | ---------- |
-| `terminal` | The Terminal tool |
-| `preview` | The Preview tool |
-| `preview/<previewId>` | On a phone, the Preview page with that preview. On desktop, the Preview tab of its port |
-| `preview/port/<port>` | On a phone, the Preview page, which shows or opens the preview of that port. On desktop, the Preview tab of that port |
-| `desktop` | The Terminal tool, because Desktop is hidden |
-
-- An address that names a tool shows it and saves it as `tool` of the
-  view. Without one, the saved view names the tool.
-- `previewPortHref` gives the address of a port. Its port is a whole
-  number from 1 to 65535, with no leading zero. Another value shows the
-  Preview tool with no preview and no port.
-- On a phone, the Preview page shows or opens the preview of the port of
-  the address, as [the previews](../../previews/README.md#the-phone-page)
-  say. Then the address of that preview takes the place of the address of
-  the port, with no new history entry. After a failed open, `preview`
-  takes its place.
-- On desktop, the Preview tool is the list of ports of `PanelPreviews`. A
-  click on a port goes to `previewPortHref` of the port, which shows its
-  Preview tab, as [Preview tabs](#preview-tabs) says.
-- The `desktop` address and a saved `desktop` tool show Terminal. Neither
-  mounts Desktop or saves Terminal in place of the saved tool. The view
-  keeps `desktop` as a valid tool.
-- On desktop the panel has a tab for each tool that the app offers. A
-  click saves the tool,
-  and the address keeps the tab of the centre. Only a tool address follows
-  the new tool.
-- On desktop, a choice of Terminal moves the keyboard focus to the
-  terminal, as
-  [Terminal](../../../docs/protocol/workspace-tools.md#terminal) says. The
-  `select` of `useToolSelect` runs for a click on its tab and for Go to
-  Terminal of the palette or its key. It asks `terminalFocus` of the
-  workspace context, a `TerminalFocus` that each workspace screen keeps.
-  The request holds the element with the focus at the choice. A choice of
-  another tool drops it. The tools part passes it to the `focusRequest` of
-  `TerminalTool`, only while Terminal shows, and clears it once the
-  terminal took it. A phone asks for no focus, because its keyboard would
-  cover the page.
-- On a phone each tool that the app offers is a page of the tab bar, with
-  its own address.
-- The terminal and Preview each mount at their first show, then stay
-  mounted and hidden while another tool shows. So the terminal keeps its
-  connection, and on a phone the page in the preview frame does not load
-  again when the user goes back to Preview. The socket of the terminal opens at
-  the `socketPath` of the terminal state through `openSocket` of the app's
-  event source, so the Mac app reaches its own Worker.
-- The mount of the Desktop tool stays for its return. It mounts at each
-  show, so it reads a new desktop URL.
-- The tools part marks the xterm.js screen of the terminal for the
-  [shortcut layer](../shortcuts/README.md), through the `screenRef` of
-  `TerminalTool`. So the screen keeps the keys that its shell reads, such
-  as Ctrl+K on Windows and Linux, as
-  [Where a key goes](../../../docs/protocol/keyboard-shortcuts.md#where-a-key-goes)
-  says. The buttons of the tool, such as Reconnect, keep no key.
-- The tools part gives the terminal its links, from `useTerminalLinks` of
-  `tools/terminal-links.ts`. A local address goes to `previewPortHref` of
-  its port, an app page to its address in the app, and every other link to
-  `openInNewTab`. The router decides which addresses of the app origin are
-  pages.
-- The tabs of the tools panel name the keys of Go to Terminal and Go to
-  Preview in their tooltips, as the palette's Go to rows run them.
-- Each tool reads its routes with the `fetch` of the org's `ApiClient`,
-  and the events of the kept `ToolEvents`.
-- The tab keeps one previews store for each shown workspace.
-  `KeptConnections` of the screen connects it while the sandbox runs. The
-  Preview tool of a phone, the list of the desktop, and the Preview tabs
-  read the same store. The end of a connection marks the list as loading,
-  because no event announces a preview that opens meanwhile, so the next
-  connection reads it again before a Preview tab opens a preview. An open
-  or a close that ends after its page left still reaches the store.
-
-### Preview tabs
-
-On desktop, each previewed port has its own Preview tab in the tab row of
-the centre, as
-[Port previews](../../../docs/protocol/port-previews.md#preview-tabs-and-the-end-of-a-preview)
-says. `usePreviewCentre` of `previews/preview-centre.tsx` gives the chat the
-tabs, the page in place of the chat, and the kept pages.
-
-- A visit to `preview/port/<port>` saves the tab of the port as open and
-  active, at the end of the row when it is new. The address keeps naming
-  the port. A visit to `preview/<previewId>` puts the address of its port
-  in its place.
-- A shown tab whose port has no open preview opens one with no notice,
-  through `useTabPreview`. It waits while the sandbox does not run, while
-  the list loads, and while an open runs. After a failed open, it asks
-  again only at the next show of the tab, or at Reload or Try again. A
-  port with two open previews shows the oldest one.
-- The bar of the shown tab holds Reload and Open. Reload loads the page
-  again, or asks again after a failure: it reads the list again after a
-  failed read, and else asks for a new open. A failed read of the list
-  shows in the tab, with Try again. While the sandbox does
-  not run, the state of the sandbox takes the place of the bar and the
-  page.
-- Each page mounts at the first show of its tab, under the chat, through
-  the `kept` slot of the chat. It stays loaded and hidden while another tab
-  shows, until its tab closes, its preview changes, or the sandbox stops.
-- Close removes the tab and ends no preview. Close of the shown tab shows
-  the next Preview tab, else the one before, else the chat. The key of
-  Close tab does the same while the tab shows.
-- A click on a session tab while a Preview tab shows goes back to the chat,
-  as for a file tab.
-- A visit that opens a Preview tab resumes a stopped sandbox, as
-  `ResumeOnTabOpen` does for a file tab.
-- An archived workspace and a phone show no Preview tab.
+[The tools part](tools-part.md) gives the Terminal and Preview tools of
+the shell, the hidden Desktop tool, their addresses, the Preview tabs of
+the centre row, and New terminal of the command palette.
 
 ## The GitHub part
 
@@ -347,6 +256,12 @@ through them while the workspace loads.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
+- The list mark of the workspace shows the GitHub state of this store
+  while the screen shows it, in the list, the palette, and the chips. So
+  the mark changes with the bar, and does not wait for the next read of
+  the list. `LiveGitHubStates` in `src/app/live-github.ts` puts the state
+  over the summary of each list read, because the Worker copies a new
+  state to the list only after its event.
 - On desktop, the bar tops the right column, with its main action and the
   line of a refusal or a stop under it. The number of a pull request links
   to it on GitHub. After a merge, its Archive archives
@@ -361,7 +276,9 @@ through them while the workspace loads.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
-  on a phone.
+  on a phone. A failure that arrives after the screen closed, or after the
+  branch changed, keeps the view and selects no session, as
+  [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
   local work. `LocalWorkList` of the mockups lists that work, as in the
   mockup of the question.

@@ -60,6 +60,9 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
 - The chat draws these parts in its own way:
   - the text while the agent writes, as
     [While the agent writes](#while-the-agent-writes) says
+  - the images of picture files of the workspace, which show as pictures,
+    as [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
+    says
   - short table rows, as [Short rows](chat-tables.md#short-rows) says
   - the agent messages in the work of a turn, as
     [Chat message lines](chat-message-lines.md) says
@@ -75,11 +78,15 @@ images at `app/chat/formatting`, and links at `app/chat/links`.
   [Messages and answers](workspace-links.md#messages-and-answers) says.
 - A `@` mention of a file or a folder of the workspace shows as a file
   chip. Inline code whose whole text is the path of such an entry shows
-  as a file chip too, as [Files in answers](file-mentions.md#files-in-answers)
+  as a file chip too, as [Files in answers](file-mentions-answers.md#files-in-answers)
   says. A code block stays code.
 - A Markdown link or image whose target is a file of the workspace shows
   as a link with its label, which opens the file, as
-  [Files in answers](file-mentions.md#files-in-answers) says.
+  [Files in answers](file-mentions-answers.md#files-in-answers) says.
+- A Markdown image of a PNG, JPEG, GIF, or WebP file of the workspace
+  shows as a small picture instead, which opens the file.
+  [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
+  says where the picture shows, and when the image shows as the link.
 - The chat reads marks, entities, and escapes as CommonMark does. A mark
   without its pair shows as typed, such as one `**`, or the `**` and the
   `*` of a file pattern such as `tests/**/*.test.ts`. The one exception is

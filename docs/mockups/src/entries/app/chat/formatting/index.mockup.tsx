@@ -51,7 +51,7 @@ export const chatFormatting = defineScreen({
       slug: 'pictures',
       title: 'Pictures in replies',
       description:
-        'The agent answers with three pictures. The picture of the guide of the places API is at a web address, so it shows its alt text as a link, and a press opens the picture in a new tab. The copy of the diagram names a path that no file of the workspace has, so it shows its alt text only. The screenshot is a file of the workspace, so its link opens the file, as app/file-mentions/answers shows.',
+        'The agent answers with three pictures. The picture of the guide of the places API is at a web address, so it shows its alt text as a link, and a press opens the picture in a new tab. The copy of the diagram names a path that no file of the workspace has, so it shows its alt text only. The screenshot is a picture file of the workspace, so it shows as its picture, and a press opens the file, as app/file-mentions/answers shows.',
       rationale:
         'The user chose A of item 5 of the Markdown plan on 17 November 2026: a picture at a web address shows its alt text as a link to its address, with the rules of a web link, and no picture loads. A picture that loads from its address makes the browser of each reader call a server that sandbox text chose, and the content security policy of the app blocks it.',
       relatedDocs: [...relatedDocs, 'docs/protocol/chat-links.md'],

@@ -13,7 +13,7 @@ import { AgentText } from './AgentText'
 /** An answer as the chat draws it, in a page that the test can read. */
 function render(text: string): HTMLElement {
   const page = document.createElement('div')
-  page.innerHTML = renderToStaticMarkup(<AgentText text={text} />)
+  page.innerHTML = renderToStaticMarkup(<AgentText id="agent:1" text={text} />)
   return page
 }
 
@@ -136,6 +136,7 @@ it('shows a workspace link in a table cell as its chip, and a link in code as co
       value={{ links: { orgId: FAKE_IDS.org, workspaces: [linked] } }}
     >
       <AgentText
+        id="agent:1"
         text={[
           '| Workspace | Command |',
           '| --- | --- |',
@@ -252,6 +253,7 @@ it('draws each heading at the level that the agent wrote, with its code, strong 
       value={{ links: { orgId: FAKE_IDS.org, workspaces: [linked] } }}
     >
       <AgentText
+        id="agent:1"
         text={[
           '# Review of #482',
           '## Needs your answer',

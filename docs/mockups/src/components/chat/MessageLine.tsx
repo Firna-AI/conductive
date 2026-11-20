@@ -55,10 +55,10 @@ function TableText(props: { table: MessageTable }) {
  * numbered list writes its number, because a browser numbers a list item
  * of spans by the items of the list of the fold. A task item shows its
  * fixed check box: closed, before its text, and open, in the place of its
- * bullet (item 14 B).
+ * bullet (item 14 B). An open line shows the pictures of its items.
  */
-function LineList(props: { list: MessageList }) {
-  const { list } = props
+function LineList(props: { list: MessageList; open: boolean }) {
+  const { list, open } = props
   return (
     <span className={classes(styles.bullets, list.numbered && styles.numbered)}>
       {list.items.map((item, index) => {
@@ -79,8 +79,8 @@ function LineList(props: { list: MessageList }) {
                 label={checked ? 'done' : 'not done'}
               />
             )}
-            <AnswerText line text={text} />{' '}
-            {item.list ? <LineList list={item.list} /> : null}
+            <AnswerText line pictures={open} text={text} />{' '}
+            {item.list ? <LineList list={item.list} open={open} /> : null}
           </span>
         )
       })}
@@ -126,25 +126,27 @@ function LineQuote(props: { quote: MessageQuote; open: boolean }) {
  * A block of a message line: a paragraph, a heading, a list, a table as
  * text, a code block, a quote, or a rule. A code block takes the look of an
  * answer's code block only while the line is open, so the closed line shows
- * its text in the line. A rule is a span with the look of a rule: the
- * closed line shows it as a middle dot, and the open line as a line. A
- * paragraph of only line breaks draws nothing.
+ * its text in the line. In the same way, the Markdown image of a picture
+ * file shows as its picture only while the line is open, and the closed
+ * line shows its link (screenshot decision 2). A rule is a span with the
+ * look of a rule: the closed line shows it as a middle dot, and the open
+ * line as a line. A paragraph of only line breaks draws nothing.
  */
 function LineBlock(props: { block: AgentBlock; open: boolean }) {
-  const { block } = props
+  const { block, open } = props
   if (typeof block === 'string') {
     const nodes = answerNodes(block)
     if (nodes.length === 0) return null
     return (
       <span className={styles.paragraph}>
-        <AnswerNodes line nodes={nodes} />{' '}
+        <AnswerNodes line nodes={nodes} pictures={open} />{' '}
       </span>
     )
   }
   if (block.kind === 'heading') return <LineHeading heading={block} />
-  if (block.kind === 'list') return <LineList list={block} />
+  if (block.kind === 'list') return <LineList list={block} open={open} />
   if (block.kind === 'quote') {
-    return <LineQuote open={props.open} quote={block} />
+    return <LineQuote open={open} quote={block} />
   }
   if (block.kind === 'rule') {
     return (
@@ -207,7 +209,7 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {table ? (
         <div className={styles.messageBody}>
-          <AgentBlocks blocks={rest} />
+          <AgentBlocks blocks={rest} pictures />
         </div>
       ) : null}
     </details>

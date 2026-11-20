@@ -138,7 +138,7 @@ export function requestBodyEntry(
         raw ? attachmentTooLarge : oversizedRequest,
       )
     } catch (error) {
-      const response = privateResponse(errorResponse(error))
+      const response = privateResponse(errorResponse(error, request))
       return env &&
         error instanceof HttpError &&
         ['body_too_large', 'attachment_too_large'].includes(error.code) &&

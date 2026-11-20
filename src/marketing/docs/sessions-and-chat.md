@@ -14,13 +14,19 @@ Select **+**, named **New session**, to start another conversation.
 Sessions in the same workspace share its cloud computer, files, and branch.
 Use a separate workspace when a task needs a separate copy of the files.
 
-You need a connected login for the agent you choose.
-Other members can also send messages under the session's login-sharing rules.
+You can use a personal or org login for the agent you choose.
+You need no personal login when the org login serves you.
+Other members can also send messages under the session's login rules.
 
 An archived workspace offers read-only chat instead of a message box.
 Restore the workspace before starting a session or sending another message.
 Restore is available for 14 days after Archive while its computer is kept.
 Select **Resume** if the restored workspace is already open.
+
+After 14 days, the workspace leaves **Archived** and the command palette.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 - [Create a workspace](/docs/workspaces#create-a-workspace-from-a-message)
 - [Connect an agent login](/docs/agent-logins)
@@ -40,6 +46,7 @@ On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
+If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 
 You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
@@ -98,7 +105,8 @@ Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
 The copy opens in the workspace's file view.
 This can start a stopped cloud computer.
-Restore an archived workspace before opening its attached files.
+Restore an archived workspace within 14 days before opening its attached files.
+After removal, the cloud computer and the attached files in it are deleted.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
 Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
@@ -129,7 +137,9 @@ This also works while you view a file or **Checks**.
 Your draft, attached files, and uploads stay as they were.
 The action's message appears in chat as your message.
 During a turn, it follows the same rules as a message you send from the box.
-If it cannot send, the chat opens and shows the cause.
+If it cannot send while you stay in the workspace on the same branch, the chat opens and shows the cause.
+If you leave or change the branch before the failure arrives, your chosen page stays open.
+The cause waits in that session's message box, also if you return before the failure arrives.
 
 - [Choose a pull request action](/docs/pull-requests#read-the-pull-request-state)
 
@@ -141,6 +151,7 @@ Its workspace tools reach every workspace of the same org.
 Agents can also rename, stop, and close sessions there.
 Closing a running session through the tools can stop its turn.
 Use a separate workspace when the delegated task needs separate files and a branch.
+The agent usually makes that workspace a [sub-workspace of the current one](/docs/workspaces#let-an-agent-manage-workspaces).
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.
@@ -156,8 +167,10 @@ The title of a session in another workspace updates when the chat loads.
 Session links also show as small boxes in agent answers and pasted message drafts.
 A member can type the same **Sent by:** line, so it does not prove who wrote a message.
 
-An agent can read archived workspaces and closed sessions.
-It cannot send messages to an archived workspace or a closed session.
+An agent can read archived and removed workspaces by ID.
+It can also read closed sessions.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+It cannot send messages to an archived or removed workspace or a closed session.
 Use **Stop** in each affected session if agents keep replying to each other without useful work.
 
 - [Get the current workspace tools](/docs/cloud-computer#apply-setup-changes)
@@ -186,13 +199,20 @@ A turn with **Fast** on can still run at standard speed, for example when the ag
 The turn then continues, and its end shows **Standard speed** with the cause.
 **Fast** stays on, so later turns run fast when the cause ends.
 
-If the chosen agent has no usable login, the message box offers **Connect** for that agent.
-Connect the login in **Account** before you send.
+A newly added Codex model can need newer cloud computer software.
+Until the cloud computer updates, an OpenAI API key or an own endpoint can run that model at a lower effort and without **Fast**.
+The chat shows no note for this.
+The cloud computer updates on its own within minutes of being idle.
+A ChatGPT sign-in is not affected.
+
+The message box offers **Connect** when neither the session's login nor your personal or org login can serve the chosen agent.
+Connect a personal login in **Account**, or ask an admin to connect an org login.
 
 For your own endpoint login, your pickers hide app models that its last successful model list does not name.
 They show all app models for the agent before the first successful read, or when the list names none of them.
 The session keeps its current model.
-Other members' pickers still show all app models.
+Other members' pickers in sessions on your personal endpoint still show all app models.
+On an org endpoint, every member's pickers follow the org endpoint's model list in the same way.
 
 - [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
 
@@ -230,7 +250,7 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, quotes, code, tables, and file chips.
+Agent replies can contain headings, paragraphs, lists, quotes, code, tables, file chips, and pictures.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 
@@ -240,6 +260,8 @@ Code that holds only the path of a file of the workspace also shows as a file ch
 Select a chip to open its file.
 A Markdown link or image to a file of the workspace shows as a link with its label.
 Select the link to open the file.
+While the cloud computer runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
+Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.
 To copy a code block, select **Copy code** in its top corner.
@@ -247,7 +269,7 @@ With a mouse, the button shows when you point at the block.
 **Code copied** confirms the copy.
 
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
-In the folded work of a turn, open a message line to read its table.
+In the folded work of a turn, open a message line to read its table or see its pictures.
 
 ## Manage session tabs
 
@@ -281,7 +303,12 @@ After a merge, **Continue** keeps these sessions and their conversation context 
 Each session shows a note with the member who continued, the new branch, and its starting branch.
 With current agent software, later messages tell the agent the current branch names when they change.
 
+A repository change also keeps these sessions and their conversation context.
+Each session shows a note with the member who changed the repository, the new repository, and the new branch.
+Later messages tell the agent the folder of the new repository and the new branch.
+
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+- [Change the repository](/docs/workspaces#change-the-repository)
 
 ## Copy a transcript
 
@@ -304,7 +331,7 @@ A long read returns part of the transcript, with its line range and a way to rea
 For a stop through an agent's tools, the transcript gives **Stopped from** and the sending session's link.
 
 You can copy another tab's conversation without changing the selected tab.
-Both options work in archived and other read-only workspaces.
+Both options work in archived and removed workspaces, and in other read-only workspaces.
 
 For a closed session, reopen it from **Session history** before copying.
 
@@ -313,36 +340,44 @@ Select the same copy option within one minute to retry.
 
 ## Know whose account a session uses
 
-The member who starts a session supplies its agent login.
-A subscription token or provider API key bills model use to that member's connected account.
+Each session keeps one agent login: its starter's personal login or the org login.
+A new session uses the starter's usable personal login, or else the org login.
+An admin can give the org login priority for new sessions with **Use for every member**.
+Older sessions keep their login when that switch changes.
+
+A subscription token or provider API key bills model use to its connected account.
 On an own endpoint login, model use bills where the endpoint's owner runs it.
 The endpoint gets the messages, files, and command results of each turn on that login, whoever sent the message.
 
-If that member shares the login, other members' messages use it too.
-The message box names that member's login when you use it.
+If the starter shares a personal login, other members' messages use it too.
+Each member can send messages on a session's org login.
+The message box names another member's login or the org login when you use it.
+An org login shows the org's name, such as **Acme's login**.
 It uses the same login label for an own endpoint.
 The chat does not show the endpoint's host.
 
-If the login is private or unavailable, your message starts a new session on your own login.
+If you cannot use the session's login, your message starts a new session when another usable login serves you.
+This happens when its login is unavailable or another member does not share their personal login.
+It uses the personal or org login that serves you for a new session.
 That session links back to the earlier conversation.
 It has no copy of the earlier history.
 
 Any member who can send in a session can change its model, effort, and **Fast** setting.
-That choice also applies to the messages of the member whose login the session uses.
+That choice applies to every member's messages on the session's login.
 
 GitHub operations follow the person whose message started the running turn.
 After a late answer to a secret request, the new turn follows the person whose message started the turn that asked.
 Commits name that person as both author and committer.
 In a workspace with older cloud computer software, agent commits name the workspace owner.
 Mac command requests go to that same person's connected Mac.
-They can differ from the member whose agent login the session uses.
+The session can use another member's personal login or the org login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
 
 An agent tool creates a session or sends a message as the sender of its calling turn.
 That sender must still belong to the org.
-A new session uses their login.
-A message to an existing session follows the same login-sharing rules as a message they send themselves.
+A new session uses that sender's personal or org login under the same rule above.
+A message to an existing session follows the same login rules as a message they send themselves.
 
 - [Choose who can use an agent login](/docs/agent-logins#choose-who-can-use-your-login)
 - [Understand account and credential access](/docs/security)
@@ -354,8 +389,9 @@ If a turn fails, read its error before retrying.
 **Try again** retries the newest failed request of that session.
 
 A login or membership change can stop a waiting message from running.
-Reconnect the needed login or send a new message under your own login.
-Another member's retry can start a new linked session when the earlier login is unavailable.
+Reconnect your personal login, or ask an admin to check the org login.
+If a personal or org login serves you, send a new message or use **Try again**.
+This can start a new linked session when the earlier login is unavailable.
 
 If a turn says **Changed files unavailable**, inspect **Changes**.
 That notice means its changed-file summary is missing.

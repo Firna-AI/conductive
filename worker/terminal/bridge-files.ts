@@ -11,6 +11,7 @@ export const BRIDGE_PATHS = [
   'worker/terminal/bridge/commands.ts',
   'worker/terminal/bridge/control.ts',
   'worker/terminal/bridge/flow.ts',
+  'worker/terminal/bridge/folder.ts',
   'worker/terminal/bridge/input.ts',
   'worker/terminal/bridge/links.ts',
   'worker/terminal/bridge/main.ts',

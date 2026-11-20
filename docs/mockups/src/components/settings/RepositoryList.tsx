@@ -1,4 +1,4 @@
-import { Check, FolderGit2, Plus, X } from 'lucide-react'
+import { Check, FolderGit2, Pencil, Plus, X } from 'lucide-react'
 import type { ReachableRepository } from '../../fixtures/repositories'
 import { ActionButton, IconButton } from '../common/actions'
 import { EmptyState } from '../common/EmptyState'
@@ -81,8 +81,20 @@ export function RepositoryList(props: {
 }
 
 /**
- * The repositories that the org uses, without search and actions, for a
- * member who is not an admin (decision 57).
+ * Edit, which opens the whole list with search, Add, and Remove, or Done,
+ * which closes it again. Only an admin gets it.
+ */
+export function RepositoryEditToggle(props: { editing: boolean }) {
+  return props.editing ? (
+    <ActionButton icon={Check}>Done</ActionButton>
+  ) : (
+    <ActionButton icon={Pencil}>Edit</ActionButton>
+  )
+}
+
+/**
+ * The repositories that the org uses, without search and actions: for a
+ * member who is not an admin (decision 57), and for an admin until Edit.
  */
 export function OrgRepositoryList(props: {
   repositories: readonly ReachableRepository[]

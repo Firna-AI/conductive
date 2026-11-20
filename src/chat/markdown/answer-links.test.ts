@@ -5,7 +5,7 @@ import { FAKE_IDS, FAKE_ORIGIN } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import type { InlineMark } from './agent-inline'
 import type { AnswerPart } from './answer-parts'
-import { partsOf, readingOf } from './answer-test-kit'
+import { partsOf, readingOf, shapes } from './answer-test-kit'
 
 const linked = workspaceFixtures().workspaces.workspaces[0] as Workspace
 const links = { orgId: FAKE_IDS.org, workspaces: [linked] }
@@ -155,6 +155,24 @@ describe('the links of an answer', () => {
       ])
     },
   )
+
+  test('an answer keeps balanced square brackets in a bare address, such as an IPv6 host, and leaves an extra closing bracket out', () => {
+    expect(
+      shapes(
+        answer(
+          'Open http://[::1], (https://[::1]). and http://example.com/a[1]]).',
+        ),
+      ),
+    ).toEqual([
+      { text: 'Open ' },
+      { local: 'http://[::1]' },
+      { text: ', (' },
+      { local: 'https://[::1]' },
+      { text: '). and ' },
+      { web: 'http://example.com/a[1]' },
+      { text: ']).' },
+    ])
+  })
 
   test('an answer links a complete GitHub path with parentheses and a line hash', () => {
     const href =

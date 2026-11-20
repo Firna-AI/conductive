@@ -48,11 +48,10 @@ export function rowTabs(
 
 /** Adds one arriving session's missing place without removing any other place. */
 export function withSessionPlace(
-  view: WorkspaceView | null,
+  view: WorkspaceView,
   sessionId: string,
-): WorkspaceView | null {
+): WorkspaceView {
   if (
-    view === null ||
     view.tabs.some(
       (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
     )
@@ -83,10 +82,9 @@ export function withSessionTabAt(
 
 /** Keeps one place per open session, and appends missing places in creation order. */
 export function withSessionPlaces(
-  view: WorkspaceView | null,
+  view: WorkspaceView,
   open: readonly Session[],
-): WorkspaceView | null {
-  if (view === null) return null
+): WorkspaceView {
   const ids = new Set(open.map((session) => session.id))
   const placed = new Set<string>()
   const tabs = view.tabs.filter((tab) => {

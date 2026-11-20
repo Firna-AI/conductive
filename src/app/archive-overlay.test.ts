@@ -44,6 +44,7 @@ function checkoutRows(model: OrgModel): string[] {
   const groups = groupWorkspaces(
     valueOf(model.sections.get()) ?? [],
     valueOf(model.workspaces.get()) ?? [],
+    FAKE_TIME,
   )
   const checkout = groups.sections.find(
     (group) => group.section.id === 'checkout',

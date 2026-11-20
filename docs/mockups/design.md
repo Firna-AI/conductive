@@ -18,7 +18,8 @@ mark in the colour of its GitHub state, the name, and the time. A
 sub-workspace shows indented under the row of its parent, and a top-level
 row moves to another section by drag and drop, with the rows under it. Archive covers the time on
 hover only, without moving the row content, and Restore does so in the
-Archived group. Selection and
+Archived group, which holds the archived workspaces of the last 14 days.
+Selection and
 keyboard focus alone keep the time visible. A right click on a row opens
 the menu of the workspace. The centre column has a slim header that names
 the
@@ -86,6 +87,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   A move that the place of a tab rules out keeps its place, greyed.
   A read-only workspace leaves out each item that it does not allow,
   from decision 214.
+- The app opens a menu beside its button in the top layer, so no box cuts
+  it. `app/chat/menu-placement` draws such menus above the page, and CSS
+  anchors place each one at its button.
 - A sub-workspace shows under the row of its parent, from sub-workspace
   decisions 1 C, 4 F, 5 C, and 6 A, as `app/sub-workspaces` shows.
   `withTrees` in `src/components/workspaces/trees.ts` places the rows of
@@ -159,6 +163,12 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu. On a phone, a long press lifts an org in the org switcher with the
   same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
+- `OrgTile` in `src/components/orgs/` draws the initials and the outline
+  of the open org in the colour of the org, as `app/org-settings/colour`
+  shows. `src/design/orgColors.ts` gives the eight presets, each with its
+  own ink and outline for the light and the dark scheme. Blue takes the
+  accent. `OrgColorField` in `src/components/settings/` draws the presets
+  as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
@@ -208,12 +218,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
+  A question that runs its own action stays open while the action runs. A
+  spinner then leads the confirming action, and Cancel is off, as
+  `app/orgs/suspended/leave/leaving` shows. Escape and a press outside then
+  do nothing, on desktop and in the sheet of a phone.
 - `ToastLayer` in `src/components/common/` draws a toast of Firna open
   where the app shows its toasts: at the bottom right of a desktop, and
   across the bottom of a phone. An action that a user can undo, such as
   Archive, asks no question and offers the undo in its toast.
   `ArchivedToast` in `src/components/workspace/` gives the toast after
-  Archive, over the workspace and over the list.
+  Archive, over the workspace and over the list. Its second line gives the
+  day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
   state, the line under the bar, the actions on top of the Checks tab of a
   phone, and the question and the note of Continue.
@@ -223,10 +238,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   of `ConfirmDialog`. The repository picker sits at the top left, and the
   org and the section of the new workspace, in plain text, at the top
   right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The model picker sits at the bottom left,
-  and the Capabilities icon, the attach button, and Create, with the hint
-  of the Enter key, at the bottom right. A phone always opens the page, so the dialog has no phone
-  layout.
+  New workspace page follow them. The attach button, the Capabilities icon,
+  and the model picker sit at the bottom left. The org login label follows
+  the model picker when the first message uses it. Create, with the hint of
+  the Enter key, sits at the bottom right. A phone always opens the page,
+  so the dialog has no phone layout.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -237,7 +253,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   failed save shows its error under the control.
 - Stats uses the parts of the operator Overview: a box of tiles, the
   workspaces by state, and the daily charts. Its tiles are Workspaces with
-  the new ones of 7 days, Running now, Automations, and Orgs.
+  the new ones of 7 days, Running now, Automations, and Orgs. Its list of
+  states has Removed after Archived, as the Overview has, for the
+  workspaces that left the list. The Workspaces tile still counts them.
 - `ShortcutsSections` in `src/components/settings/` draws the Keyboard
   shortcuts tab, in the Mac app and in each browser. It shows the keys of
   a host: the Mac app, a normal tab of Chrome or Firefox, or the installed
@@ -396,7 +414,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their five tabs in three columns, on two
+- On a phone the org settings put their six tabs in three columns, on two
   lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,

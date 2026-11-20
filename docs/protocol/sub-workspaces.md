@@ -1,11 +1,12 @@
 # Sub-workspaces
 
 This doc holds the requirements and the decisions in force for
-sub-workspaces. It covers the parent link, the depth limit, and the
-section of a new sub-workspace. It also covers the nested rows of the
+sub-workspaces. It covers the parent link, when to nest, the depth
+limit, and the section of a new sub-workspace. It also covers the nested rows of the
 workspace list, the place of a row, the moves of a tree, and the agent
 context. It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md).
-[Workspace calls](workspace-calls.md) states the fields of the calls.
+[Workspace calls](workspace-calls.md) states the fields of the calls. A
+linked page covers [parent changes](parent-changes.md).
 
 The terms are those of the [architecture doc](../architecture.md#terms)
 and the terms below. The [mockup catalogue](../mockups/catalogue.md) draws
@@ -17,7 +18,11 @@ A decision number names a dated record, as
 sub-workspace decision number, such as sub-workspace decision 4, names the
 dated record of one decision of the change that adds sub-workspaces. Its
 plan keeps these records while the change is open. Its pull request keeps
-them after the merge.
+them after the merge. A nesting guidance decision number, such as nesting
+guidance decision 1, names the dated record of one decision of the change
+that says when to nest. The pull request of that change keeps its records.
+A parent-move decision number names a decision of the change that adds
+parent changes, as [Parent changes](parent-changes.md) says.
 
 ## Terms
 
@@ -34,6 +39,8 @@ them after the merge.
 - **Own section:** the section that a workspace itself names. A create, a
   move, and a section delete set it. The list can show a sub-workspace in
   another section.
+- **Parent change:** a move that nests a workspace under a parent, or
+  takes it out of its tree to the top level.
 
 ## The parent link
 
@@ -49,6 +56,11 @@ them after the merge.
 - So New workspace in the app and each run of an automation make a
   top-level workspace. The app offers no way to nest a workspace. Reason: the user
   asked for nesting by agents.
+- The app also offers no way to change the parent of a workspace
+  (parent-move decision 4 A). Move under and Move to top level in the menu
+  of a row were rejected, and so was a drag of a row onto another row
+  (parent-move decision 4). Reason: the user asked for parent changes by
+  agents, and an app control needs its own design.
 - The parent can be any workspace of the org of the calling workspace. It
   can be in any state, also archived, and of any repository.
 - Reason: one job can span repositories. A refusal of an archived parent
@@ -56,10 +68,35 @@ them after the merge.
 - An unknown parent, or a parent of another org, gets HTTP 404 with the
   error code `workspace_not_found`. Its message says that the parent
   workspace is not available.
-- The parent link never changes after the create. No call or action sets
-  it later, also not a move, an Archive, a Restore, or Continue.
-- Reason: the depth and the agent context then stay true for the life of
-  the workspace.
+- After the create, only a parent change changes the parent link, as
+  [Parent changes](parent-changes.md) says (parent-move decision 1 A). No
+  other call or action changes it, also not a section move, an Archive, a
+  Restore, or Continue.
+
+## When to nest
+
+- The agent instructions and the create text of the workspace tools say
+  when to nest a new workspace (nesting guidance decision 1).
+- The agent nests a new workspace under the calling workspace when the
+  work belongs to the task of the calling workspace. The cases are:
+  - A part of a large task that can run in parallel.
+  - Follow-up work that the task starts.
+  - Work in another repository for the same task.
+  - A change that needs its own pull request.
+- The agent makes a top-level workspace for work that does not belong to
+  the task.
+- A workspace has one branch at a time. So each separate pull request
+  needs its own workspace.
+- When a member names the place of the new workspace, the agent follows
+  the member. Reason: the cases are guidance, not a rule of the create
+  call.
+- At the deepest depth, the agent creates a sibling in place of a
+  sub-workspace, as [The sibling advice](#the-sibling-advice) says.
+- Reason for the cases: the user asked that agents group the workspaces
+  of one task, and that agents split each separate pull request into its
+  own workspace. Without the cases, the tools say only how to nest.
+- The Worker does not check the cases. A create call with or without a
+  parent works as before.
 
 ## The depth limit
 
@@ -79,7 +116,7 @@ them after the merge.
 - Depth 3 is also the looser reading. So it blocks no work that the user
   expects to allow.
 - The depth counts each parent link, also a link to an archived parent.
-  Reason: the depth of a workspace then never changes.
+  Reason: a Restore then never shows a row past depth 3.
 - A create call under a parent of depth 3 gets HTTP 409 with the error
   code `nesting_limit`. It makes no workspace.
 - Its message names the parent by its number, and says that the parent is
@@ -89,6 +126,9 @@ them after the merge.
 - Reason: the input has the right form, but the depth of the parent
   refuses it. The message gives the ID to pass, so the agent can act on it
   at once.
+- A parent change that puts a workspace past depth 3 gets the same error
+  code, with a message of its own, as
+  [Refusals](parent-changes.md#refusals) says.
 
 ### The sibling advice
 
@@ -102,7 +142,7 @@ them after the merge.
 - Reason: at depth 3, a narrow sidebar shows about 12 characters of a
   name. A longer prefix hides the part of the name that differs. A
   one-word prefix keeps the name prefix that the user asked for.
-- The `nesting_limit` error and the
+- The `nesting_limit` error of a create call and the
   [agent instructions](agent-instructions.md#what-the-instructions-hold)
   give the sibling advice.
 
@@ -207,14 +247,20 @@ them after the merge.
 - A nested row has no drag, no move by keys, and no Move to section. A
   long press on a nested row does nothing. Reason: the tree then stays
   whole in one place.
-- `move_workspace` on a workspace that the list shows as a nested row moves
-  nothing. The nesting adds no refusal, and the other checks of the call
-  stay. Its reply gives the workspace in its section, and a `notice`.
+- `move_workspace` with only a section, on a workspace that the list shows
+  as a nested row, moves nothing. The nesting adds no refusal, and the
+  other checks of the call stay. Its reply gives the workspace in its
+  section, and a `notice`.
 - The notice names the workspace to move instead: the workspace of the
   top-level row that the nested row shows under.
-- This rule is option E of sub-workspace decision 4, which option F keeps.
-  Risk: an agent that reads only the section of the reply can miss that
-  nothing moved.
+- The notice names no target of a parent change. The description of
+  `move_workspace` and the help of the CLI teach the targets. Reason:
+  older tools cannot send a target.
+- This rule is option E of sub-workspace decision 4, which option F and
+  parent-move decision 1 A keep. Risk: an agent that reads only the
+  section of the reply can miss that nothing moved.
+- `move_workspace` with a target changes the parent of the workspace, also
+  on a nested row, as [Parent changes](parent-changes.md) says.
 - The top-level row of a sub-workspace moves like any top-level row. After
   a Restore of a workspace above it, the row shows under the nearest live
   workspace above it, as [An archived parent](#an-archived-parent) says.
@@ -223,22 +269,28 @@ them after the merge.
   - A refusal of `move_workspace` on a nested row, with HTTP 409 and the
     error code `workspace_nested`. It adds a refusal, and it keeps a tree
     whole only on the paths that it closes.
-  - A move that takes a sub-workspace out of its tree and ends its parent
-    link. The agent instructions of the moved workspace would still name
-    the old parent and depth.
   - A move of the whole tree from each of its rows, also a nested row. An
     agent that moves its own workspace would then move the work of other
     agents.
   - A reorder of a nested row among the rows under its parent, by drag or
     by keys. It needs a second order under each parent, in each move and
     in each drop.
+- Sub-workspace decision 4 also rejected a move that ends the parent link.
+  Parent-move decision 1 A supersedes that rejection: a move ends or
+  changes the parent link when the call names a target. The rejected
+  alternatives of that decision are in
+  [The target](parent-changes.md#the-target).
 
 ## Agent context
 
 - The agent instructions of each new session say where the workspace is
-  in its tree, and how to nest a new workspace.
+  in its tree, how to nest a new workspace, and
+  [when to nest](#when-to-nest) one.
   [What the instructions hold](agent-instructions.md#what-the-instructions-hold)
   lists these facts and this guidance.
+- A parent change can make these facts old.
+  [The parent and the depth](agent-instructions.md#the-parent-and-the-depth)
+  says how the agent gets the current ones.
 - [Workspace calls](workspace-calls.md) states the fields that give the
   parent, the depth, and the sub-workspaces of a workspace.
 - The parent, the sub-workspaces, and the parent filter of the list reach

@@ -68,7 +68,10 @@ alt text as a link, from item 10 B of the Markdown plan of 18 November
 2026, and each task shows a fixed check box.
 `app/files/image` has a picture of the branch in the temporary tab, from
 decision 265 B. Its `cannot-draw` variant has an image whose bytes the
-browser cannot draw, with "Download this file to open it".
+browser cannot draw, with "Download this file to open it". Its
+`from-answer` variant has the screenshot after.png of the agent, which a
+press on its picture in `app/file-mentions/answers` opened in the
+temporary tab, from screenshot decision 2 of 18 November 2026.
 
 `app/files/temporary` draws the temporary tab, from decisions 284 to 287.
 Its canonical screen has README.md, which a press in All files opened in

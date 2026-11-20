@@ -57,7 +57,10 @@ command start. For a workspace object, it:
 - runs the queued start of a create or a resume, one phase at a time
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
-- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline
+- stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
+  A failed Archive step tries again after 30 seconds, and each further failure doubles the wait, up to 1 hour.
+  The wait is at least the `Retry-After` of a Boat error, up to the same hour. The D1 repair time moves
+  with it, so the repair Cron Trigger does not wake the step early. A step that succeeds ends the wait.
 - clears Restore when the provider confirms that a retained computer is missing
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
@@ -77,9 +80,10 @@ command start. For a workspace object, it:
   [The shown state](recovery-and-shown-state.md#the-shown-state) says
 - recovers and deletes an unresolved allocation after a start reaches its limit
 - keeps failed or cancelled resume stop cleanup after the start result ends
-- advances a running Continue by one phase. While it runs, the lifecycle
-  steps run only to advance a queued start, as
-  [Continue](continue.md#the-reservation) says
+- advances a running Continue or repository change by one phase. While
+  one of them runs, the lifecycle steps run only to advance a queued
+  start, as [Continue](continue.md#the-reservation) and
+  [Repository change](repository-change.md#the-reservation) say
 
 [The object alarm scheduler](alarm-scheduler.md) gives `WorkspaceAlarms`,
 the one scheduler of the object alarm: the owners and their due times, the
@@ -235,7 +239,7 @@ create and resume. The workspace object runs that start:
   initialization, also for a second Archive. Then `finishStop` reports no
   stop, so Restore leaves a pending stop to the lifecycle. So no Archive
   or Restore step reads or changes the sandbox while a cancelled start
-  call can still reach Boat.
+  call can still reach the provider.
 - The first lifecycle prepare of each create and resume also starts the
   restore watch. After a start from a saved snapshot, Boat downloads the
   file content in the background. The
@@ -243,8 +247,8 @@ create and resume. The workspace object runs that start:
   that restore ends. The alarm reads the sandbox with
   `checkWorkspaceRestore` 5 seconds after the prepare, and then every
   5 seconds. `restoreWatchAt` in the lifecycle state keeps the time of the
-  next read. When the watch is due, its read takes the place of the Boat
-  state read of that alarm.
+  next read. When the watch is due, its read takes the place of the
+  provider state read of that alarm.
   - A reply with `hydrated: false` keeps the watch.
   - A reply with `hydrated: true`, or without `hydrated`, ends the watch.
     The watch then writes the restore marker with
@@ -252,7 +256,7 @@ create and resume. The workspace object runs that start:
     Boat's schema makes the field optional, and Boat says that a sandbox
     that restored nothing is hydrated from the start.
   - A stopped or error state ends the watch, and the alarm applies that
-    state as the Boat state read does. A stopping state, such as
+    state as the provider state read does. A stopping state, such as
     `archiving`, also ends the watch. Neither writes the marker.
   - A Boat error or a failed marker command keeps the watch. The alarm
     error handling tries again in 30 seconds.

@@ -5,7 +5,10 @@ These pages are part of [the mockup catalogue](catalogue.md).
 `app/workspace-links` draws the workspace numbers and the chips of
 decisions 211 and 212, and the session chips and the messages from agent
 tools of decisions 259 and 261. Its canonical screen has a message and an
-answer with chips in Checkout address autocomplete, `W-395`. Its child
+answer with chips in Checkout address autocomplete, `W-395`. The answer
+links Postcode lookup for the shipping and billing forms, `W-372`, which
+left the list after its 14 days. Its chip still shows, with the archived
+mark, and a press on it opens `app/archive/removed`. Its child
 pages:
 
 - `app/workspace-links/copy-link` has the header of Saved carts, `W-402`,
@@ -35,7 +38,9 @@ The message box of New workspace shows a pasted link as a chip in
 and in the `workspace-link` child page of `app/new-workspace/dialog`.
 The flow `user-flows/link-a-workspace` goes from the copy to the answer,
 and ends with a press on the chip, which opens
-`app/new-workspace/first-turn`. The flow `user-flows/open-a-session-link`
+`app/new-workspace/first-turn`. The flow
+`user-flows/open-a-removed-workspace` goes from the answer, through a press
+on the chip of `W-372`, to its read-only chat. The flow `user-flows/open-a-session-link`
 starts at the message in Saved carts. A press on the chip of the closed
 session opens `W-395` on its workspace page, at its first session, and a
 press on the chip of the `Sent by:` line there shows the second session.
@@ -129,15 +134,30 @@ pages:
   chips. Its `workspace-chip` and `attached-file` variants show the same
   × on a pasted workspace link and on an attached file in the text.
 - `app/file-mentions/answers` has an answer of the agent with file chips,
-  from answer chip decisions 1 and 2 of 13 November 2026. A `@` mention,
-  an absolute path under the repository folder in code, and a relative
-  path with the line target `:19-22` in code show as chips. A path in
-  another repository and a code block stay code. A press on the chip with
-  the line target opens `app/files/code/at-line`.
+  from answer chip decisions 1 and 2 of 13 November 2026, and with a
+  screenshot as a picture, from screenshot decision 2 of 18 November
+  2026. A `@` mention, an absolute path under the repository folder in
+  code, and a relative path with the line target `:19-22` in code show
+  as chips. A path in another repository and a code block stay code. The
+  Markdown image of the screenshot shows as a small picture at its place
+  in the line, at most 240 px high. A press on the chip with the line
+  target opens `app/files/code/at-line`. A press on the picture, or on the
+  chip after.png, opens `app/files/image/from-answer`. The page shows only
+  its canonical screen. Its child pages:
+  - `app/file-mentions/answers/loading` has the box of the label, as wide
+    as the answer and 240 px high, while the read of the picture runs.
+  - `app/file-mentions/answers/stopped` has the answer while the cloud
+    computer is stopped. The chat reads no picture then, so the image
+    shows as the link Postcode field on a phone.
+  - `app/file-mentions/answers/work` has the open work of a finished turn
+    with two screenshots. The closed line of the first message shows its
+    image as a link, and the open line of the last message shows its
+    picture.
 
 On a phone each chip of the composer keeps its icon and ends with a ×.
 The flow `user-flows/mention-a-file` goes from the query to the sent
 message, and ends with a press on the file chip, which opens
 `app/files/code`. The flow `user-flows/open-a-file-from-an-answer` goes
 from the answer of `app/file-mentions/answers` to the file tab at the
-lines, `app/files/code/at-line`.
+lines, `app/files/code/at-line`. Then a press on the picture of the
+screenshot opens it in the file tab, `app/files/image/from-answer`.

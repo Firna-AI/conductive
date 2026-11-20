@@ -31,6 +31,11 @@ Its imports carry types only.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`org-settings.ts` owns org login paths beside the other org settings paths.
+`org-agent-logins.ts` defines org login writes, metadata, and model-read
+responses. A member's metadata omits the optional endpoint model list.
+Only an admin of an active org receives it. No response holds a stored
+secret or a full endpoint address.
 `OrgSettings.envVars` in `org-settings.ts` returns only names and secret marks.
 Its `set` change carries a value and an optional mark. An omitted mark
 keeps the stored mark inside each compare-and-swap attempt. A missing or
@@ -43,7 +48,7 @@ It also owns workspace capability reads and patches, with pre-approved
 secret IDs, Mac access, and session approval metadata and removals.
 `CreateWorkspaceRequest.capabilities` in `workspaces.ts` carries the
 capabilities of a new workspace. An absent choice gives no pre-approval
-and Mac access on.
+and Mac access off.
 
 `api.ts` keeps the existing sign-in and org paths and common records.
 `API_PATHS.orgOrder` names `PUT /api/org-order`, outside the paths of one org.
@@ -56,7 +61,10 @@ The optional `error.details` identifies an unknown automation author login.
 It carries `login`, `triggerIndex`, and `list`.
 `triggerIndex` is zero-based in the automation's complete trigger list.
 `list` uses the author-filter request key, `is` or `isNot`.
-Errors without details keep the code and message only.
+The optional `error.retryAt` is a non-negative Unix millisecond time.
+Only the `feedback_send_limit` refusal gives it: the time when the oldest count of the person ends.
+[Feedback: the send limit](../../docs/protocol/feedback-send-limit.md) states the rules.
+Other errors keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
@@ -109,7 +117,11 @@ It can build model-list addresses without exposing a model-list gateway route.
 `ENDPOINT_ADDRESS_ERROR` gives the one refusal code and field message.
 Own endpoint logins stay outside the runner protocol.
 `feedback.ts` owns `FEEDBACK_PATH`, the request and reply types of the
-feedback routes, and their byte limits. `FEEDBACK_BODY_MAX_BYTES` is the
+feedback routes, their byte limits, and their send limit.
+`FEEDBACK_SENDS_PER_HOUR` is the number of feedback emails that one person
+can send in a rolling hour. The Worker, the dev fake, and the words of the
+dialog read it.
+`FEEDBACK_BODY_MAX_BYTES` is the
 JSON body limit of a send. `FEEDBACK_SCREENSHOTS_MAX_BYTES` is the limit of
 the decoded screenshots of one message. `SendFeedbackRequest` carries each
 screenshot as base64 `content` only, with no name and no media type.
@@ -154,77 +166,23 @@ can omit either, and readers preserve that absence instead of assuming zero.
 The backend sets the read limit. The sample limit in the fixtures is not product policy.
 Read and diff results do not enter the stored chat event stream.
 
-`output-sanitizer.ts` holds possible secret suffixes across answer events.
-A completion or a turn end releases the held text of its answer.
-The filter then keeps an answer context: the shown answer end that can still start a secret.
-After a completion, it keeps the context of the earlier text and of the completion text.
-A refused completion leaves the earlier text on the screen.
-Later text of the same answer masks the part that completes a secret from a context.
+[Chat contracts](chat-contracts.md) gives the output filter of agent
+answers, the limits of chat excerpts and events, the chat events, the
+browser event stream, and the session paths, logins, and replies.
 
-The filter does not cap the number of answer contexts.
-Its snapshot holds the held text, the answer contexts, and the secret values that still apply to them.
-A snapshot without answer contexts also stays valid.
-The Worker keeps the held text in the encrypted state of its runner stream.
-It keeps the answer contexts in one encrypted state of the workspace, which each runner stream uses.
-It saves both before it confirms the corresponding raw event.
-
-`event-limits.ts` applies the same chat excerpt caps after either filter.
-Its UTF-8 byte count works in the Worker and Node.
-The workspace's [port report owner](../../worker/chat/port-reports.ts)
-shortens port labels only after its final filter.
-
-`chat-events.ts` caps serialized tool detail at 64 KiB.
-Its omission count measures normalized source UTF-8 bytes before JSON escaping.
-Turn summaries keep at most 200 files and 256 KiB of serialized file-list data.
-They count omitted files. The complete Changes response has no summary cap.
-A `turn.completed` event can carry `endReason`, of the type `TurnEndReason`.
-The runner, the Worker, and the browser use that one type.
-Its one value is `background_work_limit`.
-The end of a fast turn can carry `speed`, of the type `TurnSpeed`, which
-`readTurnSpeed` reads: fast, or standard with a cause code.
-`runner.event-refused` belongs only to workspace chat events.
-It identifies the lost runner event without copying its data.
-Its `repairFailed: true` flag marks a refused replacement of a lost workspace update.
-Only the workspace sets that flag.
-[Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
-states the rules of the request and of a failed repair.
-`workspace.continued` is the note of Continue in one session. It belongs to
-`ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
-or to the runner events. Only the Worker writes it. It names its
-`sessionId`, the `member` who pressed Continue, the new `branch`, and its
-`baseBranch`.
-
-`events.ts` defines the browser stream. Its event numbers span all sessions
-and runner connections of one workspace. A reconnect uses the last stored number.
-The history response gives the point after which live events continue.
-The optional `error` of `workspace.updated` carries only the saved public
-code and message. A null error clears the previous error. An older event
-without this field keeps the previous error.
-
-`sessions.ts` defines the browser session paths and their requests and replies.
-`Session` and `TranscriptDetail` come from `generated/`.
-`Session.retryMessageId` names the one message that `retryMessagePath` accepts.
-It is the retry message of the newest turn when that turn failed, and null otherwise.
-A message or a retry that opens a linked session sets it to null on the source.
-Each other message of the session gets HTTP 409 with the code `retry_not_available`.
-[Messages](../../docs/protocol/messages-and-attachments.md#messages) states the rule.
-`Session.startedBy` names the member who started the session.
-It is null only for an older record whose starter is not known.
-`Session.sourceSessionId` names the session where a message opened this linked session, and null otherwise.
-`Session.loginAvailable` is the result of the last server check of the starter's login.
-It stays true when the starter does not share that login.
-`Session.loginShared` says whether the starter lets other members use that login, from the same check.
-Each member reads the same values. None of these fields holds a login.
-[Messages](../../docs/protocol/messages-and-attachments.md#messages) states how the composer uses both values.
-`SendMessageResponse.session` in `messages.ts` is the record of the session that took the message.
-It can differ from the session of the request.
-[Agents](../../docs/protocol/agents-and-sessions.md#agents) states the starter rule.
+`AutomationResponse.runLogin` in `automations.ts` names the automation owner's default login for its saved agent.
+It uses generated `SessionLogin`, or null when no login serves that owner.
+Every reader gets that value without a secret, endpoint host, or full address.
+It does not change the automation owner's GitHub identity.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the operator overview, directories, and user and org
-suspensions. Its user records include `OperatorUserAccess` from
+suspensions. Operator org rows and pages include `providerAccount`.
+`operator-providers.ts` defines the operator-only account list, integer
+weights, org counts, last operator change, and the GET and PUT path.
+The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
 names the switch. `OperatorWaitlistSwitch` gives `waitlistOn`,
@@ -263,8 +221,19 @@ a revoked ID again. The Preview tool hides revoked previews by their ID.
 The git credential payload is not defined yet.
 [GitHub tokens](../../docs/protocol/tokens-and-secrets.md#github-tokens) states its rule.
 
+`preview-ingress-config.json` holds the private relay metadata path and the
+E2B private header names. `preview-ingress.ts` reads it for the Worker, and
+the Rust preview relay embeds it. The generated `PreviewIngressIdentity`
+type gives the shape of the record. This file transport stays on sandbox
+tmpfs between the Worker and the preview relay. It carries the exact
+per-target outer alias and no credential.
+
 ### Key Code
 
+- [Workspace lifecycle helpers](workspaces.ts) share `WORKSPACE_RESTORE_MS`,
+  `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
+  the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time
+  when it is at or before `now`, else null. It needs no cloud computer ID.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

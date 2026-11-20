@@ -6,6 +6,7 @@ import { lineLabel, type LineRange } from '../../shared/line-target'
 import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import { AgentText } from '../components/AgentText'
 import { LinksProvider } from '../links/LinksContext'
 import { Copying, copyAll } from '../links/mention-copy-test-kit'
@@ -21,16 +22,16 @@ const entries: FileEntry[] = [
   { path: 'shots/after.png', name: 'after.png', kind: 'file', change: null },
 ]
 
-async function mountAnswer(text: string, folder: string | null = root) {
+async function mountAnswer(
+  text: string,
+  folder: string | null = root,
+  providedFiles?: ChatMentions['files'],
+) {
   const opened: string[] = []
-  const snapshot = {
-    tree: { entries: new Map(entries.map((item) => [item.path, item])) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const files = providedFiles ?? (await chatFiles(entries)).files
   const at = (lines?: LineRange) => (lines ? `?line=${lineLabel(lines)}` : '')
   const value: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
     openFile: (path, lines) => opened.push(`${path}${at(lines)}`),
     showFolder: () => undefined,
     href: (item, lines) => `/files/${item.path}${at(lines)}`,
@@ -39,7 +40,7 @@ async function mountAnswer(text: string, folder: string | null = root) {
     <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
       <MentionsProvider root={folder} value={value}>
         <Copying>
-          <AgentText text={text} />
+          <AgentText id="agent:1" text={text} />
         </Copying>
       </MentionsProvider>
     </LinksProvider>,
@@ -48,6 +49,46 @@ async function mountAnswer(text: string, folder: string | null = root) {
 }
 
 describe('file chips in an answer', () => {
+  test('shows file chips and file links when the tree loads after the answer', async () => {
+    const { files, releaseTree } = await chatFiles(entries, { holdTree: true })
+    const view = await mountAnswer(
+      `See @src/app.ts:42 and \`${root}/shots/after.png\`, then [the form](src/app.ts#L4).`,
+      root,
+      files,
+    )
+    expect({
+      text: view.container.textContent,
+      code: [...view.container.querySelectorAll('code')].map(
+        (code) => code.textContent,
+      ),
+      links: view.container.querySelectorAll('a').length,
+    }).toEqual({
+      text: `See @src/app.ts:42 and ${root}/shots/after.png, then [the form](src/app.ts#L4).`,
+      code: [`${root}/shots/after.png`],
+      links: 0,
+    })
+
+    await releaseTree()
+    const links = [...view.container.querySelectorAll('a')]
+    expect({
+      names: links.map((link) => accessibleName(link)),
+      hrefs: links.map((link) => link.getAttribute('href')),
+      chips: [...view.container.querySelectorAll('[data-mention]')].map(
+        (chip) => chip.getAttribute('title'),
+      ),
+      code: view.container.querySelectorAll('code').length,
+    }).toEqual({
+      names: ['File app.ts:42', 'File after.png', 'the form'],
+      hrefs: [
+        '/files/src/app.ts?line=42',
+        '/files/shots/after.png',
+        '/files/src/app.ts?line=4',
+      ],
+      chips: ['src/app.ts:42', 'shots/after.png'],
+      code: 0,
+    })
+  })
+
   test('a mention and a path in code are chips, and a chip with lines opens them', async () => {
     const view = await mountAnswer(
       `See @src/app.ts:42 and \`${root}/shots/after.png\`, not \`npm test\`.`,

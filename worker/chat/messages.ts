@@ -1,4 +1,5 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
+import { sameChoice } from '../../src/shared/agents'
 import type { User } from '../../src/shared/api'
 import type {
   SendMessageRequest,
@@ -25,10 +26,10 @@ export async function existingMessage(
       (await transaction.messageSource(input.id)) !== sessionId) ||
     existing.sender.id !== user.id ||
     existing.text !== input.text ||
-    existing.choice.agent !== input.choice.agent ||
-    existing.choice.model !== input.choice.model ||
-    existing.choice.effort !== input.choice.effort ||
-    (existing.choice.fast ?? false) !== input.choice.fast ||
+    !sameChoice(
+      { ...existing.choice, fast: existing.choice.fast ?? false },
+      input.choice,
+    ) ||
     JSON.stringify(existing.attachments.map((attachment) => attachment.id)) !==
       JSON.stringify(input.attachmentIds)
   ) {

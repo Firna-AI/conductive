@@ -174,7 +174,9 @@ Each is my call, with its reason. Calls 1 to 9 date from 16 November
     address, through the web link rules. With no valid address, it shows
     its alt text only, as the file preview does. A workspace image stays a
     link that opens its file, until [Pictures in Markdown](markdown-pictures.md)
-    draws it.
+    draws it. Since the merge of `main` on 20 November 2026, pull request
+    #498 draws the image of a picture file of the workspace as a picture in
+    an answer, through the answer parts of this change.
 13. In the work fold, a closed message line shows a quote as its text and a
     rule as a middle dot, `·`. An open line shows them as blocks. Reason:
     a closed line stays one line, as for a table.
@@ -627,6 +629,11 @@ Depends on: 9
 
 Depends on: every other milestone
 
+- [x] Merge `origin/main` at `17051a2de` into the branch, with the
+      behaviours that `main` added to the replaced readers moved to the
+      parser and its adapters. The justification of each merge decision is
+      in `.context/markdown-it-reader/merge-main.md`. The pull request
+      description copies it.
 - [ ] Run the targeted tests and `npm run check`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the

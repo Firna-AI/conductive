@@ -15,13 +15,14 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { termsOrgSection } from './terms-org'
+import { termsWorkSection } from './terms-work'
 
 /**
  * The terms of use. The facts come from the architecture and the protocol
  * docs. The rules of acceptable use pass on the rules of the providers of
  * the service and name no provider. Both legal pages share the operator
  * details and contact address. The section on working in an org is in
- * `terms-org.ts`.
+ * `terms-org.ts`, and the section on your work is in `terms-work.ts`.
  */
 export const termsDocument: LegalDocument = {
   title: legalTitles.terms,
@@ -30,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 16 November 2026.`,
+  accepted it. Effective date: 18 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -63,20 +64,29 @@ export const termsDocument: LegalDocument = {
             ${productName}. The app can reach each repository where you
             install its GitHub App and have access. It reads your repository
             rights and merge method from GitHub. It shows Merge only when
-            your GitHub rights let you merge.`,
-          text`${productName} runs the cloud computers of every org in its
-            own account with its cloud computer provider. You need no
-            account or key of your own for them.`,
-          text`The agents run on the agent login that you connect.
-            Each session uses the login of the member who started it.
-            For a Claude subscription, ChatGPT plan, or provider API key, model use bills to that
-            member's connected account under the terms of Anthropic or OpenAI.
-            For an own endpoint login, model use bills where the endpoint's
-            owner runs it. You are responsible for the endpoint that you
-            connect and for following its terms.
-            The runs of an automation start their sessions on the login of the
-            member who owns the automation.
-            ${productName} keeps agent logins outside cloud computers.
+            your GitHub rights let you merge. It shows Ready for review on a
+            draft pull request only when you have write access or more.`,
+          text`${productName} runs each org's cloud computers in one of its
+            own accounts with a cloud computer provider. The org keeps
+            that account for its life. You need no account or key of your
+            own for them.`,
+          text`Each session keeps one agent login: its starter's personal
+            login or the org login. Your usable personal login comes first
+            for a new session. If you have none, the session uses the org
+            login when available. An admin can turn on Use for every member
+            to give the org login priority for new sessions. If the org
+            login cannot be used, your usable personal login serves instead.
+            Older sessions keep their login.`,
+          text`A member whom the org login serves needs no personal login.
+            Each automation run follows the same login rule as a new session
+            of its owner.`,
+          text`For a Claude subscription or ChatGPT plan, model use bills to
+            its connected account under the terms of Anthropic or OpenAI.
+            For a provider API key, the account of that key pays.
+            For an own endpoint login, the account of the endpoint pays
+            under its terms. You are responsible for the endpoint that you
+            connect and for following its terms.`,
+          text`${productName} keeps agent logins outside cloud computers.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
             through ${productName} on Cloudflare. These requests
@@ -135,8 +145,8 @@ export const termsDocument: LegalDocument = {
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
           your Mac. The command runs only after you allow it.`,
-        paragraph`Each workspace has a Mac access switch, which starts on.
-          Any member of the org can turn it off or on again. While it is
+        paragraph`Each workspace has a Mac access switch, which starts off.
+          Any member of the org can turn it on or off again. While it is
           off, the agents of that workspace cannot ask for a command.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
@@ -195,41 +205,7 @@ export const termsDocument: LegalDocument = {
           or law enforcement notices, write to ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      title: 'Your work',
-      blocks: [
-        paragraph`Your repositories, files, and agent sessions live in the
-          cloud computers that ${productName} runs for your org.
-          ${productName} keeps the chat history of each workspace, so that
-          you can read it while the cloud computer is stopped.`,
-        paragraph`The cloud computer downloads a new attachment when the
-          agent starts work on its message.
-          A large text that you paste becomes an attached file.
-          ${productName} keeps each attached file until the cloud
-          computer of its workspace has it and its first start succeeds.
-          It then deletes its own copy. The file stays in the cloud computer.
-          ${productName} deletes an unsent file 7 days after you upload it.`,
-        paragraph`When ${productName} passes on the model requests of a cloud
-          computer, it keeps no copy of a request or of its answer.
-          It writes no body or header value of them to its logs.`,
-        paragraph`Continue starts a new branch from the latest default branch
-          of the repository. It keeps the cloud computer and its sessions.
-          Changed files move to the new branch. Commits that are not pushed
-          stay on their local branches.`,
-        paragraph`The agent actions in the pull request bar send messages as
-          the member who clicks. The chat history keeps these messages and a
-          note that names who used Continue and the branches.`,
-        paragraph`You keep any rights that you have in your repositories,
-          files, messages, and other content. You give the operator
-          permission to store, copy, process, and transmit that content as
-          needed to provide the service, including through its providers.
-          You must have permission to submit that content.`,
-        paragraph`If you send feedback, you give the operator permission to
-          use it to improve ${productName}, without any obligation to you.`,
-        paragraph`The terms and licences of third-party code and services
-          still apply. Check agent output before you use or publish it.`,
-      ],
-    },
+    termsWorkSection,
     {
       title: 'Ending your use',
       blocks: [
@@ -237,7 +213,8 @@ export const termsDocument: LegalDocument = {
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
         paragraph`You can stop using ${productName} at any time. You can
-          remove connected agent logins on your account page. To request
+          remove personal agent logins on your account page. An admin can
+          remove org logins on the Agents tab of the org settings. To request
           account deletion, write to ${mailLink(legalAddress)}. Stopping
           use or removing a login does not delete an org or its chat
           history. The Privacy notice explains data retention.`,

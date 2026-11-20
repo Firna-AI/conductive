@@ -18,7 +18,11 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import { formattingConversations } from './formattingConversations'
@@ -34,6 +38,7 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { postcodeHistory } from './postcodeConversation'
 import type { MessageQuote, MessageRule } from './proseBlocks'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
@@ -183,6 +188,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
   | SecretRunItem
   | LateAnswerItem
 
@@ -256,5 +262,7 @@ export const conversations: Readonly<
   ...taskListConversations,
   ...headingConversations,
   ...formattingConversations,
+  /** The chat of the removed workspace that a chip opens. */
+  'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
 }

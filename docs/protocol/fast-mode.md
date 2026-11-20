@@ -91,9 +91,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 - Any member who may send in a session may turn fast mode on or off, as for
   the model and the effort (fast mode decision 256).
 - Each message then runs with the fast mode of the session, also a message
-  of the starter. So the login of the starter pays the higher price for the
-  turns of each member who uses that login. This includes the turns of the
-  starter.
+  of the starter. So the login of the session pays the higher price for
+  the turns of each member who uses that login. This includes the turns of
+  the starter.
 - Reason: fast mode follows the rule of the model and the effort, and adds
   no restriction.
 - These ways were rejected (fast mode decision 256):
@@ -103,9 +103,10 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
     can read the conversation again without the prompt cache.
   - A second share setting on each login, for fast mode.
   - A switch that opens a new session on the own login of the member.
-- Risk: a member can make the starter pay the higher price for the
-  messages of the starter. This holds also while the starter does not share
-  the login. A costlier model or effort has the same risk.
+- Risk: a member can make the login of a session pay the higher price for
+  the messages of the starter. On a personal login, this holds also while
+  the starter does not share the login. On the org login, the org pays. A
+  costlier model or effort has the same risk.
 
 ## Saved defaults, new workspaces, and automations
 
@@ -162,6 +163,9 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
   - The Claude org of the login has not turned on fast mode.
   - OpenAI serves a fast Codex request at standard speed.
   - The cloud computer has a runner that does not support fast mode.
+  - The cloud computer runs a Codex program older than the model, as
+    [Efforts](agents-and-sessions.md#efforts) says. The chat then shows
+    no standard speed for that turn.
 - A failed turn was rejected, because the agent can go on at standard
   speed. A switch that turns itself off was rejected, because the choice of
   the member would then end with a cause that passes, such as a cooldown.

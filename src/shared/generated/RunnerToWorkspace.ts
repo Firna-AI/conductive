@@ -2,9 +2,13 @@
 import type { RunnerEventEnvelope } from './RunnerEventEnvelope.js'
 import type { RunnerFileResponse } from './RunnerFileResponse.js'
 import type { RunnerHello } from './RunnerHello.js'
+import type { RunnerRepositoryMoveRefused } from './RunnerRepositoryMoveRefused.js'
 
 /**
  * RunnerToWorkspace wire alternatives.
  */
 export type RunnerToWorkspace =
-  RunnerHello | RunnerEventEnvelope | RunnerFileResponse
+  | RunnerHello
+  | RunnerEventEnvelope
+  | RunnerFileResponse
+  | RunnerRepositoryMoveRefused

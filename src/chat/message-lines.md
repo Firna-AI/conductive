@@ -29,6 +29,12 @@ requirements, and the mockups draw them at `app/chat/work`,
   as a middle dot. Open, it shows both as blocks.
 - `AnswerText` with `line` draws a space before each line break. The CSS
   of the closed line hides each `br`, so the space keeps the words apart.
+- `LineBlocks` gets the `LineState` of the line: whether it is open, and,
+  while it is open, the pictures of its message. So the closed line shows
+  the image of a picture file as its link, and the open line shows its
+  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
+  says. A heading and a table cell keep the link. The hidden copy of the
+  line gets the state of a closed line.
 - A task item draws its fixed check box before the words of its first
   paragraph, which stay in the line of the box, as the mockups draw it. The
   item has the `task` class of `MessageLine.module.css`: closed, the box
