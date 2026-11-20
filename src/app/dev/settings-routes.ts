@@ -1,5 +1,6 @@
 import {
   compareRepositoryNames,
+  buildsAtAdd,
   orgSettingsPaths,
   repositoryPath,
   repositoryPositionPath,
@@ -165,15 +166,17 @@ function moveRepository(
  * Chooses a repository of the org, or removes it. A newly chosen
  * repository goes to the end of the repository order. A removal turns off
  * each automation in the repository with the reason that its page shows,
- * as the Worker does.
+ * as the Worker does. An add starts a build unless the body says
+ * `build: false`.
  */
 function setRepository(
   backend: DevBackend,
   org: OrgState,
   repositoryId: string,
-  selected: boolean,
+  change: { selected: boolean; build: boolean },
   now: number,
 ): Response {
+  const { selected } = change
   const changed = org.repositories.some(
     (repository) =>
       repository.id === repositoryId && repository.selected !== selected,
@@ -202,7 +205,7 @@ function setRepository(
     )
   }
   if (changed) org.settingsRevision += 1
-  if (changed && selected) startBuild(backend, org)
+  if (changed && selected && change.build) startBuild(backend, org)
   return repositoriesReply(org)
 }
 
@@ -224,12 +227,12 @@ export function settingsRoutes(backend: DevBackend): Route[] {
     {
       method: 'PUT',
       path: repositoryPath(ID.org, ID.repository),
-      answer: ({ params }) =>
+      answer: ({ params, body }) =>
         setRepository(
           backend,
           orgOf(params),
           params.repository,
-          true,
+          { selected: true, build: buildsAtAdd(body) },
           backend.now(),
         ),
     },
@@ -241,7 +244,7 @@ export function settingsRoutes(backend: DevBackend): Route[] {
           backend,
           orgOf(params),
           params.repository,
-          false,
+          { selected: false, build: false },
           backend.now(),
         ),
     },

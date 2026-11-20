@@ -103,7 +103,8 @@ the Help row of the command palette opens.
   closed while a change of the install script or of the repositories
   waits for a build.
 - A save of the install script and each repository save read the builds
-  again, so the notices and the build that an add starts show at once.
+  again, so the notices show at once. Done of the Repositories tab starts
+  the build of the added repositories, and the build shows at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A

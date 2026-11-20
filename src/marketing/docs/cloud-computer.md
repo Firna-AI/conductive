@@ -48,11 +48,12 @@ After the first successful build, use these steps to change its repositories:
 
 The tab lists the repositories in the setup, in the org's order.
 **Edit** lists every repository that the GitHub App can reach, by name.
-Each add or remove saves at once.
+Your changes save when you select **Done**.
+If you leave the tab before **Done**, nothing changes.
 The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
 If a build or refresh is running, one more build usually starts after it succeeds.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
@@ -225,7 +226,7 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts a build automatically.
 Each build installs the newest release of Conductive's own cloud computer software.
 **Continue** keeps that same computer and the software installed by the org's install script for the workspace's next task.
 A new build does not replace the existing computer.
