@@ -40,4 +40,8 @@ export type RunnerHello = {
    * Offer complete tool sources in private numbered parts.
    */
   completeToolDetails?: boolean
+  /**
+   * True while this runner's repository file server listens.
+   */
+  fileServer?: boolean
 }

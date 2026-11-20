@@ -7,8 +7,8 @@
  * Each level has its own size, as a ratio of the text around it. The
  * ratios come from a scale of 24, 20, 18, 16, 14, and 13 px over 14 px
  * text, so at 13 px text the levels are about 22.3, 18.6, 16.7, 14.9, 13,
- * and 12.1 px. Bold text keeps its own weight, so the size sets levels 1
- * to 4 apart from it.
+ * and 12.1 px. Bold text has its own weight, from
+ * MarkdownProse.module.css, so the size sets levels 1 to 4 apart from it.
  */
 .headings :is(h1, h2, h3, h4, h5, h6) {
   color: var(--ui-ink);

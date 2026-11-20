@@ -33,6 +33,8 @@ this guide.
 - `ProvidersTab.tsx` and `provider-weights.ts`: the Providers tab, its
   weights that the operator changed, and Save weights.
   `../orgs/AccountField.tsx`: the account choice of Create org.
+- `SettingsTab.tsx`: the Settings tab, with the Stop time box and Save
+  stop time.
 - `OrgPage.tsx`, `OrgDetails.tsx`, `UserPage.tsx`, `UserDetails.tsx`,
   `AccessSections.tsx`, `TargetPage.tsx`, and `TargetDialogs.tsx`: the
   pages, the app access of a user with each way in, also an open sign-up
@@ -66,7 +68,9 @@ this guide.
   `../../app/operator-access.ts`: Approve, New code, and Disable.
   `../../app/operator-providers.ts`: `OperatorProviders`, the provider
   accounts and the save of their weights.
+  `../../app/operator-idle-stop.ts`: `OperatorIdleStop`, the stop time and
+  its save.
 - `../../app/api/read-operator.ts`, `read-operator-pages.ts`,
-  `read-operator-providers.ts`, `read-operator-runs.ts`,
-  `read-operator-switch.ts`, and `read-operator-waitlist.ts`: the readers
-  of the replies.
+  `read-operator-providers.ts`, `read-operator-idle-stop.ts`,
+  `read-operator-runs.ts`, `read-operator-switch.ts`, and
+  `read-operator-waitlist.ts`: the readers of the replies.

@@ -135,6 +135,10 @@ this guide.
   tool that shows later gets them first, in event order. It passes each
   readable list of terminals, and keeps none, because the Terminal tool
   reads the list with its state.
+- `workspace-skills.ts`: `WorkspaceSkills`, the latest skill lists of the
+  workspace from the ordered stream, as a store that the chat reads for
+  the list of `/` and the skill chips. The context gives it as `skills`,
+  and `files/chat-files.tsx` puts it into `ChatMentions`.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of
@@ -148,9 +152,20 @@ this guide.
   not go out, as [Agent actions](../../github/actions.md#agent-actions)
   says.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
-  kept files and of the kept previews for the whole screen.
+  kept files, of the kept previews, and of the kept files preview for the
+  whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
   workspace, its snapshot, and its connection while the sandbox runs.
+- `previews/kept-files-preview.ts`: the kept files preview store of the
+  open workspace, its snapshot, and its connection, with the end of the
+  files preview at its expiry and at a stop of the cloud computer.
+- `previews/use-html-preview.tsx`: `useHtmlPreview`, the `htmlPreview` of
+  the file page of an HTML file: its open at each show, its failure, its
+  frame, Reload, and Open. `previews/page-frames.tsx`: `PageFrames` and
+  `KeptPageFrames`, the frames that the chat keeps on desktop, and
+  `KeptPageFrame`, the element through which only the file page puts a
+  page there. [The tabs of HTML files](html-tabs.md) gives the rules, and
+  the `previews/HtmlTab*.test.tsx` files check them over the fake API.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `repository/RepositoryControl.tsx`: the repository of the header, its

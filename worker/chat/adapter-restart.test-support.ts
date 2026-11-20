@@ -25,6 +25,7 @@ export async function verifyAdapterRestart(
   sessionId: string,
   body: unknown,
   previousTurnId: string,
+  workspaceEvents: readonly unknown[],
 ): Promise<void> {
   await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
     name: WORKSPACE_ID,
@@ -45,9 +46,16 @@ export async function verifyAdapterRestart(
     throw new Error('The restored browser socket is missing.')
   const resumedBrowserInbox = new SocketInbox(resumedBrowser)
   resumedBrowser.accept()
+  // The events socket also holds the events that belong to no session.
   expect(await resumedBrowserInbox.next()).toEqual({
     type: 'history',
-    history: body,
+    history: {
+      ...record(body),
+      events: [...array(record(body).events, record), ...workspaceEvents].sort(
+        (left, right) =>
+          Number(record(left).eventNumber) - Number(record(right).eventNumber),
+      ),
+    },
   })
   const resumedRunnerResponse = await runtime.dispatchFetch(
     `${MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
@@ -94,7 +102,7 @@ export async function verifyAdapterRestart(
   expect(sent).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 10,
+      eventNumber: 11,
       event: { type: 'message.sent', messageId: 'offline-ask' },
     },
   })
@@ -142,7 +150,7 @@ export async function verifyAdapterRestart(
   expect(live).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 11,
+      eventNumber: 12,
       event: { type: 'assistant.delta', text: 'Continued after eviction' },
     },
   })
@@ -152,7 +160,7 @@ export async function verifyAdapterRestart(
   )
   expect(continued.status).toBe(200)
   expect(await continued.json()).toEqual({
-    throughEventNumber: 11,
+    throughEventNumber: 12,
     events: [
       ...array(record(body).events, record),
       record(sent).envelope,
@@ -184,7 +192,7 @@ export async function verifyAdapterRestart(
   expect(failed).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 12,
+      eventNumber: 13,
       event: { type: 'turn.failed', retryMessageId: 'offline-ask' },
     },
   })
@@ -192,7 +200,7 @@ export async function verifyAdapterRestart(
   expect(failedSession).toMatchObject({
     type: 'event',
     envelope: {
-      eventNumber: 13,
+      eventNumber: 14,
       event: {
         type: 'session.updated',
         session: {
@@ -214,7 +222,7 @@ export async function verifyAdapterRestart(
   )
   expect(failedHistory.status).toBe(200)
   expect(await failedHistory.json()).toEqual({
-    throughEventNumber: 13,
+    throughEventNumber: 14,
     events: [
       ...array(record(body).events, record),
       record(sent).envelope,
@@ -229,7 +237,7 @@ export async function verifyAdapterRestart(
   )
   expect(sessions.status).toBe(200)
   expect(await sessions.json()).toEqual({
-    eventNumber: 13,
+    eventNumber: 14,
     sessions: [record(record(record(failedSession).envelope).event).session],
     history: [],
   })

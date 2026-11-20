@@ -13,7 +13,7 @@ import type { Section } from '../../shared/sections'
 import { useMembersApi } from '../settings/members-api'
 import type { MenuEntry } from '../ui/Menu'
 import { MenuList } from '../ui/MenuList'
-import { PointMenu, useChoiceFocus } from '../ui/PointMenu'
+import { PointMenu, useChoiceFocus, useLostFocus } from '../ui/PointMenu'
 import { Sheet } from '../ui/Sheet'
 import type { MenuOpening } from './row-menu'
 
@@ -54,7 +54,10 @@ function sectionEntries(
  * phone sheet whose choices take the place of the actions. Copy link copies
  * the link of the workspace, and each other action changes the workspace of
  * the row. While a change of the owner runs, the menu refuses to close, so
- * its result or its error shows in it.
+ * its result or its error shows in it. A change that takes Reassign to away
+ * ends that state, and the answer of its change then changes nothing. A
+ * render that takes away the item with the focus gives the focus back to
+ * the menu, on desktop and in the sheet.
  */
 export function RowMenu(props: {
   workspace: Workspace
@@ -70,16 +73,22 @@ export function RowMenu(props: {
   const { workspace, actions, phone } = props
   const name = nameLabel(workspace.name)
   const [choices, setChoices] = useState<OpenChoices | null>(null)
+  const available = (id: Submenu) =>
+    props.items.some((item) => item.kind === 'action' && item.action === id)
   const owner = useOwnerChoices({
     api: useMembersApi(workspace.orgId),
     workspace,
     onReassigned: actions.reassigned,
     close: props.close,
+    // The state keeps to Reassign to, as the owner picker of the header keys
+    // its state to `canReassign`. A change of the access that takes Reassign
+    // to away drops its change and its error. The other actions then work
+    // again, and the answer of that change changes nothing.
+    scope: `${workspace.orgId}/${workspace.id}/${available('reassign')}`,
   })
   const content = useRef<HTMLDivElement>(null)
   useChoiceFocus(content, phone && choices !== null)
-  const available = (id: Submenu) =>
-    props.items.some((item) => item.kind === 'action' && item.action === id)
+  useLostFocus(content, phone)
   // A change of the access can take the action of the open choices away.
   if (choices && !available(choices.id)) setChoices(null)
   const close = () => {

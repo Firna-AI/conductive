@@ -33,11 +33,12 @@ account has an ID:
 - After a switch, the older org image on the old account keeps that
   account in use until the org is deleted. So does each workspace whose
   sandbox is still there.
-- Each account runs in one region. Both accounts run in the EU today:
-  Boat in Germany, Finland, and France, and E2B in Belgium. An
-  account in another region needs the steps that
-  [Regions](protocol/provider-accounts.md#regions) gives before a real org
-  runs on it.
+- Each account runs in one region. Boat runs in the EU, in Germany,
+  Finland, and France. E2B runs in the United States, as
+  [The app's E2B account](#the-apps-e2b-account) says. The Privacy page
+  names only the EU countries today. So the `e2b` account needs the steps
+  that [Regions](protocol/provider-accounts.md#regions) gives before a
+  real org runs on it.
 
 ## The app's Boat account
 
@@ -61,10 +62,12 @@ D1.
 ## The app's E2B account
 
 Every cloud computer of the orgs on `e2b` runs in the app's own E2B
-project, in E2B's EU cluster. E2B's
+project, in E2B's default cluster, `e2b.app`. E2B's
 [region table](https://docs.e2b.dev/faq/egress-ip-ranges) places that
-cluster in the Google Cloud region `europe-west1`, in Belgium. The Worker
-reads the account from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`.
+cluster in the Google Cloud region `us-west1`, in the United States. The
+same page says that E2B can run sandboxes in more than one Google Cloud
+region, and can change their place over time. The Worker reads the
+account from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`.
 
 1. Make an E2B project that holds only the app's sandboxes, templates, and
    snapshots. Keep other E2B work in other projects.
@@ -77,7 +80,7 @@ reads the account from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`.
    with the `e2b` entry:
 
    ```json
-   { "e2b": { "kind": "e2b", "apiKey": "<E2B API key>", "domain": "<domain of the EU cluster>", "templateId": "<template ID>" } }
+   { "e2b": { "kind": "e2b", "apiKey": "<E2B API key>", "domain": "e2b.app", "templateId": "<template ID>" } }
    ```
 
 6. Set the secret from that file:
@@ -88,8 +91,10 @@ reads the account from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`.
 
 - The value holds an API key. Keep it in a Worker secret. Never put it in
   the `vars` of `wrangler.jsonc`, in Git, or in a log.
-- `domain` is the domain of the EU cluster, which E2B gives with the
-  cluster. `templateId` is the ID of the template of the fourth step.
+- `domain` is the domain of the cluster of the project: `e2b.app` for
+  E2B's default cluster. Another cluster has its own domain, which E2B
+  gives with the cluster. `templateId` is the ID of the template of the
+  fourth step.
 - The `boat` account always uses `BOAT_API_KEY` and `BOAT_ORG_ID`. An entry
   named `boat` in `SANDBOX_PROVIDER_ACCOUNTS` does not replace them.
 - The key never goes to the browser, into a sandbox, into a log, or into a
@@ -103,7 +108,11 @@ reads the account from the Worker secret `SANDBOX_PROVIDER_ACCOUNTS`.
 
 ## Before a real org runs on E2B
 
-Do the steps of this section before a real org runs on E2B. Until then:
+Do the steps of this section before a real org runs on E2B. One step is a
+change of the Privacy page: it names the United States, and the
+protection of the transfer from the UK, as
+[Regions](protocol/provider-accounts.md#regions) says. That protection
+comes from the documents below. Until then:
 
 - Keep the weight of `e2b` at 0% on the Providers tab.
 - Put only test orgs on `e2b`, with the account choice of Create org or
@@ -125,14 +134,16 @@ E2B is FoundryLabs, Inc., a company in the United States. Its public pages
 do not show that these documents are signed for this deployment. So the
 legal pages claim no signed protection until the documents arrive.
 
-A workspace on E2B also needs three settings of the project from E2B
+A workspace on E2B also needs two settings of the project from E2B
 support:
 
-1. The EU cluster. E2B gives it after the project has a payment method.
-2. Filesystem-only pauses and snapshots. E2B refuses them until support
+1. Filesystem-only pauses and snapshots. E2B refuses them until support
    turns them on.
-3. A sandbox disk of 51 GB, as Boat's default size has. Confirm with
+2. A sandbox disk of 51 GB, as Boat's default size has. Confirm with
    support which plan and project settings supply this size for tests.
+
+The project needs no EU cluster. E2B gives its EU cluster only after the
+project has a payment method and support turns the cluster on.
 
 Move the project to E2B Pro before a real org runs on E2B. E2B's current
 [Billing and limits](https://docs.e2b.dev/billing) gives the plan limits

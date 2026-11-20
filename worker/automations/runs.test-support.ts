@@ -4,6 +4,7 @@ import type { AutomationRunTrigger } from '../../src/shared/automations'
 import { agentLoginContext } from '../chat/queries'
 import { backendFixture } from '../lifecycle/backend-test-support'
 import { encrypt } from '../security/crypto'
+import { seedAutomation, seedAutomationRun } from '../test-support/d1-seeds'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 
 export async function runFixture(harness: TestHarness) {
@@ -17,22 +18,23 @@ export async function runFixture(harness: TestHarness) {
       VALUES ('run-section', ?, 'Runs', 1, ?)`,
       )
       .bind(org.id, TEST_TIME),
-    db
-      .prepare(
-        `INSERT INTO automations
-      (id, org_id, owner_user_id, name, repository_id, section_id, prompt, agent, model, effort,
-       time_zone, triggers_json, next_run_at, created_at, updated_at)
-      VALUES ('automation-one', ?, ?, 'Morning summary', ?, 'run-section', 'Summarize the work.',
-        'codex', 'run-model', 'high', 'Europe/London', '[]', ?, ?, ?)`,
-      )
-      .bind(
-        org.id,
-        user.id,
-        repositoryId,
-        TEST_TIME + 60_000,
-        TEST_TIME,
-        TEST_TIME,
-      ),
+    seedAutomation(db, {
+      id: 'automation-one',
+      orgId: org.id,
+      ownerUserId: user.id,
+      name: 'Morning summary',
+      repositoryId,
+      sectionId: 'run-section',
+      prompt: 'Summarize the work.',
+      agent: 'codex',
+      model: 'run-model',
+      effort: 'high',
+      timeZone: 'Europe/London',
+      triggersJson: '[]',
+      nextRunAt: TEST_TIME + 60_000,
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }),
     db
       .prepare(
         `INSERT INTO agent_logins (user_id, agent, kind, ciphertext, no_reuse, created_at, updated_at)
@@ -57,23 +59,17 @@ export async function runFixture(harness: TestHarness) {
     id = 'run-one',
     trigger: AutomationRunTrigger = { kind: 'run-now' },
   ) => {
-    await db
-      .prepare(
-        `INSERT INTO automation_runs
-      (id, automation_id, org_id, owner_user_id, run_key, message_id, trigger_json, created_at, updated_at)
-      VALUES (?, 'automation-one', ?, ?, ?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        id,
-        org.id,
-        user.id,
-        `manual:automation-one:${id}`,
-        `message-${id}`,
-        JSON.stringify(trigger),
-        TEST_TIME,
-        TEST_TIME,
-      )
-      .run()
+    await seedAutomationRun(db, {
+      id,
+      automationId: 'automation-one',
+      orgId: org.id,
+      ownerUserId: user.id,
+      runKey: `manual:automation-one:${id}`,
+      messageId: `message-${id}`,
+      triggerJson: JSON.stringify(trigger),
+      createdAt: TEST_TIME,
+      updatedAt: TEST_TIME,
+    }).run()
     return id
   }
   return {

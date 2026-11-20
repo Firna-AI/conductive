@@ -96,12 +96,13 @@ export function isOwnPress(event: Event): boolean {
  * Drag and drop with any pointer. A mouse or a pen drags after a move of
  * more than 4 px. A finger lifts the item after a long press of 450 ms, and
  * the page does not scroll while the item is lifted. A finger that moves
- * first scrolls the page. Escape ends a drag with no drop. The click that
- * ends a lifted press reaches nothing, also the click that a finger sends
- * after it lets go. A finger opens no menu of the browser, and no press
- * starts a native drag. A press of a mouse or a pen that opens a menu ends,
- * so the menu takes the pointer. A scroll during a drag, of the page or of
- * any element, finds the drop place again.
+ * first scrolls the page. Escape ends a drag with no drop, and it stops
+ * the default action of the key, so the page takes no other action for it.
+ * The click that ends a lifted press reaches nothing, also the click that
+ * a finger sends after it lets go. A finger opens no menu of the browser,
+ * and no press starts a native drag. A press of a mouse or a pen that opens
+ * a menu ends, so the menu takes the pointer. A scroll during a drag, of
+ * the page or of any element, finds the drop place again.
  *
  * `bind(item, from)` gives the handlers of the element where a drag starts.
  * `locate` finds the drop place at each move of the pointer, and `drop`
@@ -194,7 +195,10 @@ export function usePointerDrag<T, P>(options: PointerDragOptions<T, P>) {
       if (!Object.is(place, state.place)) show({ ...state, place })
     }
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') cancel.current()
+      if (event.key !== 'Escape') return
+      // The key ends the press, so no other Escape action of the page runs.
+      event.preventDefault()
+      cancel.current()
     }
     function onUp(event: PointerEvent) {
       if (event.pointerId === press.current?.pointerId) finish(true)

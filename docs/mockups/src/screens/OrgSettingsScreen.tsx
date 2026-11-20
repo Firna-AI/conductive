@@ -93,9 +93,10 @@ export const orgSettingsSchema = {
     /**
      * The Repositories tab of an admin: the chosen repositories with Edit,
      * or, after Edit, every repository that the GitHub App reaches, with
-     * search, Add, Remove, and Done.
+     * search, Add, Remove, and Done. `edit-added` is an open edit that
+     * adds acme/admin-dashboard, which Done has not saved yet.
      */
-    repositoryView: { enum: ['list', 'edit'] },
+    repositoryView: { enum: ['list', 'edit', 'edit-added'] },
     /**
      * The order of the chosen repositories outside Edit, from
      * repository-order decision 1 F: the plain list, the row menu of

@@ -31,6 +31,7 @@ and the separate preview domain.
 | A copy of the [GitHub state](../protocol/github-banner.md#the-github-state) of each workspace, for the lists | D1 |
 | Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
+| The [merge record](../protocol/account-stats.md#the-merge-record) of each merged pull request of a workspace branch | D1 |
 | The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
 | The prepared repositories and the installed software | The org image, in the provider account of the org. After a switch, also an older org image in the old account, until the org is deleted |
 | The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
@@ -92,7 +93,9 @@ and the separate preview domain.
   says.
 - An automation run acts as its owner while no person watches. It uses the
   owner's default login and GitHub token, and the org's env vars. It also
-  uses each secret that a grant allows, such as a secret for all agents.
-  Its sandbox follows the same gateway boundary above. Other GitHub accounts
-  can write text that its agent reads, as
-  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.
+  uses each secret that a grant allows, such as a chosen secret of its
+  automation or a secret for all agents. Its sandbox follows the same
+  gateway boundary above. Other GitHub accounts can write text that its
+  agent reads, as
+  [Risks that stay open](../protocol/automation-risks.md#risks-that-stay-open)
+  says.

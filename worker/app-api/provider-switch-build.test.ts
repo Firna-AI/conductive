@@ -60,7 +60,7 @@ it('records a member build for a repository added during a hidden switch build',
     org.id,
     user.id,
     repositoryId,
-    true,
+    { selected: true, build: true },
     runtime.dependencies,
   )
   expect(response.status).toBe(200)

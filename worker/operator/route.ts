@@ -13,6 +13,7 @@ import { numericGitHubId } from './directory'
 import { operatorWaitlistRoute } from './waitlist-route'
 import { operatorProvidersRoute } from './providers-route'
 import { operatorSwitchRoute } from './switch-route'
+import { operatorIdleStopRoute } from './idle-stop'
 
 export async function handleOperatorRequest(
   request: Request,
@@ -34,6 +35,13 @@ export async function handleOperatorRequest(
     dependencies,
   )
   if (providers) return providers
+  const idleStop = await operatorIdleStopRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (idleStop) return idleStop
   const waitlist = await operatorWaitlistRoute(
     request,
     env,

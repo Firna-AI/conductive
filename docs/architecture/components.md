@@ -117,10 +117,10 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## Workspace Durable Object
 
 - One Durable Object for each workspace. It runs in Western Europe, near
-  Boat's machines and E2B's EU cluster. Each runner message passes between
-  the object and the sandbox. Every workspace object gets the Western
-  Europe hint, whatever its account. Today every account runs in the EU,
-  so each object is near its sandbox.
+  Boat's machines. Each runner message passes between the object and the
+  sandbox. Every workspace object gets the Western Europe hint, whatever
+  its account. The `e2b` account runs in the United States, so each runner
+  message of a workspace on `e2b` crosses the Atlantic.
   [Regions](../protocol/provider-accounts.md#regions) says that an account
   can run in another region.
 - It holds the open tabs, the connection of the agent runner, and the
@@ -193,8 +193,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   API of its provider when it needs it.
 - A stop ends every process. Each provider keeps the disk and the enabled
   system services, and starts those services again after each resume.
-- E2B runs in its EU cluster, in an E2B project that holds only the app's
-  work. Each E2B sandbox has private traffic.
+- E2B runs in its default cluster, in the United States, in an E2B project
+  that holds only the app's work. Each E2B sandbox has private traffic.
 - On E2B, the template gives the agents the same computer tools as on
   Boat (e2b decision 216). An E2B sandbox has no desktop stream.
 

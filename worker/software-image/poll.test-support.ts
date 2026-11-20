@@ -74,3 +74,35 @@ export function holdSoftwareImageRead(
     },
   })
 }
+
+export function holdSoftwareImageDeploy(
+  db: D1Database,
+  wait: () => Promise<void>,
+) {
+  let first = true
+  const statement = (prepared: D1PreparedStatement): D1PreparedStatement =>
+    new Proxy(prepared, {
+      get(target, property, receiver) {
+        if (property === 'bind')
+          return (...values: unknown[]) => statement(target.bind(...values))
+        if (property === 'run')
+          return async () => {
+            if (first) {
+              first = false
+              await wait()
+            }
+            return target.run()
+          }
+        return Reflect.get(target, property, receiver)
+      },
+    })
+  return new Proxy(db, {
+    get(target, property, receiver) {
+      if (property !== 'prepare') return Reflect.get(target, property, receiver)
+      return (sql: string) =>
+        sql.includes('INSERT INTO software_image_deploys')
+          ? statement(target.prepare(sql))
+          : target.prepare(sql)
+    },
+  })
+}

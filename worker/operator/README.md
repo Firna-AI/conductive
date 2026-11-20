@@ -6,7 +6,8 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
-It also lists and approves people who wait, manages invite codes, pauses
+It also sets the stop time of idle cloud computers, lists and approves
+people who wait, manages invite codes, pauses
 sign-ups, and turns the waitlist off and on.
 [Waitlist routes](#waitlist-codes-and-sign-ups) describes these entry
 points.
@@ -68,6 +69,11 @@ The reply includes no build log, script, repository content, or credential.
 
 The [Switch account protocol](../../docs/protocol/switch-account.md) holds
 the build and account-change requirements.
+
+## Stop time
+
+The [stop time guide](idle-stop.md) gives the GET and PUT routes of the
+stop time of idle cloud computers, its choices, and its change records.
 
 ## Waitlist, codes, and sign-ups
 

@@ -400,7 +400,9 @@ already in force.
   Reason: it follows the rule of an org suspension.
 - An add of a repository during a switch build starts one build that waits,
   as Build computer does. Reason: an add starts a build when no job runs,
-  and the switch build is hidden.
+  and the switch build is hidden. At the merge of `main` on 20 November
+  2026, Done after an add starts that build (#556), and the build waits in
+  the same way.
 - When no other account is configured, the box shows no Switch account,
   with a line that says why. Reason: the New orgs box does the same.
 - The record of a switch keeps the time and the operator of a stop.
@@ -416,6 +418,10 @@ already in force.
 - The terms revision `TERMS_VERSION` in `src/shared/terms.ts` changes to
   `2026-11-20-provider-switch`, because the Terms text changed. Reason:
   each earlier change of the Terms text did the same, such as #423.
+  Replaced at the merge of `main` on 20 November 2026: `main` computes
+  `TERMS_VERSION` from a digest of the Terms text (#571). So the Terms
+  text of this change gives a new revision by itself, and the hand-set
+  revision is gone.
 - A second migration recreates the index `image_builds_running` so that
   it leaves out a build that waits for a switch build. Reason: a build
   that waits shows as running, and the old index allowed one running row

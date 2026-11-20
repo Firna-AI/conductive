@@ -10,6 +10,10 @@ import type { ChatSources } from '../../chat/state/sources'
 import type { SubscribeToWorkspace } from '../../chat/stream/workspace-stream'
 import type { WorkspaceFiles } from '../../files/model/files-store'
 import {
+  createFilesPreviewStore,
+  type FilesPreviewStore,
+} from '../../previews/filesPreview'
+import {
   createPreviewsStore,
   type PreviewsStore,
 } from '../../previews/previewsStore'
@@ -17,6 +21,7 @@ import {
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
+import { WorkspaceSkills } from './workspace-skills'
 import { WorkspaceView } from './workspace-view'
 
 /**
@@ -30,6 +35,8 @@ export interface ShownWorkspace {
   readonly chat: ChatController
   /** The events that the tools read, with the revokes that they keep. */
   readonly toolEvents: ToolEvents
+  /** The latest skill lists, for the list of `/` of the chat. */
+  readonly skills: WorkspaceSkills
 }
 
 interface KeptWorkspace extends ShownWorkspace {
@@ -92,6 +99,8 @@ export class ShownWorkspaces {
   private readonly keptFiles = new Map<string, WorkspaceFiles>()
   /** The kept previews of each workspace, made at their first read. */
   private readonly keptPreviews = new Map<string, PreviewsStore>()
+  /** The kept files preview of each workspace, made at its first read. */
+  private readonly keptFilesPreviews = new Map<string, FilesPreviewStore>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -151,6 +160,7 @@ export class ShownWorkspaces {
       model: new WorkspaceModel(org, workspaceId),
       notices: new HeaderNotices(),
       toolEvents: new ToolEvents(),
+      skills: new WorkspaceSkills(),
       chat: new ChatController({
         target: { orgId, workspaceId },
         // The client of the org takes each `org_suspended` refusal of the
@@ -218,6 +228,21 @@ export class ShownWorkspaces {
     return previews
   }
 
+  /**
+   * The kept files preview of a workspace, which the tabs of HTML files
+   * show. The first call makes the store, which starts nothing. The
+   * workspace screen connects it, so the end of the files preview reaches
+   * it, and each tab of an HTML file reads it.
+   */
+  filesPreview(orgId: string, workspaceId: string): FilesPreviewStore {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptFilesPreviews.get(key)
+    if (known) return known
+    const store = createFilesPreviewStore({ orgId, workspaceId })
+    this.keptFilesPreviews.set(key, store)
+    return store
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
@@ -225,6 +250,7 @@ export class ShownWorkspaces {
     for (const files of this.keptFiles.values()) files.stop()
     this.keptFiles.clear()
     this.keptPreviews.clear()
+    this.keptFilesPreviews.clear()
   }
 }
 

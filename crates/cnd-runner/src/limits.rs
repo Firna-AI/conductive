@@ -10,6 +10,7 @@ use cnd_runner_interface::runner::RunnerEvent;
 use crate::error::{Error, Result};
 use crate::json::codec;
 use crate::port_limits;
+use crate::skills::prepare;
 
 /// Bound chat excerpts and whole private port labels like the Node runner.
 /// Rust strings already contain Unicode scalar values, including repaired U+FFFD.
@@ -48,6 +49,7 @@ pub fn bound_event(mut event: RunnerEvent) -> Result<RunnerEvent> {
             *omitted_file_count = add_count(*omitted_file_count, (full - kept) as u64)?;
         }
         RunnerEvent::RunnerPortsUpdated(report) => port_limits::bound(report)?,
+        RunnerEvent::RunnerSkillsUpdated(report) => prepare::bound(report)?,
         _ => {}
     }
     Ok(event)

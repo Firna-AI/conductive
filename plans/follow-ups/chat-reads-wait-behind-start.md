@@ -27,6 +27,5 @@
 - **Left out:** None.
 - **Wider fix:** D. It keeps every slow provider call out of the chat queue, for each lifecycle step and each chat request.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/session-history-index.md` would make each history request shorter in the chat queue.
 - **Recommendation:** A. The waits can now be too short to be worth a change to the queue, and a measurement shows it. D best protects the codebase if the measurement shows long waits.
 - **Action:** ask the user, because no option is clearly best until a measurement shows how long the waits are.

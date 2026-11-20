@@ -3,11 +3,11 @@
 The operator section is the part of the web app where an operator sees
 the whole app, acts on one org or one user, and runs the waitlist. It
 lives at `/operator`. It has the tabs Overview, Orgs, Users, Waitlist,
-Invite codes, and Providers, a page for each org and each user, Suspend and
-Lift on those pages, Switch account on the page of an org, Approve for a
-person who waits, the codes, the pause of sign-ups, the waitlist switch, and
-the weights that give each new org its provider account. The Mac app shows
-the same pages, because it shows the web app.
+Invite codes, Providers, and Settings, a page for each org and each user,
+Suspend and Lift on those pages, Switch account on the page of an org,
+Approve for a person who waits, the codes, the pause of sign-ups, the
+waitlist switch, and the weights that give each new org its provider
+account. The Mac app shows the same pages, because it shows the web app.
 [Operator section](../../../docs/protocol/operator-section.md),
 [Switch account](../../../docs/protocol/switch-account.md),
 [Operator section: the Overview](../../../docs/protocol/operator-overview.md),
@@ -42,6 +42,7 @@ visual spec is the `app/operator` page of the
 | Waitlist | `/operator/waitlist?q=<search>` | `routes.operatorWaitlist(search)` |
 | Invite codes | `/operator/codes?q=<search>` | `routes.operatorCodes(search)` |
 | Providers | `/operator/providers` | `routes.operatorProviders()` |
+| Settings | `/operator/settings` | `routes.operatorSettings()` |
 
 The search lives in `q`, so Back and a link bring it back. A pause of
 300 ms in the typing, or Enter, puts the text in the address in place of
@@ -160,6 +161,19 @@ with the search of its invite code.
 - While the numbers load, the box keeps its place with 10 placeholder
   rows.
 
+## Stop time
+
+- The Settings tab reads `GET /api/operator/idle-stop` when it opens. The
+  reply gives the stop time of idle cloud computers and its last change
+  with its operator. A failed read shows Try again and no choice, because a
+  time that did not load is not the default.
+- The Stop time box offers 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours
+  as one segmented control, `StopTimeChoice`.
+- Save stop time sends `PUT` with `{minutes}`. It is on only while the
+  choice differs from the saved time, and not while the save runs. The
+  reply shows at once, with "Changed on" and its operator. A failed save
+  keeps the chosen time and shows that it was not saved.
+
 ## Provider accounts and Switch account
 
 [Provider accounts and Switch account](provider-accounts.md) gives the
@@ -172,11 +186,11 @@ The section reuses the parts of the mockups that import no fixture:
 `WorkspaceStates`, `DailyChart`, `InlineText`, `StatusGlyph`,
 `WeightSlider`, `WeightFields`, `AccountCounts`, `AccountChoice`, the words
 of `operatorCopy.ts`, `accessCopy.ts`, `codeCopy.ts`, `longRunsCopy.ts`
-with its run length format, `providerCopy.ts`, and `switchCopy.ts`, the state words of
+with its run length format, `providerCopy.ts`, `switchCopy.ts`, and `stopTimeCopy.ts`, the state words of
 `status.ts`, the workspace label of `label.ts`, and the CSS modules of
 `docs/mockups/src/components/operator/`, of `CheckOption`, and of the
 Providers screen. So the app and the mockups keep the same words, dates,
-and look. On a phone, the six tabs use the `flow` mode of `LinkTabs`, as
+and look. `StopTimeChoice` comes from there too. On a phone, the seven tabs use the `flow` mode of `LinkTabs`, as
 the mockups do.
 
 `AccountSection` and `SwitchDialogs` of the mockups import the fixtures of

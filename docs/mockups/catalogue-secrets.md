@@ -37,12 +37,22 @@ has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
 the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with
-the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
+the approval of its open session and its value for the workspace, each with
+Remove. It hides an approval of the pre-approved FIGMA_TOKEN and an
+approval of another session. Its `mac-access-off` variant has Mac access off. Its `menu` variant
 has the menu of the + button of a phone, with Attach files and
 Capabilities. The
 `mac-access-off` variant of `app/mac-commands` has a Mac command that the
 workspace refused for that reason.
+
+`app/automations/automation/capabilities` has the control of an automation,
+from the automation capabilities decisions of 18 November 2026. It opens
+above the Capabilities icon in the bar of the prompt box, and a phone opens
+it as a sheet. It has only the Secrets part: the secrets of Acme, with
+FIGMA_TOKEN and VERCEL_TOKEN checked for each run workspace. Under the
+prompt box, a line names the secrets that runs can use with no question,
+and the hint of a pull request trigger follows. The `member` and `admin`
+child pages of `app/automations/automation` have the same line, read-only.
 
 `app/secret-requests` has a request for PROD_DATABASE_URL just above the
 composer, while the tool call waits. Its child pages:

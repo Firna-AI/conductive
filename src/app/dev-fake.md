@@ -190,6 +190,8 @@ option overrides this default, including queued chats that show no spinner.
   the run fails with no workspace. A prompt that contains `fail` stands for
   a cloud computer that did not start: the run fails and keeps its
   workspace, in the error state with Try again, as the Worker does. The
+  workspace of a run starts with the chosen secrets of its automation
+  pre-approved, and Mac access off. The
   recorded server has no chat for
   a workspace that the fake made, so its chat does not load, and the line
   of its automation does not show.
@@ -201,7 +203,7 @@ option overrides this default, including queued chats that show no spinner.
   value. A member changes only the own secrets, and only an admin sets the
   mark for all agents or reveals a value, which the fake records. A Replace
   of the value ends the record of the last reveal, and a Delete ends each
-  grant of the secret. A suspended org refuses each write, also a reveal.
+  grant of the secret and leaves the chosen secrets of each automation. A suspended org refuses each write, also a reveal.
   `dev/capability-routes.ts` serves the Capabilities of each workspace:
   `checkout-autocomplete` pre-approves FIGMA_TOKEN and has two approvals of
   its sessions, and a create keeps the choices of its control. The fake

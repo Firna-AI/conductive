@@ -182,13 +182,25 @@ View writes cannot change this branch.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
-  added it, also after a failed build. A repeated save and a removal start
-  no build. An ordinary running job takes the request without starting
-  another job. During a hidden switch build, the add records a member
-  build that waits. [Provider switches](../lifecycle/provider-switches.md)
-  gives its first log line and its execution deadline.
+  added it, also after a failed build, unless its body says
+  `build: false`. The app sends that body, so that Done of the
+  Repositories tab starts one build for every add of an edit. A request
+  without the field, from an older copy of the app, still builds at the
+  add. A repeated save and a removal start no build. An ordinary running
+  job takes the request without starting another job. During a hidden
+  switch build, the add records a member build that waits.
+  [Provider switches](../lifecycle/provider-switches.md) gives its first
+  log line and its execution deadline.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
+- `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
+  an admin. Each reply is `RepositoriesResponse`: the stored repositories
+  after the save, merged with the GitHub repositories of the admin. The
+  route reads those GitHub repositories once, before the save, so that no
+  call to GitHub can fail a change that saved. A failed read fails the
+  change before it saves. A removal by an admin without a saved GitHub
+  connection reads nothing from GitHub. Its reply holds the stored
+  repositories only.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
   gives the repository order of an org. The chosen repositories come
   first, by `position`, then a chosen row without a position, then the
@@ -423,7 +435,7 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add.
+  and starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),

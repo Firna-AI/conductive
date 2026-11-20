@@ -9,11 +9,13 @@ Providers tab, the account of each org, the switch of that account, and
 the account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
-  Invite codes, and Providers, from `OperatorPage` in
-  `src/components/operator/`. On a phone the six tabs keep one line while
+  Invite codes, Providers, and Settings, from `OperatorPage` in
+  `src/components/operator/`. On a phone the seven tabs keep one line while
   they fit, with the `flow` mode of `LinkTabs`. When they do not fit, the
   last tabs move to a second line, so that every tab shows. A phone of
-  390 px puts Providers on the second line. The overview uses
+  390 px puts Providers and Settings on the second line. The Stop time
+  box of the Settings tab uses the segmented control of `@firna/ui`,
+  which wraps its five choices on a phone. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
   `@firna/ui`. A view runs no script, so the chart keeps the width that the
   page column gives it. The workspaces by state reuse `StatusGlyph`, the mark of the header.

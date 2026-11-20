@@ -179,6 +179,7 @@ export function orgEntry(state: LastWorkspaceState, orgId: string): string {
  * without an org that is not deleted. Otherwise the workspace that the
  * person opened last, while its org is in the list and not deleted. Else
  * the first org that is not deleted, which is the org of Get started.
+ * `orgs` comes from `AppModel.activeOrgs`.
  */
 export function startPage(
   state: LastWorkspaceState,
@@ -188,7 +189,6 @@ export function startPage(
   const first = setupOrg(orgs)
   if (firstRun || !first) return routes.getStarted()
   const latest = orgs.find((org) => org.id === state.latest)
-  const address =
-    latest && !latest.deletion ? state.addresses.get(latest.id) : undefined
+  const address = latest ? state.addresses.get(latest.id) : undefined
   return address ?? routes.org(first.id)
 }

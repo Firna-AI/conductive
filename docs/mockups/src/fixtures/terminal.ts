@@ -161,8 +161,8 @@ const acmeCommits = [
 
 /**
  * The log of a build of Acme that clones the chosen repositories, such as
- * the build that an added repository starts, at the start of its install
- * script. The log box shows the first lines of a log, so this log is no
+ * the build that Done starts after an add of a repository, at the start
+ * of its install script. The log box shows the first lines of a log, so this log is no
  * longer than the log of other builds.
  */
 export function acmeBuildLog(

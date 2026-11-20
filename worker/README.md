@@ -143,7 +143,7 @@ approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
 It also repairs overdue workspace disk and archive alarms and org image refreshes after a 15-minute grace period.
 It then advances unfinished software image builds and retries their cleanup
-in the default provider account.
+in each provider account of `software_images`.
 The repair checks at most 50 workspaces and 50 orgs per run.
 It defers failed calls and logs counts when either limit leaves work pending.
 The `* * * * *` Cron Trigger runs automation schedules and recovers old queued runs each minute.

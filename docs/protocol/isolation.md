@@ -184,8 +184,8 @@ requirements.
   [Mac commands](agent-tools.md#mac-commands) say.
 - An automation run uses the default login and the GitHub token of its
   owner while no person watches. Its sandbox follows the same rules below.
-  [Risks that stay open](automations.md#risks-that-stay-open) states the
-  risks of automations.
+  [Risks that stay open](automation-risks.md#risks-that-stay-open) states
+  the risks of automations.
 - With each turn, the agent runner gets a turn token for the login of its
   session, over its connection to the Durable Object. Reason: the sandbox
   gets its secrets only at a start, and the sessions of one sandbox can

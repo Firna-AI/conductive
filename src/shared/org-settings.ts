@@ -90,6 +90,24 @@ export function compareRepositoryNames(
   )
 }
 
+/**
+ * The body of an add or a removal of a repository. With `build: false`, an
+ * add starts no build, so that one build at Done holds every add of an
+ * edit. A body without `build` starts a build at each add.
+ */
+export interface RepositoryChangeRequest {
+  build?: boolean
+}
+
+/** Whether a repository add starts a build: each body but `build: false`. */
+export function buildsAtAdd(body: unknown): boolean {
+  return !(
+    typeof body === 'object' &&
+    body !== null &&
+    'build' in body &&
+    body.build === false
+  )
+}
 export interface RepositoriesResponse {
   repositories: readonly Repository[]
 }

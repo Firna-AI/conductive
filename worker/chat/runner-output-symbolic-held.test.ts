@@ -64,10 +64,10 @@ it('masks held whole copies after value changes and keeps exact longer and fallb
     },
     {
       name: 'generated mask preserves source continuation',
-      before: ['abc', 'bcdef'],
-      first: 'abc',
-      after: ['bcdef'],
-      next: 'def!',
+      before: ['a:b', ':bcde'],
+      first: 'a:b',
+      after: [':bcde'],
+      next: 'cde!',
       expected: '[redacted][redacted]!',
     },
     {

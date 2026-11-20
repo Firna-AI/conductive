@@ -59,7 +59,13 @@ lines of the target have a soft amber fill, and the first of them sits in
 the middle of the view, on desktop and on a phone.
 `app/files/markdown` has README.md and `app/files/diff` has the diff of
 AddressForm.tsx, each in the temporary tab that a press opened, beside the
-kept tab of the code file of `app/files/code`.
+kept tab of the code file of `app/files/code`. README.md has a note in a
+quote with a bold label, a table cell on two lines, a variable with a line
+through it, text in italics, a picture at a web address, a task list, and
+a rule, in the look of a reply of the chat, as
+[the Markdown of replies](design-markdown.md) gives. The picture shows its
+alt text as a link, from item 10 B of the Markdown plan of 18 November
+2026, and each task shows a fixed check box.
 `app/files/image` has a picture of the branch in the temporary tab, from
 decision 265 B. Its `cannot-draw` variant has an image whose bytes the
 browser cannot draw, with "Download this file to open it". Its
@@ -67,10 +73,35 @@ browser cannot draw, with "Download this file to open it". Its
 press on its picture in `app/file-mentions/answers` opened in the
 temporary tab, from screenshot decision 2 of 18 November 2026.
 
+`app/files/html` has `.context/report.html` in the temporary tab, in
+Preview, from HTML preview decision 1 A, which Cal chose on 18 November
+2026. An agent wrote the report as a web page. The page shows in a frame
+under the header, with its own styles and the bars that its script draws.
+The header has Download beside the path, then Reload, Open, Copy, and the
+switch between Preview and Source. On a phone, Reload and Open take a
+second line of the header, right above the page. The row of the report is
+marked in the open context folder of All files. Its variants:
+
+- Its `source` variant has the text of the file in Source, with line
+  numbers and the syntax colours of HTML, as a code file shows.
+- Its `opening` variant has the page that `app/tools/preview-opening`
+  draws, in the frame. The tab shows this one wait from the press until
+  the page loads: while the app opens the preview, then while the frame
+  loads.
+- Its `older-software` variant has a notice in place of the page: the
+  preview needs newer cloud computer software, and the member selects
+  Restart in the workspace header. The notice has no button of its own,
+  and the header has no Reload and no Open. When the workspace leaves
+  Starting after the Restart, the page shows by itself.
+- Its `failed` variant has a preview that did not open, because the cloud
+  computer did not answer. In place of the page, the tab shows the
+  failure of a Preview tab: "The preview couldn't open", the message of
+  the server, and Try again. The header has no Reload and no Open.
+
 `app/files/temporary` draws the temporary tab, from decisions 284 to 287.
 Its canonical screen has README.md, which a press in All files opened in
-the temporary tab at the end of the row, with its title in italics. Its
-variants:
+the temporary tab at the end of the row, with its title in italics.
+While it shows, Escape closes it. Its variants:
 
 - Its `replaced` variant has the diff of AddressForm.tsx in the place of
   README.md, after a press in Changes, before a new session that opened

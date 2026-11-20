@@ -1,8 +1,10 @@
 import type { Agent } from '../shared/generated/Agent'
 import { ACCOUNT_PATHS, type AccountResponse } from '../shared/account'
+import type { AccountLoginRequests } from './account-login-requests'
 import type { AgentLogins, LoginRead } from './agent-logins'
 import { AGENTS, readAccount } from './api/read-core'
 import type { AppModel } from './app-model'
+import type { Boot } from './boot'
 import { inOrgs, orgLoginsInUse } from './default-logins'
 import { modelListWait } from './endpoint-models'
 import {
@@ -34,15 +36,18 @@ export class AccountLoginReads {
   private readonly app: AppModel
   private readonly account: Store<AccountResponse | null>
   private readonly logins: AgentLogins
+  private readonly requests: AccountLoginRequests
 
   constructor(
     app: AppModel,
     account: Store<AccountResponse | null>,
     logins: AgentLogins,
+    requests: AccountLoginRequests,
   ) {
     this.app = app
     this.account = account
     this.logins = logins
+    this.requests = requests
     app.boot.subscribe(() => {
       this.running = null
       this.observations.clear()
@@ -110,7 +115,8 @@ export class AccountLoginReads {
   /**
    * Reads one login after a change of a login of its agent, with the
    * caller's mark. The read also gives the default logins of that agent,
-   * which the change can move to another login.
+   * which the change can move to another login. The caller holds the
+   * agent's request slot until this read applies.
    */
   async readAgent(
     agent: Agent,
@@ -124,21 +130,26 @@ export class AccountLoginReads {
     if (this.app.boot.get() === boot) show(account, agent)
   }
 
-  /** Starts a new read of the account, also while an older one runs. */
+  /** Queues a fresh account read, also while an older read is pending. */
   private start(): Promise<void> {
     this.clearTimer()
-    const run: Promise<void> = this.read().finally(() => {
-      if (this.running !== run) return
-      this.running = null
-      this.follow()
-    })
+    const boot = this.app.boot.get()
+    const show = this.logins.mark()
+    const run: Promise<void> = this.requests
+      .run(AGENTS, () => this.read(boot, show))
+      .finally(() => {
+        if (this.running !== run) return
+        this.running = null
+        this.follow()
+      })
     this.running = run
     return run
   }
 
-  private async read(): Promise<void> {
-    const boot = this.app.boot.get()
-    const show = this.logins.mark()
+  private async read(
+    boot: Boot,
+    show: ReturnType<AgentLogins['mark']>,
+  ): Promise<void> {
     const account = await this.app.services.api
       .get(ACCOUNT_PATHS.account, readAccount)
       .catch(() => null)

@@ -144,7 +144,9 @@ The existing stored chat session supplies the workspace's real agent choice.
 
 Each waiting request contributes to the workspace's `input` state.
 An answer clears this request's wait.
-`input` shows over starting, working, ready, and unread.
+`input` shows over working, ready, and unread.
+Starting shows over a waiting request during a start or a Restart.
+When the runner is ready and starting ends, `input` shows again while a request still waits.
 Newer stopped, archived, or error states show over a waiting request.
 The durable marker also repairs a restart before the D1 input transition.
 

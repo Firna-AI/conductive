@@ -71,12 +71,15 @@ Sources for the review:
   does not establish that all account, support, or other operations stay
   in the EU.
 - [E2B's region table](https://docs.e2b.dev/faq/egress-ip-ranges) places
-  its EU region in Google Cloud `europe-west1`.
+  its default region, `US`, in Google Cloud `us-west1`. It also says that
+  E2B can run sandboxes in more than one Google Cloud region, and can
+  change their place over time.
   [Google's location list](https://docs.cloud.google.com/workstations/docs/locations)
-  identifies that region as St. Ghislain, Belgium.
+  identifies `us-west1` as The Dalles, Oregon, in the United States.
   [E2B's regional resource guide](https://docs.e2b.dev/faq/migrate-between-regions)
-  says that sandboxes, snapshots, and templates stay in their selected
-  region. Conductive selects the EU region for its E2B project.
+  says that each project belongs to one region, and that templates,
+  sandboxes, and snapshots stay in the region of their project.
+  Conductive's E2B project runs in the default region.
 - [E2B's security page](https://e2b.dev/security) offers a data processing
   addendum through its Trust Center and a signed copy through
   `trust@e2b.dev`. The subprocessor list is also available on request.
@@ -89,13 +92,17 @@ Sources for the review:
   terms before describing a specific safeguard as applicable to Firna.
 
 The Privacy page describes both cloud computer providers as companies
-registered in the United States. It gives their selected EU sandbox and
-snapshot locations without naming them. It does not promise that every
-provider operation stays in the EU. It makes no claim that Firna has
-signed E2B's data processing addendum, standard contractual clauses, or UK
-transfer terms. The [deployment guide](../../docs/deployment.md) gives the
-operator's setup steps. Keep the E2B weight at zero until its processing
-terms are confirmed.
+registered in the United States. It gives Boat's EU sandbox and snapshot
+locations without naming the provider. It does not name E2B's US region,
+because only test orgs run there. Before a real org runs on E2B, the page
+names the United States and the protection of the transfer from the UK,
+as [Regions](../../docs/protocol/provider-accounts.md#regions) says. The
+page does not promise that every provider operation stays in the EU. It
+makes no claim that Firna has signed E2B's data processing addendum,
+standard contractual clauses, or UK transfer terms. The
+[deployment guide](../../docs/deployment.md) gives the operator's setup
+steps. Keep the E2B weight at zero until its processing terms are
+confirmed.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as

@@ -63,8 +63,12 @@ an existing running build keeps that build running.
 
 `changeShellRepository` in
 [`feature-repositories.ts`](../app-api/feature-repositories.ts) starts a
-build after a save adds a repository. It uses the admin who added it,
-also after a failed build. A repeated save and a removal start no build.
+build after a save adds a repository, unless the save says
+`build: false`. The app sends that body, and Done of the Repositories tab
+then starts one build through the builds route. An add without the
+field, from an older copy of the app, builds at once. The build uses the
+admin who added the repository, also after a failed build. A repeated
+save and a removal start no build.
 A failed start keeps the saved choice and writes one fixed warning.
 
 `publishBuild` in [`build-admission-data.ts`](build-admission-data.ts)

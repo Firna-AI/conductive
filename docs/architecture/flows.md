@@ -95,6 +95,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   request to the private preview relay of the sandbox, with the port
   credential of its provider. The relay forwards it to the previewed
   server with its local address as `Host`.
+- The frame of an HTML file tab loads the files preview of its workspace
+  in the same way. The relay forwards each of its requests to the file
+  server of the agent runner, which reads the files of the repository.
 - For a sandbox on Boat, the Worker asks Boat for a short-lived desktop
   URL, and the browser shows Boat's desktop stream. A sandbox on E2B has
   no desktop stream. The app hides the Desktop tool for now.

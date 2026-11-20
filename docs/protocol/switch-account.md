@@ -170,10 +170,11 @@ says.
   counts from then, as
   [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts)
   says. Reason: a slow switch build then fails no build of an admin.
-- An admin who adds a repository during a switch build gets one build that
-  waits in the same way. Reason: an add starts a build when no job runs, as
-  [Added repositories](org-image.md#added-repositories) says, and the
-  switch build is hidden from members.
+- An admin whose Done saves an add of a repository during a switch build
+  gets one build that waits in the same way. So does an add from an older
+  copy of the app. Reason: Done after an add starts a build when no job
+  runs, as [Added repositories](org-image.md#added-repositories) says, and
+  the switch build is hidden from members.
 - The counts of the operator section leave out a build that waits, as
   [The counts](operator-overview.md#the-counts) says.
 - A build or a refresh that the switch question ends fails, with the saved
