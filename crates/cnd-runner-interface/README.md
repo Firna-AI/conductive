@@ -21,11 +21,23 @@ complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
 The hello has an optional `fileServer` capability. A listening file server
 sets it to true. Older runners omit it. The protocol version stays 2.
-The crate defines no service type yet. Define the service contracts here,
-as [Service reports](../../docs/protocol/service-reports.md) says: the
-optional support fields of the hello and the welcome, full reports with a
-boot ID and a revision, controls with a request ID and a generation, and
-log reads. Keep them outside the numbered runner events.
+The hello and welcome also have optional `services` support fields.
+Both must be true before a connection carries services. Production code
+does not advertise or accept service support yet.
+Service contracts separate local definitions and raw log replies from
+selected public report rows and filtered app log excerpts.
+Reports carry the computer boot ID and revision. Controls carry a durable
+request ID and the observed boot, service ID, and generation.
+Private service messages belong to `RunnerToWorkspace` and
+`WorkspaceToRunner`, outside `RunnerEvent` and the stored `RunnerCommand`
+union. They never enter the numbered outbox or change its cursor.
+Report, control-result, and log documents travel in private text parts.
+Each complete outer message uses the existing 1 MiB runner budget.
+Join each document, parse its typed JSON, and filter complete text fields
+before storage or display cuts. Raw log assembly stays in memory.
+The app catalogue distinguishes unsupported software, a stopped computer,
+and a supported empty report. Feature APIs carry it without new browser
+socket kinds. An optional `serviceId` extends existing listening ports.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -72,6 +84,7 @@ let hello = RunnerHello::Hello {
     repository_folder: Some("/home/user/code/storefront".into()),
     complete_tool_details: Some(true),
     file_server: None,
+    services: None,
 };
 ```
 
@@ -90,7 +103,8 @@ It writes helper types and their dependencies to `runner/sdk-helper/src/generate
 It formats both folders with Prettier.
 It removes old generated files before export. Commit the generated files.
 The export command does not add a gate check for generated changes.
-JSON file snapshots cover every message form and optional or nullable fields.
+Wire tests cover message forms and optional or nullable fields.
+Service tests use the public JSON decoder and typed serializers.
 One test compares the TypeScript runtime limits with their Rust constants.
 
 ### Key Code
@@ -98,6 +112,13 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Handshake](src/runner_handshake.rs) defines the two message directions and event envelope.
 - [File server](src/file_server.rs) defines the reserved loopback port and files-mark header.
 - [Commands](src/runner_commands.rs) defines turn, message, control, and report requests.
+- [Local services](src/services/local.rs) defines private Start input and printable CLI/MCP replies without environment values.
+- [Service state](src/services/process.rs) defines run identities, process results, and selected metadata.
+- [Service controls](src/services/control.rs) defines generation-bound requests and durable, output-free receipts.
+- [Service reports](src/services/reports.rs) defines complete snapshots and definition provenance.
+- [Service transport](src/services/transport.rs) defines independent private commands and multipart documents.
+- [Service logs](src/services/logs.rs) defines raw runtime replies and the approved retained-log and app-excerpt bounds.
+- [App services](src/services/app.rs) defines filtered catalogue and log API replies.
 - [Credentials](src/runner_credentials.rs) defines supported logins and temporary credentials.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
 - [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.

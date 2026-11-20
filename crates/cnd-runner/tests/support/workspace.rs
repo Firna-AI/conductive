@@ -140,6 +140,7 @@ impl Socket for Connection {
                 if state.welcome {
                     self.deliver(WorkspaceToRunner::RunnerWelcome(RunnerWelcome::Welcome {
                         complete_tool_details: state.complete_tool_details,
+                        services: None,
                         protocol_version: RunnerProtocolVersion,
                         confirmed_through: *state.cursors.get(&stream_id).unwrap_or(&0),
                         stream_id,

@@ -181,6 +181,18 @@ These are the docs implementors' calls of 20 November 2026, checked by the orche
 - Show only the approved stable Start example until the native command exists. Reason: implementation owns the remaining option names.
 - Keep the shared-user credential risk in the legal pages and guides. Reason: a clean environment changes inheritance but does not isolate repository code.
 
+### Services contract calls
+
+These are the non-UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They implement the approved profile.
+
+- Separate private local definitions, selected reports, controls, logs, and app replies. Reason: each boundary has different data and storage duties.
+- Carry only `originatingTurnId` from a local Start. The Worker derives the session from its own workspace records. Reason: the caller has a turn ID but no session ID.
+- Use multipart typed JSON for private reports, control results, and logs. Reason: names, catalogues, and failure messages can exceed one envelope.
+- Keep partial assemblies with their connection. Start a fresh transfer after reconnect. Reason: private service traffic has no numbered replay.
+- Separate raw runtime log replies from filtered app excerpts. Reason: a raw assembly must never enter Worker storage.
+- Give each start attempt a new generation, including a failed launch. Reason: controls and results must name that attempt precisely.
+- Keep durable control receipts free of raw output and definitions. Reason: correlation needs only the request, target, and outcome.
+
 ### Services UI calls
 
 These are the UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They follow services decision 19 A.
@@ -246,12 +258,14 @@ Depends on: 2
 
 The non-UI implementor adds optional contracts without sending new traffic yet.
 
-- [ ] Define the service identity, selected metadata, state, process result, start input, control input, log result, and report contracts in Rust.
-- [ ] Define supported-service negotiation and the old-runner unavailable state.
-- [ ] Define a report path that remains safe with a previous Worker, pending outbox records, and old Mac apps. Keep normal event numbering intact.
-- [ ] Use the existing envelope budget. Add no unapproved name, count, label, or log limits. Use private parts or paging when the selected contract needs them.
-- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated TypeScript.
-- [ ] Check serialization and the named compatibility behaviors through the public readers. Keep the app and existing runner path working.
+- [x] Define the service identity, selected metadata, state, process result, start input, control input, log result, and report contracts in Rust.
+- [x] Define supported-service negotiation and the old-runner unavailable state.
+- [x] Define a report path that remains safe with a previous Worker, pending outbox records, and old Mac apps. Keep normal event numbering intact.
+- [x] Use the existing envelope budget. Add no unapproved name, count, label, or log limits. Use private parts or paging when the selected contract needs them.
+- [x] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated TypeScript.
+- [x] Check serialization and the named compatibility behaviors through the public readers. Keep the app and existing runner path working.
+
+Completed on 20 November 2026. Evidence: `.context/services/contracts-report.md` and `.context/services/milestone-3-integration.md`.
 
 ## Milestone 4: Native service manager and command
 
