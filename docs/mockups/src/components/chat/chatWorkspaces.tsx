@@ -7,6 +7,7 @@ import {
   type SidebarSection,
   type WorkspaceRow,
 } from '../workspaces/sections'
+import { rowLinks, type RowLinks } from './workspaceLinks'
 
 /**
  * A session of a linked workspace, as the chat read it when it loaded: its
@@ -55,8 +56,8 @@ export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
   ]
 }
 
-const ChatWorkspacesContext = createContext<readonly ChatRow[]>(
-  orgRows(workspaceSections()),
+const ChatWorkspacesContext = createContext<RowLinks>(
+  rowLinks(orgRows(workspaceSections())),
 )
 
 /**
@@ -69,13 +70,16 @@ export function ChatWorkspaces(props: {
   children: ReactNode
 }) {
   return (
-    <ChatWorkspacesContext.Provider value={props.rows}>
+    <ChatWorkspacesContext.Provider value={rowLinks(props.rows)}>
       {props.children}
     </ChatWorkspacesContext.Provider>
   )
 }
 
-/** The workspaces of the org that the chat finds for its chips. */
-export function useChatWorkspaces(): readonly ChatRow[] {
+/**
+ * The workspaces of the org that the chat finds for its chips, with the
+ * workspace links that the reader of the app reads chat text with.
+ */
+export function useChatWorkspaces(): RowLinks {
   return useContext(ChatWorkspacesContext)
 }
