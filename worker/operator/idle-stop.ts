@@ -1,4 +1,5 @@
 import {
+  IDLE_STOP_CHOICE_ERROR,
   isIdleStopMinutes,
   operatorIdleStopPath,
   type IdleStopMinutes,
@@ -27,11 +28,7 @@ async function readOperatorIdleStop(
 function parseMinutes(body: Record<string, unknown> | null): IdleStopMinutes {
   const minutes = body?.minutes
   if (!isIdleStopMinutes(minutes))
-    throw new HttpError(
-      400,
-      'invalid_input',
-      'Choose 15, 30, 60, 90, or 120 minutes.',
-    )
+    throw new HttpError(400, 'invalid_input', IDLE_STOP_CHOICE_ERROR)
   return minutes
 }
 

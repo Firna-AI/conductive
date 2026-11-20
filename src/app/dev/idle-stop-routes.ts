@@ -1,5 +1,6 @@
 import {
   DEFAULT_IDLE_STOP_MINUTES,
+  IDLE_STOP_CHOICE_ERROR,
   isIdleStopMinutes,
   operatorIdleStopPath,
   type OperatorIdleStopResponse,
@@ -42,11 +43,7 @@ export function idleStopRoutes(
             ? body.minutes
             : undefined
         if (!isIdleStopMinutes(minutes))
-          throw new RouteError(
-            400,
-            'invalid_input',
-            'Choose 15, 30, 60, 90, or 120 minutes.',
-          )
+          throw new RouteError(400, 'invalid_input', IDLE_STOP_CHOICE_ERROR)
         if (minutes !== saved.minutes)
           saved = { minutes, updatedAt: backend.now(), operator: operator() }
         return json(saved)
