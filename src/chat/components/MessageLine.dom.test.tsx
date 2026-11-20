@@ -46,9 +46,13 @@ it('shows each heading of a closed message line as text of the line in the headi
   })
 })
 
-it('keeps the closed text as the name of an open line whose table comes after an empty heading', async () => {
+it('keeps the closed text as the name of an open line whose table comes after empty headings, also after headings of formatting marks alone', async () => {
   const text = [
     '## ',
+    '## **',
+    '### `',
+    '**',
+    '---',
     '| Workers | Time |',
     '| ---: | ---: |',
     '| 4 | 3m 10s |',
