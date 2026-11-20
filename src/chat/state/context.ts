@@ -1,6 +1,5 @@
 import { ApiError } from '../../app/api/client'
 import type { Delay } from '../../app/events'
-import type { WorkspaceView } from '../../shared/workspace-view'
 import type { ChatApi, WorkspaceTarget } from '../api/client'
 import type { DeviceChannel } from '../device/device-actions'
 import type { SecretApi } from '../secrets/secret-actions'
@@ -58,7 +57,7 @@ export interface ChatContext {
    * timers of the chat, which a test gives as manual timers.
    */
   readonly delay: Delay
-  readonly saveView: (view: WorkspaceView) => void
+  readonly saveView: () => void
   /** The chat is still open. A response that arrives later changes nothing. */
   readonly live: () => boolean
   /**
@@ -141,30 +140,4 @@ export function withTranscript(
     }
   })
   return withLateSends(next, shown)
-}
-
-/** Saves the view one request at a time. A newer view replaces one that waits. */
-export function viewWriter(
-  save: (view: WorkspaceView) => Promise<unknown>,
-): (view: WorkspaceView) => void {
-  let waiting: WorkspaceView | null = null
-  let writing = false
-  const flush = async () => {
-    if (writing || !waiting) return
-    const view = waiting
-    waiting = null
-    writing = true
-    try {
-      await save(view)
-    } catch {
-      // The next change sends the whole view again.
-    } finally {
-      writing = false
-      void flush()
-    }
-  }
-  return (view) => {
-    waiting = view
-    void flush()
-  }
 }
