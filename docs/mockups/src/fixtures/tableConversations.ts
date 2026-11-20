@@ -1,10 +1,11 @@
 import type { ChatItem, MessageTable } from './conversations'
+import { tableLineBreaks } from './tableBreakTurn'
 import { tablesInWork } from './tableWorkTurn'
 
 /**
  * Replies with Markdown tables: the resources of the cloud computer, also
- * while the agent writes them, a short row, a wide table, and the tables
- * among the work of a turn.
+ * while the agent writes them, a short row, a wide table, cells with line
+ * breaks, and the tables among the work of a turn.
  */
 
 const machineQuestion: ChatItem = {
@@ -197,5 +198,6 @@ export const tableConversations = {
   ),
   'table-short-row': bundleTurn,
   'table-wide': browserTurn,
+  'table-line-breaks': tableLineBreaks,
   'tables-in-work': tablesInWork,
 } as const satisfies Record<string, readonly ChatItem[]>

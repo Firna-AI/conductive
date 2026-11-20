@@ -40,7 +40,7 @@ the tab at `app/files/html`, on desktop and on a phone.
   starts no server, and a large page loads at the speed of a local server.
 - Source shows the text with line numbers and syntax colours, as code
   shows. A tab that opens at a line or a range of lines shows Source, as
-  [Line targets](file-mentions.md#line-targets) says for a Markdown file.
+  [Line targets](file-mentions-answers.md#line-targets) says for a Markdown file.
 - Preview shows the page in a frame from the files preview of the
   workspace. So the scripts of the page run on the preview domain, never
   on the app's site.

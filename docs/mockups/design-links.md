@@ -32,9 +32,10 @@ gives the chips, which take the place of a link to a workspace of the org.
 
 ## Links in chat text
 
-- `MessageText` reads the links of chat text with `workspaceLinks.ts`.
-  `WebLinkText.tsx` beside it draws each link that is not a chip. Only
-  `http` and `https` addresses are links.
+- `MessageText` reads the links of the text of a member with
+  `workspaceLinks.ts`, and `AnswerText` reads the links of an answer with
+  `answerNodes.ts`. `WebLinkText.tsx` beside them draws each link that is
+  not a chip. Only `http` and `https` addresses are links.
   - A bare address shows as the text has it. Punctuation, quotes, `*`,
     `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
     stays in only when it closes a `(` or a `[` inside the address.
@@ -49,6 +50,16 @@ gives the chips, which take the place of a link to a workspace of the org.
   - In a message of a member, a Markdown link shows as typed, with its
     link title, and its address is the link, as `app/chat/links/sent`
     shows.
+  - In an answer and in a message line, a Markdown image whose target is
+    no file of the workspace shows its alt text, and no picture loads,
+    from item 5 A of the Markdown plan, which the user chose on 17
+    November 2026. At a web address, the alt text is a link to the
+    address, with the rules of a Markdown link: alt text that reads as an
+    address, or that shows nothing, shows the address in its place. With
+    no valid address, only the alt text shows, as
+    `app/chat/formatting/pictures` shows. An image of a file of the
+    workspace is a link that opens the file, or the picture of a picture
+    file, as [Files in answers](#files-in-answers) gives.
   - Code that holds only one address, without the spaces at its ends,
     shows it as a link inside its code box. A workspace link in such code
     is a link, not a chip, so the code keeps its text. Longer code stays
@@ -100,9 +111,9 @@ gives the chips, which take the place of a link to a workspace of the org.
     `app/file-mentions/answers/work` shows.
   - Each state holds only inline parts, because it stands in a paragraph.
     So the box shows an icon and no spinner, which draws a block.
-- `MessageText` shows the pictures where `pictures` asks: in the
-  paragraphs and the list items of an answer, and in an open message
-  line. `ChatPictures` in `chatPictures.tsx` gives the chat the state of
+- `AnswerText` shows the pictures where `pictures` asks: in the
+  paragraphs and the list items of an answer, also in a quote, and in an
+  open message line. `ChatPictures` in `chatPictures.tsx` gives the chat the state of
   its reads, and the `pictures` state of the workspace screen sets it.
 - The mockups open the screen of a workspace for its link, and
   `app/tools/preview` for a local address of port 3000. A link to a page

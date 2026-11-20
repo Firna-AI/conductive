@@ -2,34 +2,37 @@
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
-- **Added:** 2026-11-10, from branch `calummoore/markdown-formatting-issue`, review round 3, finding 4, with the problems that its check found.
-- **Location:** `src/markdown/list-items.ts` (`itemLines`, `readList`), `src/markdown/lines.ts`, `src/chat/components/agent-text.ts` (`parseLines`), `src/files/markdown/markdown-blocks.ts` (`read`, `paragraph`, `quote`, the table start), and `src/files/markdown/markdown-tables.ts`.
+- **Added:** 2026-11-10, from branch `calummoore/markdown-formatting-issue`, review round 3, finding 4, with the problems that its check found. On 2026-11-17, on branch `calummoore/output-summary-f7sm`, the item took in the follow-up item `chat-fence-at-any-indent`, from the check of the same finding, and moved its table case to `plans/follow-ups/table-header-takes-block-line.md`.
+- **Location:** `src/markdown/parser.ts`, where the shared parser wraps rules of `markdown-it`. The cause is in the block rules `fence`, `blockquote`, `hr`, `heading`, and `list` of `markdown-it` 15.0.3, in `node_modules/markdown-it/dist/markdown-it.mjs`.
 - **Reason:** each case needs an unusual indent, and the fix costs the same after the merge.
 
 - **Source:** Review. **Category:** Product bug.
 - **Terms:**
-  - **Lazy line:** a line of a list item without the indent of the item. CommonMark adds it to the open paragraph of the item, as more text.
-  - **File preview:** the view that shows a Markdown file of the repository, parsed by `src/files/markdown/`.
-  - **Shared list reader:** `readList` of `src/markdown/list-items.ts`, which the chat and the file preview use to read the items of a list.
+  - **Lazy line:** a line of a list item without the indent of the text of the item. CommonMark adds it to the open paragraph of the item when the line can start no block where it stands.
+  - **Shared parser:** `markdownParser` in `src/markdown/parser.ts`. It is the `markdown-it` parser that reads agent messages and the file preview.
+  - **Paragraph terminator:** a block rule that `markdown-it` asks, at each line of a paragraph, whether the line starts a block and so ends the paragraph.
 - **Background:**
-  - On 10 November 2026, the user chose that the chat reads lists by the CommonMark list rules of the file preview. `docs/protocol/chat-markdown.md`, section Lists, records it.
-  - The shared list reader collects the lines of each item. It removes the indent of a lazy line and passes the indexes of the lazy lines to the parser of the item. Each parser stops the item at the first lazy line that continues no paragraph.
-  - The parsers then read the lazy line, without its indent, through their block rules. So a lazy line can still start a block.
-- **Problem:** A lazy line shows as a new block instead of as text of the paragraph above it:
-  - `100. Parent` above `    - Child` with four spaces: the chat shows a nested list, and the file preview moves `- Child` out of the item as code. CommonMark keeps `- Child` as text of `Parent`.
-  - `100. a`, then `     - b`, then `    - c` with four spaces: both views show `c` as a second bullet. CommonMark keeps `- c` as text of `b`.
-  - `- a | b` above an unindented `--- | ---`: both views read a table in the item. CommonMark with GitHub tables keeps one paragraph.
-  - `100. > q` above `    - x`: the file preview moves `- x` out of the item as code. CommonMark keeps it as text of the quote.
-- **Impact if no action:** Some messages and files show a false list or table, and the two views disagree for the first case.
+  - Agent messages and the file preview read Markdown with the shared parser, by the rules of CommonMark, as `docs/protocol/chat-markdown.md` says (Markdown parser decision 3 C, 16 November 2026).
+  - A list item with a wide marker, such as `100. `, has its text at column 5. A line with 4 spaces then lacks the indent of the item. At the top level, where the line falls back, 4 spaces make indented code, and indented code cannot end a paragraph. So CommonMark reads the line as a lazy line.
+  - The paragraph terminators `fence`, `blockquote`, `hr`, and `heading` test the indent of a line only against the text of the item. So they take such a line.
+  - The `list` rule also tests the line against the indent of the block that holds the innermost list. So it takes such a line only when the line falls back past more than one list.
+  - When a terminator takes the line, the paragraph ends, the list closes, and the line becomes indented code at the top level.
+  - The shared parser fixed the other cases of this item: `100. Parent` above `    - Child`, `100. > q` above `    - x`, and CommonMark example 312.
+  - The merged item asked which indent of a fence line opens a code block. Markdown parser decision 3 C settles it: the chat reads fences by CommonMark.
+- **Problem:** A probe of 17 November 2026 gave these results in the chat and in the file preview:
+  - `100. a`, then `     - b`, then `    - c` with four spaces: `- c` shows as a code block after the list. CommonMark keeps `- c` as text of `b`.
+  - `100. Parent` above a line of four spaces and `# x`, `> q`, or `***`: the line shows as a code block after the list. CommonMark keeps it as text of `Parent`.
+  - `100. Parent` above a fence line of four spaces: the fence lines and the lines between them show as a code block after the list. CommonMark keeps them as text of `Parent`.
+- **Impact if no action:** Some messages and files show a false code block after a list, and the text leaves its list item.
 - **Root question:** How do both views show a lazy line only as more text of the paragraph that it continues, as CommonMark does?
 - **Options:**
-  - **A.** In both parsers, take a lazy line as paragraph text while a paragraph is open, before any other block test. Effort: Small. It leaves the nested-list, table, and quote cases.
-  - **C.** A, and in both views refuse a lazy line as the separator row of a table, and give `readList` the lazy lines of the parent item, so a nested list never reads one as an item. Effort: Small. It leaves the quote case, and a later rule that reads the next line can bring the class back.
-  - **D.** Give a lazy line its own type in `src/markdown/lines.ts`, such as `string | LazyLine`, that stays with the line in nested lists, quotes, and table starts. No block rule can read it as a string, so each reader takes it as paragraph text or ends there, and the compiler finds each block rule that must handle it. The type replaces the index sets in `readList`, both parsers, and `parseTable`. A scratch prototype of the check compiled under the strict settings, fixed every case above, and changed only example 312 of the 652 CommonMark examples. In that prototype, `src/files/markdown/markdown-blocks.ts` had about 290 lines. The limit is 300 lines. Effort: Medium.
-  - **E.** Replace the collect-and-reparse list reader with a CommonMark container matcher that reads each line once and gives a lazy line straight to the open paragraph. It rewrites how both parsers read blocks, and it needs a speed check, because the chat parses each live update. Effort: Large.
-- **Left out:** Dropping all lazy lines, because CommonMark keeps them in the paragraph. Agent instructions, because the file preview also shows files that people write.
-- **Wider fix:** D. The type prevents the class without a new user decision.
-- **Previous examples:** Finding 1 of review round 2 of the nested-list branch, which made each parser stop at a lazy line when no paragraph is open. Commit `68a53b65`, which added the collect-and-reparse reader of the file preview.
-- **Related:** The same loop of `readList` ends an item at a blank line directly under a marker line with no text, as CommonMark does. Keep that rule and its test in `src/chat/components/agent-text.test.ts` with each option. `plans/follow-ups/one-markdown-reader-for-chat-and-preview.md` would replace D, if the user chooses a library there. With one more line, the quote reader can mark its own lazy lines with the same type, which fixes `plans/follow-ups/preview-quote-keeps-line-after-fence.md`.
-- **Recommendation:** D. It removes the class with the help of the compiler, and it needs no new user decision.
-- **Action:** fix after merge, apply D, because each case needs an unusual indent, and the fix costs the same later.
+  - **A.** In `src/markdown/parser.ts`, give the terminators `fence`, `blockquote`, `hr`, and `heading` the indent test of the `list` rule. A line that is 4 or more columns past the block that holds its list, and short of the text of the item, then ends no paragraph. It leaves the case of a nested list, where the line falls back past more than one list. Effort: Small.
+  - **C.** A, and test the indent against the container where the line falls back, for every terminator, also `list`. `markdown-it` keeps no list of the containers around a line, so the wrappers must track the indent of each open list item. It fixes every case above. Effort: Medium.
+  - **D.** C, and offer the fix to the `markdown-it` project, so that the wrappers can go when a release has it. Effort: Medium.
+  - **E.** Read Markdown with another CommonMark library that passes these cases. It reverses Markdown parser decision 3 C, and it needs a new safety review and speed check. Effort: Large.
+- **Left out:** Dropping all lazy lines, because CommonMark keeps them in the paragraph. Agent instructions, because the file preview also shows files that people write. A wait for an upstream fix alone, because both views keep the defect for an unknown time.
+- **Wider fix:** C. One indent test against the right container prevents the class in both views.
+- **Previous examples:** The readers that the shared parser replaced had the same class, in other cases: the nested-list branch fixed some, and this item and the merged fence item recorded the rest.
+- **Related:** The shared parser ends an empty list item at a blank line directly under its marker, as CommonMark does, and `src/markdown/empty-item-lists.ts` keeps a later item of the same list after more blank lines. Keep that rule and its tests in `src/chat/markdown/agent-blocks.test.ts`, `src/files/markdown/MarkdownView.test.tsx`, and `src/markdown/empty-item-lists.test.ts` with each option.
+- **Recommendation:** C. It removes the class in both views and keeps Markdown parser decision 3 C.
+- **Action:** fix after merge, apply C, because each case needs an unusual indent, and the fix costs the same later.
