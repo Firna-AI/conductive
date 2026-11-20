@@ -126,6 +126,18 @@ view shows the New workspace page in the same state.
 dialog to the new workspace. Its child page `org-login` has a draft on the
 org login, as [org logins](catalogue-org-logins.md) gives.
 
+The `viewer` control of `app/new-workspace/dialog` sets one viewer for the
+whole screen: Cal, an admin, or Priya, a member who is not an admin. The
+dialog, the screen behind it, and the page of a phone all use that
+viewer. So the rail shows that person, and the notices of the dialog, the
+owner menu, and Archive follow the permissions of that person.
+[Orgs and members](orgs-and-logins.md#orgs-and-members) gives these
+permissions.
+
+`app/new-workspace/dialog/org-login` has the dialog of Priya over the ready
+workspace as she sees it, without the owner menu. The other saved states
+show Cal with the controls of an admin.
+
 `app/composer` shows a message with two uploaded files in a sentence. Its
 other states are child pages: `picker` has the open model picker,
 `no-agent` the notice of an agent that no login serves, `login` the label
