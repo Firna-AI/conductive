@@ -76,6 +76,7 @@ markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
 
 markdownParser.inline.ruler.after('text', 'bare_address', (state, silent) => {
   if (
+    silent ||
     state.env.chat !== true ||
     state.linkLevel > 0 ||
     !state.src.startsWith('://', state.pos)
@@ -97,7 +98,7 @@ markdownParser.inline.ruler.after('text', 'bare_address', (state, silent) => {
     state.pos - scheme + address.length > state.posMax
   )
     return false
-  if (!silent) state.pending += address.slice(scheme)
+  state.pending += address.slice(scheme)
   state.pos += address.length - scheme
   return true
 })

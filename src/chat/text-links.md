@@ -56,6 +56,12 @@ which shows its Markdown as typed.
 - `answerParts` reads each bare address in the text nodes of the tree with
   `bareAddressAt`. Before marks pair, the parser keeps each bare address as
   plain text, with the existing trailing-mark boundaries.
+- The `bare_address` rule of the parser keeps bare addresses only in the
+  read that makes the tokens. Keep it so. `markdown-it` also calls each
+  inline rule with `silent`, to find the `]` that ends a label. Those
+  calls add no text to `state.pending`, which still holds the text
+  before the link. An address that the rule read in the label could take
+  in its `]`, and the parser would then read no link.
 - `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
