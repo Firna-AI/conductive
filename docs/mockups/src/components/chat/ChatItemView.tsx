@@ -10,6 +10,7 @@ import headingStyles from '../common/MarkdownHeadings.module.css'
 import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { AgentBlocks } from './AgentBlocks'
+import { CapabilityChangeLine } from './CapabilityChangeLine'
 import { ContinuedLine } from './ContinuedLine'
 import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
@@ -141,6 +142,13 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <RepositoryChangedLine
           branch={item.branch}
           repository={item.repository}
+          who={item.by === viewer ? 'You' : people[item.by].name}
+        />
+      )
+    case 'capabilities-changed':
+      return (
+        <CapabilityChangeLine
+          changes={item.changes}
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )

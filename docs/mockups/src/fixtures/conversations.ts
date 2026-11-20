@@ -23,6 +23,10 @@ import {
   type ContinuedItem,
   type RepositoryChangedItem,
 } from './barConversations'
+import {
+  capabilityConversations,
+  type CapabilitiesChangedItem,
+} from './capabilityConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import {
@@ -175,6 +179,7 @@ export type ChatItem =
     }
   | ContinuedItem
   | RepositoryChangedItem
+  | CapabilitiesChangedItem
   | SecretRunItem
   | LateAnswerItem
 
@@ -226,6 +231,7 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...secretConversations(history),
   ...secretValueConversations(history),
+  ...capabilityConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),

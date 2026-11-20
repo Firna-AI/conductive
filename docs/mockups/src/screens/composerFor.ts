@@ -17,6 +17,7 @@ import {
   type Attachment,
 } from '../fixtures/attachments'
 import { barRunningConversations } from '../fixtures/barConversations'
+import { capabilityRunningConversations } from '../fixtures/capabilityConversations'
 import { followUpDraft, steerDraft } from '../fixtures/conversations'
 import { unlistedChoice, unlistedLabels } from '../fixtures/endpointModels'
 import {
@@ -66,6 +67,7 @@ const runningConversations = new Set([
   'secret-mixed-invalid-name',
   'secret-late-allowed',
   'secret-late-given',
+  ...capabilityRunningConversations,
 ])
 
 type ComposerKey = WorkspaceState['composer']

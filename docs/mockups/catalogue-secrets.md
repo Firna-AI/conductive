@@ -38,11 +38,28 @@ the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with
 the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
-has the menu of the + button of a phone, with Attach files and
-Capabilities. The
-`mac-access-off` variant of `app/mac-commands` has a Mac command that the
-workspace refused for that reason.
+Remove. Its child pages:
+
+- `mac-access-off` has Mac access off. The `mac-access-off` variant of
+  `app/mac-commands` has a Mac command that the workspace refused for that
+  reason.
+- `menu` has the menu of the + button of a phone, with Attach files and
+  Capabilities.
+- `changed` has the note of a change in the chat of a session, from the
+  capability prompts decisions of 20 November 2026. While a turn of Cal
+  runs, Priya pre-approves VERCEL_TOKEN. The note says "Priya Raman
+  pre-approved VERCEL_TOKEN." at the time of the change, and the agent
+  then runs the deploy with no question. Its child pages:
+  - `idle` has the note at the time of the change in an idle session, the
+    next message of Cal after it, and the agent that uses the secret.
+  - `mac` has Mac access turned on after a refused Mac command, with the
+    rules of a Mac command in the note.
+  - `removed` has a removed pre-approval and a removed value for this
+    workspace: two writes, so two notes, each with its own member.
+  - `several` has one edit with three changes in one note. The other
+    session gets only the change of its own facts.
+  - `you` has the same chat as Priya, who made the change, sees it: "You
+    pre-approved VERCEL_TOKEN."
 
 `app/automations/automation/capabilities` has the control of an automation,
 from the automation capabilities decisions of 18 November 2026. It opens

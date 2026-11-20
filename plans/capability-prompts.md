@@ -90,7 +90,10 @@ new runner command, a waiting store, and a chat note.
 - **The words.** One shared function in `src/shared/` writes the words for
   the chat and for the agent from the member and the structured changes,
   as the late-answer line does. The chat writes "You" for the viewer. A
-  Mac access line gives the same rules as the instructions.
+  Mac access line gives the same rules as the instructions. The mockups
+  hold the words in
+  [capabilityChangeCopy.ts](../docs/mockups/src/components/chat/capabilityChangeCopy.ts),
+  as pieces of text and names of secrets, with no fixtures.
 - **The waiting store.** The chat Durable Object keeps the waiting lines of
   each session in order, also of a closed session, because a closed session
   can reopen. A session that has not started a turn gets no line, because
@@ -120,8 +123,12 @@ new runner command, a waiting store, and a chat note.
 - **The chat.** A new note `capabilities.changed` in the transcript of each
   session holds the member and the structured changes, as
   `workspace.continued` does. The chat places it by its time, not by a
-  turn. The session copy and `read_session` show it too. An older tab and
+  turn. So it does not fold with the work of a turn that it falls in. The
+  session copy and `read_session` show it too. An older tab and
   an older copy of the Mac app skip the unknown event and keep the cursor.
+  `CapabilityChangeLine` in `docs/mockups/src/components/chat/` draws it,
+  as [app/capabilities/changed](../docs/mockups/catalogue-secrets.md)
+  shows.
 - **Failures.** The capability write is in D1, and the line goes to the
   chat Durable Object after it. When the Durable Object call fails, the
   route still returns the saved capabilities and logs a warning.
@@ -158,6 +165,29 @@ Design calls, by Claude on 2026-11-20:
   line does not meet this today, which the follow-up item
   `plans/follow-ups/late-answer-sender-line.md` records.
 
+Design calls from the mockups, by Claude on 2026-11-20:
+
+- The note is a centred, muted line with the Capabilities icon, as the note
+  of Continue. Reason: the icon ties the note to the control that made the
+  change, and the chat draws each note of the app in that way.
+- The note does not fold with the work of a turn. Reason: it belongs to no
+  turn, and members still see what the agent was told after the turn ends.
+- One note gives the changes of one write in one sentence, in a fixed
+  order: pre-approvals added, pre-approvals removed, session approvals
+  removed, values given, values removed, then Mac access. Mac access on
+  adds its rules after the sentence. Names and changes form lists with
+  "and". Reason: one sentence keeps the note short, and the rules follow
+  the change that they explain.
+- Each write gives its own note, also when a member makes several writes
+  in a row. The control saves each click, so three clicks give three
+  notes. Reason: a merge needs a time window and a rule for a click that
+  undoes an earlier one, and three short notes stay readable.
+- The states of `app/capabilities/changed` are child pages, and the two
+  saved states of `app/capabilities` moved into their own folders with the
+  same paths. Reason: a catalogue page shows at most five screens, and a
+  folder with child folders shows only its canonical screen, as
+  [the catalogue](../docs/mockups/catalogue.md) says.
+
 Contract owners:
 
 - [Capabilities](../docs/protocol/capabilities.md).
@@ -175,20 +205,21 @@ Depends on: none
 The chat of a session shows the change note, in a running turn and in an
 idle session.
 
-- [ ] Add a `CapabilityChangeLine` component in
+- [x] Add a `CapabilityChangeLine` component in
       `docs/mockups/src/components/chat/`, beside `LateAnswerLine.tsx`. It
       takes the member, the structured changes, and no fixtures, so the app
       can use it.
-- [ ] Add `app/capabilities/changed`, with the note in a running turn, and
+- [x] Add `app/capabilities/changed`, with the note in a running turn, and
       the next step of the agent that uses the pre-approved secret.
-- [ ] Add the variants: `idle`, with the note at the time of the change and
+- [x] Add the variants: `idle`, with the note at the time of the change and
       the next message after it. `mac`, with Mac access turned on.
       `removed`, with a removed pre-approval and a removed value for this
       workspace. `several`, with one edit of three changes. `you`, as the
-      member who made the change sees it.
-- [ ] Describe the pages in `docs/mockups/catalogue-secrets.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+      member who made the change sees it. They are child pages with these
+      paths, because a page shows at most five screens.
+- [x] Describe the pages in `docs/mockups/catalogue-secrets.md`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -265,6 +296,10 @@ Depends on: 3
 Depends on: 4, 5
 
 - [ ] Add the shared words function in `src/shared/`, with its tests.
+      Build it on the words of
+      `docs/mockups/src/components/chat/capabilityChangeCopy.ts`, as the
+      app reads `secretRunCopy.ts`, so that the chat, the agent, and the
+      mockups keep one text.
 - [ ] Add the `capabilities.changed` note to the shared chat event types
       and the transcript, beside `workspace.continued`.
 - [ ] Make the writes in `worker/secrets/capabilities-writes.ts` and the
