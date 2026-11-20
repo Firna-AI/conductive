@@ -63,7 +63,7 @@ the Help row of the command palette opens.
   By weights, the default, or a configured account by its ID, from the
   operator's providers reply. Only a chosen account goes into the create.
   The create does not wait for that reply. Nobody else sees the choice or
-  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  sends its read, as [Provider accounts](../shell/operator/provider-accounts.md#provider-accounts)
   says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.

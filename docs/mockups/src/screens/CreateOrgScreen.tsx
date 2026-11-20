@@ -62,9 +62,9 @@ function listOf(
  * workspaces use. The page stands alone, without the rail, until the org
  * exists. Create org needs at least one repository, because Create org
  * starts the first build of the cloud computer of the org. An operator
- * also chooses the provider account of the org, which it keeps for its
- * whole life: By weights, the default, or an account by its ID. Nobody
- * else sees the choice.
+ * also chooses the provider account of the org: By weights, the default,
+ * or an account by its ID. An operator can switch the account later, on
+ * the page of the org. Nobody else sees the choice.
  */
 export function CreateOrgScreen(props: {
   state: CreateOrgState

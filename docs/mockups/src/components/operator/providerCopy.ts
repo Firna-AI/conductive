@@ -15,7 +15,7 @@ export const providerWords = {
   tab: 'Providers',
   weights: 'New orgs',
   weightsLine:
-    'Each new org gets an account by chance, from these weights. An org keeps its account for its whole life.',
+    'Each new org gets an account by chance, from these weights. An operator can switch an org later, on its page.',
   weightsLabel: 'Weights of new orgs',
   save: 'Save weights',
   notSaved: "The weights weren't saved. Try again.",
@@ -63,8 +63,9 @@ export function weightsChangedLine(
 }
 
 /**
- * The words of the account of an org on the Orgs tab and on the page of an
- * org. A phone leaves out the column, so the line under the name says it.
+ * The words of the account of an org on the Orgs tab and in the Provider
+ * account box of the page of an org. A phone leaves out the column, so the
+ * line under the name says it.
  */
 export const orgAccountWords = {
   term: 'Account',
@@ -78,5 +79,5 @@ export const orgAccountWords = {
 export const accountChoiceWords = {
   label: 'Provider account',
   weights: 'By weights',
-  hint: 'Only operators see this. The org keeps its account for its whole life.',
+  hint: 'Only operators see this. An operator can switch the account later, on the page of the org.',
 } as const

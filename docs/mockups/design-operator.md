@@ -149,7 +149,8 @@ the account choice of an operator on Create org.
 - Create org of an operator has Provider account under the repositories:
   a segmented control of By weights, the default, and each configured
   account by its ID, from `AccountChoice`. Its hint says that only
-  operators see it, and that the org keeps its account for its whole life.
+  operators see it, and that an operator can switch the account later, on
+  the page of the org.
   Create org in the rail and in the org switcher of an operator opens this
   form. Nobody else sees the choice.
 - Operator screens name an account only by its ID, such as `boat`, from

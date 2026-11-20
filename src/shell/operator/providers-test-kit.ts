@@ -35,7 +35,7 @@ export const failure = {
 
 /** The title and the line of the New orgs box, before its control. */
 export const intro =
-  'New orgs Each new org gets an account by chance, from these weights. An org keeps its account for its whole life.'
+  'New orgs Each new org gets an account by chance, from these weights. An operator can switch an org later, on its page.'
 
 /** The line of a change at `CHANGED_AT` by the operator of the samples. */
 export const changed = 'Changed on 15 Jan at 07:35 by @calummoore'

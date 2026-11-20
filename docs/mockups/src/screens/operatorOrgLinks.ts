@@ -8,12 +8,15 @@ import { paths } from '../paths'
 /** The links of a question: the page of Cancel, and the page after it. */
 type QuestionLinks = { cancel: string; done: string }
 
+/** The waits that the catalogue draws for a new switch. */
+type DrawnWait = Extract<SwitchWait, { kind: 'lift' | 'admin' | 'build' }>
+
 /**
  * Why the build of a new switch must wait, when it must: a suspended org
  * waits for Lift, an org whose admins are all suspended waits for an
  * admin, and a build of the org that runs makes the switch wait for it.
  */
-export function switchWaitOf(org: OrgPage): SwitchWait | undefined {
+export function switchWaitOf(org: OrgPage): DrawnWait | undefined {
   if (org.suspension) return { kind: 'lift' }
   const admins = org.members.filter((member) => member.role === 'Admin')
   if (admins.every((member) => member.suspended === true)) {

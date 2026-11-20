@@ -210,7 +210,7 @@ says.
   failure stays until the next switch. Switch account is then the primary
   action of the box.
 - The cause is in words for the operator. It is one of these:
-  - The new account gave only errors for 10 minutes.
+  - The new account gave errors.
   - The install script failed.
   - The build passed its 60-minute limit.
 - Reason: the saved message of a build is for members, and it asks them to

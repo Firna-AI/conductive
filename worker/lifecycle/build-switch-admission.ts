@@ -13,7 +13,7 @@ export interface SwitchBuildAdmission {
 }
 
 export const WAITING_BUILD_LOG =
-  'Waiting for another update of the cloud computer to finish'
+  'Waiting for another update of the cloud computer to finish\n'
 export const SWITCH_STOPPED_BUILD =
   'Another update of the cloud computer stopped this build. Try again.'
 

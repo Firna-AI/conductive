@@ -107,7 +107,7 @@ it('records one visible waiting build and runs its saved inputs on the new accou
     {
       eventNumber: 1,
       occurredAt: TEST_TIME,
-      text: 'Waiting for another update of the cloud computer to finish',
+      text: 'Waiting for another update of the cloud computer to finish\n',
     },
   ])
   expect(await runningBuild(images.env.DB, org.id)).toBe(hidden)

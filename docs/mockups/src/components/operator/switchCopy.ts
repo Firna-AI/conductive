@@ -10,12 +10,24 @@
 
 /** Why a switch build waits before it starts. */
 export type SwitchWait =
-  /** A build of the org runs: its starter, and when it started. */
-  | { kind: 'build'; by: string; since: string }
+  /**
+   * A build of the org runs: its starter, or null when the app knows none,
+   * and when it started.
+   */
+  | { kind: 'build'; by: string | null; since: string }
+  /** A refresh of the org runs, and when it started. It names no starter. */
+  | { kind: 'refresh'; since: string }
   /** The org is suspended, and no build runs until Lift. */
   | { kind: 'lift' }
+  /** An admin deleted the org, and no build runs until Restore. */
+  | { kind: 'restore' }
   /** Every admin of the org is suspended, and the build runs for an admin. */
   | { kind: 'admin' }
+  /** Nothing holds the build back, and the app starts it on its own. */
+  | { kind: 'start' }
+
+/** A wait for a job of the org that runs: a build or a refresh. */
+export type JobWait = Extract<SwitchWait, { kind: 'build' | 'refresh' }>
 
 /**
  * Why a switch build failed, in words for the operator: the new account
@@ -32,17 +44,18 @@ export type SwitchBuild =
 
 /**
  * The newest switch of an org that did not change its account: the new
- * account, when and by which operator it started, and its build.
+ * account, when and by which operator it started, and its build. The
+ * operator is null when the app knows none.
  */
 export type OrgSwitch = {
   to: string
   when: string
-  by: string
+  by: string | null
   build: SwitchBuild
 }
 
 /** The last switch that changed the account of the org. */
-export type LastSwitch = { from: string; when: string; by: string }
+export type LastSwitch = { from: string; when: string; by: string | null }
 
 /** The labels of the Provider account box and of its questions. */
 export const switchWords = {
@@ -80,39 +93,79 @@ export function switchQuestion(
 export function switchWaitLine(org: string, wait: SwitchWait): string {
   switch (wait.kind) {
     case 'build':
-      return `A build of ${org} runs now. @${wait.by} started it ${wait.since}. The switch build starts when that build ends.`
+      return wait.by === null
+        ? `A build of ${org} runs now. It started ${wait.since}. The switch build starts when that build ends.`
+        : `A build of ${org} runs now. @${wait.by} started it ${wait.since}. The switch build starts when that build ends.`
+    case 'refresh':
+      return `A refresh of ${org} runs now. It started ${wait.since}. The switch build starts when that refresh ends.`
     case 'lift':
       return `${org} is suspended, so the switch build starts at Lift.`
+    case 'restore':
+      return `${org} is deleted, so the switch build starts at Restore.`
     case 'admin':
       return `Every admin of ${org} is suspended, so the switch build waits for an admin who is not suspended.`
+    case 'start':
+      return `The switch build of ${org} starts soon.`
   }
 }
 
 /**
- * The offer of the question to end the build that runs, off by default. An
- * ended build fails, as members see it, so an admin can try it again.
+ * The offer of the question to end the job that runs, off by default. An
+ * ended job fails, as members see it, so an admin can try it again. A
+ * build names its starter when the app knows one.
  */
-export function endBuildOffer(by: string): { label: string; hint: string } {
+export function endJobOffer(wait: JobWait): { label: string; hint: string } {
+  if (wait.kind === 'refresh') {
+    return {
+      label: 'End that refresh now',
+      hint: 'That refresh fails, and the switch build starts at once. An admin can try it again.',
+    }
+  }
+  return endBuildOffer(wait.by)
+}
+
+/** The offer of the question to end the build that runs, off by default. */
+export function endBuildOffer(by: string | null): {
+  label: string
+  hint: string
+} {
   return {
-    label: `End the build of @${by} now`,
+    label: by === null ? 'End that build now' : `End the build of @${by} now`,
     hint: 'That build fails, and the switch build starts at once. An admin can try it again.',
   }
 }
 
 /** The line under the new account: when, and by which operator. */
-export function switchStartedLine(when: string, by: string): string {
-  return `Started on ${when} by @${by}`
+export function switchStartedLine(when: string, by: string | null): string {
+  return by === null ? `Started on ${when}` : `Started on ${when} by @${by}`
 }
 
 /** What a failed switch build did, before the words of the old account. */
 function failureLine(to: string, failure: SwitchFailure): string {
   switch (failure) {
     case 'account':
-      return `The build got only errors from ${to} for 10 minutes.`
+      return `The build got errors from ${to}.`
     case 'script':
       return `The install script failed on ${to}.`
     case 'time-limit':
       return 'The build did not finish within its 60-minute limit.'
+  }
+}
+
+/** The state of the switch build that waits for a job, and why it waits. */
+function jobWaitWords(wait: JobWait): { state: string; reason: string } {
+  if (wait.kind === 'refresh') {
+    return {
+      state: 'Waits for a refresh',
+      reason: `That refresh started ${wait.since}. The switch build starts when it ends.`,
+    }
+  }
+  return {
+    state:
+      wait.by === null
+        ? 'Waits for a build'
+        : `Waits for the build of @${wait.by}`,
+    reason: `That build started ${wait.since}. The switch build starts when it ends.`,
   }
 }
 
@@ -123,19 +176,27 @@ function waitWords(
 ): { state: string; reason: string } {
   switch (wait.kind) {
     case 'build':
-      return {
-        state: `Waits for the build of @${wait.by}`,
-        reason: `That build started ${wait.since}. The switch build starts when it ends.`,
-      }
+    case 'refresh':
+      return jobWaitWords(wait)
     case 'lift':
       return {
         state: 'Waits for Lift',
         reason: `No build runs while ${org} is suspended. Lift starts the switch build.`,
       }
+    case 'restore':
+      return {
+        state: 'Waits for Restore',
+        reason: `No build runs while ${org} is deleted. Restore starts the switch build.`,
+      }
     case 'admin':
       return {
         state: 'Waits for an admin',
         reason: `The switch build runs for an admin who is not suspended. It starts when ${org} has one.`,
+      }
+    case 'start':
+      return {
+        state: 'Starts soon',
+        reason: 'The app starts the switch build on its own.',
       }
   }
 }
@@ -168,7 +229,18 @@ export function switchBuildWords(
 
 /** The value of the Last switch row. */
 export function lastSwitchLine(last: LastSwitch): string {
-  return `From ${last.from} on ${last.when} by @${last.by}`
+  return last.by === null
+    ? `From ${last.from} on ${last.when}`
+    : `From ${last.from} on ${last.when} by @${last.by}`
+}
+
+/**
+ * The line of the box in place of Switch account when the org has no other
+ * configured account. The ID goes in backticks, so the box shows it as
+ * code, as the New orgs box of the Providers tab does with one account.
+ */
+export function onlyAccountSwitchLine(account: string): string {
+  return `\`${account}\` is the only configured account.`
 }
 
 /** The title of the question before Stop switch. */

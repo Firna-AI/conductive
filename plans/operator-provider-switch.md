@@ -292,8 +292,7 @@ fixture, so Milestone 5 can use it.
   says.
 - A failed switch build says "Failed after 10m 04s", then its cause in
   words for the operator, then "Hexwave stays on boat, and new workspaces
-  still start there." The causes are "The build got only errors from e2b
-  for 10 minutes.", "The install script failed on e2b.", and "The build did
+  still start there." The causes are "The build got errors from e2b.", "The install script failed on e2b.", and "The build did
   not finish within its 60-minute limit." Switch account then takes the
   primary colour, and the failure stays until the next switch. Reason: the
   saved message of a build is written for members, and it asks them to
@@ -424,6 +423,31 @@ already in force.
   call of the orchestrator during Milestone 4, after the blocker of the
   backend agent.
 
+### Calls of the operator screen
+
+These are agent calls of 20 November 2026, made in Milestone 5. The user
+can change each one.
+
+- The words of a provider failure are "The build got errors from e2b.".
+  Reason: the Worker saves this cause for each provider error, and an
+  error with no retry fails at once, so "for 10 minutes" was false.
+- The Switch account question keeps its words for an org with no good
+  image, though its account then changes at once with no build. Reason:
+  the case is rare, the page then shows the real result, and other words
+  need a new Worker field, a protocol line, and a mockup.
+- The app has its own Provider account box and questions, with the words
+  of `switchCopy.ts`. Reason: the mockup components import fixtures and
+  catalogue links.
+- With one configured account, the box says "`boat` is the only
+  configured account.", as the New orgs box does.
+- A waiting switch with no reason shows "Starts soon".
+- The waiting log line ends with a new line, as each other step line
+  does. Reason: without it, the next step joined the same line.
+- Five rare states have words but no mockup: a running refresh, a wait
+  for Restore, a wait with no reason, a job or operator with no known
+  login, and the one-account line. The follow-up item
+  `plans/follow-ups/switch-mockup-states.md` records them.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -489,12 +513,12 @@ Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Build Switch account, its question, and the switch states on the org page of the operator section, as the mockups show.
-- [ ] Change the Cloud computer tab for the answer to switch decision 2: the log line of a build that waits.
-- [ ] Change the texts in `providerCopy.ts` and the mockup texts that restate them, as "Problems that the mockups show" says.
-- [ ] Show no Switch account when no other account is configured, with a line that says why.
-- [ ] Update `src/shell/operator/README.md`, `docs/mockups/design-operator.md`, and `docs/mockups/orgs-and-logins.md` where they still say "for its whole life" or give the account in Details.
-- [ ] Test the screens in a browser, and save screenshots under `.context/operator-provider-switch/`.
+- [x] Build Switch account, its question, and the switch states on the org page of the operator section, as the mockups show.
+- [x] Change the Cloud computer tab for the answer to switch decision 2: the log line of a build that waits. The tab needed no change. The Worker line got its missing new line.
+- [x] Change the texts in `providerCopy.ts` and the mockup texts that restate them, as "Problems that the mockups show" says.
+- [x] Show no Switch account when no other account is configured, with a line that says why.
+- [x] Update `src/shell/operator/README.md`, `docs/mockups/design-operator.md`, and `docs/mockups/orgs-and-logins.md` where they still say "for its whole life" or give the account in Details.
+- [x] Test the screens in a browser, and save screenshots under `.context/operator-provider-switch/`.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

@@ -32,7 +32,7 @@ export const operatorOrgSwitchBuild = defineScreen({
       slug: 'failed',
       title: 'Switch build failed',
       description:
-        'The switch build failed after 10m 04s, because it got only errors from e2b for the 10 minutes of its retries. Hexwave stays on boat, and its new workspaces still start there. Switch account leads the box again, so that the operator can try again. Members see no failure, no Settings mark, and no Try again.',
+        'The switch build failed after 10m 04s, because it got errors from e2b. Hexwave stays on boat, and its new workspaces still start there. Switch account leads the box again, so that the operator can try again. Members see no failure, no Settings mark, and no Try again.',
       rationale:
         'A failed switch build leaves the org on its old account (switch decision 1 B), and the page of the org shows its failure, with Switch account again. The words name the cause for the operator. The saved message of a build is written for members, and it asks them to check a log that the operator section does not show.',
       props: { switch: 'failed' },

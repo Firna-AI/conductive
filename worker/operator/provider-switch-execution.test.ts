@@ -56,7 +56,7 @@ it('starts the switch through its operator route and releases a member build whe
   expect(member.build).toMatchObject({ kind: 'build', state: 'running' })
   expect(member.build.id).not.toBe(hidden)
   expect(member.log[0]?.text).toBe(
-    'Waiting for another update of the cloud computer to finish',
+    'Waiting for another update of the cloud computer to finish\n',
   )
   const stopped = await request(path, 'DELETE')
   expect(stopped.status).toBe(200)

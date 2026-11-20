@@ -3,6 +3,7 @@
 import { describe, expect, onTestFinished, test, vi } from 'vitest'
 import { HeldRequests } from '../../app/test-kit'
 import { operatorOverviewPath } from '../../shared/operator'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import {
   byLabel,
   byRole,
@@ -63,6 +64,7 @@ describe('the Overview of the operator section', () => {
     expect(await operatorRequests(server)).toEqual([
       `GET ${overviewPath}`,
       'GET /api/operator/orgs/org_k3str3l',
+      `GET ${operatorProvidersPath()}`,
     ])
   })
 
