@@ -31,6 +31,8 @@ export interface KeyPress {
   readonly shiftKey: boolean
   /** The key stays down, so the press repeats. */
   readonly repeat: boolean
+  /** A source listener consumed this physical key's first press. */
+  readonly firstPressConsumed: boolean
   /** The press is part of a composition, such as an accented letter. */
   readonly isComposing: boolean
   /** Modifiers taken by held layout switch keys, or null when none is held. */
@@ -187,17 +189,19 @@ export function windowInput(target: Window): AppServices['onInput'] {
   }
 }
 
-/** One source shares switch state between the listener and the recorder. */
+/** One source shares held-key state and the recorder's switch state. */
 const windowKeySources = new WeakMap<Window, KeySource>()
 
 function windowKeySource(target: Window): KeySource {
   const existing = windowKeySources.get(target)
   if (existing) return existing
   const switches = new LayoutSwitchKeys()
+  const held = new Map<string, boolean>()
   const listeners = new Set<(press: KeyPress) => void>()
   let attached = false
   const onKeyDown = (event: KeyboardEvent) => {
     switches.down(event)
+    if (!event.repeat) held.set(event.code, false)
     const press: KeyPress = {
       key: event.key,
       code: event.code,
@@ -206,24 +210,31 @@ function windowKeySource(target: Window): KeySource {
       altKey: event.altKey,
       shiftKey: event.shiftKey,
       repeat: event.repeat,
+      firstPressConsumed: held.get(event.code) ?? false,
       isComposing: event.isComposing,
       layoutModifiers: switches.modifiers(),
       target: event.target,
-      preventDefault: () => event.preventDefault(),
+      preventDefault: () => {
+        if (!event.repeat) held.set(event.code, true)
+        event.preventDefault()
+      },
       stopPropagation: () => event.stopPropagation(),
     }
     for (const listener of [...listeners]) listener(press)
   }
   const onKeyUp = (event: KeyboardEvent) => {
     switches.up(event.code)
+    held.delete(event.code)
     detachIfIdle()
   }
   const onBlur = () => {
     switches.clear()
+    held.clear()
     detachIfIdle()
   }
   function detachIfIdle() {
-    if (listeners.size > 0 || switches.modifiers() !== null) return
+    if (listeners.size > 0 || held.size > 0 || switches.modifiers() !== null)
+      return
     target.removeEventListener('keydown', onKeyDown, true)
     target.removeEventListener('keyup', onKeyUp, true)
     target.removeEventListener('blur', onBlur)
@@ -251,7 +262,7 @@ function windowKeySource(target: Window): KeySource {
 
 /**
  * Captures window keys before page elements. The source also tracks key-up
- * and blur until each held layout switch clears, even between subscribers.
+ * and blur until each held key clears, even between subscribers.
  */
 export function windowKeys(target: Window): AppServices['onKey'] {
   return windowKeySource(target)
