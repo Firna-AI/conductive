@@ -17,12 +17,29 @@ its login or a time limit prevents continuation.
 
 `prepareProviderContinuation` inserts the new turn before existing waiting
 work. It copies pending member commands before the old end removes them.
-If the initial turn command still waits for acknowledgement, the successor
-holds those original messages and adds no app prompt. Otherwise it adds
-the hidden message with a fresh random ID prefixed by `continuation:`.
-This message has a normal sender and message state for older CLI readers.
-No `message.accepted` event exposes it. The atomic stop transaction keeps
-one successor per source turn. A repeated stop adds no second successor.
+A turn that the Worker never dispatched remains queued with its original
+messages. A stored start acknowledgement proves that the agent started,
+so its successor gets the hidden message with a fresh random ID prefixed
+by `continuation:`.
+
+A dispatched `turn` command that still waits for acknowledgement leaves
+the start uncertain. The successor keeps its original messages and stores
+`providerRecovery`. `commandDispatchState` blocks its commands before
+payload preparation. Replayed `turn.started` events and a terminal
+`turn.completed` with `filesUnavailable: true` prove that the old agent
+started. The old turn's end is the barrier that completes this choice.
+The pending choice and its received-message evidence survive object eviction.
+
+With start proof, `observeProviderRecovery` prepends the hidden app message
+and keeps only unanswered member commands. Without start proof, it releases
+the original messages unchanged. The late end stays in history and never
+changes the old turn's saved end. The atomic stop transaction keeps one
+successor per source turn. Duplicate events add no hidden message.
+
+The hidden message has a normal sender and message state for older CLI
+readers. No `message.accepted` event exposes it. Before input selection,
+the first original message stays first, including after a replayed start.
+A failure before selection therefore retries that original message.
 
 Try again of a failed continuation sends the same text in another hidden
 message with a fresh prefixed ID. It acts for the member who retries and
@@ -82,6 +99,10 @@ retry reply stays hidden.
 or sender loss. `provider-stop-limits.test.ts` checks both time limits and
 member resets. `provider-stop-late-answer.test.ts` checks app-only anchors.
 `provider-stop-dispatch.test.ts` checks interrupt acknowledgement and waiting
-turn order. `workspace-summary.test.ts` checks the session event and unread
-projection. The lifecycle's `provider-stop-start.test.ts` checks durable
+turn order. `provider-stop-evidence.test.ts` checks replayed start evidence,
+the old-end barrier, restart-end evidence, and unchanged messages after a
+lost dispatch. `provider-stop-pending-retry.test.ts` checks retry identity
+when a successor fails before input selection. `workspace-summary.test.ts`
+checks the session event and unread projection. The lifecycle's
+`provider-stop-start.test.ts` checks durable
 resume, cancellation, refusal, transient recovery, and a lagging row.

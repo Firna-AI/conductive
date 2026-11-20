@@ -6,6 +6,7 @@ import { sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { verifiedTurn } from './turn-context'
 import { TurnLifecycle } from './turn-lifecycle'
+import { observeProviderRecovery } from './provider-recovery'
 
 /** Validate every acknowledgement before any message or command changes. */
 export async function prepareAgentEvent(
@@ -96,6 +97,7 @@ export async function prepareAgentEvent(
   }
   return async () => {
     if (target.ended) {
+      await observeProviderRecovery(transaction, session, turn, event, randomId)
       if (
         (turn.state === 'failed' ||
           turn.endReason === 'cloud_computer_stopped') &&

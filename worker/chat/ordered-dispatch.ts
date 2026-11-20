@@ -44,6 +44,11 @@ export async function commandDispatchState(
       turn.state === 'failed'
     )
       return 'skip'
+    if (
+      (command.type === 'turn' || command.type === 'message') &&
+      turn.providerRecovery
+    )
+      return 'wait'
   }
   if (await new TurnLifecycle(view, session).canDispatch(command)) return 'send'
   return session.closedAt === null ? 'wait' : 'skip'

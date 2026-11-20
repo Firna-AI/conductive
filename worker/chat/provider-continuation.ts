@@ -41,30 +41,17 @@ export async function prepareProviderContinuation(
     chainStartedAt: await turnChainStartedAt(view, previous),
     providerContinuationStartedAt: null,
   }
-  if (started) {
-    const id = `continuation:${randomId()}`
-    const message: UserMessage = {
-      id,
-      sessionId: session.id,
+  if (started)
+    commands.push(
+      await prependProviderContinuation(view, session, next, sender, randomId),
+    )
+  else if (previous.started !== false)
+    next.providerRecovery = {
+      sourceTurnId: previous.id,
       sender,
-      text: PROVIDER_CONTINUATION_TEXT,
-      choice: session.choice,
-      attachments: [],
-      createdAt: view.now,
-      state: 'queued',
+      started: false,
+      acknowledgedMessageIds: [],
     }
-    await view.saveMessage(message)
-    next.messageIds.push(id)
-    await view.saveMessageTurn(id, next.id)
-    commands.push({
-      type: 'turn',
-      commandId: randomId(),
-      sessionId: session.id,
-      turnId: next.id,
-      messageId: id,
-      attachments: [],
-    })
-  }
   for (const command of pending) {
     const message = await view.message(command.messageId)
     if (!message || message.sessionId !== session.id) continue
@@ -83,4 +70,35 @@ export async function prepareProviderContinuation(
     await view.saveNewestTurn(session.id, next.id)
   previous.nextTurnId = next.id
   return { turn: next, commands }
+}
+
+export async function prependProviderContinuation(
+  view: ChatTransaction,
+  session: Session,
+  next: StoredTurn,
+  sender: MessageSender,
+  randomId: () => string,
+): Promise<PendingCommand> {
+  const id = `continuation:${randomId()}`
+  const message: UserMessage = {
+    id,
+    sessionId: session.id,
+    sender,
+    text: PROVIDER_CONTINUATION_TEXT,
+    choice: session.choice,
+    attachments: [],
+    createdAt: view.now,
+    state: 'queued',
+  }
+  await view.saveMessage(message)
+  next.messageIds.unshift(id)
+  await view.saveMessageTurn(id, next.id)
+  return {
+    type: 'turn',
+    commandId: randomId(),
+    sessionId: session.id,
+    turnId: next.id,
+    messageId: id,
+    attachments: [],
+  }
 }
