@@ -32,11 +32,11 @@ export async function createRunningRetryFixture(harness: TestHarness) {
   })
   const failedSession = {
     ...session,
-    defaultLogin: undefined,
     login: { type: 'personal', userId: fixture.owner.id },
     title: 'Check this code',
     retryMessageId: 'original',
   }
+  delete failedSession.defaultLogin
   const failedTurn = {
     id: 'original-turn',
     sessionId: session.id,
@@ -49,6 +49,7 @@ export async function createRunningRetryFixture(harness: TestHarness) {
     nextTurnId: null,
     started: true,
     startedAt: TEST_TIME,
+    chainStartedAt: TEST_TIME,
     gateway,
   }
   const sentMessage = { ...message, state: 'sent' as const }

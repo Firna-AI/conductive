@@ -18,13 +18,14 @@ export async function advanceLifecycleAlarm(
   initial: DurableLifecycleState,
   now: () => number,
   write: (state: DurableLifecycleState) => Promise<void>,
+  saveIntent: (state: DurableLifecycleState) => Promise<void>,
   keepalive: (state: DurableLifecycleState) => Promise<unknown>,
 ): Promise<void> {
   let state = initial
   if (state.state === 'archived') return
   if (state.startStop === 'pending') {
     state = appStoppingLifecycle(state, now())
-    await write(state)
+    await saveIntent(state)
     await write(await advanceStartStop(state, hooks, now))
     return
   }
@@ -56,7 +57,7 @@ export async function advanceLifecycleAlarm(
     state.lastActivityAt + IDLE_MS <= now()
   ) {
     state = appStoppingLifecycle(state, now())
-    await write(state)
+    await saveIntent(state)
     const result = await hooks.stop()
     stopPending = result === 'pending'
     state = reconciledLifecycle(

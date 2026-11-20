@@ -93,7 +93,7 @@ export function stoppedItem(
 }
 
 /** The member or session of the first Stop request in a turn. */
-export function stopperOf(
+function stopperOf(
   transcript: Transcript,
   turnId: string,
 ): Pick<Extract<TranscriptItem, { kind: 'stopped' }>, 'by' | 'from'> {

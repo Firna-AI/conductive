@@ -121,11 +121,11 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
   await fixture.restart()
   const retrySession = {
     ...session,
-    defaultLogin: undefined,
     login: { type: 'personal', userId: fixture.owner.id },
     title: 'Check this code',
     activeTurnId: 'retry-turn',
   }
+  delete retrySession.defaultLogin
   expect(await sessionRecord(fixture, session.id)).toEqual(retrySession)
   const retryMessage = { ...sentMessage, id: 'retry-message', state: 'queued' }
   const retryTurn = {
@@ -137,6 +137,7 @@ it('keeps the full accepted retry after a crash immediately after its commit', a
     closeAfterStop: false,
     stopRequest: null,
     nextTurnId: null,
+    chainStartedAt: TEST_TIME,
   }
   const retryCommand = {
     type: 'turn',

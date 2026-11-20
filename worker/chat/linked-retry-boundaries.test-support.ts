@@ -103,6 +103,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       closeAfterStop: false,
       stopRequest: null,
       nextTurnId: null,
+      chainStartedAt: TEST_TIME,
     },
     commands: [
       {

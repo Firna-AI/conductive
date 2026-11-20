@@ -179,6 +179,8 @@ the persisted resource records and the retained computer ledger.
   provider states and marks a provider stop before it clears running sessions.
 - [durable-stop.ts](durable-stop.ts): records app stop intent and checks
   that a provider stop mark belongs to the current stop.
+- [durable-stop-intent.ts](durable-stop-intent.ts): saves internal stop intent
+  without publication, so a projection failure cannot block the provider Stop.
 - [provider-stop-warning.ts](provider-stop-warning.ts): logs the provider
   account and the current runner identity after a saved provider stop.
 - [provider-stop-start.ts](provider-stop-start.ts): checks durable chat

@@ -11,7 +11,8 @@ import {
   withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
-import { appStoppedLifecycle, appStoppingLifecycle } from './durable-stop'
+import { appStoppedLifecycle } from './durable-stop'
+import { requestAppStop, saveStopIntent } from './durable-stop-intent'
 import { advanceDiskRetentionState } from './disk-retention-state'
 import {
   writeLifecycleState,
@@ -173,14 +174,9 @@ export class DurableLifecycle {
 
   /** Save intent without moving an existing access-stop alarm. */
   requestStop(): Promise<void> {
-    return this.serial(async () => {
-      const state = await this.read()
-      if (!state) return
-      const next = appStoppingLifecycle(state, this.now())
-      if (state.restoreWatchAt !== undefined) return this.write(next)
-      this.input.invalidate()
-      await this.storage.put(LIFECYCLE_STATE_KEY, next)
-    })
+    return this.serial(() =>
+      requestAppStop(this.storage, this.hooks, this.input, this.now),
+    )
   }
 
   fail(error: DurableLifecycleState['error'], create = false): Promise<void> {
@@ -249,6 +245,7 @@ export class DurableLifecycle {
           state,
           this.now,
           (next) => this.write(next),
+          (next) => saveStopIntent(this.storage, this.input, next),
           (next) => this.keepalive(next),
         )
     })
