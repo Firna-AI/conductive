@@ -129,7 +129,7 @@ deployment at `conductive.build`. It does not wait for CI, as
 [Automatic deploys](docs/automatic-deploys.md) says.
 
 The Linux jobs run on the GitHub-hosted `ubuntu-24.04` runner. The Apple
-silicon Mac jobs, the Mac app checks and the signing job, run on the
+silicon Mac jobs, the Mac app checks and the signing jobs, run on the
 [Blacksmith](https://docs.blacksmith.sh/blacksmith-runners/overview) runner
 `blacksmith-6vcpu-macos-15`. The Intel Mac check uses the GitHub-hosted
 `macos-15-intel` runner, because Blacksmith has no Intel Macs. Keep the
@@ -201,7 +201,10 @@ Apple silicon Mac jobs on Blacksmith.
   sandboxes that the signed-in user may reach. The Worker calls only a
   fixed list of the sandbox provider's routes.
 - Secrets: a stored secret never goes back to the browser, and no secret
-  goes into a saved snapshot.
+  goes into a saved snapshot. The one exception is Reveal: an admin gets
+  the value of one secret of the Secrets tab at a time, and the app records
+  each reveal. The value of such a secret reaches a sandbox only for a run
+  that a grant allows, as [Secrets](docs/protocol/secrets.md) says.
 - Untrusted sandbox code: port previews stay on the preview domain, and the
   proxies forward only the allowed headers and cookies.
 - Chat events: a dropped connection loses no event, and no tab shows an
@@ -216,4 +219,7 @@ Apple silicon Mac jobs on Blacksmith.
 - Avoid breaking changes. A change that breaks stored data, the Worker
   API, or the runner messages needs a migration or a compatible path.
   Older copies of the Mac app and older runners in the sandboxes must keep
-  working. Name each breaking change in the pull request description.
+  working. The previous Worker must keep working on the schema of each new
+  migration, as
+  [Keep the previous Worker working](migrations/README.md#keep-the-previous-worker-working)
+  says. Name each breaking change in the pull request description.

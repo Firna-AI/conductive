@@ -11,6 +11,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import type { SubscribeWorkspaceEvents } from '../../terminal/tool-parts/workspace'
 import type { Action } from '../ui/useAction'
 import type { Viewport } from '../ui/viewport'
+import type { TerminalFocus } from './tools/terminal-focus'
 import { appFeatures } from './app-features'
 
 /** The cloud computer of the open workspace, as the panels show it. */
@@ -28,12 +29,13 @@ export type SavedView = Pick<
 >
 
 /**
- * The kept chat as the pull request bar uses it: its snapshot, the select of
- * a session, and the send of a fixed prompt to the session of the chat.
+ * The kept chat as the pull request bar and the row menu of the Files panel
+ * use it: its snapshot, the select of a session, the send of a fixed prompt
+ * to the session of the chat, and Add to chat.
  */
 type ChatActions = Pick<
   ChatController,
-  'subscribe' | 'getSnapshot' | 'select' | 'sendPrompt'
+  'subscribe' | 'getSnapshot' | 'select' | 'sendPrompt' | 'addToChat'
 >
 
 /** What a feature of the workspace gets from the shell. */
@@ -74,7 +76,10 @@ export interface WorkspaceContext {
   stream: WorkspaceStream
   /** The saved view of the workspace, which a feature reads and changes. */
   savedView: SavedView
-  /** The kept chat, through which the bar sends its fixed prompts. */
+  /**
+   * The kept chat, through which the bar sends its fixed prompts and the row
+   * menu adds a chip to a message.
+   */
   chat: ChatActions
   /**
    * The events that the tools read: the updates of the workspace and the
@@ -83,6 +88,11 @@ export interface WorkspaceContext {
   toolEvents: SubscribeWorkspaceEvents
   /** The latest skill lists of the workspace, for the list of `/`. */
   skills: SkillsStore
+  /**
+   * The request to move the keyboard focus to the terminal, after a choice
+   * of Terminal on desktop.
+   */
+  terminalFocus: TerminalFocus
   /** Archives at once, or `null` when the viewer may not archive. */
   archive: (() => void) | null
   /**

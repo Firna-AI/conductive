@@ -203,6 +203,7 @@ export class TurnLifecycle {
       messageIds: [],
       state: 'queued',
       closeAfterStop: false,
+      stopRequest: null,
       nextTurnId: null,
     }
   }

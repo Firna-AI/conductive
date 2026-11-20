@@ -1,3 +1,16 @@
+/*
+ * The place of one terminal: its screen and its Disconnected bar. Each
+ * terminal that the user showed stays mounted, and hides while another
+ * terminal shows.
+ */
+.pane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
 /* The bar under a terminal whose connection ended, in the place of the keys. */
 .ended {
   display: flex;

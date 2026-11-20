@@ -1,16 +1,18 @@
 # Workspace CLI and MCP server
 
-The Rust program `conductive` provides 24 workspace tools as CLI commands
+The Rust program `conductive` provides 26 workspace tools as CLI commands
 and as a stdio MCP server. It manages workspaces, sessions, messages,
 sections, and private port previews. It lists repositories and models.
 It can ask to run a command on the active turn sender's connected Mac.
+It lists org secrets and runs a command with approved values in its environment.
 [Workspace tool calls](calls.md) gives each call with its options and replies.
 
 Both adapters use the fixed machine routes under `/v1/tools/`.
 The [Worker handler](../worker/tools/README.md) verifies the workspace token
-and the calling turn. Rust owns the request and reply types in
+and the calling turn. Rust owns the shared runner request and reply types in
 [cnd-runner-interface](../crates/cnd-runner-interface/README.md).
 The Worker imports their generated TypeScript directly.
+The shared interface also owns the secret route contracts and printable tool results.
 
 The sandbox release ships the tools in its Rust executable.
 The system installer links `/usr/local/bin/conductive` to
@@ -26,6 +28,10 @@ conductive repositories list
 conductive sections list
 conductive models list
 conductive workspaces create --repository repo-id --message 'Build this feature.'
+conductive workspaces create --repository repo-id --parent workspace-id --message 'Build the subtask.'
+conductive workspaces list --parent workspace-id
+conductive workspaces move --workspace workspace-id --parent parent-id
+conductive workspaces move --workspace workspace-id --top-level
 conductive workspaces create --repository repo-id --message-file task.md \
   --agent codex --model model-name --effort high --fast true --section section-id \
   --name 'Review the change' --first-session-title 'First review' --request-id review-1
@@ -41,10 +47,18 @@ conductive messages get --workspace workspace-id --session session-id --message-
 conductive previews open --port 3000
 conductive mcp
 conductive mac run --command 'pwd' --folder '/Users/me/project' --reason 'Check the local folder'
+conductive secrets list
+conductive secrets run --secret API_TOKEN --reason 'Deploy the service' -- ./deploy
 ```
 
-The CLI writes one JSON response to stdout.
-It writes a failure message to stderr and returns exit status 1.
+The CLI writes one JSON response to stdout, except for `secrets run`.
+Local and HTTP failures print a message on stderr and return exit status 1.
+Workspace create, list, and move accept `--parent ID`, or `parentId` through MCP.
+Move also accepts `--top-level`, or MCP `topLevel: true`, to take a tree out of its parent.
+Move needs a section, a target, or both. A section-only move keeps its existing rules.
+The create help gives the depth limit, the section rule, and sibling advice.
+Both adapters keep parent IDs, parent entries, depth, direct children, and notices in their JSON replies.
+The [workspace calls](calls.md#workspaces) describe these fields.
 Both tools preserve the Worker's error code and message, such as `session_closed: Reopen the session to send a message.`
 They give a generic failure for malformed replies and network failures.
 Error text never includes the known workspace credential.
@@ -84,7 +98,7 @@ Every read needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes the 24 calls of [the call table](calls.md#the-calls).
+The stdio server exposes the 26 calls of [the call table](calls.md#the-calls).
 Their fields take the values of the CLI options.
 Their optional `workspaceId` defaults to the caller.
 The ID fields name the calls or links that supply their values.
@@ -92,7 +106,7 @@ The descriptions say which calls need only the token and which need an active tu
 They also give the reach and the links of the replies.
 The workspace name and session title fields give the same guidance as the `--name` help.
 Reads have `readOnlyHint: true`.
-`archive_workspace`, `delete_section`, and `run_mac_command` have `destructiveHint: true`.
+`archive_workspace`, `delete_section`, `run_mac_command`, and `run_with_secrets` have `destructiveHint: true`.
 The server supports the `2025-11-25` MCP revision.
 It returns this supported revision during initialization.
 It never copies an unknown offered revision into its reply.
@@ -108,6 +122,49 @@ It must pass that turn's environment to the process.
 It must stop the process when the turn ends.
 A process with an old turn ID cannot serve another turn or a concurrent session.
 The Worker rejects stale turn context.
+
+## Secrets
+
+`secrets list` and `list_secrets` return each org secret's name, description,
+availability, and `environmentVariable`. They never return values. A running
+turn adds session approvals to availability. Without one, only org and
+workspace grants count. The tools derive each variable name from the secret
+name. The Worker's list reply has no variable names.
+
+`secrets run` and `run_with_secrets` need an active turn. They first refuse
+two requested names that need one environment key. That refusal is a local
+failure before any Worker call. It names both secrets and the shared
+variable, and never a value. Otherwise the tools send the names, command
+text, and optional reason to the Worker. A missing grant makes a request
+that waits up to 90 seconds. A pending result starts no command. After a
+notice of a late answer, the agent calls run again.
+
+An allowed result puts values only in the child environment. Each value
+gets its variable name, and its exact secret name unless that name is
+empty or holds `=` or NUL. These entries replace inherited variables of the
+same name in the child only. The Worker keeps the values under the exact
+requested names, so older tools still accept its reply. The tools never put
+returned values in arguments, files, logs, or replies. Both output streams
+hide exact copies with `[redacted]`, including copies split between reads.
+Keep each value out of output, files, and answers. The filter hides only
+exact copies.
+
+The CLI executes the arguments after `--` directly. It keeps stdin and
+streams filtered stdout and stderr. It returns the child's exit status.
+After the child ends, it writes `environmentVariables: ` and the JSON map of
+secret names to variable names on stderr. Stdout holds only the child's output.
+For shell syntax, pass `sh -c 'command'` after `--`.
+MCP runs its `command` text through `/bin/sh -c`, with closed stdin.
+It returns filtered `stdout`, `stderr`, `exitCode`, and the
+`environmentVariables` map with `status: "completed"`.
+A nonzero exit code sets `isError: true`. A Unix signal gives 128 plus its number.
+
+`pending`, `denied`, and `not-answered` keep the Worker's message and start
+no command. The CLI prints that message on stderr and exits 1.
+MCP preserves the status, `requestId`, and message, with `isError: true`.
+No command output or exit status goes back to the Worker.
+See [Secret variables](../docs/protocol/secret-variables.md) and
+[Secret requests](../docs/protocol/secret-requests.md).
 
 ## Mac commands
 
@@ -153,8 +210,9 @@ cargo run -p cnd-cli -- sessions send --help
 npm run test -- worker/tools
 ```
 
-Rust tests cover both adapters through mocked HTTP, message input, polling,
-and stdio boundaries. Worker tests call the real routes directly. They need
+Rust tests cover both adapters through mocked HTTP, process, message input,
+polling, and stdio boundaries. Integration tests run native child processes.
+Worker tests call the real routes directly. They need
 no Rust toolchain. The Mac route tests live in
 [worker/devices/tools.test.ts](../worker/devices/tools.test.ts).
 

@@ -10,7 +10,7 @@ import {
 } from '../../shared/workspace-view'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { createChatApi } from '../api/client'
-import { readView } from '../api/read-responses'
+import { readView } from '../api/read-view'
 import { tabSessions } from './archive-view'
 import { rowTabs } from './tab-order'
 import { chatFor } from './test-kit'

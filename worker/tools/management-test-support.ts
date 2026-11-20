@@ -4,10 +4,11 @@ import { sessionLink } from '../../src/shared/session-link'
 import { workspaceFixtures } from '../../src/test-support/fixtures/workspaces'
 import { TEST_TIME, type TestHarness } from '../test-support/harness'
 import { publishToolImage } from './list-test-support'
-import { toolFixture } from './test-support'
+import { seedRemovedWorkspace, toolFixture } from './test-support'
 
 export async function toolRouteFixture(harness: TestHarness) {
   const fixture = await toolFixture(harness)
+  await seedRemovedWorkspace(fixture.db)
   await publishToolImage(fixture.db)
   const sample = workspaceFixtures()
   const workspace: AgentWorkspaceSummary = {

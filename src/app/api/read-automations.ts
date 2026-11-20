@@ -3,6 +3,7 @@ import type {
   AutomationAuthorAccount,
   AutomationAuthorFilter,
   AutomationInactiveReason,
+  AutomationResponse,
   AutomationsResponse,
   AutomationTrigger,
   AutomationWeekday,
@@ -19,7 +20,7 @@ import {
   record,
   text,
 } from './parse'
-import { readChoice, readSender } from './read-core'
+import { readChoice, readSender, readSessionLogin } from './read-core'
 import { EVENTS, readRun, SCHEDULES } from './read-automation-runs'
 
 /** An automation of the list of its org, with its newest run, or null. */
@@ -126,13 +127,17 @@ function readAutomation(value: unknown): Automation {
   }
 }
 
-/** The automation of a read, a create, or an update. */
-export function readAutomationResponse(value: unknown): Automation {
-  return nested(
-    record(value, 'automation response'),
-    'automation',
-    readAutomation,
-  )
+/**
+ * The automation of a read, a create, or an update, with the login of its
+ * runs: the default login of its owner for its agent, as the server names
+ * it, or null when no login serves the owner. An older reply names none.
+ */
+export function readAutomationResponse(value: unknown): AutomationResponse {
+  const reply = record(value, 'automation response')
+  return {
+    automation: nested(reply, 'automation', readAutomation),
+    runLogin: maybeNested(reply, 'runLogin', readSessionLogin),
+  }
 }
 
 /** The automations of an org, each with its newest run, in the order of the reply. */

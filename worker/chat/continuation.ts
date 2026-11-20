@@ -24,6 +24,7 @@ export async function continueUnanswered(
         messageIds: [],
         state: 'queued',
         closeAfterStop: false,
+        stopRequest: null,
       }
     }
     const type = next.messageIds.length === 0 ? 'turn' : 'message'

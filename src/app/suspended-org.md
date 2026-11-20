@@ -57,8 +57,10 @@ screens show.
   the tab, and a toast tells what was not saved.
 - General offers Leave org to a person whom the last-admin rule lets
   leave: a member who is not an admin, or an admin while the members list
-  another admin. The question counts the person's workspaces from the
-  list. A `last_admin` refusal shows words that name no step that the
+  another admin. The question counts the person's workspaces that the list
+  shows. It leaves out their removed workspaces, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. A `last_admin` refusal shows words that name no step that the
   suspended org refuses.
 - A deleted org that is also suspended shows the notice of the org above
   the day of the delete, and offers no Restore. A Restore that the API

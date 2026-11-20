@@ -15,13 +15,27 @@ The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 The crate provides handshake messages, commands, numbered events, confirmations,
 resend requests, file results, and temporary turn credentials.
 The workspace tools provide workspace, session, message, repository, section,
-model, preview, and Mac command requests and replies. Their replies preserve
+model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
+Workspace records and list entries give a required nullable parent ID.
+Workspace details give the parent entry, stored depth, and direct children.
+Create, list, and move requests accept an optional parent ID.
+Move requests can instead name the top level. Their section ID is optional
+when the request gives a target.
+Create and workspace write replies can carry an optional notice.
 Dependent types include workspace and session records, messages, attachments,
 model choices, file reports, port reports, skill reports, startup reports, and commit authors.
 Skill metadata has no private path. Only helper scan results and explicit
 Codex input carry the absolute path of a skill file.
+`SessionLogin` names a personal owner or org without a credential.
+`Session.login` is optional for older clients and stored records.
+`Session.defaultLogin` names the starter's current default owner before the first accepted message.
+It is optional and absent when no login serves the starter or `Session.login` is fixed.
+`DefaultAgentLogin` carries the server's default owner and model availability for an org and agent.
+Its separate org model list also serves sessions that keep the org login with a personal default.
 Browser-only events and local socket adapters remain in TypeScript.
+Secret tool contracts keep the raw Worker response separate from printable results.
+The value-bearing run response has no serializer and no debug output.
 
 Optional fields omit `None`. Required nullable fields serialize `None` as null.
 Literal booleans and the protocol version preserve their exact JSON values.
@@ -42,6 +56,7 @@ let hello = RunnerHello::Hello {
     workspace_id: "workspace-1".into(),
     stream_id: "stream-1".into(),
     login_kinds: None,
+    process_start_id: None,
 };
 ```
 
@@ -76,6 +91,10 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Helper options](src/sdk_helper_options.rs) defines private start options and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
+- [Workspace calls](src/tools/workspaces.rs) defines parent-aware requests, list entries, details, and notices.
+- [Secret contracts](src/tools/secrets.rs) defines the legacy Worker list, run input, grants, and non-printable values.
+- [Secret results](src/tools/secret_results.rs) defines printable command output and tool outcomes.
+- [Workspace records](src/tools/workspace_types.rs) defines the app's workspace record with its nullable parent ID.
 - [Wire helpers](src/wire.rs) preserves literal booleans and read-only array views.
 - [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.
@@ -84,7 +103,11 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Secret requests](../../docs/protocol/secret-requests.md)
+- [Secret variables](../../docs/protocol/secret-variables.md)
+- [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Chat and events](../../docs/protocol/chat-and-events.md)
 - [Shared contracts](../../src/shared/README.md)
 - [Architecture](../../docs/architecture.md)

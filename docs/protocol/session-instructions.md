@@ -18,11 +18,14 @@ says.
   base prompt changes later. An example is a new default branch of the
   repository at a later resume.
 - A new session gets the instructions with the current facts and wording.
+  The parent and the depth are the exception, as
+  [The parent and the depth](agent-instructions.md#the-parent-and-the-depth) says.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- Apart from the branches, the instructions hold no fact that changes
-  during the work, such as the date, the Git state, or the pull request
-  state. The agent reads such facts with its tools.
+- Apart from the branches, the parent, and the depth, the instructions
+  hold no fact that changes during the work, such as the date, the Git
+  state, or the pull request state. The agent reads such facts with its
+  tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.

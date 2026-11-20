@@ -67,6 +67,8 @@ describe('closing a session with waiting work', () => {
     expect(closed.history).toEqual([
       {
         ...session,
+        defaultLogin: undefined,
+        login: { type: 'personal', userId: fixture.owner.id },
         title: 'Check this code',
         activeTurnId: null,
         closedAt: 1_800_000_000_000,

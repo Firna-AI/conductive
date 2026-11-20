@@ -15,7 +15,7 @@
   - `.release-please-manifest.json` starts at `0.0.0`, from the bootstrap commit in `release-please-config.json`. release-please treats `0.0.0` as no previous release. So `"initial-version": "0.1.0"` in the root package of `release-please-config.json` makes the first release `0.1.0`, whatever the types of the commits before it.
   - The merge of the release pull request creates the tag `v0.1.0` on the release commit, and a draft GitHub release.
   - The release workflow then runs the Mac checks on an Apple silicon and an Intel runner. Its `verify-tag` job checks that `refs/tags/v0.1.0` points to the release commit.
-  - The signing job runs in the `desktop-release` environment. It builds both architectures with the updater on, signs and notarizes them, and runs the packaged tests.
+  - Two signing jobs, one for each architecture, run at the same time in the `desktop-release` environment. Each builds its architecture with the updater on, and signs and notarizes it. The arm64 job also runs the packaged tests.
   - The publish job uploads the files to the draft. It publishes the draft only after GitHub lists every file with its full size.
   - The `desktop-release` environment admits only `main`. On 9 November 2026, a read of its rules found one deployment rule, the branch `main`.
   - The repository Actions secret `RELEASE_PLEASE_TOKEN` holds a token of a person, so CI runs on the release pull request with no approval. It was saved and checked on 9 November 2026.
@@ -26,7 +26,7 @@
 - **Task:**
   1. After the merge of the update change, wait for the release pull request on `main`. Check that it sets `0.1.0` in `package.json` and `desktop/package.json`, and that its `Complete gate` check passes. When it gives another version, do not merge it, and check the `initial-version` setting.
   2. Merge the release pull request.
-  3. Watch the release workflow run of that merge. Check that each job passes: `release-please`, the Mac checks on both runners, `verify-tag`, the signing job, and `publish`.
+  3. Watch the release workflow run of that merge. Check that each job passes: `release-please`, the Mac checks on both runners, `verify-tag`, the two signing jobs, and `publish`.
   4. Run `gh release view v0.1.0 --repo Firna-AI/conductive --json isDraft,isPrerelease,assets`. Check that the release is not a draft and not a prerelease, and that it holds the seven files, each with a size above zero.
   5. Run `gh api repos/Firna-AI/conductive/releases/latest --jq .tag_name`. Check that it prints `v0.1.0`. This checks once that GitHub chooses the new release as latest after the publish step sends `make_latest=legacy`. No permanent test covers this GitHub behaviour.
   6. Run `git ls-remote https://github.com/Firna-AI/conductive.git refs/tags/v0.1.0 'refs/tags/v0.1.0^{}'`. Compare its commit with `gh pr view NUMBER --repo Firna-AI/conductive --json mergeCommit`, for the release pull request. Use the peeled `^{}` commit when present. Otherwise, use the tag target. Check that it matches the merge commit.

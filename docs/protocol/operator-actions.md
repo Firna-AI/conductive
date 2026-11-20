@@ -75,10 +75,11 @@ These rules hold for each workspace that the suspended user owns.
   the rule fails or the check fails.
 - The agent tools, the git credential route, and the requests for Mac
   commands use the same rule.
-- The workspace uses no agent login of a suspended starter, and the
-  session record shows that the login cannot be used.
-  [Messages](messages-and-attachments.md#messages) states what a message of another
-  member does when the login of the starter cannot be used.
+- The workspace uses no personal login of a suspended starter, and the
+  session record shows that the login cannot be used. A session on the org
+  login does not depend on its starter.
+  [Messages](messages-and-attachments.md#messages) states what a message
+  does when the login of its session cannot be used.
 - A message of a suspended sender never reaches the agent. A suspended
   sender gets no Mac command.
 - The suspension revokes no workspace token of a workspace that another
@@ -150,9 +151,13 @@ whoever owns or started it (decision 129).
   keeps their sign-in sessions in the browser and in the Mac app.
 - Each member keeps their account and their other orgs. The org
   suspension changes nothing in another org.
-- The org suspension takes away no access to read. Members can still open
-  the org and its workspaces, also archived ones, and read the chat
-  history of each workspace.
+- Members keep read access, except for the sandbox access above and
+  [Reveal](secrets.md#reveal). Members can still open the org and its
+  workspaces, also archived ones, and read the chat history of each
+  workspace.
+- The Worker refuses Reveal with `org_suspended` through the write gate
+  of other changes (secrets decision 14 B). Reason: each reveal writes a
+  record.
 - Members can also read the automations of the org and their runs. The
   automation pages show no actions.
 - The org and each of its workspaces show a notice. It says that the org

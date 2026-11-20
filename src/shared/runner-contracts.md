@@ -20,6 +20,9 @@ The `welcome` repeats the version of the runner's `hello`.
 The optional `hello.loginKinds` declares the login kinds the runner can use.
 `runnerSupportsLogin` reads that list. A runner without the list can use
 each login kind except a Codex ChatGPT sign-in.
+The optional `hello.processStartId` names one start of the runner program.
+Only the [runner warnings](../../docs/protocol/runner-warnings.md#process-starts) use it.
+A runner from before this field omits it. It requires no new protocol version.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 

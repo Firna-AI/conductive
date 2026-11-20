@@ -80,17 +80,26 @@ export function usePreviewActions(
     if (current.previewId !== previewId) current.navigate(previewId)
   }
 
+  /**
+   * Puts the answer of a request in the store, also after this page left,
+   * because the app can keep the store for the workspace. Then `page` runs
+   * its own moves, such as of the address, only while the page stays.
+   */
+  const complete = (action: PreviewsAction, page?: () => void) => {
+    dispatch(action)
+    if (mounted.current) page?.()
+  }
+
   /** Sends the open request of a port. `then` gets the new preview, or null. */
   const request = (port: number, then: (previewId: string | null) => void) => {
     dispatch({ type: 'open' })
     void openPreview(workspace, port).then((result) => {
-      if (!mounted.current) return
-      dispatch(
+      complete(
         result.ok
           ? { type: 'opened', preview: result.value }
           : { type: 'open-failed', error: result.error },
+        () => then(result.ok ? result.value.id : null),
       )
-      then(result.ok ? result.value.id : null)
     })
   }
 
@@ -133,8 +142,7 @@ export function usePreviewActions(
   const close = (preview: Preview) => {
     dispatch({ type: 'close', previewId: preview.id })
     void closePreview(workspace, preview.id).then((result) => {
-      if (!mounted.current) return
-      dispatch(
+      complete(
         result.ok
           ? { type: 'closed', previewId: preview.id }
           : {

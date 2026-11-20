@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { automationPaths } from '../../shared/automations'
 import { workspaceViewPath } from '../../shared/workspace-view'
-import { readViewReply } from '../../chat/api/read-responses'
+import { readViewReply } from '../../chat/api/read-view'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FakeWorkspaceEvents } from '../../test-support/fake-events'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'

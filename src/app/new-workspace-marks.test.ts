@@ -10,7 +10,7 @@ import { FAKE_IDS } from '../test-support/fixtures/core'
 import { createApiClient } from './api/client'
 import { record } from './api/parse'
 import { fileMark, literalText } from './draft-marks'
-import { draftReady } from './new-workspace-model'
+import { draftReady } from './new-workspace-draft'
 import { OrgModel } from './org-model'
 import { flushMicrotasks, HeldRequests, testServices } from './test-kit'
 

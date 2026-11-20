@@ -2,67 +2,141 @@ import { expect, it } from 'vitest'
 
 import { createAdapterRuntime } from './adapter-runtime.test-support'
 import { BROWSER_TEST_NOW } from './browser-clock.test-support'
+import { array } from './agent-events'
 import { WORKSPACE_ID } from './harness.test-support'
 import { record, string } from './inputs'
+import {
+  savedRunnerState,
+  seedRunnerState,
+} from './runner-connection-state.test-support'
 import { runnerControls, disposeRunners } from './runner-native.test-support'
 
-it('retires runner authority and file ownership when close is the first wake event', async () => {
-  const { runtime, headers } = await createAdapterRuntime(
-    'worker/chat/runner-entry.test-support.ts',
-  )
-  const controls = runnerControls(runtime, headers)
-  const runner = await controls.connect()
-  try {
-    runner.emit({ type: 'runner.ready' })
-    expect(await runner.inbox.next()).toEqual({
-      type: 'confirm',
-      streamId: 'native-runner',
-      throughEventNumber: 1,
-    })
-    const before = await controls.request('settled')
-    const id = string(record(before.runner).id)
-    expect(before.fileBinding).toBe(id)
-    expect(before.fileDetached).toEqual([])
-    expect(before.detached).toBe(0)
-    expect(before.alarm).toBe(BROWSER_TEST_NOW + 15_000)
-    // Model a disconnected socket omitted from the next constructor listing.
-    await controls.request('prepare-close')
-    await runtime.unsafeEvictDurableObject('chat-adapter-tests', 'Workspace', {
-      name: WORKSPACE_ID,
-      webSockets: 'hibernate',
-    })
-    expect(runner.socket.readyState).toBe(1)
-    runner.socket.close(1000, 'Close the sleeping runner.')
-    expect(await runner.closed).toMatchObject({ code: 1000 })
-    const after = await controls.request('close-handled')
-    expect(after.instance).not.toBe(before.instance)
-    expect(after.closeEvent).toEqual({
-      first: 'close',
-      completed: 1,
-      errors: 0,
-      omitted: 1,
-      omittedIds: [id],
-    })
-    expect(after.runner).toBeNull()
-    expect(after.detached).toBe(1)
-    expect(after.fileAttached).toEqual([id])
-    expect(after.fileDetached).toEqual([id])
-    expect(after.fileBinding).toBeNull()
-    expect(after.alarm).toBeNull()
-    expect(after.hello).toBe(1)
-    expect(after.ready).toBe(1)
-    expect(after.reads).toBe(before.reads)
-    expect(after.now).toBe(BROWSER_TEST_NOW)
-    expect(runner.received.map((value) => record(value).type)).toEqual([
-      'welcome',
-      'confirm',
-    ])
-    const again = await controls.request('close')
-    expect(again.detached).toBe(1)
-    expect(again.fileDetached).toEqual([id])
-    expect(again.closeEvent).toEqual(after.closeEvent)
-    expect(again.runner).toBeNull()
-  } finally {
-    await disposeRunners(runtime, [runner.socket])
-  }
-})
+it.each([
+  {
+    identity: 'current',
+    processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
+    savedProcessStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
+    expected: 'abcdef01-2345-4678-89ab-cdef01234567',
+  },
+  {
+    identity: 'legacy',
+    processStartId: undefined,
+    savedProcessStartId: undefined,
+    expected: null,
+  },
+  {
+    identity: 'invalid',
+    processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
+    savedProcessStartId: { token: 'private-runner-token' },
+    expected: 'unknown',
+  },
+])(
+  'retires runner authority and file ownership when close is the first wake event with $identity identity',
+  async ({ processStartId, savedProcessStartId, expected }) => {
+    const { runtime, headers } = await createAdapterRuntime(
+      'worker/chat/runner-entry.test-support.ts',
+    )
+    const controls = runnerControls(runtime, headers)
+    await controls.request('capture-warnings')
+    const streamId = '12345678-1234-4234-8234-123456789abc'
+    const runner = await controls.connect(streamId, 0, 2, processStartId)
+    try {
+      runner.emit({ type: 'runner.ready' })
+      expect(await runner.inbox.next()).toEqual({
+        type: 'confirm',
+        streamId,
+        throughEventNumber: 1,
+      })
+      const before = await controls.request('settled')
+      const id = string(record(before.runner).id)
+      const connected = {
+        kind: 'runner_connected',
+        message: 'The runner of a workspace connected.',
+        workspaceId: 'unknown',
+        connectionId: id,
+        streamId,
+        processStartId: processStartId ?? null,
+        protocolVersion: 2,
+      }
+      expect(before.warnings).toEqual([[connected]])
+      const stored = savedRunnerState(before.state)
+      const connection = record(stored.connection)
+      delete connection.processStartId
+      if (savedProcessStartId !== undefined)
+        connection.processStartId = savedProcessStartId
+      await controls.request('seed', seedRunnerState(stored))
+      const woke = await controls.hibernate()
+      expect(woke.warnings).toEqual(before.warnings)
+      expect(record(woke.runner).processStartId).toBe(expected)
+      expect(
+        array(woke.sockets, record).map(({ attachment }) => attachment),
+      ).toEqual([
+        {
+          version: 1,
+          role: 'runner',
+          id,
+          generation: record(before.runner).generation,
+        },
+      ])
+      expect(before.fileBinding).toBe(id)
+      expect(before.fileDetached).toEqual([])
+      expect(before.detached).toBe(0)
+      expect(before.alarm).toBe(BROWSER_TEST_NOW + 15_000)
+      // Model a disconnected socket omitted from the next constructor listing.
+      await controls.request('prepare-close')
+      await runtime.unsafeEvictDurableObject(
+        'chat-adapter-tests',
+        'Workspace',
+        {
+          name: WORKSPACE_ID,
+          webSockets: 'hibernate',
+        },
+      )
+      expect(runner.socket.readyState).toBe(1)
+      runner.socket.close(1000, 'Close the sleeping runner.')
+      expect(await runner.closed).toMatchObject({ code: 1000 })
+      const after = await controls.request('close-handled')
+      expect(after.instance).not.toBe(before.instance)
+      expect(after.closeEvent).toEqual({
+        first: 'close',
+        completed: 1,
+        errors: 0,
+        omitted: 1,
+        omittedIds: [id],
+      })
+      expect(after.runner).toBeNull()
+      expect(after.detached).toBe(1)
+      expect(after.fileAttached).toEqual([id])
+      expect(after.fileDetached).toEqual([id])
+      expect(after.fileBinding).toBeNull()
+      expect(after.alarm).toBeNull()
+      expect(after.hello).toBe(1)
+      expect(after.warnings).toEqual([
+        [connected],
+        [
+          {
+            ...connected,
+            kind: 'runner_disconnected',
+            message: 'The runner of a workspace disconnected.',
+            processStartId: expected,
+          },
+        ],
+      ])
+      expect(after.ready).toBe(1)
+      expect(after.reads).toBe(before.reads)
+      expect(after.now).toBe(BROWSER_TEST_NOW)
+      expect(runner.received.map((value) => record(value).type)).toEqual([
+        'welcome',
+        'confirm',
+      ])
+      const again = await controls.request('close')
+      expect(again.detached).toBe(1)
+      expect(again.fileDetached).toEqual([id])
+      expect(again.closeEvent).toEqual(after.closeEvent)
+      expect(again.runner).toBeNull()
+      expect(again.warnings).toEqual(after.warnings)
+    } finally {
+      await disposeRunners(runtime, [runner.socket])
+    }
+  },
+)

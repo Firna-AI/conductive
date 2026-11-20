@@ -1,8 +1,12 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { memberViewer, you, type PersonKey } from '../fixtures/members'
+import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { runListKeys } from '../fixtures/runLists'
 import { triggerViewKeys } from '../fixtures/automationTriggers'
-import { automationKeys, type Automation } from '../fixtures/automations'
+import {
+  automationKeys,
+  automations,
+  type Automation,
+} from '../fixtures/automations'
 
 /**
  * The state of the automation screen. Each catalogue entry of the screen is a
@@ -20,6 +24,8 @@ export const automationStateSchema = {
     'tab',
     'org',
     'dialog',
+    'login',
+    'modelMenu',
   ],
   properties: {
     /** A new automation, a draft of one, or a saved automation of Acme. */
@@ -61,6 +67,19 @@ export const automationStateSchema = {
      * first, because a deleted automation cannot come back.
      */
     dialog: { enum: ['none', 'delete'] },
+    /**
+     * The agent login that the runs use, the default login of the owner
+     * (decision 5 A of the org logins plan): the own login of the owner, or
+     * the Claude login of Acme on its gateway, for an owner with no login of
+     * their own or while "Use for every member" is on.
+     */
+    login: { enum: ['own', 'org'] },
+    /**
+     * The model picker of the prompt: closed, or open. On the gateway of
+     * Acme, it hides Fable 5.1, which the model list of the gateway does not
+     * name (decision 3 A).
+     */
+    modelMenu: { enum: ['closed', 'open'] },
   },
 } as const
 
@@ -76,6 +95,8 @@ export const ownerAutomation: AutomationState = {
   tab: 'automation',
   org: 'active',
   dialog: 'none',
+  login: 'own',
+  modelMenu: 'closed',
 }
 
 /**
@@ -88,6 +109,16 @@ export type AutomationAccess = 'owner' | 'admin' | 'member'
 /** The person signed in. */
 export function viewerOf(state: AutomationState): PersonKey {
   return state.viewer === 'admin' ? you : memberViewer
+}
+
+/**
+ * The automation of a state. A new automation belongs to the person who
+ * creates it, so its owner is the person signed in.
+ */
+export function automationOf(state: AutomationState): Automation {
+  const automation = automations[state.automation]
+  if (automation.saved) return automation
+  return { ...automation, owner: people[viewerOf(state)] }
 }
 
 export function accessOf(

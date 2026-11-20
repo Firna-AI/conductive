@@ -24,8 +24,13 @@ export type MacCommandRequest = {
   longerBecause?: string
 }
 
-/** What happened to a command on the Mac, as the chat shows it. */
-export type MacCommandState = 'waiting' | 'denied' | 'done' | 'unavailable'
+/**
+ * What happened to a command on the Mac, as the chat shows it.
+ * `mac-access-off` is a request that the workspace refused, because a
+ * member turned Mac access off in its Capabilities (secrets decision 8).
+ */
+export type MacCommandState =
+  'waiting' | 'denied' | 'done' | 'unavailable' | 'mac-access-off'
 
 export const safariTest: MacCommandRequest = {
   command: 'npm run test:safari -- checkout',
@@ -104,9 +109,23 @@ export const waitingWithScript: readonly MacCommandRequest[] = [
 /** The output of the Safari test, which goes back to the agent. */
 export const safariOutput = [
   '> storefront@2.4.0 test:safari',
+  '> playwright test --project=webkit checkout',
+  '',
+  'Running 12 tests using 4 workers',
+  '',
   '✓ checkout › suggests addresses (2.4s)',
   '✓ checkout › fills the address fields (1.9s)',
-  '2 passed (14.2s)',
+  '✓ checkout › keeps the address after a reload (1.2s)',
+  '✓ checkout › shows the delivery dates (0.8s)',
+  '✓ checkout › applies a discount code (1.1s)',
+  '✓ checkout › rejects an expired discount code (0.9s)',
+  '✓ checkout › totals the basket with tax (0.7s)',
+  '✓ checkout › pays with a saved card (2.2s)',
+  '✓ checkout › asks again after a declined card (1.6s)',
+  '✓ checkout › sends the receipt (1.0s)',
+  '✓ checkout › opens the order page (0.6s)',
+  '',
+  '12 passed (14.2s)',
 ].join('\n')
 
 /** How long the Safari test ran on the Mac. */

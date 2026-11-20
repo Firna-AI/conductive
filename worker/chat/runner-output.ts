@@ -6,41 +6,20 @@ import {
 } from '../../src/shared/output-sanitizer'
 import type { AppEnv } from '../env'
 import { runningOutputSecrets } from '../lifecycle/output-secrets'
-import { decrypt, encrypt } from '../security/crypto'
-import { array, parseAgentEvent } from './agent-events'
-import { record, string, strings } from './inputs'
 import type { ChatTransaction } from './store'
 import type { RunnerWorkspaceRecord } from './types'
 import { displayPortReport } from './port-reports'
 import { displaySkillReport } from './skill-reports'
+import { agentOutputSecrets } from '../secrets/output-values'
+import {
+  readOutputSnapshot,
+  saveOutputSnapshot,
+  retainActiveSecrets,
+} from './output-filter-records'
 
 export interface FilteredRunnerOutput {
   events: RunnerEventEnvelope[]
   save(): Promise<void>
-}
-
-function parseHeld(value: unknown): HeldOutput[] {
-  if (!Array.isArray(value)) throw new Error('Invalid output filter state')
-  return value.map((entry: unknown) => {
-    const input = record(entry)
-    const event = parseAgentEvent(input.event)
-    if (event.type !== 'assistant.delta') throw new Error('Invalid held output')
-    return {
-      event,
-      secrets: strings(input.secrets).map(string),
-      ...(input.contexts === undefined
-        ? {}
-        : {
-            contexts: array(input.contexts, (value) => {
-              const context = record(value)
-              return {
-                text: string(context.text),
-                secrets: strings(context.secrets).map(string),
-              }
-            }),
-          }),
-    }
-  })
 }
 
 function unreleased(snapshot: readonly HeldOutput[]): HeldOutput[] {
@@ -97,30 +76,16 @@ export async function filterRunnerOutput(
   workspace: RunnerWorkspaceRecord,
   input: RunnerEventEnvelope,
 ): Promise<FilteredRunnerOutput> {
-  const streamContext = (streamId: string) =>
-    JSON.stringify(['runner-output', workspace.id, streamId])
-  const context = JSON.stringify(['runner-output-context', workspace.id])
-  const readStream = async (streamId: string) => {
-    const saved = await transaction.output.read(streamId)
-    return saved
-      ? parseHeld(
-          JSON.parse(
-            await decrypt(
-              saved,
-              streamContext(streamId),
-              env.BOAT_KEY_ENCRYPTION_KEY,
-            ),
-          ),
-        )
-      : []
-  }
+  const readStream = (streamId: string) =>
+    readOutputSnapshot(env, transaction, workspace.id, streamId)
   const pending = await readStream(input.streamId)
   const saved = await transaction.output.readContexts()
-  const contexts = saved
-    ? parseHeld(
-        JSON.parse(await decrypt(saved, context, env.BOAT_KEY_ENCRYPTION_KEY)),
-      )
-    : []
+  const contexts = await readOutputSnapshot(
+    env,
+    transaction,
+    workspace.id,
+    null,
+  )
   const legacy: { streamId: string; snapshot: HeldOutput[] }[] = []
   if (!saved) {
     for (const streamId of await transaction.output.streams()) {
@@ -130,15 +95,26 @@ export async function filterRunnerOutput(
         legacy.push({ streamId, snapshot })
     }
   }
+  const activeValues = new Set([
+    ...(await runningOutputSecrets(env, workspace)),
+    ...(await agentOutputSecrets(
+      env,
+      transaction.secrets,
+      workspace,
+      transaction.now,
+    )),
+  ])
   const sanitizer = new OutputSanitizer(
-    combine([
-      ...pending,
-      ...contexts,
-      ...legacy.flatMap(({ snapshot }) => released(snapshot)),
-    ]),
+    retainActiveSecrets(
+      combine([
+        ...pending,
+        ...contexts,
+        ...legacy.flatMap(({ snapshot }) => released(snapshot)),
+      ]),
+      activeValues,
+    ),
   )
-  for (const secret of await runningOutputSecrets(env, workspace))
-    sanitizer.add(secret)
+  for (const secret of activeValues) sanitizer.add(secret)
   const events = sanitizer.accept(input.event).map((event) => ({
     ...input,
     event:
@@ -152,27 +128,17 @@ export async function filterRunnerOutput(
     events,
     save: async () => {
       const snapshot = sanitizer.snapshot()
-      const saveStream = async (streamId: string, held: HeldOutput[]) => {
-        await transaction.output.save(
-          streamId,
-          held.length
-            ? await encrypt(
-                JSON.stringify(held),
-                streamContext(streamId),
-                env.BOAT_KEY_ENCRYPTION_KEY,
-              )
-            : undefined,
-        )
-      }
+      const saveStream = (streamId: string, held: HeldOutput[]) =>
+        saveOutputSnapshot(env, transaction, workspace.id, streamId, held)
       await saveStream(input.streamId, unreleased(snapshot))
       for (const { streamId, snapshot } of legacy)
         await saveStream(streamId, unreleased(snapshot))
-      await transaction.output.saveContexts(
-        await encrypt(
-          JSON.stringify(released(snapshot)),
-          context,
-          env.BOAT_KEY_ENCRYPTION_KEY,
-        ),
+      await saveOutputSnapshot(
+        env,
+        transaction,
+        workspace.id,
+        null,
+        released(snapshot),
       )
     },
   }

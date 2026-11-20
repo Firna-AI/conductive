@@ -68,7 +68,12 @@ message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's
 login is not available, or private, open a linked session, as the Worker
-does. The page
+does. The account of the page names no default login, and its session
+records name no login, as an older reply of the Worker does. So the
+composer follows the own logins of the reader, as
+[Sessions, logins, and drafts](../sessions.md) says. `npm run dev` shows
+the sessions on the org login, with the options of
+[the development fake](../../app/dev-fake.md). The page
 sends as the member of the `role` option, who also starts each new
 session. A model change opens its session under the ID that
 the chat chose. Stop and the close of a running tab

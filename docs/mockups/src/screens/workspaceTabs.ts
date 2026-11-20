@@ -5,9 +5,12 @@ import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
   linkedSession,
   newSession,
+  startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
 import { screenshotCopy } from '../fixtures/attachments'
+import { detectedServers, openPort, openPorts } from '../fixtures/previews'
+import { previewTabLabel } from '../components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
@@ -25,6 +28,15 @@ export function isNew(state: WorkspaceState): boolean {
 }
 
 /**
+ * A workspace with one session, whose tab takes the title of the
+ * workspace: a new one, and the removed Postcode lookup for the shipping
+ * and billing forms, which kept the one session that made it.
+ */
+function oneSession(state: WorkspaceState): boolean {
+  return isNew(state) || state.workspace === 'postcode-lookup'
+}
+
+/**
  * The states after the second session sent a message to the first session
  * and to Saved carts. Each session tab then leads to the chat of its session
  * at that time.
@@ -35,6 +47,15 @@ function sessionLinkStates(state: WorkspaceState): boolean {
     state.conversation === 'sent-by' ||
     state.composer === 'session-link'
   )
+}
+
+/**
+ * Whether the open session has no message yet: a new session of the viewer,
+ * or an empty session that another member started. Its chat shows the
+ * empty state of a new session.
+ */
+export function noMessages(state: WorkspaceState): boolean {
+  return state.tab === 'new-session' || state.tab === 'started-session'
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
@@ -86,6 +107,26 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
 }
 
 /**
+ * The Preview tabs of the row, while the state keeps them (decision 291):
+ * one tab for each port, ports 3000 and 6006, opened after the code file.
+ * Each shows the label of its port, as the list of the tool names it. The
+ * tab of port 3000 shows in `preview`.
+ */
+function previewTabs(state: WorkspaceState): WorkspaceTab[] {
+  if (state.tab !== 'preview' && state.tab !== 'preview-behind') return []
+  return openPorts.map((port) => {
+    const server = detectedServers.find((each) => each.port === port)
+    return {
+      key: `preview:${port}`,
+      kind: 'preview',
+      title: previewTabLabel(port, server),
+      to: paths.preview,
+      selected: state.tab === 'preview' && port === openPort,
+    }
+  })
+}
+
+/**
  * The tabs of the centre column: the sessions, the code file that stays
  * open, and the file, the diff, or the new session that the state opens.
  * Each new tab opens at the end of the row, as the linked session does. A
@@ -93,21 +134,23 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * opens, and a move puts the code file between the two sessions. A tab
  * whose file name the app does not know shows "File". The one session of a
  * new workspace takes the title of the workspace, so its tab shows the same
- * name as the header, Untitled before the title comes. While the login of
- * the starter of the first session is not available, that first session
- * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, the first session leads
- * to that view. After the second session sent its messages, the second
- * session can show, and each session tab leads to its chat of that time.
- * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it.
+ * name as the header, Untitled before the title comes, as `oneSession`
+ * says. While the login of the starter of the first session is not
+ * available, that first session leads to its view for the member, beside
+ * the linked session. While the starter keeps the login for their own
+ * messages, or after an admin removed the org login of the session, the
+ * first session leads to that view. After the second session sent its
+ * messages, the second session can show, and each session tab leads to its
+ * chat of that time. The file or the diff that the state opens can be the
+ * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
+ * after the code file.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
   running = false,
 ): WorkspaceTab[] {
-  if (isNew(state)) {
+  if (oneSession(state)) {
     const title = workspaceName(state, workspace)
     return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
@@ -117,6 +160,9 @@ export function tabsFor(
   const sent = sessionLinkStates(state)
   let firstPath: string = linked ? paths.noStarterLogin : paths.app
   if (state.composer === 'not-shared') firstPath = paths.loginNotShared
+  if (state.composer === 'no-starter-login' && state.login === 'org') {
+    firstPath = paths.orgLoginRemoved
+  }
   if (sent) firstPath = paths.sentBy
   const tabs: WorkspaceTab[] = [
     {
@@ -124,7 +170,7 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(first.title),
       to: firstPath,
-      selected: state.tab === 'session',
+      selected: state.tab === 'session' || state.tab === 'preview-behind',
     },
     {
       key: second.key,
@@ -160,10 +206,12 @@ export function tabsFor(
       title: masked ? splitPath(maskedDiffPath).name : 'AddressForm.tsx',
       to: masked ? paths.maskedPaths : paths.diff,
       selected: true,
+      hidesPath: masked,
     })
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({
       key: 'unnamed',
@@ -171,6 +219,7 @@ export function tabsFor(
       title: 'File',
       to: paths.maskedPathsUnnamed,
       selected: true,
+      hidesPath: true,
     })
   }
   if (state.tab === 'new-session') {
@@ -190,6 +239,16 @@ export function tabsFor(
       kind: 'session',
       title: nameLabel(title),
       to: paths.linkedSession,
+      selected: true,
+    })
+  }
+  if (state.tab === 'started-session') {
+    const { key, title } = startedSession
+    tabs.push({
+      key,
+      kind: 'session',
+      title: nameLabel(title),
+      to: paths.orgLoginStartedSession,
       selected: true,
     })
   }

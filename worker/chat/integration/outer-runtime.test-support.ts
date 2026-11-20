@@ -214,8 +214,6 @@ export async function createOuterRuntime(
       headers,
       request,
       restart: async () => {
-        if (!options.persistencePath)
-          throw new Error('The restart fixture needs persistent storage.')
         await runtime.dispose()
         runtime = createRuntime()
         env.DB = await runtime.getD1Database('DB')

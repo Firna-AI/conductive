@@ -2,17 +2,19 @@
 
 This doc holds the requirements and the decisions in force for the list
 of `@` in the composer of a workspace chat, the chips of the files and
-folders that it puts into a message, the mentions and the sent chips of
-attached files, the file chips in the answers of the agents, and the
-removal of each chip of the composer. The terms
-are those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says. The
+folders that it puts into a message, Add to chat, the mentions and the
+sent chips of attached files, the file chips in the answers of the agents,
+and the removal of each chip of the composer. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A file row menu decision number names a decision of the change that
+adds the menu of the rows of All files and Changes, as
+[File row menu](file-row-menu.md) says. An answer chip decision number
+names a decision of the change that added file chips to answers. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/file-mentions`, at `app/file-mentions/answers`, at
-`app/attachments/sent`, and in the flows `user-flows/mention-a-file` and
-`user-flows/open-a-file-from-an-answer`. An answer chip decision number
-names a decision of the change that added file chips to answers.
+`app/attachments/sent`, at `app/files/menu/added`, and in the flows
+`user-flows/mention-a-file` and `user-flows/open-a-file-from-an-answer`.
 [Skill mentions](skill-mentions.md) states the list of `/` and the skill
 chips. That list opens in the place of this list, and it shares the keys
 and the highlight of [The list](#the-list).
@@ -100,6 +102,48 @@ and the highlight of [The list](#the-list).
 - The copy is checked in Chrome. Firefox and Safari are not checked.
 - A draft keeps the mention of each chip. When a draft comes back, its
   mentions show as chips again.
+
+## Add to chat
+
+- Add to chat in the [row menu](file-row-menu.md) of a row of All files or
+  Changes puts the chip of the file or the folder of that row into a
+  message field. [Add to chat](file-row-menu.md#add-to-chat) of the row
+  menu states which rows offer it.
+- The chip goes into the message field of the session that the member saw
+  last (file row menu decision 4 A). The app first shows the tab of that
+  session. On a phone, it switches to the chat of that session.
+- When the workspace has no open session tab, Add to chat starts a new
+  session, as + does. The chip then goes into the message field of that
+  session.
+- The chip is the same as after a pick of its entry from the list. It goes
+  to the caret of the field, with a space after it. When the field has no
+  caret, such as when its session did not show, the chip goes to the end
+  of the text.
+- On desktop, the field then takes the focus, and the caret stands after
+  the chip. On a phone, the field does not take the focus, so no keyboard
+  opens by itself.
+- When the field shows only later, such as after a new session starts, it
+  takes the focus unless the focus moved to another element before then.
+  Reason: the message box never takes the focus from a later choice of the
+  member, as [Sections](orgs-and-members.md#sections) says for a press on
+  a workspace row.
+- Reason: one press puts the chip where the member writes next, and the
+  member sees it at once. The agent actions of the pull request bar send
+  to the same session, as
+  [Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
+  says.
+- A new session for each Add to chat, a submenu of the open sessions, and
+  an item only while a session tab shows were not chosen. A message field
+  that stays below each file tab, and a drag of a row onto the field, were
+  not chosen either.
+- A mention at the end of the draft, with a toast and no change of the
+  view, was not chosen, because the member would not see the chip at once.
+  A write into the draft while its field does not show was not chosen
+  either. So no row offers Add to chat while a bar of the cloud computer
+  takes the place of the message field, as
+  [Add to chat](file-row-menu.md#add-to-chat) says.
+- A chip in each open message field was rejected, because a member writes
+  one message at a time.
 
 ## The text of a mention
 

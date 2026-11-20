@@ -13,6 +13,7 @@ import { ReportRepairs } from './report-repairs'
 import { WorkspaceSkills } from './skill-state'
 import { WorkspaceSummaryProjection } from './workspace-summary'
 import { PreviewRevocations } from '../previews/revocation-events'
+import { TerminalList } from '../terminal/list-store'
 import { RunnerOutputState } from './runner-output-state'
 import {
   CHAT_ROOT as ROOT,
@@ -24,6 +25,8 @@ import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
+import { SecretRequestRecords } from '../secrets/request-records'
+import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -35,7 +38,9 @@ export class ChatTransaction extends ChatRecords {
   readonly repairs: ReportRepairs
   readonly skills: WorkspaceSkills
   readonly previews: PreviewRevocations
+  readonly terminals: TerminalList
   readonly output: RunnerOutputState
+  readonly secrets: SecretRequestRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages = new HistoryPages(this.data)
   private through: number
@@ -43,6 +48,7 @@ export class ChatTransaction extends ChatRecords {
 
   constructor(data: ChatData, metadata: ChatMetadata, now: number) {
     super(data)
+    this.secrets = new SecretRequestRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
     this.github = {
@@ -55,6 +61,7 @@ export class ChatTransaction extends ChatRecords {
       this.emit(event, occurredAt),
     )
     this.previews = new PreviewRevocations(data, (event) => this.emit(event))
+    this.terminals = new TerminalList(data, (event) => this.emit(event))
     this.summary = new WorkspaceSummaryProjection(
       data,
       () => this.turns(),
@@ -212,10 +219,11 @@ export class ChatStore {
     turnEnded: ConstructorParameters<typeof TurnEndReports>[0] = async () =>
       undefined,
     changed: (workspaceId: string) => Promise<void> = async () => undefined,
+    runner: () => RunnerDiagnosticIdentity | null = () => null,
   ) {
     this.storage = storage
     this.now = now
-    this.turnEnds = new TurnEndReports(turnEnded)
+    this.turnEnds = new TurnEndReports(turnEnded, runner)
     this.changed = changed
   }
 

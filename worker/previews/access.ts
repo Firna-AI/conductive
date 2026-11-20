@@ -5,7 +5,7 @@ import { suspendedWorkspaceOwnerError } from '../data/user-access'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { ProviderError } from '../sandbox/errors'
 import { gate } from '../security/gate'
-import type { ToolDependencies, WorkspaceTarget } from './types'
+import type { WorkspaceTarget } from './types'
 import {
   readWorkspaceTarget,
   type WorkspaceAccessTarget,
@@ -98,13 +98,6 @@ export async function toolRequest(
   return { context, target, tail }
 }
 
-export function recordActivity(
-  dependencies: ToolDependencies,
-  workspaceId: string,
-): void {
-  dependencies.onActivity?.(workspaceId, dependencies.now())
-}
-
 export function toolFailure(error: unknown): unknown {
   return error instanceof ProviderError
     ? new HttpError(
@@ -115,6 +108,7 @@ export function toolFailure(error: unknown): unknown {
     : error
 }
 
-export function toolError(error: unknown): Response {
-  return privateResponse(errorResponse(toolFailure(error)))
+/** A caller passes `request` only when its path holds no path of the user's app. */
+export function toolError(error: unknown, request?: Request): Response {
+  return privateResponse(errorResponse(toolFailure(error), request))
 }

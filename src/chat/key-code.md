@@ -10,6 +10,9 @@ is relative to `src/chat/`, the folder of this guide.
   through `useWorkspaceStore`.
 - `state/controller.ts`: `ChatController`, the public boundary of the chat
   state and its actions, with `show` and `hide` for a kept chat.
+  `state/chat-runs.ts`: `ChatRuns`, which the controller extends: the
+  store of the snapshot, the context of each run, and `start`, `stop`,
+  `show`, and `hide`.
 - `state/controller-context.ts`: the context of one controller run. It
   holds the local IDs of drafts and files, the upload generations, the
   devices, and the event stream. Each draft ID holds the run.
@@ -26,9 +29,10 @@ is relative to `src/chat/`, the folder of this guide.
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
 - `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  its items with the mark of each item that changes the workspace, the
-  items of a read-only row, the long press that opens that row's menu, and
-  its drawing at a point or in a sheet.
+  the long press that opens the menu of a read-only row, and its drawing
+  at a point or in a sheet. `components/tab-menu-items.ts`: the groups of
+  its items, with Copy path of the host, the mark of each item that
+  changes the workspace, and the items of a read-only row.
   `components/useTabMoves.ts`: the moves of the row and Keep open, the
   focus after a move or a keep from the menu, and the words of the status.
 - `components/TranscriptCopy.tsx`: `useTranscriptCopy`, the copy of a
@@ -43,7 +47,8 @@ is relative to `src/chat/`, the folder of this guide.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps and the sandbox bar that the app can draw.
+  `ChatHost`, the start steps, the sandbox bar, and the tools of the
+  composer that the app can give.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -52,6 +57,20 @@ is relative to `src/chat/`, the folder of this guide.
   the zips and the refused folders of a drop to `controller.attachFiles`,
   and keeps one
   source for each `Draft.id`, in `useDraftFiles`.
+- `components/ComposerTools.tsx`: `ComposerTool`, a tool of the host, such
+  as Capabilities, and `ToolButton`, its icon with its label as a native
+  tooltip, whose control opens above the icon on a computer. A second
+  press, a press outside, Escape, and the key of the command palette close
+  it.
+- `components/ComposerMenu.tsx`: `ComposerStart`, the start of the bar of
+  every composer. A computer shows the attach button and the icon of each
+  tool. A phone shows one + button, "More options", whose menu holds
+  Attach files and a row for each tool. A tool then opens its control as a
+  sheet, and the focus goes back to the + button when the sheet closes
+  (secrets decision 16 G).
+- `components/ComposerButtons.tsx`: `StopButton`, Stop with its word and
+  its key on a computer, and only its icon on a phone, where its spoken
+  name stays "Stop" (secrets decision 16 G).
 - `components/composer-drop.ts`: `useComposerDrop`, the drop of files on a
   message box, which the chat and both New workspace composers share.
   [The message field](message-field.md) gives its rules.
@@ -115,6 +134,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `mentions/`: `mention-rows.ts` gives the entries that the list offers and
   their order. `MentionsContext.tsx` gives the files that the chat gets and
   the tree that the list and the chips find, with one value for each tree.
+  Its `useFilesMentionTree` gives that tree to a part outside the chat,
+  such as Add to chat of the Files panel, and `MentionTarget` names a file
+  or a folder of a mention.
   `MentionIcon.tsx` gives the icon of All files for an entry.
   `mention-skills.ts` gives `MentionSkills`, the skill lists that the
   chat gets as a store in `ChatMentions.skills`, and the lookup of a
@@ -139,6 +161,8 @@ is relative to `src/chat/`, the folder of this guide.
   `holderOf` finds the session that holds a draft now. `afterSend`,
   `keepFiles`, and `endDraftFiles` take files off a draft with their
   marks, as [Attached files of a draft](draft-files.md) says.
+  `withEndedDraftFiles` does it for each draft when `ChatController.stop`
+  runs.
 - `state/message-actions.ts`: `setDraftText`, which makes the files of a
   draft follow the marks of each new text, and `sendDraft`, the send of a
   draft. It also holds Try again of a failed turn, Stop, and Resume.
@@ -147,6 +171,13 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/prompt-actions.ts`: `sendPrompt`, a fixed prompt to the session of
   the chat, which changes no draft, as
   [Fixed prompts](loads-and-sends.md#fixed-prompts) says.
+- `state/mention-actions.ts`: `addToChat`, which shows the session of the
+  chat, or starts a new one, and asks its message field for the chip of a
+  file or a folder, and `takeMention`, which ends the request, as
+  [Add to chat](loads-and-sends.md#add-to-chat) says.
+  `components/composer-requests.ts`: the requests that parts outside the
+  composer make of its field, `useRequestedFocus` and
+  `useRequestedMention`, with `ComposerFocus`.
 - `state/attachment-actions.ts`: attach and Try again for the files of a
   draft. `attachFiles` gives the IDs of a pick at once, and queues its
   uploads. It puts the names that it refuses in the draft, as
@@ -179,8 +210,11 @@ is relative to `src/chat/`, the folder of this guide.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
-  record and the reader, the login label in the composer, and the models
-  that the picker of the composer offers.
+  record, the reader, and the default logins of the account: the login of
+  the session, a member's or the org's, or the login of a new linked
+  session. It also gives the login label in the composer, and the models
+  that the picker of the composer offers. `state/blockers.ts` gives the
+  Connect notice when no login serves the message.
 - `state/linked-replies.ts`: the message and the focus of a reply that names
   a linked session.
 - `components/SourceLine.tsx`: the line that links a linked session to its
@@ -241,12 +275,18 @@ is relative to `src/chat/`, the folder of this guide.
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-view.ts` reads the saved view of the view route, with each
+  Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
   overlays. `ui/`: interactive buttons, menus, sheets, and dialogs.
 - `components/send-key.ts`: `useSendKey`, the send key that the composer
   shares with the page and the dialog of New workspace in the app shell.
 - `device/`: the Mac commands. Their [README](device/README.md) names
   their key code.
+- `secrets/`: the secret requests, their answers, the runs, and the line of
+  a late answer. Their [README](secrets/README.md) names their key code.
+- `components/WaitingRequests.tsx`: the region just above the composer of
+  the Mac commands and the secret requests that wait, the oldest first.
 - `dev/`: the development page, its fake writes, its scripted agent, its
   Mac, the `loss` scenario in `dev/dev-loss.ts`, and the `starter` option
   in `dev/dev-logins.ts`. `dev/dev-answers.ts` holds the plans and the

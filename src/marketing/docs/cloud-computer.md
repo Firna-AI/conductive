@@ -42,9 +42,14 @@ After the first successful build, use these steps to change its repositories:
 
 1. Open the org's **Settings**.
 2. Select **Repositories**.
-3. Add or remove the repositories you want in its setup.
+3. Select **Edit**.
+4. Add or remove the repositories you want in its setup.
+5. Select **Done**.
 
-The repository list has **Manage access** for the GitHub App's access on GitHub.
+The tab lists the repositories in the setup.
+**Edit** lists every repository that the GitHub App can reach.
+Each add or remove saves at once.
+The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
 Adding a repository starts a build automatically.
@@ -130,6 +135,51 @@ The author of a commit does not prove who made it.
 The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It does not hide values in file content, diffs, or Terminal.
 
+## Add secrets for agents
+
+Use **Secrets** for a key that an agent should use only with a member's approval.
+Use environment variables for values that every computer needs at each start.
+
+1. Open the org's **Settings**.
+2. Select **Secrets**.
+3. Select **Add secret**.
+4. Enter its **Name**, **Description**, and **Value**.
+5. Select **Save secret**.
+
+Use only letters `A-Z` and `a-z`, digits `0-9`, and underscores `_` in a new secret's name.
+The name can start with a digit.
+**Save as secret** on a request uses the same name rule.
+For other names, use **15 minutes** or **This workspace**.
+Existing secrets keep their names and remain usable.
+Replace changes the description or value and keeps the name.
+
+Every member can add a secret.
+You can replace or delete the secrets that you added.
+An admin can replace or delete each secret.
+Only an admin can reveal a saved value, or mark a secret for **All agents**.
+Each row shows who revealed its value last.
+
+An agent asks to run one command with a secret.
+The command gets the value.
+The agent gets the secret's name and environment variable name, without the value.
+A member allows each session with **Allow for this session**.
+A secret for **All agents**, or one that is pre-approved in the workspace's **Capabilities**, needs no approval.
+
+The secret list gives the environment variable name that the command must read.
+Use the secret's name to request it.
+Use its listed variable name inside the command.
+For example, `Cloudflare (read-only)` uses `CLOUDFLARE_READ_ONLY`.
+Names that already work as shell variables keep their case.
+
+Different secret names can need the same variable name.
+A command that requests those secrets together does not run.
+Use those secrets in separate commands.
+
+An older tool can still omit a value if the secret's name cannot be a shell variable.
+An [automatic software update](#apply-setup-changes) adds support for these names.
+
+- [Understand secrets](/docs/security#understand-secrets)
+
 ## Apply setup changes
 
 A successful build updates the starting setup for new workspaces.
@@ -153,11 +203,12 @@ The update never interrupts a running turn.
 Agents keep their context.
 Programs that agents started, including development servers, keep running.
 Terminals keep running.
-Terminal and preview software update at the next cloud computer start.
+Terminal and preview software update when you select **Restart**, or at the next cloud computer start.
 
 To apply the newest release now, select the state in the workspace header, then **Restart**.
 Restart first downloads the newest release, for up to 60 seconds, as [Restart the software](/docs/workspaces#restart-the-software) says.
 Unlike the idle update, Restart stops running turns and programs that agents started.
+The shells and commands in your terminals keep running during Restart.
 
 A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.
@@ -168,7 +219,7 @@ An older cloud computer without the update program gets it at its next start.
 An automatic software update gives an existing workspace the server list in **Preview**.
 The workspace tools update with Conductive's own software.
 They manage workspaces, sessions, sections, and private previews across the org.
-The tools also read chats and messages there.
+The tools also read chats and messages there, and run commands with secrets.
 
 Installing updated agent software in an older computer does not change its protection for saved agent logins.
 Ask an admin to run **Build computer**.

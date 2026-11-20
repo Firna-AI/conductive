@@ -153,7 +153,9 @@ background work, and the end of a fast turn that ran at standard speed.
     with the icons of the tool kinds and the left-out output. `FoldLine` in
     `ToolGroup.tsx` draws the line of both kinds of fold. A Mac command
     card and a lost line fold at their place, with no count and no mark,
-    from decision 151.
+    from decision 151. The card of a run with secrets folds in the same way.
+    A late request for secrets is not work, so it stays at its place, as
+    [secrets and Capabilities](design-secrets.md) gives.
   - The open fold lists its steps in order, in the indented list of an
     open run of tool calls: the call line that `ToolGroup` shares, a
     message as its first words on one line, the Mac command card, and the
@@ -266,10 +268,12 @@ background work, and the end of a fast turn that ran at standard speed.
     to another org, or to a workspace that the list does not hold, is a
     link, as [Links in text](design-links.md) says.
   - The chat finds each workspace in the list of the org, with the
-    archived ones and with the states of the list, through
+    archived ones, the removed ones, and the states of the list, through
     `ChatWorkspaces`. A phone finds the same workspaces with no list on
     the screen. An archived workspace keeps its chip, with the archived
-    mark.
+    mark. A removed workspace, whose 14 days ended, keeps that chip too,
+    and a press on it opens its read-only chat, from decision 519 B, as
+    `user-flows/open-a-removed-workspace` shows.
   - A pasted link becomes a chip in the message box at once: in the chat,
     and in New workspace as a page or a dialog. `MessageField` gives each
     box its field. A draft with a workspace link or a file mention shows

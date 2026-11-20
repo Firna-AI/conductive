@@ -7,6 +7,10 @@ import type { WorkspaceState } from './WorkspaceState.js'
  */
 export type AgentWorkspaceListEntry = {
   /**
+   * Parent workspace, or null for a top-level workspace.
+   */
+  parentId: string | null
+  /**
    * owner.
    */
   owner: AgentWorkspaceOwner

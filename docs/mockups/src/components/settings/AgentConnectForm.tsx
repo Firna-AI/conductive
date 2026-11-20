@@ -1,19 +1,23 @@
 import type { ReactNode } from 'react'
 import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
+import { TriangleAlert } from 'lucide-react'
 import { productName } from '../../brand'
-import type { AgentKey } from '../../fixtures/agents'
+import { agents, type AgentKey } from '../../fixtures/agents'
 import {
   anthropicKeyPage,
   claudeTokenCommand,
   connectKinds,
   loginLabels,
   openAiKeyPage,
+  pastedKey,
   type LoginKind,
 } from '../../fixtures/logins'
+import { orgConnectKinds } from '../../fixtures/orgLogins'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { ExternalLink } from '../common/ExternalLink'
+import { Notice } from '../common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { ChatGptSignIn } from './ChatGptSignIn'
@@ -21,7 +25,8 @@ import { EndpointFields, type EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import styles from './AgentConnectForm.module.css'
 
-const testHint = `${productName} tests it once, and never shows it again.`
+/** The app stores a secret without a test of it, as the app says too. */
+const keepHint = `${productName} keeps it encrypted, and never shows it again.`
 
 /**
  * A secret to paste: the words that say what to paste and where to get it,
@@ -37,83 +42,118 @@ type SecretAsk = {
 /** What a form asks for: a secret, or the ChatGPT sign-in, with no field. */
 type Ask = SecretAsk | { type: 'chatgpt-sign-in' } | { type: 'endpoint' }
 
-/** What each agent asks for, by the kind that the switch selects. */
-type AgentAsks = Readonly<Record<AgentKey, Readonly<Record<LoginKind, Ask>>>>
+/** The account of each agent that an API key belongs to, and its key page. */
+const keyAccounts: Readonly<Record<AgentKey, { name: string; page: string }>> =
+  {
+    claude: { name: 'Anthropic', page: anthropicKeyPage },
+    codex: { name: 'OpenAI', page: openAiKeyPage },
+  }
 
-const asks: AgentAsks = {
-  claude: {
-    endpoint: { type: 'endpoint' },
-    token: {
-      type: 'secret',
-      text: (
-        <>
-          Run <code className={styles.code}>{claudeTokenCommand}</code> on your
-          computer, then paste the token that it prints.
-        </>
-      ),
-      label: 'Subscription token',
-      placeholder: 'Paste the token',
-    },
-    'api-key': {
-      type: 'secret',
-      text: (
-        <>
-          Paste an API key of your Anthropic account.{' '}
-          <ExternalLink href={anthropicKeyPage}>
-            Make one on Anthropic
-          </ExternalLink>
-        </>
-      ),
-      label: 'Anthropic API key',
-      placeholder: 'Paste the key',
-    },
-  },
-  codex: {
-    endpoint: { type: 'endpoint' },
-    'api-key': {
-      type: 'secret',
-      text: (
-        <>
-          Paste an API key of your OpenAI account.{' '}
-          <ExternalLink href={openAiKeyPage}>Make one on OpenAI</ExternalLink>
-        </>
-      ),
-      label: 'OpenAI API key',
-      placeholder: 'Paste the key',
-    },
-    token: { type: 'chatgpt-sign-in' },
-  },
+/**
+ * An API key: a key of the own account of the user, or of the account of
+ * the org, such as "Acme's", for an org login.
+ */
+function keyAsk(agent: AgentKey, org: string | undefined): SecretAsk {
+  const account = keyAccounts[agent]
+  const whose = org ? `${org}'s` : 'your'
+  return {
+    type: 'secret',
+    text: (
+      <>
+        Paste an API key of {whose} {account.name} account.{' '}
+        <ExternalLink href={account.page}>
+          Make one on {account.name}
+        </ExternalLink>
+      </>
+    ),
+    label: `${account.name} API key`,
+    placeholder: 'Paste the key',
+  }
+}
+
+/** The subscription token of Claude, from a command on the own computer. */
+const tokenAsk: SecretAsk = {
+  type: 'secret',
+  text: (
+    <>
+      Run <code className={styles.code}>{claudeTokenCommand}</code> on your
+      computer, then paste the token that it prints.
+    </>
+  ),
+  label: 'Subscription token',
+  placeholder: 'Paste the token',
+}
+
+/** What each agent asks for, by the kind that the switch selects. */
+function askOf(agent: AgentKey, kind: LoginKind, org?: string): Ask {
+  if (kind === 'endpoint') return { type: 'endpoint' }
+  if (kind === 'api-key') return keyAsk(agent, org)
+  return agent === 'claude' ? tokenAsk : { type: 'chatgpt-sign-in' }
+}
+
+/** What the end of a form needs. */
+type FormEndProps = {
+  agent: AgentKey
+  connectTo: string
+  cancel: boolean
+  replace?: boolean
+  failed?: string
 }
 
 /**
- * The field of a secret, with the hint that the app tests it once, then
- * Cancel, when the form can close, and Connect, which leads to `connectTo`.
+ * The end of a form: the notice of a save that failed, then Cancel, when
+ * the form can close, and the main button, which leads to `connectTo`. The
+ * main button says Connect, or Replace in a form that replaces a connected
+ * login.
  */
-function SecretFields(props: {
-  ask: SecretAsk
-  connectTo: string
-  cancel: boolean
-}) {
+function FormEnd(props: FormEndProps) {
+  const agent = agents[props.agent].name
+  const title = props.replace
+    ? `The ${agent} login wasn't replaced`
+    : `${agent} wasn't connected`
+  return (
+    <>
+      {props.failed ? (
+        <Notice
+          body={props.failed}
+          icon={TriangleAlert}
+          title={title}
+          tone="danger"
+        />
+      ) : null}
+      <div className={styles.actions}>
+        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+        <ScreenLink asChild to={props.connectTo}>
+          <ActionButton tone="primary">
+            {props.replace ? 'Replace' : 'Connect'}
+          </ActionButton>
+        </ScreenLink>
+      </div>
+    </>
+  )
+}
+
+/**
+ * The field of a secret, with the hint that the app keeps it, then the end
+ * of the form. After a save that failed, the secret stays in its field.
+ */
+function SecretFields(props: { ask: SecretAsk; end: FormEndProps }) {
   const { field } = useControlSizes()
   return (
     <>
       <p className={styles.text}>{props.ask.text}</p>
       <Input
         autoComplete="off"
-        hint={testHint}
+        hint={keepHint}
+        invalid={props.end.failed !== undefined}
         label={props.ask.label}
         onChangeText={noop}
         placeholder={props.ask.placeholder}
         secureTextEntry
         size={field}
-        value=""
+        value={props.end.failed === undefined ? '' : pastedKey}
       />
-      <div className={styles.actions}>
-        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
-        <ScreenLink asChild to={props.connectTo}>
-          <ActionButton tone="primary">Connect</ActionButton>
-        </ScreenLink>
-      </div>
+      <FormEnd {...props.end} />
     </>
   )
 }
@@ -128,6 +168,12 @@ function SecretFields(props: {
  * `signIn`, by default before the start. The main button, Connect or the
  * button that gets a code, leads to `connectTo`. Cancel shows when the form
  * can close.
+ *
+ * `org` names the org of an org login, from decision 1 B of the org logins
+ * plan: the switch then offers only an API key and an own endpoint, and the
+ * words ask for a key of the account of the org. `replace` makes the form
+ * replace a connected login, and `failed` gives the cause of a save that
+ * failed, over the buttons.
  */
 export function AgentConnectForm(props: {
   agent: AgentKey
@@ -136,11 +182,21 @@ export function AgentConnectForm(props: {
   cancel: boolean
   signIn?: SignInStep
   endpoint?: EndpointEntry
+  org?: string
+  replace?: boolean
+  failed?: string
 }) {
   const { field } = useControlSizes()
-  const kinds = connectKinds[props.agent]
+  const kinds = (props.org ? orgConnectKinds : connectKinds)[props.agent]
   const kind = props.endpoint ? 'endpoint' : (props.kind ?? kinds[0])
-  const ask = asks[props.agent][kind]
+  const ask = askOf(props.agent, kind, props.org)
+  const end: FormEndProps = {
+    agent: props.agent,
+    connectTo: props.connectTo,
+    cancel: props.cancel,
+    replace: props.replace,
+    failed: props.failed,
+  }
   return (
     <div className={styles.form}>
       <SegmentedControl
@@ -159,21 +215,12 @@ export function AgentConnectForm(props: {
           <EndpointFields
             agent={props.agent}
             entry={props.endpoint ?? 'empty'}
-            keyHint={`${productName} keeps it encrypted, and never shows it again.`}
+            keyHint={keepHint}
           />
-          <div className={styles.actions}>
-            {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
-            <ScreenLink asChild to={props.connectTo}>
-              <ActionButton tone="primary">Connect</ActionButton>
-            </ScreenLink>
-          </div>
+          <FormEnd {...end} />
         </>
       ) : ask.type === 'secret' ? (
-        <SecretFields
-          ask={ask}
-          cancel={props.cancel}
-          connectTo={props.connectTo}
-        />
+        <SecretFields ask={ask} end={end} />
       ) : (
         <ChatGptSignIn
           cancel={props.cancel}

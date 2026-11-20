@@ -78,6 +78,22 @@
   It does not establish the cause of the other failures.
   The blocked awaits and the cause remain unknown.
   Machine load is not established as the cause.
+- On 16 November 2026, the conflict repair after merge `24b23ea74` on
+  `calummoore/quito-0ojg` ran eight selected workspace files.
+  The run passed 24 tests and failed two with
+  `Error: Test timed out in 15000ms.`
+  The failing cases were:
+  - `worker/features/continue-routes.test.ts:33`,
+    "resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events".
+  - `worker/lifecycle/archive-lifecycle.test.ts:79`,
+    "restores without starting, orders same-time transitions, and resumes with a fresh token".
+  A separate checkout of `origin/main` at `eedd83679` ran those two files.
+  Continue timed out there too, while all seven archive tests passed.
+  A second run of the archive file on the repaired branch passed six tests
+  and timed out in the same restore/resume case.
+  This repair changes no test or timeout.
+  The blocked await and cause remain unknown.
+  The runs overlapped other checks, but machine load is not an established cause.
 - On 16 November 2026, the main merge into `calummoore/lima-gc9c` ran the complete gate without another test run beside it.
   The suite passed 3,310 tests and reported two lifecycle timeouts:
   - `worker/lifecycle/ownership-maintenance.test.ts`, "retries a revoked-token stop after active ownership and preserves maintenance before a fresh resume": `Error: Test timed out in 15000ms.`
@@ -128,6 +144,34 @@
   Worker sources. The case passed in 13.37 seconds, with all assertions kept.
   This comparison does not establish why the runs under `/home` timed out.
   No assertion, test timeout, or gate configuration changed.
+- On 16 November 2026, a second merge into `calummoore/quito-0ojg`
+  integrated `origin/main` at `6b82e7e6a`.
+  The conflicts affected this evidence file and two files from the
+  Conductor comparison page that main removed.
+  Typechecks, lint, formatting, export checks, all 89 SDK-helper tests,
+  the app build, and the strict mockup build passed.
+  The full Vitest run was interrupted after more than 21 minutes of
+  repeated native runtime failures. It had reported 104 failed cases
+  across 48 files and skipped all 12 cases of
+  `worker/marketing/built-site.test.ts` after its setup failed.
+  Each of those 49 files matched the fetched main commit.
+  Examples include the Continue route, archive/resume, browser access,
+  multipart reports, workspace publication, device approval, and routine tests.
+  This was partial verification, with no complete suite pass count.
+  GitHub CI and Desktop passed on that main commit.
+  The test environment's blocked awaits and failure causes remain unknown.
+  A focused run of six marketing and secrets files then passed six cases,
+  timed out in three, and skipped the 12 marketing cases after setup failed.
+  The timeouts were:
+  - `worker/app-api/capabilities.test.ts:26`, "lets each member change workspace capabilities and remove only the selected session approval".
+  - `worker/app-api/create-capabilities.test.ts:28`, "saves the app capabilities with its workspace and keeps those choices on a repeated create".
+  - `worker/devices/mac-access.test.ts:70`, "ends every waiting Mac request when access turns off and keeps a running command through its result".
+  Each reported `Error: Test timed out in 15000ms.`
+  Marketing setup reported `EXDEV: cross-device link not permitted` while
+  Astro renamed an asset from `.astro/.prerender/` into `/tmp`.
+  This is the existing issue in `plans/follow-ups/built-site-test-cross-device-rename.md`.
+  Running that marketing file with `TMPDIR` inside the ignored `.context/`
+  folder passed all 12 cases in 8.83 seconds, with no code or test edit.
 - On 16 November 2026, the main merge into `calummoore/delft-i3g7`
   passed every static gate step and 275 selected tests.
   The complete Vitest run was stopped after 39 failed cases across

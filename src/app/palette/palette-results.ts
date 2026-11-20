@@ -1,4 +1,5 @@
 import { valueOf } from '../store'
+import { listedWorkspaces } from '../workspace-removal'
 import { rankRows, searchWords } from './matcher'
 import { tabGroups } from './palette-groups'
 import { rowTexts, withNumberLabel, type PaletteGroup } from './palette-rows'
@@ -28,6 +29,8 @@ export interface PaletteResults {
 /**
  * The line of the Workspaces tab without a workspace to show: it names the
  * chosen repository, or the org while the filter shows all repositories.
+ * An archived workspace shows for the 14 days after its Archive, and then
+ * it leaves the list, so the line of the Archived filter says so.
  */
 function emptyLine(query: PaletteQuery, source: PaletteSource): string {
   const repository = valueOf(source.repositories)?.find(
@@ -35,9 +38,10 @@ function emptyLine(query: PaletteQuery, source: PaletteSource): string {
   )
   const place = repository?.fullName ?? source.org?.name
   const what = query.archived ? 'Archived workspaces' : 'Workspaces'
-  return place === undefined
-    ? `${what} show here`
-    : `${what} of ${place} show here`
+  const where = place === undefined ? what : `${what} of ${place}`
+  return query.archived
+    ? `${where} show here for 14 days`
+    : `${where} show here`
 }
 
 function emptyOf(
@@ -52,13 +56,18 @@ function emptyOf(
 }
 
 /**
- * The repositories that the org uses, and those that hold its workspaces.
- * Until their names arrive, the filter offers only all repositories.
+ * The repositories that the org uses, and those that hold the workspaces
+ * of its list. A removed workspace shows in no tab, so its repository
+ * counts only when the org uses it. Until their names arrive, the filter
+ * offers only all repositories.
  */
 function repositoryChoices(source: PaletteSource): RepositoryChoice[] {
   if (source.org === null) return []
   const { list } = source
-  const workspaces = list.state === 'ready' ? list.value.workspaces : []
+  const workspaces =
+    list.state === 'ready'
+      ? listedWorkspaces(list.value.workspaces, source.listTime)
+      : []
   const used = new Set(workspaces.map((workspace) => workspace.repositoryId))
   return (valueOf(source.repositories) ?? [])
     .filter((item) => item.selected || used.has(item.id))

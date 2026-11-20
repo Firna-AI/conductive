@@ -11,7 +11,6 @@ import type {
   OrgInvite,
   OrgMember,
 } from '../../shared/members'
-import type { OrgSummary } from '../../shared/orgs'
 import type { WorkspacesResponse } from '../../shared/workspaces'
 import {
   count,
@@ -92,26 +91,6 @@ export function parseMembers(value: unknown): MembersResponse {
   }
 }
 
-export function parseOrg(value: unknown): OrgSummary {
-  const source = object(value, 'org')
-  const org: OrgSummary = {
-    id: text(source, 'id'),
-    name: text(source, 'name'),
-    role: oneOf(source, 'role', roles),
-  }
-  // Older replies omit the initials, so the org keeps them only when given.
-  if (typeof source.initials === 'string') org.initials = source.initials
-  if (source.deletion === undefined || source.deletion === null) return org
-  const deletion = nested(source, 'deletion')
-  return {
-    ...org,
-    deletion: {
-      deletedAt: count(deletion, 'deletedAt'),
-      deletesAt: count(deletion, 'deletesAt'),
-    },
-  }
-}
-
 function agentChoice(source: JsonObject): AgentChoice {
   return {
     agent: oneOf(source, 'agent', agents),
@@ -130,6 +109,9 @@ export function parseWorkspace(value: unknown): Workspace {
     orgId: text(source, 'orgId'),
     repositoryId: text(source, 'repositoryId'),
     sectionId: text(source, 'sectionId'),
+    // A reply from before sub-workspaces has no parent.
+    parentId:
+      source.parentId === undefined ? null : textOrNull(source, 'parentId'),
     owner: sender(nested(source, 'owner')),
     name: textOrNull(source, 'name'),
     branch: text(source, 'branch'),

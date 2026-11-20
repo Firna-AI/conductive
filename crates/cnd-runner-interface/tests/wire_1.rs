@@ -2,6 +2,20 @@
 
 use cnd_runner_interface::runner_handshake::{RunnerToWorkspace, WorkspaceToRunner};
 
+#[test]
+fn hello_retains_optional_process_start_id() -> Result<(), serde_json::Error> {
+    let json = serde_json::json!({
+        "type": "hello",
+        "protocolVersion": 2,
+        "workspaceId": "workspace-1",
+        "streamId": "stream-1",
+        "processStartId": "abcdef01-2345-4678-89ab-cdef01234567",
+    });
+    let message: RunnerToWorkspace = serde_json::from_value(json.clone())?;
+    assert_eq!(serde_json::to_value(message)?, json);
+    Ok(())
+}
+
 macro_rules! wire_message {
     ($name:ident, $ty:ty, $json:literal) => {
         #[test]

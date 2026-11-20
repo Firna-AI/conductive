@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { useListTime } from '../../app/deadlines'
+import { useStore, valueOf } from '../../app/store'
 import { useNow } from '../../app/time'
 import { MembersTab } from '../../members/MembersTab'
 import type { User } from '../../shared/api'
@@ -11,12 +14,16 @@ import { useMembersApi, useMembersViewport } from './members-api'
  * an invite. A member who is not an admin sees the members without those
  * actions. A removal moves the workspaces of the member to the viewer, so
  * the list of the org and its members read again. In a suspended org
- * nobody gets those actions, also an admin.
+ * nobody gets those actions, also an admin. The minute clock moves the
+ * invite ages. The list clock renders the tab again when a workspace
+ * leaves the list, so its counts change at that moment, as the list does.
  */
 export function MembersSettings(props: { org: OrgSummary; user: User }) {
   const model = useOrgModel(props.org.id)
   const { suspended } = useOrgAccess(props.org)
-  const now = useNow(60_000)
+  useNow(60_000)
+  const now = useListTime(valueOf(useStore(model.workspaces)) ?? [])
+  useEffect(() => model.watch('list'), [model])
   return (
     <MembersTab
       api={useMembersApi(props.org.id)}

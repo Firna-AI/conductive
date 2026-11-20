@@ -6,6 +6,7 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
 
@@ -48,6 +49,12 @@ const PATHS = ['plain', 'masked'] as const
 /** Endpoint model lists and hosts for save and Refresh previews. */
 const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
 
+/** The org login seeds of Acme. */
+const ORG_LOGINS = ['endpoint', 'unlisted', 'every-member'] as const
+
+/** The logins of the open sessions of `checkout-autocomplete`. */
+const SESSION_LOGINS = ['org', 'removed', 'empty'] as const
+
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
@@ -65,6 +72,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   shows the GitHub state of that bar.
  * - `paths=masked`: two files whose real paths hold a fake secret value,
  *   with their labels, in the file lists and at the end of each turn.
+ * - `subWorkspaces=1`: Acme also has the sub-workspaces of the mockups,
+ *   nested under Apple Pay button and Checkout address autocomplete, down
+ *   to depth 3, so the list shows two trees in Checkout.
  * - `firstRun=github-app|org|agent-login`: Get started is not done from
  *   that step on. With `github-app` or `org`, the user has no org until
  *   Create org runs. In each first run, no agent login is connected.
@@ -78,6 +88,19 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   host that lists only under /v1, or the host that never lists models.
  *   With `read-failed`, the Claude login keeps a list from a day before
  *   that does not name the last Claude model of the app.
+ * - `orgLogin=endpoint|unlisted|every-member`: Acme has an org login of
+ *   Claude on its gateway, whose last model list names every Claude model
+ *   of the app, or lacks the last one. With `every-member`, its switch
+ *   "Use for every member" is on. The account names the default login of
+ *   each org and agent, as the Worker does.
+ * - `sessionLogin=org|removed`: each open session of
+ *   `checkout-autocomplete` runs on the org login of Acme, as after a
+ *   first message on it. With `removed`, an admin removed that login
+ *   later, so the records say that it is not available.
+ * - `sessionLogin=empty`: `checkout-autocomplete` also has an empty
+ *   session that Cal started. Its record names the default login of Cal,
+ *   which its first message takes, as the Worker resolves it, such as the
+ *   org login with `orgLogin=every-member`.
  * - `deleted=1`: Acme is deleted, as its admins see it.
  * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
  *   `org_suspended`, except a leave, as the Worker does.
@@ -92,8 +115,9 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   keeps uploading, or the first part of the page fails at each of its
  *   sends, so its chip fails once, after the waits of its retries of about
  *   7 seconds, and Try again works.
- * - `shareSave=fail`: each change of the share setting of an agent login
- *   fails, so the account shows that the change was not saved.
+ * - `shareSave=fail`: each change of the share setting of an agent login,
+ *   and of the switch "Use for every member" of an org login, fails, so
+ *   the page shows that the change was not saved.
  * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
  *   failed run of each cause, or the skipped runs of accounts outside Acme.
  * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
@@ -127,6 +151,13 @@ export interface DevOptions {
   endpointLogins: boolean
   /** The seeded endpoint model list or the fake endpoint host. */
   modelList: (typeof MODEL_LISTS)[number] | null
+  /** The seeded org login of Acme, or `null` for none. */
+  orgLogin: (typeof ORG_LOGINS)[number] | null
+  /**
+   * The login of the open sessions of `checkout-autocomplete`, or the empty
+   * session of Cal beside them, or `null`.
+   */
+  sessionLogin: (typeof SESSION_LOGINS)[number] | null
   deleted: boolean
   suspended: boolean
   operator: boolean
@@ -147,6 +178,8 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** The state of the secret requests of `checkout-autocomplete`, or null. */
+  secrets: SecretScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -177,12 +210,15 @@ export function readDevOptions(search: string): DevOptions {
       conversation: pick(params, 'conversation', CONVERSATIONS),
       banner: pick(params, 'banner', BANNERS),
       paths: pick(params, 'paths', PATHS),
+      subWorkspaces: params.get('subWorkspaces') === '1',
     },
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
     noAgentLogin: params.get('login') === 'none',
     endpointLogins: params.get('login') === 'endpoint',
     modelList: pick(params, 'modelList', MODEL_LISTS) ?? null,
+    orgLogin: pick(params, 'orgLogin', ORG_LOGINS) ?? null,
+    sessionLogin: pick(params, 'sessionLogin', SESSION_LOGINS) ?? null,
     deleted: params.get('deleted') === '1',
     suspended: params.get('suspended') === '1',
     operator,
@@ -198,6 +234,7 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }
 

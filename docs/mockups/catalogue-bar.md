@@ -10,7 +10,8 @@ continues.
 offers Create PR, which asks the agent to open the pull request.
 Each state shows one main action, from decisions 220 to 228. The number of
 a pull request opens it on GitHub. The agent gets a fixed prompt for each
-step that changes code, and the app merges, continues, and archives. On a
+step that changes code, and the app merges, marks a draft ready for
+review, continues, and archives. On a
 phone the row opens the Checks tab, whose top holds the actions, and the
 link to GitHub of a pull request. The `localWork`, `access`, `appAction`, and `branch`
 states of the workspace screen draw them. The child pages:
@@ -22,8 +23,10 @@ states of the workspace screen draw them. The child pages:
   merge, every member sees Continue, and the owner and the admins also see
   Archive.
 - `app/banner/blocked` has a merge conflict with Resolve conflicts,
-  requested changes with Address review, a draft, a pull request closed
-  without a merge, and Blocked. A conflict, requested changes, and Blocked
+  requested changes with Address review, a draft with Ready for review,
+  Ready for review while it runs, its refusals for a missing right,
+  another pull request, and another reason, a pull request closed without
+  a merge, and Blocked. A conflict, requested changes, and Blocked
   tint the bar amber.
 - `app/banner/no-commits` has a branch without commits, whose bar offers no
   Create PR, as in `app/new-workspace/creating` and `first-turn`.
