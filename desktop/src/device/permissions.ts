@@ -251,31 +251,7 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
         macAccessPeriod,
       }).commit()
     },
-    /**
-     * Turns the running 15 minutes of a workspace into a grant until Stop,
-     * as Keep until I stop in the bar asks.
-     */
-    keepWorkspace(
-      workspaceId: string,
-      macAccessPeriod?: number,
-    ): DeviceSettingsOutcome {
-      return prepareWorkspace({
-        action: 'keep-workspace',
-        workspaceId,
-        macAccessPeriod,
-      }).commit()
-    },
     stopWorkspace,
-    extendWorkspace(
-      workspaceId: string,
-      macAccessPeriod?: number,
-    ): DeviceSettingsOutcome {
-      return prepareWorkspace({
-        action: 'extend-workspace',
-        workspaceId,
-        macAccessPeriod,
-      }).commit()
-    },
     /** Ends every grant until Stop, such as after a sign-out. */
     endUntilStop(): void {
       windows = new Map(

@@ -85,12 +85,20 @@ it('keeps the running 15 minutes until Stop, drops them from the file, and stops
   const store = test.open()
   store.allowWorkspace('one', 'First workspace', 0)
   test.advance(600_000)
-  expect(store.keepWorkspace('one')).toEqual({ status: 'done' })
+  expect(
+    store
+      .prepareWorkspace({ action: 'keep-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({ status: 'done' })
   expect(test.timers.size).toBe(0)
   expect(savedWindows(test.contents)).toEqual([])
   test.advance(600_000)
   expect(store.permits('anything', 'one', 0)).toBe(true)
-  expect(store.keepWorkspace('one')).toEqual({ status: 'done' })
+  expect(
+    store
+      .prepareWorkspace({ action: 'keep-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({ status: 'done' })
   expect(store.stopWorkspace('one')).toEqual({ status: 'done' })
   expect(store.permits('anything', 'one', 0)).toBe(false)
 })
@@ -98,10 +106,18 @@ it('keeps the running 15 minutes until Stop, drops them from the file, and stops
 it('reports a Keep after the 15 minutes as failed', () => {
   const test = setup()
   const store = test.open()
-  expect(store.keepWorkspace('one').status).toBe('failed')
+  expect(
+    store
+      .prepareWorkspace({ action: 'keep-workspace', workspaceId: 'one' })
+      .commit().status,
+  ).toBe('failed')
   store.allowWorkspace('one', null, 0)
   test.advance(900_000)
-  expect(store.keepWorkspace('one')).toEqual({
+  expect(
+    store
+      .prepareWorkspace({ action: 'keep-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({
     status: 'failed',
     message: 'These 15 minutes already ended. The next command asks first.',
   })
@@ -115,7 +131,11 @@ it('keeps after a failed save, and a later Stop still clears the saved 15 minute
   const write = vi.spyOn(test.files, 'write').mockImplementationOnce(() => {
     throw new Error('disk full')
   })
-  expect(store.keepWorkspace('one')).toEqual({ status: 'done' })
+  expect(
+    store
+      .prepareWorkspace({ action: 'keep-workspace', workspaceId: 'one' })
+      .commit(),
+  ).toEqual({ status: 'done' })
   expect(test.warn).toHaveBeenCalledOnce()
   expect(savedWindows(test.contents)).toHaveLength(1)
   test.advance(900_000)

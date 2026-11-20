@@ -25,7 +25,9 @@ const noStarts: Readable<Readonly<Record<string, StartPlace>>> = {
  * Capabilities of the workspace shows the same result. A start from that
  * control, a Stop, and Mac access that goes off end the notice: when the
  * Capabilities of the workspace show Mac access off, the result of its
- * last start or Stop goes. A browser has no Mac, so it shows nothing.
+ * last start or Stop goes. `ThisMac.forget` then also takes back a start, a
+ * Keep, or an Extend of its grant that waits. A browser has no Mac, so it
+ * shows nothing.
  */
 export function useStartFailedNotice(
   orgId: string,

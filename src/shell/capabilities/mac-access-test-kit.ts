@@ -87,11 +87,29 @@ export function answerMacAccess(server: FakeApiServer, on: boolean): void {
   server.json('PATCH', path, savedMacAccess(on))
 }
 
+/** The refusal of the Worker of a start while Mac access is off. */
+export const macAccessOff = {
+  error: {
+    code: 'mac_access_off',
+    message: 'Mac access is off in the Capabilities of this workspace.',
+  },
+}
+
 /** The open Capabilities control of the workspace. */
 export async function openControl(view: HTMLElement): Promise<HTMLElement> {
   click(byRole('button', 'Capabilities', view))
   await settle()
   return byRole('dialog', 'Capabilities', view)
+}
+
+/**
+ * Closes the open control with a second press of its tool, then opens it
+ * again, so it reads Mac access and the settings of this Mac again.
+ */
+export async function reopenControl(view: HTMLElement): Promise<HTMLElement> {
+  click(byRole('button', 'Capabilities', view))
+  await settle()
+  return openControl(view)
 }
 
 /** The Mac access part of the control, as a person reads it. */

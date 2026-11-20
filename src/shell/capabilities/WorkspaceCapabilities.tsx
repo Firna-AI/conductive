@@ -82,8 +82,9 @@ function useChange() {
  * In the Mac app, Mac access also has the line of this Mac, and each open
  * reads the settings of this Mac again. A switch-on saves Mac access first,
  * then starts the grant until Stop of this Mac. A switch-off saves, then
- * stops that grant. A start that fails keeps Mac access on, and its line
- * shows the cause.
+ * stops that grant, and a start or a Keep of that grant that still waits
+ * never goes, also after another member turns Mac access on again. A start
+ * that fails keeps Mac access on, and its line shows the cause.
  */
 function WorkspaceCapabilitiesPanel(props: {
   org: OrgSummary
@@ -156,8 +157,10 @@ function WorkspaceCapabilitiesPanel(props: {
       change.run(async () => {
         await model.setMacAccess(on)
         // The controls do not wait for this Mac, so a slow Mac never keeps
-        // the member from a switch-off. While the change of the grant
-        // waits, the switch takes no switch-on, as `switchLocked` says.
+        // the member from a switch-off, which takes back a start or a Keep
+        // that waits. While another change of the grant waits, such as the
+        // Stop of a switch-off, the switch takes no switch-on, as
+        // `switchLocked` says.
         void mac?.switched(workspaceId, on)
       }, 'Mac access was not saved')
     },

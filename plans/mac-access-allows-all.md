@@ -25,6 +25,12 @@ Contract owners:
 - The [Mac command README](../src/chat/device/README.md) and the
   [desktop README](../desktop/README.md).
 
+Replaced ways:
+
+- `keepWorkspace` and `extendWorkspace` of the Mac app permission store →
+  `prepareWorkspace(...).commit()`. Consumers: the settings handler and
+  the permission store tests. Moved and deleted in the review fixes.
+
 ## Terms
 
 - **Grant until Stop:** the Mac app choice "Allow all commands until I
@@ -220,9 +226,11 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   member of the org of the workspace, and Mac access must be on. The
   Worker adds the name of the workspace. Reason: isolation, and This Mac
   shows the name of each grant.
-- The Mac app applies the action with `allowWorkspaceUntilStop` of its
-  permission store. The result is done, because the grant is in memory
-  only.
+- The Mac app applies the action with `prepareWorkspace` of its
+  permission store, which builds and checks the settings reply before the
+  grant changes. The result is done, or failed when the reply does not
+  fit in one device frame. A done start never reports done but not saved,
+  because the grant is in memory only.
 - The Mac app bundles its own page, so only a page of the same version
   sends the new action. Reason: an older Mac app ends its device
   connection on an unknown message, and that cancels its running
@@ -423,10 +431,10 @@ requires and the mockups do not draw.
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, `npm --prefix desktop ci`,
+- [x] Run the targeted tests, `npm --prefix desktop ci`,
       `npm ci --prefix runner`, and `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

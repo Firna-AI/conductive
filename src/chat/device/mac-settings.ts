@@ -8,8 +8,8 @@ import {
   type DeviceApi,
   type SettingsChange,
 } from './device-api'
+import { SettingsControls, type Hold, type Taken } from './settings-controls'
 import {
-  controlOf,
   countedOutcome,
   notAvailableCause,
   staleCause,
@@ -26,16 +26,6 @@ import {
 const unavailable = (error: unknown) =>
   error instanceof ApiError && error.code === 'device_unavailable'
 
-/** The record without the entry of one control. */
-function without<T>(
-  record: Readonly<Record<string, T>>,
-  key: string,
-): Readonly<Record<string, T>> {
-  return Object.fromEntries(
-    Object.entries(record).filter(([control]) => control !== key),
-  )
-}
-
 /**
  * Reads and changes the settings of this Mac. The Mac keeps and applies
  * them, and the Worker only passes each read and change to it. One read or
@@ -49,14 +39,14 @@ function without<T>(
  * the settings that show as kept settings, which are not current, so each
  * part can tell them from the settings of a read that worked. A change
  * never goes to a pairing other than the one that the user acted in: it
- * fails instead, and the user acts again.
+ * fails instead, and the user acts again. A change that the page took back
+ * never goes, and keeps no result.
  */
 export class MacSettingsController {
   private readonly api: DeviceApi
   private readonly listeners = new Set<() => void>()
+  private readonly controls = new SettingsControls()
   private view: MacSettingsView = { kind: 'loading' }
-  private waiting: Readonly<Record<string, SettingsChange['action']>> = {}
-  private results: Readonly<Record<string, ChangeResult>> = {}
   private state: MacSettingsState = {
     ...this.view,
     busy: [],
@@ -78,11 +68,12 @@ export class MacSettingsController {
   }
 
   private publish(): void {
+    const { waiting, results } = this.controls
     this.state = {
       ...this.view,
-      busy: Object.keys(this.waiting),
-      waiting: this.waiting,
-      results: this.results,
+      busy: Object.keys(waiting),
+      waiting,
+      results,
     }
     for (const listener of this.listeners) listener()
   }
@@ -148,12 +139,10 @@ export class MacSettingsController {
    */
   readonly change = (change: SettingsChange): Promise<void> => {
     const shown = shownSettings(this.view)
-    const key = controlOf(change)
-    if (shown === null || Object.hasOwn(this.waiting, key)) {
-      return Promise.resolve()
-    }
-    const subject = subjectOf(change, shown.settings, this.take(key, change))
-    return this.enqueue(() => this.send(key, shown.pairing, change, subject))
+    if (shown === null || this.controls.busy(change)) return Promise.resolve()
+    const { hold, last } = this.take(change)
+    const subject = subjectOf(change, shown.settings, last)
+    return this.enqueue(() => this.send(hold, shown.pairing, subject))
   }
 
   /**
@@ -164,21 +153,21 @@ export class MacSettingsController {
    * the switch of Mac access or a create. The change goes only after a read
    * that worked. When the read finds no Mac or fails, the change fails as
    * not reached, and nothing goes to a Mac, also while kept settings show.
+   * A change that the page takes back before its turn reads nothing, and
+   * one that the page takes back during its read never goes.
    */
   readonly changeOnCurrent = (change: SettingsChange): Promise<void> => {
-    const key = controlOf(change)
-    if (Object.hasOwn(this.waiting, key)) return Promise.resolve()
-    const last = this.take(key, change)
+    if (this.controls.busy(change)) return Promise.resolve()
+    const { hold, last } = this.take(change)
     return this.enqueue(async () => {
+      if (!this.controls.has(hold)) return
       await this.read(true)
-      if (!this.alive) return
+      if (!this.alive || !this.controls.has(hold)) return
       const view = this.view
       const settings = view.kind === 'ready' ? view.settings : null
       const subject = subjectOf(change, settings, last)
-      if (view.kind === 'ready') {
-        return this.send(key, view.pairing, change, subject)
-      }
-      this.finish(key, {
+      if (view.kind === 'ready') return this.send(hold, view.pairing, subject)
+      this.finish(hold, {
         change,
         subject,
         outcome: { status: 'failed', message: notAvailableCause },
@@ -188,48 +177,56 @@ export class MacSettingsController {
   }
 
   /**
+   * Takes back `change` while it waits, such as a start or a Keep of a grant
+   * after Mac access of its workspace went off. When the change that holds the
+   * control of `change` has its action, that change never goes to the Mac,
+   * also after the read that it waits for, and its control is free at once.
+   * It keeps no result, also when it already went to the Mac. Another
+   * change of that control, such as a Stop, still goes.
+   */
+  readonly cancel = (change: SettingsChange): void => {
+    if (this.controls.cancel(change)) this.publish()
+  }
+
+  /**
    * Takes away the result of the last change of the control of `change`,
    * such as the result of a start after Mac access of its workspace went
    * off. A change that waits keeps its control busy.
    */
   readonly forget = (change: SettingsChange): void => {
-    const key = controlOf(change)
-    if (!Object.hasOwn(this.results, key)) return
-    this.results = without(this.results, key)
-    this.publish()
+    if (this.controls.forget(change)) this.publish()
   }
 
   /**
-   * Marks the control of a change busy, and takes away the result of its
-   * last change, which it returns.
+   * Makes the control of a change busy, and takes away the result of its
+   * last change, which it returns with the hold of the change.
    */
-  private take(key: string, change: SettingsChange): ChangeResult | undefined {
-    const last = Object.hasOwn(this.results, key)
-      ? this.results[key]
-      : undefined
-    this.waiting = { ...this.waiting, [key]: change.action }
-    this.results = without(this.results, key)
+  private take(change: SettingsChange): Taken {
+    const taken = this.controls.take(change)
     this.publish()
-    return last
+    return taken
   }
 
-  private finish(key: string, result: ChangeResult): void {
-    this.waiting = without(this.waiting, key)
-    this.results = { ...this.results, [key]: result }
+  /**
+   * Ends a change with its result, and shows the settings, also those of
+   * the reply of a change that the page took back, which keeps no result.
+   */
+  private finish(hold: Hold, result: ChangeResult): void {
+    this.controls.finish(hold, result)
     this.publish()
   }
 
   private async send(
-    key: string,
+    hold: Hold,
     pairing: DevicePairing,
-    change: SettingsChange,
     subject: string,
   ): Promise<void> {
-    if (!this.alive) return
+    if (!this.alive || !this.controls.has(hold)) return
+    const { change } = hold
     const shown = shownSettings(this.view)?.pairing ?? null
     const stale = staleCause(shown, pairing)
     if (stale !== null) {
-      return this.finish(key, {
+      return this.finish(hold, {
         change,
         subject,
         outcome: { status: 'failed', message: stale },
@@ -241,7 +238,7 @@ export class MacSettingsController {
       reply = await this.api.changeSettings(pairing, change)
     } catch (error) {
       if (!this.alive) return
-      this.finish(key, {
+      this.finish(hold, {
         change,
         subject,
         outcome: { status: 'failed', message: messageOf(error) },
@@ -253,7 +250,7 @@ export class MacSettingsController {
     if (!this.alive) return
     this.view = readyView(reply)
     const outcome = countedOutcome(change, reply.settings, reply.outcome)
-    this.finish(key, { change, subject, outcome })
+    this.finish(hold, { change, subject, outcome })
   }
 }
 

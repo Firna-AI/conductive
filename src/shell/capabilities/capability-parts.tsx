@@ -214,7 +214,8 @@ function secretsPart(
  * Mac waits, such as the Stop of a switch-off. A start does not go while
  * that change waits, so a switch-on then would save Mac access and start
  * no grant. A switch-off never waits, so a change that waits never keeps
- * the member from turning Mac access off.
+ * the member from turning Mac access off. A start that a switch-off took
+ * back no longer waits, so it never keeps the switch from a switch-on.
  */
 function switchLocked(view: CapabilitiesView): boolean {
   if (view.disabled) return true

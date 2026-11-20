@@ -61,11 +61,18 @@ function preparePermissionWindow(
           : 'These 15 minutes already ended. The next command asks first.',
       },
     }
+  if (extend)
+    return {
+      window: { ...current, expiresAt: now + WINDOW_MS },
+      outcome: { status: 'done' },
+    }
+  /**
+   * Turns the running 15 minutes of a workspace into a grant until Stop,
+   * as Keep until I stop in the bar asks.
+   */
   return {
     window:
-      current.expiresAt === null
-        ? current
-        : { ...current, expiresAt: extend ? now + WINDOW_MS : null },
+      current.expiresAt === null ? current : { ...current, expiresAt: null },
     outcome: { status: 'done' },
   }
 }

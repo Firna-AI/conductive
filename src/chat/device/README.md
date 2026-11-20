@@ -109,6 +109,9 @@ const state = useThisMacState(mac)
   every read, a Mac that goes away, and a new pairing, until the next change
   of that control. A change that waited while the pairing changed never goes
   to the new pairing: it fails with its cause, and the user acts again.
+  Only the change that holds its control ends it and keeps its result. So
+  a change that the page took back never frees the control from a later
+  change of that control, and keeps no result.
   `ThisMacSection` lists the results under its lists. The bar keeps the
   result of a Stop after the grant ends, and while a grant runs it hides
   only a change that the Mac made and saved. When a Stop that the Mac did
@@ -130,12 +133,20 @@ const state = useThisMacState(mac)
   Each start goes through `changeOnCurrent`, which reads the pairing and
   the settings of this Mac first, so the start reaches the connection of
   now. When the read finds no Mac or fails, the start fails as not
-  reached, and nothing goes. A switch-off that saved sends Stop when the
-  settings that show, current or kept, list a grant of the workspace.
-  While the switch shows Mac access off and a change of that grant waits,
-  such as that Stop, the switch takes no switch-on, because a start does
-  not go while another change of the grant waits. A switch-off never
-  waits.
+  reached, and nothing goes.
+- When Mac access of the workspace goes off, at a switch-off in this page
+  or in a read of its Capabilities, `ThisMac.forget` takes back each change
+  of its grant that waits and increases the grant: a start, a Keep, or an
+  Extend. It uses `cancel`. Such a change never goes, also when another
+  member turns Mac access on again before its turn, because its choice
+  belongs to a period of Mac access that ended. It keeps no result, also
+  when it already went to the Mac, and its control is free at once.
+- A switch-off that saved sends Stop when the settings that show, current
+  or kept, list a grant of the workspace, also when a start, a Keep, or an
+  Extend of that grant waited. While the switch shows Mac access off and a
+  change of that grant waits, such as that Stop, the switch takes no
+  switch-on, because a start does not go while another change of the grant
+  waits. A switch-off never waits.
 - `countedOutcome` counts a start as done only when the returned settings
   list its grant with no end. Otherwise the start fails with a cause.
 - A start shares the control of the grant of its workspace with Stop and
@@ -155,9 +166,10 @@ const state = useThisMacState(mac)
 
 Run `npm run test -- src/chat/device src/shared/transcript/command-placement.test.ts`. The tests drive the settings
 controller on a fake Mac, and mount the parts with `mount` from
-`src/test-support/`. The tests of the line and of the start after a create
-mount the whole app in the Mac app: run `npm run test --
-src/shell/capabilities/MacAccessLine.test.tsx
+`src/test-support/`. The tests of the line, of a switch-off while a start
+waits, and of the start after a create mount the whole app in the Mac app:
+run `npm run test -- src/shell/capabilities/MacAccessLine.test.tsx
+src/shell/capabilities/MacAccessSwitchOff.test.tsx
 src/shell/new-workspace/NewWorkspaceMacGrant.test.tsx`.
 
 The layout of the requests needs a real browser. The Electron check
@@ -183,6 +195,8 @@ menu of Allow over the region. Build the Mac app first, then run
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, `AllowAllBar.tsx`, and the
   shared `ThisMac` of the window.
+- `settings-controls.ts`: the change that holds each control, and the
+  result of the last change of each control, for `mac-settings.ts`.
 - `settings-view.ts`: the states of the settings that the reads give,
   current or kept, and `shownSettings`, which gives either.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all

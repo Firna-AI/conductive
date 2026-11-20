@@ -21,6 +21,22 @@ export type StartPlace = 'control' | 'create'
 const stopOf = (workspaceId: string) =>
   ({ action: 'stop-workspace', workspaceId }) as const
 
+/** The start of the grant until Stop of one workspace on this Mac. */
+const startOf = (workspaceId: string) =>
+  ({ action: 'start-workspace-until-stop', workspaceId }) as const
+
+/**
+ * The changes that increase the grant of one workspace on this Mac: its
+ * start, Keep, and Extend. Only one of them waits at a time, because they
+ * share the control of the grant.
+ */
+const increasesOf = (workspaceId: string) =>
+  [
+    startOf(workspaceId),
+    { action: 'keep-workspace', workspaceId },
+    { action: 'extend-workspace', workspaceId },
+  ] as const
+
 /**
  * The settings of this Mac that every page of one Mac app window shares
  * for the person signed in: the bar of each workspace, the line Allow all
@@ -30,6 +46,8 @@ const stopOf = (workspaceId: string) =>
  * result of a start stays after the control closes or New workspace opens
  * the new workspace. A start, a Stop, and Keep share the control of the
  * grant of a workspace, so each keeps the result of the last of them.
+ * When Mac access of a workspace goes off, a start, a Keep, or an Extend of
+ * its grant that waits never goes, as `forget` says.
  */
 export class ThisMac {
   readonly controller: MacSettingsController
@@ -59,10 +77,7 @@ export class ThisMac {
    * pairing of now. Nothing goes while a change of that grant waits.
    */
   start(workspaceId: string, place: StartPlace): Promise<void> {
-    const change = {
-      action: 'start-workspace-until-stop',
-      workspaceId,
-    } as const
+    const change = startOf(workspaceId)
     if (this.controller.get().busy.includes(controlOf(change))) {
       return Promise.resolve()
     }
@@ -79,11 +94,14 @@ export class ThisMac {
 
   /**
    * Follows the switch of Mac access of the workspace, after it saved. On:
-   * the start of the grant of this Mac (Mac access decision 1 C). Off: the
-   * Stop of that grant, when the settings that show list one, also kept
-   * settings after a read that failed, because that grant may still run.
-   * The Stop shows no result, because a switch-off ends the grants of every
-   * Mac (Mac access decision 6 C).
+   * the start of the grant of this Mac (Mac access decision 1 C). Off: a
+   * start, a Keep, or an Extend of that grant that waits never goes, as
+   * `forget` says. Then the Stop of that grant goes when the settings that
+   * show list one, also kept settings after a read that failed, because
+   * that grant may still run. The Stop goes also when such a change waited,
+   * because that change no longer holds the control of the grant. The Stop
+   * shows no result, because a switch-off ends the grants of every Mac (Mac
+   * access decision 6 C).
    */
   async switched(workspaceId: string, on: boolean): Promise<void> {
     if (on) return this.start(workspaceId, 'control')
@@ -94,16 +112,27 @@ export class ThisMac {
         (grant) => grant.workspaceId === workspaceId,
       ) ?? false
     if (!listed) return
-    await this.controller.change(stopOf(workspaceId))
-    this.forget(workspaceId)
+    const stop = stopOf(workspaceId)
+    await this.controller.change(stop)
+    this.controller.forget(stop)
   }
 
   /**
-   * Mac access of the workspace is off, so the result of its last start or
-   * Stop goes, and the notice of a new workspace with it.
+   * Mac access of the workspace is off, in this page or in a read of its
+   * Capabilities. So a change of its grant that waits and increases the
+   * grant never goes: a start, a Keep, or an Extend. It does not go also
+   * when another member turns Mac access on again before its turn, because
+   * its choice belongs to a period of Mac access that ended (Mac access
+   * decision 6 C). That change keeps no result, also when it already went
+   * to the Mac, and its control is free at once, so the Stop of a switch-off
+   * can take it. The result of the last start or Stop goes too, and the
+   * notice of a new workspace with it.
    */
   forget(workspaceId: string): void {
     this.mark(workspaceId, null)
+    for (const increase of increasesOf(workspaceId)) {
+      this.controller.cancel(increase)
+    }
     this.controller.forget(stopOf(workspaceId))
   }
 

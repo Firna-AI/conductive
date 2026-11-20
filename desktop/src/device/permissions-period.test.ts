@@ -77,11 +77,15 @@ it('does not use a grant from an older Worker to allow another request', () => {
 })
 
 it('ends old periods before Keep and Extend and cannot bring them back', () => {
-  for (const action of ['keepWorkspace', 'extendWorkspace'] as const) {
+  for (const action of ['keep-workspace', 'extend-workspace'] as const) {
     const test = setup()
     const store = test.open()
     store.allowWorkspace('one', null, 0)
-    expect(store[action]('one', 1).status).toBe('failed')
+    expect(
+      store
+        .prepareWorkspace({ action, workspaceId: 'one', macAccessPeriod: 1 })
+        .commit().status,
+    ).toBe('failed')
     expect(store.settings().workspaceWindows).toEqual([])
     expect(test.open().settings().workspaceWindows).toEqual([])
     expect(test.timers.size).toBe(0)
