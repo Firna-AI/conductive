@@ -38,7 +38,11 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
             .into_bytes(),
         ),
     ] {
-        let bytes = archive(&[(file, &bytes)])?;
+        let mut files = vec![(file, bytes.as_slice())];
+        if name == "system" {
+            files.push(("runner-start.sh", b"#!/bin/sh\n"));
+        }
+        let bytes = archive(&files)?;
         parts.push(Part {
             name: name.into(),
             url: format!("https://releases.test/{name}"),
@@ -128,7 +132,7 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
         "confirmation deleted the next release"
     );
     assert!(
-        disk.has_part(&staged_parts.parts[0].sha256)?,
+        disk.has_part(&staged_parts.parts[0])?,
         "confirmation deleted the next release's helper"
     );
     let mut kept = disk.versions()?;

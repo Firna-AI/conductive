@@ -141,7 +141,7 @@ previous -> versions/<previous-version>
 pending                         # JSON start journal, absent after confirmation
 update.lock                     # exclusive background-check lock
 update-apply.lock               # exclusive apply/confirmation lock
-part-publish.lock               # short lock of each part unpack
+part-publish.lock               # lock of the last check and rename of a part
 versions/<version>/conductive
 versions/<version>/parts.json
 versions/<version>/sdk-helper -> /opt/conductive/parts/<sdk-helper-sha256>
@@ -159,16 +159,21 @@ parts/<system-sha256>/*          # scripts, units, wrapper, and udev rule
 The links use absolute targets under the configured root. The Node part
 removes the archive's top folder. The SDK helper archive has its entry
 point at the part root. The complete marker is written last. An interrupted check can
-leave incomplete version folders and `.partial` part folders. Those
-folders never qualify for apply. A later check replaces them.
+leave incomplete version folders and private `.partial-<process ID>`
+part folders. Those folders never qualify for apply. A later check or
+collection replaces them.
 
-Apply reads `parts.json` of the version that it starts. When a part
-folder of that version has no `complete` marker, apply downloads that
-part again, with the digest check of a check. It takes no download lock.
-All part downloads of one apply share a limit of 60 seconds. A failed or
-slow part logs a warning, and apply goes on. Each unpack, by a check or
-by apply, holds `part-publish.lock` and keeps a part that is already
-complete.
+Apply reads `parts.json` of the version that it starts. A part is
+present when its folder has the `complete` marker and the entry files of
+its role: `bin/node`, `sdk-helper.mjs`, or `runner-start.sh` and
+`install-system.sh`. Apply downloads each missing part again, with the
+digest check of a check. It takes no download lock. All part downloads
+of one apply share a limit of 60 seconds. A failed download logs a
+warning, and apply goes on. Each unpack, by a check or by apply, writes
+into the private folder `parts/<sha256>.partial-<process ID>`. It holds
+`part-publish.lock` only for the last presence check and the rename, and
+it keeps a part that is present. Collection removes a private folder
+that an interrupted unpack leaves.
 
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the

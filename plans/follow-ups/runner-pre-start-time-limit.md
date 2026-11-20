@@ -11,14 +11,14 @@
   - **Pre-start step:** the `ExecStartPre=` command of `conductive-runner.service`. It runs `conductive update apply` when `/run/conductive/workspace-ready` exists.
 - **Background:**
   - The unit sets no `TimeoutStartSec=`, so it uses the systemd default of 90 seconds. On a timeout, systemd ends the step, and the start fails.
-  - Apply bounds its part downloads at 60 seconds in total. The unpack of a part and the wait for `part-publish.lock` are synchronous, and that limit does not cover them. The `sdk-helper` part unpacks to about 794 MB.
+  - Apply bounds its part downloads at 60 seconds in total. The unpack of a part is synchronous, and that limit does not cover it. The `sdk-helper` part unpacks to about 794 MB. The wait for `part-publish.lock` covers only one rename.
   - The Restart command of the workspace header needs the runner back within 3 minutes.
-- **Problem:** A slow unpack or a long publish-lock wait can still pass the systemd limit. Then apply ends with no warning.
+- **Problem:** A slow unpack can still pass the systemd limit. Then apply ends with no warning.
 - **Impact if no action:** That start fails like a start before the repair, with no log line that names the cause.
 - **Root question:** How does the runner start go on when any step of apply is slow?
 - **Options:**
   - **A.** Change nothing. The download limit covers the slow step that the incident showed. Effort: Small.
-  - **B.** Set an explicit `TimeoutStartSec=` in the unit, and run apply under `timeout` with a limit below it. On exit status 124, log a warning and start the runner. Cost: a cut activation can start a release whose system installer did not finish. Effort: Small.
+  - **B.** Set an explicit `TimeoutStartSec=` in the unit, and run apply under `timeout` with a limit below it. On exit status 124, log a warning and start the runner. Cost: a cut activation can start a release whose system installer did not finish. A cut fallback starts the unconfirmed pending release again, which can then confirm itself or loop when it exits at launch. So B must not start the runner while a pending marker remains. Effort: Small.
   - **C.** Run the unpack in a blocking task that reports progress, and stop the repair at the deadline. Cost: a blocking task cannot be stopped, so the process still waits for it at exit. Effort: Medium.
 - **Left out:** A higher systemd limit alone, because Restart needs the runner back within 3 minutes.
 - **Wider fix:** B, because it bounds the whole step, whatever step is slow.

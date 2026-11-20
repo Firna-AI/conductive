@@ -1,4 +1,4 @@
-//! Download and verify a release under the caller's download lock.
+//! Download and verify a release, and download and verify single parts.
 
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{UpdateCheck, Updater};
@@ -60,7 +60,7 @@ impl Engine {
         let parts = self.processes.inspect(&executable, &release.version)?;
         parts.validate().internal()?;
         for part in &parts.parts {
-            if self.store.has_part(&part.sha256)? {
+            if self.store.has_part(part)? {
                 continue;
             }
             self.download_part(&release.version, part).await?;
@@ -68,7 +68,7 @@ impl Engine {
         self.store.complete(&release.version, &parts)
     }
 
-    /// Download one part, refuse a wrong digest, and unpack it. The caller holds the download lock.
+    /// Download one part, refuse a wrong digest, and unpack it.
     pub(super) async fn download_part(&self, version: &str, part: &Part) -> Result<()> {
         let asset = ReleaseAssetInfo {
             binary: part.name.clone(),

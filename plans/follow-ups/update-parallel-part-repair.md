@@ -12,7 +12,7 @@
 - **Background:**
   - The repair tries each missing part in order. Each part gets the time that is left, divided by the parts that are left. A failed or slow part logs a warning, and the next part still gets its attempt.
   - Production lists the parts as `node`, `sdk-helper`, and `system`. The `sdk-helper` archive is about 329 MB, and it unpacks to about 794 MB.
-  - Each part unpacks under `part-publish.lock`, so attempts for different parts can run at the same time.
+  - Each part unpacks into its own private folder, and `part-publish.lock` covers only the last presence check and the rename. So attempts for different parts can run at the same time.
 - **Problem:** A slow `node` download uses its whole share before `system` starts, although `system` is small and the runner cannot start without it.
 - **Impact if no action:** On a slow link, a repair that could restore every part in 60 seconds can run out of time for the last part.
 - **Root question:** How can each missing part use the whole time limit of a repair?

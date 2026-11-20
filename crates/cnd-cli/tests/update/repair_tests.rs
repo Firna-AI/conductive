@@ -15,17 +15,26 @@ use cnd_release::parts::{Part, PartsList};
 use crate::support::{Server, archive};
 
 #[tokio::test]
-async fn apply_downloads_lost_parts_while_a_background_check_runs()
+async fn apply_restores_lost_part_files_while_the_download_lock_is_held()
 -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let root = tempfile::tempdir()?;
     let mut responses = HashMap::new();
     let mut parts = Vec::new();
-    for (name, file, bytes) in [
-        ("sdk-helper", "sdk-helper.mjs", b"helper bytes".as_slice()),
-        ("node", "node-v24-linux-x64/bin/node", b"node bytes"),
-        ("system", "runner-start.sh", b"start bytes"),
+    for (name, files) in [
+        (
+            "sdk-helper",
+            vec![("sdk-helper.mjs", b"helper bytes".as_slice())],
+        ),
+        ("node", vec![("node-v24-linux-x64/bin/node", b"node bytes")]),
+        (
+            "system",
+            vec![
+                ("runner-start.sh", b"start bytes"),
+                ("install-system.sh", b"install bytes"),
+            ],
+        ),
     ] {
-        let bytes = archive(&[(file, bytes)])?;
+        let bytes = archive(&files)?;
         parts.push(Part {
             name: name.into(),
             url: format!("https://releases.test/{name}"),
@@ -45,9 +54,16 @@ async fn apply_downloads_lost_parts_while_a_background_check_runs()
         current: Some("0.0.3".into()),
         ..State::default()
     })?;
-    for lost in &parts.parts[1..] {
-        fs::remove_dir_all(root.path().join("parts").join(&lost.sha256))?;
-    }
+    let part_folder = |name: &str| {
+        let part = parts.parts.iter().find(|part| part.name == name);
+        part.map(|part| root.path().join("parts").join(&part.sha256))
+    };
+    fs::remove_dir_all(part_folder("node").ok_or("missing node part")?)?;
+    fs::remove_file(
+        part_folder("system")
+            .ok_or("missing system part")?
+            .join("runner-start.sh"),
+    )?;
     let engine = Engine {
         store: disk.clone(),
         client: Arc::new(server.client.clone()),
@@ -56,7 +72,7 @@ async fn apply_downloads_lost_parts_while_a_background_check_runs()
     };
     let engine: &dyn UpdateEngine = &engine;
     let _background_check = disk.lock()?.ok_or("expected download lock")?;
-    engine.apply().await?;
+    tokio::time::timeout(std::time::Duration::from_secs(30), engine.apply()).await??;
     let active = disk.version_path("0.0.3");
     assert_eq!(fs::read(active.join("node/bin/node"))?, b"node bytes");
     assert_eq!(
@@ -73,5 +89,30 @@ async fn apply_downloads_lost_parts_while_a_background_check_runs()
     );
     assert_eq!(disk.state()?.current.as_deref(), Some("0.0.3"));
     server.finish()?;
+    Ok(())
+}
+
+#[test]
+fn unpack_keeps_a_part_that_is_present() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let root = tempfile::tempdir()?;
+    let disk = DiskStore::new(root.path().to_path_buf());
+    let first = archive(&[("sdk-helper.mjs", b"first".as_slice())])?;
+    let part = Part {
+        name: "sdk-helper".into(),
+        url: "https://releases.test/sdk-helper".into(),
+        sha256: sha256(&first),
+    };
+    disk.unpack(&part, &first)?;
+    disk.unpack(
+        &part,
+        &archive(&[("sdk-helper.mjs", b"second".as_slice())])?,
+    )?;
+    let folder = root.path().join("parts").join(&part.sha256);
+    assert_eq!(fs::read(folder.join("sdk-helper.mjs"))?, b"first");
+    assert_eq!(
+        fs::read_dir(root.path().join("parts"))?.count(),
+        1,
+        "an unpack left a private folder"
+    );
     Ok(())
 }

@@ -121,11 +121,8 @@ impl Store for DiskStore {
         self.version_parts(version)
     }
 
-    fn has_part(&self, digest: &str) -> Result<bool> {
-        self.part_path(digest)
-            .join("complete")
-            .try_exists()
-            .internal()
+    fn has_part(&self, part: &Part) -> Result<bool> {
+        self.part_present(part)
     }
 
     fn unpack(&self, part: &Part, bytes: &[u8]) -> Result<()> {

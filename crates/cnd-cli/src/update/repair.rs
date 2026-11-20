@@ -16,10 +16,11 @@ const REPAIR_TIME: Duration = Duration::from_secs(60);
 impl Engine {
     /// Download each missing part of `version` again before the release starts.
     ///
-    /// Each part gets an equal share of the time that is left. A failed or
-    /// slow part logs a warning, and the next part still gets its attempt.
-    /// The start then goes on, and the next start tries again. The repair
-    /// takes no download lock, so a background check never delays it.
+    /// Each part gets an equal share of the time that is left. A failed
+    /// download, or a download that uses up its share, logs a warning, and
+    /// the next part still gets its attempt. The start then goes on, and the
+    /// next start tries again. The repair takes no download lock. A
+    /// background check can delay it only for the rename of a part.
     pub(super) async fn restore_parts(&self, version: &str) {
         let parts = match self.store.parts(version) {
             Ok(parts) => parts,
@@ -52,7 +53,7 @@ impl Engine {
     }
 
     fn part_missing(&self, version: &str, part: &Part) -> bool {
-        match self.store.has_part(&part.sha256) {
+        match self.store.has_part(part) {
             Ok(present) => !present,
             Err(error) => {
                 tracing::warn!(%error, version, part = %part.name, "a release part could not be checked");
