@@ -24,7 +24,6 @@ import type { RowVariant } from './WorkspaceRow'
 
 /** What the main area shows, when the list links to it. */
 export type ListCurrent =
-  | { screen: 'settings' }
   | { screen: 'new-workspace' }
   | { screen: 'automations' }
   | { screen: 'workspace'; workspaceId: string }
@@ -35,15 +34,14 @@ export type ListCurrent =
  * text say Settings. A dot says that something there needs the user: the
  * last build of the cloud computer failed.
  */
-export function SettingsLink(props: { orgId: string; current: boolean }) {
+export function SettingsLink(props: { orgId: string }) {
   const org = useOrgModel(props.orgId)
   const builds = valueOf(useStore(org.builds))
   useEffect(() => org.watch('builds'), [org])
   const alert = builds ? latestBuild(builds)?.state === 'failed' : false
   return (
     <AppLink
-      aria-current={props.current ? 'page' : undefined}
-      className={classes(links.settings, props.current && links.current)}
+      className={links.settings}
       title="Settings"
       to={routes.settings(props.orgId)}
     >
@@ -157,7 +155,7 @@ export function Sidebar(props: {
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{org.name}</h2>
-        <SettingsLink current={current?.screen === 'settings'} orgId={org.id} />
+        <SettingsLink orgId={org.id} />
         <SidebarHeaderToggle />
       </div>
       <div className={styles.scroll}>

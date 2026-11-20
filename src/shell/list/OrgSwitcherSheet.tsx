@@ -97,7 +97,7 @@ export function OrgSwitcherSheet(props: {
         <AppLink
           className={styles.sheetRow}
           onClick={props.close}
-          to={routes.account()}
+          to={routes.settingsList()}
         >
           <PersonAvatar person={props.user} size={26} />
           <span className={styles.sheetLabel}>Account</span>

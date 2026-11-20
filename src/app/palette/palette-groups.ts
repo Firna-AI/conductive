@@ -153,7 +153,7 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
   ]
 }
 
-/** The settings of the org, then the Account page, each in its group. */
+/** The settings of the org, then Account settings, each in its group. */
 export function settingGroups(
   source: PaletteBase,
   withDetail: boolean,

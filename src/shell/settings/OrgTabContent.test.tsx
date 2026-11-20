@@ -18,7 +18,7 @@ import {
 import { renderScreen, startedApp, textOf } from '../test-render'
 import { gatewayLogin, noLogin, serveOrgLogins } from './agents-test-kit'
 import { ComputerSettings } from './ComputerTab'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 const minute = 60_000
 const hour = 60 * minute
@@ -30,14 +30,6 @@ async function signedIn(server: FakeApiServer) {
   const org = app.orgs.get().find((item) => item.id === FAKE_IDS.org)
   if (boot.state !== 'ready' || !org) throw new Error('The app did not start.')
   return { app, org, user: boot.user, model: app.org(org.id) }
-}
-
-/** The labels of the settings tabs, in their order. */
-function tabLabels(html: string): string[] {
-  const nav = /<nav aria-label="Org settings"[^>]*>(.*?)<\/nav>/s.exec(html)
-  return Array.from((nav?.[1] ?? '').matchAll(/<a [^>]*>(.*?)<\/a>/g), (tab) =>
-    textOf(tab[1]),
-  )
 }
 
 /** The good build that new workspaces start from, built 3 hours ago. */
@@ -95,21 +87,13 @@ async function computerText(
   return text
 }
 
-describe('OrgSettingsScreen', () => {
-  test('an admin gets the tabs General, Repositories, Cloud computer, Agents, Secrets, and Members, fields for the name and the initials, and the colour swatches', async () => {
+describe('OrgTabContent', () => {
+  test('an admin gets fields for the name and the initials, and the colour swatches on General', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
     const html = renderScreen(
       app,
-      <OrgSettingsScreen org={org} tab="general" user={user} />,
+      <OrgTabContent org={org} tab="general" user={user} />,
     )
-    expect(tabLabels(html)).toEqual([
-      'General',
-      'Repositories',
-      'Cloud computer',
-      'Agents',
-      'Secrets',
-      'Members',
-    ])
     expect(
       [...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(
         ([, value]) => value,
@@ -128,7 +112,7 @@ describe('OrgSettingsScreen', () => {
     const computer = new ComputerModel(model, new ManualDelay().delay)
     await computer.load()
     const screen = (tab: SettingsTab) =>
-      renderScreen(app, <OrgSettingsScreen org={org} tab={tab} user={user} />)
+      renderScreen(app, <OrgTabContent org={org} tab={tab} user={user} />)
     const notice =
       'Acme is suspended Its workspaces and settings are read-only. For questions, write to abuse@conductive.build.'
     const tabs = {

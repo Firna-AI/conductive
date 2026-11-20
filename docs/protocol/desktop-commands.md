@@ -175,7 +175,7 @@ workspace can ask, as
 - A saved end of the 15 minutes includes an end that Extend set.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
-- The account page of the Mac app has a This Mac tab, after Stats. It
+- Account settings of the Mac app have a This Mac tab, after Stats. It
   shows the name of the Mac, whether the Mac is available, and each
   always-allowed command by its exact text, with Remove. It also shows
   each workspace with a grant, with the time left or Until you stop, and

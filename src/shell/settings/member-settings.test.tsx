@@ -38,7 +38,7 @@ import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { mountScreen } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { gatewayLogin, noLogin, serveOrgLogins, words } from './agents-test-kit'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -51,19 +51,8 @@ async function signedIn(server: FakeApiServer, delay = new ManualDelay()) {
   const acme = app.orgs.get().find((item) => item.id === org)
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const settings = (tab: SettingsTab) =>
-    mountScreen(
-      app,
-      <OrgSettingsScreen org={acme} tab={tab} user={boot.user} />,
-    )
+    mountScreen(app, <OrgTabContent org={acme} tab={tab} user={boot.user} />)
   return { app, settings }
-}
-
-/** The labels of the settings tabs, in their order. */
-function tabLabels(html: string): string[] {
-  const nav = /<nav aria-label="Org settings"[^>]*>(.*?)<\/nav>/s.exec(html)
-  return Array.from((nav?.[1] ?? '').matchAll(/<a [^>]*>(.*?)<\/a>/g), (tab) =>
-    textOf(tab[1]),
-  )
 }
 
 function line(eventNumber: number, text: string): BuildLogEvent {
@@ -107,14 +96,6 @@ describe('the org settings of a member who is not an admin', () => {
       expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
       expect(textOf(html), page).not.toMatch(/Save|Build computer|Delete org/)
     }
-    expect(tabLabels(pages.general)).toEqual([
-      'General',
-      'Repositories',
-      'Cloud computer',
-      'Agents',
-      'Secrets',
-      'Members',
-    ])
     expect(textOf(pages.general)).toContain(
       'Org Only an admin can change it. Name Acme Initials AC',
     )

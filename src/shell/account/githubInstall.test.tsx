@@ -28,7 +28,7 @@ import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { GetStartedScreen } from '../onboarding/GetStartedScreen'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -117,7 +117,7 @@ describe('the install of the GitHub App', () => {
     await press(await installButton(getStarted))
     const account = mountScreen(
       app,
-      <AccountScreen connect={null} tab="general" user={fakeUser} />,
+      <AccountTabContent connect={null} tab="general" user={fakeUser} />,
       { href: routes.account() },
     )
     await press(await installButton(account))

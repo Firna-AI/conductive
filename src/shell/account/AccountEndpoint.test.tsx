@@ -28,7 +28,7 @@ import { bodiesOf } from '../automations/automation-test-kit'
 import { click, mountScreen, settle, typeText } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
 import { fieldNamed } from '../workspace/kept-test-kit'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 import { listItems } from './test-markup'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -81,7 +81,7 @@ async function mountGeneral(server: FakeApiServer, connect: 'claude' | null) {
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={connect} tab="agents" user={fakeUser} />,
+    <AccountTabContent connect={connect} tab="agents" user={fakeUser} />,
   )
   await settle()
   return { view, held, claude: () => listItems(view.innerHTML, 'Agents')[0] }

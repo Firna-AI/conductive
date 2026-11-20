@@ -44,7 +44,7 @@ branch that is not the default branch.
 
 - [Create a workspace: the preference](create-a-workspace-preference.md)
   holds the requirements of the preference that chooses between the page
-  and the dialog: the tabs of the Account page, the save of the choice,
+  and the dialog: the tabs of Account settings, the save of the choice,
   and its default.
 
 ### Page or dialog

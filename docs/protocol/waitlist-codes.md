@@ -59,20 +59,20 @@ says.
   (decision 160). A user who came in by a referral code has one too.
 - The user gets the code with their app access.
 - A used use does not come back.
-- The Account page shows the referral code at its end: the join link with
+- Account › General shows the referral code at its end: the join link with
   Copy, the code, and how many uses are left. Reason: on a phone, the forms
   that connect Claude and Codex then stay near the top.
 - The user does not see who used the code. The operator sees the uses and
   who used them. Reason: users see the least personal data, and the
   operator gets a trace.
-- While the pause is on, a notice on the Account page says that the code
+- While the pause is on, a notice in Account › General says that the code
   works again after the pause. A code that is used up or disabled shows no
   join link.
 - During [open sign-up](sign-ups.md#open-sign-up), a notice on the Account
   page says that anyone can sign up now, and that the invites stay for
   later (decision 230). It shows only for a code with uses left. Reason:
   the invites stay for later only while some are left.
-- While the pause is on, the Account page shows the notice of the pause,
+- While the pause is on, Account › General shows the notice of the pause,
   also while the waitlist is off. Reason: the pause wins over the waitlist
   switch.
 - An operator can disable a referral code. A disabled referral code stays
