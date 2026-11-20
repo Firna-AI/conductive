@@ -6,7 +6,6 @@ import { expiredRestartLifecycle, isFailedRestart } from './durable-restart'
 import {
   RESTORE_POLL_MS,
   SHORTEST_IDLE_MS,
-  lifecycleIdleMs,
   type DurableLifecycleState,
   type LifecycleHooks,
   type LifecycleStorage,
@@ -50,7 +49,7 @@ export async function advanceLifecycleAlarm(
   } else if (state.runningSessions.length) {
     state = reconciledLifecycle(state, await hooks.extendDeadline(), now())
   } else if (state.state !== 'error' || isFailedRestart(state)) {
-    const idleMs = await lifecycleIdleMs(hooks)
+    const idleMs = await hooks.idleMs()
     if (state.lastActivityAt + idleMs <= now()) {
       const result = await hooks.stop()
       stopPending = result === 'pending'

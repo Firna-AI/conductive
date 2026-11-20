@@ -150,8 +150,8 @@ The operator saves the stop time of idle sandboxes on the Settings tab, as
 - Each workspace object reads it through the `idleMs` hook and keeps it for
   60 seconds. A failed read keeps the last value, or 30 minutes before the
   first read.
-- The alarm and its schedule use it for the idle stop. Hooks without
-  `idleMs` keep `IDLE_MS`, 30 minutes.
+- The alarm and its schedule use it for the idle stop. `idleMs` is a
+  required hook, so no lifecycle can drop the setting.
 - When the alarm fires before the stop time ends, at least 15 minutes after
   the last activity, with the runner connected and no restore watch due, it
   extends the provider auto-stop. So a longer stop time reaches a running
