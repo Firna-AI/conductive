@@ -1,10 +1,10 @@
 # Services
 
-Status: Active. On branch `calummoore/run-dev-servers-as-services-55oo`, no pull request yet. The target is `main`. Cal requested the plan and implementation on 20 November 2026. Implementation waits for the first-release proposal in services decision 19. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/run-dev-servers-as-services-55oo`, no pull request yet. The target is `main`. Cal approved services decision 19 A on 20 November 2026, in the words "19= A". Implementation follows that first-release contract. The pull request that completes the work deletes this plan.
 
 A server for a member needs a lifetime outside an agent turn. A tracked background server can hold a Claude turn open. A detached process has no service controls. This change gives long-running processes their own systemd units, command, state, log, and app controls.
 
-Cal chose option B of brainstorm item 2 on 20 November 2026, in the words "2 = B". Services decision 1 records that choice. The choice includes this rule: a service is not activity and never keeps the cloud computer running. Services decision 19 now presents the remaining contract as one first-release proposal.
+Cal chose option B of brainstorm item 2 on 20 November 2026, in the words "2 = B". Services decision 1 records that choice. The choice includes this rule: a service is not activity and never keeps the cloud computer running. Cal's approval of services decision 19 A settles the remaining first-release contract.
 
 The change adds only services. It does not alter idle stop, activity, background work, or turn limits. Work that must finish stays in the agent's turn. The watch call belongs to workspace 456. The terminal restart plan belongs to workspace 233. This branch changes neither work item and never merges its pull request.
 
@@ -60,7 +60,7 @@ The documentation milestone adds `docs/protocol/services.md` as the owner of the
 - **Previous examples:** The source session records the T3 dev-server rule, background work decisions 1 to 3 in PR #245, and preview decision 293.
 - **Recommendation:** B. It gives the requested process a separate lifetime.
 - **Chosen:** B, by Cal on 20 November 2026. Exact answer: "2 = B".
-- **Action:** fix now, apply B, after the open decisions settle the remaining contract.
+- **Action:** fix now, apply B under the approved services decision 19 A contract.
 
 ### Services decision 19: Choose the first release
 
@@ -83,12 +83,13 @@ The documentation milestone adds `docs/protocol/services.md` as the owner of the
 - **Previous examples:** Preview already lists servers. Header Restart already defines shared workspace control access. Runtime logs avoid keeping raw output in saved disks.
 - **Related:** This proposal consolidates decisions 2 through 18. It does not treat their earlier recommendations as approvals. B also answers restart decision 3 for explicitly registered services.
 - **Recommendation:** A. It completes the requested service lifecycle and controls with one coherent contract.
-- **Action:** ask the user, because this proposal sets new product behavior and explicitly proposes readiness and log limits.
-- **Status:** Open, raised 20 November 2026.
+- **Chosen:** A, by Cal on 20 November 2026. Exact answer: "19= A". This corrects his earlier "1 = A" reply and leaves services decision 1 B unchanged.
+- **Action:** fix now, apply A.
+- **Status:** Approved on 20 November 2026.
 
-## Proposed first-release profile
+## Approved first-release profile
 
-These are the complete defaults of proposal 19 A. They are proposed requirements, not 17 separate requests for answers.
+These are the complete requirements of services decision 19 A. Cal approved them together on 20 November 2026.
 
 | Original decision | Topic | A selects | Contract |
 | --- | --- | --- | --- |
@@ -127,8 +128,8 @@ Live Terminal output is unfiltered. The existing app log API remains filtered.
 ## Decision record and consolidation
 
 On 20 November 2026, Cal asked why the plan presented so many questions. The orchestrator agreed that it had over-decomposed the contract.
-Cal then said "ok" to a shorter first-release proposal. This authorizes consolidation. It does not select the proposal's implementation contract.
-Decisions 2 through 18 remain unselected individually. An answer to decision 19 settles their included contract together.
+Cal then said "ok" to a shorter first-release proposal. He approved services decision 19 A on the same date, in the words "19= A".
+That answer settles the included contract of decisions 2 through 18 together. It leaves services decision 1 B unchanged.
 
 The initial alternatives and two completed options checks remain available at the
 [original plan](https://github.com/Firna-AI/conductive/blob/2b737ecfb5e9d5961155024bc69729953870037a/plans/services.md).
@@ -142,7 +143,7 @@ The completed consolidation check is `.context/services/consolidated-options-che
 
 These are the orchestrator's design calls of 20 November 2026. Each call follows the decision test. None adds a product limit or rejection.
 
-When a service is not running, Start uses the supplied definition. Reason: it interrupts no existing process. The proposed first-release contract settles running-name collisions.
+When a service is not running, Start uses the supplied definition. Reason: it interrupts no existing process. The approved first-release contract settles running-name collisions.
 
 All pending controls end when the computer stops. They never run after a resume. Reason: a command for an old service generation must not act on a new run.
 
@@ -164,41 +165,62 @@ All pending controls end when the computer stops. They never run after a resume.
 - Use `claude-opus-5-5` at max for actions whose model table names `opus-5-5-1m`. Reason: `list_models` does not offer the table's model, and Cal authorized the nearest model.
 - Keep service additions in their own command and agent-guidance sections. Reason: workspace 456 also edits those areas for its watch call.
 
+### Services UI calls
+
+These are the UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They follow services decision 19 A.
+
+- Put Services above Servers in Preview, then the existing Other port row. Show each owned port only in its service row. Reason: one list keeps every service reachable without duplicate ports.
+- On a phone, use the existing port form entry: no open preview, or "+" beside open previews. Keep each service listed there after its preview opens. Reason: the existing navigation already reaches this list.
+- Use three lines for each row. The first holds its name, program, folder, and fixed controls. The second shows state, relative time, and source. The third shows wrapping ports or No port. Shorten visible labels with CSS while keeping full accessible text. Reason: ports cannot push the controls out of view.
+- Put Show log on each row for every reader. Put Restart first and Stop second in the control menu. Use a phone sheet for that menu. Disable Stop when the service does not run. Reason: this keeps read access separate from control access and reduces accidental direct Restart clicks.
+- Order rows by name. Reason: a Restart then keeps the row in its place.
+- Hide the Services section for unsupported software. Show one hint for an empty report. Use the existing stopped-computer panel after stop. Default existing mockups to unsupported. Reason: these states must stay distinct without changing existing screens.
+- Show pending controls with a spinner and disable their menu. Keep ports and Show log reachable. Use the existing error, warning, and information toasts for failed, unconfirmed, and stale results. Reason: actual state stays visible and no result retries a control.
+- Keep a Preview tab after Stop. Keep the existing bare-port server row for a saved tab whose listener is gone. Reason: service controls do not close previews.
+- Use the shared wide dialog on desktop and its phone sheet for logs. Show state and program above wrapping plain text. Show omission text, Reload, and Close. Replace Reload with Try again after failure. Reason: the log stays readable while its actions stay reachable.
+- Show the originating session title and icon as a link, with spoken start context. Otherwise show Local command. Never derive access from that source. Reason: the source is context, not member identity proof.
+- Draw no menu or Stop question without the control right. Keep the read-only header state as plain text. Reason: the mockups must follow the same access rule at both surfaces.
+- Use the shared header Restart copy to name ordinary agent commands separately from services and terminal commands. Keep its confirmation title. Reason: the existing software restart preserves service units.
+
 ## Milestone 1: Services mockups
 
 Tags: mockup
 
-Depends on: none. Waits for services decision 19.
+Depends on: none.
 
-The UI implementor draws the chosen service form before any implementation. Each state has phone and desktop variants. A or B uses the Preview list. C uses marked Terminal tabs.
+The UI implementor draws the approved Preview service list before any implementation. Each state has phone and desktop variants.
 
-- [ ] Add the services surface to the existing tools catalogue and navigation. Put new states on child pages because current tools pages already hold five screens.
-- [ ] Update the Restart mockup and copy to distinguish project services from agent processes.
-- [ ] Draw running services, a service without a port, and ended or failed services.
-- [ ] Draw Stop, Restart, approved confirmations, pending actions, failures, and the chosen log view. Include the approved lost-reply result and memory-failure state.
-- [ ] Show the approved start source. Keep the source label separate from access rights.
-- [ ] Draw unavailable support for an older runner, an empty report, a stopped computer, and read-only controls.
-- [ ] Reuse `@firna/ui` and existing shared mockup parts. Keep each screen-spec page within five rendered mockups.
-- [ ] Run `npm run mockups:check`. Open the changed pages in the cloud computer browser. Save PNG screenshots under `.context/services/`.
-- [ ] Update this plan's design and TODOs for each problem that the mockups show.
+- [x] Add the services surface to the existing tools catalogue and navigation. Put new states on child pages because current tools pages already hold five screens.
+- [x] Update the Restart mockup and copy to distinguish project services from agent processes.
+- [x] Draw running services, a service without a port, and ended or failed services.
+- [x] Keep every port and control reachable when one service has several ports. Check the phone layout without adding a port limit.
+- [x] Draw Stop, Restart, approved confirmations, pending actions, failures, and the chosen log view. Include the approved lost-reply result and memory-failure state.
+- [x] Show the approved start source. Keep the source label separate from access rights.
+- [x] Draw unavailable support for an older runner, an empty report, a stopped computer, and read-only controls.
+- [x] Reuse `@firna/ui` and existing shared mockup parts. Keep each screen-spec page within five rendered mockups.
+- [x] Run `npm run mockups:check`. Open the changed pages in the cloud computer browser. Save PNG screenshots under `.context/services/`.
+- [x] Update this plan's design and TODOs for each problem that the mockups show.
+
+Completed on 20 November 2026. Evidence: `.context/services/mockups-report.md` and `.context/services/milestone-1-markdown-links.txt`.
 
 ## Milestone 2: Protocol and documentation
 
-Depends on: 1 and services decision 19.
+Depends on: 1.
 
 The docs implementors state the approved boundary behavior before implementation.
 
 - [ ] Add `docs/protocol/services.md` with lifetime, identity, start behavior, state, controls, logs, environment, access, compatibility, and selected resource rules.
+- [ ] State that Restart uses the saved definition for a stopped, ended, or failed service too. Restate header Restart's service survival wherever its behavior is repeated.
 - [ ] Link the services requirements from the relevant runner, listening-port, Preview, agent-tool, agent-instruction, software, and secrets docs.
 - [ ] State that a service is not activity under the existing stop rule. Change no idle or turn policy.
-- [ ] Under the proposed unit-failure policy, state the service-only exception in the memory-kill requirement of `docs/protocol/agent-runner.md`. Keep the current rule for ordinary agent commands.
+- [ ] Under the approved unit-failure policy, state the service-only exception in the memory-kill requirement of `docs/protocol/agent-runner.md`. Keep the current rule for ordinary agent commands.
 - [ ] State the distinction between temporary agent-check servers and services that a member needs after the reply.
 - [ ] Read both legal pages in full before changing protocol facts. Read every public guide in full. Update every restated fact in the same change.
 - [ ] If the Terms text changes, set its effective date to the date of the change. Its revision updates automatically.
 - [ ] Update `src/marketing/docs/terminal-and-previews.md` and `src/marketing/docs/cloud-computer.md` under the external docs action.
 - [ ] Update the runner, command, image, Worker area, and Preview READMEs for new public behavior and entry points.
 - [ ] Check every relative link in changed Markdown.
-- [ ] Record deferred resume and memory work as separate follow-up items after services decision 19 settles scope. Link resume work to restart decision 3.
+- [ ] Record deferred resume and memory work as separate follow-up items. Link resume work to restart decision 3.
 
 ## Milestone 3: Shared services contracts
 
@@ -228,7 +250,7 @@ The non-UI implementor adds local service execution. The app can still omit serv
 - [ ] Apply the selected readiness behavior. Check that the service owns the port.
 - [ ] Keep state and logs available across runner restarts. Report exit code or signal and systemd failures. Apply the approved log policy.
 - [ ] Reconcile actual units after a runner start. Link ports to services through control groups.
-- [ ] Apply the approved first-release policies. A defers resume and memory caps. B adds opt-in resume restoration. C changes only the service surface and its terminal integration.
+- [ ] Apply the approved first-release policies. Defer resume restoration and memory caps.
 - [ ] Test observable manager and command behavior at the lowest useful boundary. Prove each new test can fail.
 - [ ] Run targeted Rust checks. Repeat each new asynchronous test 10 times. Save counts and test cost under `.context/services/`.
 - [ ] Smoke-test a real service through the CLI and MCP. Check user, folder, clean environment, unit control group, output, exit, and stop. End every probe.
@@ -243,6 +265,7 @@ The non-UI implementor adds reports and authorized app routes. Older clients kee
 - [ ] Filter complete public text before storage or excerpts. Keep raw definitions and environment values out of Worker storage.
 - [ ] Store and forward the current report with the existing workspace persistence model. Keep old records readable.
 - [ ] Add fixed workspace routes for list, Stop, Restart, and log reads. Apply the selected access rule and existing org and suspension checks.
+- [ ] Accept Restart for a stopped, ended, or failed service when its observed generation is still current.
 - [ ] Correlate controls and results with durable request IDs and service generations. Make repeated delivery safe. Recheck the current workspace and runner connection. Apply the chosen lost-reply outcome. End every pending control at computer stop.
 - [ ] Support fresh reports and recovery after a lost connection. Publish a fresh snapshot after each negotiated connection. Clear live reports when the computer stops.
 - [ ] Check a new runner with the previous Worker, a new Worker with an old runner, a Worker rollback with pending reports, and an old app reader.
@@ -259,8 +282,8 @@ Depends on: 1 and 5
 The UI implementor builds the approved mockups against real runner data.
 
 - [ ] Add the chosen service surface with the approved metadata and actual report state.
-- [ ] Keep services without ports reachable. Link reported ports to their previews.
-- [ ] Add Stop, Restart, selected confirmations, pending results, and recoverable errors under the selected access rule.
+- [ ] Keep services without ports reachable. Keep each service in the phone list after "+", also when its preview is open. Link reported ports to their previews and list each owned port only in its service row.
+- [ ] Add Stop, Restart, selected confirmations, pending results, and recoverable errors under the selected access rule. Use the same failure toast for Restart, with its Restart wording.
 - [ ] Add the selected log view. Render output and all service metadata as untrusted text.
 - [ ] Keep absent support distinct from an empty report. Keep old runners, stopped computers, and old Mac app versions working.
 - [ ] Keep preview close separate from process Stop. Preserve the current Preview tab behavior.
@@ -307,7 +330,7 @@ The orchestrator owns the combined gate, implementation review, and pull request
 
 - [Verify servers outside terminal turns](follow-ups/terminal-restart-server-lifetime.md). Correct the terminal restart work's lifetime claim on its own branch.
 - [Correct the shared skills model table](follow-ups/shared-skills-model-table-stale.md). Keep that change in the skills repository.
-- Resume restart and per-service memory limits remain separate scope records under decisions 11 and 12. Proposal 19 A defers both. Create follow-up items after that proposal is approved.
+- Resume restart and per-service memory limits remain separate scope records under decisions 11 and 12. Approved services decision 19 A defers both. Milestone 2 records their follow-up items.
 
 ## Post-merge follow-up (non-blocking)
 

@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react'
 import { Maximize2, Plus, RotateCw } from 'lucide-react'
+import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 import {
   detectedServers,
   openPort,
@@ -41,6 +43,16 @@ export const previewStates = [
 ] as const
 
 export type PreviewState = (typeof previewStates)[number]
+
+/**
+ * The services of the report, above the servers, and the servers that the
+ * list shows beside them: each server that no service holds, in place of
+ * every detected server.
+ */
+export type PreviewServices = {
+  section: ReactNode
+  servers: readonly ListeningPort[]
+}
 
 /**
  * A tab for each open preview: the port and the cut name of its server.
@@ -89,8 +101,8 @@ export function PreviewActions(props: { href?: string; expandTo?: string }) {
  * label. After "+", no tab is current, and the port form lists the servers
  * that have no preview yet.
  */
-function PhonePreview(props: { adding: boolean }) {
-  const { adding } = props
+function PhonePreview(props: { adding: boolean; services?: PreviewServices }) {
+  const { adding, services } = props
   return (
     <div className={styles.preview}>
       <div className={styles.toolbar}>
@@ -110,7 +122,10 @@ function PhonePreview(props: { adding: boolean }) {
         {adding ? null : <PreviewActions />}
       </div>
       {adding ? (
-        <ServerList servers={unopened()} />
+        <ServerList
+          servers={services?.servers ?? unopened()}
+          services={services?.section}
+        />
       ) : (
         <div className={styles.frame}>
           <StorefrontPage />
@@ -129,10 +144,17 @@ function PhonePreview(props: { adding: boolean }) {
  * preview: it ends by itself when the cloud computer stops (decisions 292
  * and 294).
  */
-function PanelPreview(props: { shown: number | null }) {
+function PanelPreview(props: {
+  shown: number | null
+  services?: PreviewServices
+}) {
   return (
     <div className={styles.preview}>
-      <ServerList current={props.shown} servers={detectedServers} />
+      <ServerList
+        current={props.shown}
+        servers={props.services?.servers ?? detectedServers}
+        services={props.services?.section}
+      />
     </div>
   )
 }
@@ -146,27 +168,41 @@ function unopened() {
  * The Preview tool in one of its states. `frame` draws the page in the
  * tool, as a phone does. Without it, the page shows in the Preview tab of
  * its port in the centre row. On desktop, "+" and its `adding` state do not exist, so
- * `adding` draws the open previews.
+ * `adding` draws the open previews. Each list shows `services` above its
+ * servers, also when the runner reports no server, because a service can
+ * listen on no port.
  */
 export function PreviewTool(props: {
   state: PreviewState
   frame: boolean
   /** The port of the Preview tab that shows on desktop, or null. */
   shownPort: number | null
+  services?: PreviewServices
 }) {
+  const { services } = props
   const open = props.frame ? (
-    <PhonePreview adding={props.state === 'adding'} />
+    <PhonePreview adding={props.state === 'adding'} services={services} />
   ) : (
-    <PanelPreview shown={props.shownPort} />
+    <PanelPreview services={services} shown={props.shownPort} />
+  )
+  const list = (
+    <ServerList
+      servers={services?.servers ?? detectedServers}
+      services={services?.section}
+    />
   )
   switch (props.state) {
     case 'open':
     case 'adding':
       return open
     case 'detected':
-      return <ServerList servers={detectedServers} />
+      return list
     case 'no-servers':
-      return <PortMessage body={portFormCopy.noServers} />
+      return services ? (
+        <ServerList servers={[]} services={services.section} />
+      ) : (
+        <PortMessage body={portFormCopy.noServers} />
+      )
     case 'no-report':
       return <PortMessage body={portFormCopy.body} />
     case 'repair-failed':
@@ -174,7 +210,7 @@ export function PreviewTool(props: {
       // file lists. The last list and the field stay usable.
       return (
         <>
-          <ServerList servers={detectedServers} />
+          {list}
           <LostUpdateRow repair={serversUnavailable} />
         </>
       )

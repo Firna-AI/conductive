@@ -34,6 +34,7 @@ import { openPort } from '../fixtures/previews'
 import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
+import { previewServicesOf } from './workspaceServices'
 import { isRemoved, panelState } from './workspaceSandbox'
 import { backFrom, openFile } from './workspaceFileTab'
 import { isNew } from './workspaceTabs'
@@ -190,6 +191,7 @@ export function ToolContent(props: {
       return (
         <PreviewTool
           frame={mobile}
+          services={previewServicesOf(state, props.viewport)}
           shownPort={state.tab === 'preview' ? openPort : null}
           state={state.ports}
         />

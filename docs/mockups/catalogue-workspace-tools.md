@@ -50,8 +50,8 @@ decisions 1 to 3 of the terminal tabs change, with the test run of
 Terminal 2 shown. Its child
 pages show the other states of the terminals, the Preview tool, from
 decisions 220 C and 221 D, the Preview tabs of the centre row, from
-decisions 288 to 292, its list after a failed repair, and the hidden
-Desktop:
+decisions 288 to 292, its list after a failed repair, the services of the
+Preview tool, and the hidden Desktop:
 
 - `app/tools/terminals` has the one terminal that a workspace starts
   with. Its `limit` variant has ten terminals, with the + off and the line
@@ -114,9 +114,61 @@ Desktop:
   it as one small file, from `worker/previews/opening-page.ts`. Its
   `failed` variant has "Preview not available" and asks the user to open
   the preview again from the workspace.
+- `app/tools/services` has the services of the Preview tool, from
+  services decision 19 A of 20 November 2026. A service is a named server
+  that runs outside every agent turn, until the cloud computer stops, and
+  that never keeps the cloud computer running. The tool lists the services
+  above its servers, under the heading Services, and the servers that no
+  service runs under Servers. Each row has three lines. The first holds the
+  exact name, the filtered label of the program and its folder, the scroll
+  icon of Show log, and the menu button. The second holds the state, the
+  time, and where the service started: the session that the workspace
+  matched, as a link, or Local command. The last holds every port as a
+  button that opens its preview, or "No port". On a phone the list shows
+  after "+", under the tabs of the open previews. The page shows only its
+  canonical screen, with `storybook`, `web`, and `worker` running. Its
+  child pages:
+  - `app/tools/services/ended` has a run that ended with exit code 0, a run
+    that failed with exit code 1, and a command that could not start. Its
+    `memory` variant has `storybook` after the cloud computer ran out of
+    memory, which shows Failed and Out of memory.
+  - `app/tools/services/ports` has `dev`, one service with nine ports. Its
+    line of ports wraps, and the controls keep their place.
+  - `app/tools/services/unavailable` has a report with no service, whose
+    line asks the user to have the agent start one. Its `older-software`
+    variant has software without services, which shows the tool as before,
+    and its `stopped` variant has a stopped cloud computer, whose tools show
+    the state of the cloud computer with Resume.
+  - `app/tools/services/menu` has the menu of `web`, with Restart and Stop,
+    and a sheet on a phone. Its `read-only` variant has the rows of a viewer
+    who may not restart the software: no menu, and the header state as
+    plain text.
+  - `app/tools/services/stop` has the question "Stop web?" in a dialog, and
+    in a sheet on a phone. Its `stopping` variant has the Stop while it
+    runs, and its `stopped` variant has `web` after the Stop, while the
+    Preview tab of port 3000 stays.
+  - `app/tools/services/restart` has the Restart of `web`, which runs with
+    no question. Its `restarted` variant has the new run.
+  - `app/tools/services/results` has the toast of a Stop that failed. Its
+    `unconfirmed` variant has the toast of a Stop whose reply was lost, over
+    the actual state, and its `stale` variant has the toast of a Stop that
+    named a run that had already ended.
+  - `app/tools/services/log` has the log of `web` in a dialog, and in a
+    sheet on a phone, with the line that says that earlier output is left
+    out. Its variants have the log while it loads, a read that failed, a
+    log with no output yet, and the log of `storybook` after its memory
+    failure.
 - `app/tools/desktop` has the hidden Desktop. It moved into its own
   folder and kept its path, so that `app/tools` shows only its canonical
   screen.
+
+The flow `user-flows/stop-a-service` goes from the list of services,
+through the menu of `web` and the question, to `web` after the Stop. The
+flow `user-flows/restart-a-service` goes from the list, through the menu,
+to the new run of `web`. The flow `user-flows/read-a-failed-service-log`
+goes from the failed row of `storybook` to the end of its log.
+`app/restart` names the services too: Restart in the header keeps them
+running, and the commands that agents started end with the runner.
 
 `app/file-mentions` draws the list of `@` and the file chips of decisions
 213 to 217. Its canonical screen has the query `@addr` in Checkout address
