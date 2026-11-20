@@ -1,5 +1,5 @@
 import { Button } from '@firna/ui/button'
-import { Square } from 'lucide-react'
+import { ArrowUp, Square } from 'lucide-react'
 import {
   useControlSizes,
   useTouch,
@@ -37,6 +37,31 @@ export function StopButton(props: { stopping: boolean; onStop: () => void }) {
       shape="square"
       size="sm"
       tone="secondary"
+    />
+  )
+}
+
+/**
+ * Send, which sends the draft, with a spinner while the send waits. It is
+ * off while the draft cannot go, such as while it is empty.
+ */
+export function SendButton(props: {
+  off: boolean
+  sending: boolean
+  onSend: () => void
+}) {
+  const control = useControlSizes()
+  return (
+    <Button
+      accessibilityLabel="Send"
+      boxSize={control.height}
+      busy={props.sending}
+      disabled={props.off}
+      icon={ArrowUp}
+      onPress={props.onSend}
+      shape="square"
+      size="sm"
+      tone={props.off ? 'secondary' : 'primary'}
     />
   )
 }

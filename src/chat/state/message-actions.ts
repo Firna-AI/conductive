@@ -82,19 +82,22 @@ export function setDraftText(
  * uploads its kept File. The send finishes on its draft, also after a move
  * to another session. A linked-session reply shows its message in that
  * session, and the sending tab shows that session, as `linked-replies.ts`
- * says.
+ * says. A send with `follow` false, such as from the popover of an
+ * explanation, keeps the shown tab. Gives the session that took the
+ * message, or null when nothing went.
  */
 export async function sendDraft(
   context: ChatContext,
   sessionId: string,
-): Promise<void> {
+  follow = true,
+): Promise<string | null> {
   const snapshot = context.store.get()
   const session = snapshot.sessions.find((item) => item.id === sessionId)
   const { draft } = sessionState(snapshot, sessionId)
   const files = markedFiles(draft.text, draft.files)
   const empty = withoutMarks(draft.text).trim() === '' && files.length === 0
   const busy = draft.sending || filesWait(files)
-  if (!session || busy || empty || sendBlock(snapshot, sessionId)) return
+  if (!session || busy || empty || sendBlock(snapshot, sessionId)) return null
   const request: SendMessageRequest = {
     id: draft.sendId ?? context.newId(),
     text: messageText(draft.text, files),
@@ -123,7 +126,7 @@ export async function sendDraft(
         : back
     })
     showNotice(context, holder, sendFailedTitle, error)
-    return
+    return null
   }
   changeDraft(context, draftId, afterSend)
   const holder = holderOf(context.store.get(), draftId)
@@ -131,7 +134,8 @@ export async function sendDraft(
   if (context.live() && owner && (owner === sessionId || owner === holder)) {
     context.store.update((current) => ({ ...current, notice: null }))
   }
-  await showTarget(context, sessionId, posted.target, draftId)
+  if (follow) await showTarget(context, sessionId, posted.target, draftId)
+  return posted.target
 }
 
 /** The attachments of the ready files, which show with a message. */

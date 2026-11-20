@@ -77,7 +77,8 @@ export function EarlierLoading() {
   )
 }
 
-function Waiting(props: { text: string }) {
+/** A chat with nothing to show yet, with what it waits for. */
+export function Waiting(props: { text: string }) {
   const theme = useSharedUiTheme()
   return (
     <div className={waitStyles.waiting}>

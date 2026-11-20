@@ -8,7 +8,8 @@
  * end of the mark. It has a fixed width and a highest height, and its chat
  * scrolls inside it. In a low frame it takes only the room on its side of
  * the mark, less its margins. It has the full hairline outline of every
- * card of the app and the shadow of a menu.
+ * card of the app and the shadow of a menu. It takes the focus as it opens,
+ * as a dialog does, with no ring around the whole card.
  */
 .panel {
   display: flex;
@@ -24,6 +25,7 @@
   background: var(--ui-surface);
   box-shadow: 0 16px 40px -12px var(--ui-shadow);
   box-sizing: border-box;
+  outline: none;
   position-anchor: --explain-mark;
   position-area: block-end span-inline-end;
   position-try-fallbacks:
@@ -97,6 +99,7 @@
   background: var(--ui-surface);
   box-shadow: 0 -8px 28px var(--ui-shadow);
   box-sizing: border-box;
+  outline: none;
 }
 
 /*

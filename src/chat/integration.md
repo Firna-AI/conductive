@@ -158,17 +158,20 @@ mount the chat.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
   of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position, except on the message box of a composer,
-  so the list of `@` lies just above the box. A dialog or a sheet covers
-  the nearest positioned frame: the app frame. The lifted tab of a drag,
+  so the list of `@` lies just above the box, and on the text of a message
+  that Explain reads, which holds the states of its marks and Explain by a
+  selection. A dialog, a sheet, and the popover of an explanation cover or
+  lie in the nearest positioned frame: the app frame. The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
   position, because the row clips what it holds.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
   a dialog or a sheet is open. Outside the app, nothing notes them.
-- The tab row and the composer offer their commands to the keys of the
-  app through the [shortcut layer](../shell/shortcuts/README.md) of the
-  shell, and their controls show the keys in their tooltips. Outside the
+- The tab row, the composer, Explain, and the follow-up field of a popover
+  offer their commands to the keys of the app through the
+  [shortcut layer](../shell/shortcuts/README.md) of the shell, and their
+  controls show the keys in their tooltips. Outside the
   app, nothing offers them, and the controls show no key.
 - The Mac app shows two more parts of Mac commands outside the chat:
   `ThisMacSection` and `AllowAllBar`. [The Mac commands](device/README.md)

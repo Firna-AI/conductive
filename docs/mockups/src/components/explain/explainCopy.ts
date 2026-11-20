@@ -18,6 +18,15 @@ export const closeLabel = 'Close'
 /** The text of the empty follow-up field of the popover. */
 export const followUpPlaceholder = 'Ask a follow-up'
 
+/** The spoken name of the follow-up field of the popover. */
+export const followUpLabel = 'Follow-up'
+
+/** The spoken name of the chat of the explanation in its popover. */
+export const popoverChatLabel = 'Chat of the explanation'
+
+/** The notice of the parent chat when a press on Explain started nothing. */
+export const explainFailedTitle = "The explanation didn't start"
+
 /** The title of the menu of overlapping marks. */
 export const markMenuTitle = 'Explanations of this text'
 

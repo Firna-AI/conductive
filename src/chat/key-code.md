@@ -28,9 +28,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
-- `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  the long press that opens the menu of a read-only row, and its drawing
-  at a point or in a sheet. `components/tab-menu-items.ts`: the groups of
+- `components/useTabMenu.ts`: the tab menu, and the long press that opens
+  the menu of a read-only row. `ui/PointMenu.tsx` draws it at a point or in
+  a sheet, as it draws the menu of overlapping marks. `components/tab-menu-items.ts`: the groups of
   its items, with Copy path of the host, the mark of each item that
   changes the workspace, and the items of a read-only row.
   `components/useTabMoves.ts`: the moves of the row and Keep open, the
@@ -46,9 +46,11 @@ is relative to `src/chat/`, the folder of this guide.
   tab in the row, and the scroll that brings tabs into view.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
-- `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps, the sandbox bar, and the tools of the
-  composer that the app can give.
+- `components/SessionChat.tsx`: the chat of the open session.
+  `components/session-parts.tsx`: `ChatHost`, the start steps, the sandbox
+  bar, and the tools of the composer that the app can give, and
+  `sessionParts`, the lines, the cards, and the requests that wait of one
+  session, which its tab and the popover of an explanation share.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -271,6 +273,8 @@ is relative to `src/chat/`, the folder of this guide.
   their key code.
 - `secrets/`: the secret requests, their answers, the runs, and the line of
   a late answer. Their [README](secrets/README.md) names their key code.
+- `explain/`: Explain, the marks of explanations, and the popover. Its
+  [README](explain/README.md) names its key code.
 - `components/WaitingRequests.tsx`: the region just above the composer of
   the Mac commands and the secret requests that wait, the oldest first.
 - `dev/`: the development page, its fake writes, its scripted agent, its

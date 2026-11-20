@@ -103,6 +103,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'stop-agent': { mac: ['Ctrl+Meta+Backspace'], other: ['Alt+Shift+S'] },
   'copy-concise-transcript': { mac: ['Alt+Meta+C'], other: ['Alt+Shift+C'] },
   'copy-full-transcript': { mac: [], other: [] },
+  'explain-selection': { mac: ['Alt+Meta+E'], other: ['Alt+Shift+E'] },
 }
 
 /** Includes kept keys, so a saved override has the same meaning in every host. */

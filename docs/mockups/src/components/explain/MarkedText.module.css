@@ -85,6 +85,16 @@ a.mark:hover,
   background: var(--ui-amber-soft);
 }
 
+/*
+ * In a member message, the mark that covers the whole message fills the box
+ * of its bubble, so the text keeps its place.
+ */
+.wholeBubble {
+  margin: -9px -14px;
+  padding: 9px 34px 9px 14px;
+  border-radius: inherit;
+}
+
 /* The state of the whole-message mark, which a press opens. */
 .wholeGlyph {
   display: flex;

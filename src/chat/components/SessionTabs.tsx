@@ -13,11 +13,11 @@ import { IconButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { useDismiss } from '../ui/dismiss'
 import { Menu, type MenuEntry } from '../ui/Menu'
+import { PointMenu } from '../ui/PointMenu'
 import { useEdgeScroll, useRowScroll } from './row-scroll'
 import { SessionTabItem } from './SessionTab'
 import { DropLine, LiftedTab } from './TabDragParts'
 import { closeOtherTabs, closeTabsRight } from './close-tabs'
-import { TabMenu } from './TabMenu'
 import { TabNodes } from './tab-nodes'
 import { rowKey, type RowTab } from './tab-row'
 import { useTabDrag } from './useTabDrag'
@@ -192,7 +192,11 @@ export function SessionTabs(props: {
         ) : null}
       </span>
       {menu.menu ? (
-        <TabMenu menu={menu.menu} mobile={props.mobile} onClose={menu.close} />
+        <PointMenu
+          menu={menu.menu}
+          mobile={props.mobile}
+          onClose={menu.close}
+        />
       ) : null}
       {drag.lifted ? (
         <LiftedTab

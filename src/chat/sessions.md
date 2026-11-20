@@ -91,7 +91,9 @@ draft moves, the login of each session, and the linked sessions.
   it, and a second reply with the same message adds nothing.
 - Only the tab that sent moves to the linked session, and only while it
   still shows the session of the request. A user who opened another tab
-  during the send keeps that tab.
+  during the send keeps that tab. A follow-up from the popover of an
+  explanation moves no tab: the popover shows the linked session, as
+  [Explain](explain/README.md) says.
 - The draft of the request moves with the view, in the same snapshot, with
   its identity, its text, its files, and its uploads. So a user who typed
   more during the send types on in the same box, and the next message goes

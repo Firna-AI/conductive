@@ -34,6 +34,14 @@ function holdWholeChips(range: Range): void {
 }
 
 /**
+ * A copy of chat text runs: each chip shows only its copy text until the
+ * next animation frame, so the page does not show its own text now.
+ */
+export function copyRuns(): boolean {
+  return document.documentElement.classList.contains(COPYING_CLASS)
+}
+
+/**
  * Makes each copy of chat text give the text of each chip in it, such as
  * `@src/app.ts`, through the browser's own copy. So a paste into a rich
  * editor keeps the bold, the code, the lists, and the tables. While the

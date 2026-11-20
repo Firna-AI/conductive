@@ -96,7 +96,9 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Open workspace 1 to 9, Previous and Next workspace, Next workspace that needs input | `useListKeys` of the workspace list, while the page shows the list |
 | Previous tab, Next tab, Close tab, Reopen closed session | `useTabKeys` of the tab row of the chat. A shown file tab offers its own Close tab. |
 | Copy concise transcript, Copy full transcript | `useTabKeys` of the tab row of the chat, while a session tab shows, with the copy of its tab menu |
+| Explain the selection | `useExplain` of the chat, while Explain shows by a selection |
 | Focus the message field, Attach files, Stop the agent | The composer of the chat |
+| Stop the agent, while the popover of an explanation shows | The follow-up field of the popover, while a turn of its session runs. While the composer offers it too, the latest offer runs, as above. |
 | Model picker, Next effort level, Fast mode | The model picker of the composer of a session. It offers Fast mode only for a model that the model list marks as fast. |
 | Copy link | `CopyLink.tsx` of the workspace header, while the label of the number shows |
 | Create PR, Fix checks, Resolve conflicts, Address review, Commit and push, Merge PR, Continue after merge, Open PR on GitHub | `BarKeys` in `workspace/github/bar-keys.tsx`, beside the bar of the right column while the column shows, and beside the actions at the top of the Checks tab of a phone. Each button that takes a click offers its command, and Open PR on GitHub runs while the bar links the pull request. |

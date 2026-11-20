@@ -4,6 +4,7 @@ import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.c
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import markdown from '../../../docs/mockups/src/components/files/MarkdownView.module.css'
+import { MarkedMessage } from '../explain/MarkedMessage'
 import { AnswerText } from '../links/LinkedText'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
@@ -175,9 +176,16 @@ function holdsTable(block: TextBlock): boolean {
  * a screen reader. That hidden copy shows no chips, and draws each link as
  * its words, so it holds no link that the keyboard can reach while nobody
  * sees it. A press on a link in the line opens the link, as on a chip, and
- * the line stays open or closed.
+ * the line stays open or closed. The open line shows the marks of the
+ * explanations of the message, and Explain by a selection in its text.
  */
-export function MessageLine(props: { text: string }) {
+export function MessageLine(props: {
+  text: string
+  /** The ID of the message, whose open text shows Explain and its marks. */
+  messageId?: string
+  /** The agent finished the message, so a selection in it shows Explain. */
+  done?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
   const blocks = textBlocks(props.text)
@@ -186,32 +194,39 @@ export function MessageLine(props: { text: string }) {
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
   return (
-    <details
-      className={classes(styles.message, local.message)}
-      {...fold.details}
+    <MarkedMessage
+      align="middle"
+      done={props.done ?? false}
+      messageId={props.messageId ?? ''}
+      shown={open && props.messageId !== undefined}
     >
-      <summary className={styles.messageLine} {...fold.line}>
-        <MessageSquareText aria-hidden className={styles.icon} size={13} />
-        <span className={styles.messageText}>
-          <LineBlocks blocks={lead} open={open} />
-          {split && lead.every(isEmptyHeading) ? (
-            <span className={a11y.hidden}>
-              <LinksProvider value={plainLinks}>
-                <PlainLinks>
-                  <MentionsProvider value={null}>
-                    <LineBlocks blocks={body} open={false} />
-                  </MentionsProvider>
-                </PlainLinks>
-              </LinksProvider>
-            </span>
-          ) : null}
-        </span>
-      </summary>
-      {split ? (
-        <div className={classes(styles.messageBody, local.messageBody)}>
-          <AgentBlocks blocks={body} />
-        </div>
-      ) : null}
-    </details>
+      <details
+        className={classes(styles.message, local.message)}
+        {...fold.details}
+      >
+        <summary className={styles.messageLine} {...fold.line}>
+          <MessageSquareText aria-hidden className={styles.icon} size={13} />
+          <span className={styles.messageText}>
+            <LineBlocks blocks={lead} open={open} />
+            {split && lead.every(isEmptyHeading) ? (
+              <span className={a11y.hidden} data-explain-skip>
+                <LinksProvider value={plainLinks}>
+                  <PlainLinks>
+                    <MentionsProvider value={null}>
+                      <LineBlocks blocks={body} open={false} />
+                    </MentionsProvider>
+                  </PlainLinks>
+                </LinksProvider>
+              </span>
+            ) : null}
+          </span>
+        </summary>
+        {split ? (
+          <div className={classes(styles.messageBody, local.messageBody)}>
+            <AgentBlocks blocks={body} />
+          </div>
+        ) : null}
+      </details>
+    </MarkedMessage>
   )
 }

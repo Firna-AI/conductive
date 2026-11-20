@@ -7,6 +7,7 @@ import {
   workSummary,
   type WorkStep,
 } from '../../shared/transcript/transcript-entries'
+import { agentMessageId } from '../../shared/transcript/item-keys'
 import { useFold } from './useFold'
 
 /** One step of an open work fold, in the list of an open run of tool calls. */
@@ -26,7 +27,11 @@ function Step(props: { step: WorkStep<ReactNode> }) {
     case 'agent':
       return (
         <li>
-          <MessageLine text={item.text} />
+          <MessageLine
+            done={item.completed === true}
+            messageId={agentMessageId(item)}
+            text={item.text}
+          />
         </li>
       )
     case 'lost':

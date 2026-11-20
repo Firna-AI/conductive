@@ -189,6 +189,24 @@ milestones, under existing rules:
 - The key of Explain the selection is ⌥⌘E on a Mac and Alt+Shift+E on
   Windows and Linux. ⌘E was rejected, because Chrome uses it.
 
+These calls were made on 21 November 2026, in the UI milestones:
+
+- The marks use the CSS Custom Highlight API, so the text that React
+  draws does not change. The state of a mark is a real button at the end
+  of the mark, so Tab reaches it and screen readers hear its title and
+  state. A browser without highlights shows the buttons but no fill.
+- Explain shows when the pointer lets go of a selection.
+- A click that ends a text selection in a fold line no longer opens or
+  closes the fold, so a selection in an open message stays.
+- The popover takes the focus on its panel, not on the follow-up field,
+  so a phone does not open its keyboard. Close also returns the focus to
+  the mark.
+- The popover state lives in the view, not in the chat controller.
+- The follow-up field shares the session draft with the tab of the
+  explanation.
+- The app imports the Explain words, state glyph, and CSS from the
+  mockups, as the chat README asks.
+
 Contract owners:
 
 - A new protocol doc, `docs/protocol/explain.md`, linked from
@@ -313,16 +331,16 @@ Tags: ui
 
 Depends on: 2, 5
 
-- [ ] Show Explain on a finished selection inside one agent answer or
+- [x] Show Explain on a finished selection inside one agent answer or
       member message, and send it to the route of Milestone 5.
-- [ ] Add the keyboard shortcut of Milestone 3 for the current selection.
-- [ ] Draw the marks from the anchors of the session records, with the
+- [x] Add the keyboard shortcut of Milestone 3 for the current selection.
+- [x] Draw the marks from the anchors of the session records, with the
       fallback to the whole message.
-- [ ] Show the state of an explanation on its mark.
-- [ ] Add the command Explain the selection to the shortcut lists:
+- [x] Show the state of an explanation on its mark.
+- [x] Add the command Explain the selection to the shortcut lists:
       `src/shared/shortcut-commands.ts`, `src/app/shortcuts/commands.ts`,
       `src/app/shortcuts/defaults.ts`, and its test support.
-- [ ] Add DOM tests for the selection, the shortcut, the marks, and the
+- [x] Add DOM tests for the selection, the shortcut, the marks, and the
       fallback.
 
 ## Milestone 7: The popover
@@ -331,23 +349,23 @@ Tags: ui
 
 Depends on: 6
 
-- [ ] Open the popover from Explain and from a mark, with the chat of the
+- [x] Open the popover from Explain and from a mark, with the chat of the
       explanation without its written prompt, as a panel on a computer and
       a sheet on a phone.
-- [ ] Add the follow-up field, Stop, expand, and close. Expand shows the
+- [x] Add the follow-up field, Stop, expand, and close. Expand shows the
       tab of the explanation, and reopens it first when it is closed.
-- [ ] Show each state of the mockups, and a closed explanation to read. A
+- [x] Show each state of the mockups, and a closed explanation to read. A
       send there reopens it.
-- [ ] Show the menu of overlapping marks.
-- [ ] Scroll the mark into view above the phone sheet when the popover
+- [x] Show the menu of overlapping marks.
+- [x] Scroll the mark into view above the phone sheet when the popover
       opens.
-- [ ] Give the popover a fallback place in browsers without CSS anchor
+- [x] Give the popover a fallback place in browsers without CSS anchor
       positioning.
-- [ ] Add DOM tests for the popover states, expand, a closed explanation,
+- [x] Add DOM tests for the popover states, expand, a closed explanation,
       and the read-only popover.
-- [ ] Update `src/chat/README.md` and check the Explain section of
+- [x] Update `src/chat/README.md` and check the Explain section of
       `src/marketing/docs/sessions-and-chat.md` against the screens.
-- [ ] Check the flow in a browser, on a computer and a phone width.
+- [x] Check the flow in a browser, on a computer and a phone width.
 
 ## Milestone 8: Verification, commit, review, and pull request
 

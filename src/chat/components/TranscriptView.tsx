@@ -65,57 +65,74 @@ export function TranscriptView(props: {
   retrying: boolean
   onRetry: (messageId: string) => void
   onOpenDiff?: (path: string) => void
+  /**
+   * The ID of a message that the chat leaves out, such as the written
+   * prompt of an explanation in its popover. It still starts its turn, so
+   * the work of that turn folds.
+   */
+  hide?: string | null
   children?: ReactNode
 }) {
-  const { transcript } = props
+  const { transcript, hide } = props
   // The newest session record gives the permission. The order of the items
   // gives none. A read-only chat offers no Try again.
   const retryable = props.readOnly ? null : retryItemId(transcript)
   return (
     <>
-      {groupEntries(transcript, props.inserts ?? []).map((entry) => {
-        switch (entry.kind) {
-          case 'insert':
-            return (
-              <Row id={`insert:${entry.insert.key}`} key={entry.insert.key}>
-                {entry.insert.content}
-              </Row>
-            )
-          case 'tools':
-            return (
-              <Row id={`tools:${entry.id}`} key={entry.id}>
-                <ToolGroup calls={entry.calls} open={entry.open} />
-              </Row>
-            )
-          case 'work':
-            return (
-              <Row id={`work:${entry.id}`} key={entry.id}>
-                <WorkFold steps={entry.steps} />
-              </Row>
-            )
-          case 'item':
-            return (
-              <Row id={`item:${entry.item.id}`} key={entry.item.id}>
-                <ItemView
-                  actions={{
-                    canRetry: entry.item.id === retryable,
-                    retrying: props.retrying,
-                    onRetry: props.onRetry,
-                    onOpenDiff: props.onOpenDiff,
-                  }}
-                  item={entry.item}
-                  readers={props.readers}
-                  transcript={transcript}
-                />
-              </Row>
-            )
-        }
-      })}
-      {props.pending.map((message) => (
-        <Row id={`pending:${message.id}`} key={`pending:${message.id}`}>
-          <UserBubble message={message} />
-        </Row>
-      ))}
+      {groupEntries(transcript, props.inserts ?? [])
+        .filter(
+          (entry) =>
+            !(
+              entry.kind === 'item' &&
+              entry.item.kind === 'user' &&
+              entry.item.message.id === hide
+            ),
+        )
+        .map((entry) => {
+          switch (entry.kind) {
+            case 'insert':
+              return (
+                <Row id={`insert:${entry.insert.key}`} key={entry.insert.key}>
+                  {entry.insert.content}
+                </Row>
+              )
+            case 'tools':
+              return (
+                <Row id={`tools:${entry.id}`} key={entry.id}>
+                  <ToolGroup calls={entry.calls} open={entry.open} />
+                </Row>
+              )
+            case 'work':
+              return (
+                <Row id={`work:${entry.id}`} key={entry.id}>
+                  <WorkFold steps={entry.steps} />
+                </Row>
+              )
+            case 'item':
+              return (
+                <Row id={`item:${entry.item.id}`} key={entry.item.id}>
+                  <ItemView
+                    actions={{
+                      canRetry: entry.item.id === retryable,
+                      retrying: props.retrying,
+                      onRetry: props.onRetry,
+                      onOpenDiff: props.onOpenDiff,
+                    }}
+                    item={entry.item}
+                    readers={props.readers}
+                    transcript={transcript}
+                  />
+                </Row>
+              )
+          }
+        })}
+      {props.pending
+        .filter((message) => message.id !== hide)
+        .map((message) => (
+          <Row id={`pending:${message.id}`} key={`pending:${message.id}`}>
+            <UserBubble message={message} />
+          </Row>
+        ))}
       {transcript.turn ? (
         <Row id="working">
           <WorkingRow now={props.now} turn={transcript.turn} />

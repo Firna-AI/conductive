@@ -11,6 +11,7 @@ import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { MessageDraft } from '../../shared/messages'
 
 import { readTurnSpeed } from '../../shared/chat-events'
+import { readAnchor } from './read-anchor'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued } from './read-continued'
@@ -154,6 +155,7 @@ export function readSession(value: unknown): Session {
   const source = record(value, 'session')
   const login = optional(nullable(readSessionLogin))(source.login)
   const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
+  const anchor = readAnchor(source.anchor)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -167,6 +169,7 @@ export function readSession(value: unknown): Session {
     startedBy: nullable(readSender)(source.startedBy),
     ...(login === undefined ? {} : { login }),
     ...(defaultLogin === undefined ? {} : { defaultLogin }),
+    ...(anchor === null ? {} : { anchor }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),

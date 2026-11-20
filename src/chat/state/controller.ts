@@ -1,4 +1,5 @@
 import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
+import type { ExplainSessionRequest } from '../../shared/sessions'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { IntakeRefusals } from '../../app/draft-files'
 import type { DeviceApprovalAction } from '../../shared/device'
@@ -25,6 +26,7 @@ import {
 import { addToChat, takeMention } from './mention-actions'
 import { chooseModel } from './model-actions'
 import { draftFileSource } from './draft-file-source'
+import { explainQuote, sendFollowUp } from './explain-actions'
 import { sendPrompt, type PromptOutcome } from './prompt-actions'
 import { moveTab } from './tab-actions'
 import type { TabPlace } from './tab-order'
@@ -83,6 +85,8 @@ export class ChatController extends ChatRuns {
       : reopenSession(this.context, sessionId)
   readonly loadHistory = (sessionId: string) =>
     hydrate(this.context, sessionId, true)
+  /** Loads the stored history of a session once, such as for its popover. */
+  readonly readHistory = (sessionId: string) => hydrate(this.context, sessionId)
   readonly setDraft = (sessionId: string, text: string) =>
     setDraftText(this.context, sessionId, text)
   readonly attachFiles = (
@@ -115,6 +119,25 @@ export class ChatController extends ChatRuns {
   /** The message field took the chip of a request, as `takeMention` says. */
   readonly takeMention = (request: MentionRequest) =>
     takeMention(this.context, request)
+  /**
+   * Starts an explanation of a quote, as `explainQuote` says, and gives the
+   * ID of its session. A read-only workspace starts none.
+   */
+  readonly explain = (
+    parentId: string,
+    request: ExplainSessionRequest,
+  ): Promise<string | null> =>
+    this.readOnly()
+      ? Promise.resolve(null)
+      : explainQuote(this.context, parentId, request)
+  /**
+   * Sends the draft of a session from the popover of an explanation, as
+   * `sendFollowUp` says, and gives the session that took the message.
+   */
+  readonly followUp = (sessionId: string): Promise<string | null> =>
+    this.readOnly()
+      ? Promise.resolve(null)
+      : sendFollowUp(this.context, sessionId)
   readonly retry = (sessionId: string, messageId: string) =>
     this.write(() => retryTurn(this.context, sessionId, messageId))
   readonly interrupt = (sessionId: string) =>

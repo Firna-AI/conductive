@@ -16,7 +16,17 @@ import { foldMarkedLate, foldRecord } from './turn-records'
 /** One part of a chat transcript, in the order that the chat shows it. */
 export type TranscriptItem =
   | { kind: 'user'; id: string; message: UserMessage }
-  | { kind: 'agent'; id: string; turnId: string; text: string }
+  | {
+      kind: 'agent'
+      id: string
+      turnId: string
+      text: string
+      /**
+       * The agent finished the message: its `assistant.completed` event
+       * came. A message that the agent still writes has no mark.
+       */
+      completed?: true
+    }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }
   | {
       kind: 'turn-end'

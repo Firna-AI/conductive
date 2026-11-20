@@ -13,7 +13,7 @@ import {
 
 type ShortcutGroup = 'General' | 'View' | 'Navigation' | 'Workspace' | 'Chat'
 type ShortcutScope =
-  'every-page' | 'palette' | 'workspace' | 'org-page' | 'mac-app'
+  'every-page' | 'palette' | 'workspace' | 'org-page' | 'mac-app' | 'selection'
 
 export interface ShortcutCommand extends CommandText {
   readonly id: ShortcutCommandId
@@ -214,5 +214,10 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'clipboard',
     'chat',
     'expanded',
+  ]),
+  command('explain-selection', 'Chat', 'selection', 'Explain the selection', [
+    'ask',
+    'quote',
+    'question',
   ]),
 ]
