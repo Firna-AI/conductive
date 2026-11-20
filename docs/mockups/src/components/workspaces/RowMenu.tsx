@@ -1,4 +1,4 @@
-import type { MenuEntry } from '../common/Menu'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { PointMenu, type OpenSubmenu } from '../common/PointMenu'
 
 /**
@@ -9,7 +9,7 @@ import { PointMenu, type OpenSubmenu } from '../common/PointMenu'
 export type RowMenuOpen = {
   at: 'pointer' | 'sheet'
   label: string
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
   submenu?: OpenSubmenu
 }
 

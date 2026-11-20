@@ -3,8 +3,10 @@ import type { Attachment } from '../../fixtures/attachments'
 import { noop } from '../../noop'
 import { useControlSizes } from '../common/touch'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { ChipTextField } from './ChipTextField'
-import { DraftText, holdsChips } from './DraftText'
+import { chipTextField } from '../../entries/components/chat/ChipTextField.mockup'
+import { holdsChips } from './DraftText'
+import { draftText } from '../../entries/components/chat/DraftText.mockup'
+import { defined } from '../../defined'
 
 /**
  * The text field of a message box, named "Message". A draft with an
@@ -29,18 +31,22 @@ export function MessageField(props: {
   const links = useChatWorkspaces()
   if (holdsChips(props.text, links) || props.caret !== undefined) {
     return (
-      <ChipTextField
+      <chipTextField.Component
         label="Message"
         lines={props.lines}
         maxLines={props.maxLines}
+        moklyInstance="chip-field"
       >
-        <DraftText
-          caret={props.caret}
-          files={props.files}
-          pointer={props.pointer}
+        <draftText.Component
+          moklyInstance="draft"
           text={props.text}
+          {...defined({
+            caret: props.caret,
+            files: props.files,
+            pointer: props.pointer,
+          })}
         />
-      </ChipTextField>
+      </chipTextField.Component>
     )
   }
   return (

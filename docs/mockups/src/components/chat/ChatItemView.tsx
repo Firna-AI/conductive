@@ -1,35 +1,38 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
 import prose from '../common/MarkdownProse.module.css'
-import { Notice } from '../common/Notice'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { AgentBlocks } from './AgentBlocks'
-import { ContinuedLine } from './ContinuedLine'
-import { fixtureDrawing } from './fixtureDrawing'
+import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
+import { continuedLine } from '../../entries/components/chat/ContinuedLine.mockup'
 import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
-import { LinkedLine } from './LinkedLine'
-import { LinkText } from './LinkChip'
-import { LostLine } from './LostLine'
+import { linkedLine } from '../../entries/components/chat/LinkedLine.mockup'
+import { lostLine } from '../../entries/components/chat/LostLine.mockup'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
-import { MacCommand } from './MacCommand'
-import { filesWithoutPlace, MessageText, useSentParts } from './MessageText'
+import { macCommand } from '../../entries/components/chat/MacCommand.mockup'
+import { filesWithoutPlace, useSentParts } from './MessageText'
+import {
+  linkText,
+  messageText,
+} from '../../entries/components/chat/MessageText.mockup'
 import { LateAnswerLine } from './LateAnswerLine'
 import { isLateRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { SecretRun } from './SecretRun'
-import { SentFiles } from './SentFiles'
+import { sentFiles } from '../../entries/components/chat/SentFiles.mockup'
 import { standardSpeedText } from './speedCopy'
-import { StopLine, type StopSource } from './StopLine'
+import type { StopSource } from './StopLine'
+import { stopLine } from '../../entries/components/chat/StopLine.mockup'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
-import { TurnEnd } from './TurnEnd'
+import { turnEnd } from '../../entries/components/chat/TurnEnd.mockup'
+import { defined } from '../../defined'
 import styles from './ChatItemView.module.css'
 
 type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
@@ -50,9 +53,17 @@ function UserBubble(props: { item: UserItem }) {
   return (
     <div className={styles.user}>
       <div className={styles.bubble}>
-        <MessageText files={files} parts={parts} waits={item.queued} />
+        <messageText.Component
+          files={files}
+          mentions
+          moklyInstance="text"
+          text={item.text}
+          {...defined({ waits: item.queued })}
+        />
       </div>
-      {listed.length > 0 ? <SentFiles files={listed} /> : null}
+      {listed.length > 0 ? (
+        <sentFiles.Component files={listed} moklyInstance="sent-files" />
+      ) : null}
     </div>
   )
 }
@@ -65,7 +76,12 @@ function UserBubble(props: { item: UserItem }) {
  */
 function stopSource(item: StoppedItem, viewer: PersonKey): StopSource {
   if (item.from !== undefined) {
-    return { kind: 'session', chip: <LinkText href={item.from} /> }
+    return {
+      kind: 'session',
+      chip: (
+        <linkText.Component href={item.from} moklyInstance="stop-session" />
+      ),
+    }
   }
   if (item.by === undefined) return { kind: 'words', text: stoppedUnnamed }
   const who = item.by === viewer ? 'You' : people[item.by].name
@@ -100,11 +116,22 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         <div
           className={classes(styles.agent, headingStyles.headings, prose.prose)}
         >
-          <AgentBlocks blocks={item.blocks} drawing={fixtureDrawing} />
+          <agentBlocks.Component
+            blocks={item.blocks}
+            id={item.id}
+            moklyInstance="blocks"
+          />
         </div>
       )
     case 'mac-command':
-      return <MacCommand request={item.request} state={item.state} />
+      return (
+        <macCommand.Component
+          id={item.id}
+          moklyInstance="command"
+          request={item.request}
+          state={item.state}
+        />
+      )
     case 'late-answer':
       return (
         <LateAnswerLine
@@ -122,30 +149,41 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
       )
     case 'turn-end':
       return (
-        <TurnEnd
+        <turnEnd.Component
           duration={item.duration}
-          endReason={item.endReason}
           files={item.files}
-          filesUnavailable={item.filesUnavailable}
-          omittedFiles={item.omittedFiles}
-          standardSpeed={item.standardSpeed}
+          moklyInstance="turn-end"
+          {...defined({
+            endReason: item.endReason,
+            filesUnavailable: item.filesUnavailable,
+            omittedFiles: item.omittedFiles,
+            standardSpeed: item.standardSpeed,
+          })}
         />
       )
     case 'lost':
-      return <LostLine reason={item.reason} what={item.what} />
+      return (
+        <lostLine.Component
+          moklyInstance="lost-line"
+          reason={item.reason}
+          what={item.what}
+        />
+      )
     case 'linked':
       // The mockups draw one linked session. Its link leads to the view of
       // its first session that the member sees without the starter's login.
       return (
-        <LinkedLine
+        <linkedLine.Component
           link={<ScreenLink to={paths.noStarterLogin}>{item.from}</ScreenLink>}
+          moklyInstance="linked-line"
         />
       )
     case 'continued':
       return (
-        <ContinuedLine
+        <continuedLine.Component
           base={item.base}
           branch={item.branch}
+          moklyInstance="continued-line"
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
@@ -157,18 +195,36 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           who={item.by === viewer ? 'You' : people[item.by].name}
         />
       )
-    case 'stopped':
-      return (
-        <StopLine notes={stopNotes(item)} source={stopSource(item, viewer)} />
+    case 'stopped': {
+      const source = stopSource(item, viewer)
+      return source.kind === 'words' ? (
+        <stopLine.Component
+          moklyInstance="stop-line"
+          notes={stopNotes(item)}
+          source={source}
+        />
+      ) : (
+        <stopLine.Component
+          chip={source.chip}
+          moklyInstance="stop-line"
+          notes={stopNotes(item)}
+          source={{ kind: 'session' }}
+        />
       )
+    }
     case 'error':
       return (
-        <Notice
-          action={
-            item.older ? undefined : <ActionButton>Try again</ActionButton>
-          }
+        <notice.Component
+          {...defined({
+            action: item.older ? undefined : (
+              <actionButton.Component moklyInstance={`retry-${item.id}`}>
+                Try again
+              </actionButton.Component>
+            ),
+          })}
           body={item.text}
-          icon={CircleAlert}
+          icon="circle-alert"
+          moklyInstance={`error-${item.id}`}
           title="This turn stopped"
           tone="danger"
         />

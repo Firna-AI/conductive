@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
-import { LostUpdateBar, LostUpdateRow } from '../components/chat/LostUpdate'
+import {
+  lostUpdateBar,
+  lostUpdateRow,
+} from '../entries/components/chat/LostUpdate.mockup'
 import {
   changesUnavailable,
   titleUnavailable,
@@ -26,13 +29,19 @@ export function placeLostUpdate(state: WorkspaceState, parts: Parts): Parts {
         header: (
           <>
             {parts.header}
-            <LostUpdateBar repair={titleUnavailable} />
+            <lostUpdateBar.Component
+              moklyInstance="lost-title"
+              repair={titleUnavailable}
+            />
           </>
         ),
         files: (
           <>
             {parts.files}
-            <LostUpdateRow repair={changesUnavailable} />
+            <lostUpdateRow.Component
+              moklyInstance="lost-changes"
+              repair={changesUnavailable}
+            />
           </>
         ),
       }

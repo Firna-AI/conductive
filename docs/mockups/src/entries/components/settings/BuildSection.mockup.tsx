@@ -1,0 +1,68 @@
+import { defineComponent } from '@mokly/mokly'
+import { BuildSection } from '../../../components/settings/BuildSection'
+import {
+  acmeBuilds,
+  buildStateSchema,
+  newOrgBuilds,
+  orgBuildsSchema,
+} from './computerSchemas'
+
+/** The builds of the cloud computer of an org, registered with Mokly. */
+export const buildSection = defineComponent({
+  slug: 'build-section',
+  title: 'Build section',
+  description:
+    'The builds of the cloud computer of an org: the last build with its result, Build computer, the log of a build that runs or failed, and the history of the builds that ended. A failed build leaves the last good build in use. An org with no build shows Build computer first. A member who is not an admin gets no action. Its own page shows the builds of Acme.',
+  relatedDocs: ['docs/mockups/catalogue.md'],
+  propSchema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['state', 'builds'],
+    properties: {
+      state: buildStateSchema,
+      builds: orgBuildsSchema,
+      /** No actions, for a member who is not an admin. */
+      readOnly: { type: 'boolean' },
+      /** A saved change waits for a build, so the history stays closed. */
+      changeWaits: { type: 'boolean' },
+    },
+  } as const,
+  props: { state: 'ready', builds: acmeBuilds },
+  render: (props) => (
+    <BuildSection
+      builds={props.builds}
+      changeWaits={props.changeWaits}
+      readOnly={props.readOnly}
+      state={props.state}
+    />
+  ),
+  variants: [
+    {
+      slug: 'building',
+      title: 'Building',
+      description:
+        'A build that runs: its time, its live log, and the build that workspaces start from until it finishes.',
+      props: { state: 'building' },
+    },
+    {
+      slug: 'failed',
+      title: 'Failed',
+      description:
+        'A failed build: its saved message above the end of its log, Try again, and the good build that workspaces still start from.',
+      props: { state: 'failed' },
+    },
+    {
+      slug: 'none',
+      title: 'No build',
+      description:
+        'A new org whose first build did not start: Build computer comes first.',
+      props: { state: 'none', builds: newOrgBuilds },
+    },
+    {
+      slug: 'member',
+      title: 'Seen by a member',
+      description: 'The builds without Build computer, for a member.',
+      props: { readOnly: true },
+    },
+  ],
+})

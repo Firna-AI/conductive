@@ -3,13 +3,14 @@ import { InputFrame } from '@firna/ui/input'
 import { KeyRound, Plug, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { effortLabels } from '../../../../../src/shared/agents'
 import type { AgentChoice } from '../../fixtures/agents'
+import { defined } from '../../defined'
 import { noop } from '../../noop'
 import {
   CapabilitiesButton,
   type CapabilitiesControl,
 } from '../capabilities/CapabilitiesButton'
 import { runSecretsWords } from '../capabilities/capabilitiesCopy'
-import { ModelPicker } from '../chat/ModelPicker'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'
 import form from './form.module.css'
@@ -142,10 +143,13 @@ export function PromptBox(props: {
                 placement="above-start"
               />
             ) : null}
-            <ModelPicker
+            <modelPicker.Component
               choice={choice}
-              hiddenModels={props.hiddenModels}
-              open={props.open}
+              moklyInstance="prompt-model"
+              {...defined({
+                hiddenModels: props.hiddenModels,
+                open: props.open,
+              })}
             />
           </div>
         </div>

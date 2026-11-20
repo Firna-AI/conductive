@@ -80,11 +80,12 @@ function Part(props: {
 export function useSentParts(
   text: string,
   files: readonly Attachment[],
+  mentions = true,
 ): ChatPart[] {
   return chatParts(text, useChatWorkspaces().links, {
     web: webLinkOf,
-    mentions: findEntry,
-    skills: findSkill,
+    mentions: mentions ? findEntry : undefined,
+    skills: mentions ? findSkill : undefined,
     attachments: files.map(appAttachment),
   })
 }
