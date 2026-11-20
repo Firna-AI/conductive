@@ -271,6 +271,15 @@ export const paths = {
   secretLateValue: 'app/secret-requests/temporary/late/value',
   secretLateGiven: 'app/secret-requests/temporary/late/given',
   secretMixedValue: 'app/secret-requests/several/mixed-value',
+  secretStack: 'app/secret-requests/several/waiting-and-late',
+  secretStackNext: 'app/secret-requests/several/waiting-and-late/next',
+  secretStackLast: 'app/secret-requests/several/waiting-and-late/last',
+  secretAskedDenied: 'app/secret-requests/several/asked-again/denied',
+  secretAskedAllowed: 'app/secret-requests/several/asked-again/allowed',
+  secretStackMac: 'app/secret-requests/several/mac-command',
+  secretStackMacNext: 'app/secret-requests/several/mac-command/next',
+  macRequests: 'mac-app/requests',
+  macRequestsNext: 'mac-app/requests/next',
 } as const
 
 export { barPaths, checksPaths } from './bannerPaths.ts'

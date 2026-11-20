@@ -72,8 +72,8 @@ function ChoiceLinks() {
 
 /**
  * The other ways to allow, drawn open, because a view cannot open a
- * popover. The chat draws them outside the region of the requests, so the
- * region keeps its bound and never cuts them, and CSS places them at the
+ * popover. The stack of the requests draws them outside its card, so the
+ * card keeps its bound and never cuts them, and CSS places them at the
  * actions of the request that draws its arrow open.
  */
 export function DrawnChoices() {

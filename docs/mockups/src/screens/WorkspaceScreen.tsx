@@ -1,13 +1,9 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { MessageSquarePlus } from 'lucide-react'
-import { ChatPane } from '../components/chat/ChatPane'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { EmptyState } from '../components/common/EmptyState'
 import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
 import { acmeRail } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { ChecksActions } from '../components/workspace/BarActions'
 import { MobileTabBar } from '../components/workspace/MobileTabBar'
 import {
@@ -19,43 +15,32 @@ import { WorkspaceBody } from '../components/workspace/WorkspaceBody'
 import { WorkspaceHeader } from '../components/workspace/WorkspaceHeader'
 import { WorkspaceTabs } from '../components/workspace/WorkspaceTabs'
 import { mayArchiveWorkspace } from '../components/workspaces/permissions'
-import { chatItemsFor } from '../fixtures/maskedFiles'
 import { memberViewer, people } from '../fixtures/members'
-import { orgs, suspendedOrg } from '../fixtures/orgs'
+import { suspendedOrg } from '../fixtures/orgs'
 import { bannerSummary } from '../fixtures/pullRequests'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { suspendedOwner } from '../fixtures/startRefusals'
 import { paths } from '../paths'
-import { composerFor, isRunning } from './composerFor'
-import { composerNotice } from './composerNotice'
+import { isRunning } from './composerFor'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
 import { barOf, headerMenusOf, placeOf } from './workspaceBar'
 import { headerMenuOf } from './workspaceHeaderMenu'
-import {
-  FilesContent,
-  startingLogFor,
-  ToolContent,
-  workspaceSidebar,
-} from './workspaceParts'
+import { FilesContent, ToolContent, workspaceSidebar } from './workspaceParts'
 import {
   copyToast,
   workspaceOverlay,
   workspacePalette,
   workspaceToast,
 } from './workspaceOverlays'
+import { WorkspaceChat } from './workspaceChat'
 import { openWorkspace } from './workspaceRun'
-import {
-  activityOf,
-  archiveRestore,
-  drawnState,
-  sandboxNotice,
-} from './workspaceSandbox'
+import { activityOf, archiveRestore, drawnState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, noMessages, tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -115,37 +100,17 @@ export function WorkspaceScreen(props: {
   // Every member restores it while the app keeps its cloud computer.
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
-  const problem = sandboxNotice(state)
-  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
     <ChatWorkspaces rows={rows}>
-      <ChatPane
-        composer={{ ...composerFor(state, workspace, viewport), pickerPart }}
-        empty={
-          <EmptyState
-            body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
-            icon={MessageSquarePlus}
-            title="New session"
-          />
-        }
-        fold={state.fold}
-        items={empty ? [] : chatItemsFor(open.items, state.paths)}
-        notice={
-          // An archived workspace keeps its archived bar, so the notice of a
-          // suspended org shows above it.
-          archived && suspended ? (
-            <SuspendedOrgNotice org={orgs[suspendedOrg]} />
-          ) : (
-            composerNotice(state, workspace)
-          )
-        }
-        pictures={state.sandbox === 'ready' ? state.pictures : undefined}
-        problem={problem}
-        starting={startingLogFor(state)}
+      <WorkspaceChat
+        items={open.items}
+        picker={pickerPart}
+        state={state}
         viewer={viewer}
         viewport={viewport}
+        workspace={workspace}
       />
     </ChatWorkspaces>
   )

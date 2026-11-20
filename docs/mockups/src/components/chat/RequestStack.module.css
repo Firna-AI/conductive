@@ -1,0 +1,157 @@
+/*
+ * The stack of the requests that wait, just above the composer. It takes at
+ * most 40% of the window, so the transcript and the composer stay in view.
+ * A short chat shrinks the card first, and its content scrolls inside it.
+ */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 0;
+  max-height: 40dvh;
+}
+
+/* The place of the card on top, then Previous and Next, at the end. */
+.steps {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.place {
+  margin-right: 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*
+ * The card on top, with the edges of the cards behind it above it. Each
+ * edge shows 5px of a card that sits a little further back: narrower the
+ * further back it is, and in the soft fill, so it reads in both schemes.
+ */
+.deck {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.oneBehind {
+  padding-top: 5px;
+}
+
+.twoBehind {
+  padding-top: 10px;
+}
+
+.far,
+.near {
+  position: absolute;
+  top: 0;
+  height: 24px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-soft);
+  box-sizing: border-box;
+}
+
+.far {
+  right: 16px;
+  left: 16px;
+}
+
+.near {
+  right: 8px;
+  left: 8px;
+}
+
+.twoBehind .near {
+  top: 5px;
+}
+
+/*
+ * The outline of the card on top. The card inside it scrolls, so the
+ * outline stays in view while a long command scrolls.
+ */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  overflow: hidden;
+}
+
+/*
+ * The content of the card. The keyboard scrolls it from any control in it,
+ * and the focus keeps a control clear of the fade. The menu of a request
+ * opens in the top layer, so the card never cuts it.
+ */
+.scroll {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-block: 24px;
+}
+
+/*
+ * An edge that cuts the content fades out, so the card shows that it holds
+ * more. Its scroll position drives each fade, and a card that holds all of
+ * its content shows none.
+ */
+@property --stack-fade-start {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --stack-fade-end {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes stack-fade-start {
+  from {
+    --stack-fade-start: 0px;
+  }
+
+  to {
+    --stack-fade-start: 24px;
+  }
+}
+
+@keyframes stack-fade-end {
+  from {
+    --stack-fade-end: 24px;
+  }
+
+  to {
+    --stack-fade-end: 0px;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 var(--stack-fade-start),
+      #000 calc(100% - var(--stack-fade-end)),
+      transparent
+    );
+    animation:
+      stack-fade-start linear both,
+      stack-fade-end linear both;
+    animation-timeline: scroll(self), scroll(self);
+    animation-range:
+      0 24px,
+      calc(100% - 24px) 100%;
+  }
+}

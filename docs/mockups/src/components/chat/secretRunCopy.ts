@@ -31,6 +31,15 @@ export const secretRunWords = {
 } as const
 
 /**
+ * How often the agent asked for the same secrets, on a card that hides the
+ * older open requests of its session for them. One answer of the card
+ * settles each of them.
+ */
+export function askedTimes(count: number): string {
+  return `Asked ${count} times`
+}
+
+/**
  * The line of a request that ended with no answer, because its workspace
  * was archived or its org was suspended.
  */

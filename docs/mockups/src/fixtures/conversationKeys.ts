@@ -1,5 +1,6 @@
 import { barConversationKeys } from './barConversations'
 import { secretConversationKeys } from './secretConversations'
+import { secretStackConversationKeys } from './secretStackConversations'
 import { secretValueConversationKeys } from './secretValueConversations'
 
 /**
@@ -76,4 +77,5 @@ export const conversationKeys = [
   ...barConversationKeys,
   ...secretConversationKeys,
   ...secretValueConversationKeys,
+  ...secretStackConversationKeys,
 ] as const

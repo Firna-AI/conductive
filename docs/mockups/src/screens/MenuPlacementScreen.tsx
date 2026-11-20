@@ -16,8 +16,9 @@ import styles from './MenuPlacementScreen.module.css'
 export type PlacedMenu = 'model' | 'history' | 'allow'
 
 /**
- * A draft in the composer, and four commands that wait in the region above
- * it, which scrolls and fades where it cuts a request.
+ * A draft in the composer, and four commands that wait in the stack above
+ * it. The long script on top scrolls inside its card, which fades where it
+ * cuts the command.
  */
 const modelState: WorkspaceState = {
   ...readyWorkspace,
@@ -117,13 +118,14 @@ function HistoryMenuScreen(props: { viewport: Viewport }) {
 
 /**
  * A menu beside its button over a box that clips or scrolls: the model menu
- * of the composer over the region of the requests, the session history below
+ * of the composer over the stack of the requests, the session history below
  * a full tab row, or the other ways to allow of a request in the Mac app.
  * The app opens each one above every box of the page, so no box cuts it. A
  * view runs no script, so the screen draws the open menu above the page, and
- * CSS places it at its button. The chat draws the other ways to allow in the
- * same way, as `DrawnChoices` says. A phone keeps its own layout: the session
- * history is a sheet there, and the Mac app shows the same screen, smaller.
+ * CSS places it at its button. The stack of the requests draws the other
+ * ways to allow in the same way, as `DrawnChoices` says. A phone keeps its
+ * own layout: the session history is a sheet there, and the Mac app shows
+ * the same screen, smaller.
  */
 export function MenuPlacementScreen(props: {
   menu: PlacedMenu

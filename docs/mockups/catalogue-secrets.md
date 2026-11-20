@@ -48,12 +48,27 @@ workspace refused for that reason.
 composer, while the tool call waits, and the needs-input mark on the tab
 of its session. Its child pages:
 
-- `several` has a request for two secrets. Its `mixed` variant has a
-  secret of Acme and a name that Acme does not have in one card, and its
-  `mixed-value` variant has the same card with a value. Its
-  `waiting-and-late` variant has a request whose call waits and an older
-  late request in the region, the waiting one first, with the region at
-  its height limit.
+- `several` has a request for two secrets. Its child pages:
+  - `mixed` has a secret of Acme and a name that Acme does not have in one
+    card, and `mixed-value` has the same card with a value.
+  - `waiting-and-late` has three requests in the stack above the
+    composer: the request whose call waits on top, though it is the
+    newest, the edges of the two older late requests behind it, and
+    "1 of 3" with Previous and Next. Its `next` and `last` variants have
+    the second and the third card on top. On a phone, the second card
+    scrolls inside its outline. Its `answered` variant has the stack after
+    an Allow of the card on top: the run of that request in the chat, and
+    "1 of 2".
+  - `asked-again` has a late request that hides the two older requests of
+    the agent for the same secret, with "Asked 3 times". Its `denied`
+    variant has the three requests at their places after one Deny. Its
+    `allowed` variant has them after one Allow, with one line of the app
+    and one new turn.
+  - `mac-command` has a command on the Mac on top of a late request for a
+    secret, in a browser, where the command shows its state only. Its
+    `next` variant has the late request on top, with its choices. The
+    `with-secret` variant of `mac-app/requests` has the same stack in the
+    Mac app.
 - `temporary` has a request for MAPBOX_TOKEN, which Acme does not have,
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet

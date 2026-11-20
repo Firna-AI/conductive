@@ -14,6 +14,16 @@
   background: var(--ui-surface);
 }
 
+/*
+ * In the stack above the composer, the stack draws the outline, so a long
+ * command scrolls inside it. The card keeps its fill, so its text keeps the
+ * same rendering as outside the stack.
+ */
+.stacked {
+  border: 0;
+  border-radius: 0;
+}
+
 /* The command, with the actions or the state at its end. */
 .head {
   display: flex;
@@ -52,7 +62,7 @@
 
 /*
  * The actions of the request that draws its menu open also name the menu
- * that the chat draws outside the region of the requests.
+ * that the stack of the requests draws outside its card.
  */
 .endDrawn {
   anchor-name: --command-actions, --drawn-choices;

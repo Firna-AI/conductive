@@ -52,10 +52,10 @@
 }
 
 /*
- * The menu is a popover in the top layer, so the region of the requests
- * never cuts it. It keeps to the actions of its request, which `.end` of
- * the request names, also while the region scrolls. With no room above, it
- * opens under them.
+ * The menu is a popover in the top layer, so the box that holds the
+ * requests never cuts it. It keeps to the actions of its request, which
+ * `.end` of the request names, also while that box scrolls. With no room
+ * above, it opens under them.
  */
 .choices[popover] {
   inset: auto;
@@ -79,9 +79,9 @@
 }
 
 /*
- * A view runs no script, so the chat draws the open menu outside the region
- * of the requests, and anchors it to the actions of the request that draws
- * its arrow open, which `.endDrawn` of the request names. The region keeps
+ * A view runs no script, so the stack of the requests draws the open menu
+ * outside its card, and anchors it to the actions of the request that draws
+ * its arrow open, which `.endDrawn` of the request names. The card keeps
  * its bound and never cuts the menu.
  */
 .drawn {

@@ -61,8 +61,9 @@ export const macAppSchema = {
      * above the composer, the request of a longer time limit, the request
      * with the other ways to allow open, four requests with a long script,
      * the same four with the other ways to allow of the first one open, the
-     * notification while the app is in the background, the 15 minutes that
-     * allow every command, or the grant until the user stops it.
+     * request with a late request for a secret behind it, the notification
+     * while the app is in the background, the 15 minutes that allow every
+     * command, or the grant until the user stops it.
      */
     command: {
       enum: [
@@ -72,11 +73,17 @@ export const macAppSchema = {
         'choices',
         'many',
         'many-choices',
+        'with-secret',
         'notification',
         'allow-all',
         'allow-until-stop',
       ],
     },
+    /**
+     * The place of the card on top of the stack of requests above the
+     * composer, from 1, as on the workspace screen.
+     */
+    shownRequest: { type: 'integer', minimum: 1, maximum: 4 },
     /**
      * The result of the last change of the Mac's settings: none, Remove of
      * an always-allowed command in This Mac, Stop in the bar of a grant, or
@@ -136,6 +143,7 @@ const conversations = {
   choices: 'mac-waiting',
   many: 'mac-waiting-many',
   'many-choices': 'mac-waiting-many',
+  'with-secret': 'mac-waiting-secret',
   notification: 'mac-waiting',
   'allow-all': 'mac-done',
   'allow-until-stop': 'mac-done',
@@ -168,6 +176,7 @@ function pageFor(state: MacAppState): ReactNode {
             ...workspaceFor(state.command),
             palette: state.palette,
             sidebar: state.sidebar ?? 'shown',
+            shownRequest: state.shownRequest ?? 1,
           }}
           viewport="desktop"
         />

@@ -26,11 +26,14 @@ function namesStored(item: SecretRunItem): boolean {
 
 /**
  * The result that Allow leads to: in time or late, for a secret or a
- * value. The mockups draw no result of a mixed request.
+ * value. The mockups draw no result of a mixed request. A card that hides
+ * older requests for a secret of the org leads to the result of each of
+ * them.
  */
-function allowPath(item: SecretRunItem): string | undefined {
+function allowPath(item: SecretRunItem, hides: boolean): string | undefined {
   const value = asksValue(item)
   if (value && namesStored(item)) return undefined
+  if (hides && !value) return paths.secretAskedAllowed
   if (item.state === 'late') {
     return value ? paths.secretLateGiven : paths.secretLateAllowed
   }
@@ -43,11 +46,19 @@ function valuePath(item: SecretRunItem): string {
   return namesStored(item) ? paths.secretMixedValue : paths.secretTemporaryValue
 }
 
+/**
+ * The result that Deny leads to. The Deny of a card that hides older
+ * requests ends each of them too, so it leads to the result of each.
+ */
+function denyPath(item: SecretRunItem, hides: boolean): string {
+  if (hides) return paths.secretAskedDenied
+  return item.state === 'late' ? paths.secretLateDenied : paths.secretDenied
+}
+
 /** Deny, which leads to the denied result. */
-function DenyButton(props: { item: SecretRunItem }) {
-  const late = props.item.state === 'late'
+function DenyButton(props: { item: SecretRunItem; hides?: boolean }) {
   return (
-    <ScreenLink asChild to={late ? paths.secretLateDenied : paths.secretDenied}>
+    <ScreenLink asChild to={denyPath(props.item, props.hides === true)}>
       <ActionButton>{secretRunWords.deny}</ActionButton>
     </ScreenLink>
   )
@@ -57,10 +68,14 @@ function DenyButton(props: { item: SecretRunItem }) {
  * Allow. A secret of the org is allowed for the session, and a value for
  * the time that its choice gives. Allow of a value waits for each value.
  */
-export function AllowButton(props: { item: SecretRunItem; label: string }) {
+export function AllowButton(props: {
+  item: SecretRunItem
+  label: string
+  hides?: boolean
+}) {
   const { item } = props
   const typed = !asksValue(item) || item.draft?.typed === true
-  const to = typed ? allowPath(item) : undefined
+  const to = typed ? allowPath(item, props.hides === true) : undefined
   const button = (
     <ActionButton disabled={!typed} tone="primary">
       {props.label}
@@ -74,13 +89,17 @@ export function AllowButton(props: { item: SecretRunItem; label: string }) {
   )
 }
 
-/** Deny and Allow, as a computer shows them, and for a secret of the org. */
-export function Answers(props: { item: SecretRunItem }) {
+/**
+ * Deny and Allow, as a computer shows them, and for a secret of the org.
+ * `hides` marks a card that hides older requests for the same secrets.
+ */
+export function Answers(props: { item: SecretRunItem; hides?: boolean }) {
   const value = asksValue(props.item)
   return (
     <>
-      <DenyButton item={props.item} />
+      <DenyButton hides={props.hides} item={props.item} />
       <AllowButton
+        hides={props.hides}
         item={props.item}
         label={value ? secretRunWords.allow : secretRunWords.allowSession}
       />
@@ -93,10 +112,10 @@ export function Answers(props: { item: SecretRunItem }) {
  * of the mockups). Give a value opens a sheet with each value, the choice
  * of how long they last, and Allow.
  */
-export function PhoneAnswers(props: { item: SecretRunItem }) {
+export function PhoneAnswers(props: { item: SecretRunItem; hides?: boolean }) {
   return (
     <>
-      <DenyButton item={props.item} />
+      <DenyButton hides={props.hides} item={props.item} />
       <ScreenLink asChild to={valuePath(props.item)}>
         <ActionButton tone="primary">{secretRunWords.giveValue}</ActionButton>
       </ScreenLink>

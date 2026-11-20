@@ -67,6 +67,8 @@ const runningConversations = new Set([
   'secret-mixed-invalid-name',
   'secret-late-allowed',
   'secret-late-given',
+  'secret-asked-again-allowed',
+  'secret-stack-answered',
 ])
 
 type ComposerKey = WorkspaceState['composer']

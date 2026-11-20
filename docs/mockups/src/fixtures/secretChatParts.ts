@@ -58,6 +58,19 @@ export const countAsk: readonly ChatItem[] = [
   ),
 ]
 
+/** Cal asks for a preview deploy that needs two secrets of Acme. */
+export const previewAsk: readonly ChatItem[] = [
+  {
+    kind: 'user',
+    id: 'ask-preview',
+    text: 'Deploy a preview that reads the production replica, so I can try the suggestions on real addresses.',
+  },
+  agent(
+    'plan-preview',
+    "I'll deploy a preview with the production replica as its database.",
+  ),
+]
+
 /** Cal asks for a comparison that needs a token that Acme does not have. */
 export const compareAsk: readonly ChatItem[] = [
   {

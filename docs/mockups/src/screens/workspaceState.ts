@@ -51,6 +51,7 @@ export const workspaceStateSchema = {
     'startError',
     'conversation',
     'otherRequest',
+    'shownRequest',
     'fold',
     'pictures',
     'banner',
@@ -107,6 +108,12 @@ export const workspaceStateSchema = {
      * workspace needs input (needs-input decision 2 B).
      */
     otherRequest: { enum: ['none', 'first-session'] },
+    /**
+     * The place of the card on top of the stack of requests above the
+     * composer, from 1, in the order of the stack. Previous and Next of the
+     * stack move it. A place past the end shows the last card.
+     */
+    shownRequest: { type: 'integer', minimum: 1, maximum: 4 },
     /**
      * The fold of the work of each ended turn: closed, as it starts, open,
      * or open with its last message line open too. A view runs no script,
@@ -232,6 +239,7 @@ export const readyWorkspace: WorkspaceState = {
   startError: 'failed',
   conversation: 'history',
   otherRequest: 'none',
+  shownRequest: 1,
   fold: 'closed',
   pictures: 'shown',
   banner: 'ready-to-merge',

@@ -5,11 +5,12 @@ import type {
   SecretRequest as Request,
   SecretRunItem,
 } from '../../fixtures/secretRequests'
+import { classes } from '../common/classes'
 import { useTouch } from '../common/touch'
 import { Answers, endLine, LateEnd, PhoneAnswers } from './RequestActions'
 import { asksValue } from './requests'
 import { ClaimedCommand, runNames } from './SecretRun'
-import { notInOrg, secretRunWords } from './secretRunCopy'
+import { askedTimes, notInOrg, secretRunWords } from './secretRunCopy'
 import { ValueAnswer } from './ValueAnswer'
 import styles from './SecretRequest.module.css'
 import names from './SecretRun.module.css'
@@ -62,11 +63,16 @@ function RequestFacts(props: { request: Request }) {
  * answers it. A name that the org does not have asks for a value and how
  * long it lasts: in the card on a computer, and in a sheet that Give a
  * value opens on a phone (item 4 C of the mockups). An ended request shows
- * its answer, or Not answered.
+ * its answer, or Not answered. In the stack above the composer, the stack
+ * draws the outline of the card, and `hides` counts the older requests for
+ * the same secrets that the card hides: the card then says how often the
+ * agent asked, and its answer settles each of them.
  */
 export function SecretRequest(props: {
   item: SecretRunItem
   viewer: PersonKey
+  inStack?: boolean
+  hides?: number
 }) {
   const { item } = props
   const phone = useTouch()
@@ -74,20 +80,27 @@ export function SecretRequest(props: {
   const open = item.state === 'waiting' || item.state === 'late'
   const inline = open && value && !phone
   const end = endLine(item, props.viewer)
+  const hidden = props.hides ?? 0
+  const hides = hidden > 0
   return (
     <section
       aria-label={`Request for ${runNames(item)}`}
-      className={styles.request}
+      className={classes(styles.request, props.inStack && styles.stacked)}
     >
       <div className={styles.head}>
         <KeyRound aria-hidden className={styles.icon} size={14} />
         <span className={styles.names}>
           <span className={names.names}>{runNames(item)}</span>
+          {hides ? (
+            <span className={styles.asked}>{askedTimes(hidden + 1)}</span>
+          ) : null}
         </span>
         {inline ? null : (
           <span className={styles.end}>
-            {open && phone && value ? <PhoneAnswers item={item} /> : null}
-            {open && !value ? <Answers item={item} /> : null}
+            {open && phone && value ? (
+              <PhoneAnswers hides={hides} item={item} />
+            ) : null}
+            {open && !value ? <Answers hides={hides} item={item} /> : null}
             {open ? null : <LateEnd item={item} />}
           </span>
         )}
@@ -101,7 +114,7 @@ export function SecretRequest(props: {
             org={org}
           />
           <div className={styles.actions}>
-            <Answers item={item} />
+            <Answers hides={hides} item={item} />
           </div>
         </>
       ) : null}

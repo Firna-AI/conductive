@@ -4,7 +4,6 @@ import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
 import { classes } from '../common/classes'
-import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
 import { SandboxBar, type BarNotice } from '../workspace/SandboxNotice'
 import { replacesComposer } from '../workspace/sandboxNoticeState'
@@ -13,13 +12,17 @@ import { ChatItemView } from './ChatItemView'
 import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
-import { isPendingCommand, PendingCommand } from './PendingCommand'
-import { isPendingRequest, pendingRequests } from './requests'
-import { SecretRequest } from './SecretRequest'
-import { secretRunWords } from './secretRunCopy'
+import { RequestStack } from './RequestStack'
+import { isPendingRequest, shownPlace, stackEntries } from './requests'
 import { ToolGroup } from './ToolGroup'
 import { WorkFold, type FoldState } from './WorkFold'
 import styles from './ChatPane.module.css'
+
+/**
+ * The place of the card on top of the stack of requests, and the page of
+ * each place, which Previous and Next open.
+ */
+export type StackView = { place?: number; pages?: readonly string[] }
 
 /**
  * The chat transcript, with the composer or a sandbox bar under it. While
@@ -28,10 +31,10 @@ import styles from './ChatPane.module.css'
  * of its answers folds into one line. The commands that wait for approval
  * on a Mac, the requests for secrets while their tool calls wait, and the
  * late requests for secrets that wait for a member leave the transcript.
- * They stay in view just above the composer, in a region that scrolls when
- * they need more room: the requests whose calls wait first, then the late
- * requests. Once answered, or ended with no answer, a command or a run
- * shows at its place in the transcript.
+ * They stay in view just above the composer, as a stack that shows one card
+ * at a time: the requests whose calls wait first, then the late requests.
+ * Once answered, or ended with no answer, a command or a run shows at its
+ * place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -60,12 +63,13 @@ export function ChatPane(props: {
    * while the cloud computer runs. Without reads, each shows as its link.
    */
   pictures?: PictureRead
+  /** The card on top of the stack of requests, and the page of each place. */
+  stack?: StackView
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const pending = pendingRequests(props.items)
-  const commands = pending.filter(isPendingCommand)
+  const entries = stackEntries(props.items)
   const transcript = props.items.filter((item) => !isPendingRequest(item))
   const fold = props.fold ?? 'closed'
   return (
@@ -123,34 +127,13 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
-        {pending.length > 0 ? (
-          <div
-            aria-label={secretRunWords.region}
-            className={styles.requests}
-            role="group"
-          >
-            {pending.map((item) => {
-              if (item.kind === 'secret-run') {
-                return (
-                  <SecretRequest
-                    item={item}
-                    key={item.id}
-                    viewer={props.viewer}
-                  />
-                )
-              }
-              if (!isPendingCommand(item)) return null
-              return (
-                <PendingCommand
-                  key={item.id}
-                  open={mac?.choicesOpen === true && item === commands[0]}
-                  request={item.request}
-                />
-              )
-            })}
-          </div>
-        ) : null}
-        {mac?.choicesOpen && commands.length > 0 ? <DrawnChoices /> : null}
+        <RequestStack
+          choicesOpen={mac?.choicesOpen}
+          entries={entries}
+          pages={props.stack?.pages}
+          place={shownPlace(entries.length, props.stack?.place)}
+          viewer={props.viewer}
+        />
         {props.notice}
         {props.problem ? <SandboxBar {...props.problem} /> : null}
         {composer ? <Composer {...props.composer} /> : null}

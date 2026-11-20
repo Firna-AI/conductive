@@ -56,3 +56,64 @@ export function isPendingRequest(item: ChatItem): boolean {
 export function pendingRequests(items: readonly ChatItem[]): ChatItem[] {
   return [...items.filter(callWaits), ...items.filter(lateWaits)]
 }
+
+/**
+ * One card of the stack of requests above the composer: an open request,
+ * and the older open requests that it hides. A request for secrets hides
+ * each older open request of its session for the same set of secrets, so
+ * only the newest of them shows, and one answer settles each of them. A
+ * command on a Mac never hides another request, because each Allow runs
+ * one exact command.
+ */
+export type StackEntry = {
+  item: ChatItem
+  hidden: readonly SecretRunItem[]
+}
+
+/** The names of the secrets of a request, as one key for the whole set. */
+function secretSet(item: SecretRunItem): string {
+  return item.request.secrets
+    .map((secret) => secret.name)
+    .sort()
+    .join('\n')
+}
+
+/** Whether two open requests ask for the same set of secrets. */
+function sameSecrets(a: ChatItem, b: ChatItem): boolean {
+  if (a.kind !== 'secret-run' || b.kind !== 'secret-run') return false
+  return secretSet(a) === secretSet(b)
+}
+
+/**
+ * The cards of the stack, in the order of the region. A card that hides
+ * older requests takes the place of the oldest request that it holds, so a
+ * new ask of the agent does not move a card that already waits. A request
+ * whose call waits keeps its card among those whose calls wait. A chat
+ * shows one session, so each request of `items` is of that session.
+ */
+export function stackEntries(items: readonly ChatItem[]): StackEntry[] {
+  const entries: StackEntry[] = []
+  for (const item of pendingRequests(items)) {
+    const at = entries.findIndex((entry) => sameSecrets(entry.item, item))
+    const shown = at === -1 ? undefined : entries[at].item
+    if (shown?.kind !== 'secret-run' || item.kind !== 'secret-run') {
+      entries.push({ item, hidden: [] })
+      continue
+    }
+    const hidden = entries[at].hidden
+    entries[at] =
+      items.indexOf(item) > items.indexOf(shown)
+        ? { item, hidden: [...hidden, shown] }
+        : { item: shown, hidden: [...hidden, item] }
+  }
+  return entries
+}
+
+/**
+ * The place of the card on top of a stack of `count` cards, from 1: the
+ * place that the member moved to, inside the stack. A stack starts at its
+ * first card.
+ */
+export function shownPlace(count: number, place = 1): number {
+  return Math.min(Math.max(place, 1), Math.max(count, 1))
+}

@@ -100,7 +100,7 @@ one.
   as the runner sends it: one line with its target, the call of
   `conductive secrets run`, and its state.
 - While the tool call waits, the request waits just above the composer, in
-  the region of the requests of Mac commands, from
+  the stack of the requests, with the requests of Mac commands, from
   `components/chat/requests.ts`. A secret of the org offers Deny and Allow
   for this session at the end of the names. A name that the org does not
   have says so, and `ValueAnswer` asks for the value and how long it
@@ -130,15 +130,41 @@ one.
   waiting and that Allow tells it in a new turn. The card keeps its full
   form and shows no age, and no Stop comes back for it, because its turn
   ended.
-- The region holds the requests whose calls wait first, then the late
-  requests, each group oldest first, as
-  `app/secret-requests/several/waiting-and-late` shows. A waiting call has
-  a time limit, and a late request has none. The region keeps its height
-  limit of 40% of the window and its inner scroll, also on a phone.
-- After an answer, or when it ends, a late request leaves the region at
-  once and takes its place in its turn. There it never folds with the work
+- `RequestStack` in `src/components/chat/` draws the open requests of the
+  session as a stack, one card at a time, as
+  `app/secret-requests/several/waiting-and-late` shows. The requests whose
+  calls wait come first, then the late requests, each group oldest first.
+  A waiting call has a time limit, and a late request has none. The card
+  on top is the first in that order, and an answer shows the next card.
+  The edges of at most two other cards show above it, narrower the
+  further back they are.
+- With more than one card, the place of the card on top, such as
+  "1 of 3", then Previous and Next sit above the stack, at its end.
+  Previous is off on the first card, and Next on the last. The keyboard
+  reaches them before the actions of the card, and the place is a polite
+  live region. One card shows no place, no buttons, and no edges.
+  `requestStackCopy.ts` holds the words.
+- The stack keeps its height limit of 40% of the window, also on a phone.
+  The stack draws the outline of the card on top, so a long card scrolls
+  inside it, and an edge that cuts the card fades. The card takes its
+  `inStack` form there, without an outline of its own.
+- A newer open request of the session hides each older open request for
+  the same set of secrets, so one card stands for them, as the user asked
+  on 20 November 2026. The card says how often the agent asked, such as
+  "Asked 3 times", after the names, from `askedTimes`, as
+  `app/secret-requests/several/asked-again` shows. It takes the place of
+  the oldest request that it holds, so a new ask does not move it. Its
+  Allow covers each of them, and its Deny ends each of them, from
+  needs-input decision 3 B. The card is one place in the stack, whatever
+  it hides.
+- A Mac command takes its place in the stack, in the same order, but it
+  never hides another request, as
+  `app/secret-requests/several/mac-command` shows.
+- After an answer, or when it ends, a late request leaves the stack at once
+  and takes its place in its turn. There it never folds with the work
   of its turn. It shows the answer at the end of its names, and its line
-  says who answered and what followed.
+  says who answered and what followed. After the answer of a card that
+  hides requests, each of them takes its own place with the same answer.
 - A late Allow starts a turn that acts for the sender of the turn that
   asked, under the login rules of that sender. `LateAnswerLine` draws the
   line of the app that starts it, such as "Priya Raman allowed

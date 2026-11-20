@@ -53,14 +53,18 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   the time left and Stop, so Stop keeps its place at the end of the bar.
   Each button of the bar links to the page of its result.
   A grant until Stop shows Until you stop and Stop, with no Extend or Keep.
-- The requests that wait share one region above the composer, from
-  `ChatPane.module.css`, with the requests for secrets, as
-  [secrets and Capabilities](design-secrets.md) gives. It takes at most 40% of the window, so a long
-  command or many requests scroll inside it, and an edge that cuts a
-  request fades. `mac-app/requests` draws four requests with a long script.
-  A view cannot open a popover, so the chat draws an open menu with
-  `DrawnChoices` outside the region, at the actions of its request, and the
-  region keeps its bound.
+- The requests that wait share one stack above the composer, from
+  `RequestStack` in `src/components/chat/`, with the requests for secrets,
+  as [secrets and Capabilities](design-secrets.md) gives. One card shows at
+  a time, and a place such as "1 of 4" with Previous and Next moves
+  through the stack. The stack takes at most 40% of the window, so a long
+  command scrolls inside its card, and an edge that cuts the command
+  fades. `mac-app/requests` draws four requests with a long script on top.
+  Its `next` variant has the second card on top, and its `with-secret`
+  variant has a command on top of a late request for a secret. A view
+  cannot open a popover, so the stack draws an open menu with
+  `DrawnChoices` outside its card, at the actions of its request, and the
+  card keeps its bound.
 - Each change of the Mac's settings shows its result until the next change
   of the same control: done, done but not saved, or failed, from
   `ChangeOutcome` in `src/components/mac/`. This Mac lists the results of

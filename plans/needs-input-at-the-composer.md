@@ -238,6 +238,8 @@ Contract owners:
   the chat. When the region is full, the member scrolls it to read the
   line, as `app/secret-requests/several/waiting-and-late` shows. Reason:
   the card keeps its full form. The UI agent's call of 20 November 2026.
+  The stack of requests below replaces this call, and that page now draws
+  the stack.
 
 ### The stack of requests
 
@@ -270,6 +272,48 @@ card and the call above on the late line in a full region.
   Reason: each Allow runs one exact command. My call of 20 November 2026.
 - One card keeps the cap of 40% of the window and its inner scroll, for a
   long command. My call of 20 November 2026.
+- "1 of 3", Previous, and Next sit above the card on top, at the end of the
+  stack. The keyboard reaches them before the actions of the card, so a
+  member moves through the stack first and then answers. The place is a
+  polite live region. No other key moves the stack. With one card, none of
+  them shows. The UI agent's call of 20 November 2026.
+- Previous is off on the first card, and Next on the last, so the place
+  never jumps from the end to the start. When a press shows the first or
+  the last card, the focus moves to the other button, so it stays in the
+  steps. The UI agent's call of 20 November 2026.
+- The edges of at most two other cards show above the card on top,
+  narrower the further back they are, with the outline of a card and the
+  soft fill. They stand for the other cards, not only the cards after the
+  one on top, so the stack keeps its height while the member moves through
+  it. Reason: a stack of many requests is then as high as a stack of
+  three. The UI agent's call of 20 November 2026.
+- The stack draws the outline of the card on top. A long card scrolls
+  inside it, and the edge that cuts the card fades. Reason: the outline,
+  the edges, and the steps stay in view, so the card still reads as the
+  front of the stack. The UI agent's call of 20 November 2026.
+- A card that hides requests takes the place of the oldest request that it
+  holds. A card whose newest request has a call that waits goes with the
+  requests whose calls wait. Reason: a new ask of the agent then does not
+  move a card that already waits. The UI agent's call of 20 November 2026.
+- "Asked 3 times" follows the names of the card, in its muted text. It
+  counts the requests that the card stands for, and the card is one place
+  in the stack. The UI agent's call of 20 November 2026.
+- After the Deny of a card that hides requests, each request takes its
+  place in its own turn with the result of its own Deny: Denied, and "You
+  denied it.", as `app/secret-requests/several/asked-again/denied` shows.
+  After its Allow, each takes its place as a covered request, and one line
+  of the app starts one turn. Reason: the chat needs no new form, and each
+  turn keeps its own answer. The UI agent's call of 20 November 2026, under
+  decision 3 B.
+- A request that joins or leaves the stack does not change the card on
+  top, unless that card leaves. The place shows the new count. Reason: the
+  card must not change while the member reads it or presses Allow. The UI
+  agent's call of 20 November 2026.
+- After an answer, the focus moves to the new card on top, so a screen
+  reader reads it and the next Tab reaches its first action. With no card
+  left, the focus moves to the composer. Reason: the focus does not jump
+  to an action that the member did not see. The UI agent's call of 20
+  November 2026.
 
 ## Milestone 1: Mockups
 
@@ -312,19 +356,22 @@ Depends on: 1
 The region draws its requests as a stack, as "The stack of requests"
 says. Decision 3 sets the words of Deny on a card that hides requests.
 
-- [ ] Draw the stack in `app/secret-requests/several` and its
+- [x] Draw the stack in `app/secret-requests/several` and its
       `waiting-and-late` variant: one card on top, the edges of the cards
       behind it, and "1 of 3" with Previous and Next, on a computer and on
       a phone.
-- [ ] Add a page with a late request that hides two older requests for the
+- [x] Add a page with a late request that hides two older requests for the
       same secret, with "Asked 3 times".
-- [ ] Draw a stack with a Mac command request and a secret request.
-- [ ] Draw the Deny of a card that hides requests, as decision 3 says.
-- [ ] Update `docs/mockups/catalogue-secrets.md` and the design docs of the
+- [x] Draw a stack with a Mac command request and a secret request.
+- [x] Draw the Deny of a card that hides requests, as decision 3 says.
+- [x] Update `docs/mockups/catalogue-secrets.md` and the design docs of the
       mockups.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+
+Evidence: `.context/needs-input-at-the-composer/mockups-stack/` holds the
+check logs, the smoke-test and keyboard results, and the screenshots.
 
 ## Milestone 3: Documentation and protocol
 
@@ -370,11 +417,22 @@ Depends on: 3
       `src/chat/secrets/session-secrets.tsx`, and keep it out of its turn
       while it is open.
 - [ ] Order the region in `src/chat/components/WaitingRequests.tsx`: the
-      waiting requests first, then the late requests, each oldest first.
+      waiting requests first, then the late requests, each oldest first. A
+      card that hides requests takes the place of the oldest request that
+      it holds.
 - [ ] Draw the region as the stack of the mockups, with "1 of 3",
-      Previous, and Next, and the keyboard.
+      Previous, and Next, and the keyboard. Use
+      `docs/mockups/src/components/chat/RequestStack.module.css`, the words
+      of `requestStackCopy.ts`, and the `stacked` class of each card.
+- [ ] Keep the card on top when a request joins or leaves the stack, and
+      move the focus after Previous, Next, and an answer, as "The stack of
+      requests" says.
 - [ ] Hide each older request behind a newer one of the same session for
-      the same set of secrets, with "Asked 3 times". Give Deny the outcome of decision 3.
+      the same set of secrets, with `askedTimes` of `secretRunCopy.ts`.
+      Give Deny the outcome of decision 3.
+- [ ] Delete `.requests` and its fade from
+      `docs/mockups/src/components/chat/ChatPane.module.css` when the app
+      draws the stack. Only the list region of the app uses them.
 - [ ] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
       `src/chat/secrets/answer-request.test.tsx`: a late request shows above
       the composer, and its answer moves it to its place. Add tests of the

@@ -101,11 +101,11 @@ the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
 `app/chat/menu-placement` draws menus that show whole over a box that
-scrolls. Its canonical screen has the model menu over the requests that
-wait above the composer. Its `history` variant has the session history
-beside a full tab row. Its `allow` variant has More ways to allow of the
-first of four requests in the Mac app. The app opens these menus in the
-top layer, so no box cuts them.
+scrolls. Its canonical screen has the model menu over the stack of the
+requests that wait above the composer. Its `history` variant has the
+session history beside a full tab row. Its `allow` variant has More ways
+to allow of the card on top of a stack of four requests in the Mac app.
+The app opens these menus in the top layer, so no box cuts them.
 
 `app/automations` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:

@@ -40,6 +40,7 @@ import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { postcodeHistory } from './postcodeConversation'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
+import { secretStackConversations } from './secretStackConversations'
 import { secretValueConversations } from './secretValueConversations'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
@@ -226,6 +227,7 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...secretConversations(history),
   ...secretValueConversations(history),
+  ...secretStackConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),

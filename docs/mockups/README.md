@@ -171,7 +171,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   `src/components/common/`, which renders Mokly's `MockLink`. A Firna control
   becomes a link through `ScreenLink asChild`. Tabs are links, so each view
   has its own path. A link to a page outside the app reads its address from
-  `useOutsideHref`.
+  `useOutsideHref`. Previous and Next of the stack of requests above the
+  composer link to the page of each card on top, which
+  `src/screens/requestStackPages.ts` lists for each chat. The
+  `shownRequest` state of the workspace screen picks the card on top.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
 - Controls come from `@firna/ui`. A control without a handler renders as

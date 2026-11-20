@@ -1,0 +1,9 @@
+{
+  "order": [
+    "mixed",
+    "mixed-value",
+    "waiting-and-late",
+    "asked-again",
+    "mac-command"
+  ]
+}

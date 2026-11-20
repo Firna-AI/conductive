@@ -12,7 +12,7 @@ import {
  * The finished turn, then a message that needs Safari, which only the Mac
  * of the sender has. `after` is what follows the request on the Mac.
  */
-function onMac(
+export function onMac(
   history: readonly ChatItem[],
   state: MacCommandState,
   after: readonly ChatItem[],

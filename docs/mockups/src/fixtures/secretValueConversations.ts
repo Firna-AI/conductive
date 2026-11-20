@@ -2,9 +2,7 @@ import type { ChatItem } from './conversations'
 import {
   agent,
   answerLine,
-  call,
   compareAsk,
-  countAsk,
   givenForWorkspace,
   outlived,
   run,
@@ -17,7 +15,6 @@ import {
   mixedRequest,
   placesRequest,
   providersRequest,
-  replicaRequest,
 } from './secretRequests'
 
 /** The keys of the chats of requests that ask for a value. */
@@ -29,7 +26,6 @@ export const secretValueConversationKeys = [
   'secret-late-temporary',
   'secret-late-temporary-value',
   'secret-late-given',
-  'secret-waiting-late',
   'secret-waiting-mixed',
   'secret-waiting-mixed-value',
   'secret-invalid-name',
@@ -89,10 +85,9 @@ function lateValue(typed: boolean, lifetime: 'minutes' | 'workspace') {
 /**
  * The chats of requests that ask for a value, after the finished turn of
  * `history`: a temporary request with no value yet, with a typed value and
- * each lifetime, late, and answered later. The late request also waits
- * after a request of a later turn whose call waits. A mixed request names
- * a secret of Acme and a name that Acme does not have. The last two name
- * Google Places key, which cannot become a secret.
+ * each lifetime, late, and answered later. A mixed request names a secret
+ * of Acme and a name that Acme does not have. The last two name Google
+ * Places key, which cannot become a secret.
  */
 export function secretValueConversations(
   history: readonly ChatItem[],
@@ -121,17 +116,6 @@ export function secretValueConversations(
       ),
       answerLine(mapboxRequest, givenForWorkspace),
       working('5s'),
-    ],
-    // Nobody gave the Mapbox token in time. Then Cal asked for the count,
-    // and its tool call waits for PROD_DATABASE_URL. The region shows that
-    // request first, then the late one (needs-input decision 1 A).
-    'secret-waiting-late': [
-      ...history,
-      ...lateValue(false, 'minutes'),
-      ...countAsk,
-      call(replicaRequest, 'running', 'secret-call-count'),
-      { ...run(replicaRequest, 'waiting'), id: 'secret-run-count' },
-      working('24s'),
     ],
     'secret-waiting-mixed': [
       ...history,
