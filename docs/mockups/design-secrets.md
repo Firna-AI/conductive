@@ -83,10 +83,11 @@ one.
   to the list that `capabilityParts` gives.
 - The Secrets part has no hint line. It lists each secret of the org with
   a checkbox, which pre-approves it for the workspace. `SecretOption`
-  draws each row, in the app too. An info icon after the name shows the
-  description on hover, as a native tooltip. A press shows it under the
-  name, and a second press hides it. A secret without a description shows
-  no icon. A secret for all
+  draws each row, in the app too. The description shows only in the info
+  box of the info icon after the name: a small raised card under the
+  icon, over the rows below it. A mouse on the icon opens the box, and a
+  press keeps it open until a second press. A secret without a
+  description shows no icon. A secret for all
   agents stays checked, off, with the words "All agents". Manage secrets
   opens the Secrets tab. An org without secrets says so, with Add a
   secret.

@@ -141,10 +141,11 @@
 
 /*
  * One secret: its checkbox and name, its info icon, and its mark for all
- * agents, then its description while the info icon shows it.
+ * agents. Its info box floats from it.
  */
 .secretOption {
   display: flex;
+  position: relative;
   flex-direction: column;
 }
 
@@ -192,10 +193,24 @@
   outline-offset: -4px;
 }
 
-/* The description under the name, in line with the name. */
-.secretInfo {
-  margin: 0 0 4px 26px;
-  color: var(--ui-muted);
+/*
+ * The info box with the description: a small raised card under the info
+ * icon, over the rows below it. It starts in line with the name.
+ */
+.infoBox {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% - 4px);
+  left: 26px;
+  width: max-content;
+  max-width: calc(100% - 26px);
+  padding: 6px 8px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-composer);
+  box-shadow: 0 6px 16px var(--ui-shadow);
+  box-sizing: border-box;
+  color: var(--ui-ink2);
   font-size: var(--ui-text-sm);
   line-height: 1.45;
 }

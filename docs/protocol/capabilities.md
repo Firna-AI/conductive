@@ -40,13 +40,14 @@ automations, as [Automations](automations.md) says.
   or to Add a secret when the org has no secret.
 - The secrets part has no hint line, except in the control of an
   automation. Each secret shows its name and checkbox, with an info icon
-  after the name (Cal, 20 November 2026). On a computer, the icon shows
-  the description on hover. A press, also a tap on a phone, shows the
-  description under the name, and a second press hides it. A secret
-  without a description shows no icon.
+  after the name (Cal, 20 November 2026). The description shows only in
+  the info box of the icon, never in the row. The box floats under the
+  icon. A mouse on the icon opens it, and a press, also a tap on a phone,
+  keeps it open until a second press. A secret without a description
+  shows no icon.
 - Reason: one line for each secret fits more secrets in the small card.
-  The description stays inside the card, because a press outside the
-  card closes it.
+  The box stays inside the card, because a press outside the card closes
+  it.
 - When the org has more than ten secrets, a Search secrets field shows
   above them (Cal, 20 November 2026). It narrows the list to the secrets
   whose name or description holds the search, with case ignored. A search

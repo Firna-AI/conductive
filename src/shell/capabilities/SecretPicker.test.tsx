@@ -62,7 +62,7 @@ function listed(control: HTMLElement): string[] {
 }
 
 describe('the secrets in the Capabilities control', () => {
-  test('a secret hides its description behind an info icon, which a press shows and hides, and the part has no hint line', async () => {
+  test('a secret shows its description only in the info box of its info icon, which a press opens and closes, and the part has no hint line', async () => {
     const [first] = secrets
     if (!first) throw new Error('The fixtures have no secret.')
     const control = await openControl([
@@ -73,13 +73,15 @@ describe('the secrets in the Capabilities control', () => {
     const before = {
       hint: control.textContent?.includes('pre-approved secret with no'),
       text: control.textContent?.includes('Read-only replica'),
-      tip: info.getAttribute('title'),
       bare: queryByRole('button', 'About BARE_TOKEN', control),
     }
     click(info)
     await settle()
+    const box = control.querySelector('[role="tooltip"]')
     const open = {
       expanded: info.getAttribute('aria-expanded'),
+      box: box?.textContent,
+      controls: info.getAttribute('aria-controls') === box?.id,
       text: control.textContent?.includes('Read-only replica'),
     }
     click(info)
@@ -92,10 +94,14 @@ describe('the secrets in the Capabilities control', () => {
       before: {
         hint: false,
         text: false,
-        tip: 'Read-only replica of the production database.',
         bare: null,
       },
-      open: { expanded: 'true', text: true },
+      open: {
+        expanded: 'true',
+        box: 'Read-only replica of the production database.',
+        controls: true,
+        text: true,
+      },
       closed: false,
     })
   })

@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { Info } from 'lucide-react'
 import { classes } from '../common/classes'
 import check from '../common/CheckOption.module.css'
@@ -17,25 +17,28 @@ type ListedSecret = {
  * workspace. A secret for all agents is always available, so its checkbox
  * stays checked and off, with the words "All agents".
  *
- * The description hides behind an info icon after the name. On a computer,
- * the icon shows the description on hover, as a native tooltip. A press,
- * also a tap on a phone, shows it under the name, and a second press hides
- * it. A secret without a description shows no icon. The app and the
- * mockups draw each row with this.
+ * The description shows only in the info box of the info icon after the
+ * name, never in the row. The box floats under the icon, over the rows
+ * below it. A mouse on the icon shows it, and a press, also a tap on a
+ * phone, keeps it open until a second press. A secret without a
+ * description shows no icon, because the box would be empty. The app and
+ * the mockups draw each row with this.
  */
 export function SecretOption(props: {
   secret: ListedSecret
   checked: boolean
   disabled: boolean
   change: (on: boolean) => void
-  /** The description shows under the name. */
+  /** A press keeps the info box open. */
   infoOpen: boolean
   toggleInfo: () => void
 }) {
   const { secret } = props
   const info = useId()
   const tag = useId()
+  const [hover, setHover] = useState(false)
   const described = secret.description.trim() !== ''
+  const shown = described && (props.infoOpen || hover)
   return (
     <div className={styles.secretOption}>
       <div className={styles.secretRow}>
@@ -53,12 +56,15 @@ export function SecretOption(props: {
         </label>
         {described ? (
           <button
-            aria-controls={props.infoOpen ? info : undefined}
+            aria-controls={shown ? info : undefined}
             aria-expanded={props.infoOpen}
             aria-label={aboutSecret(secret.name)}
             className={styles.info}
             onClick={props.toggleInfo}
-            title={props.infoOpen ? undefined : secret.description}
+            onPointerEnter={(event) => {
+              if (event.pointerType === 'mouse') setHover(true)
+            }}
+            onPointerLeave={() => setHover(false)}
             type="button"
           >
             <Info aria-hidden size={13} />
@@ -70,10 +76,10 @@ export function SecretOption(props: {
           </span>
         ) : null}
       </div>
-      {described && props.infoOpen ? (
-        <p className={styles.secretInfo} id={info}>
+      {shown ? (
+        <span className={styles.infoBox} id={info} role="tooltip">
           {secret.description}
-        </p>
+        </span>
       ) : null}
     </div>
   )
