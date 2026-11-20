@@ -192,6 +192,7 @@ These are the non-UI implementor's calls of 20 November 2026, checked by the orc
 - Separate raw runtime log replies from filtered app excerpts. Reason: a raw assembly must never enter Worker storage.
 - Give each start attempt a new generation, including a failed launch. Reason: controls and results must name that attempt precisely.
 - Keep durable control receipts free of raw output and definitions. Reason: correlation needs only the request, target, and outcome.
+- Run the Worker milestone from the checked shared contracts, in parallel with native execution. Put runner wiring after both milestones. Reason: their source files, effects, and build outputs are independent. This is the orchestrator's scheduling call of 20 November 2026.
 
 ### Services UI calls
 
@@ -288,30 +289,46 @@ The non-UI implementor adds local service execution. The app can still omit serv
 - [ ] Run targeted Rust checks. Repeat each new asynchronous test 10 times. Save counts and test cost under `.context/services/`.
 - [ ] Smoke-test a real service through the CLI and MCP. Check user, folder, clean environment, unit control group, output, exit, and stop. End every probe.
 
-## Milestone 5: Runner reports and Worker controls
+## Milestone 5: Worker service reports and controls
 
-Depends on: 4
+Depends on: 3
 
-The non-UI implementor adds reports and authorized app routes. Older clients keep working.
+The non-UI implementor adds private report handling and authorized app routes in a nested workspace. It uses the checked shared contracts. Native execution runs in parallel. The runner wiring follows in Milestone 5a. Older clients keep working.
 
-- [ ] Report the approved services data on changes and reconnect. A service report belongs to no turn.
+- [ ] Negotiate optional service support. Receive private service traffic outside numbered event receipts and stored chat commands. Keep absent support readable across hibernation.
 - [ ] Filter complete public text before storage or excerpts. Keep raw definitions and environment values out of Worker storage.
 - [ ] Store and forward the current report with the existing workspace persistence model. Keep old records readable.
 - [ ] Add fixed workspace routes for list, Stop, Restart, and log reads. Apply the selected access rule and existing org and suspension checks.
 - [ ] Accept Restart for a stopped, ended, or failed service when its observed generation is still current.
 - [ ] Correlate controls and results with durable request IDs and service generations. Make repeated delivery safe. Recheck the current workspace and runner connection. Apply the chosen lost-reply outcome. End every pending control at computer stop.
-- [ ] Support fresh reports and recovery after a lost connection. Publish a fresh snapshot after each negotiated connection. Clear live reports when the computer stops.
-- [ ] Check a new runner with the previous Worker, a new Worker with an old runner, a Worker rollback with pending reports, and an old app reader.
+- [ ] Request and accept fresh reports after reconnect. Reconcile boot IDs and revisions. Clear live reports when the computer stops. Keep raw log assembly in memory only.
+- [ ] Check a new Worker with an old runner and an old app reader. Keep old storage records and ordinary event numbers readable.
 - [ ] Test cross-org access, suspension, allowed controls, filtered output, report recovery, and stale connection results where no existing test protects the requirement.
 - [ ] Confirm that no service path records activity or changes idle deadlines. Use a focused integration check of the existing behavior.
-- [ ] Update Worker route and chat READMEs with the real entry points. Update the architecture docs for the new component boundary.
-- [ ] Run targeted Worker and runner checks. Repeat new asynchronous tests 10 times and record their cost.
+- [ ] Update Worker route and chat READMEs with the real entry points.
+- [ ] Run targeted Worker checks. Repeat new asynchronous tests 10 times and record their cost.
+
+## Milestone 5a: Runner service transport
+
+Depends on: 4 and 5
+
+The non-UI implementor connects the checked native manager to the checked Worker contract. This milestone activates service reports and app controls.
+
+- [ ] Report the approved services data on changes and reconnect. A service report belongs to no turn.
+- [ ] Enable private traffic only after both hello and welcome accept it. Keep it outside the numbered outbox and preserve event numbering.
+- [ ] Split each complete report, control result, and raw log document within the existing envelope budget. Preserve complete text for final filtering. Add no name or service-count limit.
+- [ ] Send each control and log request to the same local manager. Preserve its request IDs, generation rules, and output-free control receipts.
+- [ ] Publish a fresh full snapshot after each negotiated connection. Retain a monotonic revision across runner restarts and reject stale connections.
+- [ ] Link owned ports through native and Worker reports without changing existing port selection.
+- [ ] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
+- [ ] Confirm that no runner service path records activity or holds a turn. Run targeted runner and integration checks. Repeat new asynchronous tests 10 times and record their cost.
+- [ ] Update actual runner entry-point docs. Use the docs implementor to update the architecture boundary when both components exist.
 
 ## Milestone 6: App service controls
 
 Tags: ui
 
-Depends on: 1 and 5
+Depends on: 1 and 5a
 
 The UI implementor builds the approved mockups against real runner data.
 
@@ -326,7 +343,7 @@ The UI implementor builds the approved mockups against real runner data.
 
 ## Milestone 7: Agent guidance
 
-Depends on: 4 and 5
+Depends on: 4 and 5a
 
 The non-UI implementor adds service guidance in the same sandbox software release as the command.
 
