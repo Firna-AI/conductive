@@ -216,7 +216,8 @@ export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
 }
 
-const MODEL_FAVOURITES_LIMIT = 5
+/** The most favourites that an account keeps, and that the model menu shows. */
+export const MODEL_FAVOURITES_LIMIT = 5
 
 export function firstFavourites(
   choices: readonly AgentChoice[],

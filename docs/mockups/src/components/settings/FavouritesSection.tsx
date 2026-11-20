@@ -1,3 +1,4 @@
+import { effortLabels } from '../../../../../src/shared/agents'
 import { CircleAlert, GripVertical, Plus, X } from 'lucide-react'
 import {
   favouriteLimit,
@@ -69,7 +70,11 @@ export function FavouritesSection(props: {
                   </span>
                 ) : null}
               </div>
-              <IconButton icon={X} label="Remove the favourite" quiet />
+              <IconButton
+                icon={X}
+                label={`Remove ${favourite.model} ${effortLabels[favourite.effort]}${favourite.fast ? ' Fast' : ''}`}
+                quiet
+              />
             </li>
           )
         })}

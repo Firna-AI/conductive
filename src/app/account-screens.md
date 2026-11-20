@@ -8,10 +8,31 @@ agent login forms, and model lists in the web app.
   address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
-  Agents. An older `/account?connect=` link opens Agents too. Preferences holds the New
-  workspaces section: Model and effort, and
+  Agents. An older `/account?connect=` link opens Agents too. Preferences holds the
+  [Favourites section](../../docs/protocol/model-favourites.md#the-favourites-section),
+  then the New workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
   On a phone, a tab that does not fit moves to a second line.
+- `FavouritesSection` in `../shell/account/` lists the favourites of the
+  account in the order of the model menu. Each row has a handle, the shell
+  `ModelPicker`, and ×.
+  The picker offers the models of the person and keeps the model of the
+  favourite. It shows no favourites, so its menu lists every model at its
+  top. A drag moves a row, as Alt with Up or Down does while the focus is
+  in the row, through `useListOrder` of `../shell/ui/`, as the repository
+  order does. A favourite that the model list no longer holds, or that the
+  list of an own endpoint does not name, shows greyed with the line of
+  `hiddenLine` in `../shell/account/favourite-rows.ts`. Add a favourite is
+  off, because the app does not add a favourite yet.
+- Each move, removal, and pick saves the whole list at once through
+  `AccountModel.setFavourites`. The account state queues no save, so the
+  section sends one save at a time. While a save runs, the section shows
+  the list that it sent and takes no other change, and its controls stay
+  on, so a row that moved by keys keeps the focus. After the reply, it
+  shows the saved list. A failed save shows the saved list with its error
+  under the list until the next change. Each row keeps its ID through a
+  move, a pick, and the reply, as `keptRows` says, so its elements and the
+  focus stay.
 - Model and effort saves each change at once through
   `AccountModel.setDefaultChoice`. While it saves, the picker shows the new
   choice. A Fast change keeps the menu open, so the switch shows its new

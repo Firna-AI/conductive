@@ -23,7 +23,8 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 - `app/command-palette/settings` has the Settings tab. The group of the
   settings of Acme lists its six tabs, with Agents and Secrets after Cloud
   computer.
-  Its Account group ends with Keyboard shortcuts, which opens
+  Its Account group has Favourites before New workspaces, as the
+  Preferences tab has them, and ends with Keyboard shortcuts, which opens
   `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its

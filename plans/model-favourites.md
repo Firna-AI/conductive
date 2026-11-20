@@ -187,6 +187,26 @@ Contract owners:
 - **Recommendation:** B, for the model pickers only. Each picker then opens the menu as the session picker and every mockup already do. The first recommendation was A, which the options check of 20 November 2026 changed, because A keeps two ways to open one menu on a phone.
 - **Action:** ask the user, because the answer decides which side of a mismatch between the mockups and the app is right.
 
+### 6. What the empty Favourites section shows
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Mockup.
+- **Location:** `src/shell/account/FavouritesSection.tsx`.
+- **Background:** A member can remove every favourite. The account then keeps an empty list, and the model menu lists every model at its top. The mockups draw the section only with favourites. Today the empty section shows its title, its description, and Add a favourite, with no list.
+- **Problem:** No requirement or mockup says what the section shows with no favourite.
+- **Impact if no action:** The empty state stays a guess, and its description speaks of favourites that are not there.
+- **Root question:** What does the section show when the account has no favourite?
+- **Options:**
+  - **A.** Keep what is built, and draw it in the mockups. Effort: Small.
+  - **B.** Show one muted line in place of the list, such as "The model menu lists every model at its top." Effort: Small.
+  - **C.** Show an empty list box with no words. Effort: Small.
+- **Left out:** Hiding the section: it is the only place that adds a favourite.
+- **Wider fix:** None.
+- **Previous examples:** The repository order shows "Select Edit to add a repository." for an empty list, in `src/shell/settings/RepositoryOrder.tsx`.
+- **Recommendation:** B. The line says what the menu does with no favourite, as the repository order does for its empty list.
+- **Action:** ask the user, because each option sets a screen state that no requirement or mockup covers.
+
 ## Design calls
 
 These calls are mine, made on 20 November 2026, unless a line says
@@ -307,6 +327,15 @@ otherwise.
   submenu of the right-click menu of the shell does.
 - The saves of the Favourites section go one at a time, because the
   account state queues no save, as for the default choice.
+- While a save runs, the Favourites section refuses other changes, but its
+  controls stay on, so the keyboard focus stays and Alt with Up or Down
+  moves a row more than once. A failed save shows the saved list again,
+  with the error. Each row keeps its ID through a move, a pick, and the
+  reply, so the focus stays on it. The drag is the drag of the repository
+  order.
+- Each × is named after its favourite, such as "Remove Opus 5.5 High", as
+  each Remove of the lists of the account is. The mockup said "Remove the
+  favourite", and it now follows the app.
 - On a phone, the menu with five favourites and the six efforts of Opus
   5.5 is about 590 px high. Each menu keeps its height limit of 70% of the
   screen, so on a screen lower than about 845 px the menu scrolls, and the
@@ -420,7 +449,7 @@ Milestones 2 and 3 found three gaps in the mockups of Milestone 1.
 - [ ] Draw the phone form of the model menu of New workspace, the
       Preferences default, and an automation, as the answer of decision 5
       says, with All models.
-- [ ] Add the Favourites row to the Settings tab of the palette mockup,
+- [x] Add the Favourites row to the Settings tab of the palette mockup,
       before New workspaces.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -462,17 +491,21 @@ Tags: ui
 
 Depends on: 5
 
-- [ ] Add the Favourites section to `src/shell/account/PreferencesSections.tsx`:
-      the rows in order, a drag that moves a row, × that removes it, and
-      Add a favourite, which is off at five.
-- [ ] Show a favourite that the menu leaves out greyed, with its line.
-- [ ] Show the error of a failed save under the section.
+- [x] Add the Favourites section to `src/shell/account/FavouritesSection.tsx`,
+      above New workspaces: the rows in order, a drag and a keyboard move,
+      × that removes a row, and Add a favourite, which is off at five.
+      Its action waits for decision 4.
+- [x] Show a favourite that the menu leaves out greyed, with its line.
+- [x] Show the error of a failed save under the section.
 - [ ] Add Add a favourite, as the answer of decision 4 says.
-- [ ] Add the Favourites row to the Account group of the command palette,
+- [x] Add the Favourites row to the Account group of the command palette,
       before New workspaces, with the search word "favorites". Update
       `docs/protocol/command-palette-actions.md`.
-- [ ] Add component tests for the add, the move, the removal, the limit,
-      and a failed save.
+- [x] Add component tests for the move, the removal, the limit, a hidden
+      row, a failed save, and one save at a time. Report:
+      `.context/model-favourites/reports/m6-section.md`.
+- [ ] Add component tests for the add, with decision 4.
+- [ ] Draw and build the empty section, as the answer of decision 6 says.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

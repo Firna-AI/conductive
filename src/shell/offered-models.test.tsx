@@ -16,6 +16,7 @@ import {
   FAKE_TIME,
 } from '../test-support/fixtures/core'
 import { MOUNTED_TEST_TIMEOUT } from '../test-support/mount'
+import { sectionTitled } from './account/test-markup'
 import { openApp } from './automations/automation-test-kit'
 import { click, press, settle } from './test-mount'
 
@@ -62,11 +63,19 @@ async function pickerModels(server: FakeApiServer) {
     server,
     routes.accountTab('preferences'),
   )
-  /** The models that the picker of the page at `address` offers. */
+  /**
+   * The models that the picker of the page at `address` offers. On the
+   * preferences, it is the picker of New workspaces, because a favourite
+   * above it has a picker with the same name.
+   */
   const offered = async (address: string) => {
     act(() => navigation.push(address))
     await settle()
-    click(byRole('button', 'Model and effort: Opus 5.5, High', view))
+    const root =
+      address === routes.accountTab('preferences')
+        ? sectionTitled(view, 'New workspaces')
+        : view
+    click(byRole('button', 'Model and effort: Opus 5.5, High', root))
     const menu = byRole('menu', 'Model and effort')
     const shown = Array.from(
       menu.querySelectorAll('[role="menuitemradio"]'),

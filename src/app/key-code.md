@@ -239,14 +239,17 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/list/drop-target.ts`: `DropLayout`, the boxes of the sections,
   the rows, and the trees that a drop measures.
 - `../shell/ui/useListDrag.ts`: the drag of an item in a vertical list,
-  such as an org in the rail and in the org switcher of a phone, or a
-  chosen repository of an org, on `usePointerDrag`.
+  such as an org in the rail and in the org switcher of a phone, a chosen
+  repository of an org, or a model favourite, on `usePointerDrag`.
   `../shell/ui/useListMoves.ts`: the moves of such an item by a menu and by
   Alt and Up or Down. `../shell/orgs/useOrgMove.ts`: the move of an org with
   the toast of a failed save. `../shell/layout/useRailOrder.ts`: the drag,
   the tile menu (`useTileMenu.tsx`), and the moves of the org tiles.
   `../shell/settings/RepositoryOrder.tsx`: the same moves of the chosen
-  repositories, with their row menu. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
+  repositories, with their row menu. `../shell/account/FavouritesSection.tsx`:
+  the same moves of the favourites of Preferences, which save one at a
+  time, with the rows of `FavouriteParts.tsx` and the row IDs of
+  `favourite-rows.ts`. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
   a long press lifts an org.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways
