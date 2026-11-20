@@ -2,6 +2,7 @@ import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
+import { appStoppingLifecycle } from './durable-stop'
 import { expiredRestartLifecycle, isFailedRestart } from './durable-restart'
 import {
   IDLE_MS,
@@ -22,6 +23,8 @@ export async function advanceLifecycleAlarm(
   let state = initial
   if (state.state === 'archived') return
   if (state.startStop === 'pending') {
+    state = appStoppingLifecycle(state, now())
+    await write(state)
     await write(await advanceStartStop(state, hooks, now))
     return
   }
@@ -52,6 +55,8 @@ export async function advanceLifecycleAlarm(
     (state.state !== 'error' || isFailedRestart(state)) &&
     state.lastActivityAt + IDLE_MS <= now()
   ) {
+    state = appStoppingLifecycle(state, now())
+    await write(state)
     const result = await hooks.stop()
     stopPending = result === 'pending'
     state = reconciledLifecycle(

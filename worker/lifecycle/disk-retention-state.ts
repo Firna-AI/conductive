@@ -6,6 +6,7 @@ import {
 } from './durable-types'
 import { WORKSPACE_START_TIME_LIMIT_MS } from './job-time-limit'
 import type { RetentionCommandPort } from './retention-command'
+import { appStoppingLifecycle } from './durable-stop'
 import {
   finishRetentionAttempt,
   hasRetentionAttempt,
@@ -19,7 +20,10 @@ export async function advanceDiskRetentionState(
   now: () => number,
   commit: (state: DurableLifecycleState) => Promise<void>,
 ) {
-  if (!hasRetentionAttempt(state)) await commit(state)
+  if (!hasRetentionAttempt(state) || state.appStop === undefined) {
+    state = appStoppingLifecycle(state, now())
+    await commit(state)
+  }
   const deadlineAt =
     state.diskRetentionDeadlineAt ?? now() + WORKSPACE_START_TIME_LIMIT_MS
   if (

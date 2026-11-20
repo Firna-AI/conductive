@@ -11,7 +11,7 @@ import {
   withPreparedStart,
 } from './durable-start'
 import type { SendMessageRequest } from '../../src/shared/messages'
-import { reconciledLifecycle } from './durable-reconciliation'
+import { appStoppedLifecycle, appStoppingLifecycle } from './durable-stop'
 import { advanceDiskRetentionState } from './disk-retention-state'
 import {
   writeLifecycleState,
@@ -152,11 +152,7 @@ export class DurableLifecycle {
   }
 
   stopped(): Promise<void> {
-    return this.update((state) =>
-      state.state === 'archived'
-        ? state
-        : reconciledLifecycle(state, 'stopped', this.now()),
-    )
+    return this.update((state) => appStoppedLifecycle(state, this.now()))
   }
 
   archive(): Promise<void> {
@@ -175,12 +171,15 @@ export class DurableLifecycle {
     )
   }
 
-  /** An access stop ends the restore watch, because its sandbox stops. */
-  endRestoreWatch(): Promise<void> {
+  /** Save intent without moving an existing access-stop alarm. */
+  requestStop(): Promise<void> {
     return this.serial(async () => {
       const state = await this.read()
-      if (state?.restoreWatchAt !== undefined)
-        await this.write({ ...state, restoreWatchAt: undefined })
+      if (!state) return
+      const next = appStoppingLifecycle(state, this.now())
+      if (state.restoreWatchAt !== undefined) return this.write(next)
+      this.input.invalidate()
+      await this.storage.put(LIFECYCLE_STATE_KEY, next)
     })
   }
 

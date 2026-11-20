@@ -16,6 +16,7 @@ import {
   workspaceActionContext,
 } from './workspace-actions'
 import { keepWorkspaceDisk } from './disk-retention'
+import { isProviderStop } from './durable-stop'
 import {
   taskWorkspaceStorage,
   workspaceTaskAlarms,
@@ -42,12 +43,18 @@ export function createWorkspaceLifecycle(
     },
     dependencies.now,
     {
+      providerStopped: async (state) => {
+        const row = await readWorkspace(env.DB, state.orgId, state.workspaceId)
+        ctx.providerStopped?.(state.workspaceId, row.providerAccount)
+      },
       changed: async (state, publish) => {
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)
         const projected = await projection.changed(publish)
         if (state.state === 'stopped' || state.state === 'error')
-          await ctx.stopped?.(state.workspaceId)
+          await ctx.stopped?.(state.workspaceId, {
+            providerStop: isProviderStop(state),
+          })
         return projected
       },
       stop: async () => {

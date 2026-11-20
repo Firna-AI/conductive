@@ -6,6 +6,7 @@ import {
 } from './durable-types'
 import { scheduleLifecycleState } from './durable-scheduling'
 import type { LifecycleInputState } from './input-activity-local'
+import { appStoppingLifecycle } from './durable-stop'
 
 async function writeArchiveTransition(
   storage: LifecycleStorage,
@@ -25,9 +26,10 @@ async function writeArchiveTransition(
 
 function archivedLifecycle(
   state: DurableLifecycleState,
+  now: number,
 ): DurableLifecycleState {
   return {
-    ...state,
+    ...appStoppingLifecycle(state, now),
     state: 'archived',
     start: null,
     runningSessions: [],
@@ -46,9 +48,10 @@ function restoredLifecycle(
   stoppedAt: number | null,
   nextDiskKeepaliveAt: number,
   stopPending: boolean,
+  now: number,
 ): DurableLifecycleState {
   return {
-    ...archivedLifecycle(state),
+    ...archivedLifecycle(state, now),
     state: 'stopped',
     stoppedAt,
     nextDiskKeepaliveAt,
@@ -71,7 +74,9 @@ export class ArchiveTransitions {
   }
 
   archive(): Promise<void> {
-    return this.transition(archivedLifecycle)
+    return this.transition((state) =>
+      archivedLifecycle(state, this.context.now()),
+    )
   }
 
   restore(
@@ -80,7 +85,13 @@ export class ArchiveTransitions {
     stopPending: boolean,
   ): Promise<void> {
     return this.transition((state) =>
-      restoredLifecycle(state, stoppedAt, nextDiskKeepaliveAt, stopPending),
+      restoredLifecycle(
+        state,
+        stoppedAt,
+        nextDiskKeepaliveAt,
+        stopPending,
+        this.context.now(),
+      ),
     )
   }
 

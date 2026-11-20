@@ -334,11 +334,11 @@ Evidence: the link check script and its output are in
 
 Depends on: 2
 
-- [ ] Add `appStop` and write it before each app stop. Clear it at a start.
-- [ ] Mark `providerStop` in `reconciledLifecycle`, from the state before
+- [x] Add `appStop` and write it before each app stop. Clear it at a start.
+- [x] Mark `providerStop` in `reconciledLifecycle`, from the state before
       the call. Clear it at a start. Pass it to the chat stop.
-- [ ] Log the warning.
-- [ ] Tests: a provider stop at the turn heartbeat, at a turn change, at
+- [x] Log the warning.
+- [x] Tests: a provider stop at the turn heartbeat, at a turn change, at
       member input, and at the restore watch. A pending idle stop and a
       pending suspension stop, which mark nothing. An error state. A stale
       mark with another `stoppedAt`.

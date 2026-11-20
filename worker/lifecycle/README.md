@@ -29,6 +29,8 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
+- Record app stop intent and identify confirmed provider stops during a
+  turn, as [Provider stops](workspace-object.md#provider-stops) describes.
 - Give the git credential helper a fresh GitHub user token of the sender of
   the current turn, or of the member who pressed Continue or changed the
   repository, during the fetch of that job.
@@ -171,6 +173,12 @@ the persisted resource records and the retained computer ledger.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
+- [durable-reconciliation.ts](durable-reconciliation.ts): applies confirmed
+  provider states and marks a provider stop before it clears running sessions.
+- [durable-stop.ts](durable-stop.ts): records app stop intent and checks
+  that a provider stop mark belongs to the current stop.
+- [provider-stop-warning.ts](provider-stop-warning.ts): logs the provider
+  account and the current runner identity after a saved provider stop.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

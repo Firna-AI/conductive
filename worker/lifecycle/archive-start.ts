@@ -75,6 +75,7 @@ export async function prepareArchivedLifecycle(
       runningSessions: [],
       runnerConnected: false,
       stoppedAt: state.stoppedAt,
+      appStop: { at: input.now },
       nextDiskKeepaliveAt: null,
       error: null,
     })

@@ -135,6 +135,7 @@ async function stopForAccess(
     return false
   }
   try {
+    await lifecycle.requestStop()
     const result = await lifecycle.exclusive(() =>
       stopAccessDeniedWorkspaceSandbox(
         {
@@ -148,7 +149,6 @@ async function stopForAccess(
       ),
     )
     if (result === 'pending') {
-      await lifecycle.endRestoreWatch()
       await storage.setAlarm(dependencies.now() + 30_000)
       return false
     }

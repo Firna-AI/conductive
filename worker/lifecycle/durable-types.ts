@@ -40,6 +40,8 @@ export interface DurableLifecycleState {
   /** The time of a Restart whose runner is not ready again yet. */
   softwareRestartAt?: number
   stoppedAt: number | null
+  appStop?: { at: number }
+  providerStop?: { at: number }
   nextDiskKeepaliveAt: number | null
   diskRetentionDeadlineAt?: number
   diskRetentionCommand?: RetentionCommandState
@@ -63,6 +65,7 @@ export type LifecycleDeadlineRequest =
     }
 
 export interface LifecycleHooks {
+  providerStopped?(state: DurableLifecycleState): void | Promise<void>
   changed(
     state: DurableLifecycleState,
     publish?: LifecyclePublisher,

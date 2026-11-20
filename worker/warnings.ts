@@ -4,6 +4,7 @@ import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
   SIMPLE_WARNINGS,
+  warningProviderAccount,
   type RunnerWarningFields,
   type WorkerWarning,
 } from './warning-types'
@@ -67,6 +68,13 @@ function warningFields(warning: WorkerWarning) {
         ...runnerFields(warning),
         turnId: warning.turnId.text,
         state: warningTurnEndState(warning.state),
+      }
+    case 'workspace_provider_stopped':
+      return {
+        kind: warning.kind,
+        message: 'A sandbox provider stopped a workspace during a turn.',
+        ...runnerFields(warning),
+        providerAccount: warningProviderAccount(warning.providerAccount),
       }
     case 'model_gateway_check_failed':
       return {

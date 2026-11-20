@@ -18,6 +18,11 @@ interface WorkspaceChatRecovery {
   title: { name: string; occurredAt: number } | null
 }
 
+export type WorkspaceStopHook = (
+  workspaceId: string,
+  options?: { providerStop: boolean },
+) => Promise<void>
+
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
   assertStartActive?(turn: QueueTurn): Promise<void>
@@ -28,7 +33,8 @@ export interface WorkspacePlatform {
   admitFirstMessage?(
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void>
-  stopped?(workspaceId: string): Promise<void>
+  stopped?: WorkspaceStopHook
+  providerStopped?(workspaceId: string, providerAccount: string): void
   stopping?(workspaceId: string): Promise<void>
   deviceWaiting?(workspaceId: string): Promise<boolean>
   readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>

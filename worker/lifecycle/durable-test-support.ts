@@ -5,6 +5,9 @@ import { DurableLifecycle } from './durable'
 import type {
   DiskRetentionResult,
   DurableLifecycleState,
+  LifecycleHooks,
+  LifecycleReconciliation,
+  LifecycleStopResult,
   LifecycleStorage,
   LifecycleTurnRecovery,
 } from './durable-types'
@@ -16,7 +19,7 @@ export const FIRST_MESSAGE: SendMessageRequest = {
   choice: { agent: 'codex', model: 'gpt-5.5', effort: 'high', fast: false },
 }
 
-export function lifecycleFixture() {
+export function lifecycleFixture(overrides: Partial<LifecycleHooks> = {}) {
   let now = 1_800_000_000_000
   let persisted: DurableLifecycleState | undefined
   let alarmAt: number | null = null
@@ -57,7 +60,9 @@ export function lifecycleFixture() {
   }
   const hooks = {
     changed: vi.fn<(state: DurableLifecycleState) => void>(),
-    stop: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    stop: vi
+      .fn<() => Promise<LifecycleStopResult | void>>()
+      .mockResolvedValue(undefined),
     keepalive: vi
       .fn<(deadlineAt: number) => Promise<DiskRetentionResult>>()
       .mockImplementation(async () => ({
@@ -66,7 +71,9 @@ export function lifecycleFixture() {
         stoppedAt: now,
         eligible: true,
       })),
-    extendDeadline: vi.fn<() => Promise<void>>().mockResolvedValue(undefined),
+    extendDeadline: vi
+      .fn<() => Promise<LifecycleReconciliation | void>>()
+      .mockResolvedValue(undefined),
     recoverTurns: vi
       .fn<() => Promise<LifecycleTurnRecovery | undefined>>()
       .mockResolvedValue(undefined),
@@ -83,8 +90,10 @@ export function lifecycleFixture() {
           : request?.kind === 'input'
             ? request.extend()
             : hooks.extendDeadline(),
+      ...overrides,
     })
   return {
+    storage,
     lifecycle: create(),
     recreate: create,
     hooks,

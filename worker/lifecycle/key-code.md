@@ -129,6 +129,12 @@ points of each part.
   initial starts, replacements, and resumes in the queue task of its caller.
 - [`durable.ts`](durable.ts): `DurableLifecycle`, the state and timers of a
   workspace. [`durable-types.ts`](durable-types.ts) holds the times.
+- [`durable-stop.ts`](durable-stop.ts): the app stop intent and the check
+  that a provider mark belongs to the current stop.
+- [`durable-reconciliation.ts`](durable-reconciliation.ts): confirmed
+  provider stops and errors, with the mark from the previous running sessions.
+- [`provider-stop-warning.ts`](provider-stop-warning.ts): the warning with
+  the provider account and current runner identity, after the state write.
 - [`durable-turns.ts`](durable-turns.ts): `applyLifecycleTurn`, the turn
   update, and `recoverLifecycleTurns`, which rebuilds the running sessions.
   Both take the turn part of the idle time only from the committed chat.

@@ -9,6 +9,7 @@ import {
 } from './durable-types'
 import { isConfirmedStopped } from './confirmed-stop'
 import { isFailedRestart, restartDeadline } from './durable-restart'
+import { isProviderStop } from './durable-stop'
 
 export async function writeLifecycleState(
   storage: LifecycleStorage,
@@ -17,6 +18,9 @@ export async function writeLifecycleState(
   now: () => number,
   publish?: LifecyclePublisher,
 ): Promise<void> {
+  const previous = isProviderStop(state)
+    ? await storage.get(LIFECYCLE_STATE_KEY)
+    : undefined
   if (
     state.restoreWatchAt !== undefined &&
     (state.state === 'stopped' ||
@@ -27,6 +31,18 @@ export async function writeLifecycleState(
     state = { ...state, restoreWatchAt: undefined }
   await storage.put(LIFECYCLE_STATE_KEY, state)
   await scheduleLifecycleState(storage, hooks, state, now)
+  if (
+    isProviderStop(state) &&
+    (!previous ||
+      !isProviderStop(previous) ||
+      previous.stoppedAt !== state.stoppedAt)
+  ) {
+    try {
+      await hooks.providerStopped?.(state)
+    } catch {
+      /* A warning failure must not prevent the chat stop. */
+    }
+  }
   await publishLifecycleState(storage, hooks, state, now, publish)
 }
 

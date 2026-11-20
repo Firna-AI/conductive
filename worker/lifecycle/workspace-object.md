@@ -99,6 +99,9 @@ running sessions and turn records. A Boat `error` state sets the workspace
 error state, with no resume and no delete. A stop reply that still shows an
 active sandbox keeps the workspace state and schedules another alarm.
 
+`DurableLifecycleState` records the stop cause, as
+[Provider stops](#provider-stops) describes.
+
 The object encrypts the env values and output chunks of a start. To release
 a log, it joins all stdout parts, then all stderr parts, and masks the
 joined text with the saved env values. So a value that crosses the stdout
@@ -280,6 +283,36 @@ create and resume. The workspace object runs that start:
   seconds, and a later resume waits for confirmation. Cleanup keeps the
   saved failure message. Late runner reports cannot revive that failed
   start.
+
+## Provider stops
+
+[Stops by a provider](../../docs/protocol/stop-and-resume.md#stops-by-a-provider)
+defines a provider stop. The lifecycle records app stop intent before an
+idle, access, suspension, failed-start, Archive, or disk retention stop.
+`DurableLifecycle.stopped` also records intent before it confirms an app stop.
+The optional `appStop` field keeps that intent across pending provider calls
+and object restarts. A normal start clears it.
+
+`reconciledLifecycle` reads the running sessions and the app intent before
+it clears the sessions. A confirmed stop during a turn with no app intent
+gets `providerStop.at`, equal to that stop's `stoppedAt`. An error state
+gets no provider mark. A normal start clears the mark too.
+
+The same reconciliation covers the alarm state read, the turn heartbeat,
+the restore watch, turn changes, and member input. The `stopped` hook of
+`WorkspacePlatform` receives an optional `{ providerStop: boolean }` argument.
+The flag is true only for a stopped state whose mark matches `stoppedAt`
+and has no app intent. A mark from a different stop gives false.
+The chat stop hook receives the flag. Chat still ends running turns as stopped.
+
+After the state write, `writeLifecycleState` calls `providerStopped` only
+for a new provider stop. A repeated write, publication retry, or object
+restart writes no second warning. The hook reads the saved provider account.
+The workspace integration adds the current runner identity and logs
+`workspace_provider_stopped` through `warnProviderStop`.
+[Runner warnings](../../docs/protocol/runner-warnings.md#provider-stops)
+states the warning requirements. A warning failure does not prevent the
+chat stop.
 
 ## The git credential sender
 

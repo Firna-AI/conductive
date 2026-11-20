@@ -180,3 +180,36 @@ it('keeps checked runner identities and strips private fields and invalid diagno
   ])
   expect(warningTurnEndState(marker)).toBe('unknown')
 })
+
+it('keeps provider account IDs and drops private values and extra fields of stop warnings', () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+  for (const providerAccount of [
+    'e2b',
+    'boat-second',
+    'password=private_command_output',
+  ])
+    warnWorker({
+      kind: 'workspace_provider_stopped',
+      workspaceId: WarningId.checked(marker),
+      connectionId: null,
+      streamId: null,
+      processStartId: null,
+      protocolVersion: null,
+      providerAccount,
+      ...{ token: marker, message: marker, stdout: marker },
+    })
+  expect(warn.mock.calls).toEqual(
+    ['e2b', 'boat-second', 'unknown'].map((providerAccount) => [
+      {
+        kind: 'workspace_provider_stopped',
+        message: 'A sandbox provider stopped a workspace during a turn.',
+        workspaceId: 'unknown',
+        connectionId: null,
+        streamId: null,
+        processStartId: null,
+        protocolVersion: null,
+        providerAccount,
+      },
+    ]),
+  )
+})

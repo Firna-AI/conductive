@@ -14,12 +14,19 @@ export function reconciledLifecycle(
     const stoppedAt =
       state.diskRetentionCommand?.stopRequestedAt ??
       (isConfirmedStopped(state) ? null : now)
+    const stopped = finishRetentionAttempt(state, stoppedAt)
     return {
-      ...finishRetentionAttempt(state, stoppedAt),
+      ...stopped,
       state: state.startStop && state.error ? 'error' : 'stopped',
       startStop: state.startStop ? 'stopped' : undefined,
       runningSessions: [],
       runnerConnected: false,
+      providerStop:
+        !state.appStop && state.runningSessions.length && stoppedAt !== null
+          ? { at: stoppedAt }
+          : state.providerStop?.at === stopped.stoppedAt
+            ? state.providerStop
+            : undefined,
     }
   }
   if (remote === 'error')
@@ -28,6 +35,7 @@ export function reconciledLifecycle(
       state: 'error',
       runningSessions: [],
       runnerConnected: false,
+      providerStop: undefined,
       error:
         state.startStop && state.error
           ? state.error

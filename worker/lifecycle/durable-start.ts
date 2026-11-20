@@ -55,6 +55,8 @@ export function beginningLifecycleStart(
     stoppedAt: null,
     nextDiskKeepaliveAt: null,
     diskRetentionDeadlineAt: undefined,
+    appStop: undefined,
+    providerStop: undefined,
     runnerConnected: false,
     lastActivityAt: now,
     startupPrepared: false,

@@ -12,7 +12,11 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
-import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
+import {
+  nativeWorkspacePlatform,
+  type WorkspaceStopHook,
+} from '../lifecycle/workspace-platform'
+import { warnProviderStop } from '../lifecycle/provider-stop-warning'
 import {
   lifecycleDependencies,
   type LifecycleEnvironment,
@@ -86,7 +90,7 @@ export function createWorkspaceIntegration(
     nativeAlarmStorage(context.storage),
   )
   const sockets = new WorkspaceSockets(context)
-  const stoppedHooks: ((id: string) => Promise<void>)[] = []
+  const stoppedHooks: WorkspaceStopHook[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
     dependencies.randomToken,
@@ -267,8 +271,10 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id) => {
-        for (const hook of stoppedHooks) await hook(id)
+      providerStopped: (id, account) =>
+        warnProviderStop(id, account, chat.runner.connections.current),
+      stopped: async (id, options) => {
+        for (const hook of stoppedHooks) await hook(id, options)
         await chat.stopWorkspace(id)
         context.waitUntil(
           Promise.all([devices.reconcile(), secrets.reconcile()]),
@@ -289,6 +295,6 @@ export function createWorkspaceIntegration(
     reconcileStopped: async () => {
       await Promise.all([devices.reconcile(), secrets.reconcile()])
     },
-    onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
+    onStopped: (hook: WorkspaceStopHook) => stoppedHooks.push(hook),
   }
 }

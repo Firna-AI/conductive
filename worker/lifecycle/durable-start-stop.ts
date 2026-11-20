@@ -1,5 +1,6 @@
 import { withStartFailure } from './durable-start'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { appStoppingLifecycle } from './durable-stop'
 import type { DurableLifecycleState, LifecycleHooks } from './durable-types'
 
 export function failedStartStop(
@@ -10,7 +11,7 @@ export function failedStartStop(
 ): DurableLifecycleState {
   if (state.state === 'archived') return state
   return {
-    ...withStartFailure(state, error, now),
+    ...withStartFailure(appStoppingLifecycle(state, now), error, now),
     state: cancelled ? 'stopped' : 'error',
     error: cancelled ? state.error : error,
     startStop: 'pending',

@@ -100,10 +100,18 @@ export interface RunnerWarningFields {
   protocolVersion: number | null
 }
 
+export function warningProviderAccount(value: string): string {
+  return /^[A-Za-z0-9_-]{1,64}$/.test(value) ? value : 'unknown'
+}
+
 /** Each kind permits only its fixed text and the safe values that it needs. */
 export type WorkerWarning =
   | (RunnerWarningFields & {
       kind: 'runner_connected' | 'runner_disconnected'
+    })
+  | (RunnerWarningFields & {
+      kind: 'workspace_provider_stopped'
+      providerAccount: string
     })
   | (RunnerWarningFields & {
       kind: 'turn_ended_without_stop_request'
