@@ -6,7 +6,7 @@ import {
   lineLabelEnds,
   type LabelEndReader,
 } from '../../markdown/markdown-labels'
-import { bareAddressAt } from '../../markdown/web-links'
+import { bareAddressAt, webAddressStartAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
 /** A Markdown link, with its label and address as typed. */
@@ -122,7 +122,7 @@ export function tokens(text: string, reading: Reading): Token[] {
       ? null
       : text[index] === '['
         ? markdownLinkAt(text, index, targetAt, labelEndAt)
-        : text.startsWith('http', index)
+        : webAddressStartAt(text, index) !== null
           ? bareAddressTokenAt(text, index)
           : null
     if (link) {

@@ -23,6 +23,30 @@ function web(href: string, source = href): ChatPart {
 }
 
 describe('the links of a sent message', () => {
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'a sent message links %s addresses and keeps each typed form',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api/Case?q=MiXeD#Part`
+      expect(
+        sent(
+          `Read ${href}, <${href}>, \`${href}\`, \`curl ${href}\`, and [Docs](${href}).`,
+        ),
+      ).toEqual([
+        text('Read '),
+        web(href),
+        text(', <'),
+        web(href),
+        text('>, '),
+        { kind: 'code', text: href, link: { kind: 'web', url: new URL(href) } },
+        text(', '),
+        { kind: 'code', text: `curl ${href}` },
+        text(', and [Docs]('),
+        web(href),
+        text(').'),
+      ])
+    },
+  )
+
   test('a sent message shows a Markdown link as typed: its label stays text and code, and its address is a link', () => {
     const pull = 'https://github.com/acme/storefront/pull/468'
     const guide = 'https://design.acme.example/forms/address'
