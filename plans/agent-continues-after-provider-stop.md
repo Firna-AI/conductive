@@ -415,20 +415,26 @@ mutation proofs are in
 
 Depends on: every other milestone
 
-- [ ] Check each claim of the changed guides and legal pages against the
+- [x] Check each claim of the changed guides and legal pages against the
       built app, as "Claims" in `src/marketing/docs-authoring.md` says.
-- [ ] Update option E of
+- [x] Update option E of
       `plans/follow-ups/runner-liveness-after-provider-stop.md`. It cites
       the stopped line of Messages, and a provider stop now queues a turn
       that the runner never started again.
-- [ ] Run the targeted tests, `npm run check`, and the Rust checks of
+- [x] Run the targeted tests, `npm run check`, and the Rust checks of
       `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
+
+Evidence: the gate and Rust logs are in
+`.context/agent-continues-after-provider-stop/milestone-6/`. The review
+rounds and the findings file are in
+`.context/reviews/calummoore/resuming-agent-on-timeout-fg44/`.
+
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
