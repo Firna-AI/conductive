@@ -10,7 +10,14 @@ failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 the agent of another session stopped with a workspace tool, from decision
 279. Its line says "Stopped from" and shows the session chip of that
 session, for a session of the same workspace and, in `other-workspace`, of
-another workspace. `app/chat/work` draws the work of ended
+another workspace. `app/chat/wakes` draws the line that wakes a session
+when a turn that it watched ends, from watch decisions 1 C and 6 B. Its
+canonical screen has "A turn finished in" and the session chip of the
+watched session, then the new turn, which reads that session. Its
+variants have a failed turn, a stopped turn, a session of another
+workspace whose turn finished at the time limit of background work, with
+that end reason after a dot, and a wake that joins a turn that runs.
+`app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac

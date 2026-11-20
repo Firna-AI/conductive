@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Implementation starts with Milestone 1. The pull request that completes this work deletes this plan.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestone 1 is checked complete. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -121,6 +121,13 @@ The first three calls came from the brainstorm on 18 November 2026. They are age
 - **20 November 2026, orchestrator call:** Keep the no-line rule when delivery can start no turn. Reason: the task adopts that brainstorm call. UI research proposed a skipped-wake line, but it would add another display state without a requirement.
 - **20 November 2026, orchestrator call:** Build one pure word module and reusable line component in the mockup milestone. Reason: both later Worker and UI milestones need that source. The UI milestone wires that component into the live transcript.
 - **20 November 2026, orchestrator call:** Keep the normal sender prefix for wake input. Reason: the general message-lines rule requires it, and existing runners add it to ordinary messages. Its member follows the complete late-secret admission rule. This adds no exception for watch messages and changes no existing secret notice behavior.
+- **20 November 2026, UI implementor call:** Use "A turn finished in", "A turn failed in", and "A turn stopped in" before the chip. Reason: the end stays visible when the chip wraps, and a session title can read as a command.
+- **20 November 2026, UI implementor call:** Use the watched turn's `TurnEndReason` with the existing app words. Reason: this is the chat's end-reason contract. Raw failures and who stopped a turn stay in the watched session.
+- **20 November 2026, UI implementor call:** Use one bell icon for every end and reuse the stop line's CSS. Reason: this marks an incoming wake without suggesting an end of the caller's turn.
+- **20 November 2026, UI implementor call:** Keep the pure words in `docs/mockups/src/components/chat/wakeCopy.ts`. Reason: the Worker and transcript already import neighboring word modules. Milestone 3 replaces its temporary mockup end union with a generated type.
+- **20 November 2026, UI implementor call:** A wake starts a new turn part and never folds. Reason: messages during a turn and late secret answers use this boundary.
+- **20 November 2026, UI implementor call:** Show a finished wake turn with folded work in the failed variant. Show running wake turns in the other variants. Reason: the mockups check that the wake stays visible after folding.
+- **20 November 2026, UI implementor call:** Use the checks of Saved carts' branch in its fixture. Reason: that fixture has no pull request. Show it ready in the workspace list without adding an unrelated screen.
 
 The fresh options check is `.context/watch-session/options-check.md`. Its resolution is `.context/watch-session/options-check-resolution.md`. The check widened the options and changed the recommendations for repeat calls and Stop. The orchestrator kept the task's one-turn scope when it chose the targeting recommendation.
 
@@ -258,7 +265,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Recommendation:** B. It gives context across workspaces and keeps detailed errors in their source session.
 - **Action:** Apply B. Cal chose B on 20 November 2026 with "6 = B".
 
-## Milestone 1: Wake line mockups
+## Milestone 1: Wake line mockups — completed
 
 Tags: mockup
 
@@ -266,11 +273,13 @@ Depends on: none
 
 Use the `ui implementor` action. Cal answered watch decisions 2 to 6 on 20 November 2026, so this milestone can start. The orchestrator checks each result before ticking its TODO.
 
-- [ ] Add desktop and mobile wake-line mockups within the existing workspace chat catalogue. Show finished, failed, and stopped outcomes, including another workspace.
-- [ ] Reuse `@firna/ui`, existing app system lines, and session chips. Keep screen-spec pages within five rendered screens.
-- [ ] Create the single pure wake word module and reusable line component for later Worker and app consumers. Add pending-watch controls only if Cal chooses watch decision 5 E.
-- [ ] Run `npm run mockups:check`. Open the changed pages in the cloud computer browser. Save PNG screenshots in `.context/watch-session/`.
-- [ ] Update the design and TODOs of this plan for each problem that the mockups show.
+- [x] Add desktop and mobile wake-line mockups within the existing workspace chat catalogue. Show finished, failed, and stopped outcomes, including another workspace.
+- [x] Reuse `@firna/ui`, existing app system lines, and session chips. Keep screen-spec pages within five rendered screens.
+- [x] Create the single pure wake word module and reusable line component for later Worker and app consumers. Add pending-watch controls only if Cal chooses watch decision 5 E.
+- [x] Run `npm run mockups:check`. Open the changed pages in the cloud computer browser. Save PNG screenshots in `.context/watch-session/`.
+- [x] Update the design and TODOs of this plan for each problem that the mockups show.
+
+Evidence: `.context/watch-session/m1-report.md` and `.context/watch-session/m1-root-check.md`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -290,6 +299,7 @@ Depends on: 2
 Use the `non-ui implementor` action. Keep generated shared types and their generator in one writer's scope.
 
 - [ ] Define the new request, reply, and chat boundary types in `crates/cnd-runner-interface/`. Regenerate `src/shared/generated/` with the repository command.
+- [ ] Replace the mockup's local `WakeEnd` union with the generated terminal type. Build agent input with the single `wakeText` and `wakeWords` source.
 - [ ] Add the fixed Worker route with existing active-turn, stored sender, membership, org, and archive rules. Implement the approved target and repeat semantics.
 - [ ] Expose the initial accepted turn ID in workspace-create replies if exact-turn targeting is chosen. Keep the field additive for older tools and the previous Worker.
 - [ ] Implement the approved caller Stop rule. If D is chosen, capture caller-owned Stop generations and check them at acceptance. Keep idle-stop watches valid and allow fresh watch intent after an explicit Stop.
@@ -307,7 +317,7 @@ Depends on: 3
 
 Use the `ui implementor` action. The approved mockup and generated event type are available before this milestone starts.
 
-- [ ] Render the approved system line with real links, terminal data, and the shared word module and component from Milestone 1.
+- [ ] Render the approved `WakeLine` with real `SessionLinkText`, terminal data, and the shared word module from Milestone 1.
 - [ ] Keep live events, stored history, copy, and agent transcript text aligned. Preserve event order and once-only display.
 - [ ] Run focused existing chat and transcript tests for the new behavior. Add a test only for an uncovered requirement. Record new asynchronous test proofs and ten-run counts.
 - [ ] Check the app in the cloud computer browser at desktop and mobile widths. Compare it with the mockup. Save PNG screenshots under `.context/watch-session/`.

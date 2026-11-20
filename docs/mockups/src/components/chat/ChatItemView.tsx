@@ -27,6 +27,7 @@ import { standardSpeedText } from './speedCopy'
 import { StopLine, type StopSource } from './StopLine'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
 import { TurnEnd } from './TurnEnd'
+import { WakeLine } from './WakeLine'
 import styles from './ChatItemView.module.css'
 
 type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
@@ -99,6 +100,14 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           names={item.names}
           org={orgs.acme.name}
           who={item.grant.by === viewer ? 'You' : people[item.grant.by].name}
+        />
+      )
+    case 'wake':
+      return (
+        <WakeLine
+          end={item.end}
+          reason={item.reason}
+          session={<LinkText href={item.session} />}
         />
       )
     case 'secret-run':
