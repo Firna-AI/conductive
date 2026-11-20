@@ -112,6 +112,15 @@ image, or the phase. Cleanup then deletes the snapshot of the failed
 build. Other log writes do not check the build state. So output can still
 reach the log during cleanup.
 
+The phase write of each step before publication does not check the build
+state. So a step that an alarm already runs can save a later phase after a
+scheduling failure ended the build. That write can replace the phase that
+the failure chose: `allocating`, `cleanup`, or `done`. `pendingImageCleanup`
+in [`image-maintenance-data.ts`](image-maintenance-data.ts) selects a build
+for cleanup when its state is `failed` or `succeeded` and its job phase is
+not `done`. So that build keeps its cleanup ownership, whatever phase the
+step saved.
+
 - A build loads the chosen repositories, installs the image software, runs
   the install script with Bash, and saves a snapshot. A first build that
   pins a matching ready software image of its own account starts from it
