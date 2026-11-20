@@ -154,6 +154,17 @@ export function secretRoutes(backend: DevBackend): Route[] {
             ),
           })
         }
+        // It also leaves the chosen secrets of each automation, as the
+        // foreign key of the Worker's table does.
+        org.automations = org.automations.map((automation) => ({
+          ...automation,
+          capabilities: {
+            preapprovedSecretIds:
+              automation.capabilities.preapprovedSecretIds.filter(
+                (secretId) => secretId !== params.secret,
+              ),
+          },
+        }))
         return noContent()
       },
     },

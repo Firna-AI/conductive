@@ -3,9 +3,9 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
-with its temporary tab, and the menu of a row of the Files panel. It also
-gives the number of a workspace with Copy link, and the bars of the cloud
-computer.
+with its temporary tab, and the menu of a row of the Files panel. It gives
+the page of an HTML file in its tab. It also gives the number of a
+workspace with Copy link, and the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -82,6 +82,25 @@ computer.
   lists gives the items and the sheet, and `rowMenuCopy.ts` gives the
   words of the items and of the toast. Add to chat has the icon of the `@`
   of a mention, because the speech bubble with a plus names New session.
+- The tab of an HTML file shows its page in a frame, from HTML preview
+  decision 1 A, as `app/files/html` shows. `PageFrame` in
+  `src/components/files/` holds the page from edge to edge under the
+  header of the file, as a Preview tab holds the page of a port. The page
+  is the member's own, so it keeps its own colours in both colour schemes.
+  The header adds Reload and Open, from `PreviewActions` of the Preview
+  tool, before Copy. The switch between Preview and Source stays at the
+  end, as for a Markdown file. On a page up to 480 px wide, such as a
+  phone, Reload and Open take a second line of the header, at its end, so
+  the first line keeps the path and the actions on the file. Reload and
+  Open show only while a page opens or shows. So Source, the notice of
+  older software, and a failed open show neither.
+  - From the press until the page loads, the frame shows the page that
+    `app/tools/preview-opening` draws, so the member sees one wait.
+  - `htmlPreviewCopy.ts` beside the frame holds the words of the notice
+    that asks for Restart. It imports no fixture, so the app can share it.
+  - A failed open shows `PreviewOpenFailure` of `src/components/tools/`:
+    "The preview couldn't open", the message of the server, and Try
+    again, as a Preview tab shows it. The words live in `previewCopy.ts`.
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are

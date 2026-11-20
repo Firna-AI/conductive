@@ -3,13 +3,31 @@
  * the last run of each.
  */
 
+import { defaultChoice } from './agents'
 import { stateAfterSuspension, type RunState } from './automationRuns'
-import { changelog, automations, type Automation } from './automations'
+import { automations, london, type Automation } from './automations'
+import { people } from './members'
 
 /** An automation in the list of the org, with the state of its last run. */
 export type AutomationRow = {
   automation: Automation
   lastRun?: { state: RunState; when: string }
+}
+
+/** An automation that Jonas turned off, which only the list shows. */
+const changelog: Automation = {
+  key: 'changelog',
+  name: 'Update the changelog',
+  repository: 'marketing-site',
+  section: 'general',
+  owner: people.jonas,
+  active: false,
+  timeZone: london,
+  triggers: [{ kind: 'pull-request', event: 'merged' }],
+  prompt:
+    'Add a line for this pull request to the changelog page, and open a pull request with it.',
+  choice: defaultChoice,
+  saved: true,
 }
 
 /** The automations of Acme, as its Automations page lists them. */

@@ -196,16 +196,21 @@ before the Worker serves them.
   and `/app-host/github-setup/requested`.
 - Run `npm run site:build` to write the pages, files, and file list into
   `public/_site/`, which Git ignores. `npm run dev` and `npm run build`
-  build the site first. Restart the Worker after rebuilding the site so
-  it reads the new file list.
+  build the site first. To see an edit through the Worker, start
+  `npm run dev` again. It rebuilds the site. The Worker then reads the new
+  file list.
 - Preview through the Worker with `npm run dev`. Set `APP_ORIGIN` to
   `http://127.0.0.1:5173` and `MARKETING_ORIGIN` to
   `http://localhost:5173` in `.dev.vars`. Open `http://localhost:5173` for
   the site and `http://127.0.0.1:5173` for the app.
 - To preview the production build, use port 5174 in those settings.
   Run `npm run build`, then `npm run preview`. Open
-  `http://localhost:5174`. The agreement page opens on the app host at
-  `/api/auth/github` without the current `terms_version` value.
+  `http://localhost:5174`.
+- `npm run dev` and `npm run preview` serve the built agreement and GitHub
+  return pages on the app host. The agreement page opens at
+  `/api/auth/github` without the current `terms_version` value. The
+  installed return page opens at `/github/setup?state=mac`. The requested
+  return page opens at `/github/setup?state=mac&setup_action=request`.
 
 ### Key code
 

@@ -76,6 +76,10 @@ export type AutomationTrigger =
 export type AutomationInactiveReason =
   'owner_left' | 'repository_removed' | 'failed_runs'
 
+export interface AutomationCapabilities {
+  preapprovedSecretIds: readonly string[]
+}
+
 export interface Automation {
   id: string
   orgId: string
@@ -86,6 +90,7 @@ export interface Automation {
   sectionId: string
   prompt: string
   choice: AgentChoice
+  capabilities: AutomationCapabilities
   active: boolean
   inactiveReason: AutomationInactiveReason | null
   failedRunsInARow: number
@@ -134,6 +139,7 @@ export interface CreateAutomationRequest {
   sectionId?: string
   prompt: string
   choice: AgentChoice
+  capabilities?: AutomationCapabilities
   active?: boolean
   timeZone: string
   triggers: readonly AutomationTriggerInput[]

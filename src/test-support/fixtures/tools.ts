@@ -144,6 +144,18 @@ export function toolFixtures(
     },
   }
   const previews: PreviewsResponse = { previews: [preview.preview] }
+  // The files preview has port 0, and no list holds it.
+  const filesPreview: PreviewResponse = {
+    preview: {
+      id: FAKE_IDS.filesPreview,
+      port: 0,
+      url: new URL(
+        previewPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.filesPreview),
+        FAKE_ORIGIN,
+      ).href,
+      expiresAt: FAKE_TIME + 86_400_000,
+    },
+  }
   const desktop: DesktopResponse = {
     url: 'https://desktop.conductive.test/#fake-desktop-token',
     expiresAt: FAKE_TIME + 600_000,
@@ -158,6 +170,7 @@ export function toolFixtures(
     checks,
     preview,
     previews,
+    filesPreview,
     desktop,
     terminal,
   }

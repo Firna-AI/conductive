@@ -32,6 +32,14 @@ out-of-memory kill.
 - Each hello of the runner also carries the process-start ID of its
   runner start, for the warnings of the Worker, as
   [Process starts](runner-warnings.md#process-starts) says.
+- Each hello of a runner whose
+  [file server](file-server.md) listens also carries
+  `fileServer: true`. Any other hello announces no file server, also the
+  hello of an older runner, which sends no such field. A `fileServer`
+  value of another type does not refuse the hello.
+- The field needs no new protocol version, so the runner protocol version
+  stays 2. Reason: the hello already announces the login kinds that the
+  runner supports.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of

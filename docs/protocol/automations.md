@@ -2,27 +2,34 @@
 
 This doc holds the requirements and the decisions in force for automations. An
 automation is a saved prompt that runs an agent without a person. This doc
-covers an automation, its pages, who may see and change it, and its schedules.
-It also says what happens when the owner leaves or a suspension stops the
-runs. Two linked pages cover the rest:
+covers an automation, its pages, who may see and change it, its chosen
+secrets, and its schedules. It also says what happens when the owner leaves
+or a suspension stops the runs. Three linked pages cover the rest:
 
-- [Automation runs](automation-runs.md): the runs, the run text, the run states,
-  and the failed runs.
+- [Automation runs](automation-runs.md): the runs, their secrets, the run text,
+  the run states, and the failed runs.
 - [Pull request runs](pull-request-runs.md): the pull request triggers, and
   whose events may start a run.
+- [Automation risks](automation-risks.md): the risks that stay open while no
+  person watches a run.
 
 The terms are those of the [architecture doc](../architecture.md#terms). A
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An automation capabilities
+decision number, such as automation capabilities decision 1, names the
+dated record of one decision of the change that adds
+[Capabilities](capabilities.md) to automations. Its plan keeps these
+records while the change is open. Its pull request keeps them after the
+merge.
 
 ## An automation
 
 - An automation belongs to one org. It has a name, a prompt, one repository of
   the org, and a section. It also has a model with its effort and its
-  [fast mode](fast-mode.md), an Active switch, one time zone, and its
-  triggers.
+  [fast mode](fast-mode.md), an Active switch, one time zone, its
+  triggers, and its [chosen secrets](#chosen-secrets).
 - Each trigger starts a run. Each run creates a new workspace, with its own
   cloud computer and branch (decision 501 A).
 - One workspace for each automation, with a new session for each run, was
@@ -38,10 +45,10 @@ decision number names a decision of the change that adds
   holds only spaces.
 - Reason: a run without a prompt has no task, but it still spends a start.
   An automation without a prompt was rejected, also as a draft that stays off.
-- A new automation starts active. It gets the first repository of the
-  [repository order](orgs-and-members.md#repository-order) of the org, the
-  General section, and the default model of its owner, with its effort and
-  its fast mode.
+- A new automation starts active, with no chosen secret. It gets the first
+  repository in the org's [repository order](orgs-and-members.md#repository-order),
+  the General section, and the default model of its owner, with its effort
+  and its fast mode.
 - An automation can have no trigger. Then only Run now starts it.
 - Deleting a section moves its automations to General, as it moves its
   workspaces.
@@ -72,6 +79,25 @@ decision number names a decision of the change that adds
   the automation owner.
 - The automation reply names the resolved login owner for its saved agent.
   It names no login owner when no login serves the automation owner.
+- For the owner, the bar of the prompt box holds the Capabilities icon,
+  before the model picker. The owner checks the secrets of the runs in its
+  control, as
+  [The control of an automation](capabilities.md#the-control-of-an-automation)
+  says.
+- After the line of the logins, a line names the chosen secrets, such as
+  "Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no question." It hides
+  while no secret is chosen. It names only the chosen secrets, not the
+  secrets for all agents, because it says what the automation adds.
+- Reason: the closed icon shows no choice, and the hint below needs the
+  names that it means.
+- While the automation has a pull request trigger and a chosen secret, a
+  hint follows that line (automation capabilities decision 3 A). It says
+  "Text in a pull request, such as a comment, can steer the agent to use
+  these secrets."
+- Every member sees the line and the hint. For the owner, the hint follows
+  the triggers of the form, also before Save. For each other member, it
+  follows the saved triggers.
+- Reason: an admin who is not the owner can still turn the automation off.
 - Save stays off while nothing changed, while the prompt is empty, and
   while the form refuses a cron.
 - A desktop shows the Runs list in a column at the right. A phone shows a
@@ -86,7 +112,8 @@ decision number names a decision of the change that adds
   triggers, and its runs (decision 502 B).
 - Every member who can create a workspace can create an automation. The member
   who creates it is its owner.
-- Only the owner changes an automation, turns it on, and uses Run now.
+- Only the owner changes an automation, also its chosen secrets. Only the
+  owner turns it on and uses Run now.
 - Reason: each run acts as the owner, with the owner's GitHub access and
   the owner's default login. So only the owner decides what runs in the
   owner's name.
@@ -114,6 +141,37 @@ decision number names a decision of the change that adds
   (decision 510 B).
 - Run now works while the automation is off. Reason: the owner can test an
   automation before its triggers start runs.
+
+## Chosen secrets
+
+- The chosen secrets of an automation are secrets of its org. Each run
+  workspace starts with them as pre-approvals, so the agents of the run use
+  them with no request (automation capabilities decision 1 A).
+  [The secrets of a run](automation-runs.md#the-secrets-of-a-run) states
+  the rules of the run.
+- Reason: no person watches a run. Without a grant, a run that needs a
+  secret waits until a member answers its request.
+- The owner can choose each secret of the org, because every member uses
+  each secret (secrets decision 3 B).
+- Every member sees the chosen secrets, read-only, as
+  [The automation pages](#the-automation-pages) says.
+- One list serves each run of the automation: the runs of its schedules,
+  its pull request runs, and the runs of Run now (automation capabilities
+  decision 3 A).
+- Pull request runs without the chosen secrets, a choice for each trigger,
+  and a rule by the visibility of the repository were rejected. Reason: an
+  owner can save a second automation without chosen secrets for the pull
+  request triggers.
+- A rule by the author of each event was rejected, because the author rule
+  already decides who starts a run, and comments come from other accounts.
+- A chosen secret belongs to its secret, not to its name. So a Replace
+  keeps the choice. A deleted secret leaves the chosen secrets of each
+  automation, and a new secret with its name is not chosen.
+- A save drops each secret ID that names no secret of the org, and it
+  saves the rest. Reason: a secret that a member deleted while the form
+  was open must not block the save.
+- An update that leaves out the chosen secrets keeps them. Reason: an
+  older copy of the app then keeps the choices.
 
 ## Schedules
 
@@ -154,8 +212,8 @@ decision number names a decision of the change that adds
 - The new owner is the member who gets their workspaces, as
   [When a member leaves](orgs-and-members.md#when-a-member-leaves) says.
   That member is usually an admin.
-- Each moved automation turns off. It keeps its triggers, its prompt, and its
-  runs.
+- Each moved automation turns off. It keeps its triggers, its prompt, its
+  chosen secrets, and its runs.
 - Its page tells the new owner that it moved from the member who left. It
   stays off until the new owner turns it on.
 - Reason: its runs would now act as the new owner, with the GitHub access
@@ -177,9 +235,11 @@ decision number names a decision of the change that adds
 - A run that waits in the queue when its owner or its org is suspended
   becomes skipped, as [Run states](automation-runs.md#run-states) says.
 - A suspended org still shows its Automations link and its automation pages. The
-  pages show the notice of the org and no actions.
+  pages show the notice of the org and no actions. They keep the line of
+  the chosen secrets.
 - Reason: an org suspension takes away no access to read, and nothing in a
   suspended org can change.
+- The pages show no pull request hint, because no run starts.
 - The automations of a deleted org start no runs. After a Restore, each
   automation of the org runs once for the schedule times that it missed.
 
@@ -195,58 +255,4 @@ decision number names a decision of the change that adds
 
 ## Risks that stay open
 
-- Risk: comments, reviews, and description edits by other GitHub accounts
-  reach the agent of a pull request run. The rule of
-  [Who may start a run](pull-request-runs.md#who-may-start-a-run) checks
-  only the author of the pull request and the sender of the event.
-- Risk: such text can steer the agent. The run uses the owner's default
-  login and GitHub token, and the env vars of the org. The agent can copy
-  the GitHub token and the env vars, or push them to a branch.
-- The sandbox of the run holds only a turn token, which spends that login
-  through the gateway while the turn runs.
-- Risk: a run on the org login spends it while no person watches. The
-  account of the org key or of the org endpoint pays, as
-  [Risks](org-logins.md#risks) says.
-- The owner's GitHub token reaches each repository where the owner
-  installed the GitHub App and has access, as
-  [GitHub tokens](github-tokens.md) says
-  (decision 121).
-- Risk: the agent of a run can create more workspaces through the agent
-  tools, and their first messages also come from the owner. Those
-  workspaces spend starts, and the Runs list does not show them.
-- Risk: the agent of a run can also use the workspace tools on each
-  workspace of the org, as [Reach](agent-tool-access.md#reach) says
-  (decisions 257 and 277). So text that steers a pull request run can read
-  every chat, workspace, session, and message of the org.
-- While a turn of the run runs, such text can also start sessions and
-  turns in each workspace of the org that is not archived. Their messages
-  come from the owner. Their turns run on the logins of their sessions.
-- While that turn runs, such text can also rename, move, and archive
-  workspaces, close and stop sessions, change the sections, and open and
-  close previews in the whole org. These writes use the rights of the
-  owner. When the owner is an admin, such text can archive each workspace
-  of the org. A member can restore each one for 14 days.
-- Risk: such text can also make the agent run a command with secrets. A
-  secret request in a run waits for a member, as in each workspace
-  (secrets decision 5 C). But a secret that a grant covers needs no
-  request, such as a secret for all agents. A command of the agent can
-  copy the value of such a secret, or push it to a branch.
-- Through the session calls, such text can also start turns in the other
-  workspaces and sessions of the org. Those turns use the grants of their
-  workspaces and their sessions with no request, as
-  [Turns that no person started](secrets.md#turns-that-no-person-started)
-  says.
-- Risk: a member with a terminal in a run workspace can read the owner's
-  GitHub token and the turn token of a running turn, as in each workspace.
-  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  states that risk (decision 105).
-- An instruction or a classifier that makes the agent ignore commands in a
-  pull request was rejected. It makes an injection less likely, but it
-  does not stop it.
-- A network allowlist for the sandboxes of runs was rejected, because a
-  controlled run can still push a secret to a branch.
-- A first agent without logins that summarizes the pull request was
-  rejected, because the agent that pushes a fix must read the code itself.
-- Decision 506 C chose the author rule. A token of the GitHub App that
-  reaches only the automation's repository was rejected for pull request runs.
-  It breaks the rule that pushes show as their sender (decision 50).
+See [Automation risks](automation-risks.md#risks-that-stay-open).

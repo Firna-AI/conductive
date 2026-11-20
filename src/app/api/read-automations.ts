@@ -1,5 +1,6 @@
 import type {
   Automation,
+  AutomationCapabilities,
   AutomationAuthorAccount,
   AutomationAuthorFilter,
   AutomationInactiveReason,
@@ -19,6 +20,7 @@ import {
   nested,
   record,
   text,
+  texts,
 } from './parse'
 import { readChoice, readSender, readSessionLogin } from './read-core'
 import { EVENTS, readRun, SCHEDULES } from './read-automation-runs'
@@ -114,6 +116,7 @@ function readAutomation(value: unknown): Automation {
     sectionId: text(automation, 'sectionId'),
     prompt: text(automation, 'prompt'),
     choice: nested(automation, 'choice', readChoice),
+    capabilities: readAutomationCapabilities(automation.capabilities),
     active: flag(automation, 'active'),
     inactiveReason: maybeNested(automation, 'inactiveReason', (reason) =>
       choice({ reason }, 'reason', INACTIVE_REASONS),
@@ -124,6 +127,18 @@ function readAutomation(value: unknown): Automation {
     nextRunAt: maybeCount(automation, 'nextRunAt'),
     createdAt: count(automation, 'createdAt'),
     updatedAt: count(automation, 'updatedAt'),
+  }
+}
+
+export function readAutomationCapabilities(
+  value: unknown,
+): AutomationCapabilities {
+  if (value === undefined) return { preapprovedSecretIds: [] }
+  return {
+    preapprovedSecretIds: texts(
+      record(value, 'capabilities'),
+      'preapprovedSecretIds',
+    ),
   }
 }
 

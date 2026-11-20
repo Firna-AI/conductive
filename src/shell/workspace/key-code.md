@@ -148,9 +148,20 @@ this guide.
   not go out, as [Agent actions](../../github/actions.md#agent-actions)
   says.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
-  kept files and of the kept previews for the whole screen.
+  kept files, of the kept previews, and of the kept files preview for the
+  whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
   workspace, its snapshot, and its connection while the sandbox runs.
+- `previews/kept-files-preview.ts`: the kept files preview store of the
+  open workspace, its snapshot, and its connection, with the end of the
+  files preview at its expiry and at a stop of the cloud computer.
+- `previews/use-html-preview.tsx`: `useHtmlPreview`, the `htmlPreview` of
+  the file page of an HTML file: its open at each show, its failure, its
+  frame, Reload, and Open. `previews/page-frames.tsx`: `PageFrames` and
+  `KeptPageFrames`, the frames that the chat keeps on desktop, and
+  `KeptPageFrame`, the element through which only the file page puts a
+  page there. [The tabs of HTML files](html-tabs.md) gives the rules, and
+  the `previews/HtmlTab*.test.tsx` files check them over the fake API.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
   `LocalWorkList` of the mockups lists.
 - `repository/RepositoryControl.tsx`: the repository of the header, its
