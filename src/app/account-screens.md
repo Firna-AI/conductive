@@ -22,6 +22,11 @@ agent login forms, and model lists in the web app.
   at once through `AccountModel.saveShortcuts`, as
   [the Keyboard shortcuts tab](../shell/account/shortcuts/README.md) says.
   The keys and every hint of the app use the saved changes at once.
+- Preferences, Keyboard shortcuts, and the keys of the app show a change
+  from another tab, another browser, or the Mac app after the next read of
+  the account, such as at a return to the page. A read that started before
+  a save of this tab answered keeps the saved value.
+  [Login data](login-data.md#rules) gives the reads.
 - Stats, at `/account/stats`, shows the counts of the person signed in.
   `StatsTab` reads them through `PageRead` each time that the tab opens, as
   [Account stats](../../docs/protocol/account-stats.md) says. A failed read

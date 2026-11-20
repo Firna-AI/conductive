@@ -71,7 +71,7 @@ The pull request of that change keeps its record.
 - A save of the choice saves no model. A user who never chose Model and
   effort keeps the default model and effort of the app.
 - An open app uses a choice that the user saved in another browser or in
-  the Mac app after its next start, as for Model and effort.
+  the Mac app after its next read of the account, as for Model and effort.
 - Reason: a saved copy of that default would hold the model for the user
   when the app changes its default.
 

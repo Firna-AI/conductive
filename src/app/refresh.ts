@@ -1,9 +1,14 @@
 import type { Resource } from './resource'
 import type { AppServices } from './services'
-import { valueOf } from './store'
+import { valueOf, type Readable } from './store'
 
 /** The wait before the next read of a shown value, in ms, or `null` for none. */
 export type RefreshWait<T> = (value: T | undefined) => number | null
+
+interface RefreshOptions {
+  visible?: Readable<boolean>
+  readOnWatch?: boolean
+}
 
 /** The reads of a value that screens show. */
 export interface Refreshing {
@@ -27,28 +32,38 @@ export class Refresher<T> implements Refreshing {
   private cancelTimer: (() => void) | null = null
   private timerWait: number | null = null
   private stops: (() => void)[] = []
-  private readonly resource: Resource<T>
+  private readonly resource: Pick<Resource<T>, 'read' | 'store'>
   private readonly wait: RefreshWait<T>
   private readonly services: Pick<AppServices, 'delay' | 'onFocus'>
+  private readonly options: RefreshOptions
 
   constructor(
-    resource: Resource<T>,
+    resource: Pick<Resource<T>, 'read' | 'store'>,
     wait: RefreshWait<T>,
     services: Pick<AppServices, 'delay' | 'onFocus'>,
+    options: RefreshOptions = {},
   ) {
     this.resource = resource
     this.wait = wait
     this.services = services
+    this.options = options
   }
 
   watch(): () => void {
     this.screens += 1
     if (this.screens === 1) {
+      const returned = () => {
+        if (this.options.visible?.get() ?? true) void this.refresh()
+        else this.clearTimer()
+      }
       this.stops = [
-        this.services.onFocus(() => void this.refresh()),
+        this.services.onFocus(returned),
         this.resource.store.subscribe(() => this.follow()),
       ]
-      void this.refresh()
+      if (this.options.visible)
+        this.stops.push(this.options.visible.subscribe(returned))
+      if (this.options.readOnWatch ?? true) void this.refresh()
+      else this.schedule()
     }
     let shown = true
     return () => {
@@ -92,7 +107,7 @@ export class Refresher<T> implements Refreshing {
 
   private schedule(): void {
     this.clearTimer()
-    if (this.screens === 0) return
+    if (this.screens === 0 || this.options.visible?.get() === false) return
     const wait = this.wanted()
     if (wait === null) return
     this.timerWait = wait

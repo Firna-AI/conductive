@@ -25,7 +25,8 @@ visual spec is the `app/operator` page of the
   and the app sends no operator request.
 - When an operator request gets HTTP 403 with `operator_required`, the app
   marks the account as not an operator. The section then shows the
-  not-found page, and the rail drops Operator, until the next load.
+  not-found page, and the rail drops Operator, until a read of the account
+  that starts after the refusal.
 - The section has no sidebar of an org, also in the Mac app. There the
   window controls sit in the top left corner.
 

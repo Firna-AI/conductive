@@ -168,9 +168,9 @@ Each path is relative to `src/app/`, the folder of this page.
   logins of the account, and `orgLoginChanged` does so after a change of
   an org login.
   `account-login-reads.ts`: `AccountLoginReads`, the one owner of the
-  reads of the logins. Each of its reads is a read of the whole account.
-  It also reads the account once when an org joins the orgs of the
-  person.
+  reads of the account, which [Login data](login-data.md#key-code) gives.
+  Each of its reads is a read of the whole account. It also reads the
+  account once when an org joins the orgs of the person.
   `login-owner.ts`: `loginOwnerName`, the name of the owner of a login,
   the org or a member, for the label of the composer and the line under
   the prompt of an automation.
