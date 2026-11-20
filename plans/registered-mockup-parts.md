@@ -90,6 +90,11 @@ counts and test under `.context/mokly-html/` of this workspace.
 - Some parts nest other parts. Mokly attributes a child's edit to the
   child when the child renders through its wrapper, and to the parent
   when the child is plain.
+- On 2026-11-20 the strict build with the Changes comparison ran out of
+  memory on the 7 GB cloud computer: the Mokly core grew to 5.2 GB. The
+  same build with `--no-changes --sidecars 2` passes. CI runs on 16 GB
+  runners. `.context/registered-mockup-parts/merge5-build-oom.mem` holds
+  the memory log.
 - The proof of Milestone 1, on 2026-11-16: with `WorkspaceMark`
   registered, a trial edit to its render gave 1 Changes row in place of
   405, and a trial edit to its CSS also gave 1 row in place of 405. The
@@ -436,6 +441,21 @@ Depends on: 4
 
 Register the parts of the operator section and the automations: 55 parts.
 
+- [ ] Register the parts that the fourth merge of `main` (2026-11-20,
+      `7fd59e6eb`) added: `CapabilitiesButton`, `CapabilitiesPanel`,
+      `GrantList`, `SendButton`, `StopButton`, `ComposerMenu`,
+      `LateAnswerLine`, `AllowButton`, `Answers`, `PhoneAnswers`, `LateEnd`,
+      `SecretRequest`, `ClaimedCommand`, `SecretRun`, `ValueAnswer`,
+      `PointMenu`, `RowMenuItem`, `RowMenuSheet`, `DeleteSecretDialog`,
+      `ReplaceForm`, `AddSecretForm`, `AllAgentsSwitch`, `AllAgentsMark`,
+      `RevealedValue`, `SecretRow`, `SecretsTab`, `OrgAgentsTab`,
+      `OrgColorField`, `OrgColorValue`, `OrgLoginLines`, `OrgColorSection`,
+      `SettingSwitch`, `PreviewActions`, `PreviewPage`, `HeaderState`,
+      `RestartSheet`, `RestartDialog`, `UpdateCheckToast`, and `RowDrop`.
+      `SidebarToggleProvider` and `CornerControlsProvider` are context
+      providers, so they stay out. Move the plain uses of registered parts
+      in the new mockup-only files, such as the `components/secrets/` and
+      `components/chat/RequestActions.tsx` files, to wrappers.
 - [ ] Register the 35 parts of `components/operator/`, with `LongRuns`, which
       `main` added. Move its plain uses of registered parts to wrappers.
 - [ ] Register the 14 parts of `components/automations/`.
