@@ -224,7 +224,8 @@ of the data that the screens read and write.
   or from an `org_suspended` refusal, and what its screens show.
 - The secrets of an org are one value of `OrgModel.secrets`, a
   `SecretsModel`. The Secrets tab and the Capabilities control read them
-  each time that they show, and share the answer. A write shows its answer
+  each time that they show, and share the answer. The automation page reads
+  them when a chosen secret of the automation has no name in the list. A write shows its answer
   in the list. The list never holds a value: a reveal gives its value to
   its caller only, shows the record of the reveal at once, and reads the
   list again for the record of the Worker.

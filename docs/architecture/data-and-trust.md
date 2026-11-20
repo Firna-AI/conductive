@@ -92,7 +92,9 @@ and the separate preview domain.
   says.
 - An automation run acts as its owner while no person watches. It uses the
   owner's default login and GitHub token, and the org's env vars. It also
-  uses each secret that a grant allows, such as a secret for all agents.
-  Its sandbox follows the same gateway boundary above. Other GitHub accounts
-  can write text that its agent reads, as
-  [Risks that stay open](../protocol/automations.md#risks-that-stay-open) says.
+  uses each secret that a grant allows, such as a chosen secret of its
+  automation or a secret for all agents. Its sandbox follows the same
+  gateway boundary above. Other GitHub accounts can write text that its
+  agent reads, as
+  [Risks that stay open](../protocol/automation-risks.md#risks-that-stay-open)
+  says.

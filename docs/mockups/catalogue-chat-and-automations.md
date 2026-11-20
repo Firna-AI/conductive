@@ -111,20 +111,29 @@ top layer, so no box cuts them.
 New workspace opens. Its child pages:
 
 - `app/automations/empty` has an org without automations.
-- `app/automations/automation` has the owner's view of a saved automation. Its
-  child pages: `new` has a new automation, whose `org-login` variant has a
+- `app/automations/automation` has the owner's view of a saved automation,
+  with the Capabilities icon in the bar of its prompt box. Under the box, a
+  line names the secrets that its runs can use with no question, and the
+  hint of its pull request triggers follows. Its child pages: `new` has a
+  new automation, whose `org-login` variant has a
   new automation of Priya whose runs use the org login of Acme, from decision
   5 A of the org logins plan, and whose `org-models` variant has its open
-  model picker without Fable 5.1, from decision 3 A. `member` has the view
-  of a member, whose `org-login` variant has the runs of Cal on the org
+  model picker without Fable 5.1, from decision 3 A. `member` has
+  the view of a member, with the secrets of the runs read-only and the pull
+  request hint, whose `org-login` variant has the runs of Cal on the org
   login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
-  `admin` the view of an admin with Turn off and Delete, `owner-left` an
+  `admin` the view of an admin with Turn off and Delete and the secret of
+  the runs of Priya read-only, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned
   off after three runs in a row failed, and `delete` the question that
   Delete asks first, because a deleted automation cannot come back. The first
   four were saved states of the page. They moved into their own folders
   and kept their paths, so the page shows only its canonical screen.
+  `capabilities` has the Capabilities control of the owner open, with two
+  secrets checked for each run workspace and the pull request hint, from
+  automation capabilities decisions 1 A to 3 A. A phone opens the control
+  as a sheet.
   `unavailable` has the page of an automation that the org no longer has,
   because it was deleted or the address is wrong, with Open Automations.
   `not-loaded` has the page after the read of the automation failed, with
