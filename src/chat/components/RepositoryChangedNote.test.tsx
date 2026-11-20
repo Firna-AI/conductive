@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { chatHistoryPath, type WorkspaceEvent } from '../../shared/events'
 import { SessionMarkdown } from '../../shared/transcript/session-markdown'
 import { markdownFixture } from '../../shared/transcript/session-markdown.test-support'
-import { emptyTranscript } from '../../shared/transcript/transcript'
 import {
   FAKE_IDS,
   FAKE_TIME,
@@ -111,7 +110,6 @@ describe('the note of a repository change', () => {
               branch,
             }}
             readers={{ viewerId, members: [] }}
-            transcript={emptyTranscript}
           />,
         ),
       ).trim()

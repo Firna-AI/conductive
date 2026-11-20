@@ -5,7 +5,8 @@ stream cursor, the session logs, the transcript items and their counts,
 the end reason of a finished turn, the standard speed of a fast turn, the
 lost lines, the turns, the open run
 of tool calls of a running turn, the work fold of each ended turn, and Try
-again. Its [key code](#key-code) names the shared transcript modules.
+again. Its [key code](#key-code) names the shared transcript modules and
+the parts of the chat that draw the transcript.
 
 - The stream cursor spans the whole workspace: every session, file, and
   workspace event. It drops a resent event, holds an event after a gap until
@@ -118,5 +119,21 @@ again. Its [key code](#key-code) names the shared transcript modules.
   each insert at its place, also in a fold. It gives each run of tool calls
   its open state: while a turn runs, only the run with its newest call is
   open.
+- `components/TranscriptView.tsx`: `TranscriptView`, the parts of the chat
+  of a session in order, then its pending messages and its running turn.
+  Its `TranscriptRows` draws the entries of `groupEntries` with the parts
+  of `components/transcript-rows.tsx`, one part for each kind of row. Each
+  part draws again only when its own data changes, as `sameData` of
+  `components/same-data.ts` checks. So a new value of an input, such as
+  `readers`, draws each row that uses it again. `components/same-data.ts`
+  also holds `KeptParts` and `sameElement`. They keep each card of
+  `sessionCommands` and `sessionSecrets` while its data stays the same.
+  Its `samePlainData` compares the blocks and the text of an answer at
+  each depth, as [Agent text](agent-text.md#drawing) says. `TranscriptRows`
+  also names the agent message that the agent writes now, whose row gets
+  `live`.
+- `components/turn-facts.ts`: `endFacts` gives what the end of a finished
+  turn shows from the rest of the transcript, such as its end reason.
+  `stopFacts` gives the notes of a stopped turn and who stopped it.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
   the reconnect, and the `hold` and `release` of the workspace stream.

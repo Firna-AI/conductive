@@ -6,6 +6,8 @@ import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
 import { startImageBuild } from '../lifecycle/image-builds'
 import { imageRuntime } from '../lifecycle/runtime'
+import { isOperator } from '../operator/access'
+import { selectOrgProviderAccount } from '../provider-assignment/selection'
 import type { RequestContext } from '../security/gate'
 import { warnWorker } from '../warnings'
 import { shellGitHubAccess } from './feature-github'
@@ -52,12 +54,19 @@ export async function createShellOrg(
     }
   }
   const id = dependencies.randomToken()
+  const providerAccount = await selectOrgProviderAccount(
+    env,
+    isOperator(env, context.user.githubId),
+    context.body?.providerAccount,
+    dependencies.randomToken,
+  )
   if (
     !(await insertShellOrg(env.DB, {
       id,
       name,
       initials,
       userId: context.user.id,
+      providerAccount,
       repositories,
       now: dependencies.now(),
     }))

@@ -1,3 +1,4 @@
+import type { Viewport } from '@mokly/mokly'
 import { MembersTab } from '../components/members/MembersTab'
 import { SecretsTab } from '../components/secrets/SecretsTab'
 import type { SecretsAccess } from '../components/secrets/secretRights'
@@ -11,10 +12,11 @@ import {
   type ReadOnlyCause,
 } from '../components/settings/OrgSections'
 import {
-  OrgRepositoryList,
   RepositoryEditToggle,
   RepositoryList,
 } from '../components/settings/RepositoryList'
+import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
+import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
 import { Section } from '../components/settings/Section'
 import {
   memberViewer,
@@ -22,6 +24,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { addedRepository } from '../fixtures/repositories'
 import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './OrgSettingsScreen'
@@ -75,18 +78,24 @@ function tabSecrets(
 }
 
 /**
- * The sentence after the description of the repositories. The notice of a
- * suspended org says why nothing changes, so the tab adds nothing.
+ * The description of the Repositories tab. Only a member who is not an
+ * admin gets one. The notice of a suspended org says why nothing changes,
+ * so the tab adds nothing.
  */
-const repositoryNotes: Readonly<Record<ReadOnlyCause | 'editable', string>> = {
-  editable: ' Adding a repository starts a build.',
-  member: ' Only an admin can change them.',
-  suspended: '',
+const repositoryNotes: Readonly<
+  Record<ReadOnlyCause | 'editable', string | undefined>
+> = {
+  editable: undefined,
+  member: 'Only an admin can change them.',
+  suspended: undefined,
 }
 
 /** The body of the open tab of the org settings. */
-export function TabBody(props: { state: OrgSettingsState }) {
-  const { state } = props
+export function TabBody(props: {
+  state: OrgSettingsState
+  viewport: Viewport
+}) {
+  const { state, viewport } = props
   const viewer = settingsViewer(state)
   const readOnly = readOnlyCause(state)
   const settings = settingsOrg(state)
@@ -110,18 +119,36 @@ export function TabBody(props: { state: OrgSettingsState }) {
       )
     case 'repositories': {
       const note = repositoryNotes[readOnly ?? 'editable']
-      const editing = !readOnly && state.repositoryView === 'edit'
+      const editing = !readOnly && state.repositoryView !== 'list'
+      // An open edit with an add that Done has not saved yet.
+      const unsaved = editing && state.repositoryView === 'edit-added'
+      const listed = unsaved
+        ? settings.repositories.map((repository) =>
+            repository.name === addedRepository
+              ? { ...repository, used: true }
+              : repository,
+          )
+        : settings.repositories
       return (
         <Section
           action={readOnly ? null : <RepositoryEditToggle editing={editing} />}
-          description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
+          description={note}
           title="Repositories"
         >
-          {settingsRepositoryNotice(state, settings)}
-          {editing ? (
-            <RepositoryList repositories={settings.repositories} search="" />
+          {unsaved ? (
+            <EditRepositoryNotice added={[addedRepository]} />
           ) : (
-            <OrgRepositoryList repositories={settings.repositories} />
+            settingsRepositoryNotice(state, settings)
+          )}
+          {editing ? (
+            <RepositoryList repositories={listed} search="" />
+          ) : (
+            <RepositoryOrderList
+              canMove={!readOnly}
+              repositories={settings.repositories}
+              state={state.repositoryOrder}
+              viewport={viewport}
+            />
           )}
         </Section>
       )

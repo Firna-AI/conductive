@@ -2,7 +2,8 @@ import type { Session } from '../../shared/generated/Session'
 import { RotateCcw, Square } from 'lucide-react'
 
 import { nameLabel } from '../../shared/name-label'
-import type { Overlay } from '../state/chat-snapshot'
+import { endedAt, historySessions } from '../state/archive-view'
+import type { ChatSnapshot, Overlay } from '../state/chat-snapshot'
 import { formatAgo } from '../state/format'
 import { ActionButton } from '../ui/actions'
 import { Menu, type MenuEntry } from '../ui/Menu'
@@ -13,19 +14,29 @@ import { AgentMark } from './AgentMark'
  * The sessions whose tabs the user closed, the last closed first: the mark
  * of the agent, the title, and the time since it closed. Each one reopens.
  * `endedAt` gives the time that a session ended, by default its close.
+ * `closedFirst` lists the sessions whose last close has no stored time, the
+ * last closed first, such as tabs that closed in the browser only. They lead
+ * the list, and each row still shows the time of `endedAt`.
  */
 export function historyEntries(
   history: readonly Session[],
   now: number,
   onReopen: (sessionId: string) => void,
   endedAt: (session: Session) => number | null = (session) => session.closedAt,
+  closedFirst: readonly string[] = [],
 ): MenuEntry[] {
   if (history.length === 0) {
     return [{ kind: 'note', text: 'Sessions that you close show here.' }]
   }
   const ended = (session: Session) => endedAt(session) ?? now
+  const rank = (session: Session) => {
+    const index = closedFirst.indexOf(session.id)
+    return index < 0 ? closedFirst.length : index
+  }
   return [...history]
-    .sort((left, right) => ended(right) - ended(left))
+    .sort(
+      (left, right) => rank(left) - rank(right) || ended(right) - ended(left),
+    )
     .map((session) => ({
       kind: 'item',
       key: session.id,
@@ -35,6 +46,30 @@ export function historyEntries(
       trailingIcon: RotateCcw,
       onSelect: () => onReopen(session.id),
     }))
+}
+
+/**
+ * The session history of the chat, as its menu and Reopen closed session
+ * read it: the sessions of `historySessions` with the times of `endedAt`.
+ * A read-only chat lists first the sessions whose tabs closed in the
+ * browser only, the last closed first, as `archive-view.ts` says. A chat
+ * that takes writes keeps the stored close order, also for the closes of
+ * other members. `readOnly` is true for an archived workspace, and for one
+ * that the host shows read-only.
+ */
+export function chatHistory(
+  snapshot: ChatSnapshot,
+  readOnly: boolean,
+  now: number,
+  onReopen: (sessionId: string) => void,
+): MenuEntry[] {
+  return historyEntries(
+    historySessions(snapshot, readOnly),
+    now,
+    onReopen,
+    (session) => endedAt(snapshot, session),
+    readOnly ? snapshot.archiveClosed : [],
+  )
 }
 
 /** The names of sessions in a sentence, such as "A, B, and C". */

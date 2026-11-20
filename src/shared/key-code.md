@@ -21,6 +21,12 @@ page.
 - [Agent tool runtime](agent-tools.ts) owns the machine paths, turn environment names, turn header, and workspace MCP registration.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
   labels for the chat, the new-workspace picker, and the mockups.
+  `sameChoice` compares two choices with one equality for each field of
+  `AgentChoice`. The chat, the automation draft, and the Worker checks of a
+  repeated message or model change use it. The Worker checks first read a
+  stored choice without `fast` as off, as
+  [The models with fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  says.
 - [Duration](transcript/duration.ts) formats elapsed chat and command times.
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
@@ -48,6 +54,10 @@ page.
 
 - [Mention text](mention-text.ts) reads and writes the mention of a file or
   a folder, for the chat field, sent messages, and the attachment mentions.
+- [Skill text](skill-text.ts): `skillTextAt` reads the skill text `/name`
+  at one place, and `skillNames` gives the names of the skill texts of a
+  message outside code, each once. The runner uses it for the skill input
+  of Codex, and code reads as in a sent message of the chat.
 - [Attachment paths](attachment-paths.ts): `attachmentPath` builds the copy
   path of a file: `ATTACHMENTS_DIRECTORY`, a digest of the file ID alone,
   and the safe file name. The Worker and the development and test fakes
@@ -67,6 +77,8 @@ page.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials, the colour of the org, and GitHub repository choices for org creation, and the request reader for org moves.
+  `CreateOrgRequest.providerAccount` carries an operator's account choice.
+  Omission means By weights. The Worker ignores the field from other users.
 - [Org colours](org-colors.ts) list the preset keys of an org colour, with Blue as the default for an org without one or with an unknown key.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.

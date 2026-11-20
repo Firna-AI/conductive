@@ -20,7 +20,8 @@ The sandbox software includes these programs:
 - `conductive`, one Rust program. Its subcommands run the agent runner,
   the preview relay, the agent tools, the git credential helper, and the
   updater. The runner runs as an always-on service. The relay listens on a
-  private port.
+  private port. The runner also holds the file server, which listens only
+  on a loopback port.
 - The SDK helper, a Node program. It runs the Claude Agent SDK and the
   Codex SDK for the runner, because these SDKs exist only in TypeScript
   and Python. The runner starts it as a child process. The two programs
@@ -98,10 +99,12 @@ source, and a separate source for each boundary were rejected.
 ## The software image
 
 The Worker builds one software image for each version of this software,
-when the deploy run asks. The software image holds the base image and a
-release of this software, and no org data. A build of an org without an
-org image starts from it. That build then installs only the parts that a
-newer release changed.
+in the `boat` account, when the deploy run asks. The software image holds
+the base image and a release of this software, and no org data. A build of
+an org on `boat` without an org image starts from it. That build then
+installs only the parts that a newer release changed. A first build of an
+org on another account, such as `e2b`, starts from the base image of that
+account, and installs this software.
 
 ## Agents and ports
 
@@ -149,6 +152,15 @@ sandbox. The previewed server then gets its local address as `Host`
 (decision 218).
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.
+
+The file server is a part of the agent runner. It serves the files of the
+workspace's repository folder over HTTP, for the files preview of the HTML
+file tabs. The preview relay forwards each request of a files preview to
+it, as to any port. The runner announces the file server to its workspace,
+and the file server updates with the runner, also at an install at idle.
+[File server](../protocol/file-server.md) states its rules. Reason: the runner already knows the repository folder,
+and it reads files safely for the file tabs. The preview relay reads no
+workspace variable, so it stays as it is.
 
 The Worker gives each sandbox the commit author of its workspace owner.
 The agent runner gives each agent the commit author of the sender of its

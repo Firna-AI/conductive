@@ -32,19 +32,17 @@ export function useDeleteAutomation(
   const question =
     asked && automation ? (
       <Dialog
-        actions={
-          <>
-            <ActionButton onPress={close}>Cancel</ActionButton>
-            <ActionButton
-              busy={remove.pending}
-              icon={Trash2}
-              onPress={() => remove.run()}
-              tone="danger"
-            >
-              Delete automation
-            </ActionButton>
-          </>
+        action={
+          <ActionButton
+            busy={remove.pending}
+            icon={Trash2}
+            onPress={() => remove.run()}
+            tone="danger"
+          >
+            Delete automation
+          </ActionButton>
         }
+        busy={remove.pending}
         close={close}
         title={`Delete ${automation.name}?`}
       >

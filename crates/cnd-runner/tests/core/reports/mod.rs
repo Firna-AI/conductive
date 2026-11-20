@@ -3,4 +3,5 @@
 mod dispatch_tests;
 mod replay_tests;
 mod retained_tests;
+mod skill_tests;
 mod support;

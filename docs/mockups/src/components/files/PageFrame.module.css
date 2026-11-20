@@ -1,0 +1,7 @@
+/* The frame of the page of an HTML file, under the header of the file. */
+.frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

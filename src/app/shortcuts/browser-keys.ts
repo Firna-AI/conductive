@@ -14,7 +14,10 @@ type BrowserTable = Readonly<Record<ShortcutKeyboard, readonly string[]>> & {
 }
 
 function digitKeys(modifier: string): string[] {
-  return shortcutDigits.map((digit) => `${modifier}+${digit}`)
+  return shortcutDigits.flatMap((digit) => [
+    `${modifier}+${digit}`,
+    `${modifier}+Numpad${digit}`,
+  ])
 }
 
 function tabAndAddressKeys(modifier: string): string[] {
@@ -24,8 +27,8 @@ function tabAndAddressKeys(modifier: string): string[] {
 const chromium: BrowserTable = {
   own: {
     mac: tabAndAddressKeys('Meta'),
-    windows: tabAndAddressKeys('Ctrl'),
-    linux: [...tabAndAddressKeys('Ctrl'), ...digitKeys('Alt')],
+    windows: [...tabAndAddressKeys('Ctrl'), 'Alt+D', 'F6'],
+    linux: [...tabAndAddressKeys('Ctrl'), ...digitKeys('Alt'), 'Alt+D', 'F6'],
   },
   mac: [
     'Meta+N',
@@ -63,8 +66,8 @@ const chromium: BrowserTable = {
 const firefox: BrowserTable = {
   own: {
     mac: tabAndAddressKeys('Meta'),
-    windows: tabAndAddressKeys('Ctrl'),
-    linux: [...digitKeys('Alt'), 'Ctrl+L'],
+    windows: [...tabAndAddressKeys('Ctrl'), 'Alt+D'],
+    linux: [...digitKeys('Alt'), 'Ctrl+L', 'Alt+D'],
   },
   mac: [
     'Meta+N',

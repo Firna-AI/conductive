@@ -8,10 +8,12 @@ import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { UserBubble } from '../components/TranscriptItem'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
@@ -49,13 +51,10 @@ function sent(id: string, text: string): UserMessage {
 async function mountText(text: string | string[], workspaceFiles: boolean) {
   const opened: string[] = []
   const shown: string[] = []
-  const snapshot = {
-    tree: { entries: new Map(entries.map((item) => [item.path, item])) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const { files } = await chatFiles(entries)
   const value: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: (path) => opened.push(path),
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,

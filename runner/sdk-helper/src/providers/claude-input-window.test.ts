@@ -33,7 +33,7 @@ async function queuedClaudeTurn() {
     const message = await sdk.nextUser()
     expect(message.message).toEqual({
       role: 'user',
-      content: `Sender: @alice [member ID: "alice"]\n\nMessage ${id}.`,
+      content: `Message ${id}.\n\nSender: @alice [member ID: "alice"]`,
     })
     sent.push(string(message.uuid))
   }
@@ -59,7 +59,7 @@ it('holds the 65th Claude message until a result frees input and reports exact m
   expect(delivered).toBe(true)
   expect(last?.message).toEqual({
     role: 'user',
-    content: 'Sender: @alice [member ID: "alice"]\n\nMessage 65.',
+    content: 'Message 65.\n\nSender: @alice [member ID: "alice"]',
   })
   expect(h.sent).not.toContain(last?.uuid)
   const completed = () =>
@@ -188,7 +188,7 @@ it('frees Claude input only for explicitly listed outstanding SDK UUIDs on each 
   })
   expect((await next).message).toEqual({
     role: 'user',
-    content: 'Sender: @alice [member ID: "alice"]\n\nChange the file.',
+    content: 'Change the file.\n\nSender: @alice [member ID: "alice"]',
   })
 })
 

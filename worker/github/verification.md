@@ -2,7 +2,7 @@
 
 This page belongs to the [GitHub backend](README.md).
 
-Run `npm run test -- worker/github worker/features/github-push-retry.test.ts src/github/githubStore.test.ts src/shared/github.test.ts` from the repository root with Node 24.
+Run `npm run test -- worker/github worker/features/github-push-retry.test.ts worker/features/github-routes.test.ts src/github/githubStore.test.ts src/shared/github.test.ts` from the repository root with Node 24.
 
 ## GitHub fakes
 
@@ -120,10 +120,18 @@ It evicts the real object, and checks that the new instance has the same records
 It resolves the merge state, and runs that one stored due alarm through the shared alarm helper.
 It then checks the ready state, one published `github.updated` event, and no stored retry or GitHub alarm.
 
+[github-routes.test.ts](../features/github-routes.test.ts) runs the production app and its Durable Objects through [featureFixture](../features/fixture.test-support.ts).
+Its rename case sends a signed `repository` event with the `renamed` action through the machine route.
+The name in the event differs from the saved name and from the name that the fake GitHub read returns.
+The case checks that D1 then holds the name and the default branch of that read.
+It runs only the alarm of the image coordinator of the org, and checks the repositories of the new build through `readBuildJob`.
+So the case fails when [the production composition](composition.ts) does not connect the GitHub read or the wake of the image coordinator.
+
 [workspace-summary.test.ts](workspace-summary.test.ts) sends signed webhooks and protected banner reads, then reads the list reply from local D1.
 It covers a failed check and a later passed read, with an unchanged activity time and position.
 It also covers an older receipt replay, the repair of a missing copy, and a failed copy whose retry follows a real eviction.
 A D1 trigger makes the copy fail.
+[merge-record.test.ts](merge-record.test.ts) covers the merge record: one row for a merged read, with the owner of the first record after a reassignment and a repeated event, no row for an open or closed pull request, the merged event of an archived workspace with no GitHub read, the delivery time for an event with no merge time, no row in a deleted org, and the org purge.
 [summary-queue.test.ts](summary-queue.test.ts) proves on the production chat port that each copy ends before the next refresh reads GitHub.
 [The shared summary tests](../../src/shared/github.test.ts) cover the order of the checks and the copy of each bar state.
 

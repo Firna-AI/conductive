@@ -5,6 +5,7 @@ import type { PortCredential, PrivatePort } from '../sandbox/provider'
 import { PREVIEW_COOKIE_PREFIX } from './credentials'
 import { portUrl, previewLocation, upstreamOrigin } from './origins'
 
+// The proxy adds the files mark only after this allowlist removes browser headers.
 const requestHeaders = [
   'accept',
   'accept-language',

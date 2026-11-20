@@ -1,6 +1,10 @@
 import { ACCOUNT_PATHS } from '../../src/shared/account'
 import { API_PATHS } from '../../src/shared/api'
-import { orgSettingsPaths } from '../../src/shared/org-settings'
+import {
+  buildsAtAdd,
+  orgSettingsPaths,
+  REPOSITORY_POSITION_SUFFIX,
+} from '../../src/shared/org-settings'
 import { sectionsPath } from '../../src/shared/sections'
 import { workspacePath } from '../../src/shared/workspaces'
 import type { AppDependencies, AppEnv } from '../env'
@@ -9,6 +13,7 @@ import { shellGitHubAccess, githubInstallUrl } from './feature-github'
 import { createShellOrg } from './feature-org'
 import {
   changeShellRepository,
+  moveShellRepositoryRoute,
   shellRepositoryChoices,
 } from './feature-repositories'
 import { featureSectionWrite } from './feature-sections'
@@ -75,6 +80,15 @@ export async function featureShellRoute(
         dependencies,
       ),
     })
+  const movedRepositoryId = repositoryPositionId(path, orgId)
+  if (movedRepositoryId !== null && request.method === 'PUT')
+    return moveShellRepositoryRoute(
+      env,
+      orgId,
+      userId,
+      movedRepositoryId,
+      context.body,
+    )
   const repositoryId = shellChildId(path, orgSettingsPaths.repositories(orgId))
   if (repositoryId && ['PUT', 'DELETE'].includes(request.method))
     return changeShellRepository(
@@ -82,7 +96,10 @@ export async function featureShellRoute(
       orgId,
       userId,
       repositoryId,
-      request.method === 'PUT',
+      {
+        selected: request.method === 'PUT',
+        build: buildsAtAdd(context.body),
+      },
       dependencies,
     )
   const sectionId = shellChildId(path, sectionsPath(orgId))
@@ -97,4 +114,13 @@ export async function featureShellRoute(
       return featureWorkspaceWrite(env, context, dependencies, workspaceId)
   }
   return null
+}
+
+/** The repository ID of a move path of the repository order, or `null`. */
+function repositoryPositionId(path: string, orgId: string): string | null {
+  if (!path.endsWith(REPOSITORY_POSITION_SUFFIX)) return null
+  return shellChildId(
+    path.slice(0, -REPOSITORY_POSITION_SUFFIX.length),
+    orgSettingsPaths.repositories(orgId),
+  )
 }

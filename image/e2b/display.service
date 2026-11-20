@@ -1,0 +1,14 @@
+[Unit]
+Description=Conductive computer display
+After=local-fs.target
+
+[Service]
+Type=notify
+User=user
+Group=user
+Environment=HOME=/home/user
+ExecStart=/usr/bin/python3 /usr/local/lib/conductive-e2b/display-start.py
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

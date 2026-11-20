@@ -4,14 +4,11 @@ import {
 } from '../../../../src/shared/agent-tools'
 
 import { object, string } from '../parse'
-import {
-  ATTACHMENT_IMAGE_MAX_BYTES,
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { codexBinary } from './binaries'
+import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
 import { prepareCodexSkills } from './codex-skills'
 import { openCodexThread } from './codex-thread'
@@ -19,53 +16,10 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage, type FixedContext } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
+import { noSkills, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
-import type { ProviderInput } from '../generated/ProviderInput'
-
-function input(command: ProviderInput, fixed: FixedContext) {
-  const images = command.attachments.filter((attachment) => {
-    const metadata = command.message.attachments.find(
-      (item) => item.id === attachment.attachmentId,
-    )
-    return (
-      metadata?.kind === 'image' &&
-      metadata.sizeBytes <= ATTACHMENT_IMAGE_MAX_BYTES
-    )
-  })
-  return [
-    {
-      type: 'text',
-      text: providerMessage(command, fixed),
-      text_elements: [],
-    },
-    ...(command.attachments.length
-      ? [
-          {
-            type: 'text',
-            text:
-              attachmentReadInstruction +
-              (images.length
-                ? ' Only an image that comes right after its file line is also in this message.'
-                : ''),
-            text_elements: [],
-          },
-        ]
-      : []),
-    ...command.attachments.flatMap((attachment) => {
-      const description = {
-        type: 'text',
-        text: attachmentDescription(command, attachment),
-        text_elements: [],
-      }
-      return images.includes(attachment)
-        ? [description, { type: 'localImage', path: attachment.path }]
-        : [description]
-    }),
-  ]
-}
 
 /**
  * Codex runs each subagent in its own thread, and the App Server sends the
@@ -84,9 +38,11 @@ function otherThread(params: unknown, threadId: string | null): boolean {
   )
 }
 
+/** `skills` gives the current Codex list at each send, also during a turn. */
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
+  skills: SkillSource = noSkills,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -121,21 +77,7 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
-    const skills = await prepareCodexSkills(options, lifetime)
-    const configs = {
-      ...settings.config,
-      'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
-      'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
-      'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
-      ...(computer
-        ? {
-            'mcp_servers.computer.command': computer.command,
-            ...(computer.args
-              ? { 'mcp_servers.computer.args': computer.args }
-              : {}),
-          }
-        : {}),
-    }
+    const orgSkills = await prepareCodexSkills(options, lifetime)
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
@@ -148,11 +90,15 @@ export function createCodexFactory(
       const args = [
         codexBinary(),
         'app-server',
-        ...skills.args,
-        ...Object.entries(configs).flatMap(([key, value]) => [
+        ...orgSkills.args,
+        ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
         ]),
+        ...codexStdioServer('conductive', WORKSPACE_TOOLS_MCP),
+        '-c',
+        `mcp_servers.conductive.env_vars=${JSON.stringify(Object.values(TOOL_ENV))}`,
+        ...(computer ? codexStdioServer('computer', computer) : []),
       ]
       rpc = new JsonRpc(
         start({
@@ -221,9 +167,11 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
-      if (skills.extraRoots.length)
+      if (orgSkills.extraRoots.length)
         await rpc
-          .request('skills/extraRoots/set', { extraRoots: skills.extraRoots })
+          .request('skills/extraRoots/set', {
+            extraRoots: orgSkills.extraRoots,
+          })
           .catch(() => {
             options.warn(
               'The org skills could not be loaded. The turn will continue.',
@@ -242,7 +190,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, options),
+                input: codexInput(command, skills, options),
               })
             } catch (error) {
               userIds = before
@@ -256,7 +204,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: input(command, options),
+                input: codexInput(command, skills, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

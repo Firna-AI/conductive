@@ -91,6 +91,7 @@ impl Fixture {
             Arc::new(NoConnection),
             clock.clone(),
             store.clone(),
+            false,
         ));
         let filter = Arc::new(CredentialFilter::default());
         filter.add("workspace-token".into())?;

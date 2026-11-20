@@ -23,7 +23,8 @@ pub(crate) async fn read_reply(
     let headers = head(stream).await?;
     let length = headers
         .lines()
-        .find_map(|line| line.strip_prefix("content-length: "))
+        .filter_map(|line| line.split_once(':'))
+        .find_map(|(name, value)| name.eq_ignore_ascii_case("content-length").then_some(value))
         .ok_or("missing content length")?
         .trim()
         .parse::<usize>()?;

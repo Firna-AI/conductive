@@ -1,11 +1,16 @@
 import { describe, expect, test } from 'vitest'
 import { pickWorkspaceFiles } from './draft-files.test-support'
-import { orgSettingsPaths, type BuildsResponse } from '../shared/org-settings'
+import {
+  orgSettingsPaths,
+  repositoryPositionPath,
+  type BuildsResponse,
+} from '../shared/org-settings'
 import { workspacesPath } from '../shared/workspaces'
 import { FakeApiServer } from '../test-support/fake-api'
 import { coreFixtures, FAKE_IDS } from '../test-support/fixtures/core'
 import { repositoryFixtures } from '../test-support/fixtures/repositories'
 import { OrgModel } from './org-model'
+import { moveRepository } from './settings-actions'
 import { testServices } from './test-kit'
 
 const org = FAKE_IDS.org
@@ -112,6 +117,27 @@ describe('the repository of a New workspace draft', () => {
       kept: { id: 'storefront', picked: false },
       removed: { id: 'billing-service', picked: false },
       sent: ['billing-service'],
+    })
+  })
+
+  test('after a move of the repository order, a new draft starts in the new first repository, and a kept draft keeps its own', async () => {
+    const server = new FakeApiServer()
+    const model = new OrgModel(testServices(server), org)
+    await Promise.all([model.reload('repositories'), model.reload('builds')])
+    const kept = model.newWorkspace(null)
+    kept.setText('Fix the flaky cart test.')
+    server.json('PUT', repositoryPositionPath(org, 'marketing-site'), {
+      order: ['marketing-site', 'storefront', 'billing-service'],
+    })
+    await moveRepository(model, 'marketing-site', 0)
+    const fresh = model.newWorkspace('checkout')
+    fresh.setText('Add a banner.')
+    expect({
+      kept: kept.draft.get().repository,
+      fresh: fresh.draft.get().repository,
+    }).toEqual({
+      kept: { id: 'storefront', picked: false },
+      fresh: { id: 'marketing-site', picked: false },
     })
   })
 })

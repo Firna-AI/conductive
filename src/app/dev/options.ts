@@ -1,9 +1,9 @@
 import type { OrgRole } from '../../shared/api'
 import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
+import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
-import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
@@ -72,6 +72,14 @@ const SKILLS = [
 export type DevSkills = (typeof SKILLS)[number]
 
 type DevInviteCode = (typeof INVITE_CODES)[number]
+
+/**
+ * The provider accounts of the dev fake: `boat` and `e2b` by default, `boat`
+ * only, three accounts, or both with a read that fails.
+ */
+const PROVIDER_PRESETS = ['two', 'one', 'three', 'fail'] as const
+
+type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
 
 /**
  * The preview state of the dev fake, from the query string of the page,
@@ -164,6 +172,12 @@ type DevInviteCode = (typeof INVITE_CODES)[number]
  *   it, the repository starts untrusted, as each repository does.
  * - `skillsSave=fail`: the first save of the page that names the skills
  *   repository or its trust fails, so the next one saves.
+ * - `providers=one|three|fail`: the configured provider accounts of the
+ *   Providers tab and of the account choice of Create org: `boat` only,
+ *   `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that
+ *   fails. Without it, the accounts are `boat` and `e2b`.
+ * - `providerSave=fail`: each save of the weights of new orgs fails, so
+ *   the Providers tab shows that the weights were not saved.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -207,6 +221,8 @@ export interface DevOptions {
   skills: DevSkills | null
   /** Acme trusts its saved skills repository. */
   skillsTrusted: boolean
+  providers: DevProviderPreset
+  providerSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
 }
@@ -266,6 +282,8 @@ export function readDevOptions(search: string): DevOptions {
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
     skills: pick(params, 'skills', SKILLS) ?? null,
     skillsTrusted: params.get('skillsTrust') === 'trusted',
+    providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
+    providerSaveFails: params.get('providerSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }

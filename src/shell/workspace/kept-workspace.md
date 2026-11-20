@@ -41,6 +41,12 @@ the `AppModel` of the tab, for the signed-in user.
   them follow the stream of the model before it opens, as the notices do.
   They keep the revokes of previews, and give each tool the kept revokes
   first, then the live events.
+- The tab also keeps the `WorkspaceSkills` of each workspace, the latest
+  skill lists for the list of `/` of its chat. Each show makes it follow
+  the stream of the model before it opens, as the tool events do. It
+  loads until the first `skills.updated` event, and each later event
+  replaces the lists. A report that the app cannot read keeps the last
+  lists. `workspace-skills.test.ts` checks it.
 - The tab also keeps the `WorkspaceFiles` of each workspace that it
   showed. The workspace screen connects it while it shows a workspace that
   is not archived, so a return shows the lists at once, and its socket asks
@@ -50,6 +56,12 @@ the `AppModel` of the tab, for the signed-in user.
   the store. The chat reads it for the list of `@` and the file chips, also
   on a phone before a visit to Files. A sign-out stops and forgets it with
   the other kept parts.
+- The tab also keeps the store of the files preview of each workspace that
+  it showed, which the tabs of HTML files show. `KeptConnections` connects
+  it while the screen shows the workspace, so its end reaches it. The end
+  of that connection forgets the files preview, so a return opens it
+  again, as [The tabs of HTML files](html-tabs.md) says. A sign-out forgets
+  the store.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

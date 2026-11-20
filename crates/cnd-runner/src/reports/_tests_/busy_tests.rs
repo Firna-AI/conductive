@@ -20,6 +20,7 @@ fn handler(next: Unimock, files: Unimock) -> ReportCommandHandler {
         ReportDependencies {
             files: Arc::new(files),
             ports: None,
+            skills: None,
             emitter: Arc::new(Unimock::new(())),
             link: Arc::new(Unimock::new(())),
             store: Arc::new(Unimock::new(())),

@@ -1,18 +1,20 @@
 import { isRunning } from './chat-snapshot'
 import { showNotice, type ChatContext } from './context'
 import { hydrate } from './history'
+import { withView } from './saved-view'
 import { selectSession } from './session-actions'
 import { beginEdit } from './session-records'
+import { showsSession } from './sessions'
 import { withSessionTabAt } from './tab-order'
 
 /** Where the tab of a session stood before its close, to put it back. */
 function placeBefore(context: ChatContext, sessionId: string) {
-  const { view, activeSessionId } = context.store.get()
+  const snapshot = context.store.get()
   return {
-    index: (view?.tabs ?? []).findIndex(
+    index: (snapshot.view?.tabs ?? []).findIndex(
       (tab) => tab.kind === 'session' && tab.sessionId === sessionId,
     ),
-    shown: activeSessionId === sessionId,
+    shown: showsSession(snapshot, sessionId),
   }
 }
 
@@ -38,23 +40,26 @@ async function closeSession(
     const closed = await context.api.closeSession(sessionId, stopRunningTurn)
     edit.confirm(closed.session, closed.eventNumber)
     if (!context.live()) return
-    const { view, activeSessionId } = context.store.get()
-    if (view) context.saveView(view)
+    const { activeSessionId } = context.store.get()
+    context.saveView()
     if (activeSessionId) await hydrate(context, activeSessionId)
   } catch (error) {
     if (!context.live()) return
     if (before.index >= 0) {
-      context.store.update((snapshot) => ({
-        ...snapshot,
-        view:
-          snapshot.view &&
-          withSessionTabAt(snapshot.view, sessionId, before.index),
-      }))
+      context.store.update((snapshot) =>
+        withView(snapshot, (view) =>
+          withSessionTabAt(view, sessionId, before.index),
+        ),
+      )
     }
     edit.fail()
+    const current = context.store.get()
     const untouched =
       context.tabChoices.count === after.choices &&
-      context.store.get().activeSessionId === after.shown
+      (after.shown === null
+        ? current.activeSessionId === null &&
+          (current.view?.activeTab ?? null) === null
+        : showsSession(current, after.shown))
     // The selection changes the store at once, before its history loads.
     const showing =
       before.shown && untouched ? selectSession(context, sessionId) : null

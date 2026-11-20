@@ -27,6 +27,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 1. Open your org.
 2. Select **New workspace**.
 3. Choose the repository for the task.
+   **New workspace** starts with the org's default repository.
 4. Choose a model and effort.
 5. Describe the task in the message box.
 6. Select **Send** on the page, or **Create** in the dialog.
@@ -49,6 +50,8 @@ The workspace keeps its accepted messages after a failed first start.
 Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
+The repository menu lists the org's repositories in the order that admins set.
+[Order repositories](/docs/cloud-computer#order-repositories) says how.
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
 The send button stays off while the selected repository waits for its build.
@@ -238,9 +241,9 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 
 ## Resume a stopped computer
 
-The computer stops after 30 minutes without user activity and without a running agent turn.
+The computer stops after a set time without user activity and without a running agent turn.
 An open tab alone does not keep it running.
-Using a port preview does not keep it running either.
+Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
 
 Open a stopped workspace to start its computer again.

@@ -172,10 +172,10 @@ change is open. Its pull request keeps them after the merge. The
   [sandbox software](sandbox-software.md#updates) keeps it too.
 - To revoke trust on a running cloud computer, the cloud computer must
   stop, then start again.
-- A cloud computer stops after 30 minutes without user activity and
-  without a running agent turn, as [The stop](stop-and-resume.md#the-stop)
-  says. A member who may archive the workspace can also archive it,
-  restore it, and then resume it.
+- A cloud computer stops after the configured stop time without user
+  activity and without a running agent turn, as
+  [The stop](stop-and-resume.md#the-stop) says. A member who may archive
+  the workspace can also archive it, restore it, and then resume it.
 - No control of the app applies a new choice to a running cloud computer
   at once.
 - Risk: an active cloud computer can keep an old trust with no time limit.

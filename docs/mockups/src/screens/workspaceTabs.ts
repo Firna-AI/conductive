@@ -8,6 +8,7 @@ import {
   startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { answerShot } from '../fixtures/answerFiles'
 import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
 import { previewTabLabel } from '../components/tools/previewCopy'
@@ -15,6 +16,7 @@ import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { htmlTab } from './workspaceFileTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -81,10 +83,10 @@ export function workspaceName(
 
 /**
  * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, or the copy of an attached
- * screenshot. A picture takes the icon that All files gives each other
- * file. A read of the copy names it by its file name, because no list
- * names it.
+ * an image whose bytes the browser cannot draw, the copy of an attached
+ * screenshot, or the screenshot of the agent. A picture takes the icon that
+ * All files gives each other file. A read of the copy names it by its file
+ * name, because no list names it.
  */
 function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
   const tab = (key: string, path: string, to: string): WorkspaceTab => ({
@@ -101,6 +103,8 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
       return tab('image', branchPictures.damaged, paths.imageNotDrawn)
     case 'attachment':
       return tab('copy', screenshotCopy.path, paths.attachmentOpen)
+    case 'screenshot':
+      return tab('screenshot', answerShot, paths.imageFromAnswer)
     default:
       return undefined
   }
@@ -213,6 +217,8 @@ export function tabsFor(
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  const html = htmlTab(state)
+  if (html) tabs.push(html)
   tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({

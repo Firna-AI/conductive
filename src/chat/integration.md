@@ -87,7 +87,13 @@ mount the chat.
   tree: the `WorkspaceFiles` of the Files screens fits it. `openFile`
   opens a file as a press in All files does, `showFolder` shows All files
   with a folder open, and `href` gives the address of the page of a chip.
-  Without `mentions`, the composer has no list. A message then shows each
+  `skills` is a store of the latest skill lists of the workspace, for the
+  list of `/` and the skill chips. Its snapshot is `MentionSkills` of
+  `mentions/mention-skills.ts`: loading, unavailable, or the list of each
+  agent. The shell gives `WorkspaceSkills`, which follows the
+  `skills.updated` events of the workspace stream.
+  Without `mentions`, the composer has no list of `@` and no list of `/`,
+  and a message shows each skill text as text. A message then shows each
   mention of a file or a folder of the workspace as text, as
   [Chips of files and folders](../../docs/protocol/file-mentions.md#chips-of-files-and-folders)
   says. The chip of each attached file of the message still shows, but it
@@ -161,7 +167,12 @@ mount the chat.
   so the list of `@` lies just above the box. A dialog or a sheet covers
   the nearest positioned frame: the app frame. The lifted tab of a drag,
   and the tab menu on desktop, draw on `document.body` with a fixed
-  position, because the row clips what it holds.
+  position, because the row clips what it holds. The model menu, the
+  session history on desktop, and the menu of Allow open beside their
+  button, in the top layer, on
+  [`PopoverSurface`](../shell/ui/PopoverSurface.tsx). So no box of the host
+  cuts them, as `app/chat/menu-placement` in
+  [the mockups](../../docs/mockups/catalogue-chat-and-automations.md) shows.
 - The menus, the dialogs, and the sheets of the chat note themselves in
   the open layers of the app shell, from `../shell/ui/layers.ts`. So the
   key of the command palette closes an open menu, and does nothing while
@@ -176,10 +187,12 @@ mount the chat.
 - `useChatController` gives the controller and its snapshot to an app that
   composes `SessionTabs` and `SessionChat` in its own layout. Such an app
   takes the tabs from `rowOf` with the sessions of `tabSessions` and the
-  shown tab of `shownTab`, and the session history from `historySessions`
-  with the times of `endedAt`, so an archived workspace navigates without a
-  write. It gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which
-  needs a toast provider above it, such as `ChatToasts`.
+  shown tab of `shownTab`, and the session history from `chatHistory`, so
+  an archived workspace navigates without a write. `chatHistory` puts the
+  local close order of a read-only workspace before the stored end times,
+  as [Read-only chats](loads-and-sends.md#read-only-chats) says. The app
+  gives `SessionTabs` its `onCopy` from `useTranscriptCopy`, which needs a
+  toast provider above it, such as `ChatToasts`.
 - `useChatController` makes the controller through the shared
   `useWorkspaceStore` hook of [the web app](../app/README.md). The hook
   starts the controller after the render. It stops the controller at

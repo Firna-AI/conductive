@@ -6,6 +6,7 @@ pub mod disk;
 pub mod emitter;
 pub mod engine;
 pub mod error;
+pub mod file_server;
 pub mod filter;
 pub mod helper;
 pub mod json;

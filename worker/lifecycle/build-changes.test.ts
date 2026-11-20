@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import { setupBackendTests } from './backend-test-hooks'
 import { SOFTWARE } from './backend-test-support'
 import { publishBuild } from './build-admission-data'
+import { readBuildChanges } from './build-changes-data'
 import {
   assignBuildSnapshot,
   failBuild,
@@ -173,13 +174,15 @@ it('keeps script references and repository snapshots within the provider account
       addedRepositories: [],
       removedRepositories: [],
     })
-    expect(
-      (await readBuildHistory(db, org.id, SECONDARY_IMAGE_ACCOUNT)).changes,
-    ).toEqual({
-      installScript: secondary,
-      addedRepositories: [{ id: repositoryId, fullName: 'example/repository' }],
-      removedRepositories: [],
-    })
+    expect(await readBuildChanges(db, org.id, SECONDARY_IMAGE_ACCOUNT)).toEqual(
+      {
+        installScript: secondary,
+        addedRepositories: [
+          { id: repositoryId, fullName: 'example/repository' },
+        ],
+        removedRepositories: [],
+      },
+    )
   }
   await db.batch([
     db

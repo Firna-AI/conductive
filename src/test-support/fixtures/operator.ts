@@ -97,6 +97,7 @@ export function sampleOrgDetail(
 ): OperatorOrgDetail {
   return {
     id: org.id,
+    providerAccount: 'boat',
     name: org.name,
     initials: org.initials,
     createdAt: daysBefore(now, org.createdDaysAgo),
@@ -165,6 +166,7 @@ export function orgRow(
       : 'active'
   return {
     id: org.id,
+    providerAccount: org.providerAccount,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,
@@ -198,7 +200,8 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
 /**
  * The numbers of the Overview of the mockups, for the 30 UTC days up to
  * the day of `readAt`. The largest orgs are those of the samples, so that
- * each opens its page, and `waiting` counts the people who wait.
+ * each opens its page, and `waiting` counts the people who wait. The long
+ * runs come only from the samples, as other orgs have no sample runs.
  */
 export function operatorOverview(
   orgs: readonly OperatorOrgDetail[],
@@ -238,15 +241,17 @@ export function operatorOverview(
     })),
     longRuns: orgs
       .filter((org) => org.workspaceStates.running > 0 || org.deletion)
+      .flatMap((org) => {
+        const source = sampleOrgs.find((sample) => sample.id === org.id)
+        return source ? [{ org, source }] : []
+      })
       .slice(0, 10)
-      .map((org, index) => {
+      .map(({ org, source }, index) => {
         const owner =
           org.members.find(
             (member) => member.githubId === SAMPLE_IDS.suspendedUser,
           ) ?? org.members[0]
         if (!owner) throw new Error('The sample run has no owner.')
-        const source = sampleOrgs.find((sample) => sample.id === org.id)
-        if (!source) throw new Error('The sample run has no org.')
         const pending = org.id === 'acme'
         return {
           workspaceId: `${org.id}-long-run`,

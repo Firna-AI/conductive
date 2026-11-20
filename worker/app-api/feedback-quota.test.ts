@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from 'vitest'
 
 import { invitesPath } from '../../src/shared/members'
 import {
@@ -18,8 +26,10 @@ beforeEach(async () => {
   await harness.reset()
 })
 afterAll(async () => harness.dispose())
+afterEach(() => vi.restoreAllMocks())
 
 it('limits feedback per person while invitations and reply reads stay outside the quota', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const client = await feedbackFixture(harness)
   client.setTime(TEST_TIME + 1)
   const invite = (email: string) =>
@@ -51,6 +61,7 @@ it('limits feedback per person while invitations and reply reads stay outside th
   expect((await client.send()).status).toBe(204)
   expect((await client.request(client.admin.session)).status).toBe(200)
   expect(client.resend.requests).toHaveLength(13)
+  expect(warn.mock.calls).toEqual([])
 })
 
 it('expires only the oldest rolling-hour send at the exact boundary', async () => {

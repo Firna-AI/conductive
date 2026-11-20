@@ -1,6 +1,6 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { randomUUID } from 'node:crypto'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import xterm from '@xterm/headless'
@@ -10,6 +10,11 @@ import {
   BRIDGE_OSC,
   TERMINAL_HISTORY_LINES,
 } from '../../../src/shared/terminal-bridge'
+import {
+  testDirectory,
+  testSocketDirectory,
+} from '../../test-support/test-directory'
+import { waitForProcessExit } from './process-exit.test-support'
 
 /** Whether to run the tests with a real tmux. CI installs tmux, so it never skips them. */
 export const runTmuxTests =
@@ -65,16 +70,16 @@ sys.exit(os.waitstatus_to_exitcode(status))
 
 /** A private tmux server, as the shell server of the image starts it. */
 export async function tmuxServer() {
-  const parent = resolve('.context/terminal-bridge-tests')
-  await mkdir(parent, { recursive: true })
-  const root = await mkdtemp(`${parent}/run-`)
+  const files = await testDirectory('terminal-bridge-')
+  const root = files.path
   const home = `${root}/home`
   await mkdir(home)
   await writeFile(`${home}/.bash_profile`, "unset PROMPT_COMMAND\nPS1='$ '\n")
   const environment = { ...process.env, HOME: home }
-  // tmux refuses a socket path of 108 characters or more, so the socket
-  // lives in a short folder, not under the checkout.
-  const socket = `${await mkdtemp(`${tmpdir()}/cbt-`)}/tmux.sock`
+  // A long system temp path needs a separate short socket folder.
+  const runtime = await testSocketDirectory(`${root}/runtime`)
+  await mkdir(runtime.path)
+  const socket = `${runtime.path}/tmux.sock`
   const runner = `${root}/pty-run.py`
   await writeFile(runner, ptyRunner)
   const started = spawnSync(
@@ -98,7 +103,11 @@ export async function tmuxServer() {
     ],
     { env: environment },
   )
-  if (started.status !== 0) throw new Error('tmux did not start.')
+  if (started.status !== 0) {
+    await runtime.remove()
+    await files.remove()
+    throw new Error('tmux did not start.')
+  }
   const tmux = (...args: string[]) =>
     spawnSync('tmux', ['-S', socket, ...args], {
       encoding: 'utf8',
@@ -131,9 +140,27 @@ export async function tmuxServer() {
       viewers.push(viewer)
       return viewer
     },
-    stop() {
-      for (const viewer of viewers) viewer.close()
-      tmux('kill-server')
+    async stop() {
+      const pids = [
+        tmux('display-message', '-p', '#{pid}'),
+        tmux('list-panes', '-a', '-F', '#{pane_pid}'),
+      ]
+        .join('\n')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+      try {
+        for (const viewer of viewers) viewer.close()
+        tmux('kill-server')
+        await Promise.all(viewers.map((viewer) => viewer.exited))
+        await waitForProcessExit(pids)
+      } finally {
+        try {
+          await runtime.remove()
+        } finally {
+          await files.remove()
+        }
+      }
     },
   }
 }
@@ -198,6 +225,14 @@ class Viewer {
   /** The length of the output now, to wait for text after it. */
   get mark(): number {
     return this.data.length
+  }
+
+  /** Runs a command, then waits for control bytes that its echo cannot hold. */
+  async runCommand(command: string): Promise<void> {
+    const marker = randomUUID()
+    const from = this.mark
+    this.write(`${command}; printf '\\n\\036%s\\037\\n' '${marker}'\r`)
+    await this.waitFor(`\x1e${marker}\x1f\r\n`, 10_000, from)
   }
 
   /** Waits until the output after `from` holds the text. */

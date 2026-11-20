@@ -77,16 +77,24 @@ type SecretRunState =
 export type MemberGrant = Extract<SecretGrant, { by: PersonKey }>
 
 /**
+ * The login that a session keeps: the personal login of its starter, or
+ * the org login of Acme.
+ */
+export type KeptLogin =
+  { type: 'personal'; starter: PersonKey } | { type: 'org' }
+
+/**
  * How a late Allow reached the agent (secrets decision 10 B): a turn for
  * the sender of the turn that asked, or nothing when that turn cannot run.
  * When the starter only stopped sharing the login, the agent learns of it
- * at the next message. When the login of the starter is gone, it learns of
- * it when the starter connects that agent again (item 12 C of the mockups).
+ * at the next message. When the login of the session is gone, it learns of
+ * it when that login is connected again: by the starter for a personal
+ * login, and by an admin for the org login (item 12 C of the mockups).
  */
 type LateDelivery =
   | { kind: 'turn' }
   | { kind: 'next-message' }
-  | { kind: 'reconnect'; starter: PersonKey; agent: AgentKey }
+  | { kind: 'reconnect'; login: KeptLogin; agent: AgentKey }
 
 /** A run of a command with secrets, at its place in the chat. */
 export type SecretRunItem = {

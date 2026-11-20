@@ -13,8 +13,13 @@ import {
   repositoryChange,
   type RepositoryChangeDependencies,
 } from './repository-change'
+import { recordBranchMerge } from './merge-record-data'
 import { checkRepositoryValues } from './repository-values-check'
-import { webhookRoute, type GitHubPullRequestEvent } from './webhook-routing'
+import {
+  webhookRepository,
+  webhookRoute,
+  type GitHubPullRequestEvent,
+} from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
 
@@ -135,25 +140,46 @@ export async function handleGitHubWebhook(
       )
       return new Response(null, { status: 204 })
     }
+    // The pull request runs, the workspace lookup, and the push refresh below
+    // match saved rows by the install of the event. So the repair of a missed
+    // move or rename runs before branch routing, including ignored events.
+    const repository = webhookRepository(event, value)
+    if (repository)
+      await checkRepositoryValues(
+        env.DB,
+        repository,
+        value,
+        dependencies.repositoryChange,
+      )
     const route = webhookRoute(event, value)
     if (route === null || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
-    await checkRepositoryValues(
-      env.DB,
-      {
-        repositoryId: route.repositoryId,
-        installationId: route.installationId,
-      },
-      value,
-      dependencies.repositoryChange,
-    )
     let pullRequestFailure: { error: unknown } | undefined
     try {
       if (route.pullRequest)
         await dependencies.pullRequest?.(route.pullRequest, deliveryId)
     } catch (error) {
       pullRequestFailure = { error }
+    }
+    // An archived workspace gets no refresh, so the event records the merge.
+    let mergeFailure: { error: unknown } | undefined
+    const merged = route.pullRequest
+    try {
+      if (merged?.trigger.event === 'merged')
+        await recordBranchMerge(
+          env.DB,
+          {
+            repositoryId: merged.repositoryId,
+            installationId: merged.installationId,
+            number: merged.trigger.number,
+            branch: merged.trigger.headBranch,
+            mergedAt: merged.mergedAt ?? dependencies.now(),
+          },
+          dependencies.now(),
+        )
+    } catch (error) {
+      mergeFailure = { error }
     }
     const workspaces = await repositoryWorkspaces(
       env.DB,
@@ -190,6 +216,7 @@ export async function handleGitHubWebhook(
         route.branch,
       )
     if (pullRequestFailure) throw pullRequestFailure.error
+    if (mergeFailure) throw mergeFailure.error
     if (failure) throw failure.error
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })

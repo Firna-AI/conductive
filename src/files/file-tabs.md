@@ -27,6 +27,10 @@ temporary tab in the saved view, as
   for a diff tab, so a screen reader hears the state. Keep the label:
   Chrome puts a space between the title and a hidden text after it, as in
   "README.md , temporary".
+- While the temporary tab shows, Escape closes it, as its Close does. The
+  shell offers that close with `usePageEscape` of the
+  [shortcut layer](../shell/shortcuts/README.md#escape-on-the-page).
+  `FileTabItem` hears no key for it.
 - The tab row also keeps the temporary tab: Keep open in its tab menu
   calls `keep` of the navigation, and a move to another place drops the
   mark, as [The tab row](../chat/tab-row.md) says. `FileTabItem` draws

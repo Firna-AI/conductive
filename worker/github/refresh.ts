@@ -8,6 +8,7 @@ import type {
   GitHubWorkspace,
 } from './contracts'
 import { activeWorkspace } from './data'
+import { recordPullRequestMerge } from './merge-record-data'
 import { saveWorkspaceGitHubSummary } from './summary-data'
 import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
@@ -169,11 +170,29 @@ async function readAndCommit(
     authorize,
     signal,
     // A receipt can replay committed state from before Continue.
-    (snapshot) =>
-      saveWorkspaceGitHubSummary(
+    async (snapshot) => {
+      await saveWorkspaceGitHubSummary(
         db,
         { ...workspace, branch: snapshot.banner.branch },
         githubSummary(snapshot.banner),
-      ),
+      )
+      const { banner } = snapshot
+      if (
+        banner.state === 'merged' &&
+        banner.pullRequest !== null &&
+        banner.mergedAt !== null
+      )
+        await recordPullRequestMerge(
+          db,
+          {
+            repositoryId: workspace.repositoryId,
+            number: banner.pullRequest.number,
+            orgId: workspace.orgId,
+            workspaceId: workspace.id,
+            mergedAt: banner.mergedAt,
+          },
+          dependencies.now(),
+        )
+    },
   )
 }

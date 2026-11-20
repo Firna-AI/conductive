@@ -3,6 +3,7 @@ import type { RunnerHello } from '../../src/shared/generated/RunnerHello'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { warningProcessStartId } from '../warning-values'
+import { warnWorker } from '../warnings'
 import { parseAgentEvent } from './agent-events'
 import { counter, identifier, invalidInput, number, record } from './inputs'
 import { parseOtherEvent } from './other-events'
@@ -11,6 +12,8 @@ import {
   checkRunnerEventLimits,
 } from './runner-event-limits'
 import { checkDisplayedPortReport } from './port-reports'
+import { checkDisplayedSkillReport } from './skill-reports'
+import { parseToolDetailPart } from './tool-detail-input'
 
 export interface IncomingRunnerEnvelope {
   type: 'event'
@@ -48,12 +51,18 @@ export function parseRunnerTransport(
   if (input.type === 'hello') {
     const protocolVersion = counter(input.protocolVersion)
     if (protocolVersion === 0) return invalidInput()
+    if (input.fileServer !== undefined && typeof input.fileServer !== 'boolean')
+      warnWorker({ kind: 'runner_file_server_invalid' })
     return {
       type: input.type,
       protocolVersion,
       workspaceId: identifier(input.workspaceId),
       streamId: identifier(input.streamId),
       processStartId: warningProcessStartId(input.processStartId),
+      ...(input.completeToolDetails === true
+        ? { completeToolDetails: true }
+        : {}),
+      ...(input.fileServer === true ? { fileServer: true } : {}),
       ...(input.loginKinds === undefined
         ? {}
         : { loginKinds: parseLoginKinds(input.loginKinds) }),
@@ -112,13 +121,15 @@ export function parseRunnerEnvelope(
   return parseRunnerPayload(input)
 }
 
-/** File display labels can grow after the raw transport checks have passed. */
+/** Display labels can grow after the raw transport checks have passed. */
 export function parseRunnerOutputEnvelope(
   input: RunnerEventEnvelope,
 ): RunnerEventEnvelope {
   const parsed = parseRunnerPayload(input)
   if (parsed.event.type === 'ports.updated')
     checkDisplayedPortReport(parsed.event)
+  if (parsed.event.type === 'skills.updated')
+    checkDisplayedSkillReport(parsed.event)
   if (
     parsed.event.type !== 'files.snapshot' &&
     parsed.event.type !== 'files.changed' &&
@@ -131,7 +142,10 @@ export function parseRunnerOutputEnvelope(
 function parseRunnerPayload(
   input: Omit<IncomingRunnerEnvelope, 'raw'>,
 ): RunnerEventEnvelope {
-  const event = parseOtherEvent(input.event) ?? parseAgentEvent(input.event)
+  const event =
+    parseToolDetailPart(input.event) ??
+    parseOtherEvent(input.event) ??
+    parseAgentEvent(input.event)
   checkRunnerEventLimits(event)
   return {
     type: 'event',

@@ -8,6 +8,7 @@ import type {
   OrgSettings,
   Repository,
   SkillsRepositoryLookupResponse,
+  RepositoryOrderResponse,
 } from '../../shared/org-settings'
 import type { SkillFolderClash } from '../../shared/skill-folders'
 import {
@@ -41,6 +42,10 @@ function readRepository(value: unknown): Repository {
 
 export function readRepositories(value: unknown): Repository[] {
   return items(record(value, 'repositories'), 'repositories', readRepository)
+}
+
+export function readRepositoryOrder(value: unknown): RepositoryOrderResponse {
+  return { order: texts(record(value, 'order'), 'order') }
 }
 
 function readBaseImage(value: unknown): BaseImage {

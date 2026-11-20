@@ -1,7 +1,9 @@
 import type { SandboxProvider } from '../sandbox/provider'
 import { createResource } from '../lifecycle/resource-intents'
+import { ProviderError } from '../sandbox/errors'
 import type { SoftwareImage } from './types'
 import { saveSoftwareImage } from './data'
+import { saveSoftwareImageOperation } from './operation-data'
 
 export class AttemptChanged extends Error {}
 
@@ -35,9 +37,20 @@ export async function snapshotSoftwareImage(
   image: SoftwareImage,
 ) {
   if (!image.sandboxId) throw new Error('Missing software image sandbox')
+  if (image.snapshotRecorded === 1 && image.operation !== 'snapshot-missing') {
+    try {
+      return await provider.getSnapshot(image.snapshotName)
+    } catch (error) {
+      if (!(error instanceof ProviderError && error.kind === 'not_found'))
+        throw error
+      if (!(await saveSoftwareImageOperation(db, image, 'snapshot-missing')))
+        throw new AttemptChanged()
+      return null
+    }
+  }
   return createResource(db, provider, {
     kind: 'snapshot',
-    recorded: image.snapshotRecorded === 1,
+    recorded: false,
     input: { sandboxId: image.sandboxId, name: image.snapshotName },
     persist: async () => {
       if (!(await saveSoftwareImage(db, image, { snapshotRecorded: 1 })))

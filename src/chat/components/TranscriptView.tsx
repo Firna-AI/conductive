@@ -1,59 +1,154 @@
-import type { ReactNode } from 'react'
-import { Spinner } from '@firna/ui/spinner'
-import { useSharedUiTheme } from '@firna/ui/theme'
+import { memo, type ReactNode } from 'react'
 import type { PendingMessage } from '../state/chat-snapshot'
-import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import { formatDuration } from '../../shared/transcript/duration'
 import { retryItemId } from '../../shared/transcript/known-turns'
-import type {
-  RunningTurn,
-  Transcript,
-} from '../../shared/transcript/transcript'
-import { ToolGroup } from './ToolGroup'
-import { ItemView, UserBubble } from './TranscriptItem'
-import { turnCopy, type ChatReaders } from '../../shared/transcript/turn-words'
+import type { Transcript } from '../../shared/transcript/transcript'
 import {
   groupEntries,
+  type SingleItem,
   type TranscriptInsert,
 } from '../../shared/transcript/transcript-entries'
-import { WorkFold } from './WorkFold'
-import { rowKeyAttribute } from './chat-place'
-import local from './chat.module.css'
+import type { ChatReaders } from '../../shared/transcript/turn-words'
+import {
+  InsertRow,
+  ItemRow,
+  PendingRow,
+  StopRow,
+  ToolsRow,
+  TurnEndRow,
+  WorkingRow,
+  WorkRow,
+} from './transcript-rows'
+import { endFacts, stopFacts } from './turn-facts'
+
+const noInserts: readonly TranscriptInsert<ReactNode>[] = []
+
+interface RowsProps {
+  transcript: Transcript
+  inserts: readonly TranscriptInsert<ReactNode>[]
+  readers: ChatReaders
+  readOnly: boolean
+  retrying: boolean
+  onRetry: (messageId: string) => void
+  onOpenDiff?: (path: string) => void
+}
 
 /**
- * One row of the transcript, with the key that the reader's place keeps. A
- * row lays out its parts as the transcript does, and an empty row takes no
- * space, so the rows change nothing that shows.
+ * The ID of the agent message that the agent writes now: the newest item of
+ * the running turn, when it is an agent message that `assistant.completed`
+ * has not completed. A later step of the turn or the end of the turn also
+ * shows that the message is complete.
  */
-function Row(props: { id: string; children: ReactNode }) {
-  const key = { [rowKeyAttribute]: props.id }
-  return (
-    <div className={local.row} {...key}>
-      {props.children}
-    </div>
+function writingMessage(transcript: Transcript): string | null {
+  const running = transcript.turn?.turnId
+  if (running === undefined) return null
+  const newest = transcript.items.findLast(
+    (item) => 'turnId' in item && item.turnId === running,
   )
+  return newest?.kind === 'agent' && !newest.complete ? newest.id : null
 }
 
-/** The running turn: thinking until the agent writes, and the time since it started. */
-function WorkingRow(props: { turn: RunningTurn; now: number }) {
-  const theme = useSharedUiTheme()
-  return (
-    <div className={styles.working}>
-      <Spinner color={theme.colors.primary} size={12} />
-      {props.turn.thinking ? turnCopy.thinking : turnCopy.working}
-      <span className={styles.elapsed}>
-        {formatDuration(props.now - props.turn.startedAt)}
-      </span>
-    </div>
-  )
+/** The items of the rows that the transcript marks. */
+interface MarkedItems {
+  /** The item that may offer Try again. */
+  retryable: string | null
+  /** The agent message that the agent writes now. */
+  writing: string | null
 }
+
+/**
+ * The row of an item. The end of a turn and the line of a stopped turn get
+ * the data that the transcript keeps about their turn, so the row needs no
+ * other part of the transcript. The agent message that the agent writes now
+ * closes its open marks, as "While the agent writes" of `chat-markdown.md`
+ * says.
+ */
+function itemRow(item: SingleItem, props: RowsProps, marked: MarkedItems) {
+  switch (item.kind) {
+    case 'turn-end':
+      return (
+        <TurnEndRow
+          facts={endFacts(props.transcript, item)}
+          item={item}
+          key={item.id}
+          onOpenDiff={props.onOpenDiff}
+        />
+      )
+    case 'stopped':
+      return (
+        <StopRow
+          facts={stopFacts(props.transcript, item, props.readers)}
+          item={item}
+          key={item.id}
+        />
+      )
+    default: {
+      // Only the item that may offer Try again shows a retry that runs.
+      const canRetry = item.id === marked.retryable
+      const actions = {
+        canRetry,
+        retrying: canRetry && props.retrying,
+        onRetry: props.onRetry,
+      }
+      return (
+        <ItemRow
+          actions={actions}
+          item={item}
+          key={item.id}
+          live={item.id === marked.writing}
+          readers={props.readers}
+        />
+      )
+    }
+  }
+}
+
+/**
+ * The rows of the items, in the order of `groupEntries`. Each row draws
+ * again only when its own data changes. A tick of the clock changes no
+ * input here, so it draws none of them.
+ */
+const TranscriptRows = memo(function TranscriptRows(props: RowsProps) {
+  const { transcript } = props
+  // The newest session record gives the permission. The order of the items
+  // gives none. A read-only chat offers no Try again.
+  const retryable = props.readOnly ? null : retryItemId(transcript)
+  const marked = { retryable, writing: writingMessage(transcript) }
+  return groupEntries(transcript, props.inserts).map((entry) => {
+    switch (entry.kind) {
+      case 'insert':
+        return (
+          <InsertRow
+            content={entry.insert.content}
+            id={entry.insert.key}
+            key={entry.insert.key}
+          />
+        )
+      case 'tools':
+        return (
+          <ToolsRow
+            calls={entry.calls}
+            id={entry.id}
+            key={entry.id}
+            open={entry.open}
+          />
+        )
+      case 'work':
+        return <WorkRow id={entry.id} key={entry.id} steps={entry.steps} />
+      case 'item':
+        return itemRow(entry.item, props, marked)
+    }
+  })
+})
 
 /**
  * The parts of a session's chat in order: messages, answers, folded tool
  * calls, the folded work of each ended turn, the end of each turn, and the
  * line of each lost event. Messages that the stream has not shown yet
  * follow, also while their send waits, then the running turn, then `children`, such as the steps of a
- * sandbox start.
+ * sandbox start. The agent message that the agent writes now closes its
+ * open marks, as "While the agent writes" of `chat-markdown.md` says. Give
+ * stable `inserts`, `readers`, `onRetry`, and `onOpenDiff`: a new value
+ * draws each row that uses it again.
  */
 export function TranscriptView(props: {
   transcript: Transcript
@@ -67,59 +162,27 @@ export function TranscriptView(props: {
   onOpenDiff?: (path: string) => void
   children?: ReactNode
 }) {
-  const { transcript } = props
-  // The newest session record gives the permission. The order of the items
-  // gives none. A read-only chat offers no Try again.
-  const retryable = props.readOnly ? null : retryItemId(transcript)
+  const { turn } = props.transcript
   return (
     <>
-      {groupEntries(transcript, props.inserts ?? []).map((entry) => {
-        switch (entry.kind) {
-          case 'insert':
-            return (
-              <Row id={`insert:${entry.insert.key}`} key={entry.insert.key}>
-                {entry.insert.content}
-              </Row>
-            )
-          case 'tools':
-            return (
-              <Row id={`tools:${entry.id}`} key={entry.id}>
-                <ToolGroup calls={entry.calls} open={entry.open} />
-              </Row>
-            )
-          case 'work':
-            return (
-              <Row id={`work:${entry.id}`} key={entry.id}>
-                <WorkFold steps={entry.steps} />
-              </Row>
-            )
-          case 'item':
-            return (
-              <Row id={`item:${entry.item.id}`} key={entry.item.id}>
-                <ItemView
-                  actions={{
-                    canRetry: entry.item.id === retryable,
-                    retrying: props.retrying,
-                    onRetry: props.onRetry,
-                    onOpenDiff: props.onOpenDiff,
-                  }}
-                  item={entry.item}
-                  readers={props.readers}
-                  transcript={transcript}
-                />
-              </Row>
-            )
-        }
-      })}
+      <TranscriptRows
+        inserts={props.inserts ?? noInserts}
+        onOpenDiff={props.onOpenDiff}
+        onRetry={props.onRetry}
+        readers={props.readers}
+        readOnly={props.readOnly}
+        retrying={props.retrying}
+        transcript={props.transcript}
+      />
       {props.pending.map((message) => (
-        <Row id={`pending:${message.id}`} key={`pending:${message.id}`}>
-          <UserBubble message={message} />
-        </Row>
+        <PendingRow key={`pending:${message.id}`} message={message} />
       ))}
-      {transcript.turn ? (
-        <Row id="working">
-          <WorkingRow now={props.now} turn={transcript.turn} />
-        </Row>
+      {turn ? (
+        <WorkingRow
+          now={props.now}
+          startedAt={turn.startedAt}
+          thinking={turn.thinking}
+        />
       ) : null}
       {props.children}
     </>
