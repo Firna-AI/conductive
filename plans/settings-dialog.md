@@ -68,6 +68,25 @@ Design calls, all mine, made on 20 November 2026:
 - This Mac stays the last row of the Account group, in the Mac app only.
 - The review pages `app/settings-options` go away in Milestone 1.
 
+Design calls, all mine, made on 20 November 2026 while building:
+
+- The rows of the list keep the name "tab". Reason: "section" already
+  names the parts inside a tab, such as the Sign-in section. "Account
+  settings" names the Account group, as the Delete org question already
+  says.
+- The page below stays mounted while Settings opens and closes. Reason: a
+  workspace below keeps its chat, its terminals, and its connections, so
+  Close returns to it as it was.
+- The focus starts on the row of the open tab, and stays in the dialog
+  while the person moves between tabs.
+- While a native dialog of the members UI is open, such as Delete org,
+  Esc closes only that dialog. Reason: the app's own Esc layers did not
+  see those dialogs, so Esc closed Settings with them.
+- The Terms and Privacy pages keep their effective dates. Reason: their
+  changed sentences only name the new place, Account settings.
+- The org group heading and the rail order follow decision 2. Until then
+  the dialog shows the current org only, which every option shows.
+
 Contract owners:
 
 - [Create a workspace](../docs/protocol/create-a-workspace.md), for the
@@ -239,21 +258,23 @@ Depends on: 1
 
 State the dialog in the protocol docs and in the public guides.
 
-- [ ] Add a protocol doc `docs/protocol/settings.md` with the dialog,
+- [x] Add a protocol doc `docs/protocol/settings.md` with the dialog,
       its groups, its addresses, Close and Esc, the phone pages, and
       decisions 1, 2, and 3.
-- [ ] Update each protocol doc that says "Account page" or "tab of the
+- [x] Update each protocol doc that says "Account page" or "tab of the
       org settings": `create-a-workspace.md`, `account-stats.md`,
       `keyboard-shortcuts.md`, `keyboard-shortcuts-tab.md`,
       `keyboard-shortcuts-keys.md`, `command-palette.md`,
       `command-palette-actions.md`, `desktop-commands.md`,
       `delete-org.md`, `secrets.md`, `org-image.md`, `waitlist-codes.md`,
       `sign-ups.md`, `isolation.md`, `fast-mode.md`,
-      `own-endpoint-logins.md`, and `tokens-and-secrets.md`.
-- [ ] Read each public guide in `src/marketing/docs/` in full. Update each
+      `own-endpoint-logins.md`, and `tokens-and-secrets.md`. The lines of
+      `secrets.md` and `org-image.md` about the tabs of the org settings
+      stay true, so they keep their words.
+- [x] Read each public guide in `src/marketing/docs/` in full. Update each
       sentence about the account page or the org settings, such as in
       `agent-logins.md` and `orgs-and-members.md`.
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact.
 
 ## Milestone 3: The dialog in the app
@@ -265,21 +286,23 @@ Depends on: 2
 Show the account and the org settings in one dialog, at their current
 addresses.
 
-- [ ] Add the section list and the dialog under `src/shell/settings/`,
+- [x] Add the section list and the dialog under `src/shell/settings/`,
       with focus inside the dialog, Close, and Esc.
-- [ ] Open the dialog over the page below for each account and settings
+- [x] Open the dialog over the page below for each account and settings
       address. Open it over the workspace list or the home page on a
       direct load.
-- [ ] Add the address `/settings`: the list on a phone, and Account ›
+- [x] Add the address `/settings`: the list on a phone, and Account ›
       General on a desktop.
-- [ ] Show the phone list and the phone section pages.
-- [ ] Let only Esc and the keys of the fields of the dialog run while it
+- [x] Show the phone list and the phone section pages.
+- [x] Let only Esc and the keys of the fields of the dialog run while it
       is open.
-- [ ] Draw the org group in the shape of decision 2.
-- [ ] Move the tab content of `AccountScreen` and `OrgSettingsScreen`
+- [ ] Draw the org group in the shape of decision 2. The dialog shows the
+      current org, which every option of decision 2 shows. Waits for
+      decision 2.
+- [x] Move the tab content of `AccountScreen` and `OrgSettingsScreen`
       into the dialog. Keep the saved drafts of each form.
-- [ ] Update the tests of both screens and add tests for the dialog.
-- [ ] Update each `README.md` under `src/` that names the two screens or
+- [x] Update the tests of both screens and add tests for the dialog.
+- [x] Update each `README.md` under `src/` that names the two screens or
       their addresses, such as `src/app/README.md`.
 
 ## Milestone 4: Ways into the dialog
@@ -288,23 +311,27 @@ Tags: ui
 
 Depends on: 3. The Settings key waits for decision 3.
 
-- [ ] Rename the shortcut command "Account page" to "Settings". Keep its
-      id. Open the section of decision 3.
-- [ ] Open the dialog from the avatar of the rail, the cog of the
+- [x] Rename the shortcut command "Account page" to "Settings". Keep its
+      id.
+- [ ] Open the target of decision 3 with the Settings key. The key keeps
+      its target of today, Account › General, until then. Waits for
+      decision 3.
+- [x] Open the dialog from the avatar of the rail, the cog of the
       sidebar, and the org switcher of a phone.
-- [ ] Open the dialog from the palette rows and from every link to a
+- [x] Open the dialog from the palette rows and from every link to a
       settings address, such as the notices of New workspace.
-- [ ] Delete the old page screens, their tab lists, and their dead
+- [x] Delete the old page screens, their tab lists, and their dead
       styles. Search `docs/`, `plans/`, and each `README.md` for their
       names.
-- [ ] Update the tests of the shortcut, the palette, and the links.
+- [x] Update the tests of the shortcut, the palette, and the links.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Smoke-test the dialog in a browser on desktop and on a phone size.
+- [x] Smoke-test the dialog in a browser on desktop and on a phone size.
+      The script and its screenshots are in `.context/settings-dialog/`.
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,

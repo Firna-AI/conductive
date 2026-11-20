@@ -327,6 +327,6 @@ dialog, and feedback with its screenshots.
   and the files use it.
 - `endpoint-models.ts`: the one rule of the model lists of own endpoints.
   `unlistedModels` gives the app models that the last list of a login does
-  not name, for the account page. `offeredModels` gives the models that a
+  not name, for the Agents tab. `offeredModels` gives the models that a
   picker of the owner offers. Every picker of the owner calls it, as
   [Screens](screens.md) says.

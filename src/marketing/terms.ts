@@ -237,7 +237,7 @@ export const termsDocument: LegalDocument = {
           cloud computers of the org at once. It deletes the org after 7
           days, unless an admin restores it.`,
         paragraph`You can stop using ${productName} at any time. You can
-          remove connected agent logins on your account page. To request
+          remove connected agent logins in Account settings. To request
           account deletion, write to ${mailLink(legalAddress)}. Stopping
           use or removing a login does not delete an org or its chat
           history. The Privacy notice explains data retention.`,

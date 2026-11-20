@@ -117,8 +117,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         workspace is archived. They let an agent use a secret in a command
         only after a member allows it.`,
       text`Endpoint models: ${productName} reads the endpoint's model list
-        with its key when you save the login or press Refresh on your account
-        page. When you save a Codex endpoint whose address gives no model
+        with its key when you save the login or press Refresh in your Account
+        settings. When you save a Codex endpoint whose address gives no model
         list, it can read the list a second time, at that address with /v1
         added. When only that read gives a list, it saves the address with
         /v1 added. It also reads the list in the background when a turn on

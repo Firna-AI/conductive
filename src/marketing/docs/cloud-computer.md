@@ -41,7 +41,7 @@ You can keep a draft there while you wait.
 After the first successful build, use these steps to change its repositories:
 
 1. Open the org's **Settings**.
-2. Select **Repositories**.
+2. Select **Repositories** under the org's name.
 3. Add or remove the repositories you want in its setup.
 
 The repository list has **Manage access** for the GitHub App's access on GitHub.
@@ -60,7 +60,7 @@ Existing workspaces keep the repositories and folders from the setup they starte
 
 ## Install software
 
-1. Open **Cloud computer** in the org's **Settings**.
+1. Open **Cloud computer** under the org's name in **Settings**.
 2. Enter an install script under **Install software**.
 3. Select **Save script**.
 4. Select **Build computer**.
@@ -82,7 +82,7 @@ Folders normally use `~/code/<repo>`.
 Repeated repository names get an owner prefix, such as `~/code/acme-storefront`.
 A remaining folder-name collision adds a numeric suffix.
 
-The page lists the software included before your install script runs.
+**Cloud computer** lists the software included before your install script runs.
 Builds do not get your org's environment variable values.
 Use startup commands for work that needs those values.
 
@@ -136,7 +136,7 @@ Use **Secrets** for a key that an agent should use only with a member's approval
 Use environment variables for values that every computer needs at each start.
 
 1. Open the org's **Settings**.
-2. Select **Secrets**.
+2. Select **Secrets** under the org's name.
 3. Select **Add secret**.
 4. Enter its **Name**, **Description**, and **Value**.
 5. Select **Save secret**.

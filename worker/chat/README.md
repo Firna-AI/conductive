@@ -253,7 +253,7 @@ It selects no ciphertext and decrypts no login.
 The shared builder refuses every IPv4 and IPv6 address, the product domain, and the configured `PREVIEW_DOMAIN`.
 Dispatch still decrypts and checks the full saved address before it sends a turn.
 `session-login.ts` treats a refused endpoint as an unusable login for linked-session admission and dispatch.
-Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to the account page.
+Its failed-turn cause requires a public HTTPS endpoint with a host name, names the starter and agent, and points to Account settings.
 Runner delivery maps a valid endpoint to an API-key turn-token credential.
 `runner-gateway-command.ts` adds `promptCacheTtl: '1h'` only for a Claude own endpoint turn.
 No endpoint address or key enters a runner command or chat record.
