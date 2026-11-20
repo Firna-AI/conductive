@@ -1,6 +1,3 @@
-import { createApiClient } from '../../src/app/api/client'
-import { xhrFileTransport } from '../../src/app/api/xhr-files'
-import { socketEventSource } from '../../src/app/event-socket'
 import { createLiveServices } from '../../src/app/live-services'
 import type { AppServices } from '../../src/app/services'
 
@@ -12,17 +9,8 @@ export function createDesktopServices(
   target: Window,
   appOrigin: string,
 ): AppServices {
-  const address = (path: string) => new URL(path, appOrigin).href
-  return {
-    ...createLiveServices(target),
-    platform: 'mac',
-    host: { kind: 'mac-app', system: 'mac' },
-    api: createApiClient(
-      (path, init) =>
-        target.fetch(address(path), { ...init, credentials: 'include' }),
-      xhrFileTransport(() => new XMLHttpRequest(), address),
-    ),
-    events: socketEventSource(appOrigin),
-    leave: (path) => target.location.assign(new URL(path, appOrigin).href),
-  }
+  const services = createLiveServices(target, appOrigin, 'include')
+  services.platform = 'mac'
+  services.host = { kind: 'mac-app', system: 'mac' }
+  return services
 }
