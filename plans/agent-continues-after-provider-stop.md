@@ -85,6 +85,31 @@ design. Its report is in
    shows no duration and no files. C, a new field of the `turn` command
    with the end of the chain, because it adds a protocol change for little
    gain.
+5. **The Terms take effect for existing users: A.** A new `TERMS_VERSION`,
+   and both effective dates set to the date of the change. Each user
+   accepts the new text at the next sign-in. Cal chose this on
+   20 November 2026, as Terms item 1 of the Milestone 2 report. Reason:
+   earlier Terms changes did the same, such as commit `ba99c6170`.
+   Rejected: B, new dates with no new version.
+6. **Automation results after a continuation: D.** Review item 2. A run
+   takes the outcome of the last turn of its first turn's chain. A chain
+   that ends with no continuation fails the run and counts toward the
+   turn-off after three failed runs. A lost login uses the cause
+   `agent_login_required`. The 15-minute guard and the 30-day end get a new
+   cause. Cal chose this on 20 November 2026. Reason: a run that the app
+   stopped retrying did not finish its work, and a loop of stops then turns
+   the automation off. Rejected: A, only the first turn counts. B, the stop
+   fails the run at once. C, the last turn decides, with no outcome for a
+   chain that ends with no continuation. E, the first finished or failed
+   turn of the first session decides.
+7. **A linked Try again of a continuation: C.** Review item 6. Each
+   continuation message names the session that holds the work, and tells
+   the agent to read that session with `read_session` when it lacks the
+   context. One shared builder writes the message. Cal chose this on
+   20 November 2026. Reason: a linked session has none of the earlier
+   history, and the message then gives the agent a way back to the task.
+   Rejected: A, change nothing. E, the retry acts for the sender of the
+   failed turn. F, every linked session names its earlier session.
 
 ## Design
 
@@ -435,6 +460,84 @@ Evidence: the gate and Rust logs are in
 rounds and the findings file are in
 `.context/reviews/calummoore/resuming-agent-on-timeout-fg44/`.
 
+The deletion of the plan and the pull request moved to Milestone 11,
+after the work of decisions 5, 6, and 7.
+
+## Milestone 7: Mockups of the automation run causes
+
+Tags: mockup
+
+Depends on: 6
+
+Decision 6 adds a cause for a run whose chain ends with no continuation.
+
+- [ ] Add the new cause to the mockup page `app/automations/runs/failed`,
+      with its words. The words never name a provider. Show a run whose
+      chain ended at the 15-minute guard or at the 30-day end, and a run
+      that failed because the login was gone.
+- [ ] Run `npm run mockups:check`. Smoke-test the page, and save a
+      screenshot in `.context/`.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 8: Documentation of decisions 5, 6, and 7
+
+Depends on: 7
+
+- [ ] `docs/protocol/automation-runs.md`: a run takes the outcome of the
+      last turn of its first turn's chain. A chain that ends with no
+      continuation fails the run with its cause and counts toward the
+      turn-off. Update "Run states" and "Turn off after failed runs".
+- [ ] `docs/protocol/provider-stops.md`: the continuation message names the
+      session that holds the work, and tells the agent to read it when it
+      lacks the context.
+- [ ] Read the legal pages and each guide in `src/marketing/docs/` in full,
+      such as the automations guide. Update each sentence that restates a
+      changed fact.
+- [ ] Check each relative link of each changed Markdown file.
+
+## Milestone 9: The Worker applies decisions 5, 6, and 7
+
+Depends on: 8
+
+- [ ] Decision 5: set a new `TERMS_VERSION` in `src/shared/terms.ts`, and
+      set the effective dates of `src/marketing/terms.ts` and
+      `src/marketing/privacy.ts` to the date of the change.
+- [ ] Decision 6: the automation run report follows the first turn's
+      chain to its last turn, through a stored link from each stopped turn
+      to its continuation. A chain that ends with no continuation fails the
+      run with `agent_login_required` or the new cause, and counts toward
+      the turn-off. Tests: a continuation that finishes, one that fails, the
+      guard, the 30-day end, a lost login, and the turn-off after three.
+- [ ] Decision 7: one builder writes each continuation message. It names
+      the session of the stopped turn and tells the agent to read it with
+      `read_session` when it lacks the context. Try again into a linked
+      session keeps that name. Tests: the automatic continuation, Try again
+      in the same session, and Try again into a linked session.
+- [ ] Update the chat and automation READMEs.
+
+## Milestone 10: The new run cause in the app
+
+Tags: ui
+
+Depends on: 9
+
+- [ ] Show the new cause in `src/shell/automations/run-copy.ts`, as in the
+      mockup. Add the dev fixture and the tests.
+- [ ] Check the Runs list in a browser, and save a screenshot in
+      `.context/`.
+
+## Milestone 11: Verification, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests, `npm run check`, and the Rust checks of
+      `CLAUDE.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the diff of Milestones 7 to 10 with the
+      `implementation-review` skill. Apply the fix rule.
+- [ ] When the merge comes after the date of the change, set the
+      effective dates and `TERMS_VERSION` to the merge date.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
