@@ -18,6 +18,9 @@ exec "$@"
 `,
     'apt-get': `#!/bin/sh
 printf '%s\\n' "$*" >> '${packages}'
+case "$*" in
+  *update*) [ "$*" = '-o Acquire::AllowReleaseInfoChange::Label=true update' ] || exit 100 ;;
+esac
 `,
     systemctl: `#!/bin/sh
 printf '%s\\n' "$*" >> '${units}/systemctl.log'

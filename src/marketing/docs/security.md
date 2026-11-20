@@ -265,7 +265,11 @@ The agent gets the secret's name and environment variable name, without the valu
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
-Every member can remove approvals in **Capabilities**.
+Every member can remove an approval under **This session** in **Capabilities**, beside the message box of that session.
+**Capabilities** lists only the approvals of the session where you open it.
+To see the approvals of another session, open that session.
+**Capabilities** hides an approval while the secret is for **All agents** or pre-approved.
+The approval stays, and it shows again when that ends.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.

@@ -5,8 +5,12 @@ mod repository {
     mod checkpoint_tests;
     mod content_tests;
     mod context_tests;
+    mod index_states_tests;
     mod limits_tests;
     mod paths_tests;
+    mod scan_reads_tests;
+    mod snapshot_tests;
+    mod stat_tests;
     mod support;
     mod watch_tests;
 }

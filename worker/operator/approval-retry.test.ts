@@ -20,6 +20,7 @@ afterAll(async () => harness.dispose())
 
 it('retains a failed email and retries from the scheduled entry with the same key and saved message', async () => {
   const client = await operatorWaitlistFixture(harness)
+  const originalOrigin = harness.env.APP_ORIGIN
   client.refuseMail()
   const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
   try {
@@ -34,6 +35,12 @@ it('retains a failed email and retries from the scheduled entry with the same ke
       changed: true,
       approvalEmail: { state: 'pending', updatedAt: TEST_TIME },
       emailFailed: true,
+    })
+    expect(await client.requests[0].clone().json()).toEqual({
+      from: 'Conductive <invites@mail.conductive.build>',
+      to: ['member@example.com'],
+      subject: 'Your Conductive account is ready',
+      text: 'You can now use Conductive. Sign in with GitHub to get started:\nhttps://app.conductive.test/',
     })
     expect(await accessRecord(harness, client.member.user.id)).toMatchObject({
       source: 'approval',
@@ -71,6 +78,7 @@ it('retains a failed email and retries from the scheduled entry with the same ke
       .run()
     client.refuseMail(false)
     client.setTime(TEST_TIME + 900_000)
+    harness.env.APP_ORIGIN = 'https://app.next-deployment.test'
     await client.scheduled()
     expect(client.requests).toHaveLength(2)
     expect(client.requests[1].headers.get('Idempotency-Key')).toBe(
@@ -87,6 +95,7 @@ it('retains a failed email and retries from the scheduled entry with the same ke
     await client.scheduled()
     expect(client.requests).toHaveLength(2)
   } finally {
+    harness.env.APP_ORIGIN = originalOrigin
     warning.mockRestore()
   }
 })
