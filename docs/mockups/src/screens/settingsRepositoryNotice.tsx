@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Hammer, RotateCw } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
-import type { BuildState } from '../components/settings/BuildSection'
+import { buildRuns, type BuildState } from '../components/settings/BuildSection'
 import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
 import { RepositoryNotice } from '../components/settings/RepositoryNotice'
 import { changedNames } from '../fixtures/repositories'
@@ -17,8 +17,10 @@ function waitOf(build: BuildState, added: boolean): RepositoryWait {
   switch (build) {
     case 'failed':
     case 'time-limit':
+    case 'ended':
       return 'failed'
     case 'building':
+    case 'waiting':
       return added ? 'building' : 'waiting'
     case 'ready':
     case 'none':
@@ -41,11 +43,7 @@ function adminAction(wait: RepositoryWait, build: BuildState): ReactNode {
       )
     case 'waiting':
       return (
-        <ActionButton
-          disabled={build === 'building'}
-          icon={Hammer}
-          tone="primary"
-        >
+        <ActionButton disabled={buildRuns(build)} icon={Hammer} tone="primary">
           Build computer
         </ActionButton>
       )

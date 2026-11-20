@@ -242,6 +242,153 @@ change each one. Each assumes switch decision 1 B.
 - A new table holds the switch records. The migration only adds data, so
   the previous Worker keeps working.
 
+### Calls of the mockups
+
+These are agent calls of 20 November 2026, made in the mockups of
+Milestone 1. The user can change each one. The mockups draw Hexwave, which
+switches from `boat` to `e2b`. The words live in
+`docs/mockups/src/components/operator/switchCopy.ts`, which imports no
+fixture, so Milestone 5 can use it.
+
+- The page of an org gets a Provider account box between Details and
+  Workspaces, and the account moves there from Details. The box gives the
+  account, the newest switch that did not change it, the last switch, and
+  the workspaces by account. Switch account sits at the bottom of the box.
+  Reason: the switch, its state, and its action then sit beside the
+  account that they change, and Suspend and Lift keep the header.
+- With one other configured account, the question names it. With more, it
+  offers each account other than the current one by its ID, in a segmented
+  control, as Create org does, and the title follows the choice. Reason:
+  production has two accounts, and a choice with one option asks nothing.
+- The question is "Switch Hexwave to e2b?", with "The switch builds the
+  cloud computer of Hexwave again on the e2b account, with the same
+  repositories and install script. New workspaces start on e2b when that
+  build succeeds, and on boat until then." and "Existing workspaces stay on
+  boat. If the build fails, Hexwave stays on boat. Only this page shows the
+  build." Reason: the design asks for these facts, and the operator must
+  know that members do not see the build.
+- When a build of the org runs, the question adds "A build of Hexwave runs
+  now. @vex-ops started it 6 minutes ago. The switch build starts when that
+  build ends." It offers "End the build of @vex-ops now", off by default,
+  with the hint "That build fails, and the switch build starts at once. An
+  admin can try it again." Reason: switch decision 3 D waits unless the
+  operator ends the build.
+- When the switch build must wait for Lift or for an admin, the question
+  says so: "Hexwave is suspended, so the switch build starts at Lift." or
+  "Every admin of Hexwave is suspended, so the switch build waits for an
+  admin who is not suspended." Reason: the operator then knows before the
+  switch that its build does not start at once.
+- The box gives a switch as Switch to, with the new account and "Started on
+  20 Nov at 14:12 by @calummoore", and as Switch build, with its state and
+  a line that says why. A waiting build says "Waits for the build of
+  @vex-ops", "Waits for Lift", or "Waits for an admin". A build that runs
+  says "Building · 4m 12s", with "New workspaces start on boat until this
+  build succeeds. Each build has a 60-minute limit." Reason: the design
+  asks for the new account and the state of the build.
+- The box shows the state of a switch build, never its log. Reason: the
+  operator section shows only counts, names, IDs, dates, roles, states,
+  codes, and weights, as
+  [Operator section](../docs/protocol/operator-section.md#what-the-section-shows)
+  says.
+- A failed switch build says "Failed after 10m 04s", then its cause in
+  words for the operator, then "Hexwave stays on boat, and new workspaces
+  still start there." The causes are "The build got only errors from e2b
+  for 10 minutes.", "The install script failed on e2b.", and "The build did
+  not finish within its 60-minute limit." Switch account then takes the
+  primary colour, and the failure stays until the next switch. Reason: the
+  saved message of a build is written for members, and it asks them to
+  check a log that the operator section does not show.
+- While a switch waits or builds, Stop switch takes the place of Switch
+  account. It asks "Stop the switch to e2b?", with "The switch build on e2b
+  stops. Hexwave stays on boat, and new workspaces still start there." A
+  waiting switch gets the same question without its first sentence. After
+  the stop, the page shows no switch. Reason: Stop switch is the switch
+  back of the design, and the org is still on its account, so the action
+  names the stop and not a move.
+- A switch that waits offers no End build. To end the build later, the
+  operator stops the switch and switches again with the offer on. Reason:
+  switch decision 3 D puts the offer in the question.
+- Last switch says "From boat on 20 Nov at 14:19 by @calummoore". Its time
+  is when the account changed, at the end of the switch build. Reason: new
+  workspaces move at that time.
+- Workspaces by account counts each workspace of the org on each account,
+  Removed included, so that the counts add up to the workspaces by state.
+  Reason: Orgs by account counts a deleted org in the same way.
+- While a switch waits for Lift, the question of Lift adds "Lift also
+  starts the switch build on e2b." Reason: the operator then knows that
+  Lift starts a build.
+- The page of the org counts a switch build that runs in "1 cloud computer
+  build also runs now". Reason: it runs a cloud computer, and the Overview
+  counts builds in the same way. A build of an admin that waits for a
+  switch build runs no cloud computer, so these counts leave it out until
+  its wait ends.
+- The Cloud computer tab shows a build of an admin that waits for a switch
+  build as "Building", with its time from Build computer. The first line of
+  its log is "Waiting for another update of the cloud computer to finish".
+  The steps of the build follow when the wait ends. Reason: the log already
+  names each step as it starts, as
+  [Org image](../docs/protocol/org-image.md#the-org-image) says, every copy
+  of the app shows log lines, and the words name no provider and no switch.
+- A build that the switch question ends shows on the Cloud computer tab as
+  a failed build, with Try again and the Settings mark, and the saved
+  message "Another update of the cloud computer stopped this build. Try
+  again." Reason: switch decision 3 D lets the operator end it, and the
+  words of the waiting build then make Try again read as the next step.
+- A sentence names an account by its ID in plain text, and a row shows the
+  ID in the monospace font. Reason: the questions of Suspend and Lift on
+  the same page write "the boat account" in plain text.
+- The mockups add the flow `user-flows/switch-org-account`, from the page
+  of the org through the question and the switch build to the page after
+  the switch.
+
+### Problems that the mockups show
+
+- A build that waits uses up its time limit. Today the Worker counts the
+  60-minute limit of a build from its `startedAt`, and the tab counts its
+  time from the same field. A long switch build can then make the build of
+  an admin fail at its limit before it runs. Agent call: the limit of a
+  build that waits counts from the end of its wait, and the tab still
+  counts its time from Build computer. Reason: older copies of the Mac app
+  then show a time that grows, and a slow switch build fails no build of an
+  admin. Milestone 4 owns it.
+- Members can see a sign of the switch. Milestone 1 said that members see
+  no other sign than the build that waits. Under switch decision 3 D, a
+  build that the operator ends fails for the members, with the Settings
+  mark. The mockups give it the message above, which names no switch.
+  Milestone 4 saves that message, not the message of a build that a
+  suspension ends.
+- Two texts of the app still say that an org keeps its account for its
+  whole life. They are the line of New orgs on the Providers tab and the
+  hint of the account choice on Create org. They live in `providerCopy.ts`,
+  which the app imports, and `src/shell/operator/providers-test-kit.ts`
+  checks the first one. A change there changes the app at once, so the
+  mockups keep them. Agent call: Milestone 5 changes them to "Each new org
+  gets an account by chance, from these weights. An operator can switch an
+  org later, on its page." and "Only operators see this. An operator can
+  switch the account later, on the page of the org." In the same change, it
+  updates the mockup texts that restate them: the descriptions of
+  `app/operator/providers`, `app/operator/orgs`, and
+  `app/orgs/new/operator`, `docs/mockups/design-operator.md`,
+  `docs/mockups/orgs-and-logins.md`, and the comments of
+  `OperatorProvidersScreen.tsx`, `CreateOrgScreen.tsx`, and
+  `operatorDirectory.ts`.
+- A suspension can come during a switch build. The question of Suspend
+  says that each unfinished build fails. Agent call: the suspension ends
+  the switch build, as it ends each build, and the switch then waits for
+  Lift, as the switch of a suspended org does. Reason: one rule for each
+  suspended org. The mockups do not draw it.
+- A refresh can run at the switch. One job runs at a time in each org.
+  Agent call: the question names a running refresh as it names a build,
+  and offers to end it. Without that choice, the switch waits for it.
+  Reason: the user chose switch decision 3 D over option E, which ended a
+  refresh at once. The mockups draw only a build.
+- A deleted org can switch. Its switch waits, as the switch of a
+  suspended org does, and Restore starts the switch build, as Lift does.
+  Agent call of the orchestrator, 20 November 2026. Reason: one rule for
+  each org that runs no build. It spends no build on an org that may not
+  come back, and it adds no refusal. The mockup subagent raised this as a
+  question. The user can change it.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -252,11 +399,11 @@ The operator org page gets Switch account and the states of a switch. The
 Cloud computer tab of the members changes only for a build that waits for
 a switch build, as switch decision 2 D says.
 
-- [ ] Update `OperatorOrgScreen.tsx` in `docs/mockups/src/screens/`: Switch account, its question, a running switch build, a failed switch build, the last switch, and the workspaces by account.
-- [ ] Update the Cloud computer tab mockup: a Build computer of an admin that waits for a hidden switch build. Members see no other sign of the switch.
-- [ ] Show a waiting switch on the org page, and the running build that the switch question offers to end.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the mockups show.
+- [x] Update `OperatorOrgScreen.tsx` in `docs/mockups/src/screens/`: Switch account, its question, a running switch build, a failed switch build, the last switch, and the workspaces by account.
+- [x] Update the Cloud computer tab mockup: a Build computer of an admin that waits for a hidden switch build. Members see no other sign of the switch.
+- [x] Show a waiting switch on the org page, and the running build that the switch question offers to end.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that the mockups show.
 
 ## Milestone 2: Documentation and protocol
 
@@ -287,7 +434,10 @@ Depends on: 3
 - [ ] Make a Build computer or a Try again of an admin wait for a running switch build.
 - [ ] Change the account of the org in the same write that publishes the image of a switch build.
 - [ ] Handle a failed build, a switch back, an org with no good image, a suspended org, and an org with no active admin, as the design says.
-- [ ] Start a waiting switch build at Lift and from the image timer.
+- [ ] Start a waiting switch build at Lift, at Restore of a deleted org, and from the image timer.
+- [ ] End a switch build at a suspension, and make the switch wait for Lift.
+- [ ] Count the time limit of a build that waits for a switch build from the end of its wait.
+- [ ] Save "Another update of the cloud computer stopped this build. Try again." for a build that the switch question ends, also for a running refresh.
 - [ ] Make the switch build start from the software image, with no previous image and no added build.
 - [ ] Read the newest build on the account of the org in `staleImageOrgs` of `worker/lifecycle/org-image-refresh-data.ts`.
 - [ ] Carry a push that arrives during the switch build to the new image.
@@ -301,7 +451,8 @@ Tags: ui
 Depends on: 1, 4
 
 - [ ] Build Switch account, its question, and the switch states on the org page of the operator section, as the mockups show.
-- [ ] Change the Cloud computer tab for the answer to switch decision 2.
+- [ ] Change the Cloud computer tab for the answer to switch decision 2: the log line of a build that waits.
+- [ ] Change the texts in `providerCopy.ts` and the mockup texts that restate them, as "Problems that the mockups show" says.
 - [ ] Test the screens in a browser, and save screenshots under `.context/operator-provider-switch/`.
 
 ## Milestone 6: Verification, commit, review, and pull request

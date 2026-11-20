@@ -5,13 +5,13 @@ import { paths } from '../../paths'
 import { Notice } from '../common/Notice'
 import { DetailList } from '../settings/DetailList'
 import { Section } from '../settings/Section'
+import { AccountSection } from './AccountSection'
 import { TargetState } from './directory'
 import {
   deletedOrgBody,
   suspendedOrgBody,
   suspendedTitle,
 } from './operatorCopy'
-import { orgAccountWords } from './providerCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
 
@@ -89,12 +89,16 @@ function MemberRow(props: { member: OrgMember }) {
 }
 
 /**
- * The page of an org for the operator: its state, its details with its
- * provider account by its ID, its workspaces in each state, and its
- * members with their names and roles. Each member opens the page of that
- * user.
+ * The page of an org for the operator: its state, its details, its
+ * provider account by its ID with the switch of the account, its
+ * workspaces in each state, and its members with their names and roles.
+ * Each member opens the page of that user.
  */
-export function OrgDetails(props: { org: OrgPage }) {
+export function OrgDetails(props: {
+  org: OrgPage
+  /** The question of the action of the account box, for the page that draws it. */
+  accountTo?: string
+}) {
   const { org } = props
   const members = org.members.length
   return (
@@ -104,12 +108,19 @@ export function OrgDetails(props: { org: OrgPage }) {
         <DetailList
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
-            { term: orgAccountWords.term, value: org.account, mono: true },
             { term: 'Created', value: org.created },
             { term: 'Repositories', value: String(org.repositories) },
           ]}
         />
       </Section>
+      <AccountSection
+        account={org.account}
+        last={org.lastSwitch}
+        org={org.name}
+        switch={org.switch}
+        to={props.accountTo}
+        workspaces={org.byAccount}
+      />
       <WorkspaceStates
         builds={{ count: org.builds, page: 'org' }}
         counts={org.states}

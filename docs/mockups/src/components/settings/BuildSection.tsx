@@ -1,9 +1,11 @@
 import { Hammer, RotateCw } from 'lucide-react'
 import {
   buildLimit,
+  endedBuild,
   failedBuild,
   runningBuild,
   timedOutBuild,
+  waitingBuild,
   type Build,
   type FailedBuild,
 } from '../../fixtures/computer'
@@ -18,12 +20,23 @@ import styles from './BuildSection.module.css'
 /**
  * The state of the cloud computer: built, building, failed, stopped at the
  * 60-minute limit of a build, or with no build yet, such as a new org
- * whose first build did not start.
+ * whose first build did not start. `waiting` is a build that waits for
+ * another update of the cloud computer, which members do not see, such as
+ * the switch build of an operator. The tab knows no state for a wait, so it
+ * shows a build that runs, and the first line of its log names the wait.
+ * `ended` is a build that an operator ended for such an update. The tab
+ * shows it as a failed build, with its saved message.
  */
-export type BuildState = 'ready' | 'building' | 'failed' | 'time-limit' | 'none'
+export type BuildState =
+  'ready' | 'building' | 'waiting' | 'failed' | 'time-limit' | 'ended' | 'none'
 
 /** The states whose card shows the log of a build. */
-type LogState = 'building' | 'failed' | 'time-limit'
+type LogState = 'building' | 'waiting' | 'failed' | 'time-limit' | 'ended'
+
+/** A build runs, as the tab shows it. A build that waits shows as one that runs. */
+export function buildRuns(state: BuildState): state is 'building' | 'waiting' {
+  return state === 'building' || state === 'waiting'
+}
 
 /** The log of the build that runs or failed, in each state with a log. */
 type BuildLogs = Readonly<Record<LogState, readonly TerminalLine[]>>
@@ -46,8 +59,11 @@ export function failedBuildOf(state: BuildState): FailedBuild | undefined {
       return failedBuild
     case 'time-limit':
       return timedOutBuild
+    case 'ended':
+      return endedBuild
     case 'ready':
     case 'building':
+    case 'waiting':
     case 'none':
       return undefined
   }
@@ -66,6 +82,7 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   if (props.readOnly) return null
   switch (props.state) {
     case 'building':
+    case 'waiting':
       return (
         <ActionButton disabled icon={Hammer}>
           Build computer
@@ -73,6 +90,7 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
       )
     case 'failed':
     case 'time-limit':
+    case 'ended':
       return (
         <ActionButton icon={RotateCw} tone="primary">
           Try again
@@ -90,14 +108,9 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
 }
 
 function Head(props: { state: BuildState; builds: OrgBuilds }) {
-  if (props.state === 'building') {
-    return (
-      <StatusText
-        busy
-        label={`Building · ${runningBuild.elapsed}`}
-        tone="active"
-      />
-    )
+  if (buildRuns(props.state)) {
+    const { elapsed } = props.state === 'waiting' ? waitingBuild : runningBuild
+    return <StatusText busy label={`Building · ${elapsed}`} tone="active" />
   }
   const build = failedBuildOf(props.state) ?? props.builds.lastGood
   if (props.state === 'none' || build === undefined) {
@@ -138,17 +151,18 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
       </div>
     )
   }
-  if (state === 'building') {
+  if (buildRuns(state)) {
     return (
       <div className={styles.body}>
-        <Log lines={builds.logs.building} live />
+        <Log lines={builds.logs[state]} live />
         <SectionText muted>{buildingNote(builds.lastGood)}</SectionText>
       </div>
     )
   }
   const failed = failedBuildOf(state)
   if (!failed) return null
-  const log: LogState = state === 'time-limit' ? 'time-limit' : 'failed'
+  const log: LogState =
+    state === 'time-limit' || state === 'ended' ? state : 'failed'
   return (
     <div className={styles.body}>
       <SectionText>{failed.error}</SectionText>

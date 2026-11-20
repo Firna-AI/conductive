@@ -3,7 +3,12 @@ import { Hammer } from 'lucide-react'
 import { type EnvVar, includedSoftware } from '../../fixtures/computer'
 import { ActionButton } from '../common/actions'
 import { Notice } from '../common/Notice'
-import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
+import {
+  BuildSection,
+  buildRuns,
+  type BuildState,
+  type OrgBuilds,
+} from './BuildSection'
 import { ScriptSection } from './EnvironmentSections'
 import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
@@ -35,10 +40,9 @@ function changedNotice(props: {
 }): ReactNode {
   const title = 'The install script changed'
   if (props.builds.lastGood === undefined) {
-    const body =
-      props.build === 'building'
-        ? 'One more build runs it when this build succeeds.'
-        : 'It runs at the next build.'
+    const body = buildRuns(props.build)
+      ? 'One more build runs it when this build succeeds.'
+      : 'It runs at the next build.'
     return <Notice body={body} icon={Hammer} title={title} />
   }
   return (
@@ -46,7 +50,7 @@ function changedNotice(props: {
       action={
         props.readOnly ? undefined : (
           <ActionButton
-            disabled={props.build === 'building'}
+            disabled={buildRuns(props.build)}
             icon={Hammer}
             tone="primary"
           >
