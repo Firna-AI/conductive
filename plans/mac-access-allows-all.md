@@ -1,0 +1,344 @@
+# Mac access allows all commands on your Mac
+
+Status: Active. On branch `calummoore/mac-permission-issue-o7fv`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+
+Cal turned Mac access on in New workspace, and his Mac still asked before
+each command. That is the rule in force today. Mac access only lets the
+agents of a workspace ask. The Mac app then asks before each command that
+its user did not always allow (decision 62). Cal wants the switch to stop
+the questions on his Mac too.
+
+The change: when a member turns Mac access on in the Mac app, the Mac app
+starts a grant until Stop for that workspace on that Mac. While Mac access
+is on, the control in the Mac app also shows a personal line, "Allow all
+commands on this Mac", that starts or stops that grant. The workspace
+check stays: while Mac access is off, the Worker still refuses every Mac
+command. The change does not touch the 15 minutes, Always allow, or the
+automation follow-up in `plans/follow-ups/automation-turns-mac-commands.md`.
+
+Contract owners:
+
+- [Capabilities](../docs/protocol/capabilities.md), section "Mac access".
+- [Permissions and Mac commands](../docs/protocol/desktop-commands.md),
+  sections "Permissions" and "The choices".
+- The [Mac command README](../src/chat/device/README.md) and the
+  [desktop README](../desktop/README.md).
+
+## Terms
+
+- **Grant until Stop:** the Mac app choice "Allow all commands until I
+  stop". It covers every command from one workspace on one Mac. Stop, a
+  quit of the Mac app, or a sign-out ends it. It lives only in the memory
+  of the Mac app (Mac until-stop decision 1).
+- **Workspace check:** the Worker refuses each Mac command of a workspace
+  while its Mac access is off (secrets decision 18 A).
+- **Paired page:** the page of the Mac app on the Mac that holds the device
+  connection. Only a paired page can change the grants of its Mac, through
+  `POST /api/devices/current/settings`.
+- **Mac access decision:** a decision of this change, numbered below.
+
+## Decisions
+
+### Mac access decision 1: what the switch does on your Mac
+
+Cal chose C on 20 November 2026. Root question: when a member turns on Mac
+access, should their Mac still ask before commands, and how does the member
+learn that? The options:
+
+- A. Keep both checks, and change the hint of the switch. Lost: Cal said
+  that A is pointless, because the agent can already ask.
+- B. A, and the Mac app offers a grant until Stop when a member turns Mac
+  access on there. Lost to C.
+- C. Turning Mac access on also starts a grant until Stop on the Mac of the
+  member who turned it on. Other members' Macs still ask. Chosen.
+- D. Change nothing. The member uses "Allow all commands until I stop" in
+  the first prompt. Lost: it keeps the problem.
+
+Left out then: no prompt on any member's Mac, because one member's choice
+would then run commands on another member's Mac. A switch that each member
+keeps, because secrets option E rejected a control with a shared part and
+a personal part. Decision 4 below brings a personal line back.
+
+### Mac access decision 2: agents can ask only while Mac access is on
+
+Cal chose A on 20 November 2026. Cal's note said that the agent "should
+always be able to ask if running on a mac". Root question: can an agent ask
+to use a Mac before any member chooses that for the workspace? The options:
+
+- A. Keep the workspace check. Off: agents cannot ask. On: agents ask, and
+  your Mac gets a grant until Stop. Chosen.
+- B. Remove the workspace check. The Mac app prompt is the only check, and
+  the switch becomes "run without asking on my Mac". Lost: an automation
+  run or a steered agent could ask from its first turn, and secrets
+  decisions 18 A and 19 B would go.
+
+### Mac access decision 3: your Mac is not reachable
+
+Cal chose A on 20 November 2026. Root question: when a member turns Mac
+access on and their Mac cannot be reached, what happens? The options:
+
+- A. The switch still saves. The control says that the Mac was not reached
+  and still asks before commands. Chosen.
+- B. The Worker keeps a pending grant and sends it at the next connection.
+  Lost: the server would store a grant, and the grant would outlive a
+  restart of the Mac app.
+- C. The switch refuses to turn on until the Mac is reachable. Lost:
+  members without a Mac could not turn it on.
+
+### Mac access decision 4: a second member gets the grant
+
+Cal chose A on 20 November 2026. Root question: when Mac access is already
+on, how does another member stop the prompts on their own Mac? The options:
+
+- A. While the switch is on, the control shows "Allow all commands on this
+  Mac". It starts a grant until Stop on that member's Mac. Chosen, so a
+  personal line now sits in the shared control.
+- B. Only the member who turned the switch on gets the grant. Lost.
+- C. Turning the switch on starts a grant on every connected Mac of the
+  org. Lost: one member would remove the prompts on other members' Macs.
+
+### Mac access decision 5: the switch in a browser
+
+Open. It waits for Cal. The options check of 20 November 2026 widened the
+root question, added options D, E, and F, and corrected the background.
+
+- **Severity:** High. **Effort:** Small (for A).
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `worker/devices/broker-routes.ts:76`, the paired page
+  check.
+- **Background:**
+  - Only a paired page can change the grants of its Mac. A browser tab,
+    also one on the same Mac, cannot.
+  - A browser tab cannot answer a Mac command either.
+  - A session that sends a message in a workspace with a grant can still
+    run commands on that Mac with no question. So the check protects the
+    start of a grant, not each command.
+- **Problem:** Decisions 1 and 4 start a grant when a member uses the
+  control. A member can also use the control in a browser.
+- **Impact if no action:** The plan cannot say what the control does in a
+  browser.
+- **Root question:** When a member uses the control outside the Mac app,
+  where does their Mac get the one confirmation that a grant needs?
+- **Options:**
+  - **A.** Only the paired page starts a grant. In a browser, the switch
+    saves, and the control says "To allow all commands on your Mac, use
+    Allow all commands on this Mac in the Mac app." The Mac then asks once,
+    at the first command. Effort: Small.
+  - **B.** The Worker relays a start from any signed-in session to the
+    Mac of that member. Risk: a stolen web session could then let agents
+    run every command on the member's Mac with no question. It needs a
+    version signal, because an older Mac app ends its device connection on
+    an unknown message. Effort: Large.
+  - **C.** B, but the Mac app asks its user to confirm the start. The
+    protocol has no dialog over the app, so this adds one. Effort: Large.
+  - **D.** A, and the browser note has "Open in the Mac app". A
+    `conductive://` link opens this workspace with its Capabilities in the
+    Mac app, where the member checks the line. It works only on the same
+    Mac, and the browser asks before it opens the app. Effort: Medium.
+  - **E.** The browser line asks for a start. The Worker keeps the
+    question until the device connection ends. The paired page shows it
+    with Allow, which sends the start of A. Risk: a stolen web session can
+    put a question on the Mac. Effort: Large.
+  - **F.** The browser line saves the member's choice on the server. The
+    choice allows nothing. The first request on that Mac then offers
+    "Allow all commands until I stop" first, and says that the member
+    chose it in a browser. Effort: Medium.
+- **Left out:**
+  - A one-time pairing of a browser with the Mac app. A stolen session of
+    that browser could then start grants with no question, as in B.
+  - A local server in the Mac app that a browser tab calls. Any web page
+    can call it, and D gives the same hand-off with no open port.
+  - A server record that lets the Mac skip its question. It breaks "no
+    record on the server can allow a command".
+- **Wider fix:** A. Only the paired page can send a start, through one
+  check. Each later start path from another session needs a change to
+  that check.
+- **Previous examples:** Decision 62 and "Permissions" in
+  `docs/protocol/desktop-commands.md`.
+- **Recommendation:** A. In a browser, each option that keeps a check
+  still asks once on the Mac, and A asks at the first command, with no new
+  path. D is the next step if Cal creates workspaces in a browser on his
+  Mac.
+- **Action:** ask the user, because B to F change who can give a Mac
+  permission, which is a security rule that the user owns.
+
+### Mac access decision 6: a grant after Mac access goes off
+
+Open. It waits for Cal. The options check found it in a design call.
+
+- **Severity:** High. **Effort:** Medium (for C).
+- **Source:** Design.
+- **Category:** Security.
+- **Location:** `desktop/src/device/permissions.ts:145`, `permits`.
+- **Background:** A grant until Stop lives in the Mac app until Stop, a
+  quit, or a sign-out. Turning Mac access off makes the Worker refuse the
+  requests. It does not end the grants on the Macs.
+- **Problem:** Member X turns Mac access off. Later member Y turns it on.
+  X's Mac then runs every command of the workspace with no question
+  again, with no new choice by X.
+- **Impact if no action:** One member's switch removes the questions on
+  another member's Mac. Decisions 1 and 4 reject that.
+- **Root question:** When Mac access goes off, how does each Mac stop
+  running commands of that workspace without asking?
+- **Options:**
+  - **A.** Accept it as a risk. The bar of the workspace and This Mac
+    show the grant, with Stop. Effort: Small.
+  - **B.** At a switch-off from any session, the Worker sends the existing
+    `stop-workspace` to the connected Mac of each org member. A Mac that
+    is not connected keeps its grant. A stop only removes permission.
+    Effort: Medium.
+  - **C.** Each command request carries a Mac access number of the
+    workspace, which grows at each switch-off. A grant keeps the number of
+    its start, and covers only requests with the same number. A grant
+    from before a switch-off then never covers a request, also on a Mac
+    that was not connected. An older Mac app ignores the number. Effort:
+    Medium.
+- **Left out:** A grant that the Mac app ends at its next request, with
+  no number. The Mac app cannot tell a request from before a switch-off
+  from one after it.
+- **Wider fix:** C. It ties each grant to one period of Mac access, so
+  no later path can bring an old grant back.
+- **Previous examples:** None found.
+- **Recommendation:** C. It ends old grants also on a Mac that was asleep,
+  where B fails.
+- **Action:** ask the user, because A keeps a security risk, and B and C
+  change the Mac command contract.
+
+## Design
+
+My calls, 20 November 2026, unless a decision above says otherwise:
+
+- A new settings action `allow-workspace-until-stop` with `workspaceId`
+  joins `DeviceSettingsAction`. The paired page sends it. Reason: the
+  route already checks the paired page, and the Mac app already decides
+  each change itself.
+- The Worker checks the action before it relays it. The user must be a
+  member of the org of the workspace, and Mac access must be on. The
+  Worker adds the name of the workspace. Reason: isolation, and This Mac
+  shows the name of each grant.
+- The Mac app applies the action with `allowWorkspaceUntilStop` of its
+  permission store. The result is done, because the grant is in memory
+  only.
+- The Mac app bundles its own page, so only a page of the same version
+  sends the new action. Reason: an older Mac app ends its device
+  connection on an unknown message, and that cancels its running
+  commands. The Worker therefore never sends the action on its own.
+- The page counts the grant as started only when the returned settings
+  list it with no end.
+- A start also runs each request of that workspace that waits on that Mac,
+  as Allow all commands until I stop does. Reason: the member chose all
+  commands of the workspace.
+- The personal line reads its state from the settings read of the Mac. It
+  shows checked while the grant until Stop runs. While the 15 minutes run,
+  it shows unchecked, and a check keeps them until Stop.
+- The control chooses its words by the shell: the Mac app or a browser.
+  It does not use the pairing read, because the Mac app with no device
+  connection also reads no device.
+- Turning the switch on in the paired page saves Mac access first. Then
+  it starts the grant. A failed start keeps Mac access on and shows the
+  cause on the line.
+- Turning the switch off in the paired page also stops the grant of this
+  Mac. Decision 6 covers the other Macs.
+- New workspace with Mac access on, in the paired page, starts the grant
+  after the create returns the ID of the new workspace. A failed start
+  shows as a notice in the new workspace, because the control of New
+  workspace closes at the create.
+- Risk: each turn that the member sends in a workspace with a grant can
+  run any command on the member's Mac with no question. Text that steers
+  the agent, another process in the sandbox, and a message of the session
+  calls from another workspace can all use it. The switch makes such
+  grants common.
+
+## Milestone 1: Mockups
+
+Tags: mockup
+
+Depends on: none
+
+The Capabilities control of a workspace and of New workspace, in the Mac
+app and in a browser.
+
+- [ ] Add the personal line to the Mac access part of
+      `docs/mockups/src/screens/workspaceCapabilities.tsx`, with variants:
+      on with the grant, on without it, start failed, and Mac not reached.
+- [ ] Add the browser variant with the note of decision 5.
+- [ ] Show the same line in `newWorkspaceCapabilities.tsx`, and the notice
+      of a failed start in the new workspace.
+- [ ] Update `docs/mockups/catalogue-secrets.md` and the words in
+      `capabilitiesCopy.ts`.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
+- [ ] Update "Mac access" in `docs/protocol/capabilities.md` with
+      decisions 1 to 6. Replace the line that rejects a personal part in
+      the control. Add the risk of commands with no question.
+- [ ] Update "Permissions", "The choices", and the reason of Extend in
+      `docs/protocol/desktop-commands.md`: the control of the paired page
+      also starts a grant until Stop.
+- [ ] Update "Mac commands" in `docs/protocol/agent-tools.md`, which says
+      that only a saved choice skips the question.
+- [ ] Add the switch grant to the Problem of
+      `plans/follow-ups/automation-turns-mac-commands.md`.
+- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+      Update each sentence that restates these facts.
+- [ ] Read each guide in `src/marketing/docs/` in full, at least
+      `mac-app.md` and `security.md`. Update each sentence that restates
+      these facts.
+- [ ] Update `src/chat/device/README.md`, `desktop/README.md`, and
+      "Permission policy and limits" in `worker/devices/README.md`.
+
+## Milestone 3: The start of a grant
+
+Depends on: 2
+
+- [ ] Add `allow-workspace-until-stop` to `DeviceSettingsAction` in
+      `src/shared/device.ts`, and the workspace name in the relayed form.
+- [ ] Read and check it in `worker/devices/broker-routes.ts`: membership,
+      Mac access on, and the name. Test each refusal.
+- [ ] Accept it in `desktop/src/device/messages.ts`, and apply it in
+      `desktop/src/device/settings.ts`. Test the grant, its result, and a
+      request that waits.
+- [ ] Apply decision 6, when Cal chose B or C.
+- [ ] Add the action to the fake device routes and the dev Mac settings.
+
+## Milestone 4: The control
+
+Tags: ui
+
+Depends on: 3
+
+- [ ] Add the personal line and the start after the switch to
+      `src/shell/capabilities/`. Test the paired page, the browser, a
+      failed start, and an older Mac app.
+- [ ] Start the grant after a create from New workspace with Mac access
+      on, in the paired page.
+- [ ] Stop the grant of this Mac when the switch turns off.
+
+## Milestone 5: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Run the targeted tests, `npm --prefix desktop ci`,
+      `npm ci --prefix runner`, and `npm run check`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] With a Mac app release that holds Milestone 3, turn Mac access on in
+      a workspace and check that a Mac command runs with no question.
