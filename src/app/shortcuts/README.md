@@ -39,6 +39,14 @@ commands.
 The account stores canonical modifier names, such as `Alt+Meta+N`.
 The key formatter gives Mac symbols or Windows and Linux key names.
 It shows a keypad digit as `Num 8`, so that it differs from the top-row 8.
+It gives one token for each modifier, then one token for the key.
+So on Windows and Linux, a saved `Ctrl++` gives the tokens Ctrl and +.
+
+Draw the key chips and the spoken name of a key from its tokens.
+Join the tokens only for text, such as a tooltip.
+Do not split joined text back into keys, because + is also the separator
+on Windows and Linux.
+
 Each press has one canonical key text for recording and matching.
 A keypad key uses the key that it types, except a keypad digit, which keeps
 its keypad name. With Num Lock off, a keypad navigation key uses its typed
@@ -83,7 +91,9 @@ check unknown input before the app or Worker uses it.
 - [browser-keys.ts](browser-keys.ts): `shortcutKeyAvailability` separates
   kept keys from keys that the app leaves to the browser.
 - [keys.ts](keys.ts): `matchesShortcut` and `shortcutFromPress` share the
-  character and physical key rules. The formatters supply visible and ARIA text.
+  character and physical key rules. `shortcutTokens` gives the visible
+  tokens of a key. `formatShortcut` joins them into text. `ariaShortcut`
+  gives the ARIA text.
 - [layout-switch.ts](layout-switch.ts): `LayoutSwitchKeys` tracks switch
   codes and their modifiers. `null` means no held switch. An empty list
   means a held switch that took no modifier.
