@@ -26,12 +26,13 @@ export async function automationSecret(
   orgId: string,
   userId: string,
   id: string,
+  name = id.toUpperCase().replaceAll('-', '_'),
 ) {
   const inserted = await insertSecret(db, {
     orgId,
     userId,
     id,
-    name: id.toUpperCase().replaceAll('-', '_'),
+    name,
     description: '',
     ciphertext: 'unused-ciphertext',
     allAgents: false,
