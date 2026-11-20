@@ -50,7 +50,8 @@ export class WorkspaceStateProjection {
       )
     const waiting = await deviceWaiting(current.workspaceId)
     const state =
-      waiting && !['stopped', 'error', 'archived'].includes(current.state)
+      waiting &&
+      !['starting', 'stopped', 'error', 'archived'].includes(current.state)
         ? 'input'
         : current.state
     const before = await readWorkspace(
