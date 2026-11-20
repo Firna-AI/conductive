@@ -41,8 +41,9 @@ description, so it has no info icon. `app/new-workspace/dialog/capabilities` has
 the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with
-the approvals of its sessions and its value for the workspace, each with
-Remove. Its `mac-access-off` variant has Mac access off. Its `menu` variant
+the approval of its open session and its value for the workspace, each with
+Remove. It hides an approval of the pre-approved FIGMA_TOKEN and an
+approval of another session. Its `mac-access-off` variant has Mac access off. Its `menu` variant
 has the menu of the + button of a phone, with Attach files and
 Capabilities. The
 `mac-access-off` variant of `app/mac-commands` has a Mac command that the

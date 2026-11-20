@@ -122,13 +122,13 @@ stay there.
 
 Put each E2B entry in the JSON `SANDBOX_PROVIDER_ACCOUNTS` Worker secret.
 Use the same JSON text in `.dev.vars` for local development.
-The `domain` is the trusted EU suffix supplied by E2B support.
+The `domain` is the domain of the project's E2B cluster: `e2b.app` for E2B's default cluster.
 It gives the API host `api.<domain>` and the sandbox port hosts.
 The `templateId` names the app's prepared template.
 The API key stays inside the Worker.
 The E2B client also needs D1 and `BOAT_KEY_ENCRYPTION_KEY` for durable state and traffic-token encryption.
 
-Ask E2B for EU access, filesystem-only pause and snapshots, and the required disk size.
+Ask E2B for filesystem-only pause and snapshots, and the required disk size.
 Use E2B Pro before real org use. Get E2B's written consent before real org use.
 The [deployment guide](../../docs/deployment.md) gives the deployment inputs and requirements.
 The [E2B README](e2b/README.md) gives its fixed control routes and recovery rules.

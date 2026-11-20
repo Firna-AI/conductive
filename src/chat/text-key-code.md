@@ -19,12 +19,15 @@ guide.
   its address, and the `CodePart` of code that holds one address alone.
   `LinksContext.tsx` gives the workspaces that chips find
   the open of a chip, and the origin of the chat's workspace link.
+  In a sent member message, each skill text that names a listed skill is
+  a skill part. `skillTextAt` in the shared contracts owns that rule.
   `LinkedText.tsx` holds `useChatParts` and
   `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, the files of a sent message, and the web links
+  and the tree and skill lists of the chat, the files of a sent message, and the web links
   of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
   draws the parts with their workspace and session chips, and their
-  links through `WebLinkText.tsx`. `FileChips.tsx` draws the file chips,
+  links through `WebLinkText.tsx`. A skill part draws as a `SkillChip` that
+  opens nothing. Answers keep skill text as text. `FileChips.tsx` draws the file chips,
   and each `AttachmentPart` as the mockups' `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
@@ -39,7 +42,7 @@ guide.
   [Pictures in answers](text-links.md#pictures-in-answers) says.
   `mention-copy.ts` makes
   the browser's own copy of chat text give the text of each chip that has
-  a `data-mention` mark: each file chip, each `SentFileChip`, and each
+  a `data-mention` mark: each file chip, each skill chip, each `SentFileChip`, and each
   picture of an answer, with the box of its label. Each such
   chip holds its copy text in a `ChipCopyText`, which shows only while the
   root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
@@ -59,6 +62,10 @@ guide.
   such as Add to chat of the Files panel, and `MentionTarget` names a file
   or a folder of a mention.
   `MentionIcon.tsx` gives the icon of All files for an entry.
+  `mention-skills.ts` gives `MentionSkills`, the skill lists in
+  `ChatMentions.skills`, and the lookup of a skill of either agent.
+  `skill-rows.ts` gives the rows of the list of `/` and their order.
+  [`skill-text.ts`](../shared/skill-text.ts) owns the shared skill text rule.
   [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
   owns the text of a mention, which the chat shares with the Worker.
 - `markdown/agent-blocks.ts`: `agentBlocks`, the chat adapter of the

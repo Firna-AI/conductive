@@ -20,6 +20,7 @@ import {
 } from './chip-nodes'
 import { joinFieldParts, type FieldPart } from './field-text'
 import { $isFileMentionNode } from './file-mention-nodes'
+import { $isSkillMentionNode } from './skill-mention-nodes'
 
 /** The part of a node for the text of the field, or null for an element. */
 type PartOf = (
@@ -30,8 +31,9 @@ type PartOf = (
 
 /**
  * The part of a node in the public text of the field, as a member reads and
- * copies it: the text as typed, the exact link of a workspace chip, and the
- * mention of a file chip. An attached file and an element give nothing.
+ * copies it: the text as typed, the exact link of a workspace chip, the
+ * mention of a file chip, and the skill text of a skill chip. An attached
+ * file and an element give nothing.
  */
 function $publicPart(
   node: LexicalNode,
@@ -41,7 +43,7 @@ function $publicPart(
   if ($isWorkspaceChipNode(node)) {
     return { kind: 'chip', source: node.getTextContent() }
   }
-  if ($isFileMentionNode(node)) {
+  if ($isFileMentionNode(node) || $isSkillMentionNode(node)) {
     return { kind: 'chip', source: node.getTextContent(), mention: true }
   }
   if ($isLineBreakNode(node)) return { kind: 'text', text: '\n' }

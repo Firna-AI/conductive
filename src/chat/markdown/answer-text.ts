@@ -1,4 +1,4 @@
-import { bareAddressAt } from '../../markdown/web-links'
+import { bareAddressAt, webAddressStartAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 import type { FilePart } from '../links/chat-parts'
 import { mentionTarget } from '../links/file-targets'
@@ -55,12 +55,16 @@ function addressParts(href: string, reading: AnswerReading): AnswerPart {
   return { kind: 'link', link, words: [{ kind: 'text', text: href }] }
 }
 
-/** The index of the next `@` or `http` of the text from `at`, or -1. */
+/** The index of the next mention or HTTP(S) prefix from `at`, or -1. */
 function nextUnit(text: string, at: number, mentions: boolean): number {
-  const address = text.indexOf('http', at)
-  const mention = mentions ? text.indexOf('@', at) : -1
-  if (address < 0 || mention < 0) return Math.max(address, mention)
-  return Math.min(address, mention)
+  for (let index = at; index < text.length; index += 1) {
+    if (
+      (mentions && text[index] === '@') ||
+      webAddressStartAt(text, index) !== null
+    )
+      return index
+  }
+  return -1
 }
 
 /**

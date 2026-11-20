@@ -20,12 +20,15 @@ async fn debounce_resets_and_port_ticks_keep_their_schedule_after_scan_completio
     settle().await;
     advance(99).await;
     assert_eq!(count(&h.files), 0);
+    assert_eq!(count(&h.skills), 0);
     h.events.send(()).unwrap();
     settle().await;
     advance(99).await;
     assert_eq!(count(&h.files), 0);
+    assert_eq!(count(&h.skills), 0);
     advance(1).await;
     assert_eq!(count(&h.files), 1);
+    assert_eq!(count(&h.skills), 1);
     advance(1800).await;
     assert_eq!(count(&h.ports), 0);
     advance(1).await;
@@ -53,17 +56,20 @@ async fn restore_polls_missing_marker_each_second_and_reopens_and_scans_once() {
     advance(1).await;
     assert_eq!(count(&h.checks), 2);
     assert_eq!(count(&h.files), 0);
+    assert_eq!(count(&h.skills), 0);
     h.marker.store(true, Ordering::SeqCst);
     advance(999).await;
     assert_eq!(count(&h.opens), 1);
     advance(1).await;
     assert_eq!(count(&h.opens), 2);
     assert_eq!(count(&h.files), 1);
+    assert_eq!(count(&h.skills), 1);
     assert_eq!(count(&h.closes), 1);
     advance(1000).await;
     assert_eq!(count(&h.checks), 3);
     assert_eq!(count(&h.opens), 2);
     assert_eq!(count(&h.files), 1);
+    assert_eq!(count(&h.skills), 1);
     h.service.close().await;
     assert_eq!(count(&h.closes), 2);
 }
@@ -81,6 +87,7 @@ async fn shutdown_prevents_marker_repair_and_debounce_and_cannot_restart() {
     h.service.start().await.unwrap();
     assert_eq!(count(&h.opens), 1);
     assert_eq!(count(&h.files), 0);
+    assert_eq!(count(&h.skills), 0);
     assert_eq!(count(&h.ports), 0);
     assert_eq!(count(&h.checks), 1);
     assert_eq!(count(&h.closes), 1);

@@ -12,6 +12,7 @@ use cnd_runner::reports::prepare::{ReportFilter, UnfilteredReports};
 use cnd_runner::repository::error;
 use cnd_runner::repository::service::{Checkpoint, Repository, RepositorySnapshot};
 use cnd_runner::runtime::CommandHandler;
+use cnd_runner::skills::boundary::SkillReports;
 use cnd_runner_interface::file_changes::{ChangedFile, ChangesResponse, ChangesResponseSummary};
 use cnd_runner_interface::file_tree::{FileEntry, FileEntryKind};
 use cnd_runner_interface::files::{DiffResponse, FileResponse};
@@ -142,8 +143,20 @@ pub(super) async fn handler(
     Arc<dyn CommandHandler>,
     mpsc::UnboundedReceiver<RunnerCommand>,
 ) {
+    handler_with_skills(h, files, None).await
+}
+
+pub(super) async fn handler_with_skills(
+    h: &Fixture,
+    files: Arc<dyn FileReports>,
+    skills: Option<Arc<dyn SkillReports>>,
+) -> (
+    Arc<dyn CommandHandler>,
+    mpsc::UnboundedReceiver<RunnerCommand>,
+) {
     let (send, receive) = mpsc::unbounded_channel();
     let dependencies = ReportDependencies {
+        skills,
         files,
         ports: None,
         emitter: Arc::new(SavingEmitter::new(h.link.clone())),

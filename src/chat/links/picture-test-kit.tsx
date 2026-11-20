@@ -15,6 +15,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { LinksProvider } from './LinksContext'
 import { Copying } from './mention-copy-test-kit'
 
@@ -154,6 +155,7 @@ export async function mountPictures(
   if (!files) await startFiles(store)
   const mentions: ChatMentions = {
     files: store,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     pictures: reader,
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,

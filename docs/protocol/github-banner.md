@@ -298,6 +298,18 @@ marks a draft ready for review, continues, and archives.
 
 [The GitHub state](github-summary.md) gives the requirements and their reasons.
 
+## The merge record
+
+- The Worker records each merged pull request of a workspace branch for
+  the Stats tab, as [The merge record](account-stats.md#the-merge-record)
+  says.
+- It records the merge when a read for a workspace finds the pull request
+  merged.
+- It also records the merge when GitHub sends the event of the merge,
+  also for an archived workspace, without a read from GitHub. Reason:
+  events do not reach an archived workspace, and a pull request can merge
+  on GitHub after its workspace is archived.
+
 ## Layouts
 
 - On desktop, the pull request bar sits at the top of the right column,

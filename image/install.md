@@ -35,14 +35,29 @@ The Worker installs no separate tool source files or launcher.
 
 The command first runs the apt part. It installs `ttyd` and `tmux` with
 `terminalPackagesCommand()`, then `gh`, with apt. It disables and masks the
-package's own ttyd service. `imagePackagesVersion()` hashes this part alone,
-so a new release does not change it. Each build job and each software image
-row records the version of the part that its command ran. A later build
-reads the version that its source image holds. When that version is
-current, the command first checks the image. When `dpkg-query` finds the
-three packages installed and `systemctl is-enabled ttyd.service` prints
-`masked`, the command skips apt. Otherwise, and for a software image build
-from the base image, it runs the apt part.
+package's own ttyd service.
+
+The `apt-get update` of the apt part adds
+`-o Acquire::AllowReleaseInfoChange::Label=true`, so apt accepts a changed
+`Label` in the release file of a source. The Boat base image holds
+`ondrej/php`, a Launchpad apt source of PHP packages. Its `Label` changed to
+`PPA for PHP (deprecated)`. Without the option, `apt-get update` fails with
+exit code 100 while the cached lists hold the old `Label`. apt still checks
+the signatures. A changed `Origin` or `Codename` still stops the update.
+
+`imagePackagesVersion()` hashes this part alone, so a new release does not
+change it. A change of the part's text, such as an apt option, changes this
+version. It also changes the app software version, which hashes the release
+version and the whole install command. Each build job and each software
+image row records the version of the part that its command ran.
+
+A later build reads the version that its source image holds. When that
+version is current, the command first checks the image. When `dpkg-query`
+finds the three packages installed and `systemctl is-enabled ttyd.service`
+prints `masked`, the command skips apt. Otherwise, and for a software image
+build from the base image, it runs the apt part. So after a change of the
+part, the next build or refresh from each image with an older version runs
+the apt part once.
 
 The release part runs as root with `umask 022`, so services that run as
 `user` can read the release files. When `/opt/conductive/current/conductive`

@@ -91,7 +91,10 @@ esac
     .digest('hex')
   const stubs: Record<string, string> = {
     sudo: `[ "$1" != -n ] || shift\n[ "$1" != -- ] || shift\nexec "$@"`,
-    'apt-get': `printf 'apt-get %s\\n' "$*" >> '${log}'`,
+    'apt-get': `printf 'apt-get %s\\n' "$*" >> '${log}'
+case "$*" in
+  *update*) [ "$*" = '-o Acquire::AllowReleaseInfoChange::Label=true update' ] || exit 100 ;;
+esac`,
     systemctl: `if [ "$1" = is-enabled ]; then printf '%s\\n' ${state.ttyd}; exit 1; fi
 printf 'systemctl %s\\n' "$*" >> '${log}'`,
     'dpkg-query': `status=0

@@ -12,6 +12,8 @@ import type {
   TextList,
   TextTable,
 } from '../markdown/agent-blocks'
+import type { InlineText } from '../markdown/agent-inline'
+import { useShowsWords } from '../markdown/answer-reading'
 import { AnswerText } from '../markdown/AnswerText'
 import local from './chat.module.css'
 
@@ -126,6 +128,25 @@ function LineList(props: { list: TextList; state: LineState }) {
 }
 
 /**
+ * A heading of a message line: a span in the weight of a heading, as
+ * `LineBlock` says, with its text through `AnswerText`. A heading whose
+ * text shows no words where it draws, as `useShowsWords` reads it with the
+ * tree and the links of the screen, draws nothing, also no space, so the
+ * open line shows no empty line for it.
+ */
+function LineHeading(props: { text: InlineText }) {
+  const shows = useShowsWords(props.text)
+  if (!shows) return null
+  return (
+    <span
+      className={classes(styles.heading, local.lineBlock, local.lineHeading)}
+    >
+      <AnswerText line text={props.text} />{' '}
+    </span>
+  )
+}
+
+/**
  * A block of a message line, as `AgentText` draws it, with the same text,
  * workspace chips, and links. A `<summary>` holds only phrasing content and
  * headings, and no paragraph, list, quote, rule, or table. So each block is
@@ -151,17 +172,7 @@ function LineBlock(props: { block: TextBlock; state: LineState }) {
         </span>
       )
     case 'heading':
-      return (
-        <span
-          className={classes(
-            styles.heading,
-            local.lineBlock,
-            local.lineHeading,
-          )}
-        >
-          <AnswerText line text={block.text} />{' '}
-        </span>
-      )
+      return <LineHeading text={block.text} />
     case 'ul':
     case 'ol':
       return <LineList list={block} state={state} />

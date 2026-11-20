@@ -22,6 +22,7 @@ pub mod runner_repository;
 pub mod runner_tool_detail;
 pub mod sdk_helper;
 pub mod sdk_helper_options;
+pub mod skills;
 pub mod tools;
 pub mod wire;
 pub mod workspaces;

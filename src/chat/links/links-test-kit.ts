@@ -19,7 +19,7 @@ export const webLinkOf = (href: string): WebLink | undefined =>
 /**
  * A part of a sent message in a short form: text, code with the kind of its
  * link, the ID and page of a chip, a link as its kind and its address, or a
- * file.
+ * file or a skill.
  */
 export function shapeOf(part: ChatPart) {
   switch (part.kind) {
@@ -29,6 +29,8 @@ export function shapeOf(part: ChatPart) {
       return { attachment: part.attachment.id, path: part.path }
     case 'file':
       return { file: part.entry.path }
+    case 'skill':
+      return { skill: part.source }
     case 'link':
       return { [part.link.kind]: part.text }
     case 'code':

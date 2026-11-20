@@ -14,6 +14,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 
 const root = '/home/user/code/checkout'
 
@@ -32,6 +33,7 @@ async function mountAnswer(
   const at = (lines?: LineRange) => (lines ? `?line=${lineLabel(lines)}` : '')
   const value: ChatMentions = {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: (path, lines) => opened.push(`${path}${at(lines)}`),
     showFolder: () => undefined,
     href: (item, lines) => `/files/${item.path}${at(lines)}`,

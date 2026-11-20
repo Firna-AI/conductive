@@ -54,6 +54,7 @@ export const conversationKeys = [
   'steered',
   'mac-in-work',
   'mention-answer',
+  'skill-answer',
   'file-answer',
   'file-answer-in-work',
   'table-resources',

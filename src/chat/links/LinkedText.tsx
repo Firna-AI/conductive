@@ -1,15 +1,18 @@
-import type { Attachment } from '../../shared/generated/Attachment'
 import { SessionChip } from '../../../docs/mockups/src/components/chat/SessionChip'
+import { SkillChip } from '../../../docs/mockups/src/components/chat/SkillChip'
 import {
   WorkspaceChip,
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { useTextLinks } from '../../shell/ui/text-links'
+import { findSkill, useMentionSkills } from '../mentions/mention-skills'
 import { findMentioned, useMentionTree } from '../mentions/MentionsContext'
 import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
+import type { SkillLookup } from './chat-tokens'
 import { AttachmentLink, FileLink } from './FileChips'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
@@ -78,6 +81,11 @@ function Part(props: { part: ChatPart; opens: boolean }) {
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
   }
+  if (part.kind === 'skill') {
+    // A press on a skill chip opens nothing. Its title is the description.
+    const { name, description } = part.skill
+    return <SkillChip mention={part.source} skill={{ name, description }} />
+  }
   return <LinkChip target={part.target} />
 }
 
@@ -91,10 +99,26 @@ export function useEntryLookup(read: boolean): EntryLookup | undefined {
   return (path, folder) => findMentioned(tree, path, folder)
 }
 
+/**
+ * The lookup of the skill texts of a message, while the chat has skill
+ * lists. Without a list, such as while it loads or in an archived
+ * workspace, each skill text stays text.
+ */
+function useSkillLookup(read: boolean): SkillLookup | undefined {
+  const skills = useMentionSkills(read)
+  if (skills?.state !== 'ready') return undefined
+  return (name) => findSkill(skills, name)
+}
+
 /** How the chat reads the text of a sent message. */
 export interface TextReading {
   /** Each mention of an entry of the file tree is a file chip. */
   mentions?: boolean
+  /**
+   * Each skill text of a skill of either agent is a skill chip, as in a
+   * message of a member. An answer keeps its skill texts as text.
+   */
+  skills?: boolean
   /** The files of a sent message. The mention of each is its chip. */
   attachments?: readonly Attachment[]
 }
@@ -104,15 +128,17 @@ export interface TextReading {
  * of the chat, and with the web links of the screen that shows it. With
  * `mentions`, a text with a `@` follows the tree of the chat for the chips
  * of the files, so a change of the tree draws only the texts that can
- * change.
+ * change. With `skills`, it follows the skill lists for the skill chips.
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
   const lookup = useEntryLookup(reading.mentions === true && text.includes('@'))
   const { linkOf } = useTextLinks()
+  const skills = useSkillLookup(reading.skills ?? false)
   return chatParts(text, links, {
     web: linkOf,
     mentions: lookup,
+    skills,
     attachments: reading.attachments,
   })
 }

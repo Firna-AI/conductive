@@ -36,6 +36,7 @@ const eventScopes = {
   'files.changed': 'workspace',
   'changes.updated': 'workspace',
   'ports.updated': 'workspace',
+  'skills.updated': 'workspace',
 } satisfies RunnerEventScopes
 
 const eventContextSources = {
@@ -55,6 +56,7 @@ const eventContextSources = {
   'files.changed': 'none',
   'changes.updated': 'none',
   'ports.updated': 'none',
+  'skills.updated': 'none',
 } satisfies RunnerEventContextSources
 
 export interface RunnerEventIdentity {

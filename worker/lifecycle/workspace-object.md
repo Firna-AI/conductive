@@ -65,7 +65,8 @@ command start. For a workspace object, it:
 - repairs the running turns from the committed chat before its deadline
   and idle decisions, as
   [Turn recovery](recovery-and-shown-state.md#turn-recovery) says
-- stops the sandbox after 30 minutes without activity or a running turn
+- stops the sandbox after the [stop time](README.md#the-stop-time)
+  without activity or a running turn
 - extends the Boat auto-stop deadline while a turn runs, unless the owner
   is suspended
 - applies the state in each deadline reply, even when the saved runner
@@ -263,8 +264,8 @@ create and resume. The workspace object runs that start:
   - A stop, an error, an archive, or a new start ends the watch. An access
     stop, such as at an org suspension, also ends it when Boat still runs
     the sandbox and the stop waits for a retry. The watch has no deadline
-    of its own, so it can last until a stop, such as the idle stop after 30
-    minutes without activity.
+    of its own, so it can last until a stop, such as the idle stop after the
+    stop time without activity.
   - A disk retention restart starts no watch, because it starts no
     terminal.
 - The end of a create stores its result in the object, with the first
