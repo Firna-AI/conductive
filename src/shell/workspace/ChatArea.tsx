@@ -1,4 +1,4 @@
-import { useCallback, useMemo, type ReactNode } from 'react'
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import {
   replacesComposer,
@@ -22,6 +22,11 @@ import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
 import { useChatFiles } from './files/chat-files'
+import {
+  KeptPageFrames,
+  PageFrames,
+  PageFramesContext,
+} from './previews/page-frames'
 import { usePreviewCentre } from './previews/preview-centre'
 import { filesCenter } from './files/files-features'
 import { SandboxBar } from './SandboxNotice'
@@ -56,8 +61,9 @@ function useComposerFocus(
  * the open files and Preview tabs: their tabs at their places in the tab
  * row, and `content`, a file or diff tab in place of the chat of the
  * session. A Preview tab that the address shows takes that place too, and
- * the pages of the Preview tabs stay loaded under it. It pre-loads the
- * Capabilities of the workspace, so their control opens at once.
+ * the pages of the Preview tabs stay loaded under it. On desktop, so do the
+ * pages of the tabs of HTML files. It pre-loads the Capabilities of the
+ * workspace, so their control opens at once.
  */
 function KeptChat(props: {
   context: WorkspaceContext
@@ -79,23 +85,34 @@ function KeptChat(props: {
   const phone = context.viewport === 'phone'
   const focus = useComposerFocus(context.workspace.id, phone)
   usePreloadedCapabilities(context.org.id, context.workspace.id)
+  const [frames] = useState(() => new PageFrames())
+  const keeps = !phone && context.sandbox !== 'archived'
   return (
-    <WorkspaceChatView
-      clock={clock}
-      composerFocus={focus}
-      content={content}
-      kept={previews.kept}
-      controller={props.chat}
-      copy={services}
-      host={props.host}
-      mentions={files.mentions}
-      onConnectAgent={(agent) => go(routes.account(agent))}
-      onOpenDiff={files.onOpenDiff}
-      onOpenPage={go}
-      readOnly={context.readOnly}
-      renderTab={renderTab}
-      viewport={phone ? 'mobile' : 'desktop'}
-    />
+    <PageFramesContext value={keeps ? frames : null}>
+      <WorkspaceChatView
+        clock={clock}
+        composerFocus={focus}
+        content={content}
+        kept={
+          <>
+            {previews.kept}
+            {keeps ? (
+              <KeptPageFrames context={context} frames={frames} />
+            ) : null}
+          </>
+        }
+        controller={props.chat}
+        copy={services}
+        host={props.host}
+        mentions={files.mentions}
+        onConnectAgent={(agent) => go(routes.account(agent))}
+        onOpenDiff={files.onOpenDiff}
+        onOpenPage={go}
+        readOnly={context.readOnly}
+        renderTab={renderTab}
+        viewport={phone ? 'mobile' : 'desktop'}
+      />
+    </PageFramesContext>
   )
 }
 

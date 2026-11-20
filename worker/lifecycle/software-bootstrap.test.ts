@@ -41,7 +41,9 @@ it('installs verified release software and apt packages without the legacy insta
   const checked = unquote(installImageSoftware(SOFTWARE, 'when-missing'))
   expect(checked).toContain('dpkg-query -W')
   expect(checked.indexOf('dpkg-query')).toBeLessThan(
-    checked.indexOf('apt-get update'),
+    checked.indexOf(
+      'apt-get -o Acquire::AllowReleaseInfoChange::Label=true update',
+    ),
   )
 })
 

@@ -1,5 +1,7 @@
 import { useCallback } from 'react'
 import { FolderGit2 } from 'lucide-react'
+import order from '../../docs/mockups/src/components/settings/RepositoryOrderList.module.css'
+import { defaultRepositoryLabel } from '../../docs/mockups/src/components/settings/repositoryOrder'
 import type { Org } from '../shared/api'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import type { MembersApi } from './api/client'
@@ -11,9 +13,10 @@ import { Section, SectionText } from './ui/Section'
 import styles from './MemberRepositoriesTab.module.css'
 
 /**
- * The repositories that the org chose, without search, Add, or Remove, for
- * a member who is not an admin (decision 57), and for everyone in a
- * suspended org, whose notice says why.
+ * The repositories that the org chose, in the repository order, without
+ * search, Add, Remove, or moves, for a member who is not an admin
+ * (decision 57), and for everyone in a suspended org, whose notice says
+ * why. The first one shows Default.
  */
 export function OrgRepositoryList(props: {
   repositories: readonly Repository[]
@@ -31,7 +34,7 @@ export function OrgRepositoryList(props: {
   }
   return (
     <ul aria-label="Repositories" className={styles.list}>
-      {chosen.map((repository) => (
+      {chosen.map((repository, place) => (
         <li className={styles.row} key={repository.id}>
           <FolderGit2 aria-hidden className={styles.icon} size={15} />
           <span className={styles.text}>
@@ -42,6 +45,9 @@ export function OrgRepositoryList(props: {
               </span>
             ) : null}
           </span>
+          {place === 0 ? (
+            <span className={order.label}>{defaultRepositoryLabel}</span>
+          ) : null}
         </li>
       ))}
     </ul>
@@ -52,7 +58,7 @@ export function OrgRepositoryList(props: {
  * The Repositories tab of the org settings for a member who is not an
  * admin: the repositories of the org, read-only. Only admins change them,
  * as decision 57 says. In a suspended org everyone sees this tab, and it
- * adds no sentence about admins, because the notice of the org says why.
+ * has no description, because the notice of the org says why.
  * With `builds`, the repository notice above the list names the changes
  * that the cloud computer does not hold yet. Mount it in the page column
  * of the org settings.
@@ -67,15 +73,12 @@ export function MemberRepositoriesTab(props: {
   builds?: BuildsResponse
 }) {
   const { api, org } = props
-  const note = props.suspended ? '' : ' Only an admin can change them.'
+  const note = props.suspended ? undefined : 'Only an admin can change them.'
   const load = useCallback(() => api.repositories(org.id), [api, org.id])
   const { state, retry } = useResource(load)
   return (
     <ViewportScope viewport={props.viewport}>
-      <Section
-        description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them.${note}`}
-        title="Repositories"
-      >
+      <Section description={note} title="Repositories">
         {props.builds ? (
           <RepositoryNotice
             builds={props.builds}

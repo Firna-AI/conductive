@@ -13,6 +13,7 @@ This guide belongs to the [agent runner](README.md).
 - [reports](../crates/cnd-runner/src/reports/) serializes scans, revisions, retained replies, and bounded parts.
 - [repository](../crates/cnd-runner/src/repository/) owns safe file access and Git comparisons.
 - [ports](../crates/cnd-runner/src/ports/) reads stable listening ports and complete selected labels.
+- [skills](../crates/cnd-runner/src/skills/) filters and bounds skill reports, keeps private Codex paths, and drives discovery through the helper.
 - [watcher](../crates/cnd-runner/src/watcher/) reopens watches after disk restore and schedules scans.
 - [cnd-relay](../crates/cnd-relay/README.md) owns the preview relay and inherited socket.
 - [SDK helper](sdk-helper/README.md#key-code) owns adapters, credentials, tools, and measurement bundles.

@@ -39,8 +39,9 @@ decision 151. The mockups draw it for Firna, the first org of the sign-up:
 
 Repositories that wait for a build come from decisions 240 and 241 of
 10 November 2026. A waiting repository is a chosen repository that the
-cloud computer of the org does not hold yet. An added repository starts a
-build, and a removed one leaves at the next build. The mockups draw it for
+cloud computer of the org does not hold yet. Done after an add starts a
+build, as decision 295 of 18 November 2026 says, and a removed one leaves
+at the next build. The mockups draw it for
 Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
 
 - `app/new-workspace/waiting-repository` has the open repository menu.
@@ -57,7 +58,9 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   dialog page gets no more variants.
 - `app/org-settings/repositories` has the repository notice in each
   state: `building` while the build of an add runs, `build-failed` with
-  Try again, and `removed` with Build computer. Its `member` variant has
+  Try again, and `removed` with Build computer. Its `unsaved-add` variant
+  has an open edit that adds acme/admin-dashboard before Done, and the
+  notice points to Done with no button. Its `member` variant has
   the notice of a failed build without a button. The notice names the
   repositories, so the rows of the list stay as they are.
 - `app/org-settings/cloud-computer/repositories-changed` has the same

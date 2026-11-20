@@ -258,6 +258,20 @@ The summary copy changes no activity time, update time, or list position.
 A failed copy rejects the refresh, so the delivery stays retryable.
 The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
 
+## The merge record
+
+[The merge record](../../docs/protocol/account-stats.md#the-merge-record) gives the requirements.
+[merge-record-data.ts](merge-record-data.ts) writes one row of `pull_request_merges` for each merged pull request, keyed by the GitHub repository ID and the number.
+A repeated write changes nothing, so the first workspace and its owner at that time keep the merge.
+Each write reads the owner from the workspace row and skips a workspace of a deleted org.
+The copy callback of the refresh writes the row after the summary copy, when the committed banner is `merged` and has a merge time.
+So a merge from the app, a merge on GitHub, a tab read after a missed event, and a receipt replay all write it.
+The merged `pull_request` event writes the row for the oldest workspace of its repository, installation, and head branch, also an archived one, with no GitHub read.
+It takes `merged_at` from the event, and the delivery time when the event has none.
+A failed write fails the delivery after the other work of the event, so the delivery stays retryable.
+GitHub does not resend a failed delivery by itself, so the next refresh of a workspace that is not archived repairs a missed row.
+The org purge removes the rows through the foreign key of the org.
+
 ## Verification
 
 The GitHub tests that store state run on the production workspace object in Miniflare, through the [shared test harness](../test-support/README.md).
@@ -269,11 +283,12 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [branch-work.ts](branch-work.ts) reads that work from a fresh snapshot: an open pull request, and the pushed commits that the base does not hold. A merged or closed pull request is not such work, and a merged branch counts no pushed commits.
 - [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
-- [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
+- [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs and merge records, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
 - [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
 - [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
+- [merge-record-data.ts](merge-record-data.ts) writes the merge record of a merged pull request.
 - [Shared summary](../../src/shared/github.ts) gives `checksSummary`, which the bar uses, and `githubSummary`, which the copy uses.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.

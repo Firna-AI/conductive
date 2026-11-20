@@ -86,7 +86,8 @@ limits, their results, and what the chat shows. A workspace with
   message in the chat, with the command and its actions.
 - While a request waits, the row of its workspace shows needs input on
   every page of the Mac app. A click on that row opens the request
-  (decision 68).
+  (decision 68). Starting shows over needs input, as
+  [Secret requests](secret-requests.md#the-request) says.
 - When the Mac app is in the background, a notification of macOS tells of
   the request. The notification opens the workspace of the request.
 - The notification comes from the Mac app. The page still gets no

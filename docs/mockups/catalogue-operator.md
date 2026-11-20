@@ -133,6 +133,11 @@ pages:
   `three-accounts` has a third account, `e2b-us`, with a field for each
   account and the total under them. Its `uneven` variant has a total of
   110%, so Save weights stays off.
+- `app/operator/settings` has the Settings tab: the Stop time box with
+  the choices 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours, at the
+  default of 30 min. Its child page `changed` has 1 hour picked and not
+  saved, `saved` has it after Save stop time with the time and the
+  operator, and `not-saved` has a save that failed.
 - `app/operator/long-runs` has the Overview at a quiet moment, when 3
   workspaces run. The newest started 41 seconds ago, and its cloud
   computer does not exist yet, so its row shows a dash and no Copy. Its

@@ -293,8 +293,6 @@ My calls, 20 November 2026, unless a decision above says otherwise:
     Extend rule says that Extend fails when the grant already ended.
   - The new settings action is `start-workspace-until-stop`, so that it
     has a name apart from the approval answer `allow-workspace-until-stop`.
-  - The Terms version changes to `2026-11-20-mac-access-allows-all`,
-    because the Terms page changed, as each earlier Terms change did.
 - From the control milestone, 20 November 2026, my calls:
   - The control opens at its top. It scrolls the line into view only when
     the line appears after a switch-on, or shows a new result. Reason: the
@@ -437,7 +435,9 @@ Depends on: every other milestone
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
-      and the follow-up items that the change adds.
+      and the follow-up items that the change adds. It also gives the
+      justifications of the merge of main, from
+      `.context/mac-access-allows-all/merge-main.md`.
 
 ## Post-merge follow-up (non-blocking)
 

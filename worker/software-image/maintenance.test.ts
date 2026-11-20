@@ -11,7 +11,10 @@ import { TEST_TIME } from '../test-support/harness'
 import { requestSoftwareImage } from './build'
 import { softwareImages } from './data'
 import { repairSoftwareImages } from './repair'
-import { seedReadySoftwareImage } from './test-support'
+import {
+  seedReadySoftwareImage,
+  softwareImageReleaseFixture,
+} from './test-support'
 
 const fixtureForTest = setupBackendTests()
 afterEach(() => vi.restoreAllMocks())
@@ -124,6 +127,7 @@ it('warns and continues scheduled work when software image storage is unavailabl
 it('keeps old software images pinned through job cleanup and deletes them after the job ends', async () => {
   const fixture = fixtureForTest()
   const { images, org, user, boat } = fixture
+  const current = { ...SOFTWARE, version: '0.0.43', sha256: 'b'.repeat(64) }
   await images.env.DB.prepare('DELETE FROM org_images WHERE org_id = ?')
     .bind(org.id)
     .run()
@@ -134,12 +138,14 @@ it('keeps old software images pinned through job cleanup and deletes them after 
     kind: 'build',
     software: SOFTWARE,
   })
+  softwareImageReleaseFixture(images).current = current
   await seedReadySoftwareImage(images.env.DB, 'new', {
-    version: 'another',
+    artifact: current,
     now: TEST_TIME + 1,
   })
   const other = await seedReadySoftwareImage(images.env.DB, 'other', {
     account: 'other-account',
+    artifact: current,
   })
   await repairSoftwareImages(images)
   expect(

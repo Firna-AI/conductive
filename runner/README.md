@@ -3,7 +3,7 @@
 The agent runner is the program of Conductive in each cloud computer, a
 sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository and the listening ports.
+repository, the listening ports, and the skills of each agent.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
@@ -33,12 +33,21 @@ The `hello` also offers complete tool details, as `completeToolDetails`.
 Only after a `welcome` that accepts them does the runner send a long tool
 detail whole, in private parts, as [Event limits](event-limits.md) says.
 A Worker without that support omits the field, so the runner keeps its cut.
+The runner also serves repository files for HTML previews on
+`127.0.0.1:7683`. It announces `fileServer: true` only after the listener
+binds. A bind failure warns and lets the runner continue without file previews.
+The [file server protocol](../docs/protocol/file-server.md) gives the private
+request checks, file access, cache dates, and byte ranges. Port reports
+leave this port out. The server shares safe file opens with file tabs and
+streams files without their read limit. It refuses dot files and links to
+dot files, while files in dot folders remain available.
 
 The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)
 is a separate Node 24 package. The runner starts one helper child for each
-agent start. Private pipes carry JSON lines. Only the helper starts the SDK adapters.
+agent start. A separate helper reads agent skill metadata.
+Private pipes carry JSON lines. Only the helper starts the SDK adapters.
 
 The release has three parts: `node`, `system`, and `sdk-helper`.
 The runner uses the Node and helper beside its running executable.
@@ -65,7 +74,8 @@ the outbox size check.
 ## Report requests
 
 The [report guide](reports.md) gives full report requests, their saved
-receipts, and the listening-port scan and scheduling boundaries.
+receipts, the listening-port scan and scheduling boundaries, and the
+skills report of each agent.
 
 ## Preview relay
 
@@ -113,6 +123,7 @@ their defaults, and the startup failure message.
 Rust tests use controlled helper boundaries and a fake helper process.
 They test transport and state with fake workspace endpoints.
 Repository tests use temporary Git repositories and native filesystem watches.
+File-server tests use real loopback HTTP and temporary repository folders.
 The relay tests use local HTTP and WebSocket servers and socket activation.
 The [crate README](../crates/cnd-runner/README.md#development) gives their commands.
 
@@ -140,6 +151,7 @@ guides that give the entry points of each part.
 - [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
 - [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
+- [Skill mentions: the skills report](../docs/protocol/skill-mentions.md#the-skills-report)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)

@@ -45,11 +45,21 @@ export interface CapabilitiesView {
   /** The controls take no change, such as while a create or a change runs. */
   disabled: boolean
   /**
-   * The approvals of the sessions, each with Remove, which only a workspace
-   * that exists has.
+   * The approvals of the open session and the values for the workspace,
+   * each with Remove, which only a workspace that exists has.
    */
   grants?: ReactNode
 }
+
+/**
+ * What the secrets part shows: the secrets of the org with the pre-approved
+ * ones checked, and the link to the Secrets tab. An automation has only
+ * this part.
+ */
+export type SecretsView = Pick<
+  CapabilitiesView,
+  'org' | 'secrets' | 'retry' | 'preapproved' | 'setPreapproved' | 'disabled'
+>
 
 /**
  * A secret of the org with its checkbox, which pre-approves it for the
@@ -96,7 +106,7 @@ function SecretCheck(props: {
  * links to its Secrets tab. A quiet spinner shows while the secrets load,
  * and a failed read shows Try again.
  */
-function SecretPicker(props: { view: CapabilitiesView }) {
+function SecretPicker(props: { view: SecretsView }) {
   const { view } = props
   const theme = useSharedUiTheme()
   const { secrets } = view
@@ -173,6 +183,32 @@ function MacAccessSwitch(props: {
 }
 
 /**
+ * The secrets part, with its hint and its content. Manage secrets opens the
+ * Secrets tab of the org settings, while the org has secrets.
+ */
+function secretsPart(
+  view: SecretsView,
+  hint: string,
+  content: ReactNode,
+): CapabilityPart {
+  const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0
+  return {
+    key: 'secrets',
+    title: secretsPartWords.title,
+    hint,
+    control: listed ? (
+      <AppLink
+        className={styles.link}
+        to={routes.settings(view.org.id, 'secrets')}
+      >
+        {secretsPartWords.manage}
+      </AppLink>
+    ) : undefined,
+    content,
+  }
+}
+
+/**
  * The Mac access part: the shared switch, and while it is on, the line of
  * this Mac in the Mac app or the note of a browser. While the switch is
  * off, the hint of the Mac app adds that turning it on also allows all
@@ -205,27 +241,29 @@ function macAccessPart(view: CapabilitiesView): CapabilityPart {
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access. Manage
- * secrets opens the Secrets tab of the org settings. Later features, such
- * as MCP servers, add their own parts here.
+ * the workspace pre-approves, with its grants, and Mac access. Later
+ * features, such as MCP servers, add their own parts here.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
-  const listed = view.secrets.state === 'ready' && view.secrets.value.length > 0
   return [
-    {
-      key: 'secrets',
-      title: secretsPartWords.title,
-      hint: secretsPartWords.hint,
-      control: listed ? (
-        <AppLink
-          className={styles.link}
-          to={routes.settings(view.org.id, 'secrets')}
-        >
-          {secretsPartWords.manage}
-        </AppLink>
-      ) : undefined,
-      content: <SecretsContent view={view} />,
-    },
+    secretsPart(view, secretsPartWords.hint, <SecretsContent view={view} />),
     macAccessPart(view),
+  ]
+}
+
+/**
+ * The parts of the Capabilities control of an automation: only the secrets
+ * that each run workspace pre-approves (automation capabilities decision
+ * 1 A), with their own hint. Each run workspace keeps Mac access off
+ * (decision 2 A), so the control has no Mac access part. An automation has
+ * no grants of its own.
+ */
+export function automationCapabilityParts(view: SecretsView): CapabilityPart[] {
+  return [
+    secretsPart(
+      view,
+      secretsPartWords.automationHint,
+      <SecretPicker view={view} />,
+    ),
   ]
 }

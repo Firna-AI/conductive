@@ -10,6 +10,8 @@ import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { toolFixtures } from '../../test-support/fixtures/tools'
 import { splitPath } from '../navigation'
 import * as samples from './dev-samples'
+import reportCss from './pages/report.css?raw'
+import reportHtml from './pages/report.html?raw'
 
 const org = FAKE_IDS.org
 const id = FAKE_IDS.workspace
@@ -27,6 +29,10 @@ export const devTextFiles: ReadonlyMap<string, string> = new Map([
   ['tsconfig.json', samples.tsconfig],
   ['.env.example', samples.envExample],
   ['notes.txt', samples.notes],
+  // An HTML report with a style file, whose page the development server
+  // serves from `pages/` in place of the files preview.
+  ['.context/report.html', reportHtml],
+  ['.context/report.css', reportCss],
 ])
 
 /** The read limit of the development routes. A sample, not product policy. */
@@ -120,14 +126,33 @@ function diffOf(
   }
 }
 
-const readmePatch = `@@ -12,3 +12,6 @@ ## Checkout
+const readmePatch = `@@ -23 +23,11 @@ ## Checkout
 -Checkout suggests addresses as you type.
-+Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to manual entry.
++Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
 +
-+## Tests
-+`
++![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
++
++- [x] Suggestions from the places API
++- [x] Manual entry without the key
++- [ ] Saved addresses for signed-in customers
++
++---
++
++## Tests`
 
 const extraEntries: readonly FileEntry[] = [
+  {
+    path: '.context/report.html',
+    name: 'report.html',
+    kind: 'file',
+    change: null,
+  },
+  {
+    path: '.context/report.css',
+    name: 'report.css',
+    kind: 'file',
+    change: null,
+  },
   { path: 'public/hero.png', name: 'hero.png', kind: 'file', change: null },
   {
     path: 'public/catalog.json',

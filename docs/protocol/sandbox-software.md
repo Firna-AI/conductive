@@ -263,7 +263,14 @@ says.
 - A software image build has a time limit of 60 minutes. A build that
   outlasts the wait of its deploy run goes on until it ends or reaches
   that limit.
-- When a new software image is ready, the app deletes each older one that
-  no running build still starts from. A rollback of the Worker then finds
-  no software image of its version, so builds install the app's own
-  software until the next deploy run builds one.
+- The app keeps the ready software image of the current version, whatever
+  the start time of its build. It also keeps each software image that a
+  running build still starts from. It deletes each other ready software
+  image. These rules apply in each account that holds software images.
+- Reason: a first build starts only from the image of the current version.
+  Keeping only the image with the latest build start was rejected, because
+  that image need not be of the current version.
+- After a rollback of the Worker that changes the version, first builds
+  start from the ready software image of the current version, when one
+  exists. Otherwise they start from the base image, as for a missing
+  software image above, until the next deploy run builds one.

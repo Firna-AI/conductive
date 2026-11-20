@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
-import { parseMarkdown } from '../markdown/markdown-document'
+import { previewDocument } from '../markdown/preview-blocks'
 import { fileText } from '../model/file-text'
 import { ReadError } from '../ui/FileStates'
 import { FileContent } from './FileBody'
@@ -95,7 +95,7 @@ it('starts Markdown rendered and shows its source as text with line numbers', ()
   })
   const preview = renderToStaticMarkup(
     <FileContent
-      markdownParser={parseMarkdown}
+      markdownParser={previewDocument}
       mode="preview"
       name="README.md"
       path="README.md"

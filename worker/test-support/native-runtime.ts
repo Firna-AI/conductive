@@ -13,7 +13,7 @@ import type {
 import { NATIVE_TEST_TIME } from './native-workspace-api'
 import { NativeHostBridge } from './native-host-bridge'
 import { nativeWorkspaceBundle } from './native-bundle'
-import { readNativePacket } from './native-protocol'
+import { readNativeReply } from './native-protocol'
 import { forceNativeEviction } from './native-eviction'
 import { migratedStorage, TEST_D1_ID } from './migrated-storage'
 
@@ -126,7 +126,7 @@ export async function createNativeRuntime(
           body: JSON.stringify({ type: 'call', id: 'host', invocation }),
         },
       )
-      const packet = readNativePacket(await response.json())
+      const packet = await readNativeReply(response, invocation)
       if (packet.type !== 'done') throw new Error('Expected a native result.')
       return packet.result
     })
@@ -185,6 +185,18 @@ export async function createNativeRuntime(
         await api.controls.configure(options)
         if ((await api.controls.instanceId()) === resetInstance)
           throw new Error('The native eviction kept the reset object instance.')
+      },
+      crash: async () => {
+        await api.controls.persist()
+        await forceNativeEviction(
+          runtime,
+          WORKER_NAME,
+          EXPORT_NAME,
+          name,
+          api.controls,
+        )
+        bridge.cancel()
+        await api.controls.configure(options)
       },
       reset: async () => {
         bridge.cancel()
@@ -258,5 +270,7 @@ export interface NativeActor {
   lifecycle: WorkspaceLifecycleEndpoint & TurnTokenEndpoint
   configure(options: NativeWorkspaceOptions): Promise<void>
   restart(): Promise<void>
+  /** Resets the object like restart, but without waiting for its work. */
+  crash(): Promise<void>
   reset(): Promise<void>
 }

@@ -1,9 +1,8 @@
-import { useEffect, type HTMLAttributes, type RefCallback } from 'react'
+import type { HTMLAttributes, RefCallback } from 'react'
 import type { PointerDragProps } from '../../app/pointer-drag'
 import type { OrgSummary } from '../../shared/orgs'
-import { useOrgDrag } from '../orgs/useOrgDrag'
 import { useOrgMove } from '../orgs/useOrgMove'
-import { useRailMoves } from './useRailMoves'
+import { useListOrder } from '../ui/useListOrder'
 import { useTileMenu } from './useTileMenu'
 
 /** The props of the list item of an org tile: its drag, its menu, and its keys. */
@@ -22,14 +21,12 @@ export type TileProps = PointerDragProps &
  */
 export function useRailOrder(orgs: readonly OrgSummary[]) {
   const move = useOrgMove()
-  const moves = useRailMoves({ orgs, move })
-  const drag = useOrgDrag(orgs, move)
+  const { drag, moves, status } = useListOrder({
+    items: orgs,
+    move,
+    sayDrop: false,
+  })
   const menu = useTileMenu({ orgs, step: moves.step })
-  const dragging = drag.dragged !== null
-  const { forget } = moves
-  useEffect(() => {
-    if (dragging) forget()
-  }, [dragging, forget])
 
   const tile = (org: OrgSummary, index: number): TileProps => {
     const base = drag.bind(org, index)
@@ -50,7 +47,7 @@ export function useRailOrder(orgs: readonly OrgSummary[]) {
     tile,
     linkRef: menu.linkRef,
     menuOpen: menu.openId,
-    status: drag.status || moves.status,
+    status,
     menu: menu.layer,
   }
 }

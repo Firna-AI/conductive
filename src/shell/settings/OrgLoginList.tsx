@@ -2,6 +2,7 @@ import { useId, useState, type ReactNode } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { loginLabels } from '../../../docs/mockups/src/components/settings/agentConnectCopy'
 import listStyles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
 import styles from '../../../docs/mockups/src/components/settings/OrgAgents.module.css'
 import { orgAgentsCopy as copy } from '../../../docs/mockups/src/components/settings/orgAgentsCopy'
@@ -16,7 +17,7 @@ import {
   EndpointDetails,
   type OrgEndpointOwner,
 } from '../account/EndpointDetails'
-import { agentNames, loginLabels } from '../account/labels'
+import { agentNames } from '../account/labels'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { EveryMemberSetting } from './EveryMemberSetting'

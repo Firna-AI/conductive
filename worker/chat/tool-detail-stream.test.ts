@@ -74,8 +74,30 @@ it('filters complete tool sources across parts and JSON cuts with Unicode, liter
 
 it('uses compatible refusal markers and clears interrupted private sources while keeping late and null details', async () => {
   const f = await outputFixture(harness, {})
+  const otherSession = await f.createSession()
+  await f.send(otherSession.id, 'other-message')
+  const other = f.runner.commands.find(
+    (command) =>
+      command.type === 'turn' && command.sessionId === otherSession.id,
+  )
+  if (other?.type !== 'turn') throw new Error('Expected another stored turn.')
+  const otherContext = { sessionId: other.sessionId, turnId: other.turnId }
+  const missingContext = {
+    sessionId: 'missing-session',
+    turnId: 'missing-turn',
+  }
   await f.emit(part(f.context, 'held source', 1))
   await f.emit(part(f.context, 'wrong sequence', 3, true))
+  await f.emit(part(f.context, 'held source with stored root IDs', 1))
+  await f.emit({
+    ...part(f.context, 'wrong sequence with stored root IDs', 3, true),
+    ...otherContext,
+  })
+  await f.emit(part(f.context, 'held source with missing root IDs', 1))
+  await f.emit({
+    ...part(f.context, 'wrong sequence with missing root IDs', 3, true),
+    ...missingContext,
+  })
   await f.emit(part({ ...f.context, turnId: 'missing' }, 'unavailable', 1))
   const oversized = await f.emit(part(f.context, 'z'.repeat(1_048_576), 1))
   f.runner.sendEnvelope(oversized)
@@ -89,6 +111,8 @@ it('uses compatible refusal markers and clears interrupted private sources while
     markers.map(({ runnerEventType, reason }) => ({ runnerEventType, reason })),
   ).toEqual([
     { runnerEventType: 'tool.updated', reason: 'invalid' },
+    { runnerEventType: 'tool.updated', reason: 'invalid' },
+    { runnerEventType: 'tool.updated', reason: 'invalid' },
     { runnerEventType: 'tool.updated', reason: 'turn_not_active' },
     { runnerEventType: 'tool.updated', reason: 'too_large' },
   ])
@@ -96,12 +120,18 @@ it('uses compatible refusal markers and clears interrupted private sources while
     expect(readChatEvent(record(marker))).toEqual(marker)
   expect(
     markers.map(({ sessionId, turnId }) => ({ sessionId, turnId })),
-  ).toEqual([f.context, { sessionId: null, turnId: null }, f.context])
+  ).toEqual([
+    f.context,
+    f.context,
+    f.context,
+    { sessionId: null, turnId: null },
+    f.context,
+  ])
   expect(
     refused.events.flatMap(({ event }) =>
       event.type === 'runner.event-refused' ? [event.reason] : [],
     ),
-  ).toEqual(['invalid', 'too_large'])
+  ).toEqual(['invalid', 'invalid', 'invalid', 'too_large'])
   expect(JSON.stringify(refused)).not.toContain('held source')
   expect(
     await f.chat.store.read(WORKSPACE_ID, (view) =>

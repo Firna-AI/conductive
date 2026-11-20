@@ -34,7 +34,10 @@ export async function insertPreview(
      SELECT ?, ?, w.org_id, w.id, ?, ?, ?, w.sandbox_id, w.provider_account FROM workspaces w
      JOIN org_members m ON m.org_id = w.org_id
      WHERE w.id = ? AND w.org_id = ? AND w.sandbox_id = ? AND w.provider_account = ?
-     AND ${sandboxAccessPredicate} AND m.user_id = ?`,
+     AND ${sandboxAccessPredicate} AND m.user_id = ?
+     AND (? <> 0 OR NOT EXISTS (
+       SELECT 1 FROM preview_hostnames p WHERE p.org_id = w.org_id AND p.workspace_id = w.id
+       AND p.port = 0 AND p.revoked_at IS NULL AND p.expires_at > ?))`,
     )
     .bind(
       row.id,
@@ -47,6 +50,8 @@ export async function insertPreview(
       target.sandboxId,
       target.providerAccount,
       userId,
+      row.port,
+      now,
     )
     .run()
   return result.meta.changes === 1
@@ -62,6 +67,7 @@ export async function listPreviews(
     .prepare(
       `SELECT id, hostname, port, expires_at AS expiresAt FROM preview_hostnames
      WHERE org_id = ? AND workspace_id = ? AND revoked_at IS NULL AND expires_at > ?
+     AND port <> 0
      ORDER BY created_at, id`,
     )
     .bind(target.orgId, target.workspaceId, now)
@@ -120,13 +126,13 @@ export async function revokePreview(
     db
       .prepare(
         `SELECT CASE WHEN revoked_at IS NULL AND expires_at > ? THEN 1 ELSE 0 END AS open
-      FROM preview_hostnames WHERE org_id = ? AND workspace_id = ? AND id = ?`,
+      FROM preview_hostnames WHERE org_id = ? AND workspace_id = ? AND id = ? AND port <> 0`,
       )
       .bind(now, target.orgId, target.workspaceId, id),
     db
       .prepare(
         `UPDATE preview_hostnames SET revoked_at = COALESCE(revoked_at, ?)
-      WHERE org_id = ? AND workspace_id = ? AND id = ?`,
+      WHERE org_id = ? AND workspace_id = ? AND id = ? AND port <> 0`,
       )
       .bind(now, target.orgId, target.workspaceId, id),
   ])

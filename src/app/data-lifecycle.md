@@ -114,8 +114,12 @@ of the data that the screens read and write.
   choices from other saves and other clients. The save queue keeps an add
   before a later remove of the same repository.
 - Each repository save and each save of the install script reads the
-  builds again, because an add starts a build, and each of these saves
-  changes `BuildsResponse.changes`.
+  builds again, because each of these saves changes
+  `BuildsResponse.changes`. A repository save starts no build. The
+  Repositories tab keeps the Add and Remove changes of an edit in the
+  page until Done. Done saves them, the removals first, and then starts
+  one build when it saved an add. A change that does not save stays in
+  the edit.
 - A read or a Resume reply carries the event number of its state. It shows
   only when no newer state has shown, from the stream or another reply.
   After it, an older stream event changes nothing. A new owner, an
@@ -220,7 +224,8 @@ of the data that the screens read and write.
   or from an `org_suspended` refusal, and what its screens show.
 - The secrets of an org are one value of `OrgModel.secrets`, a
   `SecretsModel`. The Secrets tab and the Capabilities control read them
-  each time that they show, and share the answer. A write shows its answer
+  each time that they show, and share the answer. The automation page reads
+  them when a chosen secret of the automation has no name in the list. A write shows its answer
   in the list. The list never holds a value: a reveal gives its value to
   its caller only, shows the record of the reveal at once, and reads the
   list again for the record of the Worker.

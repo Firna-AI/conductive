@@ -103,7 +103,8 @@ the Help row of the command palette opens.
   closed while a change of the install script or of the repositories
   waits for a build.
 - A save of the install script and each repository save read the builds
-  again, so the notices and the build that an add starts show at once.
+  again, so the notices show at once. Done of the Repositories tab starts
+  the build of the added repositories, and the build shows at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -319,6 +320,15 @@ the Help row of the command palette opens.
   line was checked. A start that fails shows as a notice in the new
   workspace, with Try again. A browser shows a note in place of the line,
   and starts no grant.
+- The automation page gives its owner the same icon before the model
+  picker, in the bar of the prompt box. Its control has the secrets part
+  only, with no Mac access. On a phone the icon stays in the bar and opens
+  the control as a sheet. A change of the checks turns Save on, and the
+  icon is off while a save runs. Under the prompt, every member reads the
+  line that names the chosen secrets. While the triggers hold a pull
+  request trigger, the pull request hint follows that line. For the owner,
+  both follow the form. For another member, both follow the saved
+  automation.
 - The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and

@@ -7,7 +7,8 @@ import {
 import { heldOperation } from '../test-support/held-operation'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID } from './harness.test-support'
-import { CHAT_EVENT_PREFIX, chatEventKey, chatKey } from './storage-keys'
+import { historySessionKey, historySessionPrefix } from './history-session-keys'
+import { chatKey } from './storage-keys'
 import { transcriptFixture } from './transcript.test-support'
 
 let harness: TestHarness
@@ -43,7 +44,7 @@ it('lets queued writes proceed between pages while keeping the captured session 
   let changed: Promise<void> | undefined
   await fixture.setStorageHooks({
     afterList: async (options) => {
-      if (options.prefix !== CHAT_EVENT_PREFIX) return
+      if (options.prefix !== historySessionPrefix(session.id)) return
       if (!first) {
         const current = await fixture.storage.get<Session>(
           chatKey('session', session.id),
@@ -52,7 +53,7 @@ it('lets queued writes proceed between pages while keeping the captured session 
         return
       }
       first = false
-      expect(options.startAfter).toBe(chatEventKey(0))
+      expect(options.startAfter).toBe(historySessionKey(session.id, 0))
       await held.wait()
     },
   })

@@ -49,6 +49,29 @@ export function useChoiceFocus(
   })
 }
 
+/** The focus fell to the page, as when its element left the page. */
+function focusLost(): boolean {
+  const active = document.activeElement
+  return active === null || active === document.body
+}
+
+/**
+ * Gives a lost focus back to the items of `layer` after each render, while
+ * `active`: to the checked item, else the first, as when the layer opened.
+ * A render loses the focus when it takes away the item that has it, such
+ * as an action that a change of the access drops. A focus elsewhere stays.
+ */
+export function useLostFocus(
+  layer: RefObject<HTMLElement | null>,
+  active = true,
+): void {
+  useLayoutEffect(() => {
+    const node = layer.current
+    if (!active || !node || !focusLost()) return
+    choiceToFocus(node)?.focus()
+  })
+}
+
 function size(node: HTMLElement) {
   return { width: node.offsetWidth, height: node.offsetHeight }
 }
@@ -91,7 +114,8 @@ function place(
  * as while a change of the menu runs. `showChoices` can refuse in the same
  * way, and then the choices and the focus stay. The focus goes into the menu
  * as it opens, and back with `back` as it closes, unless the user moved it
- * elsewhere. The menu of the browser stays shut over it.
+ * elsewhere. A render that takes away the item with the focus gives the
+ * focus back to the menu. The menu of the browser stays shut over it.
  */
 export function PointMenu(props: {
   label: string
@@ -149,13 +173,16 @@ export function PointMenu(props: {
     const node = menu.current
     if (node) choiceToFocus(node)?.focus()
     return () => {
-      const active = document.activeElement
-      const lost = active === null || active === document.body
-      if (lost || layer?.contains(active)) latest.current.back()
+      if (focusLost() || layer?.contains(document.activeElement)) {
+        latest.current.back()
+      }
     }
   }, [])
   // Choices that open by a key or a press take the focus.
   useChoiceFocus(choices, open?.focus ?? false)
+  // A render that takes away the item with the focus, or its choices, gives
+  // the focus back to the menu. Choices that take the focus got it above.
+  useLostFocus(menu)
 
   useEffect(() => {
     const onPointer = (event: PointerEvent) => {

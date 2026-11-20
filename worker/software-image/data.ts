@@ -66,6 +66,16 @@ export async function softwareImages(
   ).results
 }
 
+export async function softwareImageAccounts(db: D1Database): Promise<string[]> {
+  return (
+    await db
+      .prepare(
+        'SELECT DISTINCT provider_account AS account FROM software_images ORDER BY provider_account',
+      )
+      .all<{ account: string }>()
+  ).results.map((row) => row.account)
+}
+
 export async function insertSoftwareImage(
   db: D1Database,
   input: {

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { API_PATHS } from '../../src/shared/api'
 import {
+  previewLaunchUrl,
   previewsPath,
   type PreviewLaunchResponse,
 } from '../../src/shared/previews'
@@ -40,9 +41,12 @@ it('uses the Mac cookie only for exact no-Origin preview launch navigations', as
   const setup = await openPreview(harness)
   const session = await desktopSession()
   harness.requests.length = 0
-  const navigation = new Request(setup.preview.url, {
-    headers: { Cookie: session },
-  })
+  const navigation = new Request(
+    previewLaunchUrl(setup.preview, 'reports/index.html'),
+    {
+      headers: { Cookie: session },
+    },
+  )
   const page = await setup.handler.fetch(navigation)
   expect(page.status).toBe(200)
   expect(page.headers.get('Content-Security-Policy')).toContain(
@@ -105,7 +109,7 @@ it('hands the native launcher a short fragment grant and exchanges it only on th
   const session = await desktopSession()
   harness.requests.length = 0
   const native = await setup.handler.fetch(
-    new Request(setup.preview.url, {
+    new Request(previewLaunchUrl(setup.preview, 'reports/Some ü%2F.html'), {
       headers: {
         Cookie: session,
         Origin: DESKTOP_ORIGIN,
@@ -120,6 +124,7 @@ it('hands the native launcher a short fragment grant and exchanges it only on th
   expect(url.origin).toBe('https://authorize.conductive-previews.test')
   expect(url.search).toBe('')
   const fields = new URLSearchParams(url.hash.slice(1))
+  expect(fields.get('path')).toBe('reports/Some ü%2F.html')
   const token = fields.get('grant') ?? ''
   expect(token).not.toBe('')
   url.hash = ''
@@ -127,6 +132,7 @@ it('hands the native launcher a short fragment grant and exchanges it only on th
   expect(bootstrap.status).toBe(200)
   expect(bootstrap.headers.get('Content-Type')).toContain('text/html')
   url.searchParams.set('hostname', fields.get('hostname') ?? '')
+  url.searchParams.set('path', fields.get('path') ?? '')
   const headers = {
     Origin: url.origin,
     Authorization: `Bearer ${token}`,
@@ -164,7 +170,9 @@ it('hands the native launcher a short fragment grant and exchanges it only on th
   const init = { method: 'POST', headers, body, duplex: 'half' }
   const accepted = await setup.handler.proxy(new Request(url, init))
   expect(accepted.status).toBe(200)
-  expect(await accepted.json()).toEqual({ url: `${setup.previewUrl}/` })
+  expect(await accepted.json()).toEqual({
+    url: `${setup.previewUrl}/reports/Some%20%C3%BC%252F.html`,
+  })
   expect(accepted.headers.getSetCookie()).toHaveLength(1)
   expect({ pulled, cancelled }).toEqual({ pulled: 0, cancelled: 1 })
   harness.setNow(TEST_TIME + 60_000)

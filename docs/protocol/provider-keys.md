@@ -37,9 +37,13 @@ as that doc says.
 - The key never goes to the browser, into a sandbox, into a log, or into
   a saved snapshot. Reason: the key reaches the sandboxes of every org on
   `e2b`.
-- The app's E2B account is an E2B project of its own, in E2B's EU
-  cluster. It holds no other E2B work of the operator. Reason: the
-  workspace objects run in Western Europe.
+- The app's E2B account is an E2B project of its own. It holds no other
+  E2B work of the operator.
+- The account runs in E2B's default cluster, in the United States, not in
+  E2B's EU cluster. Reason: the EU is not a requirement, as
+  [Regions](provider-accounts.md#regions) says, and the app's E2B project
+  already runs in the default cluster. Regions gives the steps before a
+  real org runs on the account.
 - Every E2B sandbox has private traffic. A request to any of its ports
   needs the traffic token of that sandbox, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.

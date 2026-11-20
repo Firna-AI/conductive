@@ -1,5 +1,7 @@
 import type { FileTabView } from '../components/files/FilesPanel'
 import type { BackLink } from '../components/layout/Page'
+import type { WorkspaceTab } from '../components/workspace/TabItem'
+import { contextFiles, splitPath } from '../fixtures/files'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
@@ -21,6 +23,11 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'image-not-drawn':
     case 'attachment':
     case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
       return state.tab
     case 'session':
     case 'new-session':
@@ -49,6 +56,40 @@ export function backFrom(open: FileTabView): BackLink {
     case 'image-not-drawn':
     case 'attachment':
     case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
       return { label: 'All files', to: paths.filesAll }
+  }
+}
+
+/**
+ * The tab of the HTML report that the state opens, in each of its views.
+ * It takes the icon that All files gives a code file, and each view leads
+ * to its own screen.
+ */
+export function htmlTab(state: WorkspaceState): WorkspaceTab | undefined {
+  const tab = (to: string): WorkspaceTab => ({
+    key: 'report',
+    kind: 'code',
+    title: splitPath(contextFiles.report).name,
+    to,
+    selected: true,
+  })
+  switch (state.tab) {
+    case 'html':
+      return tab(paths.html)
+    case 'html-source':
+      return tab(paths.htmlSource)
+    case 'html-opening':
+      return tab(paths.htmlOpening)
+    case 'html-older-software':
+      return tab(paths.htmlOlderSoftware)
+    case 'html-failed':
+      return tab(paths.htmlFailed)
+    default:
+      return undefined
   }
 }

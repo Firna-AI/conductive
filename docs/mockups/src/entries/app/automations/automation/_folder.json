@@ -1,6 +1,7 @@
 {
   "order": [
     "new",
+    "capabilities",
     "member",
     "admin",
     "owner-left",

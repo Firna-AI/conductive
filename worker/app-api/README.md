@@ -15,7 +15,7 @@ Each handler returns `null` for a path that it does not own. The
 | `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices; section writes; workspace names and moves |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices and moves; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
@@ -182,10 +182,42 @@ View writes cannot change this branch.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
-  added it, also after a failed build. A repeated save and a removal start
-  no build. A running job takes the request without starting another job.
+  added it, also after a failed build, unless its body says
+  `build: false`. The app sends that body, so that Done of the
+  Repositories tab starts one build for every add of an edit. A request
+  without the field, from an older copy of the app, still builds at the
+  add. A repeated save and a removal start no build. A running job takes the request without starting another job.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
+- `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
+  an admin. Each reply is `RepositoriesResponse`: the stored repositories
+  after the save, merged with the GitHub repositories of the admin. The
+  route reads those GitHub repositories once, before the save, so that no
+  call to GitHub can fail a change that saved. A failed read fails the
+  change before it saves. A removal by an admin without a saved GitHub
+  connection reads nothing from GitHub. Its reply holds the stored
+  repositories only.
+- `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
+  gives the repository order of an org. The chosen repositories come
+  first, by `position`, then a chosen row without a position, then the
+  repositories that are not chosen. The name order breaks each tie: the
+  lower-case GitHub name, then the exact name, then the ID. The repository
+  list, its merge with the GitHub repositories of the person, and the agent
+  tool list use this order. The image build keeps its order by ID.
+- An add gives the repository the last position, also when the org chose
+  it before. Each add first gives every chosen row a position again, from
+  0, in the current order, so that a row that the previous Worker added
+  gets one. A Remove clears the position. Create org gives its
+  repositories positions in the name order.
+- `PUT` on `repositoryPositionPath` moves one chosen repository, for an
+  admin. Its body `MoveRepositoryRequest` holds `index`, which counts the
+  chosen repositories without the moved one. A larger index moves it to
+  the end. A body without a number index gets `400 invalid_input`. A
+  repository that is not chosen moves nothing. The reply is
+  `RepositoryOrderResponse`, the IDs of the chosen repositories in the
+  saved order. It reads stored data only, so that no call to GitHub can
+  fail a move that saved. A move starts no build, and it keeps the settings
+  revision, because the image does not depend on the order.
 - The build history reply also gives `BuildsResponse.changes`: the saved
   install script change and the added and removed repositories. The
   [image build reader](../lifecycle/image-builds.md#build-jobs) owns the
@@ -399,7 +431,7 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add.
+  and starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),

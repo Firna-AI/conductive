@@ -15,7 +15,9 @@ The [org lifecycle](../lifecycle/README.md) owns org builds and their pins.
 - Recover resource requests and detached commands after a lost reply.
 - Answer each deploy request within its reply budget.
 - Keep the progress and the output of work that ends after the answer.
-- Remove failed resources and old images that no unfinished org build pins.
+- Remove failed resources.
+- Keep the ready image of the current version and each pinned image, and
+  retire each other ready image.
 
 ## Deploy route
 
@@ -43,6 +45,11 @@ A release lookup failure fails the deploy request with a clear software-release 
 
 A ready image is reused. An older unfinished version fails before the new
 version starts. A failed attempt restarts only for another token digest.
+Each answer uses the attempt as the request last read it from D1. When a
+read finds that the attempt no longer exists, the request goes through
+admission again with the release that the attempt saved. A request cleans
+up only its own attempt, such as its build sandbox. Only the
+[Cron work](#cron-work) retires ready images.
 The command journal keeps a repeated start attached to its original run.
 The snapshot contains no command journal.
 
@@ -114,11 +121,15 @@ Limits that stay:
 
 ## Cron work
 
-The scheduled Worker entry advances unfinished attempts in the default
-account after lifecycle repairs. It enforces the 60-minute build limit and
-retries resource cleanup. It also deletes older ready images after all
-unfinished org jobs release their pins. A software image error logs a fixed
-warning and does not stop other scheduled work.
+After lifecycle repairs, the scheduled Worker entry reads the newest
+release once and computes the current software version. Then, in
+each provider account of `software_images`, it advances unfinished
+attempts, enforces the 60-minute build limit, and retries resource cleanup.
+It keeps the ready image of the current version and each image that an
+unfinished org job pins. It retires each other ready image. When the
+release lookup fails, it logs a warning and keeps every ready image in that
+run. A software image error logs a fixed warning and does not stop other
+scheduled work.
 
 The Cron work saves the output of each command status in the same way, but
 takes none. A later deploy poll of the same attempt returns it. The Cron
@@ -153,12 +164,13 @@ use no real sleep.
 - [operation-data.ts](operation-data.ts): the saved operations of one phase and revision.
 - [output-data.ts](output-data.ts): the waiting output that each command status saves, and its claim by a deploy poll.
 - [deploy-data.ts](deploy-data.ts): the links from a deploy token digest to its attempt, and the Cron cleanup of the poll records.
-- [cleanup.ts](cleanup.ts): attempt cleanup and guarded old-image deletion.
-- [repair.ts](repair.ts): Cron advancement and cleanup.
+- [cleanup.ts](cleanup.ts): attempt cleanup and the guarded retirement of ready images of other versions.
+- [repair.ts](repair.ts): the Cron work: the current version, then advancement, cleanup, and retirement in each account.
 
 ### Related Docs
 
-- [Org image](../../docs/protocol/org-image.md): requirements for first builds and shared software.
+- [The software image](../../docs/protocol/sandbox-software.md#the-software-image): requirements for the image, its deploy run, and its retention.
+- [Org image](../../docs/protocol/org-image.md): requirements for first builds.
 - [Automatic deploys](../../docs/automatic-deploys.md): the deploy run and its result.
 - [Sandbox software](../../image/README.md): the installed software.
 - [Migrations](../../migrations/README.md): the records and org-job pin.

@@ -72,7 +72,9 @@ says.
   restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
-  temporary tab also clears its mark.
+  temporary tab also clears its mark. While the temporary tab shows,
+  Escape closes it in the same way, through `usePageEscape` of the
+  [shortcut layer](../shortcuts/README.md#escape-on-the-page).
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -192,6 +194,8 @@ Each folder of a path is a part of the address. Another address under
   of the saved view too, though the row of a phone shows no file tabs.
 - The links of the file preview open through the one link opener of the
   screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+  The tab of an HTML file shows its page as
+  [The tabs of HTML files](html-tabs.md) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
