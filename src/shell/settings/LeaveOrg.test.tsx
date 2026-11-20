@@ -14,7 +14,7 @@ import { serveSuspendedAcme } from '../../test-support/suspended-org'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
 import { OverlayHost } from '../ui/Overlay'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -32,7 +32,7 @@ async function leave(app: AppModel): Promise<HTMLElement> {
   const view = mountScreen(
     app,
     <OverlayHost>
-      <OrgSettingsScreen org={org} tab="general" user={boot.user} />
+      <OrgTabContent org={org} tab="general" user={boot.user} />
     </OverlayHost>,
   )
   await settle()

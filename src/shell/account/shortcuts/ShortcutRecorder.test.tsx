@@ -87,7 +87,7 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
     recorded: string
     spoken: string
   }[])(
-    'in a Chrome tab on $host, $held, a recorded key saves to the account, takes the focus, and runs its command',
+    'in a Chrome tab on $host, $held, a recorded key saves to the account, takes the focus, and runs its command once Settings closes',
     async ({ place, replaces, layoutSwitch, press, recorded, spoken }) => {
       const { server } = await openShortcutsTab([], place)
       // The window loses the focus at the end, which lets go of the switch.
@@ -100,14 +100,20 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
       // The recorder has the focus, so the presses go to it.
       pressAll([...layoutSwitch, press])
       await settle()
-      const row = rowOf('General', 'Command palette')
+      const row = controlsOf(rowOf('General', 'Command palette'))
       const focused = accessibleName(document.activeElement ?? document.body)
+      // Settings holds the keys while it is open, so the press runs nothing.
+      pressAll([press], document.body)
+      const inSettings = palette() !== null
+      click(byRole('button', 'Close'))
+      await settle()
       // The same press runs the command, while the switch stays down.
       pressAll([press], document.body)
       expect({
         saves: await savesOf(server),
-        row: controlsOf(row),
+        row,
         focused,
+        inSettings,
         palette: palette() !== null,
       }).toEqual({
         saves: [{ keyboard: place.keyboard, changes: [change] }],
@@ -117,6 +123,7 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
           'Add shortcut for Command palette',
         ],
         focused: `Change ${spoken} for Command palette`,
+        inSettings: false,
         palette: true,
       })
     },
@@ -248,13 +255,14 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
     click(byRole('button', 'Change Command K for Command palette'))
     pressShortcut('Shift+Meta+K')
     await settle()
-    const row = rowOf('General', 'Command palette')
+    const shown = rowOf('General', 'Command palette')
+    const row = controlsOf(shown)
+    const lines = linesOf(shown)
+    // The saved key still runs its command once Settings closes.
+    click(byRole('button', 'Close'))
+    await settle()
     pressShortcut('Meta+K', document.body)
-    expect({
-      row: controlsOf(row),
-      lines: linesOf(row),
-      palette: palette() !== null,
-    }).toEqual({
+    expect({ row, lines, palette: palette() !== null }).toEqual({
       row: [
         'Change Command K for Command palette',
         'Add shortcut for Command palette',

@@ -59,7 +59,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the palette at
 ## The org of the palette
 
 - On a page of an org, the palette works on that org.
-- On a page without an org, such as the Account page, the palette works on
+- On a page without an org, such as Account settings, the palette works on
   the org that the person opened last in this tab.
 - When that org is deleted, or the tab opened no org, the palette works on
   the first org that is not deleted.

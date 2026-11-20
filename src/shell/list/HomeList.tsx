@@ -40,7 +40,7 @@ export function ListHeader(props: {
         <ChevronDown aria-hidden className={styles.chevron} size={15} />
       </button>
       {props.settings ? (
-        <SettingsLink current={false} orgId={props.org.id} />
+        <SettingsLink orgId={props.org.id} />
       ) : null}
       {open ? (
         <OrgSwitcherSheet

@@ -23,7 +23,12 @@ import { holdAnimationFrames } from '../../test-support/mount'
 import { Shell } from '../Shell'
 import { click, mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
+import {
+  settingsGroup,
+  settingsRow,
+  settingsTab,
+} from '../settings/settings-test-kit'
 import { chatGptLogin, codexItem, serveAccount } from './sign-in-test-kit'
 import { buttonsOf, listItems } from './test-markup'
 
@@ -52,32 +57,22 @@ function viewChoice(root: ParentNode) {
   }
 }
 
-/** The link of each tab of the account, by its label. */
-function accountTabs(view: HTMLElement): Map<string, HTMLAnchorElement> {
-  const links = view.querySelectorAll<HTMLAnchorElement>(
-    'nav[aria-label="Account"] a',
-  )
-  return new Map(Array.from(links, (link) => [String(link.textContent), link]))
-}
-
 /**
- * The open tab: the tab that the tabs mark, its sections, whether it shows
- * Model and effort, and the checked option of the choice of how New
- * workspace opens, or null when the choice does not show.
+ * The open tab of Account settings: the tab that the list marks, its
+ * sections, whether it shows Model and effort, and the checked option of
+ * the choice of how New workspace opens, or null when the choice does not
+ * show.
  */
-function openTab(view: HTMLElement) {
-  const main = view.querySelector('main')
-  if (!main) throw new Error('The account is not on the screen.')
-  const current = Array.from(accountTabs(view)).filter(
-    ([, link]) => link.getAttribute('aria-current') === 'page',
-  )
+function openTab() {
+  const { open } = settingsGroup('Account')
+  const tab = settingsTab(open[0] ?? '')
   return {
-    current: current.map(([label]) => label),
-    sections: Array.from(main.querySelectorAll('h2'), (title) =>
+    current: open,
+    sections: Array.from(tab.querySelectorAll('h2'), (title) =>
       String(title.textContent),
     ),
-    model: queryAllByText('Model and effort', main).length > 0,
-    choice: viewChoice(main)?.checked ?? null,
+    model: queryAllByText('Model and effort', tab).length > 0,
+    choice: viewChoice(tab)?.checked ?? null,
   }
 }
 
@@ -96,7 +91,7 @@ async function mountPreferences(server: FakeApiServer) {
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={null} tab="preferences" user={fakeUser} />,
+    <AccountTabContent connect={null} tab="preferences" user={fakeUser} />,
   )
   const choose = async (label: string) => {
     click(byRole('radio', label, byRole('radiogroup', choiceLabel, view)))
@@ -105,7 +100,7 @@ async function mountPreferences(server: FakeApiServer) {
   return { view, held, choose }
 }
 
-describe('AccountScreen', () => {
+describe('AccountTabContent', () => {
   test('a connect link opens the Codex form, and a connected Claude login shows its kind, Remove, and its share setting', async () => {
     const server = new FakeApiServer()
     server.json('GET', ACCOUNT_PATHS.account, {
@@ -124,7 +119,7 @@ describe('AccountScreen', () => {
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect="codex" tab="agents" user={fakeUser} />,
+      <AccountTabContent connect="codex" tab="agents" user={fakeUser} />,
     )
     await settle()
     const [claude, codex] = listItems(view.innerHTML, 'Agents')
@@ -151,7 +146,7 @@ describe('AccountScreen', () => {
     serveAccount(server, [{ ...chatGptLogin, unusableCause: cause }])
     const view = mountScreen(
       app,
-      <AccountScreen connect={null} tab="agents" user={fakeUser} />,
+      <AccountTabContent connect={null} tab="agents" user={fakeUser} />,
     )
     await settle()
     expect(codexItem(view)).toBe(
@@ -167,22 +162,20 @@ describe('AccountScreen', () => {
       newWorkspaceView: 'dialog',
     })
     const navigation = memoryNavigation(routes.account())
-    const view = mountScreen(
+    mountScreen(
       new AppModel(testServices(server)),
       <NavigationContext.Provider value={navigation}>
         <Shell />
       </NavigationContext.Provider>,
     )
     await settle()
-    const general = openTab(view)
-    const preferencesTab = accountTabs(view).get('Preferences')
-    if (!preferencesTab) throw new Error('The account has no Preferences tab.')
-    click(preferencesTab)
+    const general = openTab()
+    click(settingsRow('Account', 'Preferences'))
     await settle()
     expect({
       general,
       address: navigation.history.at(-1),
-      preferences: openTab(view),
+      preferences: openTab(),
     }).toEqual({
       general: {
         current: ['General'],

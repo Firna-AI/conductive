@@ -25,13 +25,13 @@ export function SettingsDialog(props: {
       <div aria-hidden className={styles.scrim} />
       <section aria-label="Settings" className={styles.dialog} role="dialog">
         <div className={styles.side}>
-          <h2 className={styles.heading}>Settings</h2>
+          <div className={styles.heading}>Settings</div>
           <SettingsNav groups={props.groups} variant="panel" />
         </div>
         <div className={styles.main}>
           <header className={styles.bar}>
             <div className={styles.titles}>
-              <h3 className={styles.title}>{props.title}</h3>
+              <h1 className={styles.title}>{props.title}</h1>
               <span className={styles.group}>{props.group}</span>
             </div>
             <IconButton icon={X} label="Close" />

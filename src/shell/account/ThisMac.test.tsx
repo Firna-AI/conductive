@@ -15,7 +15,7 @@ import {
 import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -36,19 +36,6 @@ function sections(view: HTMLElement): string[] {
   )
 }
 
-/** The labels of the tabs of the account, and the label of the open tab. */
-function tabs(view: HTMLElement): { all: string[]; open: string[] } {
-  const links = Array.from(
-    view.querySelectorAll<HTMLAnchorElement>('nav[aria-label="Account"] a'),
-  )
-  return {
-    all: links.map((link) => String(link.textContent)),
-    open: links
-      .filter((link) => link.getAttribute('aria-current') === 'page')
-      .map((link) => String(link.textContent)),
-  }
-}
-
 /** The requests to the Mac of this window: its pairing and its settings. */
 function macRequests(server: FakeApiServer): string[] {
   return requestLines(server).filter((line) =>
@@ -57,14 +44,14 @@ function macRequests(server: FakeApiServer): string[] {
 }
 
 describe('This Mac in the account', () => {
-  test('the Mac app shows This Mac as the last tab, with the name and the state of the Mac', async () => {
+  test('the This Mac tab of the Mac app shows the name and the state of the Mac', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
     const app = await startedApp(server)
     const view = mountScreen(
       app,
       <MacApp window={window}>
-        <AccountScreen connect={null} tab="this-mac" user={fakeUser} />
+        <AccountTabContent connect={null} tab="this-mac" user={fakeUser} />
       </MacApp>,
     )
     await waitFor(
@@ -72,22 +59,10 @@ describe('This Mac in the account', () => {
       'the name of this Mac',
     )
     expect({
-      tabs: tabs(view),
       sections: sections(view),
       state: queryByText('Available', view)?.textContent,
       requests: macRequests(server),
     }).toEqual({
-      tabs: {
-        all: [
-          'General',
-          'Agents',
-          'Preferences',
-          'Keyboard shortcuts',
-          'Stats',
-          'This Mac',
-        ],
-        open: ['This Mac'],
-      },
       sections: ['This Mac'],
       state: 'Available',
       requests: [`GET ${DEVICE_CURRENT_PATH}`, `GET ${DEVICE_SETTINGS_PATH}`],
@@ -101,7 +76,7 @@ describe('This Mac in the account', () => {
     const view = mountScreen(
       app,
       <MacApp window={window}>
-        <AccountScreen connect={null} tab="general" user={fakeUser} />
+        <AccountTabContent connect={null} tab="general" user={fakeUser} />
       </MacApp>,
     )
     await settle()
@@ -114,30 +89,19 @@ describe('This Mac in the account', () => {
     })
   })
 
-  test('a browser has no This Mac tab, shows General at its address, and asks no Mac', async () => {
+  test('a browser shows General at the address of This Mac, and asks no Mac', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer()
     const app = await startedApp(server)
     const view = mountScreen(
       app,
-      <AccountScreen connect={null} tab="this-mac" user={fakeUser} />,
+      <AccountTabContent connect={null} tab="this-mac" user={fakeUser} />,
     )
     await settle()
     expect({
-      tabs: tabs(view),
       sections: sections(view),
       requests: macRequests(server),
     }).toEqual({
-      tabs: {
-        all: [
-          'General',
-          'Agents',
-          'Preferences',
-          'Keyboard shortcuts',
-          'Stats',
-        ],
-        open: ['General'],
-      },
       sections: ['GitHub', 'Invite code'],
       requests: [],
     })

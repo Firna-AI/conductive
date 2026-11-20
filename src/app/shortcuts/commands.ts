@@ -53,8 +53,8 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     accountSettings['keyboard-shortcuts'].label,
     accountSettings['keyboard-shortcuts'].words,
   ),
-  command('account-page', 'General', 'every-page', 'Account page', [
-    'settings',
+  command('account-page', 'General', 'every-page', 'Settings', [
+    'account',
     'preferences',
   ]),
   palette('create-org', 'General'),

@@ -35,8 +35,13 @@ export function SettingsNav(props: {
       className={classes(styles.nav, touch && styles.touch)}
     >
       {props.groups.map((group) => (
-        <div className={styles.group} key={group.title}>
-          <h3 className={styles.heading}>{group.title}</h3>
+        <div
+          aria-label={group.title}
+          className={styles.group}
+          key={group.title}
+          role="group"
+        >
+          <h2 className={styles.heading}>{group.title}</h2>
           <ul className={styles.rows}>
             {group.rows.map((row) => {
               const Icon = row.icon

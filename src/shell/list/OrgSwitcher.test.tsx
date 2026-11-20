@@ -88,13 +88,13 @@ describe('the org switcher of a phone', () => {
       outcome: 'lists Operator under Account',
       who: 'an operator',
       operator: true,
-      last: ['/account', '/operator'],
+      last: [routes.settingsList(), '/operator'],
     },
     {
       outcome: 'lists no Operator',
       who: 'anyone else',
       operator: false,
-      last: ['/orgs/new', '/account'],
+      last: ['/orgs/new', routes.settingsList()],
     },
   ])('$outcome for $who', async (row) => {
     const server = new FakeApiServer()

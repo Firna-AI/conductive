@@ -1,7 +1,7 @@
 # Account stats
 
 This doc holds the requirements and the decisions in force for the Stats
-tab of the Account page, where a person sees counts of their own activity.
+tab of Account settings, where a person sees counts of their own activity.
 A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. "Account
 stats decision" names a decision of the change that added the tab. The
@@ -10,10 +10,10 @@ stats decision" names a decision of the change that added the tab. The
 
 ## Where the tab shows
 
-- The Account page has a fifth tab, Stats, after Keyboard shortcuts. Its
+- [Account settings](settings.md) have a fifth tab, Stats, after Keyboard shortcuts. Its
   address is `/account/stats` (account stats decision 1).
 - Reason: the person sees their own activity next to their other account
-  pages. A Stats page on the operator's page of a user was rejected,
+  tabs. A Stats page on the operator's page of a user was rejected,
   because only operators see it.
 - The tab shows in every host and in every layout. In the Mac app, This Mac
   comes after it, so the tabs of a browser keep their places.

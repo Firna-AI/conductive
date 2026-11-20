@@ -34,7 +34,7 @@ The pull request of that change keeps its record.
 
 ### The preference
 
-- The Account page has five tabs, General, Agents, Preferences, Keyboard
+- [Account settings](settings.md) have five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, each with its own address. Agents holds the logins
   of Claude and Codex (the user asked on 13 November 2026). Preferences
   holds the New workspaces section, with Model and effort and the choice
@@ -58,7 +58,7 @@ The pull request of that change keeps its record.
   closer to it.
 - The choice belongs to the account. So it applies in each browser and in
   the Mac app.
-- Reason: a setting of the Account page that holds in one browser only
+- Reason: a setting of Account settings that holds in one browser only
   would surprise the user. A choice in the storage of the browser was
   rejected for that reason.
 - Without a saved choice, such as for a new account, New workspace opens
