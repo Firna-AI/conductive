@@ -30,7 +30,7 @@ export type FailedStart = 'not-started' | 'not-reached'
  * this Mac not available. In New workspace, checked means that the create
  * starts the grant.
  */
-export type ThisMacLine =
+type ThisMacLine =
   | 'checked'
   | 'unchecked'
   | 'fifteen-minutes'
