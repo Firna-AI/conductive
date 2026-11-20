@@ -22,10 +22,7 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText, pasteMessage } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { orgSuspendedBody } from '../../test-support/suspended-org'
-import {
-  settingsDialog,
-  settingsGroup,
-} from '../settings/settings-test-kit'
+import { settingsDialog, settingsGroup } from '../settings/settings-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import { here, isOff, org } from '../workspace/kept-test-kit'
 import { orgRefusal } from '../workspace/SandboxNotice'
