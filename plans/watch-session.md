@@ -19,6 +19,7 @@ Contract owners:
 - [Session calls](../docs/protocol/session-calls.md) and [Session management](../docs/protocol/session-management.md).
 - [Agent tool access](../docs/protocol/agent-tool-access.md) and [Agent tools](../docs/protocol/agent-tools.md).
 - [Agent instructions](../docs/protocol/agent-instructions.md).
+- [Message lines](../docs/protocol/message-lines.md).
 - [Chat and events](../docs/protocol/chat-and-events.md).
 - [Stop and resume](../docs/protocol/stop-and-resume.md).
 - [Late secret answers](../docs/protocol/secret-late-answers.md).
@@ -79,6 +80,10 @@ Use the existing system-line appearance and session-link behavior. Add mobile an
 
 Keep older runner commands compatible. A wake reaches the agent as ordinary text through the existing turn/message command. Add event fields or types without changing existing payload meanings. Check older client handling before choosing the event shape. Older software exposes the call only after its normal update.
 
+The normal runner message prefix stays. Its sender line names the stored message sender. For a new wake turn, that member set the watch. For a wake that joins a running turn, the full late-secret admission rule selects that turn's sender. The shared wake text is the message body after that prefix.
+
+The chat shows the app line and no member bubble or sender prefix. The message-lines protocol documents this application of its general sender-line rule. The separate late-secret wording mismatch remains in its follow-up.
+
 ### Authorization and earlier decisions
 
 This change differs from decision 258's waiting read. Registration returns at once. The calling turn can end, and its computer can stop. The Worker watches its own turn records.
@@ -107,6 +112,7 @@ The first three calls came from the brainstorm on 18 November 2026. They are age
 - **20 November 2026, orchestrator call:** Keep the exact watched turn as the completion unit. Reason: Cal's task explicitly asks for the end of one turn. Following a message or waiting for a whole session changes that scope. The options check proposed those broader units. They remain recorded under watch decision 2's left-out approaches.
 - **20 November 2026, orchestrator call:** Keep the no-line rule when delivery can start no turn. Reason: the task adopts that brainstorm call. UI research proposed a skipped-wake line, but it would add another display state without a requirement.
 - **20 November 2026, orchestrator call:** Build one pure word module and reusable line component in the mockup milestone. Reason: both later Worker and UI milestones need that source. The UI milestone wires that component into the live transcript.
+- **20 November 2026, orchestrator call:** Keep the normal sender prefix for wake input. Reason: the general message-lines rule requires it, and existing runners add it to ordinary messages. Its member follows the complete late-secret admission rule. This adds no exception for watch messages and changes no existing secret notice behavior.
 
 The fresh options check is `.context/watch-session/options-check.md`. Its resolution is `.context/watch-session/options-check-resolution.md`. The check widened the options and changed the recommendations for repeat calls and Stop. The orchestrator kept the task's one-turn scope when it chose the targeting recommendation.
 
@@ -265,7 +271,7 @@ Depends on: 1
 Use the `docs implementor` action for internal docs. Use the `external docs implementor` only if a public guide needs changed words.
 
 - [ ] Add a short watch protocol section or linked page. State targeting, one-shot ends, repeat rules, access, skipped delivery, text, and resume behavior.
-- [ ] Update session calls, agent tool access, agent tools, chat and events, stop and resume, and agent instructions where their current claims need the watch.
+- [ ] Update session calls, agent tool access, agent tools, message lines, chat and events, stop and resume, and agent instructions where their current claims need the watch.
 - [ ] Read both legal pages and every public guide in full. Update each sentence that restates a changed fact. Keep unrelated guide work outside this change.
 - [ ] Update the relevant tools, chat, runner-interface, and Rust tools READMEs with public behavior and useful entry points. Check every changed Markdown link.
 
