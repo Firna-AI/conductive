@@ -79,7 +79,7 @@ describe('the list popover of the org tile', () => {
     })
   })
 
-  test('a press inside keeps it open, and a second click on the tile, Escape, and a press outside close it', async () => {
+  test('a press inside keeps it open, and a second click on the tile, Escape, and a press outside close it, and the Escape that closes it takes the key from the page', async () => {
     const { view } = await openPaletteTab(routes.workspace(org, workspace))
     hideSidebar(view)
     const acme = tile(view, 'Acme')
@@ -87,7 +87,7 @@ describe('the list popover of the org tile', () => {
     click(acme)
     const afterSecondClick = popover() !== null
     click(acme)
-    press(document.activeElement ?? document.body, 'Escape')
+    const escape = press(document.activeElement ?? document.body, 'Escape')
     const afterEscape = popover() !== null
     click(acme)
     act(() => pointerDown(rowOf(openPopover(), 'apple-pay')))
@@ -96,11 +96,13 @@ describe('the list popover of the org tile', () => {
     expect({
       afterSecondClick,
       afterEscape,
+      escapeTaken: escape.defaultPrevented,
       afterPressInside,
       afterPressOutside: popover() !== null,
     }).toEqual({
       afterSecondClick: false,
       afterEscape: false,
+      escapeTaken: true,
       afterPressInside: true,
       afterPressOutside: false,
     })

@@ -126,12 +126,19 @@ function diffOf(
   }
 }
 
-const readmePatch = `@@ -12,3 +12,6 @@ ## Checkout
+const readmePatch = `@@ -23 +23,11 @@ ## Checkout
 -Checkout suggests addresses as you type.
-+Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to manual entry.
++Checkout suggests addresses as you type. Suggestions come from \`/api/places\`, which needs \`PLACES_API_KEY\`. Without the key, the form falls back to *manual entry*.
 +
-+## Tests
-+`
++![Suggestions under the address field](https://design.acme.example/forms/address/suggestions.png)
++
++- [x] Suggestions from the places API
++- [x] Manual entry without the key
++- [ ] Saved addresses for signed-in customers
++
++---
++
++## Tests`
 
 const extraEntries: readonly FileEntry[] = [
   {

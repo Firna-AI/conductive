@@ -167,7 +167,7 @@ function SwitchItem(props: { entry: MenuSwitch }) {
       <span className={styles.label}>{entry.label}</span>
       {entry.shortcut ? (
         <span aria-hidden className={styles.keys}>
-          <KeyChips shortcut={entry.shortcut.text} />
+          <KeyChips shortcut={entry.shortcut.tokens} />
         </span>
       ) : null}
       <SwitchPicture on={entry.on} />

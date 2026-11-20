@@ -128,7 +128,11 @@ export function agentItem(
   const previous = current?.kind === 'agent' ? current.text : ''
   const text =
     event.type === 'assistant.delta' ? previous + event.text : event.text
-  return { kind: 'agent', id, turnId: event.turnId, text }
+  const item = { kind: 'agent' as const, id, turnId: event.turnId, text }
+  const done = current?.kind === 'agent' && current.complete === true
+  return event.type === 'assistant.completed' || done
+    ? { ...item, complete: true }
+    : item
 }
 
 function writeAgent(

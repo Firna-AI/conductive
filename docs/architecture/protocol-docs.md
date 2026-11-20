@@ -199,14 +199,17 @@ This page lists each protocol doc and what it covers.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their headings and lists, and their lines in
-  the work of a turn.
+  messages in the chat, with their headings, lists, quotes, and line
+  breaks.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
   - [Chat links](../protocol/chat-links.md): the links of agent messages
-    and of sent messages, the labels of Markdown links, local addresses,
-    and links in code.
+    and of sent messages, the labels of Markdown links, the images of
+    agent messages, local addresses, and links in code.
+  - [Chat message lines](../protocol/chat-message-lines.md): how each agent
+    message shows as one line in the work of a turn, closed and open, with
+    its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member, and the GitHub tokens that an

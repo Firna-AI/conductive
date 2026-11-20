@@ -307,6 +307,21 @@ The [workspace features](../features/README.md) use the current connection
 to gate files preview opens. The
 [file server protocol](../../docs/protocol/file-server.md) gives its rules.
 
+`readRunnerEventIdentity` in `runner-event-identity.ts` reads the identity of
+each runner event for refusal, repair, and turn-context checks. Its policy,
+derived from the shared runner types, gives each known `RunnerEvent['type']`
+the scope `turn` or `workspace`. It also gives the source of the session and
+the turn: the event root, the nested `start`, or none. The reader takes them
+only from that source. A `workspace` event has no source, so it gets no
+session and no turn, also when its payload names them.
+
+A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
+names that public type. The reader takes its session and turn only from an
+object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
+from the saved assembly of its stream, as [Chat backend key code](key-code.md)
+says. An event of an unknown type keeps its root IDs. Each check uses a
+session and a turn only when `verifiedTurn` finds that turn in that session.
+
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)

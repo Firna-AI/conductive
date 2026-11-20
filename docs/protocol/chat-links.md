@@ -9,13 +9,16 @@ workspace links. The terms are those of the
 [architecture doc](../architecture.md#terms). The
 [mockup catalogue](../mockups/catalogue.md) draws links at
 `app/chat/links`, and the flow `user-flows/open-a-local-server` opens a
-local address.
+local address. It draws the images of agent messages at
+`app/chat/formatting/pictures`.
 
 A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A chat link
 decision number, such as chat link decision 1, names the dated record of
 one decision of the change that makes each web address of chat text a
-link.
+link. A Markdown parser decision, such as Markdown parser decision 5 A, is
+a decision of the change that reads Markdown with one parser, as
+[Chat Markdown](chat-markdown.md) says.
 
 ## Links
 
@@ -69,6 +72,10 @@ link.
   `*`, `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
   stays in only when it closes a `(` or a `[` inside the address. GitHub
   uses the same rule for a `)`.
+- In an agent message, an address in angle brackets, such as
+  `<https://example.com/a>`, is a link when the address is a link by the
+  rules of this doc. It shows without its brackets, as the text has it.
+  Otherwise it shows as typed.
 - In an agent message, a Markdown link shows as its label, and its title
   gives its address (chat link decision 1 D). Reason: the text then reads
   as the agent meant it, with no raw brackets.
@@ -81,15 +88,15 @@ link.
   same way. A link title after the label was rejected, because it adds
   more untrusted text. A link title as the title of the link was rejected,
   because that title gives the real address.
-- The chat tests each label as it shows: without code marks, bold marks,
-  invisible characters, and the spaces at its ends. The invisible
-  characters are the default ignorable code points of Unicode, such as a
-  zero-width space.
+- The chat tests each label as it shows: without the marks of code, bold,
+  emphasis, and strikethrough, without invisible characters, and without
+  the spaces at its ends. The invisible characters are the default
+  ignorable code points of Unicode, such as a zero-width space.
 - A label that then holds `://`, or starts with `www.` in any case, shows
   the real address in its place, as the text has it.
 - A label that then shows nothing also shows the real address in its
-  place (chat link decision 8 B). Examples are an empty label, a label of
-  bold marks only, and a label of invisible characters only.
+  place (chat link decision 8 B). Examples are an empty label, and a label
+  of invisible characters only, also in bold.
 - Reason: sandbox code can shape agent text, so a label can name another
   address than its link. A label that reads as an address then cannot
   hide where its link leads. A link whose label shows nothing shows its
@@ -104,12 +111,26 @@ link.
 - A Markdown link whose address stays text shows as typed, also in an
   agent message. A file target instead opens its file, as
   [Files in answers](file-mentions-answers.md#files-in-answers) says.
-- The Markdown of an image, such as `![alt](address)`, is not a Markdown
-  link. It shows as typed, as [Formatting](chat-markdown.md#formatting)
-  says, and its address is a link as a bare address is. An image to a
-  file of the workspace instead shows its label as a link to that file,
-  or a picture of that file, as
+- In an agent message, the Markdown of an image, such as
+  `![alt](address)`, shows its alt text, and no picture at a web address
+  loads (Markdown parser decision 5 A, 17 November 2026).
+- When the address of the image is a link by the rules of this doc, the
+  alt text is a link to that address, with the rules of a label. So alt
+  text that reads as an address, or that shows nothing, shows the address
+  in its place. Otherwise only the alt text shows.
+- An image of a file of the workspace instead shows its alt text as a link
+  that opens that file, or a picture of that file, as
   [Files in answers](file-mentions-answers.md#files-in-answers) says.
+- An image inside the label of a Markdown link shows its alt text as words
+  of that label.
+- Reason: a picture at a web address makes the browser of each reader
+  call a server that sandbox text chose, and the
+  [content security policy](access-and-security.md#content-security-policy)
+  blocks it. A picture that loads at once, or at a press, was not chosen
+  for that reason. A picture through the Worker was not chosen, because
+  the Worker would then fetch untrusted addresses.
+- In a sent message, the Markdown of an image shows as typed, as a
+  Markdown link does, and its address is a link as a bare address is.
 
 ### Local addresses
 

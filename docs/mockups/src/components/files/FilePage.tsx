@@ -43,8 +43,8 @@ function isDiff(view: FileTabView): boolean {
  * whose name the app does not know shows "File". A file that is not text,
  * such as a picture, keeps Download, and its Copy is off. A Markdown or an
  * HTML file has the switch between Preview and Source at the end. The page
- * of an HTML file in a frame adds Reload and Open before Copy, as the bar
- * of a Preview tab has them. A narrow page, such as a phone, moves them to
+ * of an HTML file in a frame adds Reload, Expand on desktop, and Open
+ * before Copy, as the bar of a Preview tab has them. A narrow page, such as a phone, moves them to
  * a second line of the header, so the path keeps its room.
  *
  * `placeholder` shows in place of the content, such as the state of a
@@ -56,6 +56,11 @@ export function FilePage(props: {
   view: FileTabView
   back?: BackLink
   placeholder?: ReactNode
+  /**
+   * The screen of the page of an HTML file in its large window, which
+   * Expand shows. Only the centre of the desktop gives it.
+   */
+  expandTo?: string
 }) {
   const spec = specFor(props.view)
   const { folder, name } = splitPath(spec.path)
@@ -85,7 +90,7 @@ export function FilePage(props: {
         </div>
         {pageUrl ? (
           <div className={styles.pageActions}>
-            <PreviewActions href={pageUrl} />
+            <PreviewActions expandTo={props.expandTo} href={pageUrl} />
           </div>
         ) : null}
         <div className={styles.end}>

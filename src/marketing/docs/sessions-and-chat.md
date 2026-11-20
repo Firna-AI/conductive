@@ -250,7 +250,7 @@ The answer stays visible beside it.
 
 ## Read replies and tables
 
-Agent replies can contain headings, paragraphs, lists, code, tables, file chips, and pictures.
+Agent replies can contain headings, paragraphs, lists, quotes, code, tables, file chips, and pictures.
 A wide table scrolls sideways inside the message.
 The text around it keeps the width of the chat.
 

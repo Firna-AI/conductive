@@ -29,6 +29,7 @@ import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
+import { expandedPage } from './workspaceExpanded'
 import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceFileTab'
@@ -252,6 +253,8 @@ export function workspaceOverlay(
       ) : null
     case 'header-rename':
       return null
+    case 'expanded-page':
+      return mobile ? null : expandedPage(state)
   }
 }
 

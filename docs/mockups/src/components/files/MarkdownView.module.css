@@ -36,8 +36,17 @@
 .doc p,
 .doc ol,
 .doc ul,
+.doc blockquote,
 .table {
   margin: 0 0 10px;
+}
+
+/*
+ * The look of quotes, rules, bold text, and task boxes comes from
+ * MarkdownProse.module.css. A rule has 16px above and below it.
+ */
+.doc hr {
+  margin: 16px 0;
 }
 
 .doc ol,

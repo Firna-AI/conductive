@@ -226,6 +226,9 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Drag a preview tab to move it, as with other tabs.
 Use **Reload** in the bar above the page to load the page again.
+Use **Expand** in the same bar to show the page in a large window over the whole app.
+The page keeps its place, so you can go on where you were.
+Use **Close** or press **Escape** to go back to the tab.
 Use **Open** in the same bar to show the app in a new browser tab.
 Use the **×** on a preview tab to close the tab.
 The preview stays open, so select its server again to bring the tab back.

@@ -19,7 +19,6 @@ import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { Loaded } from './LoadState'
 import { useMembersApi, useMembersViewport } from './members-api'
-import { repositoryDefaultNote } from '../../../docs/mockups/src/components/settings/repositoryOrder'
 import { RepositoryOrder } from './RepositoryOrder'
 import { RepositoryEditToggle, RepositoryPicker } from './RepositoryPicker'
 import { AdminRepositoryNotice } from './RepositoryChangeNotice'
@@ -83,7 +82,6 @@ function AdminRepositories(props: {
           }}
         />
       }
-      description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote} Adding repositories starts a build when you select Done.`}
       title="Repositories"
     >
       {added.length > 0 ? (

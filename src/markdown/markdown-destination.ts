@@ -66,10 +66,7 @@ function titleEnd(text: string, start: number): number {
  * an optional title in quotes or parentheses. The scan stops after a fixed
  * length or depth.
  */
-export function readInlineTarget(
-  text: string,
-  at: number,
-): InlineTarget | null {
+function readInlineTarget(text: string, at: number): InlineTarget | null {
   let index = skipSpace(text, at)
   const angle = text[index] === '<'
   const start = angle ? index + 1 : index

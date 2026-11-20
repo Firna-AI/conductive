@@ -7,7 +7,10 @@ export type MessageList = {
   items: readonly MessageListItem[]
 }
 
-/** An item of a list: its text, and the list under it, if any. */
+/**
+ * An item of a list: its text, and the list under it, if any. Its text can
+ * start with a task box as typed, such as `[x]`.
+ */
 type MessageListItem = { text: string; list?: MessageList }
 
 /** A bulleted list, each item a line of text. */
