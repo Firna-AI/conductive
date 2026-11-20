@@ -103,6 +103,17 @@ The user chose each one. The full items, with every option, are in
     workspace computer after decision 19 B, is accepted, with no new
     measurement. Not chosen: B, parse only the end of a live message. C,
     `content-visibility: auto`. D, a parse worker.
+- **Item 84, a done task box in the dark scheme: A**, left to the agent by
+  Cal on 20 November 2026 ("do what you think is right"). A done box has
+  the ink fill and a check in the page colour in each scheme, so it is
+  light with a dark check in the dark scheme. Not chosen: B, a dark box in
+  both schemes, which shows less on the near-black page.
+- **An image whose path names no file: its alt text**, left to the agent
+  in the same message, at the merge of `main` on 20 November 2026. This
+  follows decisions 5 A and 10 B: an image that loads no picture shows its
+  alt text, the same in both views. Not chosen: the typed Markdown, which
+  `main` kept until this change. The follow-up item
+  `answer-image-drops-exclamation-mark` closes with it.
 
 ## Design calls
 
@@ -649,5 +660,6 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] Open a long agent answer with a table and a quote in production, and
-      check that it shows as the mockups show.
+- [x] Open a long agent answer with a table and a quote in production, and
+      check that it shows as the mockups show. Now the follow-up item
+      `markdown-parser-production-check`.

@@ -1,13 +1,13 @@
 # Repeated blocks fold
 
-Status: Active. Not started. It waits for the pull request of [One Markdown parser](markdown-it-reader.md), and it gets its own branch when that merges. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. Not started. It starts after the change "One Markdown parser for the chat and the file preview" merges, from branch `calummoore/output-summary-f7sm`, and it gets its own branch. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 On 16 November 2026, in the session "merge release", an agent message
 became `<br>` and a blank line about 1,700 times while the agent waited for
 a background task. The chat showed each one, so the rest of the chat moved
 many screens away. While a turn runs, the chat shows each agent message in
 full (`docs/protocol/chat-and-events.md:155`). With
-[One Markdown parser](markdown-it-reader.md), a flood of `<br>` draws
+the Markdown parser change ("One Markdown parser for the chat and the file preview"), a flood of `<br>` draws
 nothing, but a loop on any other text still floods the chat.
 
 This change folds each run of five or more identical blocks of one agent

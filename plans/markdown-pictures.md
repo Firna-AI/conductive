@@ -1,6 +1,6 @@
 # Pictures in Markdown
 
-Status: Active. Not started. It waits for the pull request of [One Markdown parser](markdown-it-reader.md), and it gets its own branch when that merges. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. Not started. It starts after the change "One Markdown parser for the chat and the file preview" merges, from branch `calummoore/output-summary-f7sm`, and it gets its own branch. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Agents keep screenshots in the context folder of the workspace and name
 them in an answer as a Markdown image, such as
@@ -16,7 +16,15 @@ existing file route, as the file tab does, and draw its bytes from a
 `data:` address. It needs no new route, no change to the content security
 policy, and no stored copy. The agent instructions tell agents that the
 chat shows such pictures. A picture at a web address stays a link, by
-item 5 A of [One Markdown parser](markdown-it-reader.md).
+item 5 A of the Markdown parser change ("One Markdown parser for the chat and the file preview").
+
+
+Note of 20 November 2026: pull request #498 on `main` already shows agent
+screenshots as pictures in chat answers, with its own decisions. Before
+this plan starts, check which of its decisions and TODOs #498 meets. The
+merge record of the Markdown parser change lists them: #498 meets item 4 A
+and most design calls for the chat. Item 7 B, pictures in the file
+preview, design calls 13 and 14, and Milestone 5 remain.
 
 ## Decisions
 
