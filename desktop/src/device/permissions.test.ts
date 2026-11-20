@@ -22,10 +22,10 @@ it('persists only exact allowed commands for the same account on this Mac', () =
   const test = setup()
   const store = test.open()
   store.allowCommand(' printf Hello\n')
-  expect(store.permits(' printf Hello\n', 'one')).toBe(true)
-  expect(store.permits('printf Hello', 'one')).toBe(false)
-  expect(store.permits(' printf hello\n', 'one')).toBe(false)
-  expect(store.permits(' printf Hello\n && rm file', 'one')).toBe(false)
+  expect(store.permits(' printf Hello\n', 'one', 0)).toBe(true)
+  expect(store.permits('printf Hello', 'one', 0)).toBe(false)
+  expect(store.permits(' printf hello\n', 'one', 0)).toBe(false)
+  expect(store.permits(' printf Hello\n && rm file', 'one', 0)).toBe(false)
   store.dispose()
   const restored = test.open()
   expect(restored.settings()).toEqual({
@@ -33,37 +33,39 @@ it('persists only exact allowed commands for the same account on this Mac', () =
     alwaysAllowedCommands: [' printf Hello\n'],
     workspaceWindows: [],
   })
-  expect(test.open('user-two').permits(' printf Hello\n', 'one')).toBe(false)
+  expect(test.open('user-two').permits(' printf Hello\n', 'one', 0)).toBe(false)
   restored.removeCommand(' printf Hello\n')
-  expect(test.open().permits(' printf Hello\n', 'one')).toBe(false)
+  expect(test.open().permits(' printf Hello\n', 'one', 0)).toBe(false)
 })
 
 it('keeps separate workspace deadlines and never renews a live grant', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', 'First workspace')
+  store.allowWorkspace('one', 'First workspace', 0)
   test.advance(300_000)
-  store.allowWorkspace('two', 'Second workspace')
-  store.allowWorkspace('one', 'First workspace')
+  store.allowWorkspace('two', 'Second workspace', 0)
+  store.allowWorkspace('one', 'First workspace', 0)
   expect(store.settings().workspaceWindows).toEqual([
     {
       workspaceId: 'one',
       workspaceName: 'First workspace',
+      macAccessPeriod: 0,
       expiresAt: 1_800_000_900_000,
     },
     {
       workspaceId: 'two',
       workspaceName: 'Second workspace',
+      macAccessPeriod: 0,
       expiresAt: 1_800_001_200_000,
     },
   ])
   test.advance(599_999)
-  expect(store.permits('anything', 'one')).toBe(true)
+  expect(store.permits('anything', 'one', 0)).toBe(true)
   test.advance(1)
-  expect(store.permits('anything', 'one')).toBe(false)
-  expect(store.permits('anything', 'two')).toBe(true)
+  expect(store.permits('anything', 'one', 0)).toBe(false)
+  expect(store.permits('anything', 'two', 0)).toBe(true)
   store.stopWorkspace('two')
-  expect(store.permits('anything', 'two')).toBe(false)
+  expect(store.permits('anything', 'two', 0)).toBe(false)
   expect(test.timers.size).toBe(0)
   expect(test.open().settings().workspaceWindows).toEqual([])
 })
@@ -71,17 +73,22 @@ it('keeps separate workspace deadlines and never renews a live grant', () => {
 it('keeps the original deadline across a restart and expires without a settings read', () => {
   const test = setup()
   const store = test.open()
-  store.allowWorkspace('one', null)
+  store.allowWorkspace('one', null, 0)
   test.advance(400_000)
   store.dispose()
   const restored = test.open()
-  expect(restored.permits('anything', 'one')).toBe(true)
+  expect(restored.permits('anything', 'one', 0)).toBe(true)
   expect(restored.settings().workspaceWindows).toEqual([
-    { workspaceId: 'one', workspaceName: null, expiresAt: 1_800_000_900_000 },
+    {
+      workspaceId: 'one',
+      workspaceName: null,
+      macAccessPeriod: 0,
+      expiresAt: 1_800_000_900_000,
+    },
   ])
   test.advance(500_000)
   expect(restored.settings().workspaceWindows).toEqual([])
-  expect(test.open().permits('anything', 'one')).toBe(false)
+  expect(test.open().permits('anything', 'one', 0)).toBe(false)
 })
 
 it('does not grant a permission when its private atomic write fails', () => {
@@ -91,9 +98,9 @@ it('does not grant a permission when its private atomic write fails', () => {
     throw new Error('disk full with private data')
   }
   expect(() => store.allowCommand('secret command')).toThrow()
-  expect(store.permits('secret command', 'one')).toBe(false)
-  expect(() => store.allowWorkspace('one', 'First workspace')).toThrow()
-  expect(store.permits('anything', 'one')).toBe(false)
+  expect(store.permits('secret command', 'one', 0)).toBe(false)
+  expect(() => store.allowWorkspace('one', 'First workspace', 0)).toThrow()
+  expect(store.permits('anything', 'one', 0)).toBe(false)
   expect(test.timers.size).toBe(0)
 })
 
@@ -106,7 +113,7 @@ it('refuses an always-allowed list above 900,000 UTF-8 bytes and keeps it remova
     'Always allow is full. Remove a saved command in This Mac, or request this command again and choose Allow.',
   )
   expect(store.settings().alwaysAllowedCommands).toEqual([command])
-  expect(store.permits('printf extra', 'one')).toBe(false)
+  expect(store.permits('printf extra', 'one', 0)).toBe(false)
   store.dispose()
   const restored = test.open()
   expect(restored.settings().alwaysAllowedCommands).toEqual([command])

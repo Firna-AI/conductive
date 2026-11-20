@@ -26,14 +26,18 @@ it('delivers a command request frame of exactly 1,000,000 bytes to the connected
     requestKey: await hash(input.requestId),
   }
   input.reason = 'x'.repeat(
-    1_000_000 - bytes({ type: 'command.request', request }),
+    1_000_000 - bytes({ type: 'command.request', request, macAccessPeriod: 0 }),
   )
   expect(bytes(input)).toBeLessThan(1_000_000)
   const response = await fixture.machine(input)
   expect(response.status).toBe(202)
   const accepted = readDeviceRecord(deviceObject(await response.json()).request)
   const frame = await mac.inbox.next()
-  expect(frame).toEqual({ type: 'command.request', request: accepted })
+  expect(frame).toEqual({
+    type: 'command.request',
+    request: accepted,
+    macAccessPeriod: 0,
+  })
   expect(bytes(frame)).toBe(1_000_000)
   expect(accepted).toMatchObject({
     requestId: input.requestId,

@@ -17,6 +17,7 @@ import { deviceWire } from './socket'
 import type { WorkspaceDevices } from './workspace-commands'
 import { workspaceMacAccess } from '../secrets/capabilities-data'
 import { MAC_ACCESS_OFF } from './mac-access'
+import { workspaceMacAccessPeriod } from './mac-access-data'
 
 export async function workspaceMachine(
   devices: WorkspaceDevices,
@@ -78,7 +79,14 @@ export async function workspaceMachine(
       startedAt: null,
       updatedAt: now,
     }
-    deviceWire({ type: 'command.request', request: record })
+    deviceWire({
+      type: 'command.request',
+      request: record,
+      macAccessPeriod: await workspaceMacAccessPeriod(
+        devices.env.DB,
+        workspace.id,
+      ),
+    })
     let stored = await devices.records.create(
       record,
       workspace.tokenHash,

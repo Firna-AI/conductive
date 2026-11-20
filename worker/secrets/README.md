@@ -35,6 +35,16 @@ The last reveal in metadata joins the secret's current value version.
 Replace increments that version only when it replaces the value.
 Description and all-agents changes keep the version and last reveal.
 
+## Workspace capabilities
+
+`capabilities-writes.ts` saves the shared Mac access switch with the member
+and org checks. Each write that sets Mac access off adds 1 to
+`workspaces.mac_access_period` in the same SQL statement. Other capability
+writes keep the period. The column defaults to 0, so existing rows and
+inserts of the previous Worker keep working. The
+[device broker](../devices/README.md#permission-policy-and-limits) reads the
+period for dispatch and settings operations.
+
 ## Workspace tool routes
 
 The two fixed machine routes use a workspace bearer token on the machine

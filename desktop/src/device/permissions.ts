@@ -8,6 +8,7 @@ import type {
 } from '../../../src/shared/device.ts'
 import type { DeviceClock } from './clock.js'
 import type { DeviceFiles } from './files.js'
+import { extendPermissionWindow } from './permission-extend.js'
 import {
   permissionFileText,
   readPermissionFile,
@@ -102,10 +103,19 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
    * without them. A failed save keeps only the rest of those 15 minutes in
    * the file, which the user already gave.
    */
-  const untilStop = (workspaceId: string, workspaceName: string | null) => {
+  const untilStop = (
+    workspaceId: string,
+    workspaceName: string | null,
+    macAccessPeriod?: number,
+  ) => {
     cancelTimer(workspaceId)
     const next = new Map(windows)
-    next.set(workspaceId, { workspaceId, workspaceName, expiresAt: null })
+    next.set(workspaceId, {
+      workspaceId,
+      workspaceName,
+      expiresAt: null,
+      macAccessPeriod,
+    })
     windows = next
     if (!filed.has(workspaceId)) return
     try {
@@ -113,6 +123,16 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     } catch {
       dependencies.warn()
     }
+  }
+  const observePeriod = (workspaceId: string, macAccessPeriod?: number) => {
+    const current = windows.get(workspaceId)
+    if (
+      current &&
+      macAccessPeriod !== undefined &&
+      (current.macAccessPeriod === undefined ||
+        current.macAccessPeriod < macAccessPeriod)
+    )
+      stopWorkspace(workspaceId)
   }
   const retryRead = () => {
     if (readState !== 'pending') return
@@ -142,8 +162,20 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
   retryRead()
   return {
     retryRead,
-    permits(command: string, workspaceId: string): boolean {
-      return commands.has(command) || runs(windows.get(workspaceId))
+    observePeriod,
+    permits(
+      command: string,
+      workspaceId: string,
+      macAccessPeriod?: number,
+    ): boolean {
+      observePeriod(workspaceId, macAccessPeriod)
+      const window = windows.get(workspaceId)
+      return (
+        commands.has(command) ||
+        (macAccessPeriod !== undefined &&
+          window?.macAccessPeriod === macAccessPeriod &&
+          runs(window))
+      )
     },
     allowCommand(command: string): void {
       const nextCommands = new Set([...commands, command])
@@ -160,12 +192,22 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
       return saveRevocation()
     },
     /** Gives the 15 minutes, and saves them. A grant that runs stays. */
-    allowWorkspace(workspaceId: string, workspaceName: string | null): void {
-      if (runs(windows.get(workspaceId))) return
+    allowWorkspace(
+      workspaceId: string,
+      workspaceName: string | null,
+      macAccessPeriod?: number,
+    ): void {
+      observePeriod(workspaceId, macAccessPeriod)
+      if (
+        runs(windows.get(workspaceId)) &&
+        windows.get(workspaceId)?.macAccessPeriod === macAccessPeriod
+      )
+        return
       const window = {
         workspaceId,
         workspaceName,
         expiresAt: clock.now() + WINDOW_MS,
+        macAccessPeriod,
       }
       save(commands, new Map([...windows, [workspaceId, window]]))
       cancelTimer(workspaceId)
@@ -178,54 +220,57 @@ export function createPermissionStore(dependencies: PermissionDependencies) {
     allowWorkspaceUntilStop(
       workspaceId: string,
       workspaceName: string | null,
+      macAccessPeriod?: number,
     ): void {
-      if (windows.get(workspaceId)?.expiresAt === null) return
-      untilStop(workspaceId, workspaceName)
+      observePeriod(workspaceId, macAccessPeriod)
+      const current = windows.get(workspaceId)
+      if (
+        current?.expiresAt === null &&
+        current.macAccessPeriod === macAccessPeriod
+      )
+        return
+      untilStop(workspaceId, workspaceName, macAccessPeriod)
     },
     /**
      * Turns the running 15 minutes of a workspace into a grant until Stop,
      * as Keep until I stop in the bar asks.
      */
-    keepWorkspace(workspaceId: string): DeviceSettingsOutcome {
+    keepWorkspace(
+      workspaceId: string,
+      macAccessPeriod?: number,
+    ): DeviceSettingsOutcome {
+      observePeriod(workspaceId, macAccessPeriod)
       const window = windows.get(workspaceId)
-      if (window === undefined || !runs(window))
+      if (
+        window === undefined ||
+        !runs(window) ||
+        (macAccessPeriod !== undefined &&
+          window.macAccessPeriod !== macAccessPeriod)
+      )
         return {
           status: 'failed',
           message:
             'These 15 minutes already ended. The next command asks first.',
         }
       if (window.expiresAt !== null)
-        untilStop(workspaceId, window.workspaceName)
+        untilStop(workspaceId, window.workspaceName, window.macAccessPeriod)
       return { status: 'done' }
     },
     stopWorkspace,
-    extendWorkspace(workspaceId: string): DeviceSettingsOutcome {
-      const now = clock.now()
-      const current = windows.get(workspaceId)
-      if (current?.expiresAt === null)
-        return {
-          status: 'failed',
-          message: 'This workspace already allows all commands until you stop.',
-        }
-      if (!current || current.expiresAt <= now)
-        return {
-          status: 'failed',
-          message:
-            'The 15 minutes already ended. Approve a request again to allow all commands.',
-        }
-      const window = { ...current, expiresAt: now + WINDOW_MS }
-      try {
-        save(commands, new Map([...windows, [workspaceId, window]]))
-      } catch {
-        dependencies.warn()
-        return {
-          status: 'failed',
-          message: 'The Mac could not extend the 15 minutes. Try again.',
-        }
-      }
-      cancelTimer(workspaceId)
-      schedule(window)
-      return { status: 'done' }
+    extendWorkspace(
+      workspaceId: string,
+      macAccessPeriod?: number,
+    ): DeviceSettingsOutcome {
+      observePeriod(workspaceId, macAccessPeriod)
+      return extendPermissionWindow(windows.get(workspaceId), macAccessPeriod, {
+        now: clock.now(),
+        save: (window) => {
+          save(commands, new Map([...windows, [workspaceId, window]]))
+          cancelTimer(workspaceId)
+          schedule(window)
+        },
+        warn: dependencies.warn,
+      })
     },
     /** Ends every grant until Stop, such as after a sign-out. */
     endUntilStop(): void {

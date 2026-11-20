@@ -15,7 +15,7 @@ interface SettingsDependencies {
 export function applyDeviceSettings(
   message: Extract<WorkerToDevice, { type: 'settings.operation' }>,
   dependencies: SettingsDependencies,
-): void {
+): DeviceSettingsOutcome {
   let outcome: DeviceSettingsOutcome = { status: 'done' }
   try {
     const operation = message.operation
@@ -24,9 +24,21 @@ export function applyDeviceSettings(
     if (operation.action === 'stop-workspace')
       outcome = dependencies.permissions.stopWorkspace(operation.workspaceId)
     if (operation.action === 'extend-workspace')
-      outcome = dependencies.permissions.extendWorkspace(operation.workspaceId)
+      outcome = dependencies.permissions.extendWorkspace(
+        operation.workspaceId,
+        operation.macAccessPeriod,
+      )
     if (operation.action === 'keep-workspace')
-      outcome = dependencies.permissions.keepWorkspace(operation.workspaceId)
+      outcome = dependencies.permissions.keepWorkspace(
+        operation.workspaceId,
+        operation.macAccessPeriod,
+      )
+    if (operation.action === 'start-workspace-until-stop')
+      dependencies.permissions.allowWorkspaceUntilStop(
+        operation.workspaceId,
+        operation.workspaceName,
+        operation.macAccessPeriod,
+      )
   } catch {
     dependencies.warn()
     outcome = {
@@ -49,4 +61,5 @@ export function applyDeviceSettings(
         }
       : result,
   )
+  return outcome
 }

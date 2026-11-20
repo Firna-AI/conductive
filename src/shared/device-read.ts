@@ -37,6 +37,12 @@ export function deviceNumber(value: unknown): number {
     throw new DeviceContractError('Send a valid Mac request number.')
   return value
 }
+function devicePeriod(value: unknown): number {
+  const period = deviceNumber(value)
+  if (!Number.isSafeInteger(period) || period < 0)
+    throw new DeviceContractError('Send a valid Mac request number.')
+  return period
+}
 function boolean(value: unknown): boolean {
   if (typeof value !== 'boolean')
     throw new DeviceContractError('Send a valid Mac result.')
@@ -100,6 +106,9 @@ export function readDeviceSettings(value: unknown): DeviceSettings {
         workspaceName: nullableText(window.workspaceName),
         expiresAt:
           window.expiresAt === null ? null : deviceNumber(window.expiresAt),
+        ...(window.macAccessPeriod !== undefined && {
+          macAccessPeriod: devicePeriod(window.macAccessPeriod),
+        }),
       }
     }),
   }

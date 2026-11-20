@@ -10,11 +10,12 @@ it('isolates cached account permissions and keeps their timers until the applica
   ]) {
     const saved = test.openPermissions(userId)
     saved.allowCommand(text)
-    saved.allowWorkspace(workspaceId, workspaceId)
+    saved.allowWorkspace(workspaceId, workspaceId, 0)
     saved.dispose()
   }
   await test.start()
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'one-exact',
@@ -23,6 +24,7 @@ it('isolates cached account permissions and keeps their timers until the applica
     }),
   })
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'one-workspace',
@@ -42,12 +44,14 @@ it('isolates cached account permissions and keeps their timers until the applica
     ['one-window', 'workspace-one'],
   ])
     test.receive({
+      macAccessPeriod: 0,
       type: 'command.request',
       request: test.command({ requestId, workspaceId, command: 'printf one' }),
     })
   expect(test.processes).toHaveLength(2)
   expect(test.notify).toHaveBeenCalledTimes(2)
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'two-exact',
@@ -56,6 +60,7 @@ it('isolates cached account permissions and keeps their timers until the applica
     }),
   })
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'two-workspace',
@@ -72,6 +77,7 @@ it('isolates cached account permissions and keeps their timers until the applica
     test.processes.map((process) => process.kill.mock.calls.length),
   ).toEqual([1, 1, 1, 1])
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'two-command',
@@ -82,6 +88,7 @@ it('isolates cached account permissions and keeps their timers until the applica
   expect(test.processes).toHaveLength(4)
   expect(test.notify).toHaveBeenCalledTimes(3)
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: test.command({
       requestId: 'one-again',

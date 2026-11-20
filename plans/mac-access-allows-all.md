@@ -348,33 +348,33 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add `start-workspace-until-stop` to `DeviceSettingsAction` in
+- [x] Add `start-workspace-until-stop` to `DeviceSettingsAction` in
       `src/shared/device.ts`, and the workspace name in the relayed form.
-- [ ] Read and check it in `worker/devices/broker-routes.ts`: membership,
+- [x] Read and check it in `worker/devices/broker-routes.ts`: membership,
       Mac access on, and the name. Test each refusal.
-- [ ] Accept it in `desktop/src/device/messages.ts`, and apply it in
+- [x] Accept it in `desktop/src/device/messages.ts`, and apply it in
       `desktop/src/device/settings.ts`. Test the grant, its result, and a
       request that waits.
-- [ ] Decision 6 C: add the migration of `mac_access_period`, and add 1
+- [x] Decision 6 C: add the migration of `mac_access_period`, and add 1
       at each switch-off in `worker/secrets/capabilities-writes.ts`.
-- [ ] Decision 6 C: send the period beside each `command.request` from
+- [x] Decision 6 C: send the period beside each `command.request` from
       `worker/devices/broker.ts`, and with the relayed start.
-- [ ] Decision 6 C: keep the period with each grant in
+- [x] Decision 6 C: keep the period with each grant in
       `desktop/src/device/permissions.ts` and its saved file. Test that a
       grant from an older period covers no request.
-- [ ] Leave out the grants of an older period when the Worker relays a
+- [x] Leave out the grants of an older period when the Worker relays a
       settings result, in `worker/devices/broker-settings.ts`. Keep a grant
       with no period. Drop saved grants with no period at load in the Mac
       app.
-- [ ] Send the current period with Keep and Extend. The Mac app ends a
+- [x] Send the current period with Keep and Extend. The Mac app ends a
       grant of an older period and reports failed.
-- [ ] Move "Device commands" of `desktop/README.md` to
+- [x] Move "Device commands" of `desktop/README.md` to
       `desktop/src/device/README.md`, because the file passed 300 lines.
-- [ ] Remove the "does not have ... yet" sentences of the code of this
+- [x] Remove the "does not have ... yet" sentences of the code of this
       milestone from `worker/devices/README.md`, `desktop/README.md`, and
       `worker/secrets/README.md`, and add the period write to
       `worker/secrets/README.md`.
-- [ ] Add the action to the fake device routes and the dev Mac settings.
+- [x] Add the action to the fake device routes and the dev Mac settings.
 
 ## Milestone 4: The control
 

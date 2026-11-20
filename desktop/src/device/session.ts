@@ -22,6 +22,7 @@ interface SessionDependencies {
 }
 interface LocalRequest {
   request: DeviceCommandRecord
+  macAccessPeriod?: number
   state: 'pending' | 'running' | 'terminal'
   cancel?: () => void
   dismiss?: () => void
@@ -97,13 +98,21 @@ export function createDeviceSession(dependencies: SessionDependencies) {
           dependencies.invalid()
           return
         }
+        dependencies.permissions.observePeriod(
+          request.workspaceId,
+          message.macAccessPeriod,
+        )
         const existing = requests.get(requestKey(request))
         if (existing) {
           if (JSON.stringify(existing.request) !== JSON.stringify(request))
             dependencies.invalid()
           return
         }
-        const entry: LocalRequest = { request, state: 'pending' }
+        const entry: LocalRequest = {
+          request,
+          state: 'pending',
+          macAccessPeriod: message.macAccessPeriod,
+        }
         requests.set(requestKey(request), entry)
         if (!validCommand(request)) {
           finish(entry)
@@ -113,7 +122,11 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             message: 'The Mac command request is invalid.',
           })
         } else if (
-          dependencies.permissions.permits(request.command, request.workspaceId)
+          dependencies.permissions.permits(
+            request.command,
+            request.workspaceId,
+            entry.macAccessPeriod,
+          )
         ) {
           execute(entry)
         } else {
@@ -148,11 +161,13 @@ export function createDeviceSession(dependencies: SessionDependencies) {
             dependencies.permissions.allowWorkspace(
               entry.request.workspaceId,
               entry.request.workspaceName,
+              entry.macAccessPeriod,
             )
           if (message.action === 'allow-workspace-until-stop')
             dependencies.permissions.allowWorkspaceUntilStop(
               entry.request.workspaceId,
               entry.request.workspaceName,
+              entry.macAccessPeriod,
             )
           execute(entry)
         } catch (error) {
@@ -170,7 +185,25 @@ export function createDeviceSession(dependencies: SessionDependencies) {
       if (message.type === 'settings.operation') {
         if (operations.has(message.operationId)) return
         operations.add(message.operationId)
-        applyDeviceSettings(message, dependencies)
+        const outcome = applyDeviceSettings(message, dependencies)
+        if (
+          message.operation.action === 'start-workspace-until-stop' &&
+          outcome.status === 'done'
+        ) {
+          const workspaceId = message.operation.workspaceId
+          for (const entry of requests.values()) {
+            if (
+              entry.state === 'pending' &&
+              entry.request.workspaceId === workspaceId &&
+              dependencies.permissions.permits(
+                entry.request.command,
+                workspaceId,
+                entry.macAccessPeriod,
+              )
+            )
+              execute(entry)
+          }
+        }
       }
     },
     dispose(): void {

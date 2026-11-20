@@ -5,7 +5,11 @@ import { workerMessage } from './messages.js'
 
 it('extends through a settings frame, returns the effective settings, and ignores a repeated operation ID', () => {
   const test = sessionFixture()
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    macAccessPeriod: 0,
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.approval',
     operationId: 'allow-workspace',
@@ -37,6 +41,7 @@ it('extends through a settings frame, returns the effective settings, and ignore
         {
           workspaceId: 'workspace-one',
           workspaceName: 'Checkout address',
+          macAccessPeriod: 0,
           expiresAt: 1_800_001_200_000,
         },
       ],
@@ -52,7 +57,7 @@ it('extends through a settings frame, returns the effective settings, and ignore
 
 it('returns failed Extend with the current grant when the save fails', () => {
   const test = sessionFixture()
-  test.permissions.allowWorkspace('workspace-one', 'Checkout address')
+  test.permissions.allowWorkspace('workspace-one', 'Checkout address', 0)
   test.advance(300_000)
   test.files.write = () => {
     throw new Error('private disk failure')
@@ -76,6 +81,7 @@ it('returns failed Extend with the current grant when the save fails', () => {
         {
           workspaceId: 'workspace-one',
           workspaceName: 'Checkout address',
+          macAccessPeriod: 0,
           expiresAt: 1_800_000_900_000,
         },
       ],

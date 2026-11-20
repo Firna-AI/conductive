@@ -5,7 +5,7 @@ import {
   DEVICE_OUTPUT_LIMIT_BYTES,
   DEVICE_REPLACED_CLOSE_CODE,
   DEVICE_REPLACED_CLOSE_REASON,
-  type DeviceSettingsAction,
+  type DeviceSettingsOperation,
 } from '../../src/shared/device'
 import {
   deviceObject,
@@ -26,6 +26,7 @@ import { deviceWire } from './socket'
 import { relayDeviceSettings } from './broker-settings'
 import { BrokerRequests } from './broker-store'
 import { checkBroker, dropBroker, scheduleBroker } from './broker-lifecycle'
+import { workspaceMacAccessPeriod } from './mac-access-data'
 
 export class DeviceBroker {
   connection: DeviceConnection | null = null
@@ -188,7 +189,12 @@ export class DeviceBroker {
     }
     if (!(await this.valid(item))) return false
     if (await this.requests.has(request)) return true
-    deviceWire({ type: 'command.request', request })
+    const macAccessPeriod = await workspaceMacAccessPeriod(
+      this.env.DB,
+      request.workspaceId,
+    )
+    if (macAccessPeriod === undefined) return false
+    deviceWire({ type: 'command.request', request, macAccessPeriod })
     await this.store(item)
     const claim = deviceObject(
       await deviceCall(this.env, request.workspaceId, {
@@ -203,7 +209,7 @@ export class DeviceBroker {
       await this.forget(item)
       return false
     }
-    this.connection.send({ type: 'command.request', request })
+    this.connection.send({ type: 'command.request', request, macAccessPeriod })
     return true
   }
   requirePairing(
@@ -227,7 +233,10 @@ export class DeviceBroker {
       )
     return connection
   }
-  relaySettings(connection: DeviceConnection, operation: DeviceSettingsAction) {
+  relaySettings(
+    connection: DeviceConnection,
+    operation: DeviceSettingsOperation,
+  ) {
     return relayDeviceSettings(this.settings, connection, operation)
   }
   receive(connection: DeviceConnection, value: unknown): Promise<void> {

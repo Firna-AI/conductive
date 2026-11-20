@@ -104,6 +104,7 @@ const verbs = {
   'stop-workspace': 'stop',
   'keep-workspace': 'keep',
   'extend-workspace': 'extend',
+  'start-workspace-until-stop': 'start',
 } as const satisfies Record<SettingsChange['action'], string>
 
 /**
@@ -143,6 +144,11 @@ const titles = {
     done: 'Kept until you stop',
     'done-not-saved': 'Kept, not saved',
     failed: 'Not kept',
+  },
+  'start-workspace-until-stop': {
+    done: 'Started',
+    'done-not-saved': 'Started, not saved',
+    failed: 'Not started',
   },
 } as const satisfies Record<
   SettingsChange['action'],

@@ -20,6 +20,7 @@ it('reports oversized settings for only that operation and keeps commands, outpu
   ).toBeGreaterThan(DEVICE_FRAME_LIMIT_BYTES)
   for (const [index, text] of commands.slice(0, 2).entries())
     test.receive({
+      macAccessPeriod: 0,
       type: 'command.request',
       request: command({ requestId: `running-${index}`, command: text }),
     })
@@ -63,6 +64,7 @@ it('reports oversized settings for only that operation and keeps commands, outpu
     },
   })
   test.receive({
+    macAccessPeriod: 0,
     type: 'command.request',
     request: command({ requestId: 'still-allowed', command: commands[2] }),
   })

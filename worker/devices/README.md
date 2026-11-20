@@ -179,19 +179,20 @@ Extend uses the same paired settings relay as Stop and requires a workspace ID.
 The Worker validates and relays Extend without storing or changing the grant.
 Only the Mac checks whether the grant still runs and chooses its new end.
 The paired page starts a grant until Stop of one workspace with the settings action `start-workspace-until-stop` and its workspace ID.
-That action is not the approval action of the same name, which answers one request.
+That action differs from `allow-workspace-until-stop`, which answers one request.
 Before the relay, the Worker checks that the user is a member of the org of the workspace and that its Mac access is on.
 It then adds the workspace name and the current Mac access period of the workspace.
 The Worker never sends this action by itself.
 An older Mac app ends its device connection at an unknown message, and that cancels its running commands.
 Each switch-off of Mac access adds 1 to the Mac access period of its workspace.
 The broker sends the current period beside each `command.request`, outside the request record, so an older Mac app ignores it.
+Keep and Extend also carry the current period.
+The Worker keeps a grant with no period in a settings result, so an older Mac app can still Stop it.
 The period only ends grants on the Mac.
 It never allows a command.
 A failed send or disconnected socket removes and rejects the matching waiter.
 Each result relays `done`, `done-not-saved`, or `failed` with the current settings.
 Before it relays a result, the Worker reads the period of each listed workspace and leaves out each grant of an older period.
-The Worker does not have the start, the periods, or this filter yet.
 [Mac access](../../docs/protocol/capabilities.md#when-mac-access-goes-off) states their requirements.
 An oversized settings result uses a small `settings.failed` frame.
 It rejects only the matching waiter with `settings_result_too_large`.
@@ -262,6 +263,9 @@ When the turn ends, the request fails with `turn_ended`, and D1 shows `ready`.
 - `access.ts`: `activeStoredTurn`, the shared read of the running stored turn, and `activeDeviceSender` with the current access checks.
 - `workspace-commands.ts`, `workspace-browser.ts`: machine commands and scoped app records/approvals.
 - `mac-access.ts`: the Mac access refusal code, reason, and terminal state.
+- `mac-access-data.ts`: workspace metadata and current Mac access periods.
+- `settings-operation.ts`: checks of grant starts and Worker metadata for the settings relay.
+- `broker-settings.ts`: settings waiters and the filter of grants from older periods.
 - `broker.ts`, `broker-routes.ts`, `broker-messages.ts`: the broker, its upgrade route, and its relays.
 - `native-sockets.ts`, `connection-store.ts`: `DeviceSockets`, the native acceptance, restore, close, and automatic heartbeat response of the Mac socket, and the durable current connection with its generation.
 - `broker-lifecycle.ts`: the lease and session check, the drop that settles pending work, and the alarm schedule.

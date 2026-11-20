@@ -44,9 +44,17 @@ export async function updateWorkspaceCapabilities(
     statements.push(
       db
         .prepare(
-          `UPDATE workspaces SET mac_access = ? WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}`,
+          `UPDATE workspaces SET mac_access = ?, mac_access_period = mac_access_period + ?
+           WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}`,
         )
-        .bind(Number(change.macAccess), orgId, workspaceId, orgId, userId),
+        .bind(
+          Number(change.macAccess),
+          Number(!change.macAccess),
+          orgId,
+          workspaceId,
+          orgId,
+          userId,
+        ),
     )
   if (change.preapprovedSecretIds !== undefined) {
     statements.push(

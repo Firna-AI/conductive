@@ -8,6 +8,7 @@ import {
 import { HttpError } from '../http'
 import type { DeviceBroker } from './broker'
 import type { DeviceConnection } from './broker-types'
+import { currentDeviceSettings } from './broker-settings'
 
 export async function receiveDeviceMessage(
   broker: DeviceBroker,
@@ -44,7 +45,10 @@ export async function receiveDeviceMessage(
       )
       return
     }
-    const settings = readDeviceSettings(message.settings)
+    const settings = await currentDeviceSettings(
+      broker.env.DB,
+      readDeviceSettings(message.settings),
+    )
     const outcome = readDeviceSettingsOutcome(message.outcome)
     broker.settings.delete(id)
     waiter.cancel()

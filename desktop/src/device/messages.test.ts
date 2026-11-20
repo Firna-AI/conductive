@@ -73,3 +73,59 @@ it('accepts a command request whose workspace name is null', () => {
     request: { workspaceName: null },
   })
 })
+
+it('accepts a start only with Worker metadata and rejects malformed periods in settings and requests', () => {
+  const start = {
+    type: 'settings.operation',
+    operationId: 'start',
+    operation: {
+      action: 'start-workspace-until-stop',
+      workspaceId: 'workspace-one',
+      workspaceName: null,
+      macAccessPeriod: 0,
+    },
+  }
+  expect(workerMessage(JSON.stringify(start))).toEqual(start)
+  for (const macAccessPeriod of [
+    undefined,
+    -1,
+    0.5,
+    '0',
+    null,
+    Number.MAX_SAFE_INTEGER + 1,
+  ])
+    expect(
+      workerMessage(
+        JSON.stringify({
+          ...start,
+          operation: { ...start.operation, macAccessPeriod },
+        }),
+      ),
+    ).toBeUndefined()
+  for (const action of ['keep-workspace', 'extend-workspace']) {
+    const operation = {
+      action,
+      workspaceId: 'workspace-one',
+      macAccessPeriod: 3,
+    }
+    const frame = { ...start, operation }
+    expect(workerMessage(JSON.stringify(frame))).toEqual(frame)
+    expect(
+      workerMessage(
+        JSON.stringify({
+          ...frame,
+          operation: { ...operation, macAccessPeriod: -1 },
+        }),
+      ),
+    ).toBeUndefined()
+  }
+  const request = {
+    type: 'command.request',
+    request: command(),
+    macAccessPeriod: 3,
+  }
+  expect(workerMessage(JSON.stringify(request))).toEqual(request)
+  expect(
+    workerMessage(JSON.stringify({ ...request, macAccessPeriod: -1 })),
+  ).toBeUndefined()
+})
