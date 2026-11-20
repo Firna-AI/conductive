@@ -195,6 +195,8 @@ On a phone, the preview opens on the **Preview** page.
 Servers that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
+An HTML file of the repository needs no server.
+Open it from **All files**, as [Preview an HTML file](/docs/files-and-changes#preview-an-html-file) says.
 
 To open a server by its port:
 

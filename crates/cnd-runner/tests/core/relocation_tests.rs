@@ -113,6 +113,7 @@ async fn start(root: tempfile::TempDir) -> Harness {
             Arc::new(EndpointConnector(fixture.endpoint.clone())),
             Arc::new(MoveClock),
             fixture.store.clone(),
+            false,
         )
         .with_repository_folder(&current),
     );

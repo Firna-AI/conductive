@@ -19,6 +19,8 @@ current repository of each turn and message.
 `runner_tool_detail` holds the private `tool.detail.part` events of a
 complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
+The hello has an optional `fileServer` capability. A listening file server
+sets it to true. Older runners omit it. The protocol version stays 2.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -62,6 +64,7 @@ let hello = RunnerHello::Hello {
     process_start_id: None,
     repository_folder: Some("/home/user/code/storefront".into()),
     complete_tool_details: Some(true),
+    file_server: None,
 };
 ```
 
@@ -86,6 +89,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Key Code
 
 - [Handshake](src/runner_handshake.rs) defines the two message directions and event envelope.
+- [File server](src/file_server.rs) defines the reserved loopback port and files-mark header.
 - [Commands](src/runner_commands.rs) defines turn, message, control, and report requests.
 - [Credentials](src/runner_credentials.rs) defines supported logins and temporary credentials.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
@@ -108,6 +112,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)

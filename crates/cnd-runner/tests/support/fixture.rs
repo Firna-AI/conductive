@@ -68,5 +68,6 @@ pub(crate) fn link(store: Arc<dyn EventStore>, endpoint: Arc<Endpoint>) -> Arc<d
         Arc::new(EndpointConnector(endpoint)),
         Arc::new(FixedClock),
         store,
+        false,
     ))
 }

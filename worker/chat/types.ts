@@ -140,6 +140,7 @@ export interface ActiveRunner {
   repositoryFolder?: string
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
+  fileServer?: boolean
   ready: boolean
 }
 

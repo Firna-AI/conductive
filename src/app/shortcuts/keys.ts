@@ -20,7 +20,7 @@ export type ShortcutPress = Pick<
   | 'repeat'
   | 'isComposing'
 > &
-  Partial<Pick<KeyPress, 'layoutModifiers'>>
+  Partial<Pick<KeyPress, 'layoutModifiers' | 'firstPressConsumed'>>
 
 /** Restores shortcuts with Ctrl, Alt, or Meta. Ordinary typing keeps its original identity. */
 export function restoreLayoutModifiers(press: ShortcutPress): ShortcutPress {

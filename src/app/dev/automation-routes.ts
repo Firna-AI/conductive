@@ -24,6 +24,7 @@ import {
   ownerRequired,
   requireAutomation,
   automationRuns,
+  automationCapabilities,
 } from './automation-records'
 import { slugify, uniqueId, type DevState, type OrgState } from './state'
 
@@ -65,7 +66,14 @@ function reply(
 ): Response {
   return json(
     {
-      automation,
+      automation: {
+        ...automation,
+        capabilities: automationCapabilities(
+          backend,
+          org,
+          automation.capabilities,
+        ),
+      },
       runLogin: runLoginOf(backend.state, org, automation),
     } satisfies AutomationResponse,
     status,
@@ -101,6 +109,7 @@ function createAutomation(backend: DevBackend, org: OrgState, body: unknown) {
     sectionId: sectionOf(org, optional(fields, 'sectionId', text)),
     prompt: promptOf(fields),
     choice: choiceOf(fields),
+    capabilities: automationCapabilities(backend, org, fields.capabilities),
     active: optional(fields, 'active', flag) ?? true,
     inactiveReason: null,
     failedRunsInARow: 0,
@@ -117,6 +126,7 @@ function createAutomation(backend: DevBackend, org: OrgState, body: unknown) {
 
 /** The fields of an update that the owner sent, each checked as on create. */
 function updated(
+  backend: DevBackend,
   org: OrgState,
   automation: Automation,
   fields: JsonObject,
@@ -137,6 +147,11 @@ function updated(
       : automation.sectionId,
     prompt: has('prompt') ? promptOf(fields) : automation.prompt,
     choice: has('choice') ? choiceOf(fields) : automation.choice,
+    capabilities: automationCapabilities(
+      backend,
+      org,
+      has('capabilities') ? fields.capabilities : automation.capabilities,
+    ),
     active,
     inactiveReason:
       active || automation.active ? null : automation.inactiveReason,
@@ -166,7 +181,7 @@ function updateAutomation(
     Object.keys(fields).every((key) => key === 'active')
   if (!owner && !(turnOff && org.org.role === 'admin')) throw ownerRequired()
   const now = backend.now()
-  const next = updated(org, automation, fields)
+  const next = updated(backend, org, automation, fields)
   const saved = { ...next, nextRunAt: nextRunOf(next, now), updatedAt: now }
   org.automations = org.automations.map((item) =>
     item.id === automationId ? saved : item,
@@ -200,6 +215,11 @@ export function automationRoutes(backend: DevBackend): Route[] {
         return json({
           automations: org.automations.map((automation) => ({
             ...automation,
+            capabilities: automationCapabilities(
+              backend,
+              org,
+              automation.capabilities,
+            ),
             lastRun: automationRuns(org, automation.id)[0] ?? null,
           })),
         } satisfies AutomationsResponse)

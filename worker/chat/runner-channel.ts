@@ -110,6 +110,7 @@ export class RunnerChannel {
       active.protocolVersion = welcome.protocolVersion
       active.loginKinds = message.loginKinds
       active.repositoryFolder = message.repositoryFolder
+      active.fileServer = message.fileServer
       active.ready = welcome.ready
       await this.connections.persist(active)
       this.connections.reportConnected(active)

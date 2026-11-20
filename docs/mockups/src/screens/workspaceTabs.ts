@@ -16,6 +16,7 @@ import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { htmlTab } from './workspaceFileTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -216,6 +217,8 @@ export function tabsFor(
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  const html = htmlTab(state)
+  if (html) tabs.push(html)
   tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({

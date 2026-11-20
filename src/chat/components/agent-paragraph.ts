@@ -1,9 +1,37 @@
+import type { HeadingLevel } from '../../markdown/headings'
 import { indentOf, isRule } from '../../markdown/lines'
+import { tokens } from '../links/chat-tokens'
 import type { TextBlock } from './agent-text'
 
 /** Whether the line starts a quote, which the chat shows as text. */
 export function isQuote(line: string): boolean {
   return /^ {0,3}>/.test(line)
+}
+
+/**
+ * The reading of chat text that finds the bold marks and the code of an
+ * answer, and no link or mention.
+ */
+const plainReading = { marks: true, links: false, mentions: () => false }
+
+/**
+ * The heading block of `text` at `level`. The heading keeps the text that
+ * the agent wrote when the chat shows readable text of it. Its text is
+ * empty when the chat shows only bold marks, spaces, or empty code, such as
+ * `**` or a lone backtick while the agent writes. So it draws nothing, and
+ * it still ends the paragraph above it. The check reads only code and bold,
+ * so the block depends on the text alone, as `AgentText` and `MessageLine`
+ * need: they keep the blocks until the text changes. Chips and links depend
+ * on the workspaces, the file tree, and the screen, so they resolve when
+ * the heading draws.
+ */
+export function headingBlock(level: HeadingLevel, text: string): TextBlock {
+  const readable = tokens(text, plainReading).some(
+    (token) =>
+      (token.kind === 'text' || token.kind === 'code') &&
+      token.text.trim() !== '',
+  )
+  return { kind: 'heading', level, text: readable ? text : '' }
 }
 
 /**
@@ -62,12 +90,12 @@ export class Paragraph {
 
   /**
    * The blocks that an underline of `level` makes: the lines before the text
-   * as a paragraph, and the text as a heading. Null, with no change, when no
-   * text comes before the underline.
+   * as a paragraph, and the text as a heading, from `headingBlock`. Null,
+   * with no change, when no text comes before the underline.
    */
   underline(level: 1 | 2): TextBlock[] | null {
     if (this.text === null) return null
     const heading = this.lines.splice(this.text).join(' ')
-    return [...this.take(), { kind: 'heading', level, text: heading }]
+    return [...this.take(), headingBlock(level, heading)]
   }
 }

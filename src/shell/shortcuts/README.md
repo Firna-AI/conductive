@@ -24,16 +24,26 @@ gives the rules.
   because their frames come from another origin.
 - While a dialog or a sheet is open, only the command whose offer names
   that layer can run, such as the palette key over the palette's own
-  dialog. A layer of another owner keeps every key: the page under it
-  takes no input, so the listener offers no command to the model.
+  dialog. Over a layer of another owner, no key runs a command: the page
+  under it takes no input, so the listener offers no command to the model.
 - A command decision closes every open menu first. A menu that refuses,
   such as during a change that it runs, keeps the key.
 - A key that runs a command goes no further: the listener calls
   `preventDefault` and `stopPropagation`, then runs the latest offer of
   the command. So the message field and the terminal never get it.
-- A held key runs its command once. Each repeat of a key whose first
-  press runs a command now goes no further either: the model gives it a
-  repeat decision, and the listener stops it without a run.
+- A held key runs its command once. `AppServices.onKey` notes each
+  physical key that is down whose first press the listener consumed, for
+  a command or a stop. It forgets the key at its key-up, or when the
+  window loses the focus.
+- Each repeat of such a key goes no further: the model gives it a stop
+  decision before any other rule, and the listener stops it without a run
+  and closes no menu. So when the first press opens a dialog or moves the
+  focus, no repeat reaches that dialog or field, and the browser does not
+  act on it.
+- Each other repeat of a key whose first press runs a command now goes no
+  further either: the model gives it a repeat decision, and the listener
+  stops it without a run. So a key that the recorder has just saved stops
+  its own repeats too.
 - A press that the model passes goes on to the page and the browser
   untouched.
 - A layout switch key passes untouched. While it stays down, the model
@@ -80,7 +90,8 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
   changes.
 - A part offers a command only while its control would do something. So
   without a held layout switch, a key that would do nothing goes on to
-  the page and the browser.
+  the page and the browser. A repeat of a key whose first press the
+  listener consumed still stops, as [How a key goes](#how-a-key-goes) says.
 
 ### The owners of the commands
 

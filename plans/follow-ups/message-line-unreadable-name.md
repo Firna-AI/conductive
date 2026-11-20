@@ -30,7 +30,7 @@
 - **Left out:** CSS cannot give the control a readable name. Changing nothing keeps the unnamed control.
 - **Wider fix:** B. One block reader gives each content kind the same readable-name rule.
 - **Previous examples:** Commit `712afd8f` introduced the earlier block-count condition. No other example was found in the focused check.
-- **Related:** `plans/follow-ups/formatting-only-chat-heading.md` covers the same control when its lead is an empty heading. Its parser fix does not correct paragraphs or code blocks.
+- **Related:** The fix of the closed item [Formatting marks leave an empty heading](https://github.com/Firna-AI/conductive/blob/66682a1679dbf3a208427591c9d88cea11fcca82/plans/follow-ups/formatting-only-chat-heading.md) covers the same control when its lead blocks are headings that show no text. `headingBlock` in `src/chat/components/agent-paragraph.ts` now gives such a heading empty text, as for `## **`. So the fallback adds the hidden copy for these lead blocks. That fix does not correct paragraphs or code blocks, so this gap stays.
 - **Recommendation:** B. Check readable block content in one place while keeping the normal control names.
 - **Action:** fix after merge, apply B, because the problem already exists on main and does not come from the heading change.
 

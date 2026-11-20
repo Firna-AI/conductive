@@ -119,8 +119,8 @@ draws the temporary tab at `app/files/temporary`.
 - A move of the temporary tab to another place also keeps it, as
   [The tab row](agents-and-sessions.md#the-tab-row) says.
 - Nothing else keeps the tab. A switch between Preview and Source of a
-  Markdown file keeps the state of the tab, temporary or kept. Copy,
-  Download, and a scroll keep no tab.
+  Markdown or an HTML file keeps the state of the tab, temporary or kept.
+  Copy, Download, and a scroll keep no tab.
 - A keep after a time, or when the user comes back to the tab, was
   rejected. Each long look at a file would then leave a kept tab.
 - A read-only workspace, such as an archived workspace or a workspace of a

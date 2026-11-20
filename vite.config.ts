@@ -54,6 +54,8 @@ export function developmentScripts() {
 
 export default defineConfig({
   define: { __CONDUCTIVE_APP_VERSION__: JSON.stringify(buildVersion()) },
+  // Worker asset reads use this internal host through Vite's middleware.
+  server: { allowedHosts: ['site.invalid'] },
   // Workers AI is remote only. Local development leaves new workspaces Untitled and needs no Cloudflare login.
   plugins: [
     react(),
