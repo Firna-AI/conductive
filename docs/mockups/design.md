@@ -315,7 +315,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
   phone opens the Add trigger menu and the author filter of a pull request
-  trigger in a sheet. A suspended org keeps its Automations link, and shows
+  trigger in a sheet. The bar of the prompt box holds the Capabilities icon
+  of the owner and the model picker, and the lines under the box say what
+  the runs use, as
+  [the Capabilities control](design-secrets.md#the-capabilities-control)
+  says. A suspended org keeps its Automations link, and shows
   its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its automation and to its pull request. The pull
