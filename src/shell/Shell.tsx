@@ -27,12 +27,13 @@ import { Waiting } from './waitlist/Waiting'
 
 /**
  * The app opens as usual: Get started, the workspace that the person
- * opened last, or the first org, as `startPage` says.
+ * opened last, or the first org, as `startPage` says, among the orgs of
+ * `AppModel.activeOrgs`.
  */
 function OpenApp() {
   const app = useApp()
   const navigation = useNavigation()
-  const orgs = useStore(app.orgs)
+  const orgs = useStore(app.activeOrgs)
   const getStarted = useStore(app.getStarted)
   const last = useStore(app.lastWorkspaces.state)
   const target = startPage(last, orgs, inFirstRun(getStarted))
@@ -79,7 +80,7 @@ type AccountRoute = Extract<Route, { screen: 'account' }>
 /** The account. The Mac app keeps the sidebar of an org beside it. */
 function Account(props: { route: AccountRoute; user: User }) {
   const phone = useViewport() === 'phone'
-  const org = useKeptOrg(useStore(useApp().orgs))
+  const org = useKeptOrg()
   const page = (
     <AccountScreen
       connect={props.route.connect}
