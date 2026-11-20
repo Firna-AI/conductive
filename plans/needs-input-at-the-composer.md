@@ -188,6 +188,44 @@ Contract owners:
   of 17 November 2026 for requests that a card hides. A Deny of a request
   that hides none still ends only its own request.
 
+### 4. A Mac command on top in a browser
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small.
+- **Source:** Implementation.
+- **Category:** Product bug.
+- **Location:** `stackEntries` in `docs/mockups/src/components/chat/requests.ts`,
+  and the page `app/secret-requests/several/mac-command`.
+- **Background:** The top card of the stack is the first in the order of
+  the region: the requests whose calls wait first, then the late requests,
+  each oldest first. Only the Mac app on the Mac of the sender of the turn
+  can answer a Mac command request. A browser shows only its state.
+- **Problem:** A waiting Mac command comes before an older late secret
+  request. In a browser it is the top card, and the member cannot answer
+  it there. The request that the member can answer waits behind it.
+- **Impact if no action:** A member in a browser must press Next to answer
+  the secret request, and can miss it.
+- **Root question:** Which card does a member see first when this view
+  cannot answer a card of the stack?
+- **Options:**
+  - **A.** Keep one order for every view. Risk: in a browser, the top card
+    has no choices. Effort: Small.
+  - **B.** Put the cards that this view cannot answer after the cards that
+    it can answer. Each part keeps the order of the region. Risk: two views
+    of one chat show a different top card. Effort: Small.
+  - **C.** Keep one order, but start each view at the first card that it
+    can answer, such as "2 of 2". Risk: a place that does not start at 1
+    can surprise. Effort: Small.
+  - **D.** Show a Mac command that this view cannot answer as one line above
+    the stack. Risk: requests get a second place. Effort: Medium.
+- **Left out:** choices for the command in a browser, because only the Mac
+  app on the Mac of the sender can allow a command.
+- **Wider fix:** None. The order is one rule in `stackEntries`.
+- **Previous examples:** None found.
+- **Recommendation:** B. The top card is then one that the member can
+  answer, whenever such a card exists.
+- **Action:** ask the user, because A and B trade one order for every view
+  against a top card that the member can answer, and no rule settles it.
+
 ## Design
 
 - The request region holds each open request of the shown session: each
