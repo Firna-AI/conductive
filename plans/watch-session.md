@@ -1,10 +1,12 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. The pull request that completes this work deletes this plan. Watch decisions 2 to 6 need Cal's answer. The initial plan commit contains no implementation.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Implementation starts with Milestone 1. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
 Cal chose option C in workspace 322 on 20 November 2026. His words were "1 = C - create that in a sub-workspace now, while we discuss 2". This plan records that choice as watch decision 1. The separate dev server question stays in workspace 322.
+
+On 20 November 2026, Cal answered "2 = D", "3 = C", "4 = C", "5 = D", and "6 = B". These answers approve the contract below. No watch design decision remains open at the start of implementation.
 
 The source is the [agent process management session](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/TECuGUpvCP2C5ezKfmG4f3VWeHSpToaeTHH8hDks8Og/sessions/iq1decCRv9wR4QbFyQpsCgAGmRKnXmCAk3GMzdo2bro). Research started at `c41f62825`. The branch then took `main` at `e54cbbd00` by fast-forward. Evidence belongs in `.context/watch-session/`. Review reports belong in `.context/reviews/calummoore/wake-a-session-when-a-turn-ends-b5kh/`.
 
@@ -50,13 +52,13 @@ Contract owners:
 
 ### API and registration
 
-The proposal uses `watch_session` and `conductive sessions watch`. The route is `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/watch`. An omitted workspace names the calling workspace. The caller session and sender come from the stored calling turn, never from request fields. Watch decision 2 also offers atomic watch flags as an alternative.
+The call uses `watch_session` and `conductive sessions watch`. The route is `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/watch`. An omitted workspace names the calling workspace. The caller session and sender come from the stored calling turn, never from request fields. The call adds no watch flag to existing send or create bodies.
 
-Watch decision 2 chooses current-session targeting, an explicit turn ID, or both. With the recommended optional ID, omission resolves current active work in the target's chat queue. No active work returns an idle result and creates no watch. An explicit retained terminal turn returns its end state without a record or wake. The caller reads it at once. These remain proposals until Cal answers.
+Watch decision 2 D accepts an optional exact turn ID. Omission resolves current active work in the target's chat queue. No active work returns an idle result and creates no watch. An explicit retained terminal turn returns its end state without a new record or wake. The caller reads it at once.
 
 The reply names the target workspace, target session link, exact turn ID when one exists, and whether the watch was recorded. Exact targeting also needs an additive initial turn ID in the `create_workspace` reply. The stored workspace admission already has that ID. Rust owns each new boundary type. The generated TypeScript types are committed.
 
-Watch decision 3 settles self-watches. Watch decision 4 settles repeat calls. Watch decision 5 settles Stop of the caller. The implementation must follow those answers before it adds a new refusal or deduplication rule.
+Watch decision 3 C refuses the exact active calling turn with HTTP 400 `invalid_input`. Watch decision 4 C merges repeated intent for the same calling session, member, target turn, and valid Stop generation. Watch decision 5 D drops older pending wakes at the caller after an explicit Stop. A fresh registration after cancellation creates new intent.
 
 ### Durable storage and delivery
 
@@ -66,7 +68,9 @@ Registration and turn completion use the same serialized chat queue. A pending w
 
 Use a persistent delivery queue. The workspace alarm retries ready watches outside the target's chat queue. Keep reconciliation scheduled while pending watches remain. Do not depend on the existing in-memory turn-end report list. Do not hold either workspace's chat queue across a call to the other workspace. Same-workspace delivery follows the same rule.
 
-The calling workspace accepts a wake with a stable watch-derived message ID. It saves the line, message-to-turn link, runner command, and chat event together. A lost reply can retry without a second line or turn. A transient Worker error keeps the delivery pending. A permanent inability to start a turn consumes the watch without sending a line. Watch decision 5 selects the Stop rule. Its recommended D checks a caller-owned Stop generation before acceptance. A fresh watch after Stop has a new generation. Repeated calls coalesce only within the same valid generation if Cal chooses watch decision 4 C.
+The calling workspace accepts a wake with a stable watch-derived message ID. It saves the line, message-to-turn link, runner command, and chat event together. A lost reply can retry without a second line or turn. A transient Worker error keeps the delivery pending. A permanent inability to start a turn consumes the watch without sending a line.
+
+Watch decision 5 D checks a caller-owned Stop generation before acceptance. A fresh watch after Stop has a new generation. Repeated calls coalesce only within the same valid generation under watch decision 4 C. Automatic idle stops keep watches valid.
 
 After durable acceptance, flush the runner or queue the normal resume. Keep resume retry state separate from line acceptance, so a failed start does not duplicate the line. Recheck whether the accepted wake still has live work before a later resume retry. A pending watch alone holds no active turn and extends no computer deadline.
 
@@ -74,7 +78,7 @@ Read the final state after login-failure normalization. Cover every terminal pat
 
 ### Chat, agent text, and compatibility
 
-Use one shared text function for the app line and the agent input. The wake names the watched session and its end. Watch decision 6 chooses the other visible facts. The agent reads the result with `read_session`. The wake carries no result excerpt or secret value.
+Use one shared text function for the app line and the agent input. The wake names the watched session and its end. Watch decision 6 B adds a short app-written end reason when one exists. The session chip also names the workspace. The agent reads the result with `read_session`. The wake carries no raw error, result excerpt, or secret value.
 
 Use the existing system-line appearance and session-link behavior. Add mobile and desktop mockups before UI implementation. Keep the live chat, loaded history, copy, and `read_session` consistent. Render each wake once and in stored event order.
 
@@ -161,7 +165,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Previous examples:** Send and session-create replies expose `turnId`. Workspace admission retains its initial turn ID but omits it from the tool reply. Stored turn records retain their terminal state.
 - **Related:** Watch decision 4 chooses the identity used to merge repeated registrations.
 - **Recommendation:** D. The first draft recommended C. The check preferred G for whole-task completion. D keeps the one-turn scope that Cal requested.
-- **Action:** Ask Cal. Target selection and the already-ended reply add boundary behavior that the chosen approach does not settle.
+- **Action:** Apply D. Cal chose D on 20 November 2026 with "2 = D".
 
 ### Watch decision 3: Handle the caller's own turn
 
@@ -183,7 +187,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Previous examples:** `stop_session` allows self-stop. The session tools set no automatic loop limit under decision 262.
 - **Related:** Watch decision 5 sets Stop's effect on pending wakes. Its D also stops self-watches from undoing Stop.
 - **Recommendation:** C. The requested flow watches other work. A clear refusal exposes a mistaken target.
-- **Action:** Ask Cal. C adds a new rejection, which the task reserves for Cal.
+- **Action:** Apply C. Cal approved the exact-calling-turn refusal on 20 November 2026 with "3 = C".
 
 ### Watch decision 4: Repeat a watch request
 
@@ -204,7 +208,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Previous examples:** `send_message` and `create_session` use optional request IDs and replay accepted writes.
 - **Related:** Watch decision 2 defines the target. Watch decision 5 defines when a cancelled watch needs new intent.
 - **Recommendation:** C. The first draft recommended B. The check showed that another agent tool call generates a fresh ID unless the agent supplies the earlier one.
-- **Action:** Ask Cal. The new call's repeat behavior is not covered by an existing watch requirement.
+- **Action:** Apply C. Cal chose C on 20 November 2026 with "4 = C".
 
 ### Watch decision 5: Stop the caller before delivery
 
@@ -227,7 +231,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Previous examples:** Late secret answers start a turn in an open session. Close and Archive prevent new delivery under existing access rules.
 - **Related:** Watch decision 3 covers self-watches. Watch decision 4's repeated-watch identity must allow a fresh registration after Stop.
 - **Recommendation:** D. The first draft recommended A. The check showed that a late Allow is new member input, while a watched end needs no new member action.
-- **Action:** Ask Cal. Stop's effect on this new form of deferred work is not specified, and the options have real trade-offs.
+- **Action:** Apply D. Cal chose D on 20 November 2026 with "5 = D".
 
 ### Watch decision 6: Choose the wake line's facts
 
@@ -248,7 +252,7 @@ Each decision assumes option C's one-shot, active-turn, org-reach, sender, login
 - **Wider fix:** None. One shared text builder already prevents chat and agent wording from drifting.
 - **Previous examples:** Late secret answers use one shared builder. Tool messages and stop notices already show session links.
 - **Recommendation:** B. It gives context across workspaces and keeps detailed errors in their source session.
-- **Action:** Ask Cal. The visible facts add behavior that option C does not fully specify.
+- **Action:** Apply B. Cal chose B on 20 November 2026 with "6 = B".
 
 ## Milestone 1: Wake line mockups
 
@@ -256,7 +260,7 @@ Tags: mockup
 
 Depends on: none
 
-Use the `ui implementor` action after Cal answers watch decisions 2 to 6. These decisions gate the milestone even though it has no earlier milestone. The orchestrator checks each result before ticking its TODO.
+Use the `ui implementor` action. Cal answered watch decisions 2 to 6 on 20 November 2026, so this milestone can start. The orchestrator checks each result before ticking its TODO.
 
 - [ ] Add desktop and mobile wake-line mockups within the existing workspace chat catalogue. Show finished, failed, and stopped outcomes, including another workspace.
 - [ ] Reuse `@firna/ui`, existing app system lines, and session chips. Keep screen-spec pages within five rendered screens.
