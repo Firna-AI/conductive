@@ -5,7 +5,7 @@ import type { FakeApiServer } from '../test-support/fake-api'
 import { accessibleName } from '../test-support/dom-queries'
 import type { FetchLike } from './api/files-client'
 import { filesFor } from './files-test-kit'
-import { parseMarkdown } from './markdown/markdown-document'
+import { previewDocument } from './markdown/preview-blocks'
 import type { WorkspaceFiles } from './model/files-store'
 
 /**
@@ -168,7 +168,7 @@ export function fakeWorkers() {
     answer(): void {
       const text = this.posted.at(-1)
       if (typeof text !== 'string') throw new Error('No text was posted.')
-      const document = parseMarkdown(text)
+      const document = previewDocument(text)
       act(() =>
         this.onmessage?.(new MessageEvent('message', { data: document })),
       )

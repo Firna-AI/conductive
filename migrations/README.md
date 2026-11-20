@@ -536,3 +536,9 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+`202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
+with the stop time of idle workspace computers in minutes, 30 at first,
+with its last change and operator. `idle_stop_events` keeps each change
+with its operator and time. The previous Worker reads neither table and
+keeps its fixed 30 minutes.
+[Operator stop time](../worker/operator/idle-stop.md) gives the rules.

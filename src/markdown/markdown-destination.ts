@@ -34,10 +34,15 @@ function rawEnd(text: string, start: number): number {
   return -1
 }
 
-/** The first `>` within the address length limit, or -1. */
+/** The first unescaped `>` within the address length limit, or -1. */
 function angleEnd(text: string, open: number): number {
-  const at = text.slice(open + 1, open + 1 + maxLength).indexOf('>')
-  return at < 0 ? -1 : open + 1 + at
+  for (let index = open + 1; index - open <= maxLength; index += 1) {
+    const char = text[index]
+    if (char === undefined) return -1
+    if (char === '\\') index += 1
+    else if (char === '>') return index
+  }
+  return -1
 }
 
 /** The first index from `start` that holds no space and no line break. */
@@ -66,10 +71,7 @@ function titleEnd(text: string, start: number): number {
  * an optional title in quotes or parentheses. The scan stops after a fixed
  * length or depth.
  */
-export function readInlineTarget(
-  text: string,
-  at: number,
-): InlineTarget | null {
+function readInlineTarget(text: string, at: number): InlineTarget | null {
   let index = skipSpace(text, at)
   const angle = text[index] === '<'
   const start = angle ? index + 1 : index

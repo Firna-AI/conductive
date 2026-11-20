@@ -40,7 +40,7 @@ const lineTypes: ReadonlySet<string> = new Set([
  * page. The page never hears a key of a port preview or the live desktop,
  * because their frames come from another origin.
  */
-function focusOf(
+export function focusOf(
   target: EventTarget | null,
   terminals: ReadonlySet<HTMLElement>,
 ): ShortcutFocus {

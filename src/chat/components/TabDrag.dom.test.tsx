@@ -9,11 +9,7 @@ import {
   queryByText,
 } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
-import {
-  MOUNTED_TEST_TIMEOUT,
-  pressKey,
-  waitFor,
-} from '../../test-support/mount'
+import { MOUNTED_TEST_TIMEOUT, waitFor } from '../../test-support/mount'
 import { RowLayout, widthsByText } from './row-layout-test-kit'
 import {
   debounce,
@@ -108,7 +104,7 @@ describe('a drag in the tab row', () => {
     })
   })
 
-  it('keeps the order when Escape ends a drag, and the release after it shows nothing', async () => {
+  it('keeps the order when Escape ends a drag, takes the key from the page, and the release after it shows nothing', async () => {
     const server = new FakeApiServer()
     await mountChat({ server, tabs: [first, second], viewport: 'desktop' })
     const tab = byRole('button', debounce)
@@ -118,7 +114,14 @@ describe('a drag in the tab row', () => {
     pointer(window, 'pointermove', { ...mouse, clientX: 140 })
     pointer(window, 'pointermove', { ...mouse, clientX: 20 })
     const moving = rowStatus()
-    await pressKey('Escape')
+    const escape = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      document.body.dispatchEvent(escape)
+    })
     const afterEscape = rowStatus()
     pointer(window, 'pointerup', { ...mouse, clientX: 150, buttons: 0 })
     act(() => tab.click())
@@ -127,12 +130,14 @@ describe('a drag in the tab row', () => {
     expect({
       moving,
       afterEscape,
+      escapeTaken: escape.defaultPrevented,
       saves: viewSaves(server).length,
       row: rowTitles(),
       shown: shownTab(),
     }).toEqual({
       moving: `Moving ${debounce} to place 1 of 2`,
       afterEscape: '',
+      escapeTaken: true,
       saves: 0,
       row: ['Address autocomplete', debounce],
       shown: 'Address autocomplete',

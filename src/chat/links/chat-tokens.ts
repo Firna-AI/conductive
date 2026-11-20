@@ -9,12 +9,14 @@ import {
 import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
-/** A Markdown link: its label, and the text around its address as typed. */
+/** A Markdown link, with its label and address as typed. */
 export interface MarkdownLink {
   /** The text between the brackets. */
   label: string
   /** The text before the address, such as `[docs](` or `[docs]( <`. */
   before: string
+  /** The address as typed, with its backslash escapes. */
+  address: string
   /** The text after the address, such as `)`, `>)`, or ` "Docs")`. */
   after: string
   /** A `!` stands before it, so it is the Markdown of an image. */
@@ -33,17 +35,13 @@ export interface LinkToken {
 export type Token =
   | { kind: 'text'; text: string }
   | { kind: 'code'; text: string }
-  | { kind: 'mark' }
   | LinkToken
   | { kind: 'mention'; mention: Mention }
 
 /** What a reading of chat text looks for, besides code. */
 interface Reading {
-  /** `**` marks bold, as in an answer. */
-  marks: boolean
   /** Links count. A text that shows as typed reads again without them. */
   links: boolean
-  paths?: boolean
   /**
    * Whether a mention counts, as in a message of a member. The `@` of each
    * other mention reads as plain text.
@@ -54,9 +52,9 @@ interface Reading {
 /**
  * The Markdown link whose `[` stands at `at`, or null. Its label ends at the
  * first `]` outside code, and its target follows at once, with an optional
- * link title, as the file preview reads it. So a label can hold code or
- * bold. The whole link stands on one line, as in the message field, so no
- * chip takes in a line break.
+ * link title, as the file preview reads it. So a label can hold code. The
+ * whole link stands on one line, as in the message field, so no chip takes
+ * in a line break.
  */
 function markdownLinkAt(
   text: string,
@@ -75,45 +73,25 @@ function markdownLinkAt(
     markdown: {
       label: text.slice(at + 1, end),
       before: text.slice(at, target.start),
+      address: text.slice(target.start, target.end),
       after: text.slice(target.end, target.next),
       image: text[at - 1] === '!',
     },
   }
 }
 
-/** A file image includes its leading exclamation mark in the link source. */
-function imageLinkAt(
-  text: string,
-  at: number,
-  targetAt: TargetReader,
-  labelEndAt: LabelEndReader,
-): LinkToken | null {
-  const link = markdownLinkAt(text, at + 1, targetAt, labelEndAt)
-  if (!link || /^https?:/u.test(link.href)) return null
-  return { ...link, source: `!${link.source}` }
-}
-
-/**
- * The bare web address at `at`, or null. Where `**` marks bold, the address
- * ends before the next mark, so bold around the address stays bold.
- */
-function bareAddressTokenAt(
-  text: string,
-  at: number,
-  marks: boolean,
-): LinkToken | null {
-  const mark = marks ? text.indexOf('**', at) : -1
-  const href = bareAddressAt(mark === -1 ? text : text.slice(0, mark), at)
+/** The bare web address at `at`, or null. */
+function bareAddressTokenAt(text: string, at: number): LinkToken | null {
+  const href = bareAddressAt(text, at)
   return href ? { kind: 'link', href, source: href, markdown: null } : null
 }
 
 /**
- * The tokens of a chat text, from left to right. A backtick starts code,
- * which runs to the next backtick, or to the end of the text. Outside code,
- * a Markdown link, a bare web address, and a `**` mark each start where
- * they stand, so code and bold in a link label stay in the link. A mention
- * starts at the start of the text, after a space or a line break, or right
- * after a mark. It ends before the next mark.
+ * The tokens of the text of a sent message, from left to right. A backtick
+ * starts code, which runs to the next backtick, or to the end of the text.
+ * Outside code, a Markdown link and a bare web address each start where
+ * they stand, so code in a link label stays in the link. A mention starts
+ * at the start of the text, or after a space or a line break.
  */
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
@@ -135,31 +113,18 @@ export function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'code', text: code }, close + 1 - index)
       continue
     }
-    if (reading.marks && text.startsWith('**', index)) {
-      index += add({ kind: 'mark' }, 2)
-      continue
-    }
-    const mark = reading.marks ? text.indexOf('**', index) : -1
-    const scope = mark === -1 ? text : text.slice(0, mark)
-    // Right after a mark that the reader reads, a mention can start too,
-    // as in `**@src/app.ts**` (answer chip decision 5).
-    const afterMark = plain === '' && found.at(-1)?.kind === 'mark'
-    const mention = afterMark
-      ? mentionAt(scope.slice(index), 0)
-      : mentionAt(scope, index)
+    const mention = mentionAt(text, index)
     if (mention && reading.mentions(mention)) {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
     }
     const link = !reading.links
       ? null
-      : reading.paths && text[index] === '!' && text[index + 1] === '['
-        ? imageLinkAt(text, index, targetAt, labelEndAt)
-        : text[index] === '['
-          ? markdownLinkAt(text, index, targetAt, labelEndAt)
-          : text.startsWith('http', index)
-            ? bareAddressTokenAt(text, index, reading.marks)
-            : null
+      : text[index] === '['
+        ? markdownLinkAt(text, index, targetAt, labelEndAt)
+        : text.startsWith('http', index)
+          ? bareAddressTokenAt(text, index)
+          : null
     if (link) {
       index += add(link, link.source.length)
       continue

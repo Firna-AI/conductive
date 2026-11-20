@@ -219,7 +219,9 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 - While a request waits, its workspace shows needs input, as
   [Workspace states](workspace-life.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its
-  requests waits.
+  requests waits. Starting shows over needs input. When Starting ends and
+  the agent runner is ready, needs input shows again while a request
+  waits, as [Secret requests](secret-requests.md#the-request) says.
 - After its result, the command shows at its place in the chat: denied,
   done with its output, Mac not available, or Mac access off with its
   reason.

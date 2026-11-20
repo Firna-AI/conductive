@@ -173,6 +173,10 @@ describe('routes', () => {
         { screen: 'operator', view: { page: 'providers' } },
       ],
       [
+        routes.operatorSettings(),
+        { screen: 'operator', view: { page: 'settings' } },
+      ],
+      [
         routes.operatorOrg('org/h3x w4v'),
         { screen: 'operator', view: { page: 'org', id: 'org/h3x w4v' } },
       ],
@@ -189,7 +193,7 @@ describe('routes', () => {
       view: { page: 'orgs', search: '' },
     })
     for (const path of [
-      '/operator/settings',
+      '/operator/settings/stop-time',
       '/operator/users/dana-k',
       '/operator/users/0',
       '/operator/orgs/acme/members',

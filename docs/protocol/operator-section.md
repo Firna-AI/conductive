@@ -3,8 +3,8 @@
 This doc holds the requirements and the decisions in force for the operator
 section. In this part of the web app, an operator sees the whole app and
 acts on one org or one user (decision 142). The operator also runs the
-waitlist there (decision 160), and sets the weights of new orgs
-(e2b decision 222). [Operator section: the Overview](operator-overview.md)
+waitlist there (decision 160), sets the weights of new orgs
+(e2b decision 222), and sets the stop time of idle cloud computers. [Operator section: the Overview](operator-overview.md)
 states the Overview tab, with its counts and its long runs.
 [Waitlist tabs](operator-waitlist-tabs.md) holds the Waitlist tab, Approve,
 the Invite codes tab, and the pause.
@@ -43,20 +43,25 @@ that doc says.
   gets `access_required`, as
   [What a person who waits can reach](waitlist.md#what-a-person-who-waits-can-reach)
   says.
-- The section changes four settings of the app: the codes, the pause, and
-  the waitlist switch (decisions 160 and 230), and the weights of new orgs
-  (e2b decision 222). It makes and disables invite codes, disables referral
-  codes, turns the pause on and off, turns the waitlist off and on, and
-  saves the weights. It changes no other setting (decision 143).
+- The section changes five settings of the app: the codes, the pause, and
+  the waitlist switch (decisions 160 and 230), the weights of new orgs
+  (e2b decision 222), and the stop time. It makes and disables invite
+  codes, disables referral codes, turns the pause on and off, turns the
+  waitlist off and on, and saves the weights and the stop time. It changes
+  no other setting (decision 143). Cal added the stop time on 20 November
+  2026.
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
 
 ## What the section shows
 
 - The section has the tabs Overview, Orgs, Users, Waitlist, Invite codes,
-  and Providers (decisions 147 and 160, and e2b decision 222).
+  Providers, and Settings (decisions 147 and 160, and e2b decision 222).
+  Cal chose the Settings tab on 20 November 2026, so that later settings
+  of the whole app have a home. A box on the Providers tab, a box on the
+  Overview, and a dialog from the header of the section were rejected.
 - The section shows only counts, names, IDs, dates, roles, states, codes,
-  and weights. It shows no chat, file, env value, or agent login. Reason:
+  weights, and the stop time. It shows no chat, file, env value, or agent login. Reason:
   the section then holds the least personal data.
 - The only email address that the section shows is the primary verified
   email of a user, on the page of that user. The lists of the Users tab
@@ -180,6 +185,24 @@ holds these requirements.
   account gets every new org. It shows no slider then.
 - Orgs by account counts the orgs on each configured account. As the
   Overview does, it counts a deleted org while its records exist.
+
+## The Settings tab
+
+- The Settings tab holds the Stop time box. The box sets the
+  [stop time](stop-and-resume.md#the-stop) of idle cloud computers, for
+  every workspace of every org.
+- The box offers 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours as one
+  choice. It says that a running computer takes a new time at its next
+  activity, or when its current time ends.
+- Save stop time stays off until the operator picks another time. It acts
+  at once, with no question.
+- When a save fails, the choice keeps the time that the operator picked,
+  and the box says that the stop time wasn't saved. Cloud computers keep
+  the saved time.
+- The app records each change of the stop time, with its time and its
+  operator, as it records each change of the weights. The box names the
+  operator of the last change, and when. A stop time that no operator
+  changed has no such line.
 
 ## Suspend and Lift on a page
 

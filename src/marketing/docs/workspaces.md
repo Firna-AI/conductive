@@ -241,7 +241,7 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 
 ## Resume a stopped computer
 
-The computer stops after 30 minutes without user activity and without a running agent turn.
+The computer stops after a set time without user activity and without a running agent turn.
 An open tab alone does not keep it running.
 Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
