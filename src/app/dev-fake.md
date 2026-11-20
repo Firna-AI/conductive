@@ -196,7 +196,10 @@ option overrides this default, including queued chats that show no spinner.
   Worker does: the default login of the person signed in for an own
   automation. The fake knows no logins of other people, so the runs of
   another owner use the org login while `?orgLogin=every-member` turns its
-  switch on, and else the own login of that owner.
+  switch on, and else the own login of that owner. Each reply of one
+  automation also names its chosen secrets by ID and name, in the order of
+  their names, as the Worker does. A secret that the org no longer has is
+  not in the list, and no reply holds a value.
 - Run now makes the workspace of the run as Create workspace does, in the
   section of the automation, and the run takes the state of that workspace.
   Without the agent login of the automation's model, as with `?login=none`,

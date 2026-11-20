@@ -36,6 +36,7 @@ use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
 use cnd_runner::skills::helper::{NodeSkillScanner, SkillHelpers};
 use cnd_runner::skills::reporter::SkillReporter;
 use cnd_runner::socket::WebSocketConnector;
+use cnd_runner::startup_log::{ProcessStartupLog, StartupLog};
 use cnd_runner::state::store::{DurableStore, EventStore};
 use cnd_runner::update::ReleaseReadiness;
 use cnd_runner::watcher::linux::LinuxWatchDriver;
@@ -43,6 +44,7 @@ use cnd_runner::watcher::service::ReportWatchService;
 use cnd_runner_interface::file_server::FILE_SERVER_PORT;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
+use tokio::time::Instant;
 use uuid::Uuid;
 
 use crate::error::{ErrorResultExt, Result};
@@ -53,6 +55,7 @@ use crate::runner_start::RunnerStart;
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
+    let startup_log: Arc<dyn StartupLog> = Arc::new(ProcessStartupLog::new(Instant::now()));
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
@@ -136,6 +139,7 @@ pub(crate) async fn execute() -> Result<()> {
                 &helper,
                 executable.clone(),
                 updates.clone(),
+                startup_log.clone(),
                 shutdown.clone(),
             )
             .await?;
@@ -174,6 +178,7 @@ async fn run_once(
     helper: &HelperPaths,
     executable: PathBuf,
     releases: Arc<dyn ReleaseReadiness>,
+    startup_log: Arc<dyn StartupLog>,
     shutdown: watch::Receiver<bool>,
 ) -> Result<RunExit> {
     let helpers = Arc::new(NodeHelpers {
@@ -213,13 +218,16 @@ async fn run_once(
         git: Arc::new(ChildGit),
         io,
     });
-    let files = Arc::new(FileReporter::new(
-        repositories.open(Cancellation::default()),
-        configuration.default_branch.clone(),
-        saving.clone(),
-        filter.clone(),
-        loaded.file_revisions.clone(),
-    ));
+    let files = Arc::new(
+        FileReporter::new(
+            repositories.open(Cancellation::default()),
+            configuration.default_branch.clone(),
+            saving.clone(),
+            filter.clone(),
+            loaded.file_revisions.clone(),
+        )
+        .with_startup_log(startup_log.clone()),
+    );
     let ports: Arc<dyn PortReports> = Arc::new(PortReporter::new(
         Arc::new(ProcPortScanner::new(
             Arc::new(DiskProcReader),
@@ -256,7 +264,6 @@ async fn run_once(
     );
     let startup = Arc::new(RunnerStartup {
         home: configuration.home.clone(),
-        helpers: helpers.clone(),
         executable,
     });
     let engine = Arc::new(AgentEngine::new(
@@ -273,22 +280,28 @@ async fn run_once(
         },
         loaded.clone(),
     ));
-    let handler = Arc::new(ReportCommandHandler::new(
-        ReportDependencies {
-            files,
-            ports: Some(ports),
-            skills: Some(skills),
-            emitter: saving,
-            link: link.clone(),
-            store: store.clone(),
-            clock: clock.clone(),
-            filter,
-            watches: Some(watches),
-            next: engine,
-        },
-        loaded.reports.commands,
-    ));
-    let runner: Arc<dyn Runner> =
-        Arc::new(RunnerCore::new(link, store, clock, handler, releases).with_folders(folders));
+    let handler = Arc::new(
+        ReportCommandHandler::new(
+            ReportDependencies {
+                files,
+                ports: Some(ports),
+                skills: Some(skills),
+                emitter: saving,
+                link: link.clone(),
+                store: store.clone(),
+                clock: clock.clone(),
+                filter,
+                watches: Some(watches),
+                next: engine,
+            },
+            loaded.reports.commands,
+        )
+        .with_startup_log(startup_log.clone()),
+    );
+    let runner: Arc<dyn Runner> = Arc::new(
+        RunnerCore::new(link, store, clock, handler, releases)
+            .with_folders(folders)
+            .with_startup_log(startup_log),
+    );
     runner.run(shutdown).await.internal()
 }

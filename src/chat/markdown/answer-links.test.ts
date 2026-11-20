@@ -27,6 +27,17 @@ function web(href: string, ...words: AnswerPart[]): AnswerPart {
 }
 
 describe('the links of an answer', () => {
+  test.each(['https://x.example', 'https://y.example'])(
+    'an answer replaces an address label with its destination %s after plain text',
+    (href) => {
+      expect(answer(`Seen [https://x.example](${href}) now`)).toEqual([
+        text('Seen '),
+        web(href, text(href)),
+        text(' now'),
+      ])
+    },
+  )
+
   test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
     'an answer links %s addresses and keeps their typed bare and code text',
     (scheme) => {

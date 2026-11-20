@@ -34,12 +34,16 @@ fn counts(bytes: &[u8]) -> Result<BTreeMap<String, (u64, u64)>> {
 }
 
 impl GitRepository {
+    /// Refresh the rebuilt index so restored stat data cannot hide changed content.
+    /// Snapshot scans finish parallel content reads first to warm Git's serial reads.
     pub(super) async fn index_changes(
         &self,
         index: &mut TemporaryIndex,
         branch: &str,
         sha: &str,
     ) -> Result<ChangesResponse> {
+        self.index_run(index, &["update-index", "-q", "--unmerged", "--refresh"])
+            .await?;
         if !index.unavailable.is_empty() {
             tracing::warn!("Some repository files cannot be stored by Git.");
         }

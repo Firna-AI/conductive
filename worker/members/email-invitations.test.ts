@@ -5,7 +5,7 @@ import {
   invitesPath,
   type InviteMemberResponse,
 } from '../../src/shared/members'
-import { createInvitationMailer, invitationLink } from '../invitation-mailer'
+import { createInvitationMailer } from '../invitation-mailer'
 import {
   createHarness,
   TEST_TIME,
@@ -128,7 +128,7 @@ it('reports failed email delivery and retries the same invitation with org and a
       email: 'mira@example.com',
       orgName: 'Members org',
       invitedBy: 'admin',
-      link: invitationLink(harness.env.APP_ORIGIN, 'members-1'),
+      link: 'https://app.conductive.test/?invite=members-1',
     },
   ])
 })

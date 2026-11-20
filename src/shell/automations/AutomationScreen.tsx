@@ -67,6 +67,7 @@ function SavedAutomation(props: {
   const model = automationModel(orgModel, props.automationId)
   const automation = useStore(model.automation)
   const runLogin = useStore(model.runLogin)
+  const chosenSecrets = useStore(model.chosenSecrets)
   const runs = useStore(model.runs.shown)
   const repositories = useStore(orgModel.repositories)
   const sections = useStore(orgModel.sections)
@@ -99,6 +100,7 @@ function SavedAutomation(props: {
   const shared = {
     repositories: repositories.state === 'ready' ? repositories.value : [],
     sections: sections.state === 'ready' ? sections.value : [],
+    chosenSecrets: valueOf(chosenSecrets) ?? null,
     tab: props.tab,
     runs: {
       runs,

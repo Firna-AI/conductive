@@ -147,7 +147,8 @@ export const privacyDocument: LegalDocument = {
           exists, including
           while a cloud computer is stopped or a workspace is removed. When
           ${productName} passes on model requests and their answers, it keeps
-          no copy of them.`,
+          no copy of them. ${productName} deletes each record of the steps of
+          a build or a start after 90 days.`,
         paragraph`A secret in the Secrets settings of an org stays until a
           member who may delete it deletes it. A value that a member gives
           an agent for 15 minutes stays for 15 minutes. A value for a

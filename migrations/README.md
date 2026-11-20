@@ -127,8 +127,10 @@ Existing users get empty values in all four columns.
 A build now records that phase before it asks for its build sandbox, and an older job in `create` may have sent that request already.
 So a build whose create reply was lost finds that sandbox again. When the user who started the build is suspended, the build then removes that sandbox.
 
-Chat history, sessions, runner event cursors, start steps, and banner state
-belong to workspace Durable Object storage. They have no D1 tables.
+Chat history, sessions, runner event cursors, the shown start steps, and
+banner state belong to workspace Durable Object storage. They have no D1
+tables. The job step records of `202611201500_job_step_times.sql` copy the
+times of the start steps for measurement.
 Stored secrets use ciphertext columns. The browser reads metadata, except
 when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
@@ -567,3 +569,15 @@ with its last change and operator. `idle_stop_events` keeps each change
 with its operator and time. The previous Worker reads neither table and
 keeps its fixed 30 minutes.
 [Operator stop time](../worker/operator/idle-stop.md) gives the rules.
+
+`202611201500_job_step_times.sql` adds `job_steps` and `job_runs`, the job
+step records of [Step timing](../docs/protocol/step-timing.md#job-step-records).
+`job_steps` holds the begin and the end of each step of each build,
+refresh, create, and resume, with the key `(job_id, step)`. `job_runs`
+holds one row for each run of a start, with the key `(job_id, run_number)`.
+Neither table has a foreign key. Each write checks that its org exists, so
+a record never fails the batch of the phase change that it measures. The
+org purge deletes the rows of the org, and the 15-minute cron deletes rows
+after 90 days. The migration changes no existing table, so the previous
+Worker keeps working. The [lifecycle README](../worker/lifecycle/README.md#job-step-records)
+gives the writers.

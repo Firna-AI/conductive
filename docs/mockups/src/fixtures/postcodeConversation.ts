@@ -1,3 +1,4 @@
+import { p } from './agentText'
 import type { ChatItem, ToolKind } from './conversations'
 import type { ChangedFile } from './files'
 
@@ -53,7 +54,9 @@ export const postcodeHistory: readonly ChatItem[] = [
     kind: 'agent',
     id: 'done',
     blocks: [
-      'Done. A postcode now fills the street and the city of both forms. A restored address skips the lookup, and a test covers that case.',
+      p(
+        'Done. A postcode now fills the street and the city of both forms. A restored address skips the lookup, and a test covers that case.',
+      ),
     ],
   },
   {

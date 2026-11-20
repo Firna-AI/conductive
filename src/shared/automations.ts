@@ -5,6 +5,7 @@ import type { Timestamp } from './generated/Timestamp'
 import type { MessageSender } from './generated/MessageSender'
 import type { SessionLogin } from './generated/SessionLogin'
 import { orgPath } from './api'
+import type { OrgSecret } from './secrets'
 
 export function automationsPath(orgId: string): string {
   return `${orgPath(orgId)}/automations`
@@ -150,6 +151,7 @@ export type UpdateAutomationRequest = Partial<CreateAutomationRequest>
 export interface AutomationResponse {
   automation: Automation
   runLogin: SessionLogin | null
+  chosenSecrets?: readonly Pick<OrgSecret, 'id' | 'name'>[]
 }
 
 export interface AutomationsResponse {

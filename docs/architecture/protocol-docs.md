@@ -101,7 +101,8 @@ This page lists each protocol doc and what it covers.
     an attached file in parts, with the gate rules and the body limit of
     its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
-    the preview replies and of the create reply, and what it may hold.
+    the preview replies and of the create reply, and what it may hold, and
+    the job step records of builds and starts.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
