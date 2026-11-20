@@ -6,6 +6,7 @@ import page from '../../../../docs/mockups/src/components/tools/PreviewPage.modu
 import { expandedPreviewCopy } from '../../../../docs/mockups/src/components/tools/previewCopy'
 import { IconButton } from '../../ui/actions'
 import { useModalLayer } from '../../ui/layers'
+import { trapTab } from '../../ui/Sheet'
 import {
   focusableSelector,
   useEscapeLayer,
@@ -29,32 +30,24 @@ export interface ExpandedFrame {
 const focusReturn = 'data-focus-return'
 
 /**
- * Moves Tab between the header of the window and the page, and never to
- * the app under the window. The frame counts, but only the frame of the
- * shown page, because the other frames are hidden.
+ * The elements that Tab moves between in the window: its controls, and the
+ * frame of the shown page. The other frames are hidden, and the mark after
+ * the frame only sends the focus that leaves the page back to the header.
  */
-function trapWindowTab(event: KeyboardEvent<HTMLElement>): void {
-  if (event.key !== 'Tab') return
-  const tabbable = Array.from(
-    event.currentTarget.querySelectorAll<HTMLElement>(
-      `${focusableSelector}, iframe`,
-    ),
+function windowTabbable(window: HTMLElement): HTMLElement[] {
+  return Array.from(
+    window.querySelectorAll<HTMLElement>(`${focusableSelector}, iframe`),
   ).filter(
     (each) =>
       each.tabIndex >= 0 &&
       each.closest('[hidden]') === null &&
       !each.hasAttribute(focusReturn),
   )
-  const first = tabbable[0]
-  const last = tabbable.at(-1)
-  if (!first || !last) return
-  if (event.shiftKey && event.target === first) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && event.target === last) {
-    event.preventDefault()
-    first.focus()
-  }
+}
+
+/** Keeps Tab in the window, and never moves it to the app under it. */
+function trapWindowTab(event: KeyboardEvent<HTMLElement>): void {
+  trapTab(event, windowTabbable)
 }
 
 /**

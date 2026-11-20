@@ -92,9 +92,12 @@ export class PageFrames {
     }
     const expanded = this.snapshot.expanded === shown.path ? shown.path : null
     this.set({ pages: next, shown: shown.path, expanded })
+    // The end of a show keeps the window, because the show of a new
+    // version of the same page ends the show of the old one first.
+    // `KeptPageFrames` closes the window when its page no longer shows.
     return () => {
       if (this.snapshot.shown === shown.path) {
-        this.set({ ...this.snapshot, shown: null, expanded: null })
+        this.set({ ...this.snapshot, shown: null })
       }
     }
   }

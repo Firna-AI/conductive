@@ -19,6 +19,7 @@ import {
   opened,
   pageOf,
   reportHref,
+  reportPath,
   serverWithReport,
 } from './html-tab-test-kit'
 
@@ -49,7 +50,7 @@ function pressEscape(): void {
 }
 
 describe('the expanded page of a tab', () => {
-  test('Expand on a Preview tab shows its loaded frame in a window, and Close and Escape bring it back to the tab', async () => {
+  test('Expand on a Preview tab shows its loaded frame in a window that keeps Tab, and Close and Escape bring it back to the tab', async () => {
     holdAnimationFrames()
     const { view } = await openTab(
       new FakeApiServer(),
@@ -60,6 +61,22 @@ describe('the expanded page of a tab', () => {
     click(byRole('button', 'Expand', view))
     await settle()
     const expanded = seenWindow(view, frame)
+    // A press on the title gives the focus to the window itself.
+    const box = windowOf(view)
+    act(() => box?.focus())
+    const backTab = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      shiftKey: true,
+      bubbles: true,
+      cancelable: true,
+    })
+    act(() => {
+      box?.dispatchEvent(backTab)
+    })
+    const fromWindow = {
+      kept: backTab.defaultPrevented,
+      inWindow: box?.contains(document.activeElement) ?? false,
+    }
     click(byRole('button', 'Close', windowOf(view) ?? view))
     await settle()
     const closed = seenWindow(view, frame)
@@ -69,18 +86,20 @@ describe('the expanded page of a tab', () => {
     await settle()
     expect({
       expanded,
+      fromWindow,
       closed,
       escaped: windowOf(view),
       sameFrame: portFrameOf(view) === frame,
     }).toEqual({
       expanded: { name: 'Port 3000', holdsFrame: true, focus: 'Close' },
+      fromWindow: { kept: true, inWindow: true },
       closed: { name: null, holdsFrame: false, focus: 'Expand' },
       escaped: null,
       sameFrame: true,
     })
   })
 
-  test('Expand on an HTML file shows its kept page in a window, which closes when its files preview ends', async () => {
+  test('Expand on an HTML file shows its kept page in a window, which stays at a change of the file and closes when its files preview ends', async () => {
     holdAnimationFrames()
     const server = serverWithReport()
     const { view } = await openTab(server, reportHref)
@@ -89,14 +108,40 @@ describe('the expanded page of a tab', () => {
     click(byRole('button', 'Expand', pageOf(view)))
     await settle()
     const expanded = seenWindow(view, frame)
+    emit(server, {
+      type: 'files.changed',
+      delta: {
+        revision: 3,
+        changes: [
+          {
+            operation: 'upsert',
+            entry: {
+              path: reportPath,
+              name: reportPath,
+              kind: 'file',
+              change: null,
+            },
+          },
+        ],
+      },
+    })
+    await settle()
+    const changed = reportFrameOf(view)
+    const afterChange = {
+      reloaded: changed !== null && changed !== frame,
+      inWindow:
+        changed !== null && (windowOf(view)?.contains(changed) ?? false),
+    }
     emit(server, { type: 'preview.revoked', previewId: opened.id })
     await settle()
     expect({
       expanded,
+      afterChange,
       afterRevoke: windowOf(view),
-      sameFrame: reportFrameOf(view) === frame,
+      sameFrame: reportFrameOf(view) === changed,
     }).toEqual({
       expanded: { name: 'report.html', holdsFrame: true, focus: 'Close' },
+      afterChange: { reloaded: true, inWindow: true },
       afterRevoke: null,
       sameFrame: true,
     })
