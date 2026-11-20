@@ -42,15 +42,7 @@ export async function prepareProviderContinuation(
     providerContinuationStartedAt: null,
   }
   if (started) {
-    const id = `continuation:${previous.id}`
-    const existing = await view.messageTurn(id)
-    if (existing) {
-      const stored = await view.turn(existing)
-      if (stored) {
-        previous.nextTurnId = stored.id
-        return { turn: stored, commands }
-      }
-    }
+    const id = `continuation:${randomId()}`
     const message: UserMessage = {
       id,
       sessionId: session.id,

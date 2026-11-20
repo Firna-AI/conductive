@@ -47,8 +47,9 @@ it('continues two running sessions for their original senders and keeps unacknow
       userMessageIds:
         previous === one ? ['one', 'in-detection-window'] : ['two'],
     })
-    const next = state.turns.find((turn) =>
-      turn.messageIds.includes(`continuation:${previous.turnId}`),
+    const next = state.turns.find(
+      (turn) =>
+        turn.sessionId === previous.sessionId && turn.state === 'queued',
     )
     expect(next).toMatchObject({
       sessionId: previous.sessionId,
@@ -68,9 +69,7 @@ it('continues two running sessions for their original senders and keeps unacknow
       events.filter((event) => event.type === 'message.accepted'),
     ).toHaveLength(previous === one ? 2 : 1)
     expect(
-      state.messages.find(
-        (message) => message?.id === `continuation:${previous.turnId}`,
-      ),
+      state.messages.find((message) => message?.id === next?.messageIds[0]),
     ).toMatchObject({
       sender: { id: previous.message.sender.id },
       state: 'queued',
@@ -86,7 +85,7 @@ it('continues two running sessions for their original senders and keeps unacknow
       turn.state === 'queued',
   )
   expect(next?.messageIds).toEqual([
-    `continuation:${one.turnId}`,
+    expect.stringMatching(/^continuation:/),
     'in-detection-window',
   ])
   expect(

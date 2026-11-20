@@ -13,6 +13,7 @@ import { SessionLogins } from './session-login'
 import { sessionFor } from './session-record'
 import { createSession, sameAgent } from './sessions'
 import type { ChatDependencies } from './types'
+import { turnChainStartedAt } from './turn-chain'
 
 export async function send(
   operation: ChatOperation,
@@ -24,6 +25,7 @@ export async function send(
     transaction: ChatTransaction,
     response: SendMessageResponse,
   ) => Promise<void>,
+  continuationChainStartedAt?: number,
 ): Promise<SendMessageResponse> {
   input = { ...input, choice: dependencies.normalizeChoice(input.choice) }
   const existing = await operation.read((view) =>
@@ -93,6 +95,7 @@ export async function send(
       attachments,
       dependencies.randomId,
       dependencies.readAutomaticTitleWorkspace,
+      continuationChainStartedAt,
     )
     if (target.id !== source.id) {
       await transaction.saveMessageSource(input.id, source.id)
@@ -128,16 +131,28 @@ export async function retryMessage(
       'retry_not_available',
       'Only the newest failed request can run again. Send a new message.',
     )
+  const continuation = previous.id.startsWith('continuation:')
+  const chainStartedAt = continuation
+    ? await operation.read(async (view) => {
+        const turnId = await view.messageTurn(messageId)
+        const turn = turnId ? await view.turn(turnId) : undefined
+        return turn ? turnChainStartedAt(view, turn) : previous.createdAt
+      })
+    : undefined
   return send(
     operation,
     sessionId,
     sendMessage({
-      id: dependencies.randomId(),
+      id: continuation
+        ? `continuation:${dependencies.randomId()}`
+        : dependencies.randomId(),
       text: previous.text,
       attachmentIds: previous.attachments.map((attachment) => attachment.id),
       choice: previous.choice,
     }),
     context.user,
     dependencies,
+    undefined,
+    chainStartedAt,
   )
 }

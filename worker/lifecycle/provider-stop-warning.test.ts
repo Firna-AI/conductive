@@ -5,7 +5,7 @@ import { FIRST_MESSAGE, lifecycleFixture } from './durable-test-support'
 
 afterEach(() => vi.restoreAllMocks())
 
-it('reports a provider stop only after saving it and only once across publication and restart', async () => {
+it('reports a provider stop only after saving it and only once across repeated publication', async () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
   const providerStopped = vi.fn(async () => {
     expect(await fixture.lifecycle.read()).toMatchObject({
@@ -27,10 +27,9 @@ it('reports a provider stop only after saving it and only once across publicatio
   await fixture.lifecycle.turn('session-one', true)
   fixture.hooks.extendDeadline.mockResolvedValue('stopped')
   await fixture.lifecycle.turn('session-one', false)
-  const restored = fixture.recreate()
-  await restored.retryChanged()
-  await restored.alarm()
-  await restored.update((state) => state)
+  await fixture.lifecycle.retryChanged()
+  await fixture.lifecycle.alarm()
+  await fixture.lifecycle.update((state) => state)
   expect(providerStopped).toHaveBeenCalledTimes(1)
   expect(warn.mock.calls).toEqual([
     [

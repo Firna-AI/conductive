@@ -127,9 +127,10 @@ same day, and added what an open tab shows before the automatic start.
   their commands.
   - A turn that the runner never started is queued again as it was, with
     no continue text.
-  - A turn that started gets a stored app message with the fixed ID
-    `continuation:<turn ID>`, so a repeat of the chat stop adds no second
-    turn. It keeps the shape of the late-answer message, with a member
+  - A turn that started gets a stored app message with a fresh random ID
+    prefixed by `continuation:`. The atomic stop transaction keeps one
+    continuation per source turn, so a repeated stop adds no second turn.
+    It keeps the shape of the late-answer message, with a member
     sender and a message state, so that `get_message` of an older
     `conductive` program reads it. The chat does not show it.
 - **The chat line.** A new event `turn.continued` with `sessionId`,

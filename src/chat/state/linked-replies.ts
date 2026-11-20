@@ -25,6 +25,7 @@ export function takeReply(
   const { message, session } = reply
   const target = message.sessionId
   if (session.id === target) confirmRecord(context, session, reply.eventNumber)
+  if (message.id.startsWith('continuation:')) return target
   context.store.update((snapshot) =>
     withSession(snapshot, target, (state) => {
       const shown = state.transcript.items.some(

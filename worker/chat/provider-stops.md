@@ -19,9 +19,16 @@ its login or a time limit prevents continuation.
 work. It copies pending member commands before the old end removes them.
 If the initial turn command still waits for acknowledgement, the successor
 holds those original messages and adds no app prompt. Otherwise it adds
-the hidden message `continuation:<previous turn ID>`. This message has a
-normal sender and message state for older CLI readers. No `message.accepted`
-event exposes it. A repeated stop adds no second successor.
+the hidden message with a fresh random ID prefixed by `continuation:`.
+This message has a normal sender and message state for older CLI readers.
+No `message.accepted` event exposes it. The atomic stop transaction keeps
+one successor per source turn. A repeated stop adds no second successor.
+
+Try again of a failed continuation sends the same text in another hidden
+message with a fresh prefixed ID. It acts for the member who retries and
+keeps the failed turn's chain start. The normal login rules can open a
+linked session. Neither its accepted events nor its reply adds the hidden
+text to the chat or uses it as a session title.
 
 `turn.continued` names the session, old turn, successor or null, and `next`.
 Its values are `turn`, `reconnect`, and `message`. It carries no text.
@@ -66,6 +73,11 @@ the stop yet, because its projection can lag behind the lifecycle.
 
 `provider-stop.test.ts` checks multiple sessions, unanswered input, repeat
 handling, and a turn that the runner never started.
+`provider-stop-collision.test.ts` checks member IDs in running and waiting
+turns, repeat stops, and later input delivery. `provider-continuation-retry.test.ts`
+checks hidden retries and their chain start in the same session and a
+linked session. The app's `continuation-retry.test.ts` checks that a linked
+retry reply stays hidden.
 `provider-stop-access.test.ts` checks excluded turns, queued work, and login
 or sender loss. `provider-stop-limits.test.ts` checks both time limits and
 member resets. `provider-stop-late-answer.test.ts` checks app-only anchors.

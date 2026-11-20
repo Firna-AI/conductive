@@ -64,6 +64,7 @@ export async function acceptMessage(
   attachments: ResolvedAttachments,
   randomId: () => string,
   readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
+  continuationChainStartedAt?: number,
 ): Promise<SendMessageResponse> {
   const existing = await existingMessage(transaction, sessionId, input, user)
   if (existing) return existing
@@ -76,13 +77,14 @@ export async function acceptMessage(
       'Reopen the session to send a message.',
     )
   }
-  await applyMessageSessionTitle(
-    transaction,
-    session,
-    input.text,
-    attachments.attachments,
-    readWorkspace,
-  )
+  if (continuationChainStartedAt === undefined)
+    await applyMessageSessionTitle(
+      transaction,
+      session,
+      input.text,
+      attachments.attachments,
+      readWorkspace,
+    )
   const message: UserMessage = {
     id: input.id,
     sessionId,
@@ -113,8 +115,10 @@ export async function acceptMessage(
   await transaction.saveNewestTurn(sessionId, turn.id)
   const type = turn.messageIds.length === 0 ? 'turn' : 'message'
   turn.messageIds.push(message.id)
-  turn.chainStartedAt = transaction.now
-  delete turn.providerContinuationStartedAt
+  turn.chainStartedAt = continuationChainStartedAt ?? transaction.now
+  if (continuationChainStartedAt === undefined)
+    delete turn.providerContinuationStartedAt
+  else turn.providerContinuationStartedAt = null
   await transaction.saveTurn(turn)
   await transaction.saveMessageTurn(message.id, turn.id)
   await transaction.saveCommand({
@@ -125,7 +129,8 @@ export async function acceptMessage(
     messageId: message.id,
     attachments: attachments.paths,
   })
-  await transaction.emit({ type: 'message.accepted', message })
+  if (continuationChainStartedAt === undefined)
+    await transaction.emit({ type: 'message.accepted', message })
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })
   return responseFor(transaction, message)

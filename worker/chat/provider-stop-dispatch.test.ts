@@ -39,7 +39,7 @@ it('sends the old interrupt before the continuation and removes it only after th
   const next = replacement.commands[1]
   expect(next).toMatchObject({
     type: 'turn',
-    message: { id: `continuation:${previous.turnId}` },
+    message: { id: expect.stringMatching(/^continuation:/) },
   })
   const pending = await lifecycleSnapshot(fixture)
   expect(
@@ -94,8 +94,8 @@ it('inserts a provider continuation before existing waiting work without joining
   await fixture.drain()
   await fixture.stopForProvider()
   const state = await lifecycleSnapshot(fixture)
-  const next = state.turns.find((turn) =>
-    turn.messageIds.includes(`continuation:${active.turnId}`),
+  const next = state.turns.find(
+    (turn) => turn.id === state.sessions[0].activeTurnId,
   )
   const waiting = state.turns.find((turn) =>
     turn.messageIds.includes('waiting'),
