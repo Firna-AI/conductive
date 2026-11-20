@@ -28,8 +28,8 @@ export function MessageField(props: {
   caret?: number
 }) {
   const { field } = useControlSizes()
-  const workspaces = useChatWorkspaces()
-  if (holdsChips(props.text, workspaces) || props.caret !== undefined) {
+  const links = useChatWorkspaces()
+  if (holdsChips(props.text, links) || props.caret !== undefined) {
     return (
       <chipTextField.Component
         label="Message"

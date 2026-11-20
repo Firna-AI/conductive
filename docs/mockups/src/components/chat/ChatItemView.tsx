@@ -17,7 +17,7 @@ import { linkedLine } from '../../entries/components/chat/LinkedLine.mockup'
 import { lostLine } from '../../entries/components/chat/LostLine.mockup'
 import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
 import { macCommand } from '../../entries/components/chat/MacCommand.mockup'
-import { filesWithoutPlace } from './MessageText'
+import { filesWithoutPlace, useSentParts } from './MessageText'
 import {
   linkText,
   messageText,
@@ -36,6 +36,37 @@ import { defined } from '../../defined'
 import styles from './ChatItemView.module.css'
 
 type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
+
+type UserItem = Extract<SingleItem, { kind: 'user' }>
+
+/**
+ * A message of a member: its text, as `chatParts` of the app reads it,
+ * with each chip at its place, and under it the files that its text does
+ * not show. While the message waits for the cloud computer, the chip of an
+ * attached file opens nothing.
+ */
+function UserBubble(props: { item: UserItem }) {
+  const { item } = props
+  const files = item.attachments ?? []
+  const parts = useSentParts(item.text, files)
+  const listed = filesWithoutPlace(parts, files)
+  return (
+    <div className={styles.user}>
+      <div className={styles.bubble}>
+        <messageText.Component
+          files={files}
+          mentions
+          moklyInstance="text"
+          text={item.text}
+          {...defined({ waits: item.queued })}
+        />
+      </div>
+      {listed.length > 0 ? (
+        <sentFiles.Component files={listed} moklyInstance="sent-files" />
+      ) : null}
+    </div>
+  )
+}
 
 /**
  * Who stopped a turn. A stop from a session names that session with its
@@ -78,26 +109,8 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
   const { item, viewer } = props
   const theme = useSharedUiTheme()
   switch (item.kind) {
-    case 'user': {
-      const files = item.attachments ?? []
-      const listed = filesWithoutPlace(item.text, files)
-      return (
-        <div className={styles.user}>
-          <div className={styles.bubble}>
-            <messageText.Component
-              files={files}
-              mentions
-              moklyInstance="text"
-              text={item.text}
-              {...defined({ waits: item.queued })}
-            />
-          </div>
-          {listed.length > 0 ? (
-            <sentFiles.Component files={listed} moklyInstance="sent-files" />
-          ) : null}
-        </div>
-      )
-    }
+    case 'user':
+      return <UserBubble item={item} />
     case 'agent':
       return (
         <div

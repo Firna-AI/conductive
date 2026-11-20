@@ -1,17 +1,21 @@
-import type { Attachment } from '../../fixtures/attachments'
-import type { MentionEntry } from '../../fixtures/fileMentions'
-import type { Skill } from '../../fixtures/skills'
-import { useChatWorkspaces, type ChatRow } from './chatWorkspaces'
-import type { ChipUpload } from './DraftFileChip'
+import { draftParts } from '../../../../../src/app/draft-marks'
+import { webAddressParts } from '../../../../../src/markdown/web-links'
+import type { AgentSkill } from '../../../../../src/shared/generated/AgentSkill'
+import { mentionParts } from '../../../../../src/shared/mention-text'
+import { skillTextAt } from '../../../../../src/shared/skill-text'
 import { draftFileChip } from '../../entries/components/chat/DraftFileChip.mockup'
 import { instanceKey } from '../../instanceKey'
-import { draftParts } from '../../../../../src/app/draft-marks'
+import type { Attachment } from '../../fixtures/attachments'
+import type { MentionEntry } from '../../fixtures/fileMentions'
+import { findEntry, findSkill, mockupEntry } from './chatReading'
+import { useChatWorkspaces } from './chatWorkspaces'
+import type { ChipUpload } from './DraftFileChip'
 import { entryName } from './entryPaths'
 import { FileChip } from './FileChip'
+import { LinkChip } from './LinkChip'
 import { iconOf } from './MentionChip'
-import { LinkChip } from './MessageText'
 import { SkillChip } from './SkillChip'
-import { linkTarget, textParts, type LinkTarget } from './workspaceLinks'
+import { linkTarget, type LinkTarget, type RowLinks } from './workspaceLinks'
 import styles from './DraftText.module.css'
 
 /** A part of a draft as the field draws it: text, the caret, or a chip. */
@@ -20,44 +24,75 @@ type DraftItem =
   | { kind: 'caret' }
   | { kind: 'file'; file: Attachment }
   | { kind: 'mention'; entry: MentionEntry }
-  | { kind: 'skill'; skill: Skill }
+  | { kind: 'skill'; skill: AgentSkill }
   | { kind: 'link'; target: LinkTarget }
 
 /**
- * The parts of a draft: its text, the chip of each attached file at its
- * mark, the chip of each link to a workspace of the org or to one of its
- * sessions, the chip of each mention of the tree, and the chip of each
- * skill of the list. A mark of a file that the draft does not hold shows
- * nothing.
+ * The items of text outside mentions and skill texts: each link to a
+ * workspace of the org or to one of its sessions is a chip, and the rest
+ * stays text.
+ */
+function linkItems(text: string, links: RowLinks): DraftItem[] {
+  return webAddressParts(text).map((part): DraftItem => {
+    if (part.kind === 'text') return part
+    const target = linkTarget(part.href, links)
+    return target
+      ? { kind: 'link', target }
+      : { kind: 'text', text: part.source }
+  })
+}
+
+/**
+ * The items of text outside mentions, with each skill text that
+ * `skillTextAt` of the app reads: a skill chip when it names a skill of the
+ * list, else text. The rest gives its links.
+ */
+function skillItems(text: string, links: RowLinks): DraftItem[] {
+  const items: DraftItem[] = []
+  let plain = ''
+  let index = 0
+  while (index < text.length) {
+    const found = skillTextAt(text, index)
+    if (!found) {
+      plain += text[index]
+      index += 1
+      continue
+    }
+    const skill = findSkill(found.name)
+    items.push(
+      ...linkItems(plain, links),
+      skill ? { kind: 'skill', skill } : { kind: 'text', text: found.source },
+    )
+    plain = ''
+    index += found.source.length
+  }
+  return [...items, ...linkItems(plain, links)]
+}
+
+/**
+ * The parts of a draft, as the field of the app finds its chips: its text,
+ * the chip of each attached file at its mark, and the chip of each mention
+ * of an entry of the tree, as `mentionParts` of the app reads it. The rest
+ * gives the chips of its skills and of its links to the workspaces of the
+ * org or to their sessions. A mark of a file that the draft does not hold
+ * shows nothing.
  */
 function itemsOf(
   text: string,
   files: readonly Attachment[],
-  rows: readonly ChatRow[],
+  links: RowLinks,
 ): DraftItem[] {
   return draftParts(text).flatMap((part): DraftItem[] => {
     if (part.kind === 'file') {
       const file = files.find((item) => item.id === part.id)
       return file ? [{ kind: 'file', file }] : []
     }
-    return textParts(part.text, false, true).map((piece): DraftItem => {
-      switch (piece.kind) {
-        case 'mention':
-          return { kind: 'mention', entry: piece.entry }
-        case 'skill':
-          return { kind: 'skill', skill: piece.skill }
-        case 'link': {
-          const target = linkTarget(piece.href, rows)
-          return target
-            ? { kind: 'link', target }
-            : { kind: 'text', text: piece.source }
-        }
-        case 'attached':
-          return { kind: 'text', text: piece.source }
-        case 'text':
-        case 'code':
-          return { kind: 'text', text: piece.text }
-      }
+    return mentionParts(part.text).flatMap((piece): DraftItem[] => {
+      if (piece.kind === 'text') return skillItems(piece.text, links)
+      const entry = findEntry(piece.path, piece.folder)
+      return entry
+        ? [{ kind: 'mention', entry: mockupEntry(entry) }]
+        : [{ kind: 'text', text: piece.source }]
     })
   })
 }
@@ -74,10 +109,10 @@ function isChip(item: DraftItem): boolean {
  * org or to one of its sessions, a mention of a file or a folder of the
  * tree, or a skill.
  */
-export function holdsChips(draft: string, rows: readonly ChatRow[]): boolean {
+export function holdsChips(draft: string, links: RowLinks): boolean {
   return (
     draftParts(draft).some((part) => part.kind === 'file') ||
-    itemsOf(draft, [], rows).some(isChip)
+    itemsOf(draft, [], links).some(isChip)
   )
 }
 
@@ -116,16 +151,16 @@ export function DraftText(props: {
   pointer?: boolean
   caret?: number
 }) {
-  const rows = useChatWorkspaces()
+  const links = useChatWorkspaces()
   const files = props.files ?? []
   const { text, caret } = props
   const items =
     caret === undefined
-      ? itemsOf(text, files, rows)
+      ? itemsOf(text, files, links)
       : [
-          ...itemsOf(text.slice(0, caret), files, rows),
+          ...itemsOf(text.slice(0, caret), files, links),
           caretItem,
-          ...itemsOf(text.slice(caret), files, rows),
+          ...itemsOf(text.slice(caret), files, links),
         ]
   const firstChip = items.findIndex(isChip)
   return (

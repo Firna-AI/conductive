@@ -1,6 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
 import { FileLinkText, MentionChip } from '../../../components/chat/MentionChip'
-import { mentionEntrySchema } from './chipSchemas'
 
 /** A line target at the end of a path, as `LineTarget`: its first and last line. */
 const lineSchema = {
@@ -13,11 +12,24 @@ const lineSchema = {
   },
 } as const
 
+const fileEntrySchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['path', 'name', 'kind', 'change'],
+  properties: {
+    path: { type: 'string', minLength: 1 },
+    name: { type: 'string', minLength: 1 },
+    kind: { enum: ['file', 'directory'] },
+    change: { const: null },
+  },
+} as const
+
 /** The hook of the branch, which opens in its tab. */
 const hook = {
   path: 'src/app/checkout/useAddressAutocomplete.ts',
-  folder: false,
-  preview: 'code',
+  name: 'useAddressAutocomplete.ts',
+  kind: 'file',
+  change: null,
 } as const
 
 /**
@@ -36,25 +48,23 @@ export const mentionChip = defineComponent({
     additionalProperties: false,
     required: ['part'],
     properties: {
-      /** The mention, as `MentionPart`. */
+      /** The file or folder reference, as `FilePart`. */
       part: {
         type: 'object',
         additionalProperties: false,
-        required: ['kind', 'entry', 'source'],
+        required: ['kind', 'entry', 'source', 'lines'],
         properties: {
-          kind: { const: 'mention' },
-          entry: mentionEntrySchema,
+          kind: { const: 'file' },
+          entry: fileEntrySchema,
           /** The mention or the code as the text has it. */
           source: { type: 'string' },
-          line: lineSchema,
-          /** The part was inline code of an answer. */
-          code: { const: true },
+          lines: { anyOf: [lineSchema, { const: null }] },
         },
       },
     },
   } as const,
   props: {
-    part: { kind: 'mention', entry: hook, source: `@${hook.path}` },
+    part: { kind: 'file', entry: hook, source: `@${hook.path}`, lines: null },
   },
   render: (props) => <MentionChip part={props.part} />,
   variants: [
@@ -65,11 +75,10 @@ export const mentionChip = defineComponent({
         'A path of an answer with a line target: the lines after the name, and a press opens the file at the lines.',
       props: {
         part: {
-          kind: 'mention',
+          kind: 'file',
           entry: hook,
           source: `${hook.path}:19-22`,
-          line: { start: 19, end: 22 },
-          code: true,
+          lines: { start: 19, end: 22 },
         },
       },
     },
@@ -79,9 +88,15 @@ export const mentionChip = defineComponent({
       description: 'A mention of a folder, which no view opens.',
       props: {
         part: {
-          kind: 'mention',
-          entry: { path: 'src/app/checkout', folder: true },
+          kind: 'file',
+          entry: {
+            path: 'src/app/checkout',
+            name: 'checkout',
+            kind: 'directory',
+            change: null,
+          },
           source: '@src/app/checkout/',
+          lines: null,
         },
       },
     },
@@ -101,37 +116,19 @@ export const fileLinkText = defineComponent({
   propSchema: {
     type: 'object',
     additionalProperties: false,
-    required: ['part'],
+    required: ['entry', 'label'],
     properties: {
-      /** The link, as `FileLinkPart`. */
-      part: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['kind', 'label', 'source', 'picture', 'entry'],
-        properties: {
-          kind: { const: 'file-link' },
-          /** The label of the link. */
-          label: { type: 'string' },
-          /** The link as the text has it. */
-          source: { type: 'string' },
-          /** The Markdown image of a picture file, which can show as it. */
-          picture: { type: 'boolean' },
-          entry: mentionEntrySchema,
-          line: lineSchema,
-        },
-      },
+      entry: fileEntrySchema,
+      label: { type: 'string' },
+      lines: lineSchema,
     },
   } as const,
-  props: {
-    part: {
-      kind: 'file-link',
-      label: 'the hook',
-      source: `[the hook](${hook.path})`,
-      picture: false,
-      entry: hook,
-    },
-  },
-  render: (props) => <FileLinkText part={props.part} />,
+  props: { entry: hook, label: 'the hook' },
+  render: ({ entry, label, lines }) => (
+    <FileLinkText entry={entry} lines={lines ?? null}>
+      {label}
+    </FileLinkText>
+  ),
   variants: [
     {
       slug: 'not-drawn',
@@ -139,13 +136,12 @@ export const fileLinkText = defineComponent({
       description:
         'A link to a file whose page the mockups do not draw, such as the screenshot of an answer: the label in the style of a link, with the path as its title.',
       props: {
-        part: {
-          kind: 'file-link',
-          label: 'Postcode field on a phone',
-          source:
-            '![Postcode field on a phone](/home/user/code/storefront/.context/shots/after.png)',
-          picture: true,
-          entry: { path: '.context/shots/after.png', folder: false },
+        label: 'Postcode field on a phone',
+        entry: {
+          path: '.context/shots/before.png',
+          name: 'before.png',
+          kind: 'file',
+          change: null,
         },
       },
     },

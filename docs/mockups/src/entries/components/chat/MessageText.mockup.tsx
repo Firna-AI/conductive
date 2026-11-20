@@ -1,13 +1,11 @@
 import { defineComponent } from '@mokly/mokly'
-import {
-  LinkChip,
-  LinkText,
-  MessageText,
-} from '../../../components/chat/MessageText'
+import { LinkChip, LinkText } from '../../../components/chat/LinkChip'
+import { MessageText, useSentParts } from '../../../components/chat/MessageText'
 import { plainData } from '../../../defined'
 import {
   attachmentMessage,
   draftAttachments,
+  type Attachment,
 } from '../../../fixtures/attachments'
 import { mentionChipsDraft } from '../../../fixtures/fileMentions'
 import { skillChipDraft } from '../../../fixtures/skills'
@@ -134,6 +132,17 @@ export const linkText = defineComponent({
   ],
 })
 
+function RegisteredMessageText(props: {
+  text: string
+  files?: readonly Attachment[]
+  mentions?: boolean
+  waits?: boolean
+}) {
+  const files = props.files ?? []
+  const parts = useSentParts(props.text, files, props.mentions === true)
+  return <MessageText files={files} parts={parts} waits={props.waits} />
+}
+
 /**
  * The text of a message of a member, registered with Mokly. Its pages show
  * each kind of chip and link that a text holds. The parts of a
@@ -161,14 +170,7 @@ export const messageText = defineComponent({
     },
   } as const,
   props: { text: followUpTask },
-  render: (props) => (
-    <MessageText
-      files={props.files}
-      mentions={props.mentions}
-      text={props.text}
-      waits={props.waits}
-    />
-  ),
+  render: (props) => <RegisteredMessageText {...props} />,
   variants: [
     {
       slug: 'skill',

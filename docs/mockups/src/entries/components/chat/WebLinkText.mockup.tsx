@@ -1,10 +1,11 @@
 import { defineComponent } from '@mokly/mokly'
-import {
-  CodeText,
-  NewTabAnchor,
-  WebLinkPart,
-} from '../../../components/chat/WebLinkText'
+import { codePart } from '../../../../../../src/chat/links/link-parts'
+import { AnswerText } from '../../../components/chat/AnswerText'
+import { MessageText, useSentParts } from '../../../components/chat/MessageText'
+import { CodeText, NewTabAnchor } from '../../../components/chat/WebLinkText'
+import { webLinkOf } from '../../../components/chat/workspaceLinks'
 import textLinkStyles from '../../../components/common/TextLink.module.css'
+import { inline, link } from '../../../fixtures/agentText'
 
 /** The docs of the places API, which the answers of the chat link. */
 const docs = 'https://docs.places.example/v1/autocomplete'
@@ -53,6 +54,11 @@ export const newTabAnchor = defineComponent({
   ],
 })
 
+function SentLinkExample(props: { text: string }) {
+  const parts = useSentParts(props.text, [], false)
+  return <MessageText files={[]} parts={parts} />
+}
+
 /**
  * A web link of chat text, registered with Mokly. The parts of a text have
  * no key that stays the same, so the text of a message draws it with the
@@ -86,7 +92,12 @@ export const webLinkPart = defineComponent({
     },
   } as const,
   props: { part: { kind: 'link', href: docs, source: docs }, answer: false },
-  render: (props) => <WebLinkPart answer={props.answer} part={props.part} />,
+  render: ({ answer, part }) =>
+    answer && part.label !== undefined ? (
+      <AnswerText text={inline(link(part.href, part.label))} />
+    ) : (
+      <SentLinkExample text={part.source} />
+    ),
   variants: [
     {
       slug: 'answer-label',
@@ -149,18 +160,16 @@ export const codeText = defineComponent({
     required: ['text'],
     properties: {
       text: { type: 'string' },
-      /** The address that the code holds, which is a link inside the box. */
-      href: { type: 'string', minLength: 1 },
     },
   } as const,
   props: { text: 'npm test -- checkout' },
-  render: (props) => <CodeText href={props.href} text={props.text} />,
+  render: (props) => <CodeText part={codePart(props.text, webLinkOf)} />,
   variants: [
     {
       slug: 'link',
       title: 'Address',
       description: 'Code that holds only an address shows it as a link.',
-      props: { text: docs, href: docs },
+      props: { text: docs },
     },
   ],
 })
