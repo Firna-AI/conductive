@@ -2,11 +2,12 @@ import { useSyncExternalStore } from 'react'
 import type { AppModel } from '../../app/app-model'
 import { Store, useStore, type Readable } from '../../app/store'
 import { createDeviceApi } from '../../chat/device/device-api'
-import {
-  MacSettingsController,
-  type MacSettingsState,
-} from '../../chat/device/mac-settings'
+import { MacSettingsController } from '../../chat/device/mac-settings'
 import { controlOf } from '../../chat/device/settings-results'
+import {
+  shownSettings,
+  type MacSettingsState,
+} from '../../chat/device/settings-view'
 import { useApp } from '../context'
 import { useMacApp } from './mac-app'
 
@@ -79,18 +80,19 @@ export class ThisMac {
   /**
    * Follows the switch of Mac access of the workspace, after it saved. On:
    * the start of the grant of this Mac (Mac access decision 1 C). Off: the
-   * Stop of that grant, when the settings list one, with no result, because
-   * a switch-off ends the grants of every Mac (Mac access decision 6 C).
+   * Stop of that grant, when the settings that show list one, also kept
+   * settings after a read that failed, because that grant may still run.
+   * The Stop shows no result, because a switch-off ends the grants of every
+   * Mac (Mac access decision 6 C).
    */
   async switched(workspaceId: string, on: boolean): Promise<void> {
     if (on) return this.start(workspaceId, 'control')
     this.forget(workspaceId)
-    const state = this.controller.get()
+    const shown = shownSettings(this.controller.get())
     const listed =
-      state.kind === 'ready' &&
-      state.settings.workspaceWindows.some(
+      shown?.settings.workspaceWindows.some(
         (grant) => grant.workspaceId === workspaceId,
-      )
+      ) ?? false
     if (!listed) return
     await this.controller.change(stopOf(workspaceId))
     this.forget(workspaceId)

@@ -1,6 +1,9 @@
 import { afterEach, beforeAll, beforeEach, expect, it } from 'vitest'
 
 import { workspaceCapabilitiesPath } from '../../src/shared/secrets'
+import { workspaceEventsPath } from '../../src/shared/events'
+import { deviceNumber, deviceObject } from '../../src/shared/device-read'
+import { SocketInbox } from '../chat/adapter-sockets.test-support'
 import {
   deviceFixture,
   APP,
@@ -41,6 +44,47 @@ async function setMacAccess(macAccess: boolean) {
   expect(response.status).toBe(200)
   return response
 }
+
+it('notifies every connected member when Mac access turns off without a waiting request', async () => {
+  const observe = async (token: string, after = 0) => {
+    const response = await fixture.runtime.dispatchFetch(
+      APP + workspaceEventsPath('org', WID, after),
+      { headers: { ...fixture.appHeaders(token), Upgrade: 'websocket' } },
+    )
+    expect(response.status).toBe(101)
+    if (!response.webSocket) throw new Error('Missing workspace observer.')
+    fixture.remember(response.webSocket)
+    const inbox = new SocketInbox(response.webSocket)
+    response.webSocket.accept()
+    const message = deviceObject(await inbox.next())
+    expect(message.type).toBe('history')
+    return { inbox, history: deviceObject(message.history) }
+  }
+  const observers = await Promise.all(
+    [fixture.senderToken, fixture.ownerToken].map((token) => observe(token)),
+  )
+  const through = deviceNumber(observers[0].history.throughEventNumber)
+  await setMacAccess(false)
+  const update = {
+    eventNumber: through + 1,
+    event: { type: 'workspace.updated', workspace: { id: WID } },
+  }
+  const replay = await observe(fixture.senderToken, through)
+  expect(replay.history.events).toEqual([
+    expect.objectContaining({
+      eventNumber: through + 1,
+      event: expect.objectContaining({
+        type: 'workspace.updated',
+        workspace: expect.objectContaining({ id: WID }),
+      }),
+    }),
+  ])
+  for (const observer of observers)
+    expect(await observer.inbox.next()).toMatchObject({
+      type: 'event',
+      envelope: update,
+    })
+})
 
 it('refuses a new Mac command while access is off and lets a member enable access again', async () => {
   const mac = await connected(fixture)

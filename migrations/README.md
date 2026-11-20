@@ -549,6 +549,14 @@ table, so the previous Worker keeps working.
 [The merge record](../worker/github/README.md#the-merge-record) gives the
 rules of the rows.
 
+`202611201338_mac_access_period.sql` adds the non-null integer
+`workspaces.mac_access_period` column with a default of 0. Each switch-off
+of Mac access starts a new period. The migration copies no data. The
+previous Worker ignores the column and can still insert and update
+workspaces, so it keeps working.
+[When Mac access goes off](../docs/protocol/capabilities.md#when-mac-access-goes-off)
+gives the rules of the period.
+
 `202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
 with the stop time of idle workspace computers in minutes, 30 at first,
 with its last change and operator. `idle_stop_events` keeps each change

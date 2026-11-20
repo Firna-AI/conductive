@@ -1,10 +1,7 @@
 import type { DevicePairing } from '../../shared/generated/DevicePairing'
 import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { ApiError, type ApiClient } from '../../app/api/client'
-import type {
-  DeviceSettings,
-  DeviceSettingsResponse,
-} from '../../shared/device'
+import type { DeviceSettingsResponse } from '../../shared/device'
 import { messageOf } from '../state/context'
 import {
   createDeviceApi,
@@ -19,37 +16,15 @@ import {
   subjectOf,
   type ChangeResult,
 } from './settings-results'
-
-/** The settings of this Mac, as the last read or change gave them. */
-export type MacSettingsView =
-  | { kind: 'loading' }
-  /** This window has no live connection to its Mac. */
-  | { kind: 'unavailable' }
-  | { kind: 'failed'; message: string }
-  | { kind: 'ready'; pairing: DevicePairing; settings: DeviceSettings }
-
-/**
- * The settings of this Mac, as the section shows them, with the changes
- * that wait and the result of the last change of each control. The results
- * stay through every read, a Mac that goes away, and a new pairing.
- */
-export type MacSettingsState = MacSettingsView & {
-  /** The controls whose change waits for the Mac: the keys of `waiting`. */
-  busy: readonly string[]
-  /** The action of the change that waits, by control. */
-  waiting: Readonly<Record<string, SettingsChange['action']>>
-  /** The result of the last change of each control, by control. */
-  results: Readonly<Record<string, ChangeResult>>
-}
+import {
+  readyView,
+  shownSettings,
+  type MacSettingsState,
+  type MacSettingsView,
+} from './settings-view'
 
 const unavailable = (error: unknown) =>
   error instanceof ApiError && error.code === 'device_unavailable'
-
-/** The settings and the pairing of a reply. */
-function readyView(reply: DeviceSettingsResponse): MacSettingsView {
-  const pairing = { deviceId: reply.deviceId, connectionId: reply.connectionId }
-  return { kind: 'ready', pairing, settings: reply.settings }
-}
 
 /** The record without the entry of one control. */
 function without<T>(
@@ -69,9 +44,12 @@ function without<T>(
  * operation, so the reply of the last operation shows the newest settings.
  * Each control keeps the result of its last change until its next change,
  * through every read and a new pairing. A change that fails reads the
- * settings again, because the Mac may still have made it. A change never
- * goes to a pairing other than the one that the user acted in: it fails
- * instead, and the user acts again.
+ * settings again, because the Mac may still have made it. A read again
+ * that fails, for another cause than a Mac that is not available, keeps
+ * the settings that show as kept settings, which are not current, so each
+ * part can tell them from the settings of a read that worked. A change
+ * never goes to a pairing other than the one that the user acted in: it
+ * fails instead, and the user acts again.
  */
 export class MacSettingsController {
   private readonly api: DeviceApi
@@ -135,14 +113,15 @@ export class MacSettingsController {
 
   /**
    * Reads again, such as after an answer that saved a choice. The settings
-   * that show stay until the reply, and stay after a failed read.
+   * that show stay until the reply. After a read that fails for another
+   * cause than a Mac that is not available, they stay as kept settings.
    */
   readonly refresh = (): Promise<void> => this.enqueue(() => this.read(true))
 
   private async read(quiet: boolean): Promise<void> {
     if (!this.alive) return
-    const keep = quiet && this.view.kind === 'ready'
-    if (!keep) this.show({ kind: 'loading' })
+    const shown = quiet ? shownSettings(this.view) : null
+    if (shown === null) this.show({ kind: 'loading' })
     try {
       const pairing = await this.api.current()
       if (!this.alive) return
@@ -152,23 +131,29 @@ export class MacSettingsController {
       this.show(readyView(read))
     } catch (error) {
       if (!this.alive) return
-      if (unavailable(error)) this.show({ kind: 'unavailable' })
-      else if (!keep) this.show({ kind: 'failed', message: messageOf(error) })
+      if (unavailable(error)) return this.show({ kind: 'unavailable' })
+      if (shown === null) {
+        return this.show({ kind: 'failed', message: messageOf(error) })
+      }
+      const { pairing, settings } = shown
+      this.show({ kind: 'kept', pairing, settings })
     }
   }
 
   /**
-   * Asks the Mac to make one change. Its control is busy until the Mac
-   * answers, and its result replaces the result of its last change.
+   * Asks the Mac to make one change, through the pairing of the settings
+   * that show, also of kept settings, so that Stop and Remove still go
+   * after a read that failed. Its control is busy until the Mac answers,
+   * and its result replaces the result of its last change.
    */
   readonly change = (change: SettingsChange): Promise<void> => {
-    const view = this.view
+    const shown = shownSettings(this.view)
     const key = controlOf(change)
-    if (view.kind !== 'ready' || Object.hasOwn(this.waiting, key)) {
+    if (shown === null || Object.hasOwn(this.waiting, key)) {
       return Promise.resolve()
     }
-    const subject = subjectOf(change, view.settings, this.take(key, change))
-    return this.enqueue(() => this.send(key, view.pairing, change, subject))
+    const subject = subjectOf(change, shown.settings, this.take(key, change))
+    return this.enqueue(() => this.send(key, shown.pairing, change, subject))
   }
 
   /**
@@ -176,8 +161,9 @@ export class MacSettingsController {
    * settings of this Mac first, then sends the change, so the change reaches
    * the Mac app of this window as it is connected now. The start of a grant
    * uses it, because the page asks for the start on its own, such as after
-   * the switch of Mac access or a create. When the read finds no Mac, the
-   * change fails as not reached, and nothing goes to a Mac.
+   * the switch of Mac access or a create. The change goes only after a read
+   * that worked. When the read finds no Mac or fails, the change fails as
+   * not reached, and nothing goes to a Mac, also while kept settings show.
    */
   readonly changeOnCurrent = (change: SettingsChange): Promise<void> => {
     const key = controlOf(change)
@@ -240,7 +226,7 @@ export class MacSettingsController {
     subject: string,
   ): Promise<void> {
     if (!this.alive) return
-    const shown = this.view.kind === 'ready' ? this.view.pairing : null
+    const shown = shownSettings(this.view)?.pairing ?? null
     const stale = staleCause(shown, pairing)
     if (stale !== null) {
       return this.finish(key, {

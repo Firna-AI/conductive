@@ -149,8 +149,9 @@ export const termsDocument: LegalDocument = {
         paragraph`Each workspace has a Mac access switch, which starts off.
           Any member of the org can turn it on or off again. While it is
           off, the agents of that workspace cannot ask for a command.`,
-        paragraph`When you turn Mac access on in the Mac app, you also allow
+        paragraph`When you turn Mac access on, an updated Mac app also allows
           every command from that workspace on this Mac until you stop.
+          An older Mac app only saves the switch setting.
           Other members' Macs still ask, unless their users already allowed
           the commands.`,
         paragraph`If this permission cannot start, Mac access stays on and
@@ -161,8 +162,14 @@ export const termsDocument: LegalDocument = {
           create the workspace with this choice checked.`,
         paragraph`In a browser, Mac access only lets agents ask. To allow all
           commands, use Allow all commands on this Mac in the Mac app.`,
-        paragraph`Turning Mac access off ends that workspace's permission on
-          every Mac. Turning it on again does not restore an old permission.`,
+        paragraph`Use Stop in This Mac or in the workspace bar to end a
+          workspace's permission on that Mac at once. An updated Mac app
+          also ends that permission when any member turns Mac access off.
+          Turning it on again does not restore that permission.
+          An older Mac app can keep permission until Stop or the end of
+          its 15 minutes. That permission can allow commands again after
+          Mac access turns on. Install an update with this feature when
+          one is available.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac

@@ -130,6 +130,7 @@ When workspace Mac access is off, a new request ends as `failed`, with
 `mac_access_off` and the Capabilities reason. It contacts no Mac.
 The capability settings route calls `workspace.mac-access-changed` through
 the existing internal RPC to settle each waiting request.
+It then publishes `workspace.updated`, also when no request waits, so every connected member's Mac bar reads its settings again.
 The workspace repeats the Mac access check before dispatch and each
 waiting-to-running transition. It keeps the reason when broker cleanup
 also finds that request. Running commands keep their result path.

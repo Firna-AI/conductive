@@ -27,6 +27,15 @@ export const noGrants: DeviceSettings = {
   workspaceWindows: [],
 }
 
+/** The settings of the fake Mac with the grant until Stop of the workspace. */
+export const untilStop: DeviceSettings = {
+  ...fakeMacSettings(),
+  workspaceWindows: fakeMacSettings().workspaceWindows.map((grant) => ({
+    ...grant,
+    expiresAt: null,
+  })),
+}
+
 /** The title and the hint of Mac access, in a browser or while it is on. */
 export const hint =
   'Mac access Lets agents ask to run commands on the Mac of the member who sent the message.'
@@ -91,6 +100,18 @@ export const macAccessText = (control: HTMLElement) =>
 
 export const switchOf = (control: HTMLElement) =>
   byRole('switch', 'Mac access', control)
+
+/**
+ * What the switch of Mac access shows: its value, and whether it takes no
+ * change.
+ */
+export function switchState(control: HTMLElement) {
+  const shown = switchOf(control)
+  return {
+    on: shown.getAttribute('aria-checked') === 'true',
+    locked: shown.getAttribute('aria-disabled') === 'true',
+  }
+}
 
 /** The box of the line of this Mac, or null while no line shows. */
 export function lineBox(control: HTMLElement): HTMLInputElement | null {

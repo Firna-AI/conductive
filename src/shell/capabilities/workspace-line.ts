@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { thisMacWords } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
 import { useServices } from '../../app/services'
-import type { MacSettingsState } from '../../chat/device/mac-settings'
 import {
   controlOf,
   grantRuns,
@@ -9,13 +8,18 @@ import {
   stoppedMessage,
   type ChangeResult,
 } from '../../chat/device/settings-results'
+import type { MacSettingsState } from '../../chat/device/settings-view'
 import { useNow } from '../../chat/ui/clock'
 import type { DeviceWorkspaceWindow } from '../../shared/device'
 import { timeLeft } from '../../shared/transcript/command-words'
 import { useThisMacState, type ThisMac } from '../mac/this-mac'
 import type { LineResult, ThisMacLineView } from './ThisMacLine'
 
-/** The grant of the workspace on this Mac while it runs, or null. */
+/**
+ * The grant of the workspace on this Mac while it runs, or null. Only
+ * current settings count: kept settings, after a read that failed, can
+ * list a grant that already ended.
+ */
 function runningGrant(
   state: MacSettingsState,
   workspaceId: string,
@@ -34,8 +38,8 @@ function runningGrant(
  * grant: a start that failed, with its cause, or a Stop. A start that found
  * this Mac not available says that each command still asks first. A Stop
  * that the Mac made and saved does not show while a grant runs again,
- * because it belongs to an earlier grant. A Keep and an Extend show on the
- * bar only.
+ * because it belongs to an earlier grant. The result of a Keep shows on
+ * the bar only.
  */
 function lineResult(
   result: ChangeResult | undefined,
@@ -60,8 +64,9 @@ function lineResult(
 
 /**
  * The hint of the line: the time left while the 15 minutes run, and that
- * this Mac is not available while the page cannot read its settings,
- * unless a result under the line already says why.
+ * this Mac is not available while the page cannot read its settings, also
+ * when a read failed after one that worked, unless a result under the line
+ * already says why.
  */
 function lineHint(
   state: MacSettingsState,
@@ -69,7 +74,10 @@ function lineHint(
   result: LineResult | null,
   now: number,
 ): string {
-  const unread = state.kind === 'unavailable' || state.kind === 'failed'
+  const unread =
+    state.kind === 'unavailable' ||
+    state.kind === 'failed' ||
+    state.kind === 'kept'
   if (unread && result === null) return thisMacWords.notAvailableHint
   if (grant !== null && grant.expiresAt !== null) {
     return thisMacWords.fifteenMinutesHint(timeLeft(grant.expiresAt, now))
@@ -80,11 +88,12 @@ function lineHint(
 /**
  * The line of this Mac in the control of a workspace, from the settings of
  * this Mac that the window shares, or null in a browser. It is checked only
- * while the settings list a grant until Stop of the workspace. While the 15
- * minutes run, it stays unchecked, and its hint gives the time left. While
- * the page cannot read the settings, it shows unchecked and off, so it
- * never claims a grant that may not exist. A check starts the grant until
- * Stop through the pairing of now, also while the 15 minutes run, and an
+ * while the current settings list a grant until Stop of the workspace.
+ * While the 15 minutes run, it stays unchecked, and its hint gives the time
+ * left. While the page cannot read the settings, also with the kept
+ * settings of a read that failed, it shows unchecked and off, so it never
+ * claims a grant that may not exist. A check starts the grant until Stop
+ * through the pairing of now, also while the 15 minutes run, and an
  * uncheck stops the grant. `reveal` counts the switch-ons of the control.
  */
 export function useWorkspaceLine(

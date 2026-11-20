@@ -329,7 +329,8 @@ Only the connected Mac that receives a request can approve it.
 While it is off, the agents of that workspace cannot ask for Mac commands.
 Any member can turn it on or off in a workspace's **Capabilities**.
 
-Turning **Mac access** on in the Mac app also allows every command from that workspace on your Mac until you stop.
+Turning **Mac access** on in an updated Mac app also allows every command from that workspace on your Mac until you stop.
+An older Mac app only saves the switch setting.
 Other members' Macs still ask, unless their users already allowed the commands.
 While it is on, each member can start or stop that permission with **Allow all commands on this Mac** in the Mac app.
 If permission cannot start, **Mac access** stays on, and the control shows the cause.
@@ -338,8 +339,12 @@ In **New workspace** in the Mac app, permission starts after creation if **Allow
 In a browser, **Mac access** only lets agents ask.
 The browser control directs you to **Allow all commands on this Mac** in the Mac app.
 
-When any member turns **Mac access** off, that workspace's permission on every Mac ends.
-Turning it on again does not restore those permissions.
+Use **Stop** in **This Mac** or in the workspace bar to end a workspace's permission on that Mac at once.
+An updated Mac app also ends that permission when any member turns **Mac access** off.
+Turning it on again does not restore that permission.
+An older Mac app can keep permission until **Stop** or the end of its 15 minutes.
+That permission can allow commands again after **Mac access** turns on.
+Install an update with this feature when one is available.
 
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.

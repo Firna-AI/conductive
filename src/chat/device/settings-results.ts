@@ -20,7 +20,8 @@ export interface ChangeResult {
   outcome: DeviceSettingsOutcome
   /**
    * The change failed because this Mac was not available, so it never
-   * reached the Mac: no pairing showed, or the Worker found no connection.
+   * reached the Mac: no pairing showed, the read before a start failed, or
+   * the Worker found no connection.
    */
   unreached?: boolean
 }

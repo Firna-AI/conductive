@@ -25,10 +25,13 @@ const startControl = controlOf(start)
 /**
  * A Mac that answers at once, while `pairing` names its connection. A
  * change gets `reply`. Without a connection, the Worker refuses each read
- * of the settings and each change, as it does when the Mac is away.
+ * of the settings and each change, as it does when the Mac is away. After
+ * `failReads`, each read of the settings fails with HTTP 502, as a gateway
+ * in front of the Worker answers.
  */
 function fakeMac(reply: DeviceSettingsResponse) {
   let pairing: DevicePairing | null = FAKE_PAIRING
+  let reads = true
   const sent: unknown[] = []
   const fetch: FetchLike = async (input, init) => {
     const request = new Request(
@@ -46,6 +49,7 @@ function fakeMac(reply: DeviceSettingsResponse) {
       return Response.json({ error }, { status: 409 })
     }
     if (request.method !== 'POST') {
+      if (!reads) return new Response('Bad gateway', { status: 502 })
       return Response.json({ ...fakeSettingsReply(), ...pairing })
     }
     sent.push(await request.json())
@@ -59,6 +63,9 @@ function fakeMac(reply: DeviceSettingsResponse) {
     sent,
     pair: (next: DevicePairing | null) => {
       pairing = next
+    },
+    failReads: () => {
+      reads = false
     },
   }
 }
@@ -134,6 +141,31 @@ describe('a start of a grant until Stop', () => {
         unreached: true,
       },
       shown: 'unavailable',
+    })
+  })
+
+  it('sends nothing after a read that fails, and fails as not reached, while the settings of the last read that worked stay as kept settings', async () => {
+    const mac = fakeMac(fakeSettingsReply(withGrants(null)))
+    await mac.controller.start()
+    mac.failReads()
+    await mac.controller.changeOnCurrent(start)
+    const state = mac.controller.get()
+    const result = state.results[startControl]
+    expect({
+      sent: mac.sent,
+      kind: state.kind,
+      settings: 'settings' in state ? state.settings : null,
+      outcome: result?.outcome,
+      unreached: result?.unreached,
+    }).toEqual({
+      sent: [],
+      kind: 'kept',
+      settings: fakeMacSettings(),
+      outcome: {
+        status: 'failed',
+        message: 'This Mac is not available. Try again once it connects.',
+      },
+      unreached: true,
     })
   })
 })

@@ -39,6 +39,8 @@ import {
   start,
   stop,
   switchOf,
+  switchState,
+  untilStop,
   writesOf,
 } from './mac-access-test-kit'
 
@@ -98,6 +100,47 @@ describe('Mac access in the Mac app', () => {
       changes: [
         { ...FAKE_PAIRING, operation: start },
         { ...FAKE_PAIRING, operation: stop },
+      ],
+    })
+  })
+
+  test('while the Stop of a switch-off waits on this Mac, the switch shows Mac access off and takes no switch-on, so no start drops, and once the Stop ends, a switch-on starts the grant until Stop', async () => {
+    const server = serverOf({ macAccess: true, onMac: true })
+    settingsOf(server, untilStop)
+    const tab = await openTab(server, { macApp: true })
+    const control = await openControl(tab.view)
+    await waitFor(() => lineBox(control)?.checked, 'the checked line')
+    const from = server.requests.length
+    const posts = macRequests(server, 'POST')
+    const stopped = deferred<unknown>()
+    answerMacAccess(server, false)
+    server.json('POST', DEVICE_SETTINGS_PATH, stopped.promise)
+    click(switchOf(control))
+    await waitFor(() => macRequests(server, 'POST') > posts, 'the Stop')
+    await settle()
+    const waiting = switchState(control)
+    stopped.resolve(fakeSettingsReply(noGrants))
+    await waitFor(() => !switchState(control).locked, 'the switch after Stop')
+    answerMacAccess(server, true)
+    server.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
+    server.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply(untilStop))
+    click(switchOf(control))
+    await waitFor(() => lineBox(control)?.checked, 'the started grant')
+    expect({
+      waiting,
+      writes: writesOf(server, from),
+      changes: await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, from),
+    }).toEqual({
+      waiting: { on: false, locked: true },
+      writes: [
+        `PATCH ${path}`,
+        `POST ${DEVICE_SETTINGS_PATH}`,
+        `PATCH ${path}`,
+        `POST ${DEVICE_SETTINGS_PATH}`,
+      ],
+      changes: [
+        { ...FAKE_PAIRING, operation: stop },
+        { ...FAKE_PAIRING, operation: start },
       ],
     })
   })

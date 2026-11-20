@@ -155,6 +155,9 @@ function WorkspaceCapabilitiesPanel(props: {
       if (on) setReveal((count) => count + 1)
       change.run(async () => {
         await model.setMacAccess(on)
+        // The controls do not wait for this Mac, so a slow Mac never keeps
+        // the member from a switch-off. While the change of the grant
+        // waits, the switch takes no switch-on, as `switchLocked` says.
         void mac?.switched(workspaceId, on)
       }, 'Mac access was not saved')
     },

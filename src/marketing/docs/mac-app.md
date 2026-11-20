@@ -65,7 +65,8 @@ The workspace must also have **Mac access** on in its **Capabilities**.
 It starts off in each new workspace, also in one that an agent or an automation creates.
 Any member can turn it on or off.
 
-When you turn **Mac access** on in the Mac app, this Mac allows all commands from that workspace until you stop.
+When you turn **Mac access** on, an updated Mac app allows all commands from that workspace on this Mac until you stop.
+An older Mac app only saves the switch setting.
 Other members' Macs still ask, unless their users already allowed the commands.
 While **Mac access** is on, **Allow all commands on this Mac** starts or stops this permission on your own Mac.
 
@@ -80,8 +81,12 @@ The permission starts after you create the workspace, if the choice stays checke
 In a browser, **Mac access** only lets agents ask.
 To allow all commands, use **Allow all commands on this Mac** in the Mac app.
 
-When any member turns **Mac access** off, that workspace's permission on every Mac ends.
-Turning it on again does not restore those permissions.
+Use **Stop** in **This Mac** or in the workspace bar to end a workspace's permission on that Mac at once.
+An updated Mac app also ends that permission when any member turns **Mac access** off.
+Turning it on again does not restore that permission.
+An older Mac app can keep permission until **Stop** or the end of its 15 minutes.
+That permission can allow commands again after **Mac access** turns on.
+Install an update with this feature when one is available.
 
 While workspace permission runs, every command from that workspace runs on this Mac without asking.
 This includes a command that text read by the agent steers it to request.

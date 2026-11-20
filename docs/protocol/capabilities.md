@@ -174,6 +174,10 @@ Stop. It is not a grant of a secret.
   line never claims a grant that may not exist.
 - Turning the switch on in the Mac app saves Mac access first. Then it
   starts the grant.
+- While a change of the grant of this Mac waits, the switch takes no
+  switch-on. A switch-off always goes. Reason: a switch-on in that time
+  would save Mac access and start no grant, and a waiting change must not
+  keep the member from turning Mac access off.
 - Turning the switch off in the Mac app also stops the grant of the
   workspace on that Mac.
   [When Mac access goes off](#when-mac-access-goes-off) covers the other

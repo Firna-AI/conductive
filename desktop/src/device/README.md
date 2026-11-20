@@ -19,6 +19,10 @@ Keep turns the running 15 minutes of a workspace into a grant until Stop.
 Keep and Extend end a grant from an older period and report failed.
 The settings action `start-workspace-until-stop` starts a grant until Stop of one workspace, with the workspace name and the current Mac access period that the Worker adds.
 It reports done or failed, never done but not saved, and it runs each waiting request of that workspace.
+Start, Keep, and Extend prepare their effective settings before changing permission.
+A reply above the device message budget fails without increasing permission.
+Start and Keep apply only after the transport accepts their reply.
+Extend saves and applies after the size check, before sending its reply, because its outcome depends on the save.
 Each grant keeps the Mac access period of its request or its start, also in the saved file for the 15 minutes.
 The Worker sends the current period beside each `command.request`, and a grant covers only a request of its own period.
 The app drops a saved grant without a period when it loads the permission file.
@@ -86,7 +90,7 @@ The main-process socket uses `ws` because the native WebSocket API cannot set au
 - [Device session](session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
 - [Device settings](settings.ts) reports change outcomes and checks settings replies against the device message budget.
 - [Local permissions](permissions.ts) owns exact command rules, the Always allow budget, workspace deadlines, and grants until Stop.
-- [Extend](permission-extend.ts) saves a timed extension before its timer changes.
+- [Permission preparation](permission-extend.ts) builds uncommitted workspace changes and preserves their failure outcomes.
 - [Permission file](permission-file.ts) reads and writes the saved permissions, without the grants until Stop.
 - [Command runner](runner.ts) owns time and output limits through injected process and clock boundaries.
 - [Device contract](../../../src/shared/device.ts) supplies shared message types, routes, and wire limits.

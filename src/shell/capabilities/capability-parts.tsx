@@ -209,6 +209,19 @@ function secretsPart(
 }
 
 /**
+ * Whether the switch of Mac access takes no change: while the controls
+ * take none, and while Mac access is off and a change of the grant of this
+ * Mac waits, such as the Stop of a switch-off. A start does not go while
+ * that change waits, so a switch-on then would save Mac access and start
+ * no grant. A switch-off never waits, so a change that waits never keeps
+ * the member from turning Mac access off.
+ */
+function switchLocked(view: CapabilitiesView): boolean {
+  if (view.disabled) return true
+  return view.macAccess === false && view.line !== null && view.line.busy
+}
+
+/**
  * The Mac access part: the shared switch, and while it is on, the line of
  * this Mac in the Mac app or the note of a browser. While the switch is
  * off, the hint of the Mac app adds that turning it on also allows all
@@ -231,7 +244,7 @@ function macAccessPart(view: CapabilitiesView): CapabilityPart {
       view.macAccess === null ? undefined : (
         <MacAccessSwitch
           change={view.setMacAccess}
-          disabled={view.disabled}
+          disabled={switchLocked(view)}
           on={view.macAccess}
         />
       ),

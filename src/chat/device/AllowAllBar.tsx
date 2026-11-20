@@ -5,13 +5,13 @@ import {
   Timer,
   TriangleAlert,
 } from 'lucide-react'
-import type { DeviceWorkspaceWindow } from '../../shared/device'
+import type { DeviceSettings, DeviceWorkspaceWindow } from '../../shared/device'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/mac/AllowAllBar.module.css'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import { timeLeft } from '../../shared/transcript/command-words'
-import type { MacSettingsController, MacSettingsState } from './mac-settings'
+import type { MacSettingsController } from './mac-settings'
 import {
   controlOf,
   grantRuns,
@@ -22,16 +22,16 @@ import {
   stoppedMessage,
   type ChangeResult,
 } from './settings-results'
+import { shownSettings, type MacSettingsState } from './settings-view'
 
-/** The grant of one workspace on this Mac, while it runs. */
+/** The grant of one workspace in the settings that show, while it runs. */
 function runningWindow(
-  state: MacSettingsState,
+  settings: DeviceSettings | null,
   workspaceId: string,
   now: number,
 ): DeviceWorkspaceWindow | null {
-  if (state.kind !== 'ready') return null
   return (
-    state.settings.workspaceWindows.find(
+    settings?.workspaceWindows.find(
       (grant) => grant.workspaceId === workspaceId && grantRuns(grant, now),
     ) ?? null
   )
@@ -76,9 +76,11 @@ function shownResult(
  * Stop ended the grant, a read, or a new pairing. While a grant runs, the
  * bar keeps its controls beside a change that the Mac did not save or did
  * not make. When no grant runs, Try again repeats such a Stop through the
- * current pairing. The bar shows nothing at other times. The app places it
- * at the top of the workspace, and gives it the settings of
- * `useMacSettings`, whose `refresh` it calls after an answer.
+ * current pairing. The bar shows nothing at other times. After a read that
+ * failed, it still shows the grant of the kept settings, with Stop, because
+ * that grant may still run. The app places it at the top of the workspace,
+ * and gives it the settings of `useMacSettings`, whose `refresh` it calls
+ * after an answer.
  */
 export function AllowAllBar(props: {
   controller: MacSettingsController
@@ -87,13 +89,13 @@ export function AllowAllBar(props: {
   clock?: Clock
 }) {
   const { controller, state, workspaceId } = props
+  const settings = shownSettings(state)?.settings ?? null
   const listed =
-    state.kind === 'ready' &&
-    state.settings.workspaceWindows.some(
+    settings?.workspaceWindows.some(
       (grant) => grant.workspaceId === workspaceId,
-    )
+    ) ?? false
   const now = useNow(props.clock ?? systemClock, listed)
-  const grant = runningWindow(state, workspaceId, now)
+  const grant = runningWindow(settings, workspaceId, now)
   const stop = { action: 'stop-workspace', workspaceId } as const
   const keep = { action: 'keep-workspace', workspaceId } as const
   const key = controlOf(stop)
@@ -157,16 +159,11 @@ export function AllowAllBar(props: {
           Stop
         </ActionButton>
       ) : null}
-      {result &&
-      repeatable(
-        result,
-        state.kind === 'ready' ? state.settings : null,
-        now,
-      ) ? (
+      {result && repeatable(result, settings, now) ? (
         <ActionButton
           accessibilityLabel={repeatLabel(result)}
           busy={busy}
-          disabled={state.kind !== 'ready'}
+          disabled={settings === null}
           onPress={() => void controller.change(stop)}
         >
           Try again

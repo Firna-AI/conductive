@@ -95,7 +95,11 @@ const state = useThisMacState(mac)
 - `ThisMacSection` and `AllowAllBar` show the settings that the Mac keeps.
   One read or change of the settings runs at a time, in the order of the
   user's actions, so the Mac gets them in that order and the last reply
-  holds every change. A failed change reads the settings again. The
+  holds every change. A failed change reads the settings again. A read
+  again that fails, for another cause than a Mac that is not available,
+  keeps the settings that show as kept settings, the state `kept`, which
+  are not current. `ThisMacSection` and the bar still show kept settings,
+  with Remove and Stop, because a grant that they list may still run. The
   countdowns read the clock and the Mac's end time. A grant whose end time
   is `null` runs until Stop, and shows Until you stop.
 - Each control, Remove of one command or the grant of one workspace, keeps
@@ -118,14 +122,20 @@ const state = useThisMacState(mac)
   That action is not the approval answer `allow-workspace-until-stop`,
   which answers one request. Its uncheck sends Stop. A start is done or
   failed, never done but not saved, because the Mac keeps a grant until
-  Stop only in memory.
+  Stop only in memory. The line reads only current settings. With kept
+  settings, it shows unchecked and off, with This Mac is not available,
+  because a grant that they list may have ended.
 - The page starts a grant from the line, after a switch-on of Mac access
   that saved, and after a create of New workspace whose line was checked.
   Each start goes through `changeOnCurrent`, which reads the pairing and
   the settings of this Mac first, so the start reaches the connection of
-  now. When the read finds no Mac, the start fails as not reached, and
-  nothing goes. A switch-off that saved sends Stop when the settings list
-  a grant of the workspace.
+  now. When the read finds no Mac or fails, the start fails as not
+  reached, and nothing goes. A switch-off that saved sends Stop when the
+  settings that show, current or kept, list a grant of the workspace.
+  While the switch shows Mac access off and a change of that grant waits,
+  such as that Stop, the switch takes no switch-on, because a start does
+  not go while another change of the grant waits. A switch-off never
+  waits.
 - `countedOutcome` counts a start as done only when the returned settings
   list its grant with no end. Otherwise the start fails with a cause.
 - A start shares the control of the grant of its workspace with Stop and
@@ -173,6 +183,8 @@ menu of Allow over the region. Build the Mac app first, then run
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
   `ThisMacSection.tsx`, `SavedChoices.tsx`, `AllowAllBar.tsx`, and the
   shared `ThisMac` of the window.
+- `settings-view.ts`: the states of the settings that the reads give,
+  current or kept, and `shownSettings`, which gives either.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all
   when it is long. `CommandOutput.tsx` does the same for the output of a
   card, and `use-clipped.ts` measures whether a text is cut.
