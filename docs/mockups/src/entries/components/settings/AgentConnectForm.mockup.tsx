@@ -13,7 +13,7 @@ export const agentConnectForm = defineComponent({
   slug: 'agent-connect-form',
   title: 'Agent connect form',
   description:
-    'The form that connects an agent, open under its row. Its switch chooses the kind of the login: a subscription token, an API key, or an own endpoint for Claude, and an API key, the ChatGPT plan, or an own endpoint for Codex. A secret has its field, with the hint that the app tests it once, and Connect. The ChatGPT plan has the steps of its sign-in. Cancel shows when the form can close. Its own page shows the subscription token of Claude.',
+    'The form that connects an agent, open under its row. Its switch chooses the kind of the login: a subscription token, an API key, or an own endpoint for Claude, and an API key, the ChatGPT plan, or an own endpoint for Codex. A secret has its field, with the hint that the app keeps it encrypted, and Connect. The ChatGPT plan has the steps of its sign-in. Cancel shows when the form can close. The form of an org login offers only an API key and an own endpoint, and asks for a key of the account of the org. A form that replaces a connected login says Replace, and a save that failed shows its cause in a notice over the buttons. Its own page shows the subscription token of Claude.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -31,6 +31,12 @@ export const agentConnectForm = defineComponent({
       signIn: signInStepSchema,
       /** The own endpoint kind, and what its address field holds. */
       endpoint: endpointEntrySchema,
+      /** The org of an org login, such as `Acme`. */
+      org: { type: 'string', minLength: 1 },
+      /** The form replaces a connected login, so it says Replace. */
+      replace: { type: 'boolean' },
+      /** The cause of a save that failed, over the buttons. */
+      failed: { type: 'string' },
     },
   } as const,
   props: { agent: 'claude', connectTo: paths.accountAgents, cancel: true },
@@ -40,7 +46,10 @@ export const agentConnectForm = defineComponent({
       cancel={props.cancel}
       connectTo={props.connectTo}
       endpoint={props.endpoint}
+      failed={props.failed}
       kind={props.kind}
+      org={props.org}
+      replace={props.replace}
       signIn={props.signIn}
     />
   ),

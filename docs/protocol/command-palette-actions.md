@@ -7,7 +7,9 @@ group, with Send feedback. It belongs to
 palette. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says. The [mockup catalogue](../mockups/catalogue-palette.md) draws the
+says. A terminal tabs decision number names a decision of the change that
+adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
+The [mockup catalogue](../mockups/catalogue-palette.md) draws the
 actions at `app/command-palette/actions`, and the settings at
 `app/command-palette/settings`.
 
@@ -17,7 +19,11 @@ actions at `app/command-palette/actions`, and the settings at
   (decision 144).
 - View commands were rejected for this version, because each needs its
   own mockups and stored state. Layout toggles, a focus mode, and a theme
-  choice are view commands.
+  choice are view commands. Hide and Show the sidebar are the one
+  exception, because the toggle has its mockups and keeps no state (list
+  popover decision 5 A).
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) defines the
+  list popover decisions.
 - The palette offers only the actions that the current page offers to the
   person. Send feedback is the one exception, as [Help](#help) says.
 - New workspace also shows on each page where the palette has an org that
@@ -25,19 +31,31 @@ actions at `app/command-palette/actions`, and the settings at
   [saved view of New workspace](create-a-workspace.md#page-or-dialog).
 - New section shows only where the page shows the workspace list.
 - The Go to rows show only where the page shows the right column.
+- New terminal shows only where the Go to rows show (terminal tabs
+  decision 3 B). There, it shows only while the + of the Terminal tool
+  takes a press: while the cloud computer runs, its terminal service
+  opens more than one shell, and the workspace has fewer than 10
+  terminals, as [Terminal tabs](terminal.md#terminal-tabs) says.
+- A phone shows the + on its Terminal page, but its palette offers no New
+  terminal, because a phone has no Go to rows.
+- New terminal opens a terminal, as that + button does. It then shows the
+  new terminal in the Terminal tool, also when another tool showed.
+- Reason: the palette offers each control of an open workspace, as it
+  offers New session beside the + of the sessions. A Go to row for each
+  terminal was left out, because it switches terminals and opens none.
 - On the All tab and on the Actions tab, the actions come in this order:
   1. While a workspace is open, its actions: New session, Session history,
-     a Go to row for each tab of the right column, and Archive workspace.
-     The Go to rows lead to All files, Changes, Checks, Terminal, and
-     Preview. Desktop has no Go to row while the app hides it, as
-     [Desktop](workspace-tools.md#desktop) says. An archived workspace
-     offers only Session history and Restore workspace.
+     a Go to row for each tab of the right column, New terminal, and
+     Archive workspace. The Go to rows lead to All files, Changes, Checks,
+     Terminal, and Preview. Desktop has no Go to row while the app hides
+     it, as [Desktop](workspace-tools.md#desktop) says. An archived
+     workspace offers only Session history and Restore workspace.
   2. The actions of the org: New workspace and New section.
   3. Create org, then a Switch to row for each other org of the person, in
      the order of the org rail.
-  4. In the Mac app, "Hide the sidebar" or "Show the sidebar", as the
-     sidebar toggle of the window says. This row shows on each page where
-     the sidebar can show.
+  4. "Hide the sidebar" or "Show the sidebar", as the
+     [sidebar toggle](org-rail-order.md#the-hidden-sidebar) says. This row
+     shows on each page where the sidebar can show.
   5. Send feedback, as [Help](#help) says.
 - The Actions tab shows these parts as groups. Their labels are the name
   of the open workspace, the name of the org, "Orgs", "Window", and
@@ -66,8 +84,8 @@ actions at `app/command-palette/actions`, and the settings at
   [Feedback dialog](feedback.md#the-dialog) over the current page.
 - The search words of Send feedback are "bug", "idea", "support",
   "contact", "help", and "report".
-- Help is the last group of the Actions tab. Outside the Mac app, no
-  Window group shows, so Help comes after Orgs. On the All tab, Send
+- Help is the last group of the Actions tab. On a page where the sidebar
+  cannot show, no Window group shows, so Help comes after Orgs. On the All tab, Send
   feedback is the last action.
 - Reason: feedback is about the product, not about a workspace, an org, or
   the window.
@@ -91,9 +109,10 @@ actions at `app/command-palette/actions`, and the settings at
 
 ## Settings
 
-- The Settings tab shows two groups. The first group holds the four tabs
-  of the org settings: General, Repositories, Cloud computer, and Members.
-  Its label is the name of the org and "settings", such as "Acme settings".
+- The Settings tab shows two groups. The first group holds the six tabs
+  of the org settings: General, Repositories, Cloud computer, Agents,
+  Secrets, and Members. Its label is the name of the org and "settings",
+  such as "Acme settings".
 - The second group, Account, holds four sections of the Account page:
   Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
   shortcuts, the fourth tab of the Account page.

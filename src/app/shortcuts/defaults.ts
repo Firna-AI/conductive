@@ -22,7 +22,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'account-page': { mac: ['Meta+,'], other: ['Ctrl+,'] },
   'create-org': { mac: [], other: [] },
   'send-feedback': { mac: ['Alt+Meta+F'], other: ['Alt+Shift+F'] },
-  'toggle-sidebar': { mac: ['Meta+B', '['], other: [] },
+  'toggle-sidebar': { mac: ['Meta+B', '['], other: ['Ctrl+B', '['] },
   'toggle-right-column': {
     mac: ['Alt+Meta+B', ']'],
     other: ['Alt+Shift+B', ']'],
@@ -77,6 +77,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'resolve-conflicts': { mac: [], other: [] },
   'address-review': { mac: [], other: [] },
   'commit-and-push': { mac: ['Shift+Meta+Y'], other: ['Ctrl+Shift+Y'] },
+  'mark-ready-for-review': { mac: [], other: [] },
   'merge-pull-request': { mac: ['Shift+Meta+M'], other: ['Ctrl+Shift+M'] },
   'continue-after-merge': { mac: [], other: [] },
   'open-pull-request': { mac: ['Shift+Meta+G'], other: ['Ctrl+Shift+G'] },
@@ -85,6 +86,7 @@ const defaults: Readonly<Record<PlainId, Defaults>> = {
   'go-to-checks': { mac: [], other: [] },
   'go-to-terminal': { mac: ['Meta+J'], other: ['Ctrl+J'] },
   'go-to-preview': { mac: [], other: [] },
+  'new-terminal': { mac: [], other: [] },
   'new-session': {
     mac: ['Meta+T', 'Alt+Meta+T'],
     other: ['Ctrl+T', 'Alt+Shift+T'],
@@ -124,7 +126,7 @@ export function defaultShortcutKeys(
   return (entry?.[1][keyboard] ?? []).map(readShortcutKeyText)
 }
 
-/** Back, Forward, and the sidebar toggle belong only to the Mac app. */
+/** Back and Forward belong only to the Mac app. */
 export function commandInHost(
   id: ShortcutCommandId,
   host: ShortcutHost,

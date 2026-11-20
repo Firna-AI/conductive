@@ -1,15 +1,15 @@
-import { Button } from '@firna/ui/button'
-import { ArrowUp } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
-import { noop } from '../../noop'
-import { ScreenLink } from '../common/ScreenLink'
 import {
-  actionButton,
-  iconButton,
-} from '../../entries/components/common/actions.mockup'
+  CapabilitiesButton,
+  type CapabilitiesControl,
+} from '../capabilities/CapabilitiesButton'
+import { ScreenLink } from '../common/ScreenLink'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
+import { useTouch } from '../common/touch'
+import { SendButton, StopButton } from './ComposerButtons'
+import { ComposerMenu, type ComposerMenuState } from './ComposerMenu'
 import type { MentionTree } from './FileMentionList'
 import { fileMentionList } from '../../entries/components/chat/FileMentionList.mockup'
 import { mentionAnchor } from '../../entries/components/chat/MentionList.mockup'
@@ -81,9 +81,9 @@ export type ComposerState = {
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked?: boolean
   /**
-   * The agent login of another member that the session uses: the login of
-   * its starter. A label in the bar names it. A message on the own login of
-   * the viewer has no label.
+   * The agent login that a message uses when it is not the own login of the
+   * viewer: the login of another member, or the org login. A label in the
+   * bar names it. A message on the own login of the viewer has no label.
    */
   sessionLogin?: SessionLogin
   /**
@@ -96,6 +96,16 @@ export type ComposerState = {
    * of the text.
    */
   pointer?: boolean
+  /**
+   * The Capabilities icon beside the attach button, and its control when
+   * it is open (secrets decisions 6 and 8).
+   */
+  capabilities?: CapabilitiesControl
+  /**
+   * The menu of the one button of a phone, which holds Attach files and
+   * Capabilities (secrets decision 16 G). A computer has no such menu.
+   */
+  menu?: ComposerMenuState
 }
 
 /** The query of the list of `@`: the text after the last `@` of the draft. */
@@ -103,26 +113,13 @@ function mentionQuery(draft: string): string {
   return draft.slice(draft.lastIndexOf('@') + 1)
 }
 
-function SendButton(props: { draft: string; blocked?: boolean }) {
-  const control = useControlSizes()
-  const off = props.draft === '' || props.blocked === true
-  return (
-    <Button
-      accessibilityLabel="Send"
-      boxSize={control.height}
-      disabled={off}
-      icon={ArrowUp}
-      onPress={noop}
-      shape="square"
-      size="sm"
-      tone={off ? 'secondary' : 'primary'}
-    />
-  )
-}
-
 /**
  * The message box: the text, with a chip for each attached file at its
- * place, then a bar with the attach button, the model picker, and Send.
+ * place, then a bar with the attach button, the Capabilities icon, the
+ * model picker, and Send. The Capabilities icon opens what the agents of
+ * the workspace can use. A phone holds Attach files and Capabilities in
+ * the menu of one button, and shows Stop as its icon, so the model and a
+ * login label stay readable (secrets decision 16 G).
  * The attach button puts each picked file at the caret, or at the end. The
  * whole box takes a drop of files, and shows the drop state while files
  * hover over it. While a turn runs, a message steers the turn unless it
@@ -143,6 +140,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
     : (props.placeholder ?? 'Message the agent')
   const uploads = props.attachments.some((file) => file.state !== undefined)
   const off = props.blocked === true || uploads
+  const phone = useTouch()
   const attach = (
     <iconButton.Component
       icon="paperclip"
@@ -173,12 +171,28 @@ export function Composer(props: ComposerState & { lines?: number }) {
             {...defined({ caret: props.caret, pointer: props.pointer })}
           />
           <div className={styles.bar}>
-            {props.attachTo ? (
-              <ScreenLink asChild to={props.attachTo}>
-                {attach}
-              </ScreenLink>
+            {phone ? (
+              <ComposerMenu
+                attachTo={props.attachTo}
+                capabilities={props.capabilities}
+                state={props.menu}
+              />
             ) : (
-              attach
+              <>
+                {props.attachTo ? (
+                  <ScreenLink asChild to={props.attachTo}>
+                    {attach}
+                  </ScreenLink>
+                ) : (
+                  attach
+                )}
+                {props.capabilities ? (
+                  <CapabilitiesButton
+                    {...props.capabilities}
+                    placement="above-start"
+                  />
+                ) : null}
+              </>
             )}
             <modelPicker.Component
               choice={props.choice}
@@ -193,15 +207,11 @@ export function Composer(props: ComposerState & { lines?: number }) {
             {props.sessionLogin ? (
               <sessionLoginLabel.Component
                 moklyInstance="session-login"
-                starter={props.sessionLogin.starter}
+                owner={props.sessionLogin.owner}
               />
             ) : null}
             <span className={styles.spacer} />
-            {props.running ? (
-              <actionButton.Component icon="square" moklyInstance="stop-agent">
-                Stop
-              </actionButton.Component>
-            ) : null}
+            {props.running ? <StopButton /> : null}
             {props.sendTo && !off ? (
               <ScreenLink asChild to={props.sendTo}>
                 <SendButton draft={props.draft} />

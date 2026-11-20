@@ -5,6 +5,7 @@ import {
   FileCode,
   FileDiff,
   FileText,
+  Globe,
   MessageSquare,
   SquareTerminal,
 } from 'lucide-react'
@@ -22,10 +23,11 @@ import styles from './WorkspaceTabs.module.css'
 /**
  * The kind of a tab, which sets its icon: a session, or the icon that All
  * files gives a code file, a Markdown file, or another file, or a diff, or
- * a terminal of the Terminal tool.
+ * a terminal of the Terminal tool, or the one Preview tab of the centre
+ * row (decision 288).
  */
 export type TabKind =
-  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal'
+  'session' | 'code' | 'markdown' | 'file' | 'diff' | 'terminal' | 'preview'
 
 export type WorkspaceTab = {
   key: string
@@ -40,6 +42,12 @@ export type WorkspaceTab = {
    * diff replaces its file. Only its title changes, in italics.
    */
   temporary?: boolean
+  /**
+   * The label of the file can hide a secret value: it holds "[redacted]",
+   * or the app does not know the name of the file yet. Its menu then
+   * leaves out Copy path.
+   */
+  hidesPath?: boolean
 }
 
 /** The open menu of a tab: beside it, or in a sheet that the screen draws. */
@@ -55,6 +63,7 @@ const icons: Readonly<Record<TabKind, LucideIcon>> = {
   file: File,
   diff: FileDiff,
   terminal: SquareTerminal,
+  preview: Globe,
 }
 
 /**

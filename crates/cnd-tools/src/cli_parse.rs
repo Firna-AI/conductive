@@ -3,17 +3,22 @@
 use serde_json::{Map, Value};
 
 use crate::call::Name;
+use crate::cli_secrets;
 use crate::error::{Error, InputError, Result};
 
 pub(crate) struct Arguments {
     pub(crate) name: Name,
     pub(crate) fields: Map<String, Value>,
     pub(crate) message_path: Option<String>,
+    pub(crate) command: Option<Vec<String>>,
 }
 
 pub(crate) fn help(args: &[String]) -> bool {
     if args.is_empty() {
         return true;
+    }
+    if args[0] == "secrets" {
+        return cli_secrets::help(args);
     }
     if args.first().is_none_or(|value| value != "sessions") {
         return args.iter().any(|value| value == "--help");
@@ -67,10 +72,13 @@ fn name(group: &str, verb: &str) -> Result<Name> {
 
 fn options(name: Name) -> Vec<&'static str> {
     let options = match name {
+        Name::ListSecrets | Name::RunWithSecrets => "",
         Name::CreateWorkspace => {
-            "repository message message-file agent model effort fast section name first-session-title request-id"
+            "repository message message-file agent model effort fast section parent name first-session-title request-id"
         }
-        Name::ListWorkspaces => "owner state repository query updated-since archived limit offset",
+        Name::ListWorkspaces => {
+            "owner parent state repository query updated-since archived limit offset"
+        }
         Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
         Name::RenameWorkspace => "workspace name",
         Name::MoveWorkspace => "workspace section",
@@ -100,7 +108,7 @@ fn options(name: Name) -> Vec<&'static str> {
 
 fn field(key: &str) -> String {
     match key {
-        "workspace" | "session" | "repository" | "section" | "preview" | "owner" => {
+        "workspace" | "session" | "repository" | "section" | "preview" | "owner" | "parent" => {
             format!("{key}Id")
         }
         _ => {
@@ -119,6 +127,9 @@ fn field(key: &str) -> String {
 }
 
 pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
+    if args.first().is_some_and(|group| group == "secrets") {
+        return cli_secrets::parse(args);
+    }
     let invalid = if args.first().is_some_and(|group| group == "sessions") {
         InputError::SessionOptions
     } else {
@@ -240,6 +251,7 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
         name,
         fields,
         message_path,
+        command: None,
     })
 }
 

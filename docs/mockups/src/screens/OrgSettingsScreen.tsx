@@ -9,6 +9,7 @@ import { leaveOrgDialog } from '../entries/components/members/LeaveOrgDialog.moc
 import { removeMemberDialog } from '../entries/components/members/RemoveMemberDialog.mockup'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { failedBuildOf } from '../components/settings/BuildSection'
+import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { deleteOrgDialog } from '../entries/components/settings/DeleteOrgDialog.mockup'
 import { settingsTabs } from '../entries/components/settings/OrgSections.mockup'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
@@ -22,9 +23,11 @@ import { defined, plainData } from '../defined'
 
 /**
  * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, and its members. The app-wide connections live
- * in the account. Only an admin changes the members and deletes the org. A
- * suspended org shows its notice first, and nobody changes its settings.
+ * uses, its cloud computer, its org logins, its secrets, and its members.
+ * The personal logins and the other app-wide connections live in the
+ * account. Only an admin changes the members, the org logins, and deletes
+ * the org. Every member adds secrets. A suspended org shows its notice
+ * first, and nobody changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -61,6 +64,9 @@ export function OrgSettingsScreen(props: {
         viewport={viewport}
       />
     ) : null,
+    'delete-secret': suspended ? null : (
+      <DeleteSecretDialog viewport={viewport} />
+    ),
   }
   const dialog = dialogs[state.dialog]
   const page = (
@@ -112,7 +118,9 @@ export function OrgSettingsScreen(props: {
   return (
     <appFrame.Component
       rail={{
-        orgs: props.railOrgs ?? orgList,
+        orgs: (props.railOrgs ?? orgList).map((item) =>
+          item.key === org.key ? { ...item, color: state.color } : item,
+        ),
         current: org.key,
         ...(suspended ? { suspended: org.key } : {}),
         ...(admin ? {} : { person: people[memberViewer] }),

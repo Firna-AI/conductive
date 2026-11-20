@@ -1,3 +1,4 @@
+import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
 import type { Agent } from '../../src/shared/generated/Agent'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
@@ -21,10 +22,9 @@ import type {
   ConnectionScheduler,
 } from '../security/connection-access'
 import type { AuthenticatedRunner } from './authenticated-runner'
-import type {
-  SessionLoginMetadata,
-  SessionLoginTarget,
-} from './login-availability'
+import type { SessionLoginMetadata } from './login-availability'
+import type { SessionLoginTarget } from './login-access-data'
+import type { AgentLoginOwner } from './queries'
 import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
@@ -72,7 +72,7 @@ export interface StoredTurn {
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true
   closeAfterStop: boolean
-  stopRequest?: TurnStopRequester
+  stopRequest?: TurnStopRequester | null
   /** Internal waiting work. Older records have no successor. */
   nextTurnId?: string | null
   gateway?: TurnTokenState
@@ -154,7 +154,7 @@ export type ChatCallbackPublisher = (
 
 export interface ChatDependencies {
   normalizeChoice(choice: AgentChoice): AgentChoice
-  refreshEndpointModels(userId: string, agent: Agent): Promise<void>
+  refreshEndpointModels(owner: AgentLoginOwner, agent: Agent): Promise<void>
   readBranches(
     workspaceId: string,
   ): Promise<
@@ -222,8 +222,14 @@ export interface ChatDependencies {
   readLoginMetadata: (
     targets: readonly SessionLoginTarget[],
   ) => Promise<ReadonlyMap<string, SessionLoginMetadata>>
+  resolveDefaultLogin: (
+    userId: string,
+    agent: Agent,
+    excluded?: SessionLogin,
+  ) => Promise<SessionLogin | null>
+  readOrgName: (orgId: string) => Promise<string | null>
   resolveLogin: (
-    userId: string | null,
+    login: SessionLogin | null,
     agent: Agent,
     runnerTokenHash?: string,
     senderId?: string,

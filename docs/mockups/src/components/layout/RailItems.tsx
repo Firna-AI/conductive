@@ -19,11 +19,14 @@ export function RailLink(props: {
   current: boolean
   /** The tile menu of the link is open. */
   open?: boolean
+  /** The workspace list of the link is open as a popover. */
+  expanded?: boolean
   children: ReactNode
 }) {
   return (
     <ScreenLink
       aria-current={props.current ? 'page' : undefined}
+      aria-expanded={props.expanded}
       aria-label={props.label}
       className={classes(
         styles.link,
@@ -70,6 +73,8 @@ export function RailTile(props: { org: Org; current: boolean }) {
 export function OrgItem(props: {
   org: Org
   current: boolean
+  /** The workspace list of the org is open as a popover beside the tile. */
+  expanded?: boolean
   hint: boolean
   /** The key that opens the org, which its hint shows. */
   shortcut?: Shortcut
@@ -85,6 +90,7 @@ export function OrgItem(props: {
       {to && !props.placeholder ? (
         <RailLink
           current={props.current}
+          expanded={props.expanded}
           label={label}
           open={menu !== undefined}
           to={to}

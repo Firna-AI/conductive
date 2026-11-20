@@ -1,6 +1,7 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { people, type PersonKey } from '../../fixtures/members'
+import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
@@ -19,6 +20,10 @@ import {
   linkText,
   messageText,
 } from '../../entries/components/chat/MessageText.mockup'
+import { LateAnswerLine } from './LateAnswerLine'
+import { isLateRequest } from './requests'
+import { SecretRequest } from './SecretRequest'
+import { SecretRun } from './SecretRun'
 import { sentFiles } from '../../entries/components/chat/SentFiles.mockup'
 import { standardSpeedText } from './speedCopy'
 import type { StopSource } from './StopLine'
@@ -109,6 +114,21 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           request={item.request}
           state={item.state}
         />
+      )
+    case 'late-answer':
+      return (
+        <LateAnswerLine
+          grant={item.grant}
+          names={item.names}
+          org={orgs.acme.name}
+          who={item.grant.by === viewer ? 'You' : people[item.grant.by].name}
+        />
+      )
+    case 'secret-run':
+      return isLateRequest(item) ? (
+        <SecretRequest item={item} viewer={viewer} />
+      ) : (
+        <SecretRun item={item} viewer={viewer} />
       )
     case 'turn-end':
       return (

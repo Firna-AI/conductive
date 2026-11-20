@@ -1,12 +1,18 @@
 import { membersTab } from '../entries/components/members/MembersTab.mockup'
+import { SecretsTab } from '../components/secrets/SecretsTab'
+import type { SecretsAccess } from '../components/secrets/secretRights'
 import { computerData } from '../components/settings/ComputerTab'
 import { computerTab } from '../entries/components/settings/ComputerTab.mockup'
+import { OrgAgentsTab } from '../components/settings/OrgAgents'
 import {
   deleteOrgSection,
   leaveOrgSection,
   orgDetailsSection,
 } from '../entries/components/settings/OrgSections.mockup'
-import type { ReadOnlyCause } from '../components/settings/OrgSections'
+import {
+  OrgColorSection,
+  type ReadOnlyCause,
+} from '../components/settings/OrgSections'
 import {
   orgRepositoryList,
   repositoryList,
@@ -18,6 +24,7 @@ import {
   type Membership,
   type PersonKey,
 } from '../fixtures/members'
+import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -46,6 +53,16 @@ function readOnlyCause(state: OrgSettingsState): ReadOnlyCause | undefined {
 }
 
 /**
+ * Who reads the Secrets tab. A member who is not an admin still adds
+ * secrets, so only a suspended org shows the tab read-only.
+ */
+function secretsAccess(state: OrgSettingsState): SecretsAccess {
+  const person = settingsViewer(state)
+  if (state.org === 'suspended') return { kind: 'suspended', person }
+  return { kind: state.viewer, person }
+}
+
+/**
  * The sentence after the description of the repositories. The notice of a
  * suspended org says why nothing changes, so the tab adds nothing.
  */
@@ -67,11 +84,13 @@ export function TabBody(props: { state: OrgSettingsState }) {
       return (
         <>
           <orgDetailsSection.Component
+            color={state.color}
             initials={org.initials}
             moklyInstance="org-details"
             name={org.name}
             {...defined({ readOnly })}
           />
+          {readOnly ? null : <OrgColorSection color={state.color} />}
           {readOnly ? null : (
             <deleteOrgSection.Component
               moklyInstance="delete-org"
@@ -124,6 +143,18 @@ export function TabBody(props: { state: OrgSettingsState }) {
             repositoryNotice:
               settingsRepositoryNotice(state, settings) ?? undefined,
           })}
+        />
+      )
+    case 'agents':
+      return <OrgAgentsTab {...orgAgentsFor(state, org.name, readOnly)} />
+    case 'secrets':
+      return (
+        <SecretsTab
+          access={secretsAccess(state)}
+          computerTo={settings.links.computer}
+          org={org.name}
+          secrets={settings.secrets}
+          view={state.secrets}
         />
       )
     case 'members':

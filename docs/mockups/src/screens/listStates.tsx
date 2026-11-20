@@ -38,7 +38,7 @@ export function listPalette(view: PaletteView, viewport: Viewport): ReactNode {
   if (view === 'closed') return null
   return (
     <commandPalette.Component
-      context={{ archivable: false }}
+      context={{ archivable: false, sidebar: viewport !== 'mobile' }}
       moklyInstance="command-palette"
       view={view}
       viewport={viewport}

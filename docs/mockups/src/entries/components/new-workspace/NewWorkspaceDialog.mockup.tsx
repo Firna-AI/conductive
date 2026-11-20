@@ -10,6 +10,8 @@ import {
 import { orgs } from '../../../fixtures/orgs'
 import { repositories } from '../../../fixtures/repositories'
 import { sections } from '../../../fixtures/sections'
+import { withPanel } from '../chat/capabilitiesSlot'
+import { capabilitiesSchema, sessionLoginSchema } from '../chat/composerSchemas'
 import { menuSchema, type MenuEntryData } from '../common/menuEntries'
 import { agentChoiceSchema } from '../workspaces/workspaceSchemas'
 
@@ -50,12 +52,15 @@ const repositoryMenu: readonly MenuEntryData[] = Object.values(
   checked: repository.key === 'storefront',
 }))
 
-/** The New workspace dialog, drawn open, registered with Mokly. */
+/**
+ * The New workspace dialog, drawn open, registered with Mokly. The page
+ * supplies its notices and the open Capabilities control in slots.
+ */
 export const newWorkspaceDialog = defineComponent({
   slug: 'new-workspace-dialog',
   title: 'New workspace dialog',
   description:
-    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
+    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -88,9 +93,13 @@ export const newWorkspaceDialog = defineComponent({
       choice: agentChoiceSchema,
       /** The message can go, so Create is on once each file is uploaded. */
       ready: { type: 'boolean' },
+      /** The login of the first message, when it is not the own login. */
+      login: sessionLoginSchema,
+      /** The Capabilities icon beside the attach button. */
+      capabilities: capabilitiesSchema,
     },
   } as const,
-  slots: ['notices'],
+  slots: ['notices', 'capabilitiesPanel'],
   props: {
     repository: repositories.storefront.name,
     place: `${orgs.acme.name} · ${sections.general.name}`,
@@ -104,9 +113,11 @@ export const newWorkspaceDialog = defineComponent({
   render: (props) => (
     <NewWorkspaceDialog
       attachments={props.attachments}
+      capabilities={withPanel(props.capabilities, props.capabilitiesPanel)}
       caret={props.caret}
       choice={props.choice}
       drop={props.drop}
+      login={props.login}
       notices={props.notices}
       place={props.place}
       placeholder={props.placeholder}

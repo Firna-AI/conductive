@@ -10,6 +10,7 @@ import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { changeList } from '../../entries/components/files/ChangeList.mockup'
 import { checksList } from '../../entries/components/files/ChecksList.mockup'
+import type { FileRowMenu } from './FileRowMenu'
 import { fileTree } from '../../entries/components/files/FileTree.mockup'
 import { defined } from '../../defined'
 import styles from './FilesPanel.module.css'
@@ -105,7 +106,8 @@ function FileTabs(props: {
  * is available. `paths` adds two files whose labels hide a secret value.
  * `checksTop` stands above the checks, such as the actions of the pull
  * request bar on a phone. `only` keeps the changes of these paths, such as
- * the changed files that moved to the new branch of Continue.
+ * the changed files that moved to the new branch of Continue. `menu` is the
+ * open menu of a row of the shown list.
  */
 export function FilesPanel(props: {
   view: FileList
@@ -117,6 +119,7 @@ export function FilesPanel(props: {
   paths?: PathState
   checksTop?: ReactNode
   only?: readonly string[]
+  menu?: FileRowMenu
 }) {
   const { view, open, only } = props
   const masked = props.paths === 'masked'
@@ -159,7 +162,7 @@ export function FilesPanel(props: {
           <fileTree.Component
             entries={tree}
             moklyInstance="file-tree"
-            {...defined({ open: treeOpen })}
+            {...defined({ menu: props.menu, open: treeOpen })}
           />
         </div>
       ) : null}
@@ -169,6 +172,7 @@ export function FilesPanel(props: {
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
           moklyInstance="change-list"
+          {...defined({ menu: props.menu })}
         />
       ) : null}
       {props.tree === 'saved' ? (

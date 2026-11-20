@@ -27,14 +27,15 @@ import {
   newOrgs,
 } from './listStates'
 import { orderRail, orgOrderStates } from './orgOrderStates'
+import { subWorkspaceStates } from './subWorkspaceStates'
 import { workspaceMenuStates } from './workspaceMenuStates'
 import { MobileList } from './workspaceListMobile'
 import {
   archivedGroupView,
   listViewer,
-  rowMenuView,
   sectionsOf,
-} from './workspaceListViews'
+  stateView,
+} from './listViews'
 import styles from './WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
@@ -87,6 +88,11 @@ export const workspaceListSchema = {
      * saved order.
      */
     orgOrder: { enum: orgOrderStates },
+    /**
+     * The sub-workspaces of Acme, nested under their parents, as
+     * `subWorkspaceStates` says. Without it, every row is top-level.
+     */
+    subWorkspaces: { enum: subWorkspaceStates },
   },
 } as const
 
@@ -109,7 +115,7 @@ export function WorkspaceListScreen(props: {
   if (props.viewport === 'mobile') {
     return <MobileList overlay={props.overlay} state={props.state} />
   }
-  const view = rowMenuView(props.state, props.viewport)
+  const view = stateView(props.state, props.viewport)
   if (list === 'suspended') {
     const suspendedView = plainData({
       focus: view?.focus,
@@ -177,7 +183,7 @@ export function WorkspaceListScreen(props: {
   const listed = plainData({
     archived: view?.archived ?? group?.archived,
     archivedCollapsed: view?.archivedCollapsed,
-    drag: listDrag(menu),
+    drag: view?.drag ?? listDrag(menu),
     failed: list === 'failed',
     menu: listMenu(menu),
     focus: view?.focus ?? group?.focus,

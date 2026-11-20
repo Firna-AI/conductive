@@ -1,6 +1,6 @@
 ---
 title: Files and changes
-description: Read repository files, inspect branch changes, and copy or download the content you need to review an agent's work.
+description: Read repository files, inspect branch changes, copy paths or content, and add files to chat.
 group: Work
 order: 30
 ---
@@ -21,6 +21,7 @@ On a phone, open the workspace's **Files** view.
 
 An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings `.context/` support to an older workspace at a later start or when it is idle.
 
+Workspaces in a suspended org have no file lists.
 An archived workspace keeps read-only chat, with no file lists or tools.
 Its computer and files can stay available for Restore for 14 days after Archive.
 Restore the workspace while **Restore** is available.
@@ -52,8 +53,8 @@ SVG files show their source as text.
 Other binary files offer **Download** so you can open them with another application.
 The file view also offers **Download** if the browser cannot draw an image within the read limit.
 
-These views let you read the files.
-Ask the agent to change a file, or use **Terminal**.
+You can read files, copy content or paths, and add files or folders to chat.
+To change a file, ask the agent or use **Terminal**.
 
 You can open a file from its chip in an agent reply.
 A chip with a line, such as `app.ts:42`, opens the file as text with that line in view and marked.
@@ -65,6 +66,51 @@ Restore an archived workspace before opening its attached files.
 
 - [Attach files to messages](/docs/sessions-and-chat#attach-files)
 
+## Copy a path or add a file to chat
+
+Use a row's menu in **All files** or **Changes**.
+In **All files**, folder rows offer the menu too.
+
+On a computer:
+
+1. Right-click the row.
+   With a keyboard, press **Shift+F10** or the **Menu** key while the row has focus.
+2. Select **Add to chat** or **Copy path**.
+
+On a phone:
+
+1. Open **Files**.
+2. Press and hold a row without moving to open its menu as a sheet.
+3. Select **Add to chat** or **Copy path**.
+
+**Copy path** copies the path from the repository root, such as `src/app.ts` or `src/lib`.
+It has no starting `./`, final `/`, or quotes.
+**Path copied** confirms the copy.
+If it fails, the notice says **The path didn't copy. Try again.**
+Open the menu again to retry **Copy path**.
+
+For a moved file in **Changes**, the item copies its new path.
+For a deleted file, it copies the path that the file had.
+
+**Add to chat** shows the session tab you viewed last.
+On a phone, it switches to that chat.
+The file or folder appears as a chip, a small box in the message field.
+The chip goes at the text cursor, or at the end if the field has no cursor.
+With no open session tab, the item starts a new session with the chip.
+
+Write your request beside the chip.
+Select **Send** when it is ready.
+
+**Add to chat** is available only for files and folders that the `@` list can mention.
+The menu leaves it out for deleted files in **Changes**.
+It also leaves it out while a cloud computer status bar replaces the message field, such as while the computer is stopped.
+It also leaves it out until the chat of the workspace loads.
+
+A row whose path label hides a secret value offers neither item.
+A right click on that row opens the browser's own menu.
+
+- [Mention a repository file in a message](/docs/sessions-and-chat#mention-a-repository-file)
+
 ## Keep a file open
 
 On a computer, keep a file in a normal tab so that another file does not replace it.
@@ -74,14 +120,20 @@ You can also double-click the tab.
 To use the tab menu:
 
 1. Right-click the temporary tab.
-   With a keyboard, press **Shift+F10** while the tab has focus.
+   With a keyboard, press **Shift+F10** or the **Menu** key while the tab has focus.
 2. Select **Keep open**.
+
+A file or diff tab also offers **Copy path** in its tab menu.
+On a temporary tab, it comes after **Keep open**.
+It comes before **Move left** and **Move right**.
+A tab whose path label hides a secret value leaves out **Copy path**.
 
 Moving the temporary tab to another place in the row also keeps it.
 A normal tab stays open until you close it.
 The next file without a tab opens in a new temporary tab.
 
-In a read-only workspace, use a double-click to keep the tab.
+In an archived workspace or a suspended org, file and diff tab menus offer only **Copy path**.
+Use a double-click to keep a temporary tab there.
 
 ## Inspect changes
 
@@ -108,7 +160,7 @@ A committed file can remain in **Changes** while the branch differs from its bas
 
 On an open pull request, files not committed give **Commit and push** priority in the bar.
 Commits not pushed, with no files left to commit, give **Push** priority instead.
-It replaces Merge and the fix actions until that work is pushed.
+It replaces Merge, **Ready for review**, and the fix actions until that work is pushed.
 Some uncommitted work can exist without a visible diff in this list.
 Use `git status` in **Terminal** to inspect it.
 

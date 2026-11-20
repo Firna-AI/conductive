@@ -17,9 +17,9 @@ import {
 import {
   archivedGroupView,
   listViewer,
-  rowMenuView,
   sectionsOf,
-} from './workspaceListViews'
+  stateView,
+} from './listViews'
 import type { WorkspaceListState } from './WorkspaceListScreen'
 
 /**
@@ -56,7 +56,7 @@ export function MobileList(props: {
       </mobileFrame.Component>
     )
   }
-  const view = rowMenuView(props.state, 'mobile')
+  const view = stateView(props.state, 'mobile')
   const sections = view?.sections ?? sectionsOf(list)
   if (list === 'suspended') {
     // A suspended org has no section menus, so only the org switcher opens.
@@ -85,7 +85,7 @@ export function MobileList(props: {
         {...plainData({
           archived: view?.archived ?? group?.archived,
           archivedCollapsed: view?.archivedCollapsed,
-          drag: listDrag(menu),
+          drag: view?.drag ?? listDrag(menu),
           failed: list === 'failed',
           focus: view?.focus ?? group?.focus,
           menu: listMenu(menu),

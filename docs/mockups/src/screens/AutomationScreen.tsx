@@ -6,7 +6,7 @@ import { RunsPanel } from '../components/automations/RunsPanel'
 import { offersRunNow } from '../components/automations/triggerCopy'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/automationTriggers'
-import { automations, type Automation } from '../fixtures/automations'
+import type { Automation } from '../fixtures/automations'
 import { hasOlderRuns, runLists } from '../fixtures/runLists'
 import { paths } from '../paths'
 import { PhoneDelete, automationActions } from './automationActions'
@@ -20,6 +20,7 @@ import {
 } from './automationParts'
 import {
   accessOf,
+  automationOf,
   saveStateOf,
   viewerOf,
   type AutomationState,
@@ -75,7 +76,7 @@ export function AutomationScreen(props: {
       </AutomationFrame>
     )
   }
-  const automation = automations[state.automation]
+  const automation = automationOf(state)
   const access = accessOf(state, automation)
   const edits = editsOf(state.triggers, automation.triggers)
   const menu = state.triggers === 'menu'
@@ -90,9 +91,12 @@ export function AutomationScreen(props: {
     <AutomationForm
       access={access}
       edits={edits}
+      login={state.login}
       menu={menu}
+      modelMenu={state.modelMenu === 'open'}
       automation={automation}
       suspended={suspended}
+      viewer={viewerOf(state)}
       viewport={viewport}
     />
   )

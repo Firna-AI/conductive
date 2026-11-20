@@ -7,6 +7,7 @@ import {
 import { pathStates } from '../../../fixtures/maskedFiles'
 import { bannerStates } from '../../../fixtures/pullRequests'
 import { fileTabViews } from './fileSchemas'
+import { fileRowMenuSchema } from './rowMenuSchemas'
 
 /**
  * The files panel of the workspace, registered with Mokly. A screen
@@ -17,7 +18,7 @@ export const filesPanel = defineComponent({
   slug: 'files-panel',
   title: 'Files panel',
   description:
-    'The files of the workspace: the All files, Changes, and Checks tabs, then the shown list. When the cloud computer could not read the files, All files keeps the saved list under a notice, or says that no list is available. A screen can supply the state of a sandbox in place of the lists, and the actions of the pull request bar above the checks. Its own page shows the Changes of the branch.',
+    'The files of the workspace: the All files, Changes, and Checks tabs, then the shown list. When the cloud computer could not read the files, All files keeps the saved list under a notice, or says that no list is available. A right click on a row of All files or Changes opens its menu at the pointer. A screen can supply the state of a sandbox in place of the lists, and the actions of the pull request bar above the checks. Its own page shows the Changes of the branch.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -38,6 +39,8 @@ export const filesPanel = defineComponent({
       paths: { enum: pathStates },
       /** The changes of these paths only, as after Continue. */
       only: { type: 'array', items: { type: 'string' } },
+      /** The open menu of a row of the shown list. */
+      menu: fileRowMenuSchema,
     },
   } as const,
   slots: ['placeholder', 'checksTop'],
@@ -52,6 +55,7 @@ export const filesPanel = defineComponent({
       banner={props.banner}
       checksTop={props.checksTop}
       edited={props.edited}
+      menu={props.menu}
       only={props.only}
       open={props.open}
       paths={props.paths}

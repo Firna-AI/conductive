@@ -3,9 +3,11 @@ import type { Membership } from '../../fixtures/members'
 import { sections, type SectionKey } from '../../fixtures/sections'
 import { iconKeyOf } from '../../entries/components/common/icons'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import type { OpenSubmenu } from '../common/PointMenu'
 import { reassignMenu } from '../workspace/OwnerPicker'
-import type { OpenSubmenu, RowControls } from './RowMenu'
+import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
+import { isNested } from './trees'
 import {
   renames,
   workspaceMenuItems,
@@ -128,6 +130,7 @@ export function rowControls(
     archived: row.status === 'archived',
     otherSection: context.sections.length > 1,
     readOnly: context.readOnly,
+    nested: isNested(row),
   }
   const entries = workspaceMenu(access, submenu)
   if (drawing.kind === 'rename') {

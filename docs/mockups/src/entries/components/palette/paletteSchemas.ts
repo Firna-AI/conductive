@@ -40,6 +40,8 @@ export const paletteContextSchema = {
     restorable: { type: 'boolean' },
     /** The right column shows, so Hide the right column is an action. */
     rightColumn: { type: 'boolean' },
+    /** The page can show the sidebar, so Hide the sidebar is an action. */
+    sidebar: { type: 'boolean' },
     /** The palette of the Mac app, which adds This Mac to the settings. */
     mac: { type: 'boolean' },
     shortcuts: shortcutChangesSchema,

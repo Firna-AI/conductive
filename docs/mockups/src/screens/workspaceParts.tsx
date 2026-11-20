@@ -21,7 +21,9 @@ import {
   type StartingLog,
 } from '../fixtures/starting'
 import { terminalSets } from '../fixtures/terminals'
+import { openPort } from '../fixtures/previews'
 import { paths } from '../paths'
+import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
 import { isNew } from './workspaceTabs'
@@ -49,6 +51,9 @@ export function openFile(state: WorkspaceState): FileTabView | undefined {
     case 'new-session':
     case 'linked-session':
     case 'later-session':
+    case 'started-session':
+    case 'preview':
+    case 'preview-behind':
       return undefined
   }
 }
@@ -143,7 +148,7 @@ function listsPlaceholder(state: WorkspaceState, phone: boolean): ReactNode {
  * first start. On a phone, an open file shows as a page of the Files tab,
  * with the sandbox state in place of its content, as on desktop. An
  * archived workspace has no file lists: its files went with the cloud
- * computer.
+ * computer. A row of the lists can show its open menu.
  */
 export function FilesContent(props: {
   state: WorkspaceState
@@ -185,6 +190,7 @@ export function FilesContent(props: {
       view={state.files}
       {...defined({
         checksTop: props.checksTop,
+        menu: rowMenuOf(state, props.viewport),
         only: changedPaths(state),
         open,
         placeholder: listsPlaceholder(state, phone),
@@ -251,7 +257,9 @@ export function ToolContent(props: {
     case 'preview':
       return (
         <previewTool.Component
+          frame={mobile}
           moklyInstance="preview-tool"
+          shownPort={state.tab === 'preview' ? openPort : null}
           state={state.ports}
         />
       )

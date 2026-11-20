@@ -1,8 +1,6 @@
 import type { ComponentProps } from 'react'
-import type {
-  AgentsSection,
-  OpenAgentForm,
-} from '../components/settings/AccountSections'
+import type { AgentsSection } from '../components/settings/AccountSections'
+import type { OpenAgentForm } from '../components/settings/AgentList'
 import type { UnusableLogin } from '../components/settings/LoginNotUsable'
 import { agentKeys, type AgentKey } from '../fixtures/agents'
 import {
@@ -16,6 +14,7 @@ import {
   type AgentLogins,
   type AgentLogin,
 } from '../fixtures/logins'
+import { acmeLoginUse } from '../fixtures/orgLogins'
 import { paths } from '../paths'
 import type { AccountState } from './accountState'
 
@@ -84,7 +83,8 @@ function signingInAgain(state: AccountState): boolean {
 /**
  * The logins of the agents in a state. The agent of the form has no login,
  * except a Codex login that the app can no longer use, which stays in its
- * row while the form is open.
+ * row while the form is open. While the org login of Acme serves Cal
+ * because he has no Claude login, Claude has none.
  */
 function loginsFor(state: AccountState): AgentLogins {
   const logins: Partial<Record<AgentKey, AgentLogin>> = {}
@@ -103,8 +103,11 @@ function loginsFor(state: AccountState): AgentLogins {
     state.form === 'none' || signingInAgain(state)
       ? null
       : openForms[state.form].agent
+  const noOwn = state.orgLogin === 'no-own-login' ? 'claude' : null
   for (const key of agentKeys) {
-    if (key !== formAgent && kinds[key]) logins[key] = kinds[key]
+    if (key !== formAgent && key !== noOwn && kinds[key]) {
+      logins[key] = kinds[key]
+    }
   }
   return logins
 }
@@ -151,6 +154,8 @@ function unusableFor(state: AccountState): UnusableLogin | undefined {
  * step of its ChatGPT sign-in, the connected logins, the share setting
  * that the app did not save, and a Codex login that the app can no longer
  * use, whose Sign in again opens the ChatGPT sign-in form under its row.
+ * While the org login of Acme serves the new sessions of Cal, a line under
+ * Claude names it.
  */
 export function agentsFor(
   state: AccountState,
@@ -160,5 +165,6 @@ export function agentsFor(
     logins: loginsFor(state),
     shares: { notSaved: state.shareChange === 'not-saved' ? 'claude' : null },
     unusable: unusableFor(state),
+    orgLogins: state.orgLogin === 'none' ? undefined : acmeLoginUse(),
   }
 }

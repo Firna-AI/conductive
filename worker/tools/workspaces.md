@@ -48,6 +48,19 @@ the first session title, and the create request ID, as
 - `createdAt`, and `lastActivityAt`, the row's `updated_at`, whose age the
   workspace list of the app shows
 - `archivedAt`, and `restoreUntil` while a sandbox is kept
+- `parentId`, the stored parent ID or `null`, and `parent`, its list entry or `null`
+- `depth`, counting stored parent links, including archived ancestors
+- `children`, the direct sub-workspaces, oldest first, including archived ones
+
+For live workspaces, the section comes from the shared
+[row placement helper](../../src/shared/workspace-tree.ts).
+For archived workspaces, it is the workspace's own section.
+The helper takes top-level rows in their existing order, including archived rows.
+It removes archived middle rows in place and keeps their shown sub-workspaces there.
+A live row with no live ancestor uses its own section and input place.
+The Archive write gives promoted rows their first places.
+[The place of a row](../../docs/protocol/sub-workspaces.md#the-place-of-a-row)
+states the rule.
 
 ## Rename and move
 
@@ -64,6 +77,18 @@ the first session title, and the create request ID, as
   a workspace without a name.
 - A move puts the workspace first in its destination section. A move to
   the section that already holds the workspace changes nothing.
+- A top-level row moves with every descendant, including archived ones.
+  `writeWorkspaceTree` in [feature-workspaces-data.ts](../app-api/feature-workspaces-data.ts)
+  selects the current descendants and top-level rows with recursive SQL
+  inside its D1 batch. It ranks those top-level rows and writes each
+  descendant's section. `RETURNING` supplies the moved IDs for metadata
+  publication. The current-section check also runs inside the batch.
+- A nested row changes nothing. The route still runs the existing member,
+  workspace, and section checks. `readWorkspaceMove` reads the shown
+  top-level workspace with the shared rule for the reply's `notice`:
+  "Move W-<number> to move this workspace."
+- A top-level row whose parent is archived moves independently.
+  Restore of an ancestor shows it under the nearest live ancestor again.
 
 ## Archive
 
@@ -73,6 +98,13 @@ the first session title, and the create request ID, as
 - Only the workspace owner or an org admin can archive. Any other sender
   gets HTTP 403 `archive_forbidden`, and nothing changes.
 - An archive of an archived workspace changes nothing.
+- The Archive batch selects its first live descendants through archived
+  rows and gives them the archived row's section. Oldest first, they take
+  consecutive places from the archived row's place. In that same guarded
+  statement, each other row of the section above that place, live or
+  archived, gains the promoted count minus one. With zero or one promoted
+  row, no other row changes place. All other stored places stay.
+  The shared tree-write helper writes these places only when Archive wrote.
 - An archive of the calling workspace stops its sandbox and revokes its
   token. So the calling turn ends, and the caller can miss the reply.
 
@@ -84,6 +116,7 @@ the first session title, and the create request ID, as
 | Option | Value |
 | --- | --- |
 | `ownerId` | An exact member ID. An unknown ID gives an empty list. |
+| `parentId` | An exact workspace ID, for direct sub-workspaces. An unknown ID gives an empty list. |
 | `state` | One workspace state. |
 | `repositoryId` | An exact repository ID. |
 | `query` | Text after trimming. A blank value counts as no option. |
@@ -103,6 +136,8 @@ the first session title, and the create request ID, as
 - A call without options gives every workspace of the org, also the
   archived ones.
 - The owner filter reads no login and has no mine form.
+- Each list entry gives `parentId`, or `null` for a top-level workspace.
+- An empty `parentId` is malformed, as an empty `ownerId` is.
 
 ## Creation replay and first title
 
@@ -113,7 +148,7 @@ the first session title, and the create request ID, as
   replays. The current CLI and MCP server send a new request ID when the
   agent gives none. Tools from an older org image send none.
 - `replayWorkspaceCreation` runs before the current defaults, the
-  repository check, the section choice, and the name cleaning. It calls
+  parent and depth checks, the repository check, the section choice, and the name cleaning. It calls
   `replayCreation` in the [lifecycle](../lifecycle/key-code.md), which
   joins the saved claim, plan, and admission of that message ID.
 - So overlapping retries join one workspace and one provider allocation.
@@ -131,7 +166,23 @@ the first session title, and the create request ID, as
 - A blank title leaves the session without a title. A stored title blocks
   the workspace title from replacing it.
 - `workspace-create-composition.ts` accepts the first message, records the
-  calling workspace as the parent, and waits for the creation.
+  calling workspace as the creator, and waits for the creation.
+- `parentId` travels through `ToolWorkspaceCreation`, the lifecycle request,
+  the creation plan's `parent_workspace_id`, and the start job to the workspace insert.
+  A replay keeps that parent even when the repeated input names another one.
+- Before a new creation claim, the lifecycle waits for a pending parent's
+  saved admission or failure. The wait has the workspace start limit of
+  20 minutes. A failed unadmitted parent or a missing parent gets HTTP 404
+  `workspace_not_found`: "The parent workspace is not available."
+  An admitted parent stays available after a later start failure.
+  The parent read stays within the calling org. A replay checks its saved
+  parent before it queues a pending creation.
+- The insert reads the parent's own section in the statement that creates the workspace row.
+  `sectionId` still passes the org section check.
+  When it differs from the inherited section, the saved admission and the create reply give a `notice`.
+  An omitted section beside a parent stays omitted in the plan, so it gives no notice.
+- `saveWorkspaceToolCreator` in `composition-data.ts` writes `created_by_workspace_id`.
+  The separate `parent_workspace_id` stores the parent chosen by the create call.
 
 ## Tests
 
@@ -139,13 +190,25 @@ the first session title, and the create request ID, as
 The [Rust tools crate](../../crates/cnd-tools/README.md) tests CLI and MCP request construction.
 
 - `workspace-reads.test.ts`: token-only reads of archived workspace facts,
-  and the refusal of another org.
+  the parent, depth, direct children, shown section, and the refusal of another org.
 - `workspace-actions.test.ts`: a rename that automatic naming keeps, stale
   and archived writes, moves to a section top, unchanged same-section moves,
   stored-sender archive rights, and a self-archive that stops its turn and
   revokes its token.
+- `workspace-tree-actions.test.ts`: a nested move's notice, its unchanged
+  placement and activity time, its existing section check, and a tree move
+  that also publishes a descendant's changed metadata.
 - `workspace-lists.test.ts`: each filter alone and together, paging edges
-  and `hasMore`, and malformed options.
+  and `hasMore`, the direct-parent filter, and malformed options.
 - `workspace-creation.test.ts`, with `workspace-creation.test-support.ts`:
   overlapping creates, a lost reply after a restart or changed defaults, a
   titled first session, and the replay of a failed first start.
+- `handler.workspace-parents.test.ts`: parent access, archived parents across repositories,
+  the stored depth limit and sibling advice, and the existing section check.
+- [workspace-tree.test.ts](../../src/shared/workspace-tree.test.ts): tree order and the place of rows after an archive.
+- [workspace-data.test.ts](../lifecycle/workspace-data.test.ts): the parent's section at the insert when a move races with creation.
+- [creation-parent.test.ts](../lifecycle/creation-parent.test.ts): the stored
+  parent, section notice, replay after an admission restart, pending parent
+  admission, failed provisional cleanup, and an admitted parent's later failure.
+- [creation-admission-wait.test.ts](../lifecycle/creation-admission-wait.test.ts):
+  a saved creation failure without an admission and the bounded admission wait.

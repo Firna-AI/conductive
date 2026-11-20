@@ -27,6 +27,7 @@ export type CapabilityState =
 export type LocalWork = LocalWorkKind | 'unknown'
 
 type MergeRefusal = 'merge-moved-head' | 'merge-no-right' | 'merge-refused'
+type ReadyRefusal = 'ready-no-right' | 'ready-pull-changed' | 'ready-refused'
 
 /** An action of the app that the bar shows: a run, or how it ended. */
 export type BarOutcome =
@@ -34,6 +35,10 @@ export type BarOutcome =
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
   | { kind: 'merge-failed'; message: string }
+  | { kind: 'marking-ready' }
+  | { kind: 'ready-refused'; reason: ReadyRefusal }
+  /** Ready for review that ended without a known refusal, with its words. */
+  | { kind: 'ready-failed'; message: string }
   | { kind: 'continuing' }
   /** The Worker refused Continue because a turn runs. */
   | { kind: 'continue-waits' }
@@ -139,12 +144,15 @@ function accessOf(state: CapabilityState): {
 function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
   switch (outcome?.kind) {
     case 'merging':
+    case 'marking-ready':
     case 'continuing':
     case 'continue-failed':
       return outcome.kind
     case 'merge-refused':
+    case 'ready-refused':
       return outcome.reason
     case 'merge-failed':
+    case 'ready-failed':
     case 'continue-waits':
     case undefined:
       return 'none'
@@ -179,6 +187,7 @@ function messageOf(
         ? { text: outcome.message, tone: 'danger', href: null }
         : null
     case 'merge-refused':
+    case 'ready-refused':
       return {
         text: barMessageText(model.message, branches),
         tone: 'danger',
@@ -186,6 +195,8 @@ function messageOf(
       }
     case 'merge-moved-head':
     case 'merge-no-right':
+    case 'ready-no-right':
+    case 'ready-pull-changed':
       return {
         text: barMessageText(model.message, branches),
         tone: 'danger',
@@ -198,6 +209,9 @@ function messageOf(
     return waits
   }
   if (banner.state === 'ready-to-merge' && outcome?.kind === 'merge-failed') {
+    return { text: outcome.message, tone: 'danger', href: url }
+  }
+  if (banner.state === 'draft' && outcome?.kind === 'ready-failed') {
     return { text: outcome.message, tone: 'danger', href: url }
   }
   return null

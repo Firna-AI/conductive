@@ -63,7 +63,7 @@ export const sandboxPanel = defineComponent({
       /** The panel of a phone, with the action and the words of a refusal. */
       phone: { type: 'boolean' },
       /** The place of the panel. */
-      place: { enum: ['file', 'files', 'tools'] },
+      place: { enum: ['file', 'files', 'tools', 'preview'] },
     },
   } as const,
   props: { state: { problem: 'stopped' }, place: 'files' },

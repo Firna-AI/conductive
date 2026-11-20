@@ -1,7 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
 import { PortMessage, ServerList } from '../../../components/tools/PortForm'
 import { portFormCopy } from '../../../components/tools/previewCopy'
-import { detectedServers } from '../../../fixtures/previews'
+import { detectedServers, openPort } from '../../../fixtures/previews'
 
 /** A server that the runner detects, as `ListeningPort`. */
 const serverSchema = {
@@ -17,22 +17,38 @@ const serverSchema = {
 
 /**
  * The port form with the servers of the sandbox, registered with Mokly.
- * Its page shows the servers that the runner detects.
+ * Its pages show the servers that the runner detects, and the row of the
+ * Preview tab that shows on desktop.
  */
 export const serverList = defineComponent({
   slug: 'server-list',
   title: 'Server list',
   description:
-    'The port form of the Preview tool with the servers of the sandbox: a button for each server with its port, its name, and its folder, then the smaller Other port row. A folder that does not fit keeps its end. The list scrolls when it does not fit. Its own page shows the servers that the runner detects.',
+    'The port form of the Preview tool with the servers of the sandbox: a button for each server with its port, its name, and its folder, then the smaller Other port row. A folder that does not fit keeps its end. The list scrolls when it does not fit. On desktop a click shows the Preview tab of the port, and the row of the shown tab is the current one. Its own page shows the servers that the runner detects.',
   relatedDocs: ['docs/mockups/catalogue-workspace-tools.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: ['servers'],
-    properties: { servers: { type: 'array', items: serverSchema } },
+    properties: {
+      servers: { type: 'array', items: serverSchema },
+      /** The port of the Preview tab that shows on desktop, or null. */
+      current: { type: ['integer', 'null'] },
+    },
   } as const,
   props: { servers: detectedServers },
-  render: (props) => <ServerList servers={props.servers} />,
+  render: (props) => (
+    <ServerList current={props.current} servers={props.servers} />
+  ),
+  variants: [
+    {
+      slug: 'current',
+      title: 'Shown tab',
+      description:
+        'On desktop, the row of the port whose Preview tab shows is the current one.',
+      props: { current: openPort },
+    },
+  ],
 })
 
 /**

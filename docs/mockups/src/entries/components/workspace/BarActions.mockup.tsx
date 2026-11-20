@@ -32,7 +32,7 @@ export const barButtons = defineComponent({
   slug: 'bar-buttons',
   title: 'Bar buttons',
   description:
-    'The buttons of the pull request bar, the main action first. An agent action sends its fixed prompt, Merge merges as the viewer, Continue moves the workspace to a new branch, and Archive archives it at once. The main action takes the tint of the bar, and a bar without a tint shows the outline tone. On desktop, the tooltip of a button names the key of its command. Its own page shows Squash and merge.',
+    'The buttons of the pull request bar, the main action first. An agent action sends its fixed prompt, Merge merges as the viewer, Ready for review marks a draft ready as the viewer, Continue moves the workspace to a new branch, and Archive archives it at once. The main action takes the tint of the bar, and a bar without a tint shows the outline tone. On desktop, the tooltip of a button names the key of its command. Its own page shows Squash and merge.',
   relatedDocs: ['docs/mockups/design-bar.md'],
   propSchema: {
     type: 'object',
@@ -73,6 +73,20 @@ export const barButtons = defineComponent({
       description: 'Continue in the merged tint, and Archive in the outline.',
       props: { bar: mergedBar },
     },
+    {
+      slug: 'ready-for-review',
+      title: 'Ready for review',
+      description:
+        'The main action of a draft pull request, which marks it ready for review as the viewer.',
+      props: {
+        bar: {
+          banner: 'draft',
+          actions: [{ kind: 'ready', busy: false }],
+          link: 'open',
+          localWork: false,
+        },
+      },
+    },
   ],
 })
 
@@ -81,7 +95,7 @@ export const barMessage = defineComponent({
   slug: 'bar-message',
   title: 'Bar message',
   description:
-    'A message under the pull request bar, such as a refusal of GitHub. It tints its whole line, and its edges stay neutral. Another refusal of GitHub leads to the pull request on GitHub, where GitHub names the reason. Its own page shows a merge that GitHub refused.',
+    'A message under the pull request bar, such as a refusal of GitHub. It tints its whole line, and its edges stay neutral. Another refusal of GitHub, of a merge or of Ready for review, leads to the pull request on GitHub, where GitHub names the reason. Its own page shows a merge that GitHub refused.',
   relatedDocs: ['docs/mockups/design-bar.md'],
   propSchema: {
     type: 'object',
@@ -108,6 +122,13 @@ export const barMessage = defineComponent({
       title: 'Continue waits',
       description: 'A status, not an alert: Continue waits for the turn.',
       props: { kind: 'continue-waits' },
+    },
+    {
+      slug: 'ready-refused',
+      title: 'Ready for review refused',
+      description:
+        'GitHub refused to mark the draft ready, so the line leads to the pull request on GitHub.',
+      props: { kind: 'ready-refused' },
     },
   ],
 })

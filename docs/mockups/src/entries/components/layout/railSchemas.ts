@@ -1,3 +1,4 @@
+import { ORG_COLORS } from '../../../design/orgColors'
 import type { PersonKey } from '../../../fixtures/members'
 import type { OrgKey } from '../../../fixtures/orgs'
 
@@ -28,6 +29,8 @@ export const orgSchema = {
     name: { type: 'string' },
     /** Up to two letters, which the rail shows. */
     initials: { type: 'string' },
+    /** The colour of the tile of the open org. Absent means Blue. */
+    color: { enum: ORG_COLORS },
   },
 } as const
 
@@ -75,5 +78,7 @@ export const railSchema = {
     },
     /** The org whose tile menu a right click opened. */
     menu: { enum: orgKeys },
+    /** The workspace list of the hidden sidebar is open as a popover. */
+    popover: { type: 'boolean' },
   },
 } as const

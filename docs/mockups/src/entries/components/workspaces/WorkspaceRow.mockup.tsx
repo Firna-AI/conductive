@@ -22,7 +22,7 @@ export const workspaceRow = defineComponent({
   slug: 'workspace-row-view',
   title: 'Workspace row',
   description:
-    'One workspace on one line of the list: its list mark, its name, and the time since its last activity. A bold name is output that the user has not read, and a dim name a stopped sandbox. The action of the row, Archive or Restore, covers the time on hover. A drag lifts the row and leaves a faint copy behind. A right click opens its menu at the pointer, and Rename puts a field in place of the name. Its own page shows the row of the open workspace in the sidebar while its agent works.',
+    'One workspace on one line of the list: its list mark, its name, and the time since its last activity. A bold name is output that the user has not read, and a dim name a stopped sandbox. The action of the row, Archive or Restore, covers the time on hover. A nested row indents under the rows of its tree, and a row of a tree draws the guide lines of its tree. A drag lifts the row and leaves a faint copy behind, and a lifted row of a tree shows the count of the rows that move with it in place of its time. A right click opens its menu at the pointer, and Rename puts a field in place of the name. Its own page shows the row of the open workspace in the sidebar while its agent works.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -33,6 +33,8 @@ export const workspaceRow = defineComponent({
       /** The compact row of the sidebar, or the taller row of the page. */
       variant: { enum: ['sidebar', 'page'] },
       drag: { enum: ['lifted', 'placeholder'] },
+      /** The nested rows that move with a lifted row of a tree. */
+      carried: { type: 'integer', minimum: 0 },
       /** The row offers Archive on hover. */
       archivable: { type: 'boolean' },
       /** An archived row offers Restore on hover. */
@@ -44,6 +46,7 @@ export const workspaceRow = defineComponent({
   render: (props) => (
     <WorkspaceRowView
       archivable={props.archivable}
+      carried={props.carried}
       controls={props.controls}
       drag={props.drag}
       restorable={props.restorable}

@@ -13,9 +13,14 @@ import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import { HttpError } from '../http'
 import { leasedImage, type LeasedImage } from './image-leases'
 import type { RepositoryLocation } from './repository-locations'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type WorkspaceCapabilities,
+} from '../../src/shared/secrets'
+import { creationPreapprovals } from '../secrets/capabilities-writes'
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
-  w.section_id AS sectionId, w.owner_user_id AS ownerUserId,
+  w.section_id AS sectionId, w.parent_workspace_id AS parentId, w.owner_user_id AS ownerUserId,
   u.github_login AS githubLogin, u.display_name AS displayName, u.avatar_url AS avatarUrl,
   ${workspaceNameColumn('w')}, w.branch,
   COALESCE(w.base_branch, (SELECT default_branch FROM repositories WHERE id = w.repository_id AND org_id = w.org_id)) AS baseBranch,
@@ -64,6 +69,7 @@ export function workspaceRecord(row: WorkspaceRow): Omit<Workspace, 'link'> {
     orgId: row.orgId,
     repositoryId: row.repositoryId,
     sectionId: row.sectionId,
+    parentId: row.parentId,
     owner: {
       id: row.ownerUserId,
       githubLogin: row.githubLogin,
@@ -95,6 +101,7 @@ export async function insertWorkspace(
     providerAccount: string
     repositoryId: string
     sectionId?: string
+    parentId?: string
     user: User
     senderUserId?: string
     city: string
@@ -106,8 +113,10 @@ export async function insertWorkspace(
     message: SendMessageRequest
     now: number
     repositoryLocations?: readonly RepositoryLocation[]
+    capabilities?: WorkspaceCapabilities
   },
 ): Promise<LeasedImage> {
+  const capabilities = input.capabilities ?? NEW_WORKSPACE_CAPABILITIES
   if (!input.sectionId) {
     await db
       .prepare(
@@ -132,28 +141,33 @@ export async function insertWorkspace(
   await db.batch([
     db
       .prepare(
-        `INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id,
-       name, branch, branch_placeholder, base_branch, provider_account, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, 'starting', ?, ?, ?,
+        `WITH destination AS (
+         SELECT COALESCE((SELECT section_id FROM workspaces WHERE org_id = ? AND id = ?), ?) AS section_id
+       ) INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id, parent_workspace_id,
+       name, branch, branch_placeholder, base_branch, provider_account, mac_access, state, created_at, updated_at, last_activity_at, position)
+       SELECT ?, ?, ?, ?, destination.section_id, ?, ?, ?, 1, ?, ?, ?, 'starting', ?, ?, ?,
          (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
-          WHERE org_id = ? AND section_id = ? AND archived_at IS NULL AND state != 'archived')
-       WHERE ${activeOrgIdPredicate('?')}`,
+          WHERE org_id = ? AND section_id = destination.section_id AND archived_at IS NULL AND state != 'archived')
+       FROM destination WHERE ${activeOrgIdPredicate('?')}`,
       )
       .bind(
+        input.orgId,
+        input.parentId ?? null,
+        section.id,
         input.id,
         input.orgId,
         input.repositoryId,
         input.user.id,
-        section.id,
+        input.parentId ?? null,
         input.name ?? '',
         input.branch,
         input.baseBranch ?? null,
         input.providerAccount,
+        Number(capabilities.macAccess),
         input.now,
         input.now,
         input.now,
         input.orgId,
-        section.id,
         input.orgId,
       ),
     db
@@ -177,6 +191,13 @@ export async function insertWorkspace(
           : null,
         input.id,
       ),
+    creationPreapprovals(db, {
+      orgId: input.orgId,
+      workspaceId: input.id,
+      secretIds: capabilities.preapprovedSecretIds,
+      userId: input.senderUserId ?? input.user.id,
+      now: input.now,
+    }),
   ])
   await requireActiveOrg(db, input.orgId)
   return leasedImage(db, input.orgId, input.id)
@@ -263,15 +284,4 @@ export async function revokeWorkspacePreviews(
     )
     .bind(now, workspaceId)
     .run()
-}
-
-export function workspaceExists(
-  db: D1Database,
-  orgId: string,
-  workspaceId: string,
-): Promise<{ id: string } | null> {
-  return db
-    .prepare('SELECT id FROM workspaces WHERE org_id = ? AND id = ?')
-    .bind(orgId, workspaceId)
-    .first<{ id: string }>()
 }

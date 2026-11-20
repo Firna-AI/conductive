@@ -21,12 +21,12 @@ export const workspaceHeader = defineComponent({
   slug: 'workspace-header',
   title: 'Workspace header',
   description:
-    'The name, number, repository, owner, and state of the open workspace. The label of the number follows the name and copies the link of the workspace. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its automation and its pull request. Its own page shows Checkout address autocomplete for an admin.',
+    'The name, number, repository, owner, and state of the open workspace. The label of the number follows the name and copies the link of the workspace. For an admin of the org, the owner opens the menu that reassigns the workspace. On desktop the header ends with the toggle that hides the right column. On a phone, Back leads the header, and the label of the number leads the line under the name. A run workspace also links to its automation and its pull request. While the software of the cloud computer runs, the state opens a menu with Restart, for every member of an org that is not suspended. Its own page shows Checkout address autocomplete for an admin.',
   relatedDocs: ['docs/mockups/design-workspace.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
-    required: ['workspace', 'name', 'status', 'canReassign'],
+    required: ['workspace', 'name', 'status', 'canRestart', 'canReassign'],
     properties: {
       workspace: workspaceSchema,
       /** The name to show, such as Untitled before the title comes. */
@@ -36,6 +36,10 @@ export const workspaceHeader = defineComponent({
       viewport: { enum: viewports },
       /** The menu of the owner is open. A phone shows it as a sheet. */
       ownerOpen: { type: 'boolean' },
+      /** The menu of the state is open. A phone shows it as a sheet. */
+      stateOpen: { type: 'boolean' },
+      /** The workspace can change, so the state can open its menu. */
+      canRestart: { type: 'boolean' },
       /** The person signed in is an admin of the org. */
       canReassign: { type: 'boolean' },
       /** The list that Back opens on a phone. */
@@ -52,17 +56,20 @@ export const workspaceHeader = defineComponent({
     workspace: checkoutAutocomplete,
     name: checkoutAutocomplete.name,
     status: 'ready',
+    canRestart: true,
     canReassign: true,
   },
   render: (props, context) => (
     <WorkspaceHeader
       back={props.back}
       canReassign={props.canReassign}
+      canRestart={props.canRestart}
       copy={props.copy}
       name={props.name}
       ownerOpen={props.ownerOpen}
       rightHidden={props.rightHidden}
       run={props.run}
+      stateOpen={props.stateOpen}
       status={props.status}
       viewport={props.viewport ?? context.viewport}
       workspace={props.workspace}

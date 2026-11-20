@@ -11,6 +11,7 @@ import {
   sandboxNoticeSchema,
   startingLogSchema,
 } from '../workspace/sandboxSchemas'
+import { withComposerPanel } from './capabilitiesSlot'
 import { chatItemSchema } from './chatItemSchemas'
 import { composerStateSchema } from './composerSchemas'
 
@@ -24,16 +25,16 @@ const composer = {
 
 /**
  * The chat transcript with its composer, registered with Mokly. A screen
- * supplies the content of an empty chat and the notice above the composer
- * in slots. A screen that draws a screen of another viewport passes
- * `viewport`. Without it, a page of the part draws the layout of its own
- * view.
+ * supplies the content of an empty chat, the notice above the composer,
+ * and the open Capabilities control of the composer in slots. A screen
+ * that draws a screen of another viewport passes `viewport`. Without it, a
+ * page of the part draws the layout of its own view.
  */
 export const chatPane = defineComponent({
   slug: 'chat-pane',
   title: 'Chat pane',
   description:
-    'The chat transcript, with the composer or a sandbox bar under it. When a turn ends, the work before each of its answers folds into one line. While the sandbox starts, its steps show at the end of the transcript. The commands that wait for approval on a Mac stay in view just above the composer. An empty chat shows the content that the screen supplies. Its own page shows the finished turn of Checkout address autocomplete.',
+    'The chat transcript, with the composer or a sandbox bar under it. When a turn ends, the work before each of its answers folds into one line. While the sandbox starts, its steps show at the end of the transcript. The commands that wait for approval on a Mac and the requests for secrets while their tool calls wait stay in view just above the composer. A request that outlived its tool call stays at its place, as a late request. An empty chat shows the content that the screen supplies. Its own page shows the finished turn of Checkout address autocomplete.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -54,11 +55,11 @@ export const chatPane = defineComponent({
       viewport: { enum: viewports },
     },
   } as const,
-  slots: ['empty', 'notice'],
+  slots: ['empty', 'notice', 'capabilitiesPanel'],
   props: { items: plainData(conversations.history), composer, viewer: 'cal' },
   render: (props, context) => (
     <ChatPane
-      composer={props.composer}
+      composer={withComposerPanel(props.composer, props.capabilitiesPanel)}
       empty={props.empty}
       fold={props.fold}
       items={props.items}

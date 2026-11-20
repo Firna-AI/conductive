@@ -8,6 +8,7 @@ export class ClaudeBackground {
   private ambient = new Set<string>()
   private crons: readonly SessionCronSummary[] = []
   private idle = false
+  private observed = false
   private readonly emit: (event: ProviderEvent) => void
   waited = false
 
@@ -19,8 +20,13 @@ export class ClaudeBackground {
     return this.tasks.size > 0 || this.crons.length > 0
   }
 
+  /**
+   * The engine also waits for a fresh idle state after work that this process
+   * saw. So a wake-up reply in that wait counts too, like in a live wait.
+   */
   result(allAnswered: boolean): void {
-    if (allAnswered && this.live) this.waited = true
+    if (allAnswered && (this.live || (this.observed && !this.idle)))
+      this.waited = true
   }
 
   input(): void {
@@ -69,6 +75,7 @@ export class ClaudeBackground {
   }
 
   private publish(): void {
+    if (this.live) this.observed = true
     this.emit({ type: 'background', live: this.live, idle: this.idle })
   }
 }

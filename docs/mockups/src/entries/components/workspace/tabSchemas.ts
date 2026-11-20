@@ -9,6 +9,7 @@ const tabKinds = [
   'file',
   'diff',
   'terminal',
+  'preview',
 ] as const satisfies readonly TabKind[]
 
 /** A tab of the centre column as JSON, with the fields of `WorkspaceTab`. */
@@ -27,6 +28,8 @@ export const workspaceTabSchema = {
     running: { type: 'boolean' },
     /** The temporary tab, whose title shows in italics. */
     temporary: { type: 'boolean' },
+    /** The label of the file can hide a secret value: no Copy path. */
+    hidesPath: { type: 'boolean' },
   },
 } as const
 

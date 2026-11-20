@@ -8,6 +8,7 @@ import {
 } from '../../../fixtures/attachments'
 import { mentionDrafts } from '../../../fixtures/fileMentions'
 import { roomAboveSchema, withRoomAbove } from '../common/ownPages'
+import { withPanel } from './capabilitiesSlot'
 import { composerRequired, composerStateProperties } from './composerSchemas'
 
 /** An empty message box with the default model. */
@@ -22,13 +23,14 @@ const empty = {
  * The message box of a chat, registered with Mokly. Its pages show an
  * empty box, a draft with files over a drop, a running turn, the list of
  * `@`, and the login of another member. The list of `@` opens above the
- * box, so its page gives it room above.
+ * box, so its page gives it room above. A screen supplies the open
+ * Capabilities control in the `capabilitiesPanel` slot.
  */
 export const composer = defineComponent({
   slug: 'composer',
   title: 'Composer',
   description:
-    'The message box: the text, with a chip for each attached file at its place, then a bar with the attach button, the model picker, and Send. The whole box takes a drop of files and shows the drop state while files hover over it. While a turn runs, a message steers the turn, and Stop ends it. Send waits for the uploads of the files. When a message spends the login of another member, a label after the picker names it. `@` opens the list of the files and folders above the box. Its own page shows an empty box.',
+    'The message box: the text, with a chip for each attached file at its place, then a bar with the attach button, the Capabilities icon, the model picker, and Send. A phone holds Attach files and Capabilities in the menu of one button, and shows Stop as its icon. The whole box takes a drop of files and shows the drop state while files hover over it. While a turn runs, a message steers the turn, and Stop ends it. Send waits for the uploads of the files. When a message spends the login of another member or the org login, a label after the picker names it. `@` opens the list of the files and folders above the box. Its own page shows an empty box.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',
@@ -41,9 +43,16 @@ export const composer = defineComponent({
       roomAbove: roomAboveSchema,
     },
   } as const,
+  slots: ['capabilitiesPanel'],
   props: empty,
-  render: ({ roomAbove, ...props }) =>
-    withRoomAbove(<Composer {...props} />, roomAbove),
+  render: ({ roomAbove, capabilities, capabilitiesPanel, ...props }) =>
+    withRoomAbove(
+      <Composer
+        {...props}
+        capabilities={withPanel(capabilities, capabilitiesPanel)}
+      />,
+      roomAbove,
+    ),
   variants: [
     {
       slug: 'drop',
@@ -79,7 +88,7 @@ export const composer = defineComponent({
         'A message spends the login of the starter, so a label after the picker names it.',
       props: {
         draft: 'Show a loading state under the address line.',
-        sessionLogin: { starter: 'Cal' },
+        sessionLogin: { owner: 'Cal' },
       },
     },
   ],

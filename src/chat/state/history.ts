@@ -2,6 +2,7 @@ import { withSession } from './chat-snapshot'
 import type { ChatContext, HistoryLoad } from './context'
 import type { StreamEnvelope } from '../api/read-workspace'
 import { chatEventsOf } from '../../shared/transcript/session-events'
+import { withSecretEvents } from '../secrets/secret-snapshot'
 import { mergeSession } from './session-records'
 
 /** A history page whose cursor does not move the read backwards. */
@@ -16,7 +17,12 @@ function merge(
     (envelope) => envelope.workspaceId === context.target.workspaceId,
   )
   const change = mergeSession(context, sessionId, chatEventsOf(sessionId, own))
-  context.store.update(change.apply)
+  // A page also holds the secret requests, runs, and late answers of the session.
+  context.store.update((snapshot) => {
+    const next = change.apply(snapshot)
+    const secrets = withSecretEvents(next.secrets, own)
+    return secrets === next.secrets ? next : { ...next, secrets }
+  })
 }
 
 /**

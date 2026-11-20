@@ -16,11 +16,14 @@ import { membersRoute } from './members/route'
 import { productionMembersHooks } from './members/composition'
 import { archiveRoute } from './app-api/archive'
 import { continueRoute } from './app-api/continue'
+import { restartRoute } from './app-api/restart'
 import { automationsRoute } from './automations/route'
 import { automationRunsRoute } from './automations/run-route'
 import { hasAppAccess } from './waitlist/data'
 import { waitlistRoute } from './waitlist/route'
 import { feedbackRoute } from './app-api/feedback'
+import { secretsRoute } from './app-api/secrets'
+import { capabilitiesRoute } from './app-api/capabilities'
 
 export { routeDevice } from './devices/router'
 
@@ -32,6 +35,15 @@ export async function route(
   codexTasks: CodexTaskOwner,
   execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response> {
+  const secrets = await secretsRoute(request, env, context, dependencies)
+  if (secrets) return secrets
+  const capabilities = await capabilitiesRoute(
+    request,
+    env,
+    context,
+    dependencies,
+  )
+  if (capabilities) return capabilities
   const codexDevice = await codexDeviceRoute(
     request,
     env,
@@ -86,6 +98,8 @@ export async function route(
   if (archive) return archive
   const continued = await continueRoute(request, env, context)
   if (continued) return continued
+  const restart = await restartRoute(request, env, context, dependencies)
+  if (restart) return restart
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
   const shell = await shellRoute(request, env, context, dependencies)

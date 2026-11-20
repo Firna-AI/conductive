@@ -9,6 +9,7 @@ import {
   speedCauses,
   turnEndReasons,
 } from './chatKeys'
+import { lateAnswerItemSchema, secretRunItemSchema } from './secretItemSchemas'
 
 /** The kinds of a tool call, as `ToolKind` lists them. */
 const toolKinds = [
@@ -215,6 +216,8 @@ export const chatItemSchema = {
     lostItem,
     linkedItem,
     continuedItem,
+    secretRunItemSchema,
+    lateAnswerItemSchema,
   ],
 } as const
 
@@ -231,10 +234,18 @@ export const singleItemSchema = {
     lostItem,
     linkedItem,
     continuedItem,
+    secretRunItemSchema,
+    lateAnswerItemSchema,
   ],
 } as const
 
 /** A step of the work of an ended turn, as `WorkItem`. */
 export const workItemSchema = {
-  anyOf: [agentItemSchema, toolCallSchema, macItem, lostItem],
+  anyOf: [
+    agentItemSchema,
+    toolCallSchema,
+    macItem,
+    secretRunItemSchema,
+    lostItem,
+  ],
 } as const

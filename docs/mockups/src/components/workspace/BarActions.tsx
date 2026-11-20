@@ -28,7 +28,8 @@ import styles from './BarActions.module.css'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
- * merges as the viewer, Continue moves the workspace to a new branch, and
+ * merges as the viewer, Ready for review marks a draft ready as the
+ * viewer, Continue moves the workspace to a new branch, and
  * Archive archives the workspace at once. Each one leads to the screen that
  * follows. The main action takes the tint of the bar, outside its link,
  * because the link of the mockups needs the button as its own child. On
@@ -82,6 +83,30 @@ function BarButton(props: {
                 tone={tone}
               >
                 {action.busy ? barLabels.merging : mergeLabels[action.method]}
+              </actionButton.Component>
+            </ScreenLink>
+          </TintedTheme>
+        </shortcutTip.Component>
+      )
+    case 'ready':
+      return (
+        <shortcutTip.Component
+          command="mark-ready-for-review"
+          label={barLabels.readyForReview}
+          moklyInstance="ready-tip"
+          off={action.busy}
+        >
+          <TintedTheme tint={tint}>
+            <ScreenLink asChild to={barPaths.markingReady}>
+              <actionButton.Component
+                busy={action.busy}
+                icon="git-pull-request-arrow"
+                moklyInstance="ready-for-review"
+                tone={tone}
+              >
+                {action.busy
+                  ? barLabels.markingReady
+                  : barLabels.readyForReview}
               </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
@@ -200,7 +225,7 @@ export function BarMessage(props: {
       <span className={styles.text}>
         {barMessageText(props.kind, branches)}
       </span>
-      {props.kind === 'merge-refused' ? (
+      {props.kind === 'merge-refused' || props.kind === 'ready-refused' ? (
         <githubLink.Component
           href={pullRequest.url}
           label={barLabels.openOnGitHub}

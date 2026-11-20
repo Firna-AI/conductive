@@ -19,7 +19,10 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   sit inset at the top left of the left panel, above every layer of the
   app, as macOS draws them. `WindowControls` keeps their space, then shows
   the sidebar toggle, and back and forward at the right. In full screen
-  the buttons are gone, and the toggle takes their space.
+  the buttons are gone, and the toggle takes their space. While the toggle
+  hides the sidebar, the controls keep their own width in the top left
+  corner, and the top bar of the main area starts after them, as
+  `mac-app/window/sidebar-popover` shows.
 - `MacApp` marks the screens inside it as the Mac app, so that `AppFrame`
   draws the window controls and a banner of the Mac app. The account of
   the Mac app keeps the sidebar of the org and adds the This Mac tab last.
@@ -51,7 +54,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   Each button of the bar links to the page of its result.
   A grant until Stop shows Until you stop and Stop, with no Extend or Keep.
 - The requests that wait share one region above the composer, from
-  `ChatPane.module.css`. It takes at most 40% of the window, so a long
+  `ChatPane.module.css`, with the requests for secrets, as
+  [secrets and Capabilities](design-secrets.md) gives. It takes at most 40% of the window, so a long
   command or many requests scroll inside it, and an edge that cuts a
   request fades. `mac-app/requests` draws four requests with a long script.
   A view cannot open a popover, so the chat draws an open menu with
@@ -73,7 +77,9 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available. When its turn ends, the card folds with the work
+  or Mac not available. A workspace with Mac access off refuses a request
+  at once, and its card says Mac access off, as
+  `app/mac-commands/mac-access-off` shows. When its turn ends, the card folds with the work
   of the turn at its place, from decision 151, as
   `app/chat/work/mac-command` shows.
 - The Mac app gives the page every key, so its Keyboard shortcuts tab,
@@ -81,8 +87,8 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   its child pages `search`, `recording`, and `changes`. A search field at
   the top finds a row by its words, from decision 195. The line under it
   says that keys without ⌘ go to the terminal while it has the focus.
-  Only the Mac app has Hide or show the sidebar, Back, Forward, Paste and
-  match style, and the Mac app group of its menu keys. From decision 193,
+  Only the Mac app has Back, Forward, Paste and match style, and the Mac
+  app group of its menu keys. From decision 193,
   the Workspace group ends with the fixed keys of a focused workspace row
   and a focused divider. Reset all asks first, in a `ConfirmDialog`. A
   browser shows the same tab with the keys of its tab, as

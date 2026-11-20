@@ -10,14 +10,45 @@ export const mentionTrees = [
   'unavailable',
 ] as const satisfies readonly MentionTree[]
 
-/** The agent login of another member that a session uses. */
-const sessionLoginSchema = {
+/**
+ * The agent login of a message when it is not the own login of the viewer:
+ * the login of another member, or the org login, as `SessionLogin`.
+ */
+export const sessionLoginSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['starter'],
+  required: ['owner'],
   properties: {
-    /** The name of the starter, such as `Cal`. */
-    starter: { type: 'string' },
+    /** The name of the owner of the login, such as `Cal` or `Acme`. */
+    owner: { type: 'string' },
+  },
+} as const
+
+/**
+ * The Capabilities icon of a message box, as `CapabilitiesControl` without
+ * its open control. A screen draws the open control, so a part takes it in
+ * the `capabilitiesPanel` slot.
+ */
+export const capabilitiesSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    /** The screen with the control open, which a press on the icon opens. */
+    to: { type: 'string', minLength: 1 },
+    /** The control is open elsewhere, such as in a sheet on a phone. */
+    expanded: { type: 'boolean' },
+  },
+} as const
+
+/** The menu of the one button of a phone composer, as `ComposerMenuState`. */
+const composerMenuSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['open'],
+  properties: {
+    open: { type: 'boolean' },
+    /** The screen with the menu open, which a press on the button opens. */
+    to: { type: 'string', minLength: 1 },
   },
 } as const
 
@@ -53,12 +84,16 @@ export const composerStateProperties = {
   sendTo: { type: 'string', minLength: 1 },
   /** The agent of the chosen model is not connected, so Send is off. */
   blocked: { type: 'boolean' },
-  /** The login of the starter that a message spends. */
+  /** The login of another member, or the org login, that a message spends. */
   sessionLogin: sessionLoginSchema,
   /** The list of `@` is open above the box, with this file tree. */
   mention: { enum: mentionTrees },
   /** The pointer over the icon of the first chip of the text. */
   pointer: { type: 'boolean' },
+  /** The Capabilities icon beside the attach button. */
+  capabilities: capabilitiesSchema,
+  /** The menu of the one button of a phone, with Attach files. */
+  menu: composerMenuSchema,
 } as const
 
 /** The required fields of the state of a message box. */

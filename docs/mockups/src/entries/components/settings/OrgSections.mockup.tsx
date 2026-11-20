@@ -8,6 +8,7 @@ import {
   suspendedSettingsLinks,
   type SettingsTab,
 } from '../../../components/settings/OrgSections'
+import { ORG_COLORS } from '../../../design/orgColors'
 import { orgs } from '../../../fixtures/orgs'
 import { readOnlyCauseSchema } from './computerSchemas'
 
@@ -18,6 +19,8 @@ const settingsTabKeys = [
   'general',
   'repositories',
   'computer',
+  'agents',
+  'secrets',
   'members',
 ] as const satisfies readonly SettingsTab[]
 
@@ -29,7 +32,7 @@ export const settingsTabs = defineComponent({
   slug: 'settings-tabs',
   title: 'Settings tabs',
   description:
-    'The parts of the org settings as tabs that link to each part: General, Repositories, Cloud computer, and Members. Every person of the org sees the same tabs. On a phone, the tabs wrap to two lines. Its own page shows General.',
+    'The parts of the org settings as tabs that link to each part: General, Repositories, Cloud computer, Agents, Secrets, and Members. Every person of the org sees the same tabs. On a phone, the tabs wrap to two lines. Its own page shows General.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -48,6 +51,8 @@ export const settingsTabs = defineComponent({
           general: pageSchema,
           repositories: pageSchema,
           computer: pageSchema,
+          agents: pageSchema,
+          secrets: pageSchema,
           members: pageSchema,
         },
       },
@@ -98,21 +103,24 @@ export const orgDetailsSection = defineComponent({
   slug: 'org-details-section',
   title: 'Org details section',
   description:
-    'The name of the org and the initials that the rail shows, on the General tab of the org settings: fields with Save for an admin, or the values without fields for a member who is not an admin and for everyone in a suspended org. Its own page shows Acme for an admin.',
+    'The name of the org and the initials that the rail shows, on the General tab of the org settings: fields with Save for an admin, or the values and the colour of the org without fields for a member who is not an admin and for everyone in a suspended org. An admin changes the colour in its own section. Its own page shows Acme for an admin.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
-    required: ['name', 'initials'],
+    required: ['name', 'initials', 'color'],
     properties: {
       name: { type: 'string' },
       initials: { type: 'string' },
+      /** The colour of the org, which the rail shows on its tile. */
+      color: { enum: ORG_COLORS },
       readOnly: readOnlyCauseSchema,
     },
   } as const,
-  props: { name: acme.name, initials: acme.initials },
+  props: { name: acme.name, initials: acme.initials, color: 'blue' },
   render: (props) => (
     <OrgDetailsSection
+      color={props.color}
       initials={props.initials}
       name={props.name}
       readOnly={props.readOnly}

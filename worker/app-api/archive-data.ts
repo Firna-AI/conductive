@@ -4,6 +4,7 @@ import { HttpError } from '../http'
 import { requireOrgMember } from '../members/permissions'
 import { requireActiveOrg } from '../data/user-access'
 import { activeOrgPredicate } from '../data/org-access'
+import { writeWorkspaceTree } from './feature-workspaces-data'
 
 export async function archiveWorkspaceAccess(
   env: AppEnv,
@@ -30,7 +31,9 @@ export async function markWorkspaceArchived(
   userId: string,
   now: number,
 ): Promise<void> {
-  await env.DB.batch([
+  await writeWorkspaceTree(
+    env.DB,
+    { kind: 'archive', orgId, workspaceId: id },
     env.DB.prepare(
       `UPDATE workspaces SET archived_at = ?, state = 'archived', running_since = NULL,
       updated_at = MAX(?, updated_at + 1) WHERE id = ? AND org_id = ? AND archived_at IS NULL
@@ -40,10 +43,12 @@ export async function markWorkspaceArchived(
         AND ${activeOrgPredicate('o')}
         AND (m.role = 'admin' OR workspaces.owner_user_id = m.user_id))`,
     ).bind(now, now, id, orgId, userId),
-    env.DB.prepare(
-      `UPDATE workspace_tokens SET revoked_at = COALESCE(revoked_at, ?)
+    [
+      env.DB.prepare(
+        `UPDATE workspace_tokens SET revoked_at = COALESCE(revoked_at, ?)
       WHERE workspace_id = ? AND EXISTS (SELECT 1 FROM workspaces WHERE id = ? AND state = 'archived')`,
-    ).bind(now, id, id),
-  ])
+      ).bind(now, id, id),
+    ],
+  )
   await requireActiveOrg(env.DB, orgId)
 }

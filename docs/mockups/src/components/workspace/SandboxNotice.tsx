@@ -199,7 +199,7 @@ export function SandboxPanel(props: {
   state: SandboxPanelState
   phone: boolean
   /** The place of the panel, which names it for Mokly. */
-  place: 'file' | 'files' | 'tools'
+  place: 'file' | 'files' | 'tools' | 'preview'
 }) {
   const theme = useSharedUiTheme()
   const { state } = props

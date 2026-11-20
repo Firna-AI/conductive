@@ -1,4 +1,5 @@
 import type { EndpointEntry } from '../../../components/settings/EndpointFields'
+import type { LoginOwner } from '../../../components/settings/EndpointModels'
 import { signInSteps } from '../../../components/settings/chatGptSignInCopy'
 import { agentKeys } from '../../../fixtures/agents'
 import { loginKinds } from '../../../fixtures/logins'
@@ -15,6 +16,12 @@ const endpointEntries = [
 
 /** What the endpoint field of a Connect form holds. */
 export const endpointEntrySchema = { enum: endpointEntries } as const
+
+/** Who owns an own endpoint login, as `LoginOwner` lists them. */
+const loginOwners = ['personal', 'org'] as const satisfies readonly LoginOwner[]
+
+/** Who owns an own endpoint login: a member, or the org. */
+export const loginOwnerSchema = { enum: loginOwners } as const
 
 /** The step of the ChatGPT sign-in of Codex, as `SignInStep`. */
 export const signInStepSchema = { enum: signInSteps } as const
@@ -70,14 +77,14 @@ const agentLoginSchema = {
 } as const
 
 /** The logins of the agents that a person connected, as `AgentLogins`. */
-export const agentLoginsSchema = {
+const agentLoginsSchema = {
   type: 'object',
   additionalProperties: false,
   properties: { claude: agentLoginSchema, codex: agentLoginSchema },
 } as const
 
 /** The Connect form that is open under the row of an agent, as `OpenAgentForm`. */
-export const openAgentFormSchema = {
+const openAgentFormSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['agent', 'connectTo', 'cancel'],
@@ -88,11 +95,15 @@ export const openAgentFormSchema = {
     cancel: { type: 'boolean' },
     endpoint: endpointEntrySchema,
     signIn: signInStepSchema,
+    /** The form replaces a connected login, so its main button says Replace. */
+    replace: { type: 'boolean' },
+    /** The cause of a save that failed, which a notice gives. */
+    failed: { type: 'string' },
   },
 } as const
 
 /** A login that the app can no longer use, as `UnusableLogin`. */
-export const unusableLoginSchema = {
+const unusableLoginSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['agent', 'cause', 'signInTo'],
@@ -109,4 +120,25 @@ export const loginSharesSchema = {
   additionalProperties: false,
   required: ['notSaved'],
   properties: { notSaved: { enum: [...agentKeys, null] } },
+} as const
+
+/** For each agent, the orgs whose org login serves the person, as `OrgLoginUse`. */
+const orgLoginUseSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    claude: { type: 'array', items: { type: 'string' } },
+    codex: { type: 'array', items: { type: 'string' } },
+  },
+} as const
+
+/** The data of the list of the agents, as the props of `AgentList`. */
+export const agentListProperties = {
+  logins: agentLoginsSchema,
+  /** The Connect form that is open under the row of an agent. */
+  form: openAgentFormSchema,
+  /** A login that the app can no longer use. */
+  unusable: unusableLoginSchema,
+  /** For each agent, the orgs whose org login serves the new sessions. */
+  orgLogins: orgLoginUseSchema,
 } as const

@@ -1,6 +1,7 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
 import { loginLabels, type EndpointLogin } from '../../fixtures/logins'
 import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { LoginOwner } from './EndpointModels'
 import { endpointModels } from '../../entries/components/settings/EndpointModels.mockup'
 import {
   endpointAddressNote,
@@ -17,12 +18,30 @@ import { defined } from '../../defined'
  * app that the last list leaves out. The row has one Refresh, which reads
  * the list again: beside the warning after a read that failed, or else
  * beside the models.
+ *
+ * The Agents tab of the org settings draws an org endpoint with the same
+ * lines, from a design call of 17 November 2026 in the org logins plan.
+ * There `owner` is `org`, so the model line names the pickers on the
+ * login. `readOnly` shows only the kind and the host, to a person who
+ * cannot change the login, such as a member who is not an admin. The note
+ * and the warning answer a save or a Refresh, which only an admin makes,
+ * and only an admin sees the model list and Refresh.
  */
 export function EndpointDetails(props: {
   agent: AgentKey
   login: EndpointLogin
+  owner?: LoginOwner
+  readOnly?: boolean
 }) {
   const { login } = props
+  const endpoint = (
+    <loginEndpoint.Component
+      host={login.host}
+      kind={loginLabels[props.agent].endpoint}
+      moklyInstance="endpoint"
+    />
+  )
+  if (props.readOnly) return endpoint
   const refresh = (
     <actionButton.Component
       accessibilityLabel={copy.refreshLabel(agents[props.agent].name)}
@@ -34,11 +53,7 @@ export function EndpointDetails(props: {
   )
   return (
     <>
-      <loginEndpoint.Component
-        host={login.host}
-        kind={loginLabels[props.agent].endpoint}
-        moklyInstance="endpoint"
-      />
+      {endpoint}
       {login.addedV1 ? (
         <endpointAddressNote.Component moklyInstance="address-note" />
       ) : null}
@@ -52,7 +67,10 @@ export function EndpointDetails(props: {
         <endpointModels.Component
           check={login.models}
           moklyInstance="models"
-          {...defined({ refresh: login.readFailed ? undefined : refresh })}
+          {...defined({
+            owner: props.owner,
+            refresh: login.readFailed ? undefined : refresh,
+          })}
         />
       ) : null}
     </>

@@ -10,6 +10,7 @@ const tipCommands = [
   'fix-checks',
   'resolve-conflicts',
   'address-review',
+  'mark-ready-for-review',
   'merge-pull-request',
   'continue-after-merge',
   'archive-workspace',

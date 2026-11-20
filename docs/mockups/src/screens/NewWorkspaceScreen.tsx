@@ -14,9 +14,15 @@ import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
+import { composerData } from '../entries/components/chat/capabilitiesSlot'
 import { firstBuildNotice } from '../entries/components/screens/firstBuildNotice.mockup'
+import {
+  newWorkspaceCapabilities,
+  newWorkspaceCapabilitiesSheet,
+} from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -38,6 +44,7 @@ export const newWorkspaceSchema = {
     'repositories',
     'repositoryMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
@@ -69,6 +76,7 @@ export const newWorkspaceForm: NewWorkspaceState = {
   repositories: 'chosen',
   repositoryMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -124,33 +132,48 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   const created =
     state.files === 'ready' ? paths.attachmentsQueued : paths.creating
   const fastMenu = state.modelMenu === 'open-fast'
+  const box = composerData({
+    attachments: draft.files,
+    capabilities: newWorkspaceCapabilities(
+      state,
+      props.viewport,
+      state.org === 'new'
+        ? paths.newWorkspaceNoSecrets
+        : paths.newWorkspaceCapabilities,
+    ),
+    // The menu of a phone: Firna has no page with it open.
+    menu: {
+      open: state.capabilities === 'menu',
+      to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
+    },
+    attachTo:
+      state.files === 'none' && !failed && !linked && state.org !== 'new'
+        ? paths.newWorkspaceFiles
+        : undefined,
+    blocked: building || waiting || waits(state),
+    caret: text === draft.text ? draft.caret : undefined,
+    choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
+    draft: text,
+    // A phone shows a pick at the caret in place of the drag.
+    drop: state.files === 'drop-over' && props.viewport === 'desktop',
+    picker: fastMenu,
+    placeholder: taskPlaceholder,
+    running: false,
+    sendTo:
+      failed || linked || waiting || state.org === 'new' || !hasWords(text)
+        ? undefined
+        : created,
+    sessionLogin: formLoginLabel(state),
+  })
   return (
     <chatPane.Component
-      composer={plainData({
-        attachments: draft.files,
-        attachTo:
-          state.files === 'none' && !failed && !linked && state.org !== 'new'
-            ? paths.newWorkspaceFiles
-            : undefined,
-        blocked: building || waiting || waits(state),
-        caret: text === draft.text ? draft.caret : undefined,
-        choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
-        draft: text,
-        // A phone shows a pick at the caret in place of the drag.
-        drop: state.files === 'drop-over' && props.viewport === 'desktop',
-        picker: fastMenu,
-        placeholder: taskPlaceholder,
-        running: false,
-        sendTo:
-          failed || linked || waiting || state.org === 'new' || !hasWords(text)
-            ? undefined
-            : created,
-      })}
+      composer={plainData(box.composer)}
       items={[]}
       moklyInstance="chat"
       viewer={admin ? you : memberViewer}
       viewport={props.viewport}
       {...defined({
+        capabilitiesPanel: box.capabilitiesPanel,
         empty: suspended ? undefined : (
           <newWorkspaceStart.Component
             admin={admin}
@@ -224,6 +247,9 @@ export function NewWorkspaceScreen(props: {
       <mobileFrame.Component>
         {page}
         {sheet}
+        {state.org === 'suspended'
+          ? null
+          : newWorkspaceCapabilitiesSheet(state)}
       </mobileFrame.Component>
     )
   }

@@ -45,4 +45,5 @@ export const macCommandStates = [
   'denied',
   'done',
   'unavailable',
+  'mac-access-off',
 ] as const satisfies readonly MacCommandState[]

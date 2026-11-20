@@ -1,4 +1,5 @@
 import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { SessionLogin } from '../../shared/generated/SessionLogin'
 import {
   automationPath,
   automationsPath,
@@ -8,6 +9,7 @@ import {
 } from '../../shared/automations'
 import { flag, record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { devDefaultLogins } from './default-logins'
 import { ID, json, noContent, optional, type Route } from './router'
 import {
   choiceOf,
@@ -23,10 +25,51 @@ import {
   requireAutomation,
   automationRuns,
 } from './automation-records'
-import { slugify, uniqueId, type OrgState } from './state'
+import { slugify, uniqueId, type DevState, type OrgState } from './state'
 
-function reply(automation: Automation, status = 200): Response {
-  return json({ automation } satisfies AutomationResponse, status)
+/**
+ * The login of the runs of an automation, as the Worker names it: the
+ * default login of its owner for its agent in the org. The fake knows the
+ * logins of the person signed in only. So the runs of another owner take
+ * the org login while its switch "Use for every member" is on, and else
+ * the own login of that owner.
+ */
+function runLoginOf(
+  state: DevState,
+  org: OrgState,
+  automation: Automation,
+): SessionLogin | null {
+  const { agent } = automation.choice
+  const orgId = org.org.id
+  if (automation.owner.id === state.account.user.id) {
+    const entry = devDefaultLogins(state).find(
+      (item) => item.orgId === orgId && item.agent === agent,
+    )
+    return entry?.login ?? null
+  }
+  const orgLogin =
+    org.org.suspension === undefined
+      ? state.orgLogins.get(orgId)?.get(agent)
+      : undefined
+  return orgLogin?.useForEveryMember
+    ? { type: 'org', orgId }
+    : { type: 'personal', userId: automation.owner.id }
+}
+
+/** The reply of an automation, with the login of its runs. */
+function reply(
+  backend: DevBackend,
+  org: OrgState,
+  automation: Automation,
+  status = 200,
+): Response {
+  return json(
+    {
+      automation,
+      runLogin: runLoginOf(backend.state, org, automation),
+    } satisfies AutomationResponse,
+    status,
+  )
 }
 
 /** The signed-in person, as the owner of an automation. */
@@ -69,7 +112,7 @@ function createAutomation(backend: DevBackend, org: OrgState, body: unknown) {
   }
   const saved = { ...automation, nextRunAt: nextRunOf(automation, now) }
   org.automations = [saved, ...org.automations]
-  return reply(saved, 201)
+  return reply(backend, org, saved, 201)
 }
 
 /** The fields of an update that the owner sent, each checked as on create. */
@@ -128,7 +171,7 @@ function updateAutomation(
   org.automations = org.automations.map((item) =>
     item.id === automationId ? saved : item,
   )
-  return reply(saved)
+  return reply(backend, org, saved)
 }
 
 /** Deletes an automation of its owner, or of an admin. Its runs go with it. */
@@ -171,8 +214,10 @@ export function automationRoutes(backend: DevBackend): Route[] {
     {
       method: 'GET',
       path: automationPath(ID.org, ID.automation),
-      answer: ({ params }) =>
-        reply(requireAutomation(orgOf(params.org), params.automation)),
+      answer: ({ params }) => {
+        const org = orgOf(params.org)
+        return reply(backend, org, requireAutomation(org, params.automation))
+      },
     },
     {
       method: 'PATCH',

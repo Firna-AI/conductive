@@ -46,9 +46,9 @@ and workspace owners. The terms come from the
 These rules hold for each member, for each workspace whose owner or org
 is suspended.
 
-- No member can open a new preview, launch a preview, open a terminal, or
-  get a desktop address. The Worker refuses each before any call to Boat,
-  with the same reply as the refusal of a resume.
+- No member can open a new preview, launch a preview, open or close a
+  terminal, or get a desktop address. The Worker refuses each before any
+  call to Boat, with the same reply as the refusal of a resume.
 - Each request to a preview of the workspace gets the answer of an unknown
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.
@@ -106,4 +106,4 @@ of a deleted org takes effect.
 - They can still open a workspace whose owner is suspended, and read its
   chat history, also when the workspace is archived.
 - They can still list and close the previews of that workspace, and read
-  the status of its terminal.
+  the status of its terminals.

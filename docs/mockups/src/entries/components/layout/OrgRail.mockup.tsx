@@ -12,7 +12,7 @@ export const orgRail = defineComponent({
   slug: 'org-rail',
   title: 'Org rail',
   description:
-    'The narrow rail beside the sidebar: the logo, the orgs of the person in their own order, Create org, and the account at the bottom. An operator also gets Operator above the account. The name of an org shows the key that opens it. Its own page shows every org, with Acme open.',
+    'The narrow rail beside the sidebar: the logo, the orgs of the person in their own order, Create org, and the account at the bottom. An operator also gets Operator above the account. The name of an org shows the key that opens it. While the sidebar hides, a click on the tile of the current org opens its workspace list as a popover, and the tile marks it as expanded. Its own page shows every org, with Acme open.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: railSchema,
   props: acmeRail,

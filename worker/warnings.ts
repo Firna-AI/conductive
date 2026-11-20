@@ -1,5 +1,13 @@
-import { SIMPLE_WARNINGS, type WorkerWarning } from './warning-types'
-import type { ErrorSummary } from './warning-values'
+import {
+  SIMPLE_WARNINGS,
+  type RunnerWarningFields,
+  type WorkerWarning,
+} from './warning-types'
+import {
+  type ErrorSummary,
+  warningProtocolVersion,
+  warningTurnEndState,
+} from './warning-values'
 
 export type WarningRecord = ReturnType<typeof warningFields>
 
@@ -24,14 +32,28 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
-    case 'model_gateway_check_failed':
-    case 'model_gateway_check_retry':
+    case 'runner_connected':
+    case 'runner_disconnected':
       return {
         kind: warning.kind,
         message:
-          warning.kind === 'model_gateway_check_failed'
-            ? 'A periodic model turn check failed.'
-            : 'A periodic model turn check retries.',
+          warning.kind === 'runner_connected'
+            ? 'The runner of a workspace connected.'
+            : 'The runner of a workspace disconnected.',
+        ...runnerFields(warning),
+      }
+    case 'turn_ended_without_stop_request':
+      return {
+        kind: warning.kind,
+        message: 'A turn ended without a Stop request.',
+        ...runnerFields(warning),
+        turnId: warning.turnId.text,
+        state: warningTurnEndState(warning.state),
+      }
+    case 'model_gateway_check_failed':
+      return {
+        kind: warning.kind,
+        message: 'A periodic model turn check failed.',
         workspaceId: warning.workspaceId.text,
         errorKind: warning.errorKind,
       }
@@ -140,6 +162,15 @@ function warningFields(warning: WorkerWarning) {
       }
     default:
       return { kind: warning.kind, message: SIMPLE_WARNINGS[warning.kind] }
+  }
+}
+
+function runnerFields(warning: RunnerWarningFields) {
+  return {
+    workspaceId: warning.workspaceId.text,
+    connectionId: warning.connectionId?.text ?? null,
+    streamId: warning.streamId?.text ?? null,
+    protocolVersion: warningProtocolVersion(warning.protocolVersion),
   }
 }
 

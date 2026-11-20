@@ -33,7 +33,7 @@ export const commandStatus = defineComponent({
   slug: 'command-status',
   title: 'Command status',
   description:
-    'The state of a command on the Mac, as a glyph and a word: Waiting for approval with a spinner, Denied, Done with its time, or Mac not available. Its own page shows a command that waits.',
+    'The state of a command on the Mac, as a glyph and a word: Waiting for approval with a spinner, Denied, Done with its time, Mac not available, or Mac access off. Its own page shows a command that waits.',
   relatedDocs: ['docs/mockups/mac-app.md'],
   propSchema: {
     type: 'object',
@@ -66,6 +66,13 @@ export const commandStatus = defineComponent({
       description: 'The Mac is asleep, or the Mac app is closed.',
       props: { state: 'unavailable' },
     },
+    {
+      slug: 'mac-access-off',
+      title: 'Mac access off',
+      description:
+        'The workspace refused the request, because Mac access is off in its Capabilities.',
+      props: { state: 'mac-access-off' },
+    },
   ],
 })
 
@@ -77,7 +84,7 @@ export const macCommand = defineComponent({
   slug: 'mac-command',
   title: 'Mac command',
   description:
-    'A command that the agent asked to run on the Mac of the person who sent the turn, at its place in the chat: the Mac, the state, the command, its folder and its time limit, and the output once it ran. A denied command and a Mac that is not available say what happened under the command. Its own page shows a command that ran.',
+    'A command that the agent asked to run on the Mac of the person who sent the turn, at its place in the chat: the Mac, the state, the command, its folder and its time limit, and the output once it ran. A denied command, a Mac that is not available, and a request that the workspace refused because Mac access is off say what happened under the command. Its own page shows a command that ran.',
   relatedDocs: ['docs/mockups/mac-app.md'],
   propSchema: {
     type: 'object',
@@ -106,6 +113,13 @@ export const macCommand = defineComponent({
       title: 'Mac not available',
       description: 'The Mac is asleep, or the Mac app is closed.',
       props: { state: 'unavailable' },
+    },
+    {
+      slug: 'mac-access-off',
+      title: 'Mac access off',
+      description:
+        'A member turned Mac access off in the Capabilities of the workspace, so the workspace refused the request at once, and the line under the command says so.',
+      props: { state: 'mac-access-off' },
     },
   ],
 })

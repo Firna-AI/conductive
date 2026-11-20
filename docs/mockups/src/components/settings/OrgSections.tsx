@@ -1,16 +1,19 @@
 import { Input } from '@firna/ui/input'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
+import type { OrgColor } from '../../design/orgColors'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { OrgColorField } from './OrgColorField'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { defined } from '../../defined'
 import styles from './OrgSections.module.css'
 
-export type SettingsTab = 'general' | 'repositories' | 'computer' | 'members'
+export type SettingsTab =
+  'general' | 'repositories' | 'computer' | 'agents' | 'secrets' | 'members'
 
 /**
  * Why the settings show without edit fields and actions: the person signed
@@ -25,6 +28,8 @@ export const settingsLinks: Readonly<Record<SettingsTab, string>> = {
   general: paths.orgSettings,
   repositories: paths.repositories,
   computer: paths.cloudComputer,
+  agents: paths.orgAgents,
+  secrets: paths.secrets,
   members: paths.members,
 }
 
@@ -33,12 +38,15 @@ export const suspendedSettingsLinks: Readonly<Record<SettingsTab, string>> = {
   general: paths.suspendedSettings,
   repositories: paths.suspendedRepositories,
   computer: paths.suspendedComputer,
+  agents: paths.suspendedAgents,
+  secrets: paths.suspendedSecrets,
   members: paths.suspendedMembers,
 }
 
 /**
  * The parts of the org settings, as tabs that link to each part. Every
- * person of the org sees the same tabs. `wrap` puts the tabs on two lines,
+ * person of the org sees the same tabs. Agents, with the org logins of
+ * decision 1 B of the org logins plan, follows Cloud computer. `wrap` puts the tabs on two lines,
  * for a phone, where they do not fit on one.
  */
 export function SettingsTabs(props: {
@@ -51,6 +59,8 @@ export function SettingsTabs(props: {
     { label: 'General', tab: 'general' },
     { label: 'Repositories', tab: 'repositories' },
     { label: 'Cloud computer', tab: 'computer' },
+    { label: 'Agents', tab: 'agents' },
+    { label: 'Secrets', tab: 'secrets' },
     { label: 'Members', tab: 'members' },
   ] satisfies readonly { label: string; tab: SettingsTab }[]
   return (
@@ -85,14 +95,15 @@ export function OrgNameFields(props: { name: string; initials: string }) {
 }
 
 /**
- * The name of the org and the initials that the rail shows. `readOnly`
- * shows them without fields and Save: for a member who is not an admin,
- * because only admins manage the settings of the org, and for everyone in
- * a suspended org.
+ * The name, the initials, and the colour of the org. `readOnly` shows them
+ * without fields and Save: for a member who is not an admin, because only
+ * admins manage the settings of the org, and for everyone in a suspended
+ * org. An admin changes the colour in its own section below.
  */
 export function OrgDetailsSection(props: {
   name: string
   initials: string
+  color: OrgColor
   readOnly?: ReadOnlyCause
 }) {
   if (props.readOnly) {
@@ -112,6 +123,7 @@ export function OrgDetailsSection(props: {
           rows={[
             { term: 'Name', value: props.name },
             { term: 'Initials', value: props.initials },
+            { term: 'Colour', color: props.color },
           ]}
         />
       </section.Component>
@@ -128,6 +140,22 @@ export function OrgDetailsSection(props: {
       title="Org"
     >
       <OrgNameFields initials={props.initials} name={props.name} />
+    </section.Component>
+  )
+}
+
+/**
+ * The colour of the org, which the rail shows on its tile while the org is
+ * open. A choice saves at once, so the section has no Save.
+ */
+export function OrgColorSection(props: { color: OrgColor }) {
+  return (
+    <section.Component
+      description="Shown in the rail while this org is open."
+      moklyInstance="colour"
+      title="Colour"
+    >
+      <OrgColorField onChange={noop} value={props.color} />
     </section.Component>
   )
 }

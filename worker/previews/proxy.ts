@@ -2,7 +2,7 @@ import { PREVIEW_RELAY_MARK_HEADER } from '../../src/shared/previews'
 import type { AppEnv } from '../env'
 import { HttpError } from '../http'
 import { ProviderError } from '../sandbox/errors'
-import { recordActivity, toolError } from './access'
+import { toolError } from './access'
 import type { PreviewConnection } from './connection'
 import { previewIdentity } from './credentials'
 import { portRequest, portResponseHeaders } from './headers'
@@ -100,7 +100,6 @@ export class PreviewProxy {
       const row = await timing.step('access', () => scope.access(active))
       const ready = this.ports.isReady(row)
       const port = await timing.step('relay', () => this.ports.get(row))
-      recordActivity(this.dependencies, row.workspaceId)
       // A relay lookup that called the provider can outlast a sandbox change, so it needs a new read.
       if (!ready) scope.refresh()
       await timing.step('check', active.authorize)

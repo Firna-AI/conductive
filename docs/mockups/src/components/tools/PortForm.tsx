@@ -3,6 +3,7 @@ import type { ListeningPort } from '../../../../../src/shared/generated/Listenin
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../common/classes'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
@@ -29,17 +30,19 @@ function PortField(props: { label: string; placeholder: string }) {
 /**
  * One detected server: a button with its port, its name, and its folder.
  * A folder that does not fit keeps its end, after "…". A click opens the
- * preview of the port.
+ * preview of the port. On desktop it shows the Preview tab of the port
+ * (decision 291), and the row of the shown tab is the current one.
  */
-function ServerRow(props: { server: ListeningPort }) {
+function ServerRow(props: { server: ListeningPort; current: boolean }) {
   const { server } = props
   const description = serverDescription(server)
   return (
     <li>
       <ScreenLink asChild to={paths.preview}>
         <button
+          aria-current={props.current ? 'page' : undefined}
           aria-label={description}
-          className={styles.row}
+          className={classes(styles.row, props.current && styles.current)}
           title={description}
           type="button"
         >
@@ -60,15 +63,23 @@ function ServerRow(props: { server: ListeningPort }) {
 
 /**
  * The port form with the servers of the sandbox, and the smaller Other port
- * row under them. The list scrolls when it does not fit.
+ * row under them. The list scrolls when it does not fit. `current` is the
+ * port of the Preview tab that shows, on desktop.
  */
-export function ServerList(props: { servers: readonly ListeningPort[] }) {
+export function ServerList(props: {
+  servers: readonly ListeningPort[]
+  current?: number | null
+}) {
   return (
     <div className={styles.list}>
       <p className={styles.intro}>{portFormCopy.body}</p>
       <ul aria-label={portFormCopy.listLabel} className={styles.rows}>
         {props.servers.map((server) => (
-          <ServerRow key={server.port} server={server} />
+          <ServerRow
+            current={server.port === props.current}
+            key={server.port}
+            server={server}
+          />
         ))}
       </ul>
       <div className={styles.other}>

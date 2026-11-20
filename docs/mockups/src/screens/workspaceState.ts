@@ -12,12 +12,27 @@ import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates, temporaryTabStates } from './chatStates'
+import { tabStates, temporaryTabStates } from './chatStates'
+import {
+  composerStateDefaults,
+  composerStateKeys,
+  composerStateProperties,
+} from './composerState'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
   feedbackStateProperties,
 } from './feedbackState'
+import {
+  layoutStateDefaults,
+  layoutStateKeys,
+  layoutStateProperties,
+} from './layoutState'
+import {
+  rowMenuStateDefaults,
+  rowMenuStateKeys,
+  rowMenuStateProperties,
+} from './rowMenuState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -42,10 +57,8 @@ export const workspaceStateSchema = {
     'tab',
     'tabRow',
     'temporary',
-    'composer',
-    'modelChoice',
-    'resize',
-    'rightColumn',
+    ...composerStateKeys,
+    ...layoutStateKeys,
     'overlay',
     'archive',
     'viewer',
@@ -55,6 +68,7 @@ export const workspaceStateSchema = {
     'org',
     'palette',
     ...feedbackStateKeys,
+    ...rowMenuStateKeys,
     ...barStateKeys,
   ],
   properties: {
@@ -102,8 +116,9 @@ export const workspaceStateSchema = {
      */
     terminals: { enum: terminalStates },
     /**
-     * The Preview tool: a preview in its frame, or "+" beside the tabs of
-     * the open previews. With no preview open, the port form lists the
+     * The Preview tool: open previews, or on a phone "+" beside their tabs.
+     * The desktop shows the page in the Preview tab of `tab`, and a phone
+     * in a frame of the tool. With no preview open, the port form lists the
      * detected servers, says that the runner reports none, or reads as
      * before when the app has no report, as for an older image. After a
      * failed repair of the list (decision 96), it keeps its last list under
@@ -130,30 +145,19 @@ export const workspaceStateSchema = {
      * `overlay` opens on it.
      */
     temporary: { enum: temporaryTabStates },
-    /** The composer, as `composerStates` says. */
-    composer: { enum: composerStates },
-    /**
-     * The model, the effort, and the speed of the next message: those of
-     * the workspace, the same with fast mode on, or Sonnet 5.5 High, a model
-     * that offers no fast mode.
-     */
-    modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
-    /**
-     * The user drags the handle of the right column to widen it, or the
-     * handle between the file lists and the tools to raise the split.
-     */
-    resize: { enum: ['none', 'right', 'split'] },
-    /**
-     * The right column of the desktop: shown, or hidden with the toggle at
-     * the end of the header. A phone has no right column.
-     */
-    rightColumn: { enum: ['shown', 'hidden'] },
+    ...composerStateProperties,
+    ...layoutStateProperties,
     /**
      * What lies open over the workspace: the session history, the question
      * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the temporary tab, or the question of
-     * Continue with work that is not pushed. Or the question before a
-     * terminal closes, or the toast of a terminal that did not open or close.
+     * menu of the first session or of the shown file or diff tab, such as
+     * the temporary tab, or the question of Continue with work that is not
+     * pushed. Or the question before a terminal closes, or the toast of a
+     * terminal that did not open or close. Or the sheet of the values of a
+     * request, which Give a value opens on a phone. Or the menu of the header
+     * state, the question of Restart while an agent works, the time after
+     * Restart until the agents are back, or that time with the toast of a
+     * failed update check.
      */
     overlay: {
       enum: [
@@ -166,6 +170,11 @@ export const workspaceStateSchema = {
         'close-terminal',
         'terminal-open-failed',
         'terminal-close-failed',
+        'value-sheet',
+        'restart',
+        'restart-confirm',
+        'restarting',
+        'restart-update-failed',
       ],
     },
     /**
@@ -224,6 +233,7 @@ export const workspaceStateSchema = {
      */
     palette: { enum: paletteViews },
     ...feedbackStateProperties,
+    ...rowMenuStateProperties,
     ...barStateProperties,
   },
 } as const
@@ -247,10 +257,8 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   tabRow: 'opened',
   temporary: 'none',
-  composer: 'empty',
-  modelChoice: 'workspace',
-  resize: 'none',
-  rightColumn: 'shown',
+  ...composerStateDefaults,
+  ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',
   viewer: 'admin',
@@ -260,6 +268,7 @@ export const readyWorkspace: WorkspaceState = {
   org: 'active',
   palette: 'closed',
   ...feedbackStateDefaults,
+  ...rowMenuStateDefaults,
   ...barStateDefaults,
 }
 

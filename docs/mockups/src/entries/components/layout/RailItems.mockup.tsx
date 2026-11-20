@@ -85,7 +85,7 @@ export const orgItem = defineComponent({
   slug: 'org-item',
   title: 'Org item',
   description:
-    'The tile of an org in the rail: a link to the org, its name and its key beside it on hover, and the menu of a right click at the pointer. A tile in the middle of a drag stays as a faint copy, which links nowhere. Its own page shows the tile of the open org. The name, the key, and the menu lie beside the narrow rail, so the pages of the org rail show them.',
+    'The tile of an org in the rail: a link to the org, its name and its key beside it on hover, and the menu of a right click at the pointer. A tile in the middle of a drag stays as a faint copy, which links nowhere. While the sidebar hides, the link of the open org says whether its workspace list is open as a popover. Its own page shows the tile of the open org. The name, the key, and the menu lie beside the narrow rail, so the pages of the org rail show them.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -94,6 +94,8 @@ export const orgItem = defineComponent({
     properties: {
       org: orgSchema,
       current: { type: 'boolean' },
+      /** The workspace list of the org is open as a popover beside the tile. */
+      expanded: { type: 'boolean' },
       /** The name of the org shows beside its tile, as on hover. */
       hint: { type: 'boolean' },
       /** The key that opens the org, which its hint shows. */
@@ -109,6 +111,7 @@ export const orgItem = defineComponent({
   render: (props) => (
     <OrgItem
       current={props.current}
+      expanded={props.expanded}
       hint={props.hint}
       menu={props.menu}
       org={props.org}

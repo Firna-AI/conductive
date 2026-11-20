@@ -75,10 +75,16 @@ CLI, the MCP server, the preview relay, Git credentials, and release updates.
 from `release/`. It renders the start scripts with paths under
 `/opt/conductive/current`. It generates terminal scripts from the existing
 terminal module. The previous release keeps its own system part for fallback.
+The terminal files are `terminal`, `terminal-attach`, `terminal-password`,
+and `terminal-sessions`, plus the `terminal-bridge` folder.
+The launcher embeds the attach program in ttyd's arguments at start.
+An apply or rollback therefore changes no attach program of a running ttyd.
 
 The runner service applies a staged release in its root pre-start step.
 It applies only when `/run/conductive/workspace-ready` exists.
 Relay and terminal restarts do not apply or roll back releases.
+The terminal start command checks the running ttyd before it reports support
+for several terminals. An updated file alone does not prove that support.
 The system installer that an apply runs restarts a running relay, so the relay
 runs the active release. The installer of an older release, which a rollback
 can run, may not restart it.

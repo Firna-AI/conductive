@@ -30,6 +30,9 @@ export const barMessageKinds = [
   'merge-moved-head',
   'merge-no-right',
   'merge-refused',
+  'ready-no-right',
+  'ready-pull-changed',
+  'ready-refused',
   'continue-waits',
   'continue-failed',
 ] as const satisfies readonly BarMessageKind[]
@@ -50,6 +53,17 @@ const barActionSchema = {
       properties: {
         kind: { const: 'merge' },
         method: { enum: mergeMethods },
+        busy: { type: 'boolean' },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['kind', 'busy'],
+      properties: {
+        /** Ready for review of a draft. */
+        kind: { const: 'ready' },
+        /** The change runs. */
         busy: { type: 'boolean' },
       },
     },

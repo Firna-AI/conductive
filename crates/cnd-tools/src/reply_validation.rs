@@ -55,6 +55,7 @@ pub(crate) fn valid(value: &Value, source: &Value, key: &str) -> bool {
                     | "orgId"
                     | "workspaceId"
                     | "repositoryId"
+                    | "parentId"
                     | "sectionId"
                     | "branch"
                     | "baseBranch"
@@ -72,6 +73,7 @@ pub(crate) fn valid(value: &Value, source: &Value, key: &str) -> bool {
             if matches!(
                 key,
                 "number"
+                    | "depth"
                     | "eventNumber"
                     | "sizeBytes"
                     | "startLine"

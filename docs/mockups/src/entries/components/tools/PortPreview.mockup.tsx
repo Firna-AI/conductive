@@ -3,26 +3,44 @@ import {
   PreviewTool,
   previewStates,
 } from '../../../components/tools/PortPreview'
+import { openPort } from '../../../fixtures/previews'
 
 /**
  * The Preview tool of the tools panel, registered with Mokly. Its pages
- * show an open preview, the servers after +, the detected servers, no
- * server, and the list after a failed repair.
+ * show open previews, the servers after +, the detected servers, no
+ * server, and the list after a failed repair. A phone draws the preview in
+ * a frame of the tool, so a screen passes `frame`, and a page of the part
+ * follows its own view.
  */
 export const previewTool = defineComponent({
   slug: 'preview-tool',
   title: 'Preview tool',
   description:
-    'The Preview tool: the tabs of the open previews with +, a preview in its frame with Reload and a link to a new tab, or the port form. With no preview open, the form lists the servers that the runner detects, or says that it reports none. After a failed repair of the list, the form keeps its last list under a notice. Its own page shows an open preview.',
+    'The Preview tool. On a phone it shows the tabs of the open previews with +, and a preview in its frame with Reload and a link to a new tab. On desktop each port has its own Preview tab in the centre row, so the tool lists each port, and the row of the shown tab is the current one. With no preview open, the form lists the servers that the runner detects, or says that it reports none. After a failed repair of the list, the form keeps its last list under a notice. Its own page shows open previews.',
   relatedDocs: ['docs/mockups/catalogue-workspace-tools.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: ['state'],
-    properties: { state: { enum: previewStates } },
+    properties: {
+      state: { enum: previewStates },
+      /**
+       * The page shows in a frame of the tool, as on a phone. Without it, a
+       * page of the part follows its own view.
+       */
+      frame: { type: 'boolean' },
+      /** The port of the Preview tab that shows on desktop, or null. */
+      shownPort: { type: ['integer', 'null'] },
+    },
   } as const,
-  props: { state: 'open' },
-  render: (props) => <PreviewTool state={props.state} />,
+  props: { state: 'open', shownPort: openPort },
+  render: (props, context) => (
+    <PreviewTool
+      frame={props.frame ?? context.viewport === 'mobile'}
+      shownPort={props.shownPort ?? null}
+      state={props.state}
+    />
+  ),
   variants: [
     {
       slug: 'adding',

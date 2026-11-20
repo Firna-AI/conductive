@@ -1,5 +1,4 @@
 import type { TerminalTransport } from '../shared/terminal'
-import type { ReadyTerminal } from '../terminal/terminalApi'
 
 type SocketEvent = 'open' | 'message' | 'close' | 'error'
 
@@ -17,12 +16,15 @@ export type OpenTerminalSocket = (
   protocol: 'tty',
 ) => TerminalSocket
 
-/** The opener owns the configured origin. The codec owns only ttyd framing. */
+/**
+ * The connection of one terminal at its socket path, with the fixed `tty`
+ * subprotocol of ttyd. The opener owns the configured origin. The codec owns
+ * only ttyd framing.
+ */
 export function createTerminalConnector(
   open: OpenTerminalSocket,
-): (terminal: ReadyTerminal) => TerminalTransport {
-  return (terminal) =>
-    new TtydTransport(open(terminal.socketPath, terminal.protocol))
+): (socketPath: string) => TerminalTransport {
+  return (socketPath) => new TtydTransport(open(socketPath, 'tty'))
 }
 
 class TtydTransport implements TerminalTransport {

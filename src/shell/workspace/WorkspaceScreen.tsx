@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback, useState, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
@@ -23,7 +23,7 @@ import { useViewport } from '../ui/viewport'
 import { ChatArea } from './ChatArea'
 import { ContinueDialog } from './ContinueDialog'
 import { sandboxState, useFeatures, type WorkspaceContext } from './features'
-import { KeptFilesConnection } from './files/kept-files'
+import { KeptConnections } from './kept-connections'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
 import { WorkspaceGitHub } from './github/WorkspaceGitHub'
 import { HeaderNoticeBars } from './HeaderNoticeBars'
@@ -33,19 +33,15 @@ import { SandboxPanel } from './SandboxNotice'
 import { MissingWorkspace, useRememberWorkspace } from './remember-workspace'
 import { OpenSessionAddress } from './session-address'
 import { shownWorkspaces } from './tab-memory'
+import { TerminalFocus } from './tools/terminal-focus'
 import { ToolsPart } from './tools/ToolsPart'
 import { useArchiveActions } from './useArchiveActions'
 import { PhoneTabBar, phoneView, RightColumn } from './WorkspaceColumns'
 import { WorkspaceHeader } from './WorkspaceHeader'
 import { WorkspaceMacBar } from './WorkspaceMacBar'
 import { WorkspacePaletteActions } from './WorkspacePaletteActions'
-import type { WorkspaceView } from './workspace-view'
+import { connectView } from './workspace-view'
 import workspaceStyles from './workspace.module.css'
-
-/** Shows the kept parts of the workspace while the screen shows it. */
-function connectView(view: WorkspaceView): () => void {
-  return view.connect()
-}
 
 /**
  * An open workspace. On desktop the chat column sits beside the right column.
@@ -85,6 +81,7 @@ export function WorkspaceScreen(props: {
     { create, connect: connectView },
   )
   const { model, notices, chat, toolEvents } = shown
+  const [terminalFocus] = useState(() => new TerminalFocus())
   const startError = useStore(model.startError)
   const opened = useStore(model.opened)
   const features = useFeatures()
@@ -169,6 +166,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    terminalFocus,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
       : null,
@@ -269,14 +267,14 @@ export function WorkspaceScreen(props: {
     // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
     return (
-      <KeptFilesConnection context={context}>
+      <KeptConnections context={context}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
-      </KeptFilesConnection>
+      </KeptConnections>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <KeptFilesConnection context={context}>
+    <KeptConnections context={context}>
       <WorkspaceGitHub context={context}>
         <WorkspaceLinks context={context}>
           <WorkspaceMacBar context={context} />
@@ -295,6 +293,6 @@ export function WorkspaceScreen(props: {
           </div>
         </WorkspaceLinks>
       </WorkspaceGitHub>
-    </KeptFilesConnection>
+    </KeptConnections>
   )
 }

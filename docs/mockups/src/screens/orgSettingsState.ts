@@ -1,5 +1,11 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { ORG_COLORS } from '../design/orgColors'
 import { repositoryChanges } from '../fixtures/repositories'
+import {
+  orgAgentsDefaults,
+  orgAgentsKeys,
+  orgAgentsProperties,
+} from './orgAgentsState'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -10,12 +16,24 @@ export const orgSettingsSchema = {
     'script',
     'repositoryChange',
     'envForm',
+    'secrets',
     'dialog',
     'viewer',
     'org',
+    'color',
+    ...orgAgentsKeys,
   ],
   properties: {
-    tab: { enum: ['general', 'repositories', 'computer', 'members'] },
+    tab: {
+      enum: [
+        'general',
+        'repositories',
+        'computer',
+        'agents',
+        'secrets',
+        'members',
+      ],
+    },
     /**
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
@@ -44,14 +62,28 @@ export const orgSettingsSchema = {
      */
     envForm: { enum: ['none', 'add', 'change'] },
     /**
-     * A dialog over the page: Delete org, the removal of a member, or the
-     * leave of a suspended org.
+     * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
+     * admin just revealed, the Add secret form, or the field of a new
+     * value in the row of a secret.
      */
-    dialog: { enum: ['none', 'delete-org', 'remove-member', 'leave-org'] },
+    secrets: { enum: ['list', 'revealed', 'add', 'replace'] },
+    /**
+     * A dialog over the page: Delete org, the removal of a member, the
+     * leave of a suspended org, or the question before Delete of a secret.
+     */
+    dialog: {
+      enum: [
+        'none',
+        'delete-org',
+        'remove-member',
+        'leave-org',
+        'delete-secret',
+      ],
+    },
     /**
      * The person signed in: an admin, or a member who is not an admin. A
      * member sees no actions on the members, no Delete org, and the name,
-     * the repositories, and the cloud computer read-only.
+     * the repositories, the cloud computer, and the agents read-only.
      */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -63,6 +95,13 @@ export const orgSettingsSchema = {
      * lets leave.
      */
     org: { enum: ['active', 'suspended', 'new'] },
+    /**
+     * The colour of the org, which an admin picks on the General tab. The
+     * tile of the open org in the rail shows it. Blue is the colour of an
+     * org that has none.
+     */
+    color: { enum: ORG_COLORS },
+    ...orgAgentsProperties,
   },
 } as const
 
@@ -75,7 +114,10 @@ export const acmeSettings: OrgSettingsState = {
   script: 'built',
   repositoryChange: 'none',
   envForm: 'none',
+  secrets: 'list',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',
+  color: 'blue',
+  ...orgAgentsDefaults,
 }

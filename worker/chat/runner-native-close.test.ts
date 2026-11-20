@@ -11,16 +11,28 @@ it('retires runner authority and file ownership when close is the first wake eve
     'worker/chat/runner-entry.test-support.ts',
   )
   const controls = runnerControls(runtime, headers)
-  const runner = await controls.connect()
+  await controls.request('capture-warnings')
+  const streamId = '12345678-1234-4234-8234-123456789abc'
+  const runner = await controls.connect(streamId)
   try {
     runner.emit({ type: 'runner.ready' })
     expect(await runner.inbox.next()).toEqual({
       type: 'confirm',
-      streamId: 'native-runner',
+      streamId,
       throughEventNumber: 1,
     })
     const before = await controls.request('settled')
     const id = string(record(before.runner).id)
+    const connected = {
+      kind: 'runner_connected',
+      message: 'The runner of a workspace connected.',
+      workspaceId: 'unknown',
+      connectionId: id,
+      streamId,
+      protocolVersion: 2,
+    }
+    expect(before.warnings).toEqual([[connected]])
+    expect((await controls.hibernate()).warnings).toEqual(before.warnings)
     expect(before.fileBinding).toBe(id)
     expect(before.fileDetached).toEqual([])
     expect(before.detached).toBe(0)
@@ -50,6 +62,16 @@ it('retires runner authority and file ownership when close is the first wake eve
     expect(after.fileBinding).toBeNull()
     expect(after.alarm).toBeNull()
     expect(after.hello).toBe(1)
+    expect(after.warnings).toEqual([
+      [connected],
+      [
+        {
+          ...connected,
+          kind: 'runner_disconnected',
+          message: 'The runner of a workspace disconnected.',
+        },
+      ],
+    ])
     expect(after.ready).toBe(1)
     expect(after.reads).toBe(before.reads)
     expect(after.now).toBe(BROWSER_TEST_NOW)
@@ -62,6 +84,7 @@ it('retires runner authority and file ownership when close is the first wake eve
     expect(again.fileDetached).toEqual([id])
     expect(again.closeEvent).toEqual(after.closeEvent)
     expect(again.runner).toBeNull()
+    expect(again.warnings).toEqual(after.warnings)
   } finally {
     await disposeRunners(runtime, [runner.socket])
   }

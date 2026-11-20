@@ -1,4 +1,5 @@
 import type { GitHubSummary } from '../../../../../../src/shared/generated/GitHubSummary'
+import type { RowIndent } from '../../../components/workspaces/trees'
 import type { Role } from '../../../fixtures/members'
 import { agentKeys, type EffortKey } from '../../../fixtures/agents'
 import type { RepositoryKey } from '../../../fixtures/repositories'
@@ -20,6 +21,9 @@ const githubStates = [
   'draft',
   'blocked',
 ] as const satisfies readonly GitHubSummary[]
+
+/** The steps of the indent of a nested row, as `RowIndent` lists them. */
+const rowIndents = [0, 1, 2, 3] as const satisfies readonly RowIndent[]
 
 /** The states of a workspace, as `ActivityStatus` lists them. */
 export const activityStatuses = [
@@ -119,6 +123,22 @@ export const workspaceRowSchema = {
     to: { type: 'string', minLength: 1 },
     /** The row of an archived workspace offers Restore. */
     restoreOpen: { type: 'boolean' },
+    /** The steps of its indent under the rows of its tree. Without it, 0. */
+    indent: { enum: rowIndents },
+    /** The guide lines of the row in its tree, as `TreeLines`. */
+    lines: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['last', 'through', 'hasNested'],
+      properties: {
+        /** The last row that the list shows under its parent. */
+        last: { type: 'boolean' },
+        /** Whether the line of each outer column runs on through the row. */
+        through: { type: 'array', items: { type: 'boolean' } },
+        /** The list shows rows under the row. */
+        hasNested: { type: 'boolean' },
+      },
+    },
   },
 } as const
 

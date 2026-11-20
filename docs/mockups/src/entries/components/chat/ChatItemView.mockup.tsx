@@ -23,7 +23,7 @@ export const chatItemView = defineComponent({
   slug: 'chat-item-view',
   title: 'Chat item view',
   description:
-    'One item of a chat transcript, other than a tool call: a message of a member in its bubble, with its files; an answer of the agent; a command on the Mac; the end of a turn; a lost, linked, continued, or stopped line; a failed turn; or the line of a turn that runs. A stopped turn says "You" to the member who pressed Stop. Its own page shows the message that starts a turn.',
+    'One item of a chat transcript, other than a tool call: a message of a member in its bubble, with its files; an answer of the agent; a command on the Mac; the card of a run with secrets, or a late request with its answer; the line of a late Allow, which starts a turn; the end of a turn; a lost, linked, continued, or stopped line; a failed turn; or the line of a turn that runs. A stopped turn says "You" to the member who pressed Stop. Its own page shows the message that starts a turn.',
   relatedDocs: ['docs/mockups/design-chat.md'],
   propSchema: {
     type: 'object',

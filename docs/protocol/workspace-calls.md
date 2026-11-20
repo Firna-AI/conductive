@@ -2,13 +2,16 @@
 
 This doc holds the requirements and the decisions in force for the calls
 of the workspace tools that create, list, and change the workspaces of the
-org. It also covers the lists of repositories, sections, and models that a
-create call takes. It belongs to [Agent tools](agent-tools.md).
-[Agent tool access](agent-tool-access.md) states what each call reaches,
-which calls need an active turn, and the rights of the sender. The terms
-are those of the [architecture doc](../architecture.md#terms). A decision
-number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+org. It belongs to [Agent tools](agent-tools.md). A linked page covers
+[the lists that a create call takes](create-call-lists.md).
+[Sub-workspaces](sub-workspaces.md) states the rules of the parent of a
+workspace. [Agent tool access](agent-tool-access.md) states what each
+call reaches, which calls need an active turn, and the rights of the
+sender. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A secrets decision number names a decision of the change that adds
+[secrets](secrets.md), as that doc says.
 
 ## The calls
 
@@ -42,18 +45,41 @@ number names a dated record, as
 - A create call can also turn on [fast mode](fast-mode.md) for a model
   that has it. Otherwise the first message runs at standard speed. The
   saved default of the owner gives the call no fast mode. Reason: that
-  default belongs to the owner, but the first message runs on the login of
-  the sender of the calling turn.
+  default belongs to the owner, but the first message runs on the default
+  login of the sender of the calling turn.
 - The new workspace gets the org and the workspace owner of the calling
   workspace.
 - Without a choice in the call, the new workspace gets the default section
   and the default model of its workspace owner.
+- A create call can also name a parent workspace: `parentId` in the MCP
+  tool, and `--parent ID` in the CLI. The new workspace is then a
+  sub-workspace of that parent.
+- Reason for the names: the other ID fields are camel case, such as
+  `workspaceId`. The other CLI options name the noun, such as `--section`.
+- [The parent link](sub-workspaces.md#the-parent-link) and
+  [The depth limit](sub-workspaces.md#the-depth-limit) give the parents
+  that a create call accepts, and the errors for the other parents.
+- A sub-workspace gets the section of its parent in place of any other
+  section, as
+  [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
+  says.
+- The help of the CLI and the description of `create_workspace` say when
+  to name a parent, with the cases of
+  [When to nest](sub-workspaces.md#when-to-nest). They also give the
+  deepest depth, the sibling advice, and the section of a sub-workspace.
 - The agent of the new workspace starts on the first message at once.
 - The sender of the calling turn sends the first message. So the GitHub
   token of the first turn belongs to that member.
 - The first message ends with a `Sent by:` line, as
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
   (decision 259).
+- The new workspace starts with no pre-approved secret, as
+  [Grants](secrets.md#grants) says. Its Mac access is off, also when the
+  calling workspace has Mac access on (secrets decision 18 A), as
+  [Mac access](secrets.md#mac-access) says.
+- A create call takes no pre-approval and no choice of Mac access.
+  Reason: the task gives the pre-approval to a person who creates a
+  workspace, and only a member turns Mac access on.
 - A create call can also give the new workspace a name, and the title of
   its first session. The Worker cleans both with the rule of
   [Names from the workspace tools](tool-names.md).
@@ -75,6 +101,10 @@ number names a dated record, as
   target branch of each such create.
 - The reply to a create call gives the new workspace with its number and
   its link, and the first session with its link.
+- The new workspace in the reply gives its `parentId`, as an entry of the
+  workspace list does. The reply can also give a `notice`, as
+  [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
+  says.
 
 ## List the workspaces
 
@@ -85,6 +115,8 @@ number names a dated record, as
   display name of the workspace owner, and no avatar (decision 283). A
   member without a display name has only the ID and the login. Reason: an
   agent can then find the ID of an owner whom a message names in words.
+- Each entry also gives its `parentId`: the ID of its parent workspace, or
+  `null` for a top-level workspace.
 - The list holds the archived workspaces too. It gives the workspaces in
   the order of their creation, the oldest first.
 - The list can take these filters (decisions 277 and 282):
@@ -97,6 +129,9 @@ number names a dated record, as
   - a time: only the workspaces whose latest activity is at that time or
     later
   - archived or not archived: only the workspaces in that group
+- The list can also take a parent: a workspace ID, as `parentId` in the
+  MCP tool and `--parent ID` in the CLI. It then gives only the direct
+  sub-workspaces of that workspace.
 - The latest activity of a workspace is the time whose age the workspace
   list of the app shows.
 - A list with more than one filter gives the workspaces that match each
@@ -138,6 +173,12 @@ number names a dated record, as
 - The reply gives the facts of an entry of the workspace list, with its
   owner. It also gives the repository, the base branch, the section, the
   time of its creation, and the time of its latest activity.
+- The reply also gives `parent`, the entry of the parent or `null`, and
+  the `depth`. It gives `children` too: the entries of the direct
+  sub-workspaces, oldest first, also the archived ones.
+- For a live workspace, the section is the section where the list shows
+  the workspace, as [The place of a row](sub-workspaces.md#the-place-of-a-row)
+  says.
 - For an archived workspace, the reply also gives the time of the archive.
   While the app keeps its cloud computer, the reply also gives the end of
   Restore.
@@ -168,6 +209,10 @@ number names a dated record, as
 - The call moves the workspace to the top of that section, as
   [Move to section](workspace-menu.md#move-to-section) does. A move to
   the section of the workspace changes nothing.
+- A move of a workspace that the list shows as a top-level row also moves
+  each workspace nested under it. A workspace that the list shows as a
+  nested row moves nothing, and the reply gives a `notice`.
+  [Moves](sub-workspaces.md#moves) gives these rules.
 - An unknown section gets HTTP 404 with the error code
   `section_not_found`.
 - An archived workspace refuses the move with HTTP 409 and the error code
@@ -195,61 +240,6 @@ number names a dated record, as
 
 ## Repository, section, and model lists
 
-Three list calls give the repositories, the sections, and the models that
-a create call takes, with their IDs.
-
-| List | MCP tool | CLI command | Route |
-| --- | --- | --- | --- |
-| Repositories | `list_repositories` | `conductive repositories list` | `GET /v1/tools/repositories` |
-| Sections | `list_sections` | `conductive sections list` | `GET /v1/tools/sections` |
-| Models | `list_models` | `conductive models list` | `GET /v1/tools/models` |
-
-- One call that returns all three lists was rejected, because most create
-  calls need only the repository.
-- Each list call needs only the workspace token, as the workspace list
-  does. It needs no active turn.
-- Reason: the calls read data that every member of the org already sees,
-  and they start no work.
-
-### Repositories
-
-- The repository list returns exactly the repositories that a create call
-  accepts at that time. These are the repositories of the newest good org
-  image of the org of the calling workspace.
-- A list of the repositories that the org chose was rejected, because a
-  chosen repository that no image holds yet fails the create.
-- Each entry gives the repository ID that a create call takes, the GitHub
-  name, such as `acme/web`, and the default branch.
-- Each entry also says whether it is the repository of the calling
-  workspace.
-- The list is in the order of the GitHub names.
-- When the org has no good image, the call fails with HTTP 409
-  `image_required`, the same error as a create.
-- Reason: an empty list would hide why no create can work.
-
-### Sections
-
-- The section list returns every section of the org of the calling
-  workspace, in the order of the sidebar.
-- Each entry gives the section ID and the name.
-- Each entry also says whether it is the default section, the section that
-  a create uses when it names none.
-- [Sections](section-and-preview-calls.md#sections) states the calls that
-  create and delete a section.
-
-### Models
-
-- The model list returns the models that the app offers, in the order of
-  the app's model setting. The model picker of the app offers the same
-  models.
-- Each entry gives the agent, the model ID, the label, the efforts of the
-  model, and whether the model has fast mode.
-- The answer also gives the default choice. A create uses it for the model
-  or the effort that the call does not name. Its fast mode is always off,
-  because a create runs fast only when the call asks for it.
-- The default choice is the saved default of the owner of the calling
-  workspace. Without a saved default, it is the default choice of the app.
-- The default choice is `null` when the owner has no saved default and the
-  app has no valid default choice.
-- When the app has no valid model list, the call fails with HTTP 503
-  `models_unavailable`, as the app's own model route does.
+[Repository, section, and model lists](create-call-lists.md) states the
+lists of the repositories, the sections, and the models that a create
+call takes.

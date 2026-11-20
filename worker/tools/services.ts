@@ -41,7 +41,8 @@ export interface ToolWorkspaceCreation {
   orgId: string
   owner: MessageSender
   repositoryId: string
-  sectionId: string
+  sectionId?: string
+  parentId?: string
   choice: AgentChoice
   firstMessage: string
   firstMessageId: string

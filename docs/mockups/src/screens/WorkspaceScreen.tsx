@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { workspaceChat } from './workspaceChat'
 import { ChatWorkspaces } from '../components/chat/chatWorkspaces'
-import { filePage } from '../entries/components/files/FilePage.mockup'
 import {
   appFrame,
   mobileFrame,
@@ -25,6 +24,7 @@ import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
 import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
+import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf } from './orgWorkspaces'
 import { workspaceOpen } from './workspaceOpen'
@@ -32,10 +32,10 @@ import {
   filesContent,
   toolContent,
 } from '../entries/components/screens/workspaceParts.mockup'
-import { filePlaceholder, openFile, startingLogFor } from './workspaceParts'
+import { startingLogFor } from './workspaceParts'
 import { workspaceSidebar } from './workspaceSidebar'
 import {
-  transcriptToast,
+  copyToast,
   workspaceOverlay,
   workspacePalette,
   workspaceToast,
@@ -43,7 +43,7 @@ import {
 import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor } from './workspaceTabs'
+import { historyFor, noMessages, tabsFor } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -89,13 +89,13 @@ export function WorkspaceScreen(props: {
   } = workspaceOpen(props.state)
   const admin = state.viewer === 'admin'
   const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = workspaceChat({
     rows,
     workspace,
-    items: fresh ? [] : chatItemsFor(open.items, state.paths),
+    items: empty ? [] : chatItemsFor(open.items, state.paths),
     composer: composerFor(state, workspace, viewport),
     // An archived workspace keeps its archived bar, so the notice of a
     // suspended org shows above it.
@@ -117,10 +117,12 @@ export function WorkspaceScreen(props: {
   const headerBar = (
     <workspaceHeader.Component
       canReassign={admin && !readOnly}
+      canRestart={!readOnly}
       moklyInstance="workspace-header"
       name={workspace.name}
       ownerOpen={state.overlay === 'reassign'}
       rightHidden={rightHidden}
+      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -144,7 +146,7 @@ export function WorkspaceScreen(props: {
           menuTab: row.menuTab,
           readOnly,
         })}
-      {transcriptToast(state, viewport)}
+      {copyToast(state, viewport)}
     </ChatWorkspaces>
   )
   const tabRow = (
@@ -196,6 +198,7 @@ export function WorkspaceScreen(props: {
     archivable,
     restorable,
     rightColumn: !rightHidden,
+    sidebar: true,
     mac: mac !== undefined,
     shortcuts: props.shortcuts,
   })
@@ -229,7 +232,6 @@ export function WorkspaceScreen(props: {
       />
     )
   }
-  const file = openFile(state)
   return (
     <appFrame.Component
       overlay={
@@ -243,6 +245,7 @@ export function WorkspaceScreen(props: {
         ...(suspended ? { suspended: suspendedOrg } : {}),
         ...(admin ? {} : { person: people[memberViewer] }),
       }}
+      sidebarView={state.sidebar}
       sidebar={workspaceSidebar({
         state,
         workspace,
@@ -252,17 +255,7 @@ export function WorkspaceScreen(props: {
       })}
     >
       <workspaceBody.Component
-        center={
-          file ? (
-            <filePage.Component
-              moklyInstance="file-page"
-              view={file}
-              {...defined({ placeholder: filePlaceholder(state, true) })}
-            />
-          ) : (
-            chat
-          )
-        }
+        center={centreOf(state, chat)}
         files={files}
         header={header}
         moklyInstance="workspace-body"

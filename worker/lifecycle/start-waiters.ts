@@ -20,18 +20,26 @@ export function abortStartWaiters(
 export class StartWaiters<T> {
   private readonly listeners = new Set<(result: T) => void>()
 
-  wait(read: () => Promise<T | undefined>): Promise<T> {
+  wait(
+    read: () => Promise<T | undefined>,
+    timeout?: { milliseconds: number; result: T },
+  ): Promise<T> {
     return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | undefined
       const receive = (result: T) => {
+        clearTimeout(timer)
         this.listeners.delete(receive)
         resolve(result)
       }
       this.listeners.add(receive)
+      if (timeout)
+        timer = setTimeout(() => receive(timeout.result), timeout.milliseconds)
       void read().then(
         (result) => {
           if (result) receive(result)
         },
         (error: unknown) => {
+          clearTimeout(timer)
           this.listeners.delete(receive)
           reject(error)
         },

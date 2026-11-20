@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 
-import { ACCOUNT_PATHS, type AgentLoginStatus } from '../shared/account'
+import {
+  ACCOUNT_PATHS,
+  refreshAgentLoginModelsPath,
+  type AgentLoginStatus,
+} from '../shared/account'
 import { FakeApiServer } from '../test-support/fake-api'
 import { endpointLoginFixtures } from '../test-support/fixtures/agent-logins'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
@@ -137,6 +141,25 @@ test('page returns share one account read and keep login and preference changes 
   })
   expect(app.account.login('codex')).toEqual(discovered[1])
   expect(app.account.account.get()?.defaultChoice).toEqual(choice)
+})
+
+test('a Refresh of an own endpoint shows its new list, also after a page return read the older list during the Refresh', async () => {
+  const { app, server, held, focus, logins } = await startedWithEndpoints()
+  const path = refreshAgentLoginModelsPath('claude')
+  server.json('POST', path, { modelListReadFailed: false })
+  held.holdAnswer('POST', path)
+  const refresh = app.account.refreshModels('claude')
+  await flushMicrotasks()
+  focus.focus()
+  await app.account.refreshLogins()
+  const refreshed = logins.map((login) => ({
+    ...login,
+    modelList: { missing: [], checkedAt: FAKE_TIME + 600_000 },
+  }))
+  serveLogins(server, refreshed)
+  held.release('POST', path)
+  await refresh
+  expect(app.account.login('claude')).toEqual(refreshed[0])
 })
 
 test('account polling stops after the last own endpoint is removed and page returns still read logins', async () => {

@@ -8,6 +8,7 @@ import {
   type OrgsResponse,
   type OrgSummary,
 } from '../../shared/orgs'
+import { isOrgColor } from '../../shared/org-colors'
 import { record, text, type JsonObject } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import { startBuild } from './build-routes'
@@ -78,11 +79,22 @@ function createOrg(backend: DevBackend, body: unknown): Response {
   return orgReply(org.org, 201)
 }
 
-/** Rename. A request without initials keeps the saved ones. */
-function renameOrg(org: OrgState, body: unknown): Response {
+/**
+ * The PATCH of an org, as on the Worker: a rename, a colour, or both. A
+ * request without initials or a colour keeps the saved ones. A colour
+ * change can come without the name.
+ */
+function updateOrg(org: OrgState, body: unknown): Response {
   const fields = record(body)
+  const color = fields.color
+  if (color !== undefined && !isOrgColor(color))
+    throw new RouteError(400, 'invalid_input', 'Choose one of the colours.')
+  const name =
+    fields.name === undefined && color !== undefined
+      ? org.org.name
+      : requiredText(fields, 'name')
   org.org = withInitials(
-    { ...org.org, name: requiredText(fields, 'name') },
+    { ...org.org, name, ...(color === undefined ? {} : { color }) },
     fields,
   )
   return orgReply(org.org)
@@ -97,11 +109,16 @@ function deleteOrg(backend: DevBackend, org: OrgState): Response {
   return orgReply(org.org)
 }
 
-/** Restore brings the org back as it was, with its initials. */
+/** Restore brings the org back as it was, with its initials and colour. */
 function restoreOrg(org: OrgState): Response {
-  const { id, name, role, initials } = org.org
-  org.org =
-    initials === undefined ? { id, name, role } : { id, name, role, initials }
+  const { id, name, role, initials, color } = org.org
+  org.org = {
+    id,
+    name,
+    role,
+    ...(initials === undefined ? {} : { initials }),
+    ...(color === undefined ? {} : { color }),
+  }
   return orgReply(org.org)
 }
 
@@ -169,7 +186,7 @@ export function orgRoutes(backend: DevBackend): Route[] {
     {
       method: 'PATCH',
       path: orgPath(ID.org),
-      answer: ({ params, body }) => renameOrg(orgOf(params), body),
+      answer: ({ params, body }) => updateOrg(orgOf(params), body),
     },
     {
       method: 'POST',

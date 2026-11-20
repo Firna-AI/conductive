@@ -1,0 +1,40 @@
+# Overlapping org saves restore older fields
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-17, from branch `calummoore/glow-color-customization-aneo`, review round 1, finding 1.
+- **Location:** `src/app/app-model.ts:279` and `:284`, `src/app/org-list.ts:63`, `src/shell/settings/GeneralTab.tsx:48` and `:94`.
+- **Reason:** The defect needs two overlapping saves whose replies arrive in reverse order, and its fix changes no stored data or API, so it does not get harder after the merge.
+
+- **Terms:**
+  - **General tab:** the first tab of the org settings. An admin changes the name, the initials, and the colour of the org there.
+  - **AppModel:** the model of the app in `src/app/app-model.ts`. It holds the org records that the rail, the settings, and the palette read.
+  - **OrgList:** the store of the orgs of the person in `src/app/org-list.ts`. Its `put` replaces the whole record of an org.
+- **Background:**
+  - The General tab has two writers. The Org section saves the name and the initials with Save, through `AppModel.renameOrg`. The Colour section saves a colour at once when the admin selects a swatch, through `AppModel.setOrgColor`.
+  - Each section has its own `useAction`, which refuses a second run only while its own write runs. So a name save and a colour save can run at the same time.
+  - Both writes send `PATCH /api/orgs/:id`. The Worker saves only the fields of the request, with `COALESCE` for each field in `updateOrg` of `worker/members/org-data.ts`. Each reply holds the whole org record.
+  - `renameOrg` and `setOrgColor` each put the whole reply into `OrgList`, which replaces the whole record.
+  - The colour of an org was added on 2026-11-17: an admin picks one of eight presets, and only the tile of the open org in the rail shows it.
+- **Problem:** A delayed reply replaces a newer value of the other field. A review reproduced both orders with held replies over the development API:
+  - The colour PATCH goes first and the rename PATCH second, and the rename reply arrives first. When the colour reply then arrives, the app shows the old name `Acme`. The server holds `Renamed`.
+  - The rename PATCH goes first and the colour PATCH second, and the colour reply arrives first. When the rename reply then arrives, the app shows no colour, so the rail shows Blue. The server holds `green`.
+  - After the first order, the name field also shows the old name, because the Org section takes the saved value into its draft. If the admin then changes only the initials and selects Save, the request sends the old name, and the server saves it again.
+- **Impact if no action:** The settings, the rail, and the palette can show an old name or an old colour until a reload. A later Save of the initials can write the old name back.
+- **Root question:** How do independent org saves keep the latest value of each field?
+- **Options:**
+  - **A.** Share one pending state between the two sections of the General tab, and turn each save off while the other runs. It prevents the overlap on this screen only. Effort: Small.
+  - **B.** Add one `AppModel` helper for partial org saves. It takes from the reply only the fields that the request names. It removes a named field that the reply does not hold, and it keeps a trimmed name from the reply. `renameOrg` and `setOrgColor` both use it. Add a held-reply regression for both orders over `startedOverDevRoutes` in `src/app/org-forms.test.ts`. It depends on the section guards that stop two saves of the same field, so keep them. Effort: Small.
+  - **C.** Add an increasing revision to each org in storage and in replies, and make the app ignore an older record. It needs a migration and a protocol change. Effort: Medium.
+  - **D.** Send the org writes of one org in order. `AppModel` keeps one promise chain for each org, and both saves use it. The second PATCH goes out only after the first reply is put, so the later reply holds both changes. A failed write does not stop the chain. It also covers two saves of one field. The second save takes one more round trip, a write that hangs holds the next one, and a queued save is lost when the page closes during the wait. Effort: Small.
+- **Left out:**
+  - No change: the visible defect stays.
+  - A request counter alone: it can drop an earlier successful save when a later request fails. It also fails when the server applies the later request first.
+  - One Save for every field: it breaks the decision that a colour saves at once in its own request. A shared Save also makes the stale draft of `plans/follow-ups/org-name-editor-stale-draft.md` worse.
+  - PATCH replies with only the changed fields: they break app copies that read the whole org from the reply.
+  - A new read of the org after the saves end: the old value still shows until that read returns.
+- **Wider fix:** B. Each partial save then changes only its own fields, so the class cannot recur in other partial org writes.
+- **Previous examples:** `plans/follow-ups/partial-change-restores-old-owner.md` records the same class for workspaces. Commit `8eaf4b21e` added field-specific workspace merges in `src/app/list-changes.ts`.
+- **Related:** `plans/follow-ups/org-name-editor-stale-draft.md` covers the same name editor. Its per-field draft does not stop this defect, because an unchanged field still takes the saved value, also an old one.
+- **Recommendation:** B. It covers each overlap that the screen allows today and keeps both saves parallel. D is the fix if a later change allows two saves of one field at once.
+- **Action:** fix after merge, apply B, because the defect needs overlapping saves with reversed replies, and the fix does not get harder after the merge.

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { chatPane } from '../entries/components/chat/ChatPane.mockup'
+import { composerData } from '../entries/components/chat/capabilitiesSlot'
 import { ChatWorkspaces, type ChatRow } from '../components/chat/chatWorkspaces'
 import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import type { ComposerState } from '../components/chat/Composer'
@@ -38,10 +39,12 @@ type WorkspaceChatParts = {
  * it imported the chat before, so the styles of the chat load first.
  */
 export function workspaceChat(parts: WorkspaceChatParts): ReactNode {
+  // The open Capabilities control is not data, so it goes in a slot.
+  const box = composerData(parts.composer)
   return (
     <ChatWorkspaces rows={parts.rows}>
       <chatPane.Component
-        composer={plainData(parts.composer)}
+        composer={plainData(box.composer)}
         empty={
           <emptyState.Component
             body={`The agent works on ${parts.workspace.branch}, on the same cloud computer as the other sessions.`}
@@ -56,6 +59,7 @@ export function workspaceChat(parts: WorkspaceChatParts): ReactNode {
         viewer={parts.viewer}
         viewport={parts.viewport}
         {...defined({
+          capabilitiesPanel: box.capabilitiesPanel,
           notice: parts.notice,
           problem: parts.problem && plainData(parts.problem),
           starting: parts.starting && plainData(parts.starting),

@@ -3,7 +3,6 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import { instanceKey } from '../../instanceKey'
@@ -11,6 +10,7 @@ import { archivedGroup } from '../../entries/components/workspaces/ArchivedGroup
 import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
+import { RowDrop } from './RowDrop'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
 import type { RowControls } from './RowMenu'
 import { sectionDrop } from '../../entries/components/workspaces/SectionDrop.mockup'
@@ -20,6 +20,7 @@ import type {
   SidebarSection,
   WorkspaceRow,
 } from './sections'
+import { isNested, treeOf } from './trees'
 import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
 import styles from './SectionList.module.css'
 
@@ -86,32 +87,6 @@ function SectionHeader(props: {
   )
 }
 
-/** Where a dragged workspace lands: a line, and the row under the pointer. */
-function DropTarget(props: {
-  row: WorkspaceRow
-  section: string
-  variant: Variant
-}) {
-  return (
-    <li className={styles.drop}>
-      <span aria-hidden className={styles.line}>
-        <span className={styles.lineEnd} />
-      </span>
-      <span aria-hidden className={styles.lifted}>
-        <workspaceRow.Component
-          drag="lifted"
-          moklyInstance={`${instanceKey(props.row.workspace.key)}-lifted`}
-          row={props.row}
-          variant={props.variant}
-        />
-      </span>
-      <span className={a11y.hidden} role="status">
-        Moving {props.row.workspace.name} to {props.section}
-      </span>
-    </li>
-  )
-}
-
 /** The archived row that the view draws, if any, with what it draws. */
 function drawnOf(
   rows: readonly WorkspaceRow[],
@@ -130,7 +105,10 @@ function drawnOf(
  * moves to another section by drag and drop, and a section moves to
  * another place by a drag of its header. A dragged section stays faint in
  * its place, and a line between two sections shows where it lands. The sidebar uses compact
- * rows; the list page uses taller rows for touch. `archived` adds the
+ * rows; the list page uses taller rows for touch. A sub-workspace shows
+ * nested under the row of its parent. Only a top-level row drags, and its
+ * whole tree moves with it: the tree stays faint in its place, and the line
+ * falls only between two trees. `archived` adds the
  * Archived group at the end, open unless `archivedCollapsed`. `readOnly`
  * drops the menus of the sections and of the rows, for a suspended org.
  * `viewer` is the person who looks at the list, whose role decides Archive
@@ -152,9 +130,14 @@ export function SectionList(props: {
   const { viewer } = props
   const drag = props.drag?.kind === 'workspace' ? props.drag : undefined
   const sectionDrag = props.drag?.kind === 'section' ? props.drag : undefined
-  const dragged = props.sections
-    .flatMap((item) => item.rows)
-    .find((row) => row.workspace.key === drag?.workspace)
+  /** The dragged tree: its top-level row, then the rows under it. */
+  const tree = drag
+    ? (props.sections
+        .map((item) => treeOf(item.rows, drag.workspace))
+        .find((rows) => rows.length > 0) ?? [])
+    : []
+  const dragged = tree.at(0)
+  const moving = new Set(tree.map((row) => row.workspace.key))
   const liftedSection = props.sections.find(
     (item) => item.section.key === sectionDrag?.section,
   )
@@ -178,6 +161,22 @@ export function SectionList(props: {
         const { section } = item
         const target = drag?.section === section.key ? drag : undefined
         const lifted = item === liftedSection
+        // A drop lands between two trees: before the top-level row at the
+        // index of the drag, counted without the dragged tree, or after the
+        // last tree.
+        const places = item.rows.filter(
+          (row) => !isNested(row) && !moving.has(row.workspace.key),
+        )
+        const before = target ? places.at(target.index) : undefined
+        const drop =
+          target && dragged ? (
+            <RowDrop
+              carried={tree.length - 1}
+              row={dragged}
+              section={section.name}
+              variant={props.variant}
+            />
+          ) : null
         return (
           <Fragment key={section.key}>
             {lifted ? null : sectionLine(rest.indexOf(item))}
@@ -198,15 +197,9 @@ export function SectionList(props: {
               />
               {section.collapsed ? null : (
                 <ul className={styles.rows}>
-                  {item.rows.map((row, index) => (
+                  {item.rows.map((row) => (
                     <Fragment key={row.workspace.key}>
-                      {target && dragged && index === target.index ? (
-                        <DropTarget
-                          row={dragged}
-                          section={section.name}
-                          variant={props.variant}
-                        />
-                      ) : null}
+                      {row === before ? drop : null}
                       <li>
                         <workspaceRow.Component
                           archivable={
@@ -218,16 +211,16 @@ export function SectionList(props: {
                           variant={props.variant}
                           {...defined({
                             controls: controlsOf(row),
-                            drag:
-                              row.workspace.key === drag?.workspace
-                                ? 'placeholder'
-                                : undefined,
+                            drag: moving.has(row.workspace.key)
+                              ? 'placeholder'
+                              : undefined,
                           })}
                         />
                       </li>
                     </Fragment>
                   ))}
-                  {item.rows.length === 0 ? (
+                  {before === undefined ? drop : null}
+                  {item.rows.length === 0 && !drop ? (
                     <li className={styles.empty}>
                       New workspaces appear here.
                     </li>

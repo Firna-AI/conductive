@@ -64,6 +64,10 @@ These docs belong to this doc:
   serious desktop app.
 - The sidebar toggle sits beside the window buttons. Back and Forward sit
   at the right of the top bar of the left panel.
+- While the toggle hides the sidebar, these controls keep their own width
+  in the top left corner. The top bar of the main area starts after them.
+  [The hidden sidebar](org-rail-order.md#the-hidden-sidebar) gives the
+  rest.
 - These controls sit where the [mockups](../mockups/README.md#the-mac-app)
   draw them. Back and Forward move through the pages of the window.
 - The top bars of the app move the window when the user drags them. Their

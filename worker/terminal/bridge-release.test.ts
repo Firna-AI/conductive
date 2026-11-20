@@ -1,5 +1,6 @@
 import { execFile, spawnSync } from 'node:child_process'
-import { mkdtemp, readFile, rm } from 'node:fs/promises'
+import { access, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { constants } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
@@ -7,6 +8,7 @@ import { promisify } from 'node:util'
 import { afterEach, expect, it } from 'vitest'
 
 import { BRIDGE_MAIN, BRIDGE_PATHS } from './bridge-files'
+import { attachScript } from './scripts'
 
 const execute = promisify(execFile)
 const temporaryFolders: string[] = []
@@ -30,6 +32,10 @@ it('installs each bridge file at its repository path, so the bridge loads its mo
     folder,
   ])
   expect(await readFile(`${folder}/terminal`, 'utf8')).toContain(BRIDGE_MAIN)
+  expect(await readFile(`${folder}/terminal-attach`, 'utf8')).toBe(
+    attachScript(),
+  )
+  await access(`${folder}/terminal-attach`, constants.X_OK)
   const root = `${folder}/terminal-bridge`
   for (const path of BRIDGE_PATHS)
     expect(await readFile(`${root}/${path}`, 'utf8')).toBe(

@@ -11,11 +11,18 @@ import { failureToast } from '../entries/components/common/FailureToast.mockup'
 import { menu } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { sheet } from '../entries/components/common/Sheet.mockup'
+import { RowMenuSheet } from '../components/files/FileRowMenu'
+import { pathResults } from '../components/files/rowMenuCopy'
 import { commandPalette } from '../entries/components/palette/CommandPalette.mockup'
 import type { PaletteContext } from '../components/palette/paletteContent'
 import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
 import { continueDialog } from '../entries/components/workspace/ContinueDialog.mockup'
 import { reassignMenu } from '../components/workspace/OwnerPicker'
+import {
+  RestartDialog,
+  RestartSheet,
+  UpdateCheckToast,
+} from '../components/workspace/RestartParts'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { tabMenuSheet } from '../entries/components/workspace/TabMenu.mockup'
 import { plainData } from '../defined'
@@ -24,6 +31,10 @@ import { workspaceSessions } from '../fixtures/sessions'
 import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { valueSheet } from './requestSheets'
+import { capabilitiesSheet } from './workspaceCapabilities'
+import { openFile } from './workspaceParts'
+import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -130,41 +141,47 @@ function TerminalFailure(props: { title: string; viewport: Viewport }) {
 }
 
 /**
- * The toast after a copy of a session transcript from the tab menu, if any.
- * It lies over the workspace at the place of the toasts of the app.
+ * The toast after a copy from a menu, if any: Copy path from a row menu or
+ * a tab menu, or a copy of a session transcript from the tab menu. It lies
+ * over the workspace at the place of the toasts of the app.
  */
-export function transcriptToast(
+export function copyToast(
   state: WorkspaceState,
   viewport: Viewport,
 ): ReactNode {
-  switch (state.copyTranscript) {
-    case 'none':
-      return null
-    case 'copied':
-      return (
-        <toastLayer.Component
-          moklyInstance="transcript-toast"
-          phone={viewport === 'mobile'}
-          toast={{ title: transcriptToasts.copied, tone: 'success' }}
-        />
-      )
-    case 'failed':
-      return (
-        <toastLayer.Component
-          moklyInstance="transcript-toast"
-          phone={viewport === 'mobile'}
-          toast={{ title: transcriptToasts.failed, tone: 'error' }}
-        />
-      )
-  }
+  const path = state.copyPath !== 'none'
+  const result = path ? state.copyPath : state.copyTranscript
+  if (result === 'none') return null
+  const words = path ? pathResults : transcriptToasts
+  return (
+    <toastLayer.Component
+      moklyInstance="copy-toast"
+      phone={viewport === 'mobile'}
+      toast={{
+        title: words[result],
+        tone: result === 'copied' ? 'success' : 'error',
+      }}
+    />
+  )
+}
+
+/**
+ * The sheet of the open menu of a row of the Files panel, on a phone. Its
+ * Files tab shows the lists, unless the state shows a file there as a page.
+ */
+function rowMenuSheet(state: WorkspaceState, viewport: Viewport): ReactNode {
+  const shown = state.focus === 'files' && openFile(state) === undefined
+  const menu = shown ? rowMenuOf(state, viewport) : undefined
+  return menu ? <RowMenuSheet menu={menu} /> : null
 }
 
 /**
  * What lies open over a workspace. Desktop draws the menus beside their
- * buttons, and the tab menu below its tab, so only the dialog lies over the
- * app. A phone draws each one as a sheet. `row` holds the tabs that the
- * viewport shows, the tab whose menu is open, if any, and whether the
- * workspace is read-only, which leaves items out of that menu.
+ * buttons, the tab menu below its tab, and the menu of a row of the Files
+ * panel at the pointer, so only the dialog lies over the app. A phone draws
+ * each one as a sheet, and the open Capabilities control too. `row` holds
+ * the tabs that the viewport shows, the tab whose menu is open, if any, and
+ * whether the workspace is read-only, which leaves items out of that menu.
  */
 export function workspaceOverlay(
   state: WorkspaceState,
@@ -175,7 +192,18 @@ export function workspaceOverlay(
   const mobile = viewport === 'mobile'
   switch (state.overlay) {
     case 'none':
+      return (
+        capabilitiesSheet(state, viewport) ??
+        (mobile ? rowMenuSheet(state, viewport) : null)
+      )
+    case 'restarting':
       return null
+    case 'restart':
+      return mobile ? <RestartSheet name={workspace.name} /> : null
+    case 'restart-confirm':
+      return <RestartDialog viewport={viewport} />
+    case 'restart-update-failed':
+      return <UpdateCheckToast viewport={viewport} />
     case 'close-session':
       return <CloseSessionDialog viewport={viewport} />
     case 'continue-unpushed':
@@ -233,6 +261,8 @@ export function workspaceOverlay(
           viewport={viewport}
         />
       )
+    case 'value-sheet':
+      return valueSheet(state, viewport)
   }
 }
 

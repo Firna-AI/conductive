@@ -70,6 +70,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
         avatarUrl: null,
       },
       sourceSessionId: 'source',
+      login: { type: 'personal', userId: fixture.member.id },
       loginAvailable: true,
       loginShared: true,
     },
@@ -100,6 +101,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
       messageIds: ['retry-message'],
       state: 'queued',
       closeAfterStop: false,
+      stopRequest: null,
       nextTurnId: null,
     },
     commands: [
@@ -134,6 +136,7 @@ export async function linkedRetryBoundaryFixture(harness: TestHarness) {
         avatarUrl: null,
       },
       sourceSessionId: null,
+      login: { type: 'personal', userId: fixture.owner.id },
       loginAvailable: false,
       loginShared: false,
     },

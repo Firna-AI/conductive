@@ -36,6 +36,11 @@ const states: Readonly<Record<MacCommandState, StatePresentation>> = {
     tone: 'warning',
     icon: 'monitor-off',
   },
+  'mac-access-off': {
+    label: 'Mac access off',
+    tone: 'muted',
+    icon: 'shield-off',
+  },
 }
 
 /**
@@ -45,6 +50,7 @@ const states: Readonly<Record<MacCommandState, StatePresentation>> = {
 const notes: Readonly<Partial<Record<MacCommandState, string>>> = {
   denied: `${sender} denied it in the Mac app.`,
   unavailable: 'The Mac is asleep, or the Mac app is closed.',
+  'mac-access-off': 'Mac access is off in the Capabilities of this workspace.',
 }
 
 /** The exact command, after a muted shell prompt. Long commands wrap. */

@@ -65,7 +65,6 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     'palette',
     'Hide or show the sidebar',
     actionTexts['hide-sidebar'].words,
-    'mac-app',
   ),
   command(
     'toggle-right-column',
@@ -164,6 +163,13 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
     agentActionLabels['commit-and-push'],
     ['git', 'save', 'publish'],
   ),
+  command(
+    'mark-ready-for-review',
+    'Workspace',
+    'workspace',
+    'Mark PR ready for review',
+    ['draft', 'pull request', 'github'],
+  ),
   command('merge-pull-request', 'Workspace', 'workspace', 'Merge PR', [
     'pull request',
     'github',
@@ -187,6 +193,7 @@ export const shortcutCommands: readonly ShortcutCommand[] = [
   palette('go-to-checks', 'Workspace'),
   palette('go-to-terminal', 'Workspace'),
   palette('go-to-preview', 'Workspace'),
+  palette('new-terminal', 'Workspace'),
   palette('new-session', 'Chat'),
   palette('session-history', 'Chat'),
   command('focus-message', 'Chat', 'workspace', 'Focus the message field'),

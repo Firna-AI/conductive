@@ -6,6 +6,7 @@ import { chooseRepositoriesNotice } from '../entries/components/new-workspace/no
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
+import { paths } from '../paths'
 import { defaultSection, sections } from '../fixtures/sections'
 import {
   NewWorkspaceScreen,
@@ -17,8 +18,11 @@ import {
   newOrgEmpty,
   newOrgOf,
 } from '../entries/components/screens/listParts.mockup'
+import { capabilitiesData } from '../entries/components/chat/capabilitiesSlot'
+import { newWorkspaceCapabilities } from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -41,6 +45,7 @@ export const newWorkspaceDialogSchema = {
     'repositoryMenu',
     'sectionMenu',
     'waitingBuild',
+    'capabilities',
     'result',
     'org',
     'firstBuild',
@@ -75,6 +80,7 @@ export const emptyDialog: NewWorkspaceDialogState = {
   repositoryMenu: 'closed',
   sectionMenu: 'closed',
   waitingBuild: 'building',
+  capabilities: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -151,8 +157,17 @@ export function NewWorkspaceDialogScreen(props: {
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
       text={ownDraft ? page.draft : draft.text}
+      {...capabilitiesData(
+        newWorkspaceCapabilities(
+          state,
+          'desktop',
+          // Firna has no secrets yet, which the page of a phone shows.
+          state.org === 'new' ? undefined : paths.dialogCapabilities,
+        ),
+      )}
       {...defined({
         caret: ownDraft ? undefined : draft.caret,
+        login: formLoginLabel(state),
         notices: notices.length > 0 ? notices : undefined,
         repository: chosen ? page.repository.name : undefined,
         repositoryMenu:
@@ -177,10 +192,11 @@ export function NewWorkspaceDialogScreen(props: {
       </appFrame.Component>
     )
   }
+  // The workspace behind the dialog is the one of the person signed in.
   return (
     <WorkspaceScreen
       overlay={dialog}
-      state={readyWorkspace}
+      state={{ ...readyWorkspace, viewer: state.viewer }}
       viewport="desktop"
     />
   )

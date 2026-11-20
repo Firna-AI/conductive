@@ -5,6 +5,7 @@ import {
   OrgTile,
   PersonAvatar,
 } from '../../../components/orgs/OrgTile'
+import { ORG_COLORS } from '../../../design/orgColors'
 import { orgs } from '../../../fixtures/orgs'
 import { people } from '../../../fixtures/members'
 import { orgSchema } from '../layout/railSchemas'
@@ -20,7 +21,7 @@ export const orgTile = defineComponent({
   slug: 'org-tile',
   title: 'Org tile',
   description:
-    'The initials of an org on a rounded square with a hairline outline, so that the square shows on the rail in both schemes. The current org shows its initials and its outline in the accent colour. The square is decorative: its link names the org. Its own page shows Acme, the current org, at the size of the rail.',
+    'The initials of an org on a rounded square with a hairline outline, so that the square shows on the rail in both schemes. The current org shows its initials and its outline in the colour of the org, Blue by default. The square is decorative: its link names the org. Its own page shows Acme, the current org, at the size of the rail.',
   relatedDocs: ['docs/mockups/orgs-and-logins.md'],
   propSchema: {
     type: 'object',
@@ -43,6 +44,13 @@ export const orgTile = defineComponent({
       description: 'The square of an org that is not open.',
       props: { org: orgs.futex, current: false },
     },
+    {
+      slug: 'colour',
+      title: 'Org colour',
+      description:
+        'The current org with a preset colour, Green: its initials and its outline take the colour.',
+      props: { org: { ...orgs.acme, color: 'green' } },
+    },
   ],
 })
 
@@ -61,11 +69,14 @@ export const initialsTile = defineComponent({
       initials: initialsSchema,
       size: sizeSchema,
       current: { type: 'boolean' },
+      /** The colour of the org, which a current tile shows. */
+      color: { enum: ORG_COLORS },
     },
   } as const,
   props: { initials: orgs.labs.initials, size: 26 },
   render: (props) => (
     <InitialsTile
+      color={props.color}
       current={props.current}
       initials={props.initials}
       size={props.size}
@@ -75,7 +86,8 @@ export const initialsTile = defineComponent({
     {
       slug: 'current',
       title: 'Current',
-      description: 'The initials and the outline in the accent colour.',
+      description:
+        'The initials and the outline in the colour of the org, Blue by default.',
       props: { current: true },
     },
   ],

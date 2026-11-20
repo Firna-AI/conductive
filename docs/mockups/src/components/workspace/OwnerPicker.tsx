@@ -18,10 +18,10 @@ import styles from './OwnerPicker.module.css'
 
 /**
  * The members whom an admin can make the owner of a workspace, with the
- * current owner marked. Each session runs on the agent login of its
- * starter, the member who started it, so a new owner changes no login, and
- * the cloud computer keeps running. One exception: a workspace whose stop
- * for a suspended owner has not finished still stops.
+ * current owner marked. Each session keeps its agent login, the login of
+ * its starter or the org login, so a new owner changes no login, and the
+ * cloud computer keeps running. One exception: a workspace whose stop for
+ * a suspended owner has not finished still stops.
  */
 export function reassignMenu(owner: PersonKey): MenuEntryData[] {
   return [
@@ -35,7 +35,7 @@ export function reassignMenu(owner: PersonKey): MenuEntryData[] {
     { kind: 'divider' },
     {
       kind: 'note',
-      text: 'Each session runs on the agent login of the member who started it.',
+      text: 'Each session keeps its agent login.',
     },
   ]
 }

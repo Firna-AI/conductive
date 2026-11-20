@@ -142,6 +142,40 @@ it('pages in creation order with exact more flags and preserves unlimited and of
   }
 })
 
+it('filters direct children with other filters and keeps each parent ID', async () => {
+  await fixture.db.batch([
+    fixture.db.prepare(
+      "UPDATE workspaces SET parent_workspace_id = 'calling-workspace' WHERE id IN ('teammate-workspace', 'archived-workspace')",
+    ),
+    fixture.db.prepare(
+      "UPDATE workspaces SET parent_workspace_id = 'teammate-workspace' WHERE id = 'archived-workspace'",
+    ),
+  ])
+  for (const [query, expected] of [
+    [
+      { parentId: 'calling-workspace' },
+      [['teammate-workspace', 'calling-workspace']],
+    ],
+    [
+      { parentId: 'teammate-workspace', archived: 'true' },
+      [['archived-workspace', 'teammate-workspace']],
+    ],
+    [{ parentId: 'calling-workspace', ownerId: 'owner' }, []],
+    [{ parentId: 'outside-workspace' }, []],
+    [{ parentId: 'unknown-workspace' }, []],
+  ] as const) {
+    const response = await list(query)
+    expect(response.status).toBe(200)
+    const result: AgentListWorkspacesResponse = await response.json()
+    expect(
+      result.workspaces.map(({ id, parentId }) => [id, parentId]),
+      JSON.stringify(query),
+    ).toEqual(expected)
+  }
+  const result: AgentListWorkspacesResponse = await (await list()).json()
+  expect(result.workspaces[0]?.parentId).toBeNull()
+})
+
 it('refuses malformed list filters and paging with invalid_input', async () => {
   const cases: Record<string, string>[] = [
     { limit: '0' },
@@ -154,6 +188,7 @@ it('refuses malformed list filters and paging with invalid_input', async () => {
     { state: 'unknown' },
     { archived: 'maybe' },
     { updatedSince: 'yesterday' },
+    { parentId: '' },
   ]
   for (const query of cases) {
     const response = await list(query)
