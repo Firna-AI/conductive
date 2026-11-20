@@ -104,6 +104,54 @@ test('window keys hold a layout modifier until its own keyup or blur and share i
   }
 })
 
+test('window keys remember only first-press consumption by physical key across subscriptions until keyup or blur', () => {
+  const heard: [string, boolean, boolean][] = []
+  const hear = (press: KeyPress) => {
+    heard.push([press.code, press.repeat, press.firstPressConsumed])
+    if (press.code === 'KeyK' || press.repeat) {
+      press.preventDefault()
+      press.stopPropagation()
+    }
+  }
+  let stop = windowKeys(window)(hear)
+  const send = (type: string, key: string, code: string, repeat = false) =>
+    window.dispatchEvent(
+      new KeyboardEvent(type, { key, code, repeat, cancelable: true }),
+    )
+  try {
+    send('keydown', 'k', 'KeyK')
+    send('keydown', 'a', 'KeyA')
+    send('keydown', 'a', 'KeyA', true)
+    send('keydown', 'a', 'KeyA', true)
+    stop()
+    send('keyup', 'a', 'KeyA')
+    stop = windowKeys(window)(hear)
+    send('keydown', 'л', 'KeyK', true)
+    stop()
+    send('keyup', 'л', 'KeyK')
+    stop = windowKeys(window)(hear)
+    send('keydown', 'k', 'KeyK', true)
+    send('keydown', 'k', 'KeyK')
+    stop()
+    window.dispatchEvent(new Event('blur'))
+    stop = windowKeys(window)(hear)
+    send('keydown', 'k', 'KeyK', true)
+    expect(heard).toEqual([
+      ['KeyK', false, false],
+      ['KeyA', false, false],
+      ['KeyA', true, false],
+      ['KeyA', true, false],
+      ['KeyK', true, true],
+      ['KeyK', true, false],
+      ['KeyK', false, false],
+      ['KeyK', true, false],
+    ])
+  } finally {
+    window.dispatchEvent(new Event('blur'))
+    stop()
+  }
+})
+
 describe('createLiveServices', () => {
   test('uploads a raw part on the page origin with the cookie and measured progress through native XHR', async () => {
     const fetched = vi

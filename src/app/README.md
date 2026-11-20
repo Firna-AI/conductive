@@ -204,9 +204,14 @@ the Help row of the palette opens.
   field or terminal after a shortcut consumes the press.
   `KeyPress.layoutModifiers` carries the modifiers taken by held layout
   switch keys. `onKey.layoutModifiers()` gives a recorder the same state
-  for its own event. `windowKeys` shares this state per window and resets
-  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
-  snapshot for callers with a window.
+  for its own event. `KeyPress.firstPressConsumed` is true on a repeat
+  when a listener called `preventDefault` on the first press of the same
+  physical key. A first press always has false. The
+  [shortcut model](shortcuts/README.md) stops each repeat of such a key.
+  `windowKeys` shares both states per window and keeps them between
+  listener subscriptions. It resets a key on its key-up, and every key on
+  blur. `windowLayoutModifiers(window)` reads the same layout modifiers
+  for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac
