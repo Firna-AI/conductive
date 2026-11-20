@@ -1,11 +1,12 @@
 # Create a workspace
 
 This doc holds the requirements and the decisions in force for the create
-of a workspace. It covers New workspace, as a page or as a dialog, the
-preference that chooses between them, its Capabilities icon, the create,
-the branch, and a failed first start. It belongs to
-[Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
-provider, the org image, and the startup script.
+of a workspace. It covers New workspace, as a page or as a dialog, its
+Capabilities icon, the create, the branch, and a failed first start. It
+belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md), which
+covers the provider, the org image, and the startup script.
+[New workspace preference](new-workspace-preference.md) covers the choice
+between the page and the dialog.
 [New workspace notices](new-workspace-notices.md) covers the notices that
 keep Send and Create off.
 [Life of a workspace](workspace-life.md) covers the start steps and the
@@ -34,46 +35,9 @@ The pull request of that change keeps its record.
 
 ### The preference
 
-- The Account page has five tabs, General, Agents, Preferences, Keyboard
-  shortcuts, and Stats, each with its own address. Agents holds the logins
-  of Claude and Codex (the user asked on 13 November 2026). Preferences
-  holds the New workspaces section, with Model and effort and the choice
-  of how New workspace opens (decision 142 of PR #73). General holds the
-  other sections of the account.
-  [Keyboard shortcuts: the settings tab](keyboard-shortcuts-tab.md) gives
-  the fourth tab. [Account stats](account-stats.md) gives the fifth tab.
-  The Mac app adds [This Mac](desktop-commands.md#saved-choices) as the
-  sixth tab.
-- Reason: all the settings of new workspaces then sit together. The
-  section on General, with only the new choice on Preferences, was
-  rejected, because the user then looks in two places.
-- Model and effort also saves fast mode, with the Fast switch of its menu.
-  New workspace starts from the saved choice with its fast mode, as
-  [Fast mode](fast-mode.md#saved-defaults-new-workspaces-and-automations)
-  says.
-- The choice offers the page and the dialog. Each change saves at once, as
-  a change of Model and effort does.
-- When a save fails, the choice keeps the saved value, and an error shows
-  under it. A toast was rejected, because the error under the choice is
-  closer to it.
-- The choice belongs to the account. So it applies in each browser and in
-  the Mac app.
-- Reason: a setting of the Account page that holds in one browser only
-  would surprise the user. A choice in the storage of the browser was
-  rejected for that reason.
-- Without a saved choice, such as for a new account, New workspace opens
-  as the dialog. The user asked for the dialog as the default for new
-  users on 12 November 2026.
-- Each account that existed before that change keeps the page, as its
-  saved choice. Reason: the user asked for the new default for new users
-  only. A default that also moved the existing accounts to the dialog was
-  rejected, because their New workspace would change without their choice.
-- A save of the choice saves no model. A user who never chose Model and
-  effort keeps the default model and effort of the app.
-- An open app uses a choice that the user saved in another browser or in
-  the Mac app after its next read of the account, as for Model and effort.
-- Reason: a saved copy of that default would hold the model for the user
-  when the app changes its default.
+- [The preference](new-workspace-preference.md#the-preference) states the
+  choice between the page and the dialog, and the Account page that holds
+  it.
 
 ### Page or dialog
 

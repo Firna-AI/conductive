@@ -1,0 +1,37 @@
+# Protocol catalogue misses two protocol docs
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-20, a problem outside the scope that the docs implementor found in review-fix round 1 on branch `calummoore/follow-up-keep-the-account-data-current-ipit`.
+- **Location:** `docs/architecture/protocol-docs.md:6`, the claim of the catalogue. `docs/architecture/protocol-docs.md:154-158`, the entry of Operator actions, and `docs/architecture/protocol-docs.md:230-234`, the entries of the marketing site. The two docs `docs/protocol/suspension-workspaces.md` and `docs/protocol/link-previews.md`.
+- **Reason:** The omission predates the account-refresh change and is independent of it, so a separate change adds the entries.
+
+- **Source:** Implementation. **Category:** Docs or spec.
+- **Terms:**
+  - **Protocol doc:** a page under `docs/protocol/` that holds the requirements and the decisions in force for one area.
+  - **Protocol catalogue:** `docs/architecture/protocol-docs.md` and its child page `docs/architecture/protocol-docs-workspaces.md`, which list the protocol docs and what each covers.
+- **Background:**
+  - `docs/architecture/protocol-docs.md:6` says: "This page lists each protocol doc and what it covers."
+  - Its child page `docs/architecture/protocol-docs-workspaces.md` lists the docs that belong to Workspaces and sandboxes.
+  - A search of both catalogue pages for the file name of each protocol doc on 2026-11-20 found two docs with no entry. The same search also misses `docs/protocol/README.md`, which is the README of the folder and not a protocol doc.
+  - `docs/protocol/suspension-workspaces.md` has the title "Workspaces during a suspension". It says that it belongs to Operator actions. It states how a suspension affects workspace starts, sandbox access, preview viewers, and workspace owners. `docs/protocol/operator-actions.md` links it.
+  - The catalogue lists Operator actions at `docs/architecture/protocol-docs.md:154-156`, with its sub-entry Org suspension at lines 157-158.
+  - `docs/protocol/link-previews.md` has the title "Public link previews". It states the Open Graph and Twitter card metadata of the public marketing pages, such as the home page, the guides, and the legal pages, and the image that a shared link shows. It names no parent doc. `src/marketing/link-previews.md` links it.
+  - The catalogue lists the marketing site docs Sign-ups and Website docs at `docs/architecture/protocol-docs.md:230-234`.
+- **Problem:** The catalogue says that it lists each protocol doc, but it has no entry for these two docs.
+- **Impact if no action:** A reader or a reviewer who finds the requirements of an area through the catalogue misses the suspension rules for workspaces and the rules for link previews. The claim of the catalogue stays false.
+- **Root question:** How does the protocol catalogue list every protocol doc and what it covers?
+- **Options:**
+  - **A.** Add one entry for each doc to `docs/architecture/protocol-docs.md`. Take the words of each entry from the scope sentence of its doc. Change no other entry, no intro text, and no protocol doc. Effort: Small.
+    - Add a sub-entry under Operator actions, after Org suspension, such as `[Workspaces during a suspension](../protocol/suspension-workspaces.md): how a suspension affects workspace starts, sandbox access, preview viewers, and workspace owners.`
+    - Add an entry after Website docs, such as `[Public link previews](../protocol/link-previews.md): the Open Graph and Twitter card metadata of the public pages, and the image of a shared link.`
+- **Left out:**
+  - A narrower claim at line 6, because the catalogue then no longer names every source of requirements, so it fails the goal.
+  - A gate check that each protocol doc has an entry, because only the user can add a new gate. The `testing` skill also keeps only a link check and a drift check of generated files for protocol docs.
+  - A generated catalogue, because each entry needs a written summary of what its doc covers, and a generator is a much larger change than two entries.
+  - A move of each doc into another protocol doc so that it needs no entry, because that moves required text with no need.
+  - No change, because the claim of the catalogue stays false.
+- **Wider fix:** None. The `documentation` skill already gives the procedure: docs stay consistent with themselves, so a change that adds a protocol doc also adds its catalogue entry.
+- **Previous examples:** The commits that added the docs left out their entries. `d39e64eb1`, on 2026-11-10, added `suspension-workspaces.md` and added other entries to the catalogue, but not this one. `b5dbada1f`, on 2026-11-11, added `link-previews.md` and changed no catalogue. No earlier fix of a missing entry was found.
+- **Recommendation:** A. It makes the claim of the catalogue true with two entries, and it changes no required text.
+- **Action:** fix after merge, apply A, because the omission predates the account-refresh change and is independent of it.

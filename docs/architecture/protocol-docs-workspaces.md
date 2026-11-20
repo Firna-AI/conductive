@@ -13,6 +13,9 @@ protocol docs.
 - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, its Capabilities icon, the create, the branch, and
   a failed first start.
+  - [New workspace preference](../protocol/new-workspace-preference.md):
+    the choice between the page and the dialog, and the tabs of the
+    Account page.
   - [New workspace notices](../protocol/new-workspace-notices.md): the
     notice before the first good build, and the notice of a waiting
     repository.
