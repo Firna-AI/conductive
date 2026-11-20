@@ -25,6 +25,7 @@ import {
   requireAutomation,
   automationRuns,
   automationCapabilities,
+  automationChosenSecrets,
 } from './automation-records'
 import { slugify, uniqueId, type DevState, type OrgState } from './state'
 
@@ -75,6 +76,11 @@ function reply(
         ),
       },
       runLogin: runLoginOf(backend.state, org, automation),
+      chosenSecrets: automationChosenSecrets(
+        backend,
+        org,
+        automation.capabilities,
+      ),
     } satisfies AutomationResponse,
     status,
   )

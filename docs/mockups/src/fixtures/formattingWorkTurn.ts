@@ -1,6 +1,26 @@
+import {
+  code,
+  emphasis,
+  lineBreak,
+  p,
+  quote,
+  rule,
+  strike,
+  table,
+  type Inline,
+} from './agentText'
 import type { ChatItem, ToolKind } from './conversations'
-import { quote, rule, twoLineAddress } from './proseBlocks'
 import { pullRequest } from './pullRequests'
+
+/**
+ * The address of the phone test of Priya, on two lines, as an agent writes
+ * an address with a line-break tag.
+ */
+export const twoLineAddress: readonly Inline[] = [
+  '221B Baker Street',
+  lineBreak,
+  'London NW1 6XE',
+]
 
 /** A tool call of a turn that finished. */
 function done(
@@ -30,9 +50,13 @@ export const formattingInWork: readonly ChatItem[] = [
     id: 'start',
     blocks: [
       quote(
-        'Each key press sends a lookup. Can we wait until the person *stops* typing?',
+        p(
+          'Each key press sends a lookup. Can we wait until the person ',
+          emphasis('stops'),
+          ' typing?',
+        ),
       ),
-      "I'll add the wait to `useAddressAutocomplete` first.",
+      p("I'll add the wait to ", code('useAddressAutocomplete'), ' first.'),
     ],
   },
   done(
@@ -45,9 +69,12 @@ export const formattingInWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'fields',
     blocks: [
-      'The wait is in.',
+      p('The wait is in.'),
       rule,
-      '~~Hide the fields while the list is open.~~ Next, the fields move down under the list.',
+      p(
+        strike('Hide the fields while the list is open.'),
+        ' Next, the fields move down under the list.',
+      ),
     ],
   },
   done('edit-form', 'edit', 'src/app/checkout/AddressForm.tsx', '+9 −2'),
@@ -56,16 +83,15 @@ export const formattingInWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'phone-test',
     blocks: [
-      'The phone test fills the form from the first suggestion:',
-      {
-        kind: 'table',
-        align: [null, null],
-        head: ['Field', 'Value'],
-        rows: [
+      p('The phone test fills the form from the first suggestion:'),
+      table(
+        [null, null],
+        ['Field', 'Value'],
+        [
           ['Address', twoLineAddress],
           ['Country', 'United Kingdom'],
         ],
-      },
+      ),
     ],
   },
   done(
@@ -78,12 +104,20 @@ export const formattingInWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'reply',
     blocks: [
-      "Both changes pass. ~~Hide the fields while the list is open~~ is no longer needed, so I'll reply to Priya:",
+      p(
+        'Both changes pass. ',
+        strike('Hide the fields while the list is open'),
+        " is no longer needed, so I'll reply to Priya:",
+      ),
       quote(
-        'The lookups now wait 250 ms after the *last* key press, and the fields move down under the list.',
+        p(
+          'The lookups now wait 250 ms after the ',
+          emphasis('last'),
+          ' key press, and the fields move down under the list.',
+        ),
       ),
       rule,
-      `The phone test typed:<br>${twoLineAddress}`,
+      p('The phone test typed:', lineBreak, ...twoLineAddress),
     ],
   },
   done('push', 'run', 'git push'),
@@ -91,7 +125,9 @@ export const formattingInWork: readonly ChatItem[] = [
     kind: 'agent',
     id: 'done',
     blocks: [
-      `Done. I pushed both changes to #${pullRequest.number} and replied to Priya.`,
+      p(
+        `Done. I pushed both changes to #${pullRequest.number} and replied to Priya.`,
+      ),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '3m 02s', files: [] },

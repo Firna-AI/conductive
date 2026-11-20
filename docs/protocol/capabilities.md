@@ -56,6 +56,24 @@ keeps it after the merge.
 - A secret for all agents shows as checked, with the words "All agents",
   and its checkbox does not change. The control links to the Secrets tab,
   or to Add a secret when the org has no secret.
+- The secrets part has no hint line, except in the control of an
+  automation. Each secret shows its name and checkbox, with an info icon
+  after the name (Cal, 20 November 2026). The description shows only in
+  the info box of the icon, never in the row. The box floats under the
+  icon. A mouse on the icon opens it, and a press, also a tap on a phone,
+  keeps it open until a second press. A secret without a description
+  shows no icon.
+- Reason: one line for each secret fits more secrets in the small card.
+  The box stays inside the card, because a press outside the card closes
+  it.
+- When the org has more than ten secrets, a Search secrets field shows
+  above them (Cal, 20 November 2026). It narrows the list to the secrets
+  whose name or description holds the search, with case ignored. A search
+  that matches no secret says so. A secret that the search hides keeps
+  its check. The control of an automation has the same search.
+- Reason: the control is a small card, so a long list needs a scroll to
+  find one secret. A member often knows what a secret is for, not its
+  name, so the search also reads the description.
 - A change in the control applies to each session of the workspace from
   that moment.
 - Reason: the control gives the undo of a wrong grant, and it keeps each

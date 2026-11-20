@@ -77,8 +77,8 @@ through the existing file client. With it, the Markdown image of a PNG,
 JPEG, GIF, or WebP file of an answer shows as a picture, and without it
 as its link, as
 [Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
-says. [Pictures in answers](text-links.md#pictures-in-answers) gives the
-rules of the code that draws them.
+says. [Pictures in answers](answer-pictures.md) gives the rules of the
+code that draws them.
 
 ## Rules for this code
 
@@ -109,9 +109,10 @@ rules of the code that draws them.
   [Agent text](agent-text.md) gives the rules of the code that formats
   them: the chat adapter on the shared Markdown parser, and the heading,
   list, and table parts that the chat shares with the file preview and the
-  mockups. Its linked guides [Message lines](message-lines.md) and
-  [Text links](text-links.md) give the message lines of the work of a
-  turn, and the links, the chips, and the pictures.
+  mockups. Its linked guides [Message lines](message-lines.md),
+  [Text links](text-links.md), and
+  [Pictures in answers](answer-pictures.md) give the message lines of the
+  work of a turn, the links and the chips, and the pictures.
 - The links of chat text open through the link opener of the app shell, in
   `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
   the app and the port previews of the workspace, as

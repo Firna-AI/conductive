@@ -8,7 +8,13 @@ import { Sheet } from '../components/common/Sheet'
 import { memberViewer, you } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { preApproved } from '../fixtures/secretRequests'
-import { acmeSecrets } from '../fixtures/secrets'
+import {
+  acmeSecrets,
+  manySecrets,
+  replicaUrl,
+  secretSearch,
+  undescribedSecret,
+} from '../fixtures/secrets'
 import { paths } from '../paths'
 import type { NewWorkspaceFormState } from './newWorkspaceParts'
 
@@ -18,6 +24,14 @@ type DraftState = Pick<NewWorkspaceFormState, 'capabilities'> & {
   viewer: 'admin' | 'member'
 }
 
+/** The secrets that the control lists for the state. */
+function secretsOf(state: DraftState) {
+  if (state.org === 'new') return []
+  if (state.capabilities === 'search') return manySecrets
+  if (state.capabilities === 'info') return [...acmeSecrets, undescribedSecret]
+  return acmeSecrets
+}
+
 /**
  * The Mac access of the draft while the control is open: off, as a new
  * workspace starts, or turned on. A switch that turns on in the Mac app
@@ -25,16 +39,18 @@ type DraftState = Pick<NewWorkspaceFormState, 'capabilities'> & {
  * Stop on this Mac (Mac access decision 1 C).
  */
 function macAccessOf(state: DraftState): MacAccessView | undefined {
-  if (state.capabilities === 'open') return { on: false }
+  if (!isOpen(state)) return undefined
   if (state.capabilities === 'mac-access-on') {
     return { on: true, thisMac: 'checked' }
   }
-  return undefined
+  return { on: false }
 }
 
 /**
  * The control of a new workspace. Acme offers its secrets, and the
- * creator pre-approved one. Firna, a new org, has none yet.
+ * creator pre-approved one. Firna, a new org, has none yet. `search` lists
+ * twelve secrets, with a search that keeps three. `info` shows one
+ * description, and a secret without a description, which has no info icon.
  */
 function panelOf(state: DraftState, macAccess: MacAccessView, sheet: boolean) {
   const firna = state.org === 'new'
@@ -44,13 +60,25 @@ function panelOf(state: DraftState, macAccess: MacAccessView, sheet: boolean) {
       view={{
         place: 'create',
         org: firna ? orgs.firna.name : orgs.acme.name,
-        secrets: firna ? [] : acmeSecrets,
+        secrets: secretsOf(state),
         preApproved: firna ? [] : preApproved,
+        search: state.capabilities === 'search' ? secretSearch : undefined,
+        info: state.capabilities === 'info' ? replicaUrl.name : undefined,
         macAccess,
         secretsTo: firna ? paths.secretsEmpty : paths.secrets,
         viewer: state.viewer === 'admin' ? you : memberViewer,
       }}
     />
+  )
+}
+
+/**
+ * The control is drawn open, also with Mac access on, a search, or a
+ * description.
+ */
+function isOpen(state: DraftState): boolean {
+  return ['open', 'mac-access-on', 'search', 'info'].includes(
+    state.capabilities,
   )
 }
 

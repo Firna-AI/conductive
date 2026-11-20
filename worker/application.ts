@@ -57,14 +57,13 @@ import { freshCodexLogin } from './codex-auth/renew'
 import { codexTaskOwner } from './codex-auth/tasks'
 import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
-import { cleanupCodexDevices } from './codex-auth/device-store'
+import { runRecordCleanups } from './record-cleanups'
 import { warnWorker } from './warnings'
 import { automationRunRuntime } from './automations/run-runtime'
 import { scanAutomationSchedules } from './automations/schedule-scan'
 import { healthResponse } from './health-response'
 import { isSecretMachinePath } from './secrets/routes'
 import { routeSecretTool } from './tools/secrets'
-import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 
 export function createApp(overrides: Partial<AppDependencies> = {}) {
   const dependencies: AppDependencies = {
@@ -271,8 +270,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
-      await cleanupFeedbackSends(env.DB, dependencies.now())
-      await cleanupCodexDevices(env.DB, dependencies.now())
+      await runRecordCleanups(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

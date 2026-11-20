@@ -35,7 +35,11 @@ Mac access off. A phone opens it as a sheet from the menu of the + button.
 Its `no-secrets` variant has Firna without secrets, and its `menu` variant
 has that menu open on a phone. Its `mac-access-on` variant has Mac access
 on in a browser, with the note that says to use Allow all commands on this
-Mac in the Mac app. `app/new-workspace/dialog/capabilities` has the same
+Mac in the Mac app. Its `search` variant has twelve secrets, with a Search
+secrets field above them and "deploy" typed in it. Its `info` variant has
+the info box of PROD_DATABASE_URL open, with its description, after a
+press on its info icon. STAGING_API_KEY there has no description, so it
+has no info icon. `app/new-workspace/dialog/capabilities` has the same
 control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete in a

@@ -1,11 +1,16 @@
+import type {
+  InlineImage,
+  InlineLink,
+  InlineText,
+} from '../../../../../src/chat/markdown/agent-inline'
 import { pictureType } from '../../../../../src/files/page/file-view'
-import { webAddressParts } from '../../../../../src/markdown/web-links'
-import { breakItems, keptBreaks } from '../common/markdownBreaks'
 import {
-  markNodes,
-  type MarkItem,
-  type MarkNode,
-} from '../common/markdownMarks'
+  keptBreaks,
+  showsText,
+  type BreakNodes,
+} from '../../../../../src/markdown/kept-breaks'
+import { webAddressParts } from '../../../../../src/markdown/web-links'
+import type { MarkNode } from '../common/markdownMarks'
 import {
   codeTarget,
   linkTarget as fileTarget,
@@ -13,7 +18,6 @@ import {
 } from './answerPaths'
 import { entryName } from './entryPaths'
 import { mentionParts } from './fileMentions'
-import { pathLinks } from './pathLinks'
 import { webCodePart, type TextPart } from './workspaceLinks'
 
 /**
@@ -45,75 +49,84 @@ export type ImagePart = {
 /** A unit of the text of an answer, which its marks do not read into. */
 export type AnswerPart = TextPart | FileLinkPart | ImagePart
 
-/** A node of the text of an answer, after its marks pair. */
+/** A node of the text of an answer: text, a line break, a unit, or a mark. */
 export type AnswerNode = MarkNode<AnswerPart>
 
-type AnswerItem = MarkItem<AnswerPart>
-
-function unit(part: AnswerPart, source: string): AnswerItem {
-  return { kind: 'unit', unit: part, source }
+function unit(part: AnswerPart): AnswerNode {
+  return { kind: 'unit', unit: part }
 }
 
 /**
- * Text with its Markdown links, its images at web addresses, and its bare
- * addresses, each one unit, and its line breaks. A bare address is a unit
- * before the marks pair, as the chat parser keeps it whole (design call 8),
- * so a mark in its path or its query, such as the `__` of `__tests__`,
- * stays in the address.
+ * The words of a label or of alt text: its text and its code without their
+ * marks, with a space for each line break.
  */
-function webLinkItems(text: string): AnswerItem[] {
-  const items: AnswerItem[] = []
-  let rest = ''
-  for (const part of webAddressParts(text)) {
-    if (part.kind === 'text') {
-      rest += part.text
-      continue
-    }
-    const { href, source, label } = part
-    const image = label !== undefined && rest.endsWith('!')
-    items.push(...breakItems<AnswerPart>(image ? rest.slice(0, -1) : rest))
-    items.push(
-      image
-        ? unit(
-            { kind: 'image', alt: label, href, source: `!${source}` },
-            `!${source}`,
-          )
-        : unit(part, source),
-    )
-    rest = ''
+function wordsOf(nodes: InlineText): string {
+  return nodes
+    .map((node) => {
+      switch (node.kind) {
+        case 'text':
+        case 'code':
+          return node.text
+        case 'break':
+          return ' '
+        case 'mark':
+          return wordsOf(node.nodes)
+        case 'link':
+          return wordsOf(node.label)
+        case 'image':
+          return wordsOf(node.alt)
+      }
+    })
+    .join('')
+}
+
+/**
+ * A Markdown link or image whose target is an entry of the tree, which
+ * opens the file. A label with no text shows the name of the entry. The
+ * image of a picture file can show as its picture.
+ */
+function fileLink(
+  href: string,
+  label: string,
+  source: string,
+  image: boolean,
+): FileLinkPart | undefined {
+  const target = fileTarget(href)
+  if (!target) return undefined
+  const { folder, path } = target.entry
+  return {
+    kind: 'file-link',
+    label: label.trim() === '' ? entryName(target.entry) : label,
+    source,
+    picture: image && !folder && pictureType(path) !== undefined,
+    ...target,
   }
-  return [...items, ...breakItems<AnswerPart>(rest)]
 }
 
 /**
- * Text with its Markdown links and images to entries of the tree, each one
- * unit, as `pathLinks` finds them in one pass. A label with no text shows
- * the name of the entry. Each other part reads as `webLinkItems` says.
+ * A Markdown link: a link to a file of the tree, or a link with its label,
+ * which `Part` draws as the chip of a workspace or as a web link.
  */
-function fileLinkItems(text: string): AnswerItem[] {
-  const items: AnswerItem[] = []
-  let end = 0
-  for (const link of pathLinks(text)) {
-    const target = fileTarget(link.target)
-    if (!target) continue
-    items.push(...webLinkItems(text.slice(end, link.index)))
-    const label =
-      link.label.trim() === '' ? entryName(target.entry) : link.label
-    const { source } = link
-    const { folder, path } = target.entry
-    const picture =
-      source.startsWith('!') && !folder && pictureType(path) !== undefined
-    const part: FileLinkPart = {
-      kind: 'file-link',
-      label,
+function linkPart(link: InlineLink): AnswerPart {
+  const label = wordsOf(link.label)
+  const source = `${link.typed.open}${label}${link.typed.close}`
+  return (
+    fileLink(link.href, label, source, false) ?? {
+      kind: 'link',
+      href: link.href,
       source,
-      picture,
-      ...target,
+      label,
     }
-    items.push(unit(part, source))
-    end = link.index + source.length
-  }
-  return [...items, ...webLinkItems(text.slice(end))]
+  )
+}
+
+/** A Markdown image: a link or a picture of a file, or its alt text. */
+function imagePart(image: InlineImage): AnswerPart {
+  const alt = wordsOf(image.alt)
+  const { href, source } = image
+  return (
+    fileLink(href, alt, source, true) ?? { kind: 'image', alt, href, source }
+  )
 }
 
 /**
@@ -121,46 +134,82 @@ function fileLinkItems(text: string): AnswerItem[] {
  * code names (answer chip decision 1). A web address alone in code is a
  * link inside its code box.
  */
-function codeItem(text: string): AnswerItem {
+function codePart(text: string): AnswerPart {
   const target = codeTarget(text)
-  const part: AnswerPart = target
+  return target
     ? { kind: 'mention', ...target, source: text }
     : webCodePart(text)
-  return unit(part, `\`${text}\``)
 }
 
-/** Text between the marks, with its mentions. */
+/**
+ * A text node with its bare addresses, each one unit, and its mentions. A
+ * mention can start right after a mark, and it ends before a `*` or a `~~`
+ * that the text keeps as typed (design call 11).
+ */
 function textNodes(text: string): AnswerNode[] {
-  return mentionParts(text, [], true).map((part): AnswerNode =>
-    part.kind === 'text' ? part : { kind: 'unit', unit: part },
-  )
+  return webAddressParts(text, false).flatMap((part): AnswerNode[] => {
+    if (part.kind !== 'text') return [unit(part)]
+    return mentionParts(part.text, [], true).map((piece): AnswerNode =>
+      piece.kind === 'text' ? piece : unit(piece),
+    )
+  })
 }
 
-/** The nodes, with the text between the marks read at each depth. */
-function withText(nodes: readonly AnswerNode[]): AnswerNode[] {
+/** The nodes of inline text, with the units that the mockups read. */
+function nodesOf(nodes: InlineText): AnswerNode[] {
   return nodes.flatMap((node): AnswerNode[] => {
-    if (node.kind === 'mark') {
-      return [{ ...node, children: withText(node.children) }]
+    switch (node.kind) {
+      case 'text':
+        return textNodes(node.text)
+      case 'code':
+        return [unit(codePart(node.text))]
+      case 'break':
+        return [{ kind: 'break' }]
+      case 'mark':
+        return [
+          { kind: 'mark', mark: node.mark, children: nodesOf(node.nodes) },
+        ]
+      case 'link':
+        return [unit(linkPart(node))]
+      case 'image':
+        return [unit(imagePart(node))]
     }
-    return node.kind === 'text' ? textNodes(node.text) : [node]
   })
 }
 
 /**
- * The text of an answer, in the order in which the parser reads it: code
- * first, then Markdown links, images, and bare addresses, then line
- * breaks, then the marks around them, and last, in the text between the
- * marks, the mentions. So `**` around code, a chip, or a link makes it
- * bold, and an unpaired `**` shows as typed (design call 7). A path keeps
- * its `_`, and a mention inside marks ends before the closing mark (design
- * call 11). `live` reads text that the agent still writes: a mark that can
- * only open closes at its end, so `**Next:` shows bold (item 9 C).
+ * How the rule of the line breaks reads the nodes: a mark holds nodes, and
+ * each unit shows something.
  */
-export function answerNodes(text: string, live = false): AnswerNode[] {
-  const items = text
-    .split('`')
-    .flatMap((part, index) =>
-      index % 2 === 1 ? [codeItem(part)] : fileLinkItems(part),
-    )
-  return withText(markNodes(keptBreaks(items), live))
+const breakNodes: BreakNodes<AnswerNode> = {
+  inner: (node) => (node.kind === 'mark' ? node.children : null),
+  rebuilt: (node, children) => {
+    if (node.kind !== 'mark') return node
+    return children.length > 0 ? { ...node, children } : null
+  },
+  leaf: (node) => {
+    if (node.kind === 'break') return 'break'
+    return node.kind === 'text' && node.text.trim() === '' ? 'blank' : 'shows'
+  },
+}
+
+/**
+ * The inline text of one block of an answer, as the fixtures write it with
+ * the inline tree of the app: its bold text, emphasis, strikethrough, line
+ * breaks, Markdown links, and images, with the units that the mockups read
+ * where the text draws. A link or an image to an entry of the tree is a
+ * link to the file. Inline code whose whole text is a path of the tree is
+ * a file chip. In the text between them, each bare address is a unit, and
+ * each mention of the tree is a file chip. The line breaks follow the rule
+ * of `src/markdown/kept-breaks.ts`: a break at the start or at the end of
+ * the block draws nothing, and two or more breaks in a row draw at most one
+ * empty line.
+ */
+export function answerNodes(text: InlineText): AnswerNode[] {
+  return keptBreaks(nodesOf(text), breakNodes)
+}
+
+/** Whether the inline text of a block shows words, as `answerNodes` reads it. */
+export function textShowsWords(text: InlineText): boolean {
+  return showsText(nodesOf(text), breakNodes)
 }

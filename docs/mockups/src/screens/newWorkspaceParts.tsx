@@ -74,9 +74,13 @@ export const newWorkspaceFormProperties = {
    * a browser shows a note in place of the line (Mac access decisions 1 C
    * and 5 A). `menu` opens the menu of the one button of a phone, which
    * holds Attach files and Capabilities (secrets decision 16 G). A computer
-   * has no such menu.
+   * has no such menu. `search` draws the control open on an org with more
+   * than ten secrets, with a search typed above them. `info` draws it open
+   * with the description of PROD_DATABASE_URL shown under its name.
    */
-  capabilities: { enum: ['closed', 'open', 'mac-access-on', 'menu'] },
+  capabilities: {
+    enum: ['closed', 'open', 'mac-access-on', 'menu', 'search', 'info'],
+  },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

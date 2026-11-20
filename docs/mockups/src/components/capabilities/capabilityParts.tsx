@@ -4,17 +4,20 @@ import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
+import { SearchField } from '../common/SearchField'
 import { whoOf } from '../chat/SecretRun'
 import { useMacApp } from '../mac/MacApp'
 import {
   capabilitiesIntro,
+  noSecretMatch,
   noSecrets,
   secretsPartWords,
 } from './capabilitiesCopy'
 import { CapabilitiesPanel, type CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
 import { macAccessPart, type MacAccessView, type Shell } from './MacAccessPart'
-import check from '../common/CheckOption.module.css'
+import { matchingSecrets, needsSecretSearch } from './secretSearch'
+import { SecretOption } from './SecretOption'
 import styles from './Capabilities.module.css'
 
 /** What the Capabilities control shows for one workspace or one draft. */
@@ -29,6 +32,13 @@ export type CapabilitiesView = {
   secrets: readonly OrgSecret[]
   /** The names of the secrets that the workspace pre-approves. */
   preApproved: readonly string[]
+  /**
+   * The text in the search field, which shows above more than ten secrets.
+   * It narrows the list by name and by description.
+   */
+  search?: string
+  /** The name of the secret whose description shows under its name. */
+  info?: string
   /**
    * The approvals of the sessions and the values for the workspace, which
    * only a workspace that exists has.
@@ -49,39 +59,13 @@ export type CapabilitiesView = {
  */
 type SecretsView = Pick<
   CapabilitiesView,
-  'org' | 'secrets' | 'preApproved' | 'secretsTo'
+  'org' | 'secrets' | 'preApproved' | 'search' | 'info' | 'secretsTo'
 >
 
 /**
- * A secret of the org with its checkbox, which pre-approves it for the
- * workspace. A secret for all agents is always available, so its checkbox
- * stays checked and off.
- */
-function SecretCheck(props: { secret: OrgSecret; checked: boolean }) {
-  const { secret } = props
-  return (
-    <label className={check.option}>
-      <input
-        checked={props.checked || secret.allAgents}
-        className={check.box}
-        disabled={secret.allAgents}
-        onChange={noop}
-        type="checkbox"
-      />
-      <span className={check.text}>
-        <span className={styles.secretName}>{secret.name}</span>
-        <span className={check.hint}>{secret.description}</span>
-      </span>
-      {secret.allAgents ? (
-        <span className={styles.tag}>{secretsPartWords.allAgents}</span>
-      ) : null}
-    </label>
-  )
-}
-
-/**
  * The secrets of the org, each with its checkbox. An org without secrets
- * links to its Secrets tab.
+ * links to its Secrets tab. More than ten secrets get a search field above
+ * them, and a search that matches none says so.
  */
 function SecretPicker(props: { view: SecretsView }) {
   const { view } = props
@@ -95,17 +79,47 @@ function SecretPicker(props: { view: SecretsView }) {
       </p>
     )
   }
+  const search = view.search ?? ''
+  const list = (
+    <SecretChecks secrets={matchingSecrets(view.secrets, search)} view={view} />
+  )
+  if (!needsSecretSearch(view.secrets.length)) return list
+  return (
+    <div className={styles.picker}>
+      <SearchField
+        label={secretsPartWords.search}
+        placeholder={secretsPartWords.search}
+        query={search}
+      />
+      {list}
+    </div>
+  )
+}
+
+/** The listed secrets with their checkboxes, or the line of no match. */
+function SecretChecks(props: {
+  secrets: readonly OrgSecret[]
+  view: SecretsView
+}) {
+  const { view } = props
+  if (props.secrets.length === 0) {
+    return <p className={styles.empty}>{noSecretMatch(view.search ?? '')}</p>
+  }
   return (
     <div
       aria-label="Pre-approved secrets"
       className={styles.checks}
       role="group"
     >
-      {view.secrets.map((secret) => (
-        <SecretCheck
+      {props.secrets.map((secret) => (
+        <SecretOption
+          change={noop}
           checked={view.preApproved.includes(secret.name)}
+          disabled={false}
+          infoOpen={view.info === secret.name}
           key={secret.name}
           secret={secret}
+          toggleInfo={noop}
         />
       ))}
     </div>
@@ -150,12 +164,12 @@ function SecretsContent(props: { view: CapabilitiesView }) {
 }
 
 /**
- * The secrets part, with its hint and its content. Manage secrets opens the
- * Secrets tab, while the org has secrets.
+ * The secrets part, with its content and an optional hint. Manage secrets
+ * opens the Secrets tab, while the org has secrets.
  */
 function secretsPart(
   view: SecretsView,
-  hint: string,
+  hint: string | undefined,
   content: ReactNode,
 ): CapabilityPart {
   return {
@@ -182,7 +196,7 @@ function capabilityParts(
   shell: Shell,
 ): CapabilityPart[] {
   return [
-    secretsPart(view, secretsPartWords.hint, <SecretsContent view={view} />),
+    secretsPart(view, undefined, <SecretsContent view={view} />),
     macAccessPart(view.macAccess, view.place, shell),
   ]
 }
