@@ -27,6 +27,30 @@ function web(href: string, ...words: AnswerPart[]): AnswerPart {
 }
 
 describe('the links of an answer', () => {
+  test.each(['HTTPS', 'hTtPs', 'HTTP', 'hTtP'])(
+    'an answer links %s addresses and keeps their typed bare and code text',
+    (scheme) => {
+      const href = `${scheme}://example.com/Api/Case?q=MiXeD#Part`
+      expect(
+        answer(
+          `Read ${href}, <${href}>, \`${href}\`, \`curl ${href}\`, and [Docs](${href}).`,
+        ),
+      ).toEqual([
+        text('Read '),
+        web(href, text(href)),
+        text(', '),
+        web(href, text(href)),
+        text(', '),
+        { kind: 'code', text: href, link: { kind: 'web', url: new URL(href) } },
+        text(', '),
+        { kind: 'code', text: `curl ${href}` },
+        text(', and '),
+        web(href, text('Docs')),
+        text('.'),
+      ])
+    },
+  )
+
   test('an answer shows a bare address as typed, keeps it bold in bold, and shows a Markdown link as its label with its code and bold, or as its address when the label reads as one', () => {
     const pull = 'https://github.com/acme/app/pull/2'
     const docs = 'https://docs.places.example/v1'

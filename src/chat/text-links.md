@@ -22,10 +22,29 @@ which shows its Markdown as typed.
   marks. A `)` or a `]` at its end stays in only when it closes a `(`
   or a `[` inside the address. `webAddressParts` splits plain text into
   addresses and text, with an optional Markdown label.
+- A bare address starts with `http://` or `https://` in any case, such as
+  `HTTPS://` or `Http://`. RFC 3986 makes a scheme case-insensitive.
+  `webAddressStartAt` holds this rule. It tests only the position that it
+  gets. It gives the index after `://`, or null when no scheme starts
+  there. It reads at most eight characters, so a reader that tries each
+  position stays linear.
+- `bareAddressAt`, `webAddressParts`, the tokenizer of
+  `links/chat-tokens.ts`, `textParts` in `markdown/answer-text.ts`, and
+  the `bare_address` rule of `src/markdown/parser.ts` find each start with
+  `webAddressStartAt`. Inline code reads its one address through
+  `bareAddressAt`. Keep one start test, so that no reader drifts from the
+  others.
 - `webLink` checks an address and gives its kind: an app page, a local
   server with its port, or another web page. The caller supplies the app
   origin and a page check built on `parseRoute`. `appAddress` joins the
   raw path segments with one slash, then adds the query and hash.
+- A bare address shows as the text has it, also in its case, as
+  [Bare addresses and Markdown links](../../docs/protocol/chat-links.md#bare-addresses-and-markdown-links)
+  says. `bareAddressAt` gives the address as typed, and its link shows
+  that text. Its `WebLink` holds the form of the URL parser, with the
+  scheme and the host in lowercase. The link leads where that form says,
+  and its title shows that form. In a sent message, the source of a
+  Markdown address keeps its case in the same way.
 - `labelHidesAddress` tests a Markdown label as it shows. A label that
   then shows nothing, holds `://`, or starts with `www.` hides where its
   link leads. `answerParts` gives it the text that the label nodes show,
