@@ -4,7 +4,7 @@
 - **Kind:** Needs decision.
 - **Added:** 2026-11-20, from branch `calummoore/fix-apt-update-fails-after-the-php-ppa-nsja`, the fix for the failed `apt-get update` of image builds. Rewritten on 2026-11-20 on branch `calummoore/follow-up-the-base-image-holds-a-k9or`, with the facts of a read-only investigation.
 - **Location:** `terminalPackagesCommand` at `worker/terminal/service.ts:18`, which runs `apt-get update` over every apt source of an image. `imagePackagesCommand` at `worker/lifecycle/image-packages.ts:15` and `packagesStep` at `worker/lifecycle/image-packages.ts:35`, which compose the apt part of each build. `BASE_IMAGE` at `src/shared/base-image.ts:12`, the base image software that members see. `image/install.md:40`, which describes the Label option. The PPA source file `/etc/apt/sources.list.d/ondrej-ubuntu-php-noble.sources` of the Boat base image, outside this repository.
-- **Reason:** The choice sets the apt sources and the PHP of every Boat image, and Cal asked to make this choice himself.
+- **Reason:** The package-source options have real trade-offs, and org script requirements remain unknown. B and E can change the packages that org scripts and users get.
 
 - **Source:** Implementation. **Category:** Product bug.
 - **Terms:**
@@ -37,7 +37,7 @@
     - Org install scripts, startup scripts, and agents can also run a plain `apt-get update`. While their cached lists hold the old `Label`, they fail in the same way.
     - On 2026-11-20, an agent that coordinated this follow-up work chose the Label option alone and no change to the PPA. That was a design call by an agent, not a decision by the user, Cal.
     - That agent asked to record the PPA work as one deferred item. Later that day, it asked for the read-only investigation that the earlier version of this item proposed.
-    - That agent said that Cal asked to make the package-source choice himself. Cal has not chosen an option.
+    - The earlier option D required a package-source decision after this investigation. No source choice has been recorded.
   - The investigation, checked on 2026-11-20:
     - The public facts of this item come from these sources:
       - the Launchpad page and archive of the PPA
@@ -173,4 +173,4 @@
   - `plans/follow-ups/image-download-retries.md`: the same code. Its apt retry options and F both change `terminalPackagesCommand`, so one branch can do both.
   - `plans/follow-ups/gh-package-source-claims.md`: the same apt part. It corrects the claim that Ubuntu owns `gh`. F depends on that fact, because on Boat `gh` comes from the GitHub CLI source.
 - **Recommendation:** F. No other option stops each apt source that the app does not need, this frozen PPA included, from failing the app's apt part. Under F, org scripts can still fail their own `apt-get update`. Apart from F, C can go with any option at small cost, because Boat installs this PHP. No PHP source is clearly best before org requirements are known. If Cal wants the app to own PHP 8.4 and its current updates, E with the Sury archive is the path. That path needs its own upgrade and test plan.
-- **Action:** ask the user, because Cal asked to make this package-source choice himself. The PHP part also has real trade-offs, and they depend on org scripts that no read-only check here could read.
+- **Action:** ask the user, because no package-source option is clearly best before org script requirements are known. B and E can change the packages that org scripts and users get.
