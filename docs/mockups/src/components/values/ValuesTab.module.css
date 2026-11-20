@@ -1,6 +1,5 @@
-/* The combined list of the env vars and the secrets. Its rows follow its width. */
+/* The list of the env vars and the secrets of an org. */
 .list {
-  container: values / inline-size;
   margin: 0;
   padding: 0;
   border: 1px solid var(--ui-border);
@@ -8,49 +7,70 @@
   list-style: none;
 }
 
-/*
- * A value: its name, its description, and its record on the left, then its
- * mark, the hidden value, and the actions. A value for each start has the
- * mark Hide on screen, and a secret has the mark for all agents, so the
- * mark column fits the longer of the two. Four actions of 26 px fill the
- * last column.
- */
+/* A value: its name, its badges, and a description, then its menu button. */
 .row {
-  display: grid;
-  grid-template-areas: 'text mark value actions';
-  grid-template-columns: minmax(0, 1fr) 136px 68px 108px;
+  display: flex;
   align-items: center;
-  column-gap: 12px;
-  padding: 8px 4px 8px 12px;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 4px 6px 12px;
+  box-sizing: border-box;
 }
 
 .row + .row {
   border-top: 1px solid var(--ui-border);
 }
 
-/* The kind of the value, then who added it and the last reveal. */
-.meta {
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* The name and its badges, on one line. */
+.head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 2px 6px;
+  gap: 6px;
+  min-width: 0;
+}
+
+.name {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The description of a secret, on one line. */
+.description {
+  overflow: hidden;
   color: var(--ui-muted);
-  font-size: var(--ui-text-xs);
-  line-height: 1.45;
+  font-size: var(--ui-text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* The hidden value, which a narrow list leaves out. */
-.dots {
+/* The menu button, and the open menu under it. */
+.more {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* The fields of the Add and Edit modals. */
+.fields {
   display: flex;
-  grid-area: value;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* The mark of a read-only row, in one width, so the values stay in line. */
-.mark {
-  min-width: 120px;
-}
-
-/* The choice of the kind in the Add secret form, with the hint of the choice. */
+/* The choice of the type in the Add modal, with the hint of the choice. */
 .kind {
   display: flex;
   flex-direction: column;
@@ -63,25 +83,8 @@
   font-weight: 500;
 }
 
-.kindHint {
+.hint {
   color: var(--ui-muted);
   font-size: var(--ui-text-sm);
-}
-
-/*
- * A narrow list, as on a phone: the text on the first line, then the mark
- * and the actions on a second line, without the dots.
- */
-@container values (max-width: 520px) {
-  .row {
-    grid-template-areas:
-      'text text'
-      'mark actions';
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 4px;
-  }
-
-  .dots {
-    display: none;
-  }
+  line-height: 1.45;
 }

@@ -1,67 +1,72 @@
+import { Badge } from '@firna/ui/badge'
 import { Switch } from '@firna/ui/switch'
-import { EyeOff, Power, ShieldCheck, type LucideIcon } from 'lucide-react'
+import { MoreHorizontal } from 'lucide-react'
 import { noop } from '../../noop'
 import { IconButton } from '../common/actions'
-import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { Menu, type MenuEntry } from '../common/Menu'
 import { useControlSizes } from '../common/touch'
-import env from '../settings/EnvironmentSections.module.css'
-import { hideWords, kindWords } from './valuesCopy'
+import secrets from '../secrets/SecretsTab.module.css'
+import { menuWords } from './valuesCopy'
 import styles from './ValuesTab.module.css'
 
-/** The kind of a value as an icon and a word, so it never depends on colour. */
-export function KindText(props: { kind: 'start' | 'approval' }) {
+/** A small badge after the name of a value, such as Env or All agents. */
+export function ValueBadge(props: { label: string; tone?: 'primary' }) {
   return (
-    <StatusText
-      icon={props.kind === 'start' ? Power : ShieldCheck}
-      label={kindWords[props.kind]}
-      tone="neutral"
-    />
+    <Badge size="sm" tone={props.tone ?? 'neutral'}>
+      {props.label}
+    </Badge>
   )
 }
 
 /**
- * The mark Hide on screen of a value for each start, as a switch for an
- * admin, which saves at once. It was the Secret mark of an env var
- * (item 3 B), with the same shape and a new word.
+ * The "⋯" button of a row, which opens its menu. `open` draws the menu
+ * under the button, at its end. A phone draws the open menu as a sheet,
+ * which the screen places.
  */
-export function HideSwitch(props: { name: string; value: boolean }) {
-  const { field } = useControlSizes()
+export function RowMenuButton(props: {
+  name: string
+  entries: readonly MenuEntry[]
+  open: boolean
+}) {
   return (
-    <span className={env.secret}>
-      <Switch
-        accessibilityLabel={`${hideWords.label}: ${props.name}`}
-        onValueChange={noop}
-        size={field === 'lg' ? 'md' : 'sm'}
-        value={props.value}
+    <span className={styles.more}>
+      <IconButton
+        expanded={props.open}
+        icon={MoreHorizontal}
+        label={menuWords.label(props.name)}
+        menu
+        quiet
       />
-      <span aria-hidden>{hideWords.label}</span>
-    </span>
-  )
-}
-
-/** The mark Hide on screen without a control, for a person who may not change it. */
-export function HideMark(props: { on: boolean }) {
-  return (
-    <span className={styles.mark}>
-      {props.on ? (
-        <StatusText icon={EyeOff} label={hideWords.label} tone="neutral" />
+      {props.open ? (
+        <Menu
+          entries={props.entries}
+          label={props.name}
+          placement="below-end"
+        />
       ) : null}
     </span>
   )
 }
 
-/** An icon button of a row, as a link to its screen when the mockups draw one. */
-export function RowAction(props: {
-  icon: LucideIcon
+/** A switch of a modal, with its label and its hint. */
+export function SwitchField(props: {
   label: string
-  to?: string
+  hint: string
+  value: boolean
 }) {
-  const button = <IconButton icon={props.icon} label={props.label} />
-  if (props.to === undefined) return button
+  const { field } = useControlSizes()
   return (
-    <ScreenLink asChild to={props.to}>
-      {button}
-    </ScreenLink>
+    <span className={secrets.switchField}>
+      <Switch
+        accessibilityLabel={props.label}
+        onValueChange={noop}
+        size={field === 'lg' ? 'md' : 'sm'}
+        value={props.value}
+      />
+      <span className={secrets.switchText}>
+        <span className={secrets.switchLabel}>{props.label}</span>
+        <span className={secrets.switchHint}>{props.hint}</span>
+      </span>
+    </span>
   )
 }

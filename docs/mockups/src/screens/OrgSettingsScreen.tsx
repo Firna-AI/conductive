@@ -173,6 +173,8 @@ export function OrgSettingsScreen(props: {
   body?: ReactNode
   /** A dialog in place of the one that `state.dialog` names. */
   dialog?: ReactNode
+  /** A label of the Secrets tab, for a proposal that renames it. */
+  secretsLabel?: string
 }) {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
@@ -201,7 +203,12 @@ export function OrgSettingsScreen(props: {
       back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
       subtitle="Org settings"
       tabs={
-        <SettingsTabs links={settings.links} tab={state.tab} wrap={mobile} />
+        <SettingsTabs
+          links={settings.links}
+          secretsLabel={props.secretsLabel}
+          tab={state.tab}
+          wrap={mobile}
+        />
       }
       title={org.name}
       viewport={viewport}

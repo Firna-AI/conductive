@@ -78,8 +78,8 @@ export function ComputerTab(props: {
   envForm?: EnvVarForm
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
-  /** A section in place of the env vars, for a proposal that moves them. */
-  envVars?: ReactNode
+  /** Leave out the env vars, for a proposal that moves them to another tab. */
+  withoutEnvVars?: boolean
 }) {
   const { computer } = props
   const changed = props.script === 'changed'
@@ -122,7 +122,7 @@ export function ComputerTab(props: {
         script={computer.startupScript}
         title="Startup script"
       />
-      {props.envVars ?? (
+      {props.withoutEnvVars ? null : (
         <EnvVarsSection
           form={props.envForm}
           org={props.org}

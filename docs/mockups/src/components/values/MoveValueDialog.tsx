@@ -9,8 +9,8 @@ import { secretsWords } from '../secrets/secretsCopy'
 import { moveWords } from './valuesCopy'
 
 /**
- * The question before Move (item 2 C, open). An admin moves a value for
- * each start to After approval without typing it again. The value moves in
+ * The question before Move to secrets (item 2 C, open). An admin moves an
+ * env var to the secrets without typing it again. The value moves in
  * the Worker and never reaches the browser. Cloud computers stop getting it
  * at their next start, so the dialog asks first.
  */
