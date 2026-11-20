@@ -201,7 +201,7 @@
   overflow-wrap: anywhere;
 }
 
-/* The line of this Mac under the switch, and the result of a failed start. */
+/* The line of this Mac under the switch, and the result under it. */
 .line {
   display: flex;
   flex-direction: column;

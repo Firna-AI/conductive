@@ -303,6 +303,10 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   - One settings controller for each window and person feeds the bar, the
     line, and the notice, so that a start shows on the bar at once.
   - The control reads this Mac at each open, with no polling.
+- From the mockup fixes, 20 November 2026, my calls: the Mac app
+  Capabilities page holds its views as child pages, because a page holds
+  at most five views. A `not-available` view draws the line with no
+  device connection, beside `not-reached`.
 - Risk: each turn that the member sends in a workspace with a grant can
   run any command on the member's Mac with no question. Text that steers
   the agent, another process in the sandbox, and a message of the session
@@ -411,11 +415,11 @@ Depends on: 4
 The control milestone found three states of the line that the protocol
 requires and the mockups do not draw.
 
-- [ ] Draw the time-left hint in the `fifteen-minutes` view, the
+- [x] Draw the time-left hint in the `fifteen-minutes` view, the
       disabled line with "This Mac is not available." in the `not-reached`
       view, and add a view of the result of an uncheck. Update the
       catalogue.
-- [ ] Run `npm run mockups:check`.
+- [x] Run `npm run mockups:check`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

@@ -187,3 +187,13 @@ export const notSavedMessage =
 /** What the Mac says when it could not make a change of a permission. */
 export const failedMessage =
   'The Mac could not change this permission. Try again.'
+
+/**
+ * The result of a Stop that the Mac made and saved. The bar of the
+ * workspace names it after Stop, and the line of this Mac in Capabilities
+ * after an uncheck.
+ */
+export const stoppedResult = {
+  title: 'Stopped',
+  message: 'Each command from this workspace asks first.',
+} as const

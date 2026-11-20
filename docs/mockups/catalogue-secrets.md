@@ -53,18 +53,27 @@ November 2026. Each member sees the line of their own Mac.
 `mac-app/capabilities` has the control of Checkout address autocomplete
 after Cal turned Mac access on in the Mac app. The line is checked,
 because this Mac started a grant until Stop, and the bar of the workspace
-says Until you stop. Each of its views draws the control scrolled to its
-end, where the line is, because the control of this workspace is longer
-than the space above the composer. Its variants:
+says Until you stop. It and each of its child pages draw the control
+scrolled to its end, where the line is, because the control of this
+workspace is longer than the space above the composer. The page shows only
+its canonical screen. Its child pages:
 
 - `unchecked` has Mac access that Priya turned on, so the line of Cal's
   Mac is unchecked, and each command asks first.
-- `fifteen-minutes` has the line unchecked while the 15 minutes run. A
-  check keeps them until Stop.
+- `fifteen-minutes` has the line unchecked while the 15 minutes run. Its
+  hint gives the time left of the bar, 14:32, and says that a check keeps
+  them until Stop.
+- `stopped` has the line after Cal unchecked it. The line stays unchecked,
+  and Stopped shows under it: each command from this workspace asks first.
+  The bar names the same result.
 - `not-started` has a start that the Mac did not make. The line stays
   unchecked, with Not started and the cause that the Mac gave.
-- `not-reached` has a start that found this Mac not available. The line
-  stays unchecked, and its result says that each command still asks first.
+- `not-reached` has a start that found this Mac not available. The page
+  cannot read the settings of this Mac, so the line is unchecked and off.
+  Its result says that each command still asks first.
+- `not-available` has the line while the page cannot read the settings of
+  this Mac, with no result. The line is unchecked and off, and its hint
+  says that this Mac is not available.
 
 `mac-app/new-workspace` has the control of New workspace in the Mac app,
 with Mac access on and the line checked, so the create starts the grant.

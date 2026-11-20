@@ -19,9 +19,11 @@ type OpenState = { macAccess: MacAccessView; atEnd: boolean }
  * Each composer state that draws the Capabilities control open. Every
  * member opens and changes it (secrets decision 8), and each member sees
  * the line of their own Mac (Mac access decision 4). While Mac access is
- * on, the line is checked, unchecked, or unchecked after a start that
- * failed or that found this Mac not available. The states of the line draw
- * the control at its end, where the line is.
+ * on, the line is checked or unchecked. It is unchecked while the 15
+ * minutes run, after the Stop of an uncheck, after a start that failed or
+ * that found this Mac not available, and while the page cannot read the
+ * settings of this Mac. The states of the line draw the control at its
+ * end, where the line is.
  */
 const openStates: Partial<Record<WorkspaceState['composer'], OpenState>> = {
   capabilities: { macAccess: { on: true, thisMac: 'checked' }, atEnd: false },
@@ -33,12 +35,24 @@ const openStates: Partial<Record<WorkspaceState['composer'], OpenState>> = {
     macAccess: { on: true, thisMac: 'unchecked' },
     atEnd: true,
   },
+  'capabilities-fifteen-minutes': {
+    macAccess: { on: true, thisMac: 'fifteen-minutes' },
+    atEnd: true,
+  },
+  'capabilities-stopped': {
+    macAccess: { on: true, thisMac: 'stopped' },
+    atEnd: true,
+  },
   'capabilities-not-started': {
     macAccess: { on: true, thisMac: 'not-started' },
     atEnd: true,
   },
   'capabilities-not-reached': {
     macAccess: { on: true, thisMac: 'not-reached' },
+    atEnd: true,
+  },
+  'capabilities-not-available': {
+    macAccess: { on: true, thisMac: 'not-available' },
     atEnd: true,
   },
   'capabilities-mac-off': { macAccess: { on: false }, atEnd: false },

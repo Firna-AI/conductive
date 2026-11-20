@@ -56,7 +56,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
-`app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
+`app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
 and build-failed states moved from `app/repository-settings` and its updating

@@ -95,10 +95,15 @@ one.
   switch is on, the line Allow all commands on this Mac shows under it: a
   checkbox with its hint, as each secret has. Each member sees the line of
   their own Mac. It is checked while this Mac has a grant until Stop for
-  the workspace, and unchecked otherwise, also while the 15 minutes run. A
-  start that failed keeps it unchecked, and `ChangeOutcome` shows Not
-  started and the cause under it. While the switch is off, the hint of the
-  Mac app adds that turning it on also allows all commands on this Mac.
+  the workspace, and unchecked otherwise. While the 15 minutes run, it
+  stays unchecked, and its hint gives their time left. While the page
+  cannot read the settings of this Mac, the box is off, and the hint says
+  that this Mac is not available, unless a result under the line already
+  says why. `ChangeOutcome` shows the result of the last start or Stop
+  under the line: Not started and the cause of a start that failed, or the
+  result of the Stop of an uncheck. While the switch is off, the hint of
+  the Mac app adds that turning it on also allows all commands on this
+  Mac.
 - A browser shows a note with the Laptop icon of lucide in place of the
   line. It says to use Allow all commands on this Mac in the Mac app.
   `BrowserNote.tsx` draws it, for the mockups and the app.

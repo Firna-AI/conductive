@@ -77,14 +77,18 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
 - While Mac access is on, the Capabilities control of the Mac app shows
   the line Allow all commands on this Mac under its switch, from the Mac
   access decisions of 20 November 2026. A check starts a grant until Stop
-  of the workspace on this Mac, and turning the switch on checks it. A
-  start is done or failed. A start that failed shows Not started and its
-  cause under the line, from `ChangeOutcome`, and the line stays, so it
-  needs no Try again. New workspace starts the grant after the create, so
-  a start that failed there shows as a notice in the new workspace, with
-  Try again. `mac-app/capabilities` and `mac-app/new-workspace` draw them,
-  and [secrets and Capabilities](catalogue-secrets.md) lists their
-  variants. A browser shows a note in place of the line.
+  of the workspace on this Mac, and turning the switch on checks it. An
+  uncheck stops the grant, as Stop does, and the result of the Stop shows
+  under the line. While the 15 minutes run, the line stays unchecked, and
+  its hint gives the time left. While the page cannot read the settings of
+  this Mac, the line is unchecked and off. A start is done or failed. A
+  start that failed shows Not started and its cause under the line, from
+  `ChangeOutcome`, and the line stays, so it needs no Try again. New
+  workspace starts the grant after the create, so a start that failed
+  there shows as a notice in the new workspace, with Try again.
+  `mac-app/capabilities` and `mac-app/new-workspace` draw them, and
+  [secrets and Capabilities](catalogue-secrets.md) lists their child pages
+  and variants. A browser shows a note in place of the line.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,

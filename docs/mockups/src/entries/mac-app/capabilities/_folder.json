@@ -1,0 +1,10 @@
+{
+  "order": [
+    "unchecked",
+    "fifteen-minutes",
+    "stopped",
+    "not-started",
+    "not-reached",
+    "not-available"
+  ]
+}

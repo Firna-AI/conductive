@@ -95,16 +95,20 @@ export const temporaryTabStates = [
  * While Mac access is on, the Mac app shows the line of this Mac, and a
  * browser a note in its place (Mac access decisions 4 A and 5 A). The line
  * is checked in `capabilities` and `capabilities-checked`, because this Mac
- * has a grant until Stop for the workspace. It is unchecked in
- * `capabilities-unchecked`, also while the 15 minutes run, and after a
- * start that failed in `capabilities-not-started`, or that found this Mac
- * not available in `capabilities-not-reached` (decision 3 A).
- * `capabilities` and `capabilities-mac-off` draw the control from its top,
- * as it opens. The other states of the line draw it scrolled to its end,
- * where the line is, as after a change of Mac access. `grant-not-started` and
- * `grant-not-reached` draw the notice over the composer of a new workspace
- * whose grant did not start after the create. Only the Mac app starts a
- * grant, so only its screens use them.
+ * has a grant until Stop for the workspace. It is unchecked in the other
+ * states of the line: `capabilities-unchecked`, and
+ * `capabilities-fifteen-minutes`, whose hint gives the time left of the 15
+ * minutes. `capabilities-stopped` has the result of the Stop of an
+ * uncheck. `capabilities-not-started` has a start that failed, and
+ * `capabilities-not-reached` a start that found this Mac not available
+ * (decision 3 A). In `capabilities-not-reached` and
+ * `capabilities-not-available`, the page cannot read the settings of this
+ * Mac, so the box is off. `capabilities` and `capabilities-mac-off` draw
+ * the control from its top, as it opens. The other states of the line draw
+ * it scrolled to its end, where the line is, as after a change of Mac
+ * access. `grant-not-started` and `grant-not-reached` draw the notice over
+ * the composer of a new workspace whose grant did not start after the
+ * create. Only the Mac app starts a grant, so only its screens use them.
  */
 export const composerStates = [
   'empty',
@@ -137,8 +141,11 @@ export const composerStates = [
   'capabilities',
   'capabilities-checked',
   'capabilities-unchecked',
+  'capabilities-fifteen-minutes',
+  'capabilities-stopped',
   'capabilities-not-started',
   'capabilities-not-reached',
+  'capabilities-not-available',
   'capabilities-mac-off',
   'grant-not-started',
   'grant-not-reached',

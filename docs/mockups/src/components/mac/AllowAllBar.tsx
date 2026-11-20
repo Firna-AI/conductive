@@ -12,6 +12,7 @@ import {
   extendedLeft,
   failedMessage,
   notSavedMessage,
+  stoppedResult,
   untilStop,
 } from '../../fixtures/mac'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
@@ -47,8 +48,8 @@ const results: Partial<Record<MacChange, BarResult>> = {
   stopped: {
     icon: CircleCheck,
     tone: styles.done,
-    title: 'Stopped',
-    detail: 'Each command from this workspace asks first.',
+    title: stoppedResult.title,
+    detail: stoppedResult.message,
     running: false,
   },
   'stop-not-saved': {
