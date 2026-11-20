@@ -1,6 +1,6 @@
 # Chain the start steps
 
-Status: Active. On branch `calummoore/cut-waits-in-workspace-start-and-resume-fvs3`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. Cal approved the plan on 20 November 2026, through workspace 253. On branch `calummoore/cut-waits-in-workspace-start-and-resume-fvs3`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 A workspace start is a chain of alarm runs in the workspace's Durable
 Object. Each run does one action. After the provider reports the sandbox
@@ -15,8 +15,8 @@ creates and 4 resumes, while the commands often took under 1 s.
 
 This change lets the run that sees a step end start the next step at once.
 It polls a running command, and a sandbox that is not ready yet, about
-every 0.25 s. It sets the auto-stop deadline once per command, not on each
-poll. It changes neither the steps that the app shows nor the stored start
+every 0.25 s. It sets the auto-stop deadline at most once a minute, not on
+each poll. It changes neither the steps that the app shows nor the stored start
 job. It does not cover the time before the provider call (workspace 316),
 the cause of the slow timer runs (workspace 317), the runner's warm-up and
 scan (workspace 253), or step-time records (workspace 300).
@@ -141,7 +141,12 @@ the runner's ready report) waits for workspace 300's step records.
   left no provider retry. A move back, such as `ready` to `machine`
   (`start-machine.ts:133-137`), ends the loop, so a sandbox that still
   reads as stopped gets no repeated resume calls in one run. The options
-  check found this. Each pass runs the whole advance again, with its access
+  check found this.
+- **Admission (my call, 20 November 2026).** The loop does not chain the
+  move from `records` to `machine`. Reason: item 5 of workspace 296 (which
+  change removes the 1 s timer after admission) still waits for Cal, and
+  workspace 316's option 2B covers the same timer. Today's behaviour stays
+  for that move, so either answer stays open. Each pass runs the whole advance again, with its access
   checks, its archive recovery, its time limit, and its start guard.
   Reason: no check is skipped, so isolation and suspension stay as they
   are.
@@ -161,15 +166,27 @@ the runner's ready report) waits for workspace 300's step records.
   1 s after `StartSuperseded`, the provider retry time, and the
   runner-ready wait. Reason: only these two waits poll for a state change
   that comes from outside.
-- **Auto-stop (my call).** The run that starts a command sets the
-  auto-stop deadline. A poll does not. The `ready` phase keeps its call.
-  One run sets it at most once, so a run that sees `ready` and starts the
-  first command makes one call.
+- **Auto-stop (my call, revised 20 November 2026).** The `ready` phase
+  and the command phases set the auto-stop deadline only when the last
+  set was 60 s ago or more, or when the job has no record of a set. The
+  job keeps the time of the last set in an optional field. So a run that
+  sees `ready` and starts the first command makes one call, and a poll
+  makes a call at most once a minute. Reason: since 18 November 2026 the
+  deadline follows the operator's idle stop time, and its lowest choice
+  is 15 minutes plus 60 s (`worker/lifecycle/idle-stop.ts`). That is less
+  than the 20-minute start limit, so a long startup script still needs a
+  refresh while it runs. The first version of this call set it once per
+  command, which assumed a 30-minute deadline.
   Reason: the deadline is 30 minutes, and a start ends within its
   20-minute limit.
-- **Compatibility (my call).** No phase, stored field, or wire message
-  changes. A start job that an older Worker saved continues under the new
-  loop. A start that the new Worker saved still works after a rollback.
+- **Compatibility (my call, revised 20 November 2026).** No phase or wire
+  message changes. The start job gets two optional fields: the time of the
+  last auto-stop set, and the time that the current wait began. A job
+  without them gets today's behaviour: a refresh of the auto-stop, and a
+  1 s poll. An older Worker keeps the fields through its spread copy and
+  ignores them. So a start job that an older Worker saved continues under
+  the new loop, and a start that the new Worker saved still works after a
+  rollback.
 - **Steps (my call).** Each phase still writes its step when it starts and
   ends, in the same order. So every open tab still sees each step as it
   happens, with its time.
@@ -199,7 +216,8 @@ requirement stay. The developer docs describe the start loop.
 
 - [ ] Update `worker/lifecycle/workspace-object.md`: the progress phases
       can chain in one lifecycle run, the bound, the 250 ms poll delay, and
-      auto-stop once per command.
+      the auto-stop set at most once a minute. Write it after Milestone 3,
+      so that it describes the code as built.
 - [ ] Update `worker/lifecycle/alarm-scheduler.md` if its run lease or due
       time rules need a sentence for the loop.
 - [ ] Check `worker/lifecycle/provider-accounts.md` line 42, which lists
@@ -232,13 +250,18 @@ Depends on: 2
 - [ ] Set the next start run 250 ms after the run while a command runs or
       the `ready` phase waits, for the first 5 s of that wait, then 1 s.
       Keep every other delay.
-- [ ] Move the auto-stop call so that only the run that starts a command
-      makes it, at most once per run.
+- [ ] Set the auto-stop deadline only when the last set was 60 s ago or
+      more, or the job has no record of a set, in the `ready` phase and
+      the command phases.
 - [ ] Tests:
   - [ ] The next alarm of a running command and of the `ready` wait is
         250 ms after the run in the first 5 s of the wait, then 1 s. Other
         waits keep their delays.
-  - [ ] A poll run makes no auto-stop call. A command start makes one.
+  - [ ] A poll within 60 s of the last set makes no auto-stop call. A
+        poll 60 s or more after it makes one. A run that sees `ready` and
+        starts the first command makes one call.
+  - [ ] A job without the new fields gets an auto-stop call and a 1 s
+        poll.
   - [ ] A 250 ms start alarm is not pushed to the 2 s regular deferral of
         `worker/features/workspace-alarm.ts`. Use workspace 317's
         native-runtime finding.
