@@ -36,7 +36,7 @@ pub struct RepositorySnapshot {
 #[cfg_attr(test, unimock::unimock(api = RepositoryMock))]
 #[async_trait]
 pub trait Repository: Send + Sync {
-    /// Prepare ignored context storage before runner warm-up and connection.
+    /// Prepare ignored context storage before credential cleanup and the first connection.
     async fn prepare_context(&self) -> Result<()>;
     /// Capture all reports using the current comparison base.
     async fn snapshot(&self, branch: String) -> Result<RepositorySnapshot>;

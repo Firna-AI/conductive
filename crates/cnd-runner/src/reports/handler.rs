@@ -21,6 +21,7 @@ use crate::link::ports::RunnerLink;
 use crate::ports::reporter::PortReports;
 use crate::runtime::CommandHandler;
 use crate::skills::boundary::SkillReports;
+use crate::startup_log::StartupLog;
 use crate::state::store::EventStore;
 use crate::watcher::service::ReportWatches;
 
@@ -58,6 +59,7 @@ pub struct ReportCommandHandler {
     jobs: Mutex<Vec<JoinHandle<()>>>,
     stopped: Arc<AtomicBool>,
     initial: Arc<AtomicUsize>,
+    startup_log: Option<Arc<dyn StartupLog>>,
 }
 
 struct InitialReport(Arc<AtomicUsize>);
@@ -77,7 +79,14 @@ impl ReportCommandHandler {
             jobs: Mutex::new(vec![]),
             stopped: Arc::new(AtomicBool::new(false)),
             initial: Arc::new(AtomicUsize::new(0)),
+            startup_log: None,
         }
+    }
+
+    /// Share the process startup measurements supplied by the composition root.
+    pub fn with_startup_log(mut self, startup_log: Arc<dyn StartupLog>) -> Self {
+        self.startup_log = Some(startup_log);
+        self
     }
 }
 
@@ -120,6 +129,7 @@ impl CommandHandler for ReportCommandHandler {
         let initial = self.dependencies.files.refresh(true, None, None);
         let dependencies = self.dependencies.clone();
         let stopped = self.stopped.clone();
+        let startup_log = self.startup_log.clone();
         Box::pin(async move {
             let _initial_report = initial_report;
             welcomed.await?;
@@ -161,7 +171,11 @@ impl CommandHandler for ReportCommandHandler {
                     vec![RunnerEvent::RunnerReady(RunnerReady::RunnerReady {})],
                     None,
                 )
-                .await
+                .await?;
+            if let Some(log) = startup_log {
+                log.ready();
+            }
+            Ok(())
         })
     }
 

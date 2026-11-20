@@ -203,7 +203,8 @@ says.
   chooses them for its run workspaces.
 - Every member can remove each pre-approval, each session approval, and
   each value for this workspace in the Capabilities of the workspace
-  (secrets decision 8 B).
+  (secrets decision 8 B). A session approval shows in the Capabilities of
+  its session, as [Capabilities](capabilities.md#the-control) says.
 
 ## Capabilities
 
