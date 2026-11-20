@@ -2,6 +2,7 @@ import type { Session } from '../../shared/generated/Session'
 
 import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { ChatSnapshot, Overlay } from './chat-snapshot'
+import { withView } from './saved-view'
 import { withSessionPlace } from './tab-order'
 
 const isSessionTab = (
@@ -55,23 +56,16 @@ export function showsSession(
 
 /** The view with the session's tab, made the active tab. */
 export function viewShowing(
-  view: WorkspaceView | null,
+  view: WorkspaceView,
   sessionId: string,
 ): WorkspaceView {
   const tab: WorkspaceTab = { kind: 'session', sessionId }
-  const base = view ?? {
-    tabs: [],
-    activeTab: null,
-    temporaryTab: null,
-    fileList: 'all',
-    tool: 'terminal',
-  }
-  const present = base.tabs.some(
+  const present = view.tabs.some(
     (item) => isSessionTab(item) && item.sessionId === sessionId,
   )
   return {
-    ...base,
-    tabs: present ? base.tabs : [...base.tabs, tab],
+    ...view,
+    tabs: present ? view.tabs : [...view.tabs, tab],
     activeTab: tab,
   }
 }
@@ -128,11 +122,12 @@ export function placeSession(
         : snapshot.sessions.map((item) =>
             item.id === session.id ? session : item,
           )
-    const view = withSessionPlace(snapshot.view, session.id)
+    const next = withView(snapshot, (view) =>
+      withSessionPlace(view, session.id),
+    )
     return {
-      ...snapshot,
-      view,
-      sessions: orderSessions(sessions, view),
+      ...next,
+      sessions: orderSessions(sessions, next.view),
       history: others(snapshot.history),
       activeSessionId: snapshot.activeSessionId ?? session.id,
     }
@@ -142,11 +137,10 @@ export function placeSession(
       ? neighbour(snapshot.sessions, session.id)
       : snapshot.activeSessionId
   return {
-    ...snapshot,
+    ...withView(snapshot, (view) => viewWithout(view, session.id, active)),
     sessions: others(snapshot.sessions),
     history: [...others(snapshot.history), session].sort(lastClosedFirst),
     activeSessionId: active,
-    view: snapshot.view && viewWithout(snapshot.view, session.id, active),
     overlay: overlayWithout(snapshot.overlay, session.id),
   }
 }

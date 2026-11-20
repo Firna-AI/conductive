@@ -2,6 +2,7 @@ import { expect, it } from 'vitest'
 
 import { FakeBoat } from '../test-support/fake-boat'
 import { BoatClient } from './boat'
+import { brokenReply } from './body-timeout.test-support'
 
 it('maps Boat status codes to typed provider failures', async () => {
   const server = new FakeBoat()
@@ -24,12 +25,20 @@ it('maps Boat status codes to typed provider failures', async () => {
   }
 })
 
-it('rejects malformed Boat success JSON', async () => {
+it('rejects malformed Boat success JSON and broken bodies before their deadline', async () => {
   const server = new FakeBoat()
   const client = new BoatClient('boat-first', server.fetch, 'app-org')
-  server.responseOverride = new Response('bad JSON')
-  await expect(client.get('bx_one')).rejects.toMatchObject({
-    kind: 'invalid_response',
-    status: 502,
-  })
+  for (const response of [
+    new Response('bad JSON'),
+    Response.json({ ok: true, type: 'sandbox.info', sandbox: [] }),
+    brokenReply(
+      new DOMException('The stream reset before its deadline.', 'AbortError'),
+    ),
+  ]) {
+    server.responseFactories.push(() => response)
+    await expect(client.get('bx_one')).rejects.toMatchObject({
+      kind: 'invalid_response',
+      status: 502,
+    })
+  }
 })

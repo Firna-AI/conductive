@@ -516,3 +516,15 @@ the hourly count, and the cleanup. The migration changes no existing
 table, so the previous Worker keeps working.
 [The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
 rules of these rows.
+
+`202611181500_repository_order.sql` adds the nullable integer
+`repositories.position` column. It holds the place of a chosen repository
+in the repository order of its org, which counts from 0. The migration
+fills it for each chosen row (`selected = 1`) of each org, in the order of
+the lower-case GitHub name, then the exact name, then the ID. A row that
+is not chosen keeps null. The previous Worker adds and chooses rows
+without a position, and its Remove keeps the position. So the order puts a
+chosen row without a position after the rows with one, and it ignores the
+position of a row that is not chosen. The next add or move gives every
+chosen row a position again.
+[The app API](../worker/app-api/README.md) gives the rules of the order.

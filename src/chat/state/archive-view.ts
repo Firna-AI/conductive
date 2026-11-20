@@ -3,6 +3,7 @@ import type { Session } from '../../shared/generated/Session'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
 import { hydrate } from './history'
+import { withView } from './saved-view'
 import { withSessionPlaces } from './tab-order'
 import { neighbour, pickActive } from './sessions'
 
@@ -84,21 +85,21 @@ export async function showLocally(
   const ids = tabIds(snapshot)
   const opening = !ids.includes(sessionId)
   context.store.update((current) => ({
-    ...current,
-    archiveTabs: opening ? [...ids, sessionId] : ids,
-    archiveClosed: current.archiveClosed.filter((id) => id !== sessionId),
-    view:
-      opening && current.view
+    ...withView(current, (view) =>
+      opening
         ? {
-            ...current.view,
+            ...view,
             tabs: [
-              ...current.view.tabs.filter(
+              ...view.tabs.filter(
                 (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
               ),
               { kind: 'session', sessionId },
             ],
           }
-        : current.view,
+        : view,
+    ),
+    archiveTabs: opening ? [...ids, sessionId] : ids,
+    archiveClosed: current.archiveClosed.filter((id) => id !== sessionId),
     activeSessionId: sessionId,
     overlay: { kind: 'none' },
   }))
@@ -119,13 +120,12 @@ export function closeLocally(context: ChatContext, sessionId: string): void {
         ? neighbour(shown, sessionId)
         : snapshot.activeSessionId
     return {
-      ...snapshot,
-      view: snapshot.view && {
-        ...snapshot.view,
-        tabs: snapshot.view.tabs.filter(
+      ...withView(snapshot, (view) => ({
+        ...view,
+        tabs: view.tabs.filter(
           (tab) => tab.kind !== 'session' || tab.sessionId !== sessionId,
         ),
-      },
+      })),
       archiveTabs: shown
         .filter((item) => item.id !== sessionId)
         .map((item) => item.id),

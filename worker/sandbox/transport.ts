@@ -101,6 +101,7 @@ export class BoatTransport {
         )
       }
       if (!response.ok) throw providerError(response, null)
+      if (signal.aborted) throw new ProviderError('unavailable', 503)
       throw new ProviderError('invalid_response', 502)
     }
     if (!response.ok) throw providerError(response, value)

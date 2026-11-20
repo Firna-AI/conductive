@@ -23,9 +23,13 @@ state the requirements.
   paragraphs, headings, code blocks, and tables that the agent indents
   under the item. Past `maxNesting` levels, the lines of an item join into
   one paragraph.
-- `textBlocks` replaces tabs with spaces before it reads the structure, as
-  the file preview does. A code block outside a list takes its text from
-  the lines with their tabs, so it keeps them.
+- `textBlocks` splits the text at each line ending and replaces tabs with
+  spaces before it reads the structure, as the file preview does. Both
+  views take their lines from one line reader, as
+  [List parts](#list-parts) says. The split runs on the complete message
+  at each text change. So a CRLF that arrives in two live updates still
+  counts as one line ending. A code block outside a list takes its text
+  from the lines with their tabs, so it keeps them.
 - An item of one paragraph draws its text alone, in `AgentText` and in a
   message line, as in the file preview. Another item draws its blocks.
 - `AgentBlocks` draws the blocks of a message in order. `AgentText` and the
@@ -314,9 +318,18 @@ CommonMark. These parts read the lists of both:
   as text, closes it, so a list of any number can start under either. A
   list marker comes before a table, so `- a | b` with a separator row
   under it starts a list.
-- `src/markdown/lines.ts` holds the line tests that both readers share,
-  such as `expandTabs`. Like `table-rows.ts`, these modules import no
-  React.
+- `src/markdown/lines.ts` holds the line reader and the line tests that
+  both readers share, such as `isBlank`. Like `table-rows.ts`, these
+  modules import no React.
+- `markdownLines` gives `textBlocks` and `parseBlocks` the lines of a
+  text, so both views read the same lines. It splits the text at each line
+  ending of CommonMark: CRLF, CR, and LF. It does not split at U+2028 or
+  U+2029, because CommonMark reads them as text.
+- `expanded` holds the lines with their tabs replaced by spaces. Both
+  readers read the structure from it. `raw` holds each line as the text
+  has it, without its line ending. A chat code block outside a list takes
+  its text from `raw`. The file preview also takes from `raw` the rest of
+  a file that it shows as typed.
 
 ## Heading parts
 

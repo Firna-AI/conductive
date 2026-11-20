@@ -54,7 +54,8 @@ The link uses the configured app origin, not the machine request origin.
 It includes other owners' workspaces and archived workspaces.
 A [removed workspace](../../docs/protocol/workspace-life.md#removed-workspaces) shows only with the `removed` option.
 Its optional filters and paging follow [Workspace lists](workspaces.md#workspace-lists).
-The repository list reads the calling org's newest good image, in GitHub name order.
+The repository list reads the calling org's newest good image, in the repository order of the org.
+A repository of the image that the org no longer chose goes at the end, in the name order of [the app API](../app-api/README.md).
 `current` marks the calling workspace's repository.
 Without a good image, it returns HTTP 409 `image_required`.
 The section list reads every section of that org in sidebar order.

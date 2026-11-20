@@ -57,7 +57,7 @@ export function CallLine(props: { call: ToolCall }) {
       {call.state === 'running' ? (
         <Spinner color={theme.colors.muted} size={12} />
       ) : null}
-      {ending ? <span className={styles.detail}>{ending}</span> : null}
+      {ending ? <span className={styles.ending}>{ending}</span> : null}
     </>
   )
 }

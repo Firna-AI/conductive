@@ -9,18 +9,17 @@ import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { Loaded } from './LoadState'
 import { useMembersApi, useMembersViewport } from './members-api'
-import {
-  ChosenRepositories,
-  RepositoryEditToggle,
-  RepositoryPicker,
-} from './RepositoryPicker'
+import { repositoryDefaultNote } from '../../../docs/mockups/src/components/settings/repositoryOrder'
+import { RepositoryOrder } from './RepositoryOrder'
+import { RepositoryEditToggle, RepositoryPicker } from './RepositoryPicker'
 import { AdminRepositoryNotice } from './RepositoryChangeNotice'
 
 /**
  * The repositories that the cloud computer of the org holds (decision 10),
- * which an admin adds and removes. The tab lists the chosen repositories,
- * and Edit opens every repository that the GitHub App reaches, with Add
- * and Remove, until Done. An add starts a build, and a removal waits for
+ * which an admin adds, removes, and orders. The tab lists the chosen
+ * repositories in the repository order, with their moves, and Edit opens
+ * every repository that the GitHub App reaches, by name, with Add and
+ * Remove, until Done. An add starts a build, and a removal waits for
  * the next build. The repository notice above the list shows the
  * changes that the cloud computer does not hold yet, with Try again or
  * Build computer.
@@ -43,7 +42,7 @@ function AdminRepositories(props: {
           toggle={() => setEditing(!editing)}
         />
       }
-      description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. Adding a repository starts a build.`}
+      description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. ${repositoryDefaultNote} Adding a repository starts a build.`}
       title="Repositories"
     >
       <AdminRepositoryNotice build={build} builds={props.builds} />
@@ -56,7 +55,7 @@ function AdminRepositories(props: {
           editing ? (
             <RepositoryPicker model={model} repositories={list} />
           ) : (
-            <ChosenRepositories repositories={list} />
+            <RepositoryOrder model={model} repositories={list} />
           )
         }
       </Loaded>

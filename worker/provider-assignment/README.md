@@ -48,4 +48,4 @@ The tests use local D1 and deterministic random tokens.
 ### Related docs
 
 - [Provider accounts](../lifecycle/provider-accounts.md)
-- [The account of an org](../../docs/protocol/workspaces-and-sandboxes.md#the-account-of-an-org)
+- [The account of an org](../../docs/protocol/provider-accounts.md#the-account-of-an-org)

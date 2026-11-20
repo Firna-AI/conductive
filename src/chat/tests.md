@@ -122,6 +122,12 @@ and a read-only row opens no menu on it. `state/tab-order.test.ts` moves tabs th
 the controller and checks the saved order. A move that changes the place
 of the temporary tab drops its mark in the same save. A move of another
 tab, and a move to its own place, keep the mark.
+`state/saved-view.test.ts` fails the read of the saved view. A click on
+a session tab and a new session each show the session and load its
+history. A model change to the other agent shows its new session, loads
+its history, and moves the draft there. The view stays null and no view
+save goes out, so the server keeps the saved view. The row keeps the open
+sessions in the order of creation, with each new session last.
 `components/CloseTabs.dom.test.tsx` presses Close tabs to the right on
 the first tab of a row with a file tab and a session tab. The file tab
 leaves the view in one save, with its temporary mark, the session closes

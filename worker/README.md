@@ -94,7 +94,7 @@ The model list and the default model come from Worker variables, as [Deployment 
 The optional Worker secret `FEEDBACK_EMAIL` names the team inbox of feedback.
 [The email](app-api/feedback.md#the-email) of the feedback routes gives the local log, the 503 without that inbox, and the 502 of a failed send.
 
-The Worker also serves org settings, repository choices, sections, member writes,
+The Worker also serves org settings, repository choices and their order, sections, member writes,
 workspace metadata, Archive, and Restore, image builds and logs, account GitHub access,
 and pending invitations with explicit acceptance.
 The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.

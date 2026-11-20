@@ -1,4 +1,13 @@
-/** Line tests that the Markdown readers of the chat and the file preview share. */
+/** Line readers and tests that the chat and the file preview share. */
+
+/** Splits each CommonMark line ending, with raw and tab-expanded lines. */
+export function markdownLines(text: string): {
+  raw: string[]
+  expanded: string[]
+} {
+  const raw = text.split(/\r\n|\n|\r/)
+  return { raw, expanded: raw.map(expandTabs) }
+}
 
 export function isBlank(line: string): boolean {
   return line.trim() === ''
@@ -14,7 +23,7 @@ export function isRule(line: string): boolean {
 }
 
 /** Replaces each tab with the spaces up to the next stop of four columns. */
-export function expandTabs(line: string): string {
+function expandTabs(line: string): string {
   if (!line.includes('\t')) return line
   let expanded = ''
   for (const char of line) {

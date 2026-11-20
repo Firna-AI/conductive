@@ -88,6 +88,7 @@ That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
 The workspace tools can list workspaces and usable repositories, sections, and models.
+They list repositories in the org's order.
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.

@@ -5,6 +5,8 @@ This page lists the protocol docs that belong to
 what each covers. [Protocol docs](protocol-docs.md) lists the other
 protocol docs.
 
+- [Provider accounts](../protocol/provider-accounts.md): the account of
+  each org, its weights, and the regions of the accounts.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
   app's own software, the updates of each sandbox, the install in a
   build, and the software image.

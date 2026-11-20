@@ -1,4 +1,5 @@
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
@@ -224,6 +225,14 @@ class Viewer {
   /** The length of the output now, to wait for text after it. */
   get mark(): number {
     return this.data.length
+  }
+
+  /** Runs a command, then waits for control bytes that its echo cannot hold. */
+  async runCommand(command: string): Promise<void> {
+    const marker = randomUUID()
+    const from = this.mark
+    this.write(`${command}; printf '\\n\\036%s\\037\\n' '${marker}'\r`)
+    await this.waitFor(`\x1e${marker}\x1f\r\n`, 10_000, from)
   }
 
   /** Waits until the output after `from` holds the text. */
