@@ -1,0 +1,198 @@
+.wide {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.narrow {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+  min-width: 0;
+  margin: 0 auto;
+  padding: 28px 32px 40px;
+}
+
+.narrow .main {
+  padding: 18px 16px 28px;
+}
+
+.label {
+  color: var(--ui-muted);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: 22px;
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+  line-height: 1.25;
+}
+
+.smallTitle {
+  font-size: var(--ui-text-xl);
+}
+
+.body {
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: var(--ui-leading-chat);
+}
+
+.body p {
+  margin: 0 0 8px;
+}
+
+.heading {
+  margin: 14px 0 0;
+  color: var(--ui-muted);
+  font-family: var(--ui-font-label);
+  font-size: var(--ui-text-label);
+  font-weight: 500;
+  letter-spacing: var(--ui-tracking-label);
+  text-transform: var(--ui-label-case);
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.done {
+  color: var(--ui-muted);
+  text-decoration: line-through;
+}
+
+.done .checkIcon {
+  color: var(--ui-success);
+}
+
+.activity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.event strong {
+  color: var(--ui-ink2);
+  font-weight: 500;
+}
+
+.eventText {
+  flex: 1;
+  min-width: 0;
+}
+
+.dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  margin: 0 5px;
+  border-radius: 50%;
+  background: var(--ui-border2);
+}
+
+.time {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
+/* The column of the fields beside a wide issue. */
+.side {
+  flex-shrink: 0;
+  width: 240px;
+  padding: 28px 18px;
+  border-left: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+.properties {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.property {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.name {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+}
+
+.value {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+}
+
+/* In a panel and on a phone: the values as one wrapped line of chips. */
+.inline {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inline .property {
+  flex-direction: row;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+}
+
+.inline .name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}

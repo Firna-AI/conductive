@@ -1,0 +1,5 @@
+/* Start, which its open menu hangs from. */
+.anchor {
+  display: inline-flex;
+  position: relative;
+}

@@ -1,0 +1,66 @@
+/* The state circle and the priority bars of an issue, 12 px square. */
+.icon {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.ring {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+.dashed {
+  stroke-dasharray: 2 1.6;
+}
+
+.fill,
+.filled {
+  fill: currentColor;
+}
+
+.check {
+  fill: none;
+  stroke: var(--ui-on-solid);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+}
+
+/* Each state takes a colour, and its shape says the same thing. */
+.backlog {
+  color: var(--ui-faint);
+}
+
+.todo {
+  color: var(--ui-muted);
+}
+
+.in-progress {
+  color: var(--ui-amber);
+}
+
+.in-review {
+  color: var(--ui-success);
+}
+
+.done {
+  color: var(--ui-list-merged);
+}
+
+.priority {
+  color: var(--ui-muted);
+}
+
+.bar {
+  fill: currentColor;
+}
+
+.barOff {
+  fill: currentColor;
+  opacity: 0.3;
+}
+
+.urgent {
+  color: var(--ui-rose);
+}

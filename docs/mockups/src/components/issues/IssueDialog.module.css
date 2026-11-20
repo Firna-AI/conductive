@@ -1,0 +1,61 @@
+/* What the dialog makes, at the end of its header. */
+.kind {
+  margin-left: auto;
+  padding-right: 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px 4px;
+}
+
+.title {
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-strong);
+  letter-spacing: var(--ui-tracking-heading);
+}
+
+.body {
+  min-height: 72px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A picker as a small outlined chip with its icon and its value. */
+.picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  min-height: var(--ui-touch-min);
+  padding: 0 9px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: none;
+  color: var(--ui-ink2);
+  font: inherit;
+  font-size: var(--ui-text-sm);
+  cursor: pointer;
+}
+
+.picker:hover {
+  background: var(--ui-soft);
+}
+
+.picker > svg {
+  color: var(--ui-muted);
+}

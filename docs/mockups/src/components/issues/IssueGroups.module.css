@@ -1,0 +1,40 @@
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* The state of a group, on a tinted band across the list. */
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  margin: 0 0 2px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-soft);
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+}
+
+.count {
+  color: var(--ui-muted);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

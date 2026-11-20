@@ -1,0 +1,7 @@
+/* The count of the issues to start, at the end of the row. */
+.count {
+  margin-left: auto;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}

@@ -23,6 +23,10 @@
     "mention-a-file",
     "open-a-file-from-an-answer",
     "drop-a-file",
-    "open-a-local-server"
+    "open-a-local-server",
+    "issue-page-start",
+    "issue-one-list",
+    "issue-attempts",
+    "issue-board"
   ]
 }

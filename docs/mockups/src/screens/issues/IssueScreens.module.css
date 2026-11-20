@@ -1,0 +1,36 @@
+/* The scrolling list of the Issues page. */
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 32px;
+}
+
+/* The page of a phone that starts a workspace from an issue. */
+.startPage {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.repository {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* The issue in the place of the chat: a tab, or the Issue tab of a phone. */
+.centre {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* The board of variation D, which scrolls sideways on a narrow screen. */
+.board {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow-x: auto;
+}

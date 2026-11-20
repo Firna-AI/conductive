@@ -1,0 +1,26 @@
+/* The circle fills the 12 px column of the list marks. */
+.icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  justify-content: center;
+  width: 12px;
+}
+
+/* An issue that waits for a start, in the muted ink of a stopped row. */
+.waits {
+  color: var(--ui-muted);
+}
+
+/* An issue that heads the tree of its workspaces. */
+.heads {
+  color: var(--ui-ink);
+  font-weight: 500;
+}
+
+.end {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  font-variant-numeric: tabular-nums;
+}

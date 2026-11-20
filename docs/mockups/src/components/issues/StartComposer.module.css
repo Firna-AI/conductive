@@ -1,0 +1,9 @@
+/* The box sits at the foot of the issue, as the composer of a chat does. */
+.dock {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 16px 14px;
+  box-sizing: border-box;
+}
