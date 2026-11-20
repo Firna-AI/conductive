@@ -1,0 +1,399 @@
+# Runner file report limits
+
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal must approve this plan before implementation starts. The pull request that completes the work deletes this plan.
+
+Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
+One object has a 128 MB memory limit.
+Large reports can exceed that limit during storage, publication, or replay.
+This change implements Cal's M4 = F decision of 20 November 2026.
+New runners report at most 50,000 tree entries and 1,000 changed files.
+The panels show the retained lists and the omitted counts.
+
+The workspace "mokly plan reuse editor files" had about 0.7 MB of tracked tree and a projected state of 25 to 40 MB.
+Its reconnects exceeded the object's 128 MB memory limit.
+
+The limits apply to reports, not to files on disk, Git work, or permission to read a path.
+This plan does not change report frequency, add changes deltas, or exclude ignored folders under `.context/`.
+The other two memory plans own history reads, projection buckets, and initial tab state reads.
+
+Contract owners:
+
+- [Workspace tools](../docs/protocol/workspace-tools.md#files-and-changes).
+- [Agent runner](../docs/protocol/agent-runner.md#the-agent-runner).
+- [Repository folders](../docs/protocol/repository-folders.md#the-context-folder).
+- [File mentions](../docs/protocol/file-mentions.md) and [files in answers](../docs/protocol/file-mentions-answers.md).
+- [File row menu](../docs/protocol/file-row-menu.md#add-to-chat).
+- [Runner reports](../runner/file-reports.md) and [event limits](../runner/event-limits.md).
+- [Runner README](../crates/cnd-runner/README.md) and [interface README](../crates/cnd-runner-interface/README.md).
+- [Worker files README](../worker/files/README.md) and [app files README](../src/files/README.md).
+- [Mockup catalogue](../docs/mockups/catalogue-attachments-and-files.md).
+- [Public guide](../src/marketing/docs/files-and-changes.md).
+
+## Recorded decision
+
+Cal chose **M4 = F** on **20 November 2026**.
+F combines the measurement report's B and D options.
+
+- **B, chosen:** Keep at most 1,000 changed files. Report the count and added and removed lines of every omitted file.
+- **D, chosen:** Keep at most 50,000 tree entries. Report the number of omitted entries.
+- **A, rejected:** Send a changes list only once every N seconds. The Changes panel would lag.
+- **C, rejected:** Send changes list deltas. This needs a Large change across runner, Worker, browser, and protocol.
+- **E, not chosen:** Skip ignored folders below `.context/`. The entry limit also covers these folders and files.
+
+At 1,000 changed files, the measured CPU cost fell from about 55 ms to 27 ms per agent edit.
+Rows written fell from 82 to 59.
+History growth fell from 0.43 MB to 0.11 MB per edit.
+The measured heap ratios suggest less than about 45 MB for one file event with 50,000 tree entries.
+That estimate uses the measured path sizes and current Worker code.
+It is not a fixed heap guarantee for every repository.
+
+Cal also requires compatibility with older runners, older Mac apps, and a rolled-back Worker.
+The plan uses additive optional metadata and keeps the meaning of existing fields.
+It adds no protocol version or required reader upgrade.
+
+## New decisions for Cal
+
+These choices remain open.
+Recommendations below are proposals, not approved requirements.
+All three decisions use the report limits that Cal selected.
+They preserve direct path reads and existing access checks.
+
+### 1. Which tree entries stay visible?
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** docs or spec.
+- **Location:** `crates/cnd-runner/src/repository/snapshot.rs:104` and `crates/cnd-runner/src/reports/updates.rs:12`.
+- **Terms:**
+  - **Tree entry:** One file or directory record in the inventory that All files shows.
+  - **Context entry:** An entry added only by the runner's special scan of ignored files under `.context/`.
+- **Background:** The runner collects repository files and ignored context files in one tree. It currently sorts paths with English collation. Directories also consume entries.
+- **Problem:** The 50,000-entry limit does not say which entries remain. A context folder can consume a path prefix before most repository code appears.
+- **Impact if no action:** Implementors could choose different visible files. Members could lose access through the tree to their main source folders.
+- **Root question:** Which entries should stay reachable through All files, mentions, answer pictures, and Add to chat above 50,000 entries?
+- **Options:**
+  - **A.** Keep the first 50,000 entries in stable path order. This is simple and repeatable. Context files can fill the list. Effort: Medium.
+  - **B.** Keep shallow entries first, then paths at each depth. This exposes more top-level folders but can leave folders with no listed children. Effort: Medium.
+  - **C.** Keep changed files and their ancestors first, then paths. This prioritizes current work but moves entries as edits change. Effort: Medium.
+  - **D.** Keep normal repository entries first, then context-only entries. Use stable path order within each group. This protects source browsing but gives context files lower priority. Effort: Medium.
+  - **E.** Reserve 5,000 entries for context-only entries. Give the other 45,000 to normal repository entries. Lend unused capacity across groups. Keep path order within groups. An earlier context cache can still hide later notes. Effort: Medium.
+  - **F.** Prioritize retained Changes files with their ancestors, in Changes selection order. Fill remaining capacity with E, reserving up to 5,000 remaining slots for context. This favors current work and notes, but membership follows edits. Effort: Medium.
+- **Left out:** An unlimited tree fails M4 = F. Paging or folder reads belong to item 3 C, because they require another inventory. Excluding ignored context folders was not chosen by Cal. A sticky selection hides all new files once full.
+- **Wider fix:** None. The count cap is already the selected fix. These options choose which entries fit it.
+- **Previous examples:** The end-of-turn file list keeps a prefix of 200 unique paths in `docs/protocol/agent-runner.md`.
+- **Assumptions:** Cal caps file and directory entries together. Equal source priority comes from current code, not a requirement. D, E, and F drop it. C and F drop tree selection's independence from Changes. All options keep the entry budget and directory ancestors.
+- **Related:** Item 2 selects the changes that C and F prioritize. Item 3 uses this retained inventory.
+- **Recommendation:** F, changed from A after the options check. It protects current work, source browsing, and some context files. E is the simpler alternative.
+- **Action:** ask the user, because path coverage and priority have real product trade-offs that M4 does not settle.
+
+### 2. Which changes stay visible?
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** docs or spec.
+- **Location:** `crates/cnd-runner/src/repository/changes.rs:111` and `crates/cnd-runner/src/reports/files.rs:133`.
+- **Terms:**
+  - **Branch changes:** Files that differ from the branch's merge base, including uncommitted and untracked work.
+- **Background:** Changes currently reports every changed file in path order. M4 keeps 1,000 files and totals for the rest. The visible rows need a selection rule.
+- **Problem:** The limit alone does not choose between stable paths, larger diffs, and work still waiting for a commit.
+- **Impact if no action:** The runner can hide the files that a member expects to review. Different implementations can show different subsets.
+- **Root question:** Which changed files should members review first when more than 1,000 files differ?
+- **Options:**
+  - **A.** Keep the first 1,000 files in stable path order. Rows remain predictable, but large changes later in the order stay hidden. Effort: Medium.
+  - **B.** Keep uncommitted files first, then committed changes, in path order. This favors current edits but changes membership after a commit. Effort: Medium.
+  - **C.** Keep files with the largest added-plus-removed line counts first. Break ties by path. Binary files have no useful line-count rank. Effort: Medium.
+  - **D.** Rank generated and binary files last, using Git attributes such as `linguist-generated`. Keep path order within groups. Add one batched attribute read per scan. Unmarked generated files still rank as normal files. Effort: Medium.
+- **Left out:** An unlimited list fails M4 = F. Paging saved rows retains the full projection. Live paging belongs to item 3 C. Sampling gives no useful review priority. Folder totals do not select rows.
+- **Wider fix:** None. The selected cap and omitted totals address report size. This choice sets the review order.
+- **Previous examples:** The runner already orders branch changes by path in `repository/changes.rs`. The turn-file limit uses a prefix.
+- **Assumptions:** Cal requires full omitted file and line totals regardless of ranking. A, B, and C use current scan data. D adds an attribute read. Changes cannot require tree membership, because deleted files have no tree entry.
+- **Related:** Item 1 F gives these retained files priority in the tree.
+- **Recommendation:** B, changed from A after the options check. It keeps current edits visible, with stable path order inside each commit-status group.
+- **Action:** ask the user, because review priority is visible behavior that the selected limit does not define.
+
+### 3. Which paths can mentions resolve?
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** docs or spec.
+- **Location:** `src/chat/mentions/MentionsContext.tsx:163` and `docs/protocol/file-mentions.md:34`.
+- **Terms:**
+  - **File mention:** A repository path in chat that can become a file or folder chip.
+  - **Retained tree:** The entries that remain after the runner applies its tree limit.
+- **Background:** The composer list, sent chips, answer links, and answer pictures resolve paths through the tree that All files uses. Add to chat also requires an offered entry. Attached-file chips have their own message metadata.
+- **Problem:** A path omitted by the limit no longer resolves through that tree. Its file still exists and can pass a direct path read.
+- **Impact if no action:** A member can mistake an omitted path for a deleted file. A previous answer can lose its file chip or picture.
+- **Root question:** How should chat show and open a file that exists but the retained tree omits?
+- **Options:**
+  - **A.** Use the retained tree for all existing tree-based mention rules. Omitted paths stay text or code. Explain the limited coverage. Direct path reads and attached-file chips keep working. Effort: Medium.
+  - **B.** Keep the composer list bounded, but resolve explicit mentions through authorized path reads and a label cache. This preserves explicit chips but needs more reads and loading states. Effort: Large.
+  - **C.** Add a separate paged or searchable inventory for mentions. This can find all files, but adds runner commands, routes, storage rules, and user states. Effort: Large.
+  - **D.** Make explicit mentions and Markdown file links usable without a matching tree entry while the tree is limited. Let the file read check existence after a press. Pictures use their current lazy read. Inline code still requires a tree entry. Mistyped or deleted paths then open a missing-file state. Effort: Medium.
+- **Left out:** An unlimited second tree defeats the memory goal. Treating a missing entry as proof of deletion is wrong. Removing direct path reads is outside M4.
+- **Wider fix:** C separates discovery from a bounded panel. It is broader work than M4 and needs its own approved scope.
+- **Previous examples:** Decision 214 uses the saved tree for the composer list. `file-row-menu.md` already restricts Add to chat to offered entries.
+- **Related:** Item 1 selects the tree that A uses. B, C, or D requires changes in chat readers outside the named app-files area.
+- **Assumptions:** Decision 214 and answer-chip decision 1 use tree membership today. B, C, and D drop that check for explicit paths. All options preserve existing inline-code checks and direct path access.
+- **Recommendation:** A, confirmed by the options check when item 1 F keeps current work visible. D protects explicit chat references if Cal prefers a simple tree prefix.
+- **Action:** ask the user, because preserving one inventory and preserving omitted references have real trade-offs that depend on item 1's answer.
+
+The options check added tree options E and F, changes option D, and mention option D.
+Its report is `.context/runner-file-report-limits/options-check.md`.
+The recommendation changed from 1 A to 1 F, and from 2 A to 2 B.
+A separate fresh check covered legacy rollout in `.context/runner-file-report-limits/legacy-options-check.md`.
+That check confirmed that normal runner updates already define rollout.
+The task requires acceptance of older runners, so this is a design call rather than a fourth decision.
+
+## Design
+
+The design below assumes the recommendations until Cal answers.
+Record each answer with its date before dependent work starts.
+
+### Report contract and compatibility
+
+- **Orchestrator call, 20 November 2026:** Keep `summary` as the totals of retained changes. The previous Worker verifies those totals against listed rows.
+- **Orchestrator call, 20 November 2026:** Add optional `omitted` to `ChangesResponse`. Reuse `ChangesResponseSummary` for its `files`, `added`, and `removed` totals.
+- **Orchestrator call, 20 November 2026:** Add optional `omittedEntryCount` to `RunnerFileTreePart`, `FileTreeResponse`, and `FileTreeDelta`. Count files and directories once by unique path.
+- **Orchestrator call, 20 November 2026:** The new runner sends explicit zero metadata when nothing is omitted. Missing metadata means a legacy report with no claimed cap.
+- **Orchestrator call, 20 November 2026:** Repeat omission metadata unchanged on every part. Publish it only with the complete report, so a pending part changes no panel count.
+- **Orchestrator call, 20 November 2026:** Generate all boundary types from Rust with `ts-rs`. Keep numeric counts within the non-negative JavaScript safe integer range.
+- **Orchestrator call, 20 November 2026:** Keep legacy trees readable until the normal runner update. Cal already requires acceptance of unlimited old reports. A second legacy projection adds cost without bounding their incoming reports. Hiding them would remove existing file access through the panel.
+
+The changes header and tab count show retained plus omitted file totals.
+Its line totals also show retained plus omitted values.
+The omission notice identifies how many files are absent from the rows.
+The tree notice counts omitted entries, because the cap also counts directories.
+The UI uses the actual metadata, not the configured limit, for omitted values.
+The mockup milestone settles the words and placement of these notices.
+
+Older runners can still send unlimited reports with no omission fields.
+The Worker accepts them without a new size rejection.
+For a complete legacy changes report, the Worker selects retained rows after it validates the original report.
+It computes exact `omitted` totals from the complete source and recomputes `summary` from retained rows.
+It does not claim a zero omission count for an unknown legacy tree.
+The tree cap starts with the first complete report from the new runner.
+The public guide states this rollout limit and the normal update path.
+
+The previous Worker discards unknown fields in its file parsers.
+It can still join a new report because `summary` matches the retained files.
+Older Mac apps also discard unknown response fields.
+They keep their current rows and totals, but cannot show the new omission notice.
+Reapplying the new Worker after a rollback accepts stored reports whose optional metadata was discarded.
+Do not synthesize zero omission metadata when loading such a saved projection.
+Only a fresh complete report can establish its missing changes totals.
+An in-flight report with metadata lost across versions uses the existing repair path if its parts no longer agree.
+This proposed compatibility path adds no schema migration or parallel legacy format.
+Keep omission metadata in the projection metadata that the memory plan makes rollback-readable.
+Do not change that plan's bucket format or repair protocol here.
+
+### Selection, deltas, and content updates
+
+- **Orchestrator call, 20 November 2026:** Select before filtering and splitting. Selection uses real paths, so secret masking cannot change membership.
+- **Orchestrator call, 20 November 2026:** Keep every retained entry's directory ancestors inside the same 50,000-entry budget. Add a raw-path tie-break to the existing collation.
+- **Orchestrator call, 20 November 2026:** Apply the changes cap in the report layer. Keep repository scans, checkpoints, and turn-file comparisons complete.
+- **Orchestrator call, 20 November 2026:** Keep Git status and unpushed commit counts complete. The pull request bar must not derive local work from the truncated list.
+- **Orchestrator call, 20 November 2026:** Keep the reporter's last emitted selection separate from its full scan. Compare emitted state with emitted state.
+- **Orchestrator call, 20 November 2026:** Use existing removes and upserts for retained membership changes that fit one byte-bounded delta of at most 512 operations. Remove outgoing entries first.
+- **Orchestrator call, 20 November 2026:** Send the new omission count in that delta. Missing delta metadata preserves the previous count. A count-only update can use an empty delta.
+- **Orchestrator call, 20 November 2026:** Send a bounded full tree when a membership replacement or required path refresh cannot fit one delta. Ordinary content updates keep their existing split-delta behavior.
+- **Orchestrator call, 20 November 2026:** Refresh an omitted path with a remove of that absent entry. A retained path uses an unchanged upsert. Existing readers refresh that path without growing the tree.
+- **Orchestrator call, 20 November 2026:** After a base change, refresh changed paths that the retained Changes list omits. Fall back to a full bounded tree when these touches exceed one delta.
+- **Orchestrator call, 20 November 2026:** Limit complete legacy changes reports in the Worker. Full reports contain enough data to compute exact retained and omitted totals without a second projection.
+- **Orchestrator call, 20 November 2026:** Compare the complete changes source before truncation. An edit confined to omitted files must still produce a changes report.
+
+Directory ancestors consume slots before their descendants.
+Each chosen selection must be deterministic, unique by path, and contain at most the chosen count.
+For C or F, add an ancestor closure only when it fits the remaining budget.
+Skip a priority file whose ancestor closure does not fit, then continue with entries that fit.
+F prioritizes the same ordered files that Changes retains, but cannot guarantee every priority path fits the directory budget.
+The directory closure rule prevents synthetic app folders from increasing the cap.
+Tree marks still use the complete changes source, including files outside the 1,000 retained changes.
+Changes selection does not depend on tree membership.
+Deleted files can appear in Changes without a tree entry.
+
+Worker and app parsers already accept an empty `changes` array in a tree delta.
+An absent-path remove leaves retained entries unchanged and invalidates that path in existing app readers.
+Milestone 2 states these requirements explicitly.
+Membership changes, omission counts, and path refreshes share one delta only when the complete update fits both budgets.
+Otherwise send one full bounded tree, rather than a partially applied membership replacement.
+Preserve tree metadata while ordinary content deltas advance revisions.
+Measure omitted-only edits and large replacements before the final review.
+Verify that the merged bucket implementation handles an absent-path remove without loading the complete projection.
+
+Keep the 256 KiB file-event budget and the 512-change delta budget.
+The full report cap does not replace those byte limits.
+Filtering can add display labels, so test masked multipart reports too.
+A tree or change that fits the count cap can still span many byte-bounded parts.
+The entry cap alone does not give a fixed heap cost for every path length.
+
+### Worker, output filter, and app
+
+Extend Worker and app readers to preserve the optional metadata.
+Use existing non-negative safe integer rules for present counts and line totals.
+Check that every part repeats the same omission metadata.
+Keep the existing validation of retained changes summaries.
+Do not infer omitted totals from partial parts. Cut legacy changes only after the complete source passes its original validation.
+Avoid a stricter legacy-report validation rule.
+
+Carry metadata through storage reload, reconnect, unavailable marks, repair, repository moves, and response filtering.
+The output filter must preserve numeric metadata while it masks display text.
+The existing spread-based shared filter preserves new fields, but parser reconstruction currently drops them.
+Verify the complete `filterRunnerOutput` path, not only the shared helper.
+
+Preserve tree metadata in the app's tree model and delta updates.
+Show saved omission counts while the computer sleeps or its newest scan is unavailable.
+Replace old counts atomically with each new complete report.
+Clear an old nonzero count when a new report explicitly supplies zero.
+Do not treat a limited list as a scan failure or an empty repository.
+Direct reads and diffs continue to authorize the path without requiring tree membership.
+
+Item 3 A needs no new chat inventory or resolver.
+Verify the existing mention, answer-picture, attachment, and Add to chat behavior with a limited tree.
+Only change those consumers if Cal chooses B, C, or D, after the extra scope is recorded.
+
+### Coordination
+
+- **Orchestrator call, 20 November 2026:** Milestone 4 waits for the memory plan's pull request to merge into `main`. It owns the overlapping report assembly and storage refactor.
+- **Orchestrator call, 20 November 2026:** Omission fields live inside tree and changes payloads. The tab-state plan owns response event numbers and route freshness.
+
+The dependency is [workspace object history and files memory](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/Zo7I3oIgOjg3QDhgTuwotI7KXJDK4QI0bv28NeKhTDs).
+Its branch is `calummoore/object-memory-history-and-files-state-14g5`.
+Record its pull request link when available.
+Take that merged code as the starting point for Worker edits.
+Do not reimplement its 64 path-hash buckets or its last-part path validation.
+
+[New tab workspace state reads](https://app.conductive.build/orgs/X6K5FFR3yoqyD5D1WfZdCk4GCk8QNz65J_GzQ5WkiOM/workspaces/-4VoYHRrmYl5LZ2NqfLFGVBoo2dgVTygen72sNuX1vE) owns item 4 B.
+Its branch is `calummoore/object-memory-new-tab-state-reads-cesn`.
+Reserve no event-number field here.
+If its route changes merge first, extend its response shape without changing its event-number semantics.
+Otherwise report the payload fields to its orchestrator for integration.
+
+## Replaced ways
+
+- Unlimited new-runner full reports become count-limited reports with omitted totals. Consumers: runner reporter, multipart splitter, wire types, and generated types. Move in Milestone 3.
+- Worker and app readers that discard omission fields become readers that retain them. Consumers: part assembly, projection storage, API, output filter, app parsers, and tree model. Move in Milestones 4 and 5.
+- Panels that treat listed rows as complete become panels with complete aggregate totals and omission notices. Consumers: mockup panels, app panel, tab count, public guide, and protocol requirements. Move in Milestones 1, 2, and 5.
+
+Remove superseded internal assumptions and duplicate calculations in those milestones.
+Legacy no-field readers remain a required external compatibility path under Cal's 20 November 2026 instruction.
+They have no removal date until Cal approves a separate end of support for older runners and Mac apps.
+
+## Milestone 1: Limited-list mockups
+
+Tags: mockup
+
+Depends on: Cal approves the plan and answers items 1 to 3.
+
+Draw the limited All files and Changes panels on desktop and phone.
+Use the current workspace layout, shared components, and existing notice patterns.
+
+- [ ] Read the `mockups` and `product-ui` skills. Check `@firna/ui` and existing shared file components first.
+- [ ] Add linked catalogue states for each limited list, with actual retained and omitted counts in fixtures.
+- [ ] Show full aggregate Changes totals and distinguish them from visible rows.
+- [ ] Show the tree notice with files and directories counted as entries.
+- [ ] Draw saved limited lists beside unavailable or failed-repair notices without conflicting messages.
+- [ ] Show the mention consequence of item 3 in an existing linked screen when the chosen option needs it.
+- [ ] Run `npm run mockups:check`. Check desktop and phone, in both color schemes.
+- [ ] Save PNG screenshots under `.context/runner-file-report-limits/` for the report. Commit no generated output.
+- [ ] Update this plan's design and TODOs for every problem that the mockups show. Raise only choices that pass the decision test.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: Milestone 1.
+
+State the chosen limits, omitted totals, selection, mention coverage, and compatible report rules before the implementation starts.
+
+- [ ] Update `docs/protocol/workspace-tools.md` with the new meaning of complete reports and summaries, notices, tree updates, and selection rules.
+- [ ] Keep part identity, revision, atomic replacement, refusal, reconnect, and repair rules intact.
+- [ ] State omission-count delta semantics, empty count-only deltas, absent-path refreshes, and omitted-diff refresh after a base change.
+- [ ] State the new-runner rollout boundary. Keep unlimited legacy trees readable until their runner updates.
+- [ ] Split report requirements into a linked protocol page if the edited document exceeds the documentation skill's length target.
+- [ ] Update the context coverage statements in `repository-folders.md`, `file-mentions.md`, and `file-mentions-answers.md` for the approved selection.
+- [ ] Keep `file-row-menu.md` aligned with the approved mention coverage and Add to chat rule.
+- [ ] Update the full-report references in `agent-runner.md`, `runner/file-reports.md`, and `runner/event-limits.md`. Preserve the independent 200-file turn limit.
+- [ ] Update `src/marketing/docs/files-and-changes.md` with the two limits, totals, notices, and the terminal or agent as the route to omitted files.
+- [ ] Read both legal pages in full, including imported sections of `src/marketing/terms.ts` and `src/marketing/privacy.ts`. Update each sentence that restates a changed fact.
+- [ ] Read every guide under `src/marketing/docs/` in full. Update each sentence that restates a changed fact, including mention and attachment coverage.
+- [ ] Update relevant READMEs and `src/files/store.md` for useful boundary or entry-point changes. Keep requirements in protocol docs and mechanics in code.
+- [ ] Check every changed Markdown link. Save the reading checklist under `.context/runner-file-report-limits/docs-check.md`.
+
+## Milestone 3: Runner limits and generated types
+
+Depends on: Milestone 2.
+
+Bound reports from new runners while keeping complete Git scans and turn comparisons.
+The existing Worker must still accept the emitted reports at this milestone's end.
+
+- [ ] Add the two limit constants and optional fields in `crates/cnd-runner-interface/`, with Rust as the type owner. Mirror needed runtime limits in `src/shared/files.ts` through the existing constant parity check.
+- [ ] Add stable selection in the report layer. Apply Cal's answers, directory closure, omitted counts, and omitted line totals before splitting.
+- [ ] Keep full source state for content detection, marks, Git status, unpushed counts, and turn-file comparisons.
+- [ ] Compare the last emitted selection for deltas. Keep membership replacement, count updates, and absent-path refreshes atomic within one delta, or send a full bounded tree.
+- [ ] Repeat metadata in all parts. Include it in serialized byte budgeting and preserve it through credential filtering.
+- [ ] Extend existing report tests for the cap boundary, deterministic retained paths, exact omitted totals, directory ancestors, and ignored context entries.
+- [ ] Cover growth across the tree limit, return below it, selected-entry eviction, empty count updates, absent-path refreshes, base changes, and requested repairs.
+- [ ] Keep the existing whole-entry, 256 KiB, 512-change, restart, and resend assertions.
+- [ ] Extend wire serialization cases for absent fields, explicit zeros, and nonzero metadata. Verify the previous Worker's retained-summary check accepts new report samples.
+- [ ] Run `cargo run -p cnd-runner-interface --example export_bindings`. Commit generated output without hand edits.
+- [ ] Run `cargo test -p cnd-runner-interface` and `cargo test -p cnd-runner`. Record test costs and assertion-failure proof for new cases.
+
+## Milestone 4: Worker metadata and compatibility
+
+Depends on: Milestone 3, and the pull request for "workspace object history and files memory" merged into `main`.
+
+Preserve omission metadata through the merged bucket projection, full report assembly, filtering, storage, and API publication.
+
+- [ ] Read and integrate the merged memory change before editing `worker/files/runner-reports.ts` or projection storage.
+- [ ] Extend `worker/files/parsers.ts` and `runner-input.ts` to retain optional metadata while accepting legacy reports.
+- [ ] Check repeated metadata when the report completes. Keep the retained-summary equality check and existing repair behavior.
+- [ ] After validating complete legacy changes reports, select 1,000 rows and compute exact retained and omitted totals. Keep legacy trees accepted until the runner update.
+- [ ] Store and reload metadata with complete projections. Preserve it through deltas and unavailable marks, and replace it with the next full report.
+- [ ] Verify empty deltas and absent-path removes against the merged bucket implementation. Keep these operations within the affected buckets.
+- [ ] Extend `src/shared/output-fields.ts` only where needed. Verify `worker/chat/runner-output.ts` preserves counts across filtering and masking.
+- [ ] Serve optional fields inside existing tree and changes payloads. Preserve any event numbers introduced by the tab-state plan.
+- [ ] Extend existing Worker integration tests for multipart join, omitted totals, reload, reconnect, explicit-zero replacement, and legacy missing fields.
+- [ ] Use one-time fixtures to check new runner to previous Worker, old runner to new Worker, and previous reader to new stored data.
+- [ ] Check rollback and re-upgrade with a saved no-field projection and an in-flight report. Preserve unknown counts or repair the report, rather than inventing zeros.
+- [ ] Include masked multipart publication and failed-part repair in the existing chat report coverage.
+- [ ] Run `npm run test -- worker/files` and the affected `worker/chat` report and output-filter tests.
+
+## Milestone 5: Files and Changes panels
+
+Tags: ui
+
+Depends on: Milestones 1 and 4.
+
+Render the approved mockups with real retained lists and omitted totals.
+
+- [ ] Extend `src/files/api/` readers with generated types. Preserve optional metadata in the tree model and every synchronization path.
+- [ ] Show the approved All files and Changes notices. Use full aggregate totals for the Changes header and tab count.
+- [ ] Keep omission notices with saved lists during sleep, restart, and unavailable scans. Remove them after an explicit-zero replacement.
+- [ ] Keep file and diff reads usable when their paths are outside the retained lists. Check refresh after omitted-content changes.
+- [ ] Verify the approved mention behavior, answer links and pictures, Add to chat, and attached-file chips. Add no second tree under item 3 A.
+- [ ] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
+- [ ] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
+- [ ] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.
+
+## Milestone 6: Verification, commit, review, and pull request
+
+Depends on: Milestones 1 to 5, and the memory plan's merged pull request.
+
+Verify the combined change, compare report costs, and prepare one pull request into `main`.
+
+- [ ] Run early format, lint, and file-length checks with Node 24.
+- [ ] Prove that each new test fails on the behavior it protects. Run each new asynchronous or browser test 10 times and record its cost.
+- [ ] Run a one-time cost check for 1,000 changes, 50,000 tree entries, and omitted-only edits. Compare CPU, rows, history bytes, and heap with the supplied measurements.
+- [ ] Save cost and compatibility evidence under `.context/runner-file-report-limits/`. Ask Cal if a new design choice is needed.
+- [ ] Install desktop and runner dependencies as `AGENTS.md` requires. Run `npm run check`, which includes the mockup check.
+- [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
+- [ ] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Install the target and `musl-tools` if needed.
+- [ ] Regenerate shared bindings and check for generated drift. Check each changed Markdown link.
+- [ ] Commit with the `git-commit` skill and push this workspace branch.
+- [ ] Review the full diff against `origin/main` with the `implementation-review` skill after the push. Report findings and apply the fix rule.
+      Fix `fix now` findings, record follow-up items for the rest, re-review once, and report.
+- [ ] Delete this plan when the `plans` skill permits it. Preserve its dated decisions and design calls in the pull request description.
+- [ ] Open the pull request into `main`. Include the plan permalink, compatibility path, approved coverage changes, and follow-up items. Watch CI. Cal merges.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Check a sandbox after its normal runner update. Confirm both caps and notices, a reconnect, and access to an omitted path.
+      This needs the deployed runner and remains outside the pre-merge completion boundary.
