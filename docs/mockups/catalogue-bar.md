@@ -15,7 +15,7 @@ review, continues, and archives. On a
 phone the row opens the Checks tab, whose top holds the actions, and the
 link to GitHub of a pull request. While the branch has no pull request,
 that top also names the branch and its base above Create PR, from
-decision 296. Here they are calummoore/checkout-autocomplete → main. The
+decision 306. Here they are calummoore/checkout-autocomplete → main. The
 `localWork`, `access`, `appAction`, and `branch` states of the workspace
 screen draw them. The child pages:
 
@@ -66,6 +66,6 @@ the merge and Continue to the next task.
 `app/new-workspace/start-branch/stacked` has the bar of a workspace that
 stacks on a branch, which names that base. Its `create-pr` variant has the
 top of the Checks tab of a phone, which names that base above Create PR,
-from decision 296. Its `base-moved` variant has the line under the bar
-after GitHub deleted that base, from decision 294, as
+from decision 306. Its `base-moved` variant has the line under the bar
+after GitHub deleted that base, from decision 304, as
 [New workspace](catalogue-new-workspace.md) gives.

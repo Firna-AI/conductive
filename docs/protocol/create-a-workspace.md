@@ -122,10 +122,10 @@ branch that is not the default branch.
 
 - New workspace can start a workspace from a branch that is not the
   default branch. The workspace then makes its own branch from the picked
-  branch (decision 288), and the member chooses its target (decision 291).
+  branch (decision 298), and the member chooses its target (decision 301).
 - [Start from a branch](start-from-a-branch.md) holds the requirements of
-  the branch control, its dropdown, and the target choice (decision 295). It
-  also holds the branch check of a create and its refusals (decision 293).
+  the branch control, its dropdown, and the target choice (decision 305). It
+  also holds the branch check of a create and its refusals (decision 303).
 
 ## The branch and the name
 

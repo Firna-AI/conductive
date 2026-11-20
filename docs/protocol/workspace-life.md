@@ -283,7 +283,7 @@ keeps them after the merge.
 - After the merge of its pull request, Continue moves a workspace to a new
   branch. The workspace keeps its sandbox and its sessions (decision 223).
 - The new branch starts from the branch that the pull request merged into
-  (decision 290). When GitHub no longer has that branch, it starts from the
+  (decision 300). When GitHub no longer has that branch, it starts from the
   default branch.
 - [Continue](continue.md) holds its requirements: who may continue, when
   Continue runs, its check for local work, the new branch, and the

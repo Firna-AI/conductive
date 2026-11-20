@@ -36,7 +36,7 @@ import type { NewWorkspaceFormState } from './newWorkspaceParts'
 type Form = NewWorkspaceFormState
 
 /**
- * The creates that the branch check refused (decision 293): a picked
+ * The creates that the branch check refused (decision 303): a picked
  * branch that is no longer on GitHub, or a GitHub account that cannot read
  * the repository.
  */
@@ -184,7 +184,7 @@ function openMenu(
 
 /**
  * The branch control directly right of the repository picker (decision
- * 301). It adds `→ main` while a picked branch targets the default branch.
+ * 309). It adds `→ main` while a picked branch targets the default branch.
  * On a computer the open dropdown hangs below it. A phone opens the
  * dropdown as a sheet instead, from `branchSheet`. A press on the closed
  * control opens the dropdown.

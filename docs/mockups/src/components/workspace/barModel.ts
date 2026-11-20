@@ -85,7 +85,7 @@ export type BarFacts = {
   archiving: boolean
   /**
    * GitHub no longer has the stored base of the workspace, so the Worker
-   * moved the base to the default branch (decision 294).
+   * moved the base to the default branch (decision 304).
    */
   baseMoved?: boolean
 }

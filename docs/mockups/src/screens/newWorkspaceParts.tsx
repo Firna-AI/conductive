@@ -61,17 +61,17 @@ export const newWorkspaceFormProperties = {
   /** The repository menu, closed or drawn open. */
   repositoryMenu: { enum: ['closed', 'open'] },
   /**
-   * The branch that the new branch starts from (decision 288): the default
+   * The branch that the new branch starts from (decision 298): the default
    * branch of the repository, which the branch control shows until the
    * member picks another, or a picked branch that is not the default.
    */
   branch: { enum: ['default', 'picked'] },
   /**
-   * The target of a picked branch (decision 291): the picked branch, which
-   * New workspace selects first (decision 295), or the default branch. The
+   * The target of a picked branch (decision 301): the picked branch, which
+   * New workspace selects first (decision 305), or the default branch. The
    * Target part of the dropdown offers it only for a picked branch that is
    * not the default branch, and the closed control adds `→ main` while the
-   * target is the default branch (decision 301).
+   * target is the default branch (decision 309).
    */
   target: { enum: ['picked', 'default'] },
   /**

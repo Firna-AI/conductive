@@ -35,7 +35,7 @@ function builtWhen(when: When): string {
 /**
  * The start of the empty chat, with the repository of the new workspace and
  * the branch control directly right of it. The target of a picked branch
- * lives in the dropdown of the branch control (decision 301), so no line of
+ * lives in the dropdown of the branch control (decision 309), so no line of
  * a target choice follows them. An org without chosen repositories asks for
  * them first: an admin gets Choose repositories, and a member reads that an
  * admin chooses them. It asks only after the repositories load, as the

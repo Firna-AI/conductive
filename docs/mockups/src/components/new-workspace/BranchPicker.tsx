@@ -48,7 +48,7 @@ function ControlEnd(props: { target?: string }) {
 
 /**
  * The branch control directly right of the repository picker of New
- * workspace, on the page and in the dialog (decision 301). It takes the
+ * workspace, on the page and in the dialog (decision 309). It takes the
  * look and the size of the repository picker: an icon, the name, and a
  * chevron. It shows the default branch until the member picks another
  * branch. While a picked branch targets the default branch, a muted

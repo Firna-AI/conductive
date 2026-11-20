@@ -92,7 +92,7 @@ export interface BarView {
   /**
    * The branch and its base while the branch has no pull request, also
    * without an action and in a suspended org. The top of the phone Checks
-   * tab names them (decision 296). Null with a pull request.
+   * tab names them (decision 306). Null with a pull request.
    */
   branches: BarBranches | null
   /**

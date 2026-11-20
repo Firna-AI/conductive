@@ -52,15 +52,24 @@ Contract owners:
 
 ## Decisions
 
-The numbers 288 to 295 were the next free numbers on 13 November 2026,
-and 297 and 298 on 16 November 2026. Decisions 288 to 298 hold Cal's
-answers. An
-options check ran over the decisions and the design calls. It added options
-to decisions 288, 289, 290, and 291, corrected the design calls, and found
-decisions 293 and 294. Its report is in
-`.context/start-from-branch/options-check.md`.
+This plan first gave its decisions the numbers 288 to 298 and 301. On
+21 November 2026, Milestone 18 renumbered them, because `main` used the
+numbers 288 to 297 for other changes. The old 288 to 298 became 298 to 308
+in the same order, and the old 301 became 309. Decisions 310 to 312 kept
+their numbers.
 
-### Decision 288: what a start from another branch makes
+Each decision reference in the files of this branch uses the new numbers,
+also in the completed milestones. The old numbers stay only in the text
+about the renumbering, here and in Milestones 9 and 18. The commit messages
+and the evidence in `.context/start-from-branch/` keep the old numbers.
+Evidence folder names, such as `ui-301`, keep them too.
+
+Decisions 298 to 312 hold Cal's answers. An options check ran over the
+decisions and the design calls. It added options to decisions 298, 299,
+300, and 301, corrected the design calls, and found decisions 303 and 304.
+Its report is in `.context/start-from-branch/options-check.md`.
+
+### Decision 298: what a start from another branch makes
 
 Chosen by Cal on 13 November 2026: A. The workspace makes its own branch,
 such as `calummoore/delft-xxxx`, from the picked branch. The login rule of
@@ -77,7 +86,7 @@ request.
 - Left out: a note to the agent with no app change, because the pull request
   bar and Changes then do not follow the branch.
 
-### Decision 289: the scope
+### Decision 299: the scope
 
 Chosen by Cal on 13 November 2026: A, branches only. Starts from pull
 requests and issues stay in the paused plan.
@@ -86,7 +95,7 @@ requests and issues stay in the paused plan.
   four open decisions. D, from the options check: branches, and a base that
   follows the open pull request. All are larger, and Cal asked for branches.
 
-### Decision 290: the base after Continue
+### Decision 300: the base after Continue
 
 Chosen by Cal on 13 November 2026: B. After a merge, Continue builds on the
 branch that the pull request merged into, when that branch still exists on
@@ -100,11 +109,11 @@ GitHub. Otherwise it builds on the default branch. This changes decision
   branch after a change of the base on GitHub. E, a choice in the Continue
   dialog, because it adds a question and a mockup.
 
-### Decision 291: which branch the workspace targets
+### Decision 301: which branch the workspace targets
 
 Chosen by Cal on 13 November 2026: D. When the picked branch is not the
 default branch, New workspace offers a choice of two targets: the picked
-branch or the default branch. Decision 295 holds which one is selected
+branch or the default branch. Decision 305 holds which one is selected
 first.
 
 - Reason: Cal named two real cases. A member stacks on a branch, or works on
@@ -117,7 +126,7 @@ first.
   the open pull request on GitHub, as decision 216 D of the paused plan. It
   adds to D, and the paused plan owns it.
 
-### Decision 292: the agent call
+### Decision 302: the agent call
 
 Chosen by Cal on 13 November 2026: A. The MCP tool and the CLI command of
 `create_workspace` take both the start branch and the base branch. This
@@ -130,7 +139,7 @@ the branch check follow-up item. This change applies that item's option B.
   start or the default branch. C, a base branch only. D, a start branch
   only. Each gives agents less than Cal asked for.
 
-### Decision 293: the branch check on the browser create
+### Decision 303: the branch check on the browser create
 
 Chosen by Cal on 13 November 2026: A. The create from New workspace uses the
 same branch check as the agent create. A missing branch gets a refusal, and
@@ -141,11 +150,11 @@ the composer keeps the message.
   default branch, because the work would start from a branch that the
   member did not pick.
 
-### Decision 294: a stored base that GitHub deleted
+### Decision 304: a stored base that GitHub deleted
 
 Chosen by Cal on 13 November 2026: C. When the stored base of a workspace is
 gone from GitHub, the Worker moves the base to the default branch, as
-Continue does under decision 290. It updates the Git setting in the cloud
+Continue does under decision 300. It updates the Git setting in the cloud
 computer, and the bar says that the base moved.
 
 - Problem that it solves: before, the bar showed "GitHub is not available.
@@ -156,7 +165,7 @@ computer, and the bar says that the base moved.
   then gives no way back.
 - Left out: a base that always follows GitHub, which the paused plan owns.
 
-### Decision 295: the target selected first
+### Decision 305: the target selected first
 
 Chosen by Cal on 13 November 2026: A. New workspace selects the picked
 branch as the target before the member chooses.
@@ -165,7 +174,7 @@ branch as the target before the member chooses.
   pull request with the commits of the picked branch. C, no selection,
   because it adds a step before Send.
 
-### Decision 296: a phone shows the base branch
+### Decision 306: a phone shows the base branch
 
 Chosen by Cal on 16 November 2026: A. While the workspace branch has no
 pull request, the top of the Checks tab on a phone shows the branch and its
@@ -176,10 +185,10 @@ base, where Create PR stands. Found by the mockups of Milestone 1.
   for every workspace is simpler. D, no change, because a phone user could
   not see the target before Create PR.
 
-### Decision 297: the fetch of a moved base
+### Decision 307: the fetch of a moved base
 
 Chosen by Cal on 16 November 2026: D, from review item 1 of the branch
-review. When a base moves (decision 294), one shared base-change
+review. When a base moves (decision 304), one shared base-change
 operation, built like the one of Continue, fetches the new base into its
 remote-tracking ref in an isolated stage, and only then changes
 `gh-merge-base` and `origin/HEAD`. A move that no member started, from a
@@ -195,10 +204,10 @@ workspace owner, the account that `gh` already uses outside a turn.
   keeps the old comparison. G, a button on the line of a moved base,
   because Changes then wait for a press.
 
-### Decision 298: one owner of the base move retries
+### Decision 308: one owner of the base move retries
 
 Chosen by Cal on 16 November 2026: E, from review item 101 of the branch
-review. The shared operation of decision 297 owns the cloud update of a
+review. The shared operation of decision 307 owns the cloud update of a
 base move, with one saved retry job that starts with the repair marker and
 a capped growing delay. Each resume runs the same job. The GitHub read
 keeps the database move and the marker, and runs no cloud command, so a
@@ -210,7 +219,7 @@ failing cloud computer no longer fails a banner read.
 - Rejected: A, B, D, and F of the review, because the cloud update stays
   inside the GitHub read and its failure keeps failing that read.
 
-### Decision 301: a compact branch control in the header
+### Decision 309: a compact branch control in the header
 
 Chosen by Cal on 20 November 2026: variant B, Pair, of the compact
 variants under `app/new-workspace/start-branch/compact`, with the branch
@@ -228,12 +237,9 @@ picked branch targets the default branch. The separate target row goes.
   checked row. E, one "Target main" switch. Also rejected: the place in the
   composer footer that all five variants drew, because Cal placed the
   control next to the repository picker.
-- This replaces the target row of decision 291 and the design calls of
+- This replaces the target row of decision 301 and the design calls of
   Milestones 1 and 8 that describe it. The choice of two targets, and the
-  picked branch as the first selection (decision 295), stay.
-- The decision numbers of this plan from 296 are taken on `main` by other
-  changes since 20 November 2026. Milestone 9 renumbers them. Number 301
-  stays free after that renumber.
+  picked branch as the first selection (decision 305), stay.
 
 ### Decision 310: a rename of the default branch reaches the cloud computer
 
@@ -241,9 +247,9 @@ Chosen by Cal on 21 November 2026: B, from merge item 1 of the merge of
 `main` on 20 November 2026. When the `repository` webhook of `main` (#463)
 saves a new default branch, the Worker saves one base move for each live
 workspace of that repository whose base is the default branch. The move
-reuses the fetch with the owner's token (decision 297 in the old numbers)
-and the one retry owner (decision 298 in the old numbers), so the cloud
-computer fetches the new default branch and then targets it.
+reuses the fetch with the owner's token (decision 307) and the one retry
+owner (decision 308), so the cloud computer fetches the new default branch
+and then targets it.
 
 - Problem that it solves: after a rename, the app named the new default
   branch, but the cloud computer kept its old copy and target, so Changes
@@ -289,7 +295,7 @@ My calls, made on 13 November 2026:
   of the default branch.
 - The Worker accepts any pair of branches from the browser and from an
   agent. Only New workspace limits the target to the two choices of
-  decision 291. Reason: one create path, and no new refusal of a pair.
+  decision 301. Reason: one create path, and no new refusal of a pair.
 - The branch check refuses a missing branch with HTTP 404 and the code
   `branch_not_found`, and a name that is not a valid Git branch name with
   HTTP 400 and the code `invalid_input`. When the token cannot read the
@@ -316,7 +322,7 @@ My calls, made on 13 November 2026:
   exists. The Continue job gets separate fields for the default branch and
   the base, and a job that was saved before the change still reads. Continue
   no longer writes its base into the stored default branch of the
-  repository. Reason: decision 290, and the stored GitHub summary holds only
+  repository. Reason: decision 300, and the stored GitHub summary holds only
   the state.
 - The branch picker is a control beside the repository picker, on the page
   and in the dialog. It shows the default branch until the member picks
@@ -338,7 +344,7 @@ My calls, made on 13 November 2026:
   After a change of the base on GitHub, the bar names the old base, and a
   push to the new base does not refresh the bar. This limit stays until the
   paused plan builds a base that follows GitHub. A follow-up item records it
-  when this plan is deleted. Reason: decision 289.
+  when this plan is deleted. Reason: decision 299.
 - The paused plan keeps its pull request and issue parts. Its decision 213 A
   no longer covers branches. The pull request description of this change
   says so. Reason: the paused plan lives on another branch.
@@ -367,17 +373,17 @@ Design calls from the mockups of Milestone 1, made on 13 November 2026:
   then holds: only the new work, or also the commits of the picked branch.
   In the dialog the choice takes a line of its own under the header.
   Reason: the mockups showed that two branch names do not fit side by side
-  on a phone, and the line names the cost that decision 295 avoids.
+  on a phone, and the line names the cost that decision 305 avoids.
 - A pick of another branch that is not the default branch keeps the target
   choice of the member. Only a change of repository clears it. Reason:
-  decision 295 selects the picked branch only before the member chooses.
+  decision 305 selects the picked branch only before the member chooses.
 - The refusal of a missing branch is the notice of a failed create, with
   the cause and the kept message. Its one action is Start from and the
   default branch, which puts the control back on that branch. Send stays on,
   as after each failed create. The refusal of a token that cannot read the
   repository offers Try again. Reason: Try again of a missing branch fails
-  the same way, as the reason against option B of decision 293 says.
-- The bar of decision 294 names the default branch, and a line under it
+  the same way, as the reason against option B of decision 303 says.
+- The bar of decision 304 names the default branch, and a line under it
   says "Now targets main, because the branch `<base>` is no longer on
   GitHub." The line is a status, not a refusal, and it shows until a pull
   request opens. On a phone it stands at the top of the Checks tab.
@@ -445,18 +451,18 @@ Design calls from the mockups of Milestone 10, made on 16 November 2026:
   two layouts look the same.
 - On a phone the names wrap. When the two names do not fit on one line,
   the base takes a line of its own with its arrow. A name that is longer
-  than the line breaks. Reason: a phone has no tooltip, and decision 296
+  than the line breaks. Reason: a phone has no tooltip, and decision 306
   rejected option B because long names get cut.
 - The branch and its base stand in the group of Create PR, on the line
-  above the button. The line of a moved base (decision 294) stays first,
+  above the button. The line of a moved base (decision 304) stays first,
   above them. Reason: the base is the target of Create PR, and the top of
   the Checks tab keeps its order: the message, then the actions.
 - The branch and its base show in each state without a pull request, also
   without an action: a branch without commits, a member with read access,
-  and a suspended org. Reason: decision 296 gives one rule for every
+  and a suspended org. Reason: decision 306 gives one rule for every
   workspace, and the desktop bar names the branches in each of these
   states.
-- The compact row of a phone does not change. Reason: decision 296
+- The compact row of a phone does not change. Reason: decision 306
   rejected the base in the row.
 - The `create-pr` variant of `app/new-workspace/start-branch/stacked`
   draws a stacked base. `app/banner`, `app/banner/no-commits` with its
@@ -471,16 +477,16 @@ Design calls from the mockups of Milestone 10, made on 16 November 2026:
 Design calls from Milestones 11 to 13, made on 16 November 2026:
 
 - Every fetch of a moved base uses the token of the workspace owner, also
-  when a tab read found the deleted base. Reason: decision 298 takes the
+  when a tab read found the deleted base. Reason: decision 308 takes the
   cloud update out of every GitHub read, so only the saved retry or a
   resume runs the fetch, and neither has a member.
 - A failed move does not stop a resume, and the startup does not apply an
-  unfinished move before its fetch. Reason: decision 298 gives each
+  unfinished move before its fetch. Reason: decision 308 gives each
   failure to the retry, and the missing-ref rule keeps the old target.
 - The retry job has one stable key, saved in the same transaction as the
   repair marker. Its delay starts at one second, doubles after each
   failure, and stops at 15 minutes. A move waits while a Continue runs.
-  Reason: decision 298, and Continue owns the branch while it runs.
+  Reason: decision 308, and Continue owns the branch while it runs.
 - The trusted fetch maps to the owner only while it runs, and the mapping
   lives only in memory. Reason: a rebuilt object then gives no token.
 - `github-banner.md` and `github-tokens.md` were split, and only sections
@@ -500,7 +506,7 @@ Design calls from the mockups of Milestone 14, made on 20 November 2026:
   name, and `→ main` and the chevron stay in view. The limit of the
   control grows from 280 px to 340 px while it shows `→ main`, so a name
   gives way at about the same length. Reason: Cal has not answered the
-  open item on long names, so the rule before decision 301 stays.
+  open item on long names, so the rule before decision 309 stays.
 - The label Start from heads the list also when the dropdown has no
   Target part. The Target rows name their branches without the word
   Target, the picked branch first, with a check on the target and no
@@ -529,7 +535,7 @@ Design calls from the mockups of Milestone 14, made on 20 November 2026:
   `NewWorkspaceDialog.module.css` stay until Milestone 16, and
   `targetCopy.option` stays. `branchCopy.control` takes the target as an
   optional second value. Reason: the app imports them, and it keeps
-  working until it builds decision 301.
+  working until it builds decision 309.
 - The start of the New workspace page, `.start` of
   `NewWorkspaceScreen.module.css`, gets `min-width: 0`. Reason: the smoke
   test found that a branch name, which does not wrap, made the start
@@ -541,10 +547,10 @@ Design calls from the mockups of Milestone 14, made on 20 November 2026:
 Design calls from the docs of Milestone 15, made on 20 November 2026:
 
 - The protocol doc gives a reason for each rejected variant of decision
-  301: C adds a control where B adds none, and D hides both targets behind
+  309: C adds a control where B adds none, and D hides both targets behind
   a submenu where B names both. Reason: the plan recorded a reason only
   for B.
-- The old target row is a rejected way of decision 301, not history.
+- The old target row is a rejected way of decision 309, not history.
 - The doc says only that a long name is cut short. Reason: the open item
   on long names has no answer.
 
@@ -581,6 +587,20 @@ Design calls from the merge of `origin/main`, made on 20 November 2026:
   token, and a member's token may not reach the new repository of a
   change.
 
+Design calls from the renumbering of Milestone 18, made on 21 November 2026:
+
+- The completed milestones and the ticked TODOs also take the new numbers.
+  Reason: an old number there now names a decision of `main`. The text
+  that describes the renumbering, in Milestones 9 and 18, keeps the old
+  numbers.
+- The evidence folder names keep their old numbers, such as `ui-301`.
+  Reason: they name folders on disk, and a new name would point at no
+  folder.
+- The note on the taken numbers moved from decision 309 to the start of
+  "Decisions", and decision 310 and Milestone 19 no longer give the old
+  numbers. Reason: the start of "Decisions" holds the map from the old
+  numbers to the new ones.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -598,11 +618,11 @@ and on a phone.
         states: loading, no results, a failed GitHub read with Try again, and
         no GitHub access to the repository.
   - [x] A picked branch that is not the default branch, with the target
-        choice of decision 291 on each of its two values.
-  - [x] The refusal of a missing branch, under decision 293.
+        choice of decision 301 on each of its two values.
+  - [x] The refusal of a missing branch, under decision 303.
   - [x] The picker as a sheet on a phone.
 - [x] Draw the workspace after a start that stacks on a branch, with its pull
-      request bar naming that base, and the bar of decision 294.
+      request bar naming that base, and the bar of decision 304.
 - [x] Update `docs/mockups/catalogue.md` and `docs/mockups/design.md`.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that the
@@ -615,7 +635,7 @@ Depends on: 1
 State the requirements and the decisions in force for the work below.
 
 - [x] In `docs/protocol/create-a-workspace.md`, add a "Start from a branch"
-      section with decisions 288, 291, 293, and 295, and the rules of the
+      section with decisions 298, 301, 303, and 305, and the rules of the
       branch control, its picker, the target choice, and the refusals from
       the design calls of the mockups. Change "The branch and the name" so
       that the branch starts from the start branch. The section links to
@@ -623,12 +643,12 @@ State the requirements and the decisions in force for the work below.
       rules. The dialog moved to `docs/protocol/create-a-workspace-dialog.md`,
       so that the doc stays under 300 lines.
 - [x] In `docs/protocol/base-branches.md`, give the base of a workspace with
-      a picked branch and of an agent create call, and decision 294. In
+      a picked branch and of an agent create call, and decision 304. In
       `docs/protocol/github-banner.md`, add the line under the bar of a base
       that moved, which shows until a pull request opens.
-- [x] In `docs/protocol/continue.md`, replace decision 223 with decision 290.
+- [x] In `docs/protocol/continue.md`, replace decision 223 with decision 300.
 - [x] In `docs/protocol/workspace-calls.md`, replace the text of decision 281
-      with the two fields of decision 292, their defaults, and the replay of a
+      with the two fields of decision 302, their defaults, and the replay of a
       request ID.
 - [x] In `docs/protocol/github-tokens.md`, state the branch list read and the
       branch check with the member's GitHub token.
@@ -669,7 +689,7 @@ Depends on: 2
       with the defaults of the design calls.
 - [x] Add one Worker branch check, with the refusals of the design calls and
       the fallback when GitHub cannot answer. Apply it to the browser create
-      as decision 293 says.
+      as decision 303 says.
 - [x] Store the start branch with the creation plan in a migration, beside
       the base branch. Keep Try again and each resume on the same branches.
 - [x] Change the start command as the design calls say, in
@@ -707,7 +727,7 @@ Final checks and repeated test runs are in `.context/start-from-branch/final-rep
 
 Depends on: 2
 
-- [x] Choose the base of Continue with decision 290, in
+- [x] Choose the base of Continue with decision 300, in
       `worker/lifecycle/continue-progress.ts` and
       `worker/lifecycle/continue-admission.ts`.
 - [x] Split the default branch and the base in the Continue job, in
@@ -725,7 +745,7 @@ Evidence: `.context/start-from-branch/m6-red.log`, `m6-green-final.log`, and `m6
 
 Depends on: 2
 
-- [x] Apply decision 294 in `worker/github/client.ts`, the bar, and a
+- [x] Apply decision 304 in `worker/github/client.ts`, the bar, and a
       command that updates `gh-merge-base` in the cloud computer.
 - [x] Keep the name of the base that moved until a pull request opens, so
       the bar and the top of the Checks tab of a phone show its line, as
@@ -745,8 +765,8 @@ Depends on: 1, 3, 4
 
 - [x] Build the branch control and the picker on the page and in the
       dialog, with search and the list states, as the mockups show.
-- [x] Build the target choice of decision 291, with the first selection of
-      decision 295: a segmented control on a computer, and radio cards on
+- [x] Build the target choice of decision 301, with the first selection of
+      decision 305: a segmented control on a computer, and radio cards on
       a phone. Keep the choice of the member when the member picks another
       branch.
 - [x] Keep the branch and the target in the draft, clear them on a change of
@@ -774,7 +794,7 @@ Tags: mockup
 
 Depends on: 8
 
-Draw decision 296 on a phone.
+Draw decision 306 on a phone.
 
 - [x] Draw the top of the Checks tab on a phone with the branch and its
       base while the branch has no pull request, for a stacked workspace
@@ -795,13 +815,13 @@ Depends on: 10
 
 - [x] In `docs/protocol/github-tokens.md`, add the fetch of a moved base
       with the GitHub token of the workspace owner when no member started
-      the move (decision 297). The image builds moved to
+      the move (decision 307). The image builds moved to
       `docs/protocol/github-tokens-image-builds.md`, so that the doc stays
       near 250 lines.
 - [x] In `docs/protocol/base-branches.md`, state that a moved base fetches
-      the new base before it changes the target (decision 297), and the one
-      retry owner (decision 298).
-- [x] In `docs/protocol/github-banner.md`, state decision 296 under
+      the new base before it changes the target (decision 307), and the one
+      retry owner (decision 308).
+- [x] In `docs/protocol/github-banner.md`, state decision 306 under
       "Layouts", with the design calls of the mockups of Milestone 10: on
       a phone the names wrap and show in full, the branch and its base
       stand above Create PR and under the line of a moved base, and they
@@ -818,12 +838,12 @@ Depends on: 10
 
 Depends on: 11
 
-- [x] Build the shared base-change operation of decision 297, with the
+- [x] Build the shared base-change operation of decision 307, with the
       owner token for a move that no member started, the isolated stage of
       Continue, and the missing-ref guard of commit `dcbb1a2cd`.
 - [x] Give the operation one saved retry job with a capped growing delay,
       run it at each resume, and take the cloud command out of the GitHub
-      read (decision 298). A failed database write of the move also leaves
+      read (decision 308). A failed database write of the move also leaves
       one retry.
 - [x] Apply option D of review item 103: move the failed-database recovery
       case to the native fixture `worker/features/base-moved.test.ts`, with
@@ -841,7 +861,7 @@ Tags: ui
 Depends on: 10
 
 - [x] Show the branch and its base at the top of the Checks tab on a phone
-      while the branch has no pull request (decision 296), as the mockups
+      while the branch has no pull request (decision 306), as the mockups
       of Milestone 10 show. They show also when the bar has no action, so
       the top of the Checks tab is no longer empty then. Take the styles
       from the shared `BarActions.module.css`.
@@ -853,7 +873,7 @@ Tags: mockup
 
 Depends on: 10
 
-- [x] Draw decision 301 on the `app/new-workspace/start-branch` pages and
+- [x] Draw decision 309 on the `app/new-workspace/start-branch` pages and
       their children, on the page and in the dialog, on a computer and on
       a phone: the control next to the repository picker, `main` first,
       the two-part dropdown, and `→ main` on the closed control.
@@ -875,7 +895,7 @@ the screenshots in `shots/`, and the measurements of the phone fix in
 Depends on: 14
 
 - [x] Update `docs/protocol/start-from-a-branch.md` and
-      `docs/protocol/create-a-workspace-dialog.md` with decision 301.
+      `docs/protocol/create-a-workspace-dialog.md` with decision 309.
 - [x] Read each public guide in full, and update each sentence that
       describes the target choice. Read the legal pages for the same fact.
 - [x] Check each relative link of each changed Markdown file.
@@ -886,7 +906,7 @@ Tags: ui
 
 Depends on: 14
 
-- [x] Build decision 301 in New workspace, on the page and in the dialog,
+- [x] Build decision 309 in New workspace, on the page and in the dialog,
       as the mockups of Milestone 14 show, and remove the target row.
 - [x] Keep the draft, the clear on a change of repository, the create
       request, and the refusals working.
@@ -929,12 +949,15 @@ Depends on: none
 `main` used the numbers 288 to 297 for other changes. Decisions 310 to 312
 already have free numbers.
 
-- [ ] Renumber this plan's decisions in every file of the branch: 288 to
+- [x] Renumber this plan's decisions in every file of the branch: 288 to
       298 become 298 to 308 in order, and 301 becomes 309. Change only the
       references that this branch added. Keep each reference of `main` to
       its own decisions 288 to 297.
-- [ ] Check with `git grep` that no reference of this branch keeps an old
+- [x] Check with `git grep` that no reference of this branch keeps an old
       number, and that each reference of `main` is unchanged.
+
+Evidence: `.context/start-from-branch/renumber/`, with the scripts, the
+list of each changed reference, and the check results.
 
 ## Milestone 19: Default branch renames and repository changes
 
@@ -945,8 +968,7 @@ Depends on: 18
       public guides for the same facts.
 - [ ] Build decision 310: the webhook save of a new default branch saves
       one base move for each live workspace of the repository whose base is
-      null, through the operation of decisions 307 and 308 (the old 297 and
-      298).
+      null, through the operation of decisions 307 and 308.
 - [ ] Build decision 312 in `worker/lifecycle/repository-change-progress.ts`
       and `worker/lifecycle/repository-change-data.ts`, with the check after
       the write that accepts null.

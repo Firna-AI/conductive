@@ -212,7 +212,7 @@ rules. A decision number names a dated record, as
 - Continue fetches the latest commit of its base branch with the same
   token (decision 226). GitHub then checks the read access of that member.
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
-  gives that base branch (decision 290).
+  gives that base branch (decision 300).
 - The workspace runs this fetch as a trusted Continue job, as it runs the
   fetch of a create. The credential route gives the token to that job only
   while its fetch runs.
@@ -235,11 +235,11 @@ rules. A decision number names a dated record, as
 ## A moved base
 
 - When GitHub deletes the base branch of a workspace, the Worker moves the
-  base branch to the default branch (decision 294). The cloud computer
+  base branch to the default branch (decision 304). The cloud computer
   then fetches the latest commit of the default branch, as
   [The move in the cloud computer](base-branches.md#the-move-in-the-cloud-computer)
   says.
-- That fetch gets the GitHub token of the workspace owner (decision 297).
+- That fetch gets the GitHub token of the workspace owner (decision 307).
   The owner's account is the one that `gh` already uses outside an agent
   turn.
 - Reason: no member starts the move. The Worker starts it after a GitHub
@@ -251,7 +251,7 @@ rules. A decision number names a dated record, as
   its fetch runs. GitHub then checks the read access of the owner.
 - As for Continue, the token reaches only that fetch. No Git setting and
   no hook of the repository folder runs with it.
-- These ways were rejected (decision 297):
+- These ways were rejected (decision 307):
   - A fetch only with the token of a turn or of the member who presses
     Continue. A move after a GitHub webhook, at a retry, or at a resume
     then gets no token.

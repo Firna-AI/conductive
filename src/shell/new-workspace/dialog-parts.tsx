@@ -32,7 +32,7 @@ function useSection(org: OrgSummary, model: NewWorkspaceModel) {
  * The header of the dialog: the repository picker and the branch control
  * directly right of it at the start, and the menu of the org and the
  * section at the end. The target of a picked branch lives in the dropdown
- * of the branch control (decision 301), so no line follows the header. A
+ * of the branch control (decision 309), so no line follows the header. A
  * suspended org refuses each create, so it shows no pickers.
  */
 export function DialogHeader(props: {

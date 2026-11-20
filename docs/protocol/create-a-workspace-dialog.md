@@ -14,7 +14,7 @@ says.
   branch control, the message and its files, the model picker, and the
   Capabilities icon.
 - The header of the dialog holds the repository picker, with the branch
-  control directly right of it, as on the page (decision 301). The target
+  control directly right of it, as on the page (decision 309). The target
   choice stands in the dropdown of the branch control, not on a line under
   the header. [Start from a branch](start-from-a-branch.md) states the
   branch control, its dropdown, and the target choice.

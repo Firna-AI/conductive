@@ -45,7 +45,7 @@ Continue.
     under the bar. The line takes the tint of its state, and its bottom
     border stays neutral.
   - When GitHub no longer has the stored base of a workspace, the Worker
-    moves the base to the default branch (decision 294). The bar then names
+    moves the base to the default branch (decision 304). The bar then names
     the default branch, and its line says which branch GitHub no longer
     has. That line is a status in the neutral tone, with the info icon, and
     it shows until a pull request opens. The fact `baseMoved` of
@@ -56,7 +56,7 @@ Continue.
     the top of that tab, at touch size.
   - While the branch has no pull request, the top of the Checks tab of a
     phone names the branch and its base, where Create PR stands. The user
-    chose this as decision 296 on 16 November 2026. `ChecksBranches` in
+    chose this as decision 306 on 16 November 2026. `ChecksBranches` in
     `BarActions.tsx` draws them with the parts of the desktop bar: the
     branch icon, the branch, an arrow, and the base, in the same font and
     colours. The names wrap, because a phone has no tooltip. When the two

@@ -75,11 +75,11 @@ function TargetPart(props: { targets: BranchTargets }) {
 }
 
 /**
- * The open dropdown of the branch control, in two parts (decision 301).
+ * The open dropdown of the branch control, in two parts (decision 309).
  * Start from holds the search field and the list of branches, with the
  * default branch first. Target shows only for a picked branch that is not
  * the default branch: the picked branch, which New workspace selects first
- * (decision 295), then the default branch, with the line about what the
+ * (decision 305), then the default branch, with the line about what the
  * pull request then holds. A computer draws it in the box below the
  * control, and a phone in a sheet, with rows of touch size. When the room
  * runs out, the list of branches scrolls, and the Target part stays in

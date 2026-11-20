@@ -169,7 +169,7 @@ export type NewWorkspaceDialogProps = {
  * right of it sit at the top left, and the org and the section of the new
  * workspace at the top right, as a picker of the section. The target of a
  * picked branch lives in the dropdown of the branch control, so no line
- * follows the header (decision 301). The message fills the middle, with a
+ * follows the header (decision 309). The message fills the middle, with a
  * chip for each of its files at its place, and a pasted link to a
  * workspace of the org shows as a chip, as in the composer. The attach
  * button, the Capabilities icon, and the model picker sit at the bottom

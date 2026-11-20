@@ -79,7 +79,7 @@ export type Workspace = {
   baseBranch?: string
   /**
    * The stored base branch that GitHub no longer has, which the Worker
-   * replaced with the default branch (decision 294). The line under the
+   * replaced with the default branch (decision 304). The line under the
    * pull request bar names it.
    */
   movedBase?: string

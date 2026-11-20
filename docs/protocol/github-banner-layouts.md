@@ -39,7 +39,7 @@ decision number names a dated record, as
 ### The branch and its base on a phone
 
 - While the branch has no pull request, the top of the Checks tab on a
-  phone names the branch and its base branch (decision 296).
+  phone names the branch and its base branch (decision 306).
 - It names them as the bar does on desktop: the branch icon, the branch,
   an arrow, and the base branch. It adds no other words.
 - They show also when the bar has no action. Examples are a branch without
@@ -54,7 +54,7 @@ decision number names a dated record, as
   line, the base branch takes a line of its own with its arrow. A name
   that is longer than the line breaks.
 - Reason: a phone has no tooltip that shows a cut name in full.
-- These ways were rejected (decision 296):
+- These ways were rejected (decision 306):
   - The base branch in the compact row. Long names then get cut more.
   - The branches only when the base branch is not the default branch. One
     rule for every workspace is simpler.

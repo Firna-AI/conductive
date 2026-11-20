@@ -41,7 +41,7 @@ function RepositoryPicker(props: {
 /**
  * The start of an empty chat, with the repository of the new workspace and
  * the branch control directly right of it. The target of a picked branch
- * lives in the dropdown of the branch control (decision 301). The note
+ * lives in the dropdown of the branch control (decision 309). The note
  * names the build that the workspace starts from. Before the first good
  * build there is none, and the notice over the composer says why. While
  * the repository of the form waits for its build, the notice over the

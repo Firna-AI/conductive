@@ -62,7 +62,7 @@ function ControlEnd(props: { target: string | undefined }) {
 
 /**
  * The branch control directly right of the repository picker of New
- * workspace, on the page and in the dialog (decision 301), with the look
+ * workspace, on the page and in the dialog (decision 309), with the look
  * and the size of that picker. It always names a branch: the default
  * branch, until the member picks another. While a picked branch targets
  * the default branch, a muted `→ main` follows the name, and the spoken

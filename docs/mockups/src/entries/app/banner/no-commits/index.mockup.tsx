@@ -10,7 +10,7 @@ export const noCommits = defineScreen({
   description:
     'A new workspace whose agent works on its first message and has not changed a file yet. The bar shows the branch, its target, and No commits yet, without Create PR. On a phone the row is not a link, and the top of the Checks tab names the branch and its base, calummoore/lisbon-7k2q → main, without an action. The Checks tab waits for a pull request.',
   rationale:
-    'The bar offers Create PR when GitHub has commits of the branch, or when the sandbox has local work that the agent can commit first (decision 220). The top of the Checks tab of a phone names the branch and its base in each state without a pull request, also without an action, as decision 296 gives one rule for every workspace.',
+    'The bar offers Create PR when GitHub has commits of the branch, or when the sandbox has local work that the agent can commit first (decision 220). The top of the Checks tab of a phone names the branch and its base in each state without a pull request, also without an action, as decision 306 gives one rule for every workspace.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: {

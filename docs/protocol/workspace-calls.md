@@ -95,7 +95,7 @@ names a decision of the change that adds
 - Without a request ID, the tool makes one. Reason: a retry after a lost
   reply then makes no second workspace.
 - A create call can also name a start branch and a base branch
-  (decision 292). The new workspace branch starts from the start branch,
+  (decision 302). The new workspace branch starts from the start branch,
   and its work targets the base branch, as
   [Start from a branch](start-from-a-branch.md) says.
 - The defaults apply to the branches that the call names:
@@ -108,7 +108,7 @@ names a decision of the change that adds
   not offer. Each named branch that is not the default branch gets the
   branch check of [The branch check](start-from-a-branch.md#the-branch-check).
 - These ways were not offered, because each gives agents less than the
-  user asked for (decision 292):
+  user asked for (decision 302):
   - A start branch only.
   - A base branch only.
   - A start branch, with a target of that branch or of the default branch.

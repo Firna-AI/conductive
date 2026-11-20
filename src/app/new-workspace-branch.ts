@@ -3,7 +3,7 @@ import type { CreateWorkspaceRequest } from '../shared/workspaces'
 
 /**
  * The target of a picked branch: that branch, so the work stacks on it, or
- * the default branch of the repository (decision 291).
+ * the default branch of the repository (decision 301).
  */
 export type BranchTarget = 'picked' | 'default'
 
@@ -31,7 +31,7 @@ export interface FormBranch {
   /**
    * The target of a picked branch that is not the default branch, or `null`
    * while the control names the default branch. The picked branch is
-   * selected until the member chooses (decision 295).
+   * selected until the member chooses (decision 305).
    */
   target: BranchTarget | null
 }

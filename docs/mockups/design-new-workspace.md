@@ -4,12 +4,12 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the parts that the screens share. This page
 gives the branch control of New workspace, its dropdown with the parts
 Start from and Target, and the refusals of the branch check, from decisions
-288 to 295 and 301. The design gives the rest of the New workspace page and
+298 to 305 and 309. The design gives the rest of the New workspace page and
 of the New workspace dialog.
 
 - `BranchPicker.tsx` in `src/components/new-workspace/` draws the branch
   control directly right of the repository picker, on the page and in the
-  dialog (decision 301). The control takes the look and the size of the
+  dialog (decision 309). The control takes the look and the size of the
   repository picker: an icon, the name, and a chevron, on the same action
   button. The page uses the default tone, and the dialog the plain tone, as
   for the repository picker. The control shows the default branch until the
@@ -22,7 +22,7 @@ of the New workspace dialog.
 - A long name ends in an ellipsis at its end, and `→ main` and the chevron
   stay in view. The limit of the control is 280 px, and 340 px while it
   shows `→ main`, so a name gives way at about the same length. This is the
-  rule of the header before decision 301. Cal has not chosen yet how a long
+  rule of the header before decision 309. Cal has not chosen yet how a long
   name gives way, so it can change. On a phone the control goes under the
   repository picker when the two do not fit on one line, and it can take
   the whole width of that line. A name does not wrap, so the start of the
@@ -45,7 +45,7 @@ of the New workspace dialog.
   notice that says so, without an action.
 - The second part, Target, shows only when the picked branch is not the
   default branch. It stands under a hairline, with its label. Its two rows
-  name the picked branch, which is checked first (decision 295), and the
+  name the picked branch, which is checked first (decision 305), and the
   default branch, with a check on the target of the form. The line under
   them says what the pull request then holds. A press on a row closes the
   dropdown on that target.

@@ -16,7 +16,7 @@ says.
 - After the merge of its pull request, Continue moves a workspace to a new
   branch (decision 223). The new branch starts from the latest commit of
   the base that [The base and the new branch](#the-base-and-the-new-branch)
-  gives (decision 290).
+  gives (decision 300).
 - The workspace keeps its sandbox, with its files, its installed software,
   and its running processes. It keeps its sessions, and their agents keep
   their context.
@@ -85,7 +85,7 @@ says.
 ## The base and the new branch
 
 - Continue builds on the branch that the pull request merged into, when
-  GitHub still has that branch (decision 290). Otherwise, it builds on the
+  GitHub still has that branch (decision 300). Otherwise, it builds on the
   default branch of the repository.
 - Continue reads that branch from the merged pull request on GitHub, at
   the time of Continue. So it follows a change of the base of the pull
@@ -96,7 +96,7 @@ says.
   branch of the repository stays the branch that GitHub names.
 - Reason: a workspace on a long-lived branch, such as `develop`, then stays
   on that branch after each merge.
-- These ways were rejected (decision 290):
+- These ways were rejected (decision 300):
   - Always the default branch. A workspace on `develop` would then move to
     `main` after each merge.
   - Always the stored base branch. It fails when GitHub deleted that

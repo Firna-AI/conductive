@@ -1,7 +1,7 @@
 /**
  * The words of the branch control of New workspace: the control, its
  * dropdown with the parts Start from and Target, and the refusals of the
- * branch check, from decisions 291, 293, 295, and 301. This module imports
+ * branch check, from decisions 301, 303, 305, and 309. This module imports
  * no fixture, so the app can take the words from here too.
  */
 
@@ -11,7 +11,7 @@ export const branchCopy = {
   picker: 'Branch',
   /**
    * The spoken name of the control: the branch that it shows, and the
-   * target while the control names it (decision 301).
+   * target while the control names it (decision 309).
    */
   control: (branch: string, target?: string) =>
     target === undefined
@@ -61,7 +61,7 @@ export const targetCopy = {
 
 /**
  * The words of the refusals of the branch check on a create. The composer
- * keeps the message (decision 293), and each body says so.
+ * keeps the message (decision 303), and each body says so.
  */
 export const branchRefusalCopy = {
   missing: (branch: string) =>

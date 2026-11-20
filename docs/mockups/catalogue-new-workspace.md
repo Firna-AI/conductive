@@ -7,8 +7,8 @@ branch that is not the default branch, and its child pages. The catalogue
 gives the other pages of `app/new-workspace`.
 
 `app/new-workspace/start-branch` draws the start from another branch of
-decisions 288 to 295, which Cal chose on 13 November 2026, with the branch
-control of decision 301, which Cal chose on 20 November 2026. Its canonical
+decisions 298 to 305, which Cal chose on 13 November 2026, with the branch
+control of decision 309, which Cal chose on 20 November 2026. Its canonical
 screen has the New workspace page of Acme, with the branch control directly
 right of the repository picker, set to main. Each page and each dialog of
 New workspace shows the control in the same place, in the look and at the
@@ -16,7 +16,7 @@ size of the repository picker. The dropdown of the control has two parts:
 Start from, with the search and the list of branches, and Target, with the
 two targets of a picked branch and the line about the pull request. While
 a picked branch targets main, the closed control adds `→ main`. A long name
-ends in an ellipsis at its end, the rule of the header before decision 301,
+ends in an ellipsis at its end, the rule of the header before decision 309,
 because Cal has not chosen yet how a long name gives way. The mockups draw
 Cal, who starts Saved carts from calummoore/checkout-autocomplete, the
 branch of Checkout address autocomplete, whose pull request #482 waits for
@@ -45,22 +45,22 @@ its merge. Its child pages:
 - `app/new-workspace/start-branch/missing` has the refusal of a picked
   branch that is no longer on GitHub, with Start from main. The message
   stays. Its child page `missing/dialog` has the same refusal in the
-  dialog. It was the `missing` variant of the dialog before decision 301.
+  dialog. It was the `missing` variant of the dialog before decision 309.
 - `app/new-workspace/start-branch/dialog` has the dialog with the branch
   control set to main. Its `open` variant has the open dropdown on main.
   Its `picked` variant has the closed control with the picked branch, its
   `target` variant has the dropdown with its Target part, and its
   `target-main` variant has the closed control with `→ main`, in place of
-  the `target-default` variant before decision 301. A phone always opens
+  the `target-default` variant before decision 309. A phone always opens
   the page, so each phone view shows the page in the same state.
 - `app/new-workspace/start-branch/stacked` has Saved carts after a start
   that stacks on calummoore/checkout-autocomplete, and its pull request bar
   names that base. Its `create-pr` variant has changed files that are not
   committed, so the bar offers Create PR. On a phone the top of the Checks
   tab names the branch and that base where Create PR stands, from decision
-  296, which Cal chose on 16 November 2026. The base takes a line of its
+  306, which Cal chose on 16 November 2026. The base takes a line of its
   own, so both names show in full. Its `base-moved` variant has the bar of
-  decision 294: GitHub deleted that branch, so the base moved to main, and
+  decision 304: GitHub deleted that branch, so the base moved to main, and
   a line under the bar says so. On a phone that line stands above the
   branch and main.
 
@@ -72,5 +72,5 @@ stacks on, or the default branch after GitHub deleted that branch.
 Cal compared five variants of a compact branch control under
 `app/new-workspace/start-branch/compact` on 16 November 2026, with the
 control in the footer of the message box. Cal chose variant B, Pair, with
-the control in the header (decision 301). The pages above draw it, so the
+the control in the header (decision 309). The pages above draw it, so the
 pages of the variants and their parts are gone.

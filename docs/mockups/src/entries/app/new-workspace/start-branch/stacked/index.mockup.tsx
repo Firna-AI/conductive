@@ -30,7 +30,7 @@ export const stackedStart = defineScreen({
       description:
         'The agent changed files and has not committed them, so the bar offers Create PR into calummoore/checkout-autocomplete. On a phone the row opens the Checks tab. Its top names the branch and its base where Create PR stands: calummoore/lisbon-7k2q, then calummoore/checkout-autocomplete on a line of its own with its arrow, so both names show in full. Create PR stands under them.',
       rationale:
-        'Cal chose option A of decision 296 on 16 November 2026: while the branch has no pull request, the top of the Checks tab of a phone shows the branch and its base, where Create PR stands. Before, a phone showed Create PR without its target, so a member could not see that the pull request would stack on another branch. The line takes the parts of the desktop bar, and its names wrap, because a phone has no tooltip. The base in the compact row was rejected, because long names get cut more there.',
+        'Cal chose option A of decision 306 on 16 November 2026: while the branch has no pull request, the top of the Checks tab of a phone shows the branch and its base, where Create PR stands. Before, a phone showed Create PR without its target, so a member could not see that the pull request would stack on another branch. The line takes the parts of the desktop bar, and its names wrap, because a phone has no tooltip. The base in the compact row was rejected, because long names get cut more there.',
       props: { localWork: 'changes', files: 'checks', focus: 'files' },
     },
     {
@@ -39,7 +39,7 @@ export const stackedStart = defineScreen({
       description:
         'Pull request #482 merged, and GitHub deleted calummoore/checkout-autocomplete. The Worker moved the base of Saved carts to main, so the bar names calummoore/lisbon-7k2q → main. A line under the bar says: Now targets main, because the branch calummoore/checkout-autocomplete is no longer on GitHub. On a phone the line shows at the top of the Checks tab, above the branch and its new base, calummoore/lisbon-7k2q → main.',
       rationale:
-        'Cal chose option C of decision 294 on 13 November 2026: when GitHub no longer has the stored base, the Worker moves the base to the default branch, as Continue does under decision 290. It updates the Git setting in the cloud computer, and the bar says that the base moved. Before, the bar said that GitHub was not available, and Create PR targeted a branch that did not exist. The line is a status in the neutral tone, not a refusal, and it stays until a pull request opens, because a pull request names its own base on GitHub. On a phone the branch and its base stand under the line, as decision 296 asks for each branch without a pull request.',
+        'Cal chose option C of decision 304 on 13 November 2026: when GitHub no longer has the stored base, the Worker moves the base to the default branch, as Continue does under decision 300. It updates the Git setting in the cloud computer, and the bar says that the base moved. Before, the bar said that GitHub was not available, and Create PR targeted a branch that did not exist. The line is a status in the neutral tone, not a refusal, and it stays until a pull request opens, because a pull request names its own base on GitHub. On a phone the branch and its base stand under the line, as decision 306 asks for each branch without a pull request.',
       props: { base: 'moved', files: 'checks', focus: 'files' },
     },
   ],

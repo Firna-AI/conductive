@@ -4,7 +4,7 @@ import { checkoutAutocomplete } from './workspaces'
 
 /**
  * The branches of a repository on GitHub, as the branch picker of New
- * workspace lists them (decision 291). The Worker reads them live with the
+ * workspace lists them (decision 301). The Worker reads them live with the
  * GitHub token of the member, and it stores no list.
  */
 

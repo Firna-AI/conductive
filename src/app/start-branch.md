@@ -25,7 +25,7 @@ parts reuse their CSS modules.
 - A pick of the default branch keeps no name, so the control follows a
   rename of the default branch. The target that the member chose stays
   through each pick in the repository, also through a pick of the default
-  branch. Before a choice, the picked branch is the target (decision 295).
+  branch. Before a choice, the picked branch is the target (decision 305).
 - `formBranch` gives what a form shows: the branch of the control, the
   default branch, and the target of a picked branch.
 - A create from the default branch names no branch. A create from another
@@ -40,7 +40,7 @@ parts reuse their CSS modules.
 
 - `BranchControl` in `../shell/new-workspace/BranchPicker.tsx` stands
   directly right of the repository picker on the page and in the header of
-  the dialog, with the look and the size of that picker (decision 301). It
+  the dialog, with the look and the size of that picker (decision 309). It
   always names a branch.
 - While a picked branch targets the default branch, a muted `→ main`
   follows the name, before the chevron, and the spoken name adds the
@@ -100,9 +100,9 @@ parts reuse their CSS modules.
 
 ## The Target part
 
-- The Target part of `BranchMenu` holds the target choice of decision 291,
+- The Target part of `BranchMenu` holds the target choice of decision 301,
   on the page and in the dialog. No line of a target choice shows under
-  the pickers or under the header of the dialog (decision 301).
+  the pickers or under the header of the dialog (decision 309).
 - It has two rows: the picked branch first, then the default branch. Each
   row names only its branch, and a check marks the target of the form. The
   line under the rows says what the pull request then holds.

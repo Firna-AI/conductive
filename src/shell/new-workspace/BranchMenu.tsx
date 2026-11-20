@@ -100,7 +100,7 @@ function TargetPart(props: {
 }
 
 /**
- * The open dropdown of the branch control, in two parts (decision 301), as
+ * The open dropdown of the branch control, in two parts (decision 309), as
  * `BranchMenu` of the mockups draws it. Start from holds the search field
  * and the list of branches, as `BranchList` says. Target follows it only
  * for a picked branch that is not the default branch. A computer draws the

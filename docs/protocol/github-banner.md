@@ -91,12 +91,12 @@ Rules for the bar:
   workspace whose base branch is not the default branch, such as a stack or
   a pull request run.
 - On a phone, the top of the Checks tab names them while the branch has
-  no pull request (decision 296).
+  no pull request (decision 306).
   [The branch and its base on a phone](github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
   gives the rules.
 - The Worker moves a base branch that GitHub deleted to the default branch,
   as [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
-  says. A message under the bar then says so (decision 294). It names the
+  says. A message under the bar then says so (decision 304). It names the
   default branch as the new target, and the branch that GitHub no longer
   has.
 - That message is a status, not a refusal. It shows until a pull request

@@ -17,9 +17,9 @@ says.
   (decision 507 G):
   - A workspace from New workspace has the target that the member chose,
     as [The target choice](start-from-a-branch.md#the-target-choice) says
-    (decision 291). A start from the default branch has the default branch.
+    (decision 301). A start from the default branch has the default branch.
   - A workspace from the create call of an agent has the base branch of
-    that call (decision 292).
+    that call (decision 302).
     [Create a workspace](workspace-calls.md#create-a-workspace) gives the
     defaults. A call that names no branch gives the default branch.
   - The run of a schedule or of Run now has the default branch of its
@@ -38,14 +38,14 @@ says.
   into the base branch of the workspace. When GitHub no longer has that
   branch, Continue takes the default branch, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
-  says (decision 290).
+  says (decision 300).
 - A repository change makes the latest default branch of the new
   repository the base branch of the workspace, as
   [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
   says.
 - A change of the base of an open pull request on GitHub does not change
   the base branch of the workspace. A base branch that follows the pull
-  request on GitHub was left out for now (decisions 291 and 294).
+  request on GitHub was left out for now (decisions 301 and 304).
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
@@ -73,8 +73,8 @@ says.
 ## A base branch that GitHub deleted
 
 - When GitHub no longer has the base branch of a workspace, the Worker
-  moves it to the default branch (decision 294). Continue takes the default
-  branch in the same case (decision 290).
+  moves it to the default branch (decision 304). Continue takes the default
+  branch in the same case (decision 300).
 - Only an answer of GitHub that the branch does not exist moves the base
   branch. A failed read of GitHub keeps it.
 - The cloud computer follows the move, as
@@ -87,7 +87,7 @@ says.
 - Reason: GitHub can delete a branch after its pull request merges, also
   when another workspace stacks on it. After the move, the bar can read its
   state, and Create PR opens a pull request into a branch that exists.
-- These ways were rejected (decision 294):
+- These ways were rejected (decision 304):
   - No move. A normal stack then ends with a bar that cannot read its
     state, and Create PR targets a branch that does not exist.
   - A bar state that turns off Create PR. The app then gives no way back.
@@ -96,16 +96,16 @@ says.
 
 - The cloud computer first fetches the latest commit of the default branch
   from GitHub. Only after that fetch does it target the default branch
-  (decision 297).
+  (decision 307).
 - Reason: Changes compare from the merge base. An old copy of the default
   branch lacks its newer commits, such as a merge commit of the deleted
   branch. Changes would then show merged work as work of the workspace.
 - [A moved base](github-tokens.md#a-moved-base) says whose GitHub token
-  the fetch uses, and gives the ways that decision 297 rejected.
+  the fetch uses, and gives the ways that decision 307 rejected.
 - Until the fetch succeeds, the cloud computer keeps its earlier target.
   Changes and the diffs then still work, against the earlier base branch.
 - One saved retry owns each unfinished move, in the record of the
-  workspace and in the cloud computer (decision 298). After each failure,
+  workspace and in the cloud computer (decision 308). After each failure,
   it tries again. It waits longer each time, up to a fixed longest wait.
 - Each resume of the cloud computer also runs an unfinished move. A
   failure then does not stop the resume, and the saved retry stays.
@@ -115,7 +115,7 @@ says.
   read of the pull request bar.
 - Reason: one retry for each move keeps the tries of a long failure few.
   The pull request bar does not depend on the cloud computer.
-- A retry inside the GitHub read was rejected (decision 298). A failure in
+- A retry inside the GitHub read was rejected (decision 308). A failure in
   the cloud computer then also fails that read.
 
 ## The branch of a pull request run

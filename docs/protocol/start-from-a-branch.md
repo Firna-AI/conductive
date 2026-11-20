@@ -26,7 +26,7 @@ branches that the create call of an agent takes.
 ## What the start makes
 
 - A new workspace makes its own branch from the newest commit of its start
-  branch (decision 288). The name of that branch follows the rule of every
+  branch (decision 298). The name of that branch follows the rule of every
   workspace branch, as
   [The branch and the name](create-a-workspace.md#the-branch-and-the-name)
   says (decision 53).
@@ -35,7 +35,7 @@ branches that the create call of an agent takes.
   request. The workspace adds no commits to the open pull request.
 - Reason: each workspace keeps a branch of its own, and the login rule
   holds for every workspace branch.
-- These ways were rejected (decision 288):
+- These ways were rejected (decision 298):
   - Work on the picked branch itself, with pushes to it. Two workspaces
     could then share one branch, and the base branch needed a new rule.
   - Both ways in each row of the picker. They double the actions and the
@@ -49,16 +49,16 @@ branches that the create call of an agent takes.
 ## The branch control
 
 - Each New workspace page and dialog shows a branch control directly
-  right of the repository picker (decision 301). When the two do not fit
+  right of the repository picker (decision 309). When the two do not fit
   on one line, such as on a phone, the control goes under the repository
   picker.
 - A place in the footer of the composer was rejected, because the user
-  placed the control next to the repository picker (decision 301).
+  placed the control next to the repository picker (decision 309).
 - The control always names a branch. It shows the default branch of the
   repository until the member picks another branch.
 - While a picked branch targets the default branch, the control adds an
   arrow and the name of the default branch after the picked branch, such
-  as `→ main` (decision 301). A screen reader hears the target too.
+  as `→ main` (decision 309). A screen reader hears the target too.
 - A long name is cut short. The arrow and the target stay in view.
 - Reason: the member then sees a target on the default branch before the
   create.
@@ -122,17 +122,17 @@ branches that the create call of an agent takes.
 ## The target choice
 
 - When the picked branch is not the default branch, New workspace offers
-  two targets: the picked branch and the default branch (decision 291).
+  two targets: the picked branch and the default branch (decision 301).
 - Reason: a member who stacks on a branch, or who works on a long-lived
   branch such as `develop`, targets the picked branch. A member who
   branches off a branch can still target `main`.
-- These ways were rejected (decision 291):
+- These ways were rejected (decision 301):
   - Always the picked branch, or always the default branch. Each serves
     only one of the two cases.
   - A second picker for any target. Other pairs of branches are rare.
-- The picked branch is selected first (decision 295). Reason: a member who
+- The picked branch is selected first (decision 305). Reason: a member who
   forgets the choice then gets a pull request with only the new work.
-- These ways were rejected (decision 295):
+- These ways were rejected (decision 305):
   - The default branch first. A member who forgets the choice then gets a
     pull request with the commits of the picked branch.
   - No first selection. It adds a step before Send.
@@ -140,11 +140,11 @@ branches that the create call of an agent takes.
   of the member. Only a change of repository clears it. Reason: the picked
   branch is selected first only before the member chooses.
 - The target choice is the Target part of the dropdown, under Start from,
-  on the page and in the dialog (decision 301).
+  on the page and in the dialog (decision 309).
 - Reason: the user found a row of the choice under the pickers too
   verbose. The Target part names both targets, and the control shows a
   target on the default branch before the create.
-- These ways were rejected (decision 301):
+- These ways were rejected (decision 309):
   - A row of the choice under the pickers, and in the dialog a line of its
     own under the header. The user found it too verbose.
   - A Target part with no sign of the target on the closed control. The
@@ -182,10 +182,10 @@ branches that the create call of an agent takes.
   takes its branch from the GitHub event, and each other run starts from
   the default branch.
 - The create from New workspace gets the same branch check as the create
-  call of an agent (decision 293).
+  call of an agent (decision 303).
 - Reason: a refusal before the create leaves no failed workspace. The
   member or the agent learns the cause at once.
-- These ways were rejected (decision 293):
+- These ways were rejected (decision 303):
   - No check, and a start failure that names the branch. Each Try again
     then fails the same way.
   - No check, and a fall back to the default branch. The work would then

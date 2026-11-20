@@ -10,7 +10,7 @@ export const branchDialog = defineScreen({
   description:
     'The New workspace dialog, with the branch control in the header, directly right of the repository picker, in the look and at the size of that picker. It shows main until Cal picks another branch, as on the page. No line follows the header, because the target of a picked branch lives in the dropdown of the control. The phone view is the New workspace page in the same state, because a phone always opens the page. The variants show the open dropdown on main, the picked branch, the dropdown with its Target part, and the picked branch that targets main. The refusal of a missing branch in the dialog moved to app/new-workspace/start-branch/missing/dialog.',
   rationale:
-    'Cal chose decision 301 on 20 November 2026: variant B, Pair, with the branch control in the header directly right of the repository picker, not in the footer of the message box, where the five variants drew it. Cal pointed at the place in a picture of the header of this dialog. The dialog holds the parts of the page, and the page and the dialog share the branch and the target with the rest of the draft. The control takes the plain tone of the repository picker of the dialog.',
+    'Cal chose decision 309 on 20 November 2026: variant B, Pair, with the branch control in the header directly right of the repository picker, not in the footer of the message box, where the five variants drew it. Cal pointed at the place in a picture of the header of this dialog. The dialog holds the parts of the page, and the page and the dialog share the branch and the target with the rest of the draft. The control takes the plain tone of the repository picker of the dialog.',
   relatedDocs: [],
   propSchema: newWorkspaceDialogSchema,
   props: { ...emptyDialog, draft: 'message' },
@@ -51,7 +51,7 @@ export const branchDialog = defineScreen({
       description:
         'Cal chose main in the Target part, and the dropdown closed. The control in the header names calummoore/checkout-autocomplete → main, with → main in a muted colour. The dialog draws no open dropdown in this state: app/new-workspace/start-branch/target-choice/default shows its Target part with the check on main.',
       rationale:
-        'Decision 301: the closed control adds → main while a picked branch targets the default branch, so a member sees that target before Create.',
+        'Decision 309: the closed control adds → main while a picked branch targets the default branch, so a member sees that target before Create.',
       props: { branch: 'picked', target: 'default' },
     },
   ],

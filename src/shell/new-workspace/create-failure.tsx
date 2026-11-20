@@ -63,7 +63,7 @@ function TryAgain(props: { actions: FailureActions }) {
 
 /**
  * The words and the one action of a create that the branch check refused
- * (decision 293), or `null` for every other failure. A branch that is no
+ * (decision 303), or `null` for every other failure. A branch that is no
  * longer on GitHub offers Start from and the default branch, because Try
  * again would fail the same way. A GitHub account that cannot read the
  * repository gets Try again, which works once GitHub grants the access.

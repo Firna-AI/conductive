@@ -36,8 +36,8 @@ export const barStateProperties = {
   branch: { enum: ['first', 'continued'] },
   /**
    * The base branch of the workspace: its own, the picked branch after a
-   * start that stacks on it (decision 291), or the default branch after
-   * GitHub deleted that picked branch (decision 294). Then a line under
+   * start that stacks on it (decision 301), or the default branch after
+   * GitHub deleted that picked branch (decision 304). Then a line under
    * the bar says that the base moved.
    */
   base: { enum: ['own', 'stacked', 'moved'] },

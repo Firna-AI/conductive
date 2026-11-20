@@ -193,7 +193,7 @@ export function BarMessageLine(props: {
 
 /**
  * The branch and its base at the top of the Checks tab of a phone, where
- * Create PR stands (decision 296). They take the parts of the desktop bar:
+ * Create PR stands (decision 306). They take the parts of the desktop bar:
  * the branch icon, the branch, an arrow, and the base. The names wrap, and
  * the base keeps its arrow on a line of its own, so each name shows in
  * full: a phone has no tooltip.

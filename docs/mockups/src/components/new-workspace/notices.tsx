@@ -30,7 +30,7 @@ export function CreateFailedNotice(props: { ready?: boolean }) {
 
 /**
  * A create that the server refused, in the place of a failed create, such
- * as for a picked branch that is no longer on GitHub (decision 293). `body`
+ * as for a picked branch that is no longer on GitHub (decision 303). `body`
  * names the cause and says that the message stays. `action` is the one
  * recovery of the refusal.
  */
