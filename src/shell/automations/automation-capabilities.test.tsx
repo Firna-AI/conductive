@@ -23,7 +23,7 @@ import {
   pressKey,
   waitFor,
 } from '../../test-support/mount'
-import { bodiesOf, isOff, openApp } from './automation-test-kit'
+import { bodiesOf, isOff, openApp, promptLines } from './automation-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -53,21 +53,13 @@ function promptOf(view: HTMLElement): HTMLElement {
   return byRole('region', 'Prompt', view)
 }
 
-/** The words of each line under the prompt box, or none before it shows. */
-function linesOf(view: HTMLElement): string[] {
-  const prompt = queryByRole('region', 'Prompt', view)
-  return Array.from(prompt?.querySelectorAll(':scope > p') ?? [], (line) =>
-    (line.textContent ?? '').replace(/\s+/g, ' ').trim(),
-  )
-}
-
 /** Each line under the prompt box, once the line of the secrets shows. */
 async function shownLines(view: HTMLElement): Promise<string[]> {
   await waitFor(
-    () => linesOf(view).some((line) => line.startsWith('Runs can use')),
+    () => promptLines(view).some((line) => line.startsWith('Runs can use')),
     'the line of the chosen secrets',
   )
-  return linesOf(view)
+  return promptLines(view)
 }
 
 /** The open control, once it lists the secrets of Acme. */
@@ -173,13 +165,13 @@ describe('the chosen secrets of an automation', () => {
     const saved = await shownLines(view)
     await press(byRole('button', 'Remove PR opened', view))
     await press(byRole('button', 'Remove PR pushed', view))
-    const scheduled = linesOf(view)
+    const scheduled = promptLines(view)
     const control = await openControl(view)
     await press(byLabel('FIGMA_TOKEN', control))
     await press(byLabel('VERCEL_TOKEN', control))
-    const none = linesOf(view)
+    const none = promptLines(view)
     await press(byLabel('PROD_DATABASE_URL', control))
-    expect({ saved, scheduled, none, one: linesOf(view) }).toEqual({
+    expect({ saved, scheduled, none, one: promptLines(view) }).toEqual({
       saved: [
         logins,
         'Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no question.',
@@ -196,7 +188,9 @@ describe('the chosen secrets of an automation', () => {
 
   test('another member reads the chosen secrets that the org lists, with the hint of the saved triggers, and gets no Capabilities icon', async () => {
     const member = serverWithSecrets({ role: 'member' })
-    // A secret that the list does not name has no name to show.
+    // The answer of a previous Worker names no chosen secret, so the page
+    // takes the names from the list. A secret that the list does not name
+    // has no name to show.
     const capabilities = {
       preapprovedSecretIds: ['figma-token', 'gone-token', 'vercel-token'],
     }
