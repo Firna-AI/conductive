@@ -11,7 +11,7 @@ export type SignInStep = (typeof signInSteps)[number]
 const codeMinutes = 15
 
 /**
- * The words of the ChatGPT sign-in of Codex on the Account page: the steps
+ * The words of the ChatGPT sign-in of Codex in Account settings: the steps
  * in the Connect form, and the row of a sign-in that stopped working. This
  * module imports no fixture, so the app and the Worker can import the same
  * words. The sign-in has no secret field, so it has no hint that the app

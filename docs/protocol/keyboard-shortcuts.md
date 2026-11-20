@@ -3,7 +3,7 @@
 This doc holds the requirements and the decisions in force for keyboard
 shortcuts. A shortcut is a key that runs a command of the app, such as ⌘K,
 which opens the command palette. Each person can change the keys of the
-commands on the Keyboard shortcuts tab of the Account page. The terms are
+commands on the Keyboard shortcuts tab of Account settings. The terms are
 those of the [architecture doc](../architecture.md#terms) and the terms
 below. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A fast mode

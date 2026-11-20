@@ -1,11 +1,8 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import type { RailState } from '../components/layout/OrgRail'
-import { Page } from '../components/layout/Page'
+import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
 import {
-  AccountTabs,
   AgentsSection,
   GitHubSection,
   SignInSection,
@@ -16,21 +13,24 @@ import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { StatsTab } from './accountStats'
 import { ResetShortcutsDialog } from '../components/settings/ResetShortcutsDialog'
 import { ShortcutsTab } from '../components/settings/ShortcutsSections'
+import {
+  placeLabel,
+  settingsGroups,
+} from '../components/settings/settingsGroups'
 import { ThisMacSection } from '../components/settings/ThisMacSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { Sidebar } from '../components/workspaces/Sidebar'
-import { account, orgList, orgs } from '../fixtures/orgs'
+import { orgs } from '../fixtures/orgs'
 import {
   editedShortcuts,
   type ShortcutChanges,
 } from '../fixtures/shortcutChanges'
 import type { ShortcutHost } from '../fixtures/shortcutHosts'
 import { viewerMembership } from '../fixtures/members'
-import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor } from './accountAgents'
-
-const connectedRail: RailState = { orgs: orgList, current: 'account' }
+import { GetStartedPage, getStartedFirstRun } from './GetStartedScreen'
+import { SettingsFrame } from './settingsFrame'
 
 /** At the first run the rail has no org yet. */
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
@@ -93,7 +93,7 @@ function TabContent(props: {
 }
 
 /**
- * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
+ * The Account group of Settings, in tabs. General holds the GitHub sign-in, the GitHub App,
  * and the invite code of the user. Agents holds the logins of Claude and
  * Codex that every org shares, with the share setting of each login and
  * the host of an own endpoint. Preferences holds how new
@@ -118,16 +118,44 @@ export function AccountScreen(props: {
   const changes: ShortcutChanges =
     state.shortcuts === 'edited' ? editedShortcuts : {}
   const connected = state.connections === 'connected'
-  const mobile = props.viewport === 'mobile'
-  const back = connected
-    ? { label: 'Workspaces', to: paths.shell }
-    : { label: 'Get started', to: paths.getStarted }
-  const page = (
-    <Page
-      back={mobile ? back : undefined}
-      subtitle={`@${account.login}`}
-      tabs={<AccountTabs flow={mobile} host={host} tab={state.tab} />}
-      title="Account"
+  const place = { group: 'account', tab: state.tab } as const
+  // Reset all asks first: a dialog over Settings, or a sheet on a phone.
+  const dialog =
+    state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
+      <ResetShortcutsDialog
+        changed={Object.keys(changes).length}
+        host={host}
+        viewport={props.viewport}
+      />
+    ) : null
+  // Settings lies over the workspace list of Acme. At the first run the
+  // person has no org yet, so it lies over Get started.
+  return (
+    <SettingsFrame
+      below={
+        connected ? undefined : (
+          <GetStartedPage state={getStartedFirstRun} viewport="desktop" />
+        )
+      }
+      dialog={dialog}
+      group="Account"
+      groups={settingsGroups({
+        place,
+        host,
+        org: connected ? { name: orgs.acme.name } : undefined,
+      })}
+      rail={connected ? acmeRail : firstRunRail}
+      sidebar={
+        connected ? (
+          <Sidebar
+            org={orgs.acme}
+            sections={workspaceSections(undefined, mac?.needsInput)}
+            shortcuts={changes}
+            viewer={viewerMembership('admin')}
+          />
+        ) : undefined
+      }
+      title={placeLabel(place)}
       viewport={props.viewport}
     >
       {props.content ?? (
@@ -138,41 +166,6 @@ export function AccountScreen(props: {
           viewport={props.viewport}
         />
       )}
-    </Page>
-  )
-  // Reset all asks first: a dialog over the account, or a sheet on a phone.
-  const dialog =
-    state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
-      <ResetShortcutsDialog
-        changed={Object.keys(changes).length}
-        host={host}
-        viewport={props.viewport}
-      />
-    ) : null
-  if (mobile) {
-    return (
-      <MobileFrame>
-        {page}
-        {dialog}
-      </MobileFrame>
-    )
-  }
-  // The Mac app keeps the sidebar of the org beside the account.
-  const sidebar = mac ? (
-    <Sidebar
-      org={orgs.acme}
-      sections={workspaceSections(undefined, mac.needsInput)}
-      shortcuts={changes}
-      viewer={viewerMembership('admin')}
-    />
-  ) : undefined
-  return (
-    <AppFrame
-      overlay={dialog}
-      rail={connected ? connectedRail : firstRunRail}
-      sidebar={sidebar}
-    >
-      {page}
-    </AppFrame>
+    </SettingsFrame>
   )
 }

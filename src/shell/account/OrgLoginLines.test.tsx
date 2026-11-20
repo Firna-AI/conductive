@@ -17,7 +17,7 @@ import {
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp, textOf } from '../test-render'
-import { AccountScreen } from './AccountScreen'
+import { AccountTabContent } from './AccountTabContent'
 import { listItems } from './test-markup'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -42,7 +42,7 @@ describe('the org login of an agent on the account and in Get started', () => {
       const app = await startedApp(server)
       const view = mountScreen(
         app,
-        <AccountScreen connect={null} tab="agents" user={fakeUser} />,
+        <AccountTabContent connect={null} tab="agents" user={fakeUser} />,
       )
       await settle()
       rows.push(listItems(view.innerHTML, 'Agents').map(textOf))

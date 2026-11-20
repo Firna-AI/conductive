@@ -9,6 +9,7 @@ import {
   queryByText,
 } from '../../../test-support/dom-queries'
 import { MOUNTED_TEST_TIMEOUT } from '../../../test-support/mount'
+import { settingsTab } from '../../settings/settings-test-kit'
 import { click, settle, typeText } from '../../test-mount'
 import {
   controlsOf,
@@ -34,7 +35,9 @@ const orgPlaces = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 /** The groups of the tab that show, each with the labels of its rows. */
 function shownGroups(): [string, (string | null)[]][] {
   return Array.from(
-    document.querySelectorAll<HTMLElement>('main ul[aria-label]'),
+    settingsTab('Keyboard shortcuts').querySelectorAll<HTMLElement>(
+      'ul[aria-label]',
+    ),
     (list) => [
       accessibleName(list),
       Array.from(

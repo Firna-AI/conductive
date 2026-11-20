@@ -6,9 +6,10 @@ moved. This page gives `app/account` and its child pages, the own
 endpoint form, and the pickers that hide the models that an endpoint does
 not list.
 
-`app/account` shows the General tab of the account: the sign-in, GitHub,
-and the invite code. Its five tabs are links, as the tabs of the org
-settings are. Its child pages:
+`app/account` shows Account › General in the Settings dialog: the
+sign-in, GitHub, and the invite code. Each tab of the dialog list is a
+link, and a phone shows each tab as a screen of its own, with Settings as
+the way back to `app/settings`. Its child pages:
 
 - `app/account/agents` shows the Agents tab, with Claude connected by a
   subscription token and Codex by an API key. The user asked for this tab

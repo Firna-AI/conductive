@@ -35,8 +35,7 @@ import { useRailOrder } from './useRailOrder'
  * What the rail marks as current: an org, Create org, the account, or the
  * operator section.
  */
-export type RailCurrent =
-  { org: string } | 'create' | 'account' | 'operator' | null
+export type RailCurrent = { org: string } | 'create' | 'operator' | null
 
 /**
  * A link of the rail. A link that runs a command of the keys names the key
@@ -266,7 +265,7 @@ export function OrgRail(props: {
         />
       ) : null}
       <RailLink
-        current={props.current === 'account'}
+        current={false}
         hint={accountHint}
         tip
         label="Account"

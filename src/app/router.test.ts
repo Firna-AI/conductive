@@ -25,6 +25,7 @@ describe('routes', () => {
         routes.accountTab(tab),
         { screen: 'account', tab, connect: null },
       ]),
+      [routes.settingsList(), { screen: 'settings-list' }],
       [routes.createOrg(true), { screen: 'create-org', first: true }],
       [
         routes.newWorkspace('acme', 'checkout'),

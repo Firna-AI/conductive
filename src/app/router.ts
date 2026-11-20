@@ -57,6 +57,8 @@ export type Route =
   | { screen: 'get-started' }
   /** `connect` opens the Connect form of that agent on the Agents tab. */
   | { screen: 'account'; tab: AccountTab; connect: Agent | null }
+  /** The list of the tabs of Settings on a phone, General on a desktop. */
+  | { screen: 'settings-list' }
   | { screen: 'create-org'; first: boolean }
   | { screen: 'org'; orgId: string }
   | { screen: 'new-workspace'; orgId: string; sectionId: string | null }
@@ -108,6 +110,8 @@ export const routes = {
     connect ? `/account/agents?connect=${connect}` : '/account',
   accountTab: (tab: AccountTab) =>
     tab === 'general' ? '/account' : `/account/${tab}`,
+  /** The list of the tabs of Settings, which a phone shows. */
+  settingsList: () => '/settings',
   createOrg: (first = false) => (first ? '/orgs/new?first=1' : '/orgs/new'),
   org: (orgId: string) => `/orgs/${encode(orgId)}`,
   newWorkspace: (orgId: string, sectionId?: string) =>
@@ -229,6 +233,9 @@ export function parseRoute(pathname: string, search: string): Route {
   }
   if (first === 'get-started' && orgId === undefined) {
     return { screen: 'get-started' }
+  }
+  if (first === 'settings' && orgId === undefined) {
+    return { screen: 'settings-list' }
   }
   if (first === 'account' && area === undefined) {
     // The segment after `account` names the tab.

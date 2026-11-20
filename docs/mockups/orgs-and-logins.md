@@ -131,7 +131,7 @@ plan limits.
   as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The org keeps its account for its whole
   life. Nobody else sees the choice, so no other screen names a provider.
 - Delete org asks for the org name. The deleted org leaves the rail. Until
-  the date when everything is deleted, the General tab of the Account page
+  the date when everything is deleted, Account › General in Settings
   lists it for its admins with Restore, as `app/account/deleted-orgs`
   shows. Its page still offers Restore at its address.
 - Each person keeps their own order of their orgs, from decision 515 C of
@@ -205,8 +205,8 @@ sign-in gives app access, from decision 230. This is open sign-up.
   does not work, the waitlist opens with a notice that names the reason,
   as `app/sign-in/join/failed` shows. A person who already has app access
   uses no code, and the app opens as usual.
-- Each user with app access has an invite code with 5 invites. The
-  Account page shows it at the end, after what every org shares, so that
+- Each user with app access has an invite code with 5 invites.
+  Account › General shows it at the end, after what every org shares, so that
   the form of an agent stays near the top on a phone. It gives the invite
   link with Copy, the code alone, and how many invites are left, as
   `app/account` shows.
@@ -215,7 +215,7 @@ sign-in gives app access, from decision 230. This is open sign-up.
   names nobody who used an invite.
 - During open sign-up, a person who waits gets app access at their next
   request, and the app opens. So the waitlist screen needs no state of its
-  own. The invite code on the Account page says that anyone can sign up
+  own. The invite code in Account › General says that anyone can sign up
   now, and that the invites stay for later, as
   `app/account/invites/open-sign-up` shows. The pause wins, so the notice
   of the pause shows while both are on.

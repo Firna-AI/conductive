@@ -1,6 +1,6 @@
 # Keyboard shortcuts tab
 
-This area holds the Keyboard shortcuts tab of the Account page, at
+This area holds the Keyboard shortcuts tab of Account settings, at
 `/account/shortcuts`. The tab lists each command with its keys on the
 keyboard of the device, with the changes of the person, and the fixed
 keys. A person records, replaces, removes, and resets keys there. Each

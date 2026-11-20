@@ -1,7 +1,5 @@
 import type { ReactNode } from 'react'
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
 import { LeaveOrgDialog } from '../components/members/LeaveOrgDialog'
 import { RemoveMemberDialog } from '../components/members/RemoveMemberDialog'
 import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
@@ -9,10 +7,13 @@ import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
 import {
+  placeLabel,
+  settingsGroups,
+} from '../components/settings/settingsGroups'
+import {
   RepositoryMenuSheet,
   repositoryOrderStates,
 } from '../components/settings/RepositoryOrderList'
-import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { ORG_COLORS } from '../design/orgColors'
@@ -24,6 +25,7 @@ import {
   orgAgentsProperties,
 } from './orgAgentsState'
 import { settingsViewer, TabBody } from './orgSettingsTabs'
+import { SettingsFrame } from './settingsFrame'
 import { settingsOrg } from './settingsOrgs'
 
 export const orgSettingsSchema = {
@@ -173,12 +175,13 @@ export const acmeSettings: OrgSettingsState = {
 }
 
 /**
- * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, its org logins, its secrets, and its members.
- * The personal logins and the other app-wide connections live in the
- * account. Only an admin changes the members, the org logins, and deletes
- * the org. Every member adds secrets. A suspended org shows its notice
- * first, and nobody changes its settings.
+ * The settings of an org, as the org group of Settings: its name and
+ * initials, the repositories that it uses, its cloud computer, its org
+ * logins, its secrets, and its members. The Account group holds the
+ * personal logins and the other app-wide connections. Only an admin
+ * changes the members, the org logins, and deletes the org. Every member
+ * adds secrets. A suspended org shows its notice first, and nobody
+ * changes its settings.
  */
 export function OrgSettingsScreen(props: {
   state: OrgSettingsState
@@ -224,42 +227,16 @@ export function OrgSettingsScreen(props: {
       <RepositoryMenuSheet repositories={settings.repositories} />
     ) : null
   const dialog = dialogs[state.dialog] ?? repositoryMenu
-  const page = (
-    <Page
-      back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
-      subtitle="Org settings"
-      tabs={
-        <SettingsTabs links={settings.links} tab={state.tab} wrap={mobile} />
-      }
-      title={org.name}
-      viewport={viewport}
-    >
-      {suspended ? <SuspendedOrgNotice org={org} /> : null}
-      <TabBody state={state} viewport={viewport} />
-    </Page>
-  )
-  if (mobile) {
-    return (
-      <MobileFrame>
-        {page}
-        {dialog}
-      </MobileFrame>
-    )
-  }
-  const sidebar = (
-    <Sidebar
-      current="settings"
-      newWorkspaceTo={settings.newWorkspace}
-      org={org}
-      sections={settings.sections}
-      settingsAlert={failedBuildOf(state.build) !== undefined}
-      suspended={suspended}
-      viewer={viewerMembership(state.viewer)}
-    />
-  )
+  const place = { group: 'org', tab: state.tab } as const
   return (
-    <AppFrame
-      overlay={dialog}
+    <SettingsFrame
+      dialog={dialog}
+      group={org.name}
+      groups={settingsGroups({
+        place,
+        host: 'chrome-mac',
+        org: { name: org.name, links: settings.links },
+      })}
       rail={{
         orgs: (props.railOrgs ?? orgList).map((item) =>
           item.key === org.key ? { ...item, color: state.color } : item,
@@ -268,9 +245,21 @@ export function OrgSettingsScreen(props: {
         suspended: suspended ? org.key : undefined,
         person: admin ? undefined : people[memberViewer],
       }}
-      sidebar={sidebar}
+      sidebar={
+        <Sidebar
+          newWorkspaceTo={settings.newWorkspace}
+          org={org}
+          sections={settings.sections}
+          settingsAlert={failedBuildOf(state.build) !== undefined}
+          suspended={suspended}
+          viewer={viewerMembership(state.viewer)}
+        />
+      }
+      title={placeLabel(place)}
+      viewport={viewport}
     >
-      {page}
-    </AppFrame>
+      {suspended ? <SuspendedOrgNotice org={org} /> : null}
+      <TabBody state={state} viewport={viewport} />
+    </SettingsFrame>
   )
 }

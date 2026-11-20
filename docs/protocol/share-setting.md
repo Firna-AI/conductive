@@ -27,7 +27,7 @@ says.
 - A replaced login keeps its share setting while its kind stays the same. A
   login whose kind changes gets the default of its new kind. Reason: a key
   rotation keeps the choice of its owner.
-- The account page shows the share setting of each connected login. Its
+- The Agents tab of Account settings shows the share setting of each connected login. Its
   owner can change the setting there at any time.
 - When the starter does not share a personal login, a message of another
   member starts a new session on the default login of that member. A Try

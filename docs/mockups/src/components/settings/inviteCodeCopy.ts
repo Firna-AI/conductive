@@ -9,7 +9,7 @@ export const inviteStates = ['left', 'paused', 'used-up', 'disabled'] as const
 export type InviteState = (typeof inviteStates)[number]
 
 /**
- * The words of the invite code on the Account page. The page of the app
+ * The words of the invite code in Account settings. The page of the app
  * and its mockup share them. The user sees how many invites are left, but
  * not who used them.
  */

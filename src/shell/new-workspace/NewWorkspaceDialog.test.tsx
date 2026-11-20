@@ -22,6 +22,7 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { messageText, pasteMessage } from '../../test-support/message-field'
 import { MOUNTED_TEST_TIMEOUT } from '../../test-support/mount'
 import { orgSuspendedBody } from '../../test-support/suspended-org'
+import { settingsDialog, settingsGroup } from '../settings/settings-test-kit'
 import { click, press, settle, typeText } from '../test-mount'
 import { here, isOff, org } from '../workspace/kept-test-kit'
 import { orgRefusal } from '../workspace/SandboxNotice'
@@ -164,7 +165,7 @@ describe('the New workspace dialog', () => {
     })
   })
 
-  test('Connect closes the dialog first and opens the account with the Connect form of the agent, whose main area takes the focus, and the draft stays for the next dialog', async () => {
+  test('Connect closes the dialog first and opens the Agents tab of Settings with the Connect form of the agent, which takes the focus, and the draft stays for the next dialog', async () => {
     const server = serverWith('dialog', {
       account: (account) => ({
         ...account,
@@ -186,8 +187,8 @@ describe('the New workspace dialog', () => {
     const connect = {
       dialog: dialogIn(tab.view),
       address: tab.address(),
-      page: tab.view.querySelector('main h1')?.textContent,
-      focusInMain: focusIn(mainOf(tab.view)),
+      account: settingsGroup('Account').open,
+      focusInSettings: focusIn(settingsDialog() ?? mainOf(tab.view)),
     }
     await tab.go(here)
     openFromRow(tab.view)
@@ -201,8 +202,8 @@ describe('the New workspace dialog', () => {
       connect: {
         dialog: null,
         address: routes.account('claude'),
-        page: 'Account',
-        focusInMain: true,
+        account: ['Agents'],
+        focusInSettings: true,
       },
       kept: task,
     })
@@ -239,7 +240,7 @@ describe('the New workspace dialog', () => {
     }).toEqual({ notice: true, choose: null, picker: null, createOff: true })
   })
 
-  test('in an org without chosen repositories, an admin reads that they choose them first, and Choose repositories closes the dialog and opens the Repositories tab, whose main area takes the focus', async () => {
+  test('in an org without chosen repositories, an admin reads that they choose them first, and Choose repositories closes the dialog and opens the Repositories tab of Settings, which takes the focus', async () => {
     const tab = await openTab(withoutRepositories('admin'))
     openFromRow(tab.view)
     await settle()
@@ -251,12 +252,12 @@ describe('the New workspace dialog', () => {
       notice,
       dialog: dialogIn(tab.view),
       address: tab.address(),
-      focusInMain: focusIn(mainOf(tab.view)),
+      focusInSettings: focusIn(settingsDialog() ?? mainOf(tab.view)),
     }).toEqual({
       notice: true,
       dialog: null,
       address: routes.settings(org, 'repositories'),
-      focusInMain: true,
+      focusInSettings: true,
     })
   })
 })

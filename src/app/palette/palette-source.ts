@@ -52,7 +52,7 @@ export interface PaletteBase {
   orgHref: (orgId: string) => string
   /** What the parts of the page offer. */
   offers: readonly PaletteOffer[]
-  /** The window is the Mac app, whose Account page has This Mac. */
+  /** The window is the Mac app, whose Account settings have This Mac. */
   mac: boolean
 }
 

@@ -162,7 +162,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
     rows: [
       command('command-palette', 'Command palette', [['⌘', 'K']]),
       command('keyboard-shortcuts', 'Keyboard shortcuts', [['⌥', '⌘', '/']]),
-      command('account-page', 'Account page', [['⌘', ',']]),
+      command('account-page', 'Settings', [['⌘', ',']]),
       command('create-org', 'Create org'),
       command('send-feedback', sendFeedbackLabel, [['⌥', '⌘', 'F']]),
       fixed('Close a dialog or a menu', [['Esc']]),

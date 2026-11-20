@@ -1,7 +1,7 @@
 # Keyboard shortcuts: the settings tab
 
 This doc holds the requirements and the decisions in force for the
-Keyboard shortcuts tab of the Account page, where a person changes the keys
+Keyboard shortcuts tab of Account settings, where a person changes the keys
 of the commands. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md),
 which gives the rules and the terms. A decision number names a dated
 record, as [Decision numbers](../architecture.md#decision-numbers) says.
@@ -11,7 +11,7 @@ app.
 
 ## Where the tab shows
 
-- The Account page has a fourth tab, Keyboard shortcuts, after General,
+- [Account settings](settings.md) have a fourth tab, Keyboard shortcuts, after General,
   Agents, and Preferences. Its address is `/account/shortcuts`.
 - The tab shows in every host and in every layout. Reason: the phone
   layout also serves a narrow desktop window, which has a keyboard. A tab

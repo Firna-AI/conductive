@@ -100,7 +100,7 @@ useShortcutOffer('command-palette', ready ? toggle : null, controller)
 | Command palette | `PaletteProvider.tsx` |
 | Each command that the palette lists: New workspace, New section, Archive workspace, Restore workspace, the Go to rows, New terminal, Merge latest, New session, Session history, Create org, Send feedback, Repositories settings, Keyboard shortcuts, and Hide or show the sidebar | `PaletteKeys.tsx` of the palette, from the rows of `listedCommands` |
 | Switch to org 1 to 9 | `OrgRail.tsx`, while the rail shows, for each org that is not deleted by its place, also the org of the page |
-| Account page | `Signed` in `Shell.tsx`, on each page of the signed-in app |
+| Settings | `Signed` in `Shell.tsx`, on each page of the signed-in app |
 | Workspace list | `OrgRoutes.tsx`, on each page of an org that is not deleted |
 | Hide or show the right column | `RightColumnToggle` in `WorkspaceColumns.tsx` |
 | Back, Forward | The window controls of the Mac app, while the window has a page there |

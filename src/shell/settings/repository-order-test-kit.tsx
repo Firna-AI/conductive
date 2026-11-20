@@ -5,7 +5,7 @@ import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { repositoryFixtures } from '../../test-support/fixtures/repositories'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 export const { org } = FAKE_IDS
 export const { repositories } = repositoryFixtures(org).repositories
@@ -18,7 +18,7 @@ export async function repositoriesTab(server: FakeApiServer) {
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const view = mountScreen(
     app,
-    <OrgSettingsScreen org={acme} tab="repositories" user={boot.user} />,
+    <OrgTabContent org={acme} tab="repositories" user={boot.user} />,
   )
   await settle()
   return view

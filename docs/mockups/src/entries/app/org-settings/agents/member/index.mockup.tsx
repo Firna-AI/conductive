@@ -33,7 +33,7 @@ export const orgAgentsMember = defineScreen({
       description:
         'Cal connected Codex on the gateway of Acme, and the save added /v1 to the address, as app/org-settings/agents/endpoint-models/v1-added shows to Cal. Priya opens the Agents tab. Each row says Connected, with "Own endpoint at llm.acme.example.com" and the line "Members without a login of their own use it." under it. Priya sees no note about /v1. The tab also never shows her the warning after a model list read that failed, the model list, or Refresh.',
       rationale:
-        'A design call of 17 November 2026 in the org logins plan: an admin sees the note about /v1 and the warning of a model list read, as the account page shows them to the owner of a personal login, and a member sees neither. Each line answers a save or a Refresh, which only an admin can make, and only the page of that admin shows it. The model list and Refresh stay with the admins too, because only an admin can change the endpoint. A member sees the kind and the host of each login, as the design calls of 16 November 2026 say.',
+        'A design call of 17 November 2026 in the org logins plan: an admin sees the note about /v1 and the warning of a model list read, as Account settings show them to the owner of a personal login, and a member sees neither. Each line answers a save or a Refresh, which only an admin can make, and only the page of that admin shows it. The model list and Refresh stay with the admins too, because only an admin can change the endpoint. A member sees the kind and the host of each login, as the design calls of 16 November 2026 say.',
       props: { orgModels: 'v1-added' },
     },
   ],

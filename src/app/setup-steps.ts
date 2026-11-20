@@ -15,7 +15,7 @@ export interface SetupSources {
 /**
  * The org of Get started and of the address `/`: the first org that is not
  * deleted. `orgs` comes from the active source. Null without one, so a
- * person whose orgs are all deleted gets Create org again.
+ * person whose orgs are all deleted gets Create org again. Account settings list the deleted orgs, with Restore.
  */
 export function setupOrg(orgs: readonly OrgSummary[]): OrgSummary | null {
   return orgs[0] ?? null

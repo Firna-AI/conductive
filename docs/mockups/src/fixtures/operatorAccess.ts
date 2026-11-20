@@ -89,7 +89,7 @@ export function disabledReferral(code: ReferralCode, on: string): ReferralCode {
 
 /**
  * The referral code of the operator who reads the pages, Cal, with 2 of
- * its 5 uses taken, as his Account page shows it.
+ * its 5 uses taken, as his Account settings show it.
  */
 export const operatorReferral = referral('K7QHM-3XP2R', [
   { login: 'noa-b', name: 'Noa Ben-Ami', initials: 'NB', day: '4 Nov' },

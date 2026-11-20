@@ -15,7 +15,7 @@ import {
 } from '../../test-support/mount'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
-import { OrgSettingsScreen } from './OrgSettingsScreen'
+import { OrgTabContent } from './OrgTabContent'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -56,7 +56,7 @@ test('a member count leaves out a workspace when its 14 days end, at that moment
   if (boot.state !== 'ready' || !acme) throw new Error('The app did not start.')
   const view = mountScreen(
     app,
-    <OrgSettingsScreen org={acme} tab="members" user={boot.user} />,
+    <OrgTabContent org={acme} tab="members" user={boot.user} />,
   )
   const list = await waitFor(
     () => queryByRole('list', 'Members', view),
