@@ -18,6 +18,8 @@ These peers have no physical socket. So they save no native socket state, and th
 The shared scheduled-alarm helper runs only stored due alarms.
 Reset removes the native records, aborts the real object context, and evicts its fresh idle instance.
 Restart saves clock metadata and keeps committed native SQLite records through the same context reset.
+Crash resets the object like Restart, but it does not close the connections or wait for the queued work.
+Use it to end work in progress, as an out-of-memory reset does. Hold that work outside a storage transaction, because a held transaction blocks the reset call.
 Instance identity checks prove that reconstruction creates a fresh object.
 Production request timeouts stay unchanged.
 
