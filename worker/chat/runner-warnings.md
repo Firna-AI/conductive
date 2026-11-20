@@ -13,6 +13,7 @@ explicitly, because a typed caller can still supply extra fields.
 | --- | --- | --- |
 | `runner_connected` | After the first accepted hello of a runner connection. A connection that closes before such a hello gets it just before its `runner_disconnected` | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 | `runner_disconnected` | When the runner connection ends | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
+| `runner_work_interrupted` | At the first runner work after a new start of the workspace object, when an earlier object left the record of runner work that did not end | `workspaceId`, `connectionId`, `streamId`, `processStartId`, `protocolVersion`, `work`, `stage`, `eventType`, `eventNumber`, `size` |
 | `turn_ended_without_stop_request` | After the commit that stores a turn end with no Stop request | `workspaceId`, `turnId`, `state`, `connectionId`, `streamId`, `processStartId`, `protocolVersion` |
 
 - `message` is a fixed text for each kind.
@@ -59,6 +60,33 @@ explicitly, because a typed caller can still supply extra fields.
   history at its end. When that read fails, the end writes no warning and
   still completes.
 
+## Interrupted runner work
+
+[`runner-work-watch.ts`](runner-work-watch.ts) keeps the record of
+[Runner work that did not finish](../../docs/protocol/runner-warnings.md#runner-work-that-did-not-finish).
+
+- `nativeRunnerWorkStorage` keeps the record under one chat storage key.
+  It writes with plain storage calls, outside the chat transactions, and
+  then calls `storage.sync()`. Without the sync, a reset during work that
+  never waits for I/O loses the record with its implicit transaction.
+- Plain writes add no transaction to a runner message. They also stay out
+  of the commit hooks of the native test storage, so a commit fault that a
+  test injects still reaches the chat change.
+- After the purge of a deleted org, a workspace keeps no records. So the
+  storage reads the purge fence and saves no record after a purge.
+- `RunnerWorkWatch.check` reads the record once in each object instance,
+  before the first runner work, writes the warning, and deletes the record.
+- The chat dependency `runnerWork` gives the storage. Without it, the
+  watch marks nothing.
+- [`runner-receive.ts`](runner-receive.ts) parses each runner message,
+  writes `runner_message_failed` when it fails, and ends the record in a
+  `finally` block. The runner channel updates the stage to `after_commit`.
+- The watch window belongs to the in-memory connection of the hello. A
+  connection that the object restores after hibernation has no window.
+- Each record step is best effort and ignores its own failure.
+- [`warning-runner-work.ts`](../warning-runner-work.ts) checks the values
+  again when the warning is written.
+
 ## Tests
 
 - `runner-connection-diagnostics.test.ts` checks the connect and
@@ -80,5 +108,9 @@ explicitly, because a typed caller can still supply extra fields.
   connection: no new connect warning, and one disconnect warning with the
   saved values. Its saved `processStartId` is valid, missing, invalid, or
   null.
+- `runner-work-watch.test.ts` holds an event after its commit, resets the
+  object without waiting for its work, and connects again. It checks one
+  warning with the event values and the `after_commit` stage, no warning
+  after work that ended, and no record after the watch window.
 - [`worker/warnings.test.ts`](../warnings.test.ts) checks that the
   explicit field selection drops private fields and invalid values.

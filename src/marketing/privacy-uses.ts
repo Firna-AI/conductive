@@ -164,6 +164,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including
         whether they finished, stopped, or failed.
+        It also records work on a message from that program when a restart
+        of the service ends that work. That record holds the kind of the
+        work, how far it got, the event type and number, and the size of the
+        message. To find such work, ${productName} keeps a short note of
+        the work that starts in the first 30 seconds after the program
+        connects. It keeps the note while the work runs, and after a
+        restart until the program connects again.
         These records include the workspace ID and any available turn,
         connection, and event stream IDs, and communication protocol version.
         When available, they also include a random ID for each start of that

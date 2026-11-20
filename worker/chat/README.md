@@ -194,7 +194,8 @@ retry route for `Session.retryMessageId`.
 ## Runner warnings
 
 [Runner warnings](runner-warnings.md) gives the warning kinds and the
-fields for runner connections and for turn ends with no Stop request.
+fields for runner connections, for turn ends with no Stop request, and for
+runner work that did not finish.
 
 ## Automation first turns
 
