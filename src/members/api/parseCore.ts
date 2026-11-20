@@ -1,11 +1,9 @@
-import type { Workspace } from '../../shared/generated/Workspace'
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import type { OrgRole, User } from '../../shared/api'
-import { readGitHubSummary } from '../../shared/github-read'
+import { createWorkspaceReader } from '../../shared/workspace-read'
 import type {
   MembersResponse,
   OrgInvite,
@@ -19,6 +17,7 @@ import {
   nested,
   object,
   oneOf,
+  ResponseShapeError,
   text,
   textOrNull,
   type JsonObject,
@@ -40,16 +39,6 @@ const efforts: Readonly<Record<Effort, Effort>> = {
   xhigh: 'xhigh',
   max: 'max',
   ultra: 'ultra',
-}
-const workspaceStates: Readonly<Record<WorkspaceState, WorkspaceState>> = {
-  working: 'working',
-  input: 'input',
-  unread: 'unread',
-  ready: 'ready',
-  starting: 'starting',
-  stopped: 'stopped',
-  error: 'error',
-  archived: 'archived',
 }
 
 function sender(source: JsonObject): MessageSender {
@@ -100,30 +89,16 @@ function agentChoice(source: JsonObject): AgentChoice {
   }
 }
 
-export function parseWorkspace(value: unknown): Workspace {
-  const source = object(value, 'workspace')
-  return {
-    id: text(source, 'id'),
-    number: count(source, 'number'),
-    link: text(source, 'link'),
-    orgId: text(source, 'orgId'),
-    repositoryId: text(source, 'repositoryId'),
-    sectionId: text(source, 'sectionId'),
-    // A reply from before sub-workspaces has no parent.
-    parentId:
-      source.parentId === undefined ? null : textOrNull(source, 'parentId'),
-    owner: sender(nested(source, 'owner')),
-    name: textOrNull(source, 'name'),
-    branch: text(source, 'branch'),
-    choice: agentChoice(nested(source, 'choice')),
-    state: oneOf(source, 'state', workspaceStates),
-    github: readGitHubSummary(source.github),
-    createdAt: count(source, 'createdAt'),
-    updatedAt: count(source, 'updatedAt'),
-    archivedAt: countOrNull(source, 'archivedAt'),
-    restoreUntil: countOrNull(source, 'restoreUntil'),
-  }
-}
+export const parseWorkspace = createWorkspaceReader({
+  record: object,
+  text,
+  count,
+  nullableText: textOrNull,
+  nullableCount: countOrNull,
+  sender: (value) => sender(object(value, 'owner')),
+  choice: (value) => agentChoice(object(value, 'choice')),
+  invalidState: () => new ResponseShapeError('state is not known'),
+})
 
 export function parseWorkspaces(value: unknown): WorkspacesResponse {
   const source = object(value, 'workspaces response')

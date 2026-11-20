@@ -166,6 +166,10 @@ Apple silicon Mac jobs on Blacksmith.
   `src/marketing/privacy.ts`. In the same change, update each sentence of
   the legal pages that restates the fact. A search for the old words is
   not enough, because a legal page can restate a fact in other words.
+- A change to the Terms text gives a new Terms revision on its own,
+  because `TERMS_VERSION` is a digest of the text. In the same change, set
+  the effective date at the top of the Terms in `src/marketing/terms.ts`
+  to the date of the change.
 - The public guides of the marketing site are docs too. Their Markdown
   files go in `src/marketing/docs/`. A change that makes a guide wrong
   updates that guide in the same change. When you change a fact in the
