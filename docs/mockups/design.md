@@ -299,10 +299,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [New workspace](design-new-workspace.md) gives the branch control of the
   page and of the dialog, its dropdown with the parts Start from and
   Target, and the refusals of the branch check.
-- The account has five tabs, General, Agents, Preferences, Keyboard
-  shortcuts, and Stats, as links, as the org settings have. The Mac app
-  adds This Mac as its sixth tab. On a phone, a tab that
-  does not fit moves to a second line. Preferences holds the New
+- Settings holds the account and the settings of the current org, in one
+  place. `SettingsDialog` in `src/components/settings/` draws it on a
+  desktop: a large dialog over the whole window, with the rail and the
+  sidebar under its scrim. Its left column, in the colour of the sidebar,
+  lists the tabs in two groups, from `SettingsNav`: Account, with General,
+  Agents, Preferences, Keyboard shortcuts, and Stats, then the org, with
+  General, Repositories, Cloud computer, Agents, Secrets, and Members. The Mac app
+  adds This Mac as the last tab of Account. The open tab fills the rest,
+  under a bar with its name, its group, and Close. Each tab is a link with
+  its own address. The dialog lies below the dialogs that a tab opens,
+  such as Delete org.
+- On a phone, Settings is a list screen, `app/settings`, whose rows open
+  each tab as a screen of its own with Settings as the way back.
+  Preferences holds the New
   workspaces section, whose rows put each label beside its control in two
   columns. A segmented control chooses how New workspace opens, with a
   helper line under it, and a narrow section puts it under its label. A
@@ -510,8 +520,7 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their six tabs in three columns, on two
-  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
   but its fill is 32 px high, with 4 px of the row above and below it.

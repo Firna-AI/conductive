@@ -267,7 +267,7 @@ started, and the notice for an agent that is not connected.
 
 [The waitlist](orgs-and-logins.md#the-waitlist) gives the screen of a
 person without app access, the invite codes and invite links, the invite
-code on the Account page, and open sign-up.
+code in Account › General, and open sign-up.
 
 ## The Mac app
 

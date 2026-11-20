@@ -206,27 +206,32 @@ Depends on: none. The org group waits for decision 2.
 Draw the Settings dialog for every screen of the account and of the org
 settings, on desktop and on a phone, in the browser and in the Mac app.
 
-- [ ] Add a `SettingsDialog` component under
+- [x] Add a `SettingsDialog` component under
       `docs/mockups/src/components/settings/`, from `SettingsNav` and the
       option D parts of `app/settings-options`.
-- [ ] Change `AccountScreen` and `OrgSettingsScreen` of the mockups to
+- [x] Change `AccountScreen` and `OrgSettingsScreen` of the mockups to
       draw the dialog over the page below. Keep every state, dialog, and
       form of each section.
-- [ ] Move every entry under `app/account`, `app/org-settings`, and
+- [x] Move every entry under `app/account`, `app/org-settings`, and
       `app/orgs/suspended/settings` to the dialog. Keep their paths.
-- [ ] Draw This Mac and Keyboard shortcuts in the dialog in the Mac app
+- [x] Draw This Mac and Keyboard shortcuts in the dialog in the Mac app
       entries `mac-app/this-mac` and `mac-app/shortcuts`.
-- [ ] Draw the phone list and a phone section for both groups.
-- [ ] Draw the org group in the shape of decision 2.
-- [ ] Delete `AccountTabs`, `SettingsTabs`, and the review pages
+- [x] Draw the phone list and a phone section for both groups.
+- [ ] Draw the org group in the shape of decision 2. The mockups show the
+      current org, which every option of decision 2 shows. Waits for
+      decision 2.
+- [x] Delete `AccountTabs`, `SettingsTabs`, and the review pages
       `app/settings-options`.
-- [ ] Update the catalogue, the design, and the mockups README.
-- [ ] Check which marketing pictures in
+- [x] Update the catalogue, the design, and the mockups README.
+- [x] Check which marketing pictures in
       `docs/mockups/src/screens/marketingPictures.tsx` show a settings
       page. Capture them again with `npm run marketing:pictures`.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
-      the mockups show.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show. Design call of 20 November 2026: the rows keep the
+      name "tab", because "section" already names the parts inside a tab,
+      such as the Sign-in section. The words "Account settings" name the
+      Account group, as the Delete org dialog already says.
 
 ## Milestone 2: Documentation and protocol
 

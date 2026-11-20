@@ -1,10 +1,5 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import {
-  appFrame,
-  mobileFrame,
-} from '../entries/components/layout/AppFrame.mockup'
-import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { leaveOrgDialog } from '../entries/components/members/LeaveOrgDialog.mockup'
 import { removeMemberDialog } from '../entries/components/members/RemoveMemberDialog.mockup'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
@@ -12,21 +7,25 @@ import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { deleteOrgDialog } from '../entries/components/settings/DeleteOrgDialog.mockup'
 import { repositoryOrderOverlay } from '../components/settings/RepositoryOrderList'
-import { settingsTabs } from '../entries/components/settings/OrgSections.mockup'
+import {
+  placeLabel,
+  settingsGroups,
+} from '../components/settings/settingsGroups'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
 import { type Org, orgList } from '../fixtures/orgs'
 import { settingsViewer } from './orgSettingsTabs'
 import { tabBody } from '../entries/components/screens/orgSettingsTabs.mockup'
 import type { OrgSettingsState } from './orgSettingsState'
+import { SettingsFrame } from './settingsFrame'
 import { settingsOrg } from './settingsOrgs'
-import { defined, plainData } from '../defined'
+import { plainData } from '../defined'
 
 /**
- * The settings of an org: its name and initials, the repositories that it
- * uses, its cloud computer, its org logins, its secrets, and its members.
- * The personal logins and the other app-wide connections live in the
- * account. Only an admin changes the members, the org logins, and deletes
+ * The settings of an org, as the org group of Settings: its name and
+ * initials, the repositories that it uses, its cloud computer, its org
+ * logins, its secrets, and its members. The Account group holds the
+ * personal logins and the other app-wide connections. Only an admin changes the members, the org logins, and deletes
  * the org. Every member adds secrets. A suspended org shows its notice
  * first, and nobody changes its settings.
  */
@@ -39,7 +38,6 @@ export function OrgSettingsScreen(props: {
   const { state, viewport } = props
   const admin = state.viewer === 'admin'
   const suspended = state.org === 'suspended'
-  const mobile = viewport === 'mobile'
   const settings = settingsOrg(state)
   const { org } = settings
   // A suspended org opens only the leave, because nothing else in it can
@@ -90,21 +88,36 @@ export function OrgSettingsScreen(props: {
         )
       : null
   const dialog = dialogs[state.dialog] ?? repositoryOverlay
-  const page = (
-    <pagePart.Component
-      subtitle="Org settings"
-      {...defined({
-        back: mobile ? { label: 'Workspaces', to: settings.list } : undefined,
+  const place = { group: 'org', tab: state.tab } as const
+  return (
+    <SettingsFrame
+      dialog={dialog ?? undefined}
+      group={org.name}
+      groups={settingsGroups({
+        place,
+        host: 'chrome-mac',
+        org: { name: org.name, links: settings.links },
       })}
-      tabs={
-        <settingsTabs.Component
-          links={settings.links}
-          moklyInstance="settings-tabs"
-          tab={state.tab}
-          wrap={mobile}
+      rail={{
+        orgs: (props.railOrgs ?? orgList).map((item) =>
+          item.key === org.key ? { ...item, color: state.color } : item,
+        ),
+        current: org.key,
+        ...(suspended ? { suspended: org.key } : {}),
+        ...(admin ? {} : { person: people[memberViewer] }),
+      }}
+      sidebar={
+        <sidebarPart.Component
+          moklyInstance="sidebar"
+          newWorkspaceTo={settings.newWorkspace}
+          org={org}
+          sections={plainData(settings.sections)}
+          settingsAlert={failedBuildOf(state.build) !== undefined}
+          suspended={suspended}
+          viewer={viewerMembership(state.viewer)}
         />
       }
-      title={org.name}
+      title={placeLabel(place)}
       viewport={viewport}
     >
       {suspended ? (
@@ -118,42 +131,6 @@ export function OrgSettingsScreen(props: {
         state={state}
         viewport={viewport}
       />
-    </pagePart.Component>
-  )
-  if (mobile) {
-    return (
-      <mobileFrame.Component>
-        {page}
-        {dialog}
-      </mobileFrame.Component>
-    )
-  }
-  const sidebar = (
-    <sidebarPart.Component
-      current="settings"
-      moklyInstance="sidebar"
-      newWorkspaceTo={settings.newWorkspace}
-      org={org}
-      sections={plainData(settings.sections)}
-      settingsAlert={failedBuildOf(state.build) !== undefined}
-      suspended={suspended}
-      viewer={viewerMembership(state.viewer)}
-    />
-  )
-  return (
-    <appFrame.Component
-      rail={{
-        orgs: (props.railOrgs ?? orgList).map((item) =>
-          item.key === org.key ? { ...item, color: state.color } : item,
-        ),
-        current: org.key,
-        ...(suspended ? { suspended: org.key } : {}),
-        ...(admin ? {} : { person: people[memberViewer] }),
-      }}
-      sidebar={sidebar}
-      {...defined({ overlay: dialog ?? undefined })}
-    >
-      {page}
-    </appFrame.Component>
+    </SettingsFrame>
   )
 }
