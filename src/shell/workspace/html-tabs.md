@@ -71,6 +71,11 @@ sends no preview request and imports nothing from the Preview tool.
   `versionOf` of its file grows.
 - Open is `OpenInNewTab` of the previews, at the path of the file, while a
   files preview lives and the cloud computer runs.
+- Expand shows on desktop while the page shows and a files preview lives.
+  It asks the `PageFrames` to expand the path. `KeptPageFrames` then shows
+  the kept frame in the large window of `ExpandableFrames`, with no new
+  load. The window closes at Close, at Escape, at a press on the dim
+  layer, at another tab, and when the files preview ends.
 
 ## Kept frames
 

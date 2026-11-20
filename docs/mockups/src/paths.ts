@@ -243,6 +243,8 @@ export const paths = {
   closeTerminal: 'app/tools/terminals/close',
   preview: 'app/tools/preview',
   previewAnotherPort: 'app/tools/preview/another-port',
+  previewExpanded: 'app/tools/preview-expanded',
+  htmlExpanded: 'app/tools/preview-expanded/html',
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',
   macAllowAll: 'mac-app/commands/allow-all',

@@ -74,6 +74,7 @@ export function standInShell() {
     view,
     open,
     reload,
+    expand: null,
     show,
   })
   return { calls, preview }

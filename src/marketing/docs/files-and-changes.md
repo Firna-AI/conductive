@@ -83,6 +83,7 @@ For example, an agent can write a report as a web page in `.context/`.
 
 The page runs on a separate domain from Conductive, as a port preview does.
 Use **Reload** to load the page again.
+Use **Expand** to show the page in a large window over the whole app.
 Use **Open** to show the page in a new browser tab.
 In the Mac app, **Open** uses your default browser.
 
