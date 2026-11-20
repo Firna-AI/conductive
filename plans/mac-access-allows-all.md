@@ -1,6 +1,6 @@
 # Mac access allows all commands on your Mac
 
-Status: Active. On branch `calummoore/mac-permission-issue-o7fv`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #614](https://github.com/Firna-AI/conductive/pull/614) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Cal turned Mac access on in New workspace, and his Mac still asked before
 each command. That is the rule in force today. Mac access only lets the
