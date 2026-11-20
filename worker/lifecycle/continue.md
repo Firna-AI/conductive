@@ -121,7 +121,8 @@ fetches the default branch into a bare staging repository under
 - The scope of that ID opens before the fetch command starts. It closes
   when the fetch ends or fails, at a cancel, and when the object rebuilds.
 - Before it starts the fetch or the move, Continue sets the auto-stop
-  deadline of the sandbox to 30 minutes. Each command starts detached, and
+  deadline of the sandbox to the stop time plus 60 seconds, as
+  [The stop time](README.md#the-stop-time) says. Each command starts detached, and
   the job keeps its process ID and output offsets for the later steps.
 
 ## The move

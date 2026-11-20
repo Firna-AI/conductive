@@ -113,22 +113,24 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add the migration with the setting table and the event table. Keep
+- [x] Add the migration with the setting table and the event table. Keep
       the previous Worker working.
-- [ ] Add the shared types and path helper in `src/shared/`.
-- [ ] Add the GET and PUT routes in `worker/operator/`, with the values of
+- [x] Add the shared types and path helper in `src/shared/`.
+- [x] Add the GET and PUT routes in `worker/operator/`, with the values of
       decision 1.
-- [ ] Add the lifecycle hook that reads the time, with its 60-second cache.
+- [x] Add the lifecycle hook that reads the time, with its 60-second cache.
       Use it in `durable-alarm.ts` and `durable-scheduling.ts`.
-- [ ] Pass the stop time plus 60 seconds to each workspace `setAutoStop`,
+- [x] Pass the stop time plus 60 seconds to each workspace `setAutoStop`,
       `resume`, and create call. These include the turn heartbeat in
       `workspace-actions.ts`, `continue-progress.ts`, and
       `repository-change-command.ts`. The turn heartbeat has no margin
       today, and this change gives it 60 seconds.
-- [ ] Apply decision 2 to the computers that already run.
-- [ ] Update `worker/lifecycle/README.md` and `worker/operator/README.md`.
-- [ ] Add the tests: the routes, the default, a shorter and a longer time,
-      and the provider auto-stop.
+- [x] Apply decision 2 to the computers that already run.
+- [x] Update `worker/lifecycle/README.md` and `worker/operator/README.md`.
+- [x] Add the tests: the routes, the default, a shorter and a longer time,
+      and the provider auto-stop. Design call, 20 November 2026: the
+      provider auto-stop value has a unit test. Each call site only passes
+      it on, so no full Worker test checks each call.
 
 ## Milestone 4: Operator screen
 
@@ -136,9 +138,11 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the box to the operator section, as the mockup shows.
-- [ ] Add the DOM tests of the box.
-- [ ] Check the box in a browser and save a screenshot under `.context/`.
+- [x] Add the box to the operator section, as the mockup shows.
+- [x] Add the DOM tests of the box.
+- [x] Check the box in a browser and save a screenshot under `.context/`.
+- [x] Serve the stop time from the dev fake API in `src/app/dev/`, so the
+      tab works in development.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

@@ -7,6 +7,7 @@ import { AppFrame, MobileFrame } from '../layout/AppFrame'
 import type { RailState } from '../layout/OrgRail'
 import { Page, type BackLink } from '../layout/Page'
 import { PauseNotice } from './pause'
+import { stopTimeWords } from './stopTimeCopy'
 import { WaitlistOffNotice, type WaitlistState } from './waitlistSwitch'
 
 /** The tabs of the operator section. */
@@ -32,7 +33,7 @@ const tabs: readonly { key: OperatorTab; label: string; to: string }[] = [
   { key: 'waitlist', label: 'Waitlist', to: paths.operatorWaitlist },
   { key: 'codes', label: 'Invite codes', to: paths.operatorCodes },
   { key: 'providers', label: 'Providers', to: paths.operatorProviders },
-  { key: 'settings', label: 'Settings', to: paths.operatorSettings },
+  { key: 'settings', label: stopTimeWords.tab, to: paths.operatorSettings },
 ]
 
 /** The rail of an operator, with the operator section open. */

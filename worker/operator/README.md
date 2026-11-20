@@ -6,7 +6,8 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
-It also lists and approves people who wait, manages invite codes, pauses
+It also sets the stop time of idle cloud computers, lists and approves
+people who wait, manages invite codes, pauses
 sign-ups, and turns the waitlist off and on.
 [Waitlist routes](#waitlist-codes-and-sign-ups) describes these entry
 points.
@@ -24,6 +25,11 @@ their search, their pages, and the fields of each reply.
 
 The [provider weights guide](providers.md) gives the GET and PUT routes,
 configured accounts, org counts, and atomic change records.
+
+## Stop time
+
+The [stop time guide](idle-stop.md) gives the GET and PUT routes of the
+stop time of idle cloud computers, its choices, and its change records.
 
 ## Waitlist, codes, and sign-ups
 

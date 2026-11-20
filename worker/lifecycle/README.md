@@ -141,6 +141,27 @@ Disk retention starts do not bootstrap or restart the runner.
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
 
+## The stop time
+
+The operator saves the stop time of idle sandboxes on the Settings tab, as
+[Stop and resume](../../docs/protocol/stop-and-resume.md#the-stop) says.
+[`idle-stop.ts`](idle-stop.ts) reads it from the `idle_stop_settings` row.
+
+- Each workspace object reads it through the `idleMs` hook and keeps it for
+  60 seconds. A failed read keeps the last value, or 30 minutes before the
+  first read.
+- The alarm and its schedule use it for the idle stop. Hooks without
+  `idleMs` keep `IDLE_MS`, 30 minutes.
+- When the alarm fires before the stop time ends, at least 15 minutes after
+  the last activity, with the runner connected and no restore watch due, it
+  extends the provider auto-stop. So a longer stop time reaches a running
+  sandbox before its old provider auto-stop ends.
+- Each workspace create, resume, and auto-stop call sets the provider
+  auto-stop to the stop time plus 60 seconds, from
+  `workspaceAutoStopSeconds`. When the read fails, it uses the longest
+  choice, so that the provider never stops a sandbox early.
+- Image builds and the disk retention restarts keep 1,800 seconds.
+
 ## Provider accounts
 
 [Provider accounts](provider-accounts.md) gives the provider account that
@@ -161,7 +182,7 @@ Archive, Restore, and deleted-org stops also clear it in their direct D1 writes.
 A deleted-org disk restart saves its restart time.
 The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
 The migration leaves existing times null until their next lifecycle save.
-The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
+The save runs within 5 minutes during a turn, and within the stop time otherwise.
 
 The [provider accounts page](provider-accounts.md#the-computer-ledger) describes
 the persisted resource records and the retained computer ledger.
