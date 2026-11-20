@@ -1,0 +1,68 @@
+# Answer state leak checks also scan random tokens
+
+- **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-20, from branch `calummoore/follow-up-answer-state-check-matches-shn3`, as the wider fix, option B, of the item `plans/follow-ups/runner-symbolic-held-random-substring.md`. That branch applied the direct fix of that item, option A, and deleted the item. The item came from the CI of PR #572.
+- **Location:** `worker/chat/runner-output-symbolic.test-support.ts:19-44`, the home of the helper. The leak checks are at `worker/chat/runner-output-symbolic-held.test.ts:106-110`, `worker/chat/runner-output-symbolic.test.ts:41-44`, `:72-76`, and `:144-145`, `worker/chat/runner-output-symbolic-release.test.ts:76`, `worker/chat/runner-output-activation.test.ts:56` and `:81`, `worker/chat/runner-output-row-security.test.ts:74-77`, `worker/chat/runner-output-symbolic-durability.test.ts:65`, `worker/secrets/output-filter-symbolic.test.ts:62-65` and `:80-83`, and `worker/secrets/output-filter.test.ts:188` and `:235-237`. `savedFilterState` in `worker/secrets/requests-entry.test-support.ts:104-114` reads the state for the two secrets tests.
+- **Reason:** B loosens a test assertion, which only the user can approve, and the direct fix already removed the one test value that failed in CI.
+
+- **Source:** Implementation.
+- **Category:** Test.
+- **Terms:**
+  - **Held end:** the end of an unfinished agent answer that the Durable Object holds back, because it can still become a copy of an active value.
+  - **Symbolic answer state:** the saved state of the answer filter that lists no value. Each held entry keeps a random salt and opaque identities in place of values.
+  - **Identity:** the HMAC-SHA-256 of a value under the app key, with the workspace and the salt in its input, written as 43 base64url characters.
+  - **base64url:** a text form of bytes that uses only `A` to `Z`, `a` to `z`, `0` to `9`, `-`, and `_`.
+  - **Leak check:** a test assertion that a saved answer state, written as JSON text, does not contain an active value.
+- **Background:**
+  - The workspace Durable Object hides secret values in agent answers. A value that it hides at a runner event is an active value.
+  - The leak checks protect two requirements of [The saved state of the filter](../../docs/protocol/answer-text-secrets.md#the-saved-state-of-the-filter). The state lists no value. A held end in that state holds no whole copy of an active value.
+  - With the control `CONDUCTIVE_SYMBOLIC_ANSWER_STATE` on, the filter saves the symbolic answer state. `parseHeld` in `worker/chat/output-filter-records.ts` reads it.
+  - A symbolic entry holds the held `event` with its text, `secrets: []`, and `symbolic`. `symbolic` holds the `salt`, `contexts` of `{ identity, matched }`, and `matches` with `runs` and `entries` of `{ offset, identity }`. The entry of a literal `[redacted]` has the identity `marker`.
+  - `prepareOutputState` in `worker/chat/output-filter-state.ts:70` makes the salt with `randomToken()`: 32 random bytes as 43 base64url characters. `outputCandidates` in `worker/chat/output-filter-identity.ts` makes each identity with that salt. So the salt and each identity are new random text in each run.
+  - The fixtures run the production workspace object in the local Workers runtime, as `worker/chat/README.md` says under "Tests". The salt comes from `randomToken()` inside that object.
+  - `answerState` and `rawAnswerRow` in `worker/chat/runner-output-symbolic.test-support.ts`, and `savedFilterState`, give the tests the decrypted state. The leak checks scan it for these values:
+    - `worker/chat/runner-output-symbolic-held.test.ts`: the `before` values of seven scenarios.
+    - `worker/chat/runner-output-symbolic.test.ts`: `private-value` and `prefix-short`.
+    - `worker/chat/runner-output-symbolic-release.test.ts`: `short-token` and `prefix-short-token`.
+    - `worker/chat/runner-output-activation.test.ts`: `private-value`.
+    - `worker/chat/runner-output-row-security.test.ts`: `row-short-value`, in the decrypted text of one saved row.
+    - `worker/chat/runner-output-symbolic-durability.test.ts`: `🦀short-token`.
+    - `worker/secrets/output-filter-symbolic.test.ts`: `short-token`. The check at lines 62-65 expects no value only in its `expiry` case.
+    - `worker/secrets/output-filter.test.ts`: `short-private-token` and `workspace-private-token`. The test expects each value in the state before its cleanup. So that state is in the earlier format, which holds no salt or identity.
+  - The test "masks held whole copies after value changes and keeps exact longer and fallback matches" in `worker/chat/runner-output-symbolic-held.test.ts` runs seven scenarios in one fixture. Each scenario sets the active values `before` and sends the text `first`. Line 90 then saves `JSON.stringify(await answerState(f))` as `held`. Lines 106-110 check that `held` holds no value of `before`, with the message "saved state contains no whole value".
+  - Commit `884f6142` (#519) added the scenario "generated mask preserves source continuation", at lines 65-72, on 19 November 2026. It set the active values `abc` and `bcdef`, and sent the text `abc`. Then it set only `bcdef`, sent `def!`, and expected the shown text `[redacted][redacted]!`.
+  - On 20 November 2026, CI run 44741220791, job 136305072058, failed this test in shard 2 of the `Tests` jobs. The run was on commit `7ecc06fe` of branch `calummoore/follow-up-session-history-reads-scan-55fi`. That branch changed none of the files above. They matched `main` at `458bd46d`.
+  - Shard 2 passed 1,133 tests and failed 1. `Static checks`, the `Rust gate`, and the other three shards passed. The required job `Complete gate` failed, because it passes only when each of those jobs passes.
+  - The failure text was `AssertionError: generated mask preserves source continuation: saved state contains no whole value: expected '[[],[{"event":{"sessionId":"chat-0001…' not to contain 'abc'`.
+  - In that saved state, the held event text was empty, and `secrets` was `[]`. The context identity was `My95VS_8wzaabchBJ22n77QtytE32dMSdF_LaDwTPic`, which holds `abc` at index 11 by chance. The salt did not hold `abc`. So the state held no value, and the run showed no leak.
+  - No separate rerun of the failed job ran. The unchanged test passed in the local complete gate of that branch, with all 4,689 root tests. A documentation commit to that branch started fresh CI instead of a rerun.
+  - A local run can show the failure on demand. Put back the old values. Give `prepareOutputState` a fixed salt for which an identity of `abc` or `bcdef` holds `abc`. Restore the test and the product code after the run.
+  - A run on 20 November 2026 did this and gave the same failure text. At that check, the saved state held one salt and one context identity. Only the identity held `abc`.
+  - A random token of 43 base64url characters holds a given text of 3 base64url characters about once in 6,000 tokens. So the old check, with two tokens to scan, had a chance of about 1 in 3,000 to fail in each run.
+  - A text of 11 base64url characters matches less than once in 10^18 tokens. A text with any other character, such as `:` or `🦀`, can never match.
+  - On 20 November 2026, the direct fix changed only the values of that scenario. It now sets `a:b` and `:bcde`, and sends `a:b`. Then it sets only `:bcde`, and sends `cde!`. The end `:b` of the first value is the start of the second value, as `bc` was. The lengths and the expected text stay. Every assertion stayed, and no product code changed.
+  - Now each value that a leak check scans has a character outside base64url, or 11 or more base64url characters. B protects later test values.
+  - All options share two assumptions. The product keeps a random salt in production, as the code does now. Each saved field keeps a check, because the protocol requirements above need it.
+- **Problem:** Each leak check scans the whole saved state as text, also the random salt and the identities. A random token can hold a short test value of base64url characters by chance. The check then fails, though the state holds no value.
+- **Impact if no action:** A later test with a short value of base64url characters can make the required gate fail with no code change, as the old scenario did. Each failure costs a new CI run and reduces trust in this secret check.
+- **Root question:** How can each leak check give the same result in every run, for any test value, and still find a value in any saved field?
+- **Options:**
+  - **A.** Change nothing more. Each later test picks values that a random token cannot hold, as the direct fix did. Cost: nothing makes a later test do this. A later short value of base64url characters can fail in the same way. Effort: Small.
+  - **B.** Add one helper to `worker/chat/runner-output-symbolic.test-support.ts` for the check of a saved answer state. It checks `symbolic.salt` and each `identity` by their form: 43 base64url characters, or `marker` for a match entry. It scans each other field for each whole value, as now. Use it in each leak check. Cost: the salt and the identities lose the substring check. The check then misses a value inside a string of 43 base64url characters in one of these fields. This loosens an assertion, which needs the user's approval. Effort: Small.
+  - **C.** Give the workspace object a fixed random source in these tests, so that the salt and the identities are the same in each run. Keep every assertion. Cost: the test process cannot replace the random source of the object, so this needs a seam in product code. A later change of the test key, the identity input, or the seed can put a value in a token again. The test then fails in each run until someone picks another seed. Effort: Medium.
+  - **D.** Do B, but check each identity exactly. The helper computes the identity of each test value under the salt of its entry. It uses its own copy of the identity input of `outputCandidates`. Each identity must equal one of them, or be `marker` for a match entry. Cost: the copy must change with each change of that input. The salt still loses the substring check, which needs the user's approval. Effort: Medium.
+- **Left out:**
+  - A retry, a repeat, a skip, a quarantine, or a longer time limit. Each hides the flake, and the testing rules forbid them for a flaky test.
+  - Longer values of base64url characters only. They make a match rare but still possible. A is better on every point.
+  - A check of the held event text alone, or of each value only as a whole JSON string. Each misses a value in another field, or inside a longer text.
+  - A scan that skips the salt and the identities with no check of their form. B is better on every point.
+  - D with a call to `outputCandidates` in place of a copy. A defect in that function then also changes the expected identities, so the check misses it.
+  - An exact expected state in each test, with a form check of each token. It copies the internal layout of the saved state into each test. The testing rules allow such a copy only in one test helper.
+  - A fixed salt in production. It changes product behaviour only to make a test pass. C gets the same fixed tokens in tests only.
+  - A removal of a short value from a check, or of its scenario. Each drops a check of a requirement.
+  - A lint or a guard that refuses short test values of base64url characters. It refuses values instead of checking them. It also adds a new check, which the always-on rules reserve for the user.
+- **Wider fix:** B. It takes the random tokens out of the substring scan of each leak check, in one helper that every check uses. It loosens the check of those fields, so it waits for the user's approval.
+- **Previous examples:** The old values of the scenario "generated mask preserves source continuation" are the only case found in a test. `plans/follow-ups/short-key-redaction.md` records the same chance match in product code: the gateway finds a short own endpoint key by chance in ordinary answer text.
+- **Recommendation:** B. It removes the random tokens from every leak check with one small helper, and every other field keeps its whole-value scan. D keeps the strictest check of the identities, at the cost of a copy of their input in test code.
+- **Action:** ask the user, because B weakens the leak checks: they then check the salt and the identities only by their form, and only the user can approve a loosened assertion.
