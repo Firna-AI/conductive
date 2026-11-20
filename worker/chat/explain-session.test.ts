@@ -113,6 +113,23 @@ it('prefers the body choice, then the sending member default, then the app defau
   expect(fallback.session.choice).toEqual(CLAUDE)
 })
 
+it('turns fast mode off for a saved default, and keeps it for a body choice', async () => {
+  const { fixture, explain } = await explanationFixture(harness)
+  const fastCodex = { ...CODEX, fast: true }
+  await saveAccountDefault(
+    fixture.env.DB,
+    fixture.member.id,
+    fastCodex,
+    TEST_TIME,
+  )
+  const saved: ExplainSessionResponse = await (await explain()).json()
+  expect(saved.session.choice).toEqual({ ...CODEX, fast: false })
+  const asked: ExplainSessionResponse = await (
+    await explain({ ...EXPLAIN_INPUT, choice: fastCodex })
+  ).json()
+  expect(asked.session.choice.fast).toBe(true)
+})
+
 it('lets the existing title rule cut a long first quote line at a whole word', async () => {
   const { explain } = await explanationFixture(harness)
   const response = await explain({

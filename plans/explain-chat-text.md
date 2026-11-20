@@ -167,6 +167,28 @@ These calls were made on 20 November 2026, in the Explain mockups:
 - The written prompt names the parent session with its session link only,
   because the link shows as a chip with the title.
 
+These calls were made on 21 November 2026, after the docs and backend
+milestones, under existing rules:
+
+- An explanation of a closed parent session starts. A new refusal was
+  not needed, because the parent is only the source of the quote.
+- The Worker cuts a quote over 2,000 characters and context over 300
+  characters on a side, and does not refuse it, because a long selection
+  is recoverable input.
+- Fast mode is off for an explanation unless the request asks for it, as
+  the design call "as `create_session` does" says.
+- The written prompt starts the cloud computer when the workspace does not
+  run, as each message does.
+- Any finished agent message can be explained, also one in the folded
+  work of a turn, as the call on marks in folds implies.
+- At most one popover is open. It takes the focus, and Escape closes it
+  and returns the focus to its mark.
+- A follow-up from a member who cannot use the explanation's login starts
+  a linked session with no anchor, as each message does. The popover shows
+  the line that links to it.
+- The key of Explain the selection is ⌥⌘E on a Mac and Alt+Shift+E on
+  Windows and Linux. ⌘E was rejected, because Chrome uses it.
+
 Contract owners:
 
 - A new protocol doc, `docs/protocol/explain.md`, linked from
@@ -249,16 +271,15 @@ The mockups are under `app/chat/explain` and
 
 Depends on: 2
 
-- [ ] Write `docs/protocol/explain.md`: the anchor, the written prompt,
+- [x] Write `docs/protocol/explain.md`: the anchor, the written prompt,
       the mark, the popover and its states, expand, the open start, the
       popover of a closed explanation, the mark life, read-only
       workspaces, and the decisions of this plan.
-- [ ] Choose a free key under the rules of
+- [x] Choose a free key under the rules of
       `docs/protocol/keyboard-shortcuts-keys.md` and record it there.
-- [ ] Read the Terms page, the Privacy page, and each public guide in
+- [x] Read the Terms page, the Privacy page, and each public guide in
       `src/marketing/docs/` in full. Update each sentence that the change
       makes wrong. Add a short guide section on Explain.
-- [ ] Update `src/chat/README.md`.
 
 ## Milestone 4: The anchor on the session record
 
@@ -298,6 +319,9 @@ Depends on: 2, 5
 - [ ] Draw the marks from the anchors of the session records, with the
       fallback to the whole message.
 - [ ] Show the state of an explanation on its mark.
+- [ ] Add the command Explain the selection to the shortcut lists:
+      `src/shared/shortcut-commands.ts`, `src/app/shortcuts/commands.ts`,
+      `src/app/shortcuts/defaults.ts`, and its test support.
 - [ ] Add DOM tests for the selection, the shortcut, the marks, and the
       fallback.
 
@@ -321,6 +345,8 @@ Depends on: 6
       positioning.
 - [ ] Add DOM tests for the popover states, expand, a closed explanation,
       and the read-only popover.
+- [ ] Update `src/chat/README.md` and check the Explain section of
+      `src/marketing/docs/sessions-and-chat.md` against the screens.
 - [ ] Check the flow in a browser, on a computer and a phone width.
 
 ## Milestone 8: Verification, commit, review, and pull request

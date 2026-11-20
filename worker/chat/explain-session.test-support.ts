@@ -20,7 +20,7 @@ export async function explanationFixture(harness: TestHarness) {
     CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
     CONDUCTIVE_MODELS: JSON.stringify([
       { ...CLAUDE, label: 'Claude', efforts: ['high'] },
-      { ...CODEX, label: 'Codex', efforts: ['medium'] },
+      { ...CODEX, label: 'Codex', efforts: ['medium'], fast: true },
     ]),
   })
   const parent = await fixture.createSession()

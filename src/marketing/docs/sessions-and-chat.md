@@ -252,6 +252,41 @@ With a mouse, the button shows when you point at the block.
 While a reply arrives, the chat shows its headings, text, and table rows as they arrive.
 In the folded work of a turn, open a message line to read its table.
 
+## Explain chat text
+
+Select text inside one agent answer or member message, then select **Explain**.
+On a computer, **Explain** shows above the selection.
+On a phone, it shows above the message box.
+You can also press **⌥⌘E** on a Mac or **Alt+Shift+E** on another computer.
+Tool lines, notices, and text that the agent still writes offer no **Explain**.
+
+**Explain** starts a new session.
+You write no message.
+Its first message gives the agent the text, the text around it, and a link to the session that holds the text.
+The agent can read the rest of that session when it needs more.
+The message asks for a short answer and no file changes.
+The agent still has the tools of any session, so it can change files.
+The new session uses your personal or org login, and the **Model and effort** of your **Preferences**.
+Its tab opens at the end of the tab row.
+The tab that you read stays shown.
+
+The answer shows in a small panel by the text.
+On a phone, the panel is a sheet over half the screen.
+Drag its handle up to see more.
+Ask a follow-up at the foot of the panel.
+A follow-up during a turn guides that turn.
+**Stop** ends the turn.
+Select **Expand** to open the session in its tab.
+Closing the panel leaves the agent working.
+
+The text keeps a mark that every member sees.
+The mark shows whether the agent still works, needs input, or failed.
+Select the mark to show the panel again, also after its session closes.
+A follow-up or **Expand** reopens a closed session.
+Where marks overlap, select the overlap to choose one of them.
+If Conductive cannot find the text again, the mark covers the whole message.
+An archived or other read-only workspace shows the marks and the panel, to read only.
+
 ## Manage session tabs
 
 Use a tab's menu to rename or move it, to copy its link, or to close other tabs or the tabs after it.

@@ -20,21 +20,27 @@ import { createSession } from './sessions'
 import type { ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
 
+/** The longest quote and the longest text on each side that a record keeps. */
+const quoteLimit = 2000
+const contextLimit = 300
+
+/**
+ * The selection of a request. A longer quote or context is cut, not
+ * refused, so a long selection still starts an explanation: the quote
+ * keeps its start, the text before keeps its end, and the text after keeps
+ * its start, so each stays next to the quote.
+ */
 function explanationInput(body: unknown): ExplainSessionRequest {
   const input = record(body)
+  const quote = string(input.quote)
+  if (!quote.trim()) return invalidInput()
+  const before = string(input.before)
   const selection = {
     messageId: identifier(input.messageId),
-    quote: string(input.quote),
-    before: string(input.before),
-    after: string(input.after),
+    quote: quote.slice(0, quoteLimit),
+    before: before.slice(Math.max(0, before.length - contextLimit)),
+    after: string(input.after).slice(0, contextLimit),
   }
-  if (
-    !selection.quote.trim() ||
-    selection.quote.length > 2000 ||
-    selection.before.length > 300 ||
-    selection.after.length > 300
-  )
-    return invalidInput()
   return {
     ...selection,
     ...(input.choice === undefined ? {} : { choice: choice(input.choice) }),
@@ -74,19 +80,17 @@ export async function explainSession(
 ): Promise<ExplainSessionResponse> {
   const input = explanationInput(context.body)
   await operation.read(async (view) => {
-    const parent = await sessionFor(view, parentSessionId)
-    if (parent.closedAt !== null)
-      throw new HttpError(
-        409,
-        'session_closed',
-        'Reopen the session to send a message.',
-      )
+    await sessionFor(view, parentSessionId)
     await requireMessage(view, parentSessionId, input.messageId)
   })
+  // Fast mode stays off unless the request asks for it, as a session that
+  // `create_session` starts: a press on Explain does not spend a login at
+  // the higher price of fast mode.
+  const saved =
+    (await ownerPreference(env.DB, context.user.id)) ??
+    configuredDefaultChoice(env)
   const selected = dependencies.normalizeChoice(
-    input.choice ??
-      (await ownerPreference(env.DB, context.user.id)) ??
-      configuredDefaultChoice(env),
+    input.choice ?? { ...saved, fast: false },
   )
   const resolved = await SessionLogins.resolve(
     dependencies,

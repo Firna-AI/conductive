@@ -1,6 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 
-import { explainSessionPath, sessionPaths } from '../../src/shared/sessions'
+import {
+  explainSessionPath,
+  sessionPaths,
+  type ExplainSessionResponse,
+} from '../../src/shared/sessions'
 import {
   createHarness,
   TEST_TIME,
@@ -23,14 +27,11 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-it('refuses blank, oversized, and malformed selections without creating a session', async () => {
+it('refuses blank and malformed selections without creating a session', async () => {
   const { fixture, explain } = await explanationFixture(harness)
   const before = (await fixture.snapshot()).records
   for (const input of [
     { quote: ' \n\t ' },
-    { quote: 'q'.repeat(2001) },
-    { before: 'b'.repeat(301) },
-    { after: 'a'.repeat(301) },
     { messageId: '' },
     { messageId: 3 },
     { quote: null },
@@ -48,16 +49,23 @@ it('refuses blank, oversized, and malformed selections without creating a sessio
     })
   }
   expect((await fixture.snapshot()).records).toEqual(before)
-  expect(
-    (
-      await explain({
-        ...EXPLAIN_INPUT,
-        quote: 'q'.repeat(2000),
-        before: 'b'.repeat(300),
-        after: 'a'.repeat(300),
-      })
-    ).status,
-  ).toBe(201)
+})
+
+it('cuts a long quote and long context so that each part stays next to the quote', async () => {
+  const { explain } = await explanationFixture(harness)
+  const response = await explain({
+    ...EXPLAIN_INPUT,
+    quote: `${'q'.repeat(2000)}cut`,
+    before: `cut${'b'.repeat(300)}`,
+    after: `${'a'.repeat(300)}cut`,
+  })
+  expect(response.status).toBe(201)
+  const reply: ExplainSessionResponse = await response.json()
+  expect(reply.session.anchor).toMatchObject({
+    quote: 'q'.repeat(2000),
+    before: 'b'.repeat(300),
+    after: 'a'.repeat(300),
+  })
 })
 
 it('refuses an unknown parent or a message outside the parent history', async () => {
@@ -165,20 +173,17 @@ it('requires the member login before creating the explanation', async () => {
   expect((await fixture.snapshot()).records).toEqual(before)
 })
 
-it('requires a closed parent session to be reopened before a start', async () => {
+it('starts an explanation of a closed parent session', async () => {
   const { fixture, parent, explain } = await explanationFixture(harness)
   await fixture.fetch(
     sessionPaths.close(fixture.org.id, WORKSPACE_ID, parent.id),
     { stopRunningTurn: false },
   )
-  const before = (await fixture.snapshot()).records
   const response = await explain()
-  expect(response.status).toBe(409)
-  expect(await response.json()).toEqual({
-    error: {
-      code: 'session_closed',
-      message: 'Reopen the session to send a message.',
-    },
+  expect(response.status).toBe(201)
+  const reply: ExplainSessionResponse = await response.json()
+  expect(reply.session).toMatchObject({
+    closedAt: null,
+    anchor: { parentSessionId: parent.id },
   })
-  expect((await fixture.snapshot()).records).toEqual(before)
 })
