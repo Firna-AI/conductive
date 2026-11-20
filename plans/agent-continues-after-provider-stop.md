@@ -65,14 +65,26 @@ design. Its report is in
      Medium, E2B only, and a guess from times.
    - E: B plus a provider `error` during a turn. Small, but a resume of an
      errored Boat sandbox can lose its newest writes.
-3. **The limit on continuations: D, the 30-day limit of a turn.** No count
-   limit. Continuations go on while less than 30 days have passed since the
-   chain started. The 30 days are the limit of
+3. **The limit on continuations: E, the 30-day limit of a turn and a
+   guard against fast loops.** No count limit. Continuations go on while
+   less than 30 days have passed since the chain started. The 30 days are
+   the limit of
    [The time limit](../docs/protocol/background-work.md#the-time-limit).
-   Rejected: A, one continuation per member message. B, up to 3 in a row.
-   C, no limit. The options check added options E and F. Items 3 and 4 of
-   the report to Cal ask about them. Until Cal answers, they stay open and
-   the plan applies neither.
+   A continuation turn that stops after less than 15 minutes starts no
+   further continuation. Cal first chose D, the 30 days alone, and then
+   chose E on the same day, after the options check added it. Reason:
+   sandbox code on E2B can power off the sandbox again and again, and each
+   power-off would start a new turn. Rejected: A, one continuation per
+   member message. B, up to 3 in a row. C, no limit. D, the 30 days alone.
+4. **Where the app enforces the end of a chain: A, accept the overrun.**
+   The Worker checks the 30 days only when it queues a continuation. The
+   runner counts its own 30-day wait again in each turn. Cal chose this on
+   20 November 2026. Reason: the overrun follows only a rare Boat stop. On
+   E2B, the next pause comes within one runtime limit. Rejected: B, the
+   Worker stops the turn at the end of the chain, because the turn then
+   shows no duration and no files. C, a new field of the `turn` command
+   with the end of the chain, because it adds a protocol change for little
+   gain.
 
 ## Design
 
@@ -138,7 +150,15 @@ decision. The options check corrected several of them on the same day.
   the future. Otherwise the old turn ends with `cloud_computer_stopped` and
   no continuation. Reason: the background-work count starts at the first
   wait, so this anchor is the same or earlier. It never runs longer than
-  the protocol limit at the moment of the stop.
+  the protocol limit at the moment of the stop. A continuation turn that
+  is already running can still wait past the end of the chain (decision 4).
+- **The guard against fast loops (decision 3).** A continuation turn
+  stores the time at which the runner started it. When a provider stop
+  ends a continuation turn less than 15 minutes after that time, the chat
+  queues no further continuation and starts no sandbox. The old turn ends
+  with `cloud_computer_stopped`, and `turn.continued` has no `turnId`. Its
+  line says that a member must continue. A member message starts a new
+  chain, with the guard reset.
 - **The Stop of the old turn.** The continuation's `turn` command comes
   after an `interrupt` for the old turn. Dispatch sends that interrupt,
   also though the turn ended as stopped, as it does for a failed turn that
@@ -163,6 +183,8 @@ decision. The options check corrected several of them on the same day.
   - The old turn: "The cloud computer stopped".
   - The continuation line: "The cloud computer stopped while the agent
     worked. The agent continues when it starts again."
+  - The line at the guard or at the end of the chain: "The cloud computer
+    stopped while the agent worked. Send a message to continue."
   - The agent text: "This message comes from Conductive, not from a member.
     The cloud computer of this workspace stopped while you worked, and it
     started again. Your processes may have ended, also background tasks,
@@ -209,7 +231,9 @@ for the continuation turn.
 - [ ] Add a continuation line component beside `EndReasonLine.tsx`.
 - [ ] Add a mockup entry that shows an interrupted turn, its end line, and
       the continuation turn with the agent's reply. Add a second state in
-      which the line names who must act because the login is gone.
+      which the line names who must act because the login is gone. Add a
+      third state in which the guard or the end of the chain stops the
+      continuations.
 - [ ] Run `npm run mockups:check`. Smoke-test the new page with
       `npm run mockups:serve`, and save a screenshot in `.context/`.
 - [ ] Update the design and the TODOs of this plan for each problem that
@@ -224,7 +248,8 @@ Depends on: 1
       sandbox. Say that the idle stop rule does not hold at a provider stop.
 - [ ] `docs/protocol/messages-and-attachments.md`: the two new lines.
 - [ ] `docs/protocol/background-work.md`: the 30-day limit covers a chain
-      of continuation turns, and `endReason` gets a second value.
+      of continuation turns, with the 15-minute guard and the overrun of
+      decision 4. `endReason` gets a second value.
 - [ ] `docs/protocol/chat-and-events.md`: the `turn.continued` event.
 - [ ] `docs/protocol/agent-runner.md`: the workspace can send Stop for a
       turn that a provider stop ended.
@@ -266,6 +291,8 @@ Depends on: 3
       end reason, and insert the continuation turns with their unanswered
       member messages.
 - [ ] Add `chainStartedAt` and apply the 30-day limit.
+- [ ] Store the start time of a continuation turn and apply the 15-minute
+      guard.
 - [ ] Check the login in a read step before the stop transaction.
 - [ ] Queue and dispatch the interrupt of the old turn, and remove it at
       the runner's end or `runner.ready`.
@@ -273,7 +300,8 @@ Depends on: 3
       alarm.
 - [ ] Tests: two sessions with running turns. A turn that a member was
       stopping. A turn that never started. A member message in the
-      detection window. A repeat of the chat stop. The 30-day limit. A
+      detection window. A repeat of the chat stop. The 30-day limit. The
+      15-minute guard, and its reset by a member message. A
       sender without the login. A refused start. The interrupt before the
       continuation turn.
 - [ ] Update the lifecycle and chat READMEs.
