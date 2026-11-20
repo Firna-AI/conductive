@@ -70,6 +70,13 @@ On E2B, this mode recovers identity without create, connect, or guest setup.
 Only `ProviderAllocationAbsent` proves that no allocation can still appear.
 Boat construction and its existing create replay behavior stay the same.
 
+When `observeProviders` marks the D1 binding of the env, every provider
+comes through the observer of that binding. The provider itself gets the
+untimed binding, so that the D1 calls of an E2B client count once. A workspace object uses it to time
+the provider calls of its starts, as
+[Start step records](../lifecycle/workspace-object.md#start-step-records)
+says.
+
 The `boat` account, `DEFAULT_PROVIDER_ACCOUNT` in
 [account-identity.ts](account-identity.ts), always uses `BOAT_API_KEY` and
 `BOAT_ORG_ID`. The optional `SANDBOX_PROVIDER_ACCOUNTS` Worker secret is JSON text.

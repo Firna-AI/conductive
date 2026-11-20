@@ -103,18 +103,27 @@ export async function runningBuild(
   return row?.id ?? null
 }
 
+/** The one statement of a phase change. It resets the command of the job. */
+export function buildPhaseStatement(
+  db: D1Database,
+  buildId: string,
+  phase: BuildPhase,
+  processId: number | null = null,
+): D1PreparedStatement {
+  return db
+    .prepare(
+      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
+    )
+    .bind(phase, processId, buildId)
+}
+
 export async function updateBuildJob(
   db: D1Database,
   buildId: string,
   phase: BuildPhase,
   processId: number | null = null,
 ): Promise<void> {
-  await db
-    .prepare(
-      'UPDATE image_build_jobs SET phase = ?, process_id = ?, stdout_offset = 0, stderr_offset = 0 WHERE build_id = ?',
-    )
-    .bind(phase, processId, buildId)
-    .run()
+  await buildPhaseStatement(db, buildId, phase, processId).run()
 }
 
 export async function assignBuildSandbox(
@@ -176,8 +185,9 @@ export async function writeBuildLog(
   buildId: string,
   text: string,
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db.batch(buildLogStatements(db, buildId, text, now))
+  await db.batch([...buildLogStatements(db, buildId, text, now), ...records])
 }
 
 export async function failBuild(
