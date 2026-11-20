@@ -4,10 +4,22 @@ import { ShortcutContext, type ShortcutLayer } from './shortcut-context'
 import { focusOf } from './shortcut-listener'
 
 /**
+ * The target sits inside an editable element, such as a button of a chip
+ * in the message field, which the field marks as not editable.
+ */
+function insideEditable(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    target.parentElement?.closest('[contenteditable="true"]') != null
+  )
+}
+
+/**
  * Escape is free for the page: a first press with no modifier and no
- * composition, from the page and not from a text field or a terminal,
- * while no menu, dialog, sheet, or recorder is open. The layers count as
- * they are when the press starts, before a handler closes one of them.
+ * composition, from the page and not from a text field, a control inside
+ * one, or a terminal, while no menu, dialog, sheet, or recorder is open.
+ * The layers count as they are when the press starts, before a handler
+ * closes one of them.
  */
 function freeEscape(
   event: KeyboardEvent,
@@ -22,6 +34,7 @@ function freeEscape(
   if (focusOf(event.target, shortcuts?.terminals ?? new Set()) !== 'page') {
     return false
   }
+  if (insideEditable(event.target)) return false
   return !layers?.menuOpen() && !layers?.modalOpen()
 }
 

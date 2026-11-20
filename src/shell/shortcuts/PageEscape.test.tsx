@@ -9,13 +9,21 @@ import { usePageEscape } from './page-escape'
 import { ShortcutContext, type ShortcutLayer } from './shortcut-context'
 import { ShortcutOffers } from './shortcut-offers'
 
-/** The page of the test: a button, a text field, and a terminal. */
+/**
+ * The page of the test: a button, a text field, a message field with the
+ * button of a chip, and a terminal.
+ */
 function Page(props: { run: (() => void) | null }) {
   usePageEscape(props.run)
   return (
     <>
       <button type="button">Row</button>
       <input aria-label="Search" type="text" />
+      <div contentEditable suppressContentEditableWarning>
+        <span contentEditable={false}>
+          <button type="button">Remove</button>
+        </span>
+      </div>
       <div data-terminal="">
         <button type="button">Screen</button>
       </div>
@@ -68,6 +76,7 @@ function mountPage(active = true) {
     row: element('button'),
     field: element('input'),
     screen: element('[data-terminal] button'),
+    chip: element('[contenteditable="false"] button'),
     hide: () => render(<Page run={null} />),
   }
 }
@@ -107,9 +116,10 @@ describe('Escape as the fixed key of the page', () => {
     })
   })
 
-  test('a text field, a terminal, an open menu, an open dialog, and a recorder keep Escape', () => {
+  test('a text field, a button of a chip in the message field, a terminal, an open menu, an open dialog, and a recorder keep Escape', () => {
     const page = mountPage()
     const field = escapeOn(page.field, page.run)
+    const chip = escapeOn(page.chip, page.run)
     const screen = escapeOn(page.screen, page.run)
     const closeMenu = page.layers.addMenu(() => true)
     const menu = escapeOn(page.row, page.run)
@@ -121,8 +131,9 @@ describe('Escape as the fixed key of the page', () => {
     const recorder = escapeOn(page.row, page.run)
     page.shortcuts.recorders.clear()
 
-    expect({ field, screen, menu, dialog, recorder }).toEqual({
+    expect({ field, chip, screen, menu, dialog, recorder }).toEqual({
       field: { prevented: false, runs: 0 },
+      chip: { prevented: false, runs: 0 },
       screen: { prevented: false, runs: 0 },
       menu: { prevented: false, runs: 0 },
       dialog: { prevented: false, runs: 0 },

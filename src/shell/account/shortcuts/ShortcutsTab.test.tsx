@@ -162,6 +162,7 @@ describe('the Keyboard shortcuts tab', () => {
             'Next tab',
             'Close tab',
             'Reopen closed session',
+            'Close the temporary tab',
             'Open the menu of a focused tab',
           ],
         ],

@@ -137,6 +137,9 @@ draws the temporary tab at `app/files/temporary`.
 - Escape is a [fixed key](keyboard-shortcuts-fixed-keys.md#fixed-keys), so
   no person can change it. A command with its own key in the Keyboard
   shortcuts tab was not chosen.
+- The Keyboard shortcuts tab shows Escape as the fixed row Close the
+  temporary tab, in the Navigation group. Reason: the tab lists each use
+  of a fixed key in its own row, so a search there finds the key.
 - Escape closes the tab only when nothing else on the page takes the key:
   - The focus is not in a text field, such as the message field, or in a
     terminal.

@@ -236,6 +236,7 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('reopen-session', 'Reopen closed session', '⇧⌘T', '⌥⇧⌘T'),
       ...numbered('org', 'Switch to org', (digit) => [`⌃${digit}`]),
       command('repositories-settings', 'Repositories settings', '⌥⌘A'),
+      fixed('Close the temporary tab', ['Esc']),
       tabMenuKeys,
     ],
   },
