@@ -6,7 +6,7 @@ with an "Open" link to a new tab. On desktop, `PreviewPanel` is the Preview
 tool of the tools panel: the list of ports, with no bar and no frame. The
 page of each port then shows in its Preview tab of the centre row, which
 the workspace screen draws, as
-[the tools part](../shell/workspace/screen-parts.md#the-tools-part) says.
+[Preview tabs](../shell/workspace/tools-part.md#preview-tabs) says.
 
 ## The desktop tool
 
@@ -88,6 +88,44 @@ the workspace screen draws, as
   page, such as the browser's JSON view in dark mode, shows dark.
 - A failed request shows its message and leaves the tool usable.
 
+## The files preview
+
+The files preview shows the files of the workspace's repository folder,
+from the file server of the agent runner, as
+[HTML file preview](../../docs/protocol/html-file-preview.md) says. The tab
+of an HTML file shows it, as
+[The tabs of HTML files](../shell/workspace/html-tabs.md) says. It is no
+port preview: no list and no tab of the Preview tool holds it.
+
+- `openFilesPreview` of `previewsApi.ts` sends `POST` to the route of the
+  files preview with an empty JSON object. The reply gives the files
+  preview of the workspace, with port 0, or the active one. A runner that
+  announced no file server gets the error `file_server_unavailable`.
+- `filesPreview.ts` holds the store of the files preview of one workspace:
+  the files preview that lives, the previews that ended, whether an open
+  runs, whether it is in a running period, and the count of its periods. A
+  `preview.revoked` event of its ID ends it, and so does the action
+  `ended`, which the shell sends at its expiry and when the cloud computer
+  stops. An open that answers with a preview that ended changes nothing.
+- A running period lasts while the workspace is ready and the open of the
+  visit of the screen has ended, as `WorkspaceModel.opened` says. Before
+  that open ends, the screen can show a saved state. The shell sends the
+  action `running` at each start and each end of a running period. The
+  action ends the open that runs, but keeps the files preview, so a
+  Restart keeps the page that a tab shows.
+- The action `disconnected`, at the end of the connection of the screen,
+  forgets the files preview and the open that runs. The count of the
+  periods grows at each start and each end of a running period, and at
+  each end of the connection. An open answers with the count of the period
+  in which it started, and an answer of an earlier period changes nothing.
+  A failed open forgets the files preview too, but ends no ID, so the next
+  open can answer it again.
+- `PreviewFrame` takes an optional `file`: the real path, which the launch
+  address names through `previewLaunchUrl`, and the file name of its
+  label, which names the frame, such as "Preview of report.html".
+  `OpenInNewTab` takes the same `path`. Without them, both open the root of
+  the preview, as for a port.
+
 ## Mount the tool
 
 ```tsx
@@ -145,7 +183,9 @@ the workspace screen draws, as
 - `addressPort.ts`: `useAddressPort`, which opens the port of each address
   once.
 - `PreviewToolbar.tsx`: the link tabs and the actions of a preview.
-- `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link.
+- `PreviewFrame.tsx`: the frame, its sandbox flags, and the new tab link,
+  at the path of a file for the files preview.
+- `filesPreview.ts`: the store of the files preview of one workspace.
 - `PreviewOpenForm.tsx`: the port form, its list states, and its field.
 - `ServerRows.tsx`: the buttons of the detected servers.
 - `PortsNotice.tsx`: the notice of a failed repair of the list.
@@ -155,7 +195,8 @@ the workspace screen draws, as
   desktop tool lists. `previewOfPort` gives the oldest preview of a port. The reducer takes the tool's actions and the
   events.
 - `previewsStore.ts`: the tool store, and the action of a failed repair.
-- `previewsApi.ts`: list, open, and close requests.
+- `previewsApi.ts`: list, open, and close requests, and the open of the
+  files preview.
 
 See [Port previews](../../docs/protocol/port-previews.md),
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports),

@@ -18,9 +18,14 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
+import { formattingConversations } from './formattingConversations'
 import {
   headingConversations,
   type MessageHeading,
@@ -33,17 +38,21 @@ import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { postcodeHistory } from './postcodeConversation'
+import type { MessageQuote, MessageRule } from './proseBlocks'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
+import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
+import { skillConversations } from './skills'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
@@ -58,10 +67,16 @@ type MessageCodeBlock = { kind: 'code'; text: string }
 
 /**
  * A block of a message of the agent: a paragraph, a heading, a table, a
- * list, or a code block.
+ * list, a code block, a quote, or a rule.
  */
 export type AgentBlock =
-  string | MessageHeading | MessageTable | MessageList | MessageCodeBlock
+  | string
+  | MessageHeading
+  | MessageTable
+  | MessageList
+  | MessageCodeBlock
+  | MessageQuote
+  | MessageRule
 
 export type ChatItem =
   | {
@@ -80,6 +95,11 @@ export type ChatItem =
       id: string
       /** The blocks of the message, in order. */
       blocks: readonly AgentBlock[]
+      /**
+       * The agent still writes the message, so a mark that opens at the end
+       * of its text closes there (item 9 C of the Markdown plan).
+       */
+      live?: true
     }
   | {
       kind: 'tool'
@@ -169,6 +189,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
   | SecretRunItem
   | LateAnswerItem
 
@@ -230,6 +251,7 @@ export const conversations: Readonly<
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...skillConversations(history),
   ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,
@@ -239,6 +261,10 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...taskListConversations,
   ...headingConversations,
+  ...formattingConversations,
+  /** The chat of the removed workspace that a chip opens. */
+  'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
 }

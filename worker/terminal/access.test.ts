@@ -11,6 +11,7 @@ import {
 import { TEST_ORIGIN, TEST_TIME } from '../test-support/harness'
 import { barrier } from '../previews/stream-test-support'
 import { createTerminalHandler } from './handler'
+import { WorkspaceTerminals } from './workspace'
 import { startWorkspaceTerminal } from './service'
 
 let harness: ToolsHarness
@@ -38,11 +39,15 @@ async function fixture() {
     now: clock.now,
     terminalSchedule: clock.schedule,
   }
-  const handler = createTerminalHandler(harness.env, dependencies)
+  const handler = createTerminalHandler(
+    harness.env,
+    dependencies,
+    new WorkspaceTerminals(harness.native.actor(seed.workspaceId).api.chat),
+  )
   const open = async (session = seed.session) => {
     const response = await handler.fetch(
       new Request(
-        `${TEST_ORIGIN}${terminalPaths.socket(seed.orgId, seed.workspaceId)}`,
+        `${TEST_ORIGIN}${terminalPaths.terminalSocket(seed.orgId, seed.workspaceId, 'workspace')}`,
         {
           headers: {
             Cookie: session,

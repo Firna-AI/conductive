@@ -9,9 +9,10 @@ provider, the org image, and the startup script. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A chat link decision number names a decision of the change that
 makes each web address of chat text a link, as
-[Chat links](chat-links.md) says. A terminal links decision number names
-a decision of the change that makes the addresses in the terminal open.
-The [mockup catalogue](../mockups/catalogue.md) draws the tools at
+[Chat links](chat-links.md) says. A Markdown parser decision names a
+decision of the change that reads Markdown with one parser, as
+[Chat Markdown](chat-markdown.md) says. The
+[mockup catalogue](../mockups/catalogue.md) draws the tools at
 `app/files` and `app/tools`.
 
 ## Files and changes
@@ -25,11 +26,25 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A file opens in a tab of the centre column. A press on a file opens it in
   the temporary tab, as [Temporary tabs](temporary-tabs.md) says.
 - Markdown shows rendered, with a switch to its source. Code shows with line
-  numbers and syntax colours.
+  numbers and syntax colours. An HTML file shows as a page, with a switch to
+  its source, as [HTML file preview](html-file-preview.md) says.
+- The Markdown preview reads a file with the parser of the chat, by the
+  rules of CommonMark with the tables and the strikethrough of GitHub, as
+  [Formatting](chat-markdown.md#formatting) says (Markdown parser decision
+  3 C, 16 November 2026). Quotes, rules, strong text, emphasis,
+  strikethrough, task boxes, headings, and tables have the same look as in
+  the chat.
+- HTML in a Markdown file shows as text. A line-break tag, `<br>`,
+  `<br/>`, or `<br />` in any letter case, shows as a line break, also in a
+  table cell, as [Line breaks](chat-markdown.md#line-breaks) says
+  (Markdown parser decision 1, 16 November 2026).
+- Reason: a file of the repository is untrusted, so no HTML of a file
+  reaches the page. A table of a file with line-break tags then reads as
+  on GitHub.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
-  [Line targets](file-mentions.md#line-targets) says (answer chip
-  decision 2). The tab then shows the text of the file, also for a
+  [Line targets](file-mentions-answers.md#line-targets) says (answer
+  chip decision 2). The tab then shows the text of the file, also for a
   Markdown file. It scrolls the first line to the middle of the view, and
   marks each line of the range with a background colour.
 - The address of such a tab names the lines in its query, as
@@ -54,6 +69,15 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - Unlike chat text, the Markdown preview also links a `mailto` address,
   an address with a user name or a password, and an address of the app
   that names no page.
+- An image of the Markdown preview shows its alt text, and no picture
+  loads. At a web address, the alt text is a link to that address, with
+  the rules of a link of the Markdown preview (Markdown parser decision
+  10 B, 18 November 2026). Any other image shows its alt text only.
+- Reason: such an image then shows as in an agent message, as
+  [Chat links](chat-links.md#bare-addresses-and-markdown-links) says. The
+  alt text without a link was not chosen for that reason. No picture
+  loads, because a picture at a web address makes the browser of each
+  reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back
@@ -103,7 +127,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
   counts them as local work, as [Actions](github-banner.md#actions) says.
 - After a start from a saved snapshot, the runner watches the live
   repository folder again when the app sees the end of the restore, and it
-  scans the repository once. It uses the same signal as the terminal below.
+  scans the repository once. It uses the same signal as the terminal, as
+  [The shell](terminal-shell.md#the-shell) says.
 - Reason: a watch made before the restore ends stays on the old view of the
   disk, so the lists stop updating. A file that the provider writes inside
   the sandbox at the end of its restore was rejected, because the provider
@@ -152,7 +177,7 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
-  connected, a file read falls back to Boat's file read.
+  connected, a file read falls back to the file read of the provider.
 - The Durable Object keeps the last tree and the last changes, so both tabs
   still show them while the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox
@@ -188,150 +213,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws the tools at
 
 ## Terminal
 
-- The Terminal tab opens a shell in the sandbox, in the folder of the
-  workspace's repository (decision 94).
-- The default shell prompt shows only the current folder name, such as
-  `mokly`, in place of the full path.
-- On desktop, a click on the Terminal tab of the tools panel moves the
-  keyboard focus to the terminal. So does Go to Terminal, from its row of
-  the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere. A
-  terminal that still connects takes the focus when it shows, unless the
-  user moved the focus in the meantime. A choice of another tool drops
-  that wait. The user asked for the tab on 16 November 2026, and chose the
-  same for Go to Terminal on the same day.
-- Reason: a click on the tab says that the user wants to type in the
-  shell, so a second click in the terminal is a wasted step. A terminal
-  that takes the focus after the user chose another field was rejected,
-  because the user's keys then go to the shell.
-- The Terminal shell of a workspace keeps running when its connection
-  drops. Each new connection attaches to that shell, with its running
-  commands and its current screen (decision 118).
-- Reason: a connection can drop at any time, such as at a network change
-  or when Cloudflare updates the runtime of the Worker. A shell that ends
-  with its connection was rejected, because the user then loses a running
-  command, such as a dev server.
-- After a start from a saved snapshot, the sandbox provider restores the
-  disk in the background. A shell that starts after the restore ends opens
-  in the live repository folder. A shell that started earlier moves to the
-  live copy of its own folder once, at its first prompt after the app sees
-  the end of the restore (decisions 147 and 149).
-- Reason: when the restore ends, a running program keeps an old view of
-  the disk at another path. A restart of the shell was rejected, because it
-  ends running commands. A terminal that waits for the end of the restore
-  was rejected, because the Terminal tab then waits too.
-- Apart from that one move, the terminal never moves a running shell by
-  itself. The app learns the end of the restore from a signal that the
-  sandbox provider documents (decision 149).
-- Reason: a move each time that the real folder of a shell differs from
-  the path in its prompt was rejected, because it also moves a shell
-  outside a restore. A check of the provider's path of the old view was
-  rejected, because the provider does not document that path.
-- Every byte of output reaches the screen and its output history, also
-  when a program writes faster than the screen redraws. The user chose
-  this on 13 November 2026.
-- Reason: the user copies long output, such as a build log. A terminal
-  that keeps only the lines that end on the screen was rejected, because a
-  test showed that it lost most lines of fast output. A copy of the
-  history through the clipboard writes of tmux, a separate history view,
-  and a join of screens during a drag were also rejected. The first lets a
-  sandbox process write the user's clipboard, and the others leave the
-  drag in the terminal broken or fragile.
-- A new connection first shows the output history of the shell, up to
-  2,000 lines, then its current screen. The screen keeps up to 2,000 lines
-  of history. The user chose 2,000 lines on 13 November 2026.
-- Reason: a reload shows the same history as a live screen. 5,000 and
-  10,000 lines were rejected, because each connection then sends more
-  data, which is slow on a phone.
-- A plain drag selects text on the screen and in its output history, and
-  the user can copy it, such as with Cmd+C on a Mac. A drag past the top
-  or the bottom edge scrolls the history. This also holds while a program
-  in the shell, such as vim, uses the mouse (decision 246).
-- The wheel scrolls the output history. While a program in the shell uses
-  the mouse, the wheel, the right button, and the middle button reach the
-  program. A held Cmd on a Mac, or Ctrl on Windows and Linux, gives a
-  click or a drag to the program, except a click on a link, as the
-  rules of links below say.
-- Reason: the user expects to select and copy as in the rest of the page.
-  A copy through the clipboard writes of the program was rejected, because
-  any process in the sandbox could then write the user's clipboard.
-- All viewers of a shell share one size, at most 500 columns and 200 rows.
-  A new connection sets it, and so does the viewer where the user last
-  typed, pasted, or resized. Each other viewer shows the shell at that
-  size: with smaller text when the size is larger than its panel, and with
-  empty space when it is smaller.
-- Reason: the output of a program fits one size, so one size keeps the
-  line breaks right for every viewer. The limit stops a program in the
-  shell from setting a size that no browser can hold.
-- Each key reaches the program in the shell. The terminal has no key
-  commands and no status line of its own, so Ctrl-b reaches the shell. The
-  user accepted this on 13 November 2026.
-- Reason: terminal tabs open more shells, so the shell needs no window
-  keys of its own.
-- A paste reaches a program as a paste, also after a reconnect, so a
-  program that marks pastes, such as vim or Bash, does not run the pasted
-  text as keys.
-- A workspace with older terminal software shows only its visible screen
-  in the history until an automatic software update applies, as
-  [Software updates](sandbox-software.md#updates) says.
-- Each `http` and `https` address in the output is a link. A held Cmd on
-  a Mac, or Ctrl on Windows and Linux, and a click open it (terminal links
-  decision 2 A). Such a click does not reach a program that uses the
-  mouse.
-- Reason: a plain click starts a selection, so a plain click that opens a
-  link was rejected. A rule that gives the click to a program that uses
-  the mouse was rejected, because the same click would then act in two
-  ways.
-- A local address opens the Preview tool at its port, as
-  [Port previews](port-previews.md) says. Its host is `localhost`,
-  `127.0.0.1`, `[::1]`, or `0.0.0.0`. Every other link opens in a new tab
-  of the browser, or in the default browser from the Mac app (terminal
-  links decision 1 B).
-- Reason: a local address in the terminal names the cloud computer, not
-  the user's computer. A new tab with the preview was rejected, because
-  the Preview tool keeps the user in the workspace.
-- A link under the mouse pointer shows an underline and a hint with the
-  key, such as "⌘-click to open".
-- A touch on a link opens it with no key, on each screen size. A mouse
-  always needs the key (terminal links decision 3 D).
-- Reason: a touch screen has no Cmd or Ctrl key. A rule by screen size
-  was rejected, because a narrow desktop window has a mouse, and a tablet
-  has the desktop layout. A menu, a long press, and Ctrl of the key row
-  then a tap were rejected, because each needs a second step or is hard
-  to find.
-- A program can print a link with a label, an OSC 8 link. The hint of
-  such a link also names the host of its real address, such as
-  "⌘-click to open reports.storefront.dev" (terminal links decision 4 B).
-- Reason: a label can hide where its link leads, and code in the sandbox
-  is untrusted. A dialog before each such link was rejected, because it
-  adds a step. A rule that such links open nothing was rejected, because
-  tools such as `ls --hyperlink` lose their links.
-- An address with a user name or a password, and an address with another
-  scheme, open nothing and show no hint.
-- When the connection ends, the user can still select and copy the text
-  that stays on the screen (decision 245).
-- Reason: the screen keeps its output so that the user can still use it,
-  such as an error message.
-- When the user ends the shell, such as with `exit`, the next connection
-  opens a new shell.
-- A stop of the sandbox ends the shell and its commands, as
-  [Stop and resume](workspace-life.md#stop-and-resume) says. The first connection after the
-  resume opens a new shell.
-- The commands that the user typed in the shell stay in its command
-  history after a stop. The new shell after the resume finds them, such as
-  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
-  history decisions are the decisions of the change that added this rule.
-- Each command goes into the history file when it ends, before the next
-  prompt. A command that still runs at the stop, such as a dev server, does
-  not go in. An empty or unset `HISTFILE` keeps the history out of the
-  file.
-- Reason: Bash writes its history file only when the shell exits. The
-  shell exits only during the shutdown at a stop, and a test on
-  16 November 2026 found no history file after the resume. The append
-  writes each command while the sandbox runs. A
-  shell that also reads the new commands of the other shells at each
-  prompt was rejected, because it changes the order of the Up arrow while
-  the user works.
-- On a phone, a row of keys adds the keys that a phone keyboard lacks.
+[Terminal](terminal.md) gives the terminals of a workspace and their tabs,
+the shell of each terminal, its screen, and its links.
 
 ## Port previews
 

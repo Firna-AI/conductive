@@ -1,0 +1,16 @@
+[Unit]
+Description=Conductive computer MCP settings
+Requires=conductive-e2b-desktop.service
+After=conductive-e2b-desktop.service
+Before=conductive-runner.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=user
+Group=user
+Environment=HOME=/home/user
+ExecStart=/usr/bin/python3 /usr/local/lib/conductive-e2b/computer-config.py
+
+[Install]
+WantedBy=multi-user.target

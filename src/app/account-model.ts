@@ -16,18 +16,16 @@ import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
 import { AccountLoginReads } from './account-login-reads'
+import { AccountLoginRequests } from './account-login-requests'
 import { AccountLoginWrites } from './account-login-writes'
 import { ignore, nested, record } from './api/parse'
-import {
-  readChoice,
-  readGitHubRepositories,
-  readInstallations,
-  readNewWorkspaceView,
-} from './api/read-core'
+import { readChoice, readNewWorkspaceView } from './api/read-core'
+import { readGitHubRepositories, readInstallations } from './api/read-github'
 import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { EndpointReads, type LoginReads } from './endpoint-reads'
+import type { LoginObservation } from './login-observation'
 import { Refresher } from './refresh'
 import { Resource } from './resource'
 import type { AppServices } from './services'
@@ -61,6 +59,7 @@ export class AccountModel {
   readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
   /** The logins of `account`, in the order of their changes. */
   private readonly logins = new AgentLogins(this.account)
+  private readonly loginRequests = new AccountLoginRequests()
   private readonly loginReads: AccountLoginReads
   private readonly loginWrites: AccountLoginWrites
   private readonly services: AppServices
@@ -72,7 +71,12 @@ export class AccountModel {
   constructor(services: AppServices, app: AppModel) {
     this.services = services
     this.app = app
-    this.loginReads = new AccountLoginReads(app, this.account, this.logins)
+    this.loginReads = new AccountLoginReads(
+      app,
+      this.account,
+      this.logins,
+      this.loginRequests,
+    )
     const endpointReads = new EndpointReads()
     this.endpointReads = endpointReads.store
     this.loginWrites = new AccountLoginWrites(
@@ -161,28 +165,52 @@ export class AccountModel {
     return this.loginReads.refresh()
   }
 
+  /** Reports a newer login status without merging partial account data. */
+  observeLogin(observation: LoginObservation): void {
+    this.loginReads.observe(observation)
+  }
+
+  /** Whether a complete account reply is newer than this observed status. */
+  loginObservationCurrent(observation: LoginObservation): boolean {
+    return this.loginReads.current(observation)
+  }
+
+  /** Keeps the default logins current while a missing-login notice shows. */
+  watchMissingLogin(): () => void {
+    return this.loginReads.watchMissing()
+  }
+
   login(agent: Agent): AgentLoginStatus {
     return this.logins.get(agent)
   }
 
   /** Saves a login, as `AccountLoginWrites.save` says. */
   saveLogin(request: SaveAgentLoginRequest): Promise<void> {
-    return this.loginWrites.save(request)
+    this.logins.change(request.agent)
+    return this.loginRequests.run([request.agent], () =>
+      this.loginWrites.save(request),
+    )
   }
 
   /** Starts a ChatGPT sign-in of Codex. No token comes to the browser. */
   startCodexSignIn(): Promise<StartCodexDeviceResponse> {
-    return this.loginWrites.startCodexSignIn()
+    return this.loginRequests.run(['codex'], () =>
+      this.loginWrites.startCodexSignIn(),
+    )
   }
 
   /** Asks the Worker for the state of the ChatGPT sign-in of `handle`. */
   pollCodexSignIn(handle: string): Promise<PollCodexDeviceResponse> {
-    return this.loginWrites.pollCodexSignIn(handle)
+    return this.loginRequests.run(['codex'], () =>
+      this.loginWrites.pollCodexSignIn(handle),
+    )
   }
 
   /** Refreshes an endpoint list, without restoring a changed login. */
   refreshModels(agent: Agent): Promise<void> {
-    return this.loginWrites.refreshModels(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.refreshModels(agent),
+    )
   }
 
   /**
@@ -190,12 +218,27 @@ export class AccountModel {
    * run on a login of the user, as `AccountLoginWrites.setNoReuse` says.
    */
   setNoReuse(agent: Agent, noReuse: boolean): Promise<void> {
-    return this.loginWrites.setNoReuse(agent, noReuse)
+    this.logins.change(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.setNoReuse(agent, noReuse),
+    )
   }
 
   /** Removes a login, with the note and the warning of its reads. */
   removeLogin(agent: Agent): Promise<void> {
-    return this.loginWrites.remove(agent)
+    this.logins.change(agent)
+    return this.loginRequests.run([agent], () => this.loginWrites.remove(agent))
+  }
+
+  /**
+   * An admin changed an org login of `agent`, so the default logins of the
+   * account are read again, as `AccountLoginWrites.orgLoginChanged` says.
+   */
+  orgLoginChanged(agent: Agent): Promise<void> {
+    if (this.logins.namesDefaults()) this.logins.change(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.orgLoginChanged(agent),
+    )
   }
 
   async setDefaultChoice(choice: AgentChoice): Promise<void> {

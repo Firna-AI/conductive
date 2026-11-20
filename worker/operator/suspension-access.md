@@ -32,11 +32,12 @@ The suspension stays on the user record. Each of these entries reads it:
   while it is idle, so it closes, as the
   [chat backend](../chat/access.md) says. The agent tools, the git
   credential route, and the Mac command route refuse the token too.
-- The user as the starter of a session or the sender of a turn. In one
-  read, `resolveLogin` refuses the login of a suspended starter and the
-  message of a suspended sender, as the
-  [chat backend](../chat/access.md) says. The agent tools and the
-  Mac commands refuse that sender.
+- The user as the owner of a personal session login or the sender of a
+  turn. `readLoginAccess` refuses a suspended personal owner and a
+  suspended sender, as the [chat backend](../chat/access.md) says.
+  An org session does not check its starter's membership or suspension.
+  The workspace owner and the sender still pass their normal checks.
+  The agent tools and the Mac commands refuse a suspended sender.
 
 A stopped workspace of the user gets no disk retention restart. So Boat
 can delete its disk after 14 days, as

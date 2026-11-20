@@ -1,5 +1,7 @@
 //! Decode Linux little-endian socket words and exclude the image's own services.
 
+use cnd_runner_interface::file_server::FILE_SERVER_PORT;
+
 /// Stable identity for one IPv4 or IPv6 listener.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ListeningSocket {
@@ -67,7 +69,17 @@ pub fn listening_sockets(table: &str, ipv6: bool, uid: u32) -> Vec<ListeningSock
         };
         let inode = fields[9];
         if port == 0
-            || [7681, 7682, 8911, 47984, 47989, 47990, 48010].contains(&port)
+            || [
+                7681,
+                7682,
+                u64::from(FILE_SERVER_PORT),
+                8911,
+                47984,
+                47989,
+                47990,
+                48010,
+            ]
+            .contains(&port)
             || !inode.starts_with(|c: char| c.is_ascii_digit() && c != '0')
             || !inode.bytes().all(|byte| byte.is_ascii_digit())
         {

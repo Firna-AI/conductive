@@ -5,19 +5,41 @@ of the terminal, the port previews, and the desktop. It also covers the
 proxies to a sandbox. It belongs to
 [Access and security](access-and-security.md), which covers sign-in, the
 gates of the Worker, the request bodies, and the content security policy.
-[Tools of a workspace](workspace-tools.md) states what these tools show.
-The terms are those of the [architecture doc](../architecture.md#terms). A
-decision number names a dated record, as
-[Decision numbers](../architecture.md#decision-numbers) says.
+[Preview grants](preview-grants.md) belongs to this doc. It states the
+launch address, the grant, the authorizer, and the credential cookie of a
+preview.
+[Tools of a workspace](workspace-tools.md) and [Terminal](terminal.md)
+state what these tools show. The terms are those of the
+[architecture doc](../architecture.md#terms). A decision number names a
+dated record, as [Decision numbers](../architecture.md#decision-numbers)
+says. A terminal tabs decision number names a decision of the change that
+adds terminal tabs to the Terminal tool, as [Terminal](terminal.md) says.
 
 ## Terminal
 
-- The terminal socket runs on `app.conductive.build`, behind its gate.
+- The socket of each terminal runs on `app.conductive.build`, behind its
+  gate.
 - The terminal listens on a private port of the sandbox. The Worker
-  connects to it with Boat's port cookie and a password for each
-  workspace.
+  connects to it with the port credential of the provider and a password
+  for each workspace.
 - Reason: sandbox code can make a port public, and the password still
   guards the terminal.
+- Only the Worker chooses the shell that a socket reaches. It chooses a
+  terminal from the list of terminals of the workspace (terminal tabs
+  decision 1).
+- The sandbox also checks the terminal that the Worker names. It opens no
+  shell for a name that is not valid.
+- Reason: the browser then passes no value of its own to a program in the
+  sandbox. The password of each workspace still guards each terminal.
+- A socket for a terminal that is not in the list of the workspace gets no
+  shell. A socket for a terminal whose close has started gets no shell
+  either.
+- Reason: a reconnect during a close would otherwise start a shell that no
+  tab shows.
+- The open and the close of a terminal pass the same checks as its
+  socket. So the sandbox must run, and neither the workspace owner nor the
+  org may be suspended.
+- Reason: the Terminal tool shows only while the sandbox runs.
 
 ## Port previews
 
@@ -32,60 +54,11 @@ decision number names a dated record, as
   cross-site requests and sockets, also under `no-referrer`. A hostname as
   the credential was rejected, because a preview page then leaks it to
   each site that it calls.
-- The API gives each preview a launch address on the app's hostname. The
-  address holds no secret, because each load needs the sign-in and access
-  to the workspace.
-- Each load of the launch address, in a frame or in a tab, gets a new
-  grant. A form on the launch page posts the grant to the authorizer, a
-  fixed hostname on the preview domain. The authorizer sets the credential
-  cookie, then sends the browser to the preview hostname.
-- Only pages on the app origin and on the desktop origin of the
-  [Mac app](desktop-app.md#the-page) can frame the launch page.
-- A grant works for 60 seconds at most, and only for its own preview. It
-  works only once (decision 95). A reusable grant was rejected, because a
-  copy of a used grant could give a second browser access for the life of
-  the preview.
-- A used grant gets the same 404 as an invalid grant. The reply sets no
-  cookie, and no sandbox gets a request.
-- A request that fails any other check, such as a wrong `Origin` or the
-  hostname of another preview, leaves its grant unused.
-- A grant never goes to a sandbox or into a log. It never goes into the
-  path or the query of a URL. A grant in a query was rejected, because
-  the browser sends the query to the server.
-- Only a [browser launch](desktop-app.md#port-previews) carries a grant in
-  a URL. The grant and the preview hostname go in the fragment of an
-  authorizer address, because a browser sends no fragment to a server.
-- Risk: the browser can keep that address in its history. The grant in it
-  works only once, and it stops working within 60 seconds.
-- At that address, the authorizer serves its own page, the authorizer
-  page. No page can frame it. Before any request or navigation, the page
-  removes the fragment from its address.
-- The authorizer accepts a grant in two ways. Each needs one preview
-  hostname and one valid grant for an active preview:
-  - a form POST with the app's `Origin`, from the launch page. The
-    authorizer then sends the browser to the preview hostname.
-  - a POST with the authorizer's own `Origin` and the grant in its
-    `Authorization` header, from the authorizer page. The authorizer then
-    returns the address of the preview hostname, and the page goes there.
-- Both ways set the same credential cookie. The authorizer never serves
-  sandbox content.
-- Reason: a service worker of a previewed app can read a form that the
-  browser posts to the origin of that preview. A handoff on the preview
-  hostname was rejected for that reason.
-- Authorizer form bodies have a size limit of 1,000,000 bytes under decision 65.
-  The authorizer cancels an oversized body and returns 404.
-- The authorizer never reads or buffers the body of a POST with an
-  `Authorization` header.
-- The launch page sends only the app's origin as its referrer. Reason:
-  under `no-referrer`, the form sends `Origin: null`, and the authorizer
-  refuses it.
-- The credential cookie is HttpOnly, Secure, SameSite=None, and
-  Partitioned. It expires no later than its preview.
-- Reason: a frame under the app is a third-party context, where browsers
-  can block a cookie that is not partitioned. A partitioned cookie works
-  there, but only under the top-level site that set it. So a frame and a
-  tab each get their own cookie, and another site that frames a preview
-  gets none.
+- Each load of a preview starts at its launch address on the app's
+  hostname. A one-use grant lets the authorizer on the preview domain set
+  the credential cookie, as [Preview grants](preview-grants.md) says. That
+  page also states the browser launch of the Mac app and the launch at a
+  path.
 - The Durable Object of the workspace revokes the preview when the sandbox
   stops, when a user or an agent closes the preview, and after 24 hours.
   Reason: the cookies and the grants of a revoked preview stop working at
@@ -121,8 +94,9 @@ decision number names a dated record, as
 - A revoked or an unknown hostname gets no answer from any sandbox.
 - The preview relay is the app's own service in the sandbox, as
   [Sandbox software](../architecture/sandbox-software.md) says. Each preview
-  request goes through it to the previewed server, the server on the port
-  of the preview.
+  request goes through it to the previewed server: the server on the port
+  of the preview, or the file server for the
+  [files preview](html-file-preview.md#the-files-preview).
 - An answer that does not come from the preview relay never reaches the browser.
 - The Worker refuses previews with 409 `preview_relay_unavailable` without
   a running relay, because the app is not live and the Worker keeps one route.
@@ -148,15 +122,18 @@ decision number names a dated record, as
   `Origin` gets none.
 - Reason: some servers, such as `mokly serve`, refuse a request whose
   `Origin` does not match its `Host`.
-- The preview proxy adds Boat's `_port_auth` cookie on the server side. It
-  drops any `_port_auth` cookie that the browser sends.
+- The preview proxy adds the port credential of the provider on the server
+  side. On Boat, it is the `_port_auth` cookie. On E2B, it is the traffic
+  token of the sandbox, in the `e2b-traffic-access-token` header.
+- The proxy drops each such cookie or header that the browser sends. The
+  browser never gets a port credential.
 - The preview proxy forwards the cookies of the previewed app. It never
   sends a credential cookie to a sandbox. It drops each credential cookie
   that a sandbox response sets.
 - A redirect to the local address of the previewed server, with `http` or
   `https`, reaches the browser as a redirect to the preview hostname. The
   local address is `localhost`, `127.0.0.1`, or `[::1]`, with the port of
-  the preview.
+  the previewed server.
 - Each response on the preview domain carries `Referrer-Policy:
   no-referrer`. Reason: other sites have no need for the preview address.
 - Each preview reply that passes every check carries a `Server-Timing`
@@ -200,8 +177,14 @@ decision number names a dated record, as
   cookies. They never forward the app's session cookie to a sandbox.
 - A private port of a sandbox never answers on its public address without
   its token.
-- A preview request reaches only the port of its own preview, whatever the
-  browser sends.
+- A preview request reaches only the previewed server of its own preview,
+  whatever the browser sends.
+- The preview proxy adds the files mark of the
+  [file server](file-server.md) only to the requests
+  of a files preview. It never forwards a files mark that a browser sends.
+- Reason: the file server answers only a request with the files mark. So a
+  port preview of its port gets no file, and the rules of the files
+  preview hold for each request that the file server answers.
 - The preview relay answers only a request that reaches it through the
   private address of its own port. It takes no connection from another
   machine. It refuses each request whose `Host` names another address.
@@ -210,9 +193,10 @@ decision number names a dated record, as
   either protection.
 - The relay forwards a request only to a port of its own sandbox. Reason:
   each process in the sandbox can reach these ports already.
-- A request through the relay reaches the previewed server without Boat's
-  `_port_auth` cookie. Reason: with that cookie, a request can reach each
-  port of the sandbox through the relay, with no check by the Worker.
+- A request through the relay reaches the previewed server without its
+  provider's port credential. This includes Boat's `_port_auth` cookie and
+  E2B's traffic-token header. Reason: with that credential, a request can
+  reach each port of the sandbox with no check by the Worker.
 - A request through the relay reaches the previewed server with no
   `Forwarded` or `X-Forwarded-*` header. Reason: the server must see one
   consistent local request. For example, Next.js compares `Origin` with
@@ -220,8 +204,12 @@ decision number names a dated record, as
 
 ## Desktop
 
-- The Worker asks Boat for a new desktop URL on each page load. The URL
-  works for 10 minutes and carries its token in the fragment.
+- Only a sandbox on Boat has a desktop stream. The Worker asks Boat for a
+  new desktop URL on each page load. The URL works for 10 minutes and
+  carries its token in the fragment.
+- A sandbox on E2B has no desktop, and the Worker gives it no desktop URL.
+  Reason: the app hides the Desktop tool, as
+  [Desktop](workspace-tools.md#desktop) says.
 - An open desktop stream does not pass through the Worker. So it can keep
   playing after its user loses access, until the sandbox stops. This is
   the one exception to the 30-second rule of decision 70 (decision 117).

@@ -2,7 +2,6 @@ import {
   automationPath,
   automationsPath,
   type Automation,
-  type AutomationResponse,
   type AutomationsResponse,
 } from '../../src/shared/automations'
 import {
@@ -12,6 +11,7 @@ import {
 import type { AppDependencies, AppEnv } from '../env'
 import type { RequestContext } from '../security/gate'
 import { automationNotFound, automationOwnerRequired } from './errors'
+import { readAutomationResponse } from './automation-response'
 import { latestAutomationRuns } from './latest-run-data'
 import {
   prepareAutomation,
@@ -44,10 +44,7 @@ export async function automationsRoute(
     return null
   const userId = context.user.id
   if (request.method === 'GET') {
-    if (id)
-      return Response.json({
-        automation: await readAutomation(env.DB, orgId, id),
-      } satisfies AutomationResponse)
+    if (id) return Response.json(await readAutomationResponse(env, orgId, id))
     const automations = await listAutomations(env.DB, orgId)
     const lastRuns = await latestAutomationRuns(env.DB, orgId)
     return Response.json({
@@ -90,9 +87,7 @@ export async function automationsRoute(
       await checkWriteAccess(env, orgId, previous.id, userId, true)
       throw automationNotFound()
     }
-    return Response.json({
-      automation: await readAutomation(env.DB, orgId, previous.id),
-    } satisfies AutomationResponse)
+    return Response.json(await readAutomationResponse(env, orgId, previous.id))
   }
   if (!owner) throw automationOwnerRequired()
   const prepared = await prepareAutomation(
@@ -110,6 +105,7 @@ export async function automationsRoute(
       userId,
       previous === null,
       body.active !== undefined,
+      body.capabilities !== undefined,
     ))
   ) {
     if (previous) await checkWriteAccess(env, orgId, previous.id, userId, false)
@@ -117,12 +113,9 @@ export async function automationsRoute(
     await checkReferences(env, prepared)
     throw automationNotFound()
   }
-  return Response.json(
-    {
-      automation: await readAutomation(env.DB, orgId, prepared.id),
-    } satisfies AutomationResponse,
-    { status: previous ? 200 : 201 },
-  )
+  return Response.json(await readAutomationResponse(env, orgId, prepared.id), {
+    status: previous ? 200 : 201,
+  })
 }
 
 async function checkWriteAccess(

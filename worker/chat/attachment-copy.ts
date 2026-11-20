@@ -12,6 +12,11 @@ import { attachmentDownloadCommand } from './attachment-download-command'
 import { runAttachmentDownload } from './attachment-download-process'
 import { AttachmentMissing } from './attachment-missing'
 import { markAttachmentTransferred } from './attachment-transfer-data'
+import {
+  ATTACHMENT_COPY_FAILED_MESSAGE,
+  AttachmentTransferFailed,
+  retryUnanswered,
+} from './attachment-transfer-failure'
 import type { StoredAttachment } from './types'
 
 export async function prepareMessageAttachments(
@@ -25,20 +30,21 @@ export async function prepareMessageAttachments(
 ): Promise<string | null> {
   if (attachments.length === 0) return null
   const workspace = await attachmentWorkspace(env.DB, workspaceId, userId)
-  if (!workspace?.sandboxId)
+  const destination = workspace?.sandboxId
+  if (!workspace || !destination)
     throw new HttpError(
       503,
       'attachment_copy_failed',
-      'The attached files could not reach the cloud computer. Try again.',
+      ATTACHMENT_COPY_FAILED_MESSAGE,
     )
-  if (workspace.sandboxId !== sandboxId) throw attachmentNotFound()
+  if (destination !== sandboxId) throw attachmentNotFound()
   const provider = providerForAccount(env, httpFetch, workspace.providerAccount)
   const directory = await attachmentRepositoryDirectory(env.DB, workspace)
   const missing: string[] = []
   for (const attachment of attachments) {
     const current = await attachmentWorkspace(env.DB, workspaceId, userId)
     if (
-      current?.sandboxId !== workspace.sandboxId ||
+      current?.sandboxId !== destination ||
       current.providerAccount !== workspace.providerAccount
     )
       throw attachmentNotFound()
@@ -52,59 +58,57 @@ export async function prepareMessageAttachments(
       attachment.relativePath !== (await attachmentPath(record))
     )
       throw attachmentNotFound()
-    if (record.transferredSandboxId === workspace.sandboxId) {
-      try {
-        const info = await provider.fileInfo(
-          workspace.sandboxId,
-          `${directory}/${attachment.relativePath}`,
-        )
-        if (info.isDirectory || info.sizeBytes !== record.sizeBytes)
-          missing.push(record.name)
-      } catch (error) {
-        if (
-          error instanceof ProviderError &&
-          error.kind === 'not_found' &&
-          error.status === 404
-        )
-          missing.push(record.name)
-        else
-          throw new HttpError(
-            503,
-            'attachment_copy_failed',
-            'The attached files could not reach the cloud computer. Try again.',
+    if (record.transferredSandboxId === destination) {
+      const path = `${directory}/${attachment.relativePath}`
+      const present = await retryUnanswered(workspaceId, async () => {
+        try {
+          const info = await provider.fileInfo(destination, path)
+          return !info.isDirectory && info.sizeBytes === record.sizeBytes
+        } catch (error) {
+          if (
+            error instanceof ProviderError &&
+            error.kind === 'not_found' &&
+            error.status === 404
           )
-      }
+            return false
+          throw new AttachmentTransferFailed('check', error)
+        }
+      })
+      if (!present) missing.push(record.name)
       continue
     }
     if (record.bytesDeletedAt !== null) {
       missing.push(record.name)
       continue
     }
-    if (!env.MACHINE_ORIGIN) throw attachmentNotFound()
-    const token = await createAttachmentDownload(env.DB, {
-      attachmentId: record.id,
-      workspaceId,
-      orgId: workspace.orgId,
-      sandboxId: workspace.sandboxId,
-      providerAccount: workspace.providerAccount,
+    const origin = env.MACHINE_ORIGIN
+    if (!origin) throw attachmentNotFound()
+    await retryUnanswered(workspaceId, async () => {
+      const token = await createAttachmentDownload(env.DB, {
+        attachmentId: record.id,
+        workspaceId,
+        orgId: workspace.orgId,
+        sandboxId: destination,
+        providerAccount: workspace.providerAccount,
+      })
+      await runAttachmentDownload(
+        provider,
+        destination,
+        attachmentDownloadCommand({
+          directory,
+          relativePath: attachment.relativePath,
+          origin,
+          token,
+          sizeBytes: record.sizeBytes,
+        }),
+      )
     })
-    await runAttachmentDownload(
-      provider,
-      workspace.sandboxId,
-      attachmentDownloadCommand({
-        directory,
-        relativePath: attachment.relativePath,
-        origin: env.MACHINE_ORIGIN,
-        token,
-        sizeBytes: record.sizeBytes,
-      }),
-    )
     if (
       !(await markAttachmentTransferred(
         env.DB,
         record.id,
         workspaceId,
-        workspace.sandboxId,
+        destination,
         workspace.providerAccount,
       ))
     )
@@ -112,10 +116,10 @@ export async function prepareMessageAttachments(
   }
   const current = await attachmentWorkspace(env.DB, workspaceId, userId)
   if (
-    current?.sandboxId !== workspace.sandboxId ||
+    current?.sandboxId !== destination ||
     current.providerAccount !== workspace.providerAccount
   )
     throw attachmentNotFound()
   if (missing.length > 0) throw new AttachmentMissing(missing)
-  return workspace.sandboxId
+  return destination
 }

@@ -70,6 +70,10 @@ pull request keeps the record. The [mockup catalogue](../mockups/catalogue.md) d
   opens the first org that is not deleted.
 - The app forgets a last workspace when its page shows that the
   workspace is not available.
+- An archived or a removed workspace stays the last workspace, as a
+  direct link does. Its page shows the archived or the removed bar, as
+  [Removed workspaces](workspace-life.md#removed-workspaces) says
+  (decision 522).
 - The org switcher of a phone opens the list page of the org. Reason: a
   phone has no sidebar, so the list is the way to move to a workspace.
 - The key of Workspace list still opens the list page of the org, as

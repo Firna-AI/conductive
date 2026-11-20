@@ -3,7 +3,7 @@
 import { StrictMode } from 'react'
 import { expect, it, vi } from 'vitest'
 import { fakeWorkers, mountRoot, press } from '../mount-test-kit'
-import { parseMarkdown } from './markdown-document'
+import { previewDocument } from './preview-blocks'
 import { MarkdownView } from './MarkdownView'
 
 /** The task boxes of a rendered document, in document order. */
@@ -25,7 +25,7 @@ function errorTitle(container: HTMLElement): string | null {
 it('shows the current state of each task box after the text changes, also in a reused box', () => {
   const view = mountRoot()
   const show = (text: string) =>
-    view.render(<MarkdownView parser={parseMarkdown} text={text} />)
+    view.render(<MarkdownView parser={previewDocument} text={text} />)
   show('- [ ] Plan\n- [x] Build\n  - [ ] Check\n')
   const first = boxes(view.container)
   expect(first.map((box) => box.checked)).toEqual([false, true, false])
@@ -38,13 +38,14 @@ it('shows the current state of each task box after the text changes, also in a r
     true,
   )
 
-  // The first task goes, so the boxes of Plan and Build show Build and Ship.
-  show('- [x] Build\n  - [ ] Check\n- [ ] Ship\n')
+  // The first task goes, so the boxes of Plan, Build, and Check show Build,
+  // Ship, and Check. The box of an item with sub-tasks stands in its first
+  // paragraph, so each item keeps the shape of the item that it replaces.
+  show('- [x] Build\n- [ ] Ship\n  - [ ] Check\n')
   const removed = boxes(view.container)
   expect(removed.map((box) => box.checked)).toEqual([true, false, false])
-  expect(removed[0]).toBe(first[0])
-  expect(removed[2]).toBe(first[1])
-  expect(view.container.textContent).toBe('BuildCheckShip')
+  expect(removed.every((box, index) => box === first[index])).toBe(true)
+  expect(view.container.textContent).toBe('BuildShipCheck')
 })
 
 it('parses each text in its own module worker, and ends each worker that the view no longer needs', () => {

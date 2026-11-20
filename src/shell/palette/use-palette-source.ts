@@ -1,5 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useEffect } from 'react'
+import { useListTime } from '../../app/deadlines'
 import { inFirstRun } from '../../app/get-started'
 import type { ListData } from '../../app/list-changes'
 import { useRoute } from '../../app/navigation'
@@ -15,6 +16,7 @@ import {
   loading,
   ready,
   useStore,
+  valueOf,
   type Loadable,
   type Readable,
 } from '../../app/store'
@@ -45,14 +47,15 @@ function listOf(
 
 /**
  * What the actions and the settings of the palette read from the app: the
- * org of the palette, the orgs of the person, the open workspace, and what
- * the parts of the page offer. The keys of their commands read it too,
- * while the palette is closed, so it reads no part of the org.
+ * org of the palette, the orgs of the person from `AppModel.activeOrgs`, as
+ * the rail lists them, the open workspace, and what the parts of the page
+ * offer. The keys of their commands read it too, while the palette is
+ * closed, so it reads no part of the org.
  */
 export function usePaletteBase(): PaletteBase {
   const app = useApp()
   const route = useRoute()
-  const orgs = useStore(app.orgs)
+  const orgs = useStore(app.activeOrgs)
   const refused = useStore(app.refusedOrgs)
   const lastOrg = useStore(app.lastOrg)
   const getStarted = useStore(app.getStarted)
@@ -93,11 +96,13 @@ export function usePaletteSource(): {
   const sections = useStore(model?.sections ?? nothing)
   const workspaces = useStore(model?.workspaces ?? nothing)
   const repositories = useStore(model?.repositories ?? nothing)
+  const listTime = useListTime(valueOf(workspaces) ?? [])
   useEffect(() => model?.watch('list', 'repositories'), [model])
   return {
     source: {
       ...base,
       list: listOf(sections, workspaces),
+      listTime,
       repositories,
     },
     retry: async (reads) => {

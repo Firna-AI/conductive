@@ -143,7 +143,7 @@ try {
   const completed = await run(false)
   const aborted = await run(true)
   process.stdout.write(
-    `${JSON.stringify({ checkedAt: new Date().toISOString(), sdk: '0.167.0', model: options.model, fakeDeltaObservationMs: 500, requestCount, completed, aborted, selection: 'App Server for partial text; SDK AbortSignal interrupts its CLI', limits: 'Local fake inference only. No provider account or real inference was used.' }, null, 2)}\n`,
+    `${JSON.stringify({ checkedAt: new Date().toISOString(), sdk: '0.170.0', model: options.model, fakeDeltaObservationMs: 500, requestCount, completed, aborted, selection: 'App Server for partial text; SDK AbortSignal interrupts its CLI', limits: 'Local fake inference only. No provider account or real inference was used.' }, null, 2)}\n`,
   )
 } finally {
   releaseResponse()

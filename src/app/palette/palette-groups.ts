@@ -40,7 +40,7 @@ function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
     return noWorkspaces
   }
   const { sections, workspaces } = source.list.value
-  const groups = groupWorkspaces(sections, workspaces)
+  const groups = groupWorkspaces(sections, workspaces, source.listTime)
   return {
     sections: groups.sections.map((group) => ({
       label: group.section.name,
@@ -59,6 +59,26 @@ function recent(workspaces: OrgWorkspaces, openId: string | null): Workspace[] {
     .slice(0, recentLimit)
 }
 
+/**
+ * The name of the open workspace, and the offers of its parts, such as its
+ * screen and its Terminal tool, in the order of their offers.
+ */
+function openWorkspace(source: PaletteBase): {
+  name: string
+  offers: PaletteOffer[]
+} {
+  const offers: PaletteOffer[] = []
+  let name = ''
+  for (const offer of source.offers) {
+    const { scope } = offer
+    if (scope.kind !== 'workspace') continue
+    if (scope.workspaceId !== source.openWorkspaceId) continue
+    if (offers.length === 0) name = scope.name
+    offers.push(offer)
+  }
+  return { name, offers }
+}
+
 /** The rows of offered actions, in the order of the palette, each action once. */
 function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
   const byId = new Map<OfferedActionId, OfferedAction>()
@@ -73,20 +93,18 @@ function offeredRows(offers: readonly PaletteOffer[]): PaletteRow[] {
 
 /**
  * The actions in their five parts: the open workspace, the org, the orgs,
- * the window, and help. New workspace shows wherever the org takes
- * changes. Its row links to the page, and it opens as the page or the
- * dialog that the user chose. A deleted org has no Switch to row. A Switch
- * to row takes the command of the place of its org in the rail, as
- * `switchCommand` says. Send feedback shows on each page, also without an
- * org and in a suspended org, because feedback changes no org.
+ * the window, and help. The rows of the open workspace come from each part
+ * that offers them, in the order of `offeredActionIds`. New workspace
+ * shows wherever the org takes changes. Its row links to the page, and it
+ * opens as the page or the dialog that the user chose. A deleted org has no
+ * Switch to row. A Switch to row takes the command of the place of its org
+ * in the rail, as `switchCommand` says. Send feedback shows on each page,
+ * also without an org and in a suspended org, because feedback changes no
+ * org.
  */
 export function actionGroups(source: PaletteBase): PaletteGroup[] {
   const { org, offers } = source
-  const workspace = offers.find(
-    (offer) =>
-      offer.scope.kind === 'workspace' &&
-      offer.scope.workspaceId === source.openWorkspaceId,
-  )
+  const workspace = openWorkspace(source)
   const orgRows: PaletteRow[] = []
   if (org && !source.suspended) {
     orgRows.push(linkRow('new-workspace', routes.newWorkspace(org.id)))
@@ -97,15 +115,10 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
     )
     orgRows.push(...offeredRows(list))
   }
-  const others = source.orgs.filter(
-    (other) => !other.deletion && other.id !== org?.id,
-  )
+  const others = source.orgs.filter((other) => other.id !== org?.id)
   const window = offers.filter((offer) => offer.scope.kind === 'window')
   return [
-    {
-      label: workspace?.scope.kind === 'workspace' ? workspace.scope.name : '',
-      rows: workspace ? offeredRows([workspace]) : [],
-    },
+    { label: workspace.name, rows: offeredRows(workspace.offers) },
     { label: org?.name ?? '', rows: orgRows },
     {
       label: 'Orgs',

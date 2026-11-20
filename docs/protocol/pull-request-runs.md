@@ -38,8 +38,9 @@ says.
   commits or merged the pull request.
 - So a bot, such as Dependabot, starts runs only when the owner names it in
   "Author is".
-- Reason: a run uses the owner's logins and the org's env vars. The author
-  can write instructions into the code or the text that the agent reads.
+- Reason: a run uses the owner's GitHub access, the owner's default login,
+  and the org's env vars. The author can write instructions into the code
+  or the text that the agent reads.
 - Each pull request trigger can have an author filter with two lists of
   GitHub accounts, "Author is" and "Author is not".
 - An event starts a run only when the author of its pull request passes the
@@ -68,18 +69,19 @@ says.
   gives no row, also when its author or sender is outside the org.
 - Runs for each pull request of the repository were rejected. A
   collaborator outside the org could then steer a run that uses the
-  owner's logins.
+  owner's GitHub access and default login.
 - Trust in the role that GitHub gives an author, such as a member of the
   GitHub organization, was rejected. It trusts accounts that no admin of
   the org invited.
 - Runs without the env vars and with a GitHub token that can only read were
-  rejected. Such a run still spends the owner's agent login, and needs a
-  new kind of start. [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
+  rejected. Such a run still spends the owner's default login, and needs
+  a new kind of start.
+  [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   states what its sandbox can read.
 - A run that waits for the approval of the owner was rejected, because it
   needs a new run state.
-- [Risks that stay open](automations.md#risks-that-stay-open) states what this
-  rule does not stop.
+- [Risks that stay open](automation-risks.md#risks-that-stay-open) states
+  what this rule does not stop.
 
 ## Loops
 

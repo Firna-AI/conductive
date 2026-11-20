@@ -1,0 +1,186 @@
+import { useEffect, useState, type Ref } from 'react'
+import { Unplug } from 'lucide-react'
+import type { TerminalEntry } from '../shared/terminal'
+import { CloseTerminalQuestion } from './CloseTerminalQuestion'
+import type { ReadyTerminals, ReadyTerminalsAction } from './readyTerminals'
+import type { TerminalFocusRequest } from './terminalFocus'
+import type { TerminalLinks } from './terminalLinks'
+import { shownTerminal, type TerminalRoute } from './terminalRoute'
+import { TerminalScreen, type ConnectTerminal } from './TerminalScreen'
+import { TerminalTabs } from './TerminalTabs'
+import { ToolButton } from './tool-parts/ToolButtons'
+import type { TerminalActions } from './useTerminalActions'
+import styles from './TerminalTool.module.css'
+
+/** What the screen of each terminal takes from the owner of the tool. */
+interface ScreenProps {
+  connect: ConnectTerminal
+  links?: TerminalLinks
+  onActivity?: () => void
+  screenRef?: Ref<HTMLDivElement>
+  /** The screen took the focus request, or dropped it after a focus move. */
+  onFocusDone?: () => void
+}
+
+/**
+ * One terminal: its screen, and the Disconnected bar with Reconnect after
+ * its connection ended. Reconnect opens a new connection of this terminal
+ * only, and so does the automatic try after a lost connection. The screen
+ * keeps its output until the new connection shows its own. A hidden
+ * terminal keeps its connection.
+ */
+function TerminalPane(
+  props: ScreenProps & {
+    terminal: TerminalEntry
+    hidden: boolean
+    ended: boolean
+    /** The focus request of the owner, for the shown terminal only. */
+    focusRequest: TerminalFocusRequest | null
+    /** The connection of the terminal. A new one opens a new socket. */
+    connection: number
+    dispatch: (action: ReadyTerminalsAction) => void
+  },
+) {
+  const { dispatch } = props
+  const { id, socketPath } = props.terminal
+  return (
+    <div className={styles.pane} hidden={props.hidden}>
+      <TerminalScreen
+        connect={props.connect}
+        ended={props.ended}
+        focusRequest={props.focusRequest}
+        connection={props.connection}
+        links={props.links}
+        onClosed={(end, lasted) =>
+          dispatch({ type: 'ended', terminalId: id, end, lasted })
+        }
+        onFocusDone={props.onFocusDone}
+        onInput={props.onActivity}
+        screenRef={props.screenRef}
+        socketPath={socketPath}
+      />
+      {props.ended ? (
+        <div className={styles.ended} role="status">
+          <span className={styles.endedLabel}>
+            <Unplug aria-hidden size={13} />
+            Disconnected
+          </span>
+          <ToolButton
+            onPress={() => dispatch({ type: 'reconnect', terminalId: id })}
+          >
+            Reconnect
+          </ToolButton>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * The terminals of a ready workspace: the row of tabs, the screen of each
+ * terminal that the user showed, and the question before a close. The +
+ * and the close run the actions of the owner of the terminals. The route
+ * names the shown terminal. When the shown terminal closes, also for
+ * another member, the terminal before it shows, and the route follows it.
+ * Each terminal that the user showed stays mounted and connected while
+ * another one shows. A terminal that the user never showed opens no
+ * connection. A focus request of the owner goes to the screen of the shown
+ * terminal only. A click on a tab and the + ask for the focus of the
+ * terminal that they show, through `focusOnShow`. Older software opens one
+ * shell, so the tool shows the first terminal, with no row.
+ */
+export function OpenTerminals(
+  props: ScreenProps & {
+    ready: ReadyTerminals
+    dispatch: (action: ReadyTerminalsAction) => void
+    actions: TerminalActions
+    route: TerminalRoute
+    /** Moves the keyboard focus to the screen of the shown terminal. */
+    focusRequest?: TerminalFocusRequest | null
+    /**
+     * Starts a focus request for the terminal that a click on its tab or
+     * the + shows. The result asks for the focus once it shows.
+     */
+    focusOnShow?: () => () => void
+  },
+) {
+  const { ready, dispatch, actions, route } = props
+  const terminals = ready.several
+    ? ready.terminals
+    : ready.terminals.slice(0, 1)
+  const shown = shownTerminal(terminals, ready.replaced, route)
+  const { terminal, requested, follow } = shown
+  const [asking, setAsking] = useState<TerminalEntry | null>(null)
+  // The shell follows the shown terminal when the route names another one.
+  useEffect(() => {
+    if (follow) route.show(terminal.id, 'replace')
+  }, [follow, route, terminal.id])
+  // The store keeps the shown terminal, for the next close of that terminal.
+  useEffect(() => {
+    dispatch({ type: 'shown', terminalId: terminal.id, requested })
+  }, [dispatch, terminal.id, requested])
+  // The question goes when its terminal closed, or when it is the last one.
+  const question =
+    asking !== null &&
+    terminals.length > 1 &&
+    terminals.some((each) => each.id === asking.id)
+      ? asking
+      : null
+  const mounted = terminals.filter(
+    (each) => each.id === terminal.id || ready.opened.has(each.id),
+  )
+  return (
+    <>
+      {ready.several ? (
+        <TerminalTabs
+          closing={ready.closing}
+          href={route.href}
+          onClose={setAsking}
+          onOpen={() => {
+            const focus = props.focusOnShow?.()
+            actions.openThen(() => focus?.())
+          }}
+          onSelect={(id) => {
+            // A click, or Enter on the link of a tab, also moves the focus
+            // into its terminal. A move along the tabs with Tab activates
+            // no link, so the focus stays on the row.
+            const focus = props.focusOnShow?.()
+            if (id !== terminal.id) route.show(id, 'push')
+            focus?.()
+          }}
+          opening={ready.opening}
+          shown={terminal.id}
+          terminals={terminals}
+        />
+      ) : null}
+      {mounted.map((each) => (
+        <TerminalPane
+          connect={props.connect}
+          connection={ready.connections.get(each.id) ?? 0}
+          dispatch={dispatch}
+          ended={ready.ended.has(each.id)}
+          focusRequest={
+            each.id === terminal.id ? (props.focusRequest ?? null) : null
+          }
+          hidden={each.id !== terminal.id}
+          key={each.id}
+          links={props.links}
+          onActivity={props.onActivity}
+          onFocusDone={props.onFocusDone}
+          screenRef={props.screenRef}
+          terminal={each}
+        />
+      ))}
+      {question ? (
+        <CloseTerminalQuestion
+          onCancel={() => setAsking(null)}
+          onConfirm={() => {
+            setAsking(null)
+            actions.close(question)
+          }}
+          terminal={question}
+        />
+      ) : null}
+    </>
+  )
+}

@@ -30,6 +30,7 @@ this server is the repository root, so it also serves the
 | `bar`      | The GitHub state of the pull request bar, such as `ready-to-merge` or `merged`. The page then uses the app's own Files part, so a phone shows the actions at the top of Checks, and `list` names the list of a phone. |
 | `turn`     | `running` starts the fake with a turn that runs. |
 | `access`, `method`, `merge`, `work`, `continue` | How the actions of the bar end: the member's access, the merge method, the end of a merge, the local work, and the end of Continue. The first value of each is the default. |
+| `repository` | The cloud computer holds each chosen repository, so the repository in the header opens its menu. The value says how a change ends: `changed`, `question`, `clash`, or `outdated`. Without it, the repository shows as text. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
 draws the bars of the name and the start steps on the Terminal tab of a
@@ -63,5 +64,12 @@ the real action state, the real chat send, and the real event pipeline.
 For example, `?bar=merged&work=files&continue=question&viewer=member`
 asks the question of Continue, and `?bar=checks-failed&work=none` offers
 Fix checks.
+
+With `repository`, `repositoryFetch` of
+`src/test-support/fake-repository-change.ts` answers a repository change
+as the Worker does. A change that ends publishes the workspace in
+acme/billing-service, a note in each session, and the empty changes report
+of the new branch. For example, `?repository=question` asks the question
+with the work of the mockups first.
 
 Run the tests with `npm run test -- src/shell/workspace`.

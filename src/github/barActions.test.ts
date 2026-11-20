@@ -14,7 +14,9 @@ import {
 import { FAKE_IDS } from '../test-support/fixtures/core'
 import { FAKE_GITHUB_HEAD_SHA } from '../test-support/fixtures/tools'
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
+import { deferred, type Deferred } from '../test-support/mount'
 import { BarActions } from './barActions'
+import type { PromptResult } from './barPorts'
 import { createContinueActions } from './continueActions'
 import { createGitHubActions } from './githubActions'
 import type { GitHubState } from './githubStore'
@@ -25,7 +27,10 @@ const { org, workspace: id } = FAKE_IDS
 const branch = 'calummoore/checkout-autocomplete'
 const shortly = { timeout: 10_000 }
 
-function barFor(server: FakeApiServer) {
+function barFor(
+  server: FakeApiServer,
+  sendPrompt: (text: string) => Promise<PromptResult> = async () => 'sent',
+) {
   const delay = new ManualDelay()
   const github = new Store<GitHubState>({
     status: 'ready',
@@ -38,7 +43,7 @@ function barFor(server: FakeApiServer) {
     branch,
     github: createGitHubActions(server.fetch, target),
     continues: createContinueActions(createApiClient(server.fetch), target),
-    sendPrompt: async () => 'sent',
+    sendPrompt,
     delay: delay.delay,
     githubState: github,
     refreshGitHub,
@@ -156,6 +161,44 @@ describe('the action state of the bar', () => {
       outcome: outcomeOf(bar.actions),
       polls: bar.reads(poll),
     }).toEqual({ timers: 0, outcome: null, polls: 0 })
+  })
+
+  it('gives the result of a prompt only to the connection of its press, also when the store connects again before the reply', async () => {
+    const replies: Deferred<PromptResult>[] = []
+    const bar = barFor(new FakeApiServer(), () => {
+      const reply = deferred<PromptResult>()
+      replies.push(reply)
+      return reply.promise
+    })
+    const press = () => bar.actions.sendPrompt('Fix the failed checks.')
+
+    const stopped = press()
+    bar.stop()
+    replies[0]?.resolve('failed')
+    const afterStop = await stopped
+    let stop = bar.actions.connect()
+    const reconnected = press()
+    stop()
+    stop = bar.actions.connect()
+    replies[1]?.resolve('failed')
+    const afterReconnect = await reconnected
+    const shown = press()
+    replies[2]?.resolve('failed')
+    const whileConnected = await shown
+    stop()
+
+    // The chat got each press, and finishes each send on its own.
+    expect({
+      afterStop,
+      afterReconnect,
+      whileConnected,
+      sends: replies.length,
+    }).toEqual({
+      afterStop: null,
+      afterReconnect: null,
+      whileConnected: 'failed',
+      sends: 3,
+    })
   })
 
   it('asks about local work, sends nothing on Cancel, and ends Continue anyway when the stream shows the new branch', async () => {

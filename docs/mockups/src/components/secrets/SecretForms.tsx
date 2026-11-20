@@ -1,10 +1,11 @@
 import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
 import { Plus } from 'lucide-react'
-import { newSecret, type OrgSecret } from '../../fixtures/secrets'
+import { newSecret, refusedName, type OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { useControlSizes } from '../common/touch'
+import { addNameHint, refusedNameError } from './secretNameCopy'
 import { allAgentsHint, secretsWords } from './secretsCopy'
 import sections from '../settings/Section.module.css'
 import styles from './SecretsTab.module.css'
@@ -72,19 +73,27 @@ function AllAgentsField(props: { org: string }) {
 /**
  * A new secret: its name, its description, and its value. An admin also
  * sets the mark for all agents, which starts off. A member has no switch,
- * because only admins set the mark (secrets decision 3).
+ * because only admins set the mark. The hint of the name gives the
+ * characters that a new name can use. `refused` is the form after Save
+ * secret refused a name with other characters: the error of the name shows
+ * in place of its hint, and each field keeps what was typed.
  */
-export function AddSecretForm(props: { org: string; mark: boolean }) {
+export function AddSecretForm(props: {
+  org: string
+  mark: boolean
+  refused: boolean
+}) {
   const { field } = useControlSizes()
   return (
     <>
       <Input
         autoComplete="off"
-        hint={secretsWords.nameHint}
+        error={props.refused ? refusedNameError : null}
+        hint={props.refused ? undefined : addNameHint}
         label={secretsWords.name}
         onChangeText={noop}
         size={field}
-        value={newSecret.name}
+        value={props.refused ? refusedName : newSecret.name}
       />
       <Input
         hint={secretsWords.descriptionHint}

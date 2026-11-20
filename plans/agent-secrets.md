@@ -129,8 +129,8 @@ design call of 13 November 2026 under the decision test of the
   secrets. My call for the Secrets tab: Cal chose the icon for the create
   only, and secrets still need a place to be managed.
 - Mac access. A workspace with Mac access off refuses each Mac command
-  request of its agents, with a reason. Mac access is on by default
-  (secrets decision 9 A), and every member changes it after the create
+  request of its agents, with a reason. Mac access is off by default
+  (secrets decision 18 A), and every member changes it after the create
   (secrets decision 8 B). When a member turns Mac
   access off, each waiting Mac request of the workspace ends with that
   reason, and a running command runs to its end. My call: the Mac app
@@ -490,6 +490,8 @@ access rule that no requirement covers.
 
 ### Secrets decision 9: Mac access by default
 
+Secrets decision 18 A replaced this choice on 17 November 2026.
+
 Cal chose A on 13 November 2026: Mac access is on by default for each
 workspace, and a member can turn it off in Capabilities. Reason: the Mac
 app still asks before each command, so the switch is an extra stop and
@@ -829,6 +831,43 @@ which says what the control does. "Permissions", which the Mac app
 already uses for macOS permissions. Reason: Cal kept his own name for
 the control.
 
+### Secrets decision 18: Which new workspaces start with Mac access off
+
+Cal chose A on 17 November 2026: Mac access is off in every new
+workspace, also in a workspace that an agent or an automation creates. A
+member turns it on in Capabilities. It replaces secrets decision 9 A.
+Reason: one rule for each new workspace, and no new workspace can reach a
+Mac before a member chooses it.
+
+The options as they were asked:
+
+- A. Off in every new workspace: from members, agents, and automations.
+  An automation that runs Mac commands stops until a member turns Mac
+  access on in each run workspace. Effort: Medium.
+- B. Off for workspaces from members and agents. Automation runs stay on.
+  Text that steers an automation agent can still reach the owner's Mac.
+  Effort: Medium.
+- C. Off for workspaces from members. A workspace that an agent creates
+  copies the value of the agent's workspace. Automation runs stay on.
+  Effort: Medium.
+
+### Secrets decision 19: Mac access of existing workspaces
+
+Cal chose B on 17 November 2026: a migration turns Mac access off one
+time in each existing workspace. Reason: the switch reached production
+on the same day, with pull request #379, so few members had turned it on
+themselves, and Cal expected the existing workspaces to be off.
+
+The options as they were asked:
+
+- A. Keep each current value. Effort: Small.
+- B. A migration sets each existing workspace to off one time. A member
+  who uses Mac commands turns Mac access on again in each workspace that
+  needs it. Effort: Small.
+
+Left out: turning off only the workspaces that never ran a Mac command,
+because the command records are not in D1.
+
 The options check of decisions 5, 6, and 7 is in
 `.context/agent-secrets/options-check.md`. The check of decisions 8 and 9
 is in `.context/agent-secrets/options-check-8-9.md`. The check of
@@ -985,7 +1024,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Bump `TERMS_VERSION` in `src/shared/terms.ts` and set the
+- [x] Bump `TERMS_VERSION` in `src/shared/terms.ts` and set the
       effective dates of the Terms and Privacy pages, because Milestone 2
       changed both pages.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the

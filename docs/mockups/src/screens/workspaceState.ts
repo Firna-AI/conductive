@@ -1,4 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
+import { pictureReads } from '../components/chat/chatPictures'
 import { foldStates } from '../components/chat/WorkFold'
 import { fileLists, treeStates } from '../components/files/FilesPanel'
 import { paletteViews } from '../components/palette/paletteViews'
@@ -11,8 +12,14 @@ import { runWorkspaceKeys } from '../fixtures/runWorkspaces'
 import { startErrorKeys } from '../fixtures/starting'
 import { terminalStates } from '../fixtures/terminals'
 import { openableWorkspaces } from '../fixtures/workspaces'
+import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
-import { composerStates, tabStates, temporaryTabStates } from './chatStates'
+import { tabStates, temporaryTabStates } from './chatStates'
+import {
+  composerStateDefaults,
+  composerStateKeys,
+  composerStateProperties,
+} from './composerState'
 import {
   feedbackStateDefaults,
   feedbackStateKeys,
@@ -23,6 +30,7 @@ import {
   layoutStateKeys,
   layoutStateProperties,
 } from './layoutState'
+import { overlayStates } from './overlayStates'
 import {
   rowMenuStateDefaults,
   rowMenuStateKeys,
@@ -43,6 +51,7 @@ export const workspaceStateSchema = {
     'startError',
     'conversation',
     'fold',
+    'pictures',
     'banner',
     'files',
     'tool',
@@ -52,8 +61,7 @@ export const workspaceStateSchema = {
     'tab',
     'tabRow',
     'temporary',
-    'composer',
-    'modelChoice',
+    ...composerStateKeys,
     ...layoutStateKeys,
     'overlay',
     'archive',
@@ -97,6 +105,13 @@ export const workspaceStateSchema = {
      * so a chat with open folds starts at its top.
      */
     fold: { enum: foldStates },
+    /**
+     * The pictures of the answers while the cloud computer runs (screenshot
+     * decision 2): shown, or the box of each label while the reads run. The
+     * chat reads no picture without a running cloud computer, so each
+     * Markdown image of a picture file then shows as its link.
+     */
+    pictures: { enum: pictureReads },
     banner: { enum: bannerStates },
     /** The list of the files panel: All files, Changes, or Checks. */
     files: { enum: fileLists },
@@ -141,53 +156,11 @@ export const workspaceStateSchema = {
      * `overlay` opens on it.
      */
     temporary: { enum: temporaryTabStates },
-    /** The composer, as `composerStates` says. */
-    composer: { enum: composerStates },
-    /**
-     * The model, the effort, and the speed of the next message: those of
-     * the workspace, the same with fast mode on, or Sonnet 5.5 High, a model
-     * that offers no fast mode.
-     */
-    modelChoice: { enum: ['workspace', 'fast', 'no-fast'] },
+    ...composerStateProperties,
     ...layoutStateProperties,
-    /**
-     * What lies open over the workspace: the session history, the question
-     * before a running session closes, the owner of the workspace, the tab
-     * menu of the first session or of the shown file or diff tab, such as
-     * the temporary tab, or the question of Continue with work that is not
-     * pushed. Or the question before a terminal closes, or the toast of a
-     * terminal that did not open or close. Or the sheet of the values of a
-     * request, which Give a value opens on a phone. Or the menu of the header
-     * state, the question of Restart while an agent works, the time after
-     * Restart until the agents are back, or that time with the toast of a
-     * failed update check.
-     */
-    overlay: {
-      enum: [
-        'none',
-        'history',
-        'close-session',
-        'reassign',
-        'tab-menu',
-        'continue-unpushed',
-        'close-terminal',
-        'terminal-open-failed',
-        'terminal-close-failed',
-        'value-sheet',
-        'restart',
-        'restart-confirm',
-        'restarting',
-        'restart-update-failed',
-      ],
-    },
-    /**
-     * The cloud computer of an archived workspace: kept, until the app
-     * deletes it 14 days after the Archive, kept past the last day of
-     * Restore while its delete tries again, or deleted. Until that last day,
-     * every member of an org that is not suspended may restore the
-     * workspace.
-     */
-    archive: { enum: ['kept', 'ended', 'deleted'] },
+    /** What lies open over the workspace, as `overlayStates` says. */
+    overlay: { enum: overlayStates },
+    ...archiveStateProperties,
     /** The person signed in: an admin of the org, or a member who is not. */
     viewer: { enum: ['admin', 'member'] },
     /**
@@ -251,6 +224,7 @@ export const readyWorkspace: WorkspaceState = {
   startError: 'failed',
   conversation: 'history',
   fold: 'closed',
+  pictures: 'shown',
   banner: 'ready-to-merge',
   files: 'changes',
   tool: 'terminal',
@@ -260,8 +234,7 @@ export const readyWorkspace: WorkspaceState = {
   tab: 'session',
   tabRow: 'opened',
   temporary: 'none',
-  composer: 'empty',
-  modelChoice: 'workspace',
+  ...composerStateDefaults,
   ...layoutStateDefaults,
   overlay: 'none',
   archive: 'kept',

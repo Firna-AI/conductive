@@ -2,11 +2,11 @@
 
 use serde_json::{Map, Value};
 
+use cnd_runner_interface::tools::secrets::RunWithSecretsRequest;
+
 use crate::error::{Error, InputError, Result};
 
-use super::types::RunRequest;
-
-pub(crate) fn parse(fields: &Map<String, Value>) -> Result<RunRequest> {
+pub(crate) fn parse(fields: &Map<String, Value>) -> Result<RunWithSecretsRequest> {
     let invalid = || Error::Input(InputError::Secrets);
     let names = fields
         .get("names")
@@ -33,7 +33,7 @@ pub(crate) fn parse(fields: &Map<String, Value>) -> Result<RunRequest> {
         .get("reason")
         .map(|reason| reason.as_str().map(String::from).ok_or_else(invalid))
         .transpose()?;
-    Ok(RunRequest {
+    Ok(RunWithSecretsRequest {
         names,
         command,
         reason,

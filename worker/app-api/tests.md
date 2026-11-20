@@ -70,8 +70,15 @@ Run the commands in [Development](README.md#development) from the repository roo
 - `feature-repository-builds.test.ts` checks the admin's repository build,
   repeated saves, removals, adds after a failed build, and a failed start
   that keeps the choice.
+- `feature-repository-replies.test.ts` checks an add and a removal while
+  GitHub fails after the save. Each saves and answers HTTP 200 with the
+  saved choice and catalogue-only repositories. The replies use one
+  catalogue read before the save, without another read after it.
 - `feedback.test.ts`, `feedback-refusals.test.ts`, and
   `feedback-body.test.ts` check the feedback routes with a fake Resend, as
   [Feedback routes](feedback.md#development) says.
+  `feedback-quota.test.ts`, `feedback-concurrency.test.ts`,
+  `feedback-windows.test.ts`, and `feedback-delivery.test.ts` check the
+  send limit with the same fake.
 - `codex-device-endpoint.test.ts` checks a switch from an own endpoint to
   ChatGPT and back, including metadata cleanup.

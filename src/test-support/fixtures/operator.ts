@@ -13,6 +13,7 @@ import type {
   OperatorSuspension,
   OperatorUserDetail,
   OperatorUserSummary,
+  OperatorWorkspaceStates,
 } from '../../shared/operator'
 import { FAKE_TIME, fakeUser } from './core'
 import {
@@ -96,11 +97,12 @@ export function sampleOrgDetail(
 ): OperatorOrgDetail {
   return {
     id: org.id,
+    providerAccount: 'boat',
     name: org.name,
     initials: org.initials,
     createdAt: daysBefore(now, org.createdDaysAgo),
     repositories: org.repositories,
-    workspaceStates: org.states,
+    workspaceStates: wireStates(org.states),
     running: { workspaces: org.states.running, builds: org.builds },
     members: Object.entries(org.members).map(([login, role]) => {
       const { githubId, name } = sampleUser(login)
@@ -138,6 +140,15 @@ export function sampleUserDetail(
   }
 }
 
+/**
+ * The state counts of a Worker reply, from the counts that a page shows.
+ * The reply counts the removed workspaces in `archived` too, so that an
+ * older app adds up, and the app takes them out again.
+ */
+function wireStates(states: OperatorWorkspaceStates): OperatorWorkspaceStates {
+  return { ...states, archived: states.archived + states.removed }
+}
+
 function totalOf(org: OperatorOrgDetail): number {
   const { running, stopped, failed, archived } = org.workspaceStates
   return running + stopped + failed + archived
@@ -155,6 +166,7 @@ export function orgRow(
       : 'active'
   return {
     id: org.id,
+    providerAccount: org.providerAccount,
     name: org.name,
     initials: org.initials,
     createdAt: org.createdAt,
@@ -188,7 +200,8 @@ export function userRow(user: OperatorUserDetail): OperatorUserSummary {
 /**
  * The numbers of the Overview of the mockups, for the 30 UTC days up to
  * the day of `readAt`. The largest orgs are those of the samples, so that
- * each opens its page, and `waiting` counts the people who wait.
+ * each opens its page, and `waiting` counts the people who wait. The long
+ * runs come only from the samples, as other orgs have no sample runs.
  */
 export function operatorOverview(
   orgs: readonly OperatorOrgDetail[],
@@ -215,7 +228,7 @@ export function operatorOverview(
     orgs: operatorTotals.orgs,
     workspaces: operatorTotals.workspaces,
     running: { ...runningComputers },
-    workspaceStates: { ...workspaceStates },
+    workspaceStates: wireStates(workspaceStates),
     newWorkspacesByDay: dated(newWorkspacesByDay),
     newUsersByDay: dated(newUsersByDay),
     largestOrgs: largest.map((org) => ({
@@ -228,15 +241,17 @@ export function operatorOverview(
     })),
     longRuns: orgs
       .filter((org) => org.workspaceStates.running > 0 || org.deletion)
+      .flatMap((org) => {
+        const source = sampleOrgs.find((sample) => sample.id === org.id)
+        return source ? [{ org, source }] : []
+      })
       .slice(0, 10)
-      .map((org, index) => {
+      .map(({ org, source }, index) => {
         const owner =
           org.members.find(
             (member) => member.githubId === SAMPLE_IDS.suspendedUser,
           ) ?? org.members[0]
         if (!owner) throw new Error('The sample run has no owner.')
-        const source = sampleOrgs.find((sample) => sample.id === org.id)
-        if (!source) throw new Error('The sample run has no org.')
         const pending = org.id === 'acme'
         return {
           workspaceId: `${org.id}-long-run`,

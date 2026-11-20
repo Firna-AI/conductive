@@ -1,0 +1,140 @@
+import type { Viewport } from '@mokly/mokly'
+import { ModelPicker } from '../components/chat/ModelPicker'
+import { pickerMenu } from '../components/chat/pickers'
+import { classes } from '../components/common/classes'
+import { Menu } from '../components/common/Menu'
+import { useShortcutHint } from '../components/common/ShortcutTip'
+import { HistoryAnchor } from '../components/workspace/WorkspaceTabs'
+import { checkoutAutocomplete } from '../fixtures/workspaces'
+import { MacAppScreen, type MacAppState } from './MacAppScreen'
+import { WorkspaceScreen } from './WorkspaceScreen'
+import { historyFor } from './workspaceTabs'
+import { readyWorkspace, type WorkspaceState } from './workspaceState'
+import styles from './MenuPlacementScreen.module.css'
+
+/** The open menu: Model and effort, Session history, or More ways to allow. */
+export type PlacedMenu = 'model' | 'history' | 'allow'
+
+/**
+ * A draft in the composer, and four commands that wait in the region above
+ * it, which scrolls and fades where it cuts a request.
+ */
+const modelState: WorkspaceState = {
+  ...readyWorkspace,
+  conversation: 'mac-waiting-many',
+  composer: 'draft',
+}
+
+/**
+ * A full tab row, which scrolls sideways and fades where it cuts tabs, with
+ * the session history open.
+ */
+const historyState: WorkspaceState = {
+  ...readyWorkspace,
+  tab: 'new-session',
+  tabRow: 'full',
+  overlay: 'history',
+}
+
+/**
+ * The same four commands in the Mac app, with the other ways to allow of the
+ * first request open.
+ */
+const allowState: MacAppState = {
+  window: 'window',
+  page: 'workspace',
+  command: 'many-choices',
+  change: 'none',
+  palette: 'closed',
+  keyChange: 'none',
+  shortcutSearch: 'none',
+  shortcuts: 'default',
+}
+
+/**
+ * The model menu of the composer, above the page at its picker. It reads the
+ * key of Fast mode where it draws, so a phone shows no key, as the picker
+ * does.
+ */
+function PlacedModelMenu() {
+  const fastKey = useShortcutHint('fast-mode')
+  const { choice } = checkoutAutocomplete
+  return (
+    <div className={classes(styles.above, styles.model)}>
+      <Menu
+        entries={pickerMenu(choice, choice.agent, undefined, fastKey)}
+        label="Model and effort"
+        placement="point"
+      />
+    </div>
+  )
+}
+
+/** The workspace with the model menu of its composer open. */
+function ModelMenuScreen(props: { viewport: Viewport }) {
+  return (
+    <WorkspaceScreen
+      overlay={<PlacedModelMenu />}
+      picker={
+        <span className={styles.modelAnchor}>
+          {/* The screen draws the menu above the page, so none in place. */}
+          <ModelPicker choice={checkoutAutocomplete.choice} menu={false} open />
+        </span>
+      }
+      state={modelState}
+      viewport={props.viewport}
+    />
+  )
+}
+
+/**
+ * The workspace with the session history open. A phone draws the history as
+ * a sheet, from the overlay of the state.
+ */
+function HistoryMenuScreen(props: { viewport: Viewport }) {
+  const phone = props.viewport === 'mobile'
+  return (
+    <HistoryAnchor.Provider value={phone ? undefined : styles.historyAnchor}>
+      <WorkspaceScreen
+        overlay={
+          phone ? undefined : (
+            <div className={classes(styles.above, styles.history)}>
+              <Menu
+                entries={historyFor(historyState)}
+                label="Session history"
+                placement="point"
+                wide
+              />
+            </div>
+          )
+        }
+        state={historyState}
+        viewport={props.viewport}
+      />
+    </HistoryAnchor.Provider>
+  )
+}
+
+/**
+ * A menu beside its button over a box that clips or scrolls: the model menu
+ * of the composer over the region of the requests, the session history below
+ * a full tab row, or the other ways to allow of a request in the Mac app.
+ * The app opens each one above every box of the page, so no box cuts it. A
+ * view runs no script, so the screen draws the open menu above the page, and
+ * CSS places it at its button. The chat draws the other ways to allow in the
+ * same way, as `DrawnChoices` says. A phone keeps its own layout: the session
+ * history is a sheet there, and the Mac app shows the same screen, smaller.
+ */
+export function MenuPlacementScreen(props: {
+  menu: PlacedMenu
+  viewport: Viewport
+}) {
+  switch (props.menu) {
+    case 'model':
+      return <ModelMenuScreen viewport={props.viewport} />
+    case 'history':
+      return <HistoryMenuScreen viewport={props.viewport} />
+    case 'allow':
+      return <MacAppScreen state={allowState} />
+  }
+}

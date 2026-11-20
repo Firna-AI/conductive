@@ -1,7 +1,7 @@
 {
   "name": "remote-code",
   "private": true,
-  "version": "0.24.0",
+  "version": "0.29.0",
   "type": "module",
   "scripts": {
     "dev": "npm run site:build && vite",
@@ -42,6 +42,7 @@
     "fflate": "^0.8.3",
     "lexical": "0.53.0",
     "lucide-react": "^0.577.0",
+    "markdown-it": "^15.0.3",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },

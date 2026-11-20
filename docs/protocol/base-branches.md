@@ -21,12 +21,16 @@ says.
   - The run of a merged pull request has the base branch of that pull
     request.
 - A workspace keeps its base branch at each start: the create, a resume,
-  and the restart near day 14 of a stop. The agent runner gets the base
-  branch at each start.
+  and, on Boat, the restart near day 14 of a stop. The agent runner gets
+  the base branch at each start.
 - After a merge, Continue makes the latest default branch the base branch
   of the workspace, as
   [The base and the new branch](continue.md#the-base-and-the-new-branch)
   says (decision 223).
+- A repository change makes the latest default branch of the new
+  repository the base branch of the workspace, as
+  [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
+  says.
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain

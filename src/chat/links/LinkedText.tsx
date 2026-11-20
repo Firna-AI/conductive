@@ -1,34 +1,19 @@
-import type { FileEntry } from '../../shared/generated/FileEntry'
-import type { Attachment } from '../../shared/generated/Attachment'
-import { entryName } from '../../../docs/mockups/src/components/chat/entryPaths'
-import { FileChip } from '../../../docs/mockups/src/components/chat/FileChip'
-import { SentFileChip } from '../../../docs/mockups/src/components/chat/SentFileChip'
 import { SessionChip } from '../../../docs/mockups/src/components/chat/SessionChip'
+import { SkillChip } from '../../../docs/mockups/src/components/chat/SkillChip'
 import {
   WorkspaceChip,
   type ChipOpener,
 } from '../../../docs/mockups/src/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
-import { lineLabel } from '../../shared/line-target'
+import type { Attachment } from '../../shared/generated/Attachment'
 import { sessionLink } from '../../shared/session-link'
 import { isPlainClick } from '../../shell/ui/AppLink'
 import { useTextLinks } from '../../shell/ui/text-links'
-import { MentionIcon } from '../mentions/MentionIcon'
-import {
-  findMentioned,
-  useChatMentions,
-  useMentionTree,
-  useRepositoryFolder,
-} from '../mentions/MentionsContext'
-import {
-  chatParts,
-  type AttachmentPart,
-  type ChatPart,
-  type EntryLookup,
-  type FilePart,
-} from './chat-parts'
-import { fileOpener, fileTitle } from './file-opener'
-import { FileTextLink } from './FileTextLink'
+import { findSkill, useMentionSkills } from '../mentions/mention-skills'
+import { findMentioned, useMentionTree } from '../mentions/MentionsContext'
+import { chatParts, type ChatPart, type EntryLookup } from './chat-parts'
+import type { SkillLookup } from './chat-tokens'
+import { AttachmentLink, FileLink } from './FileChips'
 import { chipOf, useChatLinks } from './LinksContext'
 import { sessionChipOf, useLinkedSession } from './session-links'
 import { CodeText, WebLinkText } from './WebLinkText'
@@ -40,7 +25,7 @@ import { sessionTarget, type LinkTarget } from './workspace-links'
  * A plain click opens it in the same window, as the other links of the app
  * do. A click with a modifier key stays with the browser, such as a new tab.
  */
-function LinkChip(props: { target: LinkTarget }) {
+export function LinkChip(props: { target: LinkTarget }) {
   const { open } = useChatLinks()
   const session = useLinkedSession(props.target)
   const { to, workspace } = props.target
@@ -84,181 +69,91 @@ export function SessionLinkText(props: {
 }
 
 /**
- * A file or a folder in a sent message or an answer: a link of the app to
- * the file, or to All files with the folder open, as a press in All files
- * opens them. A file with `lines` opens as text at the lines, and its name
- * and title end with them, as in `app.ts:42`. A click with a modifier key
- * stays with the browser.
+ * One part of a sent message. A file and an attached file draw through the
+ * chips of `FileChips.tsx`.
  */
-function FileLink(props: { part: FilePart }) {
-  const mentions = useChatMentions()
-  const { entry, lines } = props.part
-  const folder = entry.kind === 'directory'
-  const at = lines ? `:${lineLabel(lines)}` : ''
-  return (
-    <FileChip
-      entry={{ path: entry.path, folder }}
-      icon={<MentionIcon entry={entry} size={12} />}
-      mention={props.part.source}
-      lines={at || undefined}
-      name={entry.name}
-      opener={
-        mentions
-          ? (chip) => <a {...chip} {...fileOpener(mentions, entry, lines)} />
-          : undefined
-      }
-      title={fileTitle(entry, lines)}
-    />
-  )
-}
-
-/**
- * An attached file of a sent message, at the place of its mention: a link
- * of the app to the file tab of the copy of the file, as a file chip opens
- * its file. A click with a modifier key stays with the browser. While the
- * message has not gone out, `opens` is false, because the copy does not
- * exist yet. Then, and in a chat without the files of the workspace, such
- * as an archived one, the chip opens nothing.
- */
-function AttachmentLink(props: { part: AttachmentPart; opens: boolean }) {
-  const mentions = useChatMentions()
-  const files = props.opens ? mentions : null
-  const { path } = props.part
-  const copy: FileEntry = {
-    path,
-    name: entryName({ path }),
-    kind: 'file',
-    change: null,
-  }
-  return (
-    <SentFileChip
-      file={props.part.attachment}
-      mention={props.part.source}
-      opener={
-        files
-          ? (chip) => <a {...chip} {...fileOpener(files, copy, null)} />
-          : undefined
-      }
-    />
-  )
-}
-
 function Part(props: { part: ChatPart; opens: boolean }) {
   const { part } = props
   if (part.kind === 'text') return part.text
   if (part.kind === 'code') return <CodeText part={part} />
   if (part.kind === 'link') return <WebLinkText part={part} />
   if (part.kind === 'file') return <FileLink part={part} />
-  if (part.kind === 'file-link') return <FileTextLink part={part} />
   if (part.kind === 'attachment') {
     return <AttachmentLink opens={props.opens} part={part} />
+  }
+  if (part.kind === 'skill') {
+    // A press on a skill chip opens nothing. Its title is the description.
+    const { name, description } = part.skill
+    return <SkillChip mention={part.source} skill={{ name, description }} />
   }
   return <LinkChip target={part.target} />
 }
 
-/** A run of bold text, chips, and links, or one part without bold. */
-type Run =
-  { kind: 'strong'; parts: ChatPart[] } | { kind: 'part'; part: ChatPart }
-
-/** The parts in runs, so that one `<strong>` holds each run of bold parts. */
-function runsOf(parts: readonly ChatPart[]): Run[] {
-  const runs: Run[] = []
-  for (const part of parts) {
-    const last = runs.at(-1)
-    if (part.kind === 'code' || !part.strong) runs.push({ kind: 'part', part })
-    else if (last?.kind === 'strong') last.parts.push(part)
-    else runs.push({ kind: 'strong', parts: [part] })
-  }
-  return runs
-}
-
-/** The lookup of the entries of the tree, while the chat has a tree. */
-function useEntryLookup(read: boolean): EntryLookup | undefined {
+/**
+ * The lookup of the entries of the tree, while the chat has a tree. With
+ * `read` false, the text follows no change of the tree, and finds nothing.
+ */
+export function useEntryLookup(read: boolean): EntryLookup | undefined {
   const tree = useMentionTree(read)
   if (!tree) return undefined
   return (path, folder) => findMentioned(tree, path, folder)
 }
 
 /**
- * Whether a text can hold a chip or a link of a file, so that it follows
- * the tree. A mention needs `@`, a path in code needs a backtick, and a
- * Markdown link needs `](`. So a change of the tree draws only the texts
- * that can change.
+ * The lookup of the skill texts of a message, while the chat has skill
+ * lists. Without a list, such as while it loads or in an archived
+ * workspace, each skill text stays text.
  */
-function namesFiles(text: string, reading: TextReading): boolean {
-  if (!reading.mentions) return false
-  if (text.includes('@')) return true
-  return reading.paths === true && (text.includes('`') || text.includes(']('))
+function useSkillLookup(read: boolean): SkillLookup | undefined {
+  const skills = useMentionSkills(read)
+  if (skills?.state !== 'ready') return undefined
+  return (name) => findSkill(skills, name)
 }
 
-/** How the chat reads a text: as an answer, or as a message of a member. */
+/** How the chat reads the text of a sent message. */
 export interface TextReading {
-  /** `**` marks bold, as in an answer. */
-  strong?: boolean
   /** Each mention of an entry of the file tree is a file chip. */
   mentions?: boolean
   /**
-   * Inline code that is the path of an entry of the tree is a file chip,
-   * as in an answer. It needs `mentions`.
+   * Each skill text of a skill of either agent is a skill chip, as in a
+   * message of a member. An answer keeps its skill texts as text.
    */
-  paths?: boolean
+  skills?: boolean
   /** The files of a sent message. The mention of each is its chip. */
   attachments?: readonly Attachment[]
 }
 
 /**
- * The parts of a text, as `chatParts` reads it with the workspaces of the
- * chat, and with the web links of the screen that shows it. With
- * `mentions`, it follows the tree of the chat for the chips of the files.
+ * The parts of a sent message, as `chatParts` reads it with the workspaces
+ * of the chat, and with the web links of the screen that shows it. With
+ * `mentions`, a text with a `@` follows the tree of the chat for the chips
+ * of the files, so a change of the tree draws only the texts that can
+ * change. With `skills`, it follows the skill lists for the skill chips.
  */
 export function useChatParts(text: string, reading: TextReading): ChatPart[] {
   const { links } = useChatLinks()
-  const lookup = useEntryLookup(namesFiles(text, reading))
-  const root = useRepositoryFolder()
+  const lookup = useEntryLookup(reading.mentions === true && text.includes('@'))
   const { linkOf } = useTextLinks()
+  const skills = useSkillLookup(reading.skills ?? false)
   return chatParts(text, links, {
-    strong: reading.strong ?? false,
     web: linkOf,
     mentions: lookup,
-    code: reading.paths ? { root } : undefined,
+    skills,
     attachments: reading.attachments,
   })
 }
 
 /**
- * Draws the parts of a text: text, code, chips, and links. One `<strong>`
- * holds each run of bold text, chips, and links. `opens` says whether the
- * chip of an attached file opens its copy: only after its message went out
- * to the agent.
+ * Draws the parts of a sent message: text, code, chips, and links. `opens`
+ * says whether the chip of an attached file opens its copy: only after its
+ * message went out to the agent.
  */
 export function ChatText(props: {
   parts: readonly ChatPart[]
   opens?: boolean
 }) {
   const opens = props.opens ?? false
-  return (
-    <>
-      {runsOf(props.parts).map((run, index) =>
-        run.kind === 'part' ? (
-          <Part key={index} opens={opens} part={run.part} />
-        ) : (
-          <strong key={index}>
-            {run.parts.map((part, inner) => (
-              <Part key={inner} opens={opens} part={part} />
-            ))}
-          </strong>
-        ),
-      )}
-    </>
-  )
-}
-
-const answerReading: TextReading = { strong: true, mentions: true, paths: true }
-
-/**
- * Text of an answer: bold, workspace chips, and a file chip for each
- * mention of an entry of the tree and for each path of one in inline code.
- */
-export function AnswerText(props: { text: string }) {
-  return <ChatText parts={useChatParts(props.text, answerReading)} />
+  return props.parts.map((part, index) => (
+    <Part key={index} opens={opens} part={part} />
+  ))
 }

@@ -32,7 +32,8 @@ import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { changedWorkspaces, chatWorkspacesOf } from './orgWorkspaces'
 import { viewerOf } from './sessionStarter'
-import { barOf, branchOf } from './workspaceBar'
+import { barOf, headerMenusOf, placeOf } from './workspaceBar'
+import { headerMenuOf } from './workspaceHeaderMenu'
 import {
   FilesContent,
   startingLogFor,
@@ -54,7 +55,7 @@ import {
 } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
-import { historyFor, tabsFor, workspaceName } from './workspaceTabs'
+import { historyFor, noMessages, tabsFor, workspaceName } from './workspaceTabs'
 import styles from './WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
@@ -75,14 +76,16 @@ const raisedSplit = 35
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
+ * `picker` takes the place of the model picker of the message box.
  */
 export function WorkspaceScreen(props: {
   state: WorkspaceState
   viewport: Viewport
   overlay?: ReactNode
   shortcuts?: ShortcutChanges
+  picker?: ReactNode
 }) {
-  const { viewport } = props
+  const { viewport, picker: pickerPart } = props
   const mac = useMacApp()
   const state = drawnState(props.state)
   const suspended = state.org === 'suspended'
@@ -97,7 +100,7 @@ export function WorkspaceScreen(props: {
     ...record,
     owner,
     name: workspaceName(state, record),
-    branch: branchOf(state, record),
+    ...placeOf(state, record),
     github: bannerSummary(state.banner),
   }
   const status = activityOf(state)
@@ -113,13 +116,13 @@ export function WorkspaceScreen(props: {
   const restorable = archiveRestore(state) === 'available'
   const bar = barOf(state, { archivable, readOnly })
   const problem = sandboxNotice(state)
-  const fresh = state.tab === 'new-session'
+  const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
   const chat = (
     <ChatWorkspaces rows={rows}>
       <ChatPane
-        composer={composerFor(state, workspace, viewport)}
+        composer={{ ...composerFor(state, workspace, viewport), pickerPart }}
         empty={
           <EmptyState
             body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
@@ -128,7 +131,7 @@ export function WorkspaceScreen(props: {
           />
         }
         fold={state.fold}
-        items={fresh ? [] : chatItemsFor(open.items, state.paths)}
+        items={empty ? [] : chatItemsFor(open.items, state.paths)}
         notice={
           // An archived workspace keeps its archived bar, so the notice of a
           // suspended org shows above it.
@@ -138,6 +141,7 @@ export function WorkspaceScreen(props: {
             composerNotice(state, workspace)
           )
         }
+        pictures={state.sandbox === 'ready' ? state.pictures : undefined}
         problem={problem}
         starting={startingLogFor(state)}
         viewer={viewer}
@@ -152,10 +156,15 @@ export function WorkspaceScreen(props: {
       canRestart={!readOnly}
       copy={state.copyLink === 'none' ? undefined : state.copyLink}
       name={workspace.name}
-      ownerOpen={state.overlay === 'reassign'}
+      {...headerMenusOf(state)}
+      menu={
+        state.overlay === 'workspace-menu' && viewport === 'desktop'
+          ? headerMenuOf(state, workspace.owner)
+          : undefined
+      }
+      renaming={state.overlay === 'header-rename'}
       run={open.run}
       rightHidden={rightHidden}
-      stateOpen={state.overlay === 'restart'}
       status={status}
       viewport={viewport}
       workspace={workspace}
@@ -267,7 +276,7 @@ export function WorkspaceScreen(props: {
         suspended,
         viewer: membership,
         changed: changedWorkspaces(state),
-        restoreOpen: state.archive === 'kept',
+        archive: state.archive,
         shortcuts: props.shortcuts,
       })}
     >

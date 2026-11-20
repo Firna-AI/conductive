@@ -11,9 +11,11 @@ import { installationTokenProvider } from '../github/credentials'
 import { refreshWorkspace } from '../github/refresh'
 import { WorkspaceGitHubState } from '../github/workspace-state'
 import { HttpError } from '../http'
+import { handleGitHubRead } from '../github/app-handler'
 import { handleGitHubMerge } from '../github/merge-handler'
 import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
+import { readBranchWork, type BranchWork } from '../github/branch-work'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -108,10 +110,57 @@ export class WorkspaceGitHub {
     })
   }
 
+  /**
+   * The GitHub routes of the workspace object, or null for another route:
+   * the reads of the app, which gate themselves, then the other GitHub
+   * routes of `fetch`.
+   */
+  async route(request: Request): Promise<Response | null> {
+    const path = new URL(request.url).pathname
+    if (/\/github(?:\/checks|\/stored)?$/.test(path))
+      return handleGitHubRead(request, this.env, {
+        now: this.dependencies.now,
+        refresh: (workspace, signal) => this.refresh(workspace, signal),
+        stored: (workspace) => this.stored(workspace),
+      })
+    return /\/github\/.*$/.test(path) ? this.fetch(request) : null
+  }
+
+  /**
+   * The default branch of the target repository, by default the repository
+   * of the workspace. A repository change reads the new repository while
+   * the record still names the old one, so access follows the record.
+   */
   async defaultBranch(
     workspace: GitHubWorkspace,
     userId: string,
+    target: GitHubWorkspace = workspace,
   ): Promise<string> {
+    return this.read(workspace, userId, target, (reader) =>
+      reader.defaultBranch(),
+    )
+  }
+
+  /** The work of the branch that a repository change stops following. */
+  async branchWork(
+    workspace: GitHubWorkspace,
+    userId: string,
+  ): Promise<BranchWork> {
+    return readBranchWork(
+      await this.refresh(workspace, { userId }),
+      (baseBranch, headSha) =>
+        this.read(workspace, userId, workspace, (reader) =>
+          reader.aheadBy(baseBranch, headSha),
+        ),
+    )
+  }
+
+  private async read<T>(
+    workspace: GitHubWorkspace,
+    userId: string,
+    target: GitHubWorkspace,
+    operation: (reader: GitHubReader) => Promise<T>,
+  ): Promise<T> {
     const authorize = () => authorizeMerge(this.env.DB, workspace, userId)
     await authorize()
     const token = await installationTokenProvider(
@@ -121,21 +170,23 @@ export class WorkspaceGitHub {
       },
       this.dependencies.fetch,
       this.dependencies.now,
-    )(workspace)
-    const branch = await new GitHubReader(
-      {
-        ...this.dependencies,
-        token: async () => token,
-        fetch: async (request) => {
-          await authorize()
-          return this.dependencies.fetch(request)
+    )(target)
+    const result = await operation(
+      new GitHubReader(
+        {
+          ...this.dependencies,
+          token: async () => token,
+          fetch: async (request) => {
+            await authorize()
+            return this.dependencies.fetch(request)
+          },
         },
-      },
-      workspace,
-      token,
-    ).defaultBranch()
+        target,
+        token,
+      ),
+    )
     await authorize()
-    return branch
+    return result
   }
 
   async scheduleFresh(workspace: GitHubWorkspace): Promise<void> {

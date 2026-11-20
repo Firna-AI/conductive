@@ -1,7 +1,8 @@
+import type { SecretGrant } from './generated/SecretGrant'
+import type { Session } from './generated/Session'
 import type {
   SecretRequest,
   SecretWorkspaceEvent,
-  SecretGrant,
   SecretRequestEnd,
   SecretNoticeFailure,
   SecretValueLifetime,
@@ -35,7 +36,11 @@ const grantText: Record<SecretGrant, string> = {
   'workspace-value': 'Value for this workspace',
 }
 
-export function secretRequestMarkdown(request: SecretRequest): string {
+export function secretRequestMarkdown(
+  request: SecretRequest,
+  session: Session,
+  orgName: string | null,
+): string {
   const name =
     request.answeredBy?.displayName ??
     request.answeredBy?.githubLogin ??
@@ -50,9 +55,13 @@ export function secretRequestMarkdown(request: SecretRequest): string {
           : request.state === 'late'
             ? 'The agent stopped waiting. Allow sends it a message.'
             : 'Waiting for an answer.'
+  const agent = session.choice.agent === 'claude' ? 'Claude' : 'Codex'
   const fallback =
     request.notice?.state === 'not-sent'
-      ? noticeText[request.notice.reason]
+      ? request.notice.reason === 'login-unavailable' &&
+        session.login?.type === 'org'
+        ? `An admin must connect ${orgName ?? 'this org'}'s ${agent} login again. The agent learns of this at the next message in this session.`
+        : noticeText[request.notice.reason]
       : ''
   return [
     `Secrets: ${request.secrets.map((secret) => inlineCode(secret.name)).join(', ')}`,
@@ -69,7 +78,7 @@ export function secretRequestMarkdown(request: SecretRequest): string {
     ...(request.lifetime
       ? [`Available: ${lifetimeText[request.lifetime]}.`]
       : []),
-    fallback,
+    plainText(fallback),
   ]
     .filter(Boolean)
     .join('\n\n')

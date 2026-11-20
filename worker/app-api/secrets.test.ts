@@ -3,6 +3,7 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 import {
   secretAllAgentsPath,
   secretPath,
+  secretRevealPath,
   secretsPath,
 } from '../../src/shared/secrets'
 import {
@@ -51,6 +52,9 @@ it('lets members manage their own secrets and reserves other secrets and marks f
   expect(create.status).toBe(201)
   const secret = await secretReply(create)
   expect(secret).toMatchObject({ createdByUserId: 'member', allAgents: false })
+  await fixture.env.DB.prepare('UPDATE org_secrets SET name = ? WHERE id = ?')
+    .bind('Cloudflare (read-only)', secret.id)
+    .run()
   const path = secretPath(OUTER_ORG, secret.id)
   const replace = await fixture.request(path, {
     method: 'PATCH',
@@ -59,11 +63,20 @@ it('lets members manage their own secrets and reserves other secrets and marks f
   })
   expect(replace.status).toBe(200)
   expect(await replace.json()).toMatchObject({
-    secret: { description: 'Changed' },
+    secret: { name: 'Cloudflare (read-only)', description: 'Changed' },
   })
   expect((await storedSecretValue(fixture, OUTER_ORG, secret.id)).value).toBe(
     '  new\n',
   )
+  const revealed = await fixture.request(
+    secretRevealPath(OUTER_ORG, secret.id),
+    {
+      method: 'POST',
+      body: '{}',
+    },
+  )
+  expect(revealed.status).toBe(200)
+  expect(await revealed.json()).toEqual({ value: '  new\n' })
   const mark = secretAllAgentsPath(OUTER_ORG, secret.id)
   expect(
     (
@@ -151,13 +164,37 @@ it('lets members manage their own secrets and reserves other secrets and marks f
 
 it('keeps values encrypted and out of replies, uses org-unique names, and blocks suspended writes', async () => {
   fixture = await createOuterRuntime(bundle)
-  const input = { name: 'TOKEN', description: 'Access', value: '  private\n' }
+  for (const name of [
+    'Cloudflare (read-only)',
+    'Clé_API',
+    'A-B',
+    'A=B',
+    'A\0B',
+  ]) {
+    const refused = await fixture.request(secretsPath(OUTER_ORG), {
+      method: 'POST',
+      body: JSON.stringify({ name, description: '', value: 'private' }),
+    })
+    expect(refused.status, JSON.stringify(name)).toBe(400)
+    expect(await refused.json()).toMatchObject({
+      error: {
+        code: 'invalid_secret_name',
+        message: 'Use only letters, digits, and underscores.',
+      },
+    })
+  }
+  const input = {
+    name: '  9_token_ \n',
+    description: 'Access',
+    value: '  private\n',
+  }
   const response = await fixture.request(secretsPath(OUTER_ORG), {
     method: 'POST',
     body: JSON.stringify(input),
   })
   expect(response.status).toBe(201)
   const secret = await secretReply(response)
+  expect(secret).toMatchObject({ name: '9_token_' })
   const { ciphertext, value } = await storedSecretValue(
     fixture,
     OUTER_ORG,

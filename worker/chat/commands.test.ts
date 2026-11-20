@@ -93,7 +93,7 @@ describe('workspace chat commands', () => {
     )
     const same: ChangeModelResponse = await sameResponse.json()
     expect(same).toEqual({
-      eventNumber: 2,
+      eventNumber: 3,
       session: { ...session, choice: nextChoice },
       created: false,
       draft,
@@ -192,6 +192,8 @@ describe('workspace chat commands', () => {
     expect(closed.history).toEqual([
       {
         ...session,
+        defaultLogin: undefined,
+        login: { type: 'personal', userId: fixture.owner.id },
         title: 'Check this code',
         activeTurnId: null,
         closedAt: 1_800_000_000_000,
@@ -221,7 +223,7 @@ describe('workspace chat commands', () => {
       { turnId: continued.turnId },
     )
     expect(await stopped.json()).toEqual({
-      eventNumber: 12,
+      eventNumber: 13,
       turnId: continued.turnId,
       state: 'stopping',
     })

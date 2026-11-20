@@ -7,8 +7,9 @@ import { liftQuestion, type QuestionTarget } from './operatorCopy'
 
 /**
  * The operator confirms a lift. The dialog says what comes back, and that
- * the files of a workspace that stopped 14 days ago or more can be gone. A
- * deleted org stays deleted, so the dialog promises it no access.
+ * the files of a workspace on the `boat` account that stopped 14 days ago
+ * or more can be gone. A deleted org stays deleted, so the dialog promises
+ * it no access.
  */
 export function LiftDialog(props: {
   target: QuestionTarget

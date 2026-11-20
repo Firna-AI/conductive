@@ -15,9 +15,13 @@ decision number names a decision of the change that adds the
 decision number, such as own endpoint decision 9, names the dated record of
 one decision of the change that adds the
 [own endpoint logins](own-endpoint-logins.md). Its plan keeps these records
-while the change is open. Its pull request keeps them after the merge. A
-secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+while the change is open. Its pull request keeps them after the merge. An
+org login decision number, such as org login decision 4, names the dated
+record of one decision of the change that adds the
+[org logins](org-logins.md). Its plan keeps these records while the change
+is open. Its pull request keeps them after the merge. A secrets decision
+number names a decision of the change that adds [secrets](secrets.md), as
+that doc says.
 
 ## The workspace token
 
@@ -87,13 +91,20 @@ secrets decision number names a decision of the change that adds
   and the marks of the last start of the sandbox.
 - The Durable Object does this for each runner, also for an older runner
   from an org image or a saved disk. It also hides a copy that consecutive
-  text events of one answer split.
+  text events of one answer split, as
+  [Answer text secrets](answer-text-secrets.md) says.
 - Reason: an org image or a saved disk can hold an older runner. A filter
   of secret values in the runner was rejected, because an older runner
   does not have it.
 - The Durable Object also hides each value that a run with secrets used,
   as [The exact-copy filter](secret-requests.md#the-exact-copy-filter)
   says.
+- With complete tool details, the Durable Object hides these copies before
+  it cuts a long tool detail, as [Tool detail secrets](tool-detail-secrets.md) says.
+- Risk: older runners and fallback connections still cut before the filter.
+  So the start of a value that crosses the cut can show. The risk ends when
+  both sides support complete tool details. A stopped workspace can keep an
+  older runner with no time limit. Stored tool details keep their text.
 - The app keeps the real path of each file, the real name of the default
   branch of each repository, and the real name of the base branch of each
   workspace. Reads, diffs, and the file lists use them. The browser gets
@@ -104,8 +115,34 @@ secrets decision number names a decision of the change that adds
 - Reason: a hidden path or branch name names nothing real, and two hidden
   paths can become equal. File IDs in place of real paths were rejected,
   because they change the file API.
-- The runner hides the workspace token and the turn token in the text
-  that screens show, before it saves or sends an event.
+- The runner hides the workspace token and each turn token that it got
+  since it started, in the text that screens show. It does this before it
+  saves or sends an event.
+- It hides each whole copy of such a token, at any length.
+- It also hides each run of 21 or more consecutive characters of such a
+  token, from any place in the token. It counts each Unicode scalar value
+  as one character.
+- It also hides a whole token or such a run when consecutive text events
+  of one answer split it.
+- The rule does not check whether a run is secret. So it also hides a
+  public run of 21 or more characters of a token.
+- A run of 20 or fewer characters shows, unless it is a whole token or
+  lies in a longer hidden run.
+- Reason: with this rule, a cut or a change of text before the filter
+  cannot show a long part of a token (the user's decision of 18 November
+  2026). A rule that each cut runs after the filter, and a type for
+  filtered text, were rejected. New code can still cut text before the
+  filter.
+- Reason: the limit is longer than each fixed public start of a token,
+  such as `sk-ant-oat01-`. The longest such start has 20 characters. So
+  text that holds only such a start does not change.
+- Risk: a run of 20 or fewer characters outside a hidden run still shows,
+  and so does a changed or encoded token. Several short runs, such as the
+  lines of a wrapped token, can together show the token.
+- Risk: an older runner, from an org image or a saved disk, hides only
+  whole tokens until it updates, as [Updates](sandbox-software.md#updates)
+  says. The rule changes no runner message, so such a runner keeps
+  working. No filter in the Worker hides a part of these tokens.
 - A start log hides each exact copy of a secret value and of the workspace
   token before a browser gets it.
 - The app does not hide the value of an env var that is not secret. So
@@ -114,9 +151,9 @@ secrets decision number names a decision of the change that adds
   only values of 8 or more characters count, was rejected, because it
   guesses. A mask of every value was rejected, because it also hides
   short, common values, such as `1`, in ordinary text.
-- Risk: the app hides only exact copies of a value. A changed or encoded
-  value still shows. File content, diff content, and the terminal hide no
-  value.
+- Risk: the app hides only exact copies of a secret value. A changed or
+  encoded value still shows. File content, diff content, and the terminal
+  hide no value.
   The mark does not keep a value from the agent or from a member with a
   terminal, because each sandbox gets the env vars of its org.
 - Risk: the runner does not hide secret values. So its saved events on the
@@ -124,6 +161,9 @@ secrets decision number names a decision of the change that adds
 
 ## Agent logins
 
+- Each user connects their personal logins on the account page. An admin
+  connects the org logins of an org on the Agents tab of the org settings,
+  as [Org logins](org-logins.md) says.
 - A user connects Claude with a subscription token from
   `claude setup-token`, or with an Anthropic API key (decisions 24 and 37).
 - A user can also connect each agent with an own endpoint, as
@@ -190,10 +230,11 @@ secrets decision number names a decision of the change that adds
   the sandbox. Its processes and members with terminal access can read them.
 - A sign-in inside a sandbox was rejected, because the login would stay on
   the disk of one workspace.
-- A user's agent logins serve all of that user's orgs (decision 21).
-- The app uses a user's agent login only for a turn of a session that the
-  user started. The one exception is that the Worker reads the model list
-  of an own endpoint with its key, at the times that
+- A user's personal logins serve all of that user's orgs (decision 21). An
+  org login serves only the members of its org (org login decision 1 B).
+- The app uses a personal login only for the turns of the sessions that
+  its owner started on it. The one exception is that the Worker reads the
+  model list of an own endpoint with its key, at the times that
   [Own endpoint logins](own-endpoint-logins.md) gives.
   The login itself never reaches a sandbox, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
@@ -203,3 +244,8 @@ secrets decision number names a decision of the change that adds
 ### Own endpoint logins
 
 [Own endpoint logins](own-endpoint-logins.md) holds these requirements.
+
+### Org logins
+
+[Org logins](org-logins.md) holds the requirements of the org logins, the
+Agents tab of the org settings, and the default login of a new session.

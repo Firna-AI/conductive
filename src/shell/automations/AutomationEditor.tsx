@@ -1,14 +1,19 @@
 import { useMemo } from 'react'
 import { Trash2 } from 'lucide-react'
-import { offersRunNow } from '../../../docs/mockups/src/components/automations/triggerCopy'
+import {
+  hasPullRequestTrigger,
+  offersRunNow,
+} from '../../../docs/mockups/src/components/automations/triggerCopy'
 import styles from '../../../docs/mockups/src/screens/AutomationScreen.module.css'
 import {
   draftFields,
   draftOf,
   draftReady,
   sameDraft,
+  withChosenSecret,
   type AutomationDraft,
 } from '../../app/automation-draft'
+import { newSessionLogin } from '../../app/default-logins'
 import type { AutomationTab } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
 import type { User } from '../../shared/api'
@@ -16,17 +21,20 @@ import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import type { Automation } from '../../shared/automations'
 import type { Section } from '../../shared/sections'
-import { useOfferedModels, useOrgModel } from '../context'
+import { automationCapabilities } from '../capabilities/AutomationCapabilities'
+import { useApp, useOfferedModels, useOrgModel } from '../context'
 import { ActionButton } from '../ui/actions'
 import { eachField, useSavedDraft } from '../ui/useSavedDraft'
 import { useViewport } from '../ui/viewport'
 import { useDeleteAutomation } from './DeleteAutomation'
 import { PromptEditor } from './PromptBox'
+import { PromptTool } from './PromptTool'
 import { AutomationFields } from './AutomationFields'
 import { AutomationFrame } from './AutomationFrame'
 import { AutomationNote } from './AutomationNote'
 import { RunNowButton } from './RunNow'
 import { RunsPanel, type RunsSource } from './RunsPanel'
+import { useChosenSecretNames } from './RunSecrets'
 import { TriggerEditor } from './TriggerList'
 import { useAutomationSave } from './useAutomationSave'
 
@@ -47,7 +55,9 @@ type Source =
  * with Save, Run now, and Delete, beside the Runs list. Save stays off while
  * nothing changed, while the prompt has no text, and while the form refuses
  * a cron. Run now shows on a saved automation that has a schedule or no
- * trigger. A phone shows Save on the Automation tab only.
+ * trigger. A phone shows Save on the Automation tab only. The Capabilities
+ * icon of the prompt chooses the secrets of the runs, and the lines under
+ * the prompt follow the form, also before Save.
  */
 export function AutomationEditor(
   props: Source & {
@@ -68,8 +78,13 @@ export function AutomationEditor(
   )
   const form = useSavedDraft(saved, followEachField)
   const { draft } = form
-  // The runs use the owner's login, so the picker follows the owner's lists.
-  const models = useOfferedModels(draft.choice)
+  const account = useStore(useApp().account.account)
+  // A run takes the default login of its owner, the person here, so the
+  // picker follows the list of that login (org login decisions 5 A and 3 A).
+  const models = useOfferedModels(draft.choice, org.id)
+  const runsOnOrg =
+    account !== null &&
+    newSessionLogin(account, org.id, draft.choice.agent) === 'org'
   const { save, refused, refusal } = useAutomationSave({
     org,
     automation,
@@ -82,6 +97,13 @@ export function AutomationEditor(
     form.change(next)
   }
   const ready = draftReady(draft) && (!automation || !sameDraft(draft, saved))
+  const chosen = draft.capabilities.preapprovedSecretIds
+  const secretNames = useChosenSecretNames(org.id, chosen)
+  const capabilities = automationCapabilities(org, {
+    ids: chosen,
+    choose: (secretId, on) => change(withChosenSecret(draft, secretId, on)),
+    disabled: save.pending,
+  })
   const repositoryName =
     props.repositories.find((item) => item.id === draft.repositoryId)
       ?.fullName ?? draft.repositoryId
@@ -176,8 +198,12 @@ export function AutomationEditor(
         changeChoice={(choice) => change({ ...draft, choice })}
         changePrompt={(prompt) => change({ ...draft, prompt })}
         choice={draft.choice}
+        login={runsOnOrg ? `${org.name}'s` : 'your'}
         models={models}
         prompt={draft.prompt}
+        pullRequest={hasPullRequestTrigger(draft.triggers)}
+        secrets={secretNames}
+        tool={<PromptTool disabled={save.pending} tool={capabilities} />}
       />
       {automation && phone ? (
         <div className={styles.phoneDelete}>

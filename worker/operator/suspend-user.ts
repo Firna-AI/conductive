@@ -41,6 +41,7 @@ export async function suspendUser(
         jobSoftware(job),
         dependencies.now(),
         build.id,
+        job.providerAccount,
       )
     } catch {
       // The existing image alarm also checks the persistent suspension.

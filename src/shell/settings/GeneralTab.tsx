@@ -1,4 +1,9 @@
+import { useState } from 'react'
 import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
+import {
+  OrgColorField,
+  OrgColorValue,
+} from '../../../docs/mockups/src/components/settings/OrgColorField'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { routes } from '../../app/router'
@@ -7,6 +12,7 @@ import { setupOrg } from '../../app/setup-steps'
 import { useNow } from '../../app/time'
 import { DeleteOrgSection } from '../../members/DeleteOrgSection'
 import type { User } from '../../shared/api'
+import { orgColorOf, type OrgColor } from '../../shared/org-colors'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOrgAccess } from '../context'
 import {
@@ -76,11 +82,43 @@ function NameSection(props: { org: OrgSummary }) {
 }
 
 /**
+ * The colour of the org, which the rail shows on its tile while the org is
+ * open. A choice saves at once, so the section has no Save. The swatches
+ * show the choice while it saves, and a choice during a save is ignored.
+ * A failed save shows a toast and the saved colour again.
+ */
+function ColorSection(props: { org: OrgSummary }) {
+  const { org } = props
+  const app = useApp()
+  const [chosen, setChosen] = useState<OrgColor | null>(null)
+  const save = useAction(
+    (color: OrgColor) =>
+      app.setOrgColor(org.id, color).finally(() => setChosen(null)),
+    'The colour was not saved',
+  )
+  const value = chosen ?? orgColorOf(org)
+  const choose = (color: OrgColor) => {
+    if (save.pending || color === value) return
+    setChosen(color)
+    save.run(color)
+  }
+  return (
+    <Section
+      description="Shown in the rail while this org is open."
+      title="Colour"
+    >
+      <OrgColorField onChange={choose} value={value} />
+    </Section>
+  )
+}
+
+/**
  * Delete org of the members UI, as the user decided in decision 30: every
  * cloud computer stops and the org hides at once, and everything is
  * deleted after 7 days unless an admin restores it. The answer takes the
  * org out of the rail, and the app opens the next org that is not deleted,
- * else Get started. The Account page lists the org, with Restore.
+ * from `AppModel.activeOrgs`, else Get started. The Account page lists the
+ * org, with Restore.
  */
 function DeleteSection(props: { org: OrgSummary }) {
   const app = useApp()
@@ -93,7 +131,7 @@ function DeleteSection(props: { org: OrgSummary }) {
       now={now}
       onDeleted={(deleted) => {
         app.putOrg(deleted)
-        const next = setupOrg(app.orgs.get())
+        const next = setupOrg(app.activeOrgs.get())
         go(next ? routes.org(next.id) : routes.getStarted())
       }}
       org={props.org}
@@ -104,8 +142,8 @@ function DeleteSection(props: { org: OrgSummary }) {
 }
 
 /**
- * The General tab. An admin renames the org, sets its initials, and
- * deletes it. A member sees the name and the initials without fields,
+ * The General tab. An admin renames the org, sets its initials and its
+ * colour, and deletes it. A member sees them without fields,
  * because only an admin changes them (decision 57). A suspended org shows
  * them without fields to everyone, and offers Leave org, its one change.
  */
@@ -124,6 +162,10 @@ export function GeneralTab(props: { org: OrgSummary; user: User }) {
             rows={[
               { term: 'Name', value: org.name },
               { term: 'Initials', value: tileInitials(org) },
+              {
+                term: 'Colour',
+                value: <OrgColorValue value={orgColorOf(org)} />,
+              },
             ]}
           />
         </Section>
@@ -134,6 +176,7 @@ export function GeneralTab(props: { org: OrgSummary; user: User }) {
   return (
     <>
       <NameSection org={org} />
+      <ColorSection org={org} />
       <DeleteSection org={org} />
     </>
   )

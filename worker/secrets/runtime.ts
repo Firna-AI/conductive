@@ -1,7 +1,8 @@
+import type { RunWithSecretsRequest } from '../../src/shared/generated/RunWithSecretsRequest'
+import type { RunWithSecretsResponse } from '../../src/shared/generated/RunWithSecretsResponse'
+import type { ListSecretsResponse } from '../../src/shared/generated/ListSecretsResponse'
 import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import type {
-  RunWithSecretsRequest,
-  RunWithSecretsResponse,
   SecretRequest,
   AnswerSecretRequest,
 } from '../../src/shared/secret-requests'
@@ -103,7 +104,7 @@ export class SecretRuntime {
       this.waiters.get(record.request.id)?.()
   }
 
-  async list(request: Request) {
+  async list(request: Request): Promise<ListSecretsResponse> {
     const workspace = await machineWorkspace(request, this.env)
     if (!this.matches(workspace.id))
       throw new HttpError(
@@ -153,7 +154,7 @@ export class SecretRuntime {
     member: MessageSender,
   ) {
     await this.reconcile()
-    const { result, orgId, acceptedNotice } =
+    const { result, orgId, acceptedNotice, notices } =
       await this.chat.authorizedWorkspaceOperation(
         workspaceId,
         async () => {},
@@ -166,7 +167,7 @@ export class SecretRuntime {
               'The request is not available.',
             )
           const open = openSecretRequest(record.request)
-          const result = await answerSecretRequest(
+          const { request: result, notices } = await answerSecretRequest(
             this,
             operation,
             record,
@@ -178,10 +179,13 @@ export class SecretRuntime {
             result,
             orgId: record.orgId,
             acceptedNotice: open && result.notice?.state === 'sent',
+            notices,
           }
         },
       )
     if (acceptedNotice) await deliverSecretNotice(this, orgId, result)
+    for (const notice of notices)
+      await deliverSecretNotice(this, notice.orgId, notice.request)
     return result
   }
 

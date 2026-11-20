@@ -140,7 +140,9 @@ export async function createNativeRuntime(
     const value: NativeActor = {
       ready,
       api,
-      rpc: bindings.WORKSPACES.getByName(name),
+      get rpc() {
+        return bindings.WORKSPACES.getByName(name)
+      },
       fetch: async (request) => {
         await ready
         const response = await runtime.dispatchFetch(request.url, {
@@ -154,7 +156,9 @@ export async function createNativeRuntime(
             : request.body,
           duplex: 'half',
         })
-        return new Response(await response.arrayBuffer(), {
+        const body =
+          response.status === 204 ? null : await response.arrayBuffer()
+        return new Response(body, {
           status: response.status,
           headers: [...response.headers],
         })
@@ -181,6 +185,18 @@ export async function createNativeRuntime(
         await api.controls.configure(options)
         if ((await api.controls.instanceId()) === resetInstance)
           throw new Error('The native eviction kept the reset object instance.')
+      },
+      crash: async () => {
+        await api.controls.persist()
+        await forceNativeEviction(
+          runtime,
+          WORKER_NAME,
+          EXPORT_NAME,
+          name,
+          api.controls,
+        )
+        bridge.cancel()
+        await api.controls.configure(options)
       },
       reset: async () => {
         bridge.cancel()
@@ -254,5 +270,7 @@ export interface NativeActor {
   lifecycle: WorkspaceLifecycleEndpoint & TurnTokenEndpoint
   configure(options: NativeWorkspaceOptions): Promise<void>
   restart(): Promise<void>
+  /** Resets the object like restart, but without waiting for its work. */
+  crash(): Promise<void>
   reset(): Promise<void>
 }

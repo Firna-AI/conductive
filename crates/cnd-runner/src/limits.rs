@@ -10,6 +10,7 @@ use cnd_runner_interface::runner::RunnerEvent;
 use crate::error::{Error, Result};
 use crate::json::codec;
 use crate::port_limits;
+use crate::skills::prepare;
 
 /// Bound chat excerpts and whole private port labels like the Node runner.
 /// Rust strings already contain Unicode scalar values, including repaired U+FFFD.
@@ -48,6 +49,7 @@ pub fn bound_event(mut event: RunnerEvent) -> Result<RunnerEvent> {
             *omitted_file_count = add_count(*omitted_file_count, (full - kept) as u64)?;
         }
         RunnerEvent::RunnerPortsUpdated(report) => port_limits::bound(report)?,
+        RunnerEvent::RunnerSkillsUpdated(report) => prepare::bound(report)?,
         _ => {}
     }
     Ok(event)
@@ -64,11 +66,7 @@ fn detail_prefix(detail: &str) -> (usize, u64) {
     let mut bytes = 2;
     let mut end = 0;
     for point in detail.chars() {
-        let next = match point {
-            '"' | '\\' | '\u{08}' | '\u{0c}' | '\n' | '\r' | '\t' => 2,
-            '\u{00}'..='\u{1f}' => 6,
-            point => point.len_utf8(),
-        };
+        let next = json_point_bytes(point);
         if (bytes + next) as u64 > TOOL_DETAIL_MAX_BYTES {
             break;
         }
@@ -76,6 +74,14 @@ fn detail_prefix(detail: &str) -> (usize, u64) {
         end += point.len_utf8();
     }
     (end, (detail.len() - end) as u64)
+}
+
+pub(crate) fn json_point_bytes(point: char) -> usize {
+    match point {
+        '"' | '\\' | '\u{08}' | '\u{0c}' | '\n' | '\r' | '\t' => 2,
+        '\u{00}'..='\u{1f}' => 6,
+        point => point.len_utf8(),
+    }
 }
 
 #[cfg(test)]

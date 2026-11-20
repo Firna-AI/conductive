@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { ApiError } from '../../app/api/client'
+import { useListTime } from '../../app/deadlines'
 import { groupWorkspaces, type SectionGroup } from '../../app/sections'
-import { useStore } from '../../app/store'
+import { useStore, valueOf } from '../../app/store'
 import { useNow } from '../../app/time'
 import type { User } from '../../shared/api'
 import { useOrgModel } from '../context'
@@ -66,6 +67,8 @@ export function OrgList(props: {
   const sections = useStore(org.sections)
   const workspaces = useStore(org.workspaces)
   const now = useNow(30_000)
+  // A removed workspace leaves the list at the end of its Restore.
+  const listTime = useListTime(valueOf(workspaces) ?? [])
   const { actions, move, adding, create, cancelAdding } = useListActions(org)
   const local = useLocalCollapse(actions)
   usePaletteOffer(
@@ -79,7 +82,7 @@ export function OrgList(props: {
   useEffect(() => org.watch('list'), [org])
   const groups =
     sections.state === 'ready' && workspaces.state === 'ready'
-      ? groupWorkspaces(sections.value, workspaces.value)
+      ? groupWorkspaces(sections.value, workspaces.value, listTime)
       : { sections: [], archived: [] }
   const { menus, archiveAction, restoreAction, running, layer } = useRowMenus({
     orgId: props.orgId,

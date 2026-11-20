@@ -5,7 +5,10 @@ import type {
   SecretRequest,
   WorkspaceSecretValue,
 } from '../../shared/secret-requests'
-import type { OrgSecret } from '../../shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type OrgSecret,
+} from '../../shared/secrets'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import { secretFixtures } from '../../test-support/fixtures/secrets'
 import type { WorkspaceGrants } from '../api/read-secrets'
@@ -35,10 +38,9 @@ export interface OrgSecrets {
   idle: Map<string, WorkspaceState>
 }
 
-/** The capabilities of a workspace without a choice (secrets decision 9 A). */
+/** The capabilities of a workspace without a choice. */
 export const noGrants: WorkspaceGrants = {
-  preapprovedSecretIds: [],
-  macAccess: true,
+  ...NEW_WORKSPACE_CAPABILITIES,
   sessionApprovals: [],
 }
 

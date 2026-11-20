@@ -83,12 +83,46 @@ same list to a test or to the dev fake. `workspaceRecord` of
 `fixtures/workspaces.ts` turns a workspace of the mockups into the record
 of the API.
 
-Writes return recorded replies, except org moves.
+The open of the files preview, `POST` at `filesPreviewPath`, answers the
+files preview of `toolFixtures().filesPreview`: ID `files-preview-1`, port
+0, and a launch address on `FAKE_ORIGIN`. No list holds it.
+`fakeFilesPreview(routes, reply)` of `fake-tool-routes.ts` sets the next
+reply: `open`, `older-software` for the 409 `file_server_unavailable` of a
+runner without a file server, `failed` for the 502 `sandbox_unavailable`
+of a cloud computer that did not answer, or `not-ready` for the 409
+`sandbox_not_ready` of a cloud computer that does not run.
+
+Writes return recorded replies, except org moves and terminal list writes.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
 The app's stateful dev routes supply their own org list.
 `dev-org-order-route.ts` supplies a move handler for that stateful list.
 The app's dev route table must register it before a move can change that list.
+
+The terminal fake keeps a separate list for each recorded workspace.
+Its state includes `terminals`, `several`, and the current workspace `eventNumber`.
+Create and close change that list and emit a full-list `terminals.updated`
+event through `server.events`.
+Each write reply includes the number of its own event.
+It uses the lowest free number and the shared limit of 10 terminals.
+It refuses the last close, and unknown, invalid, or closed socket IDs.
+The legacy socket selects the first listed terminal after each change.
+`terminalSeveral: false` selects older software with one working terminal.
+Stopped workspaces still expose their list and refuse create, close, and sockets.
+
+Inject `server.terminals.open` into `createTerminalConnector` from
+`../app/terminal-transport.ts` to use the app's ttyd codec with in-memory
+sockets. Each terminal has one decoded `FakeTerminal` shell shared by its
+viewers. A socket disconnect leaves that shell, and a terminal close ends
+all its viewers. `server.terminals.sockets` records the opened sockets,
+their `terminalId`, and their decoded `terminal` for output and input checks.
+The opener accepts the legacy socket path and each terminal's socket path.
+No native WebSocket or real network connection is needed.
+`src/shell/workspace/tools/TerminalReconnect.test.tsx` gives it to the
+mounted app as `openSocket`, so the Terminal tool connects through the codec.
+Explicit reply overrides still take precedence over the terminal routes.
+The [production connector tests](../app/terminal-transport.test.ts) check
+framing and connection isolation. Worker route tests check list and event behavior.
 
 Other writes return recorded replies without changing backend state.
 The account fixture includes empty shortcut changes for both keyboards.
@@ -235,13 +269,16 @@ Replies, timers, and `waitFor` go on.
 - `file-drop.ts` drags and drops files, folders, and text, as Chrome gives them.
 - `fake-core-routes.ts` records account, org, settings, section, member, and automation replies: the list, and the read, update, and delete of each automation, and a create. Each automation, and the automation that a create answers, also has each page of its runs and a Run now that starts a run on a new workspace.
 - `fake-workspace-routes.ts` records workspace, session, message, and view replies.
-- `fake-tool-routes.ts` records file, terminal, preview, desktop, and GitHub replies, also the member action routes of GitHub.
+- `fake-tool-routes.ts` records file, preview, desktop, and GitHub replies, also the member action routes of GitHub.
   Its upload replies give each file the `path` that `attachmentPath` in `src/shared/attachment-paths.ts` builds, as the Worker does.
 - `fake-api-routes.ts` defines the reply registration interface.
 - `fake-org-order-routes.ts` registers org list reads and moves on the recorded fake server.
 - `dev-org-order-route.ts` exports `devOrgOrderRoute` for the app's stateful dev route table.
 - `fake-events.ts` supplies history and live event messages.
 - `fake-terminal.ts` supplies decoded terminal output and records input and resize calls.
+- `fake-terminal-routes.ts` serves terminal state, create, and close routes, and exposes the in-memory socket opener.
+- `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
+- `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
@@ -271,8 +308,9 @@ Replies, timers, and `waitFor` go on.
   Each run includes its agent and owner for the shared run contract. A member who left the org stays the owner of their runs, as the Worker keeps their user record.
   A run whose first start or first turn failed keeps its workspace, and a run that a check failed has none.
 - `fixtures/automation-triggers.ts` turns a trigger of a save into the trigger of a reply: a preset with its cron, and each login with a fake GitHub ID.
-- `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter.
+- `fixtures/workspaces.ts` maps workspace and session samples, and `senderSnapshot` copies the identity of a person as a session starter. Its list ends with the removed workspace of `fixtures/removed-workspace.ts`, Postcode lookup for the shipping and billing forms of the mockups, whose 14 days ended a week before `FAKE_TIME`. The fake API sends it in the list, as the Worker does, and the workspace list leaves it out.
 - `fixtures/tools.ts` maps file, GitHub, and tool samples. `FAKE_GITHUB_HEAD_SHA` is the head commit of each fake pull request.
+- `fixtures/terminal.ts` builds the initial terminal state and individual socket paths.
 - `fixtures/devices.ts` maps the Mac command samples of the mockups: requests in each state, the pairing, and the Mac settings.
 - `fake-device-routes.ts` records the Mac command, pairing, answer, and Mac settings replies.
 

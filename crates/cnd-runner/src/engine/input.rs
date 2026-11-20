@@ -94,12 +94,27 @@ impl Session {
                 provider_session_id: conversation,
                 instructions: Some(text),
                 instruction_branches: Some(branches),
+                instruction_folder: Some(
+                    self.dependencies
+                        .configuration
+                        .cwd
+                        .to_string_lossy()
+                        .into_owned(),
+                ),
             });
         } else if let Some(saved) = &mut self.saved {
-            let branches = saved.instruction_branches.clone().flatten().or_else(|| {
-                instructions::legacy(saved.instructions.as_deref().unwrap_or_default())
-            });
+            let text = saved.instructions.as_deref().unwrap_or_default();
+            let branches = saved
+                .instruction_branches
+                .clone()
+                .flatten()
+                .or_else(|| instructions::legacy(text));
+            let folder = saved
+                .instruction_folder
+                .clone()
+                .or_else(|| instructions::legacy_folder(text));
             saved.instruction_branches = Some(branches);
+            saved.instruction_folder = folder;
         }
         let saved = self.saved.clone().ok_or(Error::InvalidCommand)?;
         if !self

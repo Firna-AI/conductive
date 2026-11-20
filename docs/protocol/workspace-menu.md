@@ -1,7 +1,8 @@
 # Workspace menu
 
 This doc holds the requirements and the decisions in force for the menu
-of a workspace row. The menu moves, reassigns, renames, and archives the
+of a workspace row, which the header of the open workspace also opens.
+The menu moves, reassigns, renames, and archives the
 workspace of its row, and it copies the link of that workspace. It belongs
 to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are
@@ -11,7 +12,8 @@ number names a dated record, as
 [mockup catalogue](../mockups/catalogue.md) draws the menu at
 `app/workspace-menu`, on desktop and on a phone, and in the flow
 `user-flows/archive-from-list`. It draws the menu of a nested row at
-`app/sub-workspaces/menu`.
+`app/sub-workspaces/menu`, and the menu of the header at
+`app/workspace-menu/header`.
 
 ## The menu
 
@@ -21,6 +23,8 @@ number names a dated record, as
   and in the phone layout.
 - This includes automation run workspaces, as
   [A run is a workspace](automation-runs.md#a-run-is-a-workspace) says.
+- The header of the open workspace has the same menu, as
+  [The menu in the header](#the-menu-in-the-header) says.
 - The menu holds Move to section, Reassign to, Rename, Copy link, and
   Archive, in that order. A line comes before Archive.
 - On 9 November 2026 the user chose the four actions that change the
@@ -76,6 +80,35 @@ number names a dated record, as
   An archived row can have a Restore shortcut in the same place, as
   [Sections](orgs-and-members.md#sections) says.
 - The app adds no keys that run an action of the menu directly.
+
+## The menu in the header
+
+- The name of the open workspace in its header is a button. A press on it
+  opens the menu of its row below the name. In the phone layout, the menu
+  opens as a sheet. A second press on the name closes the menu.
+- The name shows no caret. It looks like the name, and only a hover or a
+  press shows that it is a button.
+- The user asked on 17 November 2026 for the menu in the header, and then
+  chose a press on the name.
+- A right click on the header bar was rejected. In the Mac app the bar
+  moves the window, so macOS takes its presses and the page never hears a
+  right click there. The name is a button, so it takes its press in the
+  Mac app too, as [the Mac app](desktop-app.md) says of the controls of a
+  top bar.
+- A right click on the header opens the menu of the browser, as before.
+- The menu has the same actions, for the same people, as the menu of the
+  row, as [Who sees each action](#who-sees-each-action) says. It shows
+  only when the list of the org has loaded and shows the workspace,
+  because the list gives the section and the tree of the workspace.
+  Otherwise the name is plain text.
+- Each action works as in the menu of the row, with one exception: Rename
+  puts its field in the header, in place of the name, as
+  [Rename](#rename) says.
+- The rules of [Opening and closing](#opening-and-closing) hold for the
+  menu in the header too. When the menu closes, the focus goes back to the
+  name.
+- The name takes the focus as other buttons do. Enter or Space on it opens
+  the menu.
 
 ## Who sees each action
 
@@ -157,6 +190,8 @@ number names a dated record, as
 
 - Rename puts a field in the row, in place of the name and the time. The
   field holds the name, and the name is selected.
+- Rename in the menu of the header puts the field in the header, in place
+  of the name. The field works as the field of the row.
 - A double click on a row of the sidebar also opens this field, when the
   menu of the row offers Rename. A double click with a modifier key does
   not. The user asked for it on 12 November 2026.

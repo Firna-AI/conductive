@@ -43,6 +43,18 @@ export class Workspace extends NativeAlarmWorkspace {
     if (new URL(request.url).pathname === '/__test/features') {
       const input = await readJsonObject(request)
       const action = string(input.action)
+      if (action === 'terminal-request') {
+        const headers = new Headers(request.headers)
+        if (input.origin === null) headers.delete('Origin')
+        else headers.set('Origin', string(input.origin))
+        return super.fetch(
+          new Request(new URL(string(input.path), request.url), {
+            method: string(input.method),
+            headers,
+            body: '{}',
+          }),
+        )
+      }
       if (action === 'connections')
         return Response.json(await this.inspectFeatureConnections())
       if (action === 'state')

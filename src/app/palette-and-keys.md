@@ -41,10 +41,16 @@ state what they do.
 - The org rail offers Switch to org 1 to 9 while it shows, for each org by
   its place from the top, as its tile opens the org. So the key also opens
   the org of the page. The tile, its key, and the Switch to row open the
-  last workspace of the org, through `orgEntry` of `last-workspaces.ts`. The rail leaves out a deleted org, so no key opens
-  one. A page without the rail, such as
-  the phone layout, runs no org key, and the palette's Switch to rows only
-  show the keys.
+  last workspace of the org, through `orgEntry` of `last-workspaces.ts`.
+  A page without the rail, such as the phone layout, runs no org key, and
+  the palette's Switch to rows only show the keys.
+- `AppModel.activeOrgs` gives the orgs of `AppModel.orgs` that are not
+  deleted, in the same order. The rail with its keys, the org switcher of a
+  phone, and the Switch to rows of the palette read it. The palette and
+  `keptOrg` choose their org from it. `setupOrg` chooses the org of Get
+  started and of the address `/` from it. `AppModel.orgs` includes the
+  deleted orgs. The [Deleted orgs](../../docs/protocol/delete-org.md) list
+  with Restore and the page at the address of a deleted org read it.
 - The keymap of the keys and of every hint holds the changes that the
   account holds for the keyboard of the person, so a save of the Keyboard
   shortcuts tab applies at once. While the recorder of that tab shows, no
@@ -65,9 +71,9 @@ state what they do.
   key closes an open palette, and does nothing while a dialog or a sheet
   of another owner is open over it, such as the sheet of a filter.
 - A part of the page offers its actions to the palette while it shows,
-  through `usePaletteOffer`: the workspace screen, the workspace list
-  that the page shows, and the sidebar toggle of the frame, in every host.
-  A row
+  through `usePaletteOffer`: the workspace screen, its Terminal tool with
+  New terminal, the workspace list that the page shows, and the sidebar
+  toggle of the frame, in every host. A row
   closes the palette first. Its action runs once the palette has left
   the page, so a field that the action opens can take the focus, and a
   question shows alone. `useRowAction` gives the action of a row, for a

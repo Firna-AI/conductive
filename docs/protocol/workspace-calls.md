@@ -11,7 +11,9 @@ sender. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. A parent-move decision number
+names a decision of the change that adds
+[parent changes](parent-changes.md), as that doc says.
 
 ## The calls
 
@@ -45,8 +47,8 @@ says. A secrets decision number names a decision of the change that adds
 - A create call can also turn on [fast mode](fast-mode.md) for a model
   that has it. Otherwise the first message runs at standard speed. The
   saved default of the owner gives the call no fast mode. Reason: that
-  default belongs to the owner, but the first message runs on the login of
-  the sender of the calling turn.
+  default belongs to the owner, but the first message runs on the default
+  login of the sender of the calling turn.
 - The new workspace gets the org and the workspace owner of the calling
   workspace.
 - Without a choice in the call, the new workspace gets the default section
@@ -64,8 +66,9 @@ says. A secrets decision number names a decision of the change that adds
   [The section of a new sub-workspace](sub-workspaces.md#the-section-of-a-new-sub-workspace)
   says.
 - The help of the CLI and the description of `create_workspace` say when
-  to name a parent. They also give the deepest depth, the sibling advice,
-  and the section of a sub-workspace.
+  to name a parent, with the cases of
+  [When to nest](sub-workspaces.md#when-to-nest). They also give the
+  deepest depth, the sibling advice, and the section of a sub-workspace.
 - The agent of the new workspace starts on the first message at once.
 - The sender of the calling turn sends the first message. So the GitHub
   token of the first turn belongs to that member.
@@ -73,12 +76,12 @@ says. A secrets decision number names a decision of the change that adds
   [The `Sent by:` line](session-calls.md#the-sent-by-line) says
   (decision 259).
 - The new workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is on, also when the
-  calling workspace has Mac access off (secrets decision 9 A).
-  [Mac access](secrets.md#mac-access) states the risk.
+  [Grants](secrets.md#grants) says. Its Mac access is off, also when the
+  calling workspace has Mac access on (secrets decision 18 A), as
+  [Mac access](secrets.md#mac-access) says.
 - A create call takes no pre-approval and no choice of Mac access.
   Reason: the task gives the pre-approval to a person who creates a
-  workspace, and Mac access starts on in each workspace.
+  workspace, and only a member turns Mac access on.
 - A create call can also give the new workspace a name, and the title of
   its first session. The Worker cleans both with the rule of
   [Names from the workspace tools](tool-names.md).
@@ -107,7 +110,7 @@ says. A secrets decision number names a decision of the change that adds
 
 ## List the workspaces
 
-- A workspace list call returns every workspace of the org, with its
+- A workspace list call returns the workspaces of the org, each with its
   number, its link, its name, its branch, its state, and its owner.
   Reason: every member of the org already sees these workspaces.
 - The owner of an entry has the member ID, the GitHub login, and the
@@ -116,8 +119,12 @@ says. A secrets decision number names a decision of the change that adds
   agent can then find the ID of an owner whom a message names in words.
 - Each entry also gives its `parentId`: the ID of its parent workspace, or
   `null` for a top-level workspace.
-- The list holds the archived workspaces too. It gives the workspaces in
-  the order of their creation, the oldest first.
+- The list holds the archived workspaces too. It leaves out the
+  [removed workspaces](workspace-life.md#removed-workspaces), unless the
+  call asks for them (decision 519). It gives the workspaces in the order
+  of their creation, the oldest first.
+- Reason: the list of the app leaves them out, and the tools give what a
+  member sees.
 - The list can take these filters (decisions 277 and 282):
   - an owner: a member ID, for only the workspaces that this member owns
   - a state: only the workspaces whose entry gives that state
@@ -128,19 +135,23 @@ says. A secrets decision number names a decision of the change that adds
   - a time: only the workspaces whose latest activity is at that time or
     later
   - archived or not archived: only the workspaces in that group
+  - removed or not removed: only the workspaces in that group. Without
+    this filter, the list gives only the workspaces that are not removed.
 - The list can also take a parent: a workspace ID, as `parentId` in the
   MCP tool and `--parent ID` in the CLI. It then gives only the direct
   sub-workspaces of that workspace.
 - The latest activity of a workspace is the time whose age the workspace
   list of the app shows.
 - A list with more than one filter gives the workspaces that match each
-  of them. A filter that matches no workspace gives an empty list. A
-  workspace without a name matches no text. A blank text counts as no
-  filter.
+  of them. So without the removed filter, the filter archived or the state
+  archived gives only the archived workspaces that are not removed. The
+  filters not archived and removed together give an empty list.
+- A filter that matches no workspace gives an empty list. A workspace
+  without a name matches no text. A blank text counts as no filter.
 - Reason: Conductor's `workspace list` filters in the same way.
 - The owner filter takes only a member ID (decision 283). The sender line
   of each message gives the member ID of its sender, as
-  [The sender line](agent-instructions.md#the-sender-line) says. So an
+  [The sender line](message-lines.md#the-sender-line) says. So an
   agent passes that ID for the workspaces of the member whose message it
   answers. It finds another owner in the entries, by GitHub login or
   display name, and passes the member ID of that entry.
@@ -156,19 +167,21 @@ says. A secrets decision number names a decision of the change that adds
 - The help of the CLI and the description of `list_workspaces` say where
   an agent gets a member ID. They also say that a member ID is for the
   arguments of the tools, and that an answer to a member names a member by
-  name, not by member ID.
+  name, not by member ID. They say that the list leaves out the removed
+  workspaces unless the call asks for them.
 - The list can also take a limit of 1 to 100, and an offset. The offset
   counts the workspaces before the first one of the reply, from 0.
 - A reply with a limit says whether more workspaces follow.
-- Without a filter, a limit, or an offset, the list gives every workspace.
-  Reason: existing callers keep working.
+- Without a filter, a limit, or an offset, the list gives every workspace
+  that is not removed. Reason: existing callers keep working. They get
+  fewer rows, as decision 519 asks.
 - A filter, a limit, or an offset of the wrong form gets HTTP 400 with the
   error code `invalid_input`. A limit outside 1 to 100 and an offset below
   0 have the wrong form.
 
 ## Get a workspace
 
-- `get_workspace` takes a workspace.
+- `get_workspace` takes a workspace, also a removed one (decision 519).
 - The reply gives the facts of an entry of the workspace list, with its
   owner. It also gives the repository, the base branch, the section, the
   time of its creation, and the time of its latest activity.
@@ -180,7 +193,8 @@ says. A secrets decision number names a decision of the change that adds
   says.
 - For an archived workspace, the reply also gives the time of the archive.
   While the app keeps its cloud computer, the reply also gives the end of
-  Restore.
+  Restore. For a removed workspace, the reply also gives the time of the
+  removal, and its state stays archived.
 - Reason: Conductor's `workspace get` and `workspace status` give one
   workspace.
 - The base branch is the branch that
@@ -204,19 +218,44 @@ says. A secrets decision number names a decision of the change that adds
 
 ## Move a workspace
 
-- `move_workspace` takes a workspace and a section of the org.
-- The call moves the workspace to the top of that section, as
-  [Move to section](workspace-menu.md#move-to-section) does. A move to
-  the section of the workspace changes nothing.
+- `move_workspace` takes a workspace, and a section of the org, a target,
+  or both. A target is a new parent or the top level, as
+  [Parent changes](parent-changes.md) says (parent-move decision 1 A).
+- The MCP tool takes a new parent as `parentId`, and the top level as
+  `topLevel: true`. The CLI takes `--parent ID` and `--top-level`.
+- Reason for the names: a create call and the list take a parent with
+  the same names. "Top-level" is the term of the docs.
+- The section is optional only when the call names a target. A call with
+  no section and no target gets HTTP 400 with the error code
+  `invalid_input`. Reason: older tools always send a section, so each
+  request that they send keeps its result.
+- A call with both `parentId` and `topLevel: true` gets HTTP 400 with the
+  error code `invalid_input` (parent-move decision 3 A).
+- Without a target, the call moves the workspace to the top of that
+  section, as [Move to section](workspace-menu.md#move-to-section) does.
+  A move to the section of the workspace changes nothing.
 - A move of a workspace that the list shows as a top-level row also moves
-  each workspace nested under it. A workspace that the list shows as a
-  nested row moves nothing, and the reply gives a `notice`.
-  [Moves](sub-workspaces.md#moves) gives these rules.
+  each workspace nested under it. Without a target, a workspace that the
+  list shows as a nested row moves nothing, and the reply gives a
+  `notice`. [Moves](sub-workspaces.md#moves) gives these rules.
+- With a target, the call changes the parent of the workspace, and moves
+  each workspace nested under it too.
+  [Parent changes](parent-changes.md) gives the section and the place of
+  the moved tree, and its `notice`. It also gives the errors of a target:
+  `nesting_cycle` and `nesting_limit` with HTTP 409, and
+  `workspace_not_found` with HTTP 404.
 - An unknown section gets HTTP 404 with the error code
   `section_not_found`.
 - An archived workspace refuses the move with HTTP 409 and the error code
   `workspace_archived`, as the app does.
-- The reply gives the workspace with its section.
+- The reply gives the workspace with its section, its `parent`, and its
+  `depth` after the move. It can also give a `notice`.
+- The reply to a move with a target has the same form as the reply to a
+  section move. Reason: older tools then accept the reply.
+- The help of the CLI and the description of `move_workspace` say how to
+  nest a workspace under a parent, and how to take it out of its tree.
+  Reason: the notice of a nested row names no target, as
+  [Moves](sub-workspaces.md#moves) says.
 
 ## Archive a workspace
 

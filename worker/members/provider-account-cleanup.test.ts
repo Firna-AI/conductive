@@ -18,9 +18,9 @@ beforeAll(async () => {
 beforeEach(async () => {
   await harness.reset()
   harness.boat.addAccount({ orgId: 'second-org', apiKey: 'boat-second' })
-  harness.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  harness.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'boat-second': { kind: 'boat', orgId: 'second-org', apiKey: 'boat-second' },
-  }
+  })
 })
 afterAll(async () => {
   await harness.dispose()

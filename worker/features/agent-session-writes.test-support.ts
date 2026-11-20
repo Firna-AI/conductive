@@ -1,4 +1,3 @@
-import { mkdir, mkdtemp } from 'node:fs/promises'
 import type { WebSocket } from 'miniflare'
 import { expect } from 'vitest'
 
@@ -27,11 +26,8 @@ export async function agentWriteFixture(
   bundle: string,
   options: Parameters<typeof createOuterRuntime>[1] = {},
 ) {
-  const directory = '.context/agent-session-tools/evidence/m4-runtimes/'
-  await mkdir(directory, { recursive: true })
   const active = await createOuterRuntime(bundle, {
     ...options,
-    persistencePath: await mkdtemp(directory + 'case-'),
     configuration: {
       CONDUCTIVE_DEFAULT_CHOICE: JSON.stringify(CLAUDE),
       CONDUCTIVE_MODELS: JSON.stringify([

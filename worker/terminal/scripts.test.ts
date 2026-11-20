@@ -7,7 +7,7 @@ import {
   unlink,
 } from 'node:fs/promises'
 
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 
 import { shellArgument } from './privileged'
 import {
@@ -24,6 +24,7 @@ import {
 
 it('creates and reuses a local runtime credential without new entropy and keeps separate runtime storage', async () => {
   const first = await scriptFixture()
+  onTestFinished(first.dispose)
   expect((await runScript(credentialScript(first.options))).code).toBe(0)
   expect(await readdir(first.options.runtimeDirectory)).toContain('password')
   expect(await first.readPassword()).toBe('11'.repeat(32))
@@ -45,6 +46,7 @@ it('creates and reuses a local runtime credential without new entropy and keeps 
 
 it('refuses missing, unreadable, and empty runtime passwords before executing the terminal', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   const missing = await runScript(launcherScript(fixture.options))
   expect(missing.code).not.toBe(0)
   expect(await readdir(fixture.root)).not.toContain('started')
@@ -69,6 +71,7 @@ it('refuses missing, unreadable, and empty runtime passwords before executing th
 
 it('fails credential generation without installing an empty password when the entropy command fails', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   const result = await runScript(
     credentialScript({ ...fixture.options, entropyCommand: ['/bin/false'] }),
   )
@@ -81,6 +84,7 @@ it('fails credential generation without installing an empty password when the en
 
 it('loads the workspace environment and opens the terminal in its repository', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
@@ -98,11 +102,12 @@ printf '%s\\n' "$PWD" "$CONDUCTIVE_LAUNCH_TEST"
 
 it('attaches each terminal connection to the workspace shell at the repository path without starting its own server', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   await writeFile(
     fixture.terminal,
     `#!/bin/sh
-printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7"
-shift 7
+printf '%s\\0' "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
+shift 8
 exec "$@"
 `,
   )
@@ -117,6 +122,7 @@ exec "$@"
     '--writable',
     '--credential',
     `conductive:${'11'.repeat(32)}`,
+    '--url-arg',
     fixture.repository,
     'workspace environment',
     '-N',
@@ -135,6 +141,7 @@ exec "$@"
 
 it('starts the workspace shell server with the repository environment and private socket', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   const result = await runScript(sessionServerScript(fixture.options))
   expect(result.code).toBe(0)
   expect(result.stderr).toBe('')
@@ -172,6 +179,7 @@ it('starts the workspace shell server with the repository environment and privat
 
 it('waits for the restore marker before moving a running shell once and keeps OLDPWD', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   const folder = `${fixture.repository}/src`
   const oldView = `${fixture.root}/old view`
   const laterView = `${fixture.root}/later view`
@@ -207,6 +215,7 @@ it('waits for the restore marker before moving a running shell once and keeps OL
 
 it('appends each command to the history file before the next prompt and keeps the exit status', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   const historyFile = `${fixture.root}/history`
   const result = await runInteractiveBash(
     [
@@ -233,6 +242,7 @@ it('appends each command to the history file before the next prompt and keeps th
 
 it('appends no history without a history file and stays silent when the append fails', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   for (const historyFile of ['', `${fixture.root}/missing/history`]) {
     const result = await runInteractiveBash(['echo one', 'exit'], {
       folder: fixture.repository,
@@ -249,6 +259,7 @@ it('appends no history without a history file and stays silent when the append f
 
 it('appends no history after the user unsets HISTFILE', async () => {
   const fixture = await scriptFixture()
+  onTestFinished(fixture.dispose)
   // Without HISTFILE, `history -a` falls back to the readline file ~/.history.
   await writeFile(`${fixture.root}/.history`, '')
   const result = await runInteractiveBash(

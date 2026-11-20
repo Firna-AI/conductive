@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { agentLoginPath } from '../../src/shared/account'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { CODEX, createChatFixture } from './harness.test-support'
-import { readAgentLogin } from './queries'
+import { readSessionLogin } from './queries'
 import { retryRequest, sessionRecord } from './retry.test-support'
 import { messageCommands, startTurn } from './turn-lifecycle.test-support'
 import { expectGatewayLogin } from './runner-credential.test-support'
@@ -24,10 +24,13 @@ it('keeps the starter login available and sends another member to an empty linke
         await harness.env.DB.prepare(
           'UPDATE agent_logins SET no_reuse = 1 WHERE user_id = ? AND agent = ?',
         )
-          .bind(userId, agent)
+          .bind(
+            userId.type === 'personal' ? userId.userId : userId.orgId,
+            agent,
+          )
           .run()
       }
-      return readAgentLogin(harness.env, userId, agent)
+      return readSessionLogin(harness.env, userId, agent)
     },
   })
   const source = await fixture.createSession()

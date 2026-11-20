@@ -16,7 +16,12 @@ import { readDevOptions } from './dev/options'
 import { routeFetch } from './dev/router'
 import { seedState } from './dev/seed'
 import { endpointReadOf } from './endpoint-reads'
-import { HeldRequests, testServices } from './test-kit'
+import {
+  flushMicrotasks,
+  HeldRequests,
+  requestLines,
+  testServices,
+} from './test-kit'
 
 /** The Claude token of the fixtures, which other members do not use. */
 const claude = {
@@ -103,7 +108,7 @@ describe('AccountModel', () => {
     })
   })
 
-  test('a share reply that comes after the login was removed leaves the login removed', async () => {
+  test('a remove after a pending share reply leaves the login removed', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     const app = new AppModel(testServices(server, { fetch: held.fetch }))
@@ -118,16 +123,16 @@ describe('AccountModel', () => {
     })
     held.holdAnswer('PATCH', path)
     const share = app.account.setNoReuse('claude', false)
-    await app.account.removeLogin('claude')
+    const remove = app.account.removeLogin('claude')
     held.release('PATCH', path)
-    await share
+    await Promise.all([share, remove])
     expect(app.account.login('claude')).toEqual({
       agent: 'claude',
       connected: false,
     })
   })
 
-  test('a model list that a refresh reads after the login was removed leaves the login removed', async () => {
+  test('a remove after a pending model-list read leaves the login removed', async () => {
     const server = new FakeApiServer()
     const held = new HeldRequests(server)
     server.json('GET', ACCOUNT_PATHS.account, {
@@ -141,15 +146,15 @@ describe('AccountModel', () => {
     })
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     const refresh = app.account.refreshModels('claude')
-    await app.account.removeLogin('claude')
+    const remove = app.account.removeLogin('claude')
     held.release('GET', ACCOUNT_PATHS.account)
-    await refresh
+    await Promise.all([refresh, remove])
     expect(app.account.login('claude')).toEqual({
       agent: 'claude',
       connected: false,
     })
   })
-  test('the note and the warning belong to the login of their save, so a Refresh answer after a new save and a save in another tab show none', async () => {
+  test('the note and warning belong to their saved login after a queued Refresh, remove, and save, until another tab saves', async () => {
     const server = new FakeApiServer()
     const [, codex] = endpointLoginFixtures(FAKE_TIME)
     if (!codex?.connected) throw new Error('The Codex fixture is missing.')
@@ -164,7 +169,7 @@ describe('AccountModel', () => {
     server.json('POST', refreshPath, { modelListReadFailed: true })
     held.holdAnswer('POST', refreshPath)
     const refresh = app.account.refreshModels('codex')
-    await app.account.removeLogin('codex')
+    const remove = app.account.removeLogin('codex')
     const saved = { ...codex, updatedAt: FAKE_TIME + 1_000 }
     server.json('PUT', agentLoginPath('codex'), {
       ...saved,
@@ -172,14 +177,14 @@ describe('AccountModel', () => {
       modelListReadFailed: false,
     })
     serveLogins(server, [claude, saved])
-    await app.account.saveLogin({
+    const save = app.account.saveLogin({
       agent: 'codex',
       kind: 'endpoint',
       endpoint: 'https://proxy.example.test',
       secret: 'key-of-the-proxy',
     })
     held.release('POST', refreshPath)
-    await refresh
+    await Promise.all([refresh, remove, save])
     const afterRefresh = reads()
     serveLogins(server, [claude, { ...saved, updatedAt: FAKE_TIME + 2_000 }])
     await app.account.refreshLogins()
@@ -189,7 +194,7 @@ describe('AccountModel', () => {
     })
   })
 
-  test('a login read that answers after a remove leaves the login removed, and shows the other login of its answer', async () => {
+  test('a remove waits for an earlier login read, leaves its login removed, and keeps the other login of the read', async () => {
     const server = new FakeApiServer()
     const chatGpt = { ...claude, agent: 'codex' } as const
     serveLogins(server, [claude, chatGpt])
@@ -198,10 +203,14 @@ describe('AccountModel', () => {
     // The server reads the logins before the remove.
     serveLogins(server, [claude, stopped])
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
+    const from = server.requests.length
     const read = app.account.refreshLogins()
-    await app.account.removeLogin('claude')
+    const remove = app.account.removeLogin('claude')
+    await flushMicrotasks()
+    const beforeReply = requestLines(server).slice(from)
     held.release('GET', ACCOUNT_PATHS.account)
-    await read
+    await Promise.all([read, remove])
+    expect(beforeReply).toEqual([`GET ${ACCOUNT_PATHS.account}`])
     expect({
       claude: app.account.login('claude'),
       codex: app.account.login('codex'),
@@ -211,7 +220,7 @@ describe('AccountModel', () => {
     })
   })
 
-  test('a login read that answers after a share reply keeps the share setting of that reply', async () => {
+  test('a login read after a pending share reply keeps the saved share setting', async () => {
     const server = new FakeApiServer()
     const { app, held } = await startedWithHolds(server)
     const path = agentLoginPath('claude')
@@ -219,7 +228,7 @@ describe('AccountModel', () => {
     server.json('PATCH', path, shared)
     held.holdAnswer('PATCH', path)
     const share = app.account.setNoReuse('claude', false)
-    // The server reads the logins before the share change saves.
+    // The held read has the older share setting.
     held.holdAnswer('GET', ACCOUNT_PATHS.account)
     const read = app.account.refreshLogins()
     held.release('PATCH', path)

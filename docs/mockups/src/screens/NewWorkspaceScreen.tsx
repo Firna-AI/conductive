@@ -18,6 +18,7 @@ import {
 } from './newWorkspaceCapabilities'
 import { pageOrg, railOf, sidebarOf } from './newWorkspacePageParts'
 import {
+  formLoginLabel,
   formNotices,
   hasWords,
   newWorkspaceDraft,
@@ -158,6 +159,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
           failed || linked || waiting || state.org === 'new' || !hasWords(text)
             ? undefined
             : created,
+        sessionLogin: formLoginLabel(state),
       }}
       empty={
         suspended ? undefined : (

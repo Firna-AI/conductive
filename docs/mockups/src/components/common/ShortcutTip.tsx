@@ -21,8 +21,9 @@ export function useShortcutHint(command: CommandId): Shortcut | undefined {
 
 /**
  * The tooltip of a control whose command has a key hint: the label of the
- * control and the key, such as "Create PR (⇧⌘P)". A control without a key
- * hint gives no tooltip.
+ * control and the key, such as "Create PR (⇧⌘P)". The page runs on a Mac,
+ * which prints the keys of a shortcut with no space between them. A control
+ * without a key hint gives no tooltip.
  */
 export function useShortcutTip(
   label: string,
@@ -30,7 +31,7 @@ export function useShortcutTip(
 ): string | undefined {
   const shortcut = useShortcutHint(command)
   if (shortcut === undefined) return undefined
-  return `${label} (${shortcut})`
+  return `${label} (${shortcut.join('')})`
 }
 
 /**

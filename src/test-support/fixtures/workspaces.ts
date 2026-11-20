@@ -22,6 +22,7 @@ import type {
   WorkspacesResponse,
 } from '../../shared/workspaces'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME, fakeUser, fakeUsers } from './core'
+import { removedWorkspace } from './removed-workspace'
 import { routes } from '../../app/router'
 
 /**
@@ -65,11 +66,6 @@ export function workspaceRecord(
   }
 }
 
-/**
- * The workspaces of Acme, with `checkout-autocomplete` in `state`. Each
- * workspace has the GitHub state of its mockup workspace, unless `github`
- * gives the one of `checkout-autocomplete`, also `null`.
- */
 /** The repository of the open workspace, which names its folder. */
 function openRepository(): string {
   const open = workspaceList.find(
@@ -78,27 +74,35 @@ function openRepository(): string {
   return open?.repository ?? 'repository'
 }
 
+/**
+ * The workspaces of Acme, with `checkout-autocomplete` in `state`. Each
+ * workspace has the GitHub state of its mockup workspace, unless `github`
+ * gives the one of `checkout-autocomplete`, also `null`. The list ends
+ * with a removed workspace, which the Worker also sends, and which the
+ * workspace list leaves out.
+ */
 export function workspaceFixtures(
   state: WorkspaceState = 'ready',
   github?: GitHubSummary | null,
 ) {
+  const listed = workspaceList.map((workspace, index): Workspace => {
+    const open = workspace.key === FAKE_IDS.workspace
+    const archived = open && state === 'archived'
+    return {
+      ...workspaceRecord(workspace, {
+        createdAt: FAKE_TIME - (index + 1) * 86_400_000,
+        // Archive raises the time of the record to its own time, as the
+        // Worker does, so the archived record is newer than each record
+        // of the workspace from before the Archive.
+        updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
+      }),
+      state: open ? state : workspace.status,
+      github: open && github !== undefined ? github : workspace.github,
+      archivedAt: archived ? FAKE_TIME : null,
+    }
+  })
   const workspaces: WorkspacesResponse = {
-    workspaces: workspaceList.map((workspace, index) => {
-      const open = workspace.key === FAKE_IDS.workspace
-      const archived = open && state === 'archived'
-      return {
-        ...workspaceRecord(workspace, {
-          createdAt: FAKE_TIME - (index + 1) * 86_400_000,
-          // Archive raises the time of the record to its own time, as the
-          // Worker does, so the archived record is newer than each record
-          // of the workspace from before the Archive.
-          updatedAt: archived ? FAKE_TIME : FAKE_TIME - index * 60_000,
-        }),
-        state: open ? state : workspace.status,
-        github: open && github !== undefined ? github : workspace.github,
-        archivedAt: archived ? FAKE_TIME : null,
-      }
-    }),
+    workspaces: [...listed, removedWorkspace()],
   }
   const workspace = workspaces.workspaces.find(
     (item) => item.id === FAKE_IDS.workspace,

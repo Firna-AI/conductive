@@ -3,10 +3,6 @@ import { randomUUID } from 'node:crypto'
 import { query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
-import {
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeBackground } from './claude-background'
@@ -16,14 +12,19 @@ import {
   claudeStart,
   type ClaudeEffortSettings,
 } from './claude-effort'
+import { claudeInput } from './claude-input'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
+import { moveClaudeTranscript } from './claude-transcript'
 import { readComputerServer } from './computer-mcp'
-import { prepareProviderHome, providerEnvironment } from './environment'
+import {
+  claudeConfigDirectory,
+  prepareProviderHome,
+  providerEnvironment,
+} from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage } from './message'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -49,6 +50,13 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
+    if (options.conversationId)
+      await moveClaudeTranscript(
+        claudeConfigDirectory(options.home),
+        options.cwd,
+        options.conversationId,
+        options.warn,
+      )
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
     options.signal?.throwIfAborted()
@@ -235,25 +243,13 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const attached = command.attachments.length
-          ? `\n${attachmentReadInstruction}\n${command.attachments
-              .map((item) => attachmentDescription(command, item))
-              .join('\n')}`
-          : ''
+        const content = await claudeInput(command, options.cwd, options)
         input.push(command.message.id, {
           type: 'user',
           uuid,
           session_id: options.conversationId ?? '',
           parent_tool_use_id: null,
-          message: {
-            role: 'user',
-            content:
-              providerMessage(
-                command.message,
-                command.branches,
-                options.instructionBranches,
-              ) + attached,
-          },
+          message: { role: 'user', content },
           priority: 'next',
         })
       },

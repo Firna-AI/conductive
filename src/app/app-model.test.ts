@@ -11,6 +11,8 @@ import {
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import { AppModel } from './app-model'
 import { ApiError } from './api/client'
+import { items, record } from './api/parse'
+import { readOrg } from './api/read-core'
 import { HeldRequests, testServices } from './test-kit'
 
 const defaults = {
@@ -113,6 +115,43 @@ describe('AppModel', () => {
       shown: ['firna', 'futex', 'acme', 'labs'],
       afterFailure: ['futex', 'firna', 'acme', 'labs'],
       saved: ['futex', 'firna', 'acme', 'labs'],
+    })
+  })
+
+  test('two org moves show at once and reach the server in call order', async () => {
+    const server = new FakeApiServer()
+    const held = new HeldRequests(server)
+    const services = testServices(server, { fetch: held.fetch })
+    const app = new AppModel(services)
+    await app.start()
+    const order = () => app.orgs.get().map((org) => org.id)
+    held.hold('PUT', API_PATHS.orgOrder)
+    const first = app.moveOrg('firna', 1)
+    expect(order()).toEqual(['acme', 'firna', 'futex'])
+    const second = app.moveOrg('firna', 0)
+    expect(order()).toEqual(['firna', 'acme', 'futex'])
+    held.release('PUT', API_PATHS.orgOrder)
+    await Promise.all([first, second])
+
+    const moves = server.requests.filter(
+      (request) =>
+        request.method === 'PUT' &&
+        new URL(request.url).pathname === API_PATHS.orgOrder,
+    )
+    const saved = await services.api.get(API_PATHS.orgs, (body) =>
+      items(record(body), 'orgs', readOrg),
+    )
+    expect({
+      sent: await Promise.all(moves.map((request) => request.clone().json())),
+      saved: saved.map((org) => org.id),
+      shown: order(),
+    }).toEqual({
+      sent: [
+        { orgId: 'firna', index: 1 },
+        { orgId: 'firna', index: 0 },
+      ],
+      saved: ['firna', 'acme', 'futex'],
+      shown: ['firna', 'acme', 'futex'],
     })
   })
 

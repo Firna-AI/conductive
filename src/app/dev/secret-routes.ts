@@ -5,6 +5,7 @@ import {
   secretsPath,
   type OrgSecret,
 } from '../../shared/secrets'
+import { SECRET_NAME_ERROR, validSecretName } from '../../shared/secret-names'
 import { flag, record, text } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
 import { capabilityRoutes } from './capability-routes'
@@ -86,6 +87,8 @@ export function secretRoutes(backend: DevBackend): Route[] {
         const name = requiredText(fields, 'name')
         const allAgents = optional(fields, 'allAgents', flag) ?? false
         if (allAgents) requireAdmin(org)
+        if (!validSecretName(name))
+          throw new RouteError(400, 'invalid_secret_name', SECRET_NAME_ERROR)
         if (store.secrets.some((item) => item.secret.name === name)) {
           throw new RouteError(
             409,
@@ -151,6 +154,17 @@ export function secretRoutes(backend: DevBackend): Route[] {
             ),
           })
         }
+        // It also leaves the chosen secrets of each automation, as the
+        // foreign key of the Worker's table does.
+        org.automations = org.automations.map((automation) => ({
+          ...automation,
+          capabilities: {
+            preapprovedSecretIds:
+              automation.capabilities.preapprovedSecretIds.filter(
+                (secretId) => secretId !== params.secret,
+              ),
+          },
+        }))
         return noContent()
       },
     },

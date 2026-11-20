@@ -58,10 +58,12 @@ says.
   [Access and security](access-and-security.md#sign-in) says.
 - The Worker reads the cookie of the Mac app on a request whose `Origin`
   header is the desktop origin.
-- It also reads that cookie on a GET of the exact launch address of a port
-  preview without an `Origin` or an `Upgrade` header. When such a GET
-  carries the cookie of the Mac app, the Worker reads no other session
-  cookie.
+- It also reads that cookie on a GET of the exact launch address of a
+  preview without an `Origin` or an `Upgrade` header. This holds also for
+  a launch address with a [launch path](preview-grants.md#launch-paths),
+  and for the [files preview](html-file-preview.md#the-files-preview) of
+  an HTML file tab. When such a GET carries the cookie of the Mac app, the
+  Worker reads no other session cookie.
 - Reason: the window loads the launch address in a frame, and a navigation
   sends no `Origin` header. Such a GET returns only the launch page or a
   browser launch. No other origin can read either reply.

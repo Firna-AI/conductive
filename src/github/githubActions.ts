@@ -1,9 +1,14 @@
-import { githubPaths, type GitHubMergeRequest } from '../shared/github'
+import {
+  githubPaths,
+  type GitHubMergeRequest,
+  type GitHubReadyRequest,
+} from '../shared/github'
 import type { FetchLike, WorkspaceTarget } from './githubClient'
 import {
   actionRecord,
   readCapabilities,
   readMergeResponse,
+  readReadyResponse,
 } from './githubActionParse'
 
 /** The safe words of an action that ended with no known result. */
@@ -24,7 +29,7 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
     path: string,
     parse: (value: unknown) => T | null,
     signal?: AbortSignal,
-    body?: GitHubMergeRequest,
+    body?: GitHubMergeRequest | GitHubReadyRequest,
   ): Promise<T> => {
     const response = await fetch(path, {
       method: body === undefined ? 'GET' : 'POST',
@@ -66,6 +71,14 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
         githubPaths.mergeResult(orgId, workspaceId, mergeId),
         readMergeResponse,
         signal,
+      ),
+    /** Marks the draft pull request ready for review, as the member. */
+    ready: (body: GitHubReadyRequest, signal?: AbortSignal) =>
+      request(
+        githubPaths.ready(orgId, workspaceId),
+        readReadyResponse,
+        signal,
+        body,
       ),
   }
 }

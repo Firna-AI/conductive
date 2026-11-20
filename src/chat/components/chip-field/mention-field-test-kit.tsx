@@ -1,4 +1,6 @@
 import { act, useState } from 'react'
+import { Store } from '../../../app/store'
+import type { Agent } from '../../../shared/generated/Agent'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
 import { filesAfterHistory, startFiles } from '../../../files/files-test-kit'
@@ -11,10 +13,12 @@ import {
   type ChatMentions,
   type MentionFilesSnapshot,
 } from '../../mentions/MentionsContext'
+import { FakeSkills } from '../../mentions/skills-test-kit'
 import { ChipTextField } from './ChipTextField'
 
-// Mounts the message field of a chat with the files of its workspace, as
-// the composer does, for the tests of the list of `@` and the file chips.
+// Mounts the message field of a chat with the files and the skills of its
+// workspace, as the composer does, for the tests of the list of `@`, the
+// list of `/`, and their chips.
 
 export function entry(
   path: string,
@@ -45,11 +49,10 @@ export const sampleTree: readonly FileEntry[] = [
  * screens over the fake API, as `realFiles` gives it.
  */
 export class FakeFiles {
-  private snapshot: MentionFilesSnapshot
-  private readonly listeners = new Set<() => void>()
+  private readonly store: Store<MentionFilesSnapshot>
 
   constructor(entries: readonly FileEntry[] | null) {
-    this.snapshot = FakeFiles.of(entries)
+    this.store = new Store<MentionFilesSnapshot>(FakeFiles.of(entries))
   }
 
   private static of(entries: readonly FileEntry[] | null) {
@@ -62,16 +65,12 @@ export class FakeFiles {
     }
   }
 
-  subscribe = (listener: () => void) => {
-    this.listeners.add(listener)
-    return () => this.listeners.delete(listener)
-  }
+  subscribe = (listener: () => void) => this.store.subscribe(listener)
 
-  getSnapshot = () => this.snapshot
+  getSnapshot = () => this.store.get()
 
   set(entries: readonly FileEntry[] | null) {
-    this.snapshot = FakeFiles.of(entries)
-    this.listeners.forEach((listener) => listener())
+    this.store.set(FakeFiles.of(entries))
   }
 }
 
@@ -86,12 +85,31 @@ export async function realFiles(server: FakeApiServer) {
   return files
 }
 
+/** The rows, the highlight, and the line of the list with the id. */
+function listReader(list: () => Element | null) {
+  return {
+    rows: () =>
+      Array.from(list()?.querySelectorAll('[role="option"]') ?? [], (row) =>
+        accessibleName(row),
+      ),
+    highlighted: () => {
+      const row = list()?.querySelector('[aria-selected="true"]')
+      return row ? accessibleName(row) : null
+    },
+    line: () => list()?.querySelector('[role="status"]')?.textContent ?? null,
+  }
+}
+
 export async function mountMentionField(
   options: {
     tree?: readonly FileEntry[] | null
     value?: string
     /** The real store of the files, in place of the two plain states. */
     files?: ChatMentions['files']
+    /** The skill lists, by default the sample lists. */
+    skills?: FakeSkills
+    /** The agent of the model of the composer, by default Claude. */
+    agent?: Agent
   } = {},
 ) {
   const fake = new FakeFiles(
@@ -101,20 +119,26 @@ export async function mountMentionField(
   const opened: string[] = []
   const shown: string[] = []
   const counts = { sends: 0 }
+  const skills = options.skills ?? new FakeSkills()
   const mentions: ChatMentions = {
     files,
+    skills,
     openFile: (path) => opened.push(path),
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,
   }
+  const chooser: { set: (agent: Agent) => void } = { set: () => undefined }
   function Field() {
     const [host, setHost] = useState<HTMLDivElement | null>(null)
     const [text, setText] = useState(options.value ?? '')
+    const [agent, setAgent] = useState<Agent>(options.agent ?? 'claude')
+    chooser.set = setAgent
     return (
       <LinksProvider value={{ links: { orgId: FAKE_IDS.org, workspaces: [] } }}>
         <MentionsProvider value={mentions}>
           <div data-host="" ref={setHost} />
           <ChipTextField
+            agent={agent}
             label="Message"
             lines={2}
             maxLines={8}
@@ -137,8 +161,9 @@ export async function mountMentionField(
   }
   const { container } = await mount(<Field />)
   const field = byRole('textbox', 'Message', container)
-  // The box of the list: its line, or the listbox of its rows.
+  // The box of each list: its line, or the listbox of its rows.
   const list = () => container.querySelector('#file-mention-list')
+  const skillList = () => container.querySelector('#skill-mention-list')
   return {
     field,
     files,
@@ -148,15 +173,21 @@ export async function mountMentionField(
     draft: () => container.querySelector('output')?.textContent,
     /** The list sits in the host above the box, or null while it is closed. */
     inHost: () => list()?.parentElement?.hasAttribute('data-host') ?? false,
-    rows: () =>
-      Array.from(list()?.querySelectorAll('[role="option"]') ?? [], (row) =>
-        accessibleName(row),
-      ),
-    highlighted: () => {
-      const row = list()?.querySelector('[aria-selected="true"]')
-      return row ? accessibleName(row) : null
+    ...listReader(list),
+    /** The list of `/`, which sits in the same host. */
+    skills: {
+      ...listReader(skillList),
+      inHost: () =>
+        skillList()?.parentElement?.hasAttribute('data-host') ?? false,
+      label: () =>
+        skillList()
+          ?.querySelector('[role="listbox"]')
+          ?.getAttribute('aria-label') ?? null,
+      set: (lists: Parameters<FakeSkills['set']>[0]) => skills.set(lists),
     },
-    line: () => list()?.querySelector('[role="status"]')?.textContent ?? null,
+    chooseAgent: async (agent: Agent) => {
+      await act(async () => chooser.set(agent))
+    },
     chips: () =>
       Array.from(field.querySelectorAll('[contenteditable="false"]'), (chip) =>
         accessibleName(chip),
