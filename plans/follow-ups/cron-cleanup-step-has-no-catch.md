@@ -1,17 +1,18 @@
-# The first 15-minute cron step has no catch
+# A cron cleanup step has no catch
 
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-18, from the review of the branch `calummoore/record-step-times-for-builds-and-2nqj`.
-- **Location:** `worker/application.ts:274`
+- **Location:** `worker/record-cleanups.ts`, `worker/codex-auth/device-store.ts`
 - **Reason:** The problem is older than that branch, and one fix should reach every open branch that adds a cron step.
 
 - **Terms:**
   - **15-minute cron:** the `*/15 * * * *` Cron Trigger of the Worker. `scheduled` in `worker/application.ts` runs its maintenance steps one after another.
 - **Background:**
-  - The 15-minute cron runs, in order: `cleanupCodexDevices`, `cleanupOldJobRecords`, `cleanupDeletedOrgs`, `repairLifecycleAlarms`, `repairSoftwareImages`, and `retryApprovalEmails`.
-  - `cleanupOldJobRecords`, `repairSoftwareImages`, and `retryApprovalEmails` catch their own errors and warn.
-  - `cleanupCodexDevices` runs first and has no catch.
+  - The 15-minute cron runs, in order: `runRecordCleanups` in `worker/record-cleanups.ts`, then `cleanupDeletedOrgs`, `repairLifecycleAlarms`, `repairSoftwareImages`, and `retryApprovalEmails`.
+  - `runRecordCleanups` runs, in order: `cleanupFeedbackSends`, `cleanupCodexDevices`, and `cleanupOldJobRecords`.
+  - `cleanupFeedbackSends`, `cleanupOldJobRecords`, `repairSoftwareImages`, and `retryApprovalEmails` catch their own errors and warn.
+  - `cleanupCodexDevices` has no catch.
 - **Problem:** one D1 error in `cleanupCodexDevices` ends the cron run. Every later step is skipped until the next run, also the org purge, the alarm repair, and the deletion of job step records after 90 days.
 - **Impact if no action:** a lasting failure in that one step stops all maintenance. The Privacy page promises the deletion of job step records after 90 days.
 - **Root question:** how does one failed maintenance step leave the other steps of the cron running?
