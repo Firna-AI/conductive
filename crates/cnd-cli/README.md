@@ -82,8 +82,13 @@ It leaves no complete version on failure. A concurrent background check returns 
 An installation check with `--bootstrap` waits for the download lock.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 
-`update apply` uses no network. It switches to the newest complete version
-and installs its system files. It leaves a pending marker until
+`update apply` switches to the newest complete version and installs its
+system files. First it checks that each part of the version that starts
+has its complete marker. In a fallback, that version is the previous
+release. When a part is missing, apply waits for the download lock and
+downloads that part again with the digest check of `update check`. When
+no part is missing, apply uses no network. A failed repair logs a warning,
+and apply goes on. The next apply tries again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
 A later apply with that marker restores the previous version and its system files. A persistent rejection
@@ -142,6 +147,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/engine.rs](src/update/engine.rs) owns download, activation, and fallback policy.
+- [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.

@@ -41,6 +41,8 @@ pub trait Store: Send + Sync {
     fn version_path(&self, version: &str) -> PathBuf;
     /// Prepare an incomplete folder with an executable seed for cli-updater.
     fn prepare(&self, version: &str) -> Result<()>;
+    /// Read the parts list that a complete version folder records.
+    fn parts(&self, version: &str) -> Result<PartsList>;
     /// Check whether a complete content-addressed part already exists.
     fn has_part(&self, digest: &str) -> Result<bool>;
     /// Unpack a checked part into the content-addressed store.
@@ -72,7 +74,8 @@ pub trait UpdateEngine: Send + Sync {
     /// Stage an image installation after any running background check finishes.
     async fn install(&self, running_version: &str) -> Result<()>;
     /// Activate the newest complete release or restore a failed start.
-    fn apply(&self) -> Result<()>;
+    /// First download again each missing part of the release that starts.
+    async fn apply(&self) -> Result<()>;
     /// Confirm only the running release after its first valid Worker welcome.
     fn started(&self, running_version: &str) -> Result<()>;
 }

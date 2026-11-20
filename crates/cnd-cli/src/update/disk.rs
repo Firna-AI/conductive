@@ -117,6 +117,10 @@ impl Store for DiskStore {
         self.prepare_version(version)
     }
 
+    fn parts(&self, version: &str) -> Result<PartsList> {
+        self.version_parts(version)
+    }
+
     fn has_part(&self, digest: &str) -> Result<bool> {
         self.part_path(digest)
             .join("complete")

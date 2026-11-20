@@ -97,7 +97,7 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
     {
         let _download = disk.lock()?.ok_or("expected download lock")?;
         assert!(disk.lock()?.is_none());
-        engine.apply()?;
+        engine.apply().await?;
         assert_eq!(
             disk.state()?,
             State {
@@ -139,7 +139,7 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
         previous: Some("0.0.1".into()),
         pending: Some("0.0.3".into()),
     })?;
-    engine.apply()?;
+    engine.apply().await?;
     assert_eq!(
         disk.state()?,
         State {

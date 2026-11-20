@@ -84,15 +84,21 @@ impl UpdateEngine for Engine {
         result
     }
 
-    fn apply(&self) -> Result<()> {
+    async fn apply(&self) -> Result<()> {
         let Some(_lock) = self.store.apply_lock()? else {
             return Ok(());
         };
         let state = self.store.state()?;
         if state.pending.is_some() {
+            if let Some(previous) = &state.previous {
+                self.restore_parts(previous).await;
+            }
             return self.rollback(state);
         }
         let newest = self.next_version(state.current.as_deref())?;
+        if let Some(version) = &newest {
+            self.restore_parts(version).await;
+        }
         if newest == state.current {
             return Ok(());
         }

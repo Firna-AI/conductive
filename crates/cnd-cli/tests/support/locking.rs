@@ -42,6 +42,9 @@ impl Store for ObservedStore {
     fn prepare(&self, version: &str) -> Result<()> {
         self.disk.prepare(version)
     }
+    fn parts(&self, version: &str) -> Result<PartsList> {
+        self.disk.parts(version)
+    }
     fn has_part(&self, digest: &str) -> Result<bool> {
         self.disk.has_part(digest)
     }

@@ -7,6 +7,7 @@ pub mod error;
 pub mod http;
 pub mod ports;
 pub mod process;
+mod repair;
 pub mod staging;
 mod state;
 
@@ -19,6 +20,9 @@ mod check_tests;
 #[cfg(test)]
 #[path = "_tests_/parts_tests.rs"]
 mod parts_tests;
+#[cfg(test)]
+#[path = "_tests_/repair_tests.rs"]
+mod repair_tests;
 
 #[cfg(test)]
 #[path = "_tests_/support.rs"]

@@ -38,7 +38,7 @@ enum Operation {
         #[arg(long)]
         bootstrap: bool,
     },
-    /// Apply a complete download before services start. Requires root.
+    /// Apply a complete download before services start, and restore its missing parts. Requires root.
     Apply,
     /// Confirm that the runner has started. Requires root.
     Started,
@@ -77,7 +77,7 @@ pub(crate) async fn execute(args: UpdateArgs) -> Result<()> {
                 engine.check(version).await.internal()
             }
         }
-        Operation::Apply => engine.apply().internal(),
+        Operation::Apply => engine.apply().await.internal(),
         Operation::Started => engine.started(release::VERSION).internal(),
         Operation::Parts => Ok(()),
     }

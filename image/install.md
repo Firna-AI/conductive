@@ -161,6 +161,11 @@ point at the part root. The complete marker is written last. An interrupted chec
 leave incomplete version folders and `.partial` part folders. Those
 folders never qualify for apply. A later check replaces them.
 
+Apply reads `parts.json` of the version that it starts. When a part
+folder of that version has no `complete` marker, apply downloads that
+part again under the download lock, with the digest check of a check.
+A failed repair logs a warning, and apply goes on.
+
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links

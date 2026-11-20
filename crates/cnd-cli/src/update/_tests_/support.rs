@@ -8,9 +8,10 @@ use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{BinaryInstaller, ReleaseClient};
 use cnd_release::files::sha256;
 use cnd_release::parts::{Part, PartsList};
-use unimock::{MockFn, Unimock, matching};
+use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::engine::Engine;
+use super::error::Error;
 use super::ports::{StoreMock, UpdateLock};
 
 #[unimock::unimock(api = ClientMock)]
@@ -37,6 +38,22 @@ impl UpdateLock for Lock {}
 
 pub(super) fn locked() -> Option<Box<dyn UpdateLock>> {
     Some(Box::new(Lock))
+}
+
+pub(super) fn held() -> Box<dyn UpdateLock> {
+    Box::new(Lock)
+}
+
+/// Each version records the test parts, and each part is on disk.
+pub(super) fn complete_parts() -> impl Clause {
+    (
+        StoreMock::parts
+            .each_call(matching!(_))
+            .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+        StoreMock::has_part
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(true)),
+    )
 }
 
 pub(super) fn release(version: &str) -> ReleaseAssetInfo {
