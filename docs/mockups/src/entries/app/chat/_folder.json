@@ -13,6 +13,7 @@
     "background-limit",
     "standard-speed",
     "masked-paths",
-    "endpoint-models"
+    "endpoint-models",
+    "menu-placement"
   ]
 }

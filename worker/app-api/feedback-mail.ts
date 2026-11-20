@@ -5,6 +5,8 @@ import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
 import { createMailSender, MailDeliveryError } from '../mail-sender'
 import { hash } from '../security/crypto'
+import { errorSummary } from '../warning-values'
+import { warnWorker } from '../warnings'
 import type { FeedbackIds } from './feedback-data'
 import type { ParsedFeedback } from './feedback-input'
 import {
@@ -104,12 +106,20 @@ export async function sendFeedbackEmail(
       }
     }
     if (error instanceof HttpError) throw error
+    warnWorker({
+      kind: 'feedback_email_delivery_failed',
+      error: errorSummary(error),
+    })
     throw feedbackEmailFailed()
   }
   if (delivery.claim) {
     try {
       await completeFeedbackSend(env.DB, delivery.claim, 'sent')
-    } catch {
+    } catch (error) {
+      warnWorker({
+        kind: 'feedback_email_delivery_failed',
+        error: errorSummary(error),
+      })
       throw feedbackEmailFailed()
     }
   }

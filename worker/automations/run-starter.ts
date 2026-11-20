@@ -111,7 +111,6 @@ export async function startAutomationRun(
         },
       },
       admission.owner,
-      undefined,
       run.trigger.kind === 'pull-request'
         ? {
             branch:

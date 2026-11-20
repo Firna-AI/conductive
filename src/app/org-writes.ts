@@ -9,10 +9,11 @@ import type {
 import type { ApiClient } from './api/client'
 import { ignore, nested, record } from './api/parse'
 import { readOrg } from './api/read-core'
+import type { OrgList } from './org-list'
 
 /**
  * The requests that create, update, or order orgs. Create and update answers
- * carry the new org record, which `AppModel` puts in the list of the user.
+ * carry the org record. A partial save applies only its requested fields.
  */
 
 const readOrgResponse = (body: unknown) => nested(record(body), 'org', readOrg)
@@ -27,14 +28,17 @@ export function postOrg(
 
 /**
  * Saves the name and the initials of an org, or its colour alone, with the
- * client of the org.
+ * client of the org. The reply changes only the fields of this request.
  */
-export function patchOrg(
+export async function saveOrgPatch(
   api: ApiClient,
+  orgs: OrgList,
   orgId: string,
   request: RenameOrgRequest | OrgColorRequest,
-): Promise<OrgSummary> {
-  return api.send('PATCH', orgPath(orgId), request, readOrgResponse)
+): Promise<void> {
+  const fields = { ...request }
+  const org = await api.send('PATCH', orgPath(orgId), fields, readOrgResponse)
+  orgs.patch(org, fields)
 }
 
 /** Saves the order of an org with the client of the app. */

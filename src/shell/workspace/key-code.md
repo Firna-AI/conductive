@@ -145,7 +145,8 @@ this guide.
   `useMergeLatest`, the label and the run of the Merge latest row of the
   palette. It sends its prompt through the store of the bar actions, and
   `useShowChat` of `bar-controls.ts` shows the chat when the prompt did
-  not go out.
+  not go out, as [Agent actions](../../github/actions.md#agent-actions)
+  says.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
   kept files and of the kept previews for the whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
@@ -173,10 +174,18 @@ this guide.
   `github/BarContinue.test.tsx`, and `files/KeptFiles.test.tsx`: mount the
   whole app over the fake API. They check Merge and its refusals, the
   phone Checks top, the prompts from a file and a phone, a prompt that did
-  not send, Continue with its question, a stop, the wait for a turn, the
-  new branch and its note, and the local work of a phone on the chat tab.
+  not send, also after the member left, Continue with its question, a stop,
+  the wait for a turn, the new branch and its note, and the local work of a
+  phone on the chat tab.
   They also press the keys of the bar where it shows a button that takes a
   click, and where it does not.
+- `github/BarPromptReturn.test.tsx`: mounts the whole app on a phone over
+  the fake API, and presses Fix checks. The Worker accepts the prompt, and
+  the test holds its reply. The member leaves the workspace and returns
+  before the reply. A second press then sends nothing and keeps the page,
+  because the kept chat still holds the prompt. The Worker gets one
+  message, and its client ID stays the same after the reply. The draft
+  keeps its text and its file, and the file uploads once.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped

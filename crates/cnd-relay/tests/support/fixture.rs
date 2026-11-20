@@ -2,6 +2,7 @@
 
 use crate::support::wire::{TestResult, read_reply};
 use cnd_relay::connect::LocalConnector;
+use cnd_relay::ingress::Ingress;
 use cnd_relay::listener::{Listener, NativeListener};
 use cnd_relay::proxy::RelayProxy;
 use cnd_relay::server::{RelayServer, Server};
@@ -10,12 +11,17 @@ use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
 use tokio_util::task::AbortOnDropHandle;
 
+use crate::support::ingress::MissingIngress;
+
 pub(crate) struct Fixture {
     pub(crate) port: u16,
     _server: AbortOnDropHandle<()>,
 }
 impl Fixture {
     pub(crate) async fn new() -> TestResult<Self> {
+        Self::with_ingress(Arc::new(MissingIngress)).await
+    }
+    pub(crate) async fn with_ingress(ingress: Arc<dyn Ingress>) -> TestResult<Self> {
         let listener = NativeListener::bind(0).await?;
         let address = match &listener {
             NativeListener::Tcp(socket) => socket.local_addr()?.ip(),
@@ -27,6 +33,7 @@ impl Fixture {
             listener: Arc::new(listener),
             proxy: Arc::new(RelayProxy {
                 connector: Arc::new(LocalConnector),
+                ingress,
             }),
         });
         Ok(Self {

@@ -98,10 +98,12 @@ source, and a separate source for each boundary were rejected.
 ## The software image
 
 The Worker builds one software image for each version of this software,
-when the deploy run asks. The software image holds the base image and a
-release of this software, and no org data. A build of an org without an
-org image starts from it. That build then installs only the parts that a
-newer release changed.
+in the `boat` account, when the deploy run asks. The software image holds
+the base image and a release of this software, and no org data. A build of
+an org on `boat` without an org image starts from it. That build then
+installs only the parts that a newer release changed. A first build of an
+org on another account, such as `e2b`, starts from the base image of that
+account, and installs this software.
 
 ## Agents and ports
 

@@ -66,9 +66,10 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
-          text`${productName} runs the cloud computers of every org in its
-            own account with its cloud computer provider. You need no
-            account or key of your own for them.`,
+          text`${productName} runs each org's cloud computers in one of its
+            own accounts with a cloud computer provider. The org keeps
+            that account for its life. You need no account or key of your
+            own for them.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org

@@ -55,6 +55,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         repository_folder: Option<String>,
+        /// Offer complete tool sources in private numbered parts.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        complete_tool_details: Option<bool>,
     },
 }
 
@@ -113,6 +117,10 @@ pub enum RunnerWelcome {
         /// confirmedThrough.
         #[ts(type = "number")]
         confirmed_through: u64,
+        /// Accept the optional complete tool source offer.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        complete_tool_details: Option<bool>,
     },
 }
 

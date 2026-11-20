@@ -107,7 +107,7 @@ it('starts and resumes ChatGPT turns from a credential file through the gateway'
       'initialized',
       'account/read',
       'configRequirements/read',
-      conversationId ? 'thread/resume' : 'thread/start',
+      ...(conversationId ? ['thread/read', 'thread/resume'] : ['thread/start']),
     ])
     expect(h.servers.latest.writes.at(-1)?.params).toMatchObject({
       modelProvider: 'openai',

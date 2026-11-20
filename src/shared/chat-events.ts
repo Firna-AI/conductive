@@ -52,7 +52,7 @@ export interface RunnerEventRefused {
   type: 'runner.event-refused'
   streamId: string
   runnerEventNumber: number
-  runnerEventType: RunnerEvent['type'] | 'unknown'
+  runnerEventType: Exclude<RunnerEvent['type'], 'tool.detail.part'> | 'unknown'
   reason: RunnerEventRefusalReason
   sessionId: string | null
   turnId: string | null

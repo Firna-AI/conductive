@@ -7,10 +7,10 @@ export function registerPortContract(
 ): void {
   it('returns the server port origin and credential', async () => {
     const fixture = createFixture()
-    fixture.given({ kind: 'port' })
+    await fixture.given({ kind: 'port' })
 
     expect(
-      await fixture.provider.privatePort('bx_one', 3000, 'network'),
+      await fixture.provider.privatePort('sandbox-one', 3000, 'network'),
     ).toEqual(fixture.expectedPort)
   })
 }

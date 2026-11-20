@@ -49,15 +49,17 @@ export async function handleTranscript(
     ? recordOf(backend, session.sourceSessionId)
     : undefined
   const api = createChatApi(backend.client, backend.target)
-  const [stored, models, members] = await Promise.all([
+  const [stored, models, members, org] = await Promise.all([
     backend.server
       .fetch(chatHistoryPath(orgId, workspaceId, session.id))
       .then(async (response) => readNewestStoredEvents(await response.json())),
     api.models(),
     api.members(),
+    api.org(),
   ])
   const builder = new SessionMarkdown({
     linkContext: { origin: url.origin, orgId },
+    orgName: org.name,
     session,
     eventNumber: Math.max(stream.throughEventNumber, stored.throughEventNumber),
     workspace,

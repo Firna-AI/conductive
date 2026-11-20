@@ -172,6 +172,7 @@ describe('messages while the sandbox of a workspace is not ready', () => {
       sessionId: first,
       title: "Your message didn't send",
       message: 'Reopen the session to send a message.',
+      messageId: 'client-1',
     })
 
     await chat.controller.send(first)

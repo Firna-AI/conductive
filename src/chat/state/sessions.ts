@@ -41,6 +41,18 @@ export function pickActive(
   return open[0]?.id ?? null
 }
 
+/** Whether the session is active, with a session tab or no selected tab. */
+export function showsSession(
+  snapshot: ChatSnapshot,
+  sessionId: string,
+): boolean {
+  const activeTab = snapshot.view?.activeTab ?? null
+  return (
+    snapshot.activeSessionId === sessionId &&
+    (activeTab === null || isSessionTab(activeTab))
+  )
+}
+
 /** The view with the session's tab, made the active tab. */
 export function viewShowing(
   view: WorkspaceView | null,

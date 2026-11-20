@@ -68,8 +68,8 @@ it('numbers each item of a numbered list from the number of its first item, in a
     '',
     '1234567890. That is the number of the order.',
   ].join('\n')
-  const answer = render(<AgentText text={text} />)
-  const message = render(<MessageLine text={text} />)
+  const answer = render(<AgentText id="agent:1" text={text} />)
+  const message = render(<MessageLine id="agent:1" text={text} />)
   expect({
     answer: Array.from(answer.querySelectorAll('ol > li'), numberOf),
     line: textOf(message.querySelector('summary')),
@@ -94,8 +94,8 @@ it('nests a list that the agent indents under an item, in an answer and in a mes
     '3. **Commit** (medium severity).',
     '   - a. Give me a name and an email.',
   ].join('\n')
-  const answer = render(<AgentText text={text} />)
-  const message = render(<MessageLine text={text} />)
+  const answer = render(<AgentText id="agent:1" text={text} />)
+  const message = render(<MessageLine id="agent:1" text={text} />)
   const first = (page: HTMLElement, selector: string) =>
     page.querySelector(selector) ?? page
   expect({
@@ -130,7 +130,7 @@ it('opens the list that holds the first table of a message under its line, and k
     '  | checkout | 182 KB |',
     '- Memory stays under 5 GiB.',
   ].join('\n')
-  const view = await mount(<MessageLine text={text} />)
+  const view = await mount(<MessageLine id="agent:1" text={text} />)
   const summary = view.container.querySelector('summary')
   if (!summary) throw new Error('The message has no line')
   await press(summary)

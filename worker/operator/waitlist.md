@@ -82,4 +82,7 @@ Approvals use `waitlist-approval/<userId>` for every attempt.
 The scheduled Worker entry retries pending messages every 15 minutes.
 It marks a message failed at or after 24 hours from approval, before
 another send. Each successful send records its time and leaves the retry
-list. A send failure logs fixed warning text without the address.
+list. A send failure keeps the message pending for the next retry. It logs
+fixed warning text and a safe summary of the failure, without the address.
+[A failed send](../members/invitations.md#a-failed-send) in the invitation
+guide says where to find the warning and what the summary holds.

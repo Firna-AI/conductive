@@ -45,17 +45,29 @@ decision number names a decision of the change that adds
   gone, and a sender who left the org.
 - The late request then says that the agent learns of the answer at the
   next message. The grant of the answer stays.
-- When the login of the starter is gone, the late request instead names
-  the action that gets the agent going again, such as "The agent learns of
-  it when Cal connects Claude again."
+- When the login of the session is gone, the late request instead names
+  the action that gets the agent going again. That action connects the
+  login of the session again. [Agents](agents-and-sessions.md#agents)
+  states the login of each session.
+- For a personal login, the line says that the starter connects the agent
+  again, such as "The agent learns of it when Cal connects Claude again."
+- For the org login, the line says that an admin connects the login of the
+  org again, such as "The agent learns of it when an admin connects Acme's
+  Claude login again." Only an admin connects an org login, as
+  [The Agents tab](org-logins.md#the-agents-tab) says.
 - Reason: a message of another member then opens a new session, as
   [Messages](messages-and-attachments.md#messages) says, so the next
   message does not reach this agent.
+- Reason: a session never moves to another login. So a new personal login
+  of the starter does not serve a session on the org login.
 - Reason: the answer then acts as an answer in time does, and the share
   setting of each login keeps its rule.
 - A turn on the login of the starter, also while the starter does not
   share it, was rejected, because the share setting exists to stop that
   use.
+- A line that does not say who connects the login was rejected. An
+  example is "The agent learns of it when the login of this session works
+  again." Reason: no member then learns who must act.
 - A rule that sends nothing whenever the message of the member who
   answered would open a new session was rejected. Most late answers of
   other members would then send nothing, because a new subscription login

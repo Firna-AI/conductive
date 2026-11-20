@@ -33,6 +33,7 @@ pub(crate) struct State {
     pub refusals: Vec<u64>,
     pub confirm: bool,
     pub welcome: bool,
+    pub complete_tool_details: Option<bool>,
     pub drop_next: bool,
     pub refuse: BTreeSet<u64>,
     cursors: BTreeMap<String, u64>,
@@ -48,6 +49,7 @@ impl Default for Endpoint {
                 refusals: vec![],
                 confirm: false,
                 welcome: true,
+                complete_tool_details: None,
                 drop_next: false,
                 refuse: BTreeSet::new(),
                 cursors: BTreeMap::new(),
@@ -137,6 +139,7 @@ impl Socket for Connection {
                 *self.stream.lock().await = Some(stream_id.clone());
                 if state.welcome {
                     self.deliver(WorkspaceToRunner::RunnerWelcome(RunnerWelcome::Welcome {
+                        complete_tool_details: state.complete_tool_details,
                         protocol_version: RunnerProtocolVersion,
                         confirmed_through: *state.cursors.get(&stream_id).unwrap_or(&0),
                         stream_id,

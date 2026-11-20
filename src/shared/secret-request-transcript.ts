@@ -1,3 +1,4 @@
+import type { Session } from './generated/Session'
 import type { SecretWorkspaceEvent } from './secret-requests'
 import {
   secretRequestMarkdown,
@@ -73,6 +74,8 @@ export class SecretRequestTranscript {
   inserts(
     items: readonly TranscriptItem[],
     times: ReadonlyMap<string, number>,
+    session: Session,
+    orgName: string | null,
   ): TranscriptInsert<SecretTranscriptContent>[] {
     const records = [
       ...[...this.requests.values()]
@@ -82,7 +85,7 @@ export class SecretRequestTranscript {
           turnId: event.request.turnId,
           createdAt: at,
           number: firstNumber,
-          markdown: secretRequestMarkdown(event.request),
+          markdown: secretRequestMarkdown(event.request, session, orgName),
           unfolded: event.request.late || event.request.state === 'waiting',
         })),
       ...[...this.runs.values()].map(({ event, number, at }) => ({

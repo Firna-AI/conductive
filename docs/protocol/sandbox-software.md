@@ -15,7 +15,10 @@ update itself. An idle update decision number, such as idle update
 decision 2, names a decision of the change that installs a new release
 while the workspace is idle. A build time decision number, such as build
 time decision 1, names a decision of the change that shortens the software
-step of a build.
+step of a build. An e2b decision number names a decision of the change that
+adds E2B as the second
+[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says.
 
 ## Releases
 
@@ -222,6 +225,11 @@ step of a build.
 - It holds no org data and no secret, because every org uses it.
 - One software image belongs to each version of the app's own software. A
   change of any install step of that software makes a new version.
+- The software image lives in the `boat` account. An org on another
+  account, such as `e2b`, has none. Its first build starts from the base
+  image of its own account, as for a missing software image below
+  (e2b decision 222). Reason: a saved snapshot starts sandboxes only in its
+  own provider account.
 - A build of an org without an org image starts from the ready software
   image of the current version. It copies the repositories, installs the
   newest release, then runs the install script. A later build and a

@@ -69,6 +69,17 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
 `show`, `hide`, and `stop`, its `sources`, and the workspace list of its
 chips.
 
+The shell gives the chat an optional picture reader through
+`ChatMentions.pictures` in `mentions/MentionsContext.tsx`. The reader and
+its types live in `../files/page/picture-reads.ts`. The shell gives it only
+while the sandbox runs. It reads a real file path from the workspace tree
+through the existing file client. With it, the Markdown image of a PNG,
+JPEG, GIF, or WebP file of an answer shows as a picture, and without it
+as its link, as
+[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
+says. [Pictures in answers](agent-text.md#pictures-in-answers) gives the
+rules of the code that draws them.
+
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
@@ -91,7 +102,7 @@ chips.
   [Chat links](../../docs/protocol/chat-links.md) states the links of sent
   messages and answers, and
   [Workspace links](../../docs/protocol/workspace-links.md) states their
-  chips. [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
+  chips. [File mentions](../../docs/protocol/file-mentions-answers.md)
   states the file chips of answers. [Agent text](agent-text.md) gives the rules of the code that
   formats them: the links, the chips, and the heading, list, and table
   parts that the chat shares with the file preview and the mockups.
@@ -157,6 +168,13 @@ chat in the whole app.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
+
+The placement of the model menu needs a real browser. The Electron check
+[`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)
+builds the development page and opens the real Model and effort menu in a
+box that clips. It checks the choices outside the box, a pointer choice,
+the arrow keys, and the focus return after Escape. Run
+`npm --prefix desktop run test:electron -- tests/chat-menu-clipping.spec.ts`.
 
 ### Key code
 

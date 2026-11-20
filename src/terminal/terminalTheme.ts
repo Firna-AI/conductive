@@ -44,20 +44,36 @@ export function terminalTheme(
   }
 }
 
+/** The mockup's monospace font and its size, from the tokens. */
+export function monospaceFont(read: ReadToken): {
+  fontFamily: string | undefined
+  fontSize: number
+} {
+  return {
+    fontFamily: read('font-mono'),
+    fontSize: Number.parseFloat(read('text-sm') ?? '') || 12,
+  }
+}
+
 /** The mockup terminal sets each line 1.6 times the font size apart. */
 const lineSpacing = 1.6
 
 /**
  * The type of the terminal: the mockup's monospace font, size, and line
- * spacing. xterm.js multiplies the natural height of the font, so the factor
- * comes from a measure of that height, as xterm.js measures it.
+ * spacing. xterm.js sets its rows `lineHeight` times the height of a
+ * character apart, and it measures that height with its own method. This
+ * helper measures the natural height of the font in the DOM: the height of
+ * a hidden `W` in `host`, with the font, the size, and `line-height:
+ * normal`. The factor is the wanted spacing over that height, so the rows
+ * stand 1.6 times the font size apart while the two measures agree. Under
+ * `display: none` the `W` has no height, and the factor is then 1, so call
+ * this only once the page lays out `host` with a size.
  */
 export function terminalFont(
   read: ReadToken,
   host: HTMLElement,
 ): ITerminalOptions {
-  const fontFamily = read('font-mono')
-  const fontSize = Number.parseFloat(read('text-sm') ?? '') || 12
+  const { fontFamily, fontSize } = monospaceFont(read)
   const probe = document.createElement('span')
   probe.textContent = 'W'
   probe.style.cssText =

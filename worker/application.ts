@@ -143,7 +143,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return respond(await routeSecretTool(request, env))
           if (path === SOFTWARE_IMAGE_PATH)
             return respond(
-              await handleSoftwareImage(request, env, dependencies),
+              await handleSoftwareImage(request, env, dependencies, execution),
             )
           if (isAgentToolPath(path))
             return respond(

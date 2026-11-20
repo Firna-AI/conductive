@@ -129,6 +129,9 @@ export class RunnerChannel {
         protocolVersion: welcome.protocolVersion,
         streamId: message.streamId,
         confirmedThrough: welcome.cursor,
+        ...(message.completeToolDetails === true
+          ? { completeToolDetails: true }
+          : {}),
       })
       await this.repairs.flush(active)
       await this.moves.check(active)

@@ -4,6 +4,7 @@ import type {
   RepositoryChange,
   RepositoryChangeDependencies,
 } from './repository-change'
+import { REACHED_REPOSITORY_ROWS, reachedValues } from './repository-reach'
 import { syncRepositoryValues } from './repository-sync'
 
 interface PayloadValues {
@@ -28,6 +29,11 @@ function payloadValues(value: unknown): PayloadValues {
   }
 }
 
+/**
+ * True when a reached row holds other values than the event, or another
+ * install. A row of another install means that the repository moved to
+ * another owner, as `REACHED_REPOSITORY_ROWS` says.
+ */
 async function savedValuesDiffer(
   db: D1Database,
   change: RepositoryChange,
@@ -36,15 +42,17 @@ async function savedValuesDiffer(
   const row = await db
     .prepare(
       `SELECT r.id FROM repositories r
-       JOIN github_installations i ON i.id = r.installation_id AND i.suspended_at IS NULL
+       JOIN github_installations i ON i.id = ? AND i.suspended_at IS NULL
        JOIN orgs o ON o.id = r.org_id AND o.deleted_at IS NULL
-       WHERE r.github_repository_id = ? AND r.installation_id = ?
-       AND ((? IS NOT NULL AND r.full_name != ?)
+       WHERE ${REACHED_REPOSITORY_ROWS}
+       AND (r.installation_id != ?
+         OR (? IS NOT NULL AND r.full_name != ?)
          OR (? IS NOT NULL AND r.default_branch != ?))
        LIMIT 1`,
     )
     .bind(
-      change.repositoryId,
+      change.installationId,
+      ...reachedValues(change),
       change.installationId,
       payload.fullName,
       payload.fullName,
@@ -57,11 +65,12 @@ async function savedValuesDiffer(
 
 /**
  * Push, pull request, check, and status webhooks also carry the name and
- * the default branch of their repository. When they differ from the saved
- * values, a repository webhook may have been missed. So this reads GitHub,
- * saves through the guarded writer, and wakes the image coordinators, as
- * the repository webhook does. A failure only warns, because the original
- * event must still complete, and the next webhook checks again.
+ * the default branch of their repository, and the install that sent them.
+ * When they differ from the saved values, a repository webhook may have
+ * been missed. So this reads GitHub, saves through the guarded writer, and
+ * wakes the image coordinators, as the repository webhook does. A failure
+ * only warns, because the original event must still complete, and the next
+ * webhook checks again.
  */
 export async function checkRepositoryValues(
   db: D1Database,
@@ -71,7 +80,6 @@ export async function checkRepositoryValues(
 ): Promise<void> {
   if (!dependencies) return
   const payload = payloadValues(value)
-  if (payload.fullName === null && payload.defaultBranch === null) return
   try {
     if (!(await savedValuesDiffer(db, change, payload))) return
     await syncRepositoryValues(db, change, () => dependencies.read(change))

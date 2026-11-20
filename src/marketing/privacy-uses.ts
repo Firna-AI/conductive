@@ -185,7 +185,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. The
+        reads a file or a diff when you open it, and a picture that an
+        agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -197,7 +198,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, and the new name or default branch of a
+        of your branches, and the new name, owner, or default branch of a
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,

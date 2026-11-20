@@ -1,5 +1,3 @@
-import { mkdir, mkdtemp } from 'node:fs/promises'
-
 import { Miniflare, Response as RuntimeResponse, WebSocket } from 'miniflare'
 
 import { workspaceEventsPath } from '../../src/shared/events'
@@ -30,10 +28,7 @@ interface RuntimeBindings {
 }
 
 export async function realRuntimeFixture(bundle: string) {
-  const root = `${import.meta.dirname}/../../.context/boat-native-remote-workspaces/8i/completion/legacy-runtime`
-  await mkdir(root, { recursive: true })
-  const directory = await mkdtemp(`${root}/case-`)
-  await migratedStorage(directory)
+  const storage = await migratedStorage()
   const boat = new LifecycleBoat()
   const sockets = new Set<WebSocket>()
   const requests: string[] = []
@@ -44,7 +39,7 @@ export async function realRuntimeFixture(bundle: string) {
       enableDevRegistry: false,
       telemetry: { enabled: false },
       cf: false,
-      resourcePersistencePath: directory,
+      resourcePersistencePath: storage.path,
       workers: [
         {
           config: {
@@ -271,8 +266,15 @@ export async function realRuntimeFixture(bundle: string) {
       env.WORKSPACES = bindings.WORKSPACES
     },
     dispose: async () => {
-      await closeBrowsers()
-      await runtime.dispose()
+      try {
+        await closeBrowsers()
+      } finally {
+        try {
+          await runtime.dispose()
+        } finally {
+          await storage.remove()
+        }
+      }
     },
   }
 }

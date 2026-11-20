@@ -28,6 +28,7 @@ import { turnCopy, type ChatReaders } from './turn-words'
 
 export interface TranscriptDocument {
   linkContext: { origin: string; orgId: string }
+  orgName: string | null
   session: Session
   eventNumber: number
   workspace: Pick<Workspace, 'number' | 'name' | 'link'>
@@ -100,7 +101,7 @@ export class SessionMarkdown {
   }
 
   render(detail: TranscriptDetail): string {
-    const { session, workspace, commands, members } = this.document
+    const { session, workspace, commands, members, orgName } = this.document
     const transcript = this.log.transcript
     const readers = { viewerId: null, members }
     const own = commands.filter((request) => request.sessionId === session.id)
@@ -116,7 +117,14 @@ export class SessionMarkdown {
       after,
       content: request,
     }))
-    inserts.push(...this.secrets.inserts(transcript.items, this.log.times))
+    inserts.push(
+      ...this.secrets.inserts(
+        transcript.items,
+        this.log.times,
+        session,
+        orgName,
+      ),
+    )
     const insertMarkdown = (
       content: DeviceCommandRecord | SecretTranscriptContent,
     ) => ('markdown' in content ? content.markdown : commandMarkdown(content))

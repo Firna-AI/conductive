@@ -5,10 +5,27 @@
 
 /*
  * Deny, Allow, and the menu, with no box of their own: the buttons stay in
- * the row of the actions, and the menu opens from that row.
+ * the row of the actions, and the menu opens beside that row. The menu sits
+ * inside this element, so a press on the menu is not a press outside.
  */
 .choices {
   display: contents;
+}
+
+/*
+ * A narrow request puts its actions under the command. `--narrow-actions`
+ * then tells `CommandChoices` to start the menu at the start of the row of
+ * the actions, and keep it inside the width of that row.
+ */
+@container (max-width: 440px) {
+  .choices {
+    --narrow-actions: 1;
+  }
+}
+
+/* The menu takes the width of its layer, so a narrow layer wraps the scopes. */
+.layer > [role='menu'] {
+  width: auto;
 }
 
 /* An always-allowed command, with Show all under it when it is long. */

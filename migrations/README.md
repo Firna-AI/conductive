@@ -270,6 +270,20 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101100_org_provider_assignment.sql` adds the fixed provider account
+of each org. Existing rows receive `boat`. New production writes name the
+selected account explicitly. The migration also creates the singleton
+assignment weights setting, with `boat` at 100%, and its change events.
+Each setting change can retain its operator and time. Operator references
+become null after account deletion. Existing org, resource, and computer
+ledger records and triggers stay in place.
+
+`202611101110_e2b_provider_state.sql` adds E2B create claims, encrypted traffic tokens,
+and the mapping from app snapshot names to provider snapshot IDs.
+Claims precede provider mutations. They survive ambiguous replies and org removal.
+Completed deletions retain tombstones so old requests cannot allocate again.
+The [E2B client](../worker/sandbox/e2b/README.md) gives the recovery behavior.
+
 `202611101200_software_images.sql` adds `software_images`, which owns each
 software image attempt and its provider account, version, artifact, phase,
 resources, output, and deploy token digest. A partial unique index allows
@@ -285,6 +299,19 @@ runs the apt part once. A build job also keeps an empty version when two
 starts of its software command carried different apt parts.
 [Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
 how a build reads and writes it.
+
+`202611181709_software_image_poll_progress.sql` adds three tables for the
+deploy polls of a software image attempt. `software_image_operations`
+keeps the last finished call of an attempt before its main provider call,
+such as the readiness read, for one phase and revision.
+`software_image_output` keeps the build output that no deploy poll has
+taken yet. `software_image_deploys` links a deploy token digest to the
+attempt that its admission chose, until that deploy token expires. Each
+row references `software_images` with `ON DELETE CASCADE`, so deleting an
+attempt deletes its rows. The migration changes no existing table, column,
+or phase name, so the previous Worker keeps working.
+[Reply budget](../worker/software-image/README.md#reply-budget) says how
+the deploy polls use these tables.
 
 `202611101300_routines.sql` adds org-scoped automations and their run records.
 Automation owners reference users, so membership removal can transfer their records.
