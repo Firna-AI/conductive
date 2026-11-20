@@ -9,9 +9,11 @@ of four Worker paths: the stored chat history, the history pages, the file
 projection, and the join of runner report parts. It changes no UI, mockup,
 runner, generated type, route, or app code, and it adds no wire field.
 
-The transaction adapter change also needs `worker/chat/files-storage.ts`.
-This is a proposed extension of Cal's named Worker file list. Cal's plan
-approval must include this extension before that implementation starts.
+Two adjacent modules also need changes: `worker/chat/files-storage.ts` for
+the transaction adapter, and `worker/chat/history-session-records.ts` for
+the indexed history reads that PR #572 added. These extend Cal's named
+Worker file list. Cal's plan approval must include those extensions.
+Small private helpers may split the page logic to meet the 300-line limit.
 
 The projection is the last complete file tree and changes list that the
 object keeps in storage. The object serves them while the sandbox sleeps.
@@ -50,6 +52,12 @@ Cal chose these options on 20 November 2026, from measurements of a
 separate harness. The figures and the full option texts are in
 `.context/workspace-object-memory/prompts/plan-draft.md`. Do not reopen a
 choice without a new fact that changes its feasibility or its cost.
+
+PR #572 merged while this plan was under review. It indexes history by
+session. Warm session reads now load no file report or other-session event.
+The recorded session timings and list counts predate that index. Milestone
+7 compares this work with the new baseline. Cal's M2 C choice still applies
+to workspace reads, indexed session reads, and legacy preparation.
 
 - M1, history retention: A. The history keeps only the newest
   `changes.updated` event. It uses the mechanism that keeps only the newest
@@ -145,7 +153,9 @@ History:
    text and its envelope. The page does not serialize it again. Reason: a
    large file report would otherwise make a second copy during a replay.
 7. `prepare` also lists at most four stored events at a time. Reason: its
-   scan of an older history loads each event.
+   scan of an older history loads each event. The session-index preparation
+   uses the same cap through `prepareSessionBatch`. Keep its atomic batch
+   commits and its queue yield between batches.
 
 Projection, under option C of decision 1:
 
@@ -237,6 +247,14 @@ Release:
     only on the documentation. The page limits depend on PR #477. Reason:
     only the page limits use the `ReadScope` of PR #477. The save path and
     PR #477 change other functions of `store.ts` and `history-pages.ts`.
+19. Keep the session index of PR #572. Set `SESSION_BATCH_SIZE` in
+    `history-session-records.ts` to four. Its list helper materializes at
+    most four event bodies at once. Apply the forward byte budget to
+    `readSessionHistory` too, or share one forward-page collector with the
+    workspace reader. Keep the cutoff and cursor at the last scanned key.
+    A read inside a write transaction keeps the workspace fallback until
+    the index is ready. Reason: the new helper owns both indexed read
+    directions, so changing only `HistoryPages` would miss a forward path.
 
 ## Open decisions
 
@@ -454,6 +472,9 @@ Replaced ways:
   first stop requester, the transcript copy, `prepare`, the newest-first
   reader, `worker/chat/history.md`, and the history tests. Moved and
   deleted in Milestone 4.
+  Preserve the session index and move its 32-key batch and forward reader
+  to the same limits. Consumers also include `listSessionHistory`,
+  `readSessionHistory`, `prepareSessionBatch`, and the session-index tests.
 
 ## Milestone 1: Documentation and protocol
 
@@ -581,7 +602,9 @@ pages.
         No watermark resets.
   - [ ] An envelope of 4,096 bytes stays one value. An envelope of 4,097
         bytes becomes a stub with chunks. Include UTF-8 and JSON escapes.
-  - [ ] A session page skips a stub without a read of its chunks.
+  - [ ] With compaction ready, legacy session-index preparation skips file
+        stubs without reading their chunks. Keep warm session reads off
+        workspace-only file events.
   - [ ] `emit` stores and publishes the file event object that it gets. A
         write to that object throws. Other event types are still copied.
   - [ ] The published events equal the stored history after a reload.
@@ -597,18 +620,26 @@ pages.
 Depends on: 1, 3, and the merge of PR #477 into `main`
 
 This milestone bounds each history page, as M2 A says. It builds on the
-`ReadScope` of PR #477. That pull request was open and not merged on 20
-November 2026. Cal merges it, because agent merges are off.
+`ReadScope` of PR #477. On 20 November 2026 it was open and conflicted with
+the updated `main`. Its owner resolves those conflicts while preserving
+the session index. Cal then merges it, because agent merges are off.
 
 - [ ] Merge `main` into this branch after PR #477 merges. Resolve
-      `store.ts` and `history-pages.ts` with the changes of Milestone 3.
+      `store.ts` and `history-pages.ts` with Milestone 3 and the session
+      index already on `main`. Preserve its committed frontier and keys.
 - [ ] Read forward pages as design call 5 says. Count each shown event once
       for both byte limits. Keep `nextAfterEventNumber` at the last stored
       step, also when the page shows no event.
 - [ ] Count a chunked event from its stored text, as design call 6 says.
 - [ ] Make the newest-first reader and `prepare` list at most four stored
-      events at a time. Keep the scan limit and the byte limit of the
-      browser page.
+      events at a time. Set the indexed read batch to four in
+      `history-session-records.ts`. Cap its parallel body loads too.
+- [ ] Apply the 4 MiB forward stop to indexed `readSessionHistory`, as
+      call 19 says. Keep the newest-first scan limit at 2,048 session keys
+      and its existing byte limit. Preserve stale-index cursor progress.
+- [ ] Keep session-index preparation resumable and atomic. Use four-record
+      batches. Yield the chat queue only between committed batches.
+      Preserve the write-transaction fallback when the index is not ready.
 - [ ] Add tests:
   - [ ] A page ends after the event that reaches 4 MiB. The next page
         starts after that event.
@@ -617,9 +648,14 @@ November 2026. Cal merges it, because agent merges are off.
   - [ ] No storage list asks for more than four events.
   - [ ] The connection budget goes down across pages, and a new page does
         not reset it. A budget end inside a page sets `hasMore` as before.
-  - [ ] A session read past 3,000 events of another session gives an
-        empty page with `hasMore`. Its cursor is at the 2,048th stored
-        step.
+  - [ ] An indexed read loads only the requested session. Both directions
+        load at most four bodies together. Forward byte stops preserve
+        every later event and advance past missing stored bodies.
+  - [ ] An unprepared write-transaction fallback past 3,000 events of
+        another session gives an empty page with `hasMore`. Its cursor
+        advances after 2,048 stored steps without starting an index build.
+  - [ ] A stopped four-record index batch resumes after its last commit.
+        Queued writes still run between batches without changing the cutoff.
   - [ ] The transcript copy, the workspace summary, Continue, and the first
         stop requester give the same results over many pages.
 - [ ] Update [History and event order](../worker/chat/history.md) for the
@@ -629,7 +665,9 @@ November 2026. Cal merges it, because agent merges are off.
       `history-session-pages.test.ts`, `transcript-pages.test.ts`,
       `session-transcripts.test.ts`, `workspace-summary.test.ts`,
       `browser-subscription.test.ts`, `browser-native-replay.test.ts`, and
-      the new tests.
+      `history-session-index.test.ts`, `history-session-commit.test.ts`,
+      and the new tests. Update batch-size expectations while keeping the
+      existing cutoff, rollback-gap, atomicity, and queue-yield assertions.
 
 ## Milestone 5: Runner part checks
 
@@ -737,6 +775,10 @@ Depends on: 2, 3, 4, 5, and 6
       workspace `JpEDfCcy4nuFwTfD3g8tmfOJn6N6EwVRFT0y5elKX1Y`, session
       `nvF3pjtEyRe5SFVCLYTUYnJlc00B-lx6F6JDMknbDLs`. Ask for the same
       scenarios at 1x and 10x, and for option G as a whole.
+- [ ] Measure the current `main` baseline with the session index and
+      PR #477, then the finished branch. Separate warm indexed pages,
+      cold index preparation, and workspace replay. Do not attribute the
+      session-index gain to the 4 KiB history stubs.
 - [ ] Include a single file delete and a folder delete at 10x. The current
       runner sends a remove for each deleted file. Compare their read cost
       when the Worker visits all buckets.
