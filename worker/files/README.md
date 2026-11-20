@@ -4,7 +4,8 @@ This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
 It joins the numbered parts of each full runner report before it stores the complete report.
 It also sends file and diff requests to the connected runner.
-Diff requests use the stored workspace base branch, with the repository default as a fallback.
+Each diff request names the base branch of the workspace's last complete changes report.
+Without that report, it names the stored workspace base branch, with the repository default as a fallback.
 The runner compares from the merge base with the current workspace branch.
 A disconnected file read uses the shared sandbox provider on the server.
 
@@ -147,10 +148,20 @@ The production handler calls the local port inside the workspace object.
 Its `read` and `diff` methods return `null` when the runner is disconnected.
 An adapter must preserve that result.
 It must carry request cancellation to the object or detach pending requests when its connection ends.
-The handler reads the stored workspace base from D1.
+For each diff, the handler names the `baseBranch` of the workspace's last complete changes report.
+That report names the base that the runner of this workspace selected.
+So the diff compares with the same base as the Changes list.
+The workspaces of one repository in an org share one repository default branch in D1.
+Continue in one of them can change it.
+So that update does not change the diff base of a workspace that has a changes report.
+Without a complete changes report, the handler uses the stored workspace base from D1.
 A null base uses the repository default branch.
 It does not use a browser-supplied base branch.
-The runner uses that name only when the current branch has no `gh-merge-base` Git setting, as [The comparison base](../../runner/file-reports.md#the-comparison-base) says.
+The runner uses the requested name only when the current branch has no `gh-merge-base` Git setting, as [The comparison base](../../runner/file-reports.md#the-comparison-base) says.
+A local base change, such as the move of Continue, can come before the next changes report.
+Until that report arrives, a runner that reads the `gh-merge-base` setting replies with its new base.
+The broker then refuses the reply.
+The diff fails with HTTP 502 `file_unavailable`.
 
 The repository root is required because lifecycle and runner code own the checkout folder.
 The provider fallback accepts roots under `/home/user/`.
