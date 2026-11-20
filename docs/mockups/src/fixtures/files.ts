@@ -14,7 +14,7 @@ export type TreeEntry = {
   open?: boolean
   change?: ChangeKind
   /** The tab that opening this file shows, when the mockups draw one. */
-  preview?: 'code' | 'markdown' | 'image' | 'image-not-drawn'
+  preview?: 'code' | 'markdown' | 'image' | 'image-not-drawn' | 'html'
 }
 
 export const fileTree: readonly TreeEntry[] = [
@@ -62,28 +62,57 @@ export const branchPictures = {
 } as const
 
 /**
+ * The files of the context folder that the mockups open. Git ignores the
+ * folder, so All files lists them and Changes does not.
+ */
+export const contextFiles = {
+  /** A report that an agent wrote as a web page, with a script. */
+  report: '.context/report.html',
+} as const
+
+/** The tree with the folder `name` of the root open, with `children`. */
+function withRootFolderOpen(
+  tree: readonly TreeEntry[],
+  name: string,
+  children: readonly TreeEntry[],
+): TreeEntry[] {
+  const at = tree.findIndex((entry) => entry.depth === 0 && entry.name === name)
+  if (at < 0) return [...tree]
+  return [
+    ...tree.slice(0, at),
+    { ...tree[at], open: true },
+    ...children,
+    ...tree.slice(at + 1),
+  ]
+}
+
+/** A file in a folder of the root, which opens the tab of `preview`. */
+function childFile(path: string, preview: TreeEntry['preview']): TreeEntry {
+  return { name: splitPath(path).name, depth: 1, folder: false, preview }
+}
+
+/**
  * The tree with the public folder open, with its two images. The tabs of
  * these images show the tree this way, with the row of the open image
  * marked.
  */
 export function withPublicOpen(tree: readonly TreeEntry[]): TreeEntry[] {
-  const at = tree.findIndex(
-    (entry) => entry.depth === 0 && entry.name === 'public',
-  )
-  if (at < 0) return [...tree]
-  const image = (path: string, preview: TreeEntry['preview']): TreeEntry => ({
-    name: splitPath(path).name,
-    depth: 1,
-    folder: false,
-    preview,
-  })
-  return [
-    ...tree.slice(0, at),
-    { ...tree[at], open: true },
-    image(branchPictures.picture, 'image'),
-    image(branchPictures.damaged, 'image-not-drawn'),
-    ...tree.slice(at + 1),
-  ]
+  return withRootFolderOpen(tree, 'public', [
+    childFile(branchPictures.picture, 'image'),
+    childFile(branchPictures.damaged, 'image-not-drawn'),
+  ])
+}
+
+/**
+ * The tree with the context folder open: the closed folder of the
+ * screenshots that an agent took, and the report. The tab of the report
+ * shows the tree this way, with the row of the report marked.
+ */
+export function withContextOpen(tree: readonly TreeEntry[]): TreeEntry[] {
+  return withRootFolderOpen(tree, '.context', [
+    { name: 'shots', depth: 1, folder: true },
+    childFile(contextFiles.report, 'html'),
+  ])
 }
 
 export type ChangedFile = {

@@ -1,6 +1,7 @@
 import { ACCOUNT_PATHS } from '../../src/shared/account'
 import { API_PATHS } from '../../src/shared/api'
 import {
+  buildsAtAdd,
   orgSettingsPaths,
   REPOSITORY_POSITION_SUFFIX,
 } from '../../src/shared/org-settings'
@@ -92,7 +93,10 @@ export async function featureShellRoute(
       orgId,
       userId,
       repositoryId,
-      request.method === 'PUT',
+      {
+        selected: request.method === 'PUT',
+        build: buildsAtAdd(context.body),
+      },
       dependencies,
     )
   const sectionId = shellChildId(path, sectionsPath(orgId))

@@ -185,6 +185,8 @@ Each folder of a path is a part of the address. Another address under
   of the saved view too, though the row of a phone shows no file tabs.
 - The links of the file preview open through the one link opener of the
   screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+  The tab of an HTML file shows its page as
+  [The tabs of HTML files](html-tabs.md) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and

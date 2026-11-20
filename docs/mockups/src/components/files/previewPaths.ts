@@ -7,4 +7,5 @@ export const previewPaths = {
   image: paths.image,
   'image-not-drawn': paths.imageNotDrawn,
   screenshot: paths.imageFromAnswer,
+  html: paths.html,
 } as const

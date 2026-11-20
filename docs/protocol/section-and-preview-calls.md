@@ -49,10 +49,12 @@ number names a dated record, as
 
 ## Previews
 
-- `list_previews` takes a workspace. It gives each open preview of that
-  workspace, with its ID, its port, its link, and the time when it ends.
-  Reason: Conductor's `preview get` gives the preview of a workspace.
-- The list also holds the previews that members opened in the app.
+- `list_previews` takes a workspace. It gives each open port preview of
+  that workspace, with its ID, its port, its link, and the time when it
+  ends. Reason: Conductor's `preview get` gives the preview of a workspace.
+- The list also holds the previews that members opened in the app. It
+  leaves out the [files preview](html-file-preview.md#the-files-preview)
+  of the HTML file tabs.
 - `open_preview` takes a workspace and a port. It opens a preview of that
   port, as a member does in the app, with the checks of
   [Port previews](port-previews.md). Reason: Conductor's `preview set`
@@ -61,7 +63,7 @@ number names a dated record, as
 - The reply gives the preview with its link. The link is the launch
   address of the preview on the app origin. So each load of the link needs
   a sign-in and access to the workspace, as
-  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
+  [Preview grants](preview-grants.md#the-launch) says.
 - Each preview that `open_preview` opens needs a sign-in. The call has no
   choice that opens a preview without a sign-in.
 - Reason: sandbox code must not make its own server public through an
@@ -81,3 +83,5 @@ number names a dated record, as
 - A close of a preview that is already closed, or that the workspace does
   not have, changes nothing, as in the app. Its reply says that no preview
   closed.
+- `close_preview` cannot close the files preview. A close that names it
+  changes nothing, as for a preview that the workspace does not have.

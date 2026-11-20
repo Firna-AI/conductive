@@ -2,6 +2,10 @@ import {
   lineTargets,
   type TargetReader,
 } from '../../markdown/markdown-destination'
+import {
+  lineLabelEnds,
+  type LabelEndReader,
+} from '../../markdown/markdown-labels'
 import { bareAddressAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
 
@@ -58,30 +62,23 @@ function markdownLinkAt(
   text: string,
   at: number,
   targetAt: TargetReader,
+  labelEndAt: LabelEndReader,
 ): LinkToken | null {
-  let code = false
-  for (let index = at + 1; index < text.length; index += 1) {
-    const char = text[index]
-    if (char === '\n') return null
-    if (char === '`') code = !code
-    else if (char === ']' && !code) {
-      if (text[index + 1] !== '(') return null
-      const target = targetAt(index + 2)
-      if (!target) return null
-      return {
-        kind: 'link',
-        href: target.destination,
-        source: text.slice(at, target.next),
-        markdown: {
-          label: text.slice(at + 1, index),
-          before: text.slice(at, target.start),
-          after: text.slice(target.end, target.next),
-          image: text[at - 1] === '!',
-        },
-      }
-    }
+  const end = labelEndAt(at)
+  if (end < 0 || text[end + 1] !== '(') return null
+  const target = targetAt(end + 2)
+  if (!target) return null
+  return {
+    kind: 'link',
+    href: target.destination,
+    source: text.slice(at, target.next),
+    markdown: {
+      label: text.slice(at + 1, end),
+      before: text.slice(at, target.start),
+      after: text.slice(target.end, target.next),
+      image: text[at - 1] === '!',
+    },
   }
-  return null
 }
 
 /** A file image includes its leading exclamation mark in the link source. */
@@ -89,8 +86,9 @@ function imageLinkAt(
   text: string,
   at: number,
   targetAt: TargetReader,
+  labelEndAt: LabelEndReader,
 ): LinkToken | null {
-  const link = markdownLinkAt(text, at + 1, targetAt)
+  const link = markdownLinkAt(text, at + 1, targetAt, labelEndAt)
   if (!link || /^https?:/u.test(link.href)) return null
   return { ...link, source: `!${link.source}` }
 }
@@ -120,6 +118,7 @@ function bareAddressTokenAt(
 export function tokens(text: string, reading: Reading): Token[] {
   const found: Token[] = []
   const targetAt = lineTargets(text)
+  const labelEndAt = reading.links ? lineLabelEnds(text, 'code') : () => -1
   let plain = ''
   const add = (token: Token, length: number) => {
     if (plain !== '') found.push({ kind: 'text', text: plain })
@@ -155,9 +154,9 @@ export function tokens(text: string, reading: Reading): Token[] {
     const link = !reading.links
       ? null
       : reading.paths && text[index] === '!' && text[index + 1] === '['
-        ? imageLinkAt(text, index, targetAt)
+        ? imageLinkAt(text, index, targetAt, labelEndAt)
         : text[index] === '['
-          ? markdownLinkAt(text, index, targetAt)
+          ? markdownLinkAt(text, index, targetAt, labelEndAt)
           : text.startsWith('http', index)
             ? bareAddressTokenAt(text, index, reading.marks)
             : null

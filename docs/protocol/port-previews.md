@@ -133,6 +133,14 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   The user starts a new workspace after an admin runs Build computer.
 - The sandbox keeps port 7682 for the relay. A preview of port 7682 shows
   an error.
+- The sandbox keeps port 7683 for the
+  [file server](file-server.md). A preview of port
+  7683 shows an error, because the file server answers only the requests
+  of the files preview.
+- The [files preview](html-file-preview.md#the-files-preview) of the HTML
+  file tabs is no port preview. It has no Preview tab, and the Preview
+  tool does not list it. The agent preview calls neither list nor close
+  it.
 
 ## Preview tabs and the end of a preview
 

@@ -19,6 +19,7 @@ export interface SocketRuntime {
 }
 
 export interface ToolDependencies {
+  fileServerAvailable?: (workspaceId: string) => boolean
   terminalSchedule?: ConnectionScheduler
   fetch: HttpFetch
   now: () => number

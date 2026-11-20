@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import { parseRunnerEnvelope, parseRunnerTransport } from './runner-input'
 import { numberedRunnerInput } from './runner-fixtures.test-support'
@@ -135,6 +135,49 @@ it('normalizes optional process-start diagnostics without refusing hello', () =>
         token: 'private-token',
       }),
     ).toEqual({ ...hello, processStartId: expected })
+})
+
+it('keeps only a true file server announcement and warns without its invalid value', () => {
+  const hello = {
+    type: 'hello',
+    workspaceId: 'workspace',
+    streamId: 'stream',
+    protocolVersion: 2,
+  }
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    for (const fileServer of [
+      true,
+      false,
+      undefined,
+      'private-token',
+      null,
+      1,
+      {},
+    ]) {
+      warning.mockClear()
+      expect(parseRunnerTransport({ ...hello, fileServer })).toEqual({
+        ...hello,
+        processStartId: null,
+        ...(fileServer === true ? { fileServer: true } : {}),
+      })
+      expect(warning.mock.calls).toEqual(
+        fileServer === undefined || typeof fileServer === 'boolean'
+          ? []
+          : [
+              [
+                {
+                  kind: 'runner_file_server_invalid',
+                  message:
+                    'A runner hello had an invalid file server announcement. It counts as no file server.',
+                },
+              ],
+            ],
+      )
+    }
+  } finally {
+    warning.mockRestore()
+  }
 })
 
 it('preserves omission counts and a known optional turn end reason in runner chat events', () => {
