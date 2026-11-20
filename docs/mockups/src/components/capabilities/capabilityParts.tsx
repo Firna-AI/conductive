@@ -5,11 +5,18 @@ import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
+import { SearchField } from '../common/SearchField'
 import { useControlSizes } from '../common/touch'
 import { whoOf } from '../chat/SecretRun'
-import { macAccessWords, noSecrets, secretsPartWords } from './capabilitiesCopy'
+import {
+  macAccessWords,
+  noSecretMatch,
+  noSecrets,
+  secretsPartWords,
+} from './capabilitiesCopy'
 import type { CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
+import { matchingSecrets, needsSecretSearch } from './secretSearch'
 import check from '../common/CheckOption.module.css'
 import styles from './Capabilities.module.css'
 
@@ -20,6 +27,11 @@ export type CapabilitiesView = {
   secrets: readonly OrgSecret[]
   /** The names of the secrets that the workspace pre-approves. */
   preApproved: readonly string[]
+  /**
+   * The text in the search field, which shows above more than ten secrets.
+   * It narrows the list by name and by description.
+   */
+  search?: string
   /**
    * The approvals of the sessions and the values for the workspace, which
    * only a workspace that exists has.
@@ -38,7 +50,7 @@ export type CapabilitiesView = {
  */
 type SecretsView = Pick<
   CapabilitiesView,
-  'org' | 'secrets' | 'preApproved' | 'secretsTo'
+  'org' | 'secrets' | 'preApproved' | 'search' | 'secretsTo'
 >
 
 /**
@@ -70,7 +82,8 @@ function SecretCheck(props: { secret: OrgSecret; checked: boolean }) {
 
 /**
  * The secrets of the org, each with its checkbox. An org without secrets
- * links to its Secrets tab.
+ * links to its Secrets tab. More than ten secrets get a search field above
+ * them, and a search that matches none says so.
  */
 function SecretPicker(props: { view: SecretsView }) {
   const { view } = props
@@ -84,13 +97,39 @@ function SecretPicker(props: { view: SecretsView }) {
       </p>
     )
   }
+  const search = view.search ?? ''
+  const list = (
+    <SecretChecks secrets={matchingSecrets(view.secrets, search)} view={view} />
+  )
+  if (!needsSecretSearch(view.secrets.length)) return list
+  return (
+    <div className={styles.picker}>
+      <SearchField
+        label={secretsPartWords.search}
+        placeholder={secretsPartWords.search}
+        query={search}
+      />
+      {list}
+    </div>
+  )
+}
+
+/** The listed secrets with their checkboxes, or the line of no match. */
+function SecretChecks(props: {
+  secrets: readonly OrgSecret[]
+  view: SecretsView
+}) {
+  const { view } = props
+  if (props.secrets.length === 0) {
+    return <p className={styles.empty}>{noSecretMatch(view.search ?? '')}</p>
+  }
   return (
     <div
       aria-label="Pre-approved secrets"
       className={styles.checks}
       role="group"
     >
-      {view.secrets.map((secret) => (
+      {props.secrets.map((secret) => (
         <SecretCheck
           checked={view.preApproved.includes(secret.name)}
           key={secret.name}

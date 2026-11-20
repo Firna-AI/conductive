@@ -113,6 +113,14 @@
   text-decoration: underline;
 }
 
+/* The search field above a long list of secrets, and the list. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* The secrets of the org, each with its checkbox. */
 .checks {
   display: flex;

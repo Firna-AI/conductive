@@ -26,11 +26,18 @@ export const secretsPartWords = {
   sessions: 'Allowed in sessions',
   values: 'Values for this workspace',
   remove: 'Remove',
+  /** The label and the placeholder of the search above a long list. */
+  search: 'Search secrets',
 } as const
 
 /** The line of an org without secrets. */
 export function noSecrets(org: string): string {
   return `${org} has no secrets yet.`
+}
+
+/** The line of a search that no secret matches. */
+export function noSecretMatch(search: string): string {
+  return `No secret matches “${search.trim()}”.`
 }
 
 /** What a session approval says: its session, who allowed it, and when. */

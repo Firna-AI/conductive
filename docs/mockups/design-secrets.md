@@ -86,6 +86,11 @@ one.
   agents stays checked, off, with the words "All agents". Manage secrets
   opens the Secrets tab. An org without secrets says so, with Add a
   secret.
+- Above more than ten secrets, the Secrets part shows the shared
+  `SearchField` of `src/components/common/`, with the words "Search
+  secrets". The search narrows the list by name and by description, and a
+  search that matches no secret says so in a line. `secretSearch.ts`
+  holds the limit and the filter, which the app uses too.
 - In a workspace, the Secrets part also lists the approvals of the
   sessions, each with its session, who allowed it, and when, and each value
   for this workspace, with who gave it. Each has Remove. `GrantList` draws

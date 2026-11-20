@@ -70,9 +70,11 @@ export const newWorkspaceFormProperties = {
    * or drawn open (secrets decision 6). It holds the secrets that the new
    * workspace pre-approves, and Mac access. `menu` opens the menu of the
    * one button of a phone, which holds Attach files and Capabilities
-   * (secrets decision 16 G). A computer has no such menu.
+   * (secrets decision 16 G). A computer has no such menu. `search` draws
+   * the control open on an org with more than ten secrets, with a search
+   * typed above them.
    */
-  capabilities: { enum: ['closed', 'open', 'menu'] },
+  capabilities: { enum: ['closed', 'open', 'menu', 'search'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

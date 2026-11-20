@@ -26,6 +26,15 @@ export const newWorkspaceCapabilities = defineScreen({
       props: { org: 'new' },
     },
     {
+      slug: 'search',
+      title: 'A search of many secrets',
+      description:
+        'Acme has twelve secrets, so a Search secrets field shows above the list. Cal typed "deploy". The list keeps VERCEL_TOKEN, FLY_API_TOKEN, and NETLIFY_TOKEN, whose descriptions hold the word, in the order of the full list. A search that matches no secret says so in a line. Clearing the field shows every secret again. Each check stays as it was while the search hides its secret. An org with ten secrets or fewer gets no search field, as the first state shows.',
+      rationale:
+        'Cal asked on 20 November 2026 for a search when the list holds more than ten secrets. The control is a small card above the composer, so a long list needs a scroll to find one secret. The search reads the name and the description, because a member often knows what a secret is for and not its name. The search field and the filter are the same as in the repository picker of the org settings.',
+      props: { capabilities: 'search' },
+    },
+    {
       slug: 'menu',
       title: 'The menu of a phone',
       description:
