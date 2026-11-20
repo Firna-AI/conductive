@@ -25,10 +25,9 @@ import {
   branchControl,
   branchRefusal,
   branchRefusals,
-  branchSendTo,
   branchSheet,
-  targetChoice,
 } from './newWorkspaceBranches'
+import { branchSendTo } from './newWorkspaceBranchScreens'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { Start } from './newWorkspaceStart'
 
@@ -186,7 +185,6 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
                 : undefined
             }
             page={page}
-            target={targetChoice(state, false)}
           />
         )
       }
@@ -241,7 +239,7 @@ export function NewWorkspaceScreen(props: {
           />
         </Sheet>
       ) : null
-    // The branch picker of a phone opens as a sheet, as the repository menu.
+    // The branch dropdown of a phone opens as a sheet, as the repository menu.
     const branchMenu =
       state.repositories !== 'none' && state.org !== 'suspended'
         ? branchSheet(state, pageOrgData.repository.name)

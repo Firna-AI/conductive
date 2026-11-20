@@ -1,6 +1,8 @@
 /*
  * The choice of two targets and the line under it, centred under the
- * pickers of the New workspace page.
+ * pickers of the New workspace page. Decision 301 replaced it with the
+ * Target part of the dropdown of the branch control, so no mockup draws it.
+ * The app draws it until it builds decision 301, which removes this file.
  */
 .choice {
   display: flex;

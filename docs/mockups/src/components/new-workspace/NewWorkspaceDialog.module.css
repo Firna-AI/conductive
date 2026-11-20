@@ -29,9 +29,10 @@
 }
 
 /*
- * The repository picker at the start, and the place of the workspace at the
- * end. The texts of the header, the message, and the footer start on one
- * line, and the boxes of the notices and the buttons on another.
+ * The repository picker and the branch control at the start, and the place
+ * of the workspace at the end. The texts of the header, the message, and
+ * the footer start on one line, and the boxes of the notices and the
+ * buttons on another.
  */
 .header {
   display: flex;
@@ -64,8 +65,10 @@
 }
 
 /*
- * The target choice of a picked branch, on a line of its own under the
- * pickers, with the same hairline under it as the header.
+ * The line of the target choice under the header, which decision 301
+ * replaced with the Target part of the dropdown of the branch control. No
+ * mockup draws it. The app draws it until it builds decision 301, which
+ * removes this rule.
  */
 .target {
   padding: 8px 10px 8px 12px;

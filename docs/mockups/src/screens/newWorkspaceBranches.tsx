@@ -5,28 +5,33 @@ import { Notice } from '../components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { Sheet } from '../components/common/Sheet'
 import {
+  BranchMenu,
+  type BranchTargets,
+} from '../components/new-workspace/BranchMenu'
+import {
   BranchLine,
-  BranchList,
   BranchPicker,
   type BranchOption,
 } from '../components/new-workspace/BranchPicker'
 import {
   branchCopy,
   branchRefusalCopy,
+  targetCopy,
 } from '../components/new-workspace/branchCopy'
 import { CreateRefusedNotice } from '../components/new-workspace/notices'
-import { TargetChoice } from '../components/new-workspace/TargetChoice'
 import {
   branchSearches,
   defaultBranch,
   pickedBranch,
   searchedBranches,
 } from '../fixtures/branches'
-import { branchPaths } from '../paths'
+import {
+  openScreen,
+  pickTo,
+  screensOf,
+  type BranchSurface,
+} from './newWorkspaceBranchScreens'
 import type { NewWorkspaceFormState } from './newWorkspaceParts'
-
-/** Where the form draws its branch control: the page, or the dialog. */
-export type BranchSurface = 'page' | 'dialog'
 
 type Form = NewWorkspaceFormState
 
@@ -42,7 +47,12 @@ function formBranch(state: Form): string {
   return state.branch === 'picked' ? pickedBranch : defaultBranch
 }
 
-/** The text in the search field of the open picker. */
+/** The picked branch targets the default branch, so the control names it. */
+function targetsMain(state: Form): boolean {
+  return state.branch === 'picked' && state.target === 'default'
+}
+
+/** The text in the search field of the open dropdown. */
 function queryOf(menu: Form['branchMenu']): string {
   if (menu === 'search') return branchSearches.some
   if (menu === 'no-match') return branchSearches.none
@@ -50,26 +60,10 @@ function queryOf(menu: Form['branchMenu']): string {
 }
 
 /**
- * The screen that a pick leads to, in the mockups: the default branch
- * closes the picker, and the branch of Checkout address autocomplete shows
- * the target choice.
- */
-function pickTo(name: string, surface: BranchSurface): string | undefined {
-  const page = surface === 'page'
-  if (name === defaultBranch) {
-    return page ? branchPaths.page : branchPaths.dialog
-  }
-  if (name === pickedBranch) {
-    return page ? branchPaths.target : branchPaths.targetDialog
-  }
-  return undefined
-}
-
-/**
- * The rows of the open picker: the default branch first, then the other
- * branches by their newest commit, which a search narrows. The default
- * branch needs no read of GitHub, so it shows while the list loads, and
- * after a read that failed. A search highlights its first match, which
+ * The rows of the Start from part: the default branch first, then the
+ * other branches by their newest commit, which a search narrows. The
+ * default branch needs no read of GitHub, so it shows while the list loads,
+ * and after a read that failed. A search highlights its first match, which
  * Enter picks.
  */
 function optionsOf(state: Form, surface: BranchSurface): BranchOption[] {
@@ -80,7 +74,7 @@ function optionsOf(state: Form, surface: BranchSurface): BranchOption[] {
     name,
     detail,
     checked: name === current,
-    to: pickTo(name, surface),
+    to: pickTo(name, state, surface),
   })
   const rows: BranchOption[] = []
   if (defaultBranch.includes(query)) {
@@ -116,14 +110,7 @@ function statusOf(
       return (
         <Notice
           action={
-            <ScreenLink
-              asChild
-              to={
-                surface === 'page'
-                  ? branchPaths.picker
-                  : branchPaths.dialogPicker
-              }
-            >
+            <ScreenLink asChild to={screensOf(surface).mainOpen}>
               <ActionButton icon={RotateCw}>Try again</ActionButton>
             </ScreenLink>
           }
@@ -146,27 +133,61 @@ function statusOf(
   }
 }
 
-/** The open picker, in its box on a computer or in a sheet on a phone. */
-function openList(
+/**
+ * The Target part of a picked branch, or none for the default branch: the
+ * picked branch first, then main, with a check on the target of the form.
+ * A press on a row closes the dropdown on that target.
+ */
+function targetsOf(
+  state: Form,
+  surface: BranchSurface,
+): BranchTargets | undefined {
+  if (state.branch !== 'picked') return undefined
+  const screens = screensOf(surface)
+  return {
+    options: [
+      {
+        branch: pickedBranch,
+        checked: state.target === 'picked',
+        to: screens.picked,
+      },
+      {
+        branch: defaultBranch,
+        checked: state.target === 'default',
+        to: screens.targetMain,
+      },
+    ],
+    line:
+      state.target === 'picked'
+        ? targetCopy.picked
+        : targetCopy.defaultBranch(pickedBranch),
+  }
+}
+
+/** The open dropdown, in its box on a computer or in a sheet on a phone. */
+function openMenu(
   state: Form,
   repository: string,
   surface: BranchSurface,
   sheet: boolean,
 ): ReactNode {
   return (
-    <BranchList
+    <BranchMenu
       options={optionsOf(state, surface)}
       query={queryOf(state.branchMenu)}
       sheet={sheet}
       status={statusOf(state, repository, surface)}
+      targets={targetsOf(state, surface)}
     />
   )
 }
 
 /**
- * The branch control beside the repository picker. On a computer the open
- * picker hangs below it. A phone opens the picker as a sheet instead, from
- * `branchSheet`. A press on the closed control opens the picker.
+ * The branch control directly right of the repository picker (decision
+ * 301). It adds `→ main` while a picked branch targets the default branch.
+ * On a computer the open dropdown hangs below it. A phone opens the
+ * dropdown as a sheet instead, from `branchSheet`. A press on the closed
+ * control opens the dropdown.
  */
 export function branchControl(props: {
   state: Form
@@ -182,35 +203,24 @@ export function branchControl(props: {
       expanded={expanded}
       open={
         expanded && !props.mobile
-          ? openList(state, props.repository, surface, false)
+          ? openMenu(state, props.repository, surface, false)
           : undefined
       }
-      to={surface === 'page' ? branchPaths.picker : branchPaths.dialogPicker}
+      room={surface}
+      target={targetsMain(state) ? defaultBranch : undefined}
+      to={openScreen(state, surface)}
       tone={surface === 'dialog' ? 'plain' : undefined}
     />
   )
 }
 
-/** The open picker of a phone, as a sheet, or `null` while it is closed. */
+/** The open dropdown of a phone, as a sheet, or `null` while it is closed. */
 export function branchSheet(state: Form, repository: string): ReactNode {
   if (state.branchMenu === 'closed') return null
   return (
     <Sheet title={branchCopy.picker}>
-      {openList(state, repository, 'page', true)}
+      {openMenu(state, repository, 'page', true)}
     </Sheet>
-  )
-}
-
-/** The target choice of a picked branch, or `null` for the default branch. */
-export function targetChoice(state: Form, inline: boolean): ReactNode {
-  if (state.branch !== 'picked') return null
-  return (
-    <TargetChoice
-      defaultBranch={defaultBranch}
-      inline={inline}
-      picked={pickedBranch}
-      value={state.target}
-    />
   )
 }
 
@@ -230,10 +240,7 @@ export function branchRefusal(
       return (
         <CreateRefusedNotice
           action={
-            <ScreenLink
-              asChild
-              to={surface === 'page' ? branchPaths.page : branchPaths.dialog}
-            >
+            <ScreenLink asChild to={screensOf(surface).main}>
               <ActionButton icon={GitBranch}>
                 {branchRefusalCopy.startFrom(defaultBranch)}
               </ActionButton>
@@ -254,14 +261,4 @@ export function branchRefusal(
     default:
       return null
   }
-}
-
-/**
- * Where Send leads from a form with a picked branch that it targets: the
- * workspace that stacks on that branch. Otherwise the form keeps the start
- * of a workspace on its usual screen.
- */
-export function branchSendTo(state: Form): string | undefined {
-  if (state.branch !== 'picked' || state.target !== 'picked') return undefined
-  return branchPaths.stacked
 }

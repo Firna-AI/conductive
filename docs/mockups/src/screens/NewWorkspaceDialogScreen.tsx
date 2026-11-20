@@ -22,11 +22,7 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
-import {
-  branchControl,
-  branchRefusal,
-  targetChoice,
-} from './newWorkspaceBranches'
+import { branchControl, branchRefusal } from './newWorkspaceBranches'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace } from './workspaceState'
@@ -178,7 +174,6 @@ export function NewWorkspaceDialogScreen(props: {
           ? repositoryMenu(page, state.waitingBuild)
           : undefined
       }
-      target={chosen ? targetChoice(state, true) : undefined}
       text={ownDraft ? page.draft : draft.text}
     />
   )

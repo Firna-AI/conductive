@@ -173,17 +173,18 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
-  of `ConfirmDialog`. The repository picker and the branch control sit at
-  the top left, and the org and the section of the new workspace, in plain
-  text, at the top right. A picked branch that is not the default branch
-  adds the target choice on a line under them. The message and its files
-  fill the middle, and the notices of the New workspace page follow them.
+  of `ConfirmDialog`. The repository picker and the branch control
+  directly right of it sit at the top left, and the org and the section of
+  the new workspace, in plain text, at the top right. The target of a
+  picked branch lives in the dropdown of the branch control, so no line
+  follows the header (decision 301). The message and its files fill the
+  middle, and the notices of the New workspace page follow them.
   The model picker sits at the bottom left, and the attach button and
   Create, with the hint of the Enter key, at the bottom right. A phone
   always opens the page, so the dialog has no phone layout.
 - [New workspace](design-new-workspace.md) gives the branch control of the
-  page and of the dialog, its picker, the target choice, and the refusals
-  of the branch check.
+  page and of the dialog, its dropdown with the parts Start from and
+  Target, and the refusals of the branch check.
 - The account has four tabs, General, Agents, Preferences, and Keyboard
   shortcuts, as links, as the org settings have. The Mac app adds This Mac
   as its fifth tab. On a phone, a tab that

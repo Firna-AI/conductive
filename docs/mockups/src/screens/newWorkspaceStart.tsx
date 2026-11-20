@@ -40,12 +40,12 @@ function RepositoryPicker(props: {
 
 /**
  * The start of an empty chat, with the repository of the new workspace and
- * the branch control beside it. The target choice of a picked branch
- * follows them. The note names the build that the workspace starts from.
- * Before the first good build there is none, and the notice over the
- * composer says why. While the repository of the form waits for its build,
- * the notice over the composer says when it is ready, so the note gives
- * way.
+ * the branch control directly right of it. The target of a picked branch
+ * lives in the dropdown of the branch control (decision 301). The note
+ * names the build that the workspace starts from. Before the first good
+ * build there is none, and the notice over the composer says why. While
+ * the repository of the form waits for its build, the notice over the
+ * composer says when it is ready, so the note gives way.
  */
 export function Start(props: {
   page: PageOrg
@@ -53,10 +53,8 @@ export function Start(props: {
   admin: boolean
   /** The open repository menu, on a computer. */
   menu?: readonly MenuEntry[]
-  /** The branch control, with its picker open below it on a computer. */
+  /** The branch control, with its dropdown open below it on a computer. */
   branch?: ReactNode
-  /** The target choice, when the form holds a picked branch. */
-  target?: ReactNode
 }) {
   const { page } = props
   const ready = formWait(page) === undefined
@@ -82,7 +80,6 @@ export function Start(props: {
       ) : props.admin ? (
         <ChooseRepositoriesButton />
       ) : null}
-      {props.chosen ? props.target : null}
       {props.chosen && ready && page.built ? (
         <p className={styles.note}>
           Starts from the cloud computer of {page.org.name}, built {page.built}.

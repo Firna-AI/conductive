@@ -6,11 +6,11 @@ import {
 } from '../../../../../screens/NewWorkspaceScreen'
 
 export const branchPicker = defineScreen({
-  title: 'Branch picker',
+  title: 'Branch dropdown',
   description:
-    'Cal pressed the branch control. The picker opens below it, with a search field at the top. main comes first, with the note default, and its check shows that the form holds it. The other branches of acme/storefront follow, newest commit first, each with the time since its newest commit. A press on calummoore/checkout-autocomplete picks it and shows the target choice, and a press on main closes the picker. A phone opens the picker as a sheet, with rows of touch size. The variants show a search, a search without a match, the list while it loads, and a read of GitHub that failed.',
+    'Cal pressed the branch control. Its dropdown opens below it, in the box of a menu. Its first part, Start from, has a search field at the top. main comes first, with the note default, and its check shows that the form holds it. The other branches of acme/storefront follow, newest commit first, each with the time since its newest commit. main offers no target choice, so the dropdown has no Target part. A press on calummoore/checkout-autocomplete picks it and closes the dropdown, and a press on main closes it. A phone opens the dropdown as a sheet titled Branch, with rows of touch size. The variants show a search, a search without a match, the list while it loads, and a read of GitHub that failed.',
   rationale:
-    'The Worker reads the branches live from GitHub with the GitHub token of the member, for one repository of the org, and it stores no list, as the design calls of the plan say. So the browser gets no token, and each member sees only what GitHub shows to that member. The default branch comes first, because it is the usual start, and the newest commits come next, because members pick the branches that they work on now. The default branch needs no read of GitHub, so its row shows in every state of the list. A repository without other branches, such as an empty repository, shows only that row. The rows look like the rows of the menus of the app, with the muted detail in the label font.',
+    'The Worker reads the branches live from GitHub with the GitHub token of the member, for one repository of the org, and it stores no list, as the design calls of the plan say. So the browser gets no token, and each member sees only what GitHub shows to that member. The default branch comes first, because it is the usual start, and the newest commits come next, because members pick the branches that they work on now. The default branch needs no read of GitHub, so its row shows in every state of the list. A repository without other branches, such as an empty repository, shows only that row. The rows look like the rows of the menus of the app, with the muted detail in the label font. Cal chose variant B of decision 301 on 20 November 2026, so the dropdown names its first part Start from, and the Target part follows it for a picked branch: start from one branch, target one branch, as a pull request does. A pick closes the dropdown, as in every picker.',
   relatedDocs: [],
   propSchema: newWorkspaceSchema,
   props: { ...newWorkspaceForm, branchMenu: 'open' },
@@ -40,7 +40,7 @@ export const branchPicker = defineScreen({
       slug: 'loading',
       title: 'Loading',
       description:
-        'The picker just opened, and the Worker reads the branches from GitHub. main shows at once, and one line says Loading branches… in place of the other rows. They show as soon as the read answers.',
+        'The dropdown just opened, and the Worker reads the branches from GitHub. main shows at once, and one line says Loading branches… in place of the other rows. They show as soon as the read answers.',
       rationale:
         'The form knows the default branch without a read of GitHub, so Cal can pick it at once.',
       props: { branchMenu: 'loading' },

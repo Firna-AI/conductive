@@ -26,8 +26,6 @@ Contract owners:
 - [Workspace calls](../docs/protocol/workspace-calls.md).
 - [GitHub tokens](../docs/protocol/github-tokens.md).
 - [GitHub banner](../docs/protocol/github-banner.md).
-- [Conductor comparison](../docs/protocol/conductor-comparison.md#statuses),
-  for the rows in `src/marketing/from-conductor/areas/`.
 - The Terms page in `src/marketing/terms.ts`, the Privacy page in
   `src/marketing/privacy.ts` with its data uses in
   `src/marketing/privacy-uses.ts`, and the public guides in
@@ -211,6 +209,31 @@ failing cloud computer no longer fails a banner read.
   cloud command showed "GitHub is not available".
 - Rejected: A, B, D, and F of the review, because the cloud update stays
   inside the GitHub read and its failure keeps failing that read.
+
+### Decision 301: a compact branch control in the header
+
+Chosen by Cal on 20 November 2026: variant B, Pair, of the compact
+variants under `app/new-workspace/start-branch/compact`, with the branch
+control in the header directly right of the repository picker. The
+control shows `main`, the default branch, until the member picks another
+branch. Its dropdown has two parts: "Start from", with the search and the
+branch list, and "Target", with the two named targets and the line about
+what the pull request holds. The closed control adds `→ main` while a
+picked branch targets the default branch. The separate target row goes.
+
+- Reason: Cal found the target row too verbose (16 November 2026), and B
+  names both targets and shows a default-branch target before the send.
+- Rejected: A, a target control in the dropdown with no sign on the closed
+  control. C, a second control for the target. D, a submenu on the
+  checked row. E, one "Target main" switch. Also rejected: the place in the
+  composer footer that all five variants drew, because Cal placed the
+  control next to the repository picker.
+- This replaces the target row of decision 291 and the design calls of
+  Milestones 1 and 8 that describe it. The choice of two targets, and the
+  picked branch as the first selection (decision 295), stay.
+- The decision numbers of this plan from 296 are taken on `main` by other
+  changes since 20 November 2026. Milestone 9 renumbers them. Number 301
+  stays free after that renumber.
 
 ## Design calls
 
@@ -426,6 +449,55 @@ Design calls from Milestones 11 to 13, made on 16 November 2026:
 - The phone line reads the names from a new `branches` field of the bar
   view, and the group keeps the name "Pull request actions". Reason: no
   caller changes, and the shell tests find the group by that name.
+
+Design calls from the mockups of Milestone 14, made on 20 November 2026:
+
+- The control is the action button of the repository picker, with the
+  same tone, size, and chevron, and the branch icon. `→ main` follows the
+  name, before the chevron, in the muted colour of the effort of the model
+  picker, and the spoken name adds the target. Reason: Cal asked for the
+  look of the repository picker, and variant B drew this muted part.
+- A long name keeps the rule of the header: the ellipsis at the end of the
+  name, and `→ main` and the chevron stay in view. The limit of the
+  control grows from 280 px to 340 px while it shows `→ main`, so a name
+  gives way at about the same length. Reason: Cal has not answered the
+  open item on long names, so the rule before decision 301 stays.
+- The label Start from heads the list also when the dropdown has no
+  Target part. The Target rows name their branches without the word
+  Target, the picked branch first, with a check on the target and no
+  detail. Reason: variant B, and the label says Target once.
+- A pick in Start from closes the dropdown, and so does a press on a
+  Target row. The Target part shows when the member opens the control on
+  a picked branch. Reason: variant B closes the dropdown on a pick, as
+  every picker does.
+- The dropdown takes at most the room below the control. When the room
+  runs out, the list of branches scrolls, and the labels, the search
+  field, and the Target part stay in view. On the page the room is about
+  half the screen, in the dialog about half the screen and the part of the
+  dialog under its header, and a phone sheet uses its body. Reason: the
+  frame of the catalogue is 720 px high, so the Target part of the page
+  fell off its bottom, and the app already limits its picker to the room
+  below the control.
+- The dialog page shows five states of the control: main, the open
+  dropdown on main, the picked branch, the dropdown with its Target part,
+  and target main. The refusal of a missing branch in the dialog moved to
+  `app/new-workspace/start-branch/missing/dialog`, and `dialog/target-default`
+  became `dialog/target-main`. They declare no `movedFrom`, because `main`
+  never had these paths, so the hint matches nothing. Only the page draws
+  the open dropdown on target main. Reason: a page shows at most five
+  screens.
+- `TargetChoice.module.css` and the `target` rule of
+  `NewWorkspaceDialog.module.css` stay until Milestone 16, and
+  `targetCopy.option` stays. `branchCopy.control` takes the target as an
+  optional second value. Reason: the app imports them, and it keeps
+  working until it builds decision 301.
+- The start of the New workspace page, `.start` of
+  `NewWorkspaceScreen.module.css`, gets `min-width: 0`. Reason: the smoke
+  test found that a branch name, which does not wrap, made the start
+  412 px wide on a 390 px phone. So the name got no ellipsis, and on a
+  360 px phone `→ main` and the chevron fell off the screen. The rule
+  changes only the three phone views with `→ main`. The app imports the
+  file, so it gets the rule too.
 
 ## Milestone 1: Mockups
 
@@ -693,13 +765,68 @@ Depends on: 10
       from the shared `BarActions.module.css`.
 - [x] Test it, and compare it with its mockup on a phone.
 
+## Milestone 14: Mockups of the compact branch control
+
+Tags: mockup
+
+Depends on: 10
+
+- [x] Draw decision 301 on the `app/new-workspace/start-branch` pages and
+      their children, on the page and in the dialog, on a computer and on
+      a phone: the control next to the repository picker, `main` first,
+      the two-part dropdown, and `→ main` on the closed control.
+- [x] Remove the target row and `TargetChoice` from the mockups, and the
+      `compact` exploration pages and their parts, when no page uses them.
+- [x] Keep the files that the app imports working, or list each change
+      that Milestone 16 must follow.
+- [x] Update `docs/mockups/design-new-workspace.md` and the catalogue.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
+Evidence: `.context/start-from-branch/compact-301/`, with the check logs,
+the screenshots in `shots/`, and the measurements of the phone fix in
+`cdp/`.
+
+## Milestone 15: Documentation of the compact branch control
+
+Depends on: 14
+
+- [ ] Update `docs/protocol/start-from-a-branch.md` and
+      `docs/protocol/create-a-workspace-dialog.md` with decision 301.
+- [ ] Read each public guide in full, and update each sentence that
+      describes the target choice. Read the legal pages for the same fact.
+- [ ] Check each relative link of each changed Markdown file.
+
+## Milestone 16: The compact branch control in the app
+
+Tags: ui
+
+Depends on: 14
+
+- [ ] Build decision 301 in New workspace, on the page and in the dialog,
+      as the mockups of Milestone 14 show, and remove the target row.
+- [ ] Keep the draft, the clear on a change of repository, the create
+      request, and the refusals working.
+- [ ] Test the closed control, the two-part dropdown, the kept target
+      choice, and the phone sheet. Compare each screen with its mockup.
+- [ ] On a 360 px phone, check that a long name with `→ main` ends in an
+      ellipsis, and that `→ main` and the chevron stay in view. The
+      `min-width: 0` of `.start` in `NewWorkspaceScreen.module.css` keeps
+      the start inside the screen.
+- [ ] Remove `TargetChoice.module.css`, the `target` rule of
+      `NewWorkspaceDialog.module.css`, and `targetCopy.option` from the
+      mockups, once the app no longer uses them.
+- [ ] Update `src/app/start-branch.md`.
+
 ## Milestone 9: Verification, commit, review, and pull request
 
 Depends on: every other milestone
 
 - [ ] Smoke-test a start that stacks on a branch, and a start that branches
       off and targets the default branch, on the development page.
-- [ ] Set the comparison rows as Milestone 2 says.
+- [x] Set the comparison rows as Milestone 2 says. Pull request #380 on
+      `main` removed the comparison page and its rows, so no row remains.
 - [ ] Renumber decisions 288 to 295 when another change took those numbers.
 - [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
 - [ ] Commit with Conventional Commits and push the branch.

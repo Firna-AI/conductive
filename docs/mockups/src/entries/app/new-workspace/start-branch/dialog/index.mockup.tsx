@@ -8,9 +8,9 @@ import {
 export const branchDialog = defineScreen({
   title: 'Dialog',
   description:
-    'The New workspace dialog, with the branch control beside the repository picker at the top left. It shows main until Cal picks another branch, as on the page. The phone view is the New workspace page in the same state, because a phone always opens the page. The variants show the open picker, the target choice on each of its values, and the refusal of a missing branch.',
+    'The New workspace dialog, with the branch control in the header, directly right of the repository picker, in the look and at the size of that picker. It shows main until Cal picks another branch, as on the page. No line follows the header, because the target of a picked branch lives in the dropdown of the control. The phone view is the New workspace page in the same state, because a phone always opens the page. The variants show the open dropdown on main, the picked branch, the dropdown with its Target part, and the picked branch that targets main. The refusal of a missing branch in the dialog moved to app/new-workspace/start-branch/missing/dialog.',
   rationale:
-    'The dialog holds the parts of the page, so it holds the branch control and the target choice too, and the page and the dialog share them with the rest of the draft. The control takes the plain tone of the repository picker of the dialog.',
+    'Cal chose decision 301 on 20 November 2026: variant B, Pair, with the branch control in the header directly right of the repository picker, not in the footer of the message box, where the five variants drew it. Cal pointed at the place in a picture of the header of this dialog. The dialog holds the parts of the page, and the page and the dialog share the branch and the target with the rest of the draft. The control takes the plain tone of the repository picker of the dialog.',
   relatedDocs: [],
   propSchema: newWorkspaceDialogSchema,
   props: { ...emptyDialog, draft: 'message' },
@@ -20,35 +20,39 @@ export const branchDialog = defineScreen({
   variants: [
     {
       slug: 'open',
-      title: 'Open picker',
+      title: 'Open dropdown',
       description:
-        'The branch picker hangs below the control, over the message: the search field, main first, then the other branches by their newest commit. The phone view is the sheet of the page.',
+        'The dropdown hangs below the control, over the message: Start from, the search field, main first, then the other branches by their newest commit. main offers no target choice, so no Target part shows. The phone view is the sheet of the page.',
       rationale:
-        'The picker of the dialog is the picker of the page, so the list states of the page apply to it too.',
+        'The dropdown of the dialog is the dropdown of the page, so the list states of the page apply to it too.',
       props: { branchMenu: 'open' },
     },
     {
-      slug: 'target',
-      title: 'Target choice',
+      slug: 'picked',
+      title: 'Picked branch',
       description:
-        'Cal picked calummoore/checkout-autocomplete. The target choice shows on a line of its own under the pickers, with Target calummoore/checkout-autocomplete selected, and the line about the pull request beside it.',
+        'Cal picked calummoore/checkout-autocomplete, and the dropdown closed. The control names the branch alone, because the work targets it. The repository picker, the control, and the org and the section keep one line.',
       rationale:
-        'A line of its own keeps the header for the pickers and the place of the workspace, so a long branch name still fits there. The line about the pull request goes under the choice when the two do not fit side by side.',
+        'The first target needs no word on the control, because the work then stacks on the branch that the control names.',
       props: { branch: 'picked' },
     },
     {
-      slug: 'target-default',
-      title: 'Target main',
+      slug: 'target',
+      title: 'Target',
       description:
-        'Cal chose Target main in the dialog. The line about the pull request says that it also holds the commits of the branch calummoore/checkout-autocomplete.',
-      props: { branch: 'picked', target: 'default' },
+        'Cal opened the control again. Start from checks calummoore/checkout-autocomplete. Under the list, the Target part names calummoore/checkout-autocomplete, which is checked, and main, with the line that the pull request then holds only the new work. A press on main closes the dropdown on target main.',
+      rationale:
+        'This replaces the line of the target choice under the header, which Cal found too verbose on 16 November 2026. The two targets stay one press away from the control, and the closed control still shows a target on main.',
+      props: { branch: 'picked', branchMenu: 'open' },
     },
     {
-      slug: 'missing',
-      title: 'Missing branch',
+      slug: 'target-main',
+      title: 'Target main',
       description:
-        'The create from the dialog was refused, because calummoore/checkout-autocomplete is no longer on GitHub. The notice above the footer keeps the message and offers Start from main, as on the page. The dialog stays open.',
-      props: { branch: 'picked', result: 'missing-branch' },
+        'Cal chose main in the Target part, and the dropdown closed. The control in the header names calummoore/checkout-autocomplete → main, with → main in a muted colour. The dialog draws no open dropdown in this state: app/new-workspace/start-branch/target-choice/default shows its Target part with the check on main.',
+      rationale:
+        'Decision 301: the closed control adds → main while a picked branch targets the default branch, so a member sees that target before Create.',
+      props: { branch: 'picked', target: 'default' },
     },
   ],
 })

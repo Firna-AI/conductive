@@ -105,15 +105,10 @@ export type NewWorkspaceDialogProps = {
    */
   repositoryMenu?: readonly MenuEntry[]
   /**
-   * The branch control beside the repository picker, with its picker drawn
-   * open below it, as on the New workspace page.
+   * The branch control directly right of the repository picker, with its
+   * dropdown drawn open below it, as on the New workspace page.
    */
   branch?: ReactNode
-  /**
-   * The target choice of a picked branch that is not the default branch,
-   * on a line of its own under the pickers.
-   */
-  target?: ReactNode
   /** The org and the section that the new workspace joins. */
   place: string
   /** The section that the new workspace joins, such as General. */
@@ -154,19 +149,19 @@ export type NewWorkspaceDialogProps = {
 
 /**
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
- * for a computer. The repository picker and the branch control sit at the
- * top left, and the org and the section of the new workspace at the top
- * right, as a picker of the section. A picked branch that is not the
- * default branch adds the target choice on a line under them. The message
- * fills
- * the middle, with a chip for each of its files at its place, and a pasted
- * link to a workspace of the org shows as a chip, as in the composer. The
- * model picker sits at the bottom left, and the attach button and Create
- * at the bottom right. The attach button puts each picked file at the
- * caret. The whole card takes a drop of files, and its full border shows
- * the drop state while they hover over it. A phone always opens the page
- * instead. The files show the chips of every composer, and Create waits
- * for their uploads, as Send does.
+ * for a computer. The repository picker and the branch control directly
+ * right of it sit at the top left, and the org and the section of the new
+ * workspace at the top right, as a picker of the section. The target of a
+ * picked branch lives in the dropdown of the branch control, so no line
+ * follows the header (decision 301). The message fills the middle, with a
+ * chip for each of its files at its place, and a pasted link to a
+ * workspace of the org shows as a chip, as in the composer. The model
+ * picker sits at the bottom left, and the attach button and Create at the
+ * bottom right. The attach button puts each picked file at the caret. The
+ * whole card takes a drop of files, and its full border shows the drop
+ * state while they hover over it. A phone always opens the page instead.
+ * The files show the chips of every composer, and Create waits for their
+ * uploads, as Send does.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
   const uploads = props.attachments.some((file) => file.state !== undefined)
@@ -193,9 +188,6 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
             section={props.section}
           />
         </div>
-        {props.target ? (
-          <div className={styles.target}>{props.target}</div>
-        ) : null}
         <div className={styles.body}>
           <MessageField
             caret={props.caret}

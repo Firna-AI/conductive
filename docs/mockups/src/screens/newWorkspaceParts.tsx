@@ -63,14 +63,16 @@ export const newWorkspaceFormProperties = {
   /**
    * The target of a picked branch (decision 291): the picked branch, which
    * New workspace selects first (decision 295), or the default branch. The
-   * choice shows only for a picked branch that is not the default branch.
+   * Target part of the dropdown offers it only for a picked branch that is
+   * not the default branch, and the closed control adds `→ main` while the
+   * target is the default branch (decision 301).
    */
   target: { enum: ['picked', 'default'] },
   /**
-   * The branch picker, closed or drawn open: the branches, a search that
-   * finds two, a search that finds none, the list while it loads, a read
-   * of GitHub that failed, or a GitHub account that cannot read the
-   * repository. A phone opens it as a sheet.
+   * The dropdown of the branch control, closed or drawn open: the
+   * branches, a search that finds two, a search that finds none, the list
+   * while it loads, a read of GitHub that failed, or a GitHub account that
+   * cannot read the repository. A phone opens it as a sheet.
    */
   branchMenu: {
     enum: [

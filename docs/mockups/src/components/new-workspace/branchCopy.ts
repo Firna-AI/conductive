@@ -1,16 +1,29 @@
 /**
- * The words of the branch control of New workspace: its picker, the target
- * choice of a picked branch, and the refusals of the branch check, from
- * decisions 291, 293, and 295. This module imports no fixture, so the app
- * can take the words from here too.
+ * The words of the branch control of New workspace: the control, its
+ * dropdown with the parts Start from and Target, and the refusals of the
+ * branch check, from decisions 291, 293, 295, and 301. This module imports
+ * no fixture, so the app can take the words from here too.
  */
 
-/** The words of the branch control and of its picker. */
+/** The words of the branch control and of the Start from part. */
 export const branchCopy = {
-  /** The name of the picker, and the title of its sheet on a phone. */
+  /** The name of the dropdown, and the title of its sheet on a phone. */
   picker: 'Branch',
-  /** The spoken name of the control, with the branch that it shows. */
-  control: (branch: string) => `Branch: ${branch}`,
+  /**
+   * The spoken name of the control: the branch that it shows, and the
+   * target while the control names it (decision 301).
+   */
+  control: (branch: string, target?: string) =>
+    target === undefined
+      ? `Branch: ${branch}`
+      : `Branch: ${branch}, target ${target}`,
+  /**
+   * The muted part of the control after the name, while a picked branch
+   * targets the default branch, such as `→ main`.
+   */
+  toTarget: (branch: string) => `→ ${branch}`,
+  /** The label of the first part of the dropdown: the search and the list. */
+  startFrom: 'Start from',
   /** The label and the placeholder of the search field. */
   search: 'Search branches',
   /** The muted detail of the default branch, the first row of the list. */
@@ -31,13 +44,18 @@ export const branchCopy = {
 } as const
 
 /**
- * The words of the choice of two targets, which shows when the picked
- * branch is not the default branch. Each option names its branch, and the
- * line under the choice says what the pull request then holds.
+ * The words of the Target part of the dropdown, which shows when the picked
+ * branch is not the default branch. Its two rows name the picked branch and
+ * the default branch, and the line under them says what the pull request
+ * then holds.
  */
 export const targetCopy = {
-  /** The spoken name of the choice. */
+  /** The label of the Target part, and its spoken name. */
   label: 'Target',
+  /**
+   * The name of one target with the word Target, such as "Target main".
+   * The target row of the app uses it until the app draws decision 301.
+   */
   option: (branch: string) => `Target ${branch}`,
   /** The line of the picked branch, which stacks the work on it. */
   picked: 'The pull request holds only the new work.',
