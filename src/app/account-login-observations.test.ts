@@ -72,7 +72,7 @@ test('stream records and session action replies refresh changed login facts with
   kept.clear()
 })
 
-test('an account read and a login-write read from before an observation cannot restore the older default', async () => {
+test('an observation during an account read and a queued login write repairs the default in request order', async () => {
   const { app, server, held, observation, reads } = await startedLoginOwner()
   held.holdAnswer('GET', ACCOUNT_PATHS.account)
   const oldRead = app.account.refreshLogins()
@@ -83,12 +83,13 @@ test('an account read and a login-write read from before an observation cannot r
   await flushMicrotasks()
   serveLoginStatus(server, 'failed', 'org')
   app.account.observeLogin(observation)
+  held.release('GET', ACCOUNT_PATHS.account)
+  await flushMicrotasks()
+  held.release('GET', ACCOUNT_PATHS.account)
   await flushMicrotasks()
   const account = app.account.account.get()
   expect(account && newSessionLogin(account, acme.id, 'codex')).toBe('org')
   expect(reads()).toBe(4)
-  held.release('GET', ACCOUNT_PATHS.account)
-  held.release('GET', ACCOUNT_PATHS.account)
   await Promise.all([oldRead, oldWriteRead])
   const after = app.account.account.get()
   expect(after && newSessionLogin(after, acme.id, 'codex')).toBe('org')
@@ -112,22 +113,24 @@ test('a login save during an observation read keeps its newer login and default'
   } as const
   server.json('PUT', agentLoginPath('codex'), saved)
   serveLoginStatus(server, 'usable', 'own', saved)
-  await app.account.saveLogin({
+  const save = app.account.saveLogin({
     agent: 'codex',
     kind: 'api-key',
     secret: 'test-key',
   })
   held.release('GET', ACCOUNT_PATHS.account)
+  await save
   await flushMicrotasks()
   expect(app.account.login('codex')).toEqual(saved)
   const account = app.account.account.get()
   expect(account && newSessionLogin(account, acme.id, 'codex')).toBe('own')
 })
 
-test('an observation during a share write cannot let its older account reply restore the share setting', async () => {
+test('an observation queued during a share write keeps the share setting and repairs the failed status', async () => {
   const { app, server, held, observation } = await startedLoginOwner()
   held.hold('PATCH', agentLoginPath('codex'))
   const write = app.account.setNoReuse('codex', false)
+  await flushMicrotasks()
   serveLoginStatus(server, 'failed', 'org')
   held.holdAnswer('GET', ACCOUNT_PATHS.account)
   app.account.observeLogin(observation)
@@ -136,8 +139,9 @@ test('an observation during a share write cannot let its older account reply res
   server.json('PATCH', agentLoginPath('codex'), shared)
   serveLoginStatus(server, 'failed', 'org', shared)
   held.release('PATCH', agentLoginPath('codex'))
-  await write
+  await flushMicrotasks()
   held.release('GET', ACCOUNT_PATHS.account)
+  await write
   await flushMicrotasks()
   expect(app.account.login('codex')).toEqual({
     ...shared,

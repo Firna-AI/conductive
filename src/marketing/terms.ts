@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 18 November 2026.`,
+  accepted it. Effective date: 20 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -235,6 +235,8 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Changes to these terms',
       blocks: [
+        paragraph`When you accept these terms, you agree that the operator
+          can change them. Each change gives these terms a new version.`,
         paragraph`A changed version of these terms applies from your next sign-in.
           A sign-in session lasts at most 7 days, so a change applies within 7 days
           while you keep using ${productName}. You accept the changed version

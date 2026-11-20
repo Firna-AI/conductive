@@ -160,8 +160,9 @@ return <TerminalTool screenRef={terminal} {...props} />
 ## Key hints
 
 - `useShortcutKey(command)` gives the first key of the command that works
-  where the page runs, or none. `useShortcutHint(command)` gives its text
-  and its name for `aria-keyshortcuts`. The phone layout gets no hint.
+  where the page runs, or none. `useShortcutHint(command)` gives its
+  tokens for the key chips, its text for a tooltip, and its name for
+  `aria-keyshortcuts`. The phone layout gets no hint.
   A normal Linux browser tab has no working default org key, so its org
   tiles show no key. An installed app on Linux keeps Alt+digit.
 - A row of the palette ends with the key of its command, in the key chips

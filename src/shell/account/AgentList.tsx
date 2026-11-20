@@ -113,6 +113,10 @@ function AgentRow(props: {
  * account. `closable` gives each form its Cancel. `disabled` turns Connect
  * off, as in a later step of Get started.
  *
+ * A save or a sign-in that connects closes only the form of its own agent,
+ * and `connected` runs. A ChatGPT sign-in can connect after its form
+ * closed, while the form of the other agent is open. That form stays open.
+ *
  * Under an agent, a line names each org whose org login the new sessions
  * of the person take, such as "Your new sessions in Acme use Acme's login.",
  * as the server names the default logins (org login decisions 4 and 7 B).
@@ -181,7 +185,9 @@ export function AgentList(props: {
                 agent={agent}
                 close={props.closable ? close : undefined}
                 connected={() => {
-                  close()
+                  // A sign-in that connects late calls the callback of an
+                  // older draw, so the update reads which form is open now.
+                  setOpen((shown) => (shown === agent ? null : shown))
                   props.connected?.()
                 }}
                 kind={login?.kind}

@@ -59,6 +59,9 @@ These docs belong to this doc:
 - Each sign-in with the agreement records the revision. It records the
   time only when the stored revision differs, so a repeat keeps the first
   time.
+- Each change to the words of the Terms gives a new revision, with no
+  manual step. The user chose this on 20 November 2026. Reason: a manual
+  revision was missed in five changes of the Terms.
 - A changed revision of the Terms applies at the user's next sign-in,
   within 7 days for a user who keeps using the app (decision 126).
   Browser and Mac app sign-in sessions last at most 7 days.
