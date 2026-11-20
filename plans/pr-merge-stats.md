@@ -1,6 +1,6 @@
 # Pull request merges on the Stats tab
 
-Status: Active. On branch `calummoore/pr-merge-stats-on-stats-page-iv4p`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #593](https://github.com/Firna-AI/conductive/pull/593) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The Stats tab of the Account page shows counts of the person signed in:
 workspaces, automations, orgs, and automation runs. This change adds the
