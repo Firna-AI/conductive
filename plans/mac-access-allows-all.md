@@ -295,6 +295,14 @@ My calls, 20 November 2026, unless a decision above says otherwise:
     has a name apart from the approval answer `allow-workspace-until-stop`.
   - The Terms version changes to `2026-11-20-mac-access-allows-all`,
     because the Terms page changed, as each earlier Terms change did.
+- From the control milestone, 20 November 2026, my calls:
+  - The control opens at its top. It scrolls the line into view only when
+    the line appears after a switch-on, or shows a new result. Reason: the
+    title and the secrets stay in view at the open. The mockups draw the
+    control scrolled to its end only so that a static view shows the line.
+  - One settings controller for each window and person feeds the bar, the
+    line, and the notice, so that a start shows on the bar at once.
+  - The control reads this Mac at each open, with no polling.
 - Risk: each turn that the member sends in a workspace with a grant can
   run any command on the member's Mac with no question. Text that steers
   the agent, another process in the sandbox, and a message of the session
@@ -382,17 +390,32 @@ Tags: ui
 
 Depends on: 3
 
-- [ ] Add the personal line and the start after the switch to
+- [x] Add the personal line and the start after the switch to
       `src/shell/capabilities/`. Test the paired page, the browser, a
       failed start, and the Mac app with no device connection.
-- [ ] Start the grant after a create from New workspace with Mac access
+- [x] Start the grant after a create from New workspace with Mac access
       on, in the paired page.
-- [ ] Stop the grant of this Mac when the switch turns off.
-- [ ] Show the disconnected state, the 15 minutes hint, the result of an
+- [x] Stop the grant of this Mac when the switch turns off.
+- [x] Show the disconnected state, the 15 minutes hint, the result of an
       uncheck, and scroll the line into view, as the mockups draw.
-- [ ] Change the This Mac sentence in `src/chat/device/ThisMacSection.tsx`.
-- [ ] Remove the "does not have ... yet" sentences of the control from
+- [x] Change the This Mac sentence in `src/chat/device/ThisMacSection.tsx`.
+- [x] Remove the "does not have ... yet" sentences of the control from
       `src/chat/device/README.md`.
+
+## Milestone 4a: Mockup fixes
+
+Tags: mockup
+
+Depends on: 4
+
+The control milestone found three states of the line that the protocol
+requires and the mockups do not draw.
+
+- [ ] Draw the time-left hint in the `fifteen-minutes` view, the
+      disabled line with "This Mac is not available." in the `not-reached`
+      view, and add a view of the result of an uncheck. Update the
+      catalogue.
+- [ ] Run `npm run mockups:check`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

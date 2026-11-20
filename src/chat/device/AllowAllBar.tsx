@@ -19,6 +19,7 @@ import {
   repeatLabel,
   resultMessage,
   resultTitle,
+  stoppedMessage,
   type ChangeResult,
 } from './settings-results'
 
@@ -48,7 +49,9 @@ const looks = {
  * a Stop then belongs to an earlier grant, and a Keep shows as the grant
  * until Stop. A Stop that the Mac did not save or did not make shows until
  * the next change, also when a later read shows the saved 15 minutes
- * again. A Keep that failed shows only while its 15 minutes run.
+ * again. A Keep that failed shows only while its 15 minutes run. A start
+ * from the Capabilities control shows its result on the line of that
+ * control and in the notice of a new workspace, never on the bar.
  */
 function shownResult(
   state: MacSettingsState,
@@ -57,6 +60,7 @@ function shownResult(
 ): ChangeResult | null {
   if (!Object.hasOwn(state.results, key)) return null
   const result = state.results[key]
+  if (result.change.action === 'start-workspace-until-stop') return null
   if (running && result.outcome.status === 'done') return null
   if (!running && result.change.action === 'keep-workspace') return null
   return result
@@ -116,8 +120,7 @@ export function AllowAllBar(props: {
           role={result.outcome.status === 'done' ? 'status' : 'alert'}
         >
           <span className={styles.title}>{resultTitle(result)}</span>{' '}
-          {resultMessage(result) ??
-            'Each command from this workspace asks first.'}
+          {resultMessage(result) ?? stoppedMessage}
         </span>
       ) : (
         <span className={styles.text}>

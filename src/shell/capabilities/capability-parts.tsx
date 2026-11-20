@@ -2,10 +2,12 @@ import { useId, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { Switch } from '@firna/ui/switch'
 import { useSharedUiTheme } from '@firna/ui/theme'
+import { BrowserNote } from '../../../docs/mockups/src/components/capabilities/BrowserNote'
 import {
   macAccessWords,
   noSecrets,
   secretsPartWords,
+  thisMacWords,
 } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
 import type { CapabilityPart } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
 import styles from '../../../docs/mockups/src/components/capabilities/Capabilities.module.css'
@@ -17,6 +19,7 @@ import type { OrgSummary } from '../../shared/orgs'
 import type { OrgSecret } from '../../shared/secrets'
 import { AppLink } from '../ui/AppLink'
 import { LoadFailure } from '../ui/LoadFailure'
+import { ThisMacCheck, type ThisMacLineView } from './ThisMacLine'
 
 /** What the Capabilities control shows for one workspace or one draft. */
 export interface CapabilitiesView {
@@ -32,6 +35,13 @@ export interface CapabilitiesView {
   /** Mac access, or null while its read runs, which hides its switch. */
   macAccess: boolean | null
   setMacAccess: (on: boolean) => void
+  /**
+   * The line of this Mac, which the Mac app shows under the switch while
+   * Mac access is on, or null in a browser, which shows a note in its
+   * place. The control chooses by where it runs, not by a pairing, so the
+   * Mac app with no device connection still shows the line.
+   */
+  line: ThisMacLineView | null
   /** The controls take no change, such as while a create or a change runs. */
   disabled: boolean
   /**
@@ -163,6 +173,37 @@ function MacAccessSwitch(props: {
 }
 
 /**
+ * The Mac access part: the shared switch, and while it is on, the line of
+ * this Mac in the Mac app or the note of a browser. While the switch is
+ * off, the hint of the Mac app adds that turning it on also allows all
+ * commands on this Mac (Mac access decision 1 C).
+ */
+function macAccessPart(view: CapabilitiesView): CapabilityPart {
+  const { line } = view
+  let content: ReactNode = null
+  if (view.macAccess === true) {
+    content = line ? <ThisMacCheck line={line} /> : <BrowserNote />
+  }
+  return {
+    key: 'mac-access',
+    title: macAccessWords.title,
+    hint:
+      line !== null && view.macAccess === false
+        ? thisMacWords.offHint
+        : macAccessWords.hint,
+    control:
+      view.macAccess === null ? undefined : (
+        <MacAccessSwitch
+          change={view.setMacAccess}
+          disabled={view.disabled}
+          on={view.macAccess}
+        />
+      ),
+    content,
+  }
+}
+
+/**
  * The parts of the Capabilities control, in their order: the secrets that
  * the workspace pre-approves, with its grants, and Mac access. Manage
  * secrets opens the Secrets tab of the org settings. Later features, such
@@ -185,18 +226,6 @@ export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
       ) : undefined,
       content: <SecretsContent view={view} />,
     },
-    {
-      key: 'mac-access',
-      title: macAccessWords.title,
-      hint: macAccessWords.hint,
-      control:
-        view.macAccess === null ? undefined : (
-          <MacAccessSwitch
-            change={view.setMacAccess}
-            disabled={view.disabled}
-            on={view.macAccess}
-          />
-        ),
-    },
+    macAccessPart(view),
   ]
 }

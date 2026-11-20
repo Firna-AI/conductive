@@ -101,6 +101,7 @@ one.
   Mac app adds that turning it on also allows all commands on this Mac.
 - A browser shows a note with the Laptop icon of lucide in place of the
   line. It says to use Allow all commands on this Mac in the Mac app.
+  `BrowserNote.tsx` draws it, for the mockups and the app.
 - `StartFailedNotice` draws the notice over the composer of a new workspace
   whose grant did not start after the create: the cause, and Try again.
 - `capabilitiesCopy.ts` holds the words of the control.

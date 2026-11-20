@@ -13,6 +13,8 @@ import {
 } from './device-api'
 import {
   controlOf,
+  countedOutcome,
+  notAvailableCause,
   staleCause,
   subjectOf,
   type ChangeResult,
@@ -47,6 +49,16 @@ const unavailable = (error: unknown) =>
 function readyView(reply: DeviceSettingsResponse): MacSettingsView {
   const pairing = { deviceId: reply.deviceId, connectionId: reply.connectionId }
   return { kind: 'ready', pairing, settings: reply.settings }
+}
+
+/** The record without the entry of one control. */
+function without<T>(
+  record: Readonly<Record<string, T>>,
+  key: string,
+): Readonly<Record<string, T>> {
+  return Object.fromEntries(
+    Object.entries(record).filter(([control]) => control !== key),
+  )
 }
 
 /**
@@ -155,22 +167,68 @@ export class MacSettingsController {
     if (view.kind !== 'ready' || Object.hasOwn(this.waiting, key)) {
       return Promise.resolve()
     }
-    const last = Object.hasOwn(this.results, key)
-      ? this.results[key]
-      : undefined
-    const subject = subjectOf(change, view.settings, last)
-    this.waiting = { ...this.waiting, [key]: change.action }
-    this.results = Object.fromEntries(
-      Object.entries(this.results).filter(([control]) => control !== key),
-    )
-    this.publish()
+    const subject = subjectOf(change, view.settings, this.take(key, change))
     return this.enqueue(() => this.send(key, view.pairing, change, subject))
   }
 
+  /**
+   * Makes a change through the pairing of now: it reads the pairing and the
+   * settings of this Mac first, then sends the change, so the change reaches
+   * the Mac app of this window as it is connected now. The start of a grant
+   * uses it, because the page asks for the start on its own, such as after
+   * the switch of Mac access or a create. When the read finds no Mac, the
+   * change fails as not reached, and nothing goes to a Mac.
+   */
+  readonly changeOnCurrent = (change: SettingsChange): Promise<void> => {
+    const key = controlOf(change)
+    if (Object.hasOwn(this.waiting, key)) return Promise.resolve()
+    const last = this.take(key, change)
+    return this.enqueue(async () => {
+      await this.read(true)
+      if (!this.alive) return
+      const view = this.view
+      const settings = view.kind === 'ready' ? view.settings : null
+      const subject = subjectOf(change, settings, last)
+      if (view.kind === 'ready') {
+        return this.send(key, view.pairing, change, subject)
+      }
+      this.finish(key, {
+        change,
+        subject,
+        outcome: { status: 'failed', message: notAvailableCause },
+        unreached: true,
+      })
+    })
+  }
+
+  /**
+   * Takes away the result of the last change of the control of `change`,
+   * such as the result of a start after Mac access of its workspace went
+   * off. A change that waits keeps its control busy.
+   */
+  readonly forget = (change: SettingsChange): void => {
+    const key = controlOf(change)
+    if (!Object.hasOwn(this.results, key)) return
+    this.results = without(this.results, key)
+    this.publish()
+  }
+
+  /**
+   * Marks the control of a change busy, and takes away the result of its
+   * last change, which it returns.
+   */
+  private take(key: string, change: SettingsChange): ChangeResult | undefined {
+    const last = Object.hasOwn(this.results, key)
+      ? this.results[key]
+      : undefined
+    this.waiting = { ...this.waiting, [key]: change.action }
+    this.results = without(this.results, key)
+    this.publish()
+    return last
+  }
+
   private finish(key: string, result: ChangeResult): void {
-    this.waiting = Object.fromEntries(
-      Object.entries(this.waiting).filter(([control]) => control !== key),
-    )
+    this.waiting = without(this.waiting, key)
     this.results = { ...this.results, [key]: result }
     this.publish()
   }
@@ -189,6 +247,7 @@ export class MacSettingsController {
         change,
         subject,
         outcome: { status: 'failed', message: stale },
+        unreached: shown === null,
       })
     }
     let reply: DeviceSettingsResponse
@@ -200,13 +259,15 @@ export class MacSettingsController {
         change,
         subject,
         outcome: { status: 'failed', message: messageOf(error) },
+        unreached: unavailable(error),
       })
       void this.refresh()
       return
     }
     if (!this.alive) return
     this.view = readyView(reply)
-    this.finish(key, { change, subject, outcome: reply.outcome })
+    const outcome = countedOutcome(change, reply.settings, reply.outcome)
+    this.finish(key, { change, subject, outcome })
   }
 }
 

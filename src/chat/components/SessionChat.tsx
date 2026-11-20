@@ -54,6 +54,11 @@ export interface ChatHost {
   keepsComposer: boolean
   /** The tools of the composer, as `ComposerTool` says. */
   tools?: readonly ComposerTool[]
+  /**
+   * A notice of the app over the composer, such as a grant of this Mac that
+   * did not start after a create. A read-only workspace shows none.
+   */
+  notice?: ReactNode
 }
 
 export interface SessionChatProps {
@@ -205,6 +210,7 @@ export function SessionChat(props: SessionChatProps) {
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
+      {readOnly ? null : props.host?.notice}
       <WaitingRequests
         items={[
           ...pendingCommandItems({

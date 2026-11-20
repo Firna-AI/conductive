@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { Blocks } from 'lucide-react'
 import {
@@ -22,10 +22,12 @@ import { nameLabel } from '../../shared/name-label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { OrgSecret } from '../../shared/secrets'
 import { useOrgModel } from '../context'
+import { useThisMac } from '../mac/this-mac'
 import { inSentence, useWhen } from '../settings/when'
 import { useAction } from '../ui/useAction'
 import { capabilityParts } from './capability-parts'
 import { GrantList, type ShownApproval, type ShownValue } from './GrantList'
+import { useWorkspaceLine } from './workspace-line'
 
 /** The title of each session of the workspace, open or closed, or Untitled. */
 function useSessionTitles(chat: ChatController): (id: string) => string {
@@ -78,6 +80,12 @@ function useChange() {
  * them at once. Each open reads them again behind the shown values, because
  * every member changes them. A change applies to
  * each session of the workspace from that moment.
+ *
+ * In the Mac app, Mac access also has the line of this Mac, and each open
+ * reads the settings of this Mac again. A switch-on saves Mac access first,
+ * then starts the grant until Stop of this Mac. A switch-off saves, then
+ * stops that grant. A start that fails keeps Mac access on, and its line
+ * shows the cause.
  */
 function WorkspaceCapabilitiesPanel(props: {
   org: OrgSummary
@@ -86,20 +94,26 @@ function WorkspaceCapabilitiesPanel(props: {
   chat: ChatController
   sheet: boolean
 }) {
-  const { org, viewer } = props
+  const { org, viewer, workspaceId } = props
   const orgModel = useOrgModel(org.id)
   const { secrets } = orgModel
-  const model = keptCapabilities(orgModel, props.workspaceId)
+  const model = keptCapabilities(orgModel, workspaceId)
   const list = useStore(secrets.list.store)
   const grants = useStore(model.grants.store)
   const values = useStore(model.values.store)
   const title = useSessionTitles(props.chat)
   const { when } = useWhen(60_000)
   const change = useChange()
+  const mac = useThisMac()
+  const [reveal, setReveal] = useState(0)
+  const line = useWorkspaceLine(mac, workspaceId, reveal)
   useEffect(() => {
     void secrets.read()
     void model.read()
   }, [secrets, model])
+  useEffect(() => {
+    mac?.open()
+  }, [mac])
   const known = valueOf(list) ?? []
   const nameOf = (id: string) =>
     known.find((secret) => secret.id === id)?.name ?? ''
@@ -137,8 +151,14 @@ function WorkspaceCapabilitiesPanel(props: {
         `The pre-approval of ${nameOf(secretId)} was not saved`,
       ),
     macAccess: shown?.macAccess ?? null,
-    setMacAccess: (on) =>
-      change.run(() => model.setMacAccess(on), 'Mac access was not saved'),
+    setMacAccess: (on) => {
+      if (on) setReveal((count) => count + 1)
+      change.run(async () => {
+        await model.setMacAccess(on)
+        void mac?.switched(workspaceId, on)
+      }, 'Mac access was not saved')
+    },
+    line,
     disabled: change.pending || shown === undefined,
     grants: (
       <GrantList

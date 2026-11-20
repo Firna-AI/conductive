@@ -74,6 +74,14 @@ export const thisMacWords = {
     workspace:
       'Commands from this workspace run without asking, until you stop.',
   },
+  /**
+   * The hint of the line while the 15 minutes of the workspace run, with
+   * their time left, such as "14:32". The line stays unchecked.
+   */
+  fifteenMinutesHint: (left: string) =>
+    `${left} left of the 15 minutes. Check this to keep them until you stop.`,
+  /** The hint of the line, off, while the page cannot read this Mac. */
+  notAvailableHint: 'This Mac is not available.',
   /** The title of the result of a start that failed. */
   notStarted: 'Not started',
   /** Why a start failed when it found this Mac not available. */

@@ -16,6 +16,7 @@ import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
 import { useMacApp, type MacChange } from '../mac/MacApp'
 import { DetailList } from './DetailList'
 import { Section } from './Section'
+import { thisMacDescription } from './thisMacCopy'
 import styles from './ThisMacSection.module.css'
 
 /** The result of Remove of `npm run lint`, in each state that shows one. */
@@ -58,7 +59,7 @@ export function ThisMacSection() {
   )
   return (
     <Section
-      description="Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first."
+      description={thisMacDescription}
       status={<StatusText label="Available" tone="success" />}
       title="This Mac"
     >

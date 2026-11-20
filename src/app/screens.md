@@ -312,6 +312,13 @@ the Help row of the command palette opens.
   the next draft starts again from the defaults. The create leaves out
   each pre-approved secret that the last read no longer lists, and a
   refusal of a missing secret reads the secrets again for Try again.
+- In the Mac app, while Mac access is on, the control also shows the line
+  Allow all commands on this Mac, a choice of the draft that the switch
+  checks. The create does not send it. After the create, the page starts
+  the grant until Stop of the new workspace on this Mac, only while the
+  line was checked. A start that fails shows as a notice in the new
+  workspace, with Try again. A browser shows a note in place of the line,
+  and starts no grant.
 - The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and

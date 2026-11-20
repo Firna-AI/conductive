@@ -22,6 +22,13 @@ says.
   changes the pre-approved secrets and Mac access there, and removes each
   approval of a session, which names its session by the title that the
   chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
+- In the Mac app, Mac access of that control also has the line Allow all
+  commands on this Mac, from `../capabilities/workspace-line.ts`, and a
+  browser shows a note in its place. The shell gives the chat
+  `host.notice`, from `../capabilities/StartFailedNotice.tsx`: the notice
+  over the composer of a new workspace whose grant of this Mac did not
+  start after the create, with Try again. A read-only workspace shows no
+  such notice.
 - An open reads the workspace, shows it, and starts the stream. Only then
   does a stopped or failed workspace resume. A Resume answers when the
   server queued the start, with the state `starting`. The stored chat
@@ -298,8 +305,11 @@ through them while the workspace loads.
 - In the Mac app, `WorkspaceMacBar` tops the main area above the whole
   workspace, also while a file shows in place of the chat. It mounts
   `AllowAllBar`, the bar of the 15 minutes, of the
-  [Mac commands](../../chat/device/README.md). A browser draws nothing
-  there.
+  [Mac commands](../../chat/device/README.md). It reads the settings of
+  this Mac that the window shares, from `../mac/this-mac.ts`, with the line
+  of the Capabilities control. A browser draws nothing there.
 - Each part sends through the services of the org, from `useOrgServices`
   of `../context.ts`. Their client and fetch mark the org on
   `org_suspended`, so a page with an old org list turns read-only at once.
+  The settings of this Mac are the one exception: they belong to the
+  window, not to an org, so they send through the client of the app.

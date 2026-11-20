@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Blocks } from 'lucide-react'
 import {
   capabilitiesIntro,
   capabilitiesLabel,
+  thisMacWords,
 } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
 import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
@@ -10,13 +11,17 @@ import { useStore } from '../../app/store'
 import type { ComposerTool } from '../../chat/components/ComposerTools'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgModel } from '../context'
+import { useMacApp } from '../mac/mac-app'
 import { capabilityParts } from './capability-parts'
 
 /**
  * The open control of New workspace: the secrets of the org that the new
  * workspace pre-approves, and its Mac access, as the draft holds them. The
  * secrets read again each time that the control opens. While the create
- * runs, the choices take no change.
+ * runs, the choices take no change. In the Mac app, Mac access also has
+ * the line of this Mac, a choice of the draft that the switch checks: the
+ * page starts the grant until Stop of the new workspace after the create,
+ * only while the line is checked. A browser shows a note in its place.
  */
 function DraftCapabilitiesPanel(props: {
   org: OrgSummary
@@ -26,8 +31,10 @@ function DraftCapabilitiesPanel(props: {
   const { org, model } = props
   const secrets = useOrgModel(org.id).secrets
   const list = useStore(secrets.list.store)
-  const { capabilities } = useStore(model.draft)
+  const { capabilities, allowThisMac } = useStore(model.draft)
   const sending = useStore(model.create).state === 'sending'
+  const macApp = useMacApp() !== null
+  const [reveal, setReveal] = useState(0)
   useEffect(() => {
     void secrets.read()
   }, [secrets])
@@ -38,7 +45,21 @@ function DraftCapabilitiesPanel(props: {
     preapproved: capabilities.preapprovedSecretIds,
     setPreapproved: (secretId, on) => model.setPreapproved(secretId, on),
     macAccess: capabilities.macAccess,
-    setMacAccess: (on) => model.setMacAccess(on),
+    setMacAccess: (on) => {
+      if (on) setReveal((count) => count + 1)
+      model.setMacAccess(on)
+    },
+    line: macApp
+      ? {
+          checked: allowThisMac,
+          disabled: sending,
+          busy: false,
+          hint: thisMacWords.lineHint.create,
+          result: null,
+          reveal,
+          change: (on) => model.setAllowThisMac(on),
+        }
+      : null,
     disabled: sending,
   })
   return (

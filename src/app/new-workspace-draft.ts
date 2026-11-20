@@ -28,6 +28,14 @@ export interface Draft {
    * new workspace starts from `NEW_WORKSPACE_CAPABILITIES`.
    */
   capabilities: WorkspaceCapabilities
+  /**
+   * The line Allow all commands on this Mac, which only the Mac app shows
+   * while Mac access is on. Turning the switch on checks it. The create
+   * does not take it: after the create, the page of the Mac app starts the
+   * grant until Stop of the new workspace on this Mac, only while it is
+   * checked. A send ends it with the other choices.
+   */
+  allowThisMac: boolean
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
   /** Files without chips, kept for undo until this draft ends. */

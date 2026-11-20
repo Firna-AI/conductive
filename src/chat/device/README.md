@@ -4,18 +4,26 @@ The Mac commands of the chat: the requests that an agent sends to the Mac
 of the person who sent the turn, their answers in the Mac app, and the
 settings that the Mac keeps. The chat shows the requests of each session.
 The Mac app adds `ThisMacSection` to the account and `AllowAllBar` to the
-top of the workspace. See [the chat](../README.md) for the whole chat.
+top of the workspace. The line Allow all commands on this Mac of the
+Capabilities control, in `src/shell/capabilities/`, reads and changes the
+same settings. See [the chat](../README.md) for the whole chat.
 
 ## Use it in the app
 
 `ThisMacSection` goes in the account, and `AllowAllBar` goes at the top of
 the workspace. Mount them only in the Mac app, because a browser has no Mac.
 The This Mac tab of the account mounts `ThisMacSection`, and only the Mac
-app shows that tab. `WorkspaceMacBar` in `src/shell/workspace/` mounts
-`AllowAllBar` at the top of the workspace. In a browser both draw nothing
-and send no request. Both read the Mac's settings through
+app shows that tab. It reads the Mac's settings through
 `useMacSettings(client)`. Give it a stable `ApiClient`, such as
 `AppServices.api`, because a new client makes a new settings controller.
+
+`WorkspaceMacBar` in `src/shell/workspace/` mounts `AllowAllBar` at the top
+of the workspace. It shares one settings controller with the line of the
+Capabilities control and with the notice of a new workspace: `ThisMac` of
+[`this-mac.ts`](../../shell/mac/this-mac.ts), one for each Mac app window
+and person, which `useThisMac` gives. So a start from the line or from a
+create shows on the bar at once. In a browser, `useThisMac` gives `null`,
+so the bar, the line, and the notice draw nothing and send no request.
 `WorkspaceMacBar` calls `refresh` after the `workspace.updated` events of
 the workspace stream, which follow each change of a Mac command, so the bar
 shows the grant that an answer started. One burst of events, such as
@@ -23,8 +31,9 @@ the stored history, gives one read.
 
 ```tsx
 <ThisMacSection client={services.api} viewport="desktop" />
-const { controller, state } = useMacSettings(services.api)
-<AllowAllBar controller={controller} state={state} workspaceId={workspaceId} />
+const mac = useThisMac() // null in a browser, which draws no bar
+const state = useThisMacState(mac)
+<AllowAllBar controller={mac.controller} state={state} workspaceId={workspaceId} />
 ```
 
 ## Rules for this code
@@ -106,25 +115,40 @@ const { controller, state } = useMacSettings(services.api)
 - The line Allow all commands on this Mac of the Capabilities control
   reads the same settings, and only the Mac app shows it. Its check sends
   the settings action `start-workspace-until-stop` with the workspace ID.
-  That action is not the approval action of the same name, which answers
-  one request. Its uncheck sends Stop. A start is done or failed, never
-  done but not saved, because the Mac keeps a grant until Stop only in
-  memory. The line counts the grant as started only when the returned
-  settings list it with no end.
+  That action is not the approval answer `allow-workspace-until-stop`,
+  which answers one request. Its uncheck sends Stop. A start is done or
+  failed, never done but not saved, because the Mac keeps a grant until
+  Stop only in memory.
+- The page starts a grant from the line, after a switch-on of Mac access
+  that saved, and after a create of New workspace whose line was checked.
+  Each start goes through `changeOnCurrent`, which reads the pairing and
+  the settings of this Mac first, so the start reaches the connection of
+  now. When the read finds no Mac, the start fails as not reached, and
+  nothing goes. A switch-off that saved sends Stop when the settings list
+  a grant of the workspace.
+- `countedOutcome` counts a start as done only when the returned settings
+  list its grant with no end. Otherwise the start fails with a cause.
+- A start shares the control of the grant of its workspace with Stop and
+  Keep, so each keeps the result of the last of them. The line shows a
+  start that failed, and the result of a Stop. The bar never shows the
+  result of a start. A start that failed after a create also shows as a
+  notice over the composer of the new workspace, with Try again. When Mac
+  access of the workspace goes off, in this page or in a read of its
+  Capabilities, the result goes.
 - The Worker refuses a start unless the user is a member of the org of the
   workspace and Mac access of the workspace is on. It leaves out each
   grant of an older Mac access period from the settings that it relays, so
   the bar, This Mac, and the line never show a grant that covers no
   request.
-- The code does not have the start, the line, or the left-out grants yet.
-  [Mac access](../../../docs/protocol/capabilities.md#mac-access) states
-  their requirements.
 
 ## Tests
 
 Run `npm run test -- src/chat/device src/shared/transcript/command-placement.test.ts`. The tests drive the settings
 controller on a fake Mac, and mount the parts with `mount` from
-`src/test-support/`.
+`src/test-support/`. The tests of the line and of the start after a create
+mount the whole app in the Mac app: run `npm run test --
+src/shell/capabilities/MacAccessLine.test.tsx
+src/shell/new-workspace/NewWorkspaceMacGrant.test.tsx`.
 
 The layout of the requests needs a real browser. The Electron check
 [`approval-region.spec.ts`](../../../desktop/tests/approval-region.spec.ts)
@@ -147,11 +171,13 @@ menu of Allow over the region. Build the Mac app first, then run
   `command-text.ts` adds the icons and colours of each state.
 - `LiteralText.tsx`: each command and folder, exactly.
 - `mac-settings.ts`: the reads and the changes of the Mac's settings for
-  `ThisMacSection.tsx`, `SavedChoices.tsx`, and `AllowAllBar.tsx`.
+  `ThisMacSection.tsx`, `SavedChoices.tsx`, `AllowAllBar.tsx`, and the
+  shared `ThisMac` of the window.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all
   when it is long. `CommandOutput.tsx` does the same for the output of a
   card, and `use-clipped.ts` measures whether a text is cut.
-- `settings-results.ts`: the result of each control, and its words.
+- `settings-results.ts`: the result of each control, and its words, with
+  `countedOutcome` for a start.
 
 ### Related docs
 

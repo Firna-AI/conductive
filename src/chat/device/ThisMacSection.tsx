@@ -8,14 +8,12 @@ import {
   Section,
   SectionText,
 } from '../../../docs/mockups/src/components/settings/Section'
+import { thisMacDescription } from '../../../docs/mockups/src/components/settings/thisMacCopy'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import local from './device.module.css'
 import { useMacSettings } from './mac-settings'
 import { ChangeResults, SavedChoices } from './SavedChoices'
-
-const DESCRIPTION =
-  'Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first.'
 
 /**
  * The Mac that the Mac app registers as a device (decision 62): its name,
@@ -81,7 +79,7 @@ export function ThisMacSection(props: {
           ? retry
           : undefined
       }
-      description={DESCRIPTION}
+      description={thisMacDescription}
       status={status}
       title="This Mac"
     >

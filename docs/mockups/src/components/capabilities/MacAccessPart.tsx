@@ -1,10 +1,10 @@
 import { useId, type ReactNode } from 'react'
-import { Laptop } from 'lucide-react'
 import { Switch } from '@firna/ui/switch'
 import { failedMessage } from '../../fixtures/mac'
 import { noop } from '../../noop'
 import { useControlSizes } from '../common/touch'
 import { ChangeOutcome } from '../mac/ChangeOutcome'
+import { BrowserNote } from './BrowserNote'
 import { macAccessWords, thisMacWords } from './capabilitiesCopy'
 import type { CapabilityPart } from './CapabilitiesPanel'
 import check from '../common/CheckOption.module.css'
@@ -89,20 +89,6 @@ function ThisMacCheck(props: { line: ThisMacLine; place: Place }) {
         />
       ) : null}
     </div>
-  )
-}
-
-/**
- * The note of a browser in place of the line (Mac access decision 5 A).
- * Only the page of the Mac app can start a grant, so the note names its
- * line. Without it, the Mac asks at the first command.
- */
-function BrowserNote() {
-  return (
-    <p className={styles.note}>
-      <Laptop aria-hidden className={styles.noteIcon} size={14} />
-      <span>{thisMacWords.browserNote}</span>
-    </p>
   )
 }
 
