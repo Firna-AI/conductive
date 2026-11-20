@@ -113,6 +113,13 @@ The separate Rust gate checks the Rust runner and static program build.
 The [service guide](service/README.md) describes how each build of the org
 image installs the runner as a systemd service, and how that service starts.
 
+## Services of a workspace
+
+[Services](../docs/protocol/services.md) are named programs that run
+outside every turn, in system units of their own. The runner does not
+manage them yet. The [runner library](../crates/cnd-runner/README.md#what-this-crate-does)
+gives the rules for its service manager.
+
 ## Configuration
 
 [Runner configuration](configuration.md) gives the service variables,

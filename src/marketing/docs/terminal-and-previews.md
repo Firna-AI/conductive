@@ -1,6 +1,6 @@
 ---
 title: Terminal and previews
-description: Run commands on a workspace's cloud computer and open a running web app by its port.
+description: Run commands and named services on a workspace's cloud computer, then open a running web app by its port.
 group: Work
 order: 40
 ---
@@ -176,23 +176,110 @@ All workspace terminals still use the workspace owner's account.
 
 - [Use pull request actions](/docs/pull-requests)
 
+## Run a server as a service
+
+A service is a named program that runs outside the agent's turn.
+Use a service for a server that you need after the agent replies.
+Ask the agent to start it as a service, or run this command in your repository's folder:
+
+```bash
+conductive services start --name web -- npm run dev
+```
+
+Replace `npm run dev` with your server command.
+The service uses the folder where you run the command.
+Its environment uses the org values from this computer start, plus values supplied for the service.
+It does not inherit the agent's credentials, turn context, or secrets added to an approved command.
+[Understand service access](/docs/security#understand-services) explains the remaining credential risks.
+
+Starting returns promptly by default.
+You can request a wait of up to 30 seconds for a port that belongs to the service.
+A timeout leaves the service running.
+Starting an exact name that already runs returns that service unchanged.
+For a stopped, ended, or failed service, Start uses the new command and settings that you supply.
+The agent can also list, stop, restart, and read logs of services on this cloud computer.
+
+Services keep running after an agent reply.
+They survive crashes and updates of the agent software.
+**Restart** in the workspace header keeps them running too.
+Stop a service when you finish with it.
+A computer stop ends every service and discards its saved command, settings, and log.
+After **Resume**, start needed services again.
+Services never keep the computer running.
+Using their previews or reading their logs adds no awake time.
+
+Builds, tests, and waits for checks that must finish stay in the agent's work.
+Agents stop temporary check servers before replying.
+
+## Manage services
+
+Open **Preview** to find **Services** above the other servers.
+The list includes services with no port and services that stopped, ended, or failed.
+Each row shows its name, program, folder, state, start time, and ports.
+It also links to the session where it started when Conductive can match that session.
+Otherwise, it shows **Local command**.
+This source gives context and does not prove which person started the service.
+
+If **Services** is missing, the computer can need newer software.
+[Apply a software update](/docs/cloud-computer#apply-setup-changes) to get service support.
+
+Select a port in a service's row to open its preview.
+On a phone, use **+**, named **Preview another port**, to return to the list.
+Each service stays in the list while its previews are open.
+
+Open a service's menu for these actions:
+
+- **Stop** asks first, then ends the service and its child programs for everyone in the workspace.
+- **Restart** runs its saved command and settings again, with no confirmation.
+  It also works for a stopped, ended, or failed service.
+
+The menu follows the access rule of [Restart in the workspace header](/docs/workspaces#restart-the-software).
+Every member who can read the workspace can read its service list and logs.
+A service does not restart itself after an exit or failure.
+Its result stays in the list until the computer stops.
+
+If a reply is lost, the action shows **Unconfirmed**, and the list refreshes the actual state.
+Check that state before choosing the action again.
+A control for a run that already changed does nothing.
+Pending controls end when the computer stops.
+
+Closing a preview keeps its service running.
+Stopping or restarting a service keeps its preview tabs.
+After a restart, select **Reload** in the preview to load the app again.
+
+## Read service logs
+
+Select **Show log** in a service's row.
+The log opens as plain text in a dialog on a computer or a sheet on a phone.
+Select **Reload** to read the latest output.
+If the read fails, use **Try again**.
+
+The computer keeps up to 10 MiB of log output in total per service.
+These logs use the computer's memory and end when the computer stops.
+Each read shows up to 200 lines and 64 KiB.
+A notice says when output was left out.
+Conductive hides exact copies of known secret values before showing the text.
+Changed or encoded values can still appear.
+
+- [Understand secret masking](/docs/security#understand-environment-values)
+
 ## Preview a running app
 
-1. Start your web server with the agent or **Terminal**.
+1. Start your web server as a service, or with **Terminal**.
 2. Open **Preview**.
-3. Select your server in the list.
+3. Select its port under **Services**, or select it under **Servers**.
 
 On a computer, the preview opens in its own tab beside your sessions and files.
 Select another server to open it in another tab.
 Select a server that already has a tab to show that tab.
 
-Each row shows a port and can also show a short program name and repository folder.
+Each row under **Servers** shows a port and can also show a short program name and repository folder.
 The list updates as servers start and stop.
 The row of the shown preview tab is highlighted.
-When the list is empty, the form asks you to start a server in **Terminal** or ask the agent.
+When no server runs, start one in **Terminal** or ask the agent to start a service.
 
 On a phone, the preview opens on the **Preview** page.
-Servers that already have an open preview appear in its tabs, not in the list.
+Servers outside a service that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
 An HTML file of the repository needs no server.

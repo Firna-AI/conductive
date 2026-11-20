@@ -147,6 +147,13 @@ The store retains the latest skill metadata without private paths.
 Native watches debounce file and skill events by 100 ms. Restore polling reopens the
 live repository path once. Port scans run on an independent two-second timer.
 
+[Services](../../docs/protocol/services.md) run outside every turn. This
+crate does not manage them yet. Keep one serialized service manager for
+local calls and Worker controls. Start each service as `user` in its own
+system unit, through noninteractive sudo, with an opaque unit identity.
+Pass names, folders, and commands as arguments, never as privileged shell
+text. Match ports to services through control groups.
+
 ## Quick Start
 
 Run the connection and state tests from the repository root:
@@ -277,6 +284,7 @@ and connection drops. It does not run the Worker.
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Services](../../docs/protocol/services.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Parent changes](../../docs/protocol/parent-changes.md)

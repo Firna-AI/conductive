@@ -88,6 +88,18 @@ the workspace screen draws, as
   page, such as the browser's JSON view in dark mode, shows dark.
 - A failed request shows its message and leaves the tool usable.
 
+## Services
+
+[Services in the app](../../docs/protocol/services-in-the-app.md) states
+the services of the Preview tool: the list above the servers, Stop,
+Restart, their results, and the log view. This folder does not show
+services yet. The words, the rows, the log view, and the menu of the
+mockups are `serviceCopy.ts`, `ServiceList.tsx`, `ServiceLog.tsx`,
+`ServiceParts.tsx`, and `serviceMenu.ts` in
+`docs/mockups/src/components/tools/`. Show each owned port only in its
+service row. Keep the close of a preview apart from the Stop of a service.
+Show each name, label, and log line as plain text.
+
 ## The files preview
 
 The files preview shows the files of the workspace's repository folder,
@@ -199,5 +211,6 @@ port preview: no list and no tab of the Preview tool holds it.
   files preview.
 
 See [Port previews](../../docs/protocol/port-previews.md),
+[Services in the app](../../docs/protocol/services-in-the-app.md),
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports),
 and [Access and security](../../docs/protocol/terminal-previews-and-desktop.md#port-previews).

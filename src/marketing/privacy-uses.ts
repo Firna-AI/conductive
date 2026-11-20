@@ -164,6 +164,16 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} deletes its own copy. The file stays in the cloud
         computer. Removing the workspace from the list keeps its chat
         history until the org is deleted.`,
+      text`Services: a service is a named program outside an agent turn.
+        ${productName} keeps its filtered name, short program label, folder,
+        state, times, exit result, ports, and originating session when it
+        can match that session. Otherwise, the source shows Local command.
+        This context does not prove which person started it. The list
+        and control results let members follow and manage services.
+        The saved full command, environment values, and raw logs stay in
+        runtime storage on the cloud computer. ${productName} reads and
+        filters recent output when a member opens or reloads its log.
+        It sends that excerpt to the member to show the log.`,
       text`Operational logs: ${productName} records when the program that
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including

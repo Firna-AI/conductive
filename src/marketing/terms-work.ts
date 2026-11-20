@@ -14,6 +14,12 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
       cloud computers that ${productName} runs for your org.
       ${productName} keeps the chat history of each workspace, so that
       you can read it while the cloud computer is stopped.`,
+    paragraph`A service is a named program that runs outside an agent turn.
+      It keeps running after the agent replies and through crashes,
+      updates, and restarts of the agent software. A cloud computer stop
+      ends all services and discards their saved commands, settings, and
+      logs. They do not restore themselves after a resume. Services and
+      their previews never keep the computer running.`,
     paragraph`The cloud computer downloads a new attachment when the
       agent starts work on its message.
       A large text that you paste becomes an attached file.

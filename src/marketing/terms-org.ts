@@ -108,6 +108,13 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         then, also a member to whom the settings never show the value. A
         program that can use the workspace token during a turn can also get
         the value of each secret that the session of that turn may use.`,
+      text`A service is a named program that runs outside an agent turn.
+        Its environment uses the org values installed at this computer
+        start, plus values supplied for the service. It does not inherit
+        the agent's credentials, turn context, or secrets added to an
+        approved command. Services run as the same computer user as other
+        programs. Their code can still read available files and credentials,
+        including those of later turns.`,
       text`Each turn gets a temporary credential for model requests in
         place of the agent login. A member with a terminal or a program in
         the workspace's cloud computer can read it while that turn runs.

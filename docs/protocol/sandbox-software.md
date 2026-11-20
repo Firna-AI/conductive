@@ -96,10 +96,11 @@ says.
 - While the sandbox runs, the runner also installs a newer release when
   its workspace is idle, as [Installs at idle](#installs-at-idle) says.
 - The program never restarts the runner service to apply an update.
-  Reason: a restart stops each running turn, and each process that an
-  agent started, such as a dev server. A member can restart the service
-  with Restart in the workspace header, which then applies the newest
-  download, as
+  Reason: a restart stops each running turn, and each ordinary process
+  that an agent started, such as a dev server. A
+  [service](services.md#lifetime) keeps running. A member can restart the
+  service with Restart in the workspace header, which then applies the
+  newest download, as
   [Restart the software](workspace-life.md#restart-the-software) says.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
@@ -153,7 +154,8 @@ says.
   disconnect the runner every 2 minutes.
 - A new release that exits at its start is a failed start. The runner
   service then starts again within seconds, on the previous release. That
-  restart stops each process that an agent started.
+  restart stops each ordinary process that an agent started. Each service
+  keeps running.
 - A runner that cannot install at idle gets each update at a later start.
 - No check guards a new release that runs but never connects to the
   Worker (idle update decision 3). Reason: the app relies on CI and on the

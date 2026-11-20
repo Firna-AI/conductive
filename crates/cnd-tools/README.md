@@ -50,6 +50,13 @@ The value-bearing Worker reply stays separate from the printable list and run re
 Pending, denied, and not-answered results start no child and keep the Worker's message.
 The CLI prints that message and exits 1. MCP returns the status with `isError: true`.
 
+The [service calls](../../docs/protocol/service-calls.md) start, list,
+stop, and restart the services of the same cloud computer, and read their
+logs. They reach the local runner, not the Worker, and they need no
+workspace token. This crate does not implement them yet. Keep their
+descriptors, help, routing, and adapters in their own services sections.
+Never print an environment value of a service.
+
 The server negotiates MCP `2025-11-25`. It requires initialization before
 tool calls, ignores notifications, answers ping while HTTP calls wait,
 and finishes outstanding replies before it exits at EOF.
@@ -115,6 +122,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 
 - [Architecture](../../docs/architecture.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Service calls](../../docs/protocol/service-calls.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Workspace commands](../../tools/README.md)

@@ -237,6 +237,17 @@ name held a secret value. Then `skill-reports.ts` cuts each description.
 `skill-state.ts` stores the result, and it publishes `skills: null` when the
 list is unavailable. [Chat backend key code](key-code.md) gives both files.
 
+## Services
+
+[Service reports](../../docs/protocol/service-reports.md) states the
+service messages of a runner connection. The chat backend does not handle
+them yet. Keep them outside the numbered runner events. Keep the latest
+service report and each waiting control under a key prefix of their own,
+outside `chat:v1:` and its commands, so a previous Worker never decodes
+them. Add no D1 migration for them. Clear them at each stop of the cloud
+computer. The list, the controls, and the log reads belong to the routes
+of the [workspace features](../features/README.md).
+
 ## Tests
 
 ```sh
@@ -340,6 +351,7 @@ session and a turn only when `verifiedTurn` finds that turn in that session.
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Agent runner: Services](../../docs/protocol/services.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

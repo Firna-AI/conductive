@@ -90,6 +90,10 @@ of agents as pictures in their answers, as
     of that service ends each running turn of each session.
   - `sudo journalctl -u conductive-runner.service` shows the cause of a
     stop of that service.
+  - A server that a member needs after the reply runs as a
+    [service](services.md), outside `conductive-runner.service`. The agent
+    ends each temporary check server before its reply, as
+    [Agent guidance](services.md#agent-guidance) says.
   - The workspace tools create, list, get, rename, move, and archive the
     workspaces of the org. In each workspace of the org, they also start,
     list, get, rename, close, and stop sessions, send and get messages,

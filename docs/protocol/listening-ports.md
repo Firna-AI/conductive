@@ -61,3 +61,16 @@
 - A port report is not activity under the rule of
   [Stop and resume](workspaces-and-sandboxes.md#stop-and-resume)
   (decision 29). So it does not delay the stop of a sandbox.
+
+## Ports of services
+
+- A port belongs to a [service](services.md) when the process that
+  listens on it runs in the unit of that service. This holds also for a
+  child process of the command of the service.
+  Reason: a child server can differ from the command that started it.
+- The rules above still decide which ports a report holds. A service adds
+  no port to a report, and it removes none.
+- A port entry of a report can name the service that owns its port, as
+  [Service reports](service-reports.md#the-worker-and-the-app) says.
+- The Preview tool shows such a port in the row of its service, as
+  [The list](services-in-the-app.md#the-list) says.

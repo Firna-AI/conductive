@@ -147,6 +147,16 @@ startup bootstrap.
 [Workspace startup](start.md#start-in-a-workspace) gives the sandbox variables,
 startup command, service gates, and runner settings.
 
+## Services
+
+[Services](../docs/protocol/services.md) run outside every agent turn.
+No code creates them yet, and the image installs no unit for them. Create
+each service unit at run time from the runner, as `user`, outside
+`conductive-runner.service`. Then a restart of the runner unit, with its
+`KillMode=control-group`, ends no service. A stop of the sandbox ends each
+service. Keep service definitions and logs in memory-backed runtime
+storage, which no saved disk or org image holds.
+
 ## Git credentials
 
 [GitHub access](github.md) describes the git credential helper and the
@@ -213,6 +223,8 @@ A build, a disk retention restart, and an unfinished start launch no runner.
   start steps, and the git credential route.
 - [Workspaces and sandboxes](../docs/protocol/workspaces-and-sandboxes.md):
   the org image, the startup script, and the env vars.
+- [Services](../docs/protocol/services.md): the lifetime, the environment,
+  and the logs of services.
 - [Access and security](../docs/protocol/access-and-security.md): what a
   sandbox holds, GitHub tokens, and the terminal.
 - [Architecture](../docs/architecture/components.md#sandbox-software): the sandbox

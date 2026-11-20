@@ -89,8 +89,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login cannot be used. The app refuses the message when no usable
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
-        their chats, and each Mac command request and result. They also see
-        the automations of the org, with their prompts, chosen secret names, and
+        their chats, and each Mac command request and result. They can read
+        the service lists and logs with workspace read access. They also
+        see the automations of the org, with their prompts, chosen secret names, and
         their runs. Only the automation's owner changes its chosen secrets.
         They see each secret request and result, without a value. They see the name
         and the description of each secret, who added it, and who last
@@ -109,7 +110,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         ${productName}, that credential can use the session's personal or
         org login. It works while the turn runs, also from
         outside the cloud computer. A program that keeps running, such as a
-        dev server or a program that the startup script starts, can also
+        service or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
         sessions that other members start. Agent settings in the repository
         can make the agent send its model requests, with their content and

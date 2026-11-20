@@ -245,6 +245,9 @@ The computer stops after a set time without user activity and without a running 
 An open tab alone does not keep it running.
 Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
+Services do not count as activity and never keep the computer running.
+The stop ends every service and discards its saved command, settings, and logs.
+Start needed services again after **Resume**.
 
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
@@ -265,6 +268,7 @@ The agent receives a message in the session that asked.
 The start follows the same checks as opening the workspace.
 
 **Stop** in chat interrupts an agent turn.
+Services keep running after this Stop.
 It is separate from the computer's automatic stop.
 
 ## Restart the software
@@ -273,13 +277,15 @@ Select the state in the workspace header, such as **Ready**, then **Restart**.
 Restart restarts Conductive's agent software, terminal software, and port previews in the running computer.
 After a software update, Restart also brings terminal tabs to a workspace that had only one terminal.
 Use it when an agent or a preview stops responding, or to apply a software update now.
-Any member can restart a workspace while it is ready, working, needs input, or has unread output.
+Any member of an active org can restart a workspace while it is ready, working, needs input, or has unread output.
+Its owner must not be suspended.
 
 Restart first downloads the newest software, for up to 60 seconds.
 If that download fails, a message says so, and the restart uses the installed software.
 The header shows **Starting** until the agents are back.
 
 Restart stops each running agent turn, so it asks first while an agent works.
+Services keep running.
 The shells and commands in your terminals keep running.
 An open terminal tab disconnects until the agents are back. Then select **Reconnect**.
 Files, sessions, and chat history stay.
@@ -317,7 +323,7 @@ That default branch becomes the workspace's base branch for its new task.
 The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
 A workspace without a name uses a city in place of the name.
 
-Continue keeps the same cloud computer, files, running servers, sessions, and workspace name.
+Continue keeps the same cloud computer, files, running servers and services, sessions, and workspace name.
 It also keeps the software installed by the org's install script.
 Conductive's own software still updates itself.
 Changed files move to the new branch.
@@ -378,6 +384,8 @@ Each session shows who changed the repository, the new repository, and the new b
 The agents keep their conversations and work in the new folder.
 Programs that already run, such as development servers, keep running in the old folder.
 Their previews show the old repository until you start them again in the new folder.
+For a service, stop it and start it from the new folder.
+Its **Restart** action uses its saved folder.
 The pull request bar then follows the new branch without a pull request.
 Each idle shell in the old folder moves to the new folder, and a line that you typed but did not send is cleared.
 A shell that runs a command keeps its folder.

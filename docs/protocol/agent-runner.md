@@ -16,7 +16,8 @@ decision number, such as background work decision 1, names a decision of
 the change that keeps a turn open for background work. An out-of-memory
 decision number, such as out-of-memory decision 1, names a decision of the
 change that keeps the runner and the terminal shells running after an
-out-of-memory kill.
+out-of-memory kill. [Services](services.md) gives the named programs that
+run outside every turn, in units of their own.
 
 ## The agent runner
 
@@ -194,6 +195,8 @@ out-of-memory kill.
   process (out-of-memory decision 1). An example is a large build.
 - The runner, the other processes of the agents, and each running turn
   keep running. The agent sees its command fail.
+- A process of a [service](services.md#out-of-memory) is the one
+  exception. Such a kill stops the whole service, which then shows Failed.
 - Reason: one command that uses too much memory must not end each running
   turn of the workspace and its background work.
 - A stop and a restart of the whole runner at such a kill was rejected.

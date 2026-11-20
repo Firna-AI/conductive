@@ -236,7 +236,15 @@ At that limit, the turn ends with **Background work stopped at the time limit** 
 The cloud computer keeps running while the turn waits.
 Ask the agent to stop background work that it does not need, such as a dev server.
 
+For a server that you need after the reply, ask the agent to start a service.
+Services run outside the turn and never keep the cloud computer running.
+Agents stop temporary check servers before replying.
+Builds, tests, and waits for checks that must finish stay in the agent's work.
+
+- [Run a server as a service](/docs/terminal-and-previews#run-a-server-as-a-service)
+
 Select **Stop** to interrupt the turn, including a wait for background work.
+Services keep running after this Stop.
 The chat records the stop.
 You can send another message to continue the conversation.
 

@@ -36,6 +36,9 @@ terminals at `app/tools` and its child pages.
 - Reason: a member can run two commands at once, such as a dev server and
   a test run, with no tmux keys. The members share the chat sessions in
   the same way.
+- A server can also run as a [service](services.md), which the Preview tool
+  lists. A service is no terminal. It has no shell and no screen, and it
+  does not count toward the limit of 10 terminals.
 - A private list of terminals for each member was rejected. A hidden shell
   still holds its ports and its memory, and the other members cannot see
   why. The privacy exists only in the app, because every shell runs as the

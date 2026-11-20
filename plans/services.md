@@ -10,6 +10,7 @@ The change adds only services. It does not alter idle stop, activity, background
 
 Contract owners:
 
+- [Services](../docs/protocol/services.md), [service calls](../docs/protocol/service-calls.md), [services in the app](../docs/protocol/services-in-the-app.md), and [service reports](../docs/protocol/service-reports.md).
 - [Agent runner](../docs/protocol/agent-runner.md).
 - [Listening ports](../docs/protocol/listening-ports.md).
 - [Port previews](../docs/protocol/port-previews.md).
@@ -21,7 +22,7 @@ Contract owners:
 - [Preview app](../src/previews/README.md).
 - [Terminal and previews guide](../src/marketing/docs/terminal-and-previews.md).
 
-The documentation milestone adds `docs/protocol/services.md` as the owner of the services requirements. Existing docs link to it. This is additive work. Plain shell commands, background tasks, terminal shells, and existing previews keep their current behavior.
+`docs/protocol/services.md` and its linked pages own the services requirements. Existing docs link to them. This is additive work. Plain shell commands, background tasks, terminal shells, and existing previews keep their current behavior.
 
 ## Sources and verified context
 
@@ -165,6 +166,21 @@ All pending controls end when the computer stops. They never run after a resume.
 - Use `claude-opus-5-5` at max for actions whose model table names `opus-5-5-1m`. Reason: `list_models` does not offer the table's model, and Cal authorized the nearest model.
 - Keep service additions in their own command and agent-guidance sections. Reason: workspace 456 also edits those areas for its watch call.
 
+### Services documentation calls
+
+These are the docs implementors' calls of 20 November 2026, checked by the orchestrator on that date. They state services decision 19 A without adding a product limit.
+
+- Put the service requirements in four linked pages under Agent runner. Reason: each page stays near the documentation length target.
+- Use Ended for exit code 0 without Stop. Use Failed for another exit, a signal, or a failure to start. Reason: these states follow the approved mockups and keep an unsuccessful end visible.
+- Give local results the full command and folder, without environment values. Reason: local output can reach chat and its model provider.
+- Supply basic user variables such as HOME and PATH alongside the approved org and explicit values. Reason: ordinary programs need them, and this imports no caller environment.
+- Keep the complete filtered service name in reports. Shorten it only in the visible row. Reason: no name limit is approved, and the full accessible text must remain available.
+- Assemble each complete text field before filtering, storage, or display. Private parts can split its source. Reason: an unlimited name can exceed a message, and secrets can cross parts.
+- Link service guidance from the existing instruction doc to its requirement owner. Reason: one owner avoids two independent copies of the same requirements.
+- Put practical instructions in the Terminal and previews guide. Keep shared control access in the Workspaces guide. Reason: each fact then has one public home.
+- Show only the approved stable Start example until the native command exists. Reason: implementation owns the remaining option names.
+- Keep the shared-user credential risk in the legal pages and guides. Reason: a clean environment changes inheritance but does not isolate repository code.
+
 ### Services UI calls
 
 These are the UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They follow services decision 19 A.
@@ -209,18 +225,20 @@ Depends on: 1.
 
 The docs implementors state the approved boundary behavior before implementation.
 
-- [ ] Add `docs/protocol/services.md` with lifetime, identity, start behavior, state, controls, logs, environment, access, compatibility, and selected resource rules.
-- [ ] State that Restart uses the saved definition for a stopped, ended, or failed service too. Restate header Restart's service survival wherever its behavior is repeated.
-- [ ] Link the services requirements from the relevant runner, listening-port, Preview, agent-tool, agent-instruction, software, and secrets docs.
-- [ ] State that a service is not activity under the existing stop rule. Change no idle or turn policy.
-- [ ] Under the approved unit-failure policy, state the service-only exception in the memory-kill requirement of `docs/protocol/agent-runner.md`. Keep the current rule for ordinary agent commands.
-- [ ] State the distinction between temporary agent-check servers and services that a member needs after the reply.
-- [ ] Read both legal pages in full before changing protocol facts. Read every public guide in full. Update every restated fact in the same change.
-- [ ] If the Terms text changes, set its effective date to the date of the change. Its revision updates automatically.
-- [ ] Update `src/marketing/docs/terminal-and-previews.md` and `src/marketing/docs/cloud-computer.md` under the external docs action.
-- [ ] Update the runner, command, image, Worker area, and Preview READMEs for new public behavior and entry points.
-- [ ] Check every relative link in changed Markdown.
-- [ ] Record deferred resume and memory work as separate follow-up items. Link resume work to restart decision 3.
+- [x] Add `docs/protocol/services.md` with lifetime, identity, start behavior, state, controls, logs, environment, access, compatibility, and selected resource rules.
+- [x] State that Restart uses the saved definition for a stopped, ended, or failed service too. Restate header Restart's service survival wherever its behavior is repeated.
+- [x] Link the services requirements from the relevant runner, listening-port, Preview, agent-tool, agent-instruction, software, and secrets docs.
+- [x] State that a service is not activity under the existing stop rule. Change no idle or turn policy.
+- [x] Under the approved unit-failure policy, state the service-only exception in the memory-kill requirement of `docs/protocol/agent-runner.md`. Keep the current rule for ordinary agent commands.
+- [x] State the distinction between temporary agent-check servers and services that a member needs after the reply.
+- [x] Read both legal pages in full before changing protocol facts. Read every public guide in full. Update every restated fact in the same change.
+- [x] If the Terms text changes, set its effective date to the date of the change. Its revision updates automatically.
+- [x] Update `src/marketing/docs/terminal-and-previews.md` and `src/marketing/docs/cloud-computer.md` under the external docs action.
+- [x] Update the runner, command, image, Worker area, and Preview READMEs for new public behavior and entry points.
+- [x] Check every relative link in changed Markdown.
+- [x] Record deferred resume and memory work as separate follow-up items. Link resume work to restart decision 3.
+
+Completed on 20 November 2026. Evidence: `.context/services/internal-docs-report.md`, `.context/services/external-docs-report.md`, `.context/services/milestone-2-root-links.txt`, and `.context/services/milestone-2-integration.md`.
 
 ## Milestone 3: Shared services contracts
 
@@ -251,6 +269,7 @@ The non-UI implementor adds local service execution. The app can still omit serv
 - [ ] Keep state and logs available across runner restarts. Report exit code or signal and systemd failures. Apply the approved log policy.
 - [ ] Reconcile actual units after a runner start. Link ports to services through control groups.
 - [ ] Apply the approved first-release policies. Defer resume restoration and memory caps.
+- [ ] Replace the native README statements that services are not implemented. Add actual manager, socket, command, output-writer, and unit entry points. Check startup settings on an already running computer.
 - [ ] Test observable manager and command behavior at the lowest useful boundary. Prove each new test can fail.
 - [ ] Run targeted Rust checks. Repeat each new asynchronous test 10 times. Save counts and test cost under `.context/services/`.
 - [ ] Smoke-test a real service through the CLI and MCP. Check user, folder, clean environment, unit control group, output, exit, and stop. End every probe.
@@ -271,6 +290,7 @@ The non-UI implementor adds reports and authorized app routes. Older clients kee
 - [ ] Check a new runner with the previous Worker, a new Worker with an old runner, a Worker rollback with pending reports, and an old app reader.
 - [ ] Test cross-org access, suspension, allowed controls, filtered output, report recovery, and stale connection results where no existing test protects the requirement.
 - [ ] Confirm that no service path records activity or changes idle deadlines. Use a focused integration check of the existing behavior.
+- [ ] Update Worker route and chat READMEs with the real entry points. Update the architecture docs for the new component boundary.
 - [ ] Run targeted Worker and runner checks. Repeat new asynchronous tests 10 times and record their cost.
 
 ## Milestone 6: App service controls
@@ -330,7 +350,9 @@ The orchestrator owns the combined gate, implementation review, and pull request
 
 - [Verify servers outside terminal turns](follow-ups/terminal-restart-server-lifetime.md). Correct the terminal restart work's lifetime claim on its own branch.
 - [Correct the shared skills model table](follow-ups/shared-skills-model-table-stale.md). Keep that change in the skills repository.
-- Resume restart and per-service memory limits remain separate scope records under decisions 11 and 12. Approved services decision 19 A defers both. Milestone 2 records their follow-up items.
+- [Choose service restoration after resume](follow-ups/restore-kept-services-after-resume.md). Approved services decision 19 A defers it. The item links the separate question about servers outside Terminal.
+- [Choose memory limits for services](follow-ups/limit-service-memory.md). Approved services decision 19 A defers caps and changed victim preferences.
+- [Split existing service-adjacent docs](follow-ups/service-adjacent-doc-length.md). Preserve the existing content and anchors on a separate branch.
 
 ## Post-merge follow-up (non-blocking)
 

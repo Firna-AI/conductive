@@ -21,6 +21,11 @@ complete tool-detail source. Only the first part carries the turn and the
 tool metadata.
 The hello has an optional `fileServer` capability. A listening file server
 sets it to true. Older runners omit it. The protocol version stays 2.
+The crate defines no service type yet. Define the service contracts here,
+as [Service reports](../../docs/protocol/service-reports.md) says: the
+optional support fields of the hello and the welcome, full reports with a
+boot ID and a revision, controls with a request ID and a generation, and
+log reads. Keep them outside the numbered runner events.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -118,6 +123,8 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
+- [Services](../../docs/protocol/services.md) and
+  [Service reports](../../docs/protocol/service-reports.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
