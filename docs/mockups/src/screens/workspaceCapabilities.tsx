@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
+import { nameLabel } from '../../../../src/shared/name-label'
 import type { CapabilitiesControl } from '../components/capabilities/CapabilitiesButton'
 import {
   capabilitiesIntro,
@@ -11,6 +12,7 @@ import { Sheet } from '../components/common/Sheet'
 import { orgs } from '../fixtures/orgs'
 import { autocompleteGrants, preApproved } from '../fixtures/secretRequests'
 import { acmeSecrets } from '../fixtures/secrets'
+import { workspaceSessions } from '../fixtures/sessions'
 import { paths } from '../paths'
 import { viewerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
@@ -27,9 +29,9 @@ function openControl(state: WorkspaceState): 'on' | 'off' | undefined {
 }
 
 /**
- * The control of Checkout address autocomplete: the secrets of Acme with
- * the pre-approved one checked, the approvals of its sessions and its
- * value for the workspace, each with Remove, and Mac access.
+ * The control of Checkout address autocomplete, from its first session: the
+ * secrets of Acme with the pre-approved one checked, the approvals of this
+ * session and the value for the workspace, each with Remove, and Mac access.
  */
 function panelOf(state: WorkspaceState, macAccess: boolean, sheet: boolean) {
   const parts = capabilityParts({
@@ -37,6 +39,7 @@ function panelOf(state: WorkspaceState, macAccess: boolean, sheet: boolean) {
     secrets: acmeSecrets,
     preApproved,
     grants: autocompleteGrants,
+    session: nameLabel(workspaceSessions[0].title),
     macAccess,
     secretsTo: paths.secrets,
     viewer: viewerOf(state),

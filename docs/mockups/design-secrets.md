@@ -87,9 +87,11 @@ one.
   opens the Secrets tab. An org without secrets says so, with Add a
   secret.
 - In a workspace, the Secrets part also lists the approvals of the
-  sessions, each with its session, who allowed it, and when, and each value
-  for this workspace, with who gave it. Each has Remove. `GrantList` draws
-  them, and a group without grants hides.
+  session that the control opens from, under "This session", each with who
+  allowed it and when. An approval whose secret the workspace already
+  allows, by a check or for all agents, does not show. The Secrets part
+  also lists each value for this workspace, with who gave it. Each has
+  Remove. `GrantList` draws them, and a group without grants hides.
 - The Mac access part is a switch at the end of its title, off by default.
 - The control of an automation has the Secrets part only, from
   `automationCapabilityParts`: no grants, and no Mac access part, because

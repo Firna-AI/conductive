@@ -35,8 +35,8 @@ export interface CapabilitiesView {
   /** The controls take no change, such as while a create or a change runs. */
   disabled: boolean
   /**
-   * The approvals of the sessions, each with Remove, which only a workspace
-   * that exists has.
+   * The approvals of the open session and the values for the workspace,
+   * each with Remove, which only a workspace that exists has.
    */
   grants?: ReactNode
 }
