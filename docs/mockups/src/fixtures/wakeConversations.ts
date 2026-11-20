@@ -1,5 +1,5 @@
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { WakeEnd } from '../components/chat/wakeCopy'
+import type { SessionWatchEndState } from '../../../../src/shared/generated/SessionWatchEndState'
 import type { ChatItem } from './conversations'
 import {
   autocompleteSessions,
@@ -20,7 +20,7 @@ export type WakeItem = {
   /** The session link of the watched session, which shows as its chip. */
   session: string
   /** How the watched turn ended. */
-  end: WakeEnd
+  end: SessionWatchEndState
   /** The end reason that the end of the watched turn names. */
   reason?: TurnEndReason
   /**
@@ -57,7 +57,7 @@ function done(id: string, target: string, detail?: string): ChatItem {
 
 function wake(
   session: LinkableSession,
-  end: WakeEnd,
+  end: SessionWatchEndState,
   more: Pick<WakeItem, 'reason' | 'during'> = {},
 ): WakeItem {
   return {

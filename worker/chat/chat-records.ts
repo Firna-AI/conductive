@@ -4,12 +4,8 @@ import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
-import type {
-  ChatData,
-  ModelSessionCreation,
-  PendingCommand,
-  StoredTurn,
-} from './types'
+import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
+import type { PendingCommand } from './pending-command'
 import type { ToolSessionRequest } from './tool-session-requests'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`

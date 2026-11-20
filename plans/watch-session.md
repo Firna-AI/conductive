@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 and 2 are checked complete. The pull request that completes this work deletes this plan.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 3 are checked complete. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -40,6 +40,14 @@ Contract owners:
 - **Watched turn:** the exact stored turn whose end triggers the watch.
 - **Watch:** a Worker record that asks for one wake when the watched turn ends.
 - **Wake line:** an app line that joins or starts a turn in the calling session.
+
+## Replaced ways
+
+The private `PendingCommand` type moves from `worker/chat/types.ts` to
+`worker/chat/pending-command.ts`. Its shape stays the same. Each consumer
+imports the new owner directly. The combined watch and upstream additions
+put the old owner at 304 lines, above the repository's 300-line limit.
+Milestone 3 lists every consumer and removes the old export.
 
 ## Design
 
@@ -131,6 +139,12 @@ The first three calls came from the brainstorm on 18 November 2026. They are age
 - **20 November 2026, orchestrator refinement:** After Milestone 3, run Milestones 4 and 5 in parallel. Reason: Milestone 3 settles their shared contracts. Chat TypeScript and CLI/MCP Rust have separate owners, files, test fixtures, ports, and build output. This narrows the earlier call for sequential work. The combined gate still waits for both.
 - **20 November 2026, orchestrator call:** Keep delivery paused under the existing org receiver fence. Retry retained watches after the lift with current access checks. Reason: no wake admission runs while the org is fenced. Discarding retained watches would add a cancellation rule that Cal did not choose.
 - **20 November 2026, orchestrator call:** Add the watch to the public tool lists and sender and resume descriptions. Reason: Cal required legal and guide text that restates changed facts to stay aligned. This corrects the first audit's narrower reading of the open lists. The Terms digest changes with the approved feature text. This pull request makes no deployment.
+- **20 November 2026, non-UI implementor call:** Keep additive indexes for live target watches and pending caller resumes. Retain authoritative settled records and receipts. Reason: watches have no expiry, but ordinary delivery must not scan all settled history.
+- **20 November 2026, orchestrator call:** Tag private pending wake commands and remove them in the explicit Stop transaction. Keep their recorded history and ordinary member-message continuation. Reason: a raw finished end after Stop must not carry an earlier pending wake into a new turn.
+- **20 November 2026, non-UI implementor call:** Prime recovery inside the target queue before delivery releases its snapshot. Later scheduling keeps an earlier alarm. Reason: an old held delivery must not postpone a new committed end, and retry backoff must remain.
+- **20 November 2026, orchestrator call:** Use native stored target fixtures for core watch cases and real target admission for route and two-workspace smoke cases. Reason: each test needs the lowest boundary that protects its requirement. Keep all assertions and guards.
+- **20 November 2026, orchestrator call:** Complete the normal startup path and runner-ready success phase in the resume smoke. Scope only preconditions to setup. Reason: manually marking startup prepared skips the dispatch fence that the wake must use.
+- **20 November 2026, orchestrator call:** Move the private pending-command type and its direct consumers to a separate module. Reason: combined upstream and watch additions exceed the existing file cap. Preserve the type instead of compressing the old file or keeping a re-export.
 
 The fresh options check is `.context/watch-session/options-check.md`. Its resolution is `.context/watch-session/options-check-resolution.md`. The check widened the options and changed the recommendations for repeat calls and Stop. The orchestrator kept the task's one-turn scope when it chose the targeting recommendation.
 
@@ -297,7 +311,7 @@ Use the `docs implementor` action for internal docs. Use the `external docs impl
 
 Evidence: `.context/watch-session/m2-report.md`, `.context/watch-session/m2-root-check.md`, and `.context/watch-session/m2-public-report.md`.
 
-## Milestone 3: Durable watches and shared contracts
+## Milestone 3: Durable watches and shared contracts — completed
 
 Depends on: 2
 
@@ -305,17 +319,32 @@ Use the `non-ui implementor` action. Keep generated shared types and their gener
 
 Integration evidence: `.context/watch-session/m3-main-merge.md` records preserved main changes and the three mockup documentation conflict resolutions.
 
-- [ ] Define the new request, reply, and chat boundary types in `crates/cnd-runner-interface/`. Regenerate `src/shared/generated/` with the repository command.
-- [ ] Replace the mockup's local `WakeEnd` union with the generated terminal type. Build agent input with the single `wakeText` and `wakeWords` source.
-- [ ] Add the fixed Worker route with existing active-turn, stored sender, membership, org, and archive rules. Implement the approved target and repeat semantics.
-- [ ] Expose the initial accepted turn ID in workspace-create replies. Keep the field additive for older tools and the previous Worker.
-- [ ] Implement the approved caller Stop rule. Capture caller-owned Stop generations and check them at acceptance. Keep idle-stop watches valid and allow fresh watch intent after an explicit Stop.
-- [ ] Add additive watch records, exact-turn registration, and durable pending delivery to target workspace storage. Prove previous Worker storage compatibility once.
-- [ ] Integrate every terminal path with the persistent delivery queue. Reconcile retained terminal turns after restart. Retry transient failures without holding cross-workspace chat queues.
-- [ ] Admit wake lines with stable message IDs. Reuse late-secret login rules, current turn selection, runner dispatch, and stopped-computer resume. Consume undeliverable watches.
-- [ ] Update the Worker tools, chat, and runner-interface entry points. Remove the temporary README statement that the watch route is not accepted yet.
-- [ ] Add focused route and lifecycle regression cases for registration races, terminal outcomes, duplicate delivery, restart recovery, login access, and closed or archived callers. Reuse existing tests when they cover the requirement.
-- [ ] Prove each new test fails on a behavior assertion. Run each new asynchronous test ten times. Save evidence and test costs under `.context/watch-session/`.
+Latest integration evidence: `.context/watch-session/m3-integration-main.md` records the merge of `359f05203`, its 196 preserved upstream paths, and the restored M3 tree.
+
+- [x] Define the new request, reply, and chat boundary types in `crates/cnd-runner-interface/`. Regenerate `src/shared/generated/` with the repository command.
+- [x] Replace the mockup's local `WakeEnd` union with the generated terminal type. Build agent input with the single `wakeText` and `wakeWords` source.
+- [x] Add the fixed Worker route with existing active-turn, stored sender, membership, org, and archive rules. Implement the approved target and repeat semantics.
+- [x] Expose the initial accepted turn ID in workspace-create replies. Keep the field additive for older tools and the previous Worker.
+- [x] Implement the approved caller Stop rule. Capture caller-owned Stop generations and check them at acceptance. Keep idle-stop watches valid and allow fresh watch intent after an explicit Stop.
+- [x] Add additive watch records, exact-turn registration, and durable pending delivery to target workspace storage. Prove previous Worker storage compatibility once.
+- [x] Integrate every terminal path with the persistent delivery queue. Reconcile retained terminal turns after restart. Retry transient failures without holding cross-workspace chat queues.
+- [x] Admit wake lines with stable message IDs. Reuse late-secret login rules, current turn selection, runner dispatch, and stopped-computer resume. Consume undeliverable watches.
+- [x] Update the Worker tools, chat, and runner-interface entry points. Remove the temporary README statement that the watch route is not accepted yet.
+- [x] Move the private pending-command type to its own module and remove its old export without changing its shape.
+  - [x] Move the import in `worker/chat/attachment-delivery.ts`.
+  - [x] Move the import in `worker/chat/runner-delivery.ts`.
+  - [x] Move the import in `worker/chat/runner-login-failure.ts`.
+  - [x] Move the import in `worker/chat/attachment-legacy-path.test.ts`.
+  - [x] Move the import in `worker/chat/turn-lifecycle.ts`.
+  - [x] Move the import in `worker/chat/store.ts`.
+  - [x] Move the import in `worker/chat/runner-command-preparation.ts`.
+  - [x] Move the import in `worker/chat/chat-records.ts`.
+  - [x] Move the import in `worker/chat/ordered-dispatch.ts`.
+  - [x] Move the import in `worker/chat/delivery-state.ts`.
+- [x] Add focused route and lifecycle regression cases for registration races, terminal outcomes, duplicate delivery, restart recovery, login access, and closed or archived callers. Reuse existing tests when they cover the requirement.
+- [x] Prove each new test fails on a behavior assertion. Run each new asynchronous test ten times. Save evidence and test costs under `.context/watch-session/`.
+
+Evidence: `.context/watch-session/m3-report.md`, `.context/watch-session/m3-root-check.md`, `.context/watch-session/m3-root-repeat-check.json`, `.context/watch-session/m3-length-fix.md`, and `.context/watch-session/m3-combined-check.md`.
 
 ## Milestone 4: Chat line implementation
 

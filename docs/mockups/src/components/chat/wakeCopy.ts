@@ -8,10 +8,8 @@
  */
 
 import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
+import type { SessionWatchEndState } from '../../../../../src/shared/generated/SessionWatchEndState'
 import { endReasonText } from './endReasonCopy'
-
-/** How the watched turn ended. */
-export type WakeEnd = 'finished' | 'failed' | 'stopped'
 
 /**
  * The words of a wake: `lead` comes before the session, and each note
@@ -26,7 +24,7 @@ export interface WakeWords {
  * The words before the session. The end comes first, so it stays on the
  * first line when a narrow chat moves the chip to the next line.
  */
-const leads: Readonly<Record<WakeEnd, string>> = {
+const leads: Readonly<Record<SessionWatchEndState, string>> = {
   finished: 'A turn finished in',
   failed: 'A turn failed in',
   stopped: 'A turn stopped in',
@@ -38,7 +36,10 @@ const leads: Readonly<Record<WakeEnd, string>> = {
  * background work. The app writes the words of each end reason, so a raw
  * error never shows in the line.
  */
-export function wakeWords(end: WakeEnd, reason?: TurnEndReason): WakeWords {
+export function wakeWords(
+  end: SessionWatchEndState,
+  reason?: TurnEndReason,
+): WakeWords {
   return {
     lead: leads[end],
     notes: reason === undefined ? [] : [endReasonText(reason)],

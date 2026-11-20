@@ -278,7 +278,8 @@ export class WorkspaceChat {
     return this.browsers.subscribe(access, after, peer, socket)
   }
 
-  private operation(workspaceId: string): ChatOperation {
+  operation(workspaceId: string): ChatOperation {
+    this.binding.bind(workspaceId)
     return new ChatOperation(
       this.store,
       workspaceId,

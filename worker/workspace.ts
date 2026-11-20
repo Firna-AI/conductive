@@ -109,6 +109,7 @@ export class Workspace extends AgentSessionWorkspace {
       lifecycle: () => this.alarmLifecycle(),
       automationReport: () =>
         retryAutomationReport(env.DB, this.chat.store, now),
+      sessionWatches: () => this.sessionWatches.alarm(),
     })
   }
 

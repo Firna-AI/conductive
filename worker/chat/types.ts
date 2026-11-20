@@ -31,6 +31,7 @@ import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 import type { AgentLogin } from './login-kind'
 import type { RepositoryMoveState } from './runner-repository-move'
+import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 import type { RunnerRepositoryRecord } from './branch-data'
 
 export interface ChatData {
@@ -81,6 +82,7 @@ export interface StoredTurn {
   /** The dispatched own endpoint model, without login metadata or secrets. */
   endpointModel?: string
   loginFailure?: string
+  endReason?: TurnEndReason
 }
 
 export interface ModelSessionCreation {
@@ -103,19 +105,6 @@ export type PreparedMessageCommand = (
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
-
-/** Credentials enter only the live command, after this record is read. */
-export type PendingCommand =
-  | {
-      type: 'turn' | 'message'
-      commandId: string
-      sessionId: string
-      turnId: string
-      messageId: string
-      attachments: readonly StoredAttachment[]
-    }
-  | RunnerInterrupt
-  | RunnerChangeModel
 
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
@@ -226,6 +215,10 @@ export interface ChatDependencies {
   runnerWork?: import('./runner-work-watch').RunnerWorkStorage
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
+  sessionWatchAlarm?: (
+    at: number | null,
+    keepEarlier?: boolean,
+  ) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   readConnectionAccess: (

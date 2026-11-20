@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react'
 import { BellRing } from 'lucide-react'
 import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
-import { wakeWords, type WakeEnd } from './wakeCopy'
+import { wakeWords } from './wakeCopy'
+import type { SessionWatchEndState } from '../../../../../src/shared/generated/SessionWatchEndState'
 import styles from './StopLine.module.css'
 
 /**
@@ -17,7 +18,7 @@ import styles from './StopLine.module.css'
  * app can use it too.
  */
 export function WakeLine(props: {
-  end: WakeEnd
+  end: SessionWatchEndState
   reason?: TurnEndReason
   session: ReactNode
 }) {

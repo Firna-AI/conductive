@@ -80,6 +80,10 @@ pub struct AgentCreateWorkspaceResponse {
     pub session_id: String,
     /// session link.
     pub session_link: String,
+    /// The saved initial turn, absent from replies of earlier Workers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub turn_id: Option<String>,
     /// Notice about the section chosen for the workspace.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

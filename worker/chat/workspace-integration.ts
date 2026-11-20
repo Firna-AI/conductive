@@ -106,6 +106,8 @@ export function createWorkspaceIntegration(
       runnerAlarm: (at) => alarms.set('runner', at),
       runnerWork: nativeRunnerWorkStorage(context.storage),
       automationReportAlarm: (at) => alarms.set('automation-report', at, true),
+      sessionWatchAlarm: (at, earlier) =>
+        alarms.set('session-watches', at, earlier),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -279,6 +281,7 @@ export function createWorkspaceIntegration(
     },
   )
   return {
+    now,
     storage,
     chat,
     devices,
