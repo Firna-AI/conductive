@@ -1,7 +1,6 @@
 import { useId } from 'react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
-  loginLabels,
   shareNotSavedCause,
   sharedByDefault,
   type AgentLogins,
@@ -11,6 +10,7 @@ import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { StatusText } from '../common/StatusText'
+import { loginLabels } from './agentConnectCopy'
 import { AgentConnectForm } from './AgentConnectForm'
 import { EndpointDetails } from './EndpointDetails'
 import type { EndpointEntry } from './EndpointFields'
