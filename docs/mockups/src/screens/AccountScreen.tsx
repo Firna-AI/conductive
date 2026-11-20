@@ -73,8 +73,11 @@ function GeneralTab(props: { state: AccountState }) {
   )
 }
 
-/** The content of the tab of a state, with the keys of its host. */
-function TabContent(props: {
+/**
+ * The content of the tab of a state, with the keys of its host. The
+ * settings options of `app/settings-options` reuse it.
+ */
+export function TabContent(props: {
   state: AccountView
   host: ShortcutHost
   changes: ShortcutChanges
