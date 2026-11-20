@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.28.0](https://github.com/Firna-AI/conductive/compare/v0.27.0...v0.28.0) (2026-11-20)
+
+
+### Features
+
+* **automations:** choose secrets for automation runs ([#540](https://github.com/Firna-AI/conductive/issues/540)) ([d8489eb](https://github.com/Firna-AI/conductive/commit/d8489ebe7ee82ee0cd1c9cd1b5efdf248c6304ae))
+* **files:** preview HTML files in their tab ([#552](https://github.com/Firna-AI/conductive/issues/552)) ([7552f6e](https://github.com/Firna-AI/conductive/commit/7552f6e33f06d7a5df9f542b269d2e1f8d92fca8))
+* **repositories:** order the repositories of an org ([#506](https://github.com/Firna-AI/conductive/issues/506)) ([da4e09a](https://github.com/Firna-AI/conductive/commit/da4e09a584aa5579a9121fce17564e54249c841b))
+* **repositories:** save repository edits and start one build at Done ([#556](https://github.com/Firna-AI/conductive/issues/556)) ([39bc62a](https://github.com/Firna-AI/conductive/commit/39bc62a3a04b960f6c64d75619f9fa69cfae6027))
+
+
+### Bug Fixes
+
+* **chat:** hide headings with formatting marks alone ([#555](https://github.com/Firna-AI/conductive/issues/555)) ([e54cbbd](https://github.com/Firna-AI/conductive/commit/e54cbbd00b4a268ffcdd4e0e67bdbd4ab420829d))
+* **chat:** keep long tool call details inside the chat ([#549](https://github.com/Firna-AI/conductive/issues/549)) ([17051a2](https://github.com/Firna-AI/conductive/commit/17051a2de448fd3dfd8c9392c1debdf1e11bff21))
+* **chat:** preserve saved tabs after a failed view read ([#544](https://github.com/Firna-AI/conductive/issues/544)) ([634a337](https://github.com/Firna-AI/conductive/commit/634a3379e08fd557032e0f65736a4ee7e81f5447))
+* **chat:** scan Markdown link labels once ([#558](https://github.com/Firna-AI/conductive/issues/558)) ([e6a0c91](https://github.com/Firna-AI/conductive/commit/e6a0c9114617884d83ced80511802f237b6866e6))
+* **dev:** serve built pages through the Worker ([#557](https://github.com/Firna-AI/conductive/issues/557)) ([25ffc4d](https://github.com/Firna-AI/conductive/commit/25ffc4de99c7bea5c470415adf683794ffbf3f09))
+* **files:** keep only the shown HTML page while the computer starts ([7552f6e](https://github.com/Firna-AI/conductive/commit/7552f6e33f06d7a5df9f542b269d2e1f8d92fca8))
+* **files:** keep retained diffs on their reported base ([#554](https://github.com/Firna-AI/conductive/issues/554)) ([c41f628](https://github.com/Firna-AI/conductive/commit/c41f628253e78ca8c7d7affaa110d0c12a193706))
+* **lifecycle:** honor saved archive retry waits ([#545](https://github.com/Firna-AI/conductive/issues/545)) ([87805e3](https://github.com/Firna-AI/conductive/commit/87805e31d82a47cea9975a930594923253aa2120))
+* **lifecycle:** retain cleanup after a scheduling failure ([#548](https://github.com/Firna-AI/conductive/issues/548)) ([f22adcc](https://github.com/Firna-AI/conductive/commit/f22adccf51e6cc93bee5412f213282d52382d649))
+* **markdown:** share CommonMark line splitting in chat ([#543](https://github.com/Firna-AI/conductive/issues/543)) ([66682a1](https://github.com/Firna-AI/conductive/commit/66682a1679dbf3a208427591c9d88cea11fcca82))
+* **palette:** keep the selected repository filter visible ([#551](https://github.com/Firna-AI/conductive/issues/551)) ([245953a](https://github.com/Firna-AI/conductive/commit/245953a4c1b6ae23e6db4ece5403d0444e119093))
+* **sandbox:** classify provider body deadlines as unavailable ([#547](https://github.com/Firna-AI/conductive/issues/547)) ([fb85c4d](https://github.com/Firna-AI/conductive/commit/fb85c4d327e74f2e85c88203416d870a10bb5c95))
+* **software-image:** retain the current image during cleanup ([#553](https://github.com/Firna-AI/conductive/issues/553)) ([340a45e](https://github.com/Firna-AI/conductive/commit/340a45e05f44cace6a642070ef0a7b21b39407f2))
+* **terminal:** wait for completed command output in bridge tests ([#541](https://github.com/Firna-AI/conductive/issues/541)) ([a759350](https://github.com/Firna-AI/conductive/commit/a7593508f890a03edcac0a4b733597154fcf026a))
+* **tests:** await runner receipt of late secret notices ([#546](https://github.com/Firna-AI/conductive/issues/546)) ([5be8744](https://github.com/Firna-AI/conductive/commit/5be87446ba01c9ef56f27d21a6c37882766c7c3f))
+
 ## [0.27.0](https://github.com/Firna-AI/conductive/compare/v0.26.0...v0.27.0) (2026-11-20)
 
 
