@@ -6,7 +6,7 @@ import {
 } from '../../../../../screens/OrgValuesScreen'
 
 const open =
-  "This page is a proposal for review, from Cal's review of 20 November 2026. Items 2, 3, and 4 are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
+  "This page is a proposal for review, from Cal's review of 20 November 2026. Cal chose item 2 B on 20 November 2026. Items 1, 3, and 4 are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
 
 export const combinedSecrets = defineScreen({
   title: 'Proposal: Env & secrets',

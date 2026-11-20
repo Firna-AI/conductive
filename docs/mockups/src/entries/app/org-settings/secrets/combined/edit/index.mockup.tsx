@@ -6,7 +6,7 @@ import {
 } from '../../../../../../screens/OrgValuesScreen'
 
 const open =
-  "This page is a proposal for review, from Cal's review of 20 November 2026. Items 2, 3, and 4 are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
+  "This page is a proposal for review, from Cal's review of 20 November 2026. Cal chose item 2 B on 20 November 2026. Items 1, 3, and 4 are still open, so app/org-settings/secrets and app/org-settings/cloud-computer stay the spec in force until the change lands."
 
 export const combinedEdit = defineScreen({
   title: 'Proposal: Edit a secret',
@@ -35,7 +35,7 @@ export const combinedEdit = defineScreen({
       description:
         'Cal opened Edit on STRIPE_SECRET_KEY, an env var, and chose the type Secret. The hint under the type says that cloud computers stop getting it at their next start, and that agents then ask before each use. The modal now shows the fields of a secret: an empty description and the switch for all agents.',
       rationale:
-        'Cal said on 20 November 2026 that Move was hard to understand. So the type is a field of the Edit modal, and Save changes it. The value stays in the Worker and never reaches the browser, so nobody types it again (item 2). Only an admin sees the type.',
+        'Cal said on 20 November 2026 that Move was hard to understand. So the type is a field of the Edit modal, and Save changes it, in both directions (item 2 B, chosen by Cal on 20 November 2026). The value stays in the Worker and never reaches the browser, so nobody types it again. A secret that becomes an env var loses its approvals. Only an admin sees the type.',
       props: { view: 'edit-type' },
     },
   ],

@@ -1,7 +1,7 @@
 /**
  * The words of the proposal that combines the env vars and the secrets of
  * an org in one tab, Env & secrets (Cal's review of 20 November 2026, and
- * items 2, 3, and 4, open). Only the mockups read them. The app keeps
+ * item 2 B, chosen, and items 3 and 4, open). Only the mockups read them. The app keeps
  * the words of `secretsCopy.ts` until the change lands.
  */
 

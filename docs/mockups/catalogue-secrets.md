@@ -29,7 +29,8 @@ sees it. Its child pages:
   the Env & secrets tab of Cal's reviews of 20 November 2026: env vars and
   secrets in one short list, each row with its name, an Env or Secret
   badge, the description of a secret, and one "⋯" menu. It also draws
-  the open items 2, 3, and 4. Its child pages:
+  item 2 B, which Cal chose on 20 November 2026, and the open items 3
+  and 4. Its child pages:
   - `add` has the compact Add modal with one secret. Its `env` variant
     has four env vars that a paste of `.env` lines split into rows.
   - `edit` has the Edit modal of FIGMA_TOKEN, which also renames it. Its
