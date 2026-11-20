@@ -38,7 +38,8 @@ decision number names a decision of the change that adds
   holds only spaces.
 - Reason: a run without a prompt has no task, but it still spends a start.
   An automation without a prompt was rejected, also as a draft that stays off.
-- A new automation starts active. It gets the first repository of the org, the
+- A new automation starts active. It gets the first repository of the
+  [repository order](orgs-and-members.md#repository-order) of the org, the
   General section, and the default model of its owner, with its effort and
   its fast mode.
 - An automation can have no trigger. Then only Run now starts it.

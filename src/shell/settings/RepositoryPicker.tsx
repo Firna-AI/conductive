@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Check, Pencil } from 'lucide-react'
-import { SectionText } from '../../../docs/mockups/src/components/settings/Section'
-import styles from '../../../docs/mockups/src/components/settings/RepositoryList.module.css'
 import type { OrgModel } from '../../app/org-model'
 import { setRepositorySelected } from '../../app/settings-actions'
-import type { Repository } from '../../shared/org-settings'
+import {
+  compareRepositoryNames,
+  type Repository,
+} from '../../shared/org-settings'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
-import { RepositoryRow } from './RepositoryRows'
 import { ChoiceActions, RepositorySearch } from './RepositorySearch'
 
 /**
@@ -30,26 +30,9 @@ export function RepositoryEditToggle(props: {
   )
 }
 
-/** The repositories that the org chose, without actions, until Edit. */
-export function ChosenRepositories(props: {
-  repositories: readonly Repository[]
-}) {
-  const chosen = props.repositories.filter((repository) => repository.selected)
-  if (chosen.length === 0) {
-    return <SectionText muted>Select Edit to add a repository.</SectionText>
-  }
-  return (
-    <ul aria-label="Repositories" className={styles.list}>
-      {chosen.map((repository) => (
-        <RepositoryRow key={repository.id} repository={repository} />
-      ))}
-    </ul>
-  )
-}
-
 /**
- * The repositories that the shared GitHub App can reach, with the ones that
- * the org uses marked as added. A search narrows the list by full name.
+ * The repositories that the shared GitHub App can reach, by name, with the
+ * ones that the org uses marked as added. A search narrows the list by full name.
  * Each change adds or removes one repository. While one change runs, the
  * other rows wait, so the list shows one change at a time.
  */
@@ -81,7 +64,7 @@ export function RepositoryPicker(props: {
         )
       }}
       keyOf={(repository) => repository.id}
-      repositories={props.repositories}
+      repositories={[...props.repositories].sort(compareRepositoryNames)}
     />
   )
 }

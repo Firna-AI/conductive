@@ -32,7 +32,9 @@ option overrides this default, including queued chats that show no spinner.
   as sent, so `?upload=wait&sent=64` shows the measured state of a file of
   one part. Create org of the dev fake
   requires at least one repository and starts a simulated build. Its
-  repository catalogue keeps the saved choices, and its custom initials
+  repository catalogue keeps the saved choices in the repository order of
+  the Worker. An add goes to the end of the order, and a move of a chosen
+  repository starts no build. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
