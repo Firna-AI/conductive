@@ -28,6 +28,8 @@ decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. An e2b decision number names a
 decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
+says. A Mac access decision names a decision of the change that makes
+[Mac access](capabilities.md#mac-access) allow all commands, as that doc
 says.
 
 ## Workspace tools
@@ -125,7 +127,8 @@ three lists that a create call takes.
 ## Mac commands
 
 An agent can ask to run a command on the Mac of the person who sent its
-turn (decision 62). The Mac app on that Mac asks that person first, as
+turn (decision 62). The Mac app on that Mac asks that person first, unless
+a choice of that person covers the command, as
 [Mac commands in the Mac app](desktop-commands.md#mac-commands) says.
 
 ### Who gets a request
@@ -154,8 +157,10 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   Capabilities of the workspace.
 - Risk: every process in the sandbox can ask in the name of a turn that
   runs now. So a member with a terminal in the same sandbox can ask for a
-  command on the Mac of that sender. The Mac still asks first, unless a
-  saved choice covers the command.
+  command on the Mac of that sender. The Mac still asks first, unless
+  Always allow or a grant covers the command. In the Mac app, turning Mac
+  access on starts such a grant (Mac access decision 1 C).
+  [Risks](capabilities.md#risks) states what such a grant allows.
 
 ### The request
 
@@ -204,7 +209,7 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
   request without choices.
 - The Worker never allows a command by itself. The Mac app on that Mac
   decides, from the answer of its user or from a choice that its user
-  saved there.
+  made there, as [The choices](desktop-commands.md#the-choices) says.
 
 ### What the chat shows
 

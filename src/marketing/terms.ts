@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 18 November 2026.`,
+  accepted it. Effective date: 20 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -144,15 +144,33 @@ export const termsDocument: LegalDocument = {
       title: 'Commands on your Mac',
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
-          your Mac. The command runs only after you allow it.`,
+          your Mac. The Mac app asks first unless you already allowed the
+          command or all commands from that workspace.`,
         paragraph`Each workspace has a Mac access switch, which starts off.
           Any member of the org can turn it on or off again. While it is
           off, the agents of that workspace cannot ask for a command.`,
+        paragraph`When you turn Mac access on in the Mac app, you also allow
+          every command from that workspace on this Mac until you stop.
+          Other members' Macs still ask, unless their users already allowed
+          the commands.`,
+        paragraph`If this permission cannot start, Mac access stays on and
+          the Mac app shows the cause.`,
+        paragraph`While Mac access is on, Allow all commands on this Mac in
+          Capabilities starts or stops this permission on your own Mac.
+          In New workspace in the Mac app, the permission starts when you
+          create the workspace with this choice checked.`,
+        paragraph`In a browser, Mac access only lets agents ask. To allow all
+          commands, use Allow all commands on this Mac in the Mac app.`,
+        paragraph`Turning Mac access off ends that workspace's permission on
+          every Mac. Turning it on again does not restore an old permission.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
           for 15 minutes, or until you stop it. Permission until you stop
           it also ends when the Mac app quits or signs out.`,
+        paragraph`While workspace permission runs, each command from that
+          workspace runs on your Mac without asking. This includes a command
+          that text read by the agent steers it to request.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,

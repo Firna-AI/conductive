@@ -90,6 +90,15 @@ The app keeps exact allowed commands and workspace deadlines under its private u
 A workspace grant until Stop stays only in memory.
 A quit, a sign-out, an expired or rejected sign-in, or another account ends it.
 Keep turns the running 15 minutes of a workspace into a grant until Stop.
+The settings action `start-workspace-until-stop` starts a grant until Stop of one workspace, with the workspace name and the current Mac access period that the Worker adds.
+It reports done or failed, never done but not saved, and it runs each waiting request of that workspace.
+Each grant keeps the Mac access period of its request or its start, also in the saved file for the 15 minutes.
+The Worker sends the current period beside each `command.request`, and a grant covers only a request of its own period.
+A saved grant without a period covers no request.
+Always allow has no period, because it covers one command text in every workspace.
+The app ends a grant of an older period when a request or a start of its workspace brings a newer period.
+The app does not have this action or the periods yet.
+[Mac access](../docs/protocol/capabilities.md#when-mac-access-goes-off) states their requirements.
 The settings name comes from the OS hostname.
 The connection sends that hostname as display metadata for command requests.
 Remove and Stop revoke permissions in memory even when saving fails.

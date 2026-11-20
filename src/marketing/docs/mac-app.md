@@ -65,7 +65,28 @@ The workspace must also have **Mac access** on in its **Capabilities**.
 It starts off in each new workspace, also in one that an agent or an automation creates.
 Any member can turn it on or off.
 
-The request appears above the session's message box.
+When you turn **Mac access** on in the Mac app, this Mac allows all commands from that workspace until you stop.
+Other members' Macs still ask, unless their users already allowed the commands.
+While **Mac access** is on, **Allow all commands on this Mac** starts or stops this permission on your own Mac.
+
+If the Mac cannot be reached or permission cannot start, **Mac access** stays on.
+The control shows the cause, and this Mac still asks before commands that you have not allowed.
+Use **Allow all commands on this Mac** in the Mac app to try again.
+
+In **New workspace** in the Mac app, **Allow all commands on this Mac** is a choice in your draft.
+Turning **Mac access** on checks it.
+The permission starts after you create the workspace, if the choice stays checked.
+
+In a browser, **Mac access** only lets agents ask.
+To allow all commands, use **Allow all commands on this Mac** in the Mac app.
+
+When any member turns **Mac access** off, that workspace's permission on every Mac ends.
+Turning it on again does not restore those permissions.
+
+While workspace permission runs, every command from that workspace runs on this Mac without asking.
+This includes a command that text read by the agent steers it to request.
+
+When a command needs approval, its request appears above the session's message box.
 It shows the exact command and time limit.
 Open **Details** to inspect the folder, reason, workspace, and sender.
 

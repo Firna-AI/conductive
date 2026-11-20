@@ -29,7 +29,7 @@ Contract owners:
 
 - **Grant until Stop:** the Mac app choice "Allow all commands until I
   stop". It covers every command from one workspace on one Mac. Stop, a
-  quit of the Mac app, or a sign-out ends it. It lives only in the memory
+  quit of the Mac app, a sign-out, or a switch-off of Mac access ends it. It lives only in the memory
   of the Mac app (Mac until-stop decision 1).
 - **Workspace check:** the Worker refuses each Mac command of a workspace
   while its Mac access is off (secrets decision 18 A).
@@ -212,7 +212,7 @@ call. The record of the options as they were asked:
 
 My calls, 20 November 2026, unless a decision above says otherwise:
 
-- A new settings action `allow-workspace-until-stop` with `workspaceId`
+- A new settings action `start-workspace-until-stop` with `workspaceId`
   joins `DeviceSettingsAction`. The paired page sends it. Reason: the
   route already checks the paired page, and the Mac app already decides
   each change itself.
@@ -256,7 +256,7 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   not a field of `DeviceCommandRecord`. Reason: an older Mac app ignores
   a field beside the request, and the record type, the runner, and the
   stored records stay as they are.
-- The relayed `allow-workspace-until-stop` carries the current period
+- The relayed `start-workspace-until-stop` carries the current period
   too. A grant from an answer takes the period of its request.
 - The Mac app keeps the period with each grant, also in the saved file
   for the 15 minutes. A grant covers a request only when the periods
@@ -284,6 +284,17 @@ My calls, 20 November 2026, unless a decision above says otherwise:
     or Stop, or until Mac access goes off.
   - The result of an uncheck, which is a Stop, shows under the line.
   - This Mac says "Each command asks you first, unless you allowed it."
+- From the docs milestone, 20 November 2026, my calls:
+  - The Worker keeps each grant with no period in a relayed result,
+    because an older Mac app still applies it and its user needs Stop. The
+    new Mac app drops each saved grant with no period when it loads.
+  - The Worker also sends the current period with Keep and Extend. The Mac
+    app ends a grant of an older period and reports failed. Reason: the
+    Extend rule says that Extend fails when the grant already ended.
+  - The new settings action is `start-workspace-until-stop`, so that it
+    has a name apart from the approval answer `allow-workspace-until-stop`.
+  - The Terms version changes to `2026-11-20-mac-access-allows-all`,
+    because the Terms page changed, as each earlier Terms change did.
 - Risk: each turn that the member sends in a workspace with a grant can
   run any command on the member's Mac with no question. Text that steers
   the agent, another process in the sandbox, and a message of the session
@@ -315,29 +326,29 @@ app and in a browser.
 
 Depends on: 1
 
-- [ ] Update "Mac access" in `docs/protocol/capabilities.md` with
+- [x] Update "Mac access" in `docs/protocol/capabilities.md` with
       decisions 1 to 6. Replace the line that rejects a personal part in
       the control. Add the risk of commands with no question.
-- [ ] Update "Permissions", "The choices", and the reason of Extend in
+- [x] Update "Permissions", "The choices", and the reason of Extend in
       `docs/protocol/desktop-commands.md`: the control of the paired page
       also starts a grant until Stop.
-- [ ] Update "Mac commands" in `docs/protocol/agent-tools.md`, which says
+- [x] Update "Mac commands" in `docs/protocol/agent-tools.md`, which says
       that only a saved choice skips the question.
-- [ ] Add the switch grant to the Problem of
+- [x] Add the switch grant to the Problem of
       `plans/follow-ups/automation-turns-mac-commands.md`.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full.
       Update each sentence that restates these facts.
-- [ ] Read each guide in `src/marketing/docs/` in full, at least
+- [x] Read each guide in `src/marketing/docs/` in full, at least
       `mac-app.md` and `security.md`. Update each sentence that restates
       these facts.
-- [ ] Update `src/chat/device/README.md`, `desktop/README.md`, and
+- [x] Update `src/chat/device/README.md`, `desktop/README.md`, and
       "Permission policy and limits" in `worker/devices/README.md`.
 
 ## Milestone 3: The start of a grant
 
 Depends on: 2
 
-- [ ] Add `allow-workspace-until-stop` to `DeviceSettingsAction` in
+- [ ] Add `start-workspace-until-stop` to `DeviceSettingsAction` in
       `src/shared/device.ts`, and the workspace name in the relayed form.
 - [ ] Read and check it in `worker/devices/broker-routes.ts`: membership,
       Mac access on, and the name. Test each refusal.
@@ -352,7 +363,17 @@ Depends on: 2
       `desktop/src/device/permissions.ts` and its saved file. Test that a
       grant from an older period covers no request.
 - [ ] Leave out the grants of an older period when the Worker relays a
-      settings result, in `worker/devices/broker-settings.ts`.
+      settings result, in `worker/devices/broker-settings.ts`. Keep a grant
+      with no period. Drop saved grants with no period at load in the Mac
+      app.
+- [ ] Send the current period with Keep and Extend. The Mac app ends a
+      grant of an older period and reports failed.
+- [ ] Move "Device commands" of `desktop/README.md` to
+      `desktop/src/device/README.md`, because the file passed 300 lines.
+- [ ] Remove the "does not have ... yet" sentences of the code of this
+      milestone from `worker/devices/README.md`, `desktop/README.md`, and
+      `worker/secrets/README.md`, and add the period write to
+      `worker/secrets/README.md`.
 - [ ] Add the action to the fake device routes and the dev Mac settings.
 
 ## Milestone 4: The control
@@ -370,6 +391,8 @@ Depends on: 3
 - [ ] Show the disconnected state, the 15 minutes hint, the result of an
       uncheck, and scroll the line into view, as the mockups draw.
 - [ ] Change the This Mac sentence in `src/chat/device/ThisMacSection.tsx`.
+- [ ] Remove the "does not have ... yet" sentences of the control from
+      `src/chat/device/README.md`.
 
 ## Milestone 5: Verification, commit, review, and pull request
 

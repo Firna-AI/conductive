@@ -103,6 +103,22 @@ const { controller, state } = useMacSettings(services.api)
   its result repeats the same change through the current pairing, only
   when the user presses it. A failed Keep shows only while its 15 minutes
   run, so the bar never repeats a Keep.
+- The line Allow all commands on this Mac of the Capabilities control
+  reads the same settings, and only the Mac app shows it. Its check sends
+  the settings action `start-workspace-until-stop` with the workspace ID.
+  That action is not the approval action of the same name, which answers
+  one request. Its uncheck sends Stop. A start is done or failed, never
+  done but not saved, because the Mac keeps a grant until Stop only in
+  memory. The line counts the grant as started only when the returned
+  settings list it with no end.
+- The Worker refuses a start unless the user is a member of the org of the
+  workspace and Mac access of the workspace is on. It leaves out each
+  grant of an older Mac access period from the settings that it relays, so
+  the bar, This Mac, and the line never show a grant that covers no
+  request.
+- The code does not have the start, the line, or the left-out grants yet.
+  [Mac access](../../../docs/protocol/capabilities.md#mac-access) states
+  their requirements.
 
 ## Tests
 
@@ -140,6 +156,8 @@ menu of Allow over the region. Build the Mac app first, then run
 ### Related docs
 
 - [Mac app](../../../docs/protocol/desktop-app.md)
+- [Capabilities](../../../docs/protocol/capabilities.md): Mac access and
+  the line of this Mac.
 - [Chat and events](../../../docs/protocol/chat-and-events.md)
 - [Mockups](../../../docs/mockups/README.md): the visual spec.
 - [Shared contracts](../../shared/README.md) and

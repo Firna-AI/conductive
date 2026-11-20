@@ -167,7 +167,7 @@ Without it, or without a lifecycle state, the device-only fallback runs in the s
 
 ## Permission policy and limits
 
-The Worker relays Deny, Allow, Always allow, and the 15-minute workspace choice.
+The Worker relays Deny, Allow, Always allow, and the two workspace choices: 15 minutes and until Stop.
 The Mac sends `command.approved` or `command.denied` after its local decision.
 Each record starts with a null `startedAt`.
 The waiting-to-running transition sets that timestamp once.
@@ -178,8 +178,21 @@ Settings reads and changes wait for a matching main-process operation result.
 Extend uses the same paired settings relay as Stop and requires a workspace ID.
 The Worker validates and relays Extend without storing or changing the grant.
 Only the Mac checks whether the grant still runs and chooses its new end.
+The paired page starts a grant until Stop of one workspace with the settings action `start-workspace-until-stop` and its workspace ID.
+That action is not the approval action of the same name, which answers one request.
+Before the relay, the Worker checks that the user is a member of the org of the workspace and that its Mac access is on.
+It then adds the workspace name and the current Mac access period of the workspace.
+The Worker never sends this action by itself.
+An older Mac app ends its device connection at an unknown message, and that cancels its running commands.
+Each switch-off of Mac access adds 1 to the Mac access period of its workspace.
+The broker sends the current period beside each `command.request`, outside the request record, so an older Mac app ignores it.
+The period only ends grants on the Mac.
+It never allows a command.
 A failed send or disconnected socket removes and rejects the matching waiter.
 Each result relays `done`, `done-not-saved`, or `failed` with the current settings.
+Before it relays a result, the Worker reads the period of each listed workspace and leaves out each grant of an older period.
+The Worker does not have the start, the periods, or this filter yet.
+[Mac access](../../docs/protocol/capabilities.md#when-mac-access-goes-off) states their requirements.
 An oversized settings result uses a small `settings.failed` frame.
 It rejects only the matching waiter with `settings_result_too_large`.
 The socket, running commands, and other settings operations remain active.
