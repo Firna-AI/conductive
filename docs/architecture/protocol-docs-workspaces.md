@@ -30,6 +30,9 @@ protocol docs.
     newest release before it.
 - [Continue](../protocol/continue.md): the next task of a workspace after a
   merge, on a new branch with the same sandbox and sessions.
+- [Repository change](../protocol/repository-change.md): the move of a
+  workspace to another repository of its org, on a new branch with the
+  same sandbox and sessions.
 - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
   row, which moves, reassigns, renames, and archives the workspace.
 - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
@@ -40,7 +43,10 @@ protocol docs.
     place of the moved tree, and the refusals.
 - [Workspace tools](../protocol/workspace-tools.md)
   - [Terminal](../protocol/terminal.md): the terminals of a workspace
-    and their tabs, and the shell of each terminal.
+    and their tabs.
+    - [Terminal shell](../protocol/terminal-shell.md): the shell of each
+      terminal, its connection, its end, its command history, and what
+      an out-of-memory kill ends.
     - [Terminal screen](../protocol/terminal-screen.md): the screen of
       each terminal, its output history, its selection, its size, and its
       keys.

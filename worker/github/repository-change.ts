@@ -1,14 +1,14 @@
 import { HttpError, isRecord } from '../http'
 import { warnWorker } from '../warnings'
-import { installedRepository } from './composition-data'
 import { completeDelivery, isProcessed, recordDelivery } from './data'
 import type { GitHubRepositoryValues } from './repository-read'
+import { reachesSavedRepository } from './repository-reach'
 import { syncRepositoryValues } from './repository-sync'
 
 /**
- * A `repository` webhook that changes the name or the default branch of a
- * repository. It names only the repository, because the handler reads the
- * current values from GitHub.
+ * A `repository` webhook that changes the name, the owner, or the default
+ * branch of a repository. It names only the repository and the install
+ * that sent it, because the handler reads the current values from GitHub.
  */
 export interface RepositoryChange {
   repositoryId: number
@@ -42,9 +42,10 @@ function positiveId(value: unknown): number {
 }
 
 /**
- * Reads the `renamed` action and the `edited` action that changes the
- * default branch. Null for each other event and action, which the caller
- * ignores.
+ * Reads the `renamed` action, the `transferred` action, and the `edited`
+ * action that changes the default branch. GitHub sends `transferred` only
+ * to the install of the new owner. Null for each other event and action,
+ * which the caller ignores.
  */
 export function repositoryChange(
   event: string,
@@ -56,7 +57,8 @@ export function repositoryChange(
     value.action === 'edited' &&
     isRecord(value.changes) &&
     value.changes.default_branch !== undefined
-  if (value.action !== 'renamed' && !edited) return null
+  if (value.action !== 'renamed' && value.action !== 'transferred' && !edited)
+    return null
   return {
     repositoryId: positiveId(value.repository),
     installationId: positiveId(value.installation),
@@ -77,10 +79,7 @@ export async function handleRepositoryChange(
 ): Promise<void> {
   if (await isProcessed(db, deliveryId)) return
   await recordDelivery(db, deliveryId, now())
-  if (
-    dependencies &&
-    (await installedRepository(db, change.repositoryId, change.installationId))
-  ) {
+  if (dependencies && (await reachesSavedRepository(db, change))) {
     await syncRepositoryValues(db, change, () => dependencies.read(change))
     try {
       await dependencies.changed(change)

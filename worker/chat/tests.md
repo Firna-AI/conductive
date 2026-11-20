@@ -105,10 +105,10 @@ npm run typecheck
   split by a second restart. The filter masks only the part that completes
   a secret. Each stream keeps its own raw cursor.
 - `runner-output-legacy.test.ts` starts from two older stream records, one
-  with an answer end and one with held text, and no workspace record. The
-  first receipt moves the answer end into the workspace record, and the
-  older stream keeps no copy. The held text stays with its own stream. No
-  record holds a raw secret prefix.
+  with an answer end and one with held text, and no workspace record or
+  index marker. The first receipt moves the answer end into the record of
+  its answer, and the older stream keeps no copy. The held text stays with
+  its own stream. No record holds a raw secret prefix.
 - `port-reports.test.ts` checks complete private labels, sorted unique ports,
   and the final display limits after filtering.
   `runner-ports.test.ts` checks stored and streamed masked labels, replay,
@@ -181,9 +181,11 @@ npm run typecheck
   original tab sockets, with a production and a local origin, through a
   wake. Both tabs then get each new event in order, with the link of their
   own origin.
-- `createAdapterRuntime` can bundle another Durable Object entry, also for
-  another workspace ID. The [GitHub store tests](../github/README.md#verification)
-  use it to run `WorkspaceChat` with the GitHub state on SQLite.
+- `createAdapterRuntime` can bundle another Durable Object entry. Its
+  callers pass the browser, runner, or gateway entry.
+- The [GitHub store tests](../github/verification.md#native-workspace-harness)
+  use the production workspace object of the [shared test harness](../test-support/README.md).
+  They run the GitHub state on its `WorkspaceChat`, with native SQLite storage.
 - `browser-entry.test-support.ts` and `runner-entry.test-support.ts` extend
   the production `Workspace`. Each adds a stored fixture clock, controls
   that fail an access read or a lifecycle read or write, a random instance

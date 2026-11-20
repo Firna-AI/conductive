@@ -1,10 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { WorkspaceEvent } from '../../shared/events'
+import type { Session } from '../../shared/generated/Session'
 import type { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_IDS } from '../../test-support/fixtures/core'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { now, textOf } from '../components/render-kit'
 import { SessionChat } from '../components/SessionChat'
+import { withSessions } from '../state/linked-kit'
 import { chatFor } from '../state/test-kit'
 
 // The helpers of the tests of secret requests in the chat.
@@ -31,14 +33,17 @@ export function storeEvents(
 /**
  * The chat of the recorded conversation with the secret events in its
  * history, loaded, with its open session as a page of elements. `readOnly`
- * shows the workspace read-only, as a suspended org does.
+ * shows the workspace read-only, as a suspended org does. `sessions`
+ * changes each open session record of the fake, such as its login.
  */
 export async function renderSecrets(options: {
   events: readonly (readonly [WorkspaceEvent, number])[]
   conversation?: RecordedChatScenario
   readOnly?: boolean
+  sessions?: (session: Session) => Session
 }): Promise<HTMLElement> {
   const chat = chatFor({ conversation: options.conversation ?? 'history' })
+  if (options.sessions) withSessions(chat.server, options.sessions)
   storeEvents(chat.server, options.events)
   await chat.controller.start()
   const page = document.createElement('div')

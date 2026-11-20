@@ -204,12 +204,12 @@ a.highlighted:hover {
   white-space: nowrap;
 }
 
-/* The state of a workspace shows in its name, as in the list. */
-.strong .label {
+/* `WorkspaceName` gives the name the class of its state, as in the list. */
+.label.strong {
   font-weight: var(--ui-weight-strong);
 }
 
-.dim .label {
+.label.dim {
   color: var(--ui-muted);
 }
 

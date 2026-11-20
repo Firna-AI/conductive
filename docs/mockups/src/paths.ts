@@ -25,6 +25,7 @@ export const paths = {
   orgs: 'app/orgs',
   createOrg: 'app/orgs/new',
   createFirstOrg: 'app/orgs/new/first',
+  createOrgOperator: 'app/orgs/new/operator',
   newOrg: 'app/orgs/empty',
   anotherNewOrg: 'app/orgs/empty/another',
   deletedOrg: 'app/orgs/deleted',
@@ -125,6 +126,8 @@ export const paths = {
   operatorCodesWaitlistOff: 'app/operator/codes/waitlist-off',
   operatorCodesWaitlistTurnedOff: 'app/operator/codes/waitlist-off/turned-off',
   operatorCodesWaitlistOffPaused: 'app/operator/codes/waitlist-off/paused',
+  operatorProviders: 'app/operator/providers',
+  operatorProvidersSaved: 'app/operator/providers/saved',
   newWorkspace: 'app/new-workspace',
   firstBuildWorkspace: 'app/new-workspace/first-build',
   newWorkspaceFiles: 'app/new-workspace/files',
@@ -202,6 +205,11 @@ export const paths = {
   orgLoginRemoved: 'app/composer/org-login/removed',
   orgLoginStartedSession: 'app/composer/org-login/started-session',
   reassign: 'app/reassign',
+  repositoryMenu: 'app/repository-change',
+  repositoryQuestion: 'app/repository-change/question',
+  repositoryChanging: 'app/repository-change/changing',
+  repositoryFailed: 'app/repository-change/failed',
+  repositoryChanged: 'app/repository-change/changed',
   restart: 'app/restart',
   archive: 'app/archive',
   justArchived: 'app/archive/just-archived',
@@ -219,6 +227,7 @@ export const paths = {
   diff: 'app/files/diff',
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
+  imageFromAnswer: 'app/files/image/from-answer',
   html: 'app/files/html',
   htmlSource: 'app/files/html/source',
   htmlOpening: 'app/files/html/opening',
@@ -262,3 +271,5 @@ export const paths = {
   secretLateGiven: 'app/secret-requests/temporary/late/given',
   secretMixedValue: 'app/secret-requests/several/mixed-value',
 } as const
+
+export { barPaths, checksPaths } from './bannerPaths.ts'

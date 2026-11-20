@@ -8,7 +8,9 @@
  * names, with the lines in view and marked. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
- * which a press on its sent chip opens. A phone shows a file in Files.
+ * which a press on its sent chip opens. `screenshot` is the screenshot of
+ * the agent, which a press on its picture in an answer opens. A phone shows
+ * a file in Files.
  *
  * `html` shows the HTML report of the context folder in Preview, with its
  * page in a frame (HTML preview decision 1 A). `html-source` shows its text,
@@ -37,6 +39,7 @@ export const tabStates = [
   'image',
   'image-not-drawn',
   'attachment',
+  'screenshot',
   'html',
   'html-source',
   'html-opening',

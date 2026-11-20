@@ -66,9 +66,17 @@ Existing workspaces keep their old folders.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
 
+When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
+It does so only when the org already has another repository of the new owner.
+Otherwise, builds fail, and its workspaces and automations get no updates from GitHub.
+To fix this, an admin removes the repository in **Edit** and adds it again.
+The removal turns off each automation of the repository.
+After the repository is back, the owner of each automation turns it on again.
+
 A removed repository stays in the setup until the next build.
 To apply a removal, select **Build computer** under **Cloud computer**.
 Existing workspaces keep the repositories and folders from the setup they started with.
+A workspace can move only to a repository that its computer holds, as [Change the repository](/docs/workspaces#change-the-repository) says.
 
 ## Install software
 
@@ -140,7 +148,7 @@ A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
 The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
-It does not hide values in file content, diffs, or Terminal.
+It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Add secrets for agents
 

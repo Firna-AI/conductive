@@ -7,6 +7,7 @@ import {
 } from 'react'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import type { LineRange } from '../../shared/line-target'
+import type { ChatPictures } from '../../files/page/picture-reads'
 import { mentionable } from './mention-rows'
 
 /**
@@ -34,6 +35,8 @@ interface MentionFiles {
  */
 export interface ChatMentions {
   files: MentionFiles
+  /** Reads pictures only while the sandbox runs. Never starts or resumes it. */
+  pictures?: ChatPictures
   /**
    * Opens a file, as a press on the file in All files does. With `lines`,
    * the file opens as text with the lines in view and marked.

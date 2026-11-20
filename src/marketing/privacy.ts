@@ -24,7 +24,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 17 November 2026.`,
+  it uses it, and who gets it. Effective date: 18 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -64,11 +64,13 @@ export const privacyDocument: LegalDocument = {
             processing terms apply the European Commission's standard
             contractual clauses with the UK International Data Transfer
             Addendum to restricted UK transfers.`,
-          text`The cloud computer provider is based in the United States.
-            It reports that its cloud computers and saved snapshots run in
-            Germany, Finland, and France. UK adequacy regulations approve
-            transfers to countries in the European Economic Area. Other
-            provider operations can involve processing outside that area.`,
+          text`The cloud computer providers are companies registered in the
+            United States. ${productName} uses their European Union regions
+            for cloud computers and saved snapshots. These locations include
+            Belgium, Germany, Finland, and France. UK adequacy regulations
+            approve transfers to countries in the European Economic Area.
+            Other provider operations can involve processing outside that
+            area.`,
           text`For a Claude subscription, ChatGPT plan, or provider API key, Anthropic or OpenAI processes agent requests under
             the agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
@@ -131,8 +133,14 @@ export const privacyDocument: LegalDocument = {
         paragraph`The team keeps each feedback email in its inbox while it
           helps to improve ${productName}. It deletes the email when it no
           longer helps, or when the sender asks. ${productName} keeps no copy
-          of feedback in its own storage. The app keeps an unsent feedback
-          draft only in the memory of its open tab.`,
+          of your feedback message or screenshots in its own storage. The
+          app keeps an unsent feedback draft only in the memory of its open
+          tab.`,
+        paragraph`Feedback send records normally stay for about 24 hours.
+          A late retry whose delivery remains unconfirmed can extend this
+          to about 25 hours. Scheduled cleanup removes them after these
+          periods. Cleanup delays can keep them longer. Account deletion
+          also deletes these records.`,
         paragraph`To request deletion of your personal data, write to
           ${mailLink(legalAddress)}. Deletion rights depend on applicable
           law and can have exceptions.`,
@@ -146,7 +154,7 @@ export const privacyDocument: LegalDocument = {
             secret in the Secrets settings, and each personal or org agent
             login encrypted. An own endpoint login includes its address and
             key. Only its host, with any non-default port, stays in plain text.`,
-          text`It does not send the key of its cloud computer provider to
+          text`It does not send the keys of its cloud computer providers to
             your browser or into a cloud computer.`,
           text`The settings never return a stored env var value or agent login
             to your browser. For an own endpoint login, your browser gets
@@ -161,15 +169,17 @@ export const privacyDocument: LegalDocument = {
             Secrets settings. The command gets the value. The agent gets
             the secret's name and environment variable name, without the
             value. ${productName} hides each exact copy of the value in the
-            output of the command and in the chat. It does not hide a changed
-            or encoded value.`,
+            output of the command and in the text of the chat. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows.`,
           text`An env var is secret until an admin clears its mark. Before
-            ${productName} puts agent output in the chat history or on a
-            screen, it hides each exact copy of a secret value in it. It also
-            hides such a copy in each start log that it shows, and in the
-            names and folders of the servers that it lists. It does not hide
-            a changed or encoded value. A change of the mark applies at
-            the next start of a cloud computer.`,
+            ${productName} puts the text of agent output in the chat history
+            or on a screen, it hides each exact copy of a secret value in it.
+            It also hides such a copy in each start log that it shows, and in
+            the names and folders of the servers that it lists. It does not
+            hide a changed or encoded value, or a value in a picture that an
+            agent answer shows. A change of the mark applies at the next start
+            of a cloud computer.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
             the default branch of each repository, and of the base branch of

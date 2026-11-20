@@ -23,6 +23,18 @@ each login kind except a Codex ChatGPT sign-in.
 The optional `hello.processStartId` names one start of the runner program.
 Only the [runner warnings](../../docs/protocol/runner-warnings.md#process-starts) use it.
 A runner from before this field omits it. It requires no new protocol version.
+The optional `hello.completeToolDetails` offers complete tool details. The
+Worker sets `welcome.completeToolDetails` only to accept that offer. A side
+without the field ignores it, so it requires no new protocol version.
+With acceptance, a detail that fits the tool-detail limit stays a normal
+`tool.updated`. A longer source goes as consecutive `tool.detail.part`
+events of the type `RunnerToolDetailPart`. Only the first part carries
+`start`, a `RunnerToolDetailStart` with the turn and the tool metadata. The
+last part sets `finalPart`. Each part fits `RUNNER_EVENT_MAX_BYTES`.
+The refusal marker of a part names `tool.updated`, because an older client
+cannot read an unknown type. So `RunnerEventRefused` excludes the part type.
+[Tool detail secrets](../../docs/protocol/tool-detail-secrets.md) states the
+filter before the cut.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 

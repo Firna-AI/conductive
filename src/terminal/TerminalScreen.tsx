@@ -39,8 +39,9 @@ function keepFocus(event: MouseEvent) {
 /**
  * The xterm.js screen of one terminal, and its connection. Each new
  * `connection` opens a new socket on the same screen, as
- * `connectScreen` of `screenConnection.ts` says. On a phone it shows the
- * key row.
+ * `connectScreen` of `screenConnection.ts` says. The connection starts at
+ * once, and the screen opens once its host has a size, as `openScreen`
+ * says. On a phone it shows the key row.
  */
 export function TerminalScreen(props: {
   /** The socket path of the terminal. A new path opens a new screen. */
@@ -82,12 +83,13 @@ export function TerminalScreen(props: {
   const currentTheme = useEffectEvent((host: Element) =>
     terminalTheme(cssTokens(host), scheme),
   )
-  // A request waits for the screen. StrictMode makes a second screen at
+  // A request waits for the text area of the screen, which xterm.js makes
+  // when the screen opens in its host. StrictMode makes a second screen at
   // once, and the request then still holds, so that screen takes it too.
   const takeFocus = useEffectEvent(() => {
     const request = props.focusRequest
     const xterm = xtermRef.current
-    if (!request || !xterm) return
+    if (!request || !xterm?.textarea) return
     if (focusUnmoved(request)) xterm.focus()
     props.onFocusDone?.()
   })
@@ -124,6 +126,9 @@ export function TerminalScreen(props: {
       openScreen(host, currentTheme(host), {
         links: () => currentLinks(),
         hintClass: styles.linkHint,
+        // A screen that opens later, once its host has a size, takes a
+        // request that waits.
+        onOpen: () => takeFocus(),
       })
     partsRef.current = parts
     xtermRef.current = parts.xterm

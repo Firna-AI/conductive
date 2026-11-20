@@ -12,7 +12,7 @@ import {
   type StreamTimers,
   type SubscribeToWorkspace,
 } from '../stream/workspace-stream'
-import type { ChatStore } from './chat-snapshot'
+import type { ChatStore } from './chat-store'
 import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
 import { viewWriter, type ChatContext } from './context'
@@ -74,7 +74,7 @@ export function createChatContext(
     picks: new Map(),
     moves: new Map(),
     newId: options.newId ?? (() => crypto.randomUUID()),
-    prompts: new Map(),
+    prompts: { sending: false, ids: new Map() },
     newDraftId: () => {
       drafts += 1
       return `draft:new:${draftEpoch}:${drafts}`

@@ -293,8 +293,8 @@ Native logins keep their existing cause text.
 `endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
 `endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses.
 
-`runner-command-preparation.ts` owns the login and runner capability checks
-before dispatch. Own endpoints require support for the agent's API-key
+`runner-command-preparation.ts` owns the login, runner capability, and
+repository folder checks before dispatch. Own endpoints require support for the agent's API-key
 mode. `runner-delivery.ts` owns the prepared command's send.
 
 `runner-input.ts` keeps only `fileServer: true` from a runner hello.

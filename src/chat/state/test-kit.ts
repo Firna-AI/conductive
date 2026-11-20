@@ -269,6 +269,8 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `lost: ${item.marker.runnerEventType} ${item.marker.reason}`
       case 'continued':
         return `continued by ${item.member.githubLogin}: ${item.branch} from ${item.baseBranch}`
+      case 'repository-changed':
+        return `repository changed by ${item.member.githubLogin}: ${item.repository.fullName} on ${item.branch}`
     }
   })
 }

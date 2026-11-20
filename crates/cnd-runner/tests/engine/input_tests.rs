@@ -114,7 +114,8 @@ async fn rejects_an_agent_change_and_second_turn_without_changing_the_running_ag
 }
 
 #[tokio::test]
-async fn keeps_exact_instructions_and_legacy_branches_across_configuration_changes() -> TestResult {
+async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configuration_changes()
+-> TestResult {
     let h = Fixture::new().await?;
     let mut command = turn("session", "first")?;
     if let RunnerCommand::RunnerTurn(RunnerTurn::Turn { branches, .. }) = &mut command {
@@ -137,6 +138,7 @@ async fn keeps_exact_instructions_and_legacy_branches_across_configuration_chang
             .contains("Workspace branch: \"continue/branch\"")
     );
     assert!(first.instructions.contains("Target branch: \"develop\""));
+    assert_eq!(first.instruction_folder.as_deref(), Some("/repo"));
     h.latest()?.result(&[]);
     h.engine.idle().await?;
     h.command(turn("session", "next")?).await?;
@@ -161,6 +163,7 @@ async fn keeps_exact_instructions_and_legacy_branches_across_configuration_chang
     h.close().await?;
     let mut legacy = h.store.snapshot().await.sessions[0].clone();
     legacy.instruction_branches = None;
+    legacy.instruction_folder = None;
     h.store.remember(legacy).await?;
     let restored = Fixture::open(
         h.memory.clone(),
@@ -181,5 +184,6 @@ async fn keeps_exact_instructions_and_legacy_branches_across_configuration_chang
         serde_json::to_value(options.instruction_branches)?,
         json!({"workspaceBranch":"continue/branch","targetBranch":"develop"})
     );
+    assert_eq!(options.instruction_folder.as_deref(), Some("/repo"));
     restored.close().await
 }

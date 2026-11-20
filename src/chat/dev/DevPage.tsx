@@ -1,6 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { FolderGit2, GitBranch } from 'lucide-react'
 import { useFileDropGuard } from '../../app/file-drags'
 import { nameLabel } from '../../shared/name-label'
@@ -16,6 +16,14 @@ import type { DevOptions } from './dev-options'
 import { DevControls } from './DevControls'
 import { DevMacBanner } from './DevMacBanner'
 import styles from './DevPage.module.css'
+
+/** The states of a workspace whose sandbox runs. */
+const runningStates: ReadonlySet<WorkspaceState> = new Set([
+  'working',
+  'input',
+  'unread',
+  'ready',
+])
 
 const stateLabels: Readonly<Record<WorkspaceState, string>> = {
   working: 'Working',
@@ -93,13 +101,20 @@ export function DevPage(props: {
     [],
   )
   const [mentions] = useState(() => devMentions(note))
+  // As the workspace screen does, the chat reads pictures only while the
+  // sandbox runs, so a stopped sandbox shows each picture as its link.
+  const runs = runningStates.has(workspace.state)
+  const chatMentions = useMemo(
+    () => (runs ? mentions : { ...mentions, pictures: undefined }),
+    [mentions, runs],
+  )
   const mobile = options.viewport === 'mobile'
   useFileDropGuard()
   const chat = (
     <WorkspaceChat
       client={backend.client}
       clock={props.clock}
-      mentions={mentions}
+      mentions={chatMentions}
       onConnectAgent={(agent) =>
         note(`The app opens the Connect form of ${agent}.`)
       }

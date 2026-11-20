@@ -21,6 +21,12 @@
   white-space: nowrap;
 }
 
+/* An account shows by its ID, such as boat or e2b, in the monospace font. */
+.account {
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+}
+
 /* A search with no result says so in place of the table. */
 .empty {
   margin: 0;

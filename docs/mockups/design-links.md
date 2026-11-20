@@ -3,6 +3,7 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. It gives the look of a
 web link in untrusted text, and what a press on each kind of link opens.
+It also gives the links and the pictures of files in answers.
 [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
 gives the chips, which take the place of a link to a workspace of the org.
 `app/chat/links` draws the links of chat text, and the flow
@@ -35,8 +36,8 @@ gives the chips, which take the place of a link to a workspace of the org.
   `WebLinkText.tsx` beside it draws each link that is not a chip. Only
   `http` and `https` addresses are links.
   - A bare address shows as the text has it. Punctuation, quotes, `*`,
-    `_`, `~`, and `]` at its end stay out of it, and so does a `)` that
-    closes no `(` inside it.
+    `_`, and `~` at its end stay out of it. A `)` or a `]` at its end
+    stays in only when it closes a `(` or a `[` inside the address.
   - In an answer and in a message line of the work of a turn, a Markdown
     link shows as its label. Its link title, the text in quotes or in
     parentheses after its address, does not show. A label that reads as
@@ -66,6 +67,43 @@ gives the chips, which take the place of a link to a workspace of the org.
   open or closed, as `app/chat/links/work` shows.
 - The message box, the tool call lines, the terminal, and code blocks keep
   each address as text.
+
+## Files in answers
+
+- A Markdown link of an answer to a file of the workspace shows as a link
+  with its label, from answer chip decision 4. Its title is the path, and
+  a press opens the file tab. `FileLinkText` in `MentionChip.tsx` of
+  `src/components/chat/` draws it.
+- A Markdown image of an answer to a PNG, JPEG, GIF, or WebP file shows as
+  a small picture, from screenshot decision 2 of 18 November 2026, as
+  `app/file-mentions/answers` shows. An SVG file and a link without `!`
+  stay links. `AnswerPicture` in `src/components/chat/` draws it. It takes
+  no fixtures, so the app can draw it too.
+  - The picture stands in the line of text at the place of the image. The
+    text of the line keeps to its top edge, as beside a chip.
+  - The picture keeps its proportions. It is never larger than its own
+    size, never wider than the answer, and never higher than 240 px. A
+    hairline in the border colour keeps a light picture apart from a light
+    answer, and its corners have the medium radius.
+  - Its alternative text is the label, and its title is the path. A press
+    opens the file tab, as `app/files/image/from-answer` shows.
+  - While the read of the file runs, a box as wide as the answer and
+    240 px high shows the icon of a picture and the label, in the muted
+    colour on the raised fill, as `app/file-mentions/answers/loading`
+    shows. A press on the box opens the file tab too.
+  - The chat reads no picture while the cloud computer does not run, so
+    the image shows as the link, as `app/file-mentions/answers/stopped`
+    shows. A failed read shows the same link.
+  - A heading and a table cell show the image as the link. A closed
+    message line in the work of a turn shows it as the link too, so the
+    line stays one line. The open line shows the picture, as
+    `app/file-mentions/answers/work` shows.
+  - Each state holds only inline parts, because it stands in a paragraph.
+    So the box shows an icon and no spinner, which draws a block.
+- `MessageText` shows the pictures where `pictures` asks: in the
+  paragraphs and the list items of an answer, and in an open message
+  line. `ChatPictures` in `chatPictures.tsx` gives the chat the state of
+  its reads, and the `pictures` state of the workspace screen sets it.
 - The mockups open the screen of a workspace for its link, and
   `app/tools/preview` for a local address of port 3000. A link to a page
   that they do not draw opens no screen, such as the workspace of another

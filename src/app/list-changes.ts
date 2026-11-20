@@ -68,6 +68,18 @@ export function workspaceRenamed(
   return workspaceChanged(workspaceId, { name })
 }
 
+/** A read mark clears unread output without changing another listed state. */
+export function workspaceRead(workspaceId: string): ListChange {
+  return (list) => ({
+    ...list,
+    workspaces: list.workspaces.map((item) =>
+      item.id === workspaceId && item.state === 'unread'
+        ? { ...item, state: 'ready' }
+        : item,
+    ),
+  })
+}
+
 export function workspaceReassigned(
   workspaceId: string,
   owner: Workspace['owner'],

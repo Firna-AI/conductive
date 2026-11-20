@@ -15,6 +15,7 @@ export interface StoredRunnerConnection {
   processStartId: string | null
   protocolVersion: number | null
   loginKinds?: readonly RunnerLoginKind[]
+  repositoryFolder?: string
   fileServer?: boolean
   ready: boolean
   checkAt: number
@@ -61,6 +62,10 @@ function readConnection(value: unknown): StoredRunnerConnection {
         Number.isSafeInteger(value.protocolVersion) &&
         value.protocolVersion > 0)
     ) ||
+    !(
+      value.repositoryFolder === undefined ||
+      typeof value.repositoryFolder === 'string'
+    ) ||
     typeof value.ready !== 'boolean' ||
     typeof value.checkAt !== 'number' ||
     !Number.isFinite(value.checkAt)
@@ -82,6 +87,9 @@ function readConnection(value: unknown): StoredRunnerConnection {
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),
+    ...(value.repositoryFolder === undefined
+      ? {}
+      : { repositoryFolder: value.repositoryFolder }),
     ready: value.ready,
     checkAt: value.checkAt,
   }

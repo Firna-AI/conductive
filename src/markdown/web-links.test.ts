@@ -96,9 +96,17 @@ describe('web addresses', () => {
     )
   })
 
-  test('keeps balanced parentheses and leaves trailing punctuation and marks out', () => {
+  test('keeps balanced parentheses and brackets and leaves trailing marks out', () => {
     const href = 'https://example.com/a_(b(c))'
     expect(bareAddressAt(`Read (${href})).,;:!?'"*_~] now`, 6)).toBe(href)
+    expect(bareAddressAt('http://[::1]', 0)).toBe('http://[::1]')
+    expect(bareAddressAt('(https://[::1]).', 1)).toBe('https://[::1]')
+    expect(bareAddressAt('http://example.com/a[1]', 0)).toBe(
+      'http://example.com/a[1]',
+    )
+    expect(bareAddressAt('http://example.com/a[1]]).', 0)).toBe(
+      'http://example.com/a[1]',
+    )
     expect(bareAddressAt('https://example.com`code', 0)).toBe(
       'https://example.com',
     )

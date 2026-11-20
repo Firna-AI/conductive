@@ -41,7 +41,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         and Ready for review of a draft pull request use the token of the
         member who clicks. Continue fetches the
         latest default branch with the token of the member who clicks
-        Continue.`,
+        Continue. A repository change fetches the latest default branch of
+        the new repository with the token of the member who changes the
+        repository.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -144,7 +146,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
         The chat history also records
-        who used Continue, the new branch, and the branch it starts from. It keeps
+        who used Continue, the new branch, and the branch it starts from.
+        It also records who changed the repository of a workspace, the new
+        repository, and the new branch. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
@@ -181,7 +185,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         value or the output of the command.`,
       text`Your code: your repositories and files live in the cloud
         computers that ${productName} runs for your org. ${productName}
-        reads a file or a diff when you open it, to show it to you. The
+        reads a file or a diff when you open it, and a picture that an
+        agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to
         Anthropic, OpenAI, or the chosen endpoint.
         Agent settings in the repository can send them to another address
@@ -193,7 +198,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         of them to its logs. ${productName} still keeps the chat history and
         the Mac command records above.`,
       text`GitHub events: the state of the pull requests and the checks
-        of your branches, and the new name or default branch of a
+        of your branches, and the new name, owner, or default branch of a
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
@@ -207,6 +212,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         metadata, such as a photo's location, from selected screenshots
         before sending. The reply address is your primary verified email
         on GitHub, when available.`,
+      text`Feedback send records: ${productName} keeps your user ID, hashed
+        delivery identifiers, random identifiers, attempt times, delivery
+        status, and active request counts. They limit feedback sends and
+        prevent duplicate emails. These records hold no message, screenshot,
+        email address, or secret.`,
       text`Panel sizes: your browser keeps the sizes of the panels of the
         app. They stay in your browser.`,
       text`Last workspaces: your browser keeps the address of the last

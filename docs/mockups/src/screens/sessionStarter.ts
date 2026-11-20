@@ -40,6 +40,7 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'image':
     case 'image-not-drawn':
     case 'attachment':
+    case 'screenshot':
     case 'html':
     case 'html-source':
     case 'html-opening':

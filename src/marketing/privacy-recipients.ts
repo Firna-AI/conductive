@@ -40,10 +40,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs the cloud computers of every org
-        for ${productName}, in the account of ${productName}. Your code,
-        your files, and your agent sessions are in them. ${productName}
-        sends the provider the requests that start, stop, and use them.`,
+      text`A cloud computer provider runs each org's cloud computers in
+        an account that ${productName} owns. The org keeps that account
+        for its life. Your code, your files, and your agent sessions
+        are in those computers. ${productName} sends their provider
+        requests to start, stop, and use them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
           account ID, and ChatGPT workspace name through ${productName} to
           the cloud computer. Codex uses them to run on that workspace.
@@ -96,9 +97,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the value of each secret, also of a secret that you added.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. They can also read the
-        value of a secret while a command runs with it there. During Continue, they
-        can also read the GitHub token of the member who clicked, while the
-        branch fetch runs. Outside an agent turn,
+        value of a secret while a command runs with it there. During Continue
+        or a repository change, they can also read the GitHub token of the
+        member who started it, while the branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,

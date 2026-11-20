@@ -1,33 +1,67 @@
+import type { FileTabView } from '../components/files/FilesPanel'
+import type { BackLink } from '../components/layout/Page'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
-import { screenshotCopy } from '../fixtures/attachments'
-import { branchPictures, contextFiles, splitPath } from '../fixtures/files'
+import { contextFiles, splitPath } from '../fixtures/files'
 import { paths } from '../paths'
 import type { WorkspaceState } from './workspaceState'
 
 /**
- * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, or the copy of an attached
- * screenshot. A picture takes the icon that All files gives each other
- * file. A read of the copy names it by its file name, because no list
- * names it.
+ * The file that the centre tab shows, when the tab is a file. With masked
+ * paths, a diff opens the masked seed script.
  */
-function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
-  const tab = (key: string, path: string, to: string): WorkspaceTab => ({
-    key,
-    kind: 'file',
-    title: splitPath(path).name,
-    to,
-    selected: true,
-  })
+export function openFile(state: WorkspaceState): FileTabView | undefined {
   switch (state.tab) {
+    case 'code':
+    case 'code-lines':
+    case 'markdown':
+      return state.tab
+    case 'diff':
+      return state.paths === 'masked' ? 'masked-diff' : 'diff'
+    case 'unnamed-file':
+      return 'unnamed'
     case 'image':
-      return tab('image', branchPictures.picture, paths.image)
     case 'image-not-drawn':
-      return tab('image', branchPictures.damaged, paths.imageNotDrawn)
     case 'attachment':
-      return tab('copy', screenshotCopy.path, paths.attachmentOpen)
-    default:
+    case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return state.tab
+    case 'session':
+    case 'new-session':
+    case 'linked-session':
+    case 'later-session':
+    case 'started-session':
+    case 'preview':
+    case 'preview-behind':
       return undefined
+  }
+}
+
+/** The way back from a file page on a phone: to its list. */
+export function backFrom(open: FileTabView): BackLink {
+  switch (open) {
+    case 'diff':
+      return { label: 'Changes', to: paths.filesChanges }
+    case 'masked-diff':
+      return { label: 'Changes', to: paths.maskedPathsChanges }
+    case 'unnamed':
+      return { label: 'All files', to: paths.maskedPathsAllFiles }
+    case 'code':
+    case 'code-lines':
+    case 'markdown':
+    case 'image':
+    case 'image-not-drawn':
+    case 'attachment':
+    case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return { label: 'All files', to: paths.filesAll }
   }
 }
 
@@ -36,7 +70,7 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
  * It takes the icon that All files gives a code file, and each view leads
  * to its own screen.
  */
-function htmlTab(state: WorkspaceState): WorkspaceTab | undefined {
+export function htmlTab(state: WorkspaceState): WorkspaceTab | undefined {
   const tab = (to: string): WorkspaceTab => ({
     key: 'report',
     kind: 'code',
@@ -58,14 +92,4 @@ function htmlTab(state: WorkspaceState): WorkspaceTab | undefined {
     default:
       return undefined
   }
-}
-
-/**
- * The tab of a file that the state opens and that no other part of the row
- * draws: an image file, or the HTML report.
- */
-export function pressedFileTab(
-  state: WorkspaceState,
-): WorkspaceTab | undefined {
-  return pictureTab(state) ?? htmlTab(state)
 }

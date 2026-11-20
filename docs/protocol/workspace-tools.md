@@ -28,8 +28,8 @@ makes each web address of chat text a link, as
   its source, as [HTML file preview](html-file-preview.md) says.
 - A file tab can open at a line or a range of lines, such as from a file
   chip of an answer with a line target, as
-  [Line targets](file-mentions.md#line-targets) says (answer chip
-  decision 2). The tab then shows the text of the file, also for a
+  [Line targets](file-mentions-answers.md#line-targets) says (answer
+  chip decision 2). The tab then shows the text of the file, also for a
   Markdown file. It scrolls the first line to the middle of the view, and
   marks each line of the range with a background colour.
 - The address of such a tab names the lines in its query, as
@@ -104,7 +104,7 @@ makes each web address of chat text a link, as
 - After a start from a saved snapshot, the runner watches the live
   repository folder again when the app sees the end of the restore, and it
   scans the repository once. It uses the same signal as the terminal, as
-  [The shell](terminal.md#the-shell) says.
+  [The shell](terminal-shell.md#the-shell) says.
 - Reason: a watch made before the restore ends stays on the old view of the
   disk, so the lists stop updating. A file that the provider writes inside
   the sandbox at the end of its restore was rejected, because the provider
@@ -153,7 +153,7 @@ makes each web address of chat text a link, as
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
-  connected, a file read falls back to Boat's file read.
+  connected, a file read falls back to the file read of the provider.
 - The Durable Object keeps the last tree and the last changes, so both tabs
   still show them while the sandbox sleeps and while it starts again.
 - Reason: Boat's API can run `git` and read files only while the sandbox

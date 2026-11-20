@@ -21,13 +21,16 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
 - [handleGitHubWebhook](webhook.ts) accepts `POST /v1/github/webhooks` on `MACHINE_ORIGIN`.
   It verifies `X-Hub-Signature-256` against the raw body before parsing or D1 access.
   It authenticates machines with `GITHUB_WEBHOOK_SECRET`, without the app gate.
-  [handleRepositoryChange](repository-change.ts) takes a `repository` event that renames a repository or changes its default branch.
+  [handleRepositoryChange](repository-change.ts) takes a `repository` event that renames a repository, moves it to another owner, or changes its default branch.
+  [REACHED_REPOSITORY_ROWS](repository-reach.ts) picks the saved rows that the install of an event may update: rows of that install, and after a move, rows of an org that already uses the new install for another repository.
   It reads the current values from GitHub through [readGitHubRepository](repository-read.ts), with a metadata token that it revokes.
-  [syncRepositoryValues](repository-sync.ts) saves them only while no other save came after the read, then reads GitHub again to confirm them.
+  [syncRepositoryValues](repository-sync.ts) saves them, with the install of the event, only while no other save came after the read, then reads GitHub again to confirm them.
   It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
   A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
-  [checkRepositoryValues](repository-values-check.ts) compares the repository name and default branch of each other routed webhook with the saved values.
+  [checkRepositoryValues](repository-values-check.ts) compares the repository name, default branch, and install of each push, pull request, check, and status webhook with the saved values.
   When they differ, it runs the same read, guarded save, and wake. A failure there only warns, so the original event still completes.
+  The handler calls `checkRepositoryValues` before [webhookRoute](webhook-routing.ts) routes the event by branch, so a tag push and a pull request from a fork run it too.
+  `webhookRoute` still returns null for those events, so they start no workspace refresh, push image refresh, or automation run.
   [Repository changes on GitHub](../../docs/protocol/repository-changes-on-github.md) states the requirements.
 - [handleGitHubRead](app-handler.ts) accepts GET and HEAD for the banner and checks routes of `githubPaths`.
   It runs the existing app gate and checks the workspace's org before a read.
@@ -146,6 +149,7 @@ A known scheduled result ends the retry chain.
 An exhausted chain keeps the last stored state and returns `github_pending`.
 
 After [Continue](../lifecycle/continue.md#publication) stores a new branch, the workspace object schedules one fresh read of the new binding.
+A [repository change](../lifecycle/repository-change.md#publication) does the same for the binding of the new repository and its new branch.
 That read has no user ID, and it uses the same retry alarm.
 A read or a retry that captured the old branch fails its binding check, so it stores and publishes nothing.
 Webhook routing follows the new branch, because the candidate query reads the current branch of the D1 row.
@@ -249,18 +253,20 @@ The replay still publishes the original event of that receipt.
 An unchanged read stores no snapshot and publishes no event, but it still repairs a missing or old copy.
 A read that returns `null`, such as an unrelated push, copies nothing.
 `saveWorkspaceGitHubSummary` updates only `github_summary`, when the value differs and the workspace still has the snapshot's branch.
-Continue clears the summary when it stores the new branch, so an old branch's copy cannot restore its mark.
+Continue and a repository change clear the summary when they store the new branch, so an old branch's copy cannot restore its mark.
 The summary copy changes no activity time, update time, or list position.
 A failed copy rejects the refresh, so the delivery stays retryable.
 The retry of a committed delivery replays its receipt and copies again, without a GitHub request or a fresh event.
 
 ## Verification
 
-[Verification](verification.md) gives the test commands and the native storage checks.
+The GitHub tests that store state run on the production workspace object in Miniflare, through the [shared test harness](../test-support/README.md).
+[Verification](verification.md) gives the test commands, the GitHub fixtures and fault controls on that harness, and what each test covers.
 
 ### Key Code
 
-- [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue asks for.
+- [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue and a repository change ask for. Its `defaultBranch` can read another repository of the org while access follows the record, for the new repository of a change. Its `branchWork` reads the work of the old branch for the question of a change.
+- [branch-work.ts](branch-work.ts) reads that work from a fresh snapshot: an open pull request, and the pushed commits that the base does not hold. A merged or closed pull request is not such work, and a merged branch counts no pushed commits.
 - [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs, and starts workspace refreshes.
@@ -272,7 +278,7 @@ The retry of a committed delivery replays its receipt and copies again, without 
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
-- [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue.
+- [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.

@@ -20,5 +20,6 @@
 - **Left out:** Remove `disabled` from busy buttons in every caller by hand with no shared rule. A, with no structure that stops a new case.
 - **Wider fix:** B. A default in the shared button removes the case for every chat caller.
 - **Previous examples:** `keepFocus` in `src/shell/ui/actions.tsx`. The bar fix in `src/chat/device/AllowAllBar.tsx` on `calummoore/riga-88hp`.
+- **Related:** `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C, a `keepFocus` default in the shell `ActionButton` and `IconButton`, would cover the two shell callers here. Only its option D, a change of the Firna `Button`, would also cover the chat `ActionButton`. This item does not wait for that answer. `plans/follow-ups/shell-dialog-cancel-focus.md` records the same native-disabling class at the shared Cancel. Its fix remains independent.
 - **Recommendation:** B. One default protects every chat caller, and the two shell callers get a direct fix.
 - **Action:** fix after merge, apply B, because it changes shared buttons outside that branch.

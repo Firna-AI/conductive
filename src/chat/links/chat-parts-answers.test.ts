@@ -10,6 +10,8 @@ const entries: FileEntry[] = [
   { path: 'src/app.ts', name: 'app.ts', kind: 'file', change: null },
   { path: 'shots/after.png', name: 'after.png', kind: 'file', change: null },
   { path: 'src/my app.ts', name: 'my app.ts', kind: 'file', change: null },
+  { path: 'docs/flow.svg', name: 'flow.svg', kind: 'file', change: null },
+  { path: 'shots.png', name: 'shots.png', kind: 'directory', change: null },
 ]
 
 const find: EntryLookup = (path, folder) =>
@@ -168,6 +170,27 @@ describe('file chips in an answer', () => {
       },
       { web: 'https://a.test/x.png' },
       { text: ') [gone](src/gone.ts) [s](src/gone%20file.ts)' },
+    ])
+  })
+
+  test('only the image of a picture file can show as its picture', () => {
+    const parts = chatParts(
+      '![a](shots/after.png) [b](shots/after.png) ![c](docs/flow.svg) ![d](shots.png/) ![e](src/app.ts)',
+      links,
+      { strong: true, web: webLinkOf, mentions: find, code: { root } },
+    )
+    expect(
+      parts.flatMap((part) =>
+        part.kind === 'file-link'
+          ? [{ path: part.entry.path, picture: part.picture }]
+          : [],
+      ),
+    ).toEqual([
+      { path: 'shots/after.png', picture: true },
+      { path: 'shots/after.png', picture: false },
+      { path: 'docs/flow.svg', picture: false },
+      { path: 'shots.png', picture: false },
+      { path: 'src/app.ts', picture: false },
     ])
   })
 

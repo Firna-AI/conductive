@@ -18,16 +18,12 @@ export async function startAddedImageBuild(
     if (image?.imageBuildId !== job.buildId) return
     const admin = await firstActiveOrgAdmin(runtime.env.DB, job.orgId)
     if (!admin) return
-    await startImageBuild(
-      runtime,
-      {
-        orgId: job.orgId,
-        userId: admin.userId,
-        kind: 'build',
-        software: jobSoftware(job),
-      },
-      job.providerAccount,
-    )
+    await startImageBuild(runtime, {
+      orgId: job.orgId,
+      userId: admin.userId,
+      kind: 'build',
+      software: jobSoftware(job),
+    })
   } catch {
     warnWorker({ kind: 'added_image_build_start_failed' })
   }

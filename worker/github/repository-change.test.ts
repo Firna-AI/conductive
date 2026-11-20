@@ -73,7 +73,7 @@ it('saves the current GitHub values, not the event values, in each org of the in
     'Codertocat/Greetings@release',
   ])
   expect(changed).toEqual([repository, repository])
-  expect(harness.memory(first.workspace.id).events).toEqual([])
+  expect((await harness.inspect(first.workspace.id)).events).toEqual([])
 })
 
 it('keeps the newer value when an older delivery arrives again after a failed read', async () => {

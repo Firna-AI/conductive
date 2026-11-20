@@ -219,9 +219,10 @@ tests.
 
 Most source tests run the production source loader with native Git and
 `/bin/sh`. `native-process-test-support.ts` maps the sandbox home to a
-temporary folder under `.context/`, and refuses each command that still holds
-`/home/user`, `/run`, or `/opt`. It reads each status with the production
-`readCommandStatus`, and its replies omit `timedOut`, as Boat's can.
+[fixture folder](../test-support/README.md) outside the checkout, and refuses
+each command that still holds `/home/user`, `/run`, or `/opt`. It reads each
+status with the production `readCommandStatus`, and its replies omit
+`timedOut`, as Boat's can.
 `NativeGitHubAccess` in `native-github-test-support.ts` stands in for GitHub
 token mints, size reads, and revokes, and tracks each token's scope and life.
 
@@ -262,6 +263,8 @@ token mints, size reads, and revokes, and tracks each token's scope and life.
   `repositoryEnvironment`, and `legacyRepositoryDirectory`.
 - [`repository-location-data.ts`](repository-location-data.ts):
   `workspaceRepositoryLocations`, the map of one workspace.
+  `storedRepositoryLocations` gives null in place of an error, for the
+  runner folder check and the chat paths.
 - [`image-sources/materialize.ts`](image-sources/materialize.ts): `createGitHubImageSourceMaterializer`,
   the source work of one call, through [`SourceCommandPort`](image-sources/source-commands.ts).
 - [`image-sources/schedule.ts`](image-sources/schedule.ts): `scheduleSources`,

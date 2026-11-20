@@ -8,8 +8,7 @@ import {
 } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
-import { checksPaths } from '../../barPaths'
-import { paths } from '../../paths'
+import { checksPaths, paths } from '../../paths'
 import { allFilesUnavailable } from '../chat/lostCopy'
 import { LostUpdateRow } from '../chat/LostUpdate'
 import { EmptyState } from '../common/EmptyState'
@@ -39,11 +38,12 @@ export type TreeState = (typeof treeStates)[number]
  * the code file at a range of lines that an answer named, a Markdown file,
  * a diff, the diff of a file whose label hides a secret value, and a file
  * whose name the app does not know. Then a picture of
- * the branch, an image whose bytes the browser cannot draw, and the copy
- * of an attached screenshot, which All files does not list. Then the HTML
- * report of the context folder: its page, its source, the wait until its
- * page loads, the notice of older cloud computer software, and a preview
- * that did not open.
+ * the branch, an image whose bytes the browser cannot draw, the copy of an
+ * attached screenshot, which All files does not list, and the screenshot
+ * of the agent in the closed context folder. Then the HTML report of the
+ * context folder: its page, its source, the wait until its page loads, the
+ * notice of older cloud computer software, and a preview that did not
+ * open.
  */
 export type FileTabView =
   | 'code'
@@ -55,6 +55,7 @@ export type FileTabView =
   | 'image'
   | 'image-not-drawn'
   | 'attachment'
+  | 'screenshot'
   | 'html'
   | 'html-source'
   | 'html-opening'

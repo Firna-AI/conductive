@@ -26,7 +26,7 @@
   - **C.** Add a revision column to each repository row, and let every writer save against the revision that it read. This needs a migration that the previous Worker tolerates. Effort: Medium.
 - **Left out:** A daily check of every repository against GitHub covers the result but not the cause. The user rejected it on 18 November 2026 for missed webhooks, because its GitHub traffic grows with the number of saved repositories.
 - **Wider fix:** B. One writer stops the class for every present and later writer of the two columns.
-- **Previous examples:** `plans/follow-ups/org-saves-restore-older-fields.md` records older replies that replace newer org values.
+- **Previous examples:** The item [`plans/follow-ups/org-saves-restore-older-fields.md`](https://github.com/Firna-AI/conductive/blob/5319f5a5879840392374105bad27acd59893a2f0/plans/follow-ups/org-saves-restore-older-fields.md), since deleted, recorded older replies that replaced newer org values.
 - **Related:** `worker/github/repository-values-check.ts` already saves through `syncRepositoryValues` when another webhook names other values. B keeps it on the same writer.
 - **Recommendation:** B. It keeps one rule for every writer, with no migration.
 - **Action:** fix after merge, apply B, because it changes code on `origin/main` outside this branch and the windows are rare.

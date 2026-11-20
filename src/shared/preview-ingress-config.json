@@ -1,0 +1,9 @@
+{
+  "path": "/run/conductive-preview/ingress.json",
+  "privateHeaders": {
+    "trafficToken": "e2b-traffic-access-token",
+    "accessToken": "x-access-token",
+    "sandboxId": "e2b-sandbox-id",
+    "sandboxPort": "e2b-sandbox-port"
+  }
+}

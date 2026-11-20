@@ -24,6 +24,10 @@ import {
   SOFTWARE_IMAGE_TIME_LIMIT,
 } from './failure'
 import { advanceSoftwareImageStep } from './steps'
+import { associateSoftwareImageDeploy } from './deploy-data'
+import { clearSoftwareImageOperation } from './operation-data'
+import { claimSoftwareImageOutput } from './output-data'
+import { softwareImageResult } from './result'
 import type {
   SoftwareImage,
   SoftwareImageResult,
@@ -34,19 +38,29 @@ import { softwareVersion } from './version'
 export async function advanceSoftwareImage(
   runtime: SoftwareImageRuntime,
   id: string,
+  deliverOutput = false,
 ): Promise<{ image: SoftwareImage; output: string }> {
   let output = ''
+  const checkpoint = async (image: SoftwareImage) => {
+    while (deliverOutput && !runtime.poll?.stopped()) {
+      const parts = await claimSoftwareImageOutput(runtime.env.DB, id)
+      if (!parts.length) break
+      if (runtime.poll) runtime.poll.output(parts)
+      else output += parts.join('')
+    }
+    runtime.poll?.checkpoint(image, output)
+    return { image, output }
+  }
   for (;;) {
     const image = await readSoftwareImage(runtime.env.DB, id)
     if (!image) throw new AttemptChanged()
+    await checkpoint(image)
+    if (runtime.poll?.stopped()) return checkpoint(image)
     if (image.state !== 'building') {
       await retrySoftwareImageCleanup(runtime, image)
       if (image.state === 'ready')
         await cleanupOldSoftwareImages(runtime, image.providerAccount)
-      return {
-        image: (await readSoftwareImage(runtime.env.DB, id)) ?? image,
-        output,
-      }
+      return checkpoint((await readSoftwareImage(runtime.env.DB, id)) ?? image)
     }
     try {
       let error: string | null = null
@@ -78,19 +92,19 @@ export async function advanceSoftwareImage(
         ),
         image,
       )
-      output += step.output ?? ''
       if (step.wait)
-        return {
-          image: (await readSoftwareImage(runtime.env.DB, id)) ?? image,
-          output,
-        }
+        return checkpoint(
+          (await readSoftwareImage(runtime.env.DB, id)) ?? image,
+        )
     } catch (error) {
       if (error instanceof AttemptChanged) continue
-      if (transientProviderError(error))
-        return {
-          image: (await readSoftwareImage(runtime.env.DB, id)) ?? image,
-          output,
-        }
+      if (transientProviderError(error)) {
+        if (!runtime.poll?.expired())
+          await clearSoftwareImageOperation(runtime.env.DB, image)
+        return checkpoint(
+          (await readSoftwareImage(runtime.env.DB, id)) ?? image,
+        )
+      }
       const current = await readSoftwareImage(runtime.env.DB, id)
       if (current?.state === 'building' && current.phase === image.phase)
         await saveSoftwareImage(runtime.env.DB, current, {
@@ -121,13 +135,15 @@ export async function requestSoftwareImage(
         error: SOFTWARE_IMAGE_REPLACED,
         completedAt: runtime.dependencies.now(),
       })
-    )
+    ) {
+      if (runtime.poll?.stopped()) continue
       await retrySoftwareImageCleanup(runtime, {
         ...old,
         state: 'failed',
         error: SOFTWARE_IMAGE_REPLACED,
         revision: old.revision + 1,
       })
+    }
   }
   let image = await latestSoftwareImage(runtime.env.DB, account, version)
   if (
@@ -145,18 +161,13 @@ export async function requestSoftwareImage(
     image = await latestSoftwareImage(runtime.env.DB, account, version)
   }
   if (!image) throw new AttemptChanged()
-  const result = await advanceSoftwareImage(runtime, image.id)
-  const { state, phase, error } = result.image
-  return {
-    state: state === 'deleting' ? 'failed' : state,
-    phase,
-    version,
-    output: result.output,
-    ...(state === 'failed'
-      ? {
-          error: error ?? SOFTWARE_IMAGE_FAILED,
-          keptOutput: result.image.output,
-        }
-      : {}),
-  }
+  if (runtime.poll)
+    await associateSoftwareImageDeploy(
+      runtime.env.DB,
+      tokenDigest,
+      image.id,
+      Date.parse(runtime.env.CF_VERSION_METADATA?.timestamp ?? '') + 1_800_000,
+    )
+  const result = await advanceSoftwareImage(runtime, image.id, true)
+  return softwareImageResult(result.image, result.output)
 }

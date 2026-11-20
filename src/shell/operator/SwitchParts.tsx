@@ -73,22 +73,18 @@ export function TurnOffDialog(props: {
   const turnOff = useQuestion(props.turnOff, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={turnOff.pending} onPress={turnOff.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={turnOff.pending}
-            icon={DoorOpen}
-            onPress={() => turnOff.run()}
-            tone="primary"
-          >
-            {waitlistWords.confirmOff}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={turnOff.pending}
+          icon={DoorOpen}
+          onPress={() => turnOff.run()}
+          tone="primary"
+        >
+          {waitlistWords.confirmOff}
+        </ActionButton>
       }
-      close={turnOff.dismiss}
+      busy={turnOff.pending}
+      close={props.close}
       title={waitlistWords.question}
     >
       {waitlistWords.questionText(props.waiting).map((text) => (

@@ -1,4 +1,3 @@
-import type { RunnerBranches } from '../generated/RunnerBranches'
 import {
   WORKSPACE_TOOLS_MCP,
   TOOL_ENV,
@@ -13,19 +12,20 @@ import {
 import { codexBinary } from './binaries'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
-import { providerMessage } from './message'
+import { providerMessage, type FixedContext } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
 import type { ProviderFactory } from './types'
 import type { ProviderInput } from '../generated/ProviderInput'
 
-function input(command: ProviderInput, branches?: RunnerBranches | null) {
+function input(command: ProviderInput, fixed: FixedContext) {
   const images = command.attachments.filter((attachment) => {
     const metadata = command.message.attachments.find(
       (item) => item.id === attachment.attachmentId,
@@ -38,7 +38,7 @@ function input(command: ProviderInput, branches?: RunnerBranches | null) {
   return [
     {
       type: 'text',
-      text: providerMessage(command.message, command.branches, branches),
+      text: providerMessage(command, fixed),
       text_elements: [],
     },
     ...(command.attachments.length
@@ -121,20 +121,6 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
-    const configs = {
-      ...settings.config,
-      'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
-      'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
-      'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
-      ...(computer
-        ? {
-            'mcp_servers.computer.command': computer.command,
-            ...(computer.args
-              ? { 'mcp_servers.computer.args': computer.args }
-              : {}),
-          }
-        : {}),
-    }
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
@@ -146,10 +132,14 @@ export function createCodexFactory(
       const args = [
         codexBinary(),
         'app-server',
-        ...Object.entries(configs).flatMap(([key, value]) => [
+        ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
         ]),
+        ...codexStdioServer('conductive', WORKSPACE_TOOLS_MCP),
+        '-c',
+        `mcp_servers.conductive.env_vars=${JSON.stringify(Object.values(TOOL_ENV))}`,
+        ...(computer ? codexStdioServer('computer', computer) : []),
       ]
       rpc = new JsonRpc(
         start({
@@ -231,7 +221,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: input(command, options.instructionBranches),
+                input: input(command, options),
               })
             } catch (error) {
               userIds = before
@@ -245,7 +235,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: input(command, options.instructionBranches),
+                input: input(command, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

@@ -28,6 +28,7 @@ repository selection, sections, and workspace metadata.
 The [invitation route](invitations.ts) serves the signed-in pending list and explicit acceptance.
 The [archive route](archive.ts) archives and restores a workspace through its workspace object, as [Archive](../../docs/protocol/workspace-life.md#archive) says.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
+The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.
 It also serves Leave, org recovery, roles, invitations, and workspace ownership.
 Leave keeps the existing last-active-admin rule and native owner-change maintenance.
@@ -175,6 +176,9 @@ View writes cannot change this branch.
   `get-started-data.ts` uses the same default resolver as message admission.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
+  The [assignment service](../provider-assignment/README.md) selects and saves
+  the fixed provider account before that build. Only an operator can supply
+  a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
@@ -351,6 +355,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`lifecycle.ts`](lifecycle.ts): the lifecycle routes and their options.
 - [`continue.ts`](continue.ts): `continueRoute`, which checks the Continue
   request body and gives the start and each poll to the workspace object.
+- [`repository-change.ts`](repository-change.ts): `repositoryChangeRoute`,
+  which checks the `ChangeRepositoryRequest` body and gives the start and
+  each poll to the workspace object.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
@@ -395,9 +402,11 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   and starts a build after an add.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
-  [`feedback-data.ts`](feedback-data.ts), and
-  [`feedback-mail.ts`](feedback-mail.ts): the feedback routes, the checked
-  body, the reply email and reachable IDs, and the email.
+  [`feedback-data.ts`](feedback-data.ts),
+  [`feedback-mail.ts`](feedback-mail.ts), and
+  [`feedback-quota-data.ts`](feedback-quota-data.ts): the feedback routes,
+  the checked body, the reply email and reachable IDs, the email, and the
+  send limit.
   [Feedback routes](feedback.md#key-code) gives each entry point.
 
 ### Related docs

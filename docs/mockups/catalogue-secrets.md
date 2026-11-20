@@ -74,7 +74,10 @@ composer, while the tool call waits. Its child pages:
     because Cal stopped sharing his login, so the agent learns of it at the
     next message. Its `login-gone` variant has the same Allow after Cal
     removed his login, so the line says that the agent learns of it when
-    Cal connects Claude again.
+    Cal connects Claude again. Its `org-login-gone` variant has the same
+    Allow in a session on the Claude login of Acme, after an admin removed
+    that login. Its line says that the agent learns of it when an admin
+    connects Acme's Claude login again.
   - `denied` has a late deny, which sends nothing.
   - `not-answered` has the request that ended when Cal archived the
     workspace.

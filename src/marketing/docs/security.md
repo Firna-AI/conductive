@@ -40,6 +40,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| A repository change's fetch | The GitHub account of the member who changes the repository |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -74,6 +75,7 @@ It reaches repositories that both the GitHub account and the GitHub App can reac
 GitHub checks the clicking member's access and branch rules for a merge.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
+Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
 
 ## Understand what agents can reach
 
@@ -183,15 +185,22 @@ Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud c
 ChatGPT sign-in needs agent software that supports its temporary credentials.
 If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
+Removing a login from Account does not revoke a copy held elsewhere.
+
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-The computer also uses a credential for its connection to Conductive.
-A copy of that credential can still expose later turn credentials in another member's workspace.
+The computer also uses its workspace token for its connection to Conductive.
+Programs and members with terminal access can read or copy it.
+A copy can still expose later turn credentials and GitHub tokens in another member's workspace.
+This remains possible after removal or suspension.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
@@ -199,10 +208,14 @@ Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
 The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
+Restore leaves the computer stopped.
+Its next resume gives it a new workspace token.
+Archive and Restore do not revoke logins or GitHub tokens already copied elsewhere.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Manage an org login](/docs/agent-logins#use-an-org-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
 ## Understand environment values
 
@@ -232,7 +245,7 @@ Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
 Changed or encoded values can still appear.
-File content, diff content, downloaded files, and Terminal do not hide secret values.
+File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
@@ -263,7 +276,8 @@ While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
 A command can also write it to a file.
 During a turn, a program on the computer can run its own command with each secret that the session may use.
-Conductive hides exact copies of a value in the command's output and in the chat.
+Conductive hides exact copies of a value in the command's output and in the text of the chat.
+Pictures in agent replies do not hide values.
 Changed or encoded values can still appear, also to the agent and its model provider.
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)

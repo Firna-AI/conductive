@@ -3,6 +3,7 @@ import { warnWorker } from '../warnings'
 import { advanceSoftwareImage } from './build'
 import { cleanupOldSoftwareImages } from './cleanup'
 import { softwareImages } from './data'
+import { cleanupSoftwareImageProgress } from './deploy-data'
 import type { SoftwareImageRuntime } from './types'
 
 export async function repairSoftwareImages(
@@ -20,4 +21,5 @@ export async function repairSoftwareImages(
     }
   }
   await cleanupOldSoftwareImages(runtime, DEFAULT_PROVIDER_ACCOUNT)
+  await cleanupSoftwareImageProgress(runtime.env.DB, runtime.dependencies.now())
 }

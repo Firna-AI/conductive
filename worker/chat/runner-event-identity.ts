@@ -2,7 +2,7 @@ import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { isRecord } from '../http'
 
 export interface RunnerEventIdentity {
-  type: RunnerEvent['type'] | null
+  type: Exclude<RunnerEvent['type'], 'tool.detail.part'> | null
   sessionId: string | null
   turnId: string | null
   revision: number | null
@@ -21,7 +21,14 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
     }
   }
   let type: RunnerEventIdentity['type'] = null
+  const context =
+    value.type === 'tool.detail.part' && isRecord(value.start)
+      ? value.start
+      : value
   switch (value.type) {
+    case 'tool.detail.part':
+      type = 'tool.updated'
+      break
     case 'turn.started':
     case 'turn.thinking':
     case 'assistant.delta':
@@ -63,8 +70,8 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
   }
   return {
     type,
-    sessionId: typeof value.sessionId === 'string' ? value.sessionId : null,
-    turnId: typeof value.turnId === 'string' ? value.turnId : null,
+    sessionId: typeof context.sessionId === 'string' ? context.sessionId : null,
+    turnId: typeof context.turnId === 'string' ? context.turnId : null,
     revision,
     partNumber,
   }

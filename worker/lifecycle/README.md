@@ -2,9 +2,10 @@
 
 This folder holds the Worker code that prepares the org image and runs the
 life of each workspace. The org image is the saved snapshot that every new
-sandbox of an org starts from. A workspace has its own Boat sandbox and one
+sandbox of an org starts from. A workspace has its own sandbox and one
 branch at a time. [Continue](continue.md) moves it to a new branch after
-its merge. The code reaches Boat only through the
+its merge. A [repository change](repository-change.md) moves it to a new
+branch of another repository of the org, in the same sandbox. The code reaches its provider only through the
 `SandboxProvider` interface in [`provider.ts`](../sandbox/provider.ts),
 with the client of the provider account that each record stores.
 [Provider accounts](provider-accounts.md) and the
@@ -22,15 +23,19 @@ gives the create, read, resume, and activity routes of a workspace to
 - Create a workspace from the newest good org image.
 - Keep the state of each workspace in its Durable Object: the starts, the
   activity, the idle stop, and the disk retention restart. That restart
-  starts a stopped sandbox briefly, so that Boat keeps its disk.
+  starts a stopped Boat sandbox briefly, so that Boat keeps its disk.
+  Other provider kinds get no disk retention restart.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn, or of the member who pressed Continue during its fetch.
+  the current turn, or of the member who pressed Continue or changed the
+  repository, during the fetch of that job.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
+- Change the repository of a workspace to another repository that its
+  sandbox holds, with the same sandbox and sessions.
 - Restart the runner, preview relay, and terminal service of a running workspace, after
   an update check, as [Restart](routes.md#restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
@@ -44,7 +49,7 @@ gives the create, read, resume, and activity routes of a workspace to
 of a create.
 
 The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
-Its provider account argument selects the published org image independently of those branch fields.
+The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
 The creation claim keeps them in its saved plan.
 The fetch updates `refs/remotes/origin/<base branch>`.
 The branch phase uses the event commit when it exists, or the fetched head otherwise.
@@ -89,6 +94,14 @@ its phases, the staged fetch and the branch move, the publication, and the
 recovery. [Continue routes](continue-routes.md) gives its routes and errors.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
+
+### Repository change
+
+[Repository change](repository-change.md) gives the routes and errors, the
+admission and the reservation that it shares with Continue, its phases,
+the move command with the context copy, the publication, and the
+recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns both jobs for the
+workspace object.
 
 ### Builds and refreshes
 
@@ -139,8 +152,6 @@ each record and start job stores, the client that each call uses, and the
 Run `npm run test -- worker/lifecycle` from the repository root with Node 24.
 The [lifecycle test guide](tests.md) describes the native fixture, clocks, alarms, and focused checks.
 
-D1 holds the workspace, token, build, and log records. The storage of each
-object holds the lifecycle state, the turn records, and the events.
 `WorkspaceStateProjection` passes the lifecycle start to `persistLifecycleState`
 in [`workspace-data.ts`](workspace-data.ts).
 The save copies `start.startedAt` into `workspaces.running_since` for starting,
@@ -151,20 +162,9 @@ A deleted-org disk restart saves its restart time.
 The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
 The migration leaves existing times null until their next lifecycle save.
 The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
-The computer ledger keeps allocation keys, orgs, owners or starters, and provider IDs with their [provider accounts](provider-accounts.md#the-computer-ledger).
-It keeps deleted computer IDs until their org is purged.
-Assigned identity writes also retain older IDs, including imports and repairs.
-Workspace owner changes update each live ledger entry of that workspace.
-The retained owner survives removal of the workspace row.
-Allocation recovery keeps that retained owner when it merges an imported computer.
-Definite first create refusals stay as rejected allocation records.
-A refused replay keeps an earlier uncertain request live.
-Each failed computer has its own cleanup flag.
-The native cleanup pointer can therefore change without losing an older failed computer.
-Archive and Restore keep the ledger entry of a retained computer live.
-At the end of Restore, the delete goes through the ledger-aware cleanup of [`cleanup.ts`](cleanup.ts).
-`detachArchiveDisk` then marks the exact account and ID deleted in the same D1 batch that detaches the disk.
-A confirmed missing archived disk uses that batch too.
+
+The [provider accounts page](provider-accounts.md#the-computer-ledger) describes
+the persisted resource records and the retained computer ledger.
 
 ### Key Code
 
@@ -183,7 +183,7 @@ the guides that give the entry points of each part.
 - [Access and security](../../docs/protocol/access-and-security.md): what a
   sandbox holds, the workspace token, and GitHub tokens.
 - [Architecture](../../docs/architecture/components.md): the Worker, the workspace
-  Durable Object, and Boat.
+  Durable Object, and the sandbox providers.
 - [Sandbox software](../../image/README.md): the software that each build
   installs.
 - [Shared contracts](../../src/shared/README.md): the browser and runner

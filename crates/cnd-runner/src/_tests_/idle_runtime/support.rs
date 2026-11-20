@@ -7,7 +7,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerControlCommand, RunnerInterrupt};
-use cnd_runner_interface::runner_files::RunnerFileResponse;
+use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
 use futures_util::future::BoxFuture;
 use tokio::sync::{self, Notify, mpsc, watch};
 use unimock::{MockFn, Unimock, matching};
@@ -40,7 +40,7 @@ impl RunnerLink for Link {
     async fn persist(&self) -> Result<()> {
         RunnerLink::persist(&self.0).await
     }
-    async fn reply(&self, response: RunnerFileResponse) -> Result<()> {
+    async fn reply(&self, response: RunnerToWorkspace) -> Result<()> {
         RunnerLink::reply(&self.0, response).await
     }
     async fn close(&self) -> Result<()> {

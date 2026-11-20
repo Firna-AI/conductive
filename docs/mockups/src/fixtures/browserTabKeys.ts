@@ -11,9 +11,13 @@ function digitKeys(modifier: string): Shortcut[] {
  * The keys that decision 192 B leaves to the browser in a normal tab. The
  * user's answer of 10 November 2026 to decision 196, B with D, makes them
  * the keys that the browser uses on its system to select a tab or to open
- * its address bar: ⌘1 to ⌘9 and ⌘L on a Mac, and Ctrl+1 to Ctrl+9 and
+ * its address bar. These lists hold only the default keys among them that
+ * the mockups show: ⌘1 to ⌘9 and ⌘L on a Mac, and Ctrl+1 to Ctrl+9 and
  * Ctrl+L on Windows. On Linux, Chrome and Edge also use Alt+1 to Alt+9, and
- * Firefox uses Alt+1 to Alt+9 in place of Ctrl+1 to Ctrl+9.
+ * Firefox uses Alt+1 to Alt+9 in place of Ctrl+1 to Ctrl+9. No default key
+ * is a keypad form of a digit key, Alt+D, or F6, so the lists leave out
+ * those keys of the browser. "Keys that the app leaves to the browser" in
+ * `docs/protocol/keyboard-shortcuts-keys.md` gives the complete table.
  */
 const macBrowserKeys = [...digitKeys('⌘'), '⌘L']
 

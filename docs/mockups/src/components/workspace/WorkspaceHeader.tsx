@@ -1,7 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, FolderGit2, PanelRight } from 'lucide-react'
+import { ChevronLeft, PanelRight } from 'lucide-react'
 import { people } from '../../fixtures/members'
-import { repositories } from '../../fixtures/repositories'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { Menu, type MenuEntry } from '../common/Menu'
@@ -16,6 +15,7 @@ import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
 import { HeaderState } from './HeaderState'
 import { NameMenuButton } from './NameMenuButton'
 import { OwnerPicker } from './OwnerPicker'
+import { RepositoryPicker } from './RepositoryPicker'
 import { RunLinks, type RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
@@ -25,7 +25,8 @@ import styles from './WorkspaceHeader.module.css'
  * header names the repository. The label of the number follows the name,
  * and copies the link of the workspace. On desktop its tooltip names the
  * key of Copy link. On a phone it leads the line under
- * the name, before the repository. For an admin of the org,
+ * the name, before the repository. The repository opens the menu that
+ * moves the workspace to another repository. For an admin of the org,
  * the owner opens the menu that reassigns the workspace. On desktop the
  * header ends with the toggle that hides the right column and shows it
  * again. A run workspace also links to its automation and its pull request.
@@ -57,6 +58,11 @@ export function WorkspaceHeader(props: {
   /** The automation of a run workspace and the pull request of its run. */
   run?: RunSource
   /**
+   * The menu of the repository is open, or the change of the repository
+   * runs. A phone shows the menu as a sheet.
+   */
+  repositoryControl?: 'open' | 'changing'
+  /**
    * The workspace menu that the name opened, below the name on desktop. A
    * phone shows it as a sheet.
    */
@@ -66,7 +72,15 @@ export function WorkspaceHeader(props: {
 }) {
   const { workspace, name } = props
   const corner = useCornerControls()
-  const repository = repositories[workspace.repository].name
+  const repositoryOpen = props.repositoryControl === 'open'
+  const repository = (
+    <RepositoryPicker
+      changing={props.repositoryControl === 'changing'}
+      inline={props.viewport === 'mobile'}
+      open={repositoryOpen}
+      repository={workspace.repository}
+    />
+  )
   const owner = (
     <OwnerPicker
       compact={props.viewport === 'mobile'}
@@ -115,7 +129,7 @@ export function WorkspaceHeader(props: {
           {title}
           <span className={styles.line}>
             {copyLink}
-            <span className={styles.branch}>{repository}</span>
+            {repository}
           </span>
         </div>
         {owner}
@@ -130,11 +144,10 @@ export function WorkspaceHeader(props: {
       <header className={classes(styles.bar, corner && styles.cornerBar)}>
         {title}
         {copyLink}
-        <span className={styles.metas}>
-          <span className={styles.meta}>
-            <FolderGit2 aria-hidden className={styles.icon} size={13} />
-            <span className={styles.branch}>{repository}</span>
-          </span>
+        <span
+          className={classes(styles.metas, repositoryOpen && styles.metasOpen)}
+        >
+          {repository}
         </span>
         {owner}
         <HeaderState

@@ -13,12 +13,12 @@ async function start(): Promise<Server> {
   return server
 }
 
-afterEach(() => {
-  server?.stop()
+afterEach(async () => {
+  await server?.stop()
   server = null
 })
 
-/** A prompt line of the login Bash, which differs between machines. */
+/** The fixed short prompt of the isolated login Bash. */
 const prompt = /\$ $/m
 
 describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {

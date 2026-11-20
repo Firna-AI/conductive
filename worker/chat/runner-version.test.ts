@@ -145,6 +145,7 @@ it.each([null, 1, 2])(
     const runner = new FakeRunner({
       workspaceId: WORKSPACE_ID,
       protocolVersion: 2,
+      ...(pin === 2 ? { completeToolDetails: true } : {}),
     })
     runner.emit({ type: 'runner.ready' })
     await fixture.connect(runner)
@@ -154,6 +155,7 @@ it.each([null, 1, 2])(
       protocolVersion: 2,
       streamId: 'fake-stream-1',
       confirmedThrough: 0,
+      ...(pin === 2 ? { completeToolDetails: true } : {}),
     })
     expect(runner.commands).toMatchObject([
       {

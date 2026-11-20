@@ -1,4 +1,5 @@
 import { parseRoute } from '../../../../../src/app/router'
+import { pictureType } from '../../../../../src/files/page/file-view'
 import {
   webAddressParts,
   type WebAddressPart,
@@ -34,12 +35,16 @@ export type TextPart =
 
 /**
  * A Markdown link or image of an answer to an entry of the tree. It shows
- * as a normal link with its label, which opens the file.
+ * as a normal link with its label, which opens the file. `picture` marks
+ * the Markdown image of a PNG, JPEG, GIF, or WebP file, which can show as
+ * its picture (screenshot decision 2). The file tab shows the same files
+ * as pictures, so an SVG file stays a link.
  */
 export type FileLinkPart = {
   kind: 'file-link'
   label: string
   source: string
+  picture: boolean
 } & PathTarget
 
 /** A Markdown link or image whose target is not a web address. */
@@ -60,7 +65,16 @@ function fileLinkParts(
     if (!target) continue
     parts.push(...rest(text.slice(end, match.index)))
     const label = match[1].trim() === '' ? entryName(target.entry) : match[1]
-    parts.push({ kind: 'file-link', label, source: match[0], ...target })
+    const { folder, path } = target.entry
+    const image = match[0].startsWith('!')
+    const picture = image && !folder && pictureType(path) !== undefined
+    parts.push({
+      kind: 'file-link',
+      label,
+      source: match[0],
+      picture,
+      ...target,
+    })
     end = match.index + match[0].length
   }
   return [...parts, ...rest(text.slice(end))]
