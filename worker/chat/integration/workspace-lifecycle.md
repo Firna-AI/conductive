@@ -13,8 +13,8 @@ methods of `Workspace`.
   lifecycle change of `Workspace` runs in it through `runLifecycle`, then
   calls `flushRunner`. So a waiting turn goes out when the lifecycle state
   allows it.
-- The progress phases of a sandbox start make most of their D1 and Boat
-  calls outside the queue, as
+- The progress phases of a sandbox start make most of their D1 and
+  provider calls outside the queue, as
   [Creates and resumes](../../lifecycle/workspace-object.md#creates-and-resumes)
   says. So the chat reads, the messages, and the runner receipts do not
   wait for those calls.
@@ -113,8 +113,9 @@ methods of `Workspace`.
   commits with the events and the turns. Queued turns do not count as
   working.
 - Known limit: other lifecycle work still holds the queue during its D1
-  and Boat calls. The lifecycle step of the alarm holds it for the restore
-  watch, the Boat state read, the deadline extension, and the idle stop.
+  and provider calls. The lifecycle step of the alarm holds it for the
+  restore watch, the provider state read, the deadline extension, and the
+  idle stop.
   Disk retention, Archive, cleanup, and the access stop also make their
   calls in the queue. A start keeps its admission, its runner readiness
   check, its failure path, and its token write in the queue. So does the

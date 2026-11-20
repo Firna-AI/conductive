@@ -27,6 +27,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 1. Open your org.
 2. Select **New workspace**.
 3. Choose the repository for the task.
+   **New workspace** starts with the org's default repository.
 4. Choose a model and effort.
 5. Describe the task in the message box.
 6. Select **Send** on the page, or **Create** in the dialog.
@@ -49,6 +50,8 @@ The workspace keeps its accepted messages after a failed first start.
 Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
+The repository menu lists the org's repositories in the order that admins set.
+[Order repositories](/docs/cloud-computer#order-repositories) says how.
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
 The send button stays off while the selected repository waits for its build.
@@ -238,9 +241,9 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 
 ## Resume a stopped computer
 
-The computer stops after 30 minutes without user activity and without a running agent turn.
+The computer stops after a set time without user activity and without a running agent turn.
 An open tab alone does not keep it running.
-Using a port preview does not keep it running either.
+Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
 
 Open a stopped workspace to start its computer again.
@@ -331,6 +334,61 @@ For another failure, follow the reason shown under the bar.
 
 - [Use pull request actions](/docs/pull-requests)
 - [Apply updated cloud computer software](/docs/cloud-computer#apply-setup-changes)
+
+## Change the repository
+
+Every org member can move a workspace to another repository of the org.
+The workspace keeps its cloud computer, number, link, name, sessions, and chat.
+It gets a new branch in the folder of the new repository.
+
+1. Open the workspace.
+2. Wait for every running agent turn, **Continue**, and **Restart** in that workspace to finish.
+3. Select the repository in the workspace header.
+   On a phone, it is in the line under the workspace name.
+4. Select the new repository in the menu.
+5. Read the question if it lists work.
+6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
+
+The menu lists only the org's repositories that the workspace's cloud computer holds.
+When no other repository can show, the header shows the repository as text, with no menu.
+A repository that the org added after the workspace started does not show.
+Create a new workspace to use it.
+
+The question lists the work that the workspace stops following.
+This work can be files not committed, commits not pushed, an open pull request, and pushed commits of the branch.
+That work stays with the old repository.
+The question also lists the changed files in the folder of the new repository.
+These files move to the new branch.
+Without such work, the change starts at once.
+
+If the message says "Restart the software, then try again.", the computer needs newer software first.
+Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software) says, then change the repository again.
+
+The computer starts first if it is stopped.
+The new branch starts from the latest default branch of the new repository.
+That default branch becomes the workspace's base branch.
+Your GitHub account needs read access to fetch it.
+The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
+The change copies the `.context/` folder into the folder of the new repository.
+A file that already exists there stays.
+If the copy fails, the change stops before the new branch, and a message names the reason.
+While the change runs, new agent turns wait, and **Continue**, **Restart**, and **Archive** are not available.
+
+Each session shows who changed the repository, the new repository, and the new branch.
+The agents keep their conversations and work in the new folder.
+Programs that already run, such as development servers, keep running in the old folder.
+Their previews show the old repository until you start them again in the new folder.
+The pull request bar then follows the new branch without a pull request.
+Each idle shell in the old folder moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command keeps its folder.
+File tabs of the old repository close.
+The startup script runs in the new folder at the next start.
+The old branch, its pull request, and the files in the old folder stay.
+
+If the change fails, the workspace keeps its repository and branch, and a message names the reason.
+If changed files in the new folder clash with its latest default branch, commit or discard them, then try again.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 
 ## Archive a workspace
 

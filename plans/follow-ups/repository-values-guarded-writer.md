@@ -1,0 +1,32 @@
+# Continue and the chooser can save older repository values
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-18, from branch `calummoore/firna-ai-user-interface-discrepancy-lsqt`, the wider fix of review finding 8 of round 2.
+- **Location:** `worker/lifecycle/continue-data.ts:76`, `worker/lifecycle/continue-progress.ts:51`, `worker/app-api/feature-repositories.ts:69`, `worker/app-api/feature-repositories-data.ts:38`, and `worker/github/repository-sync.ts`.
+- **Reason:** the change reaches code on `origin/main` outside the branch, and each window is rare and short.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Saved values:** the `full_name` and `default_branch` columns of the `repositories` table, one row for each org that connected a repository.
+  - **Continue:** the workspace action that moves a workspace to a new branch from the latest default branch. Its job reads the default branch from GitHub, and it saves the branch at the end of the job.
+  - **Repository chooser:** the Repositories tab of org settings. Turning a repository on saves the name and the default branch from the admin's GitHub repository list.
+- **Background:**
+  - On 17 November 2026 the user chose that a GitHub `repository` webhook saves the new name or default branch of a repository. `docs/protocol/repository-changes-on-github.md` states the rules.
+  - The webhook reads the current values from GitHub. `syncRepositoryValues` in `worker/github/repository-sync.ts` saves them only while each row still holds the values that it read before the GitHub read. It then reads GitHub again and saves again when the values differ. So two webhooks that run at the same time still end with the GitHub values.
+  - Continue reads the default branch at its verify phase (`worker/lifecycle/continue-progress.ts:51`). It saves the branch with no check at publication (`worker/lifecycle/continue-data.ts:76`), after resume and Git work, which can take minutes.
+  - The chooser reads the admin's repository list, then saves the name and the default branch from that list (`worker/app-api/feature-repositories-data.ts:38`), with no check.
+  - While the published org image holds values that differ from the saved values, the image coordinator starts a build of the saved values.
+- **Problem:** A webhook can save newer values while Continue or the chooser waits between its read and its save. The later save then replaces the newer values with older ones. The completed webhook delivery does not run again.
+- **Impact if no action:** Screens show an older name or default branch, and the image coordinator can build the older default branch, until the next change on GitHub.
+- **Root question:** How does every writer of the saved values keep the newest GitHub values?
+- **Options:**
+  - **A.** Let Continue save the branch only when the saved branch still equals the value that it held before the verify read. Leave the chooser as it is, because its window is one request. Effort: Small.
+  - **B.** Export one guarded writer from `worker/github/repository-sync.ts`, with the compare and the confirming read. Route the webhook, Continue, and the chooser through it. Add a test for each writer with a save between its read and its save. Effort: Medium.
+  - **C.** Add a revision column to each repository row, and let every writer save against the revision that it read. This needs a migration that the previous Worker tolerates. Effort: Medium.
+- **Left out:** A daily check of every repository against GitHub covers the result but not the cause. The user rejected it on 18 November 2026 for missed webhooks, because its GitHub traffic grows with the number of saved repositories.
+- **Wider fix:** B. One writer stops the class for every present and later writer of the two columns.
+- **Previous examples:** The item [`plans/follow-ups/org-saves-restore-older-fields.md`](https://github.com/Firna-AI/conductive/blob/5319f5a5879840392374105bad27acd59893a2f0/plans/follow-ups/org-saves-restore-older-fields.md), since deleted, recorded older replies that replaced newer org values.
+- **Related:** `worker/github/repository-values-check.ts` already saves through `syncRepositoryValues` when another webhook names other values. B keeps it on the same writer.
+- **Recommendation:** B. It keeps one rule for every writer, with no migration.
+- **Action:** fix after merge, apply B, because it changes code on `origin/main` outside this branch and the windows are rare.

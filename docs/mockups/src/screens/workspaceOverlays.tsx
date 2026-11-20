@@ -29,9 +29,11 @@ import { closedTerminal, cloudComputerSilent } from '../fixtures/terminals'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
+import { expandedPage } from './workspaceExpanded'
 import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
-import { openFile } from './workspaceParts'
+import { openFile } from './workspaceFileTab'
+import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
@@ -209,6 +211,10 @@ export function workspaceOverlay(
           />
         </Sheet>
       ) : null
+    case 'repository':
+    case 'repository-change':
+    case 'repository-failed':
+      return repositoryOverlay(state.overlay, workspace, viewport)
     case 'tab-menu':
       return mobile && row.menuTab ? (
         <TabMenuSheet
@@ -247,6 +253,8 @@ export function workspaceOverlay(
       ) : null
     case 'header-rename':
       return null
+    case 'expanded-page':
+      return mobile ? null : expandedPage(state)
   }
 }
 

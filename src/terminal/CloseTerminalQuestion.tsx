@@ -18,14 +18,12 @@ export function CloseTerminalQuestion(props: {
   const name = terminalName(props.terminal)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={props.onCancel}>Cancel</ActionButton>
-          <ActionButton icon={X} onPress={props.onConfirm} tone="danger">
-            {terminalCopy.closeConfirm}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton icon={X} onPress={props.onConfirm} tone="danger">
+          {terminalCopy.closeConfirm}
+        </ActionButton>
       }
+      busy={false}
       close={props.onCancel}
       title={terminalCopy.closeTitle(name)}
     >

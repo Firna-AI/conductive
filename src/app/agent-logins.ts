@@ -28,6 +28,8 @@ const byAgent = (a: { agent: Agent }, b: { agent: Agent }) =>
 export class AgentLogins {
   /** The number of the last change of each agent login. */
   private readonly changes = new Map<Agent, number>()
+  private readonly invalidations = new Map<Agent, number>()
+  private readonly reads = new Map<Agent, number>()
   private readonly account: Store<AccountResponse | null>
 
   constructor(account: Store<AccountResponse | null>) {
@@ -52,11 +54,21 @@ export class AgentLogins {
     return this.account.get()?.defaultLogins !== undefined
   }
 
+  /** Counts complete replies that name defaults and pass this agent's read mark. */
+  readVersion(agent: Agent): number {
+    return this.reads.get(agent) ?? 0
+  }
+
   /** Counts a change of the login of `agent`, and gives its number. */
   change(agent: Agent): number {
     const change = (this.changes.get(agent) ?? 0) + 1
     this.changes.set(agent, change)
     return change
+  }
+
+  /** A newer observation cancels older reads without retiring pending local writes. */
+  invalidateReads(agent: Agent): void {
+    this.invalidations.set(agent, (this.invalidations.get(agent) ?? 0) + 1)
   }
 
   /** Shows a login that a write gave, as a change of its own. */
@@ -78,15 +90,20 @@ export class AgentLogins {
    * login of the answer whose agent had no change after the mark, and the
    * default logins of that agent when the answer names them. `only` limits
    * the result to one agent, for a read after a change of its login.
+   * A newer login observation also invalidates an earlier mark. Its read
+   * barrier is separate, so that a pending local write can still confirm.
    */
   mark(): (read: LoginRead, only?: Agent) => void {
     const marked = new Map(this.changes)
+    const observed = new Map(this.invalidations)
     return (read, only) =>
       this.show(
         read,
         (agent) =>
           (only === undefined || agent === only) &&
-          this.changes.get(agent) === marked.get(agent),
+          this.changes.get(agent) === marked.get(agent) &&
+          this.invalidations.get(agent) === observed.get(agent),
+        true,
       )
   }
 
@@ -94,7 +111,11 @@ export class AgentLogins {
    * Shows the logins of `read` whose agent `shown` takes, and the default
    * logins of those agents in place of the ones that show.
    */
-  private show(read: LoginRead, shown: (agent: Agent) => boolean): void {
+  private show(
+    read: LoginRead,
+    shown: (agent: Agent) => boolean,
+    complete = false,
+  ): void {
     const account = this.account.get()
     if (!account) return
     const logins = read.agentLogins.filter((login) => shown(login.agent))
@@ -114,6 +135,13 @@ export class AgentLogins {
         ...(account.defaultLogins ?? []).filter((entry) => !shown(entry.agent)),
         ...defaults,
       ]
+    }
+    if (complete && defaults !== undefined) {
+      const agents = new Set(
+        [...logins, ...(defaults ?? [])].map((item) => item.agent),
+      )
+      for (const agent of agents)
+        this.reads.set(agent, this.readVersion(agent) + 1)
     }
     this.account.set(next)
   }

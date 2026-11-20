@@ -21,6 +21,12 @@ page.
 - [Agent tool runtime](agent-tools.ts) owns the machine paths, turn environment names, turn header, and workspace MCP registration.
 - [Agent words](agents.ts) supply the effort labels, model lookup, and model
   labels for the chat, the new-workspace picker, and the mockups.
+  `sameChoice` compares two choices with one equality for each field of
+  `AgentChoice`. The chat, the automation draft, and the Worker checks of a
+  repeated message or model change use it. The Worker checks first read a
+  stored choice without `fast` as off, as
+  [The models with fast mode](../../docs/protocol/fast-mode.md#the-models-with-fast-mode)
+  says.
 - [Duration](transcript/duration.ts) formats elapsed chat and command times.
   [Tool words](transcript/tool-words.ts) supply tool verbs, fold counts,
   and the rule that starts a run open.
@@ -71,6 +77,8 @@ page.
 - [Restore marker](restore-marker.ts) names the file that the Worker writes at the end of the disk restore. The terminal and the agent runner read it.
 - [Commit author](commit-author.ts) builds a GitHub user's commit author and its four Git variables.
 - [Org contracts](orgs.ts) carry custom initials, the colour of the org, and GitHub repository choices for org creation, and the request reader for org moves.
+  `CreateOrgRequest.providerAccount` carries an operator's account choice.
+  Omission means By weights. The Worker ignores the field from other users.
 - [Org colours](org-colors.ts) list the preset keys of an org colour, with Blue as the default for an org without one or with an unknown key.
 - [Member contracts](members.ts) name each invitation by its email. Each member keeps the `User` with their GitHub login. `PendingOrgInvite` adds the org ID and name, for the invitations that the signed-in user can accept.
 - [Account contracts](account.ts) include the repository list available before an org exists.
@@ -101,7 +109,7 @@ page.
 - [GitHub contracts](github.ts) give the seven `githubPaths` routes of a workspace: the banner, checks, and stored reads, the member capability, the merge start, the merge result, and Ready for review. `PullRequest.headSha` is the head commit that the banner shows, and `GitHubMergeRequest` sends it back with the merge method. `GitHubCapabilities` gives `canWrite` and the `mergeMethod` that the member may use, or null. `GitHubMergeResponse` is a pending app job with its `mergeId`, or a completed merge. `GitHubReadyRequest` sends the `pullNumber` that the bar shows, and `GitHubReadyResponse` says that the pull request is ready. These member replies never become workspace events. [Member merges](../../worker/github/merges.md) gives the replies and the error codes.
 - `githubSummary` in [GitHub contracts](github.ts) maps the banner state to the list mark, and `checksSummary` gives the checks state that the bar uses. [The summary reader](github-read.ts) reads `Workspace.github`.
 - [Org settings](org-settings.ts) carry the base image software for the Cloud computer tab.
-- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, and its byte limits.
+- [Feedback contracts](feedback.ts) define the feedback path, its request and reply, its byte limits, and its send limit.
 - [Image signatures](images.ts) give `readImage` and `CheckedImage`. [images.test.ts](images.test.ts) checks the four formats, both GIF signatures, and refused or short signatures.
 - [Automations](automations.ts) define automation paths, editable fields, triggers, inactive reasons, and run states.
   Author-filter requests carry logins. Saved filters carry account IDs and canonical logins.

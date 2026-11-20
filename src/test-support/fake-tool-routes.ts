@@ -1,4 +1,5 @@
 import type { PathState } from '../../docs/mockups/src/fixtures/maskedFiles'
+import { sandboxNotAnswering } from '../../docs/mockups/src/fixtures/previews'
 import { desktopPath } from '../shared/desktop'
 import { filePaths } from '../shared/files'
 import { githubPaths, type BannerState } from '../shared/github'
@@ -11,7 +12,12 @@ import {
   type StartAttachmentUploadResponse,
 } from '../shared/messages'
 import { attachmentPath } from '../shared/attachment-paths'
-import { previewPath, previewsPath } from '../shared/previews'
+import {
+  FILE_SERVER_UNAVAILABLE,
+  filesPreviewPath,
+  previewPath,
+  previewsPath,
+} from '../shared/previews'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
 import {
@@ -63,6 +69,68 @@ export function fakeGitHub(
   routes.json('POST', githubPaths.ready(FAKE_IDS.org, workspaceId), {
     state: 'ready',
   })
+}
+
+/**
+ * How the fake API answers the open of the files preview: with the files
+ * preview, as `open` does by default, with the refusal of a runner that
+ * announced no file server, with the failure of a cloud computer that did
+ * not answer, or with the refusal while the cloud computer does not run.
+ */
+export type FakeFilesPreview =
+  'open' | 'older-software' | 'failed' | 'not-ready'
+
+/** Sets the reply of the open of the files preview of the fake workspace. */
+export function fakeFilesPreview(
+  routes: FakeRouteWriter,
+  reply: FakeFilesPreview,
+): void {
+  const path = filesPreviewPath(FAKE_IDS.org, FAKE_IDS.workspace)
+  switch (reply) {
+    case 'open':
+      routes.json('POST', path, toolFixtures().filesPreview, 201)
+      return
+    case 'older-software':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: FILE_SERVER_UNAVAILABLE,
+            message:
+              'The cloud computer software cannot serve files. Restart the workspace.',
+          },
+        },
+        409,
+      )
+      return
+    case 'failed':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: 'sandbox_unavailable',
+            message: sandboxNotAnswering,
+          },
+        },
+        502,
+      )
+      return
+    case 'not-ready':
+      routes.json(
+        'POST',
+        path,
+        {
+          error: {
+            code: 'sandbox_not_ready',
+            message: 'Open the workspace to start its cloud computer.',
+          },
+        },
+        409,
+      )
+      return
+  }
 }
 
 export function fakeToolRoutes(
@@ -138,6 +206,7 @@ export function fakeToolRoutes(
   }
   routes.json('GET', previewsPath(org, id), data.previews)
   routes.json('POST', previewsPath(org, id), data.preview, 201)
+  fakeFilesPreview(routes, 'open')
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
   routes.json('GET', desktopPath(org, id), data.desktop)
   fakeGitHub(routes, id, banner)

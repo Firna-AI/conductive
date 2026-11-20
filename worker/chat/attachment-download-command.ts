@@ -18,6 +18,11 @@ export function attachmentDownloadCommand(input: {
     'umask 077',
     `/bin/mkdir -p -- ${shellQuote(parent)}`,
     `printf %s '*' > ${shellQuote(`${input.directory}/${ATTACHMENTS_DIRECTORY}/.gitignore`)}`,
+    // One command at a time for each file. A late command finds the file
+    // that an earlier command delivered, and it leaves that file alone.
+    `exec 9< ${shellQuote(parent)}`,
+    '/usr/bin/flock 9',
+    `if [ -f ${shellQuote(path)} ] && [ ! -L ${shellQuote(path)} ]; then exit 0; fi`,
     `/bin/rm -f -- ${shellQuote(temporaryPrefix)}*`,
     `temporary=${shellQuote(temporary)}`,
     `trap '/bin/rm -f -- "$temporary"' EXIT`,

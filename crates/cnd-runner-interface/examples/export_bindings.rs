@@ -6,8 +6,8 @@ use ts_rs::{Config, TS};
 
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
-    provider_events, runner, runner_commands, runner_credentials, runner_files, runner_handshake,
-    sdk_helper, sdk_helper_options, skills, tools, workspaces,
+    preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
+    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, skills, tools, workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -53,6 +53,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     skills::RunnerSkillsUpdated::export_all(&cfg)?;
     skills::SkillLists::export_all(&cfg)?;
     skills::SkillsUpdated::export_all(&cfg)?;
+    preview_ingress::PreviewIngressIdentity::export_all(&cfg)?;
     runner::RunnerEvent::export_all(&cfg)?;
     runner_commands::RunnerAttachment::export_all(&cfg)?;
     runner_commands::RunnerBranches::export_all(&cfg)?;
@@ -83,6 +84,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     runner_handshake::RunnerToWorkspace::export_all(&cfg)?;
     runner_handshake::RunnerWelcome::export_all(&cfg)?;
     runner_handshake::WorkspaceToRunner::export_all(&cfg)?;
+    runner_repository::RunnerRepository::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMove::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMoveRefusal::export_all(&cfg)?;
+    runner_repository::RunnerRepositoryMoveRefused::export_all(&cfg)?;
     workspaces::StartStep::export_all(&cfg)?;
     workspaces::WorkspaceStart::export_all(&cfg)?;
     tools::device::DeviceCommandInput::export_all(&cfg)?;

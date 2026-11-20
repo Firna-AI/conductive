@@ -3,6 +3,8 @@
 This guide lists the inputs of a deployment of the Conductive Worker: its
 bindings, its public variables, and its secrets. It also says which
 settings the Worker gives to each workspace sandbox.
+[Sandbox provider accounts](sandbox-provider-accounts.md) gives the
+accounts of the sandbox providers, Boat and E2B.
 [Architecture](architecture.md) describes the Worker and its hostnames.
 The [Worker README](../worker/README.md#routes) lists the routes that the
 Worker serves now. [Automatic deploys](automatic-deploys.md) says how each
@@ -63,6 +65,18 @@ examples.
     the paths of the user's app. A preview request that fails before the
     proxy, such as when a deploy restarts the workspace object, still
     logs the route words of its path, with each other segment as `*`.
+- `wrangler.jsonc` turns on the compatibility flag `enable_request_signal`
+  with the compatibility date `2026-11-06`. With this flag, the `signal`
+  of an incoming request fires its `abort` event when the client
+  disconnects, as
+  [Cloudflare's flag reference](https://developers.cloudflare.com/workers/configuration/compatibility-flags/#enable-requestsignal-for-incoming-requests)
+  says. The model gateway uses this event to cancel the request to the
+  upstream when the agent program closes its connection, as
+  [Streams](protocol/model-gateway-requests.md#streams) requires. The flag
+  applies to every incoming request of the Worker, also to each request
+  that reaches a workspace Durable Object. It does not turn on
+  `request_signal_passthrough`. So forwarding a request by itself does not
+  pass its incoming signal to a subrequest.
 - Set each secret with `npx wrangler secret put <NAME>`. The command asks
   for the value. Never put a secret in `wrangler.jsonc` or in Git.
 - The Worker reads each variable as text. Write a JSON value as one
@@ -93,7 +107,7 @@ examples.
 | `PREVIEW_DOMAIN` | Port previews | The domain of the preview hostnames. `wrangler.jsonc` sets it. |
 | `GITHUB_CLIENT_ID` | GitHub sign-in, each refresh of a stored GitHub user token, the GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds that copy a repository | The client ID of the GitHub App. |
 | `GITHUB_APP_SLUG` | The links to the GitHub App: Install in Get started, Manage on GitHub in the account, and Manage access of the repository lists | Optional. The slug of the GitHub App, as in `https://github.com/apps/<slug>`. Without it, or with a value that is not a slug, the links use `conductive`, and the Worker logs a warning for a wrong value. It is not a secret. |
-| `BOAT_ORG_ID` | Each call to Boat | The ID of the app's Boat organization, as [The app's Boat account](#the-apps-boat-account) says. It is not a secret. |
+| `BOAT_ORG_ID` | Each call to the `boat` account | The ID of the app's Boat organization, as [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | [Model configuration dependencies](deployment/models.md#configuration-failures) | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | [Default choice dependencies](deployment/models.md#configuration-failures) | The JSON default choice, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
@@ -112,7 +126,8 @@ examples.
 | Name | Needed by | Value |
 | --- | --- | --- |
 | `GITHUB_CLIENT_SECRET` | GitHub sign-in, and each refresh of a stored GitHub user token | The client secret of the GitHub App. |
-| `BOAT_API_KEY` | Each call to Boat | An API key for the app's Boat organization, and the only Boat credential, as [The app's Boat account](#the-apps-boat-account) says. |
+| `BOAT_API_KEY` | Each call to the `boat` account | An API key for the app's Boat organization, and the only Boat credential, as [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account) says. |
+| `SANDBOX_PROVIDER_ACCOUNTS` | Each call to another provider account, such as `e2b`, the draw of the account of each new org, and the account choice of operators | Optional. JSON text with the other provider accounts of the app, as [The app's E2B account](sandbox-provider-accounts.md#the-apps-e2b-account) says. Without it, `boat` is the only account. |
 | `SESSION_SIGNING_KEY` | Sign-in, the sign-in of the Mac app, and every signed-in route | 32 random bytes, encoded as Base64. |
 | `BOAT_KEY_ENCRYPTION_KEY` | Every route that stores or reads a stored secret | A separate 32 random bytes, encoded as Base64. |
 | `GITHUB_APP_PRIVATE_KEY` | The GitHub banner and Checks, the workspace refreshes of verified GitHub webhooks, and image builds and refreshes of an org that chose a repository | The private key of the GitHub App, as PEM. The PEM file from GitHub works as it is. A PKCS#8 PEM works too. |
@@ -124,8 +139,9 @@ examples.
 
 - `BOAT_KEY_ENCRYPTION_KEY` encrypts the agent logins, the GitHub user
   tokens, the env vars of each org, and the workspace tokens. It also
-  encrypts the start logs, the credentials of each image source copy, and
-  the terminal and preview credentials. It encrypts no Boat key. A new key cannot read the values
+  encrypts the start logs, the credentials of each image source copy, the
+  terminal and preview credentials, and the traffic token of each E2B
+  sandbox. It encrypts no provider key. A new key cannot read the values
   that the old key encrypted.
 
 ## The attachment bucket
@@ -153,7 +169,8 @@ serves every org.
   An age rule could delete bytes that a failed first start still needs.
 - The cloud computer downloads each attached file with a detached command.
   The Boat key needs `exec` for this transfer, as
-  [The app's Boat account](#the-apps-boat-account) says.
+  [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account)
+  says.
 - Local development and the Worker tests use local R2 storage. They need no
   Cloudflare account and no bucket.
 
@@ -218,6 +235,7 @@ the desktop stream of a sandbox in such a frame.
   shows the stream host only as `<sandbox-desktop-host>`, and Boat
   generates it for each running sandbox. A list of exact hosts was
   rejected, because it fails for each new workspace.
+- A sandbox on E2B has no desktop stream, so E2B needs no entry.
 - The wildcard also lets the pages of the app frame any other page on a
   Boat sandbox host, also a page of another Boat customer. To use this, an
   attacker first needs a way to put HTML into a page of the app.
@@ -243,10 +261,13 @@ The Worker gives each workspace sandbox its settings at each start, as
 of them comes from this guide: `CONDUCTIVE_MACHINE_ORIGIN` is
 `MACHINE_ORIGIN`.
 
-The computer tools need no deployment input. Boat writes the entry of the
-`computer` server into each sandbox at its start. It names a local server
-with no URL and no credential, and the runner reads it, as
-[What it does](../runner/README.md#what-it-does) says.
+The computer tools need no deployment input. On Boat, Boat writes the
+entry of the `computer` server into each sandbox at its start. It names a
+local server with no URL and no credential, and the runner reads it, as
+[What it does](../runner/README.md#what-it-does) says. On E2B, the E2B
+template installs the Cua Driver and writes the same entry at each boot,
+as [Computer tools](protocol/agent-tools.md#computer-tools) says. An E2B
+org image gets the entry only from a template build that has it.
 
 `CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
 gives the default branch of the repository of the workspace, from its
@@ -258,21 +279,8 @@ resume, and a disk retention restart give the workspace branch that the
 Worker's record of the workspace names. The runner names that branch in
 the [agent instructions](protocol/agent-instructions.md#the-branches).
 
-## The app's Boat account
+## Sandbox provider accounts
 
-Every cloud computer of every org runs in the app's own Boat organization.
-No org has a Boat key, and the Worker stores no Boat key in D1.
-
-- `BOAT_API_KEY` is the only Boat credential. Set it as a Worker secret.
-- `BOAT_ORG_ID` names that organization on every Boat call. It is not a
-  secret. Set it in the `vars` of `wrangler.jsonc`, next to
-  `MACHINE_ORIGIN`.
-- Both are settings of the Worker only. The key never goes to the browser,
-  into a sandbox, into a log, or into a saved snapshot, as
-  [Access and security](protocol/isolation.md#the-apps-boat-key)
-  says.
-- [The app's Boat account](../worker/sandbox/README.md#the-apps-boat-account)
-  says how to make the organization and the key.
-- The key needs `exec` to start and read the detached attachment download
-  commands. The cloud computer uses a one-use token to read each file from
-  the machine host.
+[Sandbox provider accounts](sandbox-provider-accounts.md) gives the
+provider accounts of a deployment: the app's Boat account, the app's E2B
+account, and the steps before a real org runs on E2B.

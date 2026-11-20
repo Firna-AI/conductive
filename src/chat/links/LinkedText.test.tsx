@@ -31,7 +31,7 @@ describe('workspace chips in an answer of the agent', () => {
     ].join('\n')
     const { container } = await mount(
       <LinksProvider value={{ links: { orgId: org, workspaces: [linked] } }}>
-        <AgentText text={answer} />
+        <AgentText id="agent:1" text={answer} />
       </LinksProvider>,
     )
     const chips = Array.from(container.querySelectorAll('a'), (link) => ({

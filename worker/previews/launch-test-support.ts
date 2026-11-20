@@ -1,3 +1,5 @@
+import { Window } from 'happy-dom'
+
 import type { createPreviewHandler } from './handler'
 
 type Handler = ReturnType<typeof createPreviewHandler>
@@ -5,15 +7,20 @@ type AppRequest = (path: string, init?: RequestInit) => Request
 
 /** Reads the public launch form without copying its private route or field. */
 export function launchForm(html: string) {
-  const action = /<form[^>]*action="([^"]+)"/.exec(html)?.[1]
-  const fields = [
-    ...html.matchAll(/<input[^>]*name="([^"]+)"[^>]*value="([^"]+)"/g),
-  ]
-  if (!action || fields.length !== 2)
+  const window = new Window()
+  const document = new window.DOMParser().parseFromString(html, 'text/html')
+  const form = document.querySelector('form')
+  const action = form?.getAttribute('action')
+  const fields = [...(form?.querySelectorAll('input') ?? [])].map((field) => [
+    field.name,
+    field.value,
+  ])
+  window.close()
+  if (!action || (fields.length !== 2 && fields.length !== 3))
     throw new Error('Missing preview launch form')
   return {
     action,
-    body: new URLSearchParams(fields.map((field) => [field[1], field[2]])),
+    body: new URLSearchParams(fields),
   }
 }
 
@@ -35,7 +42,7 @@ export async function launchPreview(
   launchUrl: string,
 ) {
   const url = new URL(launchUrl)
-  const page = await handler.fetch(appRequest(url.pathname))
+  const page = await handler.fetch(appRequest(url.pathname + url.search))
   if (page.status !== 200) throw new Error(`Launch failed: ${page.status}`)
   const form = launchForm(await page.text())
   const response = await handler.proxy(handoffRequest(form, url.origin))

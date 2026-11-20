@@ -10,13 +10,21 @@ the org's sandbox, as [Codex logins](codex-logins.md#chatgpt-sign-in) says.
 
 ## Computer tools
 
-Both agents get the `computer` MCP server of the sandbox. Boat writes its
-`mcpServers.computer` entry to `/home/user/.claude.json` at each sandbox
-start. The entry names a local stdio server that talks over a Unix
-socket, with no URL and no credential.
+Both agents get the `computer` MCP server of the sandbox when it has one.
+On Boat, Boat writes its `mcpServers.computer` entry to
+`/home/user/.claude.json` at each sandbox start. The entry names a local
+stdio server that talks over a Unix socket, with no URL and no credential.
+On E2B, the template writes an entry at each boot that starts the installed
+Cua Driver through `/usr/bin/env`. Its arguments set `DISPLAY`,
+`DBUS_SESSION_BUS_ADDRESS`, and `XDG_RUNTIME_DIR` before `cua-driver mcp`.
+The entry has no `env` field. Older runners pass these arguments to both
+agents, so their computer tools also get the desktop settings.
 
 The runner reads that entry again at each agent start. Claude gets it as
-it is, and Codex gets its command and arguments as a stdio server.
+it is, and Codex gets its command, arguments, and declared environment as
+a stdio server. Both Codex servers use the same settings builder.
+The builder writes the environment as a TOML inline table for Codex's
+`-c` settings.
 Without a valid entry, the runner writes a warning, and the agent starts
 without computer tools.
 
@@ -101,3 +109,6 @@ A member without a display name gets
 - [computer-mcp.ts](sdk-helper/src/providers/computer-mcp.ts) gives `readComputerServer`,
   which reads the sandbox's `computer` entry at each agent start.
   It sends warnings through `ProviderOptions.warn`.
+- [codex-mcp.ts](sdk-helper/src/providers/codex-mcp.ts) gives `codexStdioServer`,
+  which writes the command, arguments, and environment settings for both
+  Codex stdio servers.

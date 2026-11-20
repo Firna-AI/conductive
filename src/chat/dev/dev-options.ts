@@ -48,10 +48,14 @@ export interface DevOptions {
   speed: 'none' | 'fast' | 'limit' | 'older' | 'other'
   /**
    * The answer of each scripted turn: a line of text, three tables that
-   * arrive one line at a time, or a review under headings, with a plan
-   * under a heading.
+   * arrive one line at a time, a review under headings, with a plan under a
+   * heading, quotes, a rule, marks, and line breaks, with a plan that holds
+   * them too, an answer of about 100 KiB that then grows in ten parts, task
+   * lists in the plan and in the answer, or screenshots of the context
+   * folder, with a plan that holds a screenshot.
    */
-  answer: 'text' | 'tables' | 'headings'
+  answer:
+    'text' | 'tables' | 'headings' | 'prose' | 'long' | 'tasks' | 'pictures'
   /**
    * The skill lists of the list of `/`: the sample lists, no report yet, an
    * unavailable list, or a repository without skills.
@@ -109,7 +113,7 @@ export const choices = {
   page: ['chat', 'this-mac'],
   files: ['listed', 'unread'],
   speed: ['none', 'fast', 'limit', 'older', 'other'],
-  answer: ['text', 'tables', 'headings'],
+  answer: ['text', 'tables', 'headings', 'prose', 'long', 'tasks', 'pictures'],
   skills: ['listed', 'loading', 'unavailable', 'none'],
 } as const satisfies Record<keyof DevOptions, readonly string[]>
 

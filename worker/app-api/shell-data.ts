@@ -2,6 +2,7 @@ import type { Repository } from '../../src/shared/org-settings'
 import type { Section } from '../../src/shared/sections'
 import type { WorkspaceRow } from '../lifecycle/workspace-row'
 import { activeOrgIdPredicate } from '../data/org-access'
+import { REPOSITORY_ORDER } from '../data/repository-order'
 import { requireActiveOrg } from '../data/user-access'
 import { workspaceNameColumn } from '../data/workspace-name'
 
@@ -31,6 +32,7 @@ export async function shellSections(
   }))
 }
 
+/** The repositories of an org with an installation, in the repository order. */
 export async function shellRepositories(
   db: D1Database,
   orgId: string,
@@ -39,7 +41,8 @@ export async function shellRepositories(
     .prepare(
       `SELECT id, org_id AS orgId, github_repository_id AS githubId, full_name AS fullName,
      description, default_branch AS defaultBranch, installation_id AS installationId, selected
-     FROM repositories WHERE org_id = ? AND installation_id IS NOT NULL ORDER BY full_name, id`,
+     FROM repositories WHERE org_id = ? AND installation_id IS NOT NULL
+     ORDER BY ${REPOSITORY_ORDER}`,
     )
     .bind(orgId)
     .all<Omit<Repository, 'selected'> & { selected: number }>()

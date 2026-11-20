@@ -2,10 +2,10 @@
 
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
-runner, its events and their limits, its turns, the background work of
-Claude turns, its reports of the listening ports and of the skills, the
-repair of lost workspace updates, and the warnings of the Worker about the
-runner. It belongs to
+runner, its events and their limits, its turns, what an out-of-memory kill
+ends, the background work of Claude turns, its reports of the listening
+ports and of the skills, the repair of lost workspace updates, and the
+warnings of the Worker about the runner. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -13,7 +13,10 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A gateway decision number names a decision of the change that adds
 the [model gateway](model-gateway.md), as that doc says. A background work
 decision number, such as background work decision 1, names a decision of
-the change that keeps a turn open for background work.
+the change that keeps a turn open for background work. An out-of-memory
+decision number, such as out-of-memory decision 1, names a decision of the
+change that keeps the runner and the terminal shells running after an
+out-of-memory kill.
 
 ## The agent runner
 
@@ -29,6 +32,14 @@ the change that keeps a turn open for background work.
 - Each hello of the runner also carries the process-start ID of its
   runner start, for the warnings of the Worker, as
   [Process starts](runner-warnings.md#process-starts) says.
+- Each hello of a runner whose
+  [file server](file-server.md) listens also carries
+  `fileServer: true`. Any other hello announces no file server, also the
+  hello of an older runner, which sends no such field. A `fileServer`
+  value of another type does not refuse the hello.
+- The field needs no new protocol version, so the runner protocol version
+  stays 2. Reason: the hello already announces the login kinds that the
+  runner supports.
 - Each build of the org image installs the newest runner. Each sandbox then
   updates its runner itself, at a later start or when its workspace is
   idle, as [Updates](sandbox-software.md#updates) says. Reason: a fix of
@@ -48,8 +59,32 @@ the change that keeps a turn open for background work.
   Reason: the remaining storage value budget holds that wrapper.
 - Each tool detail holds at most 64 KiB, or 65,536 bytes, of serialized UTF-8 JSON.
   The count includes its surrounding quotes and JSON escapes.
-- The runner keeps the longest detail prefix that fits that limit.
-  It replaces lone UTF-16 surrogates with U+FFFD before it counts or truncates text.
+- The longest detail prefix that fits that limit stays.
+  Lone UTF-16 surrogates become U+FFFD before the count and the cut.
+- A runner that supports complete tool details says so in its `hello`.
+  When the `welcome` of the workspace accepts them, the runner sends the
+  complete source of each detail, with no cut.
+- Otherwise the runner keeps the prefix before it sends the event, as an
+  older runner does.
+  [Tool detail secrets](tool-detail-secrets.md#older-runners-and-fallback-connections)
+  gives the risk of that cut.
+- With complete tool details, the Durable Object hides each exact copy of a
+  secret value in the complete source before it keeps the prefix, as
+  [Secrets that users enter](tokens-and-secrets.md#secrets-that-users-enter)
+  and [The exact-copy filter](secret-requests.md#the-exact-copy-filter) say.
+  So its cut never splits such a copy.
+- Reason: a cut before that filter can leave the start of a secret value,
+  and the filter cannot match a part of a value.
+- When the runner sends a complete source in private parts, each part fits
+  the envelope limit above.
+- A dropped connection, or a restart of the runner or of the Durable Object,
+  loses no part. A resent part changes nothing.
+- A failed save in the runner never loses only some parts of a source.
+- No part reaches a browser or the stored chat. The tool update shows once,
+  after its last part.
+- A refused part follows the refusal rules below, but its marker names
+  `tool.updated` as its event type. No text of its source shows.
+- Reason: an older copy of the app cannot read a marker with an unknown type.
 - A prefix never splits a Unicode code point.
   The omitted detail count measures source UTF-8 bytes before JSON escaping.
 - The count applies to the complete source detail of that tool update.
@@ -150,6 +185,26 @@ the change that keeps a turn open for background work.
   and reads files and diffs on request, as
   [Files and changes](workspace-tools.md#files-and-changes) says.
   File results are not part of the chat history.
+
+## Out of memory
+
+- When the sandbox has no free memory, the kernel ends one process. Such
+  an end is an out-of-memory kill.
+- An out-of-memory kill of a process that an agent started ends only that
+  process (out-of-memory decision 1). An example is a large build.
+- The runner, the other processes of the agents, and each running turn
+  keep running. The agent sees its command fail.
+- Reason: one command that uses too much memory must not end each running
+  turn of the workspace and its background work.
+- A stop and a restart of the whole runner at such a kill was rejected.
+  Reason: it ends each running turn in each session, and the chat gives no
+  cause.
+- A memory limit for the processes of the agents, below the size of the
+  sandbox, was not chosen. Reason: the kernel ends the process that uses
+  the most memory, and that is almost always the command.
+- Risk: the kernel can also end an agent program or the runner. That still
+  ends the turns of that program, or each running turn, as at a crash of
+  the runner.
 
 ## Background work
 

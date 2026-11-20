@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { memo, useState, type ReactNode } from 'react'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import { LostEventLine } from './LostEventLine'
 import { MessageLine } from './MessageLine'
@@ -7,10 +7,16 @@ import {
   workSummary,
   type WorkStep,
 } from '../../shared/transcript/transcript-entries'
+import { sameData } from './same-data'
 import { useFold } from './useFold'
 
-/** One step of an open work fold, in the list of an open run of tool calls. */
-function Step(props: { step: WorkStep<ReactNode> }) {
+/**
+ * One step of an open work fold, in the list of an open run of tool calls.
+ * A step draws again only when its item or its insert changes, as
+ * `sameData` says. So a fold that opens draws no step again, and a late
+ * change draws only its own step.
+ */
+const Step = memo(function Step(props: { step: WorkStep<ReactNode> }) {
   const { step } = props
   if (step.kind === 'insert') {
     return <li className={styles.card}>{step.insert.content}</li>
@@ -26,7 +32,7 @@ function Step(props: { step: WorkStep<ReactNode> }) {
     case 'agent':
       return (
         <li>
-          <MessageLine text={item.text} />
+          <MessageLine id={item.id} text={item.text} />
         </li>
       )
     case 'lost':
@@ -36,7 +42,7 @@ function Step(props: { step: WorkStep<ReactNode> }) {
         </li>
       )
   }
-}
+}, sameData)
 
 /**
  * The work of an ended turn before an answer, folded into one line, such as

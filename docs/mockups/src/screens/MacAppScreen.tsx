@@ -60,8 +60,9 @@ export const macAppSchema = {
      * A command that an agent asks to run on this Mac: none, the request
      * above the composer, the request of a longer time limit, the request
      * with the other ways to allow open, four requests with a long script,
-     * the notification while the app is in the background, the 15 minutes
-     * that allow every command, or the grant until the user stops it.
+     * the same four with the other ways to allow of the first one open, the
+     * notification while the app is in the background, the 15 minutes that
+     * allow every command, or the grant until the user stops it.
      */
     command: {
       enum: [
@@ -70,6 +71,7 @@ export const macAppSchema = {
         'prompt-long',
         'choices',
         'many',
+        'many-choices',
         'notification',
         'allow-all',
         'allow-until-stop',
@@ -133,6 +135,7 @@ const conversations = {
   'prompt-long': 'mac-waiting-suite',
   choices: 'mac-waiting',
   many: 'mac-waiting-many',
+  'many-choices': 'mac-waiting-many',
   notification: 'mac-waiting',
   'allow-all': 'mac-done',
   'allow-until-stop': 'mac-done',
@@ -235,7 +238,7 @@ export function MacAppScreen(props: { state: MacAppState }) {
         ) : undefined
       }
       change={change === 'none' ? undefined : change}
-      choicesOpen={command === 'choices'}
+      choicesOpen={command === 'choices' || command === 'many-choices'}
       mode={props.state.window}
       needsInput={waits ? checkoutAutocomplete.key : undefined}
       notification={

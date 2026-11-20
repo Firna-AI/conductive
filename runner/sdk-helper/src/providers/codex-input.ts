@@ -1,10 +1,9 @@
-import type { RunnerBranches } from '../generated/RunnerBranches'
 import {
   ATTACHMENT_IMAGE_MAX_BYTES,
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
-import { senderLines } from './message'
+import { senderLines, type FixedContext } from './message'
 import { codexSkillInputs, type SkillSource } from './skill-input'
 import type { ProviderInput } from '../generated/ProviderInput'
 
@@ -18,7 +17,7 @@ import type { ProviderInput } from '../generated/ProviderInput'
 export function codexInput(
   command: ProviderInput,
   skills: SkillSource,
-  branches?: RunnerBranches | null,
+  fixed: FixedContext = {},
 ) {
   const images = command.attachments.filter((attachment) => {
     const metadata = command.message.attachments.find(
@@ -57,7 +56,7 @@ export function codexInput(
     }),
     {
       type: 'text',
-      text: senderLines(command.message, command.branches, branches),
+      text: senderLines(command, fixed),
       text_elements: [],
     },
   ]

@@ -129,6 +129,9 @@ export class RunnerConnections {
       processStartId: record.processStartId,
       protocolVersion,
       loginKinds: record.loginKinds,
+      repositoryFolder: record.repositoryFolder,
+      fileServer: record.fileServer,
+      watchUntil: record.watchUntil,
       ready: record.ready,
       peer: new AuthenticatedRunner(
         source,
@@ -234,6 +237,9 @@ export class RunnerConnections {
     record.processStartId = active.processStartId
     record.protocolVersion = active.protocolVersion
     record.loginKinds = active.loginKinds
+    record.repositoryFolder = active.repositoryFolder
+    record.fileServer = active.fileServer
+    record.watchUntil = active.watchUntil
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)
   }

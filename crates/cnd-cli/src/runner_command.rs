@@ -18,11 +18,16 @@ use cnd_runner::disk::AtomicDisk;
 use cnd_runner::emitter::{EventEmitter, SavingEmitter};
 use cnd_runner::engine::dependencies::{EngineDependencies, GitTurnRepositories, TurnRepositories};
 use cnd_runner::engine::handler::AgentEngine;
+use cnd_runner::file_server::files::RepositoryFiles;
+use cnd_runner::file_server::listener::LoopbackListener;
+use cnd_runner::file_server::policy::FilePolicy;
+use cnd_runner::file_server::server::{FileServer, HttpFileServer};
 use cnd_runner::filter::service::{CredentialFilter, Credentials, FilteredEmitter};
 use cnd_runner::helper::process::NodeHelpers;
 use cnd_runner::helper::startup::RunnerStartup;
 use cnd_runner::ports::proc::{DiskProcReader, ProcPortScanner};
 use cnd_runner::ports::reporter::{PortReporter, PortReports};
+use cnd_runner::relocation::RepositoryFolders;
 use cnd_runner::reports::files::FileReporter;
 use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
 use cnd_runner::repository::git::{Cancellation, ChildGit};
@@ -35,6 +40,7 @@ use cnd_runner::state::store::{DurableStore, EventStore};
 use cnd_runner::update::ReleaseReadiness;
 use cnd_runner::watcher::linux::LinuxWatchDriver;
 use cnd_runner::watcher::service::ReportWatchService;
+use cnd_runner_interface::file_server::FILE_SERVER_PORT;
 use tokio::signal::unix::{SignalKind, signal};
 use tokio::sync::watch;
 use uuid::Uuid;
@@ -47,14 +53,13 @@ use crate::runner_start::RunnerStart;
 pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
-    let start = RunnerStart::new();
     let environment: BTreeMap<String, String> = std::env::vars().collect();
     let cwd = std::env::current_dir().internal()?;
     let home = environment
         .get("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("/home/user"));
-    let configuration = Configuration::parse(&environment, &cwd, &home).internal()?;
+    let mut configuration = Configuration::parse(&environment, &cwd, &home).internal()?;
     let executable = std::env::current_exe()
         .internal()?
         .canonicalize()
@@ -83,7 +88,7 @@ pub(crate) async fn execute() -> Result<()> {
                 release.join(SDK_HELPER_PART).join("sdk-helper.mjs")
             }
         });
-    let helpers = Arc::new(NodeHelpers { node, program });
+    let helper = HelperPaths { node, program };
     let install_root = PathBuf::from("/opt/conductive");
     let release_store = Arc::new(DiskStore::new(install_root.clone()));
     let releases: Arc<dyn ReleaseReadiness> = Arc::new(RunnerReleases {
@@ -105,12 +110,30 @@ pub(crate) async fn execute() -> Result<()> {
         tokio::select! { _ = terminate.recv() => {}, _ = interrupt.recv() => {} }
         stop.send_replace(true);
     });
+    let (repository_root, served_root) = watch::channel(configuration.cwd.clone());
+    let file_server = match LoopbackListener::bind(FILE_SERVER_PORT).await {
+        Ok(listener) => {
+            let server: Arc<dyn FileServer> = Arc::new(HttpFileServer {
+                listener: Arc::new(listener),
+                requests: Arc::new(FilePolicy {
+                    files: Arc::new(RepositoryFiles { root: served_root }),
+                }),
+            });
+            let stopped = shutdown.clone();
+            Some(tokio::spawn(async move { server.run(stopped).await }))
+        }
+        Err(_) => {
+            tracing::warn!("The repository file server could not bind its loopback port.");
+            None
+        }
+    };
+    let start = RunnerStart::new(file_server.is_some());
     let result = async {
         while !*shutdown.borrow() && shutdown.has_changed().is_ok() {
             let exit = run_once(
                 &start,
                 configuration.clone(),
-                helpers.clone(),
+                &helper,
                 executable.clone(),
                 updates.clone(),
                 shutdown.clone(),
@@ -119,24 +142,45 @@ pub(crate) async fn execute() -> Result<()> {
             if exit == RunExit::Shutdown || *shutdown.borrow() || shutdown.has_changed().is_err() {
                 return Ok(());
             }
-            updates.swap(shutdown.clone()).await.internal()?;
+            match exit {
+                RunExit::Relocate(target) => {
+                    target.apply(&mut configuration);
+                    repository_root.send_replace(configuration.cwd.clone());
+                }
+                _ => updates.swap(shutdown.clone()).await.internal()?,
+            }
         }
         Ok(())
     }
     .await;
     signals.abort();
     let _ = signals.await;
+    if let Some(task) = file_server {
+        task.abort();
+        let _ = task.await;
+    }
     result
+}
+
+/// The pinned Node and helper bundle of the running release.
+struct HelperPaths {
+    node: PathBuf,
+    program: PathBuf,
 }
 
 async fn run_once(
     start: &RunnerStart,
     configuration: Configuration,
-    helpers: Arc<NodeHelpers>,
+    helper: &HelperPaths,
     executable: PathBuf,
     releases: Arc<dyn ReleaseReadiness>,
     shutdown: watch::Receiver<bool>,
 ) -> Result<RunExit> {
+    let helpers = Arc::new(NodeHelpers {
+        node: helper.node.clone(),
+        program: helper.program.clone(),
+        environment: NodeHelpers::workspace_environment(&configuration),
+    });
     let clock = Arc::new(SystemClock);
     let store: Arc<dyn EventStore> = Arc::new(DurableStore::new(
         Arc::new(AtomicDisk::new(configuration.state_path.clone())),
@@ -144,13 +188,19 @@ async fn run_once(
     ));
     store.load().await.internal()?;
     let loaded = store.snapshot().await;
-    let link = Arc::new(start.link(
-        configuration.workspace_id.clone(),
-        configuration.request.clone(),
-        Arc::new(WebSocketConnector),
-        clock.clone(),
-        store.clone(),
-    ));
+    let link = Arc::new(
+        start
+            .link(
+                configuration.workspace_id.clone(),
+                configuration.request.clone(),
+                Arc::new(WebSocketConnector),
+                clock.clone(),
+                store.clone(),
+            )
+            .with_repository_folder(&configuration.cwd),
+    );
+    let io = Arc::new(LocalRepositoryIo);
+    let folders = RepositoryFolders::new(&configuration, io.clone());
     let filter = Arc::new(CredentialFilter::default());
     filter
         .add(configuration.request.workspace_token.clone())
@@ -161,7 +211,7 @@ async fn run_once(
     let repositories = Arc::new(GitTurnRepositories {
         root: configuration.cwd.clone(),
         git: Arc::new(ChildGit),
-        io: Arc::new(LocalRepositoryIo),
+        io,
     });
     let files = Arc::new(FileReporter::new(
         repositories.open(Cancellation::default()),
@@ -238,6 +288,7 @@ async fn run_once(
         },
         loaded.reports.commands,
     ));
-    let runner: Arc<dyn Runner> = Arc::new(RunnerCore::new(link, store, clock, handler, releases));
+    let runner: Arc<dyn Runner> =
+        Arc::new(RunnerCore::new(link, store, clock, handler, releases).with_folders(folders));
     runner.run(shutdown).await.internal()
 }

@@ -1,0 +1,19 @@
+[Unit]
+Description=Conductive computer browser
+Requires=conductive-e2b-desktop.service
+After=conductive-e2b-desktop.service
+
+[Service]
+Type=exec
+User=user
+Group=user
+Environment=HOME=/home/user DISPLAY=:0 XDG_SESSION_TYPE=x11
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/conductive-e2b-desktop/bus
+Environment=XDG_RUNTIME_DIR=/run/conductive-e2b-desktop
+RuntimeDirectory=conductive-e2b-chrome
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/google-chrome-stable --ozone-platform=x11 --no-first-run --no-default-browser-check --disable-dev-shm-usage --force-renderer-accessibility --user-data-dir=/run/conductive-e2b-chrome/profile about:blank
+KillMode=control-group
+
+[Install]
+WantedBy=multi-user.target

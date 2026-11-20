@@ -14,6 +14,13 @@ The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
 The crate provides handshake messages, commands, numbered events, confirmations,
 resend requests, file results, and temporary turn credentials.
+`runner_repository` holds the repository move, its refusal reply, and the
+current repository of each turn and message.
+`runner_tool_detail` holds the private `tool.detail.part` events of a
+complete tool-detail source. Only the first part carries the turn and the
+tool metadata.
+The hello has an optional `fileServer` capability. A listening file server
+sets it to true. Older runners omit it. The protocol version stays 2.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
@@ -57,6 +64,9 @@ let hello = RunnerHello::Hello {
     stream_id: "stream-1".into(),
     login_kinds: None,
     process_start_id: None,
+    repository_folder: Some("/home/user/code/storefront".into()),
+    complete_tool_details: Some(true),
+    file_server: None,
 };
 ```
 
@@ -81,9 +91,11 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Key Code
 
 - [Handshake](src/runner_handshake.rs) defines the two message directions and event envelope.
+- [File server](src/file_server.rs) defines the reserved loopback port and files-mark header.
 - [Commands](src/runner_commands.rs) defines turn, message, control, and report requests.
 - [Credentials](src/runner_credentials.rs) defines supported logins and temporary credentials.
 - [Chat events](src/chat_events.rs) defines agent events and tool output.
+- [Tool details](src/runner_tool_detail.rs) defines the private parts of a complete tool-detail source.
 - [File reports](src/file_tree.rs) defines report parts, deltas, and their identities.
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
@@ -103,6 +115,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)

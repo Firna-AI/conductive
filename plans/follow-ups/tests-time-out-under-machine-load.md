@@ -189,6 +189,52 @@
   This proves that the Continue timeout occurs without the merge.
   The other failures were not reproduced on main in this attempt.
   The blocked await and cause remain unknown.
+- On 18 November 2026, the branch `calummoore/kyoto-votd` ran the complete
+  gate on a machine with 4 CPUs. The workspace runner used about 55% of
+  one CPU, and the load average was about 5. Both tests of
+  `worker/lifecycle/disk-retention.test.ts` failed with
+  `Error: Test timed out in 15000ms.`: "keeps a stopped disk through
+  startup and stop failures without a stale stop after user open" and
+  "ends failed maintenance and refuses destructive resume of a normal
+  errored workspace". Both failed again alone on the branch, and alone
+  on a clean `main` at `c3bae7b43`, in 16.6 to 17.1 seconds. That branch
+  changed no Worker file. The gate's test step then passed its 1-hour
+  limit on that machine before it ended.
+- On 20 November 2026, the main merge into `calummoore/perth-lc63`
+  passed the full static gate and all 131 SDK-helper tests.
+  The full app and Worker run was stopped after five timeouts in two files.
+  Both files match main at `9c5f16cc281264c1f33b45e16abc33634eb5f63b`.
+  A clean detached checkout of that main commit then ran both files.
+  It reproduced all five failures and passed the sixth case:
+  - `worker/features/continue-routes.test.ts`, "resumes Continue through real routes and socket wake, fences sends and Archive, expires recovered credentials, and routes new-branch GitHub events".
+  - `worker/lifecycle/runner-environment.test.ts`, "captures the create branch, keeps turn values out of the sandbox variables, and masks legacy encrypted settings in its streamed start log".
+  - `worker/lifecycle/runner-environment.test.ts`, "captures fresh resume settings, preserves the ready computer capture, and pins retention settings after rotation".
+  - `worker/lifecycle/runner-environment.test.ts`, "uses the owner login in the Git system settings when the display name is null".
+  - `worker/lifecycle/runner-environment.test.ts`, "uses the owner login in the Git system settings when the display name is only disallowed characters".
+  Each failure reported `Error: Test timed out in 15000ms.`
+  No test, assertion, timeout, or gate configuration changed.
+  The blocked awaits and the cause remain unknown.
+  The exact changed app and Worker test selection then passed 74 cases
+  and timed out in four: adapter, recorded events, retry queue, and
+  workspace summary. A broader selection also timed out in workspace
+  creation, agent tool routes, and previews.
+  A second clean-main comparison ran seven files: five cases passed,
+  and these seven cases timed out with the same 15-second error:
+  - `worker/chat/recorded-events.test.ts`, "stores provider-neutral partial text, tools, completion, stop, and failure".
+  - `worker/chat/retry-queue.test.ts`, "does not make an older failure retryable after queued or stopped waiting work".
+  - `worker/chat/retry-queue.test.ts`, "commits retry eligibility with a failed turn at both commit boundaries".
+  - `worker/chat/workspace-summary.test.ts`, "recovers a legacy summary title and original turn end beyond the first history page".
+  - `worker/tools/workspace-creation.test.ts`, "keeps one titled admission for overlapping creates and a lost reply after restart or changed defaults".
+  - `worker/tools/workspace-creation.test.ts`, "replays the same failed first start without new workspace session message or provider allocation".
+  - `worker/features/agent-tools-routes.test.ts`, "uses the active stored sender and inherited owner when a machine tool creates a workspace with a cleaned name".
+  The adapter and preview files passed on main. They then passed unchanged
+  together on the branch: three tests, with no failures or skips.
+  The earlier failing adapter case was "serves the actual Durable Object
+  with SQLite storage and authenticated WebSockets".
+  The earlier failing preview case was "opens signed-in preview links and
+  lists and closes member previews through the real workspace".
+  Those two failures are flaky. Native runtime delays are suspected, but
+  the blocked awaits and the cause remain unknown.
 - **Problem:** These tests depend on wall-clock time limits, so a busy machine can fail them with no defect in the code.
 - **Impact if no action:** A slow CI runner or a busy developer machine can fail the gate now and then, and a person must rerun it.
 - **Root question:** How do these tests stay correct on a slow or busy machine?

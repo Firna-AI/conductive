@@ -117,6 +117,9 @@ pub struct SavedSession {
         deserialize_with = "present_branches"
     )]
     pub instruction_branches: Option<Option<RunnerBranches>>,
+    /// Repository folder named by the fixed instructions. Older files omit it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub instruction_folder: Option<String>,
 }
 
 fn present_branches<'de, D: Deserializer<'de>>(

@@ -16,8 +16,13 @@ import { claudeInput } from './claude-input'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
+import { moveClaudeTranscript } from './claude-transcript'
 import { readComputerServer } from './computer-mcp'
-import { prepareProviderHome, providerEnvironment } from './environment'
+import {
+  claudeConfigDirectory,
+  prepareProviderHome,
+  providerEnvironment,
+} from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import type { ProviderFactory } from './types'
@@ -45,6 +50,13 @@ export function createClaudeFactory(
     options.signal?.throwIfAborted()
     const lifetime = options.lifetime ?? new ProviderLifetime()
     await prepareProviderHome(options.home)
+    if (options.conversationId)
+      await moveClaudeTranscript(
+        claudeConfigDirectory(options.home),
+        options.cwd,
+        options.conversationId,
+        options.warn,
+      )
     options.signal?.throwIfAborted()
     const computer = await readComputerServer(options.warn)
     options.signal?.throwIfAborted()
@@ -231,11 +243,7 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const content = await claudeInput(
-          command,
-          options.cwd,
-          options.instructionBranches,
-        )
+        const content = await claudeInput(command, options.cwd, options)
         input.push(command.message.id, {
           type: 'user',
           uuid,

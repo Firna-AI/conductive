@@ -1,5 +1,4 @@
 import type { InvitationMailer } from './invitation-mailer'
-import type { ProviderAccountConfigurations } from './sandbox/accounts'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
 
@@ -17,6 +16,7 @@ export interface AppEnv {
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
+  CONDUCTIVE_SYMBOLIC_ANSWER_STATE?: string
   CONDUCTIVE_RELEASE_SERVER?: string
   CF_VERSION_METADATA?: WorkerVersionMetadata
   CONDUCTIVE_DEPLOY_TOKEN_SHA256?: string
@@ -28,7 +28,7 @@ export interface AppEnv {
   SESSION_SIGNING_KEY: string
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
-  SANDBOX_PROVIDER_ACCOUNTS?: ProviderAccountConfigurations
+  SANDBOX_PROVIDER_ACCOUNTS?: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   FEEDBACK_EMAIL?: string

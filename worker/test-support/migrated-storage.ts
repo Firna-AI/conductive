@@ -6,13 +6,7 @@ import { join } from 'node:path'
 import { Miniflare } from 'miniflare'
 
 import { readMigrationScripts, type MigrationScript } from './migrations'
-
-declare module 'vitest' {
-  interface ProvidedContext {
-    /** The global setup deletes `directory` with each folder inside it. */
-    testStorage?: { template: string; directory: string }
-  }
-}
+import { testDirectory, testStorage } from './test-directory'
 
 /**
  * Every test runtime names its D1 database with this id. Miniflare names the
@@ -21,12 +15,6 @@ declare module 'vitest' {
 export const TEST_D1_ID = 'test-db'
 
 let standaloneTemplate: Promise<string> | undefined
-
-async function testStorage() {
-  if (process.env.VITEST_WORKER_ID === undefined) return undefined
-  const { inject } = await import('vitest')
-  return inject('testStorage')
-}
 
 export interface MigratedStorage {
   path: string
@@ -37,19 +25,28 @@ export interface MigratedStorage {
  * Copies the migrated template into `directory`, or into a new folder, for
  * the `resourcePersistencePath` of a new runtime. Test processes copy the
  * template of the global setup. A standalone caller builds one template for
- * its process. A runtime that its caller disposes can skip `remove`, because
- * the global teardown deletes the folder.
+ * its process. Each fixture removes its owned folder after the runtime closes.
+ * The global teardown removes remaining run folders, including failed setup.
  */
 export async function migratedStorage(
   directory?: string,
 ): Promise<MigratedStorage> {
   const storage = await testStorage()
   const template = storage?.template ?? (await standalone())
-  const path =
-    directory ??
-    (await mkdtemp(join(storage?.directory ?? tmpdir(), 'runtime-')))
-  await cp(template, path, { recursive: true })
-  return { path, remove: () => rm(path, { recursive: true, force: true }) }
+  const folder =
+    directory === undefined
+      ? await testDirectory('runtime-')
+      : {
+          path: directory,
+          remove: () => rm(directory, { recursive: true, force: true }),
+        }
+  try {
+    await cp(template, folder.path, { recursive: true })
+    return folder
+  } catch (error) {
+    if (directory === undefined) await folder.remove()
+    throw error
+  }
 }
 
 function standalone(): Promise<string> {

@@ -6,6 +6,7 @@ import {
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
 import { HistoryPages, type SessionPage } from './history-pages'
+import { prepareSessionHistory } from './history-session-preparation'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
 import type { GitHubStateTransaction } from '../github/contracts'
@@ -16,7 +17,6 @@ import { PreviewRevocations } from '../previews/revocation-events'
 import { TerminalList } from '../terminal/list-store'
 import { RunnerOutputState } from './runner-output-state'
 import {
-  CHAT_ROOT as ROOT,
   CHAT_META as META,
   chatKey as key,
   chatEventKey as eventKey,
@@ -42,12 +42,21 @@ export class ChatTransaction extends ChatRecords {
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
   private readonly summary: WorkspaceSummaryProjection
-  private readonly pages = new HistoryPages(this.data)
+  private readonly pages: HistoryPages
+  private readonly prepareSession:
+    ((through: number) => Promise<void>) | undefined
   private through: number
   private commandThrough: number
 
-  constructor(data: ChatData, metadata: ChatMetadata, now: number) {
+  constructor(
+    data: ChatData,
+    metadata: ChatMetadata,
+    now: number,
+    prepareSession?: (through: number) => Promise<void>,
+  ) {
     super(data)
+    this.prepareSession = prepareSession
+    this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
@@ -73,60 +82,8 @@ export class ChatTransaction extends ChatRecords {
     this.now = now
   }
 
-  async pending(): Promise<PendingCommand[]> {
-    const records = [
-      ...(
-        await this.data.list<{ command: PendingCommand; order: number }>({
-          prefix: `${ROOT}command:`,
-        })
-      ).values(),
-    ]
-    return records
-      .sort((left, right) => left.order - right.order)
-      .map((entry) => entry.command)
-  }
   saveFirstMessageAdmission(first: FirstWorkspaceMessage): Promise<void> {
     return this.data.put(FIRST_MESSAGE_ADMISSION_KEY, first)
-  }
-  async cursor(streamId: string): Promise<number> {
-    return (await this.data.get<number>(key('cursor', streamId))) ?? 0
-  }
-  async streamReady(streamId: string): Promise<boolean> {
-    return (await this.data.get<boolean>(key('ready', streamId))) ?? false
-  }
-  saveStreamReady(streamId: string): Promise<void> {
-    return this.data.put(key('ready', streamId), true)
-  }
-  async command(commandId: string): Promise<PendingCommand | undefined> {
-    return (
-      await this.data.get<{ command: PendingCommand }>(
-        key('command', commandId),
-      )
-    )?.command
-  }
-  async commandDelivered(
-    commandId: string,
-    connectionId: string,
-  ): Promise<boolean> {
-    return (
-      (await this.data.get<{ deliveredTo?: string }>(key('command', commandId)))
-        ?.deliveredTo === connectionId
-    )
-  }
-  async saveCommandDelivery(
-    commandId: string,
-    connectionId: string,
-  ): Promise<void> {
-    const record = await this.data.get<{
-      command: PendingCommand
-      order: number
-      deliveredTo?: string
-    }>(key('command', commandId))
-    if (record)
-      await this.data.put(key('command', commandId), {
-        ...record,
-        deliveredTo: connectionId,
-      })
   }
   saveTurn(turn: StoredTurn): Promise<void> {
     return this.summary
@@ -162,14 +119,13 @@ export class ChatTransaction extends ChatRecords {
       order: ++this.commandThrough,
     })
   }
-  async removeCommand(commandId: string): Promise<void> {
-    await this.data.delete(key('command', commandId))
-  }
-  saveCursor(streamId: string, through: number): Promise<void> {
-    return this.data.put(key('cursor', streamId), through)
-  }
   history(after: number, through = this.through, session?: SessionPage) {
-    return this.pages.read(after, Math.min(through, this.through), session)
+    return this.pages.read(
+      after,
+      Math.min(through, this.through),
+      session,
+      this.prepareSession !== undefined,
+    )
   }
   newestHistory(sessionId: string, before?: number, through = this.through) {
     through = Math.min(through, this.through)
@@ -264,6 +220,8 @@ export class ChatStore {
         this.storage,
         await readChatMetadata(this.storage, workspaceId),
         this.now(),
+        (through) =>
+          prepareSessionHistory(this.storage, through, this.currentTurn),
       ),
     )
   }

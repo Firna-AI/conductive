@@ -18,12 +18,23 @@ command card and a lost line at their place, and a turn whose open work
 holds two messages with tables, one closed and one open. The `fold` state
 opens the folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
-columns, a wide table that scrolls sideways inside the reply, and the
-reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lists` draws a reply with a numbered
+columns, a wide table that scrolls sideways inside the reply, cells with
+line breaks, and the reply while the agent writes it, before its
+separator row arrives and after its table appears. Its saved states
+`short-row`, `wide`, `header`, and `rows` moved into their own folders and
+kept their paths, so the page shows only its canonical screen. The new
+child page `app/chat/tables/line-break` compares the two address providers
+in a table whose cells hold two lines, where the agent wrote `<br>`,
+`<br/>`, or `<br />`, from item 1 of the Markdown plan. Each cell stands
+at the top of its row, from item 12 B of 18 November 2026. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
 user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/headings`
+turn with a plan whose steps sit under each item. Its `tasks` variant draws
+a reply with a task list, whose fixed check boxes take the place of the
+bullets, from item 14 B of the Markdown plan of 18 November 2026. Its
+`tasks-work` variant draws the work of the same turn: two closed message
+lines with the boxes before the words of their tasks, and an open message
+line with the boxes in the place of the bullets. `app/chat/headings`
 draws headings in a reply, as the user chose on 11 November 2026: a review
 with a title at level 1, the section Needs your answer at level 2, a
 heading at level 3 for each choice with its bold fields under it, and a
@@ -31,6 +42,29 @@ heading at level 4 inside the first choice. Its `work` variant has the
 open work of a turn: a closed message line that shows its heading as text
 in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading.
+
+`app/chat/formatting` draws the quotes, the rules, the emphasis, the
+strikethrough, and the line breaks of a reply, from items 8 D and 5 A of
+the Markdown plan, which the user chose on 17 November 2026, and item 1 of
+16 November 2026. Its canonical screen has an answer that quotes the two
+review comments of Priya, with a rule between them, a word in italics, an
+option with a line through it, an address on two lines, and a bold label.
+Its variants:
+
+- `work` has the open work of a turn. Its closed message lines show a
+  quote as its text, a rule as a middle dot, and a line break in a table
+  cell as a space. Its open message line shows a quote and a rule as
+  blocks, and a line break as a new line.
+- `writing` has the same answer while the agent writes it: the bold label
+  at its end has no closing `**` yet, and the open mark closes at the end
+  of the text, so the label shows bold at once, from item 9 C of
+  18 November 2026.
+- `as-typed` has marks without a pair, which show as typed, and `<kbd>`
+  tags, which show as text.
+- `pictures` has a picture at a web address, which shows its alt text as
+  a link, a picture at a path that no file has, which shows its alt text
+  only, and the screenshot of the workspace, which shows as its picture
+  and opens its file, as `app/file-mentions/answers` shows.
 
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,
@@ -100,24 +134,40 @@ software". Its `stopped` variant has a stopped turn, whose line ends with
 the same words after a dot. A fast turn at fast speed ends as any turn
 does, as `app/fast-mode/trigger` shows.
 
+`app/chat/menu-placement` draws menus that show whole over a box that
+scrolls. Its canonical screen has the model menu over the requests that
+wait above the composer. Its `history` variant has the session history
+beside a full tab row. Its `allow` variant has More ways to allow of the
+first of four requests in the Mac app. The app opens these menus in the
+top layer, so no box cuts them.
+
 `app/automations` lists the automations of Acme, which the Automations link below
 New workspace opens. Its child pages:
 
 - `app/automations/empty` has an org without automations.
-- `app/automations/automation` has the owner's view of a saved automation. Its
-  child pages: `new` has a new automation, whose `org-login` variant has a
+- `app/automations/automation` has the owner's view of a saved automation,
+  with the Capabilities icon in the bar of its prompt box. Under the box, a
+  line names the secrets that its runs can use with no question, and the
+  hint of its pull request triggers follows. Its child pages: `new` has a
+  new automation, whose `org-login` variant has a
   new automation of Priya whose runs use the org login of Acme, from decision
   5 A of the org logins plan, and whose `org-models` variant has its open
-  model picker without Fable 5.1, from decision 3 A. `member` has the view
-  of a member, whose `org-login` variant has the runs of Cal on the org
+  model picker without Fable 5.1, from decision 3 A. `member` has
+  the view of a member, with the secrets of the runs read-only and the pull
+  request hint, whose `org-login` variant has the runs of Cal on the org
   login of Acme: "Runs use Acme's Claude login and Cal's GitHub access.",
-  `admin` the view of an admin with Turn off and Delete, `owner-left` an
+  `admin` the view of an admin with Turn off and Delete and the secret of
+  the runs of Priya read-only, `owner-left` an
   automation that moved, turned off, to Cal, the admin who got the
   workspaces of a member who left, `turned-off` an automation that turned
   off after three runs in a row failed, and `delete` the question that
   Delete asks first, because a deleted automation cannot come back. The first
   four were saved states of the page. They moved into their own folders
   and kept their paths, so the page shows only its canonical screen.
+  `capabilities` has the Capabilities control of the owner open, with two
+  secrets checked for each run workspace and the pull request hint, from
+  automation capabilities decisions 1 A to 3 A. A phone opens the control
+  as a sheet.
   `unavailable` has the page of an automation that the org no longer has,
   because it was deleted or the address is wrong, with Open Automations.
   `not-loaded` has the page after the read of the automation failed, with

@@ -38,7 +38,10 @@ it('completes a push after a pending workspace schedules its retry and later wor
   harness.api.pulls[2].mergeStateStatus = 'UNKNOWN'
   const notifications: unknown[] = []
   harness.pushed = async (...input) => {
-    notifications.push([input, harness.memory(second.id).events.length])
+    notifications.push([
+      input,
+      (await harness.inspect(second.id)).events.length,
+    ])
   }
 
   expect((await harness.webhook('push', push)).status).toBe(204)
@@ -48,8 +51,8 @@ it('completes a push after a pending workspace schedules its retry and later wor
   ])
   expect(notifications).toEqual([[[186853002, 1, 'main'], 1]])
   expect(await processed()).toBe(TEST_TIME)
-  expect(harness.memory(workspace.id).events).toEqual([])
-  expect(harness.memory(workspace.id).scheduled).toEqual([
+  expect((await harness.inspect(workspace.id)).events).toEqual([])
+  expect((await harness.inspect(workspace.id)).scheduled).toEqual([
     { request: { workspace, signal: { retryAttempt: 1 } }, delayMs: 1000 },
   ])
   const reads = harness.api.requests.length
@@ -61,14 +64,16 @@ it('completes a push after a pending workspace schedules its retry and later wor
   await expect(harness.runScheduled(workspace.id)).resolves.toMatchObject({
     banner: { state: 'ready-to-merge' },
   })
-  expect(harness.memory(workspace.id).events).toHaveLength(1)
-  expect(harness.memory(workspace.id).scheduled).toEqual([])
+  expect((await harness.inspect(workspace.id)).events).toHaveLength(1)
+  expect((await harness.inspect(workspace.id)).scheduled).toEqual([])
 })
 
 it('runs later push steps after a failed publication and replays receipts until image refresh succeeds', async () => {
   const { workspace, second } = await seedWorkspaces()
-  const first = harness.memory(workspace.id)
-  first.failPublish = true
+  const inspectFirst = () => harness.inspect(workspace.id)
+  await harness
+    .actor(workspace.id)
+    .api.controls.failPublication('Test broadcast failed')
   let notifications = 0
   let imageFailure = false
   harness.pushed = async () => {
@@ -81,13 +86,13 @@ it('runs later push steps after a failed publication and replays receipts until 
   expect(await failed.json()).toMatchObject({
     error: { code: 'internal_error' },
   })
-  expect(harness.memory(second.id).events).toHaveLength(1)
-  expect(harness.memory(second.id).published).toHaveLength(1)
+  expect((await harness.inspect(second.id)).events).toHaveLength(1)
+  expect((await harness.inspect(second.id)).published).toHaveLength(1)
   expect(notifications).toBe(1)
   expect(await processed()).toBeNull()
 
   const reads = harness.api.requests.length
-  first.failPublish = false
+  await harness.actor(workspace.id).api.controls.failPublication(null)
   imageFailure = true
   expect((await harness.webhook('push', push)).status).toBe(500)
   expect(harness.api.requests).toHaveLength(reads)
@@ -97,8 +102,10 @@ it('runs later push steps after a failed publication and replays receipts until 
   expect((await harness.webhook('push', push)).status).toBe(204)
   expect(harness.api.requests).toHaveLength(reads)
   expect(notifications).toBe(3)
-  expect(first.events).toHaveLength(1)
-  expect(first.published.map((event) => event.eventNumber)).toEqual([1, 1])
-  expect(harness.memory(second.id).events).toHaveLength(1)
+  expect((await inspectFirst()).events).toHaveLength(1)
+  expect(
+    (await inspectFirst()).published.map((event) => event.eventNumber),
+  ).toEqual([1, 1])
+  expect((await harness.inspect(second.id)).events).toHaveLength(1)
   expect(await processed()).toBe(TEST_TIME)
 })

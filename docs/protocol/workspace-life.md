@@ -87,7 +87,9 @@ keeps them after the merge.
   output, ready, starting, stopped, or error.
 - Needs input shows while the agent waits for the user, such as for help,
   an approval, or an answer (decision 68). The workspace header and its
-  row in the list show it, in the web app and in the Mac app.
+  row in the list show it, in the web app and in the Mac app. Starting
+  shows over needs input, as
+  [Secret requests](secret-requests.md#the-request) says.
 - The workspace header and the operator section give each state its own
   mark shape, so no state there depends on colour alone. Reason: they also
   show the state of the cloud computer. So the header can show ready beside

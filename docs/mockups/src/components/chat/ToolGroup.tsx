@@ -48,7 +48,7 @@ export function CallLine(props: { call: ToolCallItem }) {
         <Spinner color={theme.colors.muted} size={12} />
       ) : null}
       {call.status === 'stopped' ? (
-        <span className={styles.detail}>Stopped</span>
+        <span className={styles.ending}>Stopped</span>
       ) : null}
     </>
   )

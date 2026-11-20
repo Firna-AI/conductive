@@ -47,6 +47,8 @@ export type ShortcutDecision =
 /** A held key runs its command once, and no repeat reaches the page. */
 export function decideShortcut(context: ShortcutContext): ShortcutDecision {
   if (!context.press.repeat) return decideFirstPress(context)
+  if (context.press.firstPressConsumed)
+    return { kind: 'stop', closeMenu: false }
   const first = decideFirstPress({
     ...context,
     press: { ...context.press, repeat: false },

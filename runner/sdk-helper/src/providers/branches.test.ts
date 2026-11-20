@@ -79,3 +79,56 @@ it.each(['claude', 'codex'] as const)(
     expect(adapter.prompt()).toBe(fixed)
   },
 )
+
+const repository = {
+  fullName: 'acme/billing',
+  folder: '/home/user/code/billing',
+}
+
+it.each(['claude', 'codex'] as const)(
+  'adds the %s repository line before the branch line for an earlier folder',
+  async (agent) => {
+    const h = await providerFixture(agent)
+    const adapter = instructionProviders(agent)
+    const provider = await adapter.open({
+      ...h.options,
+      instructions: fixed,
+      instructionBranches: original,
+      instructionFolder: '/home/user/code/storefront',
+    })
+    onTestFinished(() => provider.close())
+    await provider.send({ ...h.command, branches: current, repository })
+    const footer =
+      'Sender: @alice [member ID: "alice"]\nCurrent repository: "acme/billing" in the folder "/home/user/code/billing". The workspace now works in this folder. Its context folder is "/home/user/code/billing/.context".\nCurrent branches: workspace "owner/new"; target "trunk".'
+    expect(await adapter.input()).toMatchObject(
+      agent === 'claude'
+        ? { content: `Change the file.\n\n${footer}` }
+        : { input: codexInput(footer) },
+    )
+    expect(adapter.prompt()).toBe(fixed)
+  },
+)
+
+it.each([
+  ['the current folder', repository.folder, repository],
+  ['an unknown folder', null, repository],
+  ['no current repository', '/home/user/code/storefront', undefined],
+] as const)('omits the repository line for %s', async (_, folder, current) => {
+  const h = await providerFixture('claude')
+  const adapter = instructionProviders('claude')
+  const provider = await adapter.open({
+    ...h.options,
+    instructions: fixed,
+    instructionBranches: original,
+    instructionFolder: folder,
+  })
+  onTestFinished(() => provider.close())
+  await provider.send({
+    ...h.command,
+    branches: original,
+    ...(current ? { repository: current } : {}),
+  })
+  expect(await adapter.input()).toMatchObject({
+    content: 'Change the file.\n\nSender: @alice [member ID: "alice"]',
+  })
+})

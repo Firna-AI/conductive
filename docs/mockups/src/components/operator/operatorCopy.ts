@@ -24,13 +24,17 @@ export type QuestionTarget =
 export const selfSuspendWarning =
   'This is your own account. You will be signed out, and another operator must lift the suspension.'
 
-/** The cost of a suspension for the files of a stopped workspace. */
+/**
+ * The cost of a suspension for the files of a stopped workspace. Only the
+ * `boat` account restarts a stopped workspace near day 14, so the warning
+ * names it. Operator screens name an account by its ID.
+ */
 const lostFiles =
-  'A stopped workspace gets no restart near day 14, so its files can be deleted.'
+  'A stopped workspace on the boat account gets no restart near day 14, so its files can be deleted.'
 
-/** What a lift cannot give back. */
+/** What a lift cannot give back, on the `boat` account only. */
 const liftFiles =
-  'A workspace that stopped 14 days ago or more may have lost its files.'
+  'A workspace on the boat account that stopped 14 days ago or more may have lost its files.'
 
 /**
  * The paragraphs of the question before a suspension: what stops, what

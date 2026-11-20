@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
+import { ownPress } from '../../app/pointer-drag'
 import { useMenuLayer } from './layers'
 import { MenuList } from './MenuList'
 import { useDismiss } from './Overlay'
@@ -81,7 +82,8 @@ const SURFACE_OPTIONS = {
  * A trigger and its menu. Desktop opens the menu beside the trigger, in the
  * top layer, so no box clips it. It opens on the side of its placement when
  * it fits there, otherwise on the side with more room. A phone opens it as a
- * sheet. A press outside or Escape closes it.
+ * sheet. A press outside or Escape closes it. The trigger and its menu keep
+ * their own presses, so a press on them starts no drag of a row around them.
  */
 export function MenuButton(props: {
   label: string
@@ -115,7 +117,7 @@ export function MenuButton(props: {
     return true
   })
   return (
-    <span className={props.className ?? ui.anchor} ref={anchor}>
+    <span {...ownPress} className={props.className ?? ui.anchor} ref={anchor}>
       {props.trigger({ open, toggle: () => setOpen((value) => !value), busy })}
       {open && !phone ? (
         <PopoverSurface

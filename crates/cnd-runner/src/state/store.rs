@@ -32,6 +32,13 @@ pub trait EventStore: Send + Sync {
         now: i64,
         report_command_id: Option<String>,
     ) -> Result<Option<RunnerEventEnvelope>>;
+    /// Save all parts of one prepared update, or leave all of them pending on failure.
+    async fn append_batch(
+        &self,
+        events: Vec<RunnerEvent>,
+        now: i64,
+        report_command_id: Option<String>,
+    ) -> Result<Option<Vec<RunnerEventEnvelope>>>;
     /// Save the contiguous confirmation and remove covered end records.
     async fn confirm(&self, through: u64) -> Result<()>;
     /// Replace one session's conversation reference and instructions.
@@ -105,6 +112,29 @@ impl EventStore for DurableStore {
         };
         self.save(&state).await?;
         Ok(Some(envelope))
+    }
+
+    async fn append_batch(
+        &self,
+        events: Vec<RunnerEvent>,
+        now: i64,
+        report_command_id: Option<String>,
+    ) -> Result<Option<Vec<RunnerEventEnvelope>>> {
+        let mut state = self.pending.lock().await;
+        let mut candidate = state.clone();
+        let mut envelopes = Vec::with_capacity(events.len());
+        for event in events {
+            let Some(envelope) = append(&mut candidate, event, now, None)? else {
+                return Ok(None);
+            };
+            envelopes.push(envelope);
+        }
+        if let Some(command_id) = report_command_id {
+            candidate.reports.commands.push(command_id);
+        }
+        *state = candidate;
+        self.save(&state).await?;
+        Ok(Some(envelopes))
     }
 
     async fn confirm(&self, through: u64) -> Result<()> {

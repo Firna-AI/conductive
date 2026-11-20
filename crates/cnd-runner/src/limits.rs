@@ -66,11 +66,7 @@ fn detail_prefix(detail: &str) -> (usize, u64) {
     let mut bytes = 2;
     let mut end = 0;
     for point in detail.chars() {
-        let next = match point {
-            '"' | '\\' | '\u{08}' | '\u{0c}' | '\n' | '\r' | '\t' => 2,
-            '\u{00}'..='\u{1f}' => 6,
-            point => point.len_utf8(),
-        };
+        let next = json_point_bytes(point);
         if (bytes + next) as u64 > TOOL_DETAIL_MAX_BYTES {
             break;
         }
@@ -78,6 +74,14 @@ fn detail_prefix(detail: &str) -> (usize, u64) {
         end += point.len_utf8();
     }
     (end, (detail.len() - end) as u64)
+}
+
+pub(crate) fn json_point_bytes(point: char) -> usize {
+    match point {
+        '"' | '\\' | '\u{08}' | '\u{0c}' | '\n' | '\r' | '\t' => 2,
+        '\u{00}'..='\u{1f}' => 6,
+        point => point.len_utf8(),
+    }
 }
 
 #[cfg(test)]

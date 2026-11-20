@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { effortLabels } from '../../../../../src/shared/agents'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
@@ -18,6 +19,8 @@ import styles from './ModelPicker.module.css'
  * agent's models open a new session. `hiddenModels` holds the models that
  * its menu leaves out. `fastKey` marks the picker of a session tab, where
  * the key of Fast mode runs, so its Fast row shows that key on desktop.
+ * `menu` is an open menu in place of the model menu, such as the menu of
+ * the favourites.
  */
 export function ModelPicker(props: {
   choice: AgentChoice
@@ -26,6 +29,7 @@ export function ModelPicker(props: {
   sessionAgent?: AgentKey
   hiddenModels?: readonly string[]
   fastKey?: boolean
+  menu?: ReactNode
 }) {
   const control = useControlSizes()
   const fastHint = useShortcutHint('fast-mode')
@@ -54,18 +58,20 @@ export function ModelPicker(props: {
         style={pickerButtonStyle(control.height)}
         tone="plain"
       />
-      {props.open ? (
-        <Menu
-          entries={pickerMenu(
-            choice,
-            props.sessionAgent,
-            props.hiddenModels,
-            props.fastKey ? fastHint : undefined,
-          )}
-          label="Model and effort"
-          placement={props.placement ?? 'above-start'}
-        />
-      ) : null}
+      {props.open
+        ? (props.menu ?? (
+            <Menu
+              entries={pickerMenu(
+                choice,
+                props.sessionAgent,
+                props.hiddenModels,
+                props.fastKey ? fastHint : undefined,
+              )}
+              label="Model and effort"
+              placement={props.placement ?? 'above-start'}
+            />
+          ))
+        : null}
     </span>
   )
 }

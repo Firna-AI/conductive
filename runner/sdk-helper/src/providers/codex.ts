@@ -8,6 +8,7 @@ import { codexBinary } from './binaries'
 import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
+import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
@@ -75,20 +76,6 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
-    const configs = {
-      ...settings.config,
-      'mcp_servers.conductive.command': WORKSPACE_TOOLS_MCP.command,
-      'mcp_servers.conductive.args': WORKSPACE_TOOLS_MCP.args,
-      'mcp_servers.conductive.env_vars': Object.values(TOOL_ENV),
-      ...(computer
-        ? {
-            'mcp_servers.computer.command': computer.command,
-            ...(computer.args
-              ? { 'mcp_servers.computer.args': computer.args }
-              : {}),
-          }
-        : {}),
-    }
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
@@ -100,10 +87,14 @@ export function createCodexFactory(
       const args = [
         codexBinary(),
         'app-server',
-        ...Object.entries(configs).flatMap(([key, value]) => [
+        ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
         ]),
+        ...codexStdioServer('conductive', WORKSPACE_TOOLS_MCP),
+        '-c',
+        `mcp_servers.conductive.env_vars=${JSON.stringify(Object.values(TOOL_ENV))}`,
+        ...(computer ? codexStdioServer('computer', computer) : []),
       ]
       rpc = new JsonRpc(
         start({
@@ -185,7 +176,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: codexInput(command, skills, options.instructionBranches),
+                input: codexInput(command, skills, options),
               })
             } catch (error) {
               userIds = before
@@ -199,7 +190,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: codexInput(command, skills, options.instructionBranches),
+                input: codexInput(command, skills, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

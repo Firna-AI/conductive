@@ -23,8 +23,9 @@
   app.
 - `worker/data/`: D1 queries for users, orgs, and sessions.
 - `worker/sandbox/`: the provider accounts, the lookup of the client of each
-  account, and the typed Boat adapter. Production has one account, which
-  uses the app's one Boat key.
+  account, and the typed client of each provider kind. The `boat` account
+  uses the app's Boat key. Each other account, such as `e2b`, comes from
+  `SANDBOX_PROVIDER_ACCOUNTS`.
 - `src/app/`: the data of the web app, such as the typed API client, the
   models that the screens read, the router, and the event stream. Its
   [README](../src/app/README.md) gives the rules and the key code of the
@@ -35,7 +36,7 @@
   key code.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
-- `worker/test-support/`: local D1, fake GitHub and Boat servers, and runner fakes.
+- `worker/test-support/`: local D1, fake GitHub, Boat, and E2B servers, and runner fakes.
 - `migrations/`: the D1 schema migrations.
 - `desktop/`: the Mac app, an Electron package of its own. Its
   [README](../desktop/README.md) gives its key code.

@@ -5,7 +5,7 @@ This guide belongs to the [agent runner](README.md).
 - [runner_command.rs](../crates/cnd-cli/src/runner_command.rs) composes the installed Rust runtime.
 - [config.rs](../crates/cnd-runner/src/config.rs) parses service settings and the saved-state path.
 - [runtime.rs](../crates/cnd-runner/src/runtime.rs) owns retries and shutdown.
-- [link](../crates/cnd-runner/src/link/) owns hello, welcome, confirmations, and replay.
+- [link](../crates/cnd-runner/src/link/) owns hello, welcome, confirmations, replay, and the private parts of complete tool details.
 - [state](../crates/cnd-runner/src/state/) owns the Node-compatible atomic state file and recovered turns.
 - [engine](../crates/cnd-runner/src/engine/) owns each session actor, input, helper handoffs, and turn completion.
 - [filter](../crates/cnd-runner/src/filter/) masks credentials before event limits and storage.

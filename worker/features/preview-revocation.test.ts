@@ -3,6 +3,7 @@ import { afterEach, beforeAll, expect, it } from 'vitest'
 
 import { workspaceEventsPath } from '../../src/shared/events'
 import { workspacePaths } from '../../src/shared/workspaces'
+import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import { closeSockets, SocketInbox } from '../chat/adapter-sockets.test-support'
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import {
@@ -23,88 +24,98 @@ afterEach(async () => {
   await fixture?.dispose()
 })
 
-it('publishes one durable revocation per preview on expiry and archive through the shared workspace socket', async () => {
-  const active = (fixture = await featureFixture(bundle))
-  await active.env.DB.prepare(
-    "UPDATE workspaces SET sandbox_id = 'bx_preview' WHERE id = ?",
-  )
-    .bind(OUTER_WORKSPACE)
-    .run()
-  const tabs: SocketInbox[] = []
-  for (let index = 0; index < 2; index++) {
-    const response = await active.request(
-      workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),
-      { headers: { Upgrade: 'websocket' } },
+it.each([3000, 0])(
+  'publishes one durable revocation per preview of port %s on expiry and archive through the shared workspace socket',
+  async (port) => {
+    const active = (fixture = await featureFixture(bundle))
+    await active.env.DB.prepare(
+      "UPDATE workspaces SET sandbox_id = 'bx_preview' WHERE id = ?",
     )
-    if (!response.webSocket) throw new Error('Missing workspace socket')
-    sockets.push(response.webSocket)
-    const inbox = new SocketInbox(response.webSocket)
-    response.webSocket.accept()
-    await inbox.next()
-    tabs.push(inbox)
-  }
-  const insert = (id: string, hostname: string, expiresAt: number) =>
-    active.env.DB.prepare(
-      'INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at) VALUES (?, ?, ?, ?, 3000, 1, ?)',
-    )
-      .bind(id, hostname, OUTER_ORG, OUTER_WORKSPACE, expiresAt)
+      .bind(OUTER_WORKSPACE)
       .run()
-  await insert('expired-preview', `${'a'.repeat(32)}.preview.test`, 1)
-  await active.actor().seedFeatureState({
-    'previews:workspace-id': OUTER_WORKSPACE,
-    'alarm:previews': 0,
-  })
-  await active.actor().advanceStartAlarm()
-  for (const inbox of tabs)
-    expect(await inbox.next()).toMatchObject({
-      type: 'event',
-      envelope: {
-        eventNumber: 1,
-        event: { type: 'preview.revoked', previewId: 'expired-preview' },
-      },
+    const tabs: SocketInbox[] = []
+    for (let index = 0; index < 2; index++) {
+      const response = await active.request(
+        workspaceEventsPath(OUTER_ORG, OUTER_WORKSPACE),
+        { headers: { Upgrade: 'websocket' } },
+      )
+      if (!response.webSocket) throw new Error('Missing workspace socket')
+      sockets.push(response.webSocket)
+      const inbox = new SocketInbox(response.webSocket)
+      response.webSocket.accept()
+      await inbox.next()
+      tabs.push(inbox)
+    }
+    const insert = (id: string, hostname: string, expiresAt: number) =>
+      active.env.DB.prepare(
+        'INSERT INTO preview_hostnames (id, hostname, org_id, workspace_id, port, created_at, expires_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
+      )
+        .bind(id, hostname, OUTER_ORG, OUTER_WORKSPACE, port, expiresAt)
+        .run()
+    await insert('expired-preview', `${'a'.repeat(32)}.preview.test`, 1)
+    await active.actor().seedFeatureState({
+      'previews:workspace-id': OUTER_WORKSPACE,
+      'alarm:previews': 0,
     })
-  await active.actor().advanceStartAlarm()
-  expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
-    throughEventNumber: 1,
-  })
-  await insert(
-    'archived-preview',
-    `${'b'.repeat(32)}.preview.test`,
-    Date.now() + 86_400_000,
-  )
-  const archive = await active.request(
-    workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
-    { method: 'POST', body: '{}' },
-  )
-  expect(archive.status).toBe(200)
-  for (const inbox of tabs)
-    expect(await inbox.next()).toMatchObject({
-      type: 'event',
-      envelope: {
-        eventNumber: 2,
-        event: { type: 'preview.revoked', previewId: 'archived-preview' },
-      },
-    })
-  for (const inbox of tabs) {
-    expect(await inbox.next()).toMatchObject({
-      type: 'event',
-      envelope: {
-        eventNumber: 3,
-        event: { type: 'ports.updated', ports: null },
-      },
-    })
-    expect(await inbox.next()).toMatchObject({
-      type: 'event',
-      envelope: {
-        eventNumber: 4,
-        event: {
-          type: 'workspace.updated',
-          workspace: { state: 'archived' },
+    await active.actor().advanceStartAlarm()
+    expect(
+      await active.env.DB.prepare(
+        'SELECT revoked_at FROM preview_hostnames WHERE id = ?',
+      )
+        .bind('expired-preview')
+        .first('revoked_at'),
+    ).toBe(DEVICE_TEST_NOW)
+    for (const inbox of tabs)
+      expect(await inbox.next()).toMatchObject({
+        type: 'event',
+        envelope: {
+          eventNumber: 1,
+          event: { type: 'preview.revoked', previewId: 'expired-preview' },
         },
-      },
+      })
+    await active.actor().advanceStartAlarm()
+    expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
+      throughEventNumber: 1,
     })
-  }
-  expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
-    throughEventNumber: 4,
-  })
-})
+    await insert(
+      'archived-preview',
+      `${'b'.repeat(32)}.preview.test`,
+      DEVICE_TEST_NOW + 86_400_000,
+    )
+    const archive = await active.request(
+      workspacePaths.archive(OUTER_ORG, OUTER_WORKSPACE),
+      { method: 'POST', body: '{}' },
+    )
+    expect(archive.status).toBe(200)
+    for (const inbox of tabs)
+      expect(await inbox.next()).toMatchObject({
+        type: 'event',
+        envelope: {
+          eventNumber: 2,
+          event: { type: 'preview.revoked', previewId: 'archived-preview' },
+        },
+      })
+    for (const inbox of tabs) {
+      expect(await inbox.next()).toMatchObject({
+        type: 'event',
+        envelope: {
+          eventNumber: 3,
+          event: { type: 'ports.updated', ports: null },
+        },
+      })
+      expect(await inbox.next()).toMatchObject({
+        type: 'event',
+        envelope: {
+          eventNumber: 4,
+          event: {
+            type: 'workspace.updated',
+            workspace: { state: 'archived' },
+          },
+        },
+      })
+    }
+    expect(await active.actor().readChatWorkspaceSummary()).toMatchObject({
+      throughEventNumber: 4,
+    })
+  },
+)

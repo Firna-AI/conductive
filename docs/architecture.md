@@ -1,11 +1,11 @@
 # Architecture
 
 Conductive is a coding tool at `conductive.build`. Each workspace has its
-own cloud computer, a Boat sandbox, and one branch at a time. It can hold
-one task after another. Agents powered by Claude and Codex work only in
-the sandbox. The user follows them in the browser or in the Mac app, which
-shows the web app. Automations also start agents without a person, each run
-in a new workspace. This doc describes the components, their
+own cloud computer, a sandbox on Boat or E2B, and one branch at a time. It
+can hold one task after another. Agents powered by Claude and Codex work
+only in the sandbox. The user follows them in the browser or in the Mac
+app, which shows the web app. Automations also start agents without a
+person, each run in a new workspace. This doc describes the components, their
 responsibilities, and the boundaries between them. The
 [protocol docs](architecture/protocol-docs.md) hold the requirements of
 each feature.
@@ -38,9 +38,10 @@ each feature.
 - **Referral code:** the personal code of each user with app access. It
   gives app access to up to 5 people who wait. The screens of users call
   it an invite code.
-- **Workspace:** the work of an org on one repository, one task at a time.
-  It has one repository, one sandbox, one or more sessions, and one branch
-  at a time. After a merge, Continue moves it on to its next task.
+- **Workspace:** the work of an org on one repository and one task at a
+  time. It has one sandbox, one or more sessions, and one repository and
+  one branch at a time. After a merge, Continue moves it on to its next
+  task. A repository change moves it to another repository of the org.
 - **Workspace owner:** the person who is responsible for a workspace. It is
   the person who created the workspace, until an admin reassigns it.
 - **Sub-workspace:** a workspace nested under another workspace, its
@@ -53,6 +54,9 @@ each feature.
 - **Continue:** the action after a merge that moves a workspace to a new
   branch from the latest default branch. The workspace keeps its sandbox
   and its sessions.
+- **Repository change:** the action that moves a workspace to a new branch
+  of another repository of its org, in the folder of that repository in
+  its sandbox. The workspace keeps its sandbox and its sessions.
 - **Local work:** work in the sandbox of a workspace that GitHub does not
   have: changed files that are not committed, also untracked files, and
   commits that no remote branch holds.
@@ -75,22 +79,29 @@ each feature.
   on: the personal login of its starter, or the org login.
 - **Default login:** the agent login that a new session of a member takes,
   as [The default login](protocol/org-logins.md#the-default-login) says.
-- **Boat key:** the one key of the app's own Boat account, where every
-  sandbox and every org image of every org runs. It is a Worker secret.
-- **Provider account:** an account with a sandbox provider. The Worker
-  holds its credentials, and reaches it through its own client.
-- **Sandbox:** the Boat sandbox of one workspace. The product calls it a
-  cloud computer or a sandbox.
+- **Provider account:** an account of the app with a sandbox provider:
+  `boat` with Boat, or `e2b` with E2B. Each org runs in one provider
+  account for its whole life. The Worker holds the credentials of each
+  account, and reaches it through its own client.
+- **Boat key** and **E2B key:** the one key of the app's account with Boat
+  or with E2B. Each key reaches every sandbox and every org image of the
+  orgs on its account. Each is a Worker secret.
+- **Weights:** the chance, in percent, that a new org gets each provider
+  account. An operator sets them.
+- **Sandbox:** the cloud computer of one workspace, on Boat or on E2B. The
+  product calls it a cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose
   when the build of the image began.
 - **Build:** a run of the install script on a copy of the org image. A
   build also installs the newest release of the sandbox software. An org
-  without an org image builds on a copy of the software image. A build
-  replaces the org image only when it succeeds.
+  without an org image builds on a copy of the software image of its
+  account, or else on the base image of that account. A build replaces the
+  org image only when it succeeds.
 - **Software image:** the saved snapshot of the base image with the app's
   own software, and no org data. Each deploy run builds the one of its
-  version, and a build of an org without an org image starts from it.
+  version in the `boat` account. A build of an org on that account without
+  an org image starts from it.
 - **Refresh:** an update of the org image that fetches the new commits of
   each repository that the org image holds. It does not run the install
   script.
@@ -100,7 +111,8 @@ each feature.
   as [Sandbox software](protocol/sandbox-software.md) says.
 - **Agent runner:** the part of the sandbox software that runs the agents.
   It runs them through the agent SDKs, and it reports the files, the
-  changes, and the listening ports of its workspace.
+  changes, and the listening ports of its workspace. Its file server
+  serves the files of the repository for the preview of an HTML file.
 - **Session:** one agent conversation in a workspace. It shows as a tab.
 - **Turn:** the work of the agent on a message, from the message to the
   end of the agent's reply. A Claude turn stays open after that reply
@@ -117,8 +129,8 @@ each feature.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
-  build, a refresh, or a software image build. The app's Boat account
-  limits the starts of all orgs.
+  build, a refresh, or a software image build. Each provider account of
+  the app limits the starts of its orgs.
 - **Plan:** what an org pays for each month, with the cloud hours that it
   includes: Free, Plus, Pro, or Ultra. [Pricing](protocol/pricing.md)
   states the plans. Billing has not started, so no org has a plan yet.
@@ -139,9 +151,10 @@ each feature.
 
 The [components page](architecture/components.md) describes each
 component and its responsibilities. It covers the apps, the Worker and
-its storage, Boat, the sandbox software, and the external services. The
-[sandbox software page](architecture/sandbox-software.md) describes the two
-programs in each sandbox, their releases, and their updates.
+its storage, the sandbox providers, the sandbox software, and the external
+services. The [sandbox software page](architecture/sandbox-software.md)
+describes the two programs in each sandbox, their releases, and their
+updates.
 
 ## Hostnames
 
@@ -150,7 +163,7 @@ programs in each sandbox, their releases, and their updates.
 | `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
 | `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
 | `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
-| `*.conductive.page`       | One random hostname for each open port preview, one level deep                                                                             |
+| `*.conductive.page`       | One random hostname for each open port preview and for the files preview of each workspace, one level deep                                 |
 | `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
 `api.conductive.build` is the hostname for machines. Each of its routes has
@@ -161,9 +174,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new workspace, chat, a run with secrets, the terminal,
-previews, the desktop, GitHub events, a merge, Continue, automation runs, and
-stops.
+together for a new org, a new workspace, chat, a run with secrets, the
+terminal, previews, the desktop, GitHub events, a merge, Continue,
+automation runs, and stops.
 
 ## Where data lives
 
@@ -173,7 +186,7 @@ where each kind of data lives.
 ## Trust boundaries
 
 The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
-separate the orgs, the Boat key, the model gateway, and the sandboxes.
+separate the orgs, the provider keys, the model gateway, and the sandboxes.
 
 ## Decision numbers
 

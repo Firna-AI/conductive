@@ -7,13 +7,13 @@ import { accessibleName } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount } from '../../test-support/mount'
+import { AgentText } from '../components/AgentText'
 import { UserBubble } from '../components/TranscriptItem'
 import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
 import { FakeSkills } from '../mentions/skills-test-kit'
-import { AnswerText } from './LinkedText'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
 
@@ -65,9 +65,7 @@ async function mountText(
       <MentionsProvider value={value}>
         <Copying>
           {answer ? (
-            <p>
-              <AnswerText text={text} />
-            </p>
+            <AgentText id="agent:1" text={text} />
           ) : (
             <UserBubble message={sent(text)} />
           )}

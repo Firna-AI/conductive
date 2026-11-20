@@ -1,4 +1,5 @@
 import { lineTargets } from './markdown-destination'
+import { lineLabelEnds } from './markdown-labels'
 
 /** A web address in text, with its source and optional Markdown label. */
 export type WebAddressLink = {
@@ -23,8 +24,7 @@ export type WebLink =
   | { kind: 'web'; url: URL }
 
 const barePattern = /https?:\/\/[^\s<>`]+/y
-const markdownLabel = /\[([^\]\n]*)\]\(/y
-const endMarks = new Set([...'.,;:!?\'"*_~]'])
+const endMarks = new Set([...'.,;:!?\'"*_~'])
 const localHosts = new Set(['localhost', '127.0.0.1', '[::1]', '0.0.0.0'])
 const invisible = /\p{Default_Ignorable_Code_Point}/gu
 
@@ -74,9 +74,11 @@ export function bareAddressAt(text: string, at: number): string | null {
   if (!found) return null
   let address = found
   let extraCloses = address.split(')').length - address.split('(').length
+  let extraBrackets = address.split(']').length - address.split('[').length
   while (address !== '') {
     const last = address.at(-1) ?? ''
     if (last === ')' && extraCloses > 0) extraCloses -= 1
+    else if (last === ']' && extraBrackets > 0) extraBrackets -= 1
     else if (!endMarks.has(last)) break
     address = address.slice(0, -1)
   }
@@ -96,6 +98,7 @@ export function webAddressParts(
 ): WebAddressPart[] {
   const parts: WebAddressPart[] = []
   const targetAt = lineTargets(text)
+  const labelEndAt = lineLabelEnds(text, 'plain')
   let end = 0
   for (let index = 0; index < text.length;) {
     let href: string | null = null
@@ -104,15 +107,17 @@ export function webAddressParts(
     let start = index
     let next = index
     if (text[index] === '[') {
-      markdownLabel.lastIndex = index
-      const match = markdownLabel.exec(text)
-      const target = match ? targetAt(index + match[0].length) : null
+      const labelEnd = labelEndAt(index)
+      const target =
+        labelEnd >= 0 && text[labelEnd + 1] === '('
+          ? targetAt(labelEnd + 2)
+          : null
       if (target) {
         href = target.destination
         next = target.next
         if (markdown) {
           source = text.slice(index, target.next)
-          label = match?.[1]
+          label = text.slice(index + 1, labelEnd)
         } else {
           start = target.start
           source = text.slice(target.start, target.end)

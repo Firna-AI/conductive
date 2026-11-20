@@ -1,13 +1,12 @@
 import { skillTextAt } from '../../../../src/shared/skill-text'
 import type { ProviderInput } from '../generated/ProviderInput'
-import type { RunnerBranches } from '../generated/RunnerBranches'
 import { claudeSkillFiles } from '../skill-files'
 import { readClaudeSkill } from '../skill-read'
 import {
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
-import { senderLines } from './message'
+import { senderLines, type FixedContext } from './message'
 
 /**
  * The text of one Claude message: the member's text, the read instruction
@@ -24,9 +23,9 @@ import { senderLines } from './message'
 export async function claudeInput(
   command: ProviderInput,
   repository: string,
-  branches?: RunnerBranches | null,
+  fixed: FixedContext = {},
 ): Promise<string> {
-  const lines = senderLines(command.message, command.branches, branches)
+  const lines = senderLines(command, fixed)
   const text = command.message.text
   const attached = command.attachments.map((item) =>
     attachmentDescription(command, item),

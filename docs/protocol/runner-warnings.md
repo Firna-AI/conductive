@@ -2,8 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the
 warnings that the Worker writes to its log about the connections of the
-agent runner and about turn ends with no Stop request. It also covers the
-process-start ID that the runner sends for these warnings. It belongs to
+agent runner, about turn ends with no Stop request, and about runner work
+that did not finish. It also covers the process-start ID that the runner
+sends for these warnings. It belongs to
 [Agent runner](agent-runner.md).
 [Agent instructions](agent-instructions.md#what-the-instructions-hold)
 states the guidance that tells each agent how a stop of the runner service
@@ -12,7 +13,9 @@ ends its turns. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A stop diagnostics decision number, such as stop diagnostics
 decision 4, names a decision about these warnings and that guidance.
-Stop diagnostics decision 5 is the choice to add the process-start ID.
+Stop diagnostics decision 5 is the choice to add the process-start ID. A
+runner work decision number, such as runner work decision 2, names a
+decision about the warning for runner work that did not finish.
 
 ## Terms
 
@@ -30,6 +33,10 @@ Stop diagnostics decision 5 is the choice to add the process-start ID.
 - **Protocol version:** the version of the runner messages that a runner
   connection carries, as [Runner versions](version-pins.md#runner-versions)
   says. It is not the release of the runner.
+- **Runner work:** the handling of one runner message by the workspace,
+  or the delivery of the waiting commands just after a hello.
+- **Watch window:** the first 30 seconds after the workspace receives the
+  hello of a runner connection.
 - **Stop request:** a Stop of a member, a close of a session that stops its
   turn, or a stop through the workspace tools, as
   [Messages](messages-and-attachments.md#messages) says.
@@ -89,6 +96,50 @@ Stop diagnostics decision 5 is the choice to add the process-start ID.
   So a store that fails writes no warning. A resent end, or a late event
   of an ended turn, writes no second warning.
 
+## Runner work that did not finish
+
+- The Worker writes a warning for each runner work that starts in a watch
+  window and does not end (runner work decision 2 A).
+- Reason: some runner work can make the workspace go over its memory
+  limit. The platform then resets the workspace before it can write a
+  warning. The runner connects again and sends the same events, so the
+  same work fails again in a loop. Without the warning, the log does not
+  show which work fails.
+- The workspace saves a durable record of the work before the work
+  starts. It removes the record when the work ends, with success or with
+  an error. After the purge of a deleted org, its workspaces save no
+  record.
+- The workspace writes the warning at its first runner work after a new
+  start. So the warning comes after the reset, not before it. Then the
+  workspace removes the record.
+- A log line before each work was rejected. Reason: the platform does not
+  promise that a reset keeps the log lines of the work that it ends.
+- A wake of the workspace that restores its saved runner connection keeps
+  the watch window of that connection, with its original end.
+- The watch covers only the watch window. Reason: the runner sends its
+  unconfirmed events again at once after its hello. So each pass of such
+  a loop starts in a watch window. A record for each runner message was
+  rejected, because it adds durable writes to each runner message.
+- A reset can have another cause, such as a deploy of the Worker. The
+  warning then names the work that the reset ended. It does not name the
+  cause of the reset.
+- The record changes no handling of the work. When the workspace cannot
+  save or remove the record, the work runs as before.
+- The warning holds the connection values of the work: the workspace ID,
+  the connection ID, the stream ID, the process-start ID, and the protocol
+  version. For a hello, these come from that hello.
+- The warning holds the kind of the work: `hello`, `event`, `file_result`,
+  `move_refused`, or `flush`. `flush` is the delivery of the waiting
+  commands.
+- The warning holds the last stage that the work reached: `hello`,
+  `event`, `file_result`, or `after_commit`. `after_commit` means that the
+  workspace stored the event and its cursor. A flush has a null stage.
+- For an event, the warning holds the event type and the event number.
+  For a message, it holds the size of the message: the length of its text
+  in UTF-16 code units, or its byte count when it is binary.
+- Risk: the size and the event type are what the runner sends. Agent code
+  runs on the same cloud computer, so they prove nothing.
+
 ## What a warning holds
 
 - Each warning holds its kind and the workspace ID. It also holds the
@@ -101,10 +152,15 @@ Stop diagnostics decision 5 is the choice to add the process-start ID.
 - A value that is not known, such as the connection of a turn end with no
   current runner connection, is null.
 - A warning holds only IDs, the protocol version, the state of an end, and
-  a fixed text for its kind. It holds no secret, no token, no text of a
+  a fixed text for its kind. A warning about runner work that did not
+  finish also holds the kind, the stage, the event type, the event number,
+  and the size of that work. It holds no secret, no token, no text of a
   message, no content of a file, no error text, and no close reason.
 - The Worker checks the format of each ID and of the protocol version. It
-  never writes a value that fails the check. Reason: the runner sends the
+  also checks the event type, which must be a short dotted lowercase name,
+  and each number, which must be a non-negative safe integer. It never
+  writes a value that fails the check. An event type that fails shows as
+  `unknown`, and a number that fails shows as null. Reason: the runner sends the
   stream ID, the process-start ID, and the protocol version, and agent
   code runs on the same cloud computer.
 

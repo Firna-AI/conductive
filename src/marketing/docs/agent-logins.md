@@ -309,6 +309,7 @@ Code and members with terminal access can read or copy that credential.
 They can use it only through Conductive on the session's login while the turn runs.
 A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
+A program that keeps running can read tokens of later turns, including turns in other members' sessions.
 Your ChatGPT sign-in never enters a cloud computer.
 
 An own endpoint's address and key never reach a cloud computer.
@@ -317,7 +318,13 @@ If Conductive reports unsupported agent software, ask an admin to run **Build co
 After it succeeds, create a new workspace.
 
 The share switch does not hide turn tokens from code or members with terminal access.
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
+Removing it from Conductive does not revoke a copy held elsewhere.
+
 Work in an org with people you trust with your agent and GitHub logins.
 
 - [Understand sessions and chat](/docs/sessions-and-chat)
 - [Read the security guide](/docs/security)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)

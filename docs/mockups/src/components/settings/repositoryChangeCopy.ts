@@ -97,6 +97,15 @@ export function repositoryNoticeText(props: {
 }
 
 /**
+ * The words of the repository notice while an open edit of the
+ * Repositories tab adds repositories. Done saves the edit and starts one
+ * build, so the notice points to Done.
+ */
+export function editNoticeText(added: readonly string[]): NoticeText {
+  return { title: `Select Done to add ${listNames(added)} and start a build` }
+}
+
+/**
  * What a person can do while the repository of a New workspace form waits,
  * in each state. `alternative` says that another chosen repository is
  * ready, so the person can choose it and send now.

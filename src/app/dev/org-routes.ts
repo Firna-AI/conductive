@@ -10,8 +10,11 @@ import {
 } from '../../shared/orgs'
 import { isOrgColor } from '../../shared/org-colors'
 import { record, text, type JsonObject } from '../api/parse'
+import { selectActiveOrgs } from '../active-orgs'
+import { setupOrg } from '../setup-steps'
 import { requireOrg, type DevBackend } from './backend'
 import { startBuild } from './build-routes'
+import { newOrgAccount } from './provider-routes'
 import {
   ID,
   json,
@@ -47,7 +50,9 @@ function withInitials(org: OrgSummary, fields: JsonObject): OrgSummary {
 /**
  * Create org. The new org has its own state, as `freshOrg` says: the
  * repositories chosen by the request, and a running first build. When the
- * user has no org yet, the new org becomes the org of Get started.
+ * user has no org yet, the new org becomes the org of Get started. Its
+ * provider account is the choice of an operator, or a draw from the
+ * weights, as the Worker does, and the operator section lists it.
  */
 function createOrg(backend: DevBackend, body: unknown): Response {
   const { state } = backend
@@ -70,6 +75,15 @@ function createOrg(backend: DevBackend, body: unknown): Response {
     backend.now(),
     chosen,
   )
+  const choice = optional(fields, 'providerAccount', text) ?? null
+  state.providers.made.set(id, {
+    providerAccount: newOrgAccount(
+      state.providers,
+      choice,
+      state.account.operator,
+    ),
+    createdAt: backend.now(),
+  })
   state.orgs = [...state.orgs, org]
   startBuild(backend, org)
   if (state.getStarted.orgId === null) {
@@ -128,7 +142,8 @@ function restoreOrg(org: OrgState): Response {
  */
 function leaveSetupOrg(state: DevState, orgId: string): void {
   if (state.getStarted.orgId !== orgId) return
-  const next = state.orgs.find((item) => !item.org.deletion)?.org.id ?? null
+  const next =
+    setupOrg(selectActiveOrgs(state.orgs.map((item) => item.org)))?.id ?? null
   state.getStarted = {
     orgId: next,
     steps: state.getStarted.steps.map((item) =>

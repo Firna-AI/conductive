@@ -51,7 +51,10 @@ function listLabel(
 
 /**
  * The label of an open page: from the reply that it read for its path, or
- * else from the lists, or null when neither names the file.
+ * else the label of its tab, as `tabLabel` gives it, or null when no record
+ * names the file. So a page whose read fails, and a page that shows again
+ * before its read answers, keep the label of the last read of a path that
+ * no list names.
  */
 export function pageLabel(
   snapshot: FilesSnapshot,
@@ -60,7 +63,7 @@ export function pageLabel(
   reply: { path: string; displayPath?: string } | null,
 ): string | null {
   if (reply && reply.path === path) return pathLabel(reply)
-  return listLabel(snapshot, path, kind)
+  return tabLabel(snapshot, path, kind)
 }
 
 /**

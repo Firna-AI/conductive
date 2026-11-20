@@ -56,6 +56,7 @@ pub(super) fn message(
         session_id,
         message,
         branches,
+        repository,
         attachments,
         ..
     }) = turn(session, id)?
@@ -69,6 +70,7 @@ pub(super) fn message(
             turn_id: turn_id.into(),
             message,
             branches,
+            repository,
             attachments,
         },
     ))

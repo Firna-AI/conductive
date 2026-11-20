@@ -60,6 +60,23 @@ of a draft.
   the workspace is read-only, and the server path otherwise. The controller
   reads `readOnly` at each action, because a suspension can start during a
   visit, and it sends no other write then.
+- The chat of a read-only workspace keeps one local close order. A local
+  close puts its session first in that order. A local reopen takes the
+  session out of the order, so a later close puts it first again. The
+  session history lists the sessions of that order first, and then the
+  other sessions by the stored end times that `endedAt` gives. Reopen
+  closed session runs the first row of the history. So the history lists
+  the session that closed last first, and Reopen closed session reopens
+  it, as [Sessions](../../docs/protocol/agents-and-sessions.md#sessions)
+  and
+  [Where a command runs](../../docs/protocol/keyboard-shortcuts.md#where-a-command-runs)
+  say.
+- The local order changes no time that a row of the history shows. So
+  the times of the rows can show out of order. The chat snapshot keeps the
+  local order in `archiveClosed`, beside `archiveTabs`, in memory only. A
+  reload or a [Restore](../../docs/protocol/workspace-life.md#restore)
+  clears it. A workspace that accepts writes keeps the stored close order,
+  with the closes of every member.
 - A read-only chat shows no composer, no +, no Try again, no drag of a
   tab, and no answer to a Mac command. The tab menu of a session tab holds
   only its three copy items, and the tab menu of a file or diff tab holds
@@ -103,7 +120,7 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   line with the mockups' `StopLine`, and `SessionLinkText` of
   `links/LinkedText.tsx` draws the chip.
 - That chip finds its session and opens its page as the chip of a session
-  link in a message does, as [Workspace chips](agent-text.md#workspace-chips)
+  link in a message does, as [Workspace chips](text-links.md#workspace-chips)
   says. This holds also for a session of another workspace, and for a
   closed or unknown session. A workspace that the list of the org does not
   hold leaves the session link as text, with the origin of the link of the
@@ -148,6 +165,16 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   [`state/drafts.ts`](state/drafts.ts) says. Text and files that the user
   added during the send stay after it, and the message then gets a new ID.
   The notice "Your message didn't send" shows the Worker's plain message.
+- A send with no answer, or with a server error, can still reach the
+  Worker, as `isRefusal` of [`state/context.ts`](state/context.ts) says.
+  The notice of a failed send keeps the client ID of its message. When a
+  transcript of any session shows that ID, the notice goes, and a draft
+  that still holds that client ID empties, as `withLateSends` of
+  [`state/late-sends.ts`](state/late-sends.ts) says. An edit of the draft
+  clears its client ID, so a changed draft stays. A stream that shows the
+  message before the error arrives gets the same result, as
+  `showSendFailed` of [`state/message-send.ts`](state/message-send.ts)
+  says. A fixed prompt follows the same rule for its notice.
 - Send takes the files whose marks the draft text holds. It writes the
   returned copy path of each file at its mark, as
   [The send](draft-files.md#the-send) says.
@@ -170,9 +197,21 @@ says. `sendPrompt` of the controller, in
 - A session whose login is missing gets no request, and the outcome is
   `blocked`. A failed send shows the notice "Your message didn't send", as
   a send from the composer does. Without an open session, nothing sends.
-- A second try of the same prompt in the same session keeps the client ID
-  of the prompt that did not send, so a lost reply makes no second message.
-  The same prompt in another session is a new message.
+- The controller sends one prompt at a time. From the call until the send
+  of a prompt ends, another call of `sendPrompt` gets no request and
+  changes nothing in the chat. The bar keeps the view for that call, as
+  [Agent actions](../github/actions.md#agent-actions) says. The app keeps
+  the controller while it shows another page, as
+  [A chat that the app keeps](integration.md#a-chat-that-the-app-keeps)
+  says. So a call after the member leaves the workspace and returns also
+  gets no request while the send waits. A send from a composer still goes
+  while a prompt sends.
+- The prompt takes its client ID at the call, before its request goes out.
+  The controller keeps that ID for the session and the text while the send
+  waits. A sent prompt drops it, so the next send of the same prompt is a
+  new message. A failed send keeps it. So a second try of the same prompt
+  in the same session is the same message, and a lost reply makes no
+  second message. The same prompt in another session is a new message.
 - A reply that names a linked session shows the prompt there. No draft
   moves, and the tab moves only as for a draft that cannot move.
 - A read-only workspace sends nothing.

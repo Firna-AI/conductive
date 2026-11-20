@@ -1,0 +1,117 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { _electron, expect, test } from '@playwright/test'
+import type { ElectronApplication, Page } from '@playwright/test'
+import { build, preview, type PreviewServer } from 'vite'
+
+const repository = resolve(import.meta.dirname, '../..')
+const desktop = resolve(repository, 'desktop')
+const config = resolve(repository, 'src/chat/dev/vite.config.js')
+const evidence = resolve(repository, '.context/shared-menu-surface')
+const options = new URLSearchParams({
+  scenario: 'history',
+  state: 'ready',
+  viewport: 'desktop',
+  scheme: 'dark',
+  clock: 'frozen',
+})
+
+test('the model menu reaches choices outside a clipping box and returns focus after Escape', async () => {
+  await mkdir(evidence, { recursive: true })
+  const directory = await mkdtemp(resolve(evidence, 'm-'))
+  const site = resolve(directory, 'site')
+  let server: PreviewServer | undefined
+  let electron: ElectronApplication | undefined
+  let page: Page | undefined
+  try {
+    await build({
+      configFile: config,
+      logLevel: 'error',
+      publicDir: false,
+      build: {
+        outDir: site,
+        emptyOutDir: true,
+        rollupOptions: {
+          input: resolve(repository, 'src/chat/dev/index.html'),
+        },
+      },
+    })
+    server = await preview({
+      configFile: config,
+      logLevel: 'warn',
+      build: { outDir: site },
+      preview: { host: '127.0.0.1', port: 0 },
+    })
+    const origin = server.resolvedUrls?.local[0]
+    if (!origin) throw new Error('The chat build has no preview address')
+    const host = resolve(directory, 'browser.mjs')
+    await writeFile(
+      host,
+      `import { app, BrowserWindow } from 'electron';
+app.setPath('userData', ${JSON.stringify(resolve(directory, 'profile'))});
+void app.whenReady().then(async () => {
+const window = new BrowserWindow({width: 1440, height: 900, useContentSize: true,
+webPreferences: {contextIsolation: true, sandbox: true, nodeIntegration: false}});
+await window.loadURL('about:blank');
+});
+app.on('window-all-closed', () => app.quit());
+`,
+    )
+    electron = await _electron.launch({
+      args: [host, '--lang=en-GB'],
+      cwd: desktop,
+      env: { ...process.env, TZ: 'UTC' },
+    })
+    page = await electron.firstWindow()
+    await page.goto(new URL(`src/chat/dev/?${options}`, origin).href)
+    const picker = page.getByRole('button', { name: /^Model and effort:/ })
+    await expect(picker).toHaveAccessibleName(
+      'Model and effort: Opus 5.5, High',
+    )
+
+    // A user cannot add a clipping box from this page. Give the real picker
+    // wrapper a clip, so the menu must reach beyond the box of its button.
+    await picker.evaluate((button) => {
+      const anchor = button.parentElement?.parentElement
+      if (!anchor) throw new Error('The model picker has no wrapper')
+      anchor.style.overflow = 'hidden'
+    })
+    await picker.click()
+    const menu = page.getByRole('menu', {
+      name: 'Model and effort',
+      exact: true,
+    })
+    const low = menu.getByRole('menuitemradio', { name: 'Low', exact: true })
+    // Check the clip before a pointer action can scroll anything into view.
+    await expect(low).toBeInViewport({ ratio: 1 })
+    const triggerBox = await picker.boundingBox()
+    const choiceBox = await low.boundingBox()
+    if (!triggerBox || !choiceBox) throw new Error('The picker has no box')
+    expect(choiceBox.y + choiceBox.height).toBeLessThanOrEqual(triggerBox.y)
+
+    await low.click()
+    await expect(menu).toHaveCount(0)
+    await expect(picker).toHaveAccessibleName('Model and effort: Opus 5.5, Low')
+    await picker.click()
+    await page.keyboard.press('Home')
+    await expect(
+      menu.getByRole('menuitemradio', { name: 'Opus 5.5', exact: true }),
+    ).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await expect(
+      menu.getByRole('menuitemradio', { name: 'Sonnet 5.5', exact: true }),
+    ).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(menu).toHaveCount(0)
+    await expect(picker).toBeFocused()
+  } catch (error) {
+    await page?.screenshot({
+      path: resolve(evidence, 'regression-failure.png'),
+    })
+    throw error
+  } finally {
+    await electron?.close()
+    await server?.close()
+    await rm(directory, { recursive: true, force: true })
+  }
+})

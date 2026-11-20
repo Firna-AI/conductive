@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest'
+import { expect, it, vi } from 'vitest'
 
 import { parseRunnerEnvelope, parseRunnerTransport } from './runner-input'
 import { numberedRunnerInput } from './runner-fixtures.test-support'
@@ -71,6 +71,42 @@ it('reads positive integer protocol versions before the handshake owns support',
     )
 })
 
+it('reads the repository folder of hello and the reply to a refused move', () => {
+  const hello = {
+    type: 'hello',
+    protocolVersion: 2,
+    workspaceId: 'workspace',
+    streamId: 'stream',
+  }
+  const folder = '/home/user/code/billing'
+  expect(parseRunnerTransport({ ...hello, repositoryFolder: folder })).toEqual({
+    ...hello,
+    processStartId: null,
+    repositoryFolder: folder,
+  })
+  for (const repositoryFolder of ['code/billing', '', 7, null])
+    expect(parseRunnerTransport({ ...hello, repositoryFolder })).toEqual({
+      ...hello,
+      processStartId: null,
+    })
+  for (const [reason, read] of [
+    ['unknown_folder', 'unknown_folder'],
+    ['not_repository', 'not_repository'],
+    ['later_reason', 'other'],
+  ])
+    expect(
+      parseRunnerTransport({
+        type: 'repository.move.refused',
+        commandId: 'move',
+        reason,
+      }),
+    ).toEqual({
+      type: 'repository.move.refused',
+      commandId: 'move',
+      reason: read,
+    })
+})
+
 it('normalizes optional process-start diagnostics without refusing hello', () => {
   const hello = {
     type: 'hello',
@@ -99,6 +135,49 @@ it('normalizes optional process-start diagnostics without refusing hello', () =>
         token: 'private-token',
       }),
     ).toEqual({ ...hello, processStartId: expected })
+})
+
+it('keeps only a true file server announcement and warns without its invalid value', () => {
+  const hello = {
+    type: 'hello',
+    workspaceId: 'workspace',
+    streamId: 'stream',
+    protocolVersion: 2,
+  }
+  const warning = vi.spyOn(console, 'warn').mockImplementation(() => {})
+  try {
+    for (const fileServer of [
+      true,
+      false,
+      undefined,
+      'private-token',
+      null,
+      1,
+      {},
+    ]) {
+      warning.mockClear()
+      expect(parseRunnerTransport({ ...hello, fileServer })).toEqual({
+        ...hello,
+        processStartId: null,
+        ...(fileServer === true ? { fileServer: true } : {}),
+      })
+      expect(warning.mock.calls).toEqual(
+        fileServer === undefined || typeof fileServer === 'boolean'
+          ? []
+          : [
+              [
+                {
+                  kind: 'runner_file_server_invalid',
+                  message:
+                    'A runner hello had an invalid file server announcement. It counts as no file server.',
+                },
+              ],
+            ],
+      )
+    }
+  } finally {
+    warning.mockRestore()
+  }
 })
 
 it('preserves omission counts and a known optional turn end reason in runner chat events', () => {

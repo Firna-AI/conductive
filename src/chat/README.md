@@ -69,6 +69,17 @@ says how `WorkspaceChatView` draws a controller that the app keeps: its
 `show`, `hide`, and `stop`, its `sources`, and the workspace list of its
 chips.
 
+The shell gives the chat an optional picture reader through
+`ChatMentions.pictures` in `mentions/MentionsContext.tsx`. The reader and
+its types live in `../files/page/picture-reads.ts`. The shell gives it only
+while the sandbox runs. It reads a real file path from the workspace tree
+through the existing file client. With it, the Markdown image of a PNG,
+JPEG, GIF, or WebP file of an answer shows as a picture, and without it
+as its link, as
+[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
+says. [Pictures in answers](text-links.md#pictures-in-answers) gives the
+rules of the code that draws them.
+
 ## Rules for this code
 
 - [The tab row](tab-row.md) gives the rules of the one order of the
@@ -88,13 +99,19 @@ chips.
 - [Chat Markdown](../../docs/protocol/chat-markdown.md) states the
   formatting of agent messages, with their headings and lists.
   [Chat tables](../../docs/protocol/chat-tables.md) states their tables.
+  [Chat message lines](../../docs/protocol/chat-message-lines.md) states
+  their lines in the work of a turn.
   [Chat links](../../docs/protocol/chat-links.md) states the links of sent
   messages and answers, and
   [Workspace links](../../docs/protocol/workspace-links.md) states their
-  chips. [File mentions](../../docs/protocol/file-mentions.md#files-in-answers)
-  states the file chips of answers. [Agent text](agent-text.md) gives the rules of the code that
-  formats them: the links, the chips, and the heading, list, and table
-  parts that the chat shares with the file preview and the mockups.
+  chips. [File mentions](../../docs/protocol/file-mentions-answers.md)
+  states the file chips and the pictures of answers.
+  [Agent text](agent-text.md) gives the rules of the code that formats
+  them: the chat adapter on the shared Markdown parser, and the heading,
+  list, and table parts that the chat shares with the file preview and the
+  mockups. Its linked guides [Message lines](message-lines.md) and
+  [Text links](text-links.md) give the message lines of the work of a
+  turn, and the links, the chips, and the pictures.
 - The links of chat text open through the link opener of the app shell, in
   `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
   the app and the port previews of the workspace, as
@@ -158,15 +175,24 @@ chat in the whole app.
 The Mac commands have their own [tests](device/README.md#tests), and a
 check in the Mac app.
 
+The placement of the model menu needs a real browser. The Electron check
+[`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)
+builds the development page and opens the real Model and effort menu in a
+box that clips. It checks the choices outside the box, a pointer choice,
+the arrow keys, and the focus return after Escape. Run
+`npm --prefix desktop run test:electron -- tests/chat-menu-clipping.spec.ts`.
+
 ### Key code
 
 [Chat key code](key-code.md) names the files, the types, and the
 functions of the chat that a reader opens first. It covers the controller
 and its state, the tab row, and the composer with its message field and
-its drop of files. Its other entries are the links, the mentions, the
-session links, and the attached files. It also
+its drop of files. Its other entries are the attached files and the
+workspace list of the chips. It also
 covers the transcript and its shared parts, the stream, the transcript
-copy, the chat routes, the Mac commands, and the development page.
+copy, the chat routes, the Mac commands, and the development page. Its
+linked guide [Text key code](text-key-code.md) names the links, the chips,
+the mentions, the pictures, and the Markdown of chat text.
 
 
 ### Related docs
@@ -176,6 +202,8 @@ copy, the chat routes, the Mac commands, and the development page.
   agent messages, with their headings and lists.
 - [Chat tables](../../docs/protocol/chat-tables.md): the tables of agent
   messages.
+- [Chat message lines](../../docs/protocol/chat-message-lines.md): the
+  lines of agent messages in the work of a turn.
 - [Chat links](../../docs/protocol/chat-links.md): the links of sent
   messages and answers.
 - [Agent runner](../../docs/protocol/agent-runner.md): the limits of the

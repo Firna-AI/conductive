@@ -11,6 +11,7 @@ import { queryAllByRole } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME, fakeUser } from '../../test-support/fixtures/core'
 import { senderSnapshot } from '../../test-support/fixtures/workspaces'
 import { mount, press } from '../../test-support/mount'
+import { chatFiles } from '../chat-files-test-kit'
 import { LinksProvider } from '../links/LinksContext'
 import { Copying, copyAll } from '../links/mention-copy-test-kit'
 import { FakeSkills } from '../mentions/skills-test-kit'
@@ -93,13 +94,9 @@ async function mountMessages(
   workspaceFiles: boolean,
 ) {
   const opened: string[] = []
-  const snapshot = {
-    tree: { entries: new Map([[readme.path, readme]]) },
-    treeError: null,
-    treeUnavailable: false,
-  }
+  const { files } = await chatFiles([readme])
   const value: ChatMentions = {
-    files: { subscribe: () => () => undefined, getSnapshot: () => snapshot },
+    files,
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,
     href: (entry) => `/files/${entry.path}`,

@@ -74,11 +74,17 @@ The detached build command streams its output to the build log.
 The release installer supplies both terminal units and their scripts.
 It enables the ttyd unit, which requires the shell server unit.
 It starts nothing and puts no password in the image.
+The shell server unit sets `OOMPolicy=continue`. So an out-of-memory kill of
+one command ends only that command, as
+[Out of memory](../../docs/protocol/terminal-shell.md#out-of-memory) says.
+The default policy, `stop`, would stop the unit and end every shell.
 
 Release updates bring terminal script and unit changes to existing workspaces.
 The program downloads them in the background. The runner applies them at a
 later start, or in place when its workspace is idle. The running terminal
-services keep their old units and scripts until their next start. Restart
+services keep their old scripts until their next start.
+[Release installation](../../image/install.md#release-installation) says when
+a changed unit applies. Restart
 of the workspace software restarts ttyd after the runner applies the release.
 It keeps the shell server running. But each
 new terminal connection runs the bridge from `/opt/conductive/current` at
@@ -141,6 +147,20 @@ When the selected session does not exist, the bridge creates it with a login Bas
 repository folder. It gives tmux the path of that folder, not its own
 current folder.
 
+After a [repository change](../lifecycle/repository-change.md#publication),
+the ttyd and tmux services still have the start variables of the old
+folder, and only a resume rewrites them. So the Worker writes the new
+folder to `/run/conductive/repository`, and sets
+`CONDUCTIVE_REPOSITORY_DIR` in the global tmux environment for each new
+shell. `terminalFolder` in [`bridge/folder.ts`](bridge/folder.ts) reads
+that file when the bridge creates the session. It takes the folder only
+when it is a folder under `/home/user/code` that exists. Otherwise it
+takes the folder of its command line. A session that runs keeps its
+folder. The startup command deletes the file at each start, because the
+start variables then name the folder of the new repository. A bridge of
+an older release, and the plain tmux client, ignore the file, so a new
+session there starts in the old folder until the software update.
+
 When the private Node or the bridge is missing, or the bridge exits with
 code 3 because tmux exited before the bridge attached, the attach program
 runs the plain tmux client with the same session and folder. Any other exit
@@ -168,6 +188,9 @@ without the marker. The agent runner reads the same marker to watch the
 live repository folder again, as the [runner guide](../../runner/README.md)
 says. The path lives in
 [`src/shared/restore-marker.ts`](../../src/shared/restore-marker.ts).
+E2B boots from the saved disk and omits the optional `hydrated` field.
+The common restore check then writes this marker as soon as the sandbox reports ready.
+It needs no delayed repair of a retired disk view.
 
 Bash runs the prompt hook before each prompt. Its folder check waits until
 the restore marker exists. At the first prompt after that, it checks the
@@ -201,7 +224,7 @@ during the shutdown can come after the last save. The
 [disk flush rules](../../docs/protocol/workspaces-and-sandboxes.md#disk-flushes)
 say that a normal stop loses nothing, which this loss contradicts for
 writes during the shutdown. With the append, the write comes while the
-sandbox runs. An idle stop comes at least 30 minutes after the last input,
+sandbox runs. An idle stop comes at least 15 minutes after the last input,
 so each finished command is on the disk well before it. The append has
 these limits:
 
@@ -269,9 +292,10 @@ runtime folder, with the password and the tmux socket, when a unit stops
 or restarts. The setup command writes no password to its output or to the
 command history.
 
-The provider's file API reads only under `/home/user` or `/tmp`, and both
-are on disk. So the setup command binds the memory folder
+Boat's file API reads only under `/home/user` or `/tmp`, and both
+are on disk. So the shared setup command binds the memory folder
 `/run/conductive-terminal` at `/home/user/.conductive-terminal`.
+E2B can read `/run` directly. It keeps the same bind mount through the shared setup hook.
 
 After the setup command exits with code 0, the lifecycle calls
 `startWorkspaceTerminal(env, orgId, workspaceId, dependencies)`. This

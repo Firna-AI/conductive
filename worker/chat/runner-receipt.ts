@@ -13,6 +13,8 @@ import { prepareAgentEvent } from './turn-events'
 import { observeRepairPart } from './repair-refusal'
 import { storeWorkspaceTitle } from './workspace-title'
 import type { ChatDependencies, RunnerWorkspaceRecord } from './types'
+import type { FilteredRunnerOutput } from './runner-output'
+import { invalidInput } from './inputs'
 /** Only validation errors become permanent refusals. Storage and sends must retry. */
 export async function storeRunnerReceipt(
   transaction: ChatTransaction,
@@ -29,21 +31,27 @@ export async function storeRunnerReceipt(
     await refuseInvalid(transaction, message, error, randomId)
     return { ready: false, stored: [transaction.emitted[0]] }
   }
-  const filtered = await dependencies.filterRunnerOutput(
-    transaction,
-    workspace,
-    parsed,
-  )
+  let filtered: FilteredRunnerOutput
+  try {
+    filtered = await dependencies.filterRunnerOutput(
+      transaction,
+      workspace,
+      parsed,
+    )
+  } catch (error) {
+    await refuseInvalid(transaction, message, error, randomId)
+    return { ready: false, stored: [transaction.emitted[0]] }
+  }
   let ready = false
   let accepted = false
-  if (!filtered.events.length && parsed.event.type === 'assistant.delta') {
+  const context =
+    filtered.privateContext ??
+    (parsed.event.type === 'assistant.delta'
+      ? { ...parsed.event, text: '' }
+      : undefined)
+  if (!filtered.events.length && context) {
     try {
-      await prepareAgentEvent(
-        transaction,
-        { ...parsed.event, text: '' },
-        parsed.occurredAt,
-        randomId,
-      )
+      await prepareAgentEvent(transaction, context, parsed.occurredAt, randomId)
       accepted = true
     } catch (error) {
       await refuseSemantic(transaction, message, error, randomId)
@@ -134,6 +142,7 @@ async function applyRunnerEvent(
   readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
 ): Promise<{ ready: boolean; accepted: boolean }> {
   const event = parsed.event
+  if (event.type === 'tool.detail.part') return invalidInput()
   let apply: (() => Promise<void>) | undefined
   if ('sessionId' in event) {
     try {

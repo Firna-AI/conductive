@@ -51,7 +51,6 @@ function itemsOf(
             : { kind: 'text', text: piece.source }
         }
         case 'attached':
-        case 'file-link':
           return { kind: 'text', text: piece.source }
         case 'text':
         case 'code':

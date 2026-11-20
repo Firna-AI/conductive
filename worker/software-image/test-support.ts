@@ -1,12 +1,19 @@
 import { SOFTWARE_RELEASE as SOFTWARE } from '../lifecycle/software-release-test-support'
+import type { SoftwareRelease } from '../lifecycle/software-release'
 import { softwareImageName } from '../lifecycle/image-names'
 import { TEST_TIME } from '../test-support/harness'
+import type { SoftwareImageRuntime } from './types'
 import { softwareVersion } from './version'
 
 export async function seedReadySoftwareImage(
   db: D1Database,
   id = 'software-ready',
-  input: { account?: string; version?: string; now?: number } = {},
+  input: {
+    account?: string
+    version?: string
+    artifact?: SoftwareRelease
+    now?: number
+  } = {},
 ): Promise<string> {
   const name = softwareImageName(id)
   await db
@@ -18,8 +25,8 @@ export async function seedReadySoftwareImage(
     .bind(
       id,
       input.account ?? 'boat',
-      input.version ?? (await softwareVersion(SOFTWARE)),
-      JSON.stringify(SOFTWARE),
+      input.version ?? (await softwareVersion(input.artifact ?? SOFTWARE)),
+      JSON.stringify(input.artifact ?? SOFTWARE),
       name,
       'a'.repeat(64),
       input.now ?? TEST_TIME,
@@ -27,4 +34,29 @@ export async function seedReadySoftwareImage(
     )
     .run()
   return name
+}
+
+export function softwareImageReleaseFixture(runtime: SoftwareImageRuntime) {
+  const release = { current: SOFTWARE, reads: 0 }
+  const fetch = runtime.dependencies.fetch
+  runtime.dependencies.fetch = (request) => {
+    if (
+      request.url ===
+      `${release.current.server}/releases/latest/conductive/x86_64-unknown-linux-musl`
+    ) {
+      release.reads++
+      return Promise.resolve(
+        Response.json({
+          binary: 'conductive',
+          target: 'x86_64-unknown-linux-musl',
+          asset_name: 'conductive.tar.gz',
+          version: release.current.version,
+          download_url: release.current.url,
+          sha256: release.current.sha256,
+        }),
+      )
+    }
+    return fetch(request)
+  }
+  return release
 }

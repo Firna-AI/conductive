@@ -94,6 +94,7 @@ it('lets only the owner edit or enable and lets an admin disable or delete', asy
       { name: 'Stolen prompt' },
       { active: true },
       { active: false, prompt: 'Changed' },
+      { capabilities: { preapprovedSecretIds: ['chosen-secret'] } },
     ]) {
       const denied = await harness.request(
         path,

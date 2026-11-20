@@ -31,6 +31,9 @@ On a phone, or after you select something else, select the terminal area to give
 
 A new workspace starts with **Terminal 1**.
 Each terminal starts its own shell in the workspace's repository folder.
+After a repository change, each new shell starts in the folder of the new repository.
+Each idle shell in the old folder also moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command stays in its folder.
 Its prompt shows the current folder name.
 Use `pwd` to see the full path.
 For a quick check, you can run:
@@ -61,6 +64,7 @@ If you end its shell with `exit`, **Reconnect** opens a new shell in the same ta
 Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
 Start any needed server again in its terminal.
+After a repository change, a server that already runs keeps the old folder, so start it again in the new folder.
 
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.
@@ -167,7 +171,8 @@ The token can reach repositories that both that person and the GitHub App can ac
 This can include repositories outside the Conductive org.
 
 **Merge**, **Ready for review**, and **Continue** in the pull request bar use the GitHub account of the member who selects them.
-All workspace terminals use the workspace owner's account.
+A repository change fetches with the GitHub account of the member who changes the repository.
+All workspace terminals still use the workspace owner's account.
 
 - [Use pull request actions](/docs/pull-requests)
 
@@ -190,6 +195,8 @@ On a phone, the preview opens on the **Preview** page.
 Servers that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
+An HTML file of the repository needs no server.
+Open it from **All files**, as [Preview an HTML file](/docs/files-and-changes#preview-an-html-file) says.
 
 To open a server by its port:
 
@@ -219,6 +226,9 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Drag a preview tab to move it, as with other tabs.
 Use **Reload** in the bar above the page to load the page again.
+Use **Expand** in the same bar to show the page in a large window over the whole app.
+The page keeps its place, so you can go on where you were.
+Use **Close** or press **Escape** to go back to the tab.
 Use **Open** in the same bar to show the app in a new browser tab.
 Use the **×** on a preview tab to close the tab.
 The preview stays open, so select its server again to bring the tab back.

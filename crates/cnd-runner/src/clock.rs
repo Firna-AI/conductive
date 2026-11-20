@@ -23,6 +23,10 @@ pub trait Clock: Send + Sync {
     async fn update_delay(&self) {
         tokio::time::sleep(Duration::from_secs(60)).await;
     }
+    /// Wait one second before a waiting repository move checks the turns again.
+    async fn move_delay(&self) {
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
 }
 
 /// System time and Tokio's cancellable scheduler.

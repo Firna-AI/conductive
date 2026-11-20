@@ -71,7 +71,9 @@ The run masks it in the log. Old immutable files stay in the bucket.
 Each deploy from `main` asks the Worker for the
 [software image](../protocol/org-image.md#the-software-image) of its new
 version. The software image holds the base image, the Conductive release, and
-the rest of the app's own sandbox software.
+the rest of the app's own sandbox software. The Worker builds it in the
+`boat` account only. The first build of an org on `e2b` installs the app's
+own software on the E2B template.
 
 1. Before the Worker upload, the deploy makes 32 random bytes as its
    deploy token. It keeps the token in a file of the deploy job only, and

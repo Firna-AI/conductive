@@ -19,8 +19,8 @@ function TerminalLine(props: { keyboard: ShortcutKeyboard }) {
   if (props.keyboard === 'mac') {
     return (
       <p className={styles.introLine}>
-        Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
-        the focus.
+        Keys without <KeyChips shortcut={['⌘']} /> go to the terminal while it
+        has the focus.
       </p>
     )
   }
@@ -53,19 +53,17 @@ function ResetAllDialog(props: {
     props.changed === 1 ? '1 command gets' : `${props.changed} commands get`
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={props.close}>Cancel</ActionButton>
-          <ActionButton
-            busy={props.busy}
-            icon={RotateCcw}
-            onPress={props.confirm}
-            tone="danger"
-          >
-            Reset all
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={props.busy}
+          icon={RotateCcw}
+          onPress={props.confirm}
+          tone="danger"
+        >
+          Reset all
+        </ActionButton>
       }
+      busy={props.busy}
       close={props.close}
       title="Reset all shortcuts?"
     >

@@ -8,6 +8,10 @@ import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
 import { failedBuildOf } from '../components/settings/BuildSection'
 import { DeleteSecretDialog } from '../components/secrets/DeleteSecretDialog'
 import { DeleteOrgDialog } from '../components/settings/DeleteOrgDialog'
+import {
+  RepositoryMenuSheet,
+  repositoryOrderStates,
+} from '../components/settings/RepositoryOrderList'
 import { SettingsTabs } from '../components/settings/OrgSections'
 import { Sidebar } from '../components/workspaces/Sidebar'
 import { memberViewer, people, viewerMembership } from '../fixtures/members'
@@ -31,6 +35,7 @@ export const orgSettingsSchema = {
     'script',
     'repositoryChange',
     'repositoryView',
+    'repositoryOrder',
     'envForm',
     'secrets',
     'dialog',
@@ -74,9 +79,17 @@ export const orgSettingsSchema = {
     /**
      * The Repositories tab of an admin: the chosen repositories with Edit,
      * or, after Edit, every repository that the GitHub App reaches, with
-     * search, Add, Remove, and Done.
+     * search, Add, Remove, and Done. `edit-added` is an open edit that
+     * adds acme/admin-dashboard, which Done has not saved yet.
      */
-    repositoryView: { enum: ['list', 'edit'] },
+    repositoryView: { enum: ['list', 'edit', 'edit-added'] },
+    /**
+     * The order of the chosen repositories outside Edit, from
+     * repository-order decision 1 F: the plain list, the row menu of
+     * acme/billing-service open, a drag of acme/marketing-site to the top,
+     * or the list after Make default on acme/billing-service.
+     */
+    repositoryOrder: { enum: repositoryOrderStates },
     /**
      * The open form of the environment variables, which the cloud computer
      * tab of an admin shows: none, Add variable, or the new value of
@@ -102,7 +115,8 @@ export const orgSettingsSchema = {
     },
     /**
      * A dialog over the page: Delete org, the removal of a member, the
-     * leave of a suspended org, or the question before Delete of a secret.
+     * leave of a suspended org, that leave while it runs, or the question
+     * before Delete of a secret.
      */
     dialog: {
       enum: [
@@ -110,6 +124,7 @@ export const orgSettingsSchema = {
         'delete-org',
         'remove-member',
         'leave-org',
+        'leaving-org',
         'delete-secret',
       ],
     },
@@ -147,6 +162,7 @@ export const acmeSettings: OrgSettingsState = {
   script: 'built',
   repositoryChange: 'none',
   repositoryView: 'list',
+  repositoryOrder: 'list',
   envForm: 'none',
   secrets: 'list',
   dialog: 'none',
@@ -185,13 +201,29 @@ export function OrgSettingsScreen(props: {
       <RemoveMemberDialog viewport={viewport} />
     ),
     'leave-org': suspended ? (
-      <LeaveOrgDialog viewer={settingsViewer(state)} viewport={viewport} />
+      <LeaveOrgDialog
+        busy={false}
+        viewer={settingsViewer(state)}
+        viewport={viewport}
+      />
+    ) : null,
+    'leaving-org': suspended ? (
+      <LeaveOrgDialog busy viewer={settingsViewer(state)} viewport={viewport} />
     ) : null,
     'delete-secret': suspended ? null : (
       <DeleteSecretDialog viewport={viewport} />
     ),
   }
-  const dialog = dialogs[state.dialog]
+  const repositoryMenu =
+    mobile &&
+    admin &&
+    !suspended &&
+    state.tab === 'repositories' &&
+    state.repositoryView === 'list' &&
+    state.repositoryOrder === 'menu' ? (
+      <RepositoryMenuSheet repositories={settings.repositories} />
+    ) : null
+  const dialog = dialogs[state.dialog] ?? repositoryMenu
   const page = (
     <Page
       back={mobile ? { label: 'Workspaces', to: settings.list } : undefined}
@@ -203,7 +235,7 @@ export function OrgSettingsScreen(props: {
       viewport={viewport}
     >
       {suspended ? <SuspendedOrgNotice org={org} /> : null}
-      <TabBody state={state} />
+      <TabBody state={state} viewport={viewport} />
     </Page>
   )
   if (mobile) {
