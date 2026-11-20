@@ -4,7 +4,7 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-18, from the review of branch `calummoore/preview-html-file-c42r`, finding 105.
 - **Location:** `src/shell/workspace/previews/use-html-preview.tsx:116`, `:147`, `:155`, `src/previews/filesPreview.ts`, `src/shell/workspace/previews/kept-files-preview.ts`, `src/shell/workspace/WorkspaceScreen.tsx:85`.
-- **Reason:** A Rare product bug of Medium severity waits for a later branch under the fix rule, and its fix builds on `plans/follow-ups/needs-input-hides-starting.md`.
+- **Reason:** A Rare product bug of Medium severity waits for a later branch under the fix rule. Its fix uses the Starting priority of `docs/protocol/secret-requests.md#the-request`.
 
 - **Terms:**
   - **Files preview:** the preview on the preview domain that shows the page of an HTML file in its tab.
@@ -30,6 +30,6 @@
 - **Left out:** No change, because it fails the goal. A held open in the Worker, because B is better on every point. A timed retry, because it breaks the rule of one open for each show. `resumingAtOpen` for each return, because it shows a false Starting.
 - **Wider fix:** B for the HTML tab. F and G go wider at a higher cost.
 - **Previous examples:** Commit `46769d979` made file pages wait for the cloud computer. Commit `8c49081e3` added visit state to prevent wrong first renders.
-- **Related:** `plans/follow-ups/needs-input-hides-starting.md`: Cal chose its option A on 2026-11-20, so the Worker will show Starting also while a request waits. Apply that item first, because B reads the confirmed Starting and Ready states.
+- **Related:** `docs/protocol/secret-requests.md#the-request`: Starting shows while a request waits, under Cal's choice of 2026-11-20. B uses the confirmed Starting and Ready states.
 - **Recommendation:** B. It removes the early open and the old answer at their one cause, with the counter that the store already has.
 - **Action:** fix after merge, apply B, because a Rare product bug of Medium severity waits for a later branch under the fix rule.
