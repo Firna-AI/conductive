@@ -40,9 +40,16 @@ which shows its Markdown as typed.
 - `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. Sent messages, the message field, and the mockups share it through
-  `lineTargets`, with its address boundaries, its escape decoding, and its
-  length limits.
+  `)`. An address in angle brackets ends at the first `>` that no
+  backslash escapes, as CommonMark does. Sent messages, the message field,
+  and the mockups share it through `lineTargets`, with its address
+  boundaries, its escape decoding, and its length limits.
+- Each target gives its address in two forms. `destination` is the
+  decoded address: each backslash escape, such as `\(`, becomes the
+  character after the backslash. `start` and `end` mark the source of the
+  address, as typed, inside any angle brackets. A link or a chip leads to
+  the decoded address. Where the Markdown shows as typed, the address
+  shows its source.
 - Sent messages, the message field, and the mockups read each target
   through `lineTargets` of the same module. It keeps each Markdown link on
   one line, as its label is. A line break inside its parentheses makes it
@@ -89,9 +96,15 @@ text. These parts read and draw them:
   for each address that is no chip and that its `web` reader accepts. The
   part holds the `WebLink` and the address as the text has it. A Markdown
   link shows as typed. Its brackets, its label, and its link title read
-  again as text and code, with no link, and its address reads as a bare
-  address: a chip, a link, or text. The Markdown of an image,
-  `![alt](address)`, shows as typed in the same way.
+  again as text and code, with no link. Its address is a chip, a link, or
+  text, as a bare address is. The Markdown of an image, `![alt](address)`,
+  shows as typed in the same way.
+- The token of a Markdown link in `links/chat-tokens.ts` keeps both forms
+  of its address: the decoded `href`, and the source in
+  `MarkdownLink.address`. `href` decides whether the address is a chip, a
+  link, or text. It also gives the title of a link and the page that a
+  chip or a link opens. The address shows its source, exactly as typed,
+  as the words of its link or as text.
 - Inline code whose text, without the spaces at its ends, is one address
   that the reader accepts holds that link, as `CodePart.link`. A
   workspace link alone in code is such a link, not a chip. Code in a label
