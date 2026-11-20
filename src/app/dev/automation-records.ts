@@ -3,11 +3,26 @@ import type {
   AutomationCapabilities,
   AutomationRun,
 } from '../../shared/automations'
+import type { OrgSecret } from '../../shared/secrets'
 import { readAutomationCapabilities } from '../api/read-automations'
 import type { DevBackend } from './backend'
 import { RouteError } from './router'
 import { orgSecretsOf } from './secret-store'
 import type { OrgState } from './state'
+
+export function automationChosenSecrets(
+  backend: DevBackend,
+  org: OrgState,
+  capabilities: AutomationCapabilities,
+): Pick<OrgSecret, 'id' | 'name'>[] {
+  const chosen = new Set(capabilities.preapprovedSecretIds)
+  const compare = (left: string, right: string) =>
+    left < right ? -1 : left > right ? 1 : 0
+  return orgSecretsOf(backend.state, org.org.id)
+    .secrets.filter(({ secret }) => chosen.has(secret.id))
+    .map(({ secret }) => ({ id: secret.id, name: secret.name }))
+    .sort((a, b) => compare(a.name, b.name) || compare(a.id, b.id))
+}
 
 export function automationCapabilities(
   backend: DevBackend,
