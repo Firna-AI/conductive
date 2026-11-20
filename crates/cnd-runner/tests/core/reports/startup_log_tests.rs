@@ -65,6 +65,7 @@ async fn logs_startup_milliseconds_and_file_count_once_across_reconnects() {
             ReportDependencies {
                 files,
                 ports: None,
+                skills: None,
                 emitter,
                 link: h.link.clone(),
                 store: h.store.clone(),

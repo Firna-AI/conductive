@@ -48,11 +48,12 @@ After the first successful build, use these steps to change its repositories:
 
 The tab lists the repositories in the setup, in the org's order.
 **Edit** lists every repository that the GitHub App can reach, by name.
-Each add or remove saves at once.
+Your changes save when you select **Done**.
+If you leave the tab before **Done**, nothing changes.
 The full list has **Manage access** for the GitHub App's access on GitHub.
 Your account and the app must both be able to reach a repository to select it.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts one build automatically, so you can add many repositories first.
 If a build or refresh is running, one more build usually starts after it succeeds.
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
@@ -70,7 +71,8 @@ If the last build failed, the change waits for **Try again**.
 When a repository moves to another owner on GitHub, Conductive follows the move like a new name.
 It does so only when the org already has another repository of the new owner.
 Otherwise, builds fail, and its workspaces and automations get no updates from GitHub.
-To fix this, an admin removes the repository in **Edit** and adds it again.
+To fix this, an admin removes the repository in **Edit** and selects **Done**.
+Then the admin adds it again in **Edit** and selects **Done**.
 The removal turns off each automation of the repository.
 After the repository is back, the owner of each automation turns it on again.
 
@@ -171,7 +173,7 @@ An older workspace gets the turn sender as commit author when an automatic softw
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Add secrets for agents
@@ -203,6 +205,8 @@ The command gets the value.
 The agent gets the secret's name and environment variable name, without the value.
 A member allows each session with **Allow for this session**.
 A secret for **All agents**, or one that is pre-approved in the workspace's **Capabilities**, needs no approval.
+The owner of an automation can choose secrets in **Capabilities** on its page.
+Each run workspace starts with those secrets pre-approved by the owner.
 
 The secret list gives the environment variable name that the command must read.
 Use the secret's name to request it.
@@ -218,6 +222,7 @@ An older tool can still omit a value if the secret's name cannot be a shell vari
 An [automatic software update](#apply-setup-changes) adds support for these names.
 
 - [Understand secrets](/docs/security#understand-secrets)
+- [Choose secrets for automation runs](/docs/security#choose-secrets-for-automation-runs)
 
 ## Apply setup changes
 
@@ -225,7 +230,7 @@ A successful build updates the starting setup for new workspaces.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts a build automatically.
 Each build installs the newest release of Conductive's own cloud computer software.
 **Continue** keeps that same computer and the software installed by the org's install script for the workspace's next task.
 A new build does not replace the existing computer.

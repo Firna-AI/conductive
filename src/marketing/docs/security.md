@@ -239,7 +239,7 @@ An `author` or `committer` setting in the repository or in the global Git settin
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It starts on for a new variable.
 Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
@@ -265,13 +265,15 @@ The agent gets the secret's name and environment variable name, without the valu
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
-Every member can remove approvals in **Capabilities**.
+Every member can remove an approval under **This session** in **Capabilities**, beside the message box of that session.
+**Capabilities** lists only the approvals of the session where you open it.
+To see the approvals of another session, open that session.
+**Capabilities** hides an approval while the secret is for **All agents** or pre-approved.
+The approval stays, and it shows again when that ends.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
 An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
-An automation run follows the same rules.
-Text in a pull request can steer its agent to use the secrets that need no new approval.
 
 While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
@@ -283,13 +285,43 @@ Changed or encoded values can still appear, also to the agent and its model prov
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
 
+## Choose secrets for automation runs
+
+The owner of an automation can choose org secrets in **Capabilities** on the automation page, beside the model picker.
+Every member sees the chosen secret names under the prompt.
+Only the owner changes the selection.
+Each run workspace starts with those secrets pre-approved.
+Conductive records the owner as the member who approved them.
+
+Agents in every session of that workspace can use them without a new request.
+The same selection serves schedules, pull request triggers, and **Run now**.
+Requests for other secrets still wait for a member, unless another approval allows them.
+
+These pre-approvals stay in a run workspace that you keep.
+Every member can remove them in that workspace's **Capabilities**.
+Changing the automation's selection affects only later run workspaces.
+It does not remove pre-approvals from earlier runs.
+A workspace that the run's agent creates gets no copied pre-approvals.
+
+Text in a pull request, such as a comment or review, can steer the agent to use these secrets.
+The automation page warns every member about this risk when the automation has a pull request trigger and a chosen secret.
+The member who added a chosen secret, or an admin, can replace its value.
+Later runs then use the new value.
+**Mac access** stays off in each new run workspace.
+
 ## Understand previews and Mac commands
 
-Preview apps run on a separate domain from Conductive.
+Preview apps and the pages of HTML files run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
 Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
+
+The page of an HTML file can load the files of the workspace's repository.
+It cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
+Its scripts can read the files that it can load and send them to another site.
+A secret in a file with another name, such as `key.pem`, stays readable to those scripts.
+Preview only HTML files whose scripts you trust.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
@@ -307,6 +339,7 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 - [Control Mac command permissions](/docs/mac-app#change-saved-permissions)
 - [Use port previews](/docs/terminal-and-previews#preview-a-running-app)
+- [Preview an HTML file](/docs/files-and-changes#preview-an-html-file)
 
 ## Keep the work you need
 

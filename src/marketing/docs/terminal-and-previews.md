@@ -195,6 +195,8 @@ On a phone, the preview opens on the **Preview** page.
 Servers that already have an open preview appear in its tabs, not in the list.
 
 When the terminal shows the local address of your server, open it from there.
+An HTML file of the repository needs no server.
+Open it from **All files**, as [Preview an HTML file](/docs/files-and-changes#preview-an-html-file) says.
 
 To open a server by its port:
 
@@ -224,6 +226,9 @@ The program name uses at most 10 characters, including **…** when shortened.
 Its tooltip and screen reader label give the full name and folder.
 Drag a preview tab to move it, as with other tabs.
 Use **Reload** in the bar above the page to load the page again.
+Use **Expand** in the same bar to show the page in a large window over the whole app.
+The page keeps its place, so you can go on where you were.
+Use **Close** or press **Escape** to go back to the tab.
 Use **Open** in the same bar to show the app in a new browser tab.
 Use the **×** on a preview tab to close the tab.
 The preview stays open, so select its server again to bring the tab back.

@@ -389,6 +389,14 @@ The migration adds `workspaces.mac_access`, on for each existing and new
 row, and `workspace_creation_plans.capabilities_json` for create recovery.
 The [secrets backend](../worker/secrets/README.md) owns these records.
 
+`202611181310_automation_secret_preapprovals.sql` adds the chosen secrets of
+each automation. Composite foreign keys enforce the org of its automation
+and secret. Deleting either removes its rows. Approver IDs are opaque
+attribution IDs, so account removal keeps the choices. The migration adds
+only this table and its indexes for org reads and secret deletion. The
+previous Worker ignores them and keeps its existing reads and writes.
+The [automations backend](../worker/automations/README.md) owns these choices.
+
 `202611161353_secret_reveals.sql` adds retained reveal records with the
 secret ID and name, value version, admin ID, and time. An org foreign key
 removes its records at org purge. Secret and admin IDs have no foreign
@@ -528,3 +536,22 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_pull_request_merges.sql` adds `pull_request_merges`. Each row
+holds one merged pull request of a workspace branch: the GitHub repository
+ID and the number as the key, the org, the workspace, the owner at the time
+of the record, the GitHub merge time, and the record time. Deleting the org
+deletes the rows through the foreign key. The workspace ID has no foreign
+key, so the org purge can delete the workspaces first. One index serves the
+counts of an owner by merge time, and one serves the cascade of an org. The
+migration copies no data, so the table starts empty. It changes no existing
+table, so the previous Worker keeps working.
+[The merge record](../worker/github/README.md#the-merge-record) gives the
+rules of the rows.
+
+`202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
+with the stop time of idle workspace computers in minutes, 30 at first,
+with its last change and operator. `idle_stop_events` keeps each change
+with its operator and time. The previous Worker reads neither table and
+keeps its fixed 30 minutes.
+[Operator stop time](../worker/operator/idle-stop.md) gives the rules.

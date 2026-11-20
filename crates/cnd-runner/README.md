@@ -15,7 +15,9 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
 - Read and write the existing Node state file format without a migration.
 - Read safe repository files and compare Git changes through private indexes and objects.
-- Send bounded file reports and stable listening-port reports.
+- Stream repository files over private loopback HTTP for HTML file previews.
+- Send bounded file reports, stable listening-port reports, and agent skill reports.
+- Keep private skill paths in memory and supply explicit Codex skills on each send.
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
@@ -119,6 +121,16 @@ snapshot. Checkpoints, including submodule checkpoints, do not refresh because
 `update-index --info-only` already stores fresh stat data.
 The first scan still completes before `runner.ready`.
 
+The CLI starts the repository file server on `127.0.0.1:7683`. A failed
+bind warns and leaves the runner available without that capability.
+The hello carries `fileServer: true` while the server listens.
+The [file server protocol](../../docs/protocol/file-server.md) defines its
+private request headers, file access, indexes, types, cache dates, and byte ranges.
+The server shares descriptor checks with file reads. It streams files
+without the file-tab size limit and refuses dot files and links to dot files.
+It reads the current repository folder of the runner at each request, so a
+repository move points it at the new folder with no new bind.
+
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
 independent revisions. Report repair saves the answer and request receipt
@@ -127,7 +139,12 @@ together. Retained reports select the newest pending state under the store lock.
 Port scans inspect Linux socket tables and process metadata. They never read
 process environments. Reports require two successful scans for additions and
 removals. Complete labels stay cached for each socket identity.
-Native watches debounce file events by 100 ms. Restore polling reopens the
+A separate SDK helper reads Claude skill folders and the Codex app-server
+list, with folder fallback. Rust filters whole skill sources, applies name,
+count, and byte limits, and saves the report and refresh receipt together.
+The store retains the latest skill metadata without private paths.
+
+Native watches debounce file and skill events by 100 ms. Restore polling reopens the
 live repository path once. Port scans run on an independent two-second timer.
 
 ## Quick Start
@@ -142,6 +159,7 @@ Compose `Arc<dyn Disk>`, `Arc<dyn EventStore>`, `Arc<dyn Clock>`,
 `Arc<dyn Connector>`, and `Arc<dyn RunnerLink>`. Give `DurableStore` a fresh
 random stream ID for a missing file. Call `EventStore::load` once before
 sharing the store. An existing file supplies its saved stream ID.
+Give `SavedRunnerLink` a true file-server flag only after the listener binds.
 Give each `SavedRunnerLink` the process-start ID of the runner start.
 Make one random version 4 UUID when the program starts. Give that ID to
 each later link of the same program. Never save it in the store.
@@ -203,6 +221,8 @@ cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
+File policy unit tests mock file access. HTTP integration tests bind isolated
+loopback listeners and stream real repository files from temporary folders.
 Connection-loop tests hold message processing after receipt and control report completion.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.
@@ -237,17 +257,25 @@ and connection drops. It does not run the Worker.
 - [tool_detail.rs](src/link/tool_detail.rs): `prepare` keeps a fitting tool detail whole, or splits a longer complete source into private parts that each fit the envelope.
 - [commands.rs](src/json/commands.rs): `workspace_message` repairs and validates command JSON.
 - [service.rs](src/repository/service.rs): `Repository` supplies scans, reads, diffs, and checkpoints.
+- [open.rs](src/repository/open.rs): `verified_file` checks containment through the opened descriptor for file tabs and HTTP.
+- [server.rs](src/file_server/server.rs): `FileServer` owns HTTP connections and their shutdown.
+- [policy.rs](src/file_server/policy.rs): `FileRequests` enforces private HTTP requests, paths, and file replies.
+- [range.rs](src/file_server/range.rs): selects byte ranges only when `If-Range` is absent or matches the file's modification date to the second.
+- [files.rs](src/file_server/files.rs): `Files` provides safe repository files and rejects dot files.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
 - [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.
 - [prepare.rs](src/reports/prepare.rs): `ReportFilter` receives complete sources before byte limits.
 - [reporter.rs](src/ports/reporter.rs): `PortReporter` keeps stable bounded port lists.
 - [proc.rs](src/ports/proc.rs): `ProcPortScanner` captures Linux listeners and complete cached labels.
+- [reporter.rs](src/skills/reporter.rs): `SkillReporter` orders discovery and saves complete bounded skill reports.
+- [helper.rs](src/skills/helper.rs): `NodeSkillScanner` reads private metadata and `SkillHelpers` supplies current Codex paths.
 - [service.rs](src/watcher/service.rs): `ReportWatchService` owns watch debounce, restore repair, and port timing.
 
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)

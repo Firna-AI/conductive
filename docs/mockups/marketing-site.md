@@ -218,7 +218,7 @@ the page.
 - How cloud hours count follows, with `SectionIntro`: the size of each
   cloud computer, then four rules under neutral hairlines, in two columns
   on a desktop. The rules give one pool for the org, every minute of every
-  cloud computer, the stop after 30 minutes without activity, and the
+  cloud computer, the stop after a set time without activity, and the
   extra hours.
 - The last call to action has the sentence and the two actions of the
   home page, through `ClosingCall`.

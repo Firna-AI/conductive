@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { WebAddressLink } from '../../../../../src/markdown/web-links'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import type { Attachment } from '../../fixtures/attachments'
@@ -8,10 +8,10 @@ import { workspaceLabel } from '../workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { ChipRemoval } from './ChipRemove'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { FileLinkText, FilePicture, MentionChip } from './MentionChip'
+import { MentionChip } from './MentionChip'
 import { SentFileChip } from './SentFileChip'
 import { SessionChip, type ChipSession } from './SessionChip'
-import { strongRuns } from './strongText'
+import { SkillChip } from './SkillChip'
 import { CodeText, WebLinkPart } from './WebLinkText'
 import {
   linkPage,
@@ -105,16 +105,15 @@ function ChatLink(props: { part: WebAddressLink; answer: boolean }) {
 }
 
 /**
- * One part of the text of a message: text, code, a chip, a link, or a
- * picture. While its message `waits` for the cloud computer, the chip of an
- * attached file opens nothing, because its copy does not exist yet. With
- * `pictures`, the Markdown image of a picture file shows as its picture.
+ * One part of the text of a message or an answer: text, code, a chip, or a
+ * link. `answer` shows a Markdown link as its label. While its message
+ * `waits` for the cloud computer, the chip of an attached file opens
+ * nothing, because its copy does not exist yet.
  */
-function Part(props: {
+export function Part(props: {
   part: TextPart
   answer: boolean
   waits?: boolean
-  pictures?: boolean
 }) {
   const { part } = props
   if (part.kind === 'text') return part.text
@@ -133,12 +132,8 @@ function Part(props: {
     )
   }
   if (part.kind === 'mention') return <MentionChip part={part} />
-  if (part.kind === 'file-link') {
-    return part.picture && props.pictures ? (
-      <FilePicture part={part} />
-    ) : (
-      <FileLinkText part={part} />
-    )
+  if (part.kind === 'skill') {
+    return <SkillChip mention={part.source} skill={part.skill} />
   }
   return <ChatLink answer={props.answer} part={part} />
 }
@@ -156,20 +151,16 @@ export function LinkText(props: { href: string; source?: string }) {
 }
 
 /**
- * The text of a sent message or an answer. Each part in backticks is code,
- * and each link to a workspace of the org is a chip that opens the
+ * The text of a message of a member, as typed. Each part in backticks is
+ * code, and each link to a workspace of the org is a chip that opens the
  * workspace, when the mockups draw its screen. A link to a session that the
- * chat read is a session chip that opens the session. A Markdown link to a
- * workspace or a session shows as the chip alone. Each other `http` and
- * `https` address is a link, as `WebLinkPart` says. Code that holds only an
- * address shows it as a link in its code box, and other code stays code.
- * With `strong`, as in an answer, `**` marks bold, and a Markdown link
- * shows as its label. In the text of a member, `mentions` makes each
- * mention of a file or a folder of the tree a chip that opens the file.
- * In an answer, each mention and each inline path of the file tree is a file chip.
- * With `pictures`, as in a paragraph or a list item of an answer, the
- * Markdown image of a picture file shows as its picture (screenshot
- * decision 2). A heading and a table cell keep its link.
+ * chat read is a session chip that opens the session. Each other `http` and
+ * `https` address is a link, as `WebLinkPart` says, and a Markdown link
+ * shows as typed. Code that holds only an address shows it as a link in its
+ * code box, and other code stays code. `mentions` makes each mention of a
+ * file or a folder of the tree a chip that opens the file, and each skill
+ * of the list a skill chip, which opens nothing. `AnswerText`
+ * draws the text of an answer.
  *
  * `files` are the attached files of a sent message. A mention of the copy
  * path of one of them shows as the chip of that file, which opens the file
@@ -179,36 +170,13 @@ export function LinkText(props: { href: string; source?: string }) {
 export function MessageText(props: {
   text: string
   mentions?: boolean
-  answer?: boolean
   files?: readonly Attachment[]
   waits?: boolean
-  pictures?: boolean
 }) {
-  const answer = props.answer === true
-  const parts = textParts(
-    props.text,
-    true,
-    props.mentions,
-    props.files,
-    props.answer,
-  )
-  const runs = props.answer ? strongRuns(parts) : [{ strong: false, parts }]
-  return runs.map((run, index) => {
-    const content = run.parts.map((part, inner) => (
-      <Part
-        answer={answer}
-        key={inner}
-        part={part}
-        pictures={props.pictures}
-        waits={props.waits}
-      />
-    ))
-    return run.strong ? (
-      <strong key={index}>{content}</strong>
-    ) : (
-      <Fragment key={index}>{content}</Fragment>
-    )
-  })
+  const parts = textParts(props.text, true, props.mentions, props.files)
+  return parts.map((part, index) => (
+    <Part answer={false} key={index} part={part} waits={props.waits} />
+  ))
 }
 
 /**

@@ -58,6 +58,19 @@ export function sameData<Props extends object>(
 }
 
 /**
+ * Whether two values hold the same plain data at each depth: the same
+ * strings, numbers, booleans, and nulls, in lists and plain records of the
+ * same shape. The blocks and the inline text of an agent message hold plain
+ * data only, and two parses of the same text give the same data. So each
+ * update of a live message keeps the drawing of each block and each text
+ * that did not change. A function or a React element counts only as the
+ * same value.
+ */
+export function samePlainData(before: unknown, after: unknown): boolean {
+  return holdsSame(before, after, Number.POSITIVE_INFINITY)
+}
+
+/**
  * Whether two elements draw the same: the same component and key, with
  * props that hold the same data, as `sameData` says.
  */

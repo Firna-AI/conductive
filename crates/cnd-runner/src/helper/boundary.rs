@@ -62,7 +62,7 @@ pub trait HelperEvents: Send + Sync {
     fn output(&self, output: HelperOutput);
 }
 
-/// Opens private helper processes for agent starts.
+/// Opens private helper processes for agent starts and skill scans.
 #[cfg_attr(test, unimock::unimock(api = HelperPortsMock))]
 pub trait HelperPorts: Send + Sync {
     /// Open a process with private stdin and stdout.

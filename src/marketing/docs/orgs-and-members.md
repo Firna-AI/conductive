@@ -96,7 +96,7 @@ The list needs access from both your GitHub account and the app.
 
 Admins can later change the selection and its order in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
-Adding a repository starts a build automatically.
+Selecting **Done** after you add repositories starts a build automatically.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
 

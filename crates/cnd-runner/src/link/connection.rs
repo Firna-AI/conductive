@@ -31,6 +31,7 @@ pub(super) struct Connection {
 pub struct SavedRunnerLink {
     pub(super) workspace_id: String,
     process_start_id: String,
+    file_server: bool,
     pub(super) request: ConnectionRequest,
     pub(super) connector: Arc<dyn Connector>,
     pub(super) clock: Arc<dyn Clock>,
@@ -51,10 +52,12 @@ impl SavedRunnerLink {
         connector: Arc<dyn Connector>,
         clock: Arc<dyn Clock>,
         store: Arc<dyn EventStore>,
+        file_server: bool,
     ) -> Self {
         Self {
             workspace_id,
             process_start_id,
+            file_server,
             request,
             connector,
             clock,
@@ -141,6 +144,7 @@ impl RunnerLink for SavedRunnerLink {
             workspace_id: self.workspace_id.clone(),
             stream_id: self.store.snapshot().await.stream_id,
             process_start_id: Some(self.process_start_id.clone()),
+            file_server: self.file_server.then_some(true),
             login_kinds: Some(vec![
                 RunnerLoginKind::Claude {
                     kind: LoginKind::Token,

@@ -59,6 +59,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         complete_tool_details: Option<bool>,
+        /// True while this runner's repository file server listens.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        file_server: Option<bool>,
     },
 }
 

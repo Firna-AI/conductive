@@ -100,7 +100,7 @@ export function DevPage(props: {
     (line: string) => setLog((lines) => [line, ...lines].slice(0, 6)),
     [],
   )
-  const [mentions] = useState(() => devMentions(note))
+  const [mentions] = useState(() => devMentions(note, options.skills))
   // As the workspace screen does, the chat reads pictures only while the
   // sandbox runs, so a stopped sandbox shows each picture as its link.
   const runs = runningStates.has(workspace.state)

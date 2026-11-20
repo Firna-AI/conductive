@@ -3,6 +3,7 @@
 mod dispatch_tests;
 mod replay_tests;
 mod retained_tests;
+mod skill_tests;
 mod startup_log_tests;
 mod startup_support;
 mod support;

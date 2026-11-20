@@ -98,6 +98,15 @@ export function hasSchedule(triggers: readonly Trigger[]): boolean {
 }
 
 /**
+ * The automation has a pull request trigger, so text in a pull request
+ * reaches the agent of its runs. With a chosen secret, the page shows the
+ * hint under the prompt (automation capabilities decision 3 A).
+ */
+export function hasPullRequestTrigger(triggers: readonly Trigger[]): boolean {
+  return triggers.some((trigger) => trigger.kind === 'pull-request')
+}
+
+/**
  * Run now shows on an automation with a schedule or with no trigger. An automation
  * whose triggers are all pull request triggers has none, because its runs
  * need a pull request (decision 510 C).

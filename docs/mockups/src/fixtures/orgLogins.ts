@@ -1,6 +1,6 @@
 import { agentKeys, type AgentKey } from './agents'
 import { gatewayModelCheck } from './endpointModels'
-import type { AgentLogins, LoginKind } from './logins'
+import type { AgentLogins } from './logins'
 import { orgs, type Org } from './orgs'
 
 /**
@@ -11,18 +11,6 @@ import { orgs, type Org } from './orgs'
  * runs on it, and needs no login (decision 4). No screen shows its key or
  * its full address.
  */
-
-/**
- * The kinds of an org login, in the order of the switch of its form. An org
- * login is never a subscription token or a ChatGPT sign-in, because each of
- * those is for one person.
- */
-export const orgConnectKinds: Readonly<
-  Record<AgentKey, readonly [LoginKind, ...LoginKind[]]>
-> = {
-  claude: ['api-key', 'endpoint'],
-  codex: ['api-key', 'endpoint'],
-}
 
 /** The org whose login the mockups draw. The labels name it: "Acme's login". */
 export const orgWithLogin: Org = orgs.acme

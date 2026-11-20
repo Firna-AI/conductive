@@ -3,16 +3,19 @@ import a11y from './a11y.module.css'
 import styles from './KeyChips.module.css'
 
 /**
- * A shortcut as its keyboard prints it. On a Mac: its modifiers in the
- * order ⌃ ⌥ ⇧ ⌘, then its key, such as ⌥⌘/, ⇧Enter, or ⌃⇧Tab. On Windows:
- * its modifiers as words and its key, joined with +, such as Ctrl+Shift+T.
+ * A shortcut as its keyboard prints each of its keys: its modifiers, then
+ * its key. A Mac gives its modifiers in the order ⌃ ⌥ ⇧ ⌘, such as
+ * `['⌥', '⌘', '/']` or `['⇧', 'Enter']`. Windows gives them as words, such
+ * as `['Ctrl', 'Shift', 'T']`, or `['Ctrl', '+']` for Control with Plus.
  */
-export type Shortcut = string
+export type Shortcut = readonly string[]
 
-const modifiers: ReadonlySet<string> = new Set(['⌃', '⌥', '⇧', '⌘'])
-
-/** The modifiers that start a shortcut of a Windows keyboard. */
-const windowsShortcut = /^(Ctrl|Alt|Shift|Meta)\+./
+/** Whether two shortcuts hold the same keys, in the same order. */
+export function sameShortcut(one: Shortcut, other: Shortcut): boolean {
+  return (
+    one.length === other.length && one.every((key, at) => key === other[at])
+  )
+}
 
 /** The names that a screen reader says for the symbols and short words of a key. */
 const spokenNames: Readonly<Record<string, string>> = {
@@ -26,28 +29,15 @@ const spokenNames: Readonly<Record<string, string>> = {
   '→': 'Right Arrow',
   '↑': 'Up Arrow',
   '↓': 'Down Arrow',
+  '+': 'Plus',
   Ctrl: 'Control',
   PgUp: 'Page Up',
   PgDn: 'Page Down',
 }
 
-/**
- * The keys of a shortcut, each modifier and then the key: ⌥, ⌘, / on a Mac,
- * and Ctrl, Shift, T on Windows.
- */
-function symbolsOf(shortcut: Shortcut): string[] {
-  if (windowsShortcut.test(shortcut)) return shortcut.split('+')
-  const symbols = [...shortcut]
-  const key = symbols.findIndex((symbol) => !modifiers.has(symbol))
-  if (key === -1) return symbols
-  return [...symbols.slice(0, key), symbols.slice(key).join('')]
-}
-
 /** The words that a screen reader says for a shortcut, such as Option Command /. */
 export function spokenShortcut(shortcut: Shortcut): string {
-  return symbolsOf(shortcut)
-    .map((symbol) => spokenNames[symbol] ?? symbol)
-    .join(' ')
+  return shortcut.map((key) => spokenNames[key] ?? key).join(' ')
 }
 
 /**
@@ -66,9 +56,9 @@ export function KeyChips(props: { shortcut: Shortcut; dimmed?: boolean }) {
         aria-hidden
         className={classes(styles.chips, props.dimmed && styles.dimmed)}
       >
-        {symbolsOf(props.shortcut).map((symbol, index) => (
+        {props.shortcut.map((key, index) => (
           <kbd className={styles.chip} key={index}>
-            {symbol}
+            {key}
           </kbd>
         ))}
       </kbd>

@@ -25,6 +25,7 @@ import {
   type OperatorRouteKit,
 } from './operator-waitlist-routes'
 import { providerRoutes } from './provider-routes'
+import { idleStopRoutes } from './idle-stop-routes'
 import { ID, json, RouteError, type Route } from './router'
 import { signupRoutes } from './signup-routes'
 
@@ -204,5 +205,6 @@ export function operatorRoutes(backend: DevBackend): Route[] {
     ...operatorWaitlistRoutes(kit),
     ...signupRoutes(kit),
     ...providerRoutes(backend, guard, operator),
+    ...idleStopRoutes(backend, guard, operator),
   ]
 }

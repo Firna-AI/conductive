@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Address autocomplete report</title>
+    <link rel="stylesheet" href="report.css" />
+  </head>
+  <body>
+    <h1>Address autocomplete report</h1>
+    <p class="meta">Test run of 18 November 2026</p>
+    <p>
+      The tests typed 120 addresses into the checkout form. 118 of them got a
+      matching suggestion.
+    </p>
+    <h2>Time to first suggestion</h2>
+    <!-- The script below draws one bar for each length of query. -->
+    <div id="chart"></div>
+    <p class="note">Each time is the median of 30 queries.</p>
+    <script>
+      const times = [
+        ['3 characters', 210],
+        ['4 characters', 160],
+        ['5 characters', 130],
+        ['6 or more', 110],
+      ]
+      const chart = document.getElementById('chart')
+      for (const [label, ms] of times) {
+        const name = document.createElement('span')
+        name.className = 'label'
+        name.textContent = label
+        const bar = document.createElement('span')
+        bar.className = 'bar'
+        bar.style.width = `${ms}px`
+        const time = document.createElement('span')
+        time.textContent = `${ms} ms`
+        const row = document.createElement('div')
+        row.className = 'row'
+        row.append(name, bar, time)
+        chart.append(row)
+      }
+    </script>
+  </body>
+</html>

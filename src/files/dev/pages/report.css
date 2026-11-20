@@ -1,0 +1,28 @@
+/* The style file of the sample report of the development page. */
+body {
+  margin: 32px;
+  color: #111827;
+  font: 15px/1.5 system-ui;
+}
+
+.meta,
+.note {
+  color: #4b5563;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.label {
+  width: 96px;
+  color: #374151;
+}
+
+.bar {
+  height: 12px;
+  border-radius: 0 4px 4px 0;
+  background: #2a78d6;
+}

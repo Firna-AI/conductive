@@ -14,6 +14,7 @@ import { OrgsTab } from './OrgsTab'
 import { OverviewTab } from './OverviewTab'
 import { PauseContext } from './pause-context'
 import { ProvidersTab } from './ProvidersTab'
+import { SettingsTab } from './SettingsTab'
 import { SwitchContext } from './switch-context'
 import { UserPage } from './UserPage'
 import { UsersTab } from './UsersTab'
@@ -34,6 +35,8 @@ function OperatorBody(props: { view: OperatorView; user: User }) {
       return <CodesTab search={view.search} />
     case 'providers':
       return <ProvidersTab />
+    case 'settings':
+      return <SettingsTab />
     case 'org':
       return <OrgPage key={view.id} orgId={view.id} />
     case 'user':

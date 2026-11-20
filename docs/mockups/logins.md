@@ -90,7 +90,10 @@ other pages.
 - A connected login shows its kind and Remove. The name of the kind
   depends on the agent: a Claude token is a "Subscription token", the
   ChatGPT sign-in of Codex is "ChatGPT plan", and a key is an "API key".
-  `loginLabels` in `src/fixtures/logins.ts` holds the names. On a phone,
+  `agentConnectCopy.ts` in `src/components/settings/` holds the names.
+  It also holds the switch order of `AgentConnectForm`, the field labels
+  and placeholders, the words above the field, and the addresses of the
+  key pages. The app shares these words. On a phone,
   the state and the kind go on a second line under the name of the agent,
   so that the kind shows in full.
 - Under each connected login, the switch "Let other members use this

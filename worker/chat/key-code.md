@@ -87,11 +87,15 @@ first.
   change in a queue task with its receiver generation, then calls
   `flushRunner`.
 - `history-pages.ts`: `HistoryPages`, the pages of the stored history and
-  the index of replaced answers and tool states. `read` reads one forward
-  storage list of 32 events. `readNewest` uses `BROWSER_PAGE_LIMITS` for the
-  browser: up to 2,048 stored events or 4 MiB of session events.
-- `history-newest-pages.ts`: the reverse storage loop, its byte and scan
-  limits, and the exclusive cursor of the next earlier page.
+  the index of replaced answers and tool states. `read` reads forward one
+  list of 32 events or session keys. `readNewest` uses `BROWSER_PAGE_LIMITS`
+  for the browser: up to 2,048 session events or 4 MiB of them.
+- `history-newest-pages.ts` and `history-session-records.ts`: the reverse
+  and forward reads of the session keys, the byte and scan limits, and the
+  exclusive cursor of the next earlier page.
+- `history-session-index.ts`: `SessionHistoryIndex`, the key of each event
+  of a session, and its frontier. `prepareSessionHistory` in
+  `history-session-preparation.ts` builds it, and yields between batches.
 - `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
 - `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
@@ -238,6 +242,16 @@ first.
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
   publishes a null list.
+- `skill-reports.ts`: the skills-report parser, the description cut to 300
+  characters after the final filter, the check of the cut, and the browser
+  form `SkillsUpdated`. The parser leaves out a name that no skill text can
+  hold and a repeated name. `runner-event-limits.ts` refuses a list of more
+  than 200 skills, or a description of more than 4096 characters, as too
+  large.
+- `skill-state.ts`: `WorkspaceSkills` on `ChatTransaction.skills`. It
+  stores each filtered report as a `skills.updated` event. It publishes
+  `skills: null` once when a runner sends `runner.ready` with no skills
+  report since its connect, or when the repair of a refused report fails.
 - `runner-input.ts`, `runner-event-limits.ts`, `agent-events.ts`, and
   `other-events.ts`: the checks and the caps of runner messages.
   `parseRunnerEnvelope` applies the byte limits to the raw message.
