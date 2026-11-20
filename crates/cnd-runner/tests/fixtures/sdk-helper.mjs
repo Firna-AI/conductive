@@ -32,6 +32,11 @@ for await (const line of lines) {
         process.stdout.write('{bad\n')
         break
       }
+      if (request.options.choice.model === 'environment')
+        output({
+          type: 'warning',
+          message: `${process.env.CONDUCTIVE_REPOSITORY_DIR} ${process.env.CONDUCTIVE_WORKSPACE_BRANCH}`,
+        })
       if (request.options.choice.model === 'hold') {
         held = request.requestId
         output({ type: 'warning', message: 'start held' })

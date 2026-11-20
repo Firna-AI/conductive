@@ -3,7 +3,9 @@ import { COPYING_CLASS } from '../../../docs/mockups/src/components/chat/ChipCop
 
 /**
  * The mark of a file chip, or of the chip of an attached file, in a sent
- * message or an answer: the text that a copy of the chip gives.
+ * message or an answer: the text that a copy of the chip gives. A picture
+ * of an answer, and the box of its label, carry it too, with the Markdown
+ * image as the agent wrote it.
  */
 const MENTION = 'data-mention'
 

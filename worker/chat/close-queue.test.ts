@@ -43,7 +43,7 @@ describe('closing a session with waiting work', () => {
     expect(waitingId).not.toBe(active.turnId)
     const cancelled = await fixture.fetch(interruptPath, { turnId: waitingId })
     expect(await cancelled.json()).toEqual({
-      eventNumber: 14,
+      eventNumber: 15,
       turnId: waitingId,
       state: 'stopped',
     })
@@ -67,6 +67,8 @@ describe('closing a session with waiting work', () => {
     expect(closed.history).toEqual([
       {
         ...session,
+        defaultLogin: undefined,
+        login: { type: 'personal', userId: fixture.owner.id },
         title: 'Check this code',
         activeTurnId: null,
         closedAt: 1_800_000_000_000,

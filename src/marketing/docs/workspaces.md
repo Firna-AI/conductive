@@ -13,7 +13,8 @@ Use separate workspaces for tasks that need separate files and branches.
 
 You need access to Conductive and membership of an org.
 The org needs a successful cloud computer build that includes your repository.
-You also need a login for the agent you choose.
+You also need a usable personal or org login for the agent you choose.
+You need no personal login when the org login serves you.
 Your GitHub account needs read access to the repository for the new workspace's start.
 
 If you joined an org, its admin manages the repositories and shared setup.
@@ -26,6 +27,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 1. Open your org.
 2. Select **New workspace**.
 3. Choose the repository for the task.
+   **New workspace** starts with the org's default repository.
 4. Choose a model and effort.
 5. Describe the task in the message box.
 6. Select **Send** on the page, or **Create** in the dialog.
@@ -48,6 +50,8 @@ The workspace keeps its accepted messages after a failed first start.
 Before the org's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
+The repository menu lists the org's repositories in the order that admins set.
+[Order repositories](/docs/cloud-computer#order-repositories) says how.
 A newly added repository shows as unavailable in the repository menu until its build succeeds.
 Its note says when it will be ready.
 The send button stays off while the selected repository waits for its build.
@@ -107,9 +111,10 @@ Archived workspaces keep a faint grey mark.
 
 A light runs around the mark while the agent works or the checks run.
 The moving light means that you do not need to act.
-The mark pulses when the agent needs input.
+The mark turns blue and pulses when the agent needs input.
+The pull request bar still shows the state of the pull request.
 With reduced motion, a still ring means the agent works.
-A still middle column means it needs input.
+A still blue middle column means it needs input.
 Bold workspace names mark unread output.
 
 The command palette and workspace links use the same marks.
@@ -127,8 +132,9 @@ Use **+** for a new conversation on that same task.
 
 **Link copied** confirms the copy.
 
-You can also copy the link from the workspace list.
+You can also copy the link from the workspace's menu.
 Right-click the workspace's row, or press **Shift+F10** while the row has focus.
+You can also select the workspace's name in the header of the open workspace.
 Then select **Copy link**.
 This works for archived workspaces too.
 
@@ -137,6 +143,7 @@ Its name and mark follow the workspace as they change.
 
 The link opens the workspace for a person who has access.
 It grants no org membership.
+A direct link or a chat link still opens a removed workspace's read-only chat.
 Typing `W-12` alone leaves plain text in the message.
 
 ## Organize work with sections
@@ -165,36 +172,58 @@ Every member of the org sees the same order of sections.
 
 You can also select **Move to section** in the top-level row's menu.
 This moves the whole tree to the top of the section you choose.
-A nested row moves only with its top-level workspace.
+In the list, a nested row moves only with its top-level workspace.
 Its menu has no **Move to section**.
+To move a workspace under another parent, or out of its tree, ask an agent.
 
 ## Let an agent manage workspaces
 
 Ask an agent to create, inspect, or rename a workspace.
 It can also move a top-level workspace and its whole tree to the top of a section.
-If it tries to move a nested workspace, nothing moves.
+If it moves a nested workspace only to another section, nothing moves.
 The reply names the top-level workspace to move instead.
 It can find workspaces by owner, state, repository, name, parent, recent activity, and archive state.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+An agent can still read a removed workspace and its sessions by ID.
 Ask for your workspaces, or give another member's name or GitHub login.
 
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
 
-Ask an agent to create a sub-workspace for a task that needs its own files and branch.
+An agent puts related work in a sub-workspace of the current workspace:
+
+- A part of a large task that runs in parallel.
+- Follow-up work that the task starts.
+- Work in another repository for the same task.
+- Each change that needs its own pull request.
+
+Unrelated work goes in a top-level workspace.
+You can tell the agent where to put a new workspace.
+
 The agent can name a parent workspace in the same org when it creates the workspace.
 Without a parent, the new workspace shows at the top level.
 If the agent also names another section, the sub-workspace still follows its parent.
 
+An agent can also move a workspace under another parent, or out of its tree to the top level.
+Every sub-workspace under the workspace moves with it.
+Under the new parent, the workspace and its sub-workspaces join the parent's section.
+At the top level, they go to the top of their section, or of a section that the agent names.
+A workspace cannot move under itself or under a workspace nested under it.
+
 Each sub-workspace has its own cloud computer, branch, sessions, and pull request.
 It also has its own Archive and Restore.
-The agent knows its workspace's parent and nesting level.
+The agent learns its workspace's parent and nesting level when its session starts.
+After a move, a new session gets the new ones only after the cloud computer starts again.
+A session that started before the move keeps the old ones.
+Ask the agent to look up its workspace for the current ones.
 It can find a workspace's parent and its direct sub-workspaces.
 
 Sub-workspaces can nest three levels below a top-level workspace.
-Archived parents still count toward this limit.
-A deeper request fails with advice to create a sibling of the deepest workspace.
+Archived workspaces still count toward this limit.
+A deeper create fails with advice to create a sibling of the deepest workspace.
 A sibling shares the same parent.
 The advice asks for a one-word name prefix that shows the group, such as `Limits: `.
+A move that goes deeper fails, and nothing moves.
 
 Agents can also create and delete sections.
 Deleting a section moves its workspaces to **General**.
@@ -212,9 +241,9 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 
 ## Resume a stopped computer
 
-The computer stops after 30 minutes without user activity and without a running agent turn.
+The computer stops after a set time without user activity and without a running agent turn.
 An open tab alone does not keep it running.
-Using a port preview does not keep it running either.
+Using a port preview or the preview of an HTML file does not keep it running either.
 A normal stop keeps its files, sessions, and chat history.
 
 Open a stopped workspace to start its computer again.
@@ -241,7 +270,8 @@ It is separate from the computer's automatic stop.
 ## Restart the software
 
 Select the state in the workspace header, such as **Ready**, then **Restart**.
-Restart restarts Conductive's agent software and the port previews in the running computer.
+Restart restarts Conductive's agent software, terminal software, and port previews in the running computer.
+After a software update, Restart also brings terminal tabs to a workspace that had only one terminal.
 Use it when an agent or a preview stops responding, or to apply a software update now.
 Any member can restart a workspace while it is ready, working, needs input, or has unread output.
 
@@ -305,16 +335,72 @@ For another failure, follow the reason shown under the bar.
 - [Use pull request actions](/docs/pull-requests)
 - [Apply updated cloud computer software](/docs/cloud-computer#apply-setup-changes)
 
+## Change the repository
+
+Every org member can move a workspace to another repository of the org.
+The workspace keeps its cloud computer, number, link, name, sessions, and chat.
+It gets a new branch in the folder of the new repository.
+
+1. Open the workspace.
+2. Wait for every running agent turn, **Continue**, and **Restart** in that workspace to finish.
+3. Select the repository in the workspace header.
+   On a phone, it is in the line under the workspace name.
+4. Select the new repository in the menu.
+5. Read the question if it lists work.
+6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
+
+The menu lists only the org's repositories that the workspace's cloud computer holds.
+When no other repository can show, the header shows the repository as text, with no menu.
+A repository that the org added after the workspace started does not show.
+Create a new workspace to use it.
+
+The question lists the work that the workspace stops following.
+This work can be files not committed, commits not pushed, an open pull request, and pushed commits of the branch.
+That work stays with the old repository.
+The question also lists the changed files in the folder of the new repository.
+These files move to the new branch.
+Without such work, the change starts at once.
+
+If the message says "Restart the software, then try again.", the computer needs newer software first.
+Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software) says, then change the repository again.
+
+The computer starts first if it is stopped.
+The new branch starts from the latest default branch of the new repository.
+That default branch becomes the workspace's base branch.
+Your GitHub account needs read access to fetch it.
+The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
+The change copies the `.context/` folder into the folder of the new repository.
+A file that already exists there stays.
+If the copy fails, the change stops before the new branch, and a message names the reason.
+While the change runs, new agent turns wait, and **Continue**, **Restart**, and **Archive** are not available.
+
+Each session shows who changed the repository, the new repository, and the new branch.
+The agents keep their conversations and work in the new folder.
+Programs that already run, such as development servers, keep running in the old folder.
+Their previews show the old repository until you start them again in the new folder.
+The pull request bar then follows the new branch without a pull request.
+Each idle shell in the old folder moves to the new folder, and a line that you typed but did not send is cleared.
+A shell that runs a command keeps its folder.
+File tabs of the old repository close.
+The startup script runs in the new folder at the next start.
+The old branch, its pull request, and the files in the old folder stay.
+
+If the change fails, the workspace keeps its repository and branch, and a message names the reason.
+If changed files in the new folder clash with its latest default branch, commit or discard them, then try again.
+
+- [Continue after a merge](/docs/workspaces#continue-after-a-merge)
+
 ## Archive a workspace
 
 In an active org, only the workspace owner and org admins can archive it.
 On a computer, point to the workspace's row in the org's workspace list.
 Select **Archive workspace** when its icon appears over the time.
 
-You can also open the row's menu:
+You can also open the workspace's menu:
 
 - On a computer, right-click the row.
 - With a keyboard, press **Shift+F10** while the row has focus.
+- Select the workspace's name in the header of the open workspace.
 
 Then select **Archive**.
 
@@ -333,10 +419,12 @@ They show under the nearest workspace above them that is not archived.
 If none remains above them, they show at the top level.
 
 Conductive keeps the computer and its files for 14 days after Archive.
-The chat stays read-only in **Archived**.
+The workspace stays in **Archived** for those 14 days.
+Its chat is read-only.
 File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
 
 The notification after Archive names the workspace and offers **Restore**.
+It also gives the day the workspace leaves the list.
 Use that action if you archived the workspace by mistake.
 
 ## Restore an archived workspace
@@ -355,6 +443,7 @@ The command palette offers **Restore workspace** for the archived workspace you 
 On a phone, open its row.
 Then select **Restore** in the workspace bar.
 The archived bar gives the Archive date and the last day of Restore.
+It also gives the day the workspace leaves the list, even when Restore is unavailable.
 
 Restore brings back the workspace with its files and agent sessions.
 A top-level workspace returns to its section and its place in the list.
@@ -371,9 +460,13 @@ Restore keeps the workspace's owner.
 If that owner is suspended, ask an org admin to reassign the workspace before resuming.
 
 Restore ends after 14 days, even while the computer's deletion is still in progress.
-The archived bar shows when Restore ended until deletion completes.
-It says the computer is deleted only after that deletion completes.
-The chat stays read-only after the computer and its files are deleted.
+Conductive deletes the cloud computer and the files on it.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Its text says that the cloud computer is deleted or is being deleted.
+
+Conductive keeps the workspace's chat history until the org is deleted.
 Keep work in GitHub if you need it after the Restore window ends.
 
 - [Review files and changes](/docs/files-and-changes)

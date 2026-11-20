@@ -26,8 +26,7 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const path = agentLoginPath('claude')
 const sharedHint = 'Their messages in your sessions use this login.'
-const keptHint =
-  'Their messages in your sessions start a new session on their own login.'
+const keptHint = 'Their messages in your sessions start a new session.'
 const notSaved = 'Not saved. The request failed. Try again.'
 
 /** The Claude login of the fixtures after other members may use it. */

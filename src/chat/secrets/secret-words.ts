@@ -1,4 +1,6 @@
+import type { SecretRunGrant } from '../../shared/generated/SecretRunGrant'
 import type { MessageSender } from '../../shared/generated/MessageSender'
+import type { Session } from '../../shared/generated/Session'
 import {
   deniedNote,
   endedLine,
@@ -7,7 +9,9 @@ import {
   reconnectNote,
   lifetimeHint,
   lifetimeLabels,
+  type SessionLoginOwner,
 } from '../../../docs/mockups/src/components/chat/secretRunCopy'
+import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import {
   lateAnswerParts as sharedLateAnswerParts,
@@ -16,7 +20,6 @@ import {
 import type {
   SecretRequest,
   SecretRequestEnd,
-  SecretRunGrant,
   SecretValueLifetime,
   SecretWorkspaceEvent,
 } from '../../shared/secret-requests'
@@ -26,17 +29,26 @@ type RunEvent = Extract<SecretWorkspaceEvent, { type: 'secrets.run' }>
 /**
  * A member as the words of a request name them: `subject` starts a
  * sentence, and `object` follows a word. The person signed in reads "You"
- * and "you".
+ * and "you". `name` is null when the chat does not know the member.
  */
+function whoNamed(
+  id: string | null,
+  name: string | null,
+  viewerId: string | null,
+): { subject: string; object: string } {
+  if (id !== null && id === viewerId) {
+    return { subject: 'You', object: 'you' }
+  }
+  return { subject: name ?? 'A member', object: name ?? 'a member' }
+}
+
+/** The member of a record as the words of a request name them. */
 function whoOf(
   person: MessageSender | null,
   viewerId: string | null,
 ): { subject: string; object: string } {
-  if (person !== null && person.id === viewerId) {
-    return { subject: 'You', object: 'you' }
-  }
   const name = person ? personName(person) : null
-  return { subject: name ?? 'A member', object: name ?? 'a member' }
+  return whoNamed(person?.id ?? null, name, viewerId)
 }
 
 /** The names of the mockup words for each lifetime of a value. */
@@ -97,17 +109,53 @@ function endedWords(cause: SecretRequestEnd, org: string): string {
 }
 
 /**
+ * The login that a late request names when it is gone: the owner of the
+ * login that the session keeps, and the name of its agent.
+ */
+export interface RecoveryLogin {
+  owner: SessionLoginOwner
+  agent: string
+}
+
+/**
+ * The owner of the login that a session keeps, named by `loginOwnerName`,
+ * as the session-login view names it. The session keeps `Session.login`
+ * also after that login is gone, so the owner never follows the login that
+ * a new message would take. The person signed in reads "you". An older
+ * record without a login keeps the personal login of its starter.
+ * `orgName` is the name of the org of the workspace, which owns its org
+ * login.
+ */
+export function keptLoginOwner(
+  session: Pick<Session, 'login' | 'startedBy'>,
+  viewerId: string | null,
+  orgName: string,
+): SessionLoginOwner {
+  const { login, startedBy } = session
+  if (!login) {
+    return { type: 'personal', name: whoOf(startedBy, viewerId).object }
+  }
+  const name = loginOwnerName(login, orgName, startedBy ? [startedBy] : [])
+  if (login.type === 'org') return { type: 'org', name: name ?? orgName }
+  return {
+    type: 'personal',
+    name: whoNamed(login.userId, name, viewerId).object,
+  }
+}
+
+/**
  * The line under a request that ended: why it ended with no answer, or who
  * answered it late and what followed (secrets decision 10 B). A request
  * that a member answered in time shows its answer at the end of its names
- * only. Until the app knows whether the late answer told the agent, the
- * line says only who answered.
+ * only. When the login of the session is gone, the line names who connects
+ * `login` again. Until the app knows whether the late answer told the
+ * agent, the line says only who answered.
  */
 export function endLine(
   request: SecretRequest,
   viewerId: string | null,
   org: string,
-  starter: { person: MessageSender | null; agent: string } | null = null,
+  login: RecoveryLogin | null = null,
 ): string | null {
   if (request.state === 'not-answered') {
     return request.endedBy ? endedWords(request.endedBy, org) : null
@@ -121,9 +169,8 @@ export function endLine(
   if (notice?.state === 'not-sent' && notice.reason !== 'login-unavailable') {
     return lateAnswerNote(who, 'next-message')
   }
-  if (notice?.state === 'not-sent' && starter) {
-    const person = whoOf(starter.person, viewerId).object
-    return reconnectNote(who, person, starter.agent)
+  if (notice?.state === 'not-sent' && login) {
+    return reconnectNote(who, login.owner, login.agent)
   }
   return `${who} answered.`
 }

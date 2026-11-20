@@ -48,13 +48,14 @@ says.
 ## Waiting repositories
 
 - The repository picker lists each chosen repository, on the page and in
-  the dialog (decision 240). A removed repository is not in the list.
+  the dialog (decision 240), in the
+  [repository order](orgs-and-members.md#repository-order) of the org. A removed repository is not in the list.
 - A [waiting repository](org-image.md#repository-changes) is off in the
   list, with a note that says when it is ready. The note follows the
   states of [The repository notice](org-image.md#the-repository-notice).
 - Reason: the person learns of the wait before the send. A change of only
   the words of the refusal was rejected for that reason.
-- The form picks the first ready repository. A kept draft keeps its
+- The form picks the first ready repository of the order. A kept draft keeps its
   repository, also when it waits. Reason: the form keeps the choice of the
   person.
 - While the repository of the form waits, Send and Create stay off. A

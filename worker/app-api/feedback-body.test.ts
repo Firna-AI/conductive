@@ -39,7 +39,7 @@ it('accepts the 10 MB JSON boundary and refuses one extra byte with and without 
     expect(await oversized.response.json()).toEqual(oversizedError)
     expect(oversized.observed.cancelled).toBe(1)
   }
-  expect(client.resend.requests).toHaveLength(2)
+  expect(client.resend.requests).toHaveLength(1)
   expect(client.resend.deliveries.size).toBe(1)
 })
 

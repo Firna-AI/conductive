@@ -50,23 +50,19 @@ export function NewCodeDialog(props: {
   }
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={make.pending} onPress={make.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={make.pending}
-            disabled={named === '' || useLimit === null}
-            icon={Plus}
-            onPress={submit}
-            tone="primary"
-          >
-            {newCodeWords.make}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={make.pending}
+          disabled={named === '' || useLimit === null}
+          icon={Plus}
+          onPress={submit}
+          tone="primary"
+        >
+          {newCodeWords.make}
+        </ActionButton>
       }
-      close={make.dismiss}
+      busy={make.pending}
+      close={props.close}
       title={newCodeWords.title}
     >
       <DialogText>{newCodeWords.text}</DialogText>
@@ -118,22 +114,18 @@ export function DisableCodeDialog(props: {
   const disable = useQuestion(props.disable, props.close)
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton disabled={disable.pending} onPress={disable.dismiss}>
-            Cancel
-          </ActionButton>
-          <ActionButton
-            busy={disable.pending}
-            icon={Ban}
-            onPress={() => disable.run()}
-            tone="danger"
-          >
-            {disableCodeWords.action}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          busy={disable.pending}
+          icon={Ban}
+          onPress={() => disable.run()}
+          tone="danger"
+        >
+          {disableCodeWords.action}
+        </ActionButton>
       }
-      close={disable.dismiss}
+      busy={disable.pending}
+      close={props.close}
       title={disableCodeWords.title(name)}
     >
       <DialogText>

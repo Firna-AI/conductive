@@ -24,11 +24,14 @@ const column: readonly number[] = [1, 4, 7]
 
 /**
  * The colour of the mark: the colour of the GitHub state, or dim grey
- * without one. An archived workspace keeps a faint mark without colour, so
- * that its chip shows the archive.
+ * without one. While the agent needs input, the mark is blue whatever the
+ * GitHub state, so that a workspace that waits for the user stands out. An
+ * archived workspace keeps a faint mark without colour, so that its chip
+ * shows the archive.
  */
 function toneOf(github: GitHubSummary | null, status: ActivityStatus) {
   if (status === 'archived') return styles.archived
+  if (status === 'input') return styles.input
   return github === null ? styles.none : colours[github]
 }
 
@@ -47,7 +50,7 @@ function chases(github: GitHubSummary | null, status: ActivityStatus) {
 /**
  * How one cell looks. While the agent works or the checks run, a light
  * runs around the ring and the centre stays dim. While the agent needs
- * input, the whole grid pulses. Without motion, the ring of a working
+ * input, the whole grid pulses in blue. Without motion, the ring of a working
  * agent or the middle column stays lit, and running checks light the whole
  * grid. Every other state is still: lit in the colour of the GitHub state,
  * or dim.
@@ -99,9 +102,10 @@ function cellOf(
  * purple a merge, and amber a merge conflict, requested changes, or a
  * block. Running checks and a draft are grey. A mark without a GitHub state
  * is dim grey.
- * A light runs around the ring while the agent works or the checks run,
- * and the mark pulses while the agent needs input. Every other mark is
- * still. It imports no fixture value, so the app uses it too.
+ * A light runs around the ring while the agent works or the checks run.
+ * While the agent needs input, the mark turns blue and pulses, whatever the
+ * GitHub state. Every other mark is still. It imports no fixture value, so
+ * the app uses it too.
  */
 export function WorkspaceMark(props: {
   github: GitHubSummary | null

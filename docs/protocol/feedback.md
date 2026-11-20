@@ -182,6 +182,9 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
 - A failed send keeps the draft. A notice under the message box says "The
   feedback wasn't sent", then the message of the error. Send stays on, and
   a new press of Send tries again.
+- A send over the [send limit](feedback-send-limit.md) keeps the draft
+  too. [Its notice](feedback-send-limit.md#the-notice) says when the
+  person can try again.
 - A repeat of a send of the same draft sends one email, also after a lost
   reply. A send of a changed draft sends a new email.
 - [Resend keeps each delivery key for 24 hours](https://resend.com/changelog/idempotency-keys).
@@ -216,16 +219,8 @@ draws the dialog at `app/feedback`, on desktop and on a phone.
 - When Resend refuses the email, the send gets HTTP 502. A deployed origin
   without the Resend key gives HTTP 502 too, as for an org invitation.
 - The dialog shows each error.
-- The app sets no limit on how often a person sends (decision 276). An
-  operator suspends a person who misuses it, as
-  [Suspend a user](operator-actions.md#suspend-a-user) says.
-- Risk: the feedback emails share the Resend account of the invitation and
-  approval emails. A person who sends in a loop can use up its send quota.
-  The other emails then fail. An approval email tries again for 24 hours,
-  then stops.
-- A limit of 10 feedback sends in an hour for each person can come later.
-  It would count only feedback emails. A limit only in the dialog was
-  rejected, because a crafted request skips it.
+- A send over the [send limit](feedback-send-limit.md) gets HTTP 429 with
+  the code `feedback_send_limit`.
 
 ## The email
 

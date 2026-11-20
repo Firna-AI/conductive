@@ -1,6 +1,31 @@
-import type { Automation, AutomationRun } from '../../shared/automations'
+import type {
+  Automation,
+  AutomationCapabilities,
+  AutomationRun,
+} from '../../shared/automations'
+import { readAutomationCapabilities } from '../api/read-automations'
+import type { DevBackend } from './backend'
 import { RouteError } from './router'
+import { orgSecretsOf } from './secret-store'
 import type { OrgState } from './state'
+
+export function automationCapabilities(
+  backend: DevBackend,
+  org: OrgState,
+  value: unknown,
+): AutomationCapabilities {
+  const capabilities = readAutomationCapabilities(value)
+  const secrets = new Set(
+    orgSecretsOf(backend.state, org.org.id).secrets.map(
+      ({ secret }) => secret.id,
+    ),
+  )
+  return {
+    preapprovedSecretIds: [...new Set(capabilities.preapprovedSecretIds)]
+      .filter((id) => secrets.has(id))
+      .sort(),
+  }
+}
 
 export function requireAutomation(
   org: OrgState,

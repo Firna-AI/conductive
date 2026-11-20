@@ -1,0 +1,14 @@
+---
+source: crates/cnd-runner-interface/tests/wire_5.rs
+description: Current protocol JSON. Optional fields stay absent; nullable fields stay null.
+expression: message
+---
+{
+  "type": "repository.move",
+  "commandId": "command-1",
+  "folder": "/home/user/code/billing",
+  "branches": {
+    "workspaceBranch": "member/cart-v2-cd34",
+    "targetBranch": "main"
+  }
+}

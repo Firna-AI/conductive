@@ -27,6 +27,7 @@ import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 import type { StartCall } from './start-guard'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -49,7 +50,8 @@ export async function advanceStartCommand(
   )
     throw new WorkspaceStartError(null)
   const phase = job.phase
-  await call(() => provider.setAutoStop(sandboxId, 1_800))
+  const autoStop = await call(() => workspaceAutoStopSeconds(env.DB))
+  await call(() => provider.setAutoStop(sandboxId, autoStop))
   if (job.processId === null) {
     const secrets = await call(async () => {
       const values = await workspaceEnvironmentSettings(

@@ -1,5 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { RefreshCw } from 'lucide-react'
+import type { Agent } from '../../shared/generated/Agent'
+import { loginLabels } from '../../../docs/mockups/src/components/settings/agentConnectCopy'
 import {
   EndpointAddressNote,
   EndpointReadFailed,
@@ -7,17 +9,29 @@ import {
 import { endpointReadCopy as copy } from '../../../docs/mockups/src/components/settings/endpointReadCopy'
 import { LoginEndpoint } from '../../../docs/mockups/src/components/settings/LoginEndpoint'
 import { unlistedModels } from '../../app/endpoint-models'
-import { endpointReadOf } from '../../app/endpoint-reads'
-import { useStore } from '../../app/store'
-import type { AgentLoginStatus } from '../../shared/account'
+import {
+  endpointReadOf,
+  type AnyLogin,
+  type LoginReads,
+} from '../../app/endpoint-reads'
+import { useStore, type Readable } from '../../app/store'
 import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { EndpointModels } from './EndpointModels'
-import { agentNames, loginLabels } from './labels'
+import { agentNames } from './labels'
 
-/** A connected own endpoint login of the account. */
-type EndpointLogin = Extract<AgentLoginStatus, { kind: 'endpoint' }>
+/** A connected own endpoint login of the account, or an org endpoint. */
+type EndpointLogin = Extract<AnyLogin, { kind: 'endpoint' }>
+
+/**
+ * The org of an org endpoint on the Agents tab of the org settings: the
+ * reads of its saves and of Refresh in this page, and its Refresh.
+ */
+export interface OrgEndpointOwner {
+  reads: Readable<LoginReads>
+  refresh: (agent: Agent) => Promise<void>
+}
 
 /** Where the one Refresh of a row shows: beside the warning, or the models. */
 type RefreshPlace = 'warning' | 'models' | null
@@ -44,23 +58,25 @@ function useRefreshFocus(
 }
 
 /**
- * The lines under the row of an own endpoint login, as the mockup part
- * `EndpointDetails` draws them: its kind with the host of its endpoint, the
- * note after a save that added `/v1` to the address, the warning after a
- * save or a Refresh that read no model list, and the models of the app that
- * the last list leaves out. The note and the warning come from the answers
- * that the account model keeps. The row has one Refresh, which reads the
- * list again: beside the warning, or else beside the models.
+ * The note, the warning, and the models under the host of an own endpoint
+ * login of the account, or of `org`, with the one Refresh of the row.
  */
-export function EndpointDetails(props: { login: EndpointLogin }) {
+function EndpointReadLines(props: {
+  login: EndpointLogin
+  org?: OrgEndpointOwner
+}) {
   const { login } = props
   const app = useApp()
+  const owner = props.org ?? {
+    reads: app.account.endpointReads,
+    refresh: (agent: Agent) => app.account.refreshModels(agent),
+  }
   const models = useStore(app.models)
-  const reads = useStore(app.account.endpointReads)
+  const reads = useStore(owner.reads)
   const read = endpointReadOf(reads, login)
   const name = agentNames[login.agent]
   const refresh = useAction(
-    () => app.account.refreshModels(login.agent),
+    () => owner.refresh(login.agent),
     `The model list of ${name} wasn't refreshed.`,
   )
   const button = useRef<HTMLElement | null>(null)
@@ -84,18 +100,49 @@ export function EndpointDetails(props: { login: EndpointLogin }) {
   )
   return (
     <>
-      <LoginEndpoint
-        host={login.host}
-        kind={loginLabels[login.agent].endpoint}
-      />
       {read.addedV1 ? <EndpointAddressNote /> : null}
       {read.readFailed ? <EndpointReadFailed refresh={refreshButton} /> : null}
       {unlisted ? (
         <EndpointModels
+          owner={props.org ? 'org' : 'personal'}
           refresh={read.readFailed ? null : refreshButton}
           unlisted={unlisted}
         />
       ) : null}
+    </>
+  )
+}
+
+/**
+ * The lines under the row of an own endpoint login, as the mockup part
+ * `EndpointDetails` draws them: its kind with the host of its endpoint, the
+ * note after a save that added `/v1` to the address, the warning after a
+ * save or a Refresh that read no model list, and the models of the app that
+ * the last list leaves out. The note and the warning come from the answers
+ * that the account model keeps. The row has one Refresh, which reads the
+ * list again: beside the warning, or else beside the models.
+ *
+ * With `org`, the login is an org endpoint on the Agents tab of the org
+ * settings. The org logins of that org keep the note and the warning, and
+ * the line of the models names every picker on the login. `readOnly`
+ * shows only the kind and the host, to a person who cannot change the
+ * login, such as a member who is not an admin.
+ */
+export function EndpointDetails(props: {
+  login: EndpointLogin
+  org?: OrgEndpointOwner
+  readOnly?: boolean
+}) {
+  const { login } = props
+  return (
+    <>
+      <LoginEndpoint
+        host={login.host}
+        kind={loginLabels[login.agent].endpoint}
+      />
+      {props.readOnly ? null : (
+        <EndpointReadLines login={login} org={props.org} />
+      )}
     </>
   )
 }

@@ -2,6 +2,7 @@ import type {
   GitHubCapabilities,
   GitHubMergeMethod,
   GitHubMergeResponse,
+  GitHubReadyResponse,
 } from '../shared/github'
 
 function isActionRecord(value: unknown): value is Record<string, unknown> {
@@ -37,4 +38,8 @@ export function readMergeResponse(value: unknown): GitHubMergeResponse | null {
   )
     return { state: 'pending', mergeId: input.mergeId }
   return null
+}
+
+export function readReadyResponse(value: unknown): GitHubReadyResponse | null {
+  return actionRecord(value)?.state === 'ready' ? { state: 'ready' } : null
 }

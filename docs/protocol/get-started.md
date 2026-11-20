@@ -1,12 +1,13 @@
 # Get started
 
 This doc holds the requirements and the decisions in force for Get
-started, the first run of the app. It covers its steps, the state of the
-first build in its org step, and its finish. It belongs to
-[Orgs and members](orgs-and-members.md). The terms are those of the
+started, the first run of the app. It covers its steps, the agent step,
+the state of the first build in its org step, and its finish. It belongs
+to [Orgs and members](orgs-and-members.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. An org login decision number names a decision of the change that
+adds the org logins, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## The first run
 
@@ -18,7 +19,14 @@ says.
   1. Install the GitHub App.
   2. Create the first org.
   3. Connect Claude or Codex.
-- Get started asks for no Boat account and no Boat key.
+- The agent step is complete when a login serves the person for an agent
+  (org login decision 4). That login is a personal login, or the org login
+  of an org of the person.
+- With only an org login, the step names that login. It says that the
+  person can start now, and can connect their own login at any time in
+  the account.
+- Get started requires no personal account or key of a
+  [sandbox provider](workspaces-and-sandboxes.md#the-provider).
 - [Chat and events](messages-and-attachments.md#messages) states the notice for a
   missing agent login.
 - The second step, the org step, shows the cloud computer of the org once

@@ -35,7 +35,7 @@ export type PaletteRead = (typeof paletteReads)[number]
  * keys of their commands read it too, while the palette is closed.
  */
 export interface PaletteBase {
-  /** The orgs of the person, in the order of the org rail. */
+  /** The active orgs from `AppModel.activeOrgs`, in the order of the org rail. */
   orgs: readonly OrgSummary[]
   /** The org of the palette, as `paletteOrg` says, or `null`. */
   org: OrgSummary | null
@@ -60,6 +60,11 @@ export interface PaletteBase {
 export interface PaletteSource extends PaletteBase {
   /** The sections and the workspaces of the org, as they load. */
   list: Loadable<ListData>
+  /**
+   * The time of the list, as `useListTime` says. A workspace whose Restore
+   * ended by then is removed, so no group of the palette shows it.
+   */
+  listTime: number
   /** The repositories of the org, with their names, as they load. */
   repositories: Loadable<readonly Repository[]>
 }

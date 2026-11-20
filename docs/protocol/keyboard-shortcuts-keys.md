@@ -7,7 +7,9 @@ browser. It belongs to [Keyboard shortcuts](keyboard-shortcuts.md), which
 gives the rules and the terms. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A fast mode
 decision number names a decision of the change that adds
-[fast mode](fast-mode.md), as that doc says.
+[fast mode](fast-mode.md), as that doc says. A terminal tabs decision
+number names a decision of the change that adds terminal tabs to the
+Terminal tool, as [Terminal](terminal.md) says.
 
 ## The default keys
 
@@ -65,8 +67,10 @@ decision number names a decision of the change that adds
 | Workspace | Create PR | ⇧⌘P, ⌥⇧⌘P | Ctrl+Shift+P, Alt+Shift+P | Pull request bar |
 | Workspace | Fix checks | ⌥⌘X | Alt+Shift+X | Pull request bar |
 | Workspace | Resolve conflicts | – | – | Pull request bar |
+| Workspace | Merge latest target branch | – | – | Palette |
 | Workspace | Address review | – | – | Pull request bar |
 | Workspace | Commit and push | ⇧⌘Y | Ctrl+Shift+Y | Pull request bar |
+| Workspace | Mark PR ready for review | – | – | Pull request bar |
 | Workspace | Merge PR | ⇧⌘M | Ctrl+Shift+M | Pull request bar |
 | Workspace | Continue after merge | – | – | Pull request bar |
 | Workspace | Open PR on GitHub | ⇧⌘G | Ctrl+Shift+G | Pull request link |
@@ -75,6 +79,7 @@ decision number names a decision of the change that adds
 | Workspace | Go to Checks | – | – | Palette |
 | Workspace | Go to Terminal | ⌘J | Ctrl+J | Palette |
 | Workspace | Go to Preview | – | – | Palette |
+| Workspace | New terminal | – | – | Palette |
 | Chat | New session | ⌘T, ⌥⌘T | Ctrl+T, Alt+Shift+T | Palette |
 | Chat | Session history | – | – | Palette |
 | Chat | Focus the message field | ⌘L, ⇧⌘L | Ctrl+L, Ctrl+Shift+L | Workspace |
@@ -90,6 +95,15 @@ decision number names a decision of the change that adds
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
+- New terminal has no default key. Reason: Conductor opens a terminal tab
+  on ⌘T while its terminal has the focus, but ⌘T runs New session in this
+  app. On Windows and Linux, no key reaches the app while the terminal has
+  the focus, as [Where a key goes](keyboard-shortcuts.md#where-a-key-goes)
+  says.
+- A default key of New terminal that also works while the terminal has
+  the focus was rejected (terminal tabs decision 3). Reason: such a key
+  must be free in each browser, in each shell, on each keyboard layout,
+  and in the message field. Such a key is hard to find.
 - Hide or show the sidebar runs in every host, with ⌘B and [ on a Mac and
   their twins Ctrl+B and [ on Windows and Linux (list popover decision 5 A,
   16 November 2026). Reason: the browser has the sidebar toggle too, and
@@ -228,11 +242,18 @@ browser, as [Hosts](keyboard-shortcuts-hosts.md#hosts) says.
 
 | Browser | Mac | Windows | Linux |
 | --- | --- | --- | --- |
-| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L |
-| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L | Alt+1 to Alt+9, Ctrl+L |
+| Chrome and Edge | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D, F6 | Ctrl+1 to Ctrl+9, Alt+1 to Alt+9, Ctrl+L, Alt+D, F6 |
+| Firefox | ⌘1 to ⌘9, ⌘L | Ctrl+1 to Ctrl+9, Ctrl+L, Alt+D | Alt+1 to Alt+9, Ctrl+L, Alt+D |
 | Safari | ⌘1 to ⌘9, ⌘L | – | – |
 
-- In Safari, these keys are also kept keys.
+- In Chrome, Edge, and Firefox, the app also leaves to the browser the
+  keypad form of each digit key of the table. Examples are ⌘Num 1 on a Mac
+  and Alt+Num 1 on Linux. These browsers select a tab on a keypad digit
+  too. A keypad digit is a key of its own, as
+  [How a key matches](keyboard-shortcuts-matching.md#how-a-key-matches)
+  says.
+- In Safari, these keys are also kept keys. The Safari row lists only the
+  top-row digits.
 - [Windows and Linux](#windows-and-linux) says how Android and an unknown
   system count.
 - An unknown browser leaves to the browser the keys of each supported

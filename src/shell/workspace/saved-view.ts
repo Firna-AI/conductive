@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import type { RunAutomation } from '../../chat/api/read-responses'
+import type { RunAutomation } from '../../chat/api/read-view'
 import type { WorkspaceView } from '../../shared/workspace-view'
 import type { SavedView } from './features'
 
@@ -43,5 +43,17 @@ export function saveView(
  */
 export function useRunAutomation(saved: SavedView): RunAutomation | null {
   const read = () => saved.getSnapshot().automation
+  return useSyncExternalStore(saved.subscribe, read, read)
+}
+
+/**
+ * The repositories that the cloud computer holds, by ID, which the chat
+ * reads with the view, for the repository menu. Null until the read, and
+ * for a workspace without a record of its folders.
+ */
+export function useHeldRepositories(
+  saved: SavedView,
+): readonly string[] | null {
+  const read = () => saved.getSnapshot().heldRepositoryIds
   return useSyncExternalStore(saved.subscribe, read, read)
 }

@@ -1,6 +1,11 @@
 import type { SessionLogin } from '../components/chat/SessionLogin'
 import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
-import { linkedSession, workspaceSessions } from '../fixtures/sessions'
+import { orgWithLogin } from '../fixtures/orgLogins'
+import {
+  linkedSession,
+  startedSession,
+  workspaceSessions,
+} from '../fixtures/sessions'
 import type { Workspace } from '../fixtures/workspaces'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -13,7 +18,8 @@ export function viewerOf(state: WorkspaceState): PersonKey {
 /**
  * The starter of the open session. The viewer starts a new session with +,
  * and the creator of a new workspace started its one session. Cal started
- * both sessions of Checkout address autocomplete.
+ * both sessions of Checkout address autocomplete, and the empty session
+ * that the viewer opens from his tab.
  */
 function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
   switch (state.tab) {
@@ -23,6 +29,8 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
       return linkedSession.starter
     case 'later-session':
       return workspaceSessions[1].starter
+    case 'started-session':
+      return startedSession.starter
     case 'session':
     case 'code':
     case 'code-lines':
@@ -32,6 +40,12 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'image':
     case 'image-not-drawn':
     case 'attachment':
+    case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
     case 'preview':
     case 'preview-behind':
       return isNew(state) ? workspace.owner : workspaceSessions[0].starter
@@ -52,14 +66,32 @@ export function otherStarter(
 }
 
 /**
- * The display props of the login label in the composer. `member` is the
- * starter when that starter is another member. Without it, the composer has
+ * The name of the owner of the login of the open session, when that login
+ * is not the own login of the viewer: the org, such as "Acme", for a session
+ * on the org login, or the starter, when that starter is another member. A
+ * new session takes the default login of the viewer, which `login` sets to
+ * the org login (decisions 4, 6 A, and 7 B of the org logins plan). The
+ * org login is no member's own login, so every member sees its name. On the
+ * own login of the viewer, there is none.
+ */
+export function loginOwnerOf(
+  state: WorkspaceState,
+  workspace: Workspace,
+): string | undefined {
+  if (state.login === 'org') return orgWithLogin.name
+  const starter = otherStarter(state, workspace)
+  return starter === undefined ? undefined : people[starter].name
+}
+
+/**
+ * The display props of the login label in the composer: the name of the
+ * owner of the login, such as "Cal" or "Acme". Without it, the composer has
  * no login label, because a message uses the own login of the viewer: in a
- * session of the viewer, or when a message opens a linked session.
+ * session of the viewer on their own login, or when a message opens a
+ * linked session.
  */
 export function sessionLoginFor(
-  member: PersonKey | undefined,
+  owner: string | undefined,
 ): SessionLogin | undefined {
-  if (member === undefined) return undefined
-  return { starter: people[member].name }
+  return owner === undefined ? undefined : { owner }
 }

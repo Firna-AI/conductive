@@ -72,7 +72,9 @@ it.each([null, 'older'])(
     await setOrgImagePackages(fixture, version)
     const current = await imagePackagesVersion()
     const first = await runBuild(fixture, 'build')
-    expect(first.software).toContain('apt-get update')
+    expect(first.software).toContain(
+      'apt-get -o Acquire::AllowReleaseInfoChange::Label=true update',
+    )
     expect(first.software).not.toContain('dpkg-query')
     expect(first.recorded).toBe(current)
     const next = await runBuild(fixture, 'refresh')
@@ -114,7 +116,9 @@ it('keeps no version when an earlier start of the step carried another apt part'
   const first = await runBuild(fixture, 'build', 'older')
   expect(first.recorded).toBe('')
   const next = await runBuild(fixture, 'refresh')
-  expect(next.software).toContain('apt-get update')
+  expect(next.software).toContain(
+    'apt-get -o Acquire::AllowReleaseInfoChange::Label=true update',
+  )
   expect(next.software).not.toContain('dpkg-query')
 })
 

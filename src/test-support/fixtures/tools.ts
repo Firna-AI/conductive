@@ -23,9 +23,9 @@ import {
   type PreviewResponse,
   type PreviewsResponse,
 } from '../../shared/previews'
-import { terminalPaths, type TerminalResponse } from '../../shared/terminal'
 import { FAKE_IDS, FAKE_ORIGIN, FAKE_TIME } from './core'
 import { withRealPath } from './masked-paths'
+import { fakeTerminalState } from './terminal'
 
 export const FAKE_FILE_PATH = 'src/app/checkout/AddressForm.tsx'
 export const FAKE_GITHUB_HEAD_SHA = 'a'.repeat(40)
@@ -144,15 +144,23 @@ export function toolFixtures(
     },
   }
   const previews: PreviewsResponse = { previews: [preview.preview] }
+  // The files preview has port 0, and no list holds it.
+  const filesPreview: PreviewResponse = {
+    preview: {
+      id: FAKE_IDS.filesPreview,
+      port: 0,
+      url: new URL(
+        previewPath(FAKE_IDS.org, FAKE_IDS.workspace, FAKE_IDS.filesPreview),
+        FAKE_ORIGIN,
+      ).href,
+      expiresAt: FAKE_TIME + 86_400_000,
+    },
+  }
   const desktop: DesktopResponse = {
     url: 'https://desktop.conductive.test/#fake-desktop-token',
     expiresAt: FAKE_TIME + 600_000,
   }
-  const terminal: TerminalResponse = {
-    state: 'ready',
-    socketPath: terminalPaths.socket(FAKE_IDS.org, FAKE_IDS.workspace),
-    protocol: 'tty',
-  }
+  const terminal = fakeTerminalState()
   return {
     files,
     content,
@@ -162,6 +170,7 @@ export function toolFixtures(
     checks,
     preview,
     previews,
+    filesPreview,
     desktop,
     terminal,
   }

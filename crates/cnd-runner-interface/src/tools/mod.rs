@@ -3,6 +3,8 @@
 pub mod device;
 pub mod previews;
 pub mod resources;
+pub mod secret_results;
+pub mod secrets;
 pub mod session_actions;
 pub mod session_reads;
 pub mod session_types;

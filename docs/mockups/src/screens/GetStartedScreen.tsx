@@ -9,7 +9,6 @@ import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
 import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { type FirstBuildState, firstBuildStates } from '../fixtures/computer'
-import { newOrg } from '../fixtures/repositories'
 import { paths } from '../paths'
 import { getStartedCopy as copy } from './getStartedCopy'
 import {
@@ -20,6 +19,8 @@ import {
   InstallStep,
   isPast,
   OrgStep,
+  setupOrgOf,
+  type GetStartedPerson,
 } from './getStartedSteps'
 import styles from './GetStartedScreen.module.css'
 
@@ -34,8 +35,10 @@ export const getStartedSchema = {
      */
     step: { enum: getStartedSteps },
     /**
-     * Whether an agent is connected. A login belongs to the person, so it
-     * stays after a leave of the last org.
+     * Whether an agent is connected. A personal login belongs to the
+     * person, so it stays after a leave of the last org. `org` has no login
+     * of the person, and the org login of their org for Claude, so the step
+     * is done (decision 4 of the org logins plan).
      */
     agent: { enum: agentStates },
     /** The person signed in, with the GitHub App installation that they reach. */
@@ -82,14 +85,15 @@ const finishes: Readonly<Record<FirstBuildState, (org: string) => string>> = {
  * ready. After a failed build or with no build, the action of the org step
  * is the main action.
  */
-function Finish(props: { build: FirstBuildState }) {
+function Finish(props: { build: FirstBuildState; person: GetStartedPerson }) {
   const fix = props.build === 'failed' || props.build === 'none'
+  const org = setupOrgOf[props.person]
   return (
     <div className={styles.finish}>
-      <p className={styles.finishText}>{finishes[props.build](newOrg.name)}</p>
-      <ScreenLink asChild to={paths.newOrg}>
+      <p className={styles.finishText}>{finishes[props.build](org.name)}</p>
+      <ScreenLink asChild to={org.list}>
         <ActionButton icon={ArrowRight} tone={fix ? 'secondary' : 'primary'}>
-          {copy.open(newOrg.name)}
+          {copy.open(org.name)}
         </ActionButton>
       </ScreenLink>
     </div>
@@ -112,8 +116,9 @@ export function GetStartedScreen(props: {
   const person = people[props.state.person]
   const page = <GetStartedPage state={props.state} viewport={props.viewport} />
   if (props.viewport === 'mobile') return <MobileFrame>{page}</MobileFrame>
+  const setupOrg = orgs[setupOrgOf[props.state.person].key]
   const rail: RailState = {
-    orgs: isPast(step, 'org') ? [orgs.firna] : [],
+    orgs: isPast(step, 'org') ? [setupOrg] : [],
     current: undefined,
     firstRun: step === 'install',
     person,
@@ -147,14 +152,19 @@ export function GetStartedPage(props: {
           <InstallStep person={props.state.person} step={step} />
         </li>
         <li>
-          <OrgStep build={firstBuild} step={step} />
+          <OrgStep build={firstBuild} person={props.state.person} step={step} />
         </li>
         <li>
-          <AgentStep agent={agent} build={firstBuild} step={step} />
+          <AgentStep
+            agent={agent}
+            build={firstBuild}
+            person={props.state.person}
+            step={step}
+          />
         </li>
       </ol>
-      {step === 'done' && agent === 'connected' ? (
-        <Finish build={firstBuild} />
+      {step === 'done' && agent !== 'none' ? (
+        <Finish build={firstBuild} person={props.state.person} />
       ) : null}
     </Page>
   )

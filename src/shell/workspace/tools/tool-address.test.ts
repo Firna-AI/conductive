@@ -25,6 +25,11 @@ describe('the address of the Preview tool with a port', () => {
       port: null,
     },
   ])('with $value shows the Preview tool with port $port', ({ href, port }) => {
-    expect(placeOf(href)).toEqual({ tool: 'preview', previewId: null, port })
+    expect(placeOf(href)).toEqual({
+      tool: 'preview',
+      previewId: null,
+      port,
+      terminalId: null,
+    })
   })
 })

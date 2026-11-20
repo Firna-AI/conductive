@@ -1,18 +1,19 @@
 import { readFile } from 'node:fs/promises'
 
-import { expect, it } from 'vitest'
+import { expect, it, onTestFinished } from 'vitest'
 
 import { installationFixture } from './install.test-support'
 import { terminalPackagesCommand } from './service'
 
-it('installs terminal packages and stops and masks the package service that holds the terminal port', async () => {
+it('installs terminal packages after a release Label change and stops and masks the package service that holds the terminal port', async () => {
   const fixture = await installationFixture()
+  onTestFinished(fixture.dispose)
   expect(await fixture.install()).toEqual({ code: 0, stdout: '', stderr: '' })
   expect(terminalPackagesCommand().startsWith("sudo -n -- /bin/sh -c '")).toBe(
     true,
   )
   expect(await readFile(fixture.packages, 'utf8')).toBe(
-    'update\ninstall -y ttyd tmux\n',
+    '-o Acquire::AllowReleaseInfoChange::Label=true update\ninstall -y ttyd tmux\n',
   )
   expect(await readFile(`${fixture.units}/systemctl.log`, 'utf8')).toBe(
     'disable --now ttyd.service\nmask ttyd.service\n',

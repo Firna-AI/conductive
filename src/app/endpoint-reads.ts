@@ -1,8 +1,12 @@
 import type { AgentLoginStatus } from '../shared/account'
 import type { Agent } from '../shared/generated/Agent'
 import type { Timestamp } from '../shared/generated/Timestamp'
+import type { OrgAgentLoginStatus } from '../shared/org-agent-logins'
 import type { SavedLogin } from './api/read-login-writes'
 import { Store, type Readable } from './store'
+
+/** A login of an agent of the account, or an org login. */
+export type AnyLogin = AgentLoginStatus | OrgAgentLoginStatus
 
 /**
  * What the reads of the model list of an own endpoint login gave at its
@@ -27,7 +31,7 @@ export type LoginReads = Readonly<Partial<Record<Agent, LoginRead>>>
 const noRead: EndpointRead = { addedV1: false, readFailed: false }
 
 /** The save time of an own endpoint login, or null for another login. */
-function savedAtOf(login: AgentLoginStatus): Timestamp | null {
+function savedAtOf(login: AnyLogin): Timestamp | null {
   return login.connected && login.kind === 'endpoint' ? login.updatedAt : null
 }
 
@@ -38,7 +42,7 @@ function savedAtOf(login: AgentLoginStatus): Timestamp | null {
  */
 export function endpointReadOf(
   reads: LoginReads,
-  login: AgentLoginStatus,
+  login: AnyLogin,
 ): EndpointRead {
   const read = reads[login.agent]
   if (read === undefined || read.savedAt !== savedAtOf(login)) return noRead
@@ -48,17 +52,17 @@ export function endpointReadOf(
 /**
  * The note and the warning under each own endpoint login, from the answers
  * of its save and of Refresh. Only the memory of the page keeps them, beside
- * the account, so a reload removes them, and each screen that draws the
- * logins again shows them. A save sets both. A Refresh sets the warning
- * while the login that it read still shows, and keeps the note. A Remove
- * clears both.
+ * the account or the org logins of one org, so a reload removes them, and
+ * each screen that draws the logins again shows them. A save sets both. A
+ * Refresh sets the warning while the login that it read still shows, and
+ * keeps the note. A Remove clears both.
  */
 export class EndpointReads {
   private readonly reads = new Store<LoginReads>({})
   readonly store: Readable<LoginReads> = this.reads
 
   /** Keeps the reads of a save, in place of those of the login before. */
-  saved(saved: SavedLogin): void {
+  saved(saved: SavedLogin<AnyLogin>): void {
     this.keep(saved.login.agent, savedAtOf(saved.login), {
       addedV1: saved.endpointV1Added,
       readFailed: saved.modelListReadFailed,
@@ -70,11 +74,7 @@ export class EndpointReads {
    * press, read a list, while `shown`, the login at its answer, is the same
    * login. A save or a Remove in between owns the reads.
    */
-  refreshed(
-    pressed: AgentLoginStatus,
-    shown: AgentLoginStatus,
-    readFailed: boolean,
-  ): void {
+  refreshed(pressed: AnyLogin, shown: AnyLogin, readFailed: boolean): void {
     const savedAt = savedAtOf(shown)
     if (savedAt === null || savedAt !== savedAtOf(pressed)) return
     const { addedV1 } = endpointReadOf(this.reads.get(), shown)

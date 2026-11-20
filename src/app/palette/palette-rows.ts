@@ -127,7 +127,7 @@ export function offeredRow(action: OfferedAction): CommandRow {
     kind: 'command',
     key: `action:${action.id}`,
     lead: { kind: 'action', id: action.id },
-    label: text.label,
+    label: action.label ?? text.label,
     words: text.words,
     href: action.href,
     run: action.run,

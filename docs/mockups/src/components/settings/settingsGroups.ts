@@ -40,6 +40,7 @@ const orgTabs: readonly TabInfo<SettingsTab>[] = [
   { tab: 'general', label: 'General', icon: Building2 },
   { tab: 'repositories', label: 'Repositories', icon: FolderGit2 },
   { tab: 'computer', label: 'Cloud computer', icon: Cloud },
+  { tab: 'agents', label: 'Agents', icon: Bot },
   { tab: 'secrets', label: 'Secrets', icon: KeyRound },
   { tab: 'members', label: 'Members', icon: Users },
 ]

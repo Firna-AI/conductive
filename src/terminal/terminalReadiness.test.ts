@@ -1,21 +1,55 @@
 import type { WorkspaceState } from '../shared/generated/WorkspaceState'
 import { describe, expect, it } from 'vitest'
 import type { WorkspaceEvent } from '../shared/events'
-import { terminalPaths, type TerminalResponse } from '../shared/terminal'
+import {
+  terminalPaths,
+  type TerminalEntry,
+  type TerminalResponse,
+} from '../shared/terminal'
 
 import { workspaceFixtures } from '../test-support/fixtures/workspaces'
 import type { ToolResult } from './tool-parts/request'
 import {
   initialReadiness,
   readinessReducer,
+  type TerminalReadiness,
   type TerminalReadinessAction,
 } from './terminalReadiness'
 
+const org = 'acme'
+const workspace = 'checkout-autocomplete'
+
+/** A ready answer of an older server, which has no list of terminals. */
 const ready = {
   state: 'ready',
-  socketPath: terminalPaths.socket('acme', 'checkout-autocomplete'),
+  socketPath: terminalPaths.socket(org, workspace),
   protocol: 'tty',
 } as const
+
+function entry(id: string, number: number): TerminalEntry {
+  return {
+    id,
+    number,
+    socketPath: terminalPaths.terminalSocket(org, workspace, id),
+  }
+}
+
+const first = entry('workspace', 1)
+const second = entry('2'.repeat(32), 2)
+const third = entry('3'.repeat(32), 3)
+
+/** A ready answer with its list, as an older Worker sends it. */
+function listed(terminals: readonly TerminalEntry[]): TerminalResponse {
+  return { ...ready, terminals, several: true }
+}
+
+/** A ready answer with its list and the number of the event that holds it. */
+function at(
+  eventNumber: number,
+  terminals: readonly TerminalEntry[],
+): TerminalResponse {
+  return { ...listed(terminals), eventNumber }
+}
 
 function answer(
   read: number,
@@ -31,8 +65,36 @@ function updated(state: WorkspaceState): WorkspaceEvent {
   return { type: 'workspace.updated', workspace: { ...workspace, state } }
 }
 
+/** The list of a `terminals.updated` event, with the number of its event. */
+function changed(
+  terminals: readonly TerminalEntry[],
+  eventNumber = 1,
+): TerminalReadinessAction {
+  return { type: 'listed', terminals, eventNumber }
+}
+
 function reduce(...actions: (TerminalReadinessAction | WorkspaceEvent)[]) {
   return actions.reduce(readinessReducer, initialReadiness)
+}
+
+/** The terminals of a ready tool, or null when it does not show them. */
+function terminalsOf(state: TerminalReadiness) {
+  return state.view.state === 'ready' ? state.view.terminals : null
+}
+
+/**
+ * What a ready tool shows: its list, its shown terminal, and the place of a
+ * shown terminal that closed.
+ */
+function shownOf(state: TerminalReadiness) {
+  if (state.view.state !== 'ready') return null
+  const { terminals, shown, replaced } = state.view
+  return { terminals, shown: shown?.id ?? null, replaced }
+}
+
+/** The view shows a terminal that the route asks for. */
+function show(terminal: TerminalEntry): TerminalReadinessAction {
+  return { type: 'shown', terminalId: terminal.id, requested: terminal.id }
 }
 
 describe('terminal readiness', () => {
@@ -43,23 +105,149 @@ describe('terminal readiness', () => {
     )
 
     expect(state).toEqual({ view: { state: 'loading' }, read: 2 })
+    // An older server sends no list: its one terminal opens its socket.
     expect(readinessReducer(state, answer(2, ready))).toEqual({
-      view: { state: 'ready', terminal: ready, ended: false },
+      view: expect.objectContaining({
+        state: 'ready',
+        terminals: [
+          { id: 'workspace', number: 1, socketPath: ready.socketPath },
+        ],
+        several: false,
+      }),
       read: 2,
     })
   })
 
   it('keeps a connected terminal when the workspace moves between running states', () => {
-    const state = reduce(
-      answer(1, ready),
+    const connected = reduce(answer(1, listed([first, second])))
+    const state = [
       updated('working'),
       updated('input'),
       updated('unread'),
+    ].reduce(readinessReducer, connected)
+
+    expect(state).toBe(connected)
+  })
+
+  it('reads again when the list changes during a read, so an older answer cannot hide the change', () => {
+    const state = reduce(changed([first, second]))
+
+    expect(state).toEqual({ view: { state: 'loading' }, read: 2 })
+    expect(readinessReducer(state, answer(1, listed([first])))).toBe(state)
+    const answered = readinessReducer(state, answer(2, listed([first, second])))
+    expect(terminalsOf(answered)).toEqual([first, second])
+  })
+
+  it('without event numbers, as from an older server, shows an opened terminal and drops a closed one before their events, in the order of the numbers', () => {
+    const opened = reduce(answer(1, listed([first, third])), {
+      type: 'opened',
+      terminal: second,
+      terminals: [first, second, third],
+    })
+    const closed = readinessReducer(opened, {
+      type: 'closed',
+      terminalId: first.id,
+      terminals: [second, third],
+    })
+
+    expect(terminalsOf(opened)).toEqual([first, second, third])
+    expect(terminalsOf(closed)).toEqual([second, third])
+    expect(terminalsOf(readinessReducer(closed, changed([third])))).toEqual([
+      third,
+    ])
+  })
+  it('keeps the newer list and the shown terminal when the events of two opens come after their replies', () => {
+    const state = reduce(
+      answer(1, at(0, [first])),
+      { type: 'open' },
+      {
+        type: 'opened',
+        terminal: second,
+        terminals: [first, second],
+        eventNumber: 1,
+      },
+      show(second),
+      { type: 'open' },
+      {
+        type: 'opened',
+        terminal: third,
+        terminals: [first, second, third],
+        eventNumber: 2,
+      },
+      show(third),
+      changed([first, second], 1),
+      changed([first, second, third], 2),
     )
 
-    expect(state).toEqual({
-      view: { state: 'ready', terminal: ready, ended: false },
-      read: 1,
+    expect(shownOf(state)).toEqual({
+      terminals: [first, second, third],
+      shown: third.id,
+      replaced: null,
     })
+  })
+
+  it('keeps a terminal closed when the reply of its open comes after its close by another member', () => {
+    const state = reduce(
+      answer(1, at(0, [first])),
+      { type: 'open' },
+      changed([first, second], 1),
+      changed([first], 2),
+      {
+        type: 'opened',
+        terminal: second,
+        terminals: [first, second],
+        eventNumber: 1,
+      },
+    )
+
+    expect({
+      terminals: terminalsOf(state),
+      opening: state.view.state === 'ready' && state.view.opening,
+    }).toEqual({ terminals: [first], opening: false })
+  })
+
+  it('takes none of the stored lists that a first visit replays after the read, and takes the next change', () => {
+    const read = reduce(answer(1, at(3, [first, third])), show(third))
+    const replayed = [
+      changed([first, second], 1),
+      changed([first, second, third], 2),
+      changed([first, third], 3),
+    ].reduce(readinessReducer, read)
+    const next = readinessReducer(replayed, changed([first], 4))
+
+    expect({ replayed: shownOf(replayed), next: shownOf(next) }).toEqual({
+      replayed: { terminals: [first, third], shown: third.id, replaced: null },
+      next: {
+        terminals: [first],
+        shown: first.id,
+        replaced: { from: third.id, to: first.id },
+      },
+    })
+  })
+  it('takes several from a list event only when its event is newer, and keeps it after an event without it', () => {
+    const severalOf = (state: TerminalReadiness) =>
+      state.view.state === 'ready' && state.view.several
+    const one = reduce(answer(1, { ...at(2, [first]), several: false }))
+    // A Restart started a terminal service that opens several shells.
+    const restarted = readinessReducer(one, {
+      type: 'listed',
+      terminals: [first],
+      eventNumber: 3,
+      several: true,
+    })
+    const late = readinessReducer(restarted, {
+      type: 'listed',
+      terminals: [first],
+      eventNumber: 3,
+      several: false,
+    })
+    const opened = readinessReducer(late, changed([first, second], 4))
+
+    expect([one, restarted, late, opened].map(severalOf)).toEqual([
+      false,
+      true,
+      true,
+      true,
+    ])
   })
 })

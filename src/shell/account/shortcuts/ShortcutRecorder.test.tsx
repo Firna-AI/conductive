@@ -107,12 +107,21 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
       const inSettings = palette() !== null
       click(byRole('button', 'Close'))
       await settle()
+      const held = pressShortcut(press.text, document.body, {
+        ...press,
+        repeat: true,
+      })
+      const repeated = {
+        prevented: held.defaultPrevented,
+        palette: palette() !== null,
+      }
       // The same press runs the command, while the switch stays down.
       pressAll([press], document.body)
       expect({
         saves: await savesOf(server),
         row,
         focused,
+        repeated,
         inSettings,
         palette: palette() !== null,
       }).toEqual({
@@ -123,6 +132,7 @@ describe('the recorder of the Keyboard shortcuts tab', () => {
           'Add shortcut for Command palette',
         ],
         focused: `Change ${spoken} for Command palette`,
+        repeated: { prevented: true, palette: false },
         inSettings: false,
         palette: true,
       })

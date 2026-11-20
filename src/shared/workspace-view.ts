@@ -35,6 +35,7 @@ export interface WorkspaceView {
   temporaryTab: TemporaryTab | null
   fileList: 'all' | 'changes' | 'checks'
   tool: 'terminal' | 'preview' | 'desktop'
+  terminal?: string
 }
 export interface WorkspaceViewResponse {
   /** The view in the shape of the route, as `WorkspaceViewWire` says. */
@@ -46,6 +47,13 @@ export interface WorkspaceViewResponse {
    * read of the view gives it.
    */
   repositoryFolder?: string | null
+  /**
+   * The repositories that the cloud computer holds, by ID, for the
+   * repository menu. Null when the workspace has no record of its folders:
+   * the menu then lists only the current repository. Only the read of the
+   * view gives it.
+   */
+  heldRepositoryIds?: readonly string[] | null
   automation?: {
     id: string
     name: string

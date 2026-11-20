@@ -31,7 +31,13 @@ it('returns zero counts and thirty empty UTC days for a new account', async () =
     readAt,
     orgs: 0,
     workspaces: { total: 0, lastWeek: 0 },
-    workspaceStates: { running: 0, stopped: 0, failed: 0, archived: 0 },
+    workspaceStates: {
+      running: 0,
+      stopped: 0,
+      failed: 0,
+      archived: 0,
+      removed: 0,
+    },
     automations: 0,
   })
   for (const days of [result.newWorkspacesByDay, result.automationRunsByDay]) {
@@ -42,7 +48,7 @@ it('returns zero counts and thirty empty UTC days for a new account', async () =
   }
 })
 
-it('counts only the records of the person, without deleted orgs', async () => {
+it('counts only the records of the person, without deleted orgs, with removed workspaces in removed and still in archived', async () => {
   const cookie = await harness.login()
   await seedUser(harness, 100, 0)
   await seedOrg(harness, { id: 'acme' })
@@ -60,13 +66,19 @@ it('counts only the records of the person, without deleted orgs', async () => {
       createdAt: 0,
       state,
     })
-  await seedWorkspace(harness, {
-    id: 'archived',
-    orgId: 'suspended',
-    createdAt: 0,
-    state: 'stopped',
-    archivedAt: 0,
-  })
+  // The first Archive is just before the read. The second is so old that
+  // its 14 days of Restore ended, so the workspace is removed.
+  for (const [id, archivedAt] of [
+    ['archived', readAt - 1],
+    ['removed', 0],
+  ] as const)
+    await seedWorkspace(harness, {
+      id,
+      orgId: 'suspended',
+      createdAt: 0,
+      state: 'stopped',
+      archivedAt,
+    })
   await seedWorkspace(harness, {
     id: 'theirs',
     orgId: 'acme',
@@ -87,12 +99,15 @@ it('counts only the records of the person, without deleted orgs', async () => {
   await seedAutomation(harness, { id: 'old', orgId: 'deleted' })
   const result = await accountStats(harness, cookie)
   expect(result.orgs).toBe(2)
-  expect(result.workspaces).toEqual({ total: 5, lastWeek: 0 })
+  expect(result.workspaces).toEqual({ total: 6, lastWeek: 0 })
+  // `archived` keeps the removed workspace too, so an older app that reads
+  // only the first four states still adds up to the total of 6.
   expect(result.workspaceStates).toEqual({
     running: 2,
     stopped: 1,
     failed: 1,
-    archived: 1,
+    archived: 2,
+    removed: 1,
   })
   expect(result.automations).toBe(1)
   expect(result.newWorkspacesByDay.map((day) => day.count)).toEqual(

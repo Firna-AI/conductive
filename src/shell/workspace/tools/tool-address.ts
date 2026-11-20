@@ -5,14 +5,16 @@ import type { WorkspaceView } from '../../../shared/workspace-view'
 export type ToolKey = WorkspaceView['tool']
 
 /**
- * The tool that an address shows, and the preview or the port of the sandbox
- * that it names. An address names a preview or a port, never both.
+ * The tool that an address shows, and the preview, the port of the sandbox,
+ * or the terminal that it names. An address names at most one of them.
  */
 export interface ToolPlace {
   tool: ToolKey
   previewId: string | null
   /** A port of the sandbox, which the Preview tool opens. */
   port: number | null
+  /** A terminal, which the Terminal tool shows. */
+  terminalId: string | null
 }
 
 /**
@@ -65,24 +67,22 @@ function addressPort(segment: string): number | null {
 
 /**
  * The tool of the address after the workspace, or null for the chat, the
- * files, or another address: `terminal`, `preview`, `preview/<previewId>`,
- * `preview/port/<port>`, or `desktop`. Another address under `preview`
- * shows the Preview tool with no preview and no port.
+ * files, or another address: `terminal`, `terminal/<terminalId>`,
+ * `preview`, `preview/<previewId>`, `preview/port/<port>`, or `desktop`.
+ * Another address under `terminal` or `preview` shows its tool with no
+ * terminal, no preview, and no port.
  */
 export function toolPlace(view: readonly string[]): ToolPlace | null {
   const [area, second, third, ...rest] = view
-  if (area === 'terminal' || area === 'desktop') {
-    return { tool: area, previewId: null, port: null }
-  }
+  const only = second !== undefined && third === undefined ? second : null
+  const none = { previewId: null, port: null, terminalId: null }
+  if (area === 'terminal') return { ...none, tool: area, terminalId: only }
+  if (area === 'desktop') return { ...none, tool: area }
   if (area !== 'preview') return null
   if (second === portSegment && third !== undefined && rest.length === 0) {
-    return { tool: 'preview', previewId: null, port: addressPort(third) }
+    return { ...none, tool: 'preview', port: addressPort(third) }
   }
-  return {
-    tool: 'preview',
-    previewId: second !== undefined && third === undefined ? second : null,
-    port: null,
-  }
+  return { ...none, tool: 'preview', previewId: only }
 }
 
 /**
@@ -114,6 +114,15 @@ export function toolHref(
   return previewId === undefined
     ? routes.workspace(orgId, workspaceId, tool)
     : routes.workspace(orgId, workspaceId, tool, previewId)
+}
+
+/** The address of the Terminal tool with one of its terminals. */
+export function terminalHref(
+  orgId: string,
+  workspaceId: string,
+  terminalId: string,
+): string {
+  return routes.workspace(orgId, workspaceId, 'terminal', terminalId)
 }
 
 /**

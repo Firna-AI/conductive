@@ -1,11 +1,11 @@
 import type { AccountResponse } from '../shared/account'
 import type { GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
-import { loginUsable } from './api/read-core'
+import { anyLoginServes, inOrgs } from './default-logins'
 import { stepComplete } from './get-started'
 import type { Readable } from './store'
 
-/** The sources of the steps: the reply of the API, the org list, the account. */
+/** The sources of the steps: the API reply, the active orgs, and the account. */
 export interface SetupSources {
   readonly server: Readable<GetStartedResponse | null>
   readonly orgs: Readable<readonly OrgSummary[]>
@@ -14,11 +14,11 @@ export interface SetupSources {
 
 /**
  * The org of Get started and of the address `/`: the first org that is not
- * deleted. Null without one, so a person whose orgs are all deleted gets
- * Create org again. Account settings list the deleted orgs, with Restore.
+ * deleted. `orgs` comes from the active source. Null without one, so a
+ * person whose orgs are all deleted gets Create org again. Account settings list the deleted orgs, with Restore.
  */
 export function setupOrg(orgs: readonly OrgSummary[]): OrgSummary | null {
-  return orgs.find((org) => !org.deletion) ?? null
+  return orgs[0] ?? null
 }
 
 /** The steps from the reply of the API, the org list, and the account. */
@@ -28,7 +28,7 @@ function deriveSteps(
   account: AccountResponse,
 ): GetStartedResponse {
   const org = setupOrg(orgs)
-  const agent = account.agentLogins.some((login) => loginUsable(login))
+  const agent = anyLoginServes(inOrgs(account, orgs))
   return {
     orgId: org?.id ?? null,
     steps: [
@@ -44,8 +44,9 @@ function deriveSteps(
  * GitHub App comes from the reply of the API. The org step and the org of
  * Get started follow the orgs that are not deleted, as the address `/`
  * does. The step of the agent follows the logins of the account that can
- * run turns, as the Worker counts them. So a leave or a connect on another
- * page shows at once. The value is null until the
+ * run turns, and the org logins that the server names as default logins
+ * (org login decision 4), as the Worker counts them. So a leave or a
+ * connect on another page shows at once. The value is null until the
  * reply and the account are both loaded. It stays the same object until a
  * source changes, as `useStore` needs.
  */

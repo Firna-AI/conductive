@@ -8,7 +8,11 @@ those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says.
+[secrets](secrets.md), as that doc says. An org login decision number
+names a decision of the change that adds the org logins, as
+[Tokens and secrets](tokens-and-secrets.md) says. An automation
+capabilities decision number names a decision of the change that adds
+Capabilities to automations, as [Automations](automations.md) says.
 
 ## A run is a workspace
 
@@ -26,7 +30,7 @@ decision number names a decision of the change that adds
   and 43).
 - A new cloud computer in place of the restart of a clean workspace was
   rejected. It loses the ignored files and the memory of the agent.
-- So the restarts of kept run workspaces stay a cost, as
+- So on Boat, the restarts of kept run workspaces stay a cost, as
   [Limits](automations.md#limits) says.
 - A line under the header of a run workspace says "Run of" and the name of
   the automation, with a link to the automation.
@@ -38,21 +42,64 @@ decision number names a decision of the change that adds
 - The owner of the automation is the workspace owner of each run workspace.
   The owner is also the starter of its first session and the sender of its
   first message.
-- So the first turn uses the owner's agent login and the owner's GitHub
-  access. Its pushes and pull requests show as the owner.
-- Reason: a session runs on the login of its starter (decision 105), and
-  pushes show as the sender of the turn (decision 50).
-- The first session runs on the owner's own login, so the share setting of
-  that login does not block it.
-- A later message of another member follows the share setting, as
+- So the first session takes the default login of the owner: the personal
+  login of the owner, or the org login (org login decision 5 A).
+- The first turn uses the owner's GitHub access. So its pushes and pull
+  requests show as the owner.
+- Reason: a new session takes the default login of its starter, as
+  [The default login](org-logins.md#the-default-login) says. Pushes show
+  as the sender of the turn (decision 50).
+- A run that uses only the personal login of the owner was rejected.
+  Reason: a member who relies on the org login could then save an automation
+  whose runs all fail. One rule for the default login serves the sessions,
+  the agent tools, and the automation runs.
+- The owner starts the first session, so no share setting blocks it.
+- A later message of another member follows the rules of the login of
+  the session, as
   [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
-  says (decision 116).
-- A run workspace starts with no pre-approved secret, as
-  [Grants](secrets.md#grants) says. Its Mac access is on, as
-  [Mac access](secrets.md#mac-access) says (secrets decision 9 A).
-- A secret request of a run waits for a member, as each request does
-  (secrets decision 5 C). [Turns that no person started](secrets.md#turns-that-no-person-started)
-  gives the reason and the risk.
+  says.
+- [The secrets of a run](#the-secrets-of-a-run) states which secrets the
+  run uses with no request.
+
+## The secrets of a run
+
+- A run workspace starts with the
+  [chosen secrets](automations.md#chosen-secrets) of its automation as
+  pre-approvals (automation capabilities decision 1 A). So each session
+  there uses them with no request, as [Grants](secrets.md#grants) says.
+- The run workspace records the owner as the member who pre-approved each
+  of them. Every member can remove each one in the Capabilities of the run
+  workspace, as for each pre-approval (secrets decision 8 B).
+- The run takes the chosen secrets of its automation at its create, and it
+  keeps them for each retry of that create. A later change of the chosen
+  secrets changes no run workspace that exists.
+- A secret that a member deletes during the start leaves the list, and the
+  run goes on without it. Reason: the run can still do the work that needs
+  no such secret. A deleted secret ends each of its grants anyway, as
+  [Storage](secrets.md#storage) says.
+- The Mac access of a run workspace is off, as
+  [Mac access](capabilities.md#mac-access) says (secrets decision 18 A).
+  An automation has no choice of Mac access (automation capabilities
+  decision 2 A).
+- A workspace that the agent of a run creates with the workspace tools
+  gets no capability. It starts with no pre-approval, as
+  [Grants](secrets.md#grants) says, and with Mac access off. Reason: the
+  owner chose the secrets for the run workspaces only.
+- A request of a run for each other secret waits for a member, as each
+  request does (secrets decision 5 C).
+  [Turns that no person started](secrets.md#turns-that-no-person-started)
+  gives the reason and the risks.
+- A grant that ends with the first turn of the run was rejected, as a run
+  grant and as a session approval of the first session. With it, each
+  later turn in the run workspace asks again, and it costs more work.
+- A run workspace that reads the current chosen secrets of its automation
+  at each use was rejected, because a member could then not remove one of
+  them in one run workspace.
+- Pre-approvals that serve only the turns that the owner sends were
+  rejected. They still stay in each kept run workspace, and they would be
+  the first grant that depends on the sender.
+- Allow for this automation on a request card was rejected, because the
+  first run still waits for a member.
 
 ## When a run starts
 
@@ -76,9 +123,10 @@ decision number names a decision of the change that adds
 - Before each create, the app checks that the owner is still a member of
   the org. It also checks that neither the owner nor the org is suspended
   or deleted.
-- It then checks the owner's agent login for the agent of the run, and the
-  owner's GitHub access.
-- Each turn of the first session uses that owner's login through the
+- It then checks that a login serves the owner for the agent of the run,
+  as [The default login](org-logins.md#the-default-login) says. It also
+  checks the owner's GitHub access.
+- Each turn of the first session uses that login through the
   [model gateway](model-gateway.md). The sandbox gets
   a turn token, as [Agent logins in a sandbox](isolation.md#agent-logins-in-a-sandbox)
   says.
@@ -86,8 +134,9 @@ decision number names a decision of the change that adds
   automation at its first start, and keeps them for its check and its create.
 - Reason: a change of the automation during the start cannot give the check
   and the create two different agents.
-- A missing agent login fails the run with the code `agent_login_required`.
-  Expired GitHub access fails it with the code `github_reconnect_required`.
+- When no login serves the owner for the agent of the run, the run fails
+  with the code `agent_login_required`. Expired GitHub access fails it
+  with the code `github_reconnect_required`.
 - Reason: the run fails before it spends a start, and the Runs list names
   the real cause.
 - A run that fails a check creates no workspace.
@@ -108,6 +157,9 @@ decision number names a decision of the change that adds
 - The run text copies no title and no body of a pull request.
 - Reason: the agent reads the pull request itself, and the facts stay
   short.
+- The run text names no chosen secret. Reason: `list_secrets` already says
+  which secrets the session may use with no request, as
+  [List the secrets](secret-requests.md#list-the-secrets) says.
 
 ## Run states
 
@@ -123,7 +175,7 @@ decision number names a decision of the change that adds
 - Reason: a failed turn counts as output for the state of a workspace. So
   the state of the workspace would hide the failure.
 - A run fails for one of these causes:
-  - The owner has no agent login for the agent of the run.
+  - No login serves the owner for the agent of the run.
   - The owner's GitHub access expired.
   - The cloud computer did not start.
   - The first turn failed.

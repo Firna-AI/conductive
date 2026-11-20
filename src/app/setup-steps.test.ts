@@ -3,6 +3,8 @@ import type { AccountResponse } from '../shared/account'
 import type { GetStartedResponse } from '../shared/onboarding'
 import type { OrgSummary } from '../shared/orgs'
 import { coreFixtures, FAKE_TIME } from '../test-support/fixtures/core'
+import { activeOrgSource } from './active-orgs'
+import { accountWithDefaults } from './default-logins.test-support'
 import { setupSteps } from './setup-steps'
 import { Store } from './store'
 
@@ -61,7 +63,7 @@ function shown(
 ) {
   return setupSteps({
     server: new Store(server),
-    orgs: new Store(orgs),
+    orgs: activeOrgSource(new Store(orgs)),
     account: new Store(account),
   }).get()
 }
@@ -105,13 +107,25 @@ describe('setupSteps', () => {
     })
   })
 
+  test('the agent step is complete with only an org login that the server names as a default login, and not after the person leaves that org', () => {
+    const orgOnly = accountWithDefaults('admin', { claude: 'org', codex: null })
+    const futex: OrgSummary = { id: 'futex', name: 'Futex', role: 'member' }
+    expect({
+      orgLogin: shown(reply('acme', true, true, false), [acme], orgOnly),
+      leftAcme: shown(reply('futex', true, true, true), [futex], orgOnly),
+    }).toEqual({
+      orgLogin: reply('acme', true, true, true),
+      leftAcme: reply('futex', true, true, false),
+    })
+  })
+
   test('keeps one snapshot until a source changes, as useStore needs', () => {
     const orgs = new Store<readonly OrgSummary[]>([acme])
     const shownSteps = setupSteps({
       server: new Store<GetStartedResponse | null>(
         reply('acme', true, true, true),
       ),
-      orgs,
+      orgs: activeOrgSource(orgs),
       account: new Store<AccountResponse | null>(connected),
     })
     const first = shownSteps.get()

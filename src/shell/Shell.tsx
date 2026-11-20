@@ -4,7 +4,8 @@ import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
 import { startPage } from '../app/last-workspaces'
 import { useHref, useNavigation, useRoute } from '../app/navigation'
-import { isSettingsRoute, routes, type Route } from '../app/router'
+import { routes, type Route } from '../app/router'
+import { isSettingsRoute } from '../app/settings-route'
 import { useStore } from '../app/store'
 import type { User } from '../shared/api'
 import { SignInScreen } from './auth/SignInScreen'
@@ -26,12 +27,13 @@ import { Waiting } from './waitlist/Waiting'
 
 /**
  * The app opens as usual: Get started, the workspace that the person
- * opened last, or the first org, as `startPage` says.
+ * opened last, or the first org, as `startPage` says, among the orgs of
+ * `AppModel.activeOrgs`.
  */
 function OpenApp() {
   const app = useApp()
   const navigation = useNavigation()
-  const orgs = useStore(app.orgs)
+  const orgs = useStore(app.activeOrgs)
   const getStarted = useStore(app.getStarted)
   const last = useStore(app.lastWorkspaces.state)
   const target = startPage(last, orgs, inFirstRun(getStarted))

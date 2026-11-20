@@ -4,6 +4,8 @@
  * choose them, and the app can share them.
  */
 
+import { FEEDBACK_SENDS_PER_HOUR } from '../../../../../src/shared/feedback'
+
 /** The label of the row, and the title of the dialog that it opens. */
 export const sendFeedbackLabel = 'Send feedback'
 
@@ -59,6 +61,25 @@ export const sendingLabel = 'Sending'
 
 /** The title of the notice of a failed send, over the message of the server. */
 export const notSentTitle = "The feedback wasn't sent"
+
+const minuteMs = 60_000
+
+/**
+ * The body of the notice of a send over the limit, with the time when the
+ * person can try again, in Unix milliseconds, as the server gives it. The
+ * time shows on the 24-hour clock, such as 15:02. It rounds up to a whole
+ * minute, so the shown minute is never before that time. Without
+ * `timeZone`, the time shows in the time zone of the browser.
+ */
+export function sendLimitBody(retryAt: number, timeZone?: string): string {
+  const time = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    timeZone,
+  }).format(Math.ceil(retryAt / minuteMs) * minuteMs)
+  return `You can send up to ${FEEDBACK_SENDS_PER_HOUR} feedback messages an hour. Try again at ${time}.`
+}
 
 /** The title of the notice for a file that the dialog did not add. */
 export function notAddedTitle(name: string): string {

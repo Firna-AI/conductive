@@ -23,13 +23,13 @@ afterAll(async () => {
 it('copies attachments through the stored provider account', async () => {
   const { copy, fixture, file, session, runner } =
     await attachmentOwnerFixture(harness)
-  harness.env.SANDBOX_PROVIDER_ACCOUNTS = {
+  harness.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
     'attachment-account': {
       kind: 'boat',
       orgId: 'attachment-provider-org',
       apiKey: 'attachment-provider-key',
     },
-  }
+  })
   await harness.env.DB.prepare(
     'UPDATE workspaces SET provider_account = ? WHERE id = ?',
   )

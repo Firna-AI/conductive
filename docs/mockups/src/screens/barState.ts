@@ -17,14 +17,16 @@ export const barStateProperties = {
   localWork: { enum: localWorkKinds },
   /**
    * The GitHub access of the viewer to the repository: write or more, read
-   * only, or unknown when the Worker could not read it. Merge needs write,
-   * and the agent actions show unless the access is read only.
+   * only, or unknown when the Worker could not read it. Merge and Ready
+   * for review need write, and the agent actions show unless the access is
+   * read only.
    */
   access: { enum: gitHubAccesses },
   /**
    * The action of the app that the bar shows: a merge that runs, a merge
    * that GitHub refused for a moved head, a missing right, or another
-   * reason, or a Continue that runs or that stopped.
+   * reason, Ready for review while it runs, or a Continue that runs or
+   * that stopped.
    */
   appAction: { enum: appActions },
   /**
@@ -32,6 +34,11 @@ export const barStateProperties = {
    * the latest base after Continue.
    */
   branch: { enum: ['first', 'continued'] },
+  /**
+   * The repository change of the workspace: none, a change that runs, or
+   * the workspace after the change, on a new branch of acme/billing-service.
+   */
+  repositoryMove: { enum: ['none', 'changing', 'changed'] },
 } as const
 
 export const barStateKeys = [
@@ -39,6 +46,7 @@ export const barStateKeys = [
   'access',
   'appAction',
   'branch',
+  'repositoryMove',
 ] as const
 
 /** No local work, write access, and no action of the app. */
@@ -47,4 +55,5 @@ export const barStateDefaults = {
   access: 'write',
   appAction: 'none',
   branch: 'first',
+  repositoryMove: 'none',
 } as const

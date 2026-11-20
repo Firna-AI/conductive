@@ -58,7 +58,7 @@ async function mountAnswer(services: CopyServices) {
   await mount(
     <ChatToasts>
       <CodeCopy services={services}>
-        <AgentText text={answer} />
+        <AgentText id="agent:1" text={answer} />
       </CodeCopy>
     </ChatToasts>,
   )
@@ -90,7 +90,7 @@ describe('the Copy button of a code block', () => {
   })
 
   it('shows no button outside a chat that copies', async () => {
-    await mount(<AgentText text={answer} />)
+    await mount(<AgentText id="agent:1" text={answer} />)
     expect(document.querySelector('pre')?.textContent).toBe(code)
     expect(queryByRole('button', 'Copy code')).toBeNull()
   })

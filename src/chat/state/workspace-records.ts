@@ -1,21 +1,106 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
+import type { WorkspaceTab, WorkspaceView } from '../../shared/workspace-view'
 import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { afterRestore, isArchived } from './archive-view'
 import type { ChatSnapshot } from './chat-snapshot'
 import type { ChatContext } from './context'
+import { withView } from './saved-view'
+
+/**
+ * The view without its file and diff tabs, after a repository change: their
+ * paths belong to the folder of the old repository. A file or diff that
+ * showed gives its place to the session of the chat.
+ */
+function withoutFileTabs(
+  view: WorkspaceView,
+  activeSessionId: string | null,
+): WorkspaceView {
+  const tabs = view.tabs.filter((tab) => tab.kind === 'session')
+  const active = view.activeTab
+  const showsFile = active !== null && active.kind !== 'session'
+  if (tabs.length === view.tabs.length && !showsFile && !view.temporaryTab)
+    return view
+  const session: WorkspaceTab | null = activeSessionId
+    ? { kind: 'session', sessionId: activeSessionId }
+    : null
+  return {
+    ...view,
+    tabs,
+    activeTab: showsFile ? session : active,
+    temporaryTab: null,
+  }
+}
 
 /**
  * The snapshot with a newer workspace record. A record that leaves the
- * archived state ends the read-only tabs, as `afterRestore` says.
+ * archived state ends the read-only tabs, as `afterRestore` says. A record
+ * of another repository closes the file and diff tabs, and clears the
+ * folder of the old repository until `afterRepositoryMove` reads the new
+ * one.
  */
 function withRecord(
   snapshot: ChatSnapshot,
   workspace: Workspace,
 ): ChatSnapshot {
   const restored = isArchived(snapshot) && workspace.state !== 'archived'
-  const next = { ...snapshot, workspace }
+  const moved =
+    snapshot.workspace !== null &&
+    snapshot.workspace.repositoryId !== workspace.repositoryId
+  const next = moved
+    ? {
+        ...withView(snapshot, (view) =>
+          withoutFileTabs(view, snapshot.activeSessionId),
+        ),
+        workspace,
+        repositoryFolder: null,
+      }
+    : { ...snapshot, workspace }
   return restored ? afterRestore(next) : next
+}
+
+/**
+ * Reads the folder of the new repository after a repository change, so the
+ * file chips of the chat use it. Only the read of the view gives the
+ * folder. The chat drops a reply that comes after a later change, because
+ * that change reads again. After a failed read, the chat has no folder
+ * until the next change or load.
+ */
+async function reloadRepositoryFolder(
+  context: ChatContext,
+  repositoryId: string,
+): Promise<void> {
+  const reply = await context.api.view().catch(() => null)
+  if (!context.live() || reply === null) return
+  context.store.update((snapshot) =>
+    snapshot.workspace?.repositoryId === repositoryId
+      ? {
+          ...snapshot,
+          repositoryFolder: reply.repositoryFolder,
+          heldRepositoryIds: reply.heldRepositoryIds,
+        }
+      : snapshot,
+  )
+}
+
+/**
+ * After a record of another repository: saves the view whose file and diff
+ * tabs closed, so each later tab of the member opens without them, and
+ * reads the folder of the new repository.
+ */
+export function afterRepositoryMove(
+  context: ChatContext,
+  before: ChatSnapshot,
+): void {
+  const after = context.store.get()
+  if (
+    before.workspace === null ||
+    after.workspace === null ||
+    before.workspace.repositoryId === after.workspace.repositoryId
+  )
+    return
+  if (after.view !== before.view) context.saveView()
+  void reloadRepositoryFolder(context, after.workspace.repositoryId)
 }
 
 /**
@@ -34,11 +119,13 @@ export function confirmWorkspace(
   const newer = reply.eventNumber >= context.workspaceOrder.through
   if (!newer) return false
   context.workspaceOrder.through = reply.eventNumber
+  const before = context.store.get()
   context.store.update((snapshot) => ({
     ...withRecord(snapshot, reply.workspace),
     start: reply.start,
     savedError: reply.error?.message ?? null,
   }))
+  afterRepositoryMove(context, before)
   return true
 }
 

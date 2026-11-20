@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-13, from review finding 3 of branch `calummoore/delft-vl39` (terminal links).
-- **Location:** `src/terminal/terminalLinks.ts`, `docs/protocol/workspace-tools.md` (the Terminal section), `src/marketing/docs/terminal-and-previews.md`.
+- **Location:** `src/terminal/terminalLinks.ts`, `docs/protocol/terminal.md` (the Links section), `src/marketing/docs/terminal-and-previews.md`.
 - **Reason:** The rule for links to the app's own addresses changes a requirement, so the user chooses it.
 
 - **Terms:**

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import { useMacApp } from '../components/mac/MacApp'
@@ -103,11 +104,13 @@ function TabContent(props: {
  * that always run on this Mac. The product is free, so the page shows no
  * plan and no billing, and the sandbox provider stays out of sight. With the
  * person's changes to the shortcuts, the Search row of the Mac app's
- * sidebar shows the person's key of the palette.
+ * sidebar shows the person's key of the palette. `content` takes the place
+ * of the content of the tab, for a page that draws other settings.
  */
 export function AccountScreen(props: {
   state: AccountView
   viewport: Viewport
+  content?: ReactNode
 }) {
   const { state } = props
   const mac = useMacApp()
@@ -155,12 +158,14 @@ export function AccountScreen(props: {
       title={placeLabel(place)}
       viewport={props.viewport}
     >
-      <TabContent
-        changes={changes}
-        host={host}
-        state={state}
-        viewport={props.viewport}
-      />
+      {props.content ?? (
+        <TabContent
+          changes={changes}
+          host={host}
+          state={state}
+          viewport={props.viewport}
+        />
+      )}
     </SettingsFrame>
   )
 }

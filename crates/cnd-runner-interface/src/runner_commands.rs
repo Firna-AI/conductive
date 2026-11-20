@@ -8,6 +8,7 @@ use crate::commit_author::CommitAuthor;
 use crate::messages::UserMessage;
 use crate::runner_credentials::RunnerTurnCredential;
 use crate::runner_files::RunnerFileCommand;
+use crate::runner_repository::{RunnerRepository, RunnerRepositoryMove};
 use crate::wire::ReadonlyVec;
 
 /// RunnerCommand wire alternatives.
@@ -41,6 +42,10 @@ pub enum RunnerTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         branches: Option<RunnerBranches>,
+        /// Current repository. Only Workers that can move the runner send it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        repository: Option<RunnerRepository>,
         /// attachments.
         #[ts(as = "ReadonlyVec<RunnerAttachment>")]
         attachments: Vec<RunnerAttachment>,
@@ -90,6 +95,10 @@ pub enum RunnerMessageDuringTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         branches: Option<RunnerBranches>,
+        /// Current repository. Only Workers that can move the runner send it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        repository: Option<RunnerRepository>,
         /// attachments.
         #[ts(as = "ReadonlyVec<RunnerAttachment>")]
         attachments: Vec<RunnerAttachment>,
@@ -108,6 +117,8 @@ pub enum RunnerControlCommand {
     RunnerFileCommand(RunnerFileCommand),
     /// RunnerReportRefresh.
     RunnerReportRefresh(RunnerReportRefresh),
+    /// RunnerRepositoryMove.
+    RunnerRepositoryMove(RunnerRepositoryMove),
 }
 
 /// RunnerInterrupt.
@@ -174,4 +185,7 @@ pub enum RunnerReportKind {
     /// ports.updated.
     #[serde(rename = "ports.updated")]
     PortsUpdated,
+    /// skills.updated.
+    #[serde(rename = "skills.updated")]
+    SkillsUpdated,
 }

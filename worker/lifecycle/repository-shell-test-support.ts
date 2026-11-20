@@ -1,22 +1,19 @@
 import { execFile } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 
 import type { CommandResult } from '../sandbox/provider'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
+import { testDirectory } from '../test-support/test-directory'
 import { shellQuote } from './commands'
 
 const execute = promisify(execFile)
 
 /** The only executable tools are harmless stand-ins inside this mapped image. */
 export async function repositoryShellFixture() {
-  const root = resolve(
-    import.meta.dirname,
-    '../../.context/boat-native-remote-workspaces/milestone-5/decisions-89-91-94/lifecycle/image-layout',
-  )
-  await mkdir(root, { recursive: true })
-  const directory = await mkdtemp(join(root, 'case-'))
+  const files = await testDirectory('repository-shell-')
+  const directory = files.path
   const home = join(directory, 'home')
   const bin = join(directory, 'bin')
   const calls = join(directory, 'calls')
@@ -107,6 +104,6 @@ export async function repositoryShellFixture() {
     },
     calls: async () =>
       (await readFile(calls, 'utf8')).replaceAll(home, '/home/user'),
-    dispose: () => rm(directory, { recursive: true, force: true }),
+    dispose: files.remove,
   }
 }

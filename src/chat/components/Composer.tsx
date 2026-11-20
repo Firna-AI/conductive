@@ -55,8 +55,9 @@ export interface ComposerProps {
   /** A notice says why a message cannot go yet, so Send is off. */
   blocked: boolean
   /**
-   * The agent login of another member that the session uses, which a label
-   * in the bar names. A message on the reader's own login has no label.
+   * The agent login that a message uses when it is not the reader's own:
+   * the login of another member, or the org login, which a label in the
+   * bar names. A message on the reader's own login has no label.
    */
   login?: SessionLogin
   /**
@@ -127,14 +128,17 @@ function useComposerKeys(props: {
  * picker again.
  * While a turn runs, a message steers the turn, and Stop sits beside Send.
  * While the sandbox is not ready, Send still sends, and the workspace queues
- * the message. When a message spends the agent login of another member, a
- * label after the model picker names that login, so the box keeps its place.
+ * the message. When a message spends the agent login of another member or
+ * the org login, a label after the model picker names that login, so the
+ * box keeps its place.
  * Enter follows the shared rule of `useSendKey`: on desktop, Enter sends and
  * Shift+Enter starts a new line. The text field asks the send key before it
  * adds a line, so Enter never adds a line to a message that it sends. A
  * pasted workspace link shows as a chip, and the draft keeps the plain link.
  * In a chat with the files of its workspace, `@` opens the list of the files
- * and folders just above the box, and a pick shows as a file chip. A focus
+ * and folders just above the box, and a pick shows as a file chip. There,
+ * `/` opens the list of the skills of the agent of the chosen model, and a
+ * pick shows as a skill chip. A focus
  * request, such as from a click on the workspace in the sidebar, puts the
  * caret in the field when it shows. The chip of Add to chat goes into the
  * field when it shows, before the focus of a request of the same render.
@@ -180,6 +184,7 @@ export function Composer(props: ComposerProps) {
             {...boxDrops}
           >
             <ChipTextField
+              agent={props.choice.agent}
               caretAtEnd
               files={props.files}
               handle={field}

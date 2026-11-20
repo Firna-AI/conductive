@@ -6,6 +6,7 @@ export const SETTINGS_TABS = [
   'general',
   'repositories',
   'cloud-computer',
+  'agents',
   'secrets',
   'members',
 ] as const
@@ -40,10 +41,12 @@ type OperatorList = (typeof OPERATOR_LISTS)[number]
 /**
  * A page of the operator section: a tab, or the page of one org or one
  * user. A tab of a list keeps its search, which is empty for the whole
- * list.
+ * list. The Providers and Settings tabs have no search.
  */
 export type OperatorView =
   | { page: 'overview' }
+  | { page: 'providers' }
+  | { page: 'settings' }
   | { page: OperatorList; search: string }
   | { page: 'org'; id: string }
   | { page: 'user'; githubId: number }
@@ -140,6 +143,8 @@ export const routes = {
   operatorUsers: (search = '') => operatorList('users', search),
   operatorWaitlist: (search = '') => operatorList('waitlist', search),
   operatorCodes: (search = '') => operatorList('codes', search),
+  operatorProviders: () => '/operator/providers',
+  operatorSettings: () => '/operator/settings',
   operatorOrg: (orgId: string) => `/operator/orgs/${encode(orgId)}`,
   operatorUser: (githubId: number) => `/operator/users/${githubId}`,
 } as const
@@ -175,6 +180,12 @@ function operatorView(
   const [first, id, ...rest] = parts
   const search = query.get('q')?.trim() ?? ''
   if (first === undefined) return { page: 'overview' }
+  if (first === 'providers') {
+    return id === undefined ? { page: 'providers' } : null
+  }
+  if (first === 'settings') {
+    return id === undefined ? { page: 'settings' } : null
+  }
   const list = OPERATOR_LISTS.find((item) => item === first)
   if (list === undefined || rest.length > 0) return null
   if (id === undefined) return { page: list, search }
@@ -275,21 +286,6 @@ export function parseRoute(pathname: string, search: string): Route {
     }
   }
   return { screen: 'not-found' }
-}
-
-/** A route of Settings: a tab of the account or of an org, or the list. */
-export type SettingsRoute = Extract<
-  Route,
-  { screen: 'account' | 'settings' | 'settings-list' }
->
-
-/** Whether a route shows Settings. */
-export function isSettingsRoute(route: Route): route is SettingsRoute {
-  return (
-    route.screen === 'account' ||
-    route.screen === 'settings' ||
-    route.screen === 'settings-list'
-  )
 }
 
 /** The org that a screen belongs to, such as the org of the command palette. */

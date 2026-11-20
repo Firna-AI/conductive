@@ -4,7 +4,11 @@ import { SOFTWARE } from '../lifecycle/backend-test-support'
 import { setupFirstBuildTests } from '../lifecycle/first-build-test-support'
 import { startImageBuild } from '../lifecycle/image-builds'
 import { finishImageBuild } from '../lifecycle/image-test-support'
-import { failBuild, readBuildHistory } from '../lifecycle/build-data'
+import {
+  failBuild,
+  readBuildHistory,
+  readBuildJob,
+} from '../lifecycle/build-data'
 import { featureSettings } from './feature-settings'
 
 const fixtureForTest = setupFirstBuildTests()
@@ -13,6 +17,21 @@ it('compares the install script with the newest build before the first image and
   const fixture = await fixtureForTest()
   const { runtime, images, org, user } = fixture
   const db = runtime.env.DB
+  fixture.boat.server.addAccount({
+    orgId: 'settings-second-org',
+    apiKey: 'settings-second-key',
+  })
+  runtime.env.SANDBOX_PROVIDER_ACCOUNTS = JSON.stringify({
+    secondary: {
+      kind: 'boat',
+      orgId: 'settings-second-org',
+      apiKey: 'settings-second-key',
+    },
+  })
+  await db
+    .prepare('UPDATE orgs SET provider_account = ? WHERE id = ?')
+    .bind('secondary', org.id)
+    .run()
   const changes = async () => (await readBuildHistory(db, org.id)).changes
   const save = (installScript: string) =>
     featureSettings(
@@ -32,6 +51,9 @@ it('compares the install script with the newest build before the first image and
   await save('echo first')
   await expect(changes()).resolves.toMatchObject({ installScript: false })
   const first = await build()
+  expect(await readBuildJob(db, org.id, first)).toMatchObject({
+    providerAccount: 'secondary',
+  })
   await expect(changes()).resolves.toMatchObject({ installScript: false })
   await save('echo second')
   await expect(changes()).resolves.toMatchObject({ installScript: true })

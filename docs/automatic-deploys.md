@@ -163,6 +163,29 @@ An app build error stops the run before it changes anything live.
   proves only that the Worker answers. Wrangler names the deployed version
   in the log of the run.
 
+## Migrations and the previous Worker
+
+The previous Worker is the version that was live before the deploy. It runs
+on the new schema for some time in each deploy:
+
+- The run applies the D1 migrations before it uploads the new Worker. In
+  that time, only the previous Worker runs.
+- After the upload, Durable Objects that were already running keep the
+  previous Worker for minutes. In one measured deploy, this took about 5
+  minutes. In that time, the previous Worker and the new Worker run
+  together.
+- A failed upload leaves the previous Worker on the new schema until the
+  next deploy.
+- A rollback puts an older Worker on the new schema. A rollback to a
+  Worker that uses a name that a later migration renamed or dropped fails.
+
+So each migration keeps the previous Worker working. A rename or a drop
+takes two pull requests.
+[Keep the previous Worker working](../migrations/README.md#keep-the-previous-worker-working)
+gives the rule. A run of the migrations after the upload does not close
+this gap. The new Worker would then run on the old schema until the
+migrations end. That is the same gap in reverse.
+
 ## When a deploy fails
 
 A failed run does not roll back.
@@ -179,9 +202,10 @@ A failed run does not roll back.
   org without an org image then install the app's own software, until a
   later run makes the software image. Re-run all jobs or Re-run failed
   jobs tries again with a new deploy. The next push also tries again.
-- Between the migrations and the Worker upload, the old Worker runs on the
-  new schema. A failed upload leaves the old Worker on the new schema until
-  the next deploy.
+- A failed upload leaves the previous Worker on the new schema until the
+  next deploy, as
+  [Migrations and the previous Worker](#migrations-and-the-previous-worker)
+  says.
 - [`npx wrangler rollback`](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/)
   restores an earlier version of the Worker. Without a version ID, it
   restores the version before the newest one.
@@ -201,12 +225,28 @@ A failed run does not roll back.
   `automations` and `automation_runs`, with no bridge for an older Worker.
   A Worker version from before it reads the old tables, so every
   automation request, schedule scan, and run report of that version fails.
+  That version looks up the automation run of the workspace after each
+  chat write. So each chat write of that version also fails after its
+  commit.
   Recover in the same way: deploy a fix forward, or restore D1 with Time
   Travel together with a Worker rollback.
 - [D1 Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/)
   restores the database to an earlier minute. Run
   `npx wrangler d1 time-travel restore DB --timestamp=<time>`, with a Unix
   timestamp or an RFC 3339 time.
+
+## Effects on open pages
+
+- A deploy restarts the Durable Object of each workspace with the new
+  code. Cloudflare can restart an object some minutes after the deploy
+  ends. On 17 November 2026, one object restarted 5 minutes after the
+  deploy.
+- A request that runs in an object at its restart fails. The Worker
+  answers `503 server_restarted`, and the page shows "The server
+  restarted. Try again." A retry reaches the new object.
+- Each socket of the object drops. The chat event stream connects again
+  by itself. The terminal connects again once by itself, as
+  [Terminal](protocol/workspace-tools.md#terminal) says.
 
 ## Deploys from other branches
 

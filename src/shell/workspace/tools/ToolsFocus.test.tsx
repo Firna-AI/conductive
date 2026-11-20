@@ -1,18 +1,20 @@
 // @vitest-environment happy-dom
 
 import { act } from 'react'
-import { describe, expect, test, vi } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { routes } from '../../../app/router'
 import { terminalPaths } from '../../../shared/terminal'
 import {
   workspaceViewPath,
   type WorkspaceViewResponse,
 } from '../../../shared/workspace-view'
+import screenStyles from '../../../terminal/TerminalScreen.module.css'
 import { byLabel, byRole } from '../../../test-support/dom-queries'
 import { FakeApiServer } from '../../../test-support/fake-api'
 import { FAKE_IDS } from '../../../test-support/fixtures/core'
 import { toolFixtures } from '../../../test-support/fixtures/tools'
 import { workspaceFixtures } from '../../../test-support/fixtures/workspaces'
+import { layOut } from '../../../test-support/layout'
 import {
   holdAnimationFrames,
   MOUNTED_TEST_TIMEOUT,
@@ -21,9 +23,14 @@ import { openPaletteTab } from '../../palette/palette-test-kit'
 import { pressCommand } from '../../shortcuts/shortcut-test-kit'
 import { click, settle } from '../../test-mount'
 import { linkTo, openTab, socketsOf } from '../wiring-test-kit'
+import { openTerminals } from './terminal-tabs-kit'
 import { toolHref } from './tool-address'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+// happy-dom lays out nothing, and a terminal screen opens only in a host
+// with a size. Each shown terminal gets the size of the tools panel.
+beforeEach(() => layOut(`.${screenStyles.host}`, { width: 440, height: 389 }))
 
 const { org, workspace: id } = FAKE_IDS
 
@@ -100,6 +107,30 @@ describe('the focus after a click on the Terminal tab', () => {
 
     expect(opened).toHaveLength(1)
     expect(terminalFocused(panel)).toBe(true)
+  })
+
+  test('moves to the shown terminal, and no hidden terminal takes it', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer()
+    await openTerminals(server, 2)
+    const { events } = socketsOf(server)
+    const { view } = await openTab(server, routes.workspace(org, id), {
+      events,
+    })
+    const panel = toolsPanel(view)
+
+    // Terminal 1 stays mounted and hidden while Terminal 3 shows.
+    click(byRole('link', 'Terminal 3', panel))
+    await settle()
+    click(linkTo(panel, toolHref(org, id, 'preview')))
+    await settle()
+    click(linkTo(panel, toolHref(org, id, 'terminal')))
+    await settle()
+
+    expect({
+      terminal: terminalFocused(panel),
+      hidden: document.activeElement?.closest('[hidden]') !== null,
+    }).toEqual({ terminal: true, hidden: false })
   })
 
   test('stays where the user moved it before the terminal connected', async () => {

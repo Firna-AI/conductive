@@ -9,9 +9,10 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
 
 - `app/command-palette/workspaces` has the Workspaces tab. Its
   `repository` variant has the menu of the repository filter, and its
-  `archived` variant has the archived workspaces. Its `empty` variant has
-  the Archived filter of `acme/marketing-site`, which holds no archived
-  workspace, and the line that says where they show. Its `unavailable`
+  `archived` variant has the archived workspaces of the last 14 days, as
+  the Archived group has them. Its `empty` variant has the Archived filter
+  of `acme/marketing-site`, which holds no archived workspace, and the
+  line that says where they show and for how long. Its `unavailable`
   variant has a workspace list that did not load: the notice with Try
   again fills the tab.
 - `app/command-palette/actions` has the Actions tab over the list. The
@@ -19,8 +20,11 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
   the tab over an open workspace, whose actions come first.
   Its `archived` variant has the tab over an archived workspace, as Priya,
   a member who is not an admin, sees it: Session history and Restore workspace.
-- `app/command-palette/settings` has the Settings tab. Its Account group
-  ends with Keyboard shortcuts, which opens `app/account/shortcuts`.
+- `app/command-palette/settings` has the Settings tab. The group of the
+  settings of Acme lists its six tabs, with Agents and Secrets after Cloud
+  computer.
+  Its Account group ends with Keyboard shortcuts, which opens
+  `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its
   saved states, so the page shows only its canonical screen:
@@ -62,6 +66,10 @@ child pages:
   verified email. Its `sending` variant has a send that runs, and its
   `failed` variant has a send that did not reach the server. Its `sent`
   variant has the toast over the list after a send.
+- `app/feedback/send-limit` has a send over the limit of 10 feedback
+  messages an hour for each person. The notice of a failed send says when
+  the person can try again, on the 24-hour clock. The draft stays, and
+  Send stays on.
 - `app/feedback/reply` has the kept draft while the reply address loads,
   with a spinner on the reply line. Its `failed` variant has a read that
   did not reach the server: the notice of a failed read, with Try again,
@@ -87,5 +95,7 @@ text. A notice under the box names a file that the dialog did not add, or
 a send that failed. `FeedbackReply.tsx` beside it draws the reply line from the read of
 the reply address, and the `LoadFailure` notice of a read that failed.
 `feedbackCopy.ts` holds the words of the row, the dialog, and the toast, so
-the app can share them. `SuccessToast` in `src/components/common/` draws
+the app can share them. Its `sendLimitBody` gives the words of a send over
+the limit from the time that the server gives, in the time zone of the
+browser. `SuccessToast` in `src/components/common/` draws
 the toast after a send, where `FailureToast` draws its own.

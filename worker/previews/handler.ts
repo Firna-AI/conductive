@@ -1,3 +1,4 @@
+import { isFilePath } from '../../src/shared/file-path'
 import type {
   PreviewResponse,
   PreviewsResponse,
@@ -44,6 +45,14 @@ export function createPreviewHandler(
           )
         }
         if (request.method === 'GET' && tail) {
+          const paths = new URL(request.url).searchParams.getAll('path')
+          const path = paths[0]
+          if (paths.length > 1 || (path !== undefined && !isFilePath(path)))
+            throw new HttpError(
+              400,
+              'invalid_input',
+              'Choose a file in this repository.',
+            )
           requireRunning(target)
           const row = await previewForLaunch(env.DB, target, tail, now)
           if (!row)
@@ -57,8 +66,22 @@ export function createPreviewHandler(
             sessionId: context.sessionId,
           }
           return request.headers.get('Accept') === 'application/json'
-            ? previewNativeLaunch(env, row, viewer, now)
-            : previewLaunchPage(env, row, viewer, now)
+            ? previewNativeLaunch(env, row, viewer, now, path)
+            : previewLaunchPage(env, row, viewer, now, path)
+        }
+        if (request.method === 'POST' && tail === 'files') {
+          const result = await actions.openFiles(
+            target,
+            context.user.id,
+            env.APP_ORIGIN,
+            now,
+          )
+          return privateResponse(
+            Response.json(
+              { preview: result.preview } satisfies PreviewResponse,
+              { status: result.created ? 201 : 200 },
+            ),
+          )
         }
         if (request.method === 'POST' && tail === null) {
           return privateResponse(
@@ -82,7 +105,7 @@ export function createPreviewHandler(
         }
         throw new HttpError(404, 'not_found', 'The page is not available.')
       } catch (error) {
-        return toolError(error)
+        return toolError(error, request)
       }
     },
     proxy: (request: Request) => proxy.fetch(request),

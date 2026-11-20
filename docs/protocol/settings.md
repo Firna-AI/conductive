@@ -32,7 +32,7 @@ The [mockup catalogue](../mockups/catalogue.md) draws Settings at
   as their last tab, as
   [Desktop commands](desktop-commands.md#saved-choices) says.
 - The org settings follow, under the name of the org, with the tabs
-  General, Repositories, Cloud computer, Secrets, and Members.
+  General, Repositories, Cloud computer, Agents, Secrets, and Members.
 - The org of the org settings is the org of the page below Settings. On a
   page without an org, it is the org that the
   [command palette](command-palette.md) works on.
@@ -84,8 +84,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws Settings at
   the Mac app, `/account/this-mac`.
 - The tabs of the org settings are at `/orgs/<org>/settings`,
   `/orgs/<org>/settings/repositories`,
-  `/orgs/<org>/settings/cloud-computer`, `/orgs/<org>/settings/secrets`,
-  and `/orgs/<org>/settings/members`.
+  `/orgs/<org>/settings/cloud-computer`, `/orgs/<org>/settings/agents`,
+  `/orgs/<org>/settings/secrets`, and `/orgs/<org>/settings/members`.
 - `/settings` shows the list on a phone, and Account › General on a
   desktop. Reason: `/account` already means Account › General.
 - A row of the list opens the address of its tab.

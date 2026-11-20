@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { CircleAlert, Hammer } from 'lucide-react'
 import { Notice } from '../common/Notice'
 import {
+  editNoticeText,
   repositoryNoticeText,
   type RepositoryWait,
 } from './repositoryChangeCopy'
@@ -51,4 +52,15 @@ export function RepositoryNotice(props: {
       tone={failed ? 'danger' : 'neutral'}
     />
   )
+}
+
+/**
+ * The repository notice of an admin while an open edit of the Repositories
+ * tab adds repositories. It names them and points to Done, which saves the
+ * edit and starts one build. It has no button, so that no build starts
+ * before Done. It draws nothing when the edit adds no repository.
+ */
+export function EditRepositoryNotice(props: { added: readonly string[] }) {
+  if (props.added.length === 0) return null
+  return <Notice icon={Hammer} title={editNoticeText(props.added).title} />
 }

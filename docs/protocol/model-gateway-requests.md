@@ -99,7 +99,7 @@ complete.
   checks no turn and calls no upstream for such a request.
 - Reason: a process without a key of its own can find the profile of
   Claude. Without the check, its requests would spend the login of the
-  starter.
+  session.
 - The check is no security boundary. A process that can read the turn
   token can also copy the markers.
 - No response header and no error body carries the real login. For an own
@@ -145,8 +145,11 @@ complete.
   work.
 - The workspace also checks the address when it dispatches a turn. A
   refused address fails the turn before an agent starts (gateway decision
-  4). The cause names the starter and the agent, and points to the account
-  page. The login then counts as a login that cannot be used, as
+  4). On a personal login, the cause names the starter and the agent, and
+  points to Account settings. On the org login, the cause names the org
+  and the agent, and points to the Agents tab of the org settings. Reason:
+  only an admin can fix an org login. The login then counts as a login
+  that cannot be used, as
   [Messages](messages-and-attachments.md#messages) says.
 - When the gateway cannot connect to the endpoint, it answers the request
   with an error that names the endpoint as unreachable.
@@ -234,7 +237,7 @@ complete.
   repository can send the token.
 - Risk: the marker check passes each request of the agent program of
   Claude. A process that the agent starts can run that program with no
-  key of its own. That run then spends the login of the starter while the
+  key of its own. That run then spends the login of the session while the
   turn runs.
 - Risk: a deploy of the Worker or an update of the Cloudflare runtime can
   reset the workspace object. A check during the reset fails. The gateway

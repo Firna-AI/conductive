@@ -46,7 +46,8 @@ screens show.
   phone it is above the content of either tab, so the Runs tab shows it
   too. The frame of the page draws it, not the content of a tab.
 - The automation shows without fields, with no action, no note about a
-  turn-off, and no line about the logins of runs. The page of a new automation
+  turn-off, and no line about the logins of runs. It keeps the line that
+  names the chosen secrets, with no pull request hint. The page of a new automation
   shows only the notice.
 - The rail names the org as suspended.
 - The settings show the notice above each tab. Each tab is read-only, also
@@ -57,8 +58,10 @@ screens show.
   the tab, and a toast tells what was not saved.
 - General offers Leave org to a person whom the last-admin rule lets
   leave: a member who is not an admin, or an admin while the members list
-  another admin. The question counts the person's workspaces from the
-  list. A `last_admin` refusal shows words that name no step that the
+  another admin. The question counts the person's workspaces that the list
+  shows. It leaves out their removed workspaces, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. A `last_admin` refusal shows words that name no step that the
   suspended org refuses.
 - A deleted org that is also suspended shows the notice of the org above
   the day of the delete, and offers no Restore. A Restore that the API

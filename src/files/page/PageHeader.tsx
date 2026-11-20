@@ -8,6 +8,7 @@ import {
 import { unknownFileName } from '../model/file-labels'
 import { FileIcon } from '../panel/file-icons'
 import { IconButton } from '../ui/actions'
+import { classes } from '../ui/classes'
 import { FilesLink } from '../ui/FilesLink'
 import a11y from '../ui/a11y.module.css'
 import type { ActionStatus } from './file-actions'
@@ -26,9 +27,11 @@ const statusText: Readonly<Record<Exclude<ActionStatus, null>, string>> = {
 
 /**
  * The header of a file or diff page: the way back on a phone, the label of
- * the path, Download, the line count or the changed lines, Copy, and the
- * view switch. Download shows only with a handler. Copy without a handler
- * is disabled. The real `path` chooses only the icon.
+ * the path, Download, the actions of a page in a frame, the line count or
+ * the changed lines, Copy, and the view switch. Download shows only with a
+ * handler. Copy without a handler is disabled. The real `path` chooses only
+ * the icon. A narrow header, such as on a phone, moves the actions of a
+ * page to a second line, at its end, so the path keeps its room.
  */
 export function PageHeader(props: {
   path: string
@@ -43,6 +46,8 @@ export function PageHeader(props: {
   downloading: boolean
   onCopy?: () => void
   status: ActionStatus
+  /** Reload and Open of a page in a frame, before the actions on the file. */
+  pageActions?: ReactNode
   viewSwitch?: ReactNode
 }) {
   const { folder, name } = props.label
@@ -51,7 +56,12 @@ export function PageHeader(props: {
   const copied = props.status === 'copied'
   const failed = props.status !== null && !copied
   return (
-    <div className={styles.header}>
+    <div
+      className={classes(
+        styles.header,
+        props.pageActions !== undefined && styles.framed,
+      )}
+    >
       <div className={styles.start}>
         {props.back ? (
           <FilesLink
@@ -83,6 +93,9 @@ export function PageHeader(props: {
           />
         ) : null}
       </div>
+      {props.pageActions !== undefined ? (
+        <div className={styles.pageActions}>{props.pageActions}</div>
+      ) : null}
       <div className={styles.end}>
         <span className={failed ? styles.failed : a11y.hidden} role="status">
           {props.status ? statusText[props.status] : ''}

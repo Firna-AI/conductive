@@ -52,7 +52,7 @@ export interface RunnerEventRefused {
   type: 'runner.event-refused'
   streamId: string
   runnerEventNumber: number
-  runnerEventType: RunnerEvent['type'] | 'unknown'
+  runnerEventType: Exclude<RunnerEvent['type'], 'tool.detail.part'> | 'unknown'
   reason: RunnerEventRefusalReason
   sessionId: string | null
   turnId: string | null
@@ -66,6 +66,15 @@ export type ChatEvent =
       type: 'workspace.continued'
       sessionId: string
       member: MessageSender
+      branch: string
+      baseBranch: string
+    }
+  | {
+      /** The note of a repository change in one session. */
+      type: 'workspace.repository-changed'
+      sessionId: string
+      member: MessageSender
+      repository: { id: string; fullName: string }
       branch: string
       baseBranch: string
     }

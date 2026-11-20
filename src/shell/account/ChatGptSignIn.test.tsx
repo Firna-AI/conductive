@@ -201,7 +201,7 @@ describe('the ChatGPT sign-in of Codex', () => {
       () => !codexItem(view).includes(copy.signedOut),
       'the connected Codex login',
     )
-    const share = `Let other members use this login Their messages in your sessions start a new session on their own login.`
+    const share = `Let other members use this login Their messages in your sessions start a new session.`
     expect({ signedOut, signIn, connected: codexItem(view) }).toEqual({
       signedOut: `Codex ${copy.signedOut} ChatGPT plan Remove ${cause} ${copy.signInAgain} ${share}`,
       signIn: {

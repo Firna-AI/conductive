@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { ComputerModel } from '../../app/computer-model'
 import type { SettingsTab } from '../../app/router'
 import { flushMicrotasks, ManualDelay } from '../../app/test-kit'
+import { ORG_COLORS } from '../../shared/org-colors'
 import {
   buildPath,
   orgSettingsPaths,
@@ -15,6 +16,7 @@ import {
   FAKE_TIME,
 } from '../../test-support/fixtures/core'
 import { renderScreen, startedApp, textOf } from '../test-render'
+import { gatewayLogin, noLogin, serveOrgLogins } from './agents-test-kit'
 import { ComputerSettings } from './ComputerTab'
 import { OrgTabContent } from './OrgTabContent'
 
@@ -84,7 +86,7 @@ async function computerText(
 }
 
 describe('OrgTabContent', () => {
-  test('an admin gets fields for the name and the initials on General', async () => {
+  test('an admin gets fields for the name and the initials, and the colour swatches on General', async () => {
     const { app, org, user } = await signedIn(new FakeApiServer())
     const html = renderScreen(
       app,
@@ -94,15 +96,17 @@ describe('OrgTabContent', () => {
       [...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(
         ([, value]) => value,
       ),
-    ).toEqual(['Acme', 'AC'])
+    ).toEqual(['Acme', 'AC', ...ORG_COLORS])
   })
 
   test('a suspended org shows its notice above each tab, and no edit control, also for its only admin', async () => {
     const server = new FakeApiServer()
     serveSuspendedAcme(server)
+    serveOrgLogins(server, [gatewayLogin('claude'), noLogin('codex')])
     const { app, org, user, model } = await signedIn(server)
     await model.reload('repositories')
     await model.reload('builds')
+    await model.reload('agentLogins')
     const computer = new ComputerModel(model, new ManualDelay().delay)
     await computer.load()
     const screen = (tab: SettingsTab) =>
@@ -113,6 +117,7 @@ describe('OrgTabContent', () => {
       general: screen('general'),
       repositories: screen('repositories'),
       'cloud computer': screen('cloud-computer'),
+      agents: screen('agents'),
       members: screen('members'),
     }
     for (const [tab, html] of Object.entries(tabs)) {
@@ -122,9 +127,10 @@ describe('OrgTabContent', () => {
       general: tabs.general,
       repositories: tabs.repositories,
       'cloud computer': tabs['cloud computer'],
+      agents: tabs.agents,
     }
     for (const [page, html] of Object.entries(pages)) {
-      expect(html, page).not.toMatch(/<button|<input|<textarea/)
+      expect(html, page).not.toMatch(/<button|<input|<textarea|role="switch"/)
       expect(textOf(html), page).not.toMatch(
         /Save|Build computer|Delete org|Leave org|Only an admin/,
       )

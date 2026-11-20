@@ -31,6 +31,7 @@ export interface ApiErrorBody {
   error: {
     code: string
     message: string
+    retryAt?: number
     details?: {
       login: string
       triggerIndex: number

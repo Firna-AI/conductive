@@ -17,10 +17,14 @@ It cancels downloads from child frames, preview frames, and other windows.
 It also cancels non-blob downloads and downloads with no native source frame.
 The file flow adds no renderer bridge.
 
-The desktop entry supplies the configured Worker origin to the app's API and event services.
+The desktop entry gives the configured Worker origin and the `include` credential mode to the shared [live services](../src/app/live-services.ts) of the web app.
+The web entry gives the same services the origin of its page.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
 File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
+`AppServices.appOrigin` and the paths that `leave` opens, such as sign-in, use it too.
+The join links of Account settings and of the operator section start with that origin, so they name the deployment that owns their codes.
+Chat and file preview links to a page of the app at that origin open the page in the window.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
 ## Development
@@ -244,7 +248,7 @@ Run it after the desktop build with `npm --prefix desktop run test:electron -- t
 Mac CI runs the source and packaged tests on an Apple silicon runner and on an Intel runner.
 [Releases](RELEASES.md#releases) names the runners.
 It runs them for each pull request, and for each push to `main` and to the primary branch of the plan.
-It builds DMG and ZIP files with publishing disabled.
+It builds DMG and ZIP files with publishing disabled, for the architecture of each runner.
 Mac jobs run only when changed files match these paths:
 
 - `desktop/**`
@@ -264,10 +268,12 @@ npm --prefix desktop run test:packaged
 
 `iconutil` compiles the unchanged [approved iconset](../docs/brand/conductive.iconset/).
 The build copies the [1024px PNG master](../docs/brand/conductive-icon-1024.png) unchanged for the Dock.
-electron-builder makes DMG and ZIP packages for both Mac architectures.
+The `package` command makes DMG and ZIP packages for the architecture of the Mac that runs it.
+The packaged tests run only that package.
+The `package:release` command makes the packages for both Mac architectures, or for the one that its `--arm64` or `--x64` flag names.
 The `package` command uses an ad-hoc signature.
 PR builds force this same ad-hoc signing mode without certificate credentials.
-The package command verifies both app bundles with `codesign --verify --deep --strict`.
+The package command verifies the app bundle with `codesign --verify --deep --strict`.
 It also requires `Signature=adhoc` in the signature display.
 CI logs and `.context/boat-native-remote-workspaces/desktop-signatures.json` keep the signature evidence.
 Generated bundles, icons, packages, and test output stay ignored.
@@ -285,9 +291,11 @@ The package includes only `dist/app/` and `dist/bundle/`.
 ### Key Code
 
 - [Main process](src/main.ts) composes the protocol, window, session, and updater.
+- [Install location](src/install-location.ts) decides at launch whether to offer the move into Applications.
+  It tests for a read-only volume next to the app, and keeps the version that Not now dismissed.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
-- [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
-  It supplies the Mac keyboard and the fixed Mac app host for shortcuts.
+- [Renderer services](renderer/services.ts) gives the shared live services the configured Worker origin and the `include` credential mode.
+  It supplies the Mac keyboard and the fixed `mac-app` shortcut host.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
 - [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.

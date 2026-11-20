@@ -3,6 +3,10 @@ import { attachmentPath } from '../../src/shared/attachment-paths'
 import { HttpError } from '../http'
 import { attachmentCopyKey, attachmentNotFound } from './attachment-record'
 import { AttachmentMissing } from './attachment-missing'
+import {
+  ATTACHMENT_COPY_FAILED_MESSAGE,
+  warnAttachmentCopyFailed,
+} from './attachment-transfer-failure'
 import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import { hash } from '../security/crypto'
 import type { ChatStore } from './store'
@@ -150,15 +154,17 @@ export class AttachmentPreparation {
                   sandboxId,
                 )
             }),
-        (error: unknown) =>
-          this.store.run(async () => {
+        (error: unknown) => {
+          warnAttachmentCopyFailed(active.workspace.id, error)
+          return this.store.run(async () => {
             if (this.pending.get(key) !== preparation) return
             this.pending.delete(key)
             const current = await this.currentCommand(preparation, command)
             if (current)
               await this.failTurn(active.workspace.id, current, error)
             await this.resume()
-          }),
+          })
+        },
       )
     this.dependencies.waitUntil(
       work.catch((error: unknown) => {
@@ -220,8 +226,7 @@ export class AttachmentPreparation {
             ? { code: error.code, message: error.message }
             : {
                 code: 'attachment_copy_failed',
-                message:
-                  'The attached files could not reach the cloud computer. Try again.',
+                message: ATTACHMENT_COPY_FAILED_MESSAGE,
               }
         await view.emit({
           type: 'turn.failed',

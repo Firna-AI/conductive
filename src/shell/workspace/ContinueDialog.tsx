@@ -18,20 +18,16 @@ function Question(props: { actions: BarActions }) {
   const { uncommittedFiles, unpushedCommits } = question.localWork
   return (
     <Dialog
-      actions={
-        <>
-          <ActionButton onPress={cancel}>
-            {continueQuestion.cancel}
-          </ActionButton>
-          <ActionButton
-            icon={GitBranchPlus}
-            onPress={() => actions.confirmContinue()}
-            tone="primary"
-          >
-            {continueQuestion.confirm}
-          </ActionButton>
-        </>
+      action={
+        <ActionButton
+          icon={GitBranchPlus}
+          onPress={() => actions.confirmContinue()}
+          tone="primary"
+        >
+          {continueQuestion.confirm}
+        </ActionButton>
       }
+      busy={false}
       close={cancel}
       title={continueQuestion.title}
     >

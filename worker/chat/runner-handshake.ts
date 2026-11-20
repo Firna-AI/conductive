@@ -59,6 +59,7 @@ export async function prepareRunnerHello(
       await new RunnerFileReports(transaction.files).beginStream(
         message.streamId,
       )
+      await transaction.output.beginToolStream(message.streamId)
       return {
         protocolVersion,
         cursor: await transaction.repairs.confirmedThrough(

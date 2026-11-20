@@ -1,0 +1,69 @@
+.wrap {
+  position: relative;
+}
+
+.handle {
+  flex-shrink: 0;
+  margin-left: -4px;
+  color: var(--ui-muted);
+  cursor: grab;
+}
+
+.label {
+  flex-shrink: 0;
+  padding: 1px 6px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-sm);
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.anchor {
+  display: flex;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* Where the dragged row was while the drag lasts. */
+.placeholder {
+  opacity: 0.4;
+}
+
+/* The dragged row under the pointer, as a raised card. */
+.lifted {
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-composer);
+  box-shadow: 0 8px 22px var(--ui-shadow);
+  cursor: grabbing;
+}
+
+/* The lifted row sits under the pointer, above the line. */
+.floating {
+  position: absolute;
+  z-index: 2;
+  top: -30px;
+  right: 24px;
+  left: 16px;
+  border: 0;
+}
+
+/* The line takes no space, so no row moves during the drag. */
+.drop {
+  position: relative;
+  height: 0;
+}
+
+.line {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  top: -1px;
+  right: 8px;
+  left: 8px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ui-primary);
+}

@@ -87,7 +87,7 @@ function RailHint(props: { name: string; hint?: ShortcutHint }) {
       {props.name}
       {props.hint ? (
         <span className={styles.hintKey}>
-          <KeyChips shortcut={props.hint.text} />
+          <KeyChips shortcut={props.hint.tokens} />
         </span>
       ) : null}
     </span>

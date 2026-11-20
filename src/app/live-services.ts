@@ -1,5 +1,4 @@
 import { copyText } from './clipboard'
-import { appDomain } from '../../docs/mockups/src/brand'
 import { createApiClient } from './api/client'
 import { xhrFileTransport } from './api/xhr-files'
 import { socketEventSource } from './event-socket'
@@ -18,30 +17,29 @@ import {
 } from './services'
 
 /**
- * The origin of the app host. A browser loads the app from that host. The
- * Mac app loads the app from its own origin, so it names the app host of
- * the brand.
+ * The services of the Worker at `appOrigin`. A browser uses its page
+ * origin and normal credentials. The Mac app always includes its cookie.
+ * Files upload to the same origin, with a native `XMLHttpRequest`.
  */
-function appHostOrigin(location: Location): string {
-  return location.protocol === 'https:' || location.protocol === 'http:'
-    ? location.origin
-    : `https://${appDomain}`
-}
-
-/**
- * The services of the deployed app: the Worker on the origin of the page.
- * Files upload from the same origin, with a native `XMLHttpRequest`.
- */
-export function createLiveServices(target: Window): AppServices {
+export function createLiveServices(
+  target: Window,
+  appOrigin: string,
+  credentials: RequestCredentials,
+): AppServices {
+  const address = (path: string) => new URL(path, appOrigin).href
   return {
     api: createApiClient(
-      (input, init) => target.fetch(input, init),
-      xhrFileTransport(
-        () => new XMLHttpRequest(),
-        (path) => path,
-      ),
+      (path, init) =>
+        target.fetch(address(path), {
+          ...init,
+          credentials:
+            credentials === 'include'
+              ? credentials
+              : (init?.credentials ?? credentials),
+        }),
+      xhrFileTransport(() => new XMLHttpRequest(), address),
     ),
-    events: socketEventSource(target.location.origin),
+    events: socketEventSource(appOrigin),
     now: () => Date.now(),
     delay: browserDelay,
     onFocus: windowFocus(target),
@@ -52,9 +50,9 @@ export function createLiveServices(target: Window): AppServices {
     visible: windowVisibility(target),
     storage: windowStorage(target),
     newId: () => target.crypto.randomUUID(),
-    leave: (url) => target.location.assign(url),
+    leave: (path) => target.location.assign(address(path)),
     openInNewTab: windowNewTab(target),
-    appOrigin: appHostOrigin(target.location),
+    appOrigin,
     appVersion: APP_VERSION,
     copy: (text) => copyText(target, text),
   }

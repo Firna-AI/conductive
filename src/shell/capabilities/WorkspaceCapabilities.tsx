@@ -18,7 +18,6 @@ import {
 import type { ComposerTool } from '../../chat/components/ComposerTools'
 import type { ChatController } from '../../chat/state/controller'
 import type { User } from '../../shared/api'
-import { nameLabel } from '../../shared/name-label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { OrgSecret } from '../../shared/secrets'
 import { useOrgModel } from '../context'
@@ -27,16 +26,13 @@ import { useAction } from '../ui/useAction'
 import { capabilityParts } from './capability-parts'
 import { GrantList, type ShownApproval, type ShownValue } from './GrantList'
 
-/** The title of each session of the workspace, open or closed, or Untitled. */
-function useSessionTitles(chat: ChatController): (id: string) => string {
-  const snapshot = useSyncExternalStore(
+/** The session whose message box shows the control, or null. */
+function useActiveSession(chat: ChatController): string | null {
+  return useSyncExternalStore(
     chat.subscribe,
-    chat.getSnapshot,
-    chat.getSnapshot,
+    () => chat.getSnapshot().activeSessionId,
+    () => chat.getSnapshot().activeSessionId,
   )
-  const sessions = [...snapshot.sessions, ...snapshot.history]
-  return (id) =>
-    nameLabel(sessions.find((item) => item.id === id)?.title ?? null)
 }
 
 /**
@@ -72,8 +68,10 @@ function useChange() {
 
 /**
  * The open control of a workspace (secrets decision 8 B): the secrets of
- * the org that it pre-approves, the approvals of its sessions and the values
- * that members gave for it, each with Remove, and Mac access. The workspace
+ * the org that it pre-approves, the approvals of the session whose message
+ * box shows it and the values that members gave for the workspace, each
+ * with Remove, and Mac access. An approval whose secret the workspace
+ * already allows does not show, and it shows again when that grant ends. The workspace
  * pre-loads them, as `usePreloadedCapabilities` says, so the control shows
  * them at once. Each open reads them again behind the shown values, because
  * every member changes them. A change applies to
@@ -93,7 +91,7 @@ function WorkspaceCapabilitiesPanel(props: {
   const list = useStore(secrets.list.store)
   const grants = useStore(model.grants.store)
   const values = useStore(model.values.store)
-  const title = useSessionTitles(props.chat)
+  const session = useActiveSession(props.chat)
   const { when } = useWhen(60_000)
   const change = useChange()
   useEffect(() => {
@@ -104,18 +102,20 @@ function WorkspaceCapabilitiesPanel(props: {
   const nameOf = (id: string) =>
     known.find((secret) => secret.id === id)?.name ?? ''
   const shown = valueOf(grants)
+  const preapproved = shown?.preapprovedSecretIds ?? []
   const approvals = (shown?.sessionApprovals ?? []).flatMap(
     (approval): ShownApproval[] => {
-      const secret = nameOf(approval.secretId)
-      if (secret === '') return []
+      if (approval.sessionId !== session) return []
+      const secret = known.find((item) => item.id === approval.secretId)
+      if (!secret || secret.allAgents) return []
+      if (preapproved.includes(secret.id)) return []
       const who = nameInSentence(
         approval.approvedBy,
         approval.approvedByUserId,
         viewer.id,
       )
       const at = inSentence(when(approval.approvedAt))
-      const session = title(approval.sessionId)
-      return [{ approval, secret, session, who, when: at }]
+      return [{ approval, secret: secret.name, who, when: at }]
     },
   )
   const given = (valueOf(values) ?? []).map((value): ShownValue => ({
@@ -130,7 +130,7 @@ function WorkspaceCapabilitiesPanel(props: {
     retry: async () => {
       await Promise.all([secrets.read(), model.read()])
     },
-    preapproved: shown?.preapprovedSecretIds ?? [],
+    preapproved,
     setPreapproved: (secretId, on) =>
       change.run(
         () => model.setPreapproved(secretId, on),
@@ -191,7 +191,7 @@ export function usePreloadedCapabilities(orgId: string, workspaceId: string) {
 /**
  * The Capabilities tool beside the message box of a workspace (secrets
  * decision 8 B), with the same icon as New workspace. `chat` gives the
- * titles of the sessions of the approvals.
+ * session whose approvals the control shows.
  */
 export function workspaceCapabilities(props: {
   org: OrgSummary

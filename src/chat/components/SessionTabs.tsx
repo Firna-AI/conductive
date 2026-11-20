@@ -183,6 +183,7 @@ export function SessionTabs(props: {
         ) : null}
         {historyMenu ? (
           <Menu
+            anchor={anchor}
             entries={props.historyEntries}
             label="Session history"
             onClose={closeHistory}

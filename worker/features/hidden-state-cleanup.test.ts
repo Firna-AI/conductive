@@ -9,6 +9,7 @@ import {
   type FeatureFixture,
 } from './fixture.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
+import { TERMINALS_KEY } from '../terminal/list-store'
 
 let bundle: string
 let fixture: FeatureFixture | undefined
@@ -32,6 +33,7 @@ it('purges a hidden failed-create draft and its retained cleanup sandbox with th
     ).bind(OUTER_ORG),
   ])
   await active.actor('hidden-failure').seedFeatureState({
+    [TERMINALS_KEY]: [{ id: 'workspace', number: 1 }],
     ...Object.fromEntries(
       Array.from({ length: 40 }, (_, index) => [
         `extension:${index}`,

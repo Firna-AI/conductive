@@ -3,6 +3,7 @@ import type { SettingsTab } from '../../app/router'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess } from '../context'
+import { AgentsTab } from './AgentsTab'
 import { ComputerTab } from './ComputerTab'
 import { GeneralTab } from './GeneralTab'
 import { MembersSettings } from './MembersSettings'
@@ -17,6 +18,8 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
       return <RepositoriesTab org={props.org} />
     case 'cloud-computer':
       return <ComputerTab org={props.org} />
+    case 'agents':
+      return <AgentsTab org={props.org} />
     case 'secrets':
       return <SecretsTab org={props.org} user={props.user} />
     case 'members':
@@ -26,7 +29,7 @@ function TabBody(props: { org: OrgSummary; tab: SettingsTab; user: User }) {
 
 /**
  * A tab of the settings of an org: its name, its repositories, its cloud
- * computer, its secrets, or its members. A member sees every tab without
+ * computer, its org logins of the agents, its secrets, or its members. A member sees every tab without
  * its edit actions, except Secrets, where every member adds secrets and
  * changes the own ones. A suspended org shows its notice above every tab,
  * and every person sees the tabs without edit actions.

@@ -8,6 +8,7 @@ use crate::runner::RunnerEvent;
 use crate::runner_commands::RunnerCommand;
 use crate::runner_credentials::RunnerLoginKind;
 use crate::runner_files::RunnerFileResponse;
+use crate::runner_repository::RunnerRepositoryMoveRefused;
 use crate::wire::ReadonlyVec;
 
 /// RunnerToWorkspace wire alternatives.
@@ -20,6 +21,8 @@ pub enum RunnerToWorkspace {
     RunnerEventEnvelope(RunnerEventEnvelope),
     /// RunnerFileResponse.
     RunnerFileResponse(RunnerFileResponse),
+    /// RunnerRepositoryMoveRefused.
+    RunnerRepositoryMoveRefused(RunnerRepositoryMoveRefused),
 }
 
 /// The bearer token authenticates the outbound socket on the machine hostname.
@@ -38,11 +41,28 @@ pub enum RunnerHello {
         workspace_id: String,
         /// streamId.
         stream_id: String,
+        /// One runner program start, retained across reconnections and fresh links.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        process_start_id: Option<String>,
         /// loginKinds.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         #[ts(as = "Option<ReadonlyVec<RunnerLoginKind>>")]
         login_kinds: Option<Vec<RunnerLoginKind>>,
+        /// The runner's repository folder. Its presence means that the runner
+        /// accepts repository.move. Older runners omit it.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        repository_folder: Option<String>,
+        /// Offer complete tool sources in private numbered parts.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        complete_tool_details: Option<bool>,
+        /// True while this runner's repository file server listens.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        file_server: Option<bool>,
     },
 }
 
@@ -101,6 +121,10 @@ pub enum RunnerWelcome {
         /// confirmedThrough.
         #[ts(type = "number")]
         confirmed_through: u64,
+        /// Accept the optional complete tool source offer.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        complete_tool_details: Option<bool>,
     },
 }
 

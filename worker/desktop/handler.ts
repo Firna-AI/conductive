@@ -36,7 +36,7 @@ export function createDesktopHandler(
           } satisfies DesktopResponse),
         )
       } catch (error) {
-        return toolError(error)
+        return toolError(error, request)
       }
     },
   }

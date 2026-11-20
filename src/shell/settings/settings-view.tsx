@@ -1,13 +1,8 @@
 import { useEffect, type ReactNode } from 'react'
 import { routeOf } from '../../app/navigation'
 import { paletteOrg } from '../../app/palette/palette-org'
-import {
-  isSettingsRoute,
-  routeOrgId,
-  routes,
-  type Route,
-  type SettingsRoute,
-} from '../../app/router'
+import { routeOrgId, routes, type Route } from '../../app/router'
+import { isSettingsRoute, type SettingsRoute } from '../../app/settings-route'
 import { useStore } from '../../app/store'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'
@@ -73,10 +68,10 @@ export type SettingsView =
   | { kind: 'page'; route: PageRoute; dialog: ReactNode }
   | { kind: 'screen'; screen: ReactNode }
 
-/** The org of a page, when the person has it and it is not deleted. */
-function ownOrg(route: Route, orgs: readonly OrgSummary[]) {
+/** The org of a page among the active orgs, the orgs that are not deleted. */
+function ownOrg(route: Route, active: readonly OrgSummary[]) {
   const orgId = routeOrgId(route)
-  return orgs.find((org) => org.id === orgId && !org.deletion) ?? null
+  return active.find((org) => org.id === orgId) ?? null
 }
 
 /**
@@ -120,6 +115,7 @@ export function useSettingsView(
 ): SettingsView {
   const app = useApp()
   const all = useStore(app.orgs)
+  const active = useStore(app.activeOrgs)
   const lastOrg = useStore(app.lastOrg)
   const phone = useViewport() === 'phone'
   const mac = useMacApp() !== null
@@ -146,8 +142,8 @@ export function useSettingsView(
       : { route: last, href: below }
   const org =
     route.screen === 'settings'
-      ? ownOrg(route, all)
-      : paletteOrg(shown?.route ?? { screen: 'home' }, all, lastOrg)
+      ? ownOrg(route, active)
+      : paletteOrg(shown?.route ?? { screen: 'home' }, active, lastOrg)
   const tab = tabRouteOf(route, mac)
   const groups = (selected: TabRoute | null) =>
     settingsGroups({ route: selected, org, mac })
@@ -176,7 +172,7 @@ export function useSettingsView(
       )
     return { kind: 'screen', screen: <PhoneFrame>{screen}</PhoneFrame> }
   }
-  const page = pageBelow(shown, all, org, route.screen === 'settings')
+  const page = pageBelow(shown, active, org, route.screen === 'settings')
   return {
     kind: 'page',
     route: page.route,

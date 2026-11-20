@@ -12,6 +12,7 @@ use cnd_runner_interface::tools::resources::{
     AgentCreateSectionResponse, AgentDeleteSectionResponse, AgentListModelsResponse,
     AgentListRepositoriesResponse, AgentListSectionsResponse,
 };
+use cnd_runner_interface::tools::secret_results::{ListSecretsResult, RunWithSecretsResult};
 use cnd_runner_interface::tools::session_actions::{
     AgentGetMessageResponse, AgentSessionResponse, AgentStopSessionResponse,
 };
@@ -26,13 +27,13 @@ use cnd_runner_interface::tools::workspaces::{
 use crate::call::Name;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::reply_validation::{cap_output, normalize_paths, valid};
-use crate::secrets::types::{ListResponse, RunResult};
+use crate::secrets::response;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub(crate) enum Reply {
-    ListSecrets(ListResponse),
-    RunWithSecrets(RunResult),
+    ListSecrets(ListSecretsResult),
+    RunWithSecrets(RunWithSecretsResult),
     RunMacCommand(DeviceCommandResponse),
     CreateWorkspace(AgentCreateWorkspaceResponse),
     ListWorkspaces(AgentListWorkspacesResponse),
@@ -96,81 +97,83 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
         Err(_) => return Err(Error::Reply { mac }),
     };
     normalize_paths(&mut value);
+    if name == Name::ListSecrets {
+        return response::list(value).map(Reply::ListSecrets);
+    }
     let source = value.clone();
-    let parsed = match name {
-        Name::ListSecrets => serde_json::from_value::<ListResponse>(value).map(Reply::ListSecrets),
-        Name::RunWithSecrets => return Err(Error::Reply { mac }),
-        Name::RunMacCommand => {
-            serde_json::from_value::<DeviceCommandResponse>(value).map(Reply::RunMacCommand)
-        }
-        Name::CreateWorkspace => serde_json::from_value::<AgentCreateWorkspaceResponse>(value)
-            .map(Reply::CreateWorkspace),
-        Name::ListWorkspaces => {
-            serde_json::from_value::<AgentListWorkspacesResponse>(value).map(Reply::ListWorkspaces)
-        }
-        Name::GetWorkspace => {
-            serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::GetWorkspace)
-        }
-        Name::RenameWorkspace => {
-            serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::RenameWorkspace)
-        }
-        Name::MoveWorkspace => {
-            serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::MoveWorkspace)
-        }
-        Name::ArchiveWorkspace => {
-            serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::ArchiveWorkspace)
-        }
-        Name::ListRepositories => serde_json::from_value::<AgentListRepositoriesResponse>(value)
-            .map(Reply::ListRepositories),
-        Name::ListSections => {
-            serde_json::from_value::<AgentListSectionsResponse>(value).map(Reply::ListSections)
-        }
-        Name::ListModels => {
-            serde_json::from_value::<AgentListModelsResponse>(value).map(Reply::ListModels)
-        }
-        Name::ListSessions => {
-            serde_json::from_value::<AgentListSessionsResponse>(value).map(Reply::ListSessions)
-        }
-        Name::ReadSession => {
-            serde_json::from_value::<AgentReadSessionResponse>(value).map(Reply::ReadSession)
-        }
-        Name::CreateSession => {
-            serde_json::from_value::<AgentCreateSessionResponse>(value).map(Reply::CreateSession)
-        }
-        Name::SendMessage => {
-            serde_json::from_value::<AgentSendMessageResponse>(value).map(Reply::SendMessage)
-        }
-        Name::GetSession => {
-            serde_json::from_value::<AgentSessionResponse>(value).map(Reply::GetSession)
-        }
-        Name::RenameSession => {
-            serde_json::from_value::<AgentSessionResponse>(value).map(Reply::RenameSession)
-        }
-        Name::CloseSession => {
-            serde_json::from_value::<AgentSessionResponse>(value).map(Reply::CloseSession)
-        }
-        Name::StopSession => {
-            serde_json::from_value::<AgentStopSessionResponse>(value).map(Reply::StopSession)
-        }
-        Name::GetMessage => {
-            serde_json::from_value::<AgentGetMessageResponse>(value).map(Reply::GetMessage)
-        }
-        Name::CreateSection => {
-            serde_json::from_value::<AgentCreateSectionResponse>(value).map(Reply::CreateSection)
-        }
-        Name::DeleteSection => {
-            serde_json::from_value::<AgentDeleteSectionResponse>(value).map(Reply::DeleteSection)
-        }
-        Name::ListPreviews => {
-            serde_json::from_value::<AgentListPreviewsResponse>(value).map(Reply::ListPreviews)
-        }
-        Name::OpenPreview => {
-            serde_json::from_value::<AgentOpenPreviewResponse>(value).map(Reply::OpenPreview)
-        }
-        Name::ClosePreview => {
-            serde_json::from_value::<AgentClosePreviewResponse>(value).map(Reply::ClosePreview)
-        }
-    };
+    let parsed =
+        match name {
+            Name::ListSecrets => return Err(Error::Reply { mac }),
+            Name::RunWithSecrets => return Err(Error::Reply { mac }),
+            Name::RunMacCommand => {
+                serde_json::from_value::<DeviceCommandResponse>(value).map(Reply::RunMacCommand)
+            }
+            Name::CreateWorkspace => serde_json::from_value::<AgentCreateWorkspaceResponse>(value)
+                .map(Reply::CreateWorkspace),
+            Name::ListWorkspaces => serde_json::from_value::<AgentListWorkspacesResponse>(value)
+                .map(Reply::ListWorkspaces),
+            Name::GetWorkspace => {
+                serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::GetWorkspace)
+            }
+            Name::RenameWorkspace => {
+                serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::RenameWorkspace)
+            }
+            Name::MoveWorkspace => {
+                serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::MoveWorkspace)
+            }
+            Name::ArchiveWorkspace => {
+                serde_json::from_value::<AgentWorkspaceResponse>(value).map(Reply::ArchiveWorkspace)
+            }
+            Name::ListRepositories => {
+                serde_json::from_value::<AgentListRepositoriesResponse>(value)
+                    .map(Reply::ListRepositories)
+            }
+            Name::ListSections => {
+                serde_json::from_value::<AgentListSectionsResponse>(value).map(Reply::ListSections)
+            }
+            Name::ListModels => {
+                serde_json::from_value::<AgentListModelsResponse>(value).map(Reply::ListModels)
+            }
+            Name::ListSessions => {
+                serde_json::from_value::<AgentListSessionsResponse>(value).map(Reply::ListSessions)
+            }
+            Name::ReadSession => {
+                serde_json::from_value::<AgentReadSessionResponse>(value).map(Reply::ReadSession)
+            }
+            Name::CreateSession => serde_json::from_value::<AgentCreateSessionResponse>(value)
+                .map(Reply::CreateSession),
+            Name::SendMessage => {
+                serde_json::from_value::<AgentSendMessageResponse>(value).map(Reply::SendMessage)
+            }
+            Name::GetSession => {
+                serde_json::from_value::<AgentSessionResponse>(value).map(Reply::GetSession)
+            }
+            Name::RenameSession => {
+                serde_json::from_value::<AgentSessionResponse>(value).map(Reply::RenameSession)
+            }
+            Name::CloseSession => {
+                serde_json::from_value::<AgentSessionResponse>(value).map(Reply::CloseSession)
+            }
+            Name::StopSession => {
+                serde_json::from_value::<AgentStopSessionResponse>(value).map(Reply::StopSession)
+            }
+            Name::GetMessage => {
+                serde_json::from_value::<AgentGetMessageResponse>(value).map(Reply::GetMessage)
+            }
+            Name::CreateSection => serde_json::from_value::<AgentCreateSectionResponse>(value)
+                .map(Reply::CreateSection),
+            Name::DeleteSection => serde_json::from_value::<AgentDeleteSectionResponse>(value)
+                .map(Reply::DeleteSection),
+            Name::ListPreviews => {
+                serde_json::from_value::<AgentListPreviewsResponse>(value).map(Reply::ListPreviews)
+            }
+            Name::OpenPreview => {
+                serde_json::from_value::<AgentOpenPreviewResponse>(value).map(Reply::OpenPreview)
+            }
+            Name::ClosePreview => {
+                serde_json::from_value::<AgentClosePreviewResponse>(value).map(Reply::ClosePreview)
+            }
+        };
     match parsed {
         Ok(mut reply) => {
             let canonical = serde_json::to_value(&reply).internal()?;

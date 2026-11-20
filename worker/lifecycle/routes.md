@@ -105,7 +105,8 @@ turn and the branch step use the sender.
 1. It runs the checks of a resume: an active org, a member, a workspace
    that is not archived and has a sandbox, and an active owner.
 2. `softwareRestart(id, 'begin')` of the workspace object runs in its
-   lifecycle queue. It refuses a pending Continue. `restartingLifecycle`
+   lifecycle queue. It refuses a pending Continue and a pending
+   [repository change](repository-change.md#the-reservation). `restartingLifecycle`
    of [`durable-restart.ts`](durable-restart.ts) refuses each state other
    than ready, working, input, and unread with HTTP 409 and
    `workspace_not_running`. Otherwise it shows Starting and stores
@@ -115,9 +116,20 @@ turn and the branch step use the sender.
    with a limit of 60 seconds. Its result is the `updateCheck` of the reply.
 4. It runs `RESTART_COMMAND`, which restarts the runner under the start
    lock, so that its pre-start step applies a complete download, and then
-   the preview relay.
+   the preview relay and ttyd. The ttyd command removes the old support
+   marker before the restart. It shares the bounded support probe of a
+   normal start and writes a marker only for confirmed support.
+   It never restarts the terminal shell server. A failed ttyd restart or
+   probe warns and leaves no marker, without failing the command.
 5. When that command fails, `softwareRestart(id, 'fail')` shows the error
    state with `restart_failed`, and the route answers HTTP 502.
+6. After success, `softwareRestart` asks the workspace object to read the
+   terminal password and support again for the captured sandbox ID and
+   provider account. A failed read, including a missing support marker,
+   warns and keeps the cache, with no failure of Restart or terminal list
+   event. A changed support value commits one full-list
+   `terminals.updated` event with `several` through the list event path.
+   Unchanged support emits no event.
 
 `readyLifecycle` clears `softwareRestartAt` when the new runner is ready.
 A turn end keeps Starting meanwhile. The alarm ends a restart whose runner
@@ -143,13 +155,14 @@ The preview proxy reports no input (decision 293).
   fenced by the member generation. The shared deadline hook checks the org
   before this queued local write. The write publishes no shown state and
   waits for no provider call.
-- The idle stop still comes 30 minutes after `lastActivityAt`.
+- The idle stop still comes the stop time after `lastActivityAt`.
 - The owner updates D1 and the provider at most once a minute. The first
   input after a quiet minute starts an update. One more update follows for
   the newest input of that minute.
 - An update moves `last_activity_at` forward only, while the workspace, its
   sandbox, and the org generation stay active. It then sets the provider's
-  auto-stop to 1,860 seconds, which covers the minute of collection.
+  auto-stop to the stop time plus 60 seconds, which covers the minute of
+  collection.
 - When the provider reports a stopped or failed sandbox, the update
   reconciles the durable lifecycle state.
 - A failed update keeps its input time for the next minute, also without

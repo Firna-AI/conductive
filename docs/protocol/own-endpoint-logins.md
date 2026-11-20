@@ -15,23 +15,25 @@ A decision number names a dated record, as
 decision number names a decision of the change that adds the
 [model gateway](model-gateway.md), as that doc says. An own endpoint
 decision number names a decision of the change that adds the own endpoint
-logins, as [Tokens and secrets](tokens-and-secrets.md) says. A Codex base
-decision number, such as Codex base decision 1, names the dated record of
-one decision of the change that saves a Codex endpoint with its `/v1`
-base. Its plan keeps these records while the change is open. Its pull
-request keeps them after the merge.
+logins, and an org login decision number names a decision of the change
+that adds the org logins, as [Tokens and secrets](tokens-and-secrets.md)
+says. A Codex base decision number, such as Codex base decision 1, names
+the dated record of one decision of the change that saves a Codex endpoint
+with its `/v1` base. Its plan keeps these records while the change is
+open. Its pull request keeps them after the merge.
 
 ## The login and its endpoint
 
 - An own endpoint login holds the address of a gateway or a proxy that the
-  user chose, and its key (own endpoint decision 1). Each agent has its own
-  login. So a user who sends both agents to one proxy connects it once for
-  each agent.
+  user who connects it chose, and its key (own endpoint decision 1). Each
+  agent has its own login. So a user who sends both agents to one proxy
+  connects it once for each agent.
 - A manual mode, where the scripts and the env vars of the org set up the
   agent programs, was rejected. Reason: only an admin could change it, and
   each process on the cloud computers of the org would get the key.
-- An endpoint that an admin sets for the whole org was rejected, because
-  each agent login belongs to one user (decisions 21 and 105).
+- An admin can also connect an own endpoint as the org login of an agent,
+  as [Org logins](org-logins.md) says (org login decision 1 B). Each rule
+  of this doc holds for it too.
 - A Claude endpoint must serve the Anthropic Messages API, and accept the
   key in the `x-api-key` header. A Codex endpoint must serve the OpenAI
   Responses API, and accept the key as a bearer token in the
@@ -42,28 +44,39 @@ request keeps them after the merge.
 ## The model list
 
 - The Worker also reads the model list of the endpoint, with the key: at
-  the save, when the owner presses Refresh on the Agents tab, and in the
-  background when a turn on the login starts, at most once in 10 minutes
-  (own endpoint decision 10). A Codex save can make a second read, as
+  the save, at a press of Refresh, and in the background when a turn on
+  the login starts, at most once in 10 minutes (own endpoint decision 10).
+  A Codex save can make a second read, as
   [The address of a Codex save](#the-address-of-a-codex-save) says. The
   Worker makes no other call to the endpoint.
+- The owner of a personal endpoint presses Refresh on the Agents tab of Account settings.
+  For an org endpoint, an admin presses Refresh on the Agents tab of the
+  org settings.
 - A read fails when it gets no model list that the app can read, such as
   after HTTP 404 or when the endpoint does not answer. A read that fails
   never fails the save.
-- The pickers of the owner hide each model of the app that the last list
-  that the Worker could read does not name. Before the first such list,
-  and when a list names no model of the app for an agent, the pickers show
-  every model of the app for that agent. A failed read keeps the last
-  list. The picker of a session keeps its current model.
-- The Agents tab names each model of the app that the list does not
-  name, with its model ID and the time when the Worker read that list.
+- The pickers of the owner of a personal endpoint hide each model of the
+  app that the last list that the Worker could read does not name. Before
+  the first such list, and when a list names no model of the app for an
+  agent, the pickers show every model of the app for that agent. A failed
+  read keeps the last list. The picker of a session keeps its current
+  model.
+- On an org endpoint, each picker of a session or a new session on the org
+  login follows the last list of the org endpoint in the same way (org
+  login decision 3 A). This holds for every member. It holds also for the
+  picker of a new workspace, and of an automation whose runs take the org
+  login.
+- The Agents tab of Account settings names each model of the app that the list does not
+  name, with its model ID and the time when the Worker read that list. For
+  an org endpoint, the Agents tab names them to an admin in the same way.
 - Reason: a model that the endpoint does not serve fails in its turn. A
   mark that only warns was rejected, because the owner chose to see only
   models that the endpoint lists. Risk: a gateway can serve a model that
-  its list does not name, and the owner's pickers then hide that model.
-- The pickers of other members show every model of the app. A turn on a
-  model that the endpoint does not serve fails with a cause that names the
-  model ID, and no host (own endpoint decision 5).
+  its list does not name, and these pickers then hide that model.
+- In a session on the personal endpoint of another member, the pickers of
+  the other members show every model of the app. A turn on a model that
+  the endpoint does not serve fails with a cause that names the model ID,
+  and no host (own endpoint decision 5).
 - Risk: a turn with fast mode on asks the endpoint for fast mode too. An
   endpoint that refuses it fails each such turn on the login, as
   [The requests of the agents](fast-mode.md#the-requests-of-the-agents)
@@ -91,8 +104,9 @@ request keeps them after the merge.
 
 - The key and the full address are write-only, as the other logins are.
   The browser gets back only the host of the address, with its port when
-  the port is not the default. The Agents tab shows that host with the
-  login.
+  the port is not the default. The Agents tab of Account settings shows that host
+  with the login. The Agents tab of the org settings shows the host of an org
+  endpoint in the same way.
 - The app stores the key and the address encrypted. It keeps only the host
   and the port in plain text, so that it can show them. Reason: the path or
   the query of an address can hold a secret.
@@ -197,3 +211,9 @@ request keeps them after the merge.
   says.
 - The agent step of Get started shows the note and the warning too.
   Reason: an owner who connects an agent there needs them as much.
+- For an org endpoint, the Agents tab of the org settings shows the
+  warning, with Refresh, and the note to an admin. It shows them as the
+  Agents tab of Account settings shows them to the owner. A member who is not an admin sees
+  neither.
+  Reason: each rule of an own endpoint holds for an org endpoint, and only
+  an admin sees the model list and Refresh of an org endpoint.

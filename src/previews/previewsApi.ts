@@ -1,7 +1,7 @@
 import type { OpenPreviewRequest } from '../shared/generated/OpenPreviewRequest'
 import type { Preview } from '../shared/generated/Preview'
 import type { EmptyRequest } from '../shared/api'
-import { previewPath, previewsPath } from '../shared/previews'
+import { filesPreviewPath, previewPath, previewsPath } from '../shared/previews'
 import {
   isRecord,
   requestJson,
@@ -50,6 +50,22 @@ export function openPreview(
 ): Promise<ToolResult<Preview>> {
   const body: OpenPreviewRequest = { port }
   const path = previewsPath(workspace.orgId, workspace.workspaceId)
+  return requestJson(
+    workspace.fetch,
+    { method: 'POST', path, body },
+    parseOpened,
+  )
+}
+
+/**
+ * Opens the files preview of the workspace, or gives the one that is open.
+ * A runner without a file server gets the error `file_server_unavailable`.
+ */
+export function openFilesPreview(
+  workspace: ToolRequests,
+): Promise<ToolResult<Preview>> {
+  const body: EmptyRequest = {}
+  const path = filesPreviewPath(workspace.orgId, workspace.workspaceId)
   return requestJson(
     workspace.fetch,
     { method: 'POST', path, body },

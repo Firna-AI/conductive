@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import orgDrag from '../../../docs/mockups/src/components/orgs/OrgDrag.module.css'
-import type { LiftedFrame } from './useOrgDrag'
+import type { LiftedFrame } from '../ui/useListDrag'
 import local from './orgs.module.css'
 
 /** The list where an org moves: the rail, or the org switcher of a phone. */

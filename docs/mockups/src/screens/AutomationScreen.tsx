@@ -6,10 +6,14 @@ import { RunsPanel } from '../components/automations/RunsPanel'
 import { offersRunNow } from '../components/automations/triggerCopy'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/automationTriggers'
-import { automations, type Automation } from '../fixtures/automations'
+import type { Automation } from '../fixtures/automations'
 import { hasOlderRuns, runLists } from '../fixtures/runLists'
 import { paths } from '../paths'
 import { PhoneDelete, automationActions } from './automationActions'
+import {
+  automationCapabilityControl,
+  automationCapabilitySheet,
+} from './automationCapabilities'
 import { AutomationFrame } from './automationFrame'
 import { AutomationNotShown } from './automationNotShown'
 import {
@@ -20,6 +24,7 @@ import {
 } from './automationParts'
 import {
   accessOf,
+  automationOf,
   saveStateOf,
   viewerOf,
   type AutomationState,
@@ -48,13 +53,14 @@ function flowLinks(state: AutomationState, automation: Automation) {
 /**
  * The page of an automation: its name, the Active switch, the repository, the
  * section of the run workspaces, the triggers, and the prompt with its
- * model, beside the Runs list. Desktop shows the runs in a column at the
- * right. A phone shows a saved automation in two tabs, Automation and Runs.
- * Every member sees the automation and its runs, and only its owner changes
- * it (decision 502). A suspended org shows them read-only to everyone,
- * under its notice: at the top of the form on desktop, and above either tab
- * on a phone. An automation that the page cannot read shows why in place of the
- * automation.
+ * model and the secrets of its runs, beside the Runs list. Desktop shows
+ * the runs in a column at the right. A phone shows a saved automation in
+ * two tabs, Automation and Runs. Every member sees the automation and its
+ * runs, and only its owner changes it (decision 502), also the secrets of
+ * its runs (automation capabilities decision 1 A). A suspended org shows
+ * them read-only to everyone, under its notice: at the top of the form on
+ * desktop, and above either tab on a phone. An automation that the page
+ * cannot read shows why in place of the automation.
  */
 export function AutomationScreen(props: {
   state: AutomationState
@@ -74,13 +80,16 @@ export function AutomationScreen(props: {
       </AutomationFrame>
     )
   }
-  const automation = automations[state.automation]
+  const automation = automationOf(state)
   const access = accessOf(state, automation)
   const edits = editsOf(state.triggers, automation.triggers)
   const menu = state.triggers === 'menu'
   // A new automation has no runs yet, so a phone shows it without tabs.
   const runsTab = mobile && automation.saved && state.tab === 'runs'
   const links = flowLinks(state, automation)
+  // Only the owner changes the secrets of the runs, so only the owner opens
+  // the control (automation capabilities decision 1 A).
+  const owner = access === 'owner'
   const dialog =
     state.dialog === 'delete' && !suspended ? (
       <DeleteAutomationDialog automation={automation} viewport={viewport} />
@@ -89,9 +98,17 @@ export function AutomationScreen(props: {
     <AutomationForm
       access={access}
       edits={edits}
+      login={state.login}
       menu={menu}
+      modelMenu={state.modelMenu === 'open'}
       automation={automation}
+      capabilities={
+        owner
+          ? automationCapabilityControl(state, automation, viewport)
+          : undefined
+      }
       suspended={suspended}
+      viewer={viewerOf(state)}
       viewport={viewport}
     />
   )
@@ -115,6 +132,7 @@ export function AutomationScreen(props: {
         mobile ? (
           <>
             <PhoneSheet edits={edits} menu={menu} />
+            {owner ? automationCapabilitySheet(state, automation) : null}
             {dialog}
           </>
         ) : (
