@@ -1,4 +1,6 @@
 import type { AgentLogin } from '../chat/login-kind'
+import { redactHeaderValue } from './redact'
+import type { RedactionPolicy } from './redaction-policy'
 
 const requestNames = new Set([
   'accept',
@@ -91,7 +93,7 @@ export function upstreamHeaders(headers: Headers, login: AgentLogin): Headers {
 
 export function downstreamHeaders(
   headers: Headers,
-  secrets: readonly string[],
+  policy: RedactionPolicy,
   codexToken = false,
 ): Headers {
   const result = new Headers()
@@ -104,16 +106,7 @@ export function downstreamHeaders(
         name.startsWith('anthropic-ratelimit-') ||
         name.startsWith('x-ratelimit-'))
     )
-      result.set(
-        name,
-        secrets
-          .filter(Boolean)
-          .sort((a, b) => b.length - a.length)
-          .reduce(
-            (text, secret) => text.replaceAll(secret, '[redacted]'),
-            value,
-          ),
-      )
+      result.set(name, redactHeaderValue(name, value, policy))
   })
   return result
 }

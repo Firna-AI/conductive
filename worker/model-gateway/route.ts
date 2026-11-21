@@ -15,6 +15,7 @@ import {
 import { downstreamHeaders, hasClaudeMarkers, upstreamHeaders } from './headers'
 import { allowedModelRoute, codexTokenPaths, gatewayPath } from './paths'
 import { redactErrorBody } from './redact'
+import { RedactionPolicy } from './redaction-policy'
 import { GatewayRequestLifetime } from './request-lifetime'
 import { gatewayStream } from './stream'
 import { turnTokenRoute } from './token'
@@ -122,10 +123,6 @@ export async function routeModelGateway(
       const upstreamUrl =
         address?.upstream ??
         `${agent === 'claude' ? 'https://api.anthropic.com' : 'https://api.openai.com/v1'}${suffix}${url.search}`
-      const secrets =
-        login.kind === 'endpoint' && address
-          ? [login.secret, ...address.secretForms]
-          : [login.secret]
       const auth = chatgpt
         ? await lifetime.wait(
             gatewayCodexAuth(
@@ -162,7 +159,10 @@ export async function routeModelGateway(
             )
       await lifetime.wait(lifetime.upload.finish())
       lifetime.signal.throwIfAborted()
-      const redactions = [...secrets, ...(auth?.secrets ?? [])]
+      const redactions = new RedactionPolicy(
+        [login.secret, ...(auth?.secrets ?? [])],
+        address?.secretForms,
+      )
       const headers = downstreamHeaders(upstream.headers, redactions, chatgpt)
       if (!upstream.body) {
         lifetime.complete()
@@ -170,7 +170,7 @@ export async function routeModelGateway(
       }
       const body = upstream.ok
         ? upstream.body
-        : redactErrorBody(upstream.body, ...redactions)
+        : redactErrorBody(upstream.body, redactions)
       return new Response(gatewayStream(body, lifetime), {
         status: upstream.status,
         headers,

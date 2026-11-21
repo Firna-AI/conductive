@@ -3,6 +3,7 @@ import { expect, it } from 'vitest'
 import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import { downstreamHeaders } from './headers'
 import { redactErrorBody } from './redact'
+import { RedactionPolicy } from './redaction-policy'
 
 it('preserves protocol paths without a saved suffix and hides saved path or query forms', async () => {
   for (const [agent, endpoint, route, search, echoed, expected] of [
@@ -49,12 +50,13 @@ it('preserves protocol paths without a saved suffix and hides saved path or quer
   ] as const) {
     const address = readEndpointAddress(endpoint, agent, { route, search })
     if (!address) throw new Error('Expected a valid endpoint address.')
+    const policy = new RedactionPolicy([], address.secretForms)
     const headers = downstreamHeaders(
       new Headers({ 'x-request-id': echoed }),
-      address.secretForms,
+      policy,
     )
     const response = new Response(
-      redactErrorBody(new Blob([echoed]).stream(), ...address.secretForms),
+      redactErrorBody(new Blob([echoed]).stream(), policy),
       { status: 400, headers },
     )
     expect.soft(response.headers.get('x-request-id'), endpoint).toBe(expected)

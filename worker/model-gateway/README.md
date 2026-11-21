@@ -112,7 +112,17 @@ The base path is empty for Claude. For Codex, it can be empty or `/v1`.
 The builder also includes each saved path segment and query value with at least 12 characters.
 It lists plain, percent-encoded, and JSON-escaped forms, including escaped slashes.
 Shorter address parts match only inside a whole address form.
-Key redaction keeps its existing rules.
+Both filters use one redaction policy, which the gateway builds once for each response.
+It covers the real login, these secret forms, and the ChatGPT tokens of the request.
+It replaces each secret form at any length, and each key or token with at least 12 characters, wherever they occur.
+A shorter key or token, such as a placeholder key, leaves protocol values unchanged.
+These are JSON structure, property names, string escapes, literals, and numbers.
+Fixed-format header values also stay unchanged when they pass their header's grammar.
+Examples include content types, retry times, and rate-limit values.
+A header value that fails its grammar counts as other text.
+In JSON string values, request IDs, and other text, a shorter key or token matches only as a whole token.
+It does not match inside a longer word.
+The policy replaces in one pass, so it never changes its own `[redacted]` marker.
 Error bodies redact these values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.
 
@@ -230,7 +240,10 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [json-stack.ts](json-stack.ts): `JsonStack` stores compact container states without a separate depth limit.
 - [request-lifetime.ts](request-lifetime.ts): `GatewayRequestLifetime` owns the start check, the periodic checks, cancellation, warnings, and cleanup across every forwarding phase.
 - [stream.ts](stream.ts): answer forwarding under the request lifetime.
-- [redact.ts](redact.ts): bounded carry bytes for credential removal from error bodies.
+- [redact.ts](redact.ts): `redactHeaderValue` and `redactErrorBody` apply the policy in one pass, with bounded carry across error chunks.
+- [redaction-policy.ts](redaction-policy.ts): `RedactionPolicy` holds response patterns and the header grammar rules.
+- [redaction-context.ts](redaction-context.ts): `RedactionContext` tracks JSON and plain text without retaining it.
+  [redaction-characters.ts](redaction-characters.ts) reads JSON escapes and word boundaries.
 - [errors.ts](errors.ts): stable gateway refusals in each provider's API shape.
 - [workspace.ts](workspace.ts): `WorkspaceTurnTokens.forRunningTurn` derives a stable token from the turn record.
   Runner delivery calls it for each `turn` command, after the running state commits.
@@ -270,6 +283,7 @@ The `request` helper of `gatewayHttp` in [http.test-support.ts](http.test-suppor
 - [endpoint-login.test.ts](endpoint-login.test.ts): both agents' endpoint routes and authentication, credential-free runner commands, revalidation, redirects, and unreachable endpoints.
 - [endpoint-errors.test.ts](endpoint-errors.test.ts): split endpoint and key redaction in errors and allowed headers.
 - [endpoint-redaction.test.ts](endpoint-redaction.test.ts): unchanged protocol paths and redaction of saved path or query forms in both filters.
+- [short-key-redaction.test.ts](short-key-redaction.test.ts): placeholder keys preserve protocol values and the model failure cause. Credential echoes stay hidden.
 - [lease.test.ts](lease.test.ts): late answer starts, held uploads, a start check that does not return, and answers that keep streaming through late and failed checks, with a manual clock.
 - [codex-body.test.ts](codex-body.test.ts): HTTP refusals, upload cancellation, and unchanged accepted bytes through the fake OpenAI upstream.
 - [codex-token.test.ts](codex-token.test.ts): ChatGPT metadata, Worker routing, header filtering, route refusals, and failed discovery.
