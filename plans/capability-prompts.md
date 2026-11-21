@@ -394,9 +394,12 @@ Depends on: 1, 6
 Depends on: 1, 2, 3, 4, 5, 6, 7
 
 - [ ] Run the targeted tests, `npm run check`, and the Rust checks and the
-      Rust release build of `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+      Rust release build of `CLAUDE.md`. The targeted tests, the Rust checks,
+      and the release build passed on 2026-11-21. On this cloud computer,
+      the strict mockup build runs out of memory, and the full test suite
+      times out under load, also on `main`. CI must run the complete gate.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
