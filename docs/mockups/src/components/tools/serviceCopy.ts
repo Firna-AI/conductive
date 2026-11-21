@@ -63,6 +63,8 @@ export const servicesCopy = {
   serversHeading: 'Servers',
   empty:
     'Ask the agent to start a server as a service, which runs until the cloud computer stops.',
+  /** The title of the notice after a first read of the list that failed. */
+  loadFailed: "The services didn't load",
   noPort: 'No port',
   local: 'Local command',
   /** The hidden words before the title of the session that started it. */

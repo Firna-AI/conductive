@@ -6,8 +6,10 @@ export const serviceStateProperties = {
   /**
    * The services of the report, above the servers of the Preview tool.
    * `unsupported` is software of the cloud computer without services, which
-   * shows the tool as before. `empty` is a report with no service. The
-   * other lists hold `storybook`, `web`, and `worker`: as they run, with
+   * shows the tool as before. `empty` is a report with no service.
+   * `load-failed` is a first read of the list that failed: a notice with
+   * Try again takes the place of the rows. No port leaves Servers for a service.
+   * The other lists hold `storybook`, `web`, and `worker`: as they run, with
    * ended and failed runs, after the memory failure of `storybook`, while
    * a Stop or a Restart of `web` runs, and after it. `ports` holds `dev`,
    * one service with nine ports, and `worker`. `read-only` is the list of
@@ -18,6 +20,7 @@ export const serviceStateProperties = {
     enum: [
       'unsupported',
       'empty',
+      'load-failed',
       'running',
       'ended',
       'memory',

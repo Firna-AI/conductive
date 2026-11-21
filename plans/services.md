@@ -252,6 +252,14 @@ These are the orchestrator's calls of 21 November 2026. They apply the existing 
 
 Preparation evidence: `.context/services/ui-root-calls.md` and `.context/services/mockup-gap-preparation.md`.
 
+### Catalogue failure mockup calls
+
+These are the UI implementor's calls of 21 November 2026, checked by the orchestrator on that date.
+
+- Name the sample state `load-failed` and the page Services not loaded. Use "The services didn't load" in its notice. Reason: these names distinguish a failed read from failed service runs and follow the existing catalogue titles.
+- Reuse the registered failure wrapper with its own instance name. Give the notice the row width and the hint's six-pixel space below it. Link Try again to the list page. Reason: the shared notice and navigation already show how a successful read follows a failure.
+- State that no port leaves Servers for a service while no service row shows. Keep the ordinary phone rule for open previews. Reason: the error view adds no service ownership without changing the existing port filter.
+
 ### Guidance scheduling call
 
 On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
@@ -400,11 +408,13 @@ Depends on: 5a
 
 The UI implementor fills the first catalogue-read failure gap found during app preparation. It uses the existing app read-failure pattern before Milestone 6 implements it.
 
-- [ ] Draw the first failed catalogue read with the shared failure notice, its message, and Try again. Keep ordinary servers and Other port usable.
-- [ ] Add one linked child page with phone and desktop variants. Keep unsupported, empty, and failed-read states distinct. Preserve the existing service screens and page screen counts.
-- [ ] Update the direct mockup catalogue and design documentation. Check each changed Markdown link.
-- [ ] Run the mockup checks. Open the changed light and dark views in the browser and save PNG screenshots under `.context/services/`.
-- [ ] Check the design and update the plan for each actual problem before starting the app implementation.
+- [x] Draw the first failed catalogue read with the shared failure notice, its message, and Try again. Keep ordinary servers and Other port usable.
+- [x] Add one linked child page with phone and desktop variants. Keep unsupported, empty, and failed-read states distinct. Preserve the existing service screens and page screen counts.
+- [x] Update the direct mockup catalogue and design documentation. Check each changed Markdown link.
+- [x] Run the mockup checks. Open the changed light and dark views in the browser and save PNG screenshots under `.context/services/`.
+- [x] Check the design and update the plan for each actual problem before starting the app implementation.
+
+Completed on 21 November 2026. Evidence: `.context/services/mockup-gap-report.md`, `.context/services/m5b-mockups-check.log`, and the five PNGs named in that report. The orchestrator checked their visual states and corrected the documentation's wording about the existing phone port filter.
 
 ## Milestone 6: App service controls
 

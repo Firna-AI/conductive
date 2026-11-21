@@ -3,6 +3,7 @@
     "ended",
     "ports",
     "unavailable",
+    "load-failed",
     "menu",
     "stop",
     "restart",

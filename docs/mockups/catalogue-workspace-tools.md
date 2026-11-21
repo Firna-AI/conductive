@@ -139,6 +139,12 @@ Preview tool, and the hidden Desktop:
     variant has software without services, which shows the tool as before,
     and its `stopped` variant has a stopped cloud computer, whose tools show
     the state of the cloud computer with Resume.
+  - `app/tools/services/load-failed` has a first read of the list that
+    failed. Under Services, the notice "The services didn't load", with the
+    message of the server and Try again, takes the place of the rows. No
+    port leaves Servers for a service, and the Other port row stays. A
+    later read that fails keeps the last list with no notice, as
+    `app/tools/services` draws it.
   - `app/tools/services/menu` has the menu of `web`, with Restart and Stop,
     and a sheet on a phone. Its `read-only` variant has the rows of a viewer
     who may not restart the software: no menu, and the header state as

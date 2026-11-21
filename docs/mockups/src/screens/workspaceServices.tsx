@@ -48,6 +48,8 @@ type ListState = Exclude<WorkspaceState['services'], 'unsupported'>
 
 const lists: Readonly<Record<ListState, readonly ServiceEntry[]>> = {
   empty: [],
+  // A first read that failed shows no row, so no port leaves Servers.
+  'load-failed': [],
   running: runningServices,
   ended: endedServices,
   memory: memoryServices,
@@ -126,11 +128,17 @@ export function previewServicesOf(
     controls && state.serviceView === 'menu'
       ? { name: webService.name, anchored: !phone }
       : undefined
+  // Try again of a read that failed shows the list that it reads.
+  const failed =
+    state.services === 'load-failed'
+      ? { retryTo: servicePaths.list }
+      : undefined
   return {
     section: (
       <ServiceSection
         controls={controls}
         current={shown}
+        failed={failed}
         linksFor={linksFor}
         menu={menu}
         services={services}

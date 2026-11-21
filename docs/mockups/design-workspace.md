@@ -120,6 +120,10 @@ link, and the bars of the cloud computer.
   The last holds the ports as small buttons in the type of the port column,
   and it wraps. The port of the shown Preview tab has the fill of the
   current server row. A row with an open menu keeps the fill of a hover.
+  - After a first read of the list that failed, `LoadFailure` takes the
+    place of the rows under the heading, in the width of the rows. No port
+    leaves Servers for a service, as
+    `app/tools/services/load-failed` shows.
   - The menu holds Restart, then Stop in the danger colour. Desktop draws
     it below its button, and a phone as a sheet, through `ServiceMenuSheet`.
     `StopServiceDialog` asks before Stop, through `ConfirmDialog`.

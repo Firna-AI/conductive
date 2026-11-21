@@ -5,6 +5,7 @@ import {
   ScrollText,
   SquareTerminal,
 } from 'lucide-react'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import { paths } from '../../paths'
 import a11y from '../common/a11y.module.css'
 import { IconButton } from '../common/actions'
@@ -186,8 +187,10 @@ export function ToolHeading(props: { children: string }) {
 
 /**
  * The services of the report, above the servers of the Preview tool. With
- * no service yet, a line says what a service is for. `current` is the port
- * of the Preview tab that shows, on desktop.
+ * no service yet, a line says what a service is for. After a first read of
+ * the list that failed, the notice of data that did not load takes the
+ * place of the rows, with the message of the server and Try again.
+ * `current` is the port of the Preview tab that shows, on desktop.
  */
 export function ServiceSection(props: {
   services: readonly ServiceEntry[]
@@ -195,11 +198,21 @@ export function ServiceSection(props: {
   controls: boolean
   linksFor: (service: ServiceEntry) => ServiceLinks
   menu?: OpenServiceMenu
+  /** A first read that failed, and the screen of the list after Try again. */
+  failed?: { retryTo: string }
 }) {
   return (
     <section aria-label={servicesCopy.heading} className={styles.section}>
       <ToolHeading>{servicesCopy.heading}</ToolHeading>
-      {props.services.length === 0 ? (
+      {props.failed ? (
+        <div className={styles.failure}>
+          <loadFailure.Component
+            moklyInstance="services-load-failure"
+            title={servicesCopy.loadFailed}
+            to={props.failed.retryTo}
+          />
+        </div>
+      ) : props.services.length === 0 ? (
         <p className={styles.hint}>{servicesCopy.empty}</p>
       ) : (
         <ul aria-label={servicesCopy.listLabel} className={styles.rows}>

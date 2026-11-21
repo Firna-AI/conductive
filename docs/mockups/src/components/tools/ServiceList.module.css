@@ -24,6 +24,11 @@
   line-height: 1.5;
 }
 
+/* The notice of a list that did not load spans the width of the rows. */
+.failure {
+  padding-bottom: 6px;
+}
+
 .rows {
   margin: 0;
   padding: 0;
