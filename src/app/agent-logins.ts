@@ -7,7 +7,13 @@ import type { Store } from './store'
  * person, and the default login of each org and agent that the server
  * names. An older reply names no default login.
  */
-export type LoginRead = Pick<AccountResponse, 'agentLogins' | 'defaultLogins'>
+type LoginRead = Pick<AccountResponse, 'agentLogins' | 'defaultLogins'>
+
+export type LoginMark = (
+  read: LoginRead,
+  only?: Agent,
+  current?: (agent: Agent) => boolean,
+) => void
 
 const byAgent = (a: { agent: Agent }, b: { agent: Agent }) =>
   a.agent.localeCompare(b.agent)
@@ -28,7 +34,6 @@ const byAgent = (a: { agent: Agent }, b: { agent: Agent }) =>
 export class AgentLogins {
   /** The number of the last change of each agent login. */
   private readonly changes = new Map<Agent, number>()
-  private readonly invalidations = new Map<Agent, number>()
   private readonly reads = new Map<Agent, number>()
   private readonly account: Store<AccountResponse | null>
 
@@ -66,11 +71,6 @@ export class AgentLogins {
     return change
   }
 
-  /** A newer observation cancels older reads without retiring pending local writes. */
-  invalidateReads(agent: Agent): void {
-    this.invalidations.set(agent, (this.invalidations.get(agent) ?? 0) + 1)
-  }
-
   /** Shows a login that a write gave, as a change of its own. */
   put(login: AgentLoginStatus): void {
     this.change(login.agent)
@@ -90,19 +90,18 @@ export class AgentLogins {
    * login of the answer whose agent had no change after the mark, and the
    * default logins of that agent when the answer names them. `only` limits
    * the result to one agent, for a read after a change of its login.
-   * A newer login observation also invalidates an earlier mark. Its read
-   * barrier is separate, so that a pending local write can still confirm.
+   * `current` also checks the order of complete replies and session facts.
+   * These checks do not retire a pending local write.
    */
-  mark(): (read: LoginRead, only?: Agent) => void {
+  mark(): LoginMark {
     const marked = new Map(this.changes)
-    const observed = new Map(this.invalidations)
-    return (read, only) =>
+    return (read, only, current = () => true) =>
       this.show(
         read,
         (agent) =>
           (only === undefined || agent === only) &&
           this.changes.get(agent) === marked.get(agent) &&
-          this.invalidations.get(agent) === observed.get(agent),
+          current(agent),
         true,
       )
   }

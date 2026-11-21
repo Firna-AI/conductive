@@ -64,17 +64,28 @@ export class Resource<T> {
   private readonly fetch: () => Promise<T>
   private readonly missing: (error: ApiError) => boolean
 
-  constructor(fetch: () => Promise<T>, options: ResourceOptions = {}) {
+  constructor(
+    fetch: () => Promise<T>,
+    options: ResourceOptions = {},
+    initial?: T,
+  ) {
     this.fetch = fetch
     this.missing = options.missing ?? (() => false)
+    if (initial !== undefined) {
+      this.answer = ready(initial)
+      this.shown.set(this.answer)
+    }
   }
 
   /** Reads the value. `current` returns false when its answer is obsolete. */
-  async read(current: () => boolean = () => true): Promise<void> {
+  async read(
+    current: () => boolean = () => true,
+    fetch: () => Promise<T> = this.fetch,
+  ): Promise<void> {
     const startedAt = ++this.count
     let value: T
     try {
-      value = await this.fetch()
+      value = await fetch()
     } catch (error) {
       if (current()) this.failed(asApiError(error), startedAt)
       return

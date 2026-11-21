@@ -18,10 +18,8 @@ import { AgentLogins } from './agent-logins'
 import { AccountLoginReads } from './account-login-reads'
 import { AccountLoginRequests } from './account-login-requests'
 import { AccountLoginWrites } from './account-login-writes'
-import { ignore, nested, record } from './api/parse'
-import { readChoice, readNewWorkspaceView } from './api/read-core'
+import { ignore } from './api/parse'
 import { readGitHubRepositories, readInstallations } from './api/read-github'
-import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { EndpointReads, type LoginReads } from './endpoint-reads'
@@ -147,19 +145,18 @@ export class AccountModel {
   /**
    * The API refused an operator request, so the person is no longer an
    * operator. The rail and the org switcher drop Operator, and the operator
-   * section shows the not-found page, until the next load reads the account.
+   * section shows the not-found page. A newer account read can restore it.
    */
   refuseOperator(): void {
-    const account = this.account.get()
-    if (account?.operator) this.account.set({ ...account, operator: false })
+    if (this.account.get()?.operator)
+      this.loginReads.preferences.refuseOperator()
   }
 
   /**
    * Reads the agent logins again, as each open of the agent list does, so
    * that a login that the Worker stopped after the app opened shows Signed
-   * out. Only the read of the whole account gives the logins, and only its
-   * logins show. A read that runs already counts for this call. A failed
-   * read keeps what shows.
+   * out. The same complete reply refreshes the other account fields. A read
+   * that runs already counts for this call. A failed read keeps what shows.
    */
   refreshLogins(): Promise<void> {
     return this.loginReads.refresh()
@@ -241,26 +238,12 @@ export class AccountModel {
     )
   }
 
-  async setDefaultChoice(choice: AgentChoice): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.defaultModel,
-      { choice },
-      (body) => nested(record(body), 'choice', readChoice),
-    )
-    const account = this.account.get()
-    if (account) this.account.set({ ...account, defaultChoice: saved })
+  setDefaultChoice(choice: AgentChoice): Promise<void> {
+    return this.loginReads.preferences.setDefaultChoice(choice)
   }
 
-  async setNewWorkspaceView(view: NewWorkspaceView): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.newWorkspaceView,
-      { view },
-      readNewWorkspaceView,
-    )
-    const account = this.account.get()
-    if (account) this.account.set({ ...account, newWorkspaceView: saved.view })
+  setNewWorkspaceView(view: NewWorkspaceView): Promise<void> {
+    return this.loginReads.preferences.setNewWorkspaceView(view)
   }
 
   /**
@@ -269,19 +252,8 @@ export class AccountModel {
    * of the keys and of each hint read from the account. A failed save
    * changes nothing, so the account keeps the saved keys.
    */
-  async saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.shortcuts,
-      request,
-      readSavedShortcuts,
-    )
-    const account = this.account.get()
-    if (!account) return
-    this.account.set({
-      ...account,
-      shortcuts: { ...account.shortcuts, [saved.keyboard]: saved.changes },
-    })
+  saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
+    return this.loginReads.preferences.saveShortcuts(request)
   }
 
   async signOut(): Promise<void> {
