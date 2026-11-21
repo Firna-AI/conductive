@@ -1,7 +1,7 @@
 import type { ExplainSessionRequest } from '../../shared/sessions'
 import { explainFailedTitle } from '../../../docs/mockups/src/components/explain/explainCopy'
 import { showNotice, type ChatContext } from './context'
-import { takeReply } from './linked-replies'
+import { takeReply, type SendingView } from './linked-replies'
 import { sendDraft } from './message-actions'
 import { confirmRecord } from './session-records'
 
@@ -45,18 +45,19 @@ async function reopenInPlace(
 }
 
 /**
- * Sends the draft of a session from the popover of an explanation. A closed
- * session opens again first, as a session link reopens it, and its tab
- * opens at the end of the row. The shown tab stays. Gives the session that
- * took the message: the session itself, or a linked session that the Worker
- * opened, which the popover then shows. Null when nothing went.
+ * Sends the draft of a session from the popover of an explanation, `view`.
+ * A closed session opens again first, as a session link reopens it, and
+ * its tab opens at the end of the row. The shown tab stays. When the Worker
+ * opens a linked session for the message, the popover shows that session
+ * with the draft, as `showTarget` says.
  */
 export async function sendFollowUp(
   context: ChatContext,
   sessionId: string,
-): Promise<string | null> {
+  view: SendingView,
+): Promise<void> {
   const snapshot = context.store.get()
   const open = snapshot.sessions.some((session) => session.id === sessionId)
-  if (!open && !(await reopenInPlace(context, sessionId))) return null
-  return sendDraft(context, sessionId, false)
+  if (!open && !(await reopenInPlace(context, sessionId))) return
+  await sendDraft(context, sessionId, view)
 }

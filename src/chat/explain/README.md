@@ -90,8 +90,13 @@ for the screens.
   through `sessionParts` and `TranscriptView`, with `hide` for the written
   prompt: its first message. Its follow-up field edits the draft of the
   session, which its tab shows too. A follow-up of a closed explanation
-  reopens it first, with no change of the shown tab. A follow-up that the
-  Worker puts in a linked session shows that session in the popover.
+  reopens it first, with no change of the shown tab. A follow-up or a Try
+  again that the Worker puts in a linked session shows that session in the
+  popover, with the draft, as a tab follows it. The popover follows only
+  while it still shows the session of the request, so a late reply leaves
+  the popover of another explanation as it is. `popoverView` of
+  `useExplain` gives the popover to `showTarget` as the view that sent, as
+  [the sessions guide](../sessions.md) says.
 - While the cloud computer does not run, the bar of `sandboxParts` takes
   the place of the follow-up field, as it takes the place of the composer
   of a tab: the bar of the host in the app, or the chat's own bar with
@@ -121,14 +126,19 @@ for the screens.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
+- `PopoverLinked.dom.test.tsx` follows a linked session with the text that
+  the member typed while the reply waited, follows the linked session of
+  Try again, and keeps the popover of another explanation that the member
+  opened while the reply waited.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
-  explanations, the selection, the highlights, and the press on a mark
-  that opens a popover.
+  explanations, the selection, the highlights, the press on a mark that
+  opens a popover, a follow-up, and the replies of the Worker.
 
 ### Key code
 
 - `useExplain.ts`: the marks, the selection, the key, and the popover and
-  the menu that lie open. `useExplainSelection.ts` reads the selection.
+  the menu that lie open, with `popoverView`, the popover as the view that
+  sends. `useExplainSelection.ts` reads the selection.
 - `selection.ts`: `explainableSelection`, the selection that Explain reads.
   `text-model.ts`: `textModel`, and the places of the text in the page.
 - `explanations.ts`: `explanationsOf`, the explanations of a session with

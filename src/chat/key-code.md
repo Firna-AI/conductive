@@ -203,8 +203,9 @@ is relative to `src/chat/`, the folder of this guide.
   session. It also gives the login label in the composer, and the models
   that the picker of the composer offers. `state/blockers.ts` gives the
   Connect notice when no login serves the message.
-- `state/linked-replies.ts`: the message and the focus of a reply that names
-  a linked session.
+- `state/linked-replies.ts`: the message of a reply that names a linked
+  session, and the view that sent, which follows that session with the
+  draft: the shown tab, or the popover of an explanation.
 - `components/SourceLine.tsx`: the line that links a linked session to its
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each

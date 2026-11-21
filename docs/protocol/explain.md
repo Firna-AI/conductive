@@ -275,6 +275,12 @@ in the design of the chat gives the look of each part.
   [Messages](messages-and-attachments.md#messages) says. That session has
   no anchor. Its tab opens, and the popover shows the line that links to
   it, as the chat of a tab does.
+- This holds for Try again in the popover too. The popover then shows the
+  new session, and the text in its field moves with it, as a tab does.
+  Reason: the answer shows where the member asked for it.
+- The popover follows the new session only while it still shows the
+  session that took the request. Reason: a late reply never changes the
+  popover of another explanation.
 
 ## A closed explanation
 

@@ -1,7 +1,9 @@
 import { useCallback, useId, useMemo, useRef, useState } from 'react'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
+import { useLatest } from '../components/chip-field/use-latest'
 import type { ChatSnapshot } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
+import type { SendingView } from '../state/linked-replies'
 import type { MenuPoint } from '../ui/Menu'
 import type { ExplainView } from './explain-context'
 import { byMessage, explanationsOf, type Explanation } from './explanations'
@@ -41,7 +43,13 @@ export interface ExplainState {
   anchor: HTMLElement | null
   menu: OpenMarkMenu | null
   openPopover: (explanationId: string) => void
-  showInPopover: (sessionId: string) => void
+  /**
+   * The popover of an explanation as the view that sends a follow-up or Try
+   * again, as `SendingView` says. It shows a session only while it lies
+   * open on that explanation, so a late reply leaves the popover of another
+   * explanation as it is.
+   */
+  popoverView: (explanationId: string) => SendingView
   closePopover: (focusMark: boolean) => void
   closeMenu: () => void
 }
@@ -62,6 +70,8 @@ export function useExplain(props: ExplainProps): ExplainState {
   )
   const [starting, setStarting] = useState(false)
   const [popover, setPopover] = useState<OpenPopover | null>(null)
+  // The popover that lies open now, for a reply that comes later.
+  const latest = useLatest(popover)
   const [menu, setMenu] = useState<OpenMarkMenu | null>(null)
   const [scope, setScope] = useState(sessionId)
   if (scope !== sessionId) {
@@ -126,8 +136,20 @@ export function useExplain(props: ExplainProps): ExplainState {
     anchor,
     menu,
     openPopover,
-    showInPopover: (shown) =>
-      setPopover((current) => current && { ...current, sessionId: shown }),
+    popoverView: (explanationId) => ({
+      shows: (sessionId) => {
+        const open = latest.current
+        return (
+          open?.explanationId === explanationId && open.sessionId === sessionId
+        )
+      },
+      show: (sessionId) =>
+        setPopover((current) =>
+          current?.explanationId === explanationId
+            ? { ...current, sessionId }
+            : current,
+        ),
+    }),
     closePopover: (focusMark) => {
       const id = popover?.explanationId
       setPopover(null)

@@ -31,15 +31,17 @@ function menuEntries(
 /** What the chat of the popover takes from the chat of the shown session. */
 export type LayerChat = Omit<
   PopoverChatProps,
-  'sessionId' | 'explanation' | 'onOpenSession' | 'onSend'
+  'sessionId' | 'explanation' | 'onOpenSession' | 'onSend' | 'onRetry'
 >
 
 /**
  * The popover of an explanation, with its actions. Expand shows the tab of
  * the session that the popover shows, and reopens it first when it is
- * closed. A follow-up sends the draft of that session. When the Worker puts
- * it in a linked session, the popover shows that session, whose first line
- * links back. A press on that link shows the explanation again.
+ * closed. A follow-up sends the draft of that session, and Try again sends
+ * the message of its failed turn again. When the Worker puts the message in
+ * a linked session, the popover shows that session with the draft, while
+ * it still shows the session of the request. The first line of that
+ * session links back. A press on that link shows the explanation again.
  */
 function Popover(props: {
   popover: OpenPopover
@@ -51,6 +53,7 @@ function Popover(props: {
   const { popover, state, chat } = props
   const { snapshot, controller } = chat
   const shown = popover.sessionId
+  const view = state.popoverView(popover.explanationId)
   const show = (sessionId: string) => {
     const open = snapshot.sessions.some((item) => item.id === sessionId)
     void (open ? controller.select(sessionId) : controller.reopen(sessionId))
@@ -74,14 +77,11 @@ function Popover(props: {
         explanation={shown === popover.explanationId}
         onOpenSession={(sessionId) =>
           sessionId === popover.explanationId
-            ? state.showInPopover(sessionId)
+            ? view.show(sessionId)
             : show(sessionId)
         }
-        onSend={() =>
-          void controller.followUp(shown).then((target) => {
-            if (target !== null && target !== shown) state.showInPopover(target)
-          })
-        }
+        onRetry={(messageId) => void controller.retry(shown, messageId, view)}
+        onSend={() => void controller.followUp(shown, view)}
         sessionId={shown}
       />
     </ExplainPopover>

@@ -16,6 +16,7 @@ import { attachFiles } from './attachment-actions'
 import { ChatRuns } from './chat-runs'
 import type { MentionRequest } from './chat-snapshot'
 import { hydrate } from './history'
+import type { SendingView } from './linked-replies'
 import {
   interruptTurn,
   resumeWorkspace,
@@ -131,15 +132,18 @@ export class ChatController extends ChatRuns {
       ? Promise.resolve(null)
       : explainQuote(this.context, parentId, request)
   /**
-   * Sends the draft of a session from the popover of an explanation, as
-   * `sendFollowUp` says, and gives the session that took the message.
+   * Sends the draft of a session from the popover of an explanation, `view`,
+   * as `sendFollowUp` says.
    */
-  readonly followUp = (sessionId: string): Promise<string | null> =>
-    this.readOnly()
-      ? Promise.resolve(null)
-      : sendFollowUp(this.context, sessionId)
-  readonly retry = (sessionId: string, messageId: string) =>
-    this.write(() => retryTurn(this.context, sessionId, messageId))
+  readonly followUp = (sessionId: string, view: SendingView) =>
+    this.write(() => sendFollowUp(this.context, sessionId, view))
+  /**
+   * Try again of a failed turn, as `retryTurn` says. The shown tab follows
+   * a linked session, or `view` when Try again was in it, such as the
+   * popover of an explanation.
+   */
+  readonly retry = (sessionId: string, messageId: string, view?: SendingView) =>
+    this.write(() => retryTurn(this.context, sessionId, messageId, view))
   readonly interrupt = (sessionId: string) =>
     this.write(() => interruptTurn(this.context, sessionId))
   readonly chooseModel = (sessionId: string, choice: AgentChoice) =>

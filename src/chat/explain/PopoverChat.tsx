@@ -48,6 +48,8 @@ export interface PopoverChatProps {
   onOpenSession: (sessionId: string) => void
   /** Sends the draft of the session, as `ChatController.followUp` does. */
   onSend: () => void
+  /** Sends the message of a failed turn again, as `ChatController.retry` does. */
+  onRetry: (messageId: string) => void
 }
 
 /**
@@ -180,7 +182,7 @@ export function PopoverChat(props: PopoverChatProps) {
         hide={prompt}
         inserts={parts.inserts}
         onOpenDiff={props.onOpenDiff}
-        onRetry={(messageId) => void controller.retry(sessionId, messageId)}
+        onRetry={props.onRetry}
         pending={state.pending}
         readers={{
           viewerId: snapshot.account?.user.id ?? null,

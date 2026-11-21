@@ -13,7 +13,6 @@ import {
   MOUNTED_TEST_TIMEOUT,
   press,
   pressKey,
-  typeText,
   waitFor,
 } from '../../test-support/mount'
 import { mountChat } from './explain-test-kit'
@@ -21,7 +20,10 @@ import {
   explained,
   explanationAnswer,
   followUpReply,
+  linkedFrom,
+  nextEvent as next,
   openFromMark,
+  sendFollowUp,
 } from './popover-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
@@ -29,21 +31,11 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 const { org, workspace } = FAKE_IDS
 const title = 'Explain "Manual entry still works"'
 
-/** The number of the next event of the fake. */
-const next = (server: FakeApiServer) =>
-  server.events.history(Number.MAX_SAFE_INTEGER).throughEventNumber + 1
-
 /** The paths of the requests of the fake, by method, in their order. */
 function writes(server: FakeApiServer): string[] {
   return server.requests
     .filter((request) => request.method === 'POST')
     .map((request) => new URL(request.url).pathname)
-}
-
-/** Types a follow-up in the popover and sends it. */
-async function sendFollowUp(popover: HTMLElement, text: string) {
-  await typeText(byRole('textbox', 'Follow-up', popover), text)
-  await press(byRole('button', 'Send', popover))
 }
 
 describe('the popover of an explanation', () => {
@@ -226,13 +218,7 @@ describe('the popover of an explanation', () => {
       'explain-1',
       'Manual entry still works',
     )
-    const linked = {
-      ...record,
-      id: 'linked-1',
-      title: 'And on a phone?',
-      anchor: null,
-      sourceSessionId: record.id,
-    }
+    const linked = linkedFrom(record, 'And on a phone?')
     await mountChat({
       stored: events,
       setup: (fake) =>
