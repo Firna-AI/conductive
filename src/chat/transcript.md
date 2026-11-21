@@ -136,4 +136,6 @@ the parts of the chat that draw the transcript.
   turn shows from the rest of the transcript, such as its end reason.
   `stopFacts` gives the notes of a stopped turn and who stopped it.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  the reconnect, and the `hold` and `release` of the workspace stream.
+  the reconnect, and the `hold` and `release` of the workspace stream. It
+  tells the chat when a replay of its stored history starts and ends, as
+  [Record order](loads-and-sends.md#record-order) says.

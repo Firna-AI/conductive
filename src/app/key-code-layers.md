@@ -77,10 +77,23 @@ the folder of this page.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.
+- [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css):
+  the parts of the modal card, the card of a desktop dialog. They keep the
+  card inside its layer. Its `.head` and its `.foot` keep their size, and
+  only its `.body` scrolls when the content is taller.
+  `../shell/ui/Dialog.tsx`, the `ConfirmDialog` of `../chat/ui/overlays.tsx`
+  and of `../members/ui/ConfirmDialog.tsx`, and the New workspace dialog
+  use them. `.topLayer` keeps the question of the members UI, a native
+  dialog element in the top layer of the browser, inside the window.
 - `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
   New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
   way that each place opens New workspace as the dialog or the page.
-  `NewWorkspaceDialog.tsx`: the dialog.
+  `NewWorkspaceDialog.tsx`: the dialog. Only its message and its notices
+  sit in the `.body` of the modal card. Its pickers, the Capabilities
+  control, and Create sit in the `.head` and the `.foot`.
+  [new-workspace-height.spec.ts](../../desktop/tests/new-workspace-height.spec.ts)
+  checks a tall dialog at the 480 px minimum height of the Mac window. Run
+  `npm --prefix desktop run test:electron -- tests/new-workspace-height.spec.ts`.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the notices, the readiness, and
   the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice

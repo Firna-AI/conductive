@@ -111,16 +111,28 @@ export class WorkspaceOperations {
     )
   }
 
-  async stop(workspaceId: string): Promise<void> {
-    const { store, bind, publish, closeRunner } = this.options
+  async stop(workspaceId: string, keepQueued?: boolean): Promise<void> {
+    const { store, bind, publish, closeRunner, dependencies } = this.options
     bind(workspaceId)
     closeRunner()
     await store.change(
       workspaceId,
       async (transaction) => {
         await transaction.emit({ type: 'ports.updated', ports: null })
-        await stopDispatchedTurns(transaction)
+        await stopDispatchedTurns(
+          transaction,
+          keepQueued ? dependencies.randomId : undefined,
+        )
       },
+      publish,
+    )
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    const { store, publish, dependencies } = this.options
+    return store.change(
+      workspaceId,
+      (transaction) => stopDispatchedTurns(transaction, dependencies.randomId),
       publish,
     )
   }

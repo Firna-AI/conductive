@@ -1,12 +1,12 @@
-import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import { defined } from '../../defined'
 import type { ArchiveDays } from '../../fixtures/archive'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
@@ -26,7 +26,7 @@ export type BarNotice =
 export type PanelNotice = BarNotice | { problem: 'starting' }
 
 type Problem = {
-  icon: LucideIcon
+  icon: IconKey
   title: string
   /** The text of the bar under the chat. */
   body: string
@@ -54,7 +54,7 @@ const chatSaved = 'Your chat is saved.'
 const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
   {
     stopped: {
-      icon: CirclePause,
+      icon: 'circle-pause',
       title: 'Sandbox stopped',
       body: saved,
       panelBody: saved,
@@ -62,7 +62,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'neutral',
     },
     error: {
-      icon: CircleAlert,
+      icon: 'circle-alert',
       title: "The sandbox couldn't start",
       body: saved,
       panelBody: saved,
@@ -70,7 +70,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'danger',
     },
     refused: {
-      icon: refusedIcon,
+      icon: iconKeyOf(refusedIcon),
       title: "The sandbox can't start",
       body: history,
       panelBody: history,
@@ -116,8 +116,9 @@ function archivedProblem(
   const { archivedOn, removedOn } = notice.days
   const leaves = `It leaves the list on ${removedOn}.`
   const left = 'It left the list.'
-  const listed = { icon: Archive, title: `Archived on ${archivedOn}` }
-  const removed = { icon: Archive, title: `Removed on ${removedOn}` }
+  const icon: IconKey = 'archive'
+  const listed = { icon, title: `Archived on ${archivedOn}` }
+  const removed = { icon, title: `Removed on ${removedOn}` }
   const tone = 'neutral'
   switch (stageOf(notice)) {
     case 'available':
@@ -180,7 +181,11 @@ function recoveryPath(state: BarNotice): string | undefined {
 
 /** The one way forward, as a link where the mockups draw its screen. */
 function RecoveryButton(props: { label: string; state: BarNotice }) {
-  const button = <ActionButton tone="primary">{props.label}</ActionButton>
+  const button = (
+    <actionButton.Component moklyInstance="recover" tone="primary">
+      {props.label}
+    </actionButton.Component>
+  )
   const to = recoveryPath(props.state)
   if (to === undefined) return button
   return (
@@ -221,16 +226,17 @@ function barBody(state: SandboxNoticeState, body: string): string {
 export function SandboxBar(props: BarNotice) {
   const problem = problemOf(props)
   return (
-    <Notice
-      action={
-        problem.action ? (
-          <RecoveryButton label={problem.action} state={props} />
-        ) : undefined
-      }
+    <notice.Component
       body={barBody(props, keptBody(props, problem.body))}
       icon={problem.icon}
+      moklyInstance="sandbox-bar"
       title={problem.title}
       tone={problem.tone}
+      {...defined({
+        action: problem.action ? (
+          <RecoveryButton label={problem.action} state={props} />
+        ) : undefined,
+      })}
     />
   )
 }
@@ -246,7 +252,12 @@ function panelTitle(state: BarNotice, problem: Problem): string {
  * leaves the action and the words of a refusal to the chat bar beside it. A
  * phone shows the bar only on the Chat tab, so its panels show them too.
  */
-export function SandboxPanel(props: { state: PanelNotice; phone: boolean }) {
+export function SandboxPanel(props: {
+  state: PanelNotice
+  phone: boolean
+  /** The place of the panel, which names it for Mokly. */
+  place: 'file' | 'files' | 'tools' | 'preview'
+}) {
   const theme = useSharedUiTheme()
   const { state } = props
   if (state.problem === 'starting') {
@@ -259,12 +270,14 @@ export function SandboxPanel(props: { state: PanelNotice; phone: boolean }) {
   }
   const problem = problemOf(state)
   return (
-    <EmptyState
-      action={
-        props.phone && problem.action ? (
-          <RecoveryButton label={problem.action} state={state} />
-        ) : undefined
-      }
+    <emptyState.Component
+      moklyInstance={`sandbox-${props.place}`}
+      {...defined({
+        action:
+          props.phone && problem.action ? (
+            <RecoveryButton label={problem.action} state={state} />
+          ) : undefined,
+      })}
       body={
         props.phone && state.problem === 'refused'
           ? state.reason

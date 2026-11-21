@@ -111,7 +111,9 @@ export class RunnerChannel {
       active.loginKinds = message.loginKinds
       active.repositoryFolder = message.repositoryFolder
       active.fileServer = message.fileServer
-      active.ready = welcome.ready
+      active.ready =
+        welcome.savedReady &&
+        !(await this.dependencies.requiresFreshRunnerReady?.())
       await this.connections.persist(active)
       this.connections.reportConnected(active)
       if (active.ready) this.connections.attachFiles(active)

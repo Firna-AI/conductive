@@ -1,5 +1,6 @@
-import { ExternalLink } from 'lucide-react'
 import { effortLabels } from '../../../../../src/shared/agents'
+import { defined } from '../../defined'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import {
   agentKeys,
   agents,
@@ -9,9 +10,18 @@ import {
   type AgentKey,
 } from '../../fixtures/agents'
 import type { Shortcut } from '../common/KeyChips'
-import type { MenuEntry } from '../common/Menu'
 
-const divider: MenuEntry = { kind: 'divider' }
+const divider: MenuEntryData = { kind: 'divider' }
+
+/**
+ * The external link icon of a model that opens a new session, which a
+ * screen reader says as "New session".
+ */
+function newSession(opens: boolean) {
+  return opens
+    ? ({ trailingIcon: 'external-link', trailingLabel: 'New session' } as const)
+    : {}
+}
 
 /**
  * The models of each agent as a group, with no brand name, and the current
@@ -23,19 +33,18 @@ export function modelEntries(
   sessionAgent?: AgentKey,
   /** The labels of the models that the menu leaves out. */
   hiddenModels: readonly string[] = [],
-): MenuEntry[] {
-  return agentKeys.flatMap((key, index): MenuEntry[] => {
+): MenuEntryData[] {
+  return agentKeys.flatMap((key, index): MenuEntryData[] => {
     const opensSession = sessionAgent !== undefined && key !== sessionAgent
     const shown = agents[key].models.filter(
       (model) => !hiddenModels.includes(model.name),
     )
     return [
       ...(index > 0 ? [divider] : []),
-      ...shown.map((model): MenuEntry => ({
+      ...shown.map((model): MenuEntryData => ({
         kind: 'item',
         label: model.name,
-        trailingIcon: opensSession ? ExternalLink : undefined,
-        trailingLabel: opensSession ? 'New session' : undefined,
+        ...newSession(opensSession),
         checked: key === choice.agent && model.name === choice.model,
       })),
     ]
@@ -51,22 +60,22 @@ export function modelEntries(
 export function effortEntries(
   choice: AgentChoice,
   fastKey?: Shortcut,
-): MenuEntry[] {
-  const fast: MenuEntry[] = offersFast(choice)
+): MenuEntryData[] {
+  const fast: MenuEntryData[] = offersFast(choice)
     ? [
         divider,
         {
           kind: 'switch',
           label: 'Fast',
           on: choice.fast === true,
-          shortcut: fastKey,
+          ...defined({ shortcut: fastKey }),
         },
       ]
     : []
   return [
     divider,
     { kind: 'label', label: 'Effort' },
-    ...effortsFor(choice).map((effort): MenuEntry => ({
+    ...effortsFor(choice).map((effort): MenuEntryData => ({
       kind: 'item',
       label: effortLabels[effort],
       checked: effort === choice.effort,
@@ -91,7 +100,7 @@ export function pickerMenu(
   /** The labels of the models that the menu leaves out. */
   hiddenModels: readonly string[] = [],
   fastKey?: Shortcut,
-): MenuEntry[] {
+): MenuEntryData[] {
   return [
     ...modelEntries(choice, sessionAgent, hiddenModels),
     ...effortEntries(choice, fastKey),

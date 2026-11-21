@@ -1,8 +1,8 @@
-import { X } from 'lucide-react'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { useTouch } from '../common/touch'
+import { instanceKey } from '../../instanceKey'
 import tabScroll from '../workspace/TabScroll.module.css'
 import styles from './PreviewTabs.module.css'
 
@@ -49,7 +49,12 @@ export function PreviewTabs(props: {
             {tab.label}
           </ScreenLink>
           <span className={styles.close}>
-            <IconButton icon={X} label={`Close ${tab.label}`} quiet />
+            <iconButton.Component
+              icon="x"
+              label={`Close ${tab.label}`}
+              moklyInstance={`close-preview-${instanceKey(tab.label)}`}
+              quiet
+            />
           </span>
         </span>
       ))}

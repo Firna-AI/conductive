@@ -66,9 +66,9 @@ which shows its Markdown as typed.
 - `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. Sent messages, the message field, and the mockups share it through
-  `lineTargets`, with its address boundaries, its escape decoding, and its
-  length limits.
+  `)`. Sent messages and the message field share it through
+  `lineTargets`, also in the mockups, with its address boundaries, its
+  escape decoding, and its length limits.
 - One scan reads an address in angle brackets. As in CommonMark, it ends
   at the first `>` that no backslash escapes. It refuses an address with
   a `<` that no backslash escapes, or with an LF. A backslash does not
@@ -81,11 +81,11 @@ which shows its Markdown as typed.
   address, as typed, inside any angle brackets. A link or a chip leads to
   the decoded address. Where the Markdown shows as typed, the address
   shows its source.
-- Sent messages, the message field, and the mockups read each target
-  through `lineTargets` of the same module. It keeps each Markdown link on
-  one line, as its label is. A line break inside its parentheses makes it
-  no Markdown link, so no chip of a sent message or of the field takes in
-  a line break.
+- Sent messages and the message field read each target through
+  `lineTargets` of the same module, also in the mockups. It keeps each
+  Markdown link on one line, as its label is. A line break inside its
+  parentheses makes it no Markdown link, so no chip of a sent message or
+  of the field takes in a line break.
 - `lineTargets` reads each target of a text once. Keep it so. The readers
   try a link at each `[`, and many `[` can reach the same `(`. One read
   for each `[` would take seconds for a crafted message.

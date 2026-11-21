@@ -7,7 +7,7 @@ import { Menu, type MenuEntry } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
 import styles from './HeaderState.module.css'
 import { restartableStates, restartCopy } from './restartCopy'
 
@@ -37,7 +37,7 @@ export function HeaderState(props: {
   const { label } = activityPresentation[props.status]
   const state = (
     <>
-      <StatusGlyph status={props.status} />
+      <statusGlyph.Component status={props.status} />
       {label}
     </>
   )

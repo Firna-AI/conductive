@@ -8,7 +8,7 @@ points of each part.
   git credential route, and the input activity owner, with its durable
   input time and its D1 and provider update.
 - [`workspaces.ts`](workspaces.ts): `createWorkspace`, which records a
-  workspace on its fixed org account and queues its start. `replayCreation`
+  workspace on its current org account and queues its start. `replayCreation`
   finds a saved create by its first-message ID and joins its claim, plan,
   and admission without the current defaults. The
   [agent workspace tools](../tools/workspaces.md#creation-replay-and-first-title)
@@ -190,6 +190,7 @@ points of each part.
   `WorkspaceAlarms` of [`alarms.ts`](../features/alarms.ts), as
   [The object alarm scheduler](alarm-scheduler.md) says.
 - [`durable-journal.ts`](durable-journal.ts): `WorkspaceEventJournal`.
+- [Provider switches](provider-switches.md#key-code): hidden builds, member waits, atomic account publication, and lifecycle wakes.
 - [Image builds](image-builds.md#key-code): the entries of build admission,
   build jobs, failures and allocation recovery, refreshes, build logs and
   timers, the image coordinator, the image software and runtime, and the

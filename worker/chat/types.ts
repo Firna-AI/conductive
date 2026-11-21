@@ -194,6 +194,7 @@ export interface ChatDependencies {
   runnerDisconnected(
     workspaceId: string,
     publish: ChatCallbackPublisher,
+    at: number,
   ): Promise<void>
   runnerUnsupported(
     workspaceId: string,
@@ -228,6 +229,7 @@ export interface ChatDependencies {
   automationReportAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
+  requiresFreshRunnerReady?(): Promise<boolean>
   readConnectionAccess: (
     identities: readonly ConnectionIdentity[],
     now: number,

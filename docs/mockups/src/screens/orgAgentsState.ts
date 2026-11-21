@@ -11,7 +11,7 @@ import {
   unlistedOrgLogins,
 } from '../fixtures/orgLogins'
 import { paths } from '../paths'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 
 /**
  * The parts of the state of the org settings that the Agents tab shows,

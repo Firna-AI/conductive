@@ -15,7 +15,7 @@ export function ClosingCall(props: {
     <section className={classes(styles.call, mobile && styles.mobile)}>
       <h2 className={styles.title}>{props.title}</h2>
       <p className={styles.text}>{props.text}</p>
-      <SiteActions stack={mobile} to={props.signIn} />
+      <SiteActions place="closing" stack={mobile} to={props.signIn} />
     </section>
   )
 }

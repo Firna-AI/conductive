@@ -161,6 +161,14 @@ is relative to `src/chat/`, the folder of this guide.
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
   establishes the current records before the shown session starts its history.
+  `replaySessionRecords` starts one replay of stored pages, for a history
+  load or for the stored history of the stream.
+- `state/session-replay.ts`: `SessionReplay`, the merges and the end of one
+  replay. The end places the tabs, as
+  [Record order](loads-and-sends.md#record-order) says. It also keeps, for
+  each session, the record that places its tab, apart from its newest
+  record. A pending close applies over that record, and a failed close goes
+  back to it.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session

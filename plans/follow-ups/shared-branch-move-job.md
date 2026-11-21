@@ -29,5 +29,6 @@
 - **Left out:** A shared contract test suite for both jobs, because a fix still goes to two places, and the jobs differ on purpose. "Change nothing", because Continue keeps its endless retry.
 - **Wider fix:** A. One job removes the second copy and gives both actions one end rule.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/repository-change-fetch-access-hint.md` records two guesses by phase of the repository change: the access hint of a failed fetch, and the clash reason of an index lock. Its option E gives the repository change a closed stored stop cause, as Continue has. One shared branch-move job would carry one cause type and one copy function for both jobs, so that work fits option A here. Neither item waits for the other.
 - **Recommendation:** A. It removes the copies, gives Continue the end rule, and needs no migration.
 - **Action:** fix after merge, apply A, because it changes the Continue job in production and is a Large change that needs its own review.
