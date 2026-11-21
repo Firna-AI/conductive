@@ -5,6 +5,8 @@ import card from '../../../docs/mockups/src/components/common/ModalCard.module.c
 import { ActionButton } from './actions'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { Sheet, trapTab } from './Sheet'
+import { controlsOf } from './tab-stops'
+import ui from './ui.module.css'
 import { useViewport } from './viewport'
 
 /**
@@ -24,7 +26,9 @@ import { useViewport } from './viewport'
  * worked, the caller closes the question.
  *
  * A desktop dialog taller than the room of the frame keeps its title and
- * its actions, and its content scrolls between them.
+ * its actions, and its content scrolls between them. While that content is
+ * text without a control, Tab stops on it too, so the keys of the keyboard
+ * scroll it. It never takes the first focus.
  */
 export function Dialog(props: {
   title: string
@@ -89,19 +93,30 @@ function DialogBox(props: {
   initial?: RefObject<Focusable | null>
 }) {
   const dialog = useRef<HTMLElement>(null)
+  const body = useRef<HTMLDivElement>(null)
   useModalLayer(dialog, props.close, { initial: props.initial })
   return (
     <section
       aria-label={props.title}
       aria-modal
       className={classes(styles.dialog, card.card, props.wide && styles.wide)}
-      onKeyDownCapture={trapTab}
+      onKeyDownCapture={(event) => trapTab(event, controlsOf, body.current)}
       ref={dialog}
       role="dialog"
       tabIndex={-1}
     >
       <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
-      <div className={classes(styles.body, card.body)}>{props.children}</div>
+      {/*
+       * The browser makes no Tab stop of the body. The trap does, while the
+       * body scrolls text.
+       */}
+      <div
+        className={classes(styles.body, card.body, ui.focusable)}
+        ref={body}
+        tabIndex={-1}
+      >
+        {props.children}
+      </div>
       <div className={classes(styles.actions, card.foot)}>{props.actions}</div>
     </section>
   )

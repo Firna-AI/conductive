@@ -21,6 +21,5 @@
 - **Left out:** A portal for the window, because the frame then loads its page again.
 - **Wider fix:** B, because the browser shuts off the background whatever route the focus takes.
 - **Previous examples:** Commit `be73a1188` fixed a focus escape from the container of a sheet in `trapTab`.
-- **Related:** `plans/follow-ups/dialog-scroll-body-keyboard-reach.md` changes the same `trapTab` owner. Its body-focus fix must preserve the expanded window's custom list while that list remains in use.
 - **Recommendation:** B, after a browser check of the frame state.
 - **Action:** fix after merge, apply B, because it needs checks in each browser and changes how toasts layer.

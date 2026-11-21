@@ -20,6 +20,7 @@
   - The operator questions, New section, and Send feedback already turned Cancel off while their write ran. Continue, Change repository, Restart, and Close terminal pass `busy={false}`, because they close before their write starts.
   - As a question opens, it focuses `initial`, else an element with `data-autofocus`, else its first focusable element (`src/shell/ui/Overlay.tsx:205-209`).
   - Cancel comes first in the row of actions. The text of Leave org, Reset all, Delete automation, and Delete secret has no control. So Cancel has the focus as these questions open.
+  - The content of a desktop question is also a Tab stop while its text overflows and holds no control. `tabWithScrollingBody` of `src/shell/ui/tab-stops.ts` gives this stop, through `trapTab`. A fix here must keep this stop and the first focus on Cancel.
   - The Firna button renders a native `<button>`. When it is off, it gets the `disabled` attribute (`node_modules/@firna/ui/dist/node/primitives/dom/domProps.js:152`).
   - The Firna `Pressable` always sets `tabIndex`: 0 when on, and -1 when off (`node_modules/@firna/ui/dist/node/primitives/dom/Pressable.js:95`).
   - Firna `busy` blocks a press, but the button stays focusable. So the busy confirming action keeps a focus that it has.
@@ -61,7 +62,6 @@
 - **Wider fix:** B, because the one shared Cancel covers every shell question. The class beyond Cancel lives in other shared buttons, which the items under **Related** track.
 - **Previous examples:** `keepFocus` on the Save buttons of `src/shell/settings/ScriptSection.tsx:41`, `src/shell/settings/GeneralTab.tsx:66`, and `src/shell/automations/AutomationEditor.tsx:115`. The test at `src/shell/ui/actions.test.tsx:41` checks that a button that turns off with the focus keeps it, looks and acts off, and is natively off when the focus leaves.
 - **Related:**
-  - `plans/follow-ups/dialog-scroll-body-keyboard-reach.md`: the same focus code. Its shared trap fix keeps the initial focus on the safe action and must preserve the busy question's focus behavior.
   - `plans/follow-ups/busy-buttons-lose-focus.md`: the same class, a natively disabled button that loses the focus. There the pressed busy button itself turns off, in the chat `ActionButton` and two shell callers. Here a Cancel that had the first focus turns off when another button starts the write. Neither fix covers the other.
   - `plans/follow-ups/busy-menu-escape-loses-focus.md`: the same class, for the trigger of a busy shell menu after Escape. Neither fix covers the other.
   - `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C, a `keepFocus` default in the shell `ActionButton`, would give the shared Cancel the behaviour of B here. This item does not wait for that answer.
