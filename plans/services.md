@@ -392,10 +392,10 @@ The orchestrator owns the combined gate, implementation review, and pull request
 
 - [ ] Recheck every completed milestone against the diff and the repository rules.
 - [x] Fix the unused service-copy exports found by the existing export check. Keep their module-local uses.
-- [ ] In an isolated test workspace, start a service, end its agent turn, and confirm that it stays usable. Restart only that workspace's runner and confirm service survival. Check computer stop and the selected resume behavior.
+- [x] In an isolated test workspace, start a service, end its agent turn, and confirm that it stays usable. Restart only that workspace's runner and confirm service survival. Check computer stop and the selected resume behavior.
 - [ ] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
 - [ ] Run `npm run format:check` and `npm run lint` before the long gate.
-- [ ] Install gate dependencies with Node 24: `npm --prefix desktop ci` and `npm ci --prefix runner`, after the root dependencies.
+- [x] Install gate dependencies with Node 24: `npm --prefix desktop ci` and `npm ci --prefix runner`, after the root dependencies.
 - [ ] Run `npm run check` on the combined final tree.
 - [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
 - [ ] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Prepare the target and musl tools if needed.
@@ -409,6 +409,8 @@ The orchestrator owns the combined gate, implementation review, and pull request
 
 Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.context/services/pre-worker-exports-fixed.log`, and `.context/services/pre-worker-export-typecheck.log`.
 
+Lifetime evidence: `.context/services/lifetime-progress.md`, `.context/services/idle-observations.jsonl`, `.context/services/lifetime-stage5-report.md`, and `.context/services/lifetime-cleanup-report.md`. The isolated test workspace is cleaned and archived. Dependency installation evidence: `.context/services/desktop-install.log` and `.context/services/runner-install.log`.
+
 ## Outside this change
 
 - [Verify servers outside terminal turns](follow-ups/terminal-restart-server-lifetime.md). Correct the terminal restart work's lifetime claim on its own branch.
@@ -416,6 +418,7 @@ Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.
 - [Choose service restoration after resume](follow-ups/restore-kept-services-after-resume.md). Approved services decision 19 A defers it. The item links the separate question about servers outside Terminal.
 - [Choose memory limits for services](follow-ups/limit-service-memory.md). Approved services decision 19 A defers caps and changed victim preferences.
 - [Split existing service-adjacent docs](follow-ups/service-adjacent-doc-length.md). Preserve the existing content and anchors on a separate branch.
+- [Keep agent-end diagnostics after a stop](follow-ups/agent-end-cause-not-recorded.md). The existing item now records the missing prior-boot journal observed during the isolated lifetime check. This change adds no diagnostic or provider behavior.
 
 ## Post-merge follow-up (non-blocking)
 
