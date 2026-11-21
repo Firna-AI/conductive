@@ -77,6 +77,14 @@ the folder of this page.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.
+- `../shell/ui/lost-focus.ts`: `useLostFocus`, which gives a lost focus
+  back to an open layer. A render can take away the focused element, such
+  as an item of a menu. The focus then falls to the page. After each
+  render, such a focus goes to the part that `target` gives, which the
+  layer focuses as it opens. Any other focus stays. `focusLost` says
+  whether the focus fell to the page. `PointMenu.tsx`, `useLayerFocus` of
+  `Overlay.tsx`, and `useFocusInside` of `../chat/ui/dismiss.ts` call it.
+  So the menus, sheets, and dialogs of the shell and the chat share it.
 - [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css):
   the parts of the modal card, the card of a desktop dialog. They keep the
   card inside its layer. Its `.head` and its `.foot` keep their size, and
