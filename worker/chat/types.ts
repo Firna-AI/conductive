@@ -5,6 +5,7 @@ import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import type { Attachment } from '../../src/shared/generated/Attachment'
 import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachment'
 import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
+import type { RunnerCapabilities } from '../../src/shared/generated/RunnerCapabilities'
 import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
@@ -168,6 +169,10 @@ export interface ChatDependencies {
   ): Promise<
     import('../../src/shared/generated/RunnerBranches').RunnerBranches | null
   >
+  readCapabilities(
+    workspaceId: string,
+    sessionId: string,
+  ): Promise<RunnerCapabilities | null>
   /** The record repository and the stored folders, or null without them. */
   readRepository(workspaceId: string): Promise<RunnerRepositoryRecord | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>

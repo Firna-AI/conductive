@@ -305,12 +305,12 @@ Depends on: 2
 
 Depends on: 3
 
-- [ ] Add a `readCapabilities` seam to `worker/chat/dependencies.ts`. Read
+- [x] Add a `readCapabilities` seam to `worker/chat/dependencies.ts`. Read
       the facts of one session from the grant data in `worker/secrets/` and
       from `workspaceMacAccess`. Never read a value or a ciphertext.
-- [ ] Send the facts with each turn command in
+- [x] Send the facts with each turn command in
       `worker/chat/runner-command-preparation.ts`.
-- [ ] Add Worker tests: the field on a turn command, the empty facts, a
+- [x] Add Worker tests: the field on a turn command, the empty facts, a
       session approval, a value for 15 minutes left out, and no value in the
       field.
 

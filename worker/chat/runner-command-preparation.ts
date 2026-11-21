@@ -117,11 +117,17 @@ export class RunnerCommandPreparation {
     const turn = await this.store.read(active.workspace.id, (view) =>
       view.turn(command.turnId),
     )
+    const capabilities = await this.dependencies.readCapabilities(
+      active.workspace.id,
+      command.sessionId,
+    )
+    if (!capabilities) throw new RunnerAccessDenied()
     return {
       state: 'send',
       command: {
         type: 'turn',
         ...fields,
+        capabilities,
         commitAuthor: turn
           ? await this.dependencies.readCommitAuthor(turn.senderId)
           : null,
