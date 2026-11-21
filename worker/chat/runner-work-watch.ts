@@ -122,9 +122,9 @@ export class RunnerWorkWatch {
     size: number | null,
   ): Promise<RunnerWorkMark | null> {
     if (message?.type === 'hello')
-      connection.watchUntil = this.now() + RUNNER_WORK_WATCH_MS
+      connection.state.watchUntil = this.now() + RUNNER_WORK_WATCH_MS
     const { storage } = this
-    const until = connection.watchUntil
+    const until = connection.state.watchUntil
     if (!storage || until === undefined || this.now() >= until) return null
     let record: StoredRunnerWork = {
       ...connectionValues(connection, message),
@@ -164,15 +164,15 @@ function connectionValues(
   message: RunnerTransport | null,
 ) {
   const hello = message?.type === 'hello' ? message : null
-  const streamId = hello?.streamId ?? connection.streamId
+  const streamId = hello?.streamId ?? connection.state.streamId
   return {
-    workspaceId: WarningId.checked(connection.workspace.id).text,
-    connectionId: WarningId.checked(connection.id).text,
+    workspaceId: WarningId.checked(connection.state.workspace.id).text,
+    connectionId: WarningId.checked(connection.state.id).text,
     streamId: streamId === null ? null : WarningStreamId.checked(streamId).text,
     processStartId: warningProcessStartId(
-      hello ? hello.processStartId : connection.processStartId,
+      hello ? hello.processStartId : connection.state.processStartId,
     ),
-    protocolVersion: hello?.protocolVersion ?? connection.protocolVersion,
+    protocolVersion: hello?.protocolVersion ?? connection.state.protocolVersion,
   }
 }
 

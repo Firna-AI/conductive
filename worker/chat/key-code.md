@@ -136,12 +136,16 @@ first.
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
-  physical runner socket. That record keeps the protocol version, the
-  process-start ID, the login kinds, and the repository folder declared
-  in `hello`. A record without login kinds keeps that list absent, as its
-  `hello` did. So after a wake, the runner keeps its login support and its
-  process-start ID with no second `hello` or `welcome`. A restore retires
-  a record of an unsupported version, or with a stream and no version.
+  physical runner socket. `persist` saves the whole `ActiveRunner.state`,
+  and `activate` restores the whole value at a wake, as
+  [The runner](access.md#the-runner) says. The one reader of the store
+  accepts older records. A record without login kinds keeps that list
+  absent, as its `hello` did. A restore retires a record of an
+  unsupported version, or with a stream and no version.
+- `runner-connection-state.ts`: `RunnerConnectionState`, the whole value
+  of a runner connection that native storage saves and a wake restores.
+  `ActiveRunner` in `types.ts` holds it as `state`, beside the
+  memory-only `peer`.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. Each answer record keeps the shown ends of its

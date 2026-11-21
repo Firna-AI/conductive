@@ -78,9 +78,9 @@ export class Workspace extends ProductionWorkspace {
       this.integration.files.runner,
     )
     this.integration.files.runner.attach = (id, send) => {
-      this.fileBinding = id
       this.fileAttached.push(id)
       attach(id, send)
+      this.fileBinding = id
     }
     const detach = this.integration.files.runner.detach.bind(
       this.integration.files.runner,
@@ -158,6 +158,8 @@ export class Workspace extends ProductionWorkspace {
       await this.settledAlarms()
     } else if (action === 'drain') {
       await this.chat.store.settled()
+    } else if (action === 'check-repository') {
+      await this.chat.store.run(() => this.chat.runner.checkRepository())
     } else if (action === 'alarm') {
       await this.alarm()
       await this.settledAlarms()
