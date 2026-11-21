@@ -16,7 +16,7 @@ use crate::reports::prepare::ReportFilter;
 use crate::reports::queue::SerialQueue;
 
 /// A replaceable scan never reads host state in unit tests.
-#[cfg_attr(test, unimock::unimock(api = PortScannerMock))]
+#[unimock::unimock(api = PortScannerMock)]
 #[async_trait]
 pub trait PortScanner: Send + Sync {
     /// Capture current listeners, or fail without changing reporter state.

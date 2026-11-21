@@ -58,10 +58,12 @@ those processes for lack of memory, as
 [Out of memory](../../docs/protocol/agent-runner.md#out-of-memory) says.
 The default policy, `stop`, would stop the service and end every running turn.
 
-The runner does not manage [services](../../docs/protocol/services.md)
-yet. Run each service in its own system unit, outside this service group.
-Then a stop, a restart, or a failed start of this service ends no service.
-Set `OOMPolicy=stop` explicitly on each service unit, so a memory kill
-stops that service only, as
+The [native manager](../../crates/cnd-services/README.md) runs each
+[service](../../docs/protocol/services.md) in an independent system unit.
+A stop, a restart, or a failed start of the runner ends no service.
+Each service unit uses `User=user`, `Group=user`, `KillMode=control-group`,
+`OOMPolicy=stop`, and `Restart=no`. Its user-side helper owns output pipes
+and rotating logs. Standard output and error go to runtime files, not the journal.
+A memory kill stops that service only, as
 [Out of memory](../../docs/protocol/services.md#out-of-memory) says.
 [Workspace startup](../../image/start.md) gives the build and retention gates.

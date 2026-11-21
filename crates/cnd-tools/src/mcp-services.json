@@ -1,0 +1,113 @@
+[
+  {
+    "name": "start_service",
+    "description": "Start a named service on this cloud computer, outside every agent turn. A running exact name returns unchanged. Other states use this command and folder. It runs until Stop, its own end, or the computer stop. It never keeps the computer running. Environment values are explicit additions to the clean startup environment. The call needs no workspace token or active turn.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Exact service name, including its spaces."
+        },
+        "command": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1,
+          "description": "Executable followed by its literal arguments."
+        },
+        "folder": {
+          "type": "string",
+          "description": "Calling folder. Its omission uses this MCP process's current folder."
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Explicit environment values. They are not printed in results."
+        },
+        "waitForPort": {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "enum": ["first", "port"] },
+            "port": { "type": "integer" }
+          },
+          "required": ["kind"],
+          "description": "Wait at most 30 seconds for the first owned port, or the named owned port. A timeout leaves the service running."
+        },
+        "requestId": {
+          "type": "string",
+          "description": "Keep this ID to check a repeated Start without another run."
+        }
+      },
+      "required": ["name", "command"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false
+    }
+  },
+  {
+    "name": "list_services",
+    "description": "List every service of this cloud computer, with its command, folder, state, result, and owned ports. This local read needs no workspace token or active turn and adds no activity.",
+    "inputSchema": { "type": "object", "properties": {} },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
+    "name": "stop_service",
+    "description": "Stop the exact named service and its process tree on this cloud computer. A nonrunning service stays unchanged. This local call needs no workspace token or active turn. Check actual state after an unconfirmed result. Never resend a control automatically.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "requestId": {
+          "type": "string",
+          "description": "Stable identity for this control. A repeat acts at most once."
+        }
+      },
+      "required": ["name"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    }
+  },
+  {
+    "name": "restart_service",
+    "description": "Restart the exact named service on this cloud computer with its saved command, folder, values, and start source. This also starts stopped, ended, or failed services. It needs no workspace token or active turn. Check actual state after an unconfirmed result. Never resend a control automatically.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "requestId": {
+          "type": "string",
+          "description": "Stable identity for this control. A repeat acts at most once."
+        }
+      },
+      "required": ["name"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false
+    }
+  },
+  {
+    "name": "read_service_logs",
+    "description": "Read the complete retained stdout and stderr of the exact named service on this cloud computer. It gives no environment map and applies no app excerpt cut. This local read needs no workspace token or active turn and adds no activity.",
+    "inputSchema": {
+      "type": "object",
+      "properties": { "name": { "type": "string" } },
+      "required": ["name"]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  }
+]

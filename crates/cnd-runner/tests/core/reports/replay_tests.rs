@@ -64,7 +64,7 @@ async fn preserves_complete_port_labels_through_saved_replay_and_whole_label_bud
         port: 3000,
         name: Some("development-server-entry-point secretpass".into()),
         folder: Some(long),
-        service_id: None,
+        service_id: Some("service-id".into()),
     };
     let ports: Arc<dyn PortReports> = Arc::new(PortReporter::new(
         Arc::new(Scanner(vec![server.clone()])),

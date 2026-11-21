@@ -194,6 +194,20 @@ These are the non-UI implementor's calls of 20 November 2026, checked by the orc
 - Keep durable control receipts free of raw output and definitions. Reason: correlation needs only the request, target, and outcome.
 - Run the Worker milestone from the checked shared contracts, in parallel with native execution. Put runner wiring after both milestones. Reason: their source files, effects, and build outputs are independent. This is the orchestrator's scheduling call of 20 November 2026.
 
+### Native services calls
+
+These are the non-UI implementor's calls, checked by the orchestrator on 21 November 2026. They implement the approved profile.
+
+- On 20 November 2026, use an isolated `env_clear` read of the frozen startup settings. Remove fixed app credentials, turn and author values, and fixed app context. Keep arbitrary other org keys and installed repository paths. Reason: this keeps the approved startup values on an already running computer without caller inheritance or a new Worker projection.
+- On 20 November 2026, read basic user variables through an isolated login shell. Reason: installed user tools need their paths without ambient agent credentials.
+- On 20 November 2026, save request receipts and run identities before unit effects. Reconcile unfinished operations instead of retrying them. Reason: a lost Restart reply must not create another run.
+- On 21 November 2026, let the unit-owned helper read its private definition after systemd changes user. Reason: names, arguments, and literal folders never become privileged shell text or systemd properties.
+- On 21 November 2026, retain one rotating runtime log per service across its runs. Join retained bytes before decoding. Keep child output out of the journal. Reason: the unit owns its pipes, and a character can cross a rotation boundary.
+- On 21 November 2026, treat a deactivating unit with live processes as Running until it ends. Reason: repeated Start cannot create a second copy during an external stop.
+- On 21 November 2026, retain the current display repository root in the runtime registry. Advance its revision when the root changes. Reason: reports reflect relocation without changing a saved execution folder.
+- On 21 November 2026, preserve ordinary port reports when optional service lookup fails. Reason: service availability must not change existing server detection.
+- On 21 November 2026, keep local MCP identities and schemas outside the Worker-call union. Resolve remote credentials only for a remote call. Reason: local services need neither a workspace token nor an active turn.
+
 ### Services UI calls
 
 These are the UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They follow services decision 19 A.
@@ -274,20 +288,22 @@ Depends on: 3
 
 The non-UI implementor adds local service execution. The app can still omit services until the Worker supports them.
 
-- [ ] Add the shared systemd manager boundary and production adapter. Define effects for units, state, files, clock, and port ownership.
-- [ ] Add a user-only Unix request socket in the runner for local CLI and MCP service calls. Bind it to this workspace only.
-- [ ] Start commands as `user` in the caller's folder, outside the runner unit. Apply the approved environment rule. Execute no repository code as root.
-- [ ] Keep one service identity per name. Apply the approved repeated-start rule. Serialize concurrent changes.
-- [ ] Add `conductive services start --name web -- npm run dev`, list, stop, restart, and logs.
-- [ ] Add equivalent MCP calls. Keep descriptors, CLI help, command routing, and adapters in services sections separate from the watch call.
-- [ ] Apply the selected readiness behavior. Check that the service owns the port.
-- [ ] Keep state and logs available across runner restarts. Report exit code or signal and systemd failures. Apply the approved log policy.
-- [ ] Reconcile actual units after a runner start. Link ports to services through control groups.
-- [ ] Apply the approved first-release policies. Defer resume restoration and memory caps.
-- [ ] Replace the native README statements that services are not implemented. Add actual manager, socket, command, output-writer, and unit entry points. Check startup settings on an already running computer.
-- [ ] Test observable manager and command behavior at the lowest useful boundary. Prove each new test can fail.
-- [ ] Run targeted Rust checks. Repeat each new asynchronous test 10 times. Save counts and test cost under `.context/services/`.
-- [ ] Smoke-test a real service through the CLI and MCP. Check user, folder, clean environment, unit control group, output, exit, and stop. End every probe.
+- [x] Add the shared systemd manager boundary and production adapter. Define effects for units, state, files, clock, and port ownership.
+- [x] Add a user-only Unix request socket in the runner for local CLI and MCP service calls. Bind it to this workspace only.
+- [x] Start commands as `user` in the caller's folder, outside the runner unit. Apply the approved environment rule. Execute no repository code as root.
+- [x] Keep one service identity per name. Apply the approved repeated-start rule. Serialize concurrent changes.
+- [x] Add `conductive services start --name web -- npm run dev`, list, stop, restart, and logs.
+- [x] Add equivalent MCP calls. Keep descriptors, CLI help, command routing, and adapters in services sections separate from the watch call.
+- [x] Apply the selected readiness behavior. Check that the service owns the port.
+- [x] Keep state and logs available across runner restarts. Report exit code or signal and systemd failures. Apply the approved log policy.
+- [x] Reconcile actual units after a runner start. Link ports to services through control groups.
+- [x] Apply the approved first-release policies. Defer resume restoration and memory caps.
+- [x] Replace the native README statements that services are not implemented. Add actual manager, socket, command, output-writer, and unit entry points. Check startup settings on an already running computer.
+- [x] Test observable manager and command behavior at the lowest useful boundary. Prove each new test can fail.
+- [x] Run targeted Rust checks. Repeat each new asynchronous test 10 times. Save counts and test cost under `.context/services/`.
+- [x] Smoke-test a real service through the CLI and MCP. Check user, folder, clean environment, unit control group, output, exit, and stop. End every probe.
+
+Completed on 21 November 2026. Evidence: `.context/services/native-report.md`, `.context/services/native-incremental-checks.md`, and `.context/services/native-root-check.log`.
 
 ## Milestone 5: Worker service reports and controls
 
