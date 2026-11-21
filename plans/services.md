@@ -321,18 +321,29 @@ Depends on: 3
 
 The non-UI implementor adds private report handling and authorized app routes in a nested workspace. It uses the checked shared contracts. Native execution runs in parallel. The runner wiring follows in Milestone 5a. Older clients keep working.
 
-- [ ] Negotiate optional service support. Receive private service traffic outside numbered event receipts and stored chat commands. Keep absent support readable across hibernation.
-- [ ] Filter complete public text before storage or excerpts. Keep raw definitions and environment values out of Worker storage.
-- [ ] Store and forward the current report with the existing workspace persistence model. Keep old records readable.
-- [ ] Add fixed workspace routes for list, Stop, Restart, and log reads. Apply the selected access rule and existing org and suspension checks.
-- [ ] Accept Restart for a stopped, ended, or failed service when its observed generation is still current.
-- [ ] Correlate controls and results with durable request IDs and service generations. Make repeated delivery safe. Recheck the current workspace and runner connection. Apply the chosen lost-reply outcome. End every pending control at computer stop.
-- [ ] Request and accept fresh reports after reconnect. Reconcile boot IDs and revisions. Clear live reports when the computer stops. Keep raw log assembly in memory only.
-- [ ] Check a new Worker with an old runner and an old app reader. Keep old storage records and ordinary event numbers readable.
-- [ ] Test cross-org access, suspension, allowed controls, filtered output, report recovery, and stale connection results where no existing test protects the requirement.
-- [ ] Confirm that no service path records activity or changes idle deadlines. Use a focused integration check of the existing behavior.
-- [ ] Update Worker route and chat READMEs with the real entry points.
-- [ ] Run targeted Worker checks. Repeat new asynchronous tests 10 times and record their cost.
+- [x] Negotiate optional service support. Receive private service traffic outside numbered event receipts and stored chat commands. Keep absent support readable across hibernation. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Filter complete public text before storage or excerpts. Keep raw definitions and environment values out of Worker storage. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Store and forward the current report with the existing workspace persistence model. Keep old records readable. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Add fixed workspace routes for list, Stop, Restart, and log reads. Apply the selected access rule and existing org and suspension checks. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Accept Restart for a stopped, ended, or failed service when its observed generation is still current. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Correlate controls and results with durable request IDs and service generations. Make repeated delivery safe. Recheck the current workspace and runner connection. Apply the chosen lost-reply outcome. End every pending control at computer stop. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Request and accept fresh reports after reconnect. Reconcile boot IDs and revisions. Clear live reports when the computer stops. Keep raw log assembly in memory only. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Check a new Worker with an old runner and an old app reader. Keep old storage records and ordinary event numbers readable. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Test cross-org access, suspension, allowed controls, filtered output, report recovery, and stale connection results where no existing test protects the requirement. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Confirm that no service path records activity or changes idle deadlines. Use a focused integration check of the existing behavior. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Update Worker route and chat READMEs with the real entry points. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+- [x] Run targeted Worker checks. Repeat new asynchronous tests 10 times and record their cost. Branch: `calummoore/services-worker-reports-and-controls-c6g4`.
+
+Completed on 21 November 2026 on branch `calummoore/services-worker-reports-and-controls-c6g4`. Evidence: `.context/services/worker-report.md`, `.context/services/m5-implementor-report.md`, and `.context/services/m5-test-evidence/` in workspace 516.
+
+These are the Worker calls of 20 and 21 November 2026. The primary orchestrator confirmed the first two on 21 November 2026.
+
+- The catalogue shows a snapshot only while the connection that delivered it is the current connection that accepted services. A new connection gives `unsupported` until it sends its own first full report. Reason: the contract has no loading state, and an earlier snapshot can belong to an old computer run.
+- Each log read sends a new runner request ID that the Worker makes. The app reply keeps the browser request. Reason: two reads with one browser request ID must not mix their parts.
+- Raw log reads run one at a time in a workspace. A discarded log reply ends its read as failed. Reason: a raw log can hold 10 MiB, so the Worker keeps one raw assembly in memory.
+- A failed optional negotiation declines services, and the hello continues. Reason: optional support must not stop a runner from connecting.
+- A computer stop ends each pending control, then deletes the control records of the workspace. Reason: a record belongs to one computer run, and a later copy of an old request ID names an old boot.
+- A failed software restart keeps the service state. Reason: it leaves the cloud computer and its services running.
 
 ## Milestone 5a: Runner service transport
 
