@@ -620,9 +620,9 @@ results, and the failure proofs are in
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests, `npm run check`, and the Rust checks of
+- [x] Run the targeted tests, `npm run check`, and the Rust checks of
       `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the diff of Milestones 7 to 10 with the
       `implementation-review` skill. Apply the fix rule.
 - [ ] When the merge comes after the date of the change, set the
