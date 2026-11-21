@@ -240,13 +240,20 @@ list is unavailable. [Chat backend key code](key-code.md) gives both files.
 ## Services
 
 [Service reports](../../docs/protocol/service-reports.md) states the
-service messages of a runner connection. The chat backend does not handle
-them yet. Keep them outside the numbered runner events. Keep the latest
-service report and each waiting control under a key prefix of their own,
-outside `chat:v1:` and its commands, so a previous Worker never decodes
-them. Add no D1 migration for them. Clear them at each stop of the cloud
-computer. The list, the controls, and the log reads belong to the routes
-of the [workspace features](../features/README.md).
+service messages of a runner connection. `RunnerChannel.services` delegates
+them to the [services area](../services/README.md) before the numbered reader
+and work mark. `runner-hello.ts` negotiates support and requests a fresh report.
+Saved connections retain the optional support flag and the connection's
+sandbox binding across a wake. Old connections without support stay readable.
+
+Service snapshots and control receipts use `services:v1:` records. They use
+no chat commands, cursors, repair records, browser socket kinds, or activity
+calls. Raw log assemblies live only in memory. Computer Stop clears service
+state through `RunnerChannel.stop` and `WorkspaceServices.stoppedHook`.
+Software Restart, including its failure path, keeps the service catalogue.
+Its runner disconnect ends an outstanding control as unconfirmed.
+The catalogue, controls, and log reads use the
+[workspace feature routes](../features/README.md).
 
 ## Tests
 

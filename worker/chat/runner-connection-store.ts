@@ -3,6 +3,7 @@ import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
 import { warningProcessStartId } from '../warning-values'
 import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
+import { readBinding, type ServiceBinding } from '../services/binding'
 
 const KEY = 'native:runner:current'
 const chunkKey = (part: number) => `native:runner:state:${part}`
@@ -17,6 +18,8 @@ export interface StoredRunnerConnection {
   loginKinds?: readonly RunnerLoginKind[]
   repositoryFolder?: string
   fileServer?: boolean
+  services?: boolean
+  serviceBinding?: ServiceBinding
   watchUntil?: number
   ready: boolean
   checkAt: number
@@ -85,6 +88,10 @@ function readConnection(value: unknown): StoredRunnerConnection {
     processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
+    ...(value.services === true ? { services: true } : {}),
+    ...(value.serviceBinding === undefined
+      ? {}
+      : { serviceBinding: readBinding(value.serviceBinding) }),
     // A diagnostic value cannot prevent the restore of the connection.
     ...(typeof value.watchUntil === 'number' &&
     Number.isFinite(value.watchUntil)
