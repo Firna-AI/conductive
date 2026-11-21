@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. [PR #627](https://github.com/Firna-AI/conductive/pull/627) is open on branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`. Cal requested the pull request before verification is complete on 21 November 2026. Watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B remain approved. Milestones 1 to 5 and 5a are checked complete. The full implementation review found no new issue before the latest main integration. Runtime verification item 8 still needs Cal's answer. The pull request that completes this work deletes this plan.
+Status: Active. [PR #627](https://github.com/Firna-AI/conductive/pull/627) is open on branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`. Cal requested the pull request before verification is complete on 21 November 2026. Watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B remain approved. Milestones 1 to 5, 5a, and 5b are checked complete. The full implementation review found no new issue after the latest main integration. Runtime verification item 8 still needs Cal's answer. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -424,7 +424,7 @@ Latest main replaced fixture strings with shared text-block trees. Use the `ui i
 
 Evidence: `.context/watch-session/m5a-report.md` and `.context/watch-session/m5a-root-check.md`.
 
-## Milestone 5b: Keep wakes in registered mockup props
+## Milestone 5b: Keep wakes in registered mockup props — completed
 
 Tags: mockup
 
@@ -433,7 +433,9 @@ Depends on: 5a
 Main now registers chat parts with JSON props. Its two transcript schemas must also admit the existing wake fixture. Use the `ui implementor` action. Keep the approved words and appearance.
 
 - [x] Add the existing wake shape to both registered chat item schemas. Keep their other variants and constraints.
-- [ ] Check the combined mockup types and strict build. Preserve main's registered session-link wrapper in the wake line.
+- [x] Check the combined mockup types and strict build. Preserve main's registered session-link wrapper in the wake line.
+
+Evidence: `.context/watch-session/pr-schema-report.md` and `.context/watch-session/pr-static-job.log`.
 
 ## Milestone 6: Verification, review, and pull request
 
