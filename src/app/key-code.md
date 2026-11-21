@@ -107,6 +107,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `org-waits.ts` gives the wait of each part, such as `workspacesWait`.
   `OrgModel.startBuild` sends Build computer and Try again for each screen
   that offers them.
+- `org-refresh.ts`: the readers of the parts of `OrgModel`, in
+  [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
   the save, the switch, Remove, and Refresh of an admin. Each save, switch
   change, remove, and Refresh calls `changed`, which reads the default
@@ -137,13 +139,8 @@ Each path is relative to `src/app/`, the folder of this page.
 - [Key code: automations](key-code-automations.md) names the entry points
   of the automations: their readers, models, and drafts, the Automations
   page, the automation page, and the Runs list.
-- `repository-changes.ts`: the saved repository changes that the org
-  image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
-  their state, `repositoryChangesOf` the changes of the repository
-  notice, `waitingRepositoriesOf` the waiting repositories of New
-  workspace, and `changeWaits` whether the build history stays closed.
-  `../shell/settings/RepositoryChangeNotice.tsx` draws the notice of an
-  admin, and `../members/RepositoryNotice.tsx` the notice of a member.
+- `repository-changes.ts`: the repository changes and their readiness, in
+  [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `account-model.ts`: the agent logins with their share setting, the
   default model, the New workspace view, the shortcut changes of each
   keyboard, the GitHub App installations, and the repositories that

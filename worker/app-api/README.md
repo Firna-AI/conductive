@@ -201,6 +201,13 @@ View writes cannot change this branch.
   change before it saves. A removal by an admin without a saved GitHub
   connection reads nothing from GitHub. Its reply holds the stored
   repositories only.
+- Each repository of the repository list and of these replies gives
+  `imageReady` and `ready`. `imageReady` says whether the org has a
+  published image: the image that a create checks, on the current
+  provider account of the org. `ready` says whether that image holds the
+  repository, so it is false without an image. It does not follow
+  `selected`, so a removed repository stays ready until an image without
+  it publishes.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
   gives the repository order of an org. The chosen repositories come
   first, by `position`, then a chosen row without a position, then the
@@ -438,7 +445,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add without `build: false`.
+  gives each its `imageReady` and `ready` from
+  `currentImageRepositoryReadiness` of the
+  [published image data](../lifecycle/published-image-data.ts), and
+  starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),

@@ -68,6 +68,14 @@ Other errors keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
+`Repository.imageReady` and `Repository.ready` in `org-settings.ts` say
+whether the org has an image, and whether that image holds the repository,
+as the [App API rules](../../worker/app-api/README.md#rules) say. The
+current Worker always sends both, in the list and in these replies. The
+fields are optional, because a reply from a previous Worker omits them.
+The browser reader then keeps them absent, and New workspace takes the
+waiting repositories from the builds. An older copy of the app ignores the
+fields.
 
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.
