@@ -61,6 +61,9 @@ describe('NewWorkspaceModel', () => {
     draft.setText('Let shoppers save their cart.')
     draft.setRepository('billing-service')
     draft.setChoice(choice)
+    // The switch of this Mac is a choice of the draft, which the create
+    // does not send and the next draft does not keep.
+    draft.setAllowThisMac(true)
     await pickWorkspaceFiles(draft, [
       new File(['Cart notes'], 'notes.txt', { type: 'text/plain' }),
     ])
@@ -129,6 +132,7 @@ describe('NewWorkspaceModel', () => {
     expect(draft.draft.get()).toMatchObject({
       text: 'A newer draft',
       files: [],
+      allowThisMac: false,
     })
     expect(draft.draft.get().messageId).not.toBe('client-1')
   })

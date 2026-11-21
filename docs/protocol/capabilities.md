@@ -26,8 +26,10 @@ automations, as [Automations](automations.md) says.
   features, such as MCP servers, add their parts to the same control. A
   separate picker of secrets in New workspace was rejected for that
   reason.
-- The create takes the choices of the control, as
-  [The create](create-a-workspace.md#the-create) says.
+- The create takes the secrets that the control pre-approves, as
+  [The create](create-a-workspace.md#the-create) says. It does not take
+  the Mac access switch, which starts a grant on this Mac after the create,
+  as [Mac access](mac-access.md) says.
 - Each workspace shows the same icon beside its message box
   (secrets decision 8 B). Every member can see and change the
   pre-approvals there.

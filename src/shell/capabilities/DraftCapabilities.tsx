@@ -66,7 +66,8 @@ function DraftCapabilitiesPanel(props: {
  * The Capabilities tool of New workspace, on the page and in the dialog
  * (secrets decision 6 G): a small icon with its label on hover, whose
  * control chooses what the agents of the new workspace can use. The create
- * sends the choices with the first message.
+ * sends the pre-approved secrets with the first message. The Mac access
+ * switch is not sent: after the create, it starts a grant on this Mac.
  */
 export function draftCapabilities(
   org: OrgSummary,

@@ -535,7 +535,7 @@ Depends on: 6, 8. It runs beside Milestone 7, because decision 7 states the requ
 Depends on: 9
 
 - [x] Run the complete gate. Commit and push.
-- [ ] Review the diff against `origin/main` with the
+- [x] Review the diff against `origin/main` with the
       `implementation-review` skill, apply the fix rule, and update the
       pull request description.
 
