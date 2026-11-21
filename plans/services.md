@@ -349,6 +349,7 @@ The non-UI implementor connects the checked native manager to the checked Worker
 - [ ] Link owned ports through native and Worker reports without changing existing port selection.
 - [ ] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
 - [ ] Confirm that no runner service path records activity or holds a turn. Run targeted runner and integration checks. Repeat new asynchronous tests 10 times and record their cost.
+- [ ] Extend the existing Rust/TypeScript budget-parity test with the approved app log line and byte bounds from the Worker module.
 - [ ] Update actual runner entry-point docs. Use the docs implementor to update the architecture boundary when both components exist.
 
 ## Milestone 6: App service controls
