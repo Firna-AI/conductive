@@ -32,7 +32,10 @@ it('recovers saved permissions after a failed read and failed addition without l
     workspaceId: 'no-window',
     command: 'printf added',
   })
-  test.receive({ type: 'command.request', request: failedAddition })
+  test.receive({
+    type: 'command.request',
+    request: failedAddition,
+  })
   test.receive({
     type: 'command.approval',
     workspaceId: failedAddition.workspaceId,
@@ -78,7 +81,10 @@ it('recovers saved permissions after a failed read and failed addition without l
     workspaceId: 'no-window',
     command: 'printf added',
   })
-  test.receive({ type: 'command.request', request: addition })
+  test.receive({
+    type: 'command.request',
+    request: addition,
+  })
   expect(test.processes).toHaveLength(2)
   expect(test.notify).toHaveBeenCalledTimes(3)
   test.receive({

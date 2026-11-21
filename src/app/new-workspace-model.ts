@@ -1,9 +1,6 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import {
-  NEW_WORKSPACE_CAPABILITIES,
-  type WorkspaceCapabilities,
-} from '../shared/secrets'
+import { NEW_WORKSPACE_CAPABILITIES } from '../shared/secrets'
 import {
   workspacesPath,
   type CreateWorkspaceRequest,
@@ -29,6 +26,9 @@ import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf } from './store'
 
+/** The parts of a draft that the Capabilities control chooses. */
+type CapabilityChoice = 'capabilities' | 'allowThisMac'
+
 /**
  * New workspace: an empty chat whose first message creates the workspace.
  * When the create request fails, the draft stays, so Try again sends it
@@ -45,8 +45,9 @@ import { asApiError, Store, valueOf } from './store'
  * start fails, the workspace keeps the message in its chat, with the saved
  * cause and Try again, so the form gives nothing back.
  *
- * The create also takes the choices of the Capabilities control: the
- * secrets that the new workspace pre-approves, and its Mac access.
+ * The create also takes the secrets of the Capabilities control that the
+ * new workspace pre-approves. The switch of Mac access is a choice of the
+ * draft too, which the create does not take, as `Draft.allowThisMac` says.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
@@ -99,7 +100,10 @@ export class NewWorkspaceModel {
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
       sectionId: null,
-      capabilities: NEW_WORKSPACE_CAPABILITIES,
+      capabilities: {
+        preapprovedSecretIds: NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
+      },
+      allowThisMac: false,
       files: [],
       detached: [],
       refused: [],
@@ -138,24 +142,28 @@ export class NewWorkspaceModel {
 
   /** Pre-approves a secret of the org for the new workspace, or not. */
   setPreapproved(secretId: string, on: boolean): void {
-    this.changeCapabilities(({ preapprovedSecretIds, macAccess }) => ({
-      preapprovedSecretIds: withPreapproval(preapprovedSecretIds, secretId, on),
-      macAccess,
+    this.changeChoices(({ capabilities }) => ({
+      capabilities: {
+        preapprovedSecretIds: withPreapproval(
+          capabilities.preapprovedSecretIds,
+          secretId,
+          on,
+        ),
+      },
     }))
   }
 
-  setMacAccess(macAccess: boolean): void {
-    this.changeCapabilities((capabilities) => ({ ...capabilities, macAccess }))
+  /** Turns the switch of Mac access of the draft on or off. */
+  setAllowThisMac(allowThisMac: boolean): void {
+    this.changeChoices(() => ({ allowThisMac }))
   }
 
-  private changeCapabilities(
-    change: (capabilities: WorkspaceCapabilities) => WorkspaceCapabilities,
+  /** Changes the choices of the Capabilities control, but not during a create. */
+  private changeChoices(
+    change: (draft: Draft) => Partial<Pick<Draft, CapabilityChoice>>,
   ): void {
     if (this.create.get().state === 'sending') return
-    this.draft.change((draft) => ({
-      ...draft,
-      capabilities: change(draft.capabilities),
-    }))
+    this.draft.change((draft) => ({ ...draft, ...change(draft) }))
   }
 
   /**

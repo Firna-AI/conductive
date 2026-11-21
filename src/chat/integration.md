@@ -137,7 +137,9 @@ mount the chat.
   `ComposerTool` in `components/ComposerTools.tsx` says. A computer shows
   the icon of each tool after the attach button, and a phone holds Attach
   files and the tools in the menu of one + button. Without tools, the bar
-  keeps its attach button on a phone too.
+  keeps its attach button on a phone too. `host.notice` gives a notice of
+  the app over the composer, such as a grant of the Mac that did not start
+  after a create. A read-only chat shows none.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar

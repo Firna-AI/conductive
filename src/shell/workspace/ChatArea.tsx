@@ -12,6 +12,7 @@ import type { ChatHost } from '../../chat/components/SessionChat'
 import type { ChatController } from '../../chat/state/controller'
 import type { RenderTab } from '../../chat/components/tab-row'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
+import { useStartFailedNotice } from '../capabilities/StartFailedNotice'
 import {
   usePreloadedCapabilities,
   workspaceCapabilities,
@@ -128,9 +129,11 @@ function KeptChat(props: {
  * read-only workspace shows its chat read-only. The chat shows the open
  * file tabs, and on desktop the file or diff tab of the address in place of
  * the chat of its session. The composer of the chat gets the Capabilities
- * tool of the workspace. A host that gives the `tabs`, `transcript`, or
- * `composer` slot gets the shell's own column with those slots instead. A
- * `center` part of the host takes the place of the chat.
+ * tool of the workspace, and over it, in the Mac app, the notice of a grant
+ * of this Mac that did not start after the create. A host that gives the
+ * `tabs`, `transcript`, or `composer` slot gets the shell's own column with
+ * those slots instead. A `center` part of the host takes the place of the
+ * chat.
  */
 export function ChatArea(props: {
   context: WorkspaceContext
@@ -144,6 +147,7 @@ export function ChatArea(props: {
   const { context, notice } = props
   const { sandbox, workspace } = context
   const phone = context.viewport === 'phone'
+  const startNotice = useStartFailedNotice(workspace.id)
   const starting =
     sandbox === 'starting' && props.start ? (
       <StartingCard start={props.start} />
@@ -200,6 +204,7 @@ export function ChatArea(props: {
           starting,
           sandboxBar,
           keepsComposer,
+          notice: startNotice,
           tools: [
             workspaceCapabilities({
               org: context.org,

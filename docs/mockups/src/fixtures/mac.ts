@@ -26,8 +26,9 @@ export type MacCommandRequest = {
 
 /**
  * What happened to a command on the Mac, as the chat shows it.
- * `mac-access-off` is a request that the workspace refused, because a
- * member turned Mac access off in its Capabilities (secrets decision 8).
+ * `mac-access-off` is an older request that the workspace refused, because
+ * its Mac access was off. Agents can now always ask (Mac access decision
+ * 7), so no new request ends this way.
  */
 export type MacCommandState =
   'waiting' | 'denied' | 'done' | 'unavailable' | 'mac-access-off'
@@ -187,3 +188,13 @@ export const notSavedMessage =
 /** What the Mac says when it could not make a change of a permission. */
 export const failedMessage =
   'The Mac could not change this permission. Try again.'
+
+/**
+ * The result of a Stop that the Mac made and saved. The bar of the
+ * workspace names it after Stop, and the switch of Mac access in
+ * Capabilities after a switch-off.
+ */
+export const stoppedResult = {
+  title: 'Stopped',
+  message: 'Each command from this workspace asks first.',
+} as const

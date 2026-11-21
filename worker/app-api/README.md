@@ -278,8 +278,9 @@ The capability reply gives `macAccess`, `preapprovedSecretIds`, and
 `sessionApprovals`, including the approver and date.
 A patch can replace the pre-approved IDs, change Mac access, and remove
 named session approvals. A secret ID must belong to the workspace's org.
-Turning Mac access off also asks the workspace object to settle its waiting
-Mac requests. Running commands continue.
+The stored `macAccess` stays for older pages of older Mac apps. It gates no
+Mac request, and a change of it ends no waiting request, as
+[Mac access](../../docs/protocol/mac-access.md) says.
 
 The workspace responses give an org-local number and a canonical web link.
 They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.

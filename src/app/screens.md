@@ -307,12 +307,18 @@ the Help row of the command palette opens.
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each
-  one for the new workspace, and the switch of Mac access, off by default.
-  A secret for all agents stays checked and off. The draft keeps the
-  choices, the create sends them, and a create that succeeds ends them, so
-  the next draft starts again from the defaults. The create leaves out
-  each pre-approved secret that the last read no longer lists, and a
-  refusal of a missing secret reads the secrets again for Try again.
+  one for the new workspace. A secret for all agents stays checked and
+  off. The draft keeps the choices, the create sends them, and a create
+  that succeeds ends them, so the next draft starts again from the
+  defaults. The create leaves out each pre-approved secret that the last
+  read no longer lists, and a refusal of a missing secret reads the
+  secrets again for Try again.
+- In the Mac app, the control also shows the switch of Mac access, a
+  choice of the draft that starts off. The create does not send it. After
+  the create, the page starts the grant until Stop of the new workspace on
+  this Mac, only while the switch was on. A start that fails shows as a
+  notice in the new workspace, with Try again. A browser shows no Mac
+  access part, and starts no grant.
 - The automation page gives its owner the same icon before the model
   picker, in the bar of the prompt box. Its control has the secrets part
   only, with no Mac access. On a phone the icon stays in the bar and opens

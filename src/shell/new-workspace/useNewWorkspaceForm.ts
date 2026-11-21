@@ -21,6 +21,7 @@ import { useStore, valueOf } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'
+import { useThisMac } from '../mac/this-mac'
 import { useGo } from '../ui/AppLink'
 import {
   createFailure,
@@ -81,8 +82,11 @@ export interface NewWorkspaceForm {
  * build: the pick of the user, or the repository that the form showed at
  * its first text or file, as `NewWorkspaceModel` says. When the server
  * accepts the create, the app opens the new workspace, also when the form
- * closed while the create ran. `open` goes to another page from a notice,
- * such as Connect.
+ * closed while the create ran. In the Mac app, the page then starts the
+ * grant until Stop of the new workspace on this Mac, when the switch of Mac
+ * access of the draft was on. A start that fails shows as a notice in the
+ * new workspace, as `useStartFailedNotice` says. `open` goes to another
+ * page from a notice, such as Connect.
  */
 export function useNewWorkspaceForm(
   org: OrgSummary,
@@ -99,6 +103,7 @@ export function useNewWorkspaceForm(
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const access = useOrgAccess(org)
+  const mac = useThisMac()
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   const repositories = loaded?.filter((item) => item.selected)
   const waiting = waitingRepositoriesOf(builds)
@@ -137,9 +142,12 @@ export function useNewWorkspaceForm(
       : null
   const send = () => {
     if (!defaults) return
-    void model.send(defaults, (created) =>
-      go(routes.workspace(org.id, created.workspace.id)),
-    )
+    // The draft empties after the create, so the switch is read at the send.
+    const starts = model.draft.get().allowThisMac ? mac : null
+    void model.send(defaults, (created) => {
+      go(routes.workspace(org.id, created.workspace.id))
+      void starts?.start(created.workspace.id, 'create')
+    })
   }
   return {
     draft,

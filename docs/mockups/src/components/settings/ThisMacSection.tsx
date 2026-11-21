@@ -16,6 +16,7 @@ import { useMacApp, type MacChange } from '../mac/MacApp'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
+import { thisMacDescription } from './thisMacCopy'
 import styles from './ThisMacSection.module.css'
 
 /** The result of Remove of `npm run lint`, in each state that shows one. */
@@ -58,7 +59,7 @@ export function ThisMacSection() {
   )
   return (
     <section.Component
-      description="Agents can ask to run commands on this Mac while it is awake and the app is open. Each command asks you first."
+      description={thisMacDescription}
       moklyInstance="this-mac"
       status={
         <statusText.Component

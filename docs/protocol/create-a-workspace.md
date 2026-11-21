@@ -29,8 +29,9 @@ The pull request of that change keeps its record.
   message field of the page and of the dialog shows a workspace link.
 - The page and the dialog have a small Capabilities icon, with its label
   on hover (secrets decision 6 G). Its control chooses the secrets that
-  the new workspace pre-approves, and its Mac access.
-  [Capabilities](secrets.md#capabilities) states the control.
+  the new workspace pre-approves. In the Mac app, it also has the Mac
+  access switch of this Mac. [Capabilities](secrets.md#capabilities)
+  states the control.
 
 ### The preference
 
@@ -184,10 +185,11 @@ The pull request of that change keeps its record.
 - Reason: the new workspace then follows its start steps on its own
   events, as a resume does. A stream of the progress in the create request
   was rejected, because it is a larger build.
-- The create takes the choices of the Capabilities control with the first
-  message: the pre-approved secrets and Mac access. Without a choice, the
-  new workspace pre-approves no secret, and its Mac access is off
-  (secrets decision 18 A).
+- The create takes the pre-approved secrets of the Capabilities control
+  with the first message. Without a choice, the new workspace pre-approves
+  no secret. In the Mac app, the Mac access switch starts the grant of the
+  new workspace after the create, as
+  [In New workspace](mac-access.md#in-new-workspace) says.
 
 ## The branch and the name
 
