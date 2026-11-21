@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from branch `calummoore/follow-up-archived-computer-certainty-irrm`, review finding 1. A finding check of the same day confirmed it, corrected its severity to Low, and added the options D, E, and F.
-- **Location:** `worker/lifecycle/archive-state.ts:225-247` (the publication of the Archive owner, and its alarm delete at line 238), `worker/data/archived-computer.ts:6-17` (`archivedComputerColumn`), `worker/lifecycle/workspace-alarm.ts:177-199` (`advanceCleanup`), `worker/lifecycle/start-failure.ts:138-195`, `worker/lifecycle/start-allocation-cleanup.ts:16-85`, `worker/lifecycle/allocation-recovery.ts:15-21`, `worker/lifecycle/cleanup.ts:89-102`, `worker/lifecycle/archive-retry.ts:6-30`, `src/app/workspace-detail.ts:62-82` (`lifecycleReplyDetail`), and `src/app/workspace-detail-order.ts:129-195`.
+- **Location:** `worker/lifecycle/archive-state.ts:225-247` (the publication of the Archive owner, and its alarm delete at line 238), `worker/data/archived-computer.ts:6-17` (`archivedComputerColumn`), `worker/lifecycle/workspace-alarm.ts:240-262` (`advanceCleanup`), `worker/lifecycle/start-failure.ts:138-195`, `worker/lifecycle/start-allocation-cleanup.ts:16-85`, `worker/lifecycle/allocation-recovery.ts:15-21`, `worker/lifecycle/cleanup.ts:89-102`, `worker/lifecycle/archive-retry.ts:6-30`, `src/app/workspace-detail.ts:62-82` (`lifecycleReplyDetail`), and `src/app/workspace-detail-order.ts:129-195`.
 - **Reason:** The defect is rare and costs little, and its fix changes the Archive owner, outside the files of the branch that found it.
 
 - **Source:** Review. **Category:** Product bug.
@@ -28,7 +28,7 @@
     - `deleted` after the last day: the title "Removed on <day>", and "It left the list. Its cloud computer is deleted, and the chat is read-only."
   - `unknown`, and a record without `archivedComputer`, keep the reading of `origin/main`: Restore from the legacy `Workspace.restoreUntil` alone. With a null legacy value, the bar says that the cloud computer is deleted. `plans/follow-ups/archived-computer-unknown-outcome.md` owns those words.
   - Before `archivedComputer`, a record with no computer ID said "Its cloud computer is deleted" at once. The `may-exist` stage adds a later change of the bar, and nothing publishes that change.
-  - The Archive section of `docs/protocol/workspace-life.md:150-157` gives two requirements:
+  - The Archive section of `docs/protocol/workspace-life.md:151-158` gives two requirements:
     - "The bar says that the cloud computer is deleted only after the delete. Before that, the bar of a removed workspace says that the cloud computer is being deleted."
     - "An archived workspace can have no kept sandbox while a create or a delete of its cloud computer is still open." Until Restore ends, its bar then promises only its chat history.
   - How an open tab learns of a new record:
@@ -40,21 +40,21 @@
     - A bump of `updatedAt` also shows a recent time on the archived list row, at `src/shell/list/RowContent.tsx:74`.
   - Which code can publish the change:
     - The Archive owner publishes `workspace.updated` when the whole record differs from its last published copy, at `worker/lifecycle/archive-state.ts:225-237`. A failed publication uses its retry.
-    - The lifecycle journal dedupes on the state, the start, and the error only, at `worker/lifecycle/durable-journal.ts:35-40`. `persistLifecycleState` skips archived rows, at `worker/lifecycle/workspace-data.ts:241`. So that path drops a change of `archivedComputer` alone.
+    - The lifecycle journal dedupes on the state, the start, and the error only, at `worker/lifecycle/durable-journal.ts:35-40`. `persistLifecycleState` skips archived rows, at `worker/lifecycle/workspace-data.ts:243`. So that path drops a change of `archivedComputer` alone.
     - The repair Cron Trigger wakes only archived rows that name a computer, at `worker/lifecycle/repair-data.ts:10`. It never wakes the Archive owner of this case.
     - The Archive owner backs off after failures: 30 seconds, doubled after each failure, up to one hour, at `worker/lifecycle/archive-retry.ts:6-30`. A successful pass clears that count, at `worker/lifecycle/archive-state.ts:221-224`.
-    - In one alarm run, the Archive pass runs before the failed-start cleanup, at `worker/lifecycle/workspace-alarm.ts:65` and `:85-88`.
+    - In one alarm run, the Archive pass runs before the failed-start cleanup, at `worker/lifecycle/workspace-alarm.ts:84` and `:104-107`.
 - **Problem:** An Archive during the failed-start cleanup publishes `may-exist` once, then the Archive owner deletes its alarm. The cleanup later writes `deleted_at` or the refusal flag, with no change of `updatedAt` and no `workspace.updated`. The open tab keeps `may-exist`, because the list read drops a record with the same `updatedAt`.
   - The trace, from the source:
     1. A first start fails after its create call. The failed-start path clears the computer ID of the workspace row, at `worker/lifecycle/start-failure.ts:144-158`. With a known computer ID, it also records the cleanup.
     2. With a known ID, the immediate delete fails, at `worker/lifecycle/start-failure.ts:176-195`. Without an ID, because the create reply never came, the job waits for a deferred allocation cleanup, at `:138-142`.
-    3. Either way, `retryFailedCreateCleanup` sets the `lifecycle:cleanup` alarm 5 seconds later, at `worker/lifecycle/workspace-controller.ts:243-248`. The alarm then retries every 30 seconds.
+    3. Either way, `retryFailedCreateCleanup` sets the `lifecycle:cleanup` alarm 5 seconds later, at `worker/lifecycle/workspace-controller.ts:244-249`. The alarm then retries every 30 seconds.
     4. `complete` in `worker/lifecycle/start-storage.ts:164-202` deletes the start job.
     5. The user archives the workspace while the delete retries. `beginWorkspaceArchive` finds no computer ID and no start job, at `worker/lifecycle/archive-begin.ts:29-36`.
     6. The Archive owner reads the record. The live ledger row gives `may-exist`. The owner publishes the record, then deletes its alarm because the row names no computer, at `worker/lifecycle/archive-state.ts:225-238`.
     7. The cleanup confirms the delete and writes `deleted_at`, at `worker/lifecycle/cleanup.ts:101`. The state becomes `deleted`.
     8. Or the deferred allocation cleanup gets the provider's proof that no computer exists. It writes `create_rejected = 1`, at `worker/lifecycle/allocation-recovery.ts:15-21`. The state becomes `unknown`, or `deleted` when an earlier attempt has a recorded delete.
-    9. Both cleanups end at `worker/lifecycle/workspace-alarm.ts:185-193`, with no `updated_at` change and no event.
+    9. Both cleanups end at `worker/lifecycle/workspace-alarm.ts:248-256`, with no `updated_at` change and no event.
     10. The open bar keeps "Your chat history is available." until the last day. After the 14 days, the clock of the page moves it to "Its cloud computer is being deleted".
 - **Impact if no action:** The open bar keeps the old evidence until a reload, a reopen, or another `workspace.updated`. A page that stays open past the 14 days says "being deleted" after the delete completed.
   - The severity is Low. Before the last day, the stale words stay true. Restore correctly stays unavailable, a reopen repairs the bar, and no data is lost.
