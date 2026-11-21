@@ -136,7 +136,7 @@ export class WorkspaceChat {
       env,
       this.dependencies,
       this.publish,
-      () => this.runner.connections.current,
+      () => this.runner.connections.current?.state ?? null,
     )
     this.authorizedWorkspaceOperation = workspaceOperationRunner(
       this.store,
