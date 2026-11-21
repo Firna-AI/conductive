@@ -8,6 +8,8 @@ import type { RunnerFileEvent } from './generated/RunnerFileEvent'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentSkill } from './generated/AgentSkill'
 import type { GitHubBanner } from './github'
+import type { ChatEvent } from './chat-events'
+import type { ContinueWorkspaceResponse } from './workspaces'
 type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
@@ -30,15 +32,49 @@ function baseLabel<
     : { ...value, displayBaseBranch }
 }
 
+function branchLabel<T extends { branch: string; displayBranch?: string }>(
+  value: T,
+  text: FilterText,
+): T {
+  const displayBranch = text(value.displayBranch || value.branch)
+  return displayBranch === value.branch && value.displayBranch === undefined
+    ? value
+    : { ...value, displayBranch }
+}
+
 export function filterGitHubBanner<T extends GitHubBanner>(
   banner: T,
   text: FilterText,
 ): T {
-  const result = baseLabel(banner, text)
-  const displayBranch = text(banner.displayBranch || banner.branch)
-  return displayBranch === banner.branch && banner.displayBranch === undefined
-    ? result
-    : { ...result, displayBranch }
+  return branchLabel(baseLabel(banner, text), text)
+}
+
+export function filterContinued(
+  event: Extract<ChatEvent, { type: 'workspace.continued' }>,
+  text: FilterText,
+): typeof event {
+  return branchLabel(baseLabel(event, text), text)
+}
+
+export function filterContinueResponse(
+  response: ContinueWorkspaceResponse,
+  text: FilterText,
+): ContinueWorkspaceResponse {
+  if (response.state !== 'confirmation-required') return response
+  const work = response.localWork
+  const displayUncommittedFiles = work.uncommittedFiles.map((path, index) =>
+    text(work.displayUncommittedFiles?.[index] || path),
+  )
+  const changed = displayUncommittedFiles.some(
+    (path, index) => path !== work.uncommittedFiles[index],
+  )
+  return {
+    ...baseLabel(response, text),
+    localWork:
+      changed || work.displayUncommittedFiles !== undefined
+        ? { ...work, displayUncommittedFiles }
+        : work,
+  }
 }
 
 function fileEntry(entry: FileEntry, text: FilterText): FileEntry {

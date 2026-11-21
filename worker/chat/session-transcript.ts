@@ -5,6 +5,10 @@ import { configuredModels } from '../app-api/models'
 import { workspaceLink } from '../data/workspace-link'
 import { readDeviceCommands } from '../devices/record-read'
 import type { AppEnv } from '../env'
+import {
+  continueLabels,
+  labelContinueHistory,
+} from '../lifecycle/continue-output'
 import { orgMembers } from '../members/member-data'
 import type { BrowserAccess } from './browser-authorization'
 import { invalidInput } from './inputs'
@@ -97,6 +101,10 @@ export async function buildSessionTranscript(
     }),
   )
   const builder = new SessionMarkdown(document)
+  const labels = await continueLabels(env, {
+    id: workspaceId,
+    orgId: access.orgId,
+  })
   let after = 0
   for (;;) {
     const page = await store.run(() =>
@@ -104,7 +112,7 @@ export async function buildSessionTranscript(
         view.history(after, document.eventNumber, { sessionId }),
       ),
     )
-    builder.merge(page.events)
+    builder.merge(labelContinueHistory(page, labels).events)
     if (!page.hasMore) break
     after = page.nextAfterEventNumber
   }

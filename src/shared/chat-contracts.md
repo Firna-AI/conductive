@@ -72,7 +72,12 @@ states the rules of the request and of a failed repair.
 `ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
 or to the runner events. Only the Worker writes it. It names its
 `sessionId`, the `member` who pressed Continue, the new `branch`, and its
-`baseBranch`.
+`baseBranch`. The optional `displayBranch` and `displayBaseBranch` are
+masked labels of these real names. The stored note has no labels. At each
+read that a browser gets, `filterContinued` in `output-fields.ts` adds them.
+It leaves out a label that equals its real name, as
+[Labels](../../worker/lifecycle/continue.md#labels) in the Continue guide
+says.
 
 ## The browser stream
 

@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-21, from the branch `calummoore/follow-up-github-branch-labels-are-not-knov`, outside the scope of its fix of the GitHub screens.
-- **Location:** `src/chat/components/SessionStatus.tsx:148`, `worker/lifecycle/repository-change-publication.ts:42`, `worker/lifecycle/repository-change-errors.ts:32`, `worker/lifecycle/repository-change-progress.ts:99`, `src/shell/workspace/repository/RepositoryQuestion.tsx:40`, `src/shell/workspace/repository/RepositoryControl.tsx:40`, `src/chat/api/read-continued.ts:28`, `src/chat/components/TranscriptItem.tsx:138`, and `src/shared/transcript/markdown-items.ts:165`.
+- **Location:** `src/chat/components/SessionStatus.tsx:148`, `worker/lifecycle/repository-change-publication.ts:42`, `worker/lifecycle/repository-change-errors.ts:32`, `worker/lifecycle/repository-change-progress.ts:99`, `src/shell/workspace/repository/RepositoryQuestion.tsx:40`, `src/shell/workspace/repository/RepositoryControl.tsx:40`, `src/chat/api/read-continued.ts:38`, `src/chat/components/TranscriptItem.tsx:139`, and `src/shared/transcript/markdown-items.ts:167`.
 - **Reason:** The branch that found these screens fixes only the GitHub state, which none of these screens reads.
 
 - **Terms:**
@@ -34,7 +34,7 @@
 - **Wider fix:** C. A label on the workspace record covers each screen that names the workspace branch, now and later.
 - **Previous examples:** Commit `216ed6791` split the real paths and base branches of the file data from their masked labels. `worker/github/output.ts` gives the GitHub state its labels at each boundary.
 - **Related:**
-  - `plans/follow-ups/continue-branch-labels-unmasked.md` has the same class for the Continue screens, and it waits for the fix of the Continue stop causes. They share the boundary helper and the files `src/chat/api/read-continued.ts`, `src/chat/components/TranscriptItem.tsx`, and `src/shared/transcript/markdown-items.ts`. The first fix to merge adds the helper, and the other reuses it.
+  - The Continue screens had the same class, and their fix added the boundary helper `worker/lifecycle/continue-output.ts`. It labels each `workspace.continued` note in the browser stream and its old history, in the session history pages, and in the transcript build. It also labels the question of the Continue routes, and hides each secret value in their stop messages. `filterContinued` and `filterContinueResponse` in `src/shared/output-fields.ts` fill those labels. This fix can label `workspace.repository-changed` at the same call sites, with the same secret values. It shares the files `src/chat/api/read-continued.ts`, `src/chat/components/TranscriptItem.tsx`, and `src/shared/transcript/markdown-items.ts` with that fix.
   - `plans/follow-ups/shared-branch-move-job.md` gives Continue and the repository change one job, so that one fix of their messages reaches both.
 - **Recommendation:** A. It masks each repository change screen, and the New session text whenever the screen knows the label, with no new words. C best protects the codebase, but it adds a secret read for each listed workspace.
 - **Action:** fix after merge, apply A, because the branch that found it changes only the GitHub state, and C costs too much for one text.

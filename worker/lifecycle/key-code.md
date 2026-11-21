@@ -117,7 +117,8 @@ points of each part.
   secret marks. It treats older plain values as secret. `environmentSecrets`
   selects marked values without a length rule.
 - [`output-secrets.ts`](output-secrets.ts): reads the actual start capture
-  for the workspace event filter and file display labels.
+  for the workspace event filter and the display labels of paths and
+  branches.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
   It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.

@@ -2,6 +2,7 @@ import { workspacePaths } from '../../src/shared/workspaces'
 import type { AppEnv } from '../env'
 import { requireFeatureResult } from '../features/result'
 import { HttpError } from '../http'
+import { labelContinueResult } from '../lifecycle/continue-output'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
 import { workspaceBinding } from './workspace-state'
@@ -37,15 +38,19 @@ export async function continueRoute(
         'Open the workspace and try Continue again.',
       )
     const result = requireFeatureResult(
-      await object.continueWorkspace(
-        orgId,
-        id,
-        context.user,
-        {
-          expectedBranch,
-          ...(allowLocalWork === undefined ? {} : { allowLocalWork }),
-        },
-        env.APP_ORIGIN,
+      await labelContinueResult(
+        env,
+        { id, orgId },
+        await object.continueWorkspace(
+          orgId,
+          id,
+          context.user,
+          {
+            expectedBranch,
+            ...(allowLocalWork === undefined ? {} : { allowLocalWork }),
+          },
+          env.APP_ORIGIN,
+        ),
       ),
     )
     return Response.json(result, {
@@ -63,12 +68,16 @@ export async function continueRoute(
     )
   }
   const result = requireFeatureResult(
-    await object.readWorkspaceContinue(
-      orgId,
-      id,
-      context.user.id,
-      continueId,
-      env.APP_ORIGIN,
+    await labelContinueResult(
+      env,
+      { id, orgId },
+      await object.readWorkspaceContinue(
+        orgId,
+        id,
+        context.user.id,
+        continueId,
+        env.APP_ORIGIN,
+      ),
     ),
   )
   return request.method === 'HEAD' ? new Response(null) : Response.json(result)
