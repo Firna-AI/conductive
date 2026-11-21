@@ -260,22 +260,38 @@ the Help row of the command palette opens.
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
   says, and Send, Create, and Try again stay off. The shared form watches
   the builds and owns the notice. Its words come from
-  `firstBuildCopy.ts` of the mockups. While the builds load or after a
-  failed load, no notice shows, and the Worker refuses a create of an org
-  with no good image.
+  `firstBuildCopy.ts` of the mockups. When the repositories reply shows a
+  good image, through `imageReady` or a ready repository, the builds are
+  older, and the notice gives way. `imageReadyOf` reads every repository
+  of the reply, also one that the org no longer chose. While the builds
+  load or after a failed load, the notice of the first build does not
+  show. Send still stays off for a repository that the reply gives
+  `ready: false`. A reply of a previous
+  Worker has no `ready`. Send can then go, and the Worker refuses a create
+  of an org with no good image.
 - The shared form shows the
-  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories)
-  that `BuildsResponse.changes` lists as added: off in the repository
-  menu, with the note of `menuNotes`, and in the notice over the
-  composer while the repository of the form waits, with the words of
-  `waitingFormText`. The note of the cloud computer under the picker then
-  gives way. The Worker lists no waiting repository before the first good
-  build, so this notice and the notice of the first build never show
-  together. The builds read again while a build runs, so a waiting
-  repository turns on when a build that holds it succeeds. A draft keeps
-  the repository that the form showed at its first text or file
-  (`NewWorkspaceModel`), so a repository that turns on moves no written
-  draft.
+  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories):
+  off in the repository menu, with the note of `menuNotes`, and in the
+  notice over the composer while the repository of the form waits, with
+  the words of `waitingFormText`. The note of the cloud computer under the
+  picker then gives way. A chosen repository waits when the repositories
+  reply gives it `ready: false`, also while the builds load, after a
+  failed load, or with older builds (`waitsForBuild`). With `ready: true`,
+  it stays on in each case. Without `ready`, the repositories that
+  `BuildsResponse.changes` lists as added wait. The builds give how a
+  repository waits. Without an answer of the builds, the note and the
+  notice name the next build.
+- Before the first good build, no repository waits, so this notice and the
+  notice of the first build never show together. The form knows that time
+  from `imageReady: false`. Without that field, the builds list no added
+  repository in that time.
+- When the builds show a build that ended or a new image, the repositories
+  read again, as [Data lifecycle](data-lifecycle.md) says. A waiting
+  repository turns on when that answer gives it `ready: true`. Until then,
+  it keeps its notice. Without `ready`, it turns on when the builds no
+  longer list it. A draft keeps the repository that the form showed at its
+  first text or file (`NewWorkspaceModel`), so a repository that turns on
+  moves no written draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page and the dialog of New workspace, and the Feedback dialog. On a
   computer, Enter sends and Shift+Enter adds a

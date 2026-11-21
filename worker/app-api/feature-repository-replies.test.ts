@@ -93,14 +93,18 @@ it('answers an Add with its saved selection and catalogue when GitHub fails afte
   ])
   expect(response.status).toBe(200)
   expect(
-    readRepositories(await response.json()).map(({ githubId, selected }) => ({
-      githubId,
-      selected,
-    })),
+    readRepositories(await response.json()).map(
+      ({ githubId, selected, ready, imageReady }) => ({
+        githubId,
+        selected,
+        ready,
+        imageReady,
+      }),
+    ),
   ).toEqual([
-    { githubId: 101, selected: true },
-    { githubId: 202, selected: true },
-    { githubId: 303, selected: false },
+    { githubId: 101, selected: true, ready: true, imageReady: true },
+    { githubId: 202, selected: true, ready: false, imageReady: true },
+    { githubId: 303, selected: false, ready: false, imageReady: true },
   ])
   expect(calls()).toEqual({ cataloguesBeforeSave: 1, callsAfterSave: 0 })
 })
@@ -118,14 +122,18 @@ it('answers a Remove with its saved selection and catalogue when GitHub fails af
   ).toEqual([{ githubId: 101, selected: false }])
   expect(response.status).toBe(200)
   expect(
-    readRepositories(await response.json()).map(({ githubId, selected }) => ({
-      githubId,
-      selected,
-    })),
+    readRepositories(await response.json()).map(
+      ({ githubId, selected, ready, imageReady }) => ({
+        githubId,
+        selected,
+        ready,
+        imageReady,
+      }),
+    ),
   ).toEqual([
-    { githubId: 202, selected: false },
-    { githubId: 101, selected: false },
-    { githubId: 303, selected: false },
+    { githubId: 202, selected: false, ready: false, imageReady: true },
+    { githubId: 101, selected: false, ready: true, imageReady: true },
+    { githubId: 303, selected: false, ready: false, imageReady: true },
   ])
   expect(calls()).toEqual({ cataloguesBeforeSave: 1, callsAfterSave: 0 })
 })
