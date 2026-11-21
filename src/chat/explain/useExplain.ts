@@ -55,6 +55,19 @@ export interface ExplainState {
 }
 
 /**
+ * The same list as the last render while its content is the same, so a
+ * new chat snapshot that changes no explanation keeps the marks as they
+ * are. An explanation is plain data, so its JSON names its content.
+ */
+function useSameList<T>(list: readonly T[]): readonly T[] {
+  const key = JSON.stringify(list)
+  const [kept, setKept] = useState({ key, list })
+  if (kept.key === key) return kept.list
+  setKept({ key, list })
+  return list
+}
+
+/**
  * Explain in the chat of the shown session tab: the marks of the
  * explanations of that session, the finished selection with Explain by it,
  * its key, and the popover and the menu that lie open. At most one popover
@@ -81,9 +94,11 @@ export function useExplain(props: ExplainProps): ExplainState {
   }
   const glyphs = useRef(new Map<string, HTMLElement>())
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
-  const explanations = useMemo(
-    () => (sessionId ? explanationsOf(snapshot, sessionId, readOnly) : []),
-    [snapshot, sessionId, readOnly],
+  const explanations = useSameList(
+    useMemo(
+      () => (sessionId ? explanationsOf(snapshot, sessionId, readOnly) : []),
+      [snapshot, sessionId, readOnly],
+    ),
   )
   const marks = useMemo(() => byMessage(explanations), [explanations])
   const openPopover = useCallback(
@@ -114,21 +129,45 @@ export function useExplain(props: ExplainProps): ExplainState {
     if (element) glyphs.current.set(id, element)
     else glyphs.current.delete(id)
   }, [])
-  const view: ExplainView | null = sessionId
-    ? {
-        chat,
-        marks,
-        selection,
-        floating: !props.mobile && !readOnly,
-        starting,
-        open: popover?.explanationId ?? null,
-        explain,
-        openPopover,
-        openMenu: (ids, at) => setMenu({ ids, at }),
-        noteGlyph,
-        noteAnchor: setAnchor,
-      }
-    : null
+  const openMenu = useCallback(
+    (ids: readonly string[], at: MenuPoint) => setMenu({ ids, at }),
+    [],
+  )
+  const floating = !props.mobile && !readOnly
+  const open = popover?.explanationId ?? null
+  // One view while nothing in it changes, so the marked messages of the
+  // chat do not draw again for each streamed part of an answer.
+  const view = useMemo<ExplainView | null>(
+    () =>
+      sessionId
+        ? {
+            chat,
+            marks,
+            selection,
+            floating,
+            starting,
+            open,
+            explain,
+            openPopover,
+            openMenu,
+            noteGlyph,
+            noteAnchor: setAnchor,
+          }
+        : null,
+    [
+      sessionId,
+      chat,
+      marks,
+      selection,
+      floating,
+      starting,
+      open,
+      explain,
+      openPopover,
+      openMenu,
+      noteGlyph,
+    ],
+  )
   return {
     view,
     explanations,

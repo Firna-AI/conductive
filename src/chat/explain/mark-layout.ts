@@ -3,7 +3,7 @@ import { findQuote } from './quote-match'
 import { pointAt, rangeOf, textModel, type TextModel } from './text-model'
 
 /** A mark found in its message: its range, and the slot of its state. */
-export interface PlacedMark {
+interface PlacedMark {
   mark: Explanation
   range: Range
   /** The element at the end of the mark that holds its state. */
