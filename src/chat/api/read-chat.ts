@@ -14,6 +14,7 @@ import { readTurnSpeed } from '../../shared/chat-events'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued, readRepositoryChanged } from './read-continued'
+import { readWatchNotice } from './read-watch-notice'
 import {
   count,
   flag,
@@ -198,6 +199,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       return readContinued(source)
     case 'workspace.repository-changed':
       return readRepositoryChanged(source)
+    case 'session.watch-notice':
+      return readWatchNotice(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

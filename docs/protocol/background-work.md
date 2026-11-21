@@ -38,6 +38,9 @@ work.
   inside a turn.
 - A new turn that background work starts by itself was rejected, because
   sandbox code could then spend the login of the sender.
+- A [watch](session-watches.md#the-boundary-of-a-watch) keeps this rule.
+  Only a running turn can set it, and only the Worker fires it, once, at
+  the end of the watched turn.
 
 ### The note
 

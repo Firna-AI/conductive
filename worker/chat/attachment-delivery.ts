@@ -14,9 +14,9 @@ import { TurnCompletion } from './turn-completion'
 import type {
   ActiveRunner,
   ChatDependencies,
-  PendingCommand,
   PreparedMessageCommand,
 } from './types'
+import type { PendingCommand } from './pending-command'
 
 type MessageCommand = PreparedMessageCommand
 interface Preparation {

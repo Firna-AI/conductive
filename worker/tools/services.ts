@@ -23,6 +23,11 @@ import type { AgentOpenPreviewResponse } from '../../src/shared/generated/AgentO
 import type { AgentClosePreviewResponse } from '../../src/shared/generated/AgentClosePreviewResponse'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
+import type { AgentWatchSessionResponse } from '../../src/shared/generated/AgentWatchSessionResponse'
+import type {
+  CallingWatchTurn,
+  ToolSessionWatch,
+} from '../chat/session-watch-records'
 
 import type { User } from '../../src/shared/api'
 import type { WorkspaceParentTarget } from '../app-api/workspace-parent-change-data'
@@ -112,6 +117,11 @@ export interface ToolSessionAccess {
 
 /** The composition root supplies the lifecycle and the workspace's turn store. */
 export interface AgentToolServices {
+  callingWatchTurn(
+    workspaceId: string,
+    turnId: string,
+  ): Promise<CallingWatchTurn | null>
+  watchSession(input: ToolSessionWatch): Promise<AgentWatchSessionResponse>
   writeSection(
     input: ToolSectionWrite,
   ): Promise<AgentCreateSectionResponse | AgentDeleteSectionResponse>

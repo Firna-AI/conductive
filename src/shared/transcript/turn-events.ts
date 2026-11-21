@@ -45,9 +45,17 @@ export function settleTools(
   )
 }
 
+/** The row of a message: its bubble, or the line of the wake that it carries. */
+function messageRow(item: TranscriptItem, messageId: string): boolean {
+  return item.kind === 'wake'
+    ? item.notice.messageId === messageId
+    : item.id === userKey(messageId)
+}
+
 /**
  * Places an answer after the last message that it answers, so a result
- * shows with every message that it answers, also one sent during the turn.
+ * shows with every message that it answers, also one sent during the turn,
+ * such as the hidden message of a wake.
  */
 function placeAnswer(
   items: TranscriptItem[],
@@ -57,7 +65,7 @@ function placeAnswer(
   const from = items.findIndex((item) => item.id === id)
   const last = Math.max(
     ...answers.map((answer) =>
-      items.findIndex((item) => item.id === userKey(answer)),
+      items.findIndex((item) => messageRow(item, answer)),
     ),
   )
   if (from < 0 || last <= from) return items

@@ -96,6 +96,28 @@ Use names and returned links in normal answers. A session link holds workspace a
 A workspace link in a message names that workspace. Workspace and session links in an answer show as chips.
 A Sent by: line names the sending session. Do not reply only to confirm it.
 
+Session watches
+
+conductive sessions watch --session ID [--workspace ID] [--turn-id ID]
+
+Watch wakes the calling session once when one turn finishes, fails, or stops.
+Use the reply's actual session and exact turnId after sending or creating work, when available.
+Older workspace-create replies can omit turnId.
+Without --turn-id, watch selects current queued, running, or stopping work, or returns idle.
+The reply gives the target workspace and linked session, with one state:
+- watching, with watchId and turnId.
+- idle.
+- finished, failed, or stopped, with turnId.
+An idle or ended reply sets no watch and sends no wake. Read the session at once.
+Repeated calls for the same calling session, member, exact target, and valid Stop period give one watch.
+Only a watch of the exact active calling turn is refused with invalid_input.
+Set the watch, then end your reply when only the watched work remains.
+After a wake, use sessions read or read_session for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop of the calling session drops older pending wakes. Automatic idle computer stops keep watches.
+Watch follows the common tool rights and current member and session login checks.
+A new wake turn acts for the member who set the watch. A joined wake keeps the running turn's sender.
+
 Secrets list gives each org secret's name, environmentVariable, description, and availability, never its value.
 Read each value through its environmentVariable, also when the secret name has spaces.
 A running turn adds session approvals to availability. Without it, only org and workspace grants count.

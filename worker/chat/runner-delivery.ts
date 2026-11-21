@@ -12,10 +12,10 @@ import type { ChatStore } from './store'
 import type {
   ActiveRunner,
   ChatDependencies,
-  PendingCommand,
   PreparedCommand,
   ResolvedCommand,
 } from './types'
+import type { PendingCommand } from './pending-command'
 import { AttachmentPreparation } from './attachment-delivery'
 import { RunnerCommandPreparation } from './runner-command-preparation'
 

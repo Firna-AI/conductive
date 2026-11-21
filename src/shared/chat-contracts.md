@@ -73,6 +73,12 @@ states the rules of the request and of a failed repair.
 or to the runner events. Only the Worker writes it. It names its
 `sessionId`, the `member` who pressed Continue, the new `branch`, and its
 `baseBranch`.
+`session.watch-notice` is the wake of a watch in one calling session, of
+the generated type `SessionWatchNotice`. It belongs to `ChatEvent` in the
+same way, and only the Worker writes it. Its `messageId` names the hidden
+message that carries the wake to the agent. The chat finds the turn of
+the line through that message, as
+[Transcript rules](../chat/transcript.md) says.
 
 ## The browser stream
 

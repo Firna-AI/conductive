@@ -30,6 +30,7 @@ async function finishCreation(
       env.APP_ORIGIN,
     ),
     sessionId: created.first.sessionId,
+    turnId: created.first.turnId,
     ...(created.notice !== undefined && { notice: created.notice }),
     sessionLink: sessionLink(
       env.APP_ORIGIN,

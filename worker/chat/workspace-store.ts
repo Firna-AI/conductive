@@ -19,7 +19,16 @@ export function createWorkspaceChatStore(
   const store: ChatStore = new ChatStore(
     storage,
     dependencies.now,
-    (report) => reportTurnEnd(store, dependencies, publish, report),
+    async (report) => {
+      if (dependencies.sessionWatchAlarm)
+        await store.read(report.workspaceId, async (view) => {
+          if (await view.watches.active())
+            await dependencies.sessionWatchAlarm?.(
+              await view.watches.due(dependencies.now()),
+            )
+        })
+      await reportTurnEnd(store, dependencies, publish, report)
+    },
     (workspaceId) =>
       reportAfterChatChange(
         () =>

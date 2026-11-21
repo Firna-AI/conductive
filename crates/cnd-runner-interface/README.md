@@ -103,6 +103,10 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Helper options](src/sdk_helper_options.rs) defines private start options and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
+- [Session writes](src/tools/sessions.rs) defines the session create and send requests, the accepted message and turn, the resume states, and the write replies.
+- [Session actions](src/tools/session_actions.rs) defines the session get, rename, close, and stop contracts, and the message lookup.
+- [Session reads](src/tools/session_reads.rs) defines the session list and transcript read contracts, with the session states.
+- [Session watches](src/tools/session_watches.rs) defines watch requests, replies, terminal states, and Worker wake notices with their hidden message identity.
 - [Workspace calls](src/tools/workspaces.rs) defines parent-aware requests, list entries, details, and notices.
 - [Secret contracts](src/tools/secrets.rs) defines the legacy Worker list, run input, grants, and non-printable values.
 - [Secret results](src/tools/secret_results.rs) defines printable command output and tool outcomes.
