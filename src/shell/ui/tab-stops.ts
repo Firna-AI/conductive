@@ -63,3 +63,33 @@ export function tabWithScrollingBody(
   }
   return true
 }
+
+/**
+ * Keeps a press of Tab inside a modal layer, among its `tabbable` elements
+ * in their order. Tab from the last goes to the first, and Shift+Tab from
+ * the first goes to the last. From an element that is not one of them, such
+ * as the layer itself or a body that does not scroll, Tab goes to the first
+ * and Shift+Tab to the last. Between them, the browser moves the focus.
+ * Without an element, Tab does nothing. `from` is the element with the
+ * focus, which each trap reads where it listens.
+ */
+export function keepTabInside(
+  event: Pick<TabPress, 'shiftKey' | 'preventDefault'>,
+  tabbable: readonly HTMLElement[],
+  from: EventTarget | null,
+): void {
+  const first = tabbable[0]
+  const last = tabbable.at(-1)
+  if (!first || !last) {
+    event.preventDefault()
+    return
+  }
+  const inside = tabbable.some((element) => element === from)
+  if (event.shiftKey && (from === first || !inside)) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && (from === last || !inside)) {
+    event.preventDefault()
+    first.focus()
+  }
+}

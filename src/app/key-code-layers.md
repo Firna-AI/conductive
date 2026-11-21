@@ -101,7 +101,10 @@ the folder of this page.
   `ConfirmDialog` of `../members/ui/ConfirmDialog.tsx` directly. Each body
   stays out of the native Tab order. Each dialog keeps its first focus,
   such as Cancel in a question or the chosen field of a form. Any other
-  card keeps the Tab order of its controls.
+  card keeps the Tab order of its controls. When no body is a stop,
+  `trapTab` and `useFocusTrap` keep Tab inside the controls with
+  `keepTabInside`. From an element outside the controls, such as a body
+  that does not scroll, Tab goes to the first and Shift+Tab to the last.
 - [dialog-scroll-keyboard.spec.ts](../../desktop/tests/dialog-scroll-keyboard.spec.ts):
   the check that the keyboard reaches the whole Change repository work
   list at the 480 px minimum height of the Mac window. A second test

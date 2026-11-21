@@ -6,7 +6,7 @@ import {
 } from 'react'
 import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
-import { controlsOf, tabWithScrollingBody } from './tab-stops'
+import { controlsOf, keepTabInside, tabWithScrollingBody } from './tab-stops'
 
 /**
  * Keeps the Tab key inside a modal layer, as a dialog needs. Tab from the
@@ -27,21 +27,7 @@ export function trapTab(
   if (event.key !== 'Tab') return
   const tabbable = tabbableOf(event.currentTarget)
   if (tabWithScrollingBody(event, tabbable, body)) return
-  const first = tabbable[0]
-  const last = tabbable.at(-1)
-  if (!first || !last) {
-    event.preventDefault()
-    return
-  }
-  const from = event.target
-  const inside = tabbable.some((element) => element === from)
-  if (event.shiftKey && (from === first || !inside)) {
-    event.preventDefault()
-    last.focus()
-  } else if (!event.shiftKey && (from === last || !inside)) {
-    event.preventDefault()
-    first.focus()
-  }
+  keepTabInside(event, tabbable, event.target)
 }
 
 /**
