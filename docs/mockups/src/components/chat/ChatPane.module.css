@@ -27,6 +27,12 @@
   flex-direction: column;
 }
 
+/*
+ * Each item of the chat breaks a long word at any character to fit its
+ * line, such as a long link that stays text. So no word passes the edge of
+ * a phone screen. A chip or a code block keeps its text on one line through
+ * its own white-space.
+ */
 .transcript {
   display: flex;
   flex-direction: column;
@@ -36,6 +42,15 @@
   margin: 0 auto auto;
   padding: 24px 28px 14px;
   box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * A table keeps the normal breaks of its text, so a wide table scrolls
+ * sideways in its box.
+ */
+.transcript table {
+  overflow-wrap: normal;
 }
 
 .empty {
