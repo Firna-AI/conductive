@@ -19,6 +19,7 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { InputReceipts } from './input-receipts'
 import { providerMessage, type FixedContext } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
@@ -26,6 +27,14 @@ import type { ProviderFactory } from './types'
 import type { ProviderInput } from '../generated/ProviderInput'
 
 function input(command: ProviderInput, fixed: FixedContext) {
+  if (command.type === 'notice')
+    return [
+      {
+        type: 'text',
+        text: providerMessage(command, fixed),
+        text_elements: [],
+      },
+    ]
   const images = command.attachments.filter((attachment) => {
     const metadata = command.message.attachments.find(
       (item) => item.id === attachment.attachmentId,
@@ -124,6 +133,7 @@ export function createCodexFactory(
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
+    const receipts = new InputReceipts(options.event)
     let choice = options.choice
     let activeChoice = choice
     let closed = false
@@ -154,7 +164,7 @@ export function createCodexFactory(
           if (otherThread(params, threadId)) return
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
-          codexNotification(method, params, userIds, options.event)
+          codexNotification(method, params, userIds, receipts.emit)
           if (method === 'turn/completed') activeTurn = null
         },
         () => {
@@ -213,14 +223,16 @@ export function createCodexFactory(
       options.event({ type: 'conversation', id: thread })
       return {
         send: async (command) => {
+          if (command.type === 'notice' && !activeTurn) return
+          const inputId = receipts.add(command)
           if (activeTurn) {
             const before = [...userIds]
-            userIds.push(command.message.id)
+            userIds.push(inputId)
             try {
               await rpc.request('turn/steer', {
                 threadId: thread,
                 expectedTurnId: activeTurn,
-                clientUserMessageId: command.message.id,
+                clientUserMessageId: inputId,
                 input: input(command, options),
               })
             } catch (error) {
@@ -228,7 +240,7 @@ export function createCodexFactory(
               throw error
             }
           } else {
-            userIds = [command.message.id]
+            userIds = [inputId]
             activeChoice = choice
             if (choice.fast)
               options.event({ type: 'speed', speed: { state: 'fast' } })
@@ -236,7 +248,7 @@ export function createCodexFactory(
               await rpc.request('turn/start', {
                 threadId: thread,
                 input: input(command, options),
-                clientUserMessageId: command.message.id,
+                clientUserMessageId: inputId,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
                 serviceTierForTurn: choice.fast ? 'priority' : 'default',

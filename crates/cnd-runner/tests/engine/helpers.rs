@@ -65,6 +65,7 @@ impl Process {
         self.event(ProviderEvent::Result {
             state: cnd_runner_interface::provider_events::ProviderResultState::Finished,
             user_message_ids: ids.iter().map(|s| (*s).to_owned()).collect(),
+            notice_ids: vec![],
             end_reason: None,
         });
     }

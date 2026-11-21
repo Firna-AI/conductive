@@ -68,7 +68,7 @@ pub(super) fn message(
             command_id,
             session_id,
             turn_id: turn_id.into(),
-            message,
+            message: *message,
             branches,
             repository,
             attachments,
@@ -92,11 +92,12 @@ pub(super) fn input_ids(
         .lock()
         .map_err(|_| "test lock poisoned")?
         .iter()
-        .map(|input| match input {
-            ProviderInput::Turn(RunnerTurn::Turn { message, .. })
-            | ProviderInput::Message(RunnerMessageDuringTurn::Message { message, .. }) => {
-                message.id.clone()
+        .filter_map(|input| match input {
+            ProviderInput::Turn(RunnerTurn::Turn { message, .. }) => Some(message.id.clone()),
+            ProviderInput::Message(RunnerMessageDuringTurn::Message { message, .. }) => {
+                Some(message.id.clone())
             }
+            ProviderInput::Notice(_) => None,
         })
         .collect())
 }

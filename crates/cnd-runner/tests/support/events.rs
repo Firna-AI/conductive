@@ -39,6 +39,7 @@ pub(crate) fn started(id: &str) -> RunnerEvent {
         },
         started_at: Timestamp(100),
         message_ids: vec![format!("message-{id}")],
+        notice_ids: vec![],
     })
 }
 
@@ -56,6 +57,7 @@ pub(crate) fn ended(id: &str) -> RunnerEvent {
         files_unavailable: None,
         omitted_file_count: 0,
         user_message_ids: vec![format!("message-{id}")],
+        notice_ids: vec![],
     })
 }
 

@@ -28,6 +28,7 @@ import {
 } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { InputReceipts } from './input-receipts'
 import { providerMessage } from './message'
 import type { ProviderFactory } from './types'
 
@@ -97,6 +98,7 @@ export function createClaudeFactory(
       env.ANTHROPIC_PROFILE = credentials.name
     } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
+    const receipts = new InputReceipts(options.event)
     const background = new ClaudeBackground(options.event)
     const note = new ClaudeBackgroundNote(
       (id) => background.isAmbient(id),
@@ -105,7 +107,7 @@ export function createClaudeFactory(
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
     const mapper = new ClaudeEvents(
       input.ids,
-      options.event,
+      receipts.emit,
       (uuid) => input.hasOutstanding(uuid),
       background,
       options.choice.fast,
@@ -247,12 +249,13 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const attached = command.attachments.length
-          ? `\n${attachmentReadInstruction}\n${command.attachments
-              .map((item) => attachmentDescription(command, item))
-              .join('\n')}`
-          : ''
-        input.push(command.message.id, {
+        const attached =
+          command.type !== 'notice' && command.attachments.length
+            ? `\n${attachmentReadInstruction}\n${command.attachments
+                .map((item) => attachmentDescription(command, item))
+                .join('\n')}`
+            : ''
+        input.push(receipts.add(command), {
           type: 'user',
           uuid,
           session_id: options.conversationId ?? '',

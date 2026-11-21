@@ -63,6 +63,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         file_server: Option<bool>,
+        /// This runner can deliver app notes and acknowledge the lines read.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        capability_notices: Option<bool>,
     },
 }
 

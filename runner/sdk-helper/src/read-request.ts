@@ -4,6 +4,7 @@ import type { HelperCredential } from './generated/HelperCredential'
 import type { ProviderInput } from './generated/ProviderInput'
 import type { RunnerBranches } from './generated/RunnerBranches'
 import type { RunnerRepository } from './generated/RunnerRepository'
+import type { RunnerNoticeLine } from './generated/RunnerNoticeLine'
 import { array, nullable, object, oneOf, string } from './parse'
 import {
   parseChoice,
@@ -76,12 +77,24 @@ function options(value: unknown): HelperOptions {
   }
 }
 
+function notices(value: unknown): RunnerNoticeLine[] {
+  return array(value, (value) => {
+    const notice = object(value)
+    return { id: string(notice.id), text: string(notice.text) }
+  })
+}
+
 function providerInput(value: unknown): ProviderInput {
   const input = object(value)
-  const command = {
+  const identity = {
     commandId: string(input.commandId),
     sessionId: string(input.sessionId),
     turnId: string(input.turnId),
+  }
+  if (input.type === 'notice')
+    return { ...identity, type: 'notice', notices: notices(input.notices) }
+  const command = {
+    ...identity,
     message: parseUserMessage(input.message),
     attachments: array(input.attachments, (value) => {
       const file = object(value)
@@ -102,6 +115,9 @@ function providerInput(value: unknown): ProviderInput {
     return {
       ...command,
       type: 'turn',
+      ...(input.notices === undefined
+        ? {}
+        : { notices: notices(input.notices) }),
       credential: parseCredential(input.credential),
       commitAuthor: parseCommitAuthor(input.commitAuthor, () => {}),
     }

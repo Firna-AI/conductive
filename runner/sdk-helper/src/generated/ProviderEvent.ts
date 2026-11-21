@@ -49,6 +49,10 @@ export type ProviderEvent =
        * Exact input messages answered.
        */
       userMessageIds: ReadonlyVec<string>
+      /**
+       * Exact app notes read for this answer.
+       */
+      noticeIds?: ReadonlyVec<string>
     }
   | {
       type: 'tool'
@@ -92,6 +96,10 @@ export type ProviderEvent =
        * Exact input messages answered.
        */
       userMessageIds: ReadonlyVec<string>
+      /**
+       * Exact app notes read for this reply.
+       */
+      noticeIds?: ReadonlyVec<string>
       /**
        * Optional turn end reason.
        */

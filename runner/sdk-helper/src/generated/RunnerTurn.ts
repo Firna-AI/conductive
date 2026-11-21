@@ -4,6 +4,7 @@ import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { RunnerAttachment } from './RunnerAttachment.js'
 import type { RunnerBranches } from './RunnerBranches.js'
 import type { RunnerCapabilities } from './RunnerCapabilities.js'
+import type { RunnerNoticeLine } from './RunnerNoticeLine.js'
 import type { RunnerRepository } from './RunnerRepository.js'
 import type { RunnerTurnCredential } from './RunnerTurnCredential.js'
 import type { UserMessage } from './UserMessage.js'
@@ -41,6 +42,10 @@ export type RunnerTurn = {
    * Current session capabilities. Older command producers can omit them.
    */
   capabilities?: RunnerCapabilities
+  /**
+   * App notes to read before the member's message.
+   */
+  notices?: ReadonlyVec<RunnerNoticeLine>
   /**
    * attachments.
    */

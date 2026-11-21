@@ -89,6 +89,16 @@ impl Session {
             }
             _ => {}
         }
+        if let ProviderEvent::Answer { notice_ids, .. } | ProviderEvent::Result { notice_ids, .. } =
+            &event
+        {
+            turn.read_notice_ids.extend(
+                notice_ids
+                    .iter()
+                    .filter(|id| turn.notice_ids.contains(id))
+                    .cloned(),
+            );
+        }
         let events = turn.output.accept(&event);
         self.emit(events).await?;
         let Some(turn) = &self.active else {
@@ -114,8 +124,10 @@ impl Session {
                 state,
                 user_message_ids,
                 end_reason,
+                notice_ids,
             } => {
-                self.result(state, user_message_ids, end_reason, false)
+                let notice_only = user_message_ids.is_empty() && !notice_ids.is_empty();
+                self.result(state, user_message_ids, end_reason, notice_only)
                     .await
             }
             ProviderEvent::WakeUp { state } => self.result(state, vec![], None, true).await,
@@ -186,9 +198,10 @@ impl Session {
             turn.control.run(helper.close()).await?;
         }
         turn.helper = None;
-        let (_, _, message) = identity(&next);
-        turn.message_ids.push(message.id.clone());
-        turn.retry_message_id = message.id.clone();
+        if let Some((_, _, message)) = identity(&next) {
+            turn.message_ids.push(message.id.clone());
+            turn.retry_message_id = message.id.clone();
+        }
         self.start(next).await?;
         loop {
             let next = self

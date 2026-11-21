@@ -44,4 +44,8 @@ export type RunnerHello = {
    * True while this runner's repository file server listens.
    */
   fileServer?: boolean
+  /**
+   * This runner can deliver app notes and acknowledge the lines read.
+   */
+  capabilityNotices?: boolean
 }

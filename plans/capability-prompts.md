@@ -318,13 +318,13 @@ Depends on: 3
 
 Depends on: 3
 
-- [ ] Add the `notice` command and the `capabilityNotices` hello flag in
+- [x] Add the `notice` command and the `capabilityNotices` hello flag in
       `crates/cnd-runner-interface/`, and regenerate the TypeScript.
-- [ ] In the runner and the sdk-helper, give the lines of a `notice` to the
+- [x] In the runner and the sdk-helper, give the lines of a `notice` to the
       agent under an app header, as a steer in a running turn, or before
       the message of the turn that it comes with.
-- [ ] Report which lines the agent took, so that the Worker keeps the rest.
-- [ ] Add runner and sdk-helper tests for both agents, and for a notice
+- [x] Report which lines the agent took, so that the Worker keeps the rest.
+- [x] Add runner and sdk-helper tests for both agents, and for a notice
       that comes after its turn ended.
 
 ## Milestone 6: Worker change lines

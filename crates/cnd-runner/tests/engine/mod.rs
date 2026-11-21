@@ -6,6 +6,7 @@ mod failure_tests;
 mod helpers;
 mod input_tests;
 mod lifecycle_tests;
+mod notice_tests;
 mod repository;
 mod stop_tests;
 mod support;

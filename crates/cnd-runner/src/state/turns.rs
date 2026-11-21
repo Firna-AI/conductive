@@ -109,5 +109,6 @@ pub(super) fn recovered_end(turn: &SavedTurn, now: i64) -> RunnerEvent {
         files_unavailable: turn.start_event_number.map(|_| WireTrue),
         omitted_file_count: 0,
         user_message_ids: turn.message_ids.clone(),
+        notice_ids: vec![],
     })
 }

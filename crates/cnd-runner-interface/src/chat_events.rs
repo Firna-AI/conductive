@@ -48,6 +48,10 @@ pub enum AgentChatEvent {
         /// messageIds.
         #[ts(as = "ReadonlyVec<String>")]
         message_ids: Vec<String>,
+        /// App notes taken from the turn command.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
     /// turn.thinking.
     #[serde(rename = "turn.thinking")]
@@ -80,6 +84,10 @@ pub enum AgentChatEvent {
         /// One answer can respond to several user messages.
         #[ts(as = "ReadonlyVec<String>")]
         user_message_ids: Vec<String>,
+        /// Steered app notes read by the agent for this answer.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
     /// tool.updated.
     #[serde(rename = "tool.updated")]
@@ -123,6 +131,10 @@ pub enum AgentChatEvent {
         /// userMessageIds.
         #[ts(as = "ReadonlyVec<String>")]
         user_message_ids: Vec<String>,
+        /// Steered app notes read before this turn ended.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
     /// turn.failed.
     #[serde(rename = "turn.failed")]

@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use cnd_runner_interface::agents::Agent;
-use cnd_runner_interface::runner_commands::RunnerTurn;
+use cnd_runner_interface::runner_commands::{RunnerNotice, RunnerTurn};
 use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
 use cnd_runner_interface::sdk_helper_options::{
     HelperCredential, HelperOptions, ProviderInput, WorkspaceToolContext,
@@ -15,7 +15,7 @@ use crate::helper::boundary::HelperEvents;
 
 use super::control::Control;
 use super::mailbox::Mailbox;
-use super::types::{Session, Work, identity};
+use super::types::{ActiveTurn, Session, Work, identity};
 
 struct ForwardOutput {
     mailbox: Mailbox,
@@ -32,8 +32,12 @@ impl HelperEvents for ForwardOutput {
 
 impl Session {
     pub(super) async fn start(&mut self, input: ProviderInput) -> Result<()> {
-        let (_, _, message) = identity(&input);
-        self.choice = Some(message.choice.clone());
+        let choice = identity(&input)
+            .map(|(_, _, message)| &message.choice)
+            .or(self.choice.as_ref())
+            .ok_or(Error::InvalidCommand)?
+            .clone();
+        self.choice = Some(choice.clone());
         self.generation += 1;
         let saved = self.saved.as_ref().ok_or(Error::InvalidCommand)?;
         let turn = self.active.as_mut().ok_or(Error::InvalidCommand)?;
@@ -84,7 +88,7 @@ impl Session {
                 credential: credential.clone(),
             },
             commit_author: commit_author.clone(),
-            choice: message.choice.clone(),
+            choice,
             conversation_id: saved.provider_session_id.clone(),
             instructions: saved.instructions.clone().unwrap_or_default(),
             instruction_branches: saved.instruction_branches.clone().flatten(),
@@ -102,13 +106,20 @@ impl Session {
             background_note_ids: turn.notes.iter().cloned().collect(),
         };
         control.run(helper.start(options)).await?;
-        control.run(helper.send(input)).await
+        control.run(helper.send(input.clone())).await?;
+        turn.track_notices(&input);
+        Ok(())
     }
 
     pub(super) async fn deliver(&mut self, input: ProviderInput) -> Result<HelperModelResult> {
         let turn = self.active.as_mut().ok_or(Error::InvalidCommand)?;
         let helper = turn.helper.clone().ok_or(Error::HelperExited)?;
-        let (_, _, message) = identity(&input);
+        if matches!(&input, ProviderInput::Notice(_)) {
+            turn.control.run(helper.send(input.clone())).await?;
+            turn.track_notices(&input);
+            return Ok(HelperModelResult::Applied);
+        }
+        let (_, _, message) = identity(&input).ok_or(Error::InvalidCommand)?;
         let id = message.id.clone();
         self.choice = Some(message.choice.clone());
         let result = turn.control.run(helper.model(message.choice.clone())).await;
@@ -119,5 +130,14 @@ impl Session {
         result?;
         turn.control.run(helper.send(input)).await?;
         Ok(HelperModelResult::Applied)
+    }
+}
+
+impl ActiveTurn {
+    fn track_notices(&mut self, input: &ProviderInput) {
+        if let ProviderInput::Notice(RunnerNotice::Notice { notices, .. }) = input {
+            self.notice_ids
+                .extend(notices.iter().map(|notice| notice.id.clone()));
+        }
     }
 }

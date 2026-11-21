@@ -19,6 +19,8 @@ pub enum RunnerCommand {
     RunnerTurn(RunnerTurn),
     /// RunnerMessageDuringTurn.
     RunnerMessageDuringTurn(RunnerMessageDuringTurn),
+    /// App notes for a running turn, without a member message.
+    RunnerNotice(RunnerNotice),
     /// RunnerControlCommand.
     RunnerControlCommand(RunnerControlCommand),
 }
@@ -37,7 +39,7 @@ pub enum RunnerTurn {
         /// turnId.
         turn_id: String,
         /// message.
-        message: UserMessage,
+        message: Box<UserMessage>,
         /// Current Worker branches. Older command producers can omit them.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
@@ -50,6 +52,10 @@ pub enum RunnerTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         capabilities: Option<RunnerCapabilities>,
+        /// App notes to read before the member's message.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<RunnerNoticeLine>>", optional)]
+        notices: Vec<RunnerNoticeLine>,
         /// attachments.
         #[ts(as = "ReadonlyVec<RunnerAttachment>")]
         attachments: Vec<RunnerAttachment>,
@@ -79,6 +85,34 @@ pub struct RunnerCapabilities {
     pub secrets: Vec<String>,
     /// Whether Mac access is on in this workspace.
     pub mac_access: bool,
+}
+
+/// One line of the app, with its delivery identity.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct RunnerNoticeLine {
+    /// Identity acknowledged when the agent reads this line.
+    pub id: String,
+    /// App text, without a sender line.
+    pub text: String,
+}
+
+/// App notes that join an existing turn. This command never starts a turn.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(tag = "type", rename_all_fields = "camelCase")]
+pub enum RunnerNotice {
+    /// Deliver notes only to the named running turn.
+    #[serde(rename = "notice")]
+    Notice {
+        /// Command identity retained across transport retries.
+        command_id: String,
+        /// Session that owns the notes.
+        session_id: String,
+        /// Running turn that can take the notes.
+        turn_id: String,
+        /// App notes in change order.
+        notices: Vec<RunnerNoticeLine>,
+    },
 }
 
 /// Absolute path in the workspace repository, after the backend copies the file.

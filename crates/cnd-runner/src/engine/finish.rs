@@ -68,6 +68,7 @@ impl Session {
             files_unavailable: None,
             omitted_file_count: 0,
             user_message_ids: vec![],
+            notice_ids: vec![],
         }])
         .await
     }
@@ -168,6 +169,11 @@ impl Session {
                     files_unavailable: unavailable.then_some(WireTrue),
                     omitted_file_count: 0,
                     user_message_ids: turn.message_ids,
+                    notice_ids: turn
+                        .notice_ids
+                        .into_iter()
+                        .filter(|id| turn.read_notice_ids.contains(id))
+                        .collect(),
                 }
             }
         };
