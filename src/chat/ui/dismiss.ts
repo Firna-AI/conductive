@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { useMenuLayer } from '../../shell/ui/layers'
+import { useLostFocus } from '../../shell/ui/lost-focus'
 
 /** Calls `close` when the user presses Escape. */
 export function useEscape(close: () => void, active = true): void {
@@ -49,6 +50,8 @@ export function useDismiss(
  * Moves the focus into a part when it opens, and back to where it was when
  * it closes, so the keyboard stays where the user works. The element to go
  * back to is kept once, so an effect that runs twice keeps the first one.
+ * While the part shows, a render that takes away the element with the
+ * focus gives the focus back to `first`, as `useLostFocus` says.
  */
 export function useFocusInside(
   part: RefObject<HTMLElement | null>,
@@ -69,6 +72,7 @@ export function useFocusInside(
     // The part focuses once, when it opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  useLostFocus(part, first)
 }
 
 const FOCUSABLE = [

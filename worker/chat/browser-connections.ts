@@ -11,6 +11,10 @@ import type { ChatStore } from './store'
 import type { BrowserPeer, ChatDependencies } from './types'
 import type { AppEnv } from '../env'
 import { githubBranchLabels, labelGitHubMessage } from '../github/output'
+import {
+  continueLabels,
+  labelContinueMessage,
+} from '../lifecycle/continue-output'
 import { presentWorkspaceMessage } from './workspace-events'
 import { browserRegistration } from './browser-registration'
 
@@ -55,11 +59,7 @@ export class BrowserConnections extends BrowserTabs {
     peer: BrowserPeer,
     socket?: WebSocket,
   ): Promise<() => void> {
-    const presented = this.present(
-      peer,
-      access.presentation,
-      await githubBranchLabels(this.env, access.workspace),
-    )
+    const presented = await this.present(peer, access.presentation)
     let persist:
       ((registration: BrowserRegistration | null) => Promise<void>) | undefined
     if (socket) {
@@ -90,16 +90,23 @@ export class BrowserConnections extends BrowserTabs {
     })
   }
 
-  private present(
-    peer: BrowserPeer,
-    presentation: WorkspaceLinkContext,
-    labels: Awaited<ReturnType<typeof githubBranchLabels>>,
-  ) {
+  private async present(peer: BrowserPeer, presentation: WorkspaceLinkContext) {
+    const workspace = {
+      id: presentation.workspaceId,
+      orgId: presentation.orgId,
+    }
+    const [githubLabels, continuedLabels] = await Promise.all([
+      githubBranchLabels(this.env, workspace),
+      continueLabels(this.env, workspace),
+    ])
     return {
       send: (message: Parameters<typeof presentWorkspaceMessage>[0]) =>
         peer.send(
           presentWorkspaceMessage(
-            labelGitHubMessage(message, labels),
+            labelContinueMessage(
+              labelGitHubMessage(message, githubLabels),
+              continuedLabels,
+            ),
             presentation,
           ),
         ),
@@ -140,16 +147,12 @@ export class BrowserConnections extends BrowserTabs {
   ): Promise<boolean> {
     const saved = await this.registration(state)
     if (!saved) return false
-    const peer = this.present(
+    const peer = await this.present(
       {
         send: (message) => socket.send(JSON.stringify(message)),
         close: () => socket.close(1000, 'Connection closed.'),
       },
       saved.presentation,
-      await githubBranchLabels(this.env, {
-        id: saved.registration.identity.workspaceId,
-        orgId: saved.registration.identity.orgId,
-      }),
     )
     this.connections.set(socket, peer)
     await this.restore(peer, saved.registration, this.stateWriter(state.id))

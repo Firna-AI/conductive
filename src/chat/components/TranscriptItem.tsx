@@ -128,10 +128,11 @@ export function ItemView(props: {
     case 'lost':
       return <LostEventLine marker={item.marker} />
     case 'continued':
+      // Each branch shows by its label, or by its real name without one.
       return (
         <ContinuedLine
-          base={item.baseBranch}
-          branch={item.branch}
+          base={item.displayBaseBranch ?? item.baseBranch}
+          branch={item.displayBranch ?? item.branch}
           who={continuedBy(item.member, props.readers)}
         />
       )

@@ -147,6 +147,13 @@ reply.
 - A reply with local work ends the run with the question, which
   `ContinueDialog` of the workspace screen asks. Cancel sends nothing.
   Continue anyway starts again with the work allowed.
+- The reply reader keeps the optional `displayBaseBranch` of the question
+  and `displayUncommittedFiles` of its local work, and the store keeps them
+  in the question. `ContinueDialog` names the base by its label. A reply
+  can lack that label, such as a reply of an older Worker. The dialog then
+  takes the label of the bar when the bar names the same base, or else the
+  real name. `LocalWorkList` shows each file by its label, or by its real
+  path. The requests keep the real names.
 - A `continued` reply names an event number. Continuing shows until the
   ordered stream reaches it, so the workspace on its new branch and the
   note of each session show. The store of the new branch then follows.
@@ -190,3 +197,5 @@ says.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.
 - `barReady.test.ts`: the rules and the run of Ready for review.
+- `continueActions.test.ts`: the reader keeps the labels of a question,
+  and reads a question without usable labels as before.

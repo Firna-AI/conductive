@@ -1,4 +1,9 @@
 import type { SessionsResponse } from '../../src/shared/sessions'
+import type { AppEnv } from '../env'
+import {
+  continueLabels,
+  labelContinueHistory,
+} from '../lifecycle/continue-output'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
 import {
@@ -38,6 +43,7 @@ export async function chatRoute(
   operation: ChatOperation,
   dependencies: ChatDependencies,
   presentation: WorkspaceLinkContext,
+  env: AppEnv,
 ): Promise<Response> {
   const url = new URL(request.url)
   if (suffix === '/history' && request.method === 'GET') {
@@ -52,7 +58,16 @@ export async function chatRoute(
         through === null ? undefined : counter(Number(through)),
       ),
     )
-    return Response.json(presentWorkspaceHistory(history, presentation))
+    const labels = await continueLabels(env, {
+      id: presentation.workspaceId,
+      orgId: presentation.orgId,
+    })
+    return Response.json(
+      presentWorkspaceHistory(
+        labelContinueHistory(history, labels),
+        presentation,
+      ),
+    )
   }
   if (suffix === '/sessions') {
     if (request.method === 'GET') {
