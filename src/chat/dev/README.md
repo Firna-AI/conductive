@@ -71,7 +71,8 @@ fail its start, write the title of a workspace with no name, drop the
 connection, resend the last event, send two parts out of order, and connect
 the Mac again under a new pairing, whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. As in the Worker, Try again sends the
+changes, uploads, Resume, the view, and Explain, whose new session takes the
+anchor of the selection and a prompt that the page writes. As in the Worker, Try again sends the
 message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's

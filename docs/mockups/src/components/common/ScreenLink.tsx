@@ -65,3 +65,13 @@ export function ScreenLink(props: ScreenLinkProps) {
     </span>
   )
 }
+
+/** A control that opens a page of the catalogue, or the control alone. */
+export function Linked(props: { to?: string; children: ReactElement }) {
+  if (!props.to) return props.children
+  return (
+    <ScreenLink asChild to={props.to}>
+      {props.children}
+    </ScreenLink>
+  )
+}

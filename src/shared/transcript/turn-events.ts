@@ -118,7 +118,10 @@ export function endLostTurn(
   }
 }
 
-/** The text item of an agent message: a part adds to its earlier text. */
+/**
+ * The text item of an agent message: a part adds to its earlier text. The
+ * item stays complete once its `assistant.completed` event came.
+ */
 export function agentItem(
   items: readonly TranscriptItem[],
   event: AgentText,

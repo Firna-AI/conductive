@@ -60,6 +60,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
+        With Explain, the first message of a new session holds the text that
+        a member selects in a chat, with the text around it. That text can
+        come from a message of another member or from a session on another
+        login.
         Each Mac command request and its result also go to the agent and
         to that provider or endpoint. They also get each listed secret's
         name, description, and environment variable name. They get the

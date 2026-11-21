@@ -1,17 +1,23 @@
 import { useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useDismiss } from '../ui/dismiss'
-import { Menu } from '../ui/Menu'
-import { Sheet } from '../ui/overlays'
-import type { OpenTabMenu } from './useTabMenu'
+import { useDismiss } from './dismiss'
+import { Menu, type MenuEntry, type MenuPoint } from './Menu'
+import { Sheet } from './overlays'
+
+/** A menu that opens at a point of the window, with its title. */
+export interface OpenMenu {
+  title: string
+  at: MenuPoint
+  entries: readonly MenuEntry[]
+}
 
 /**
- * The menu of a tab at a point, above the page, because the row clips what
- * it holds. Escape or a press outside closes it. The menu of the browser
+ * A menu at a point, above the page, so no part that clips what it holds
+ * cuts it. Escape or a press outside closes it. The menu of the browser
  * stays shut over it, also when a browser sends its menu event to the focus
  * after the keys that opened this menu.
  */
-function PointMenu(props: { menu: OpenTabMenu; onClose: () => void }) {
+function MenuAtPoint(props: { menu: OpenMenu; onClose: () => void }) {
   const { menu } = props
   const frame = useRef<HTMLDivElement>(null)
   useDismiss(frame, true, props.onClose)
@@ -29,16 +35,17 @@ function PointMenu(props: { menu: OpenTabMenu; onClose: () => void }) {
 }
 
 /**
- * The open menu of a tab: at its point on desktop, and on a phone in a sheet
- * with the title of the tab, as the mockups draw it.
+ * An open menu at its point on a computer, and on a phone in a sheet with
+ * its title, as the mockups draw the menus of a tab and of the marks of
+ * explanations.
  */
-export function TabMenu(props: {
-  menu: OpenTabMenu
+export function PointMenu(props: {
+  menu: OpenMenu
   mobile: boolean
   onClose: () => void
 }) {
   const { menu } = props
-  if (!props.mobile) return <PointMenu menu={menu} onClose={props.onClose} />
+  if (!props.mobile) return <MenuAtPoint menu={menu} onClose={props.onClose} />
   return (
     <Sheet onClose={props.onClose} title={menu.title}>
       <Menu

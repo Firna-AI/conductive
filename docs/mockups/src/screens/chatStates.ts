@@ -23,7 +23,8 @@
  * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
  * session, and both Preview tabs stay in the row with their pages loaded.
  * A phone row shows no Preview tab, so a phone shows the page on its
- * Preview page.
+ * Preview page. `explanation` shows the tab of the explanation of Cal
+ * after Expand, at the end of the row.
  */
 export const tabStates = [
   'session',
@@ -47,6 +48,7 @@ export const tabStates = [
   'html-failed',
   'preview',
   'preview-behind',
+  'explanation',
 ] as const
 
 /**

@@ -21,7 +21,10 @@ export type TranscriptItem =
       id: string
       turnId: string
       text: string
-      /** Set when `assistant.completed` gave the whole text of the message. */
+      /**
+       * Set when `assistant.completed` gave the whole text of the message.
+       * A message that the agent still writes has no mark.
+       */
       complete?: true
     }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }

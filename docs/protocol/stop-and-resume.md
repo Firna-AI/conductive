@@ -78,6 +78,8 @@ says.
   also starts the sandbox (decision 260). It does so in the same cases as
   an open, and with the same checks. These cases are a stopped workspace
   and a workspace whose later start failed, such as a failed resume.
+- An accepted written prompt of [Explain](explain.md) also starts the
+  sandbox in the same cases, with the same checks.
 - An accepted notice for a late Allow or value answer to a secret request
   also starts the sandbox in the same cases, with the same checks. The
   notice starts a turn in the asking session, as

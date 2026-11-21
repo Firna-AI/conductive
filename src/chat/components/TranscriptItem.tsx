@@ -11,12 +11,14 @@ import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
 import { ChatText, SessionLinkText, useChatParts } from '../links/LinkedText'
+import { agentMessageId } from '../../shared/transcript/item-keys'
 import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
   continuedBy,
   turnCopy,
   type ChatReaders,
 } from '../../shared/transcript/turn-words'
+import { MarkedMessage } from '../explain/MarkedMessage'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
@@ -34,7 +36,9 @@ import type { StopFacts } from './turn-facts'
  * the message.
  */
 export function UserBubble(props: {
-  message: Pick<UserMessage, 'text' | 'attachments' | 'state'>
+  message: Pick<UserMessage, 'id' | 'text' | 'attachments' | 'state'>
+  /** The message is in the transcript, so Explain can mark its text. */
+  accepted?: boolean
 }) {
   const { message } = props
   const parts = useChatParts(message.text, {
@@ -43,10 +47,17 @@ export function UserBubble(props: {
     attachments: message.attachments,
   })
   const listed = filesWithoutChip(parts, message.attachments)
+  const text = <ChatText opens={message.state === 'sent'} parts={parts} />
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>
-        <ChatText opens={message.state === 'sent'} parts={parts} />
+        {props.accepted ? (
+          <MarkedMessage align="end" bubble done messageId={message.id}>
+            {text}
+          </MarkedMessage>
+        ) : (
+          text
+        )}
       </div>
       {listed.length > 0 ? <SentFiles attachments={listed} /> : null}
     </div>
@@ -103,9 +114,17 @@ export function ItemView(props: {
   const { item, actions } = props
   switch (item.kind) {
     case 'user':
-      return <UserBubble message={item.message} />
+      return <UserBubble accepted message={item.message} />
     case 'agent':
-      return <AgentText id={item.id} live={props.live} text={item.text} />
+      return (
+        <MarkedMessage
+          align="middle"
+          done={item.complete === true}
+          messageId={agentMessageId(item)}
+        >
+          <AgentText id={item.id} live={props.live} text={item.text} />
+        </MarkedMessage>
+      )
     case 'failed':
       return (
         <Notice

@@ -1,0 +1,21 @@
+/*
+ * The follow-up field: the box of a message box, with the full hairline
+ * outline and the fill of the composer, and its buttons at the end of its
+ * last line. Its text starts as far from the edge as in the composer.
+ */
+.field {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 1px 2px var(--ui-shadow);
+}
+
+.text {
+  flex: 1;
+  align-self: center;
+  min-width: 0;
+}

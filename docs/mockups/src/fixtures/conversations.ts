@@ -41,6 +41,7 @@ import { postcodeHistory } from './postcodeConversation'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
+import { explanationConversations } from './explanationChats'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
 import { taskListConversations } from './taskListConversations'
@@ -244,4 +245,5 @@ export const conversations: Readonly<
   /** The chat of the removed workspace that a chip opens. */
   'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
+  ...explanationConversations,
 }
