@@ -142,14 +142,21 @@ export async function advanceStartMachine(
       }
     if (status === 'error') throw new WorkspaceStartError(null)
     if (status !== 'ready') return null
-    await call(async () => {
-      await provider.setAutoStop(
-        sandboxId,
-        await workspaceAutoStopSeconds(env.DB),
-      )
-      if (job.kind === 'create')
-        await releaseImageLease(env.DB, job.orgId, job.workspaceId)
-    })
+    if (
+      job.autoStopSetAt === undefined ||
+      dependencies.now() - job.autoStopSetAt >= 60_000
+    ) {
+      await call(async () => {
+        await provider.setAutoStop(
+          sandboxId,
+          await workspaceAutoStopSeconds(env.DB),
+        )
+      })
+      job.autoStopSetAt = dependencies.now()
+      await storage.update(job)
+    }
+    if (job.kind === 'create')
+      await call(() => releaseImageLease(env.DB, job.orgId, job.workspaceId))
     await endpoint.lifecycleStep(
       job.kind === 'create' ? 'image' : 'disk',
       job.kind === 'create'
