@@ -45,9 +45,7 @@ async fn remove(path: PathBuf) -> Result<()> {
 #[async_trait]
 impl Startup for RunnerStartup {
     async fn prepare(&self) -> Result<()> {
-        if let Some(mut entries) =
-            directory(&self.home.join(".conductive/anthropic/credentials")).await?
-        {
+        if let Some(mut entries) = directory(&self.home.join(".conductive/anthropic")).await? {
             while let Some(entry) = entries.next_entry().await.internal()? {
                 remove(entry.path()).await?;
             }

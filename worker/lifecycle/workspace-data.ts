@@ -220,6 +220,7 @@ export async function deleteProvisionalWorkspace(
   ])
 }
 
+/** Timing `records` of starts go to D1 in the same batch as the state. */
 export async function persistLifecycleState(
   db: D1Database,
   input: {
@@ -233,8 +234,9 @@ export async function persistLifecycleState(
     error: { code: string; message: string } | null
   },
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db
+  const update = db
     .prepare(
       `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
@@ -255,7 +257,8 @@ export async function persistLifecycleState(
       input.workspaceId,
       input.orgId,
     )
-    .run()
+  if (records.length) await db.batch([update, ...records])
+  else await update.run()
 }
 
 export async function revokeWorkspacePreviews(

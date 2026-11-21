@@ -82,7 +82,10 @@ says.
    that an agent started. Otherwise, the next start of the runner applies
    the release (sandbox software decision 5). The preview relay and the
    terminal run a new release from their next start.
-6. Each build of an org image or of the software image installs the newest
+6. Before the runner starts a release, the updater downloads again each
+   part of that release that is missing from the disk, as
+   [Updates](../protocol/sandbox-software.md#updates) says.
+7. Each build of an org image or of the software image installs the newest
    release through the same program. When the image already holds the
    program, the build uses its updater, which downloads only the parts
    that changed.

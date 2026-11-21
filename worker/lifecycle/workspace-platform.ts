@@ -5,6 +5,7 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
 import type { WorkspaceStorage } from './platform-storage'
+import type { StartJobRecords } from './start-job-records'
 
 export interface WorkspaceEventPublication {
   workspaceId: string
@@ -20,6 +21,7 @@ interface WorkspaceChatRecovery {
 
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
+  startRecords?: StartJobRecords
   assertStartActive?(turn: QueueTurn): Promise<void>
   hasOutsideTurns?(): boolean
   blockConcurrencyWhile<T>(operation: () => Promise<T>): Promise<T>
@@ -28,7 +30,7 @@ export interface WorkspacePlatform {
   admitFirstMessage?(
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void>
-  stopped?(workspaceId: string): Promise<void>
+  stopped?(workspaceId: string, keepQueued?: boolean): Promise<void>
   stopping?(workspaceId: string): Promise<void>
   deviceWaiting?(workspaceId: string): Promise<boolean>
   readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>

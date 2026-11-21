@@ -2,8 +2,9 @@
 
 This guide belongs to [Agent text](agent-text.md). It gives the rules of
 the code that reads and draws the links of chat text: web links, the
-workspace chips of sent messages and answers, and the file chips and the
-pictures of answers. [Chat links](../../docs/protocol/chat-links.md),
+workspace chips of sent messages and answers, and the file chips of
+answers. Its linked guide [Pictures in answers](answer-pictures.md) gives
+the pictures of answers. [Chat links](../../docs/protocol/chat-links.md),
 [Workspace links](../../docs/protocol/workspace-links.md), and
 [File mentions](../../docs/protocol/file-mentions-answers.md) state the
 requirements.
@@ -56,12 +57,18 @@ which shows its Markdown as typed.
 - `answerParts` reads each bare address in the text nodes of the tree with
   `bareAddressAt`. Before marks pair, the parser keeps each bare address as
   plain text, with the existing trailing-mark boundaries.
+- The `bare_address` rule of the parser keeps bare addresses only in the
+  read that makes the tokens. Keep it so. `markdown-it` also calls each
+  inline rule with `silent`, to find the `]` that ends a label. Those
+  calls add no text to `state.pending`, which still holds the text
+  before the link. An address that the rule read in the label could take
+  in its `]`, and the parser would then read no link.
 - `src/markdown/markdown-destination.ts` holds `readInlineTarget`. It
   reads the target of an inline link after its `(`: the spaces and line
   breaks around the address, the address, an optional link title, and the
-  `)`. Sent messages, the message field, and the mockups share it through
-  `lineTargets`, with its address boundaries, its escape decoding, and its
-  length limits.
+  `)`. Sent messages and the message field share it through
+  `lineTargets`, also in the mockups, with its address boundaries, its
+  escape decoding, and its length limits.
 - One scan reads an address in angle brackets. As in CommonMark, it ends
   at the first `>` that no backslash escapes. It refuses an address with
   a `<` that no backslash escapes, or with an LF. A backslash does not
@@ -74,11 +81,11 @@ which shows its Markdown as typed.
   address, as typed, inside any angle brackets. A link or a chip leads to
   the decoded address. Where the Markdown shows as typed, the address
   shows its source.
-- Sent messages, the message field, and the mockups read each target
-  through `lineTargets` of the same module. It keeps each Markdown link on
-  one line, as its label is. A line break inside its parentheses makes it
-  no Markdown link, so no chip of a sent message or of the field takes in
-  a line break.
+- Sent messages and the message field read each target through
+  `lineTargets` of the same module, also in the mockups. It keeps each
+  Markdown link on one line, as its label is. A line break inside its
+  parentheses makes it no Markdown link, so no chip of a sent message or
+  of the field takes in a line break.
 - `lineTargets` reads each target of a text once. Keep it so. The readers
   try a link at each `[`, and many `[` can reach the same `(`. One read
   for each `[` would take seconds for a crafted message.
@@ -112,7 +119,7 @@ text. These parts read and draw them:
   angle brackets shows its brackets.
 - No picture at a web address loads. An image of a file of the tree is a
   link to the file, or its picture, as
-  [Pictures in answers](#pictures-in-answers) says. An image whose address
+  [Pictures in answers](answer-pictures.md) says. An image whose address
   the `web` reader accepts shows its alt text as a link, by the rules of a
   label. Another image shows its alt text only. An
   image in a label shows its alt text as words of the label.
@@ -209,7 +216,7 @@ text. These parts read and draw them:
   `FileTextLink` in `markdown/FileTextLink.tsx` draws a normal link with
   the label, which opens the file. A label that shows nothing shows the
   name of the entry. An image of a picture file can show as its picture
-  instead, as [Pictures in answers](#pictures-in-answers) says.
+  instead, as [Pictures in answers](answer-pictures.md) says.
 - `textParts` in `markdown/answer-text.ts` reads the mentions of a text
   node. A mention starts at the start of the block, after a space or a
   line break, right after a mark, or right after a `*`, `_`, or `~~` that
@@ -235,58 +242,5 @@ text. These parts read and draw them:
 
 ## Pictures in answers
 
-[Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
-states the requirements. These parts read and draw the pictures:
-
-- `answerParts` sets `picture` on the `file-link` part of an image of a
-  PNG, JPEG, GIF, or WebP file, which `pictureType` of
-  `src/files/page/file-view.ts` knows by the name. `picture` holds the
-  image as the agent wrote it, from `imageSource` of the parser. A link, a
-  folder, and each other file, such as an SVG file, keep `picture` null.
-  The part does not know where it shows, so one reading serves each
-  place.
-- `AnswerText` takes `pictures`, an `AnswerPictures` with the ID of the
-  agent message. It draws a part with `picture` as `FilePicture` only with
-  `pictures`, else as `FileTextLink`. `AgentText` gives `pictures`, with
-  the ID of its item in the transcript, to its paragraphs and list items,
-  also inside a quote. A heading and a table cell get none, so the image
-  keeps its link there.
-- `MessageLine` gives `pictures` only while the line is open, through the
-  `LineState` of `components/LineBlocks.tsx`, also to the blocks that open
-  under the line. So the closed line shows the link and stays one line.
-  The hidden copy of a line that starts with a table gets none.
-- `FilePicture`, in `links/FilePicture.tsx`, draws the mockups'
-  `AnswerPicture` with an opener: the link of `fileOpener`. So a plain
-  press opens the file tab in each state, and a press with a modifier key
-  stays with the browser. The title is the path. The alternative text and
-  the label of the box are the label as plain text, without its marks,
-  with a space for each line break. The link shows the label as
-  `AnswerText` draws it, with its code and its marks, so it looks as the
-  link of each other file.
-- Without `ChatMentions.pictures`, the picture shows the link and watches
-  nothing. With a reader, the box of the label shows until the read and
-  the decode end. `useNearView`, in `ui/near-view.ts`, watches the box
-  with an `IntersectionObserver`. The read starts when the box comes
-  within 400 CSS px of the part of the chat that shows.
-- `ChatPane` gives its scroll box to the observer as its root, through
-  `NearViewRoot`. Reason: a scroll box clips each element at its own
-  edges, so a margin around the window does not reach into the chat.
-  Outside a chat, the margin applies to the window. Without
-  `IntersectionObserver`, the read starts at once.
-- `usePictureRead`, in `links/picture-read.ts`, reads the path with
-  `ChatPictures.read`, with the ID of the agent message as `message`.
-  Then `decodePicture` of `src/files/page/decode-picture.ts` gives the
-  size. A failed read and bytes that the browser cannot draw show the
-  link. An unmount, or a change of the reader, the path, or the message,
-  aborts the read and stops the decode.
-- When the shell takes the reader away, as when the sandbox stops, each
-  picture shows its link. When the reader comes back, the read gives the
-  result that the reader kept, and the picture shows again.
-- A picture is a link, so a press on a picture in an open message line
-  opens the file, and `useFold` leaves the line open.
-- In the box and the picture states, `FilePicture` puts its link in a
-  span with `data-mention`, beside a `ChipCopyText` with the Markdown
-  image as the agent wrote it. So a copy gives that Markdown, as a copy of
-  a chip gives its mention, and the copy holds no picture bytes. The link
-  state has no such span, so a copy gives the label, as for each other
-  link.
+[Pictures in answers](answer-pictures.md) gives the rules of the code that
+reads and draws the pictures of answers.

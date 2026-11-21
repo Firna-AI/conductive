@@ -12,7 +12,8 @@ import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
 import type { WorkspaceStartIntent, WorkspaceStartJob } from './start-types'
-import { durableStartStorage, START_JOB_KEY } from './start-storage'
+import { START_JOB_KEY } from './start-storage'
+import { startJobStorage } from './start-record-storage'
 import { readStartLog } from './start-log-storage'
 import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import { workspaceActionContext } from './workspace-actions'
@@ -48,7 +49,7 @@ export function createWorkspaceController(
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
   const alarms = workspaceTaskAlarms(platform.storage)
   const startStorage = taskWorkspaceStorage(platform.storage, 'lifecycle:start')
-  const startJobs = durableStartStorage(platform.storage, dependencies.now, env)
+  const startJobs = startJobStorage(platform, dependencies.now, env)
   const cleanupStorage = taskWorkspaceStorage(
     platform.storage,
     'lifecycle:cleanup',
@@ -233,8 +234,8 @@ export function createWorkspaceController(
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },
-    async runnerLifecycleDisconnected(publish): Promise<void> {
-      await lifecycle.runnerDisconnected(publish)
+    async runnerLifecycleDisconnected(publish, at): Promise<void> {
+      await lifecycle.runnerDisconnected(publish, at)
     },
     runnerProtocolUnsupported: (reason) => starts.runnerUnsupported(reason),
     async scheduleImage(state: ImageCoordinatorState): Promise<void> {
@@ -252,15 +253,15 @@ export function createWorkspaceController(
         lifecycle,
       )
     },
-    async alarm(turn): Promise<void> {
+    async alarm(turn, restart): Promise<void> {
       await runWorkspaceAlarm({
         turn,
         storage: platform.storage,
-        env: env,
-        dependencies: dependencies,
-        images: images,
-        starts: starts,
-        lifecycle: lifecycle,
+        env,
+        dependencies,
+        images,
+        starts,
+        lifecycle,
         accessStop,
         alarms,
         startStorage,
@@ -268,6 +269,8 @@ export function createWorkspaceController(
         cleanupStorage,
         archive,
         computerStops,
+        runs: platform.startRecords,
+        restart,
       })
     },
   }

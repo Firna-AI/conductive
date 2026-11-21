@@ -1,7 +1,9 @@
 import { useRef, type ReactNode } from 'react'
 import { useModalLayer } from '../../shell/ui/layers'
+import { classes } from '../../../docs/mockups/src/components/common/classes'
 import sheetStyles from '../../../docs/mockups/src/components/common/Sheet.module.css'
 import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
+import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
 import { useEscape, useFocusInside, useFocusTrap } from './dismiss'
 
 type FirstFocus = (node: HTMLElement) => HTMLElement | null
@@ -62,13 +64,15 @@ function DesktopDialog(props: {
       <section
         aria-label={props.title}
         aria-modal
-        className={styles.dialog}
+        className={classes(styles.dialog, card.card)}
         ref={ref}
         role="dialog"
       >
-        <h2 className={styles.title}>{props.title}</h2>
-        {props.children}
-        <div className={styles.actions}>{props.actions}</div>
+        <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+        <div className={classes(styles.body, card.body)}>{props.children}</div>
+        <div className={classes(styles.actions, card.foot)}>
+          {props.actions}
+        </div>
       </section>
     </div>
   )
@@ -78,7 +82,9 @@ function DesktopDialog(props: {
  * A question that the user confirms before an action: a dialog over the
  * dimmed app on desktop, and a sheet on a phone. The actions come last, with
  * the confirming action at the end. The focus starts on the first action,
- * the safe one, Tab stays inside, and Escape cancels.
+ * the safe one, Tab stays inside, and Escape cancels. A desktop dialog
+ * taller than its room keeps its title and its actions, and its content
+ * scrolls between them.
  */
 export function ConfirmDialog(props: {
   title: string

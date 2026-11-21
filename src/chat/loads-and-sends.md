@@ -106,6 +106,20 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   tab shows again. The notice "The session didn't close" shows with the
   tab, or on the shown tab when the restored tab stays hidden.
   [`state/close-actions.ts`](state/close-actions.ts) holds these steps.
+- A history load, and the stored history that the stream sends before its
+  live events, each replay stored events in pages. While a replay runs,
+  the chat holds the changes that its session records make to the open
+  tabs, their order, and the shown tab. A page shows its messages and the
+  newer fields of its session records, such as a title or a model, when it
+  merges. When no replay runs any more, the tabs follow the newest record
+  of each session. When the connection of the stream drops during its
+  replay, the hold lasts until the next final page, also an empty one. A
+  failed history load does not apply the changes that it held.
+- A close, a reopen, a choice of a tab, and a model change apply at once,
+  also during a replay. A failed close during a replay puts its tab back,
+  also when a page of the replay says that the session closed.
+  [`state/session-replay.ts`](state/session-replay.ts) holds the steps of a
+  replay.
 
 ## Sends and Stop
 

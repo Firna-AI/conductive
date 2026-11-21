@@ -28,9 +28,7 @@ it('bounds lasting start status faults across alarm restarts and retains existin
   })
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(earlyCalls).toBe(calls)
-  expect(
-    fixture.boat.deadlineIds.filter((id) => id === 'bx_1').length,
-  ).toBeGreaterThan(4)
+  expect(fixture.boat.deadlineIds).toEqual(['bx_1'])
 })
 
 it('preserves captured start output and lets cancellation bypass a pending retry', async () => {
@@ -45,6 +43,8 @@ it('preserves captured start output and lets cancellation bypass a pending retry
   expect((await start.endpoint.readLifecycleStartLog()).text).toContain(
     'captured output\n',
   )
+  fixture.boat.commandRunning = true
+  fixture.boat.commandOutput = ''
   await start.tick(now + 2_000)
   fault.fail('60')
   await start.tick(now + 3_000)

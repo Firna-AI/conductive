@@ -49,3 +49,39 @@ it('dispatches the minute scan separately from all 15-minute maintenance and ign
   expect(retryApprovalEmails).toHaveBeenCalledTimes(1)
   expect(scanAutomationSchedules).toHaveBeenCalledTimes(1)
 })
+
+it('deletes job step records older than 90 days in the 15-minute maintenance', async () => {
+  const app = createApp({ now: () => TEST_TIME })
+  const db = harness.env.DB
+  const old = TEST_TIME - 90 * 86_400_000 - 1
+  const kept = TEST_TIME - 89 * 86_400_000
+  await db.batch(
+    [
+      ['old-job', old],
+      ['kept-job', kept],
+    ].flatMap(([jobId, at]) => [
+      db
+        .prepare(
+          `INSERT INTO job_steps (job_id, step, job_kind, org_id, started_at)
+           VALUES (?, 'phase:machine', 'resume', 'org', ?)`,
+        )
+        .bind(jobId, at),
+      db
+        .prepare(
+          `INSERT INTO job_runs (job_id, run_number, job_kind, org_id, phase, began_at, ended_at)
+           VALUES (?, 1, 'resume', 'org', 'machine', ?, ?)`,
+        )
+        .bind(jobId, at, at),
+    ]),
+  )
+  await app.scheduled(
+    { cron: '*/15 * * * *', scheduledTime: TEST_TIME, noRetry() {} },
+    harness.env,
+  )
+  const left = await db
+    .prepare(
+      'SELECT job_id AS id FROM job_steps UNION ALL SELECT job_id AS id FROM job_runs',
+    )
+    .all<{ id: string }>()
+  expect(left.results.map((row) => row.id)).toEqual(['kept-job', 'kept-job'])
+})

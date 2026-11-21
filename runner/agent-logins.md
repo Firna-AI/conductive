@@ -100,21 +100,26 @@ The next runner start removes stale credential files.
 ## Claude
 
 - Before it starts the `claude` program, the Claude adapter writes the
-  profile pair of the session into `<home>/.conductive/anthropic`. That
-  folder is beside the `claude` and `codex` folders of the agents. It has
-  mode 0700.
+  profile pair into a new profile folder in
+  `<home>/.conductive/anthropic/credentials`. The `anthropic` folder is
+  beside the `claude` and `codex` folders of the agents.
+- The profile folder belongs to that one agent process. Its name is
+  `process-` and a random suffix. So each agent process gets its own
+  folder, also when one session starts two processes.
+- The profile folder holds its own `configs` and `credentials` folders.
+  These two folders, the profile folder, the `anthropic` folder, and its
+  `credentials` folder have mode 0700.
 - `configs/<name>.json` holds the gateway address of Claude as `base_url`,
   and `user_oauth` as `authentication.type`.
 - `credentials/<name>.json` holds the turn token as `access_token`. The
-  file has mode 0600, in a `credentials` folder with mode 0700. Each write
-  sets these modes again. The pinned program refuses a credentials file
-  that other users can read.
+  file has mode 0600. Each write sets these modes again. The pinned
+  program refuses a credentials file that other users can read.
 - The name is `session-`, then the hexadecimal SHA-256 hash of the session
   ID. So each session keeps one name, and two sessions never share a token.
-- The adapter starts the program with `ANTHROPIC_CONFIG_DIR` set to that
-  folder, and `ANTHROPIC_PROFILE` set to that name. The runner gives the
-  program no descriptor credential, no `ANTHROPIC_BASE_URL`, no API key,
-  and no auth token.
+- The adapter starts the program with `ANTHROPIC_CONFIG_DIR` set to the
+  profile folder, and `ANTHROPIC_PROFILE` set to that name. The runner
+  gives the program no descriptor credential, no `ANTHROPIC_BASE_URL`, no
+  API key, and no auth token.
 - The runner adds no gateway address, no proxy setting, and no certificate
   setting of its own to that environment or to the flag settings.
 - The pinned program reads the address and the token from the profile
@@ -124,22 +129,25 @@ The next runner start removes stale credential files.
   `.claude/settings.json` of the repository can set `ANTHROPIC_BASE_URL`.
   The program then sends each model request and the turn token to that
   address.
-- The lifetime of the agent process removes the credentials file after the
-  program exits. So the file goes at each end of a turn, at Stop, at a
-  shutdown, and after a failed start.
-- Stop also removes the file when it comes while the adapter still writes
-  the profile pair. The config file stays, and it holds no secret.
-- Before its first connection, the runner removes each entry of the
-  `credentials` folder. So no token stays after a crash. A reconnect
-  removes nothing.
+- The lifetime of the agent process removes the profile folder after the
+  program exits, with each file in it. So the folder goes at each end of a
+  turn, at Stop, at a shutdown, and after a failed start.
+- Stop also removes the folder when it comes while the adapter still
+  writes the profile pair.
+- Before its first connection, the runner removes each entry of
+  `<home>/.conductive/anthropic`, whatever its name. So no token and no
+  lock stay after a crash. A reconnect removes nothing, so the folders of
+  running agent processes stay.
 - While the pinned program reads a credentials file, it locks the folder
-  that holds the file. Its lock is the folder `credentials.lock`, beside
-  the `credentials` folder. The program removes the lock at a normal exit
-  and at each signal that it can catch.
-- The removal before the first connection keeps that lock, because the
-  lock is outside the `credentials` folder. A hard kill of the program
-  during a read can leave the lock. Then no later program can read its
-  token until the lock is 60 seconds old.
+  that holds the file. Its lock is the folder `credentials.lock` in the
+  profile folder, beside the `credentials` folder of the profile. So each
+  Claude agent start uses a separate lock. The program removes the lock
+  at a normal exit and at each signal that it can catch.
+- A hard kill of the program during a read can leave the lock. The removal
+  of the profile folder after the exit also removes that lock.
+- When the helper ends before that removal, the folder stays until the
+  next runner start. Its lock blocks no later agent process, because each
+  agent process gets a new folder.
 - The runner uses its own folder, not the default Anthropic folder
   `~/.anthropic`. So the Anthropic profiles of a project stay as they are.
 - A tool process inherits `ANTHROPIC_CONFIG_DIR` and `ANTHROPIC_PROFILE`.
@@ -241,14 +249,16 @@ because no runner command carries a login.
 The [Rust command tests](../crates/cnd-runner/src/json/_tests_/command_tests.rs)
 check typed credentials, public ChatGPT claims, author tolerance, and cache values.
 The [helper process tests](../crates/cnd-runner/tests/engine/helper_process_tests.rs)
-check correlated pipe requests and process exit.
+check correlated pipe requests, process exit, and the removal of stale credentials before the first connection.
+The [runtime tests](../crates/cnd-runner/tests/core/runtime_tests.rs)
+check that a reconnect keeps the profile folders of running Claude processes.
 The [engine tests](../crates/cnd-runner/tests/engine/)
 check credential continuity and helper cleanup before completion.
 The [filter tests](../crates/cnd-runner/src/filter/_tests_/)
 check split tokens before event storage.
 
 Helper tests stay under `sdk-helper/src/providers/`.
-They check Claude profile files, cache settings, native descriptor pipes,
+They check Claude profile folders and their locks, cache settings, native descriptor pipes,
 Codex private login, temporary ChatGPT files, and cleanup after cancellation.
 These fake SDK checks prove no real login or model request.
 
@@ -259,7 +269,7 @@ These fake SDK checks prove no real login or model request.
 - [helper](../crates/cnd-runner/src/helper/) starts private pipes and clears stale credentials before the first connection.
 - [filter](../crates/cnd-runner/src/filter/) keeps workspace and historical turn tokens in memory.
 - [environment.ts](sdk-helper/src/providers/environment.ts) builds each agent environment.
-- [claude-profile.ts](sdk-helper/src/providers/claude-profile.ts) writes private Claude credentials and removes stale files.
+- [claude-profile.ts](sdk-helper/src/providers/claude-profile.ts) makes the private profile folder of each Claude process and removes it.
 - [claude.ts](sdk-helper/src/providers/claude.ts) and
   [claude-process.ts](sdk-helper/src/providers/claude-process.ts) start the pinned agent through the SDK.
 - [codex.ts](sdk-helper/src/providers/codex.ts),

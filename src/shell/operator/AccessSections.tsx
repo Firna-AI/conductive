@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Ban } from 'lucide-react'
 import {
   accessTerms,
@@ -102,8 +103,11 @@ function WayIn(props: { source: OperatorAccessSource }) {
   }
 }
 
-/** A state, with a short muted line under it that says why. */
-function StateWithReason(props: { state: string; reason: string }) {
+/**
+ * A state, with a short muted line under it that says why. The state can be
+ * a word or a part, such as `StatusText` or an account ID.
+ */
+export function StateWithReason(props: { state: ReactNode; reason: string }) {
   return (
     <span className={styles.lines}>
       {props.state}

@@ -111,7 +111,8 @@ keeps them after the merge.
 - [Restart the software](restart-the-software.md) holds the requirements
   of Restart in the workspace header: the states that offer it, what it
   restarts, the download of the newest release, who may restart, and a
-  failed restart.
+  failed restart. It also holds the automatic restart, which the Worker
+  starts by itself when the agent runner stays away while a message waits.
 
 ## Archive
 

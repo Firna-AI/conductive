@@ -6,7 +6,9 @@ pub mod engine;
 pub mod error;
 pub mod http;
 pub mod ports;
+pub mod presence;
 pub mod process;
+mod repair;
 pub mod staging;
 mod state;
 
@@ -19,6 +21,9 @@ mod check_tests;
 #[cfg(test)]
 #[path = "_tests_/parts_tests.rs"]
 mod parts_tests;
+#[cfg(test)]
+#[path = "_tests_/repair_tests.rs"]
+mod repair_tests;
 
 #[cfg(test)]
 #[path = "_tests_/support.rs"]
@@ -27,3 +32,7 @@ mod test_support;
 #[cfg(test)]
 #[path = "_tests_/warning_tests.rs"]
 mod warning_tests;
+
+#[cfg(test)]
+#[path = "_tests_/warned_parts.rs"]
+mod warned_parts;

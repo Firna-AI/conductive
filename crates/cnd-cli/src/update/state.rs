@@ -79,16 +79,17 @@ impl DiskStore {
         Ok(())
     }
 
+    pub(super) fn version_parts(&self, version: &str) -> Result<PartsList> {
+        serde_json::from_slice(&fs::read(self.version_path(version).join("parts.json")).internal()?)
+            .internal()
+    }
+
     pub(super) fn collect_unused(&self, versions: &[String]) -> Result<()> {
         let keep: HashSet<_> = versions.iter().cloned().collect();
         let mut digests = HashSet::new();
         for version in &keep {
-            let parts: PartsList = serde_json::from_slice(
-                &fs::read(self.version_path(version).join("parts.json")).internal()?,
-            )
-            .internal()?;
             digests.extend(
-                parts
+                self.version_parts(version)?
                     .parts
                     .into_iter()
                     .map(|part| part.sha256.to_ascii_lowercase()),

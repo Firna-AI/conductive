@@ -1,6 +1,5 @@
-import { FolderX, PowerOff, UserX } from 'lucide-react'
-import { Notice } from '../components/common/Notice'
-import { SectionText } from '../components/settings/Section'
+import { notice } from '../entries/components/common/Notice.mockup'
+import { sectionText } from '../entries/components/settings/Section.mockup'
 import { orgs } from '../fixtures/orgs'
 import {
   offAfterFailedRuns,
@@ -22,9 +21,9 @@ function ReadOnlyNote(props: {
       : ' You can delete it.'
   }
   return (
-    <SectionText muted>
+    <sectionText.Component moklyInstance="owner-only-text" muted>
       {`Only ${automation.owner.name} can change this automation.${actions}`}
-    </SectionText>
+    </sectionText.Component>
   )
 }
 
@@ -38,13 +37,14 @@ function FailedRunsNotice(props: {
   ownerViews: boolean
 }) {
   return (
-    <Notice
+    <notice.Component
       body={
         props.ownerViews
           ? 'Three runs in a row failed. Fix the cause, then turn it on.'
           : `Three runs in a row failed. Only ${props.automation.owner.name} can turn it on again.`
       }
-      icon={PowerOff}
+      icon="power-off"
+      moklyInstance="failed-runs"
       title="This automation turned off"
       tone="danger"
     />
@@ -80,9 +80,10 @@ function RepositoryRemovedNotice(props: {
       : `${removed} Only ${owner} can turn it on again.`
   }
   return (
-    <Notice
+    <notice.Component
       body={body}
-      icon={FolderX}
+      icon="folder-x"
+      moklyInstance="repository-removed"
       title="This automation turned off"
       tone="danger"
     />
@@ -121,9 +122,10 @@ export function AutomationNote(props: {
   }
   if (!automation.movedFrom) return null
   return (
-    <Notice
+    <notice.Component
       body={`${automation.movedFrom} left ${orgs.acme.name}. It stays off until you turn it on.`}
-      icon={UserX}
+      icon="user-x"
+      moklyInstance="moved-to-you"
       title="This automation moved to you"
     />
   )

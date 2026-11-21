@@ -18,5 +18,8 @@
 - **Left out:** A test for the class, because B removes the wrong case.
 - **Wider fix:** B.
 - **Previous examples:** Review item 1 of the Restart branch.
+- **Related:**
+  - `plans/follow-ups/failed-restart-keeps-running-sessions.md`: a shared wider fix. Its option E merges option B here, and also reads the running turns from the committed chat. Apply the two in one branch.
+  - `plans/follow-ups/failed-restart-error-hidden-by-turn-end.md`: its option D uses the helper of option B here, so that a turn end keeps each error state whose sandbox may run.
 - **Recommendation:** B.
 - **Action:** fix after merge, apply B, because it changes the alarm of every error state.

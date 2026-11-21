@@ -13,6 +13,7 @@ import { localSourceFixture } from './local-source-test-support'
 import { createGitHubImageSourceMaterializer } from './materialize'
 import { INSTALLATION_TOKEN } from './native-github-test-support'
 import { readSourceJob } from './source-data'
+import { openBuildStepStatement } from '../job-steps'
 
 const keys = generateKeyPairSync('rsa', { modulusLength: 2048 })
 const privateKey = keys.privateKey
@@ -249,6 +250,32 @@ it('refuses a nonempty remote when its captured default branch is missing', asyn
     await expect(fixture.finish()).rejects.toMatchObject(FAILURE)
     expect(fixture.access.activeTokens).toEqual([])
     expect(fixture.provider.commands).toHaveLength(3)
+  } finally {
+    await fixture.dispose()
+  }
+})
+
+it('ends the boot step of a build when its first copy starts', async () => {
+  const fixture = await localSourceFixture(harness, privateKey)
+  try {
+    const db = fixture.env.DB
+    const id = fixture.input.buildId
+    await openBuildStepStatement(db, id, 'computer:boot', TEST_TIME - 1).run()
+    await fixture.finish()
+    const heading = await db
+      .prepare(
+        "SELECT occurred_at AS at FROM image_build_logs WHERE build_id = ? AND text = 'Updating the repositories.\n'",
+      )
+      .bind(id)
+      .first<{ at: number }>()
+    expect(
+      await db
+        .prepare(
+          "SELECT ended_at AS endedAt, outcome FROM job_steps WHERE job_id = ? AND step = 'computer:boot'",
+        )
+        .bind(id)
+        .first(),
+    ).toEqual({ endedAt: heading?.at, outcome: 'done' })
   } finally {
     await fixture.dispose()
   }

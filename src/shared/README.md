@@ -174,6 +174,13 @@ browser event stream, and the session paths, logins, and replies.
 It uses generated `SessionLogin`, or null when no login serves that owner.
 Every reader gets that value without a secret, endpoint host, or full address.
 It does not change the automation owner's GitHub identity.
+`AutomationResponse.chosenSecrets` gives each chosen secret of the automation as its `id` and `name` from `OrgSecret` in `secrets.ts`.
+It never holds a value.
+It sorts by name, then by ID, as the org secrets list does.
+The current Worker always sends it, as an empty list when no secret is chosen.
+The field is optional, because a reply from a previous Worker omits it.
+The app then takes the names from the org secrets list.
+An older copy of the app ignores the field.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `termsRevision(document)` computes it from the text of `termsDocument` in [`terms.ts`](../marketing/terms.ts): `terms-` and a 14-digit hex digest.
@@ -186,6 +193,15 @@ So a new field or a new paragraph break also gives a new revision, and each user
 suspensions. Operator org rows and pages include `providerAccount`.
 `operator-providers.ts` defines the operator-only account list, integer
 weights, org counts, last operator change, and the GET and PUT path.
+`operator-switch.ts` defines the operator's org account switch path,
+request, record, stop reply, and org detail fields. Switch records carry
+the operator and time of each request and stop, wait reasons, job identity,
+build times, a failure cause, and the account-change time. The detail
+adds the newest visible switch, last completed switch, running job, wait
+reason, and workspace counts by account. These fields are optional on
+`OperatorOrgDetail` for existing readers and older replies.
+The optional `switchAvailable` boolean permits new switch actions only
+when true. Existing switch reads and Stop do not depend on it.
 The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`

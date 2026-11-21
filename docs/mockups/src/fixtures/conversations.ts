@@ -1,9 +1,11 @@
 /**
- * Chat transcripts. Text in backticks renders as inline code.
+ * Chat transcripts. In the text of a member's message, text in backticks
+ * renders as inline code. An agent message holds the blocks of the app, as
+ * the builders of `agentText.ts` write them.
  */
 
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import type { StandardSpeedCause } from '../components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
@@ -26,12 +28,9 @@ import {
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import { formattingConversations } from './formattingConversations'
-import {
-  headingConversations,
-  type MessageHeading,
-} from './headingConversations'
+import { headingConversations } from './headingConversations'
 import { linkedConversations } from './linkedConversations'
-import { listConversations, type MessageList } from './listConversations'
+import { listConversations } from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
@@ -39,7 +38,6 @@ import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { postcodeHistory } from './postcodeConversation'
-import type { MessageQuote, MessageRule } from './proseBlocks'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
@@ -59,25 +57,6 @@ export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
 
-/** A table in a message of the agent. A short row keeps only its own cells. */
-export type MessageTable = { kind: 'table' } & TableCells<string>
-
-/** A code block in a message of the agent, with its text as written. */
-type MessageCodeBlock = { kind: 'code'; text: string }
-
-/**
- * A block of a message of the agent: a paragraph, a heading, a table, a
- * list, a code block, a quote, or a rule.
- */
-export type AgentBlock =
-  | string
-  | MessageHeading
-  | MessageTable
-  | MessageList
-  | MessageCodeBlock
-  | MessageQuote
-  | MessageRule
-
 export type ChatItem =
   | {
       kind: 'user'
@@ -93,13 +72,11 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The blocks of the message, in order. */
-      blocks: readonly AgentBlock[]
       /**
-       * The agent still writes the message, so a mark that opens at the end
-       * of its text closes there (item 9 C of the Markdown plan).
+       * The blocks of the message, in order, as the app reads them from the
+       * Markdown of the agent. `agentText.ts` gives their builders.
        */
-      live?: true
+      blocks: readonly TextBlock[]
     }
   | {
       kind: 'tool'

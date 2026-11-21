@@ -1,6 +1,6 @@
 //! Descriptor-verified opens shared by file tabs and the HTTP file server.
 
-use std::fs::{self, File};
+use std::fs::{self, File, Metadata};
 use std::os::fd::AsRawFd;
 use std::path::{Path, PathBuf};
 
@@ -12,6 +12,7 @@ use super::error::{Error, ErrorResultExt, Result};
 pub(crate) struct VerifiedFile {
     pub(crate) file: File,
     pub(crate) target: PathBuf,
+    pub(super) metadata: Metadata,
 }
 
 fn file_error(error: std::io::Error) -> Error {
@@ -55,16 +56,18 @@ fn verified_open(root: &Path, path: &str) -> Result<VerifiedFile> {
     if !inside(&canonical, &opened) {
         return Err(Error::Unavailable);
     }
+    let metadata = file.metadata().internal()?;
     Ok(VerifiedFile {
         file,
         target: opened,
+        metadata,
     })
 }
 
 pub(crate) fn verified_file(root: &Path, path: &str) -> Result<VerifiedFile> {
     safe_path(path)?;
     let opened = verified_open(root, path)?;
-    if !opened.file.metadata().internal()?.is_file() {
+    if !opened.metadata.is_file() {
         return Err(Error::Unavailable);
     }
     Ok(opened)
@@ -74,12 +77,7 @@ pub(crate) fn verified_directory(root: &Path, path: &str) -> Result<()> {
     if !path.is_empty() {
         safe_path(path)?;
     }
-    if !verified_open(root, path)?
-        .file
-        .metadata()
-        .internal()?
-        .is_dir()
-    {
+    if !verified_open(root, path)?.metadata.is_dir() {
         return Err(Error::Unavailable);
     }
     Ok(())

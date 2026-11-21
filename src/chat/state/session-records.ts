@@ -5,16 +5,17 @@ import { withTranscript, type ChatContext } from './context'
 import { applyMoves, claimMoves, saveMovedView } from './model-moves'
 import { withView } from './saved-view'
 import type { ChatEnvelope } from '../../shared/transcript/session-events'
+import { SessionLog } from '../../shared/transcript/session-log'
 import {
-  SessionLog,
-  type PlacedRecord,
-} from '../../shared/transcript/session-log'
-import {
-  orderSessions,
-  pickActive,
-  placeSession,
-  sortHistory,
-} from './sessions'
+  recordReplay,
+  publishPlacement,
+  placementOf,
+  placeCurrent,
+  withCurrentFields,
+  type SessionChange,
+  type SessionReplay,
+} from './session-replay'
+import { orderSessions, pickActive, sortHistory } from './sessions'
 import { withSessionPlaces } from './tab-order'
 
 /**
@@ -75,9 +76,39 @@ function placeShown(
   context: ChatContext,
   snapshot: ChatSnapshot,
   sessionId: string,
+  local = false,
 ): ChatSnapshot {
   const record = shownRecord(context, sessionId)
-  return record === null ? snapshot : placeSession(snapshot, record)
+  if (record === null) return snapshot
+  return local
+    ? withCurrentFields(snapshot, record)
+    : placeCurrent(context, snapshot, record)
+}
+
+/** Holds replay navigation across pages, including overlapping stored reads. */
+export function replaySessionRecords(context: ChatContext): SessionReplay {
+  return recordReplay(
+    context,
+    (id, events) => mergeSession(context, id, events, true),
+    (snapshot, ids) => {
+      const records = ids.flatMap((id) => logOf(context, id).record ?? [])
+      records.sort((left, right) => left.eventNumber - right.eventNumber)
+      return records.reduce((next, record) => {
+        publishPlacement(context, record)
+        return placeShown(
+          context,
+          next,
+          record.session.id,
+          next.archiveTabs !== null,
+        )
+      }, snapshot)
+    },
+  )
+}
+
+function offer(context: ChatContext, session: Session, eventNumber: number) {
+  const changed = writableLogOf(context, session.id).offer(session, eventNumber)
+  return publishPlacement(context, { session, eventNumber }) || changed
 }
 
 /** The snapshot with the shown record of a session and its transcript. */
@@ -106,8 +137,7 @@ export function confirmRecord(
   eventNumber: number,
 ): boolean {
   if (!context.live()) return false
-  if (!writableLogOf(context, session.id).offer(session, eventNumber))
-    return false
+  if (!offer(context, session, eventNumber)) return false
   const moves = claimMoves(context, [session])
   context.store.update((snapshot) =>
     applyMoves(withRecord(context, snapshot, session.id), moves),
@@ -129,16 +159,17 @@ export function confirmSessions(
   const listed = [...response.sessions, ...response.history]
   const accepted: Session[] = []
   for (const session of listed) {
-    if (
-      writableLogOf(context, session.id).offer(session, response.eventNumber)
-    ) {
+    if (offer(context, session, response.eventNumber)) {
       accepted.push(session)
     }
   }
   const moves = claimMoves(context, accepted)
   context.store.update((snapshot) => {
     const current = change(snapshot)
-    const records = listed.map((item) => shownRecord(context, item.id) ?? item)
+    const records = listed.map((item) => {
+      const current = shownRecord(context, item.id) ?? item
+      return placementOf(context, current) ?? current
+    })
     const openRecords = records.filter((item) => item.closedAt === null)
     // The complete list gives each open session a place in the saved order,
     // and drops the places of sessions that are not open.
@@ -161,6 +192,8 @@ export function confirmSessions(
     }
     for (const { id } of listed) {
       const log = logOf(context, id)
+      const current = shownRecord(context, id)
+      if (current) next = withCurrentFields(next, current)
       next = withTranscript(next, id, log.transcript, log.times)
     }
     for (const session of accepted) next = placeShown(context, next, session.id)
@@ -177,21 +210,28 @@ export function mergeSession(
   context: ChatContext,
   sessionId: string,
   events: readonly ChatEnvelope[],
-): {
-  record: PlacedRecord | null
-  apply: (snapshot: ChatSnapshot) => ChatSnapshot
-} {
+  replay = false,
+): SessionChange {
   const log = writableLogOf(context, sessionId)
   const before = log.record
   const changed = log.merge(events)
   const record = log.record !== before ? log.record : null
+  if (record && (!replay || context.moves.has(sessionId)))
+    publishPlacement(context, record)
   return {
     record,
     apply: (snapshot) =>
       !changed
         ? snapshot
         : withTranscript(
-            record ? placeShown(context, snapshot, sessionId) : snapshot,
+            record
+              ? placeShown(
+                  context,
+                  snapshot,
+                  sessionId,
+                  replay && snapshot.archiveTabs !== null,
+                )
+              : snapshot,
             sessionId,
             log.transcript,
             log.times,
@@ -229,10 +269,7 @@ export function beginEdit(
   return {
     confirm: (session, eventNumber) => {
       if (!context.live()) return
-      const changed = writableLogOf(context, sessionId).offer(
-        session,
-        eventNumber,
-      )
+      const changed = offer(context, session, eventNumber)
       const retired = retire(true)
       if (changed || retired) {
         context.store.update((snapshot) =>

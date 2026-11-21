@@ -2,7 +2,11 @@ import { advanceStartStop } from './durable-start-stop'
 import { reconciledLifecycle } from './durable-reconciliation'
 import { recoverLifecycleTurns } from './durable-turns'
 import { isConfirmedStopped } from './confirmed-stop'
-import { expiredRestartLifecycle, isFailedRestart } from './durable-restart'
+import {
+  canRestartLifecycle,
+  expiredRestartLifecycle,
+  isFailedRestart,
+} from './durable-restart'
 import {
   RESTORE_POLL_MS,
   SHORTEST_IDLE_MS,
@@ -18,12 +22,19 @@ export async function advanceLifecycleAlarm(
   now: () => number,
   write: (state: DurableLifecycleState) => Promise<void>,
   keepalive: (state: DurableLifecycleState) => Promise<unknown>,
-): Promise<void> {
+): Promise<boolean> {
   let state = initial
-  if (state.state === 'archived') return
+  if (state.state === 'archived') return false
   if (state.startStop === 'pending') {
     await write(await advanceStartStop(state, hooks, now))
-    return
+    return false
+  }
+  if (state.automaticRestartAt !== undefined) {
+    const expired = expiredRestartLifecycle(state, now())
+    if (expired !== state) {
+      await write(expired)
+      return false
+    }
   }
   state = await recoverLifecycleTurns(state, hooks)
   let stopPending = false
@@ -44,7 +55,7 @@ export async function advanceLifecycleAlarm(
       state.nextDiskKeepaliveAt <= now()
     ) {
       await keepalive(state)
-      return
+      return false
     }
   } else if (state.runningSessions.length) {
     state = reconciledLifecycle(state, await hooks.extendDeadline(), now())
@@ -85,6 +96,11 @@ export async function advanceLifecycleAlarm(
           }
         : reconciledLifecycle(state, result, now())
   }
+  const canRestart =
+    !stopPending && !state.runnerConnected && canRestartLifecycle(state)
+  if (canRestart && state.runnerDisconnectedAt === undefined)
+    state = { ...state, runnerDisconnectedAt: now() }
   await write(state)
   if (stopPending) await storage.setAlarm(now() + 30_000)
+  return canRestart
 }

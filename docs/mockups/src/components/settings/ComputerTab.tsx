@@ -1,13 +1,16 @@
 import type { ReactNode } from 'react'
-import { Hammer } from 'lucide-react'
 import { type EnvVar, includedSoftware } from '../../fixtures/computer'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
-import { BuildSection, type BuildState, type OrgBuilds } from './BuildSection'
-import { ScriptSection } from './EnvironmentSections'
-import { EnvVarsSection, type EnvVarForm } from './EnvVarsSection'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
+import { buildSection } from '../../entries/components/settings/BuildSection.mockup'
+import { buildRuns, type BuildState, type OrgBuilds } from './BuildSection'
+import { buildOf } from './BuildHistory'
+import { scriptSection } from '../../entries/components/settings/EnvironmentSections.mockup'
+import { envVarsSection } from '../../entries/components/settings/EnvVarsSection.mockup'
+import type { EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
-import { TabIntro } from './TabIntro'
+import { tabIntro } from '../../entries/components/settings/TabIntro.mockup'
+import { defined } from '../../defined'
 
 /**
  * The cloud computer of an org: its builds, its scripts, and its env vars.
@@ -35,30 +38,58 @@ function changedNotice(props: {
 }): ReactNode {
   const title = 'The install script changed'
   if (props.builds.lastGood === undefined) {
-    const body =
-      props.build === 'building'
-        ? 'One more build runs it when this build succeeds.'
-        : 'It runs at the next build.'
-    return <Notice body={body} icon={Hammer} title={title} />
+    const body = buildRuns(props.build)
+      ? 'One more build runs it when this build succeeds.'
+      : 'It runs at the next build.'
+    return (
+      <notice.Component
+        body={body}
+        icon="hammer"
+        moklyInstance="script-changed"
+        title={title}
+      />
+    )
   }
   return (
-    <Notice
-      action={
-        props.readOnly ? undefined : (
-          <ActionButton
-            disabled={props.build === 'building'}
-            icon={Hammer}
+    <notice.Component
+      body="It runs at the next build. Workspaces keep the current build until then."
+      icon="hammer"
+      moklyInstance="script-changed"
+      title={title}
+      {...defined({
+        action: props.readOnly ? undefined : (
+          <actionButton.Component
+            disabled={buildRuns(props.build)}
+            icon="hammer"
+            moklyInstance="build-computer"
             tone="primary"
           >
             Build computer
-          </ActionButton>
-        )
-      }
-      body="It runs at the next build. Workspaces keep the current build until then."
-      icon={Hammer}
-      title={title}
+          </actionButton.Component>
+        ),
+      })}
     />
   )
+}
+
+/**
+ * The cloud computer as the data of a Mokly part: each build without the
+ * saved message of a failed build, because the data of a build holds only
+ * its time, its result, and its length.
+ */
+export function computerData(computer: OrgComputer): OrgComputer {
+  const { lastGood, ...rest } = computer
+  return {
+    ...rest,
+    ...(lastGood ? { lastGood: buildOf(lastGood) } : {}),
+    history: computer.history.map(buildOf),
+  }
+}
+
+/** The builds of a computer, as the card of its builds takes them. */
+function buildsOf(computer: OrgComputer): OrgBuilds {
+  const { lastGood, history, logs } = computerData(computer)
+  return { ...(lastGood ? { lastGood } : {}), history, logs }
 }
 
 /**
@@ -85,46 +116,50 @@ export function ComputerTab(props: {
   const readOnly = props.readOnly !== undefined
   return (
     <>
-      <TabIntro title="Cloud computer">
+      <tabIntro.Component moklyInstance="intro" title="Cloud computer">
         The shared cloud computer of {props.org}. Every workspace starts from
         it, with every repository of the org.
         {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
-      </TabIntro>
+      </tabIntro.Component>
       {props.repositoryNotice}
-      <BuildSection
-        builds={computer}
+      <buildSection.Component
+        builds={buildsOf(computer)}
         changeWaits={changed || repositoriesChanged}
+        moklyInstance="builds"
         readOnly={readOnly}
         state={props.build}
       />
-      <ScriptSection
+      <scriptSection.Component
         description={
           readOnly
             ? `${includedSoftware} The install script runs only at a build of the computer.`
             : `${includedSoftware} The install script runs only when you build the computer.`
         }
-        notice={
-          changed
-            ? changedNotice({ build: props.build, builds: computer, readOnly })
-            : undefined
-        }
+        moklyInstance="install-script"
         readOnly={readOnly}
         script={
           changed ? computer.changedInstallScript : computer.installScript
         }
         title="Install software"
+        {...defined({
+          notice: changed
+            ? changedNotice({ build: props.build, builds: computer, readOnly })
+            : undefined,
+        })}
       />
-      <ScriptSection
+      <scriptSection.Component
         description="Runs in the cloud computer of each workspace, at each start and resume."
+        moklyInstance="startup-script"
         readOnly={readOnly}
         script={computer.startupScript}
         title="Startup script"
       />
-      <EnvVarsSection
-        form={props.envForm}
+      <envVarsSection.Component
+        moklyInstance="env-vars"
         org={props.org}
         readOnly={readOnly}
         vars={computer.envVars}
+        {...defined({ form: props.envForm })}
       />
     </>
   )

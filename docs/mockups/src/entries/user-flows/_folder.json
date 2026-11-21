@@ -13,6 +13,7 @@
     "archive-from-list",
     "open-a-removed-workspace",
     "create-org",
+    "switch-org-account",
     "mac-command",
     "secret-request",
     "create-automation",
