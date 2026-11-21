@@ -22,6 +22,7 @@ import {
   transientProviderError,
 } from './provider-retry'
 import { liveBuildComputers } from './computer-ledger'
+import { switchBuildFailureCause } from './provider-switch-end'
 
 export async function failUnscheduledBuild(
   runtime: ImageRuntime,
@@ -55,7 +56,8 @@ export async function handleImageBuildFailure(
     ['user_suspended', 'org_suspended'].includes(error.code)
   const failure =
     !suspended &&
-    dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS
+    dependencies.now() >=
+      (job.executionStartedAt ?? job.startedAt) + IMAGE_BUILD_TIME_LIMIT_MS
       ? new JobTimeLimit('build')
       : error
   const retry = nextProviderRetry(
@@ -95,7 +97,14 @@ export async function handleImageBuildFailure(
     phase: job.phase,
     error: errorSummary(failure),
   })
-  await failBuild(env.DB, buildId, message, dependencies.now())
+  await failBuild(env.DB, buildId, message, dependencies.now(), {
+    cause: switchBuildFailureCause(failure),
+    wait: suspended
+      ? failure instanceof HttpError && failure.code === 'org_suspended'
+        ? 'suspended'
+        : 'admin'
+      : undefined,
+  })
   if (!unresolvedAllocation) await updateBuildJob(env.DB, buildId, 'cleanup')
   if (!(await cleanupBuildImageSources(env, dependencies.fetch, buildId)))
     return false

@@ -2,7 +2,8 @@
 
 This doc holds the requirements and the decisions in force for Restart in
 the workspace header, which restarts the app's own software in a running
-sandbox. It belongs to
+sandbox. It also covers the automatic restart, which the Worker starts by
+itself for an agent runner that stays away. It belongs to
 [Life of a workspace](workspace-life.md#restart-the-software). The terms
 are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
@@ -83,3 +84,51 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
 - The Worker refuses a restart of a workspace in another state with HTTP
   409 and the error code `workspace_not_running`. The app shows the
   refusal in a toast.
+
+## Automatic restart
+
+- The Worker restarts the software of a running sandbox by itself when its
+  agent runner stays away while a message waits for it (Cal's decision of
+  20 November 2026). This is the automatic restart.
+- The runner is away from the moment that its connection to the Worker
+  closes until it is ready again. That time is one away period.
+- The Worker starts an automatic restart only when all of these hold:
+  - A message waits for the runner in a session of the workspace.
+  - The provider shows the sandbox as running.
+  - The runner has been away for at least 3 minutes.
+  - The oldest waiting message has waited for at least 1 minute.
+  - No Restart, start, Continue, or repository change runs.
+  - The state of the workspace allows a Restart, as [Restart](#restart)
+    says.
+  - The org and the owner of the workspace are not suspended.
+- Reason: a waiting message must not wait with no end and no notice.
+- A fix only in the runner, with no automatic restart, was rejected.
+  Reason: it covers one cause, and a runner can also go missing in other
+  ways.
+- Reason for the two times: an
+  [install at idle](sandbox-software.md#installs-at-idle) takes seconds,
+  and the runner tries to connect again every second. So only a stuck
+  runner stays away for 3 minutes.
+- A running turn alone does not start an automatic restart. Reason: a
+  runner that lost its connection can still run that turn, and a restart
+  stops it.
+- The automatic restart needs no action of a member. It does what Restart
+  does:
+  - The header and the row show Starting until the runner is ready again.
+  - The sandbox first downloads the newest release, with a limit of 60
+    seconds. When that download fails, the app shows no toast, and the
+    restart goes on with the installed release.
+  - The Worker then restarts the agent runner, the preview relay, and the
+    terminal service. Each running turn ends, and so does each process
+    that an agent started under the runner. The shells of the terminals
+    and the commands in them keep running.
+- Reason for the download: a newer release can hold the fix of a broken
+  release.
+- The automatic restart fails when the restart of the software fails, or
+  when the runner is not ready 3 minutes after it began. The workspace
+  then shows the error state of a failed Restart, with "The software
+  didn't restart. Try again."
+- The Worker starts at most one automatic restart in each away period.
+  After a failed automatic restart, a member uses Try again. Reason: a
+  broken release must not restart in a loop, and the error state tells
+  the members.

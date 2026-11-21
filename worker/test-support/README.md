@@ -1,6 +1,8 @@
 # Backend and runner fakes
 
 `createHarness` creates one Miniflare runtime with local D1 and R2.
+It sets `PROVIDER_SWITCH=on` for switch route tests. An availability test
+can set it off to check the production default without disabling execution.
 The runtime also constructs the production workspace object with native SQLite.
 `harness.native.actor(name)` supplies HTTP, lifecycle RPC, storage controls, and real eviction.
 `native-runtime.ts` owns these objects and their fake outbound fetch path.

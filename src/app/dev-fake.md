@@ -121,7 +121,10 @@ option overrides this default, including queued chats that show no spinner.
   `boat` only, a third account, or a failed read, and `?providerSave=fail`
   fails each save of the weights. An org that Create org makes joins the
   operator section with its account: the choice of an operator, or a draw
-  from the weights.
+  from the weights. Switch account and Stop switch change the switch of an
+  org, as [the operator section](../shell/operator/README.md#development)
+  says. `?switches=1` gives sample orgs each state of a switch, and
+  `?switchSave=fail` fails each switch and stop.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same

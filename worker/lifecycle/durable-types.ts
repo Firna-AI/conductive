@@ -41,6 +41,10 @@ export interface DurableLifecycleState {
   lastActivityAt: number
   runningSessions: readonly string[]
   runnerConnected: boolean
+  runnerDisconnectedAt?: number
+  /** The attempt already made in the current absence. */
+  automaticRestartAt?: number
+  automaticRestartSubmitted?: true
   startupPrepared?: boolean
   restoreWatchAt?: number
   startStop?: 'pending' | 'stopped' | 'error'

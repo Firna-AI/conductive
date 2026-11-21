@@ -3,7 +3,7 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
@@ -92,13 +92,19 @@ export function DrawnChoices() {
  * draws the arrow open, and the chat draws the choices with
  * `DrawnChoices`.
  */
-export function CommandActions(props: { choicesOpen?: boolean }) {
+export function CommandActions(props: {
+  /** The id of the chat item of the command, which names its buttons. */
+  id: string
+  choicesOpen?: boolean
+}) {
   const menu = `more-ways-${useId()}`
   const open = props.choicesOpen === true
   return (
     <>
       <ScreenLink asChild to={paths.macDenied}>
-        <ActionButton>Deny</ActionButton>
+        <actionButton.Component moklyInstance={`deny-${props.id}`}>
+          Deny
+        </actionButton.Component>
       </ScreenLink>
       <span className={styles.split}>
         <ScreenLink asChild to={paths.macDone}>

@@ -144,7 +144,7 @@ async fn monitor(
         }
     }
     watcher.close().await;
-    while scans.join_next().await.is_some() {}
+    scans.shutdown().await;
 }
 
 #[async_trait]

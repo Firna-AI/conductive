@@ -42,6 +42,11 @@ merge.
     days, each with its total for the 30 days.
   - The five orgs with the most workspaces. Their counts hold every
     workspace, also the archived and the removed ones.
+- A build that waits runs no cloud computer, so the count of cloud
+  computers that run now leaves it out until its wait ends. This covers a
+  build of an admin that waits for a switch build, as
+  [What members see](switch-account.md#what-members-see) says. A switch
+  build that runs counts as each build does.
 - The count of users keeps every account, by join day, also each person
   who waits. Reason: decision 144 chose the counts, and the two numbers
   still show who can use the app.

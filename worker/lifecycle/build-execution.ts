@@ -188,8 +188,8 @@ export async function cleanupBuild(
     }
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
-  await startAddedImageBuild(runtime, job)
   await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
+  await startAddedImageBuild(runtime, job)
   return true
 }
 

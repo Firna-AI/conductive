@@ -2,6 +2,8 @@ import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
+import type { ContinueJob } from './lifecycle/continue-types'
+import type { ContinueStopCause } from './lifecycle/continue-stop-causes'
 import type {
   ErrorSummary,
   WarningCode,
@@ -14,6 +16,8 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  provider_switch_wake_failed:
+    'The provider account switch remains saved for its next image alarm.',
   provider_accounts_invalid:
     'Some sandbox provider accounts are not configured correctly.',
   provider_assignment_weights_recovered:
@@ -192,6 +196,12 @@ export type WorkerWarning =
       phase: WorkspaceStartJob['phase']
       code: WarningCode
       cancelled: boolean
+    }
+  | {
+      kind: 'workspace_continue_ended'
+      workspaceId: WarningId
+      phase: ContinueJob['phase']
+      stopCause: ContinueStopCause
     }
   | {
       kind: 'workspace_first_message_failed'
