@@ -19,7 +19,7 @@ impl DiskStore {
         Self { root }
     }
 
-    fn lock_file(&self, name: &str) -> Result<File> {
+    pub(super) fn lock_file(&self, name: &str) -> Result<File> {
         fs::create_dir_all(&self.root).internal()?;
         File::options()
             .create(true)
@@ -117,11 +117,12 @@ impl Store for DiskStore {
         self.prepare_version(version)
     }
 
-    fn has_part(&self, digest: &str) -> Result<bool> {
-        self.part_path(digest)
-            .join("complete")
-            .try_exists()
-            .internal()
+    fn parts(&self, version: &str) -> Result<PartsList> {
+        self.version_parts(version)
+    }
+
+    fn has_part(&self, part: &Part) -> Result<bool> {
+        self.part_present(part)
     }
 
     fn unpack(&self, part: &Part, bytes: &[u8]) -> Result<()> {
