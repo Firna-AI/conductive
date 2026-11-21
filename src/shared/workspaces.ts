@@ -75,6 +75,7 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
 }
 export interface LocalWork {
   uncommittedFiles: readonly string[]
+  displayUncommittedFiles?: readonly string[]
   unpushedCommits: number
 }
 
@@ -89,6 +90,7 @@ export type ContinueWorkspaceResponse =
       state: 'confirmation-required'
       branch: string
       baseBranch: string
+      displayBaseBranch?: string
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }

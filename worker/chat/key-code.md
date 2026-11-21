@@ -252,9 +252,9 @@ first.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
-  sockets, and the read of a saved registration. `BrowserConnections` adds
-  the branch labels of [`worker/github/output.ts`](../github/output.ts) to
-  each GitHub event that it sends a tab, also in old history.
+  sockets, and the read of a saved registration. It adds the branch labels
+  of [`worker/github/output.ts`](../github/output.ts) and [`continue-output.ts`](../lifecycle/continue-output.ts)
+  to each GitHub event and Continue note that it sends a tab, also in old history.
 - `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
   `browser` alarm deadlines of physical tab sockets, and the grant check
   before each send. By default,

@@ -57,12 +57,17 @@ export type TranscriptItem =
       /**
        * The note of Continue, at its place in the chat: the member who
        * pressed it, the new branch, and its base. It belongs to no turn.
+       * The branches keep their real names, and the optional labels, which
+       * hide each secret value, are the names that the chat and its copy
+       * show.
        */
       kind: 'continued'
       id: string
       member: MessageSender
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | {
       /**
@@ -132,17 +137,22 @@ function withNote(transcript: Transcript, item: TranscriptItem): Transcript {
 /**
  * Applies the note of Continue at its place in the event order. Each new
  * branch has one note in a session, so a repeat of the note replaces it.
+ * The real branch keys the note, because a label can change between two
+ * reads of the same note, and two branches can have the same label.
  */
 function foldContinued(
   transcript: Transcript,
   event: Extract<ChatEvent, { type: 'workspace.continued' }>,
 ): Transcript {
+  const { displayBranch, displayBaseBranch } = event
   return withNote(transcript, {
     kind: 'continued',
     id: continuedKey(event.branch),
     member: event.member,
     branch: event.branch,
     baseBranch: event.baseBranch,
+    ...(displayBranch === undefined ? {} : { displayBranch }),
+    ...(displayBaseBranch === undefined ? {} : { displayBaseBranch }),
   })
 }
 

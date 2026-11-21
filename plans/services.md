@@ -225,6 +225,16 @@ These are the UI implementor's calls of 20 November 2026, checked by the orchest
 - Draw no menu or Stop question without the control right. Keep the read-only header state as plain text. Reason: the mockups must follow the same access rule at both surfaces.
 - Use the shared header Restart copy to name ordinary agent commands separately from services and terminal commands. Keep its confirmation title. Reason: the existing software restart preserves service units.
 
+### Guidance scheduling call
+
+On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
+
+The non-UI implementor made these guidance calls on 21 November 2026. The orchestrator checked them on that date.
+
+- Append Services after the existing common guidance. Select only the temporary-server instruction by agent. Reason: the approved server rules differ for Claude and Codex, while their service lifecycle is the same.
+- Keep saved-session text unchanged and use the existing runtime note-output tests. Reason: this release changes guidance, not saved-session recovery or background-work bookkeeping.
+- Update only the direct guidance entry-point descriptions. Reason: the protocols and public guides already state the approved behavior.
+
 ## Milestone 1: Services mockups
 
 Tags: mockup
@@ -334,6 +344,7 @@ The non-UI implementor connects the checked native manager to the checked Worker
 - [ ] Enable private traffic only after both hello and welcome accept it. Keep it outside the numbered outbox and preserve event numbering.
 - [ ] Split each complete report, control result, and raw log document within the existing envelope budget. Preserve complete text for final filtering. Add no name or service-count limit.
 - [ ] Send each control and log request to the same local manager. Preserve its request IDs, generation rules, and output-free control receipts.
+- [ ] Keep private log reads and pending controls from blocking ordinary initial port reports, idle updates, or repository relocation. Preserve observed-target checks across asynchronous reads.
 - [ ] Publish a fresh full snapshot after each negotiated connection. Retain a monotonic revision across runner restarts and reject stale connections.
 - [ ] Link owned ports through native and Worker reports without changing existing port selection.
 - [ ] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
@@ -359,17 +370,19 @@ The UI implementor builds the approved mockups against real runner data.
 
 ## Milestone 7: Agent guidance
 
-Depends on: 4 and 5a
+Depends on: 4
 
 The non-UI implementor adds service guidance in the same sandbox software release as the command.
 
-- [ ] Add a separate services section to `crates/cnd-runner/src/engine/instructions.rs`.
-- [ ] Tell agents to end temporary check servers before their reply. Claude uses tracked background work. Codex keeps the process ID.
-- [ ] Tell agents to start a server that must outlive the reply as a service.
-- [ ] Tell agents to report the service name and port. State that it runs until the computer stops and that preview use adds no awake time.
-- [ ] Update the Claude background note's server guidance without changing its trigger, wait rules, or deadline.
-- [ ] Keep watch guidance unchanged. Check the CLI help and MCP descriptions against the approved service contract.
-- [ ] Keep the protocol and public guides aligned with final wording and actual behavior.
+- [x] Add a separate services section to `crates/cnd-runner/src/engine/instructions.rs`.
+- [x] Tell agents to end temporary check servers before their reply. Claude uses tracked background work. Codex keeps the process ID.
+- [x] Tell agents to start a server that must outlive the reply as a service.
+- [x] Tell agents to report the service name and port. State that it runs until the computer stops and that preview use adds no awake time.
+- [x] Update the Claude background note's server guidance without changing its trigger, wait rules, or deadline.
+- [x] Keep watch guidance unchanged. Check the CLI help and MCP descriptions against the approved service contract.
+- [x] Keep the protocol and public guides aligned with final wording and actual behavior.
+
+Completed on 21 November 2026. Evidence: `.context/services/guidance-report.md` and `.context/services/guidance-root-check.log`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
@@ -378,6 +391,7 @@ Depends on: every other milestone
 The orchestrator owns the combined gate, implementation review, and pull request. It checks each delegated result before ticking its TODO.
 
 - [ ] Recheck every completed milestone against the diff and the repository rules.
+- [x] Fix the unused service-copy exports found by the existing export check. Keep their module-local uses.
 - [ ] In an isolated test workspace, start a service, end its agent turn, and confirm that it stays usable. Restart only that workspace's runner and confirm service survival. Check computer stop and the selected resume behavior.
 - [ ] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
 - [ ] Run `npm run format:check` and `npm run lint` before the long gate.
@@ -392,6 +406,8 @@ The orchestrator owns the combined gate, implementation review, and pull request
 - [ ] Merge current `main` into this branch when required by the delegation and finish rules. Resolve only services conflicts. Rerun checks for the combined tree.
 - [ ] Delete this plan when all other milestone TODOs are ticked and the review rounds are done. Preserve its dated decisions in the pull request description.
 - [ ] Open the pull request into `main`. Keep it unmerged. Watch the final commit until `Complete gate` and `Rust gate` are green.
+
+Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.context/services/pre-worker-exports-fixed.log`, and `.context/services/pre-worker-export-typecheck.log`.
 
 ## Outside this change
 

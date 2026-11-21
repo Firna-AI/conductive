@@ -1,0 +1,54 @@
+# Fresh branch labels depend on each publisher
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** Medium. **Harder later:** Yes.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from the branch `calummoore/follow-up-continue-shows-raw-branch-t76h`, review finding 1. This item is the wider fix that the review split off the direct fix of that finding.
+- **Location:** `worker/chat/browser-connections.ts:62` and `:93-115`, `worker/chat/browser-subscription.ts:27-62`, `worker/chat/workspace-operation.ts:26-40`, `worker/features/github.ts:101-104`, `worker/github/chat-store.ts:23-34`, `worker/lifecycle/continue-publication.ts:34-54` and `:72-83`, and `worker/chat/http-routes.ts:61`.
+- **Reason:** The fix reaches the shared publication path, the tab subscription, and the GitHub port, which the branch that found it does not change.
+
+- **Source:** Review. **Category:** Security.
+- **Terms:**
+  - **Label:** the text that a screen shows for a branch name or a path. It has `[redacted]` in place of each exact copy of a secret value. The optional fields `displayBranch`, `displayBaseBranch`, and `displayPath` carry it beside the real names.
+  - **Capture:** the env var values and secret marks of the latest start of the sandbox. `recordRunningEnvironment` writes it. `runningOutputSecrets` in `worker/lifecycle/output-secrets.ts` reads it from D1 and decrypts its secret values.
+  - **Publisher:** Worker code that stores a workspace event and sends it to the open tabs, such as the GitHub port or `publishContinue`.
+  - **Tab filter:** the label function that `BrowserConnections.present` reads once, when a tab opens or restores. It labels each message for that tab. It masks `displayBranch || branch`, so it can add a mask to a stored label but cannot remove one.
+  - **Continue note:** the `workspace.continued` event that each session shows after Continue moves the workspace to a new branch.
+- **Background:**
+  - `docs/protocol/tokens-and-secrets.md`, under "Secrets that users enter", keeps the real paths and branch names in the data that the browser gets and sends. The user chose this on 8 November 2026 (decision 145).
+  - The same section requires a separate label of each path and branch name on screens. The label hides each exact copy of a secret value. The Privacy page, `src/marketing/privacy.ts:186-192`, promises the same.
+  - So the raw `path`, `branch`, and `baseBranch` fields are permitted in the browser data, the requests, the prompts, and Git. Each shown label and each transcript copy must hide the values.
+  - A changed mark applies at the next start of the sandbox. Chat text from before that start keeps its text, as the same protocol section says.
+  - A Resume writes the new capture at `worker/lifecycle/start-machine.ts:113`, and leaves the tabs open. The other capture writers are `worker/lifecycle/start-machine.ts:75` and `worker/lifecycle/disk-retention.ts:120`, which `worker/lifecycle/create-workspace-lifecycle.ts:66` calls.
+  - An org admin sets the values and the marks. The agents and each member with a terminal can read each value, as `src/marketing/privacy.ts:195-196` says.
+  - A member can rename a workspace, and sandbox code can rename it through `worker/tools/workspace-routes.ts:79-92`. The new branch of Continue takes a slug of that name, in `worker/lifecycle/workspace-branch.ts:45-61`.
+  - So each actor who can put a value into a branch name already knows the value. The display is still a security defect. The label exists to keep the value out of screenshots, screen shares, and copied text that leave the org.
+  - On `main`, the GitHub port labels each new `github.updated` event with a fresh read before its write. It labels each receipt replay again before it sends it. See `worker/features/github.ts:101-104` and `worker/github/chat-store.ts:23-34`.
+  - The file routes read the capture for each request, at `worker/files/handlers.ts:61-75`. Runner file reports and chat text take a filter of each receipt, at `worker/chat/runner-output.ts:29-37` and `worker/chat/runner-receipt.ts:36-40`.
+  - Start logs use the capture that is saved with their own start, at `worker/lifecycle/start-log-storage.ts:14` and `:34`. So no path on `main` depends on the tab filter.
+  - When the Continue note first got labels, only the boundaries added them. A live note then took the tab filter. A test showed that a note sent after a new start reached an older tab without labels. The screen then showed the real name with the new secret value.
+  - The direct fix is in place. `publishContinue` reads fresh labels inside its authorized operation, at `worker/lifecycle/continue-publication.ts:34`. It stores each new note with labels beside its unchanged real names, at `:42-54`.
+  - A replay of a completed job labels each saved note again with fresh values before it sends it, at `:72-83`. The boundary labels stay for older notes.
+  - So a new Continue note now carries labels from its write. A tab filter that is older than the capture only adds masks to it. No new note shows a value that a start before its write made secret.
+  - The repository change note and the New session text have no labels at all. That older gap belongs to `plans/follow-ups/workspace-branch-labels-unmasked.md`. It is not a stale filter.
+  - `BrowserConnections.subscribe` reads the tab filter at `worker/chat/browser-connections.ts:62`. `subscribeBrowser` then reads the history in a later step of the queue, at `worker/chat/browser-subscription.ts:27-62`. A capture write can run between the two steps.
+  - In that window, the history can hold a note without stored labels, such as a note of an older Worker. The old tab filter then labels it without the newest values. Such a note was written before the new start, so the protocol lets it keep its text. The code suggests this window. Nobody reproduced it.
+  - Each tab open and restore reads and decrypts the capture twice, for the GitHub labels and for the Continue labels, at `worker/chat/browser-connections.ts:98-101`.
+  - Each page of the session history reads and decrypts the capture at `worker/chat/http-routes.ts:61`, also when the page has no Continue note. The code shows these reads. No timing was measured.
+  - `NativeValues` in `worker/test-support/native-values.ts` carries each function of a Node-backed test as an asynchronous call. So a callback that a caller passes to `WorkspaceOperation.change` returns a promise in tests such as `worker/lifecycle/continue.test.ts:31`.
+- **Problem:** The Continue leak is fixed, but each publisher must still read fresh labels by itself. A later publisher that leaves its labels to the tab filter, which reads the capture once for each tab, can show a newly secret value. Each tab open also reads the capture twice, and each history page reads it, also with no note to label.
+- **Impact if no action:** The repository change note, or any later publisher, can again show a secret value in a label of an open tab. The extra capture reads stay on each tab open and each history page.
+- **Root question:** How does each branch or path label from each Worker publisher hide each secret value of the latest sandbox start, now and later?
+- **Options:**
+  - **A.** Keep one label filter for the workspace, and refresh it at each capture write. The three writers are in the Background. A new writer without the refresh brings the defect back. Effort: Medium.
+  - **B.** Read fresh labels in the tab presenter for each outgoing batch, and hold later events behind that read. Each publication then waits for a read, which puts the order of events at risk. Effort: Medium, or Large with the order work.
+  - **C.** Put one label step in the shared change path, in `runWorkspaceOperation` of `worker/chat/workspace-operation.ts` or in `ChatStore.change`. It reads fresh labels once when a batch or a replay holds an event that names a branch or a path. One dispatcher then labels each such event at its write and at each replay: `github.updated`, `workspace.continued`, and later `workspace.repository-changed`. The subscription reads its labels in the same step of the queue as its history. The real names stay in the stored events, and the publication stays synchronous. The step lives inside the shared path, so no caller passes it a callback. Effort: Medium.
+  - **D.** Add a test for the class. For each event type that names a branch, a tab that opened before a capture change gets the new labels. A test for the class needs the user's approval. Effort: Medium.
+- **Left out:**
+  - A fresh read in each publisher, as GitHub and Continue do now. It works for each publisher that has it, but a later publisher can skip it, so it does not prevent the class.
+  - Masking in the browser, because the browser then needs the secret values.
+  - Masked names in place of the real names, because decision 145 keeps the real names for each operation.
+- **Wider fix:** C. One shared step prepares the labels for each publisher of the shared path, so no such publisher depends on the tab filter. A new event type that names a branch still needs its entry in the dispatcher.
+- **Previous examples:** Commit `a0d399b74` labels each GitHub state with fresh values at its write and at each replay, at `worker/features/github.ts:101-104` and `worker/github/chat-store.ts:23-34`. `publishContinue` in `worker/lifecycle/continue-publication.ts` applies the same pattern to the Continue note. No earlier case of a stale tab filter was found.
+- **Related:** `plans/follow-ups/workspace-branch-labels-unmasked.md` adds the labels of the repository change note and of the New session text. Its fix can use the shared step of C when C lands first. Otherwise it labels its note at its publisher with fresh values, as Continue does, and C later takes that publisher in.
+- **Recommendation:** C. A publisher of the shared path can then no longer skip the fresh read. It keeps each publication synchronous, and it gives the repository change note one place. It also removes the duplicate capture reads of a tab and the unneeded read of a history page.
+- **Action:** fix after merge, apply C, because it reaches shared code outside the branch that found it, and it serves the repository change fix.

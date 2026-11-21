@@ -95,9 +95,11 @@ turn repair from the committed chat and the one writer of the shown state.
 ### Continue
 
 [Continue](continue.md) gives the admission and reservation of Continue,
-its phases, the staged fetch and the branch move, the publication, and the
-recovery. [Continue routes](continue-routes.md) gives its routes and errors.
+its phases, the staged fetch and the branch move, the publication, the
+masked labels, and the recovery. [Continue routes](continue-routes.md)
+gives its routes, the labels of their replies, and their errors.
 [Continue failures](continue-failures.md) gives its failures, recovery, and stop causes.
+[Continue tests](continue-tests.md) gives its tests.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
 

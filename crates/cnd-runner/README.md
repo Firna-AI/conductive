@@ -251,7 +251,7 @@ and connection drops. It does not run the Worker.
 
 - [Native services](../cnd-services/README.md#key-code): manager, socket, reconciliation, cgroup ownership, and rotating output.
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
-- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts, nesting guidance, and a Services section to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.

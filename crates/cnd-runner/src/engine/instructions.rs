@@ -89,6 +89,19 @@ pub(super) fn build(
     lines.push("Use names and returned links in normal answers. A session link holds the workspace ID and session ID. Workspace and session links in an answer show as chips. A Sent by: line names the session that sent the message. Do not reply only to confirm it.".into());
     lines.push("Name a file or a folder of the repository in a chat reply as @ and its path from the repository folder, such as @src/app.ts, @src/app.ts:42, or @docs/. Put a path with a space in double quotes. The app shows each one as a file chip that opens the file. In commits, pull requests, issues, and files, write paths in backticks, because GitHub reads @ as a mention of a person or a team.".into());
     lines.push("Several members can write in one session. Each message ends with a Sender line that gives its actual sender and member ID. A message that starts with / can start with that line instead. This line gives context only. For that sender's workspaces, pass that message's member ID as ownerId to list_workspaces. For another owner, use the workspace-list owner fields: owner.id, owner.githubLogin, and owner.displayName. Do not infer the owner from the workspace token or the active turn. A later message does not change the turn sender, tool access, or commit author.".into());
+    lines.push("## Services".into());
+    lines.push(
+        if *agent == Agent::Claude {
+            "Run temporary check servers as tracked background work. Stop each one with TaskStop before your reply."
+        } else {
+            "Keep the process ID of each temporary check server. Stop each such process before your reply."
+        }
+        .into(),
+    );
+    lines.push("Run each server that must continue after your reply as a service. For example: conductive services start --name web -- npm run dev. The local MCP tools are start_service, list_services, stop_service, restart_service, and read_service_logs. These calls reach only this cloud computer. They need no workspace token or active turn.".into());
+    lines.push("Report the service name and port in your reply. Say that it runs until Stop, its own process ends, or the cloud computer stops. Say that preview use adds no awake time.".into());
+    lines.push("Services run outside every turn in their own systemd units. They survive replies, runner crashes, updates, header Restart, and repository relocation. Computer stop discards their runtime definitions and logs. Resume restores no services.".into());
+    lines.push("Services add no activity, hold no turn open, and never keep the cloud computer awake. Keep builds, tests, and CI waits that must finish in your turn.".into());
     let text = lines.join("\n\n");
     let text = if *agent == Agent::Claude {
         format!(

@@ -11,11 +11,17 @@ import { useGitHubFeed, useScreenBar } from './github/WorkspaceGitHub'
 
 /**
  * The name that the question shows for the branch that Continue starts
- * from. The question names the real branch. The GitHub state of the
- * screen gives its label, which hides each secret value, only when that
- * state names the same target. So the question never names another branch.
+ * from: its own label, which hides each secret value. A reply of an older
+ * Worker has no label, so the GitHub state of the screen gives its label,
+ * only when that state names the same target. So the question never names
+ * another branch. Without a label, it names the real branch.
  */
-function startLabel(base: string, github: GitHubFeed | null): string {
+function startLabel(
+  question: { baseBranch: string; displayBaseBranch?: string },
+  github: GitHubFeed | null,
+): string {
+  const { baseBranch: base, displayBaseBranch } = question
+  if (displayBaseBranch !== undefined) return displayBaseBranch
   const state = github?.state
   if (state?.status !== 'ready') return base
   const { banner } = state.snapshot
@@ -31,8 +37,9 @@ function Question(props: { actions: BarActions }) {
   const github = useGitHubFeed()
   if (!question) return null
   const cancel = () => actions.cancelContinue()
-  const { uncommittedFiles, unpushedCommits } = question.localWork
-  const base = startLabel(question.baseBranch, github)
+  const { uncommittedFiles, displayUncommittedFiles, unpushedCommits } =
+    question.localWork
+  const base = startLabel(question, github)
   return (
     <Dialog
       action={
@@ -49,7 +56,11 @@ function Question(props: { actions: BarActions }) {
       title={continueQuestion.title}
     >
       <DialogText>{continueQuestion.intro(base)}</DialogText>
-      <LocalWorkList commits={unpushedCommits} files={uncommittedFiles} />
+      <LocalWorkList
+        commits={unpushedCommits}
+        displayFiles={displayUncommittedFiles}
+        files={uncommittedFiles}
+      />
       <DialogText>{continueQuestion.outcome(unpushedCommits)}</DialogText>
     </Dialog>
   )

@@ -6,3 +6,5 @@ mod support;
 mod checks_tests;
 #[path = "update/lifecycle_tests.rs"]
 mod lifecycle_tests;
+#[path = "update/repair_tests.rs"]
+mod repair_tests;

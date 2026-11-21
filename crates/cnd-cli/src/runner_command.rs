@@ -10,6 +10,7 @@ use cnd_cli::runner_update::process::SystemSwap;
 use cnd_cli::runner_update::releases::RunnerReleases;
 use cnd_cli::runner_update::swap::UpdateRunner;
 use cnd_cli::update::disk::DiskStore;
+use cnd_cli::update::presence::SDK_HELPER_PART;
 use cnd_cli::update::staging::NODE_PART;
 use cnd_runner::config::Configuration;
 use cnd_runner::file_server::files::RepositoryFiles;
@@ -29,9 +30,6 @@ use crate::release::VERSION;
 use crate::runner_round::{RoundResources, run_once};
 use crate::runner_services;
 use crate::runner_start::RunnerStart;
-
-/// Role containing the SDK helper and its runtime packages.
-pub(crate) const SDK_HELPER_PART: &str = "sdk-helper";
 
 pub(crate) async fn execute() -> Result<()> {
     let startup_log: Arc<dyn StartupLog> = Arc::new(ProcessStartupLog::new(Instant::now()));

@@ -13,9 +13,9 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. After the second try sends, the next send of the same
 prompt gets a new client ID. While one prompt waits, another prompt sends
 nothing, also in another session, and a send from the composer still goes.
-`components/ContinuedNote.test.tsx` folds the note of
-Continue once at its place, also after a repeat and in a new tab, in the
-history of a closed session, and draws "You" or the name of the member.
+`components/ContinuedNote.test.tsx` folds the note of Continue once at its
+place, also after a repeat, in a new tab, and in a closed session. It draws
+"You" or the member, and each branch by its label, also in a copy.
 `state/repository-folder.test.ts` checks that a record of another
 repository reads the view again for the folder of the new repository, that
 a record of the same repository does not, and that a failed read or a late

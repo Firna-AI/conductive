@@ -18,6 +18,9 @@ Continue job, its recovery, and the stop cause that each stop saves.
   - A stop in the `fetch` phase, with any cause, says that Continue could
     not finish. It adds the hint to check GitHub access and try again.
   - Each other stop says only that Continue could not finish.
+- The clash text names the real branches, and the saved error keeps them.
+  The routes hide each secret value in that text, as
+  [Labels](continue-routes.md#labels) says.
 - No other cause has text of its own yet. No cause names an access
   problem, so the fetch hint does not come from a known cause.
   [Continue stop messages need approved words](../../plans/follow-ups/continue-stop-cause-copy.md)
