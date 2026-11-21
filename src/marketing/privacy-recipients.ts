@@ -40,10 +40,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs the cloud computers of every org
-        for ${productName}, in the account of ${productName}. Your code,
-        your files, and your agent sessions are in them. ${productName}
-        sends the provider the requests that start, stop, and use them.`,
+      text`A cloud computer provider runs each org's cloud computers in
+        an account that ${productName} owns. The org keeps that account
+        for its life. Your code, your files, and your agent sessions
+        are in those computers. ${productName} sends their provider
+        requests to start, stop, and use them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
           account ID, and ChatGPT workspace name through ${productName} to
           the cloud computer. Codex uses them to run on that workspace.
@@ -64,10 +65,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         come from a message of another member or from a session on another
         login.
         Each Mac command request and its result also go to the agent and
-        to that provider or endpoint. So do the names and descriptions of
-        the secrets that the agent lists, and the output of each command
-        that it runs with a secret. That output hides each exact copy of a
-        secret value, but not a changed or encoded value.
+        to that provider or endpoint. They also get each listed secret's
+        name, description, and environment variable name. They get the
+        output of each command that the agent runs with a secret.
+        That output hides each exact copy of a secret value, but not a
+        changed or encoded value.
         With each message, they also get
         the GitHub login, the display name, and the ${productName} user ID of
         its sender. They get the
@@ -92,16 +94,17 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
         their chats, and each Mac command request and result. They also see
-        the automations of the org, with their prompts and their runs. They see
-        each secret request and result, without a value. They see the name
+        the automations of the org, with their prompts, chosen secret names, and
+        their runs. Only the automation's owner changes its chosen secrets.
+        They see each secret request and result, without a value. They see the name
         and the description of each secret, who added it, and who last
         revealed its current value. In an active org, an admin can reveal
         the value of each secret, also of a secret that you added.
         A member with a terminal in a cloud computer can read
         the GitHub token of a turn that runs there. They can also read the
-        value of a secret while a command runs with it there. During Continue, they
-        can also read the GitHub token of the member who clicked, while the
-        branch fetch runs. Outside an agent turn,
+        value of a secret while a command runs with it there. During Continue
+        or a repository change, they can also read the GitHub token of the
+        member who started it, while the branch fetch runs. Outside an agent turn,
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,
@@ -128,14 +131,18 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         steer the agent while the run uses its session's agent login, your
         GitHub token, and the org's env vars. It can also steer the agent to
         run commands with the secrets that need no new approval, such as a
-        secret that an admin marked for all agents. Such text can also steer the
-        agent to read and change work across the org, with your workspace
+        secret that an admin marked for all agents or one that you chose
+        for the automation. The automation page warns every member about
+        this risk when the automation has a pull request trigger and a
+        chosen secret.
+        Such text can also steer the agent to read and change work across
+        the org, with your workspace
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
-        message details, list sessions and previews, list the names and
-        descriptions of secrets, and read chats across its org without a
-        running turn.
+        message details, list sessions and previews, and read chats across
+        its org. It can also list each secret's name, description, and
+        environment variable name. These reads need no running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,

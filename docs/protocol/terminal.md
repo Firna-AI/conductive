@@ -1,10 +1,11 @@
 # Terminal
 
 This doc holds the requirements and the decisions in force for the Terminal
-tool of a workspace. It covers the terminals of a workspace and their tabs,
-and the shell of each terminal. [Terminal screen](terminal-screen.md) gives
-the screen of each terminal, and [Terminal links](terminal-links.md) gives
-the links in its output. It belongs to
+tool of a workspace. It covers the terminals of a workspace and their tabs.
+[Terminal shell](terminal-shell.md) gives the shell of each terminal,
+[Terminal screen](terminal-screen.md) gives its screen, and
+[Terminal links](terminal-links.md) gives the links in its output. It
+belongs to
 [Tools of a workspace](workspace-tools.md#terminal).
 [Terminal](terminal-previews-and-desktop.md#terminal) in the security docs
 states how the terminals stay safe. The terms are those of the
@@ -154,75 +155,10 @@ terminals at `app/tools` and its child pages.
 
 ## The shell
 
-- Each terminal opens its shell in the sandbox, in the folder of the
-  workspace's repository (decision 94).
-- The default shell prompt shows only the current folder name, such as
-  `mokly`, in place of the full path.
-- On desktop, a click on the Terminal tab of the tools panel moves the
-  keyboard focus to the shown terminal. So does Go to Terminal, from its
-  row of the command palette or its key, ⌘J on a Mac or Ctrl+J elsewhere.
-  The user asked for the tab on 16 November 2026, and chose the same for
-  Go to Terminal on the same day.
-- On desktop, New terminal of the command palette, the + of the terminal
-  tabs, and a click on a terminal tab also move the focus to the terminal
-  that they show (terminal tabs decision 5 D). A keyboard user who moves
-  along the tabs keeps the focus on the row.
-- A terminal that still opens or connects takes the focus when it shows,
-  unless the user moved the focus in the meantime. A choice of another
-  tool drops that wait.
-- On a phone, none of these controls moves the focus. Reason: the keyboard
-  of the phone would then cover the page.
-- Reason: a click on the tab says that the user wants to type in the
-  shell, so a second click in the terminal is a wasted step. A member who
-  opens or picks a terminal also types in it next. A focus that stays in
-  place was rejected, because typed text and Enter then often go to the
-  message box, and so to the agent. A terminal that takes the focus after
-  the user chose another field was rejected, because the user's keys then
-  go to the shell.
-- The shell of each terminal keeps running when its connection drops. Each
-  new connection of the terminal attaches to that shell, with its running
-  commands and its current screen (decision 118).
-- Reason: a connection can drop at any time, such as at a network change
-  or when Cloudflare updates the runtime of the Worker. A shell that ends
-  with its connection was rejected, because the user then loses a running
-  command, such as a dev server.
-- When the user ends the shell of a terminal, such as with `exit`, the
-  next connection of that terminal opens a new shell in the same tab.
-- A stop of the sandbox ends the shell of each terminal and its commands,
-  as [Stop and resume](workspace-life.md#stop-and-resume) says. The list
-  of terminals stays. The first connection of each terminal after the
-  resume opens a new shell.
-- The commands that the user typed in a shell stay in the command
-  history after a stop. The new shell after the resume finds them, such as
-  with the Up arrow or Ctrl-R (terminal history decision 1). Terminal
-  history decisions are the decisions of the change that added this rule.
-- Each command goes into the history file when it ends, before the next
-  prompt. A command that still runs at the stop, such as a dev server, does
-  not go in. An empty or unset `HISTFILE` keeps the history out of the
-  file.
-- Reason: Bash writes its history file only when the shell exits. The
-  shell exits only during the shutdown at a stop, and a test on
-  16 November 2026 found no history file after the resume. The append
-  writes each command while the sandbox runs. A
-  shell that also reads the new commands of the other shells at each
-  prompt was rejected, because it changes the order of the Up arrow while
-  the user works.
-- After a start from a saved snapshot, the sandbox provider restores the
-  disk in the background. A shell that starts after the restore ends opens
-  in the live repository folder. A shell that started earlier moves to the
-  live copy of its own folder once, at its first prompt after the app sees
-  the end of the restore (decisions 147 and 149).
-- Reason: when the restore ends, a running program keeps an old view of
-  the disk at another path. A restart of the shell was rejected, because it
-  ends running commands. A terminal that waits for the end of the restore
-  was rejected, because the Terminal tool then waits too.
-- Apart from that one move, the terminal never moves a running shell by
-  itself. The app learns the end of the restore from a signal that the
-  sandbox provider documents (decision 149).
-- Reason: a move each time that the real folder of a shell differs from
-  the path in its prompt was rejected, because it also moves a shell
-  outside a restore. A check of the provider's path of the old view was
-  rejected, because the provider does not document that path.
+[Terminal shell](terminal-shell.md) gives the rules of the shell of each
+terminal: its folder and prompt, the focus, its connection, its end, its
+command history, its folder after a restore, and what an out-of-memory
+kill ends.
 
 ## The screen
 

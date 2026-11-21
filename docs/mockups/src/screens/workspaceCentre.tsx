@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
-import { FilePage } from '../components/files/FilePage'
+import { defined } from '../defined'
+import { filePage } from '../entries/components/files/FilePage.mockup'
+import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
 import { SandboxPanel } from '../components/workspace/SandboxNotice'
-import { filePlaceholder, openFile } from './workspaceParts'
+import { openFile } from './workspaceFileTab'
+import { filePlaceholder } from './workspaceParts'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
@@ -15,13 +18,24 @@ import type { WorkspaceState } from './workspaceState'
 export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
   const file = openFile(state)
   if (file) {
-    return <FilePage placeholder={filePlaceholder(state, true)} view={file} />
+    return (
+      <filePage.Component
+        expandTo={paths.htmlExpanded}
+        moklyInstance="file-page"
+        view={file}
+        {...defined({ placeholder: filePlaceholder(state, true) })}
+      />
+    )
   }
   if (state.tab === 'preview') {
     const panel = panelState(state)
     return (
       <PreviewPage
-        placeholder={panel ? <SandboxPanel phone state={panel} /> : undefined}
+        placeholder={
+          panel ? (
+            <SandboxPanel phone place="preview" state={panel} />
+          ) : undefined
+        }
       />
     )
   }

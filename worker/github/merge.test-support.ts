@@ -37,13 +37,13 @@ export async function addMergeMember(
 
 export async function createMergeHarness() {
   const harness = await createGitHubHarness()
-  const jobs = new Map<string, unknown>()
   let sequence = 0
   const request = (path: string, session = '', init: RequestInit = {}) => {
     const headers = new Headers(init.headers)
     headers.set('Cookie', session)
     headers.set('Origin', TEST_ORIGIN)
     headers.set('Content-Type', 'application/json')
+    const workspaceId = decodeURIComponent(path.split('/')[5])
     return handleGitHubMerge(
       new Request(`${TEST_ORIGIN}${path}`, { ...init, headers }),
       harness.env,
@@ -53,10 +53,9 @@ export async function createMergeHarness() {
         randomToken: () => `merge-${++sequence}`,
         refresh: harness.refresh,
         storage: {
-          get: async (key) => structuredClone(jobs.get(key)),
-          put: async (key, value) => {
-            jobs.set(key, structuredClone(value))
-          },
+          get: (key) => harness.actor(workspaceId).api.storage.get(key),
+          put: (key, value) =>
+            harness.actor(workspaceId).api.storage.put(key, value),
         },
       },
     )
@@ -64,7 +63,10 @@ export async function createMergeHarness() {
   return {
     ...harness,
     harness,
-    jobs,
+    jobs: () =>
+      harness
+        .actor('workspace-1')
+        .api.storage.list({ prefix: 'github-merge:' }),
     request,
     seed: harness.seed.bind(harness),
     capability: (orgId: string, session: string) =>

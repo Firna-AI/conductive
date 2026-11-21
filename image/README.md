@@ -4,13 +4,16 @@ This folder holds the app's own sandbox software. Each image build installs
 it before it runs the org's install script. A software image build installs
 it once for each app software version. A first org build from that image
 also checks and installs the newest release. Without a matching ready software image,
-the first build installs it itself. Later builds and refreshes install the newest release. The org
+the first build installs it itself. The software image lives in the `boat`
+account, so the first build of an org on `e2b` starts from the
+[E2B template](e2b/README.md) and installs the software. Later builds and
+refreshes install the newest release. The org
 image is the saved snapshot that every new sandbox of an org starts from.
 In a workspace sandbox, this software starts the agent runner and the
 preview relay. It also
 gives git a fresh GitHub token for each operation. The release program also
 supplies the workspace CLI and MCP server. The folder also holds [developer scripts](developer-scripts.md) that no build installs: release
-packaging and a real-sandbox live check.
+packaging, a real-sandbox live check, and the E2B template builder.
 
 ## Responsibilities
 
@@ -96,8 +99,9 @@ A running runner also applies a staged release when its workspace is idle,
 as the [runner service guide](../runner/service/README.md) describes. It
 runs `update apply` through `sudo -n`, then executes the new
 `current/system/runner-start.sh` in the same process. The service does not
-restart, so a changed runner unit applies only at the next start of the
-service. A runner without this step applies a release only at its next start.
+restart. [Release installation](install.md#release-installation) says when
+a changed runner unit applies. A runner without this step applies a release
+only at its next start.
 The relay and terminal processes keep their release until they start again.
 A new terminal connection runs the bridge from `current` under the command
 line of the running terminal service. So the bridge keeps its command-line
@@ -111,6 +115,22 @@ The next apply restores the previous release when confirmation did not occur.
 
 [The private Node runtime](runtime.md) gives the pinned Node release, its
 paths, and its update steps.
+
+## E2B base template
+
+The [E2B template](e2b/README.md) supplies Ubuntu 24.04 and the software of
+`BASE_IMAGE`, with 4 vCPU and 8192 MiB. Its developer builder uploads only
+public image inputs and prints the actual template ID.
+It installs a private TCP relay for web servers that listen on loopback.
+An enabled systemd service seeds that relay under `/run` at boot.
+The relay holds no credential. The template also supplies the `computer`
+MCP server through Cua Driver 0.54.0, with Google Chrome, Xvfb, and Openbox
+on display `:0`. Enabled services start the desktop and merge the computer
+entry into `/home/user/.claude.json` at each boot. It supplies no desktop
+stream. The [template guide](e2b/README.md#software-and-pins) gives the pins
+and their sources.
+Each org image build still installs the newest release of the sandbox
+software, as on Boat.
 
 ## Install
 

@@ -106,7 +106,7 @@ export class ChatController extends ChatRuns {
   readonly send = (sessionId: string) =>
     this.write(() => sendDraft(this.context, sessionId))
   /** Sends a fixed prompt to the session of the chat, as `sendPrompt` says. */
-  readonly sendPrompt = (text: string): Promise<PromptOutcome> =>
+  readonly sendPrompt = (text: string): Promise<PromptOutcome | null> =>
     this.readOnly()
       ? Promise.resolve('unavailable')
       : sendPrompt(this.context, text)

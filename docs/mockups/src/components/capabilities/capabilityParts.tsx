@@ -1,15 +1,23 @@
+import type { ReactNode } from 'react'
 import { Switch } from '@firna/ui/switch'
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
+import { SearchField } from '../common/SearchField'
 import { useControlSizes } from '../common/touch'
 import { whoOf } from '../chat/SecretRun'
-import { macAccessWords, noSecrets, secretsPartWords } from './capabilitiesCopy'
+import {
+  macAccessWords,
+  noSecretMatch,
+  noSecrets,
+  secretsPartWords,
+} from './capabilitiesCopy'
 import type { CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
-import check from '../common/CheckOption.module.css'
+import { matchingSecrets, needsSecretSearch } from './secretSearch'
+import { SecretOption } from './SecretOption'
 import styles from './Capabilities.module.css'
 
 /** What the Capabilities control shows for one workspace or one draft. */
@@ -20,10 +28,19 @@ export type CapabilitiesView = {
   /** The names of the secrets that the workspace pre-approves. */
   preApproved: readonly string[]
   /**
+   * The text in the search field, which shows above more than ten secrets.
+   * It narrows the list by name and by description.
+   */
+  search?: string
+  /** The name of the secret whose description shows under its name. */
+  info?: string
+  /**
    * The approvals of the sessions and the values for the workspace, which
    * only a workspace that exists has.
    */
   grants?: WorkspaceGrants
+  /** The title of the session that the control opens from, if any. */
+  session?: string
   macAccess: boolean
   /** The Secrets tab of the org settings. */
   secretsTo: string
@@ -32,37 +49,20 @@ export type CapabilitiesView = {
 }
 
 /**
- * A secret of the org with its checkbox, which pre-approves it for the
- * workspace. A secret for all agents is always available, so its checkbox
- * stays checked and off.
+ * What the secrets of the control show: the secrets of the org with the
+ * pre-approved ones checked, and the link to the Secrets tab.
  */
-function SecretCheck(props: { secret: OrgSecret; checked: boolean }) {
-  const { secret } = props
-  return (
-    <label className={check.option}>
-      <input
-        checked={props.checked || secret.allAgents}
-        className={check.box}
-        disabled={secret.allAgents}
-        onChange={noop}
-        type="checkbox"
-      />
-      <span className={check.text}>
-        <span className={styles.secretName}>{secret.name}</span>
-        <span className={check.hint}>{secret.description}</span>
-      </span>
-      {secret.allAgents ? (
-        <span className={styles.tag}>{secretsPartWords.allAgents}</span>
-      ) : null}
-    </label>
-  )
-}
+type SecretsView = Pick<
+  CapabilitiesView,
+  'org' | 'secrets' | 'preApproved' | 'search' | 'info' | 'secretsTo'
+>
 
 /**
  * The secrets of the org, each with its checkbox. An org without secrets
- * links to its Secrets tab.
+ * links to its Secrets tab. More than ten secrets get a search field above
+ * them, and a search that matches none says so.
  */
-function SecretPicker(props: { view: CapabilitiesView }) {
+function SecretPicker(props: { view: SecretsView }) {
   const { view } = props
   if (view.secrets.length === 0) {
     return (
@@ -74,21 +74,73 @@ function SecretPicker(props: { view: CapabilitiesView }) {
       </p>
     )
   }
+  const search = view.search ?? ''
+  const list = (
+    <SecretChecks secrets={matchingSecrets(view.secrets, search)} view={view} />
+  )
+  if (!needsSecretSearch(view.secrets.length)) return list
+  return (
+    <div className={styles.picker}>
+      <SearchField
+        label={secretsPartWords.search}
+        placeholder={secretsPartWords.search}
+        query={search}
+      />
+      {list}
+    </div>
+  )
+}
+
+/** The listed secrets with their checkboxes, or the line of no match. */
+function SecretChecks(props: {
+  secrets: readonly OrgSecret[]
+  view: SecretsView
+}) {
+  const { view } = props
+  if (props.secrets.length === 0) {
+    return <p className={styles.empty}>{noSecretMatch(view.search ?? '')}</p>
+  }
   return (
     <div
       aria-label="Pre-approved secrets"
       className={styles.checks}
       role="group"
     >
-      {view.secrets.map((secret) => (
-        <SecretCheck
+      {props.secrets.map((secret) => (
+        <SecretOption
+          change={noop}
           checked={view.preApproved.includes(secret.name)}
+          disabled={false}
+          infoOpen={view.info === secret.name}
           key={secret.name}
           secret={secret}
+          toggleInfo={noop}
         />
       ))}
     </div>
   )
+}
+
+/**
+ * The grants that the control shows: the approvals of the open session
+ * whose secret the workspace does not already allow, by a check or for all
+ * agents, and each value for the workspace. A hidden approval stays, and it
+ * shows again after an uncheck.
+ */
+function shownGrants(
+  view: CapabilitiesView,
+  grants: WorkspaceGrants,
+): WorkspaceGrants {
+  const allowed = (name: string) =>
+    view.preApproved.includes(name) ||
+    view.secrets.some((secret) => secret.name === name && secret.allAgents)
+  return {
+    approvals: grants.approvals.filter(
+      (approval) =>
+        approval.session === view.session && !allowed(approval.secret),
+    ),
+    values: grants.values,
+  }
 }
 
 function SecretsContent(props: { view: CapabilitiesView }) {
@@ -98,7 +150,7 @@ function SecretsContent(props: { view: CapabilitiesView }) {
       <SecretPicker view={view} />
       {view.grants ? (
         <GrantList
-          grants={view.grants}
+          grants={shownGrants(view, view.grants)}
           who={(person) => whoOf(person, view.viewer).object}
         />
       ) : null}
@@ -120,28 +172,56 @@ function MacAccessSwitch(props: { on: boolean }) {
 }
 
 /**
+ * The secrets part, with its content and an optional hint. Manage secrets
+ * opens the Secrets tab, while the org has secrets.
+ */
+function secretsPart(
+  view: SecretsView,
+  hint: string | undefined,
+  content: ReactNode,
+): CapabilityPart {
+  return {
+    key: 'secrets',
+    title: secretsPartWords.title,
+    hint,
+    control:
+      view.secrets.length === 0 ? undefined : (
+        <ScreenLink className={styles.link} to={view.secretsTo}>
+          {secretsPartWords.manage}
+        </ScreenLink>
+      ),
+    content,
+  }
+}
+
+/**
  * The parts of the Capabilities control, in their order: the secrets that
  * the workspace pre-approves, with its grants, and Mac access.
  */
 export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
   return [
-    {
-      key: 'secrets',
-      title: secretsPartWords.title,
-      hint: secretsPartWords.hint,
-      control:
-        view.secrets.length === 0 ? undefined : (
-          <ScreenLink className={styles.link} to={view.secretsTo}>
-            {secretsPartWords.manage}
-          </ScreenLink>
-        ),
-      content: <SecretsContent view={view} />,
-    },
+    secretsPart(view, undefined, <SecretsContent view={view} />),
     {
       key: 'mac-access',
       title: macAccessWords.title,
       hint: macAccessWords.hint,
       control: <MacAccessSwitch on={view.macAccess} />,
     },
+  ]
+}
+
+/**
+ * The parts of the Capabilities control of an automation: only the secrets
+ * that each run workspace pre-approves (automation capabilities decision
+ * 1 A). Each run workspace keeps Mac access off (decision 2 A), so the
+ * control has no Mac access part. An automation has no grants of its own.
+ */
+export function automationCapabilityParts(view: SecretsView): CapabilityPart[] {
+  return [
+    secretsPart(
+      view,
+      secretsPartWords.automationHint,
+      <SecretPicker view={view} />,
+    ),
   ]
 }

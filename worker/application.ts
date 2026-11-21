@@ -57,7 +57,7 @@ import { freshCodexLogin } from './codex-auth/renew'
 import { codexTaskOwner } from './codex-auth/tasks'
 import { failCodexAccessToken } from './codex-auth/failure'
 import { waitForCodexRotation } from './codex-auth/rotation'
-import { cleanupCodexDevices } from './codex-auth/device-store'
+import { runRecordCleanups } from './record-cleanups'
 import { warnWorker } from './warnings'
 import { automationRunRuntime } from './automations/run-runtime'
 import { scanAutomationSchedules } from './automations/schedule-scan'
@@ -142,7 +142,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
             return respond(await routeSecretTool(request, env))
           if (path === SOFTWARE_IMAGE_PATH)
             return respond(
-              await handleSoftwareImage(request, env, dependencies),
+              await handleSoftwareImage(request, env, dependencies, execution),
             )
           if (isAgentToolPath(path))
             return respond(
@@ -254,7 +254,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
           ),
         )
       } catch (error) {
-        const response = errorResponse(error)
+        const response = errorResponse(error, request)
         if (path === API_PATHS.githubCallback) {
           response.headers.append('Set-Cookie', cookie(OAUTH_COOKIE, '', 0))
         }
@@ -270,7 +270,7 @@ export function createApp(overrides: Partial<AppDependencies> = {}) {
         return
       }
       if (event.cron !== '*/15 * * * *') return
-      await cleanupCodexDevices(env.DB, dependencies.now())
+      await runRecordCleanups(env.DB, dependencies.now())
       await cleanupDeletedOrgs(
         env,
         dependencies,

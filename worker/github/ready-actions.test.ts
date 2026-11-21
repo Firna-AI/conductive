@@ -48,7 +48,7 @@ it('marks the draft ready as the member and publishes the new state', async () =
     body: { variables: { id: 'PR_2' } },
   })
   expect(
-    fixture.harness.memory('workspace-1').published.at(-1)?.event,
+    (await fixture.harness.inspect('workspace-1')).published.at(-1)?.event,
   ).toMatchObject({
     type: 'github.updated',
     banner: { state: 'ready-to-merge', pullRequest: { number: 2 } },
@@ -62,7 +62,7 @@ it('changes nothing on GitHub for a pull request that is no longer a draft', asy
   expect(response.status).toBe(200)
   expect(await readyWrites()).toEqual([])
   expect(
-    fixture.harness.memory('workspace-1').published.at(-1)?.event,
+    (await fixture.harness.inspect('workspace-1')).published.at(-1)?.event,
   ).toMatchObject({ banner: { state: 'ready-to-merge' } })
 })
 
@@ -98,7 +98,7 @@ it('keeps the words of a GitHub refusal on the server', async () => {
     error: { code: 'github_ready_refused' },
   })
   expect(text).not.toContain('GitHub detail')
-  expect(fixture.harness.memory('workspace-1').published).toEqual([])
+  expect((await fixture.harness.inspect('workspace-1')).published).toEqual([])
 })
 
 it('refuses a request without a pull request number', async () => {

@@ -2,8 +2,12 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them, and the sender line and the branch line of each
-message. [Base prompts](base-prompts.md) states the base prompt of Claude
+and the guidance in them, and the skills of a message.
+[Message lines](message-lines.md) states the sender line, the repository
+line, and the branch line of each message.
+[Session instructions](session-instructions.md) states how a session keeps
+its instructions and how each agent gets them.
+[Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
 agents and their sessions. [Agent tools](agent-tools.md) states the tools
 of the agents. The other terms are those of the
@@ -12,7 +16,12 @@ dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. A secrets decision number names a decision of the change that adds
 [secrets](secrets.md), as that doc says. A stop diagnostics decision number
 names a decision of the change that adds the
-[runner warnings](runner-warnings.md), as that doc says.
+[runner warnings](runner-warnings.md), as that doc says. A parent-move
+decision number names a decision of the change that adds
+[parent changes](parent-changes.md), as that doc says. A screenshot
+decision number names a decision of the change that shows the screenshots
+of agents as pictures in their answers, as
+[File mentions: files in answers](file-mentions-answers.md) says.
 
 ## Terms
 
@@ -21,15 +30,21 @@ names a decision of the change that adds the
   guidance for the tools of the product.
 - **System instructions:** the text that an agent takes before its
   conversation, apart from the messages.
-- **Sender line:** one line at the start of each message to the agent. It
+- **Sender line:** one line at the end of each message to the agent. It
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
-  merge.
+  merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
   says. For a workspace that a member creates, it is the default branch of
   the repository.
+- **Repository folder:** the folder of the workspace's repository in the
+  sandbox, as [Repository folders](repository-folders.md) says. A
+  repository change moves the workspace to the folder of another
+  repository.
+- **Repository line:** one line after the sender line of a message. It
+  names the current repository folder.
 - **Branch line:** one line after the sender line of a message. It names
   the current workspace branch and the current target branch.
 - **Base prompt:** the general rules for work that a Claude agent gets
@@ -66,6 +81,10 @@ names a decision of the change that adds the
     front and use foreground input without asking.
   - Other sessions of the workspace share that desktop.
   - A member opens a port preview in the app by its port number.
+  - When the agent designs or checks an interface in a browser, it saves a
+    screenshot of the result as a PNG file in the context folder. It shows
+    that screenshot in its reply as a Markdown image (screenshot decision
+    1 B).
   - Every agent of the workspace runs inside the service
     `conductive-runner.service` of the cloud computer. A stop or a restart
     of that service ends each running turn of each session.
@@ -89,13 +108,16 @@ names a decision of the change that adds the
   - `get_workspace` gives the parent and the sub-workspaces of a
     workspace. `list_workspaces` with a parent lists the sub-workspaces of
     one workspace.
+  - `move_workspace` with a target changes the parent of a workspace. A
+    move can change the parent and the depth of this workspace, and
+    `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as
-    [Files in answers](file-mentions.md#files-in-answers) says (answer
-    chip decision 1).
+    [Files in answers](file-mentions-answers.md#files-in-answers) says
+    (answer chip decision 1).
   - In commits, pull requests, issues, and files, the agent writes paths
     in backticks. Reason: GitHub reads `@` and a name as a mention of a
     person or a team, and notifies them.
@@ -111,17 +133,22 @@ names a decision of the change that adds the
   Agents that decide from each refusal of a tool were rejected, because
   they spend calls on background input or ask a member. A guide that names
   each computer tool was rejected, because the provider can change them.
-- Reason for the parent and the depth: they never change. So they follow
-  [the rule for facts that change](#the-same-text-for-the-life-of-a-session).
-  The sub-workspaces change, so the instructions name the calls that list
-  them.
-- A line in each message with the parent and the depth, as the branch
-  line, was rejected. Reason: no fact of that line can change.
 - Reason for the service guidance: work of one agent can stop or restart
   that service, and so end the turns of every session. The chat then shows
   "The agent stopped" with no cause, as
   [Messages](messages-and-attachments.md#messages) says. The journal gives
   the agent that cause (stop diagnostics decision 4 A).
+- Reason for the screenshot guidance: no member watches the desktop, so
+  the screenshot shows the member what the agent saw. The chat shows that
+  Markdown image as a picture, as
+  [Pictures in answers](file-mentions-answers.md#pictures-in-answers)
+  says.
+- An agent that reads the saved screenshot, so that an automatic preview
+  shows it, was rejected (screenshot decision 1). The chat shows only the
+  pictures that the agent picks. A second read also costs tokens.
+- Screenshots that the runner takes by itself were rejected, because the
+  sessions share one desktop. The screenshot guidance names no computer
+  tool, for the reason of the desktop guidance.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
   [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
@@ -133,17 +160,13 @@ names a decision of the change that adds the
 - The instructions never tell the agent to send a member to a tool that
   the app hides, such as Desktop. [Desktop](workspace-tools.md#desktop)
   says why the app hides it.
-- The instructions do not ask the agent to show a screenshot in a reply.
-  Reason: the chat shows no picture in an answer. The Markdown of an image
-  of a file of the workspace shows as a link that opens the file, as
-  [Chat Markdown](chat-markdown.md#formatting) says.
 - The instructions hold no secret, such as the workspace token or an agent
   login.
 - The instructions follow the naming rules of user-facing text, as
   [Names in the product](agents-and-sessions.md#names-in-the-product) and
   [The provider](workspaces-and-sandboxes.md#the-provider) say. So they
-  never name Boat, and they never use "Claude Code" as a name of the
-  product.
+  never name a sandbox provider, and they never use "Claude Code" as a
+  name of the product.
 - Reason: the agent can repeat the instructions in the chat.
 
 ### The branches
@@ -167,67 +190,60 @@ names a decision of the change that adds the
   branch. The Worker's record then names the new branch, and the pull
   request bar follows it. Continue is a branch change of the app, not a
   rename by the agent.
+- A [repository change](repository-change.md) also moves the workspace to
+  a new branch, in the folder of another repository. It is a change of
+  the app too.
+
+### The parent and the depth
+
+- A [parent change](parent-changes.md) changes the parent and the depth of
+  a workspace, and the depth of each workspace under it.
+- The instructions still hold the parent and the depth (parent-move
+  decision 2 A). They also say that a move can change them, and that
+  `get_workspace` gives the current ones. The sub-workspaces change too,
+  so the instructions name the calls that list them.
+- Accepted cost: a running session keeps the parent and the depth of its
+  instructions. A new session gets the parent and the depth of the last
+  start of the cloud computer.
+- These ways were rejected (parent-move decision 2), because the user
+  chose the smallest change:
+  - A tree line in each message with the current parent and depth, as
+    [the branch line](message-lines.md#the-branch-line) of decision 227.
+  - Instructions without the parent and the depth, so that each agent
+    reads them with `get_workspace`.
 
 ## The sender line
 
-[The sender line](agent-instructions-sender-line.md#the-sender-line)
-states the sender line of each message to the agent.
+[The sender line](message-lines.md#the-sender-line) holds the
+requirements of the line that names the sender of each message, and
+[Access](message-lines.md#access) states the access of a turn, which does
+not depend on the sender line.
 
-### Access
+## The repository line
 
-[Access](agent-instructions-sender-line.md#access) states the access of a
-turn, which does not depend on the sender line.
+[The repository line](message-lines.md#the-repository-line) holds the
+requirements of the line that names the current repository folder after
+a repository change.
 
 ## The branch line
 
-- The Worker sends the current workspace branch and the current target
-  branch with each message (decision 227).
-- When the agent instructions of a session name an earlier workspace
-  branch or an earlier target branch, each message to the agent gets a
-  branch line after its sender line. The line names the current branches.
-- A session whose instructions name the current branches gets no branch
-  line. A new session gets the current branches in its instructions.
-- The branch line exists only in the text that reaches the agent, as the
-  sender line does. The chat never shows it.
-- Reason: after Continue, each session keeps its context and its
-  instructions. The line reaches every session in each message, also after
-  a summary and in a session that starts later, and the instructions keep
-  their text and their prompt cache.
-- These ways were rejected (decision 227):
-  - One line only in the next message of each session. A later summary can
-    drop it.
-  - New instructions for each session at Continue. They rewrite the prompt
-    cache, and each agent must restart to read them.
-  - Only the note of Continue in the chat. The instructions then keep the
-    earlier branch.
+[The branch line](message-lines.md#the-branch-line) holds the
+requirements of the line that names the current branches.
+
+## Skills of a message
+
+[Skills of a message](skill-input.md) states how each agent gets the
+skills that a member names in a message.
 
 ## The same text for the life of a session
 
-- A session keeps the same agent instructions for its whole life. A Claude
-  session also keeps the same base prompt.
-- This holds across each turn, each stop and resume of the sandbox, and
-  each restart of the agent runner.
-- This holds also when a fact, the wording of the instructions, or the
-  base prompt changes later. An example is a new default branch of the
-  repository at a later resume.
-- A new session gets the instructions with the current facts and wording.
-- A session that started without agent instructions can get them once, at
-  a later turn. It then keeps that text.
-- Apart from the branches, the instructions hold no fact that changes
-  during the work, such as the date, the Git state, or the pull request
-  state. The agent reads such facts with its tools.
-- Reason: a change of the text rewrites the prompt cache of the
-  conversation. An agent can also keep the first instructions of a session
-  until it summarizes the conversation.
-- The workspace branch and the target branch can change, by Continue or
-  by a new default branch. The instructions keep the branches of the start
-  of the session, and [the branch line](#the-branch-line) names the
-  current branches.
-- A tool that returns facts that change, such as the pull request state,
-  was rejected. It widens what the workspace token allows, and agents still
-  need instructions to call it.
-  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
-  what the token allows.
+[Session instructions](session-instructions.md#the-same-text-for-the-life-of-a-session)
+states how a session keeps its instructions across turns and changes.
+
+## Session instructions
+
+[Session instructions](session-instructions.md) states that a session
+keeps the same agent instructions for its whole life.
 
 ## How each agent gets them
 

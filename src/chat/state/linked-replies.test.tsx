@@ -103,9 +103,10 @@ describe('a reply that names a linked session', () => {
     chat.controller.setDraft(first, words)
     await chat.controller.send(first)
     expect(snapshot(chat).notice?.title).toBe("Your message didn't send")
-    // The Worker took the message before its reply got lost.
-    streamLinked(chat)
+    // The Worker took the message before its reply got lost. A send again
+    // before the stream shows it keeps the same ID.
     await chat.controller.send(first)
+    streamLinked(chat)
     const bodies = await chat.bodies(
       'POST',
       sessionPaths.messages(org, ws, first),

@@ -27,7 +27,7 @@ for the screens.
   in a `MarkedMessage`. The message carries the ID of the chat and of the
   message, and a mark that it is finished: a member message that the
   transcript holds, or an agent message whose `assistant.completed` came
-  (`completed` of its transcript item). An open message line of the folded
+  (`complete` of its transcript item). An open message line of the folded
   work counts too. A closed line shows no marks.
 - The quote, the text around it, and each mark come from one reading of
   the text that a message shows, `textModel`: the text of each shown text
@@ -87,8 +87,8 @@ for the screens.
   and a browser without it gets the same place from `placePanel`. On a
   phone it is a sheet, which stops at the top of the chat at full height.
 - The popover shows the chat of the explanation with the parts of a tab,
-  through `sessionParts` and `TranscriptView`, with `hide` for the written
-  prompt: its first message. Its follow-up field edits the draft of the
+  through `useSessionParts` and `TranscriptView`, with `hide` for the
+  written prompt: its first message. Its follow-up field edits the draft of the
   session, which its tab shows too. A follow-up of a closed explanation
   reopens it first, with no change of the shown tab. A follow-up or a Try
   again that the Worker puts in a linked session shows that session in the

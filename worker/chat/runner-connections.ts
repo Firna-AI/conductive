@@ -92,6 +92,7 @@ export class RunnerConnections {
         generation: 1,
         workspace,
         streamId: null,
+        processStartId: null,
         protocolVersion: null,
         loginKinds: undefined,
         ready: false,
@@ -125,8 +126,12 @@ export class RunnerConnections {
       id: record.id,
       workspace: record.workspace,
       streamId: record.streamId,
+      processStartId: record.processStartId,
       protocolVersion,
       loginKinds: record.loginKinds,
+      repositoryFolder: record.repositoryFolder,
+      fileServer: record.fileServer,
+      watchUntil: record.watchUntil,
       ready: record.ready,
       peer: new AuthenticatedRunner(
         source,
@@ -229,8 +234,12 @@ export class RunnerConnections {
     const record = this.record
     if (this.current !== active || !record) return
     record.streamId = active.streamId
+    record.processStartId = active.processStartId
     record.protocolVersion = active.protocolVersion
     record.loginKinds = active.loginKinds
+    record.repositoryFolder = active.repositoryFolder
+    record.fileServer = active.fileServer
+    record.watchUntil = active.watchUntil
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)
   }

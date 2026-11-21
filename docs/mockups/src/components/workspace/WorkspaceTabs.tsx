@@ -1,15 +1,20 @@
-import { Fragment } from 'react'
+import { createContext, Fragment, useContext } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { History, Plus, RotateCcw } from 'lucide-react'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
-import { AgentMark } from '../chat/AgentMark'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { DropPlace, TabItem, type WorkspaceTab } from './TabItem'
+import { defined } from '../../defined'
+import { instanceKey } from '../../instanceKey'
+import {
+  dropPlace,
+  tabItem,
+} from '../../entries/components/workspace/TabItem.mockup'
+import type { WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
 import tabScroll from './TabScroll.module.css'
 import styles from './WorkspaceTabs.module.css'
@@ -24,33 +29,43 @@ export type TabDrag = { tab: string; index: number }
  * The sessions whose tabs the user closed, the last closed first: the mark
  * of the agent, the title, and the time. Each one reopens as a tab.
  */
-export const historyEntries: readonly MenuEntry[] = closedSessions.map(
-  (session): MenuEntry => ({
+export const historyEntries: readonly MenuEntryData[] = closedSessions.map(
+  (session): MenuEntryData => ({
     kind: 'item',
     label: nameLabel(session.title),
-    mark: <AgentMark agent={session.agent} />,
+    mark: { kind: 'agent', agent: session.agent },
     detail: session.closed,
-    trailingIcon: RotateCcw,
+    trailingIcon: 'rotate-ccw',
   }),
 )
+
+/**
+ * The class of the clock when the screen draws the open session history
+ * above the page, as the app opens it in the top layer of the browser. The
+ * clock then draws no menu of its own, and the class names it as the anchor
+ * where CSS places the menu, as `app/chat/menu-placement` shows.
+ */
+export const HistoryAnchor = createContext<string | undefined>(undefined)
 
 /** The clock that opens the session history, with its menu when open. */
 function HistoryButton(props: {
   open: boolean
   anchored: boolean
-  entries: readonly MenuEntry[]
+  entries: readonly MenuEntryData[]
 }) {
+  const anchor = useContext(HistoryAnchor)
   const hasHistory = props.entries.some((entry) => entry.kind === 'item')
   const button = (
-    <IconButton
+    <iconButton.Component
       expanded={props.open}
-      icon={History}
+      icon="history"
       label="Session history"
       menu
+      moklyInstance="session-history"
     />
   )
   return (
-    <span className={styles.anchor}>
+    <span className={classes(styles.anchor, anchor)}>
       {hasHistory ? (
         props.open ? (
           button
@@ -60,10 +75,11 @@ function HistoryButton(props: {
           </ScreenLink>
         )
       ) : null}
-      {props.open && props.anchored ? (
-        <Menu
+      {props.open && props.anchored && anchor === undefined ? (
+        <menuPart.Component
           entries={props.entries}
           label="Session history"
+          moklyInstance="history-menu"
           placement="below-end"
           wide
         />
@@ -96,7 +112,7 @@ function placeAfterDrop(from: number, index: number): number {
 export function WorkspaceTabs(props: {
   tabs: readonly WorkspaceTab[]
   viewport: Viewport
-  historyEntries?: readonly MenuEntry[]
+  historyEntries?: readonly MenuEntryData[]
   historyOpen?: boolean
   /**
    * A read-only workspace, such as an archived one: no new session, and a
@@ -122,7 +138,7 @@ export function WorkspaceTabs(props: {
   const overRow = dragged !== undefined || (menuOpen && !phone)
   const dropAt = (index: number) =>
     dragged && drag?.index === index ? (
-      <DropPlace
+      <dropPlace.Component
         count={tabs.length}
         place={placeAfterDrop(from, index)}
         tab={dragged}
@@ -145,15 +161,17 @@ export function WorkspaceTabs(props: {
         {tabs.map((tab, index) => (
           <Fragment key={tab.key}>
             {dropAt(index)}
-            <TabItem
-              menu={
-                menuOpen && tab.key === menuTab
-                  ? { entries: menu, anchored: !phone }
-                  : undefined
-              }
+            <tabItem.Component
+              moklyInstance={`tab-${instanceKey(tab.key)}`}
               placeholder={tab === dragged}
               renaming={tab.key === props.renaming}
               tab={tab}
+              {...defined({
+                menu:
+                  menuOpen && tab.key === menuTab
+                    ? { entries: menu, anchored: !phone }
+                    : undefined,
+              })}
             />
           </Fragment>
         ))}
@@ -161,7 +179,11 @@ export function WorkspaceTabs(props: {
       </ul>
       {readOnly ? null : (
         <ScreenLink asChild to={paths.sessions}>
-          <IconButton icon={Plus} label="New session" />
+          <iconButton.Component
+            icon="plus"
+            label="New session"
+            moklyInstance="new-session"
+          />
         </ScreenLink>
       )}
       <HistoryButton

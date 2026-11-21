@@ -35,9 +35,15 @@ pull request bar, and the owner picker. A host can give its own parts, as
   kept chat. The
   [chat development page](../chat/dev/README.md) has a fake with state for
   live events and writes.
-- The production build uses `live-services.ts`: the Worker on the origin of
-  the page, its event socket, and an `XMLHttpRequest` for each raw part of
-  an upload, which measures the bytes that the browser sent.
+- The production build uses `createLiveServices` of `live-services.ts`.
+  It requires an app origin and a credential mode. A browser gives
+  the origin of its page and `same-origin`, the default credential mode of
+  `fetch`. The Mac app gives its configured Worker origin and `include`,
+  as the [Mac app README](../../desktop/README.md) says. The API requests,
+  the event and terminal sockets, the paths that `leave` opens, and
+  `AppServices.appOrigin` use that origin. Each raw part of an upload is
+  an `XMLHttpRequest` to the same origin, which measures the bytes that
+  the browser sent.
 
 ## Composition
 
@@ -109,6 +115,10 @@ the invitations, the kept workspace models, the build log, the read marks,
 the workspace stores, the raw event streams of feature stores, and the
 feedback draft.
 
+For an existing workspace, `OrgModel.putWorkspace` keeps the listed parent,
+section, and order together. A record with a different parent requests a
+fresh list read through `Refresher.reread`, after any current read finishes.
+
 ## Screens
 
 [Screens](screens.md) gives the rules of the screens of the app shell:
@@ -162,6 +172,17 @@ the Help row of the palette opens.
 - A control that ends at a time, such as Restore until its last day, ends
   at that time through `usePassedDeadlines` in `deadlines.ts`, with the
   clock and the timers of `AppServices`, and with no other event.
+- An archived workspace leaves the list at the end of its Restore, 14 days
+  after its Archive, as
+  [Removed workspaces](../../docs/protocol/workspace-life.md#removed-workspaces)
+  says. The list of the org keeps it, so its links still resolve.
+  `groupWorkspaces` in `sections.ts` leaves it out of the sections, the
+  Archived group, the keys, and the groups of the palette, through
+  `isListed` in `workspace-removal.ts`. The counts of the org page, of
+  Leave org, and of the Members tab leave it out too. `useListTime` in
+  `deadlines.ts` renders each such screen again at that time, also without
+  a kept cloud computer. No code reads `restoreUntil` to find the removal,
+  because that value is null whenever no cloud computer is kept.
 - A read mark counts no generation, because one request serves every
   visit of its kept model. An answer after a close still sets the
   confirmed number, which a later open uses. While the model stays closed,
@@ -189,9 +210,14 @@ the Help row of the palette opens.
   field or terminal after a shortcut consumes the press.
   `KeyPress.layoutModifiers` carries the modifiers taken by held layout
   switch keys. `onKey.layoutModifiers()` gives a recorder the same state
-  for its own event. `windowKeys` shares this state per window and resets
-  it on key-up or blur. `windowLayoutModifiers(window)` reads the same
-  snapshot for callers with a window.
+  for its own event. `KeyPress.firstPressConsumed` is true on a repeat
+  when a listener called `preventDefault` on the first press of the same
+  physical key. A first press always has false. The
+  [shortcut model](shortcuts/README.md) stops each repeat of such a key.
+  `windowKeys` shares both states per window and keeps them between
+  listener subscriptions. It resets a key on its key-up, and every key on
+  blur. `windowLayoutModifiers(window)` reads the same layout modifiers
+  for callers with a window.
 - `AppServices.appVersion` is the version of the build: the version of the
   root `package.json` and the short commit, as `<version> (<commit>)`.
   `build-version.ts` at the repository root makes it for the web and Mac
@@ -200,8 +226,13 @@ the Help row of the palette opens.
   feedback message carries it.
 - An address that people share, such as the invite link, starts with
   `AppServices.appOrigin`: the origin of the page in a browser. The Mac
-  app loads the page from its own origin, so it names the app host of the
-  brand.
+  app loads the page from its own origin, so it gives the Worker origin of
+  its build. `CONDUCTIVE_APP_ORIGIN` selects that origin, as
+  [Development](../../desktop/README.md#development) in the Mac app README
+  says. So a join link names the deployment that owns its code. Links in
+  chat text and the file preview to a page of the app at this origin are
+  [links of the app](../../docs/protocol/chat-links.md#links).
+  Each opens its page in the same window.
 - The shell reuses the design tokens, the pure parts, and the CSS modules of
   the [mockups](../../docs/mockups/README.md). It never imports a mockup
   screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
@@ -211,71 +242,24 @@ the Help row of the palette opens.
 
 ## Tests
 
-The account routes of the development backend keep device sign-ins in a
-private route closure. Start returns a fixed display code and a new handle.
-The first poll waits. The next poll connects Codex with the normal share
-default. Later polls read the current login without saving it again, until the sign-in expires after 15 minutes.
-The fake uses the shared device response types. It sends no request to OpenAI.
-
-Vitest runs in Node without a DOM. `test-kit.ts` gives services over the
-fake API, with the raw parts of uploads through its fetch, requests or answers that
-wait for the test (also two at one path), a manual timer with the wait of
-each pending timer, which can run only the timers of one wait, a manual page
-focus, visibility, input, and keys, and a recording event source.
-`../shell/test-render.tsx` draws a screen with every provider through
-server rendering, after the test loads its data. A test that needs focus
-and keys opts into happy-dom with `// @vitest-environment happy-dom`, and
-mounts the screen with `../shell/test-mount.tsx`, which also presses keys,
-clicks, types, and lets the answers of the fake API settle.
-`../shell/new-workspace/dialog-test-kit.tsx` mounts the whole app in a tab
-for the tests of New workspace as a page or a dialog, and of its send key.
-Its `markOf` gives the mark of a file of the draft by the name of the file.
-
-`../shell/new-workspace/NewWorkspaceDrops.test.tsx` drops files on the
-page and on the dialog card. A drop on the text of the page puts the files
-at the point. While a create runs, the box shows no drop state or drop
-caret, also for files that hovered as it began, and takes no drop. Files
-over the card show its drop state, a dropped folder attaches as its zip,
-and a folder that cannot be read gets its notice in the dialog.
-`folder-zip.test.ts` zips a folder with nested, empty, and hidden entries,
-moves the compressed bytes into a blob each time that they reach the flush
-size, gives the name of a zip over the size limit and of a folder that
-cannot be read, and stops with its drop. `../App.dom.test.tsx` mounts `App` and checks the guard
-outside each box, the browser's own drag of text and links, and the copy
-offer of a box. It also checks that the Feedback dialog still takes a
-dropped screenshot.
-
-`attachment-upload.test.ts` checks the upload in parts of both composers
-over a fake Worker with small parts, from
-`attachment-upload.test-support.ts`. It checks the parts in their order
-with the progress of all parts, a part that goes again alone up to three
-times, the waits of 1, 2, and 4 seconds before these retries, a stop during
-a wait, a refusal that goes once, a resumed upload, a new upload when the
-kept one is gone, the end of an upload by its complete call, a draft file
-and an empty file, and a stop by the signal. `api/xhr-files.test.ts`
-checks the `PUT` of each part. `new-workspace-waits.test.ts` checks that
-New workspace waits on the timer of the app services, and that a Remove
-during the wait stops the upload.
-
-Run `npm run test -- src/app/dev/attachment-files.test.ts src/chat/dev/dev-attachment-files.test.ts`
-for the API tests of the uploaded bytes and their copies in both
-development fakes. `dev/attachment-test-kit.ts` gives them a stub
-`window`, fake timers, a sample image, and a check of the exact bytes.
-
-`dev/secret-request-routes.test.ts` answers the secret requests of the dev
-fake. A waiting request gives the workspace the state `input` until an
-Allow in time sends its run. A late Allow of a value sends the line of the
-app, and the value stays for the workspace until Remove.
+[Web app tests](tests.md) gives the test environment of Vitest, the shared
+test helpers, and what the tests of the device sign-in, the drops, the
+uploads, and the secret requests check.
 
 ## Key code
 
 [Key code](key-code.md) names the files, the types, and the functions to
 open first. It covers the dev fake, the API client, the clipboard, the
-models, the waitlist and its codes, the automations, and the workspace list.
-It also covers the event streams, the drag, and the operator section.
+models, and the waitlist and its codes. It also covers the event streams,
+the drag, and the operator section.
+[Key code: the workspace list and the workspace models](key-code-workspaces.md)
+covers the workspace list with its menus, Archive and Restore, and the
+models of an open workspace and of New workspace.
 [Key code: drafts and attached files](key-code-drafts.md) covers the draft
 text, the attached files, and their uploads, which the chat and New
 workspace share.
+[Key code: automations](key-code-automations.md) covers the readers, the
+models, the drafts, and the pages of the automations.
 [Key code: the palette, the layers, and the dialogs](key-code-layers.md)
 covers the command palette, the layers, the frames, New workspace as a
 dialog, and feedback with its screenshots.

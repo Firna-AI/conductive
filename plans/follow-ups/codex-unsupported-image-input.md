@@ -13,7 +13,7 @@
 - **Background:**
   - The runner gives Codex each attached image of at most 25,000,000 bytes as image input, right after its file line. The protocol says so in `docs/protocol/attachment-transfers.md:154`.
   - The kind comes only from the media type (`worker/chat/attachment-multipart-routes.ts:82`), so an SVG, a TIFF, or an HEIC file is an image too.
-  - The bundled Codex 0.167.0 holds the text "Codex cannot attach image at `<path>`: unsupported image `<type>`". This was found in the strings of its binary, not in a run of Codex.
+  - The bundled Codex 0.167.0 and 0.170.0 hold the text "Codex cannot attach image at `<path>`: unsupported image `<type>`". This was found in the strings of its binary, not in a run of Codex.
 - **Problem:** The runner can send Codex an image type that Codex cannot attach. The read line then says that the image is in the message, though Codex replaces it with a text.
 - **Impact if no action:** Codex can skip reading such a file, because the read line says that it already has it. The answer can then miss what the image shows.
 - **Root question:** Which attached images does Codex get as image input?

@@ -1,9 +1,11 @@
 /**
- * Chat transcripts. Text in backticks renders as inline code.
+ * Chat transcripts. In the text of a member's message, text in backticks
+ * renders as inline code. An agent message holds the blocks of the app, as
+ * the builders of `agentText.ts` write them.
  */
 
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { TableCells } from '../../../../src/markdown/table-rows'
 import type { LostReason, LostWhat } from '../components/chat/lostCopy'
 import type { StandardSpeedCause } from '../components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
@@ -18,51 +20,43 @@ import {
   history,
 } from './autocompleteTurn'
 import { backgroundConversations } from './backgroundConversations'
-import { barConversations, type ContinuedItem } from './barConversations'
+import {
+  barConversations,
+  type ContinuedItem,
+  type RepositoryChangedItem,
+} from './barConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
-import {
-  headingConversations,
-  type MessageHeading,
-} from './headingConversations'
+import { formattingConversations } from './formattingConversations'
+import { headingConversations } from './headingConversations'
 import { linkedConversations } from './linkedConversations'
-import { listConversations, type MessageList } from './listConversations'
+import { listConversations } from './listConversations'
 import { lostConversations } from './lostConversations'
 import type { MacCommandRequest, MacCommandState } from './mac'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { linkedSession } from './sessions'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
+import { postcodeHistory } from './postcodeConversation'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
 import { explanationConversations } from './explanationChats'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
+import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
 import { fileMentionConversations } from './fileMentions'
 import { sessionLinkConversations } from './sessionLinkConversations'
+import { skillConversations } from './skills'
 import { workspaceLinkConversations } from './workspaceLinkConversations'
 
 export type ToolKind = 'read' | 'search' | 'create' | 'edit' | 'run'
 
 type ToolCallStatus = 'done' | 'running' | 'stopped'
-
-/** A table in a message of the agent. A short row keeps only its own cells. */
-export type MessageTable = { kind: 'table' } & TableCells<string>
-
-/** A code block in a message of the agent, with its text as written. */
-type MessageCodeBlock = { kind: 'code'; text: string }
-
-/**
- * A block of a message of the agent: a paragraph, a heading, a table, a
- * list, or a code block.
- */
-export type AgentBlock =
-  string | MessageHeading | MessageTable | MessageList | MessageCodeBlock
 
 export type ChatItem =
   | {
@@ -79,8 +73,11 @@ export type ChatItem =
   | {
       kind: 'agent'
       id: string
-      /** The blocks of the message, in order. */
-      blocks: readonly AgentBlock[]
+      /**
+       * The blocks of the message, in order, as the app reads them from the
+       * Markdown of the agent. `agentText.ts` gives their builders.
+       */
+      blocks: readonly TextBlock[]
     }
   | {
       kind: 'tool'
@@ -170,6 +167,7 @@ export type ChatItem =
       from: string
     }
   | ContinuedItem
+  | RepositoryChangedItem
   | SecretRunItem
   | LateAnswerItem
 
@@ -231,6 +229,7 @@ export const conversations: Readonly<
   ...workspaceLinkConversations(history),
   ...sessionLinkConversations(history),
   ...fileMentionConversations(history),
+  ...skillConversations(history),
   ...answerFileConversations(history),
   ...workConversations({
     start: autocompleteStart,
@@ -240,7 +239,11 @@ export const conversations: Readonly<
   ...tableConversations,
   ...barConversations({ history, cutOff: cutOffTurn }),
   ...listConversations,
+  ...taskListConversations,
   ...headingConversations,
+  ...formattingConversations,
+  /** The chat of the removed workspace that a chip opens. */
+  'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
   ...explanationConversations,
 }

@@ -1,7 +1,7 @@
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Square } from 'lucide-react'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
 import { useControlSizes, useTouch } from '../common/touch'
 
 /** Send, which is off while the box is empty or the message waits. */
@@ -29,7 +29,13 @@ export function SendButton(props: { draft: string; blocked?: boolean }) {
  */
 export function StopButton() {
   const control = useControlSizes()
-  if (!useTouch()) return <ActionButton icon={Square}>Stop</ActionButton>
+  if (!useTouch()) {
+    return (
+      <actionButton.Component icon="square" moklyInstance="stop-agent">
+        Stop
+      </actionButton.Component>
+    )
+  }
   return (
     <Button
       accessibilityLabel="Stop"

@@ -16,8 +16,11 @@ import {
 } from '../shared/workspaces'
 import type { WorkspaceTarget } from './githubClient'
 
-/** Checks the local work that the question of Continue lists. */
-function readLocalWork(value: unknown): LocalWork {
+/**
+ * Checks the local work that the question of Continue lists, and the
+ * question of a repository change.
+ */
+export function readLocalWork(value: unknown): LocalWork {
   const body = record(value, 'local work')
   return {
     uncommittedFiles: texts(body, 'uncommittedFiles'),

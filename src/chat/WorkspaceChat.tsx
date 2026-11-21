@@ -14,7 +14,7 @@ import {
   ChatDropAreaProvider,
   useChatDropArea,
 } from './components/chat-drop-area'
-import { ChatOverlays, historyEntries } from './components/ChatOverlays'
+import { ChatOverlays, chatHistory } from './components/ChatOverlays'
 import type { ComposerFocus } from './components/composer-requests'
 import { SessionChat } from './components/SessionChat'
 import type { ChatHost } from './components/session-parts'
@@ -28,7 +28,7 @@ import { useChatLinksOf } from './links/chat-links'
 import { LinksProvider } from './links/LinksContext'
 import { useMentionCopy } from './links/mention-copy'
 import { MentionsProvider, type ChatMentions } from './mentions/MentionsContext'
-import { endedAt, historySessions, tabSessions } from './state/archive-view'
+import { tabSessions } from './state/archive-view'
 import {
   isRunning,
   type ChatSnapshot,
@@ -169,12 +169,7 @@ function ChatBody(
     (sessionId: string) => void controller.reopen(sessionId),
     [controller],
   )
-  const history = historyEntries(
-    historySessions(snapshot, readOnly),
-    now,
-    reopen,
-    (item) => endedAt(snapshot, item),
-  )
+  const history = chatHistory(snapshot, readOnly, now, reopen)
   const tabs = rowOf(
     snapshot.view,
     tabSessions(snapshot),

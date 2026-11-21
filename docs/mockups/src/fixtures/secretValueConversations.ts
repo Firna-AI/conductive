@@ -10,7 +10,12 @@ import {
   waitsForMapbox,
   working,
 } from './secretChatParts'
-import { mapboxRequest, mixedRequest } from './secretRequests'
+import {
+  mapboxRequest,
+  mixedRequest,
+  placesRequest,
+  providersRequest,
+} from './secretRequests'
 
 /** The keys of the chats of requests that ask for a value. */
 export const secretValueConversationKeys = [
@@ -23,6 +28,8 @@ export const secretValueConversationKeys = [
   'secret-late-given',
   'secret-waiting-mixed',
   'secret-waiting-mixed-value',
+  'secret-invalid-name',
+  'secret-mixed-invalid-name',
 ] as const
 
 type SecretValueConversationKey = (typeof secretValueConversationKeys)[number]
@@ -40,6 +47,32 @@ const mixedAsk: readonly ChatItem[] = [
   ),
 ]
 
+/** Cal asks for a comparison with Google Places, and names its key. */
+const placesAsk: readonly ChatItem[] = [
+  {
+    kind: 'user',
+    id: 'ask-places',
+    text: 'Compare the suggestions of the places proxy with Google Places. I can give you the Google Places key.',
+  },
+  agent(
+    'plan-places',
+    'Acme has no secret for the Google Places key, so I asked for it to run the comparison.',
+  ),
+]
+
+/** Cal asks for both providers on real addresses from production. */
+const providersAsk: readonly ChatItem[] = [
+  {
+    kind: 'user',
+    id: 'ask-providers',
+    text: 'Compare Mapbox and Google Places with the places proxy on real addresses from production.',
+  },
+  agent(
+    'plan-providers',
+    "I'll sample 200 saved addresses from the production replica. Acme has no Mapbox token or Google Places key yet, so I asked for both.",
+  ),
+]
+
 /** The late request for MAPBOX_TOKEN, with its drawn answer. */
 function lateValue(typed: boolean, lifetime: 'minutes' | 'workspace') {
   return outlived(
@@ -50,10 +83,11 @@ function lateValue(typed: boolean, lifetime: 'minutes' | 'workspace') {
 }
 
 /**
- * The chats of requests that ask for a value (secrets decision 7), after
- * the finished turn of `history`: a temporary request with no value yet,
- * with a typed value and each lifetime, late, and answered later. A mixed
- * request names a secret of Acme and a name that Acme does not have.
+ * The chats of requests that ask for a value, after the finished turn of
+ * `history`: a temporary request with no value yet, with a typed value and
+ * each lifetime, late, and answered later. A mixed request names a secret
+ * of Acme and a name that Acme does not have. The last two name Google
+ * Places key, which cannot become a secret.
  */
 export function secretValueConversations(
   history: readonly ChatItem[],
@@ -93,6 +127,20 @@ export function secretValueConversations(
     'secret-waiting-mixed-value': [
       ...history,
       ...valueAsk(mixedAsk, mixedRequest, { typed: true, lifetime: 'minutes' }),
+    ],
+    'secret-invalid-name': [
+      ...history,
+      ...valueAsk(placesAsk, placesRequest, {
+        typed: true,
+        lifetime: 'minutes',
+      }),
+    ],
+    'secret-mixed-invalid-name': [
+      ...history,
+      ...valueAsk(providersAsk, providersRequest, {
+        typed: true,
+        lifetime: 'workspace',
+      }),
     ],
   }
 }

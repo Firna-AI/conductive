@@ -1,13 +1,7 @@
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import {
-  File,
-  FileBox,
-  FileCode,
-  FileDiff,
-  FileText,
-  FileX,
-} from 'lucide-react'
+import { File, FileCode, FileDiff, FileText } from 'lucide-react'
+import { answerShot } from '../../fixtures/answerFiles'
 import { screenshotCopy } from '../../fixtures/attachments'
 import {
   addressFormDiff,
@@ -16,15 +10,21 @@ import {
 } from '../../fixtures/fileContents'
 import { maskedDiffPath, seedScriptDiff } from '../../fixtures/maskedFiles'
 import { branchPictures, splitPath } from '../../fixtures/files'
-import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { CodeView, type LineRange } from './CodeView'
-import { DiffStat } from './DiffStat'
-import { DiffView } from './DiffView'
+import {
+  CheckoutPicture,
+  screenshotSize,
+  type CheckoutView,
+} from '../../fixtures/pictures'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { codeView } from '../../entries/components/files/CodeView.mockup'
+import type { LineRange } from './CodeView'
+import { diffStat } from '../../entries/components/files/DiffStat.mockup'
+import { diffView } from '../../entries/components/files/DiffView.mockup'
 import type { FileTabView } from './FilesPanel'
-import { ImageView } from './ImageView'
-import { MarkdownView } from './MarkdownView'
+import { htmlSpec } from './htmlSpecs'
+import { imageView } from '../../entries/components/files/ImageView.mockup'
+import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
 
 /** What the page of a file shows: its header and its content. */
 export type FileSpec = {
@@ -37,20 +37,30 @@ export type FileSpec = {
   closed?: true
   /** The file is not text, so the header keeps Download, and Copy is off. */
   binary?: true
+  /**
+   * The file shows rendered or as its source, so the header has the switch
+   * between Preview and Source, which shows this view.
+   */
+  mode?: 'preview' | 'source'
+  /**
+   * The address of the page that the tab shows in a frame, which Open opens
+   * in a new tab. The header then has Reload and Open.
+   */
+  pageUrl?: string
 }
 
 /**
  * The picture of an image file. The tab shows a PNG, JPEG, GIF, or WebP
  * file by its name as a picture, up to the read limit of the file tab.
  */
-function picture(path: string, overlap: boolean): FileSpec {
+function picture(path: string, view: CheckoutView): FileSpec {
   return {
     path,
     icon: File,
     content: (
-      <ImageView size={screenshotSize}>
-        <CheckoutPicture label={splitPath(path).name} overlap={overlap} />
-      </ImageView>
+      <imageView.Component moklyInstance="image-view" size={screenshotSize}>
+        <CheckoutPicture label={splitPath(path).name} view={view} />
+      </imageView.Component>
     ),
     binary: true,
   }
@@ -65,10 +75,15 @@ function notDrawn(path: string): FileSpec {
     path,
     icon: File,
     content: (
-      <EmptyState
-        action={<ActionButton>Download</ActionButton>}
+      <emptyState.Component
+        action={
+          <actionButton.Component moklyInstance="download-binary-file">
+            Download
+          </actionButton.Component>
+        }
         body="It is a binary file."
-        icon={FileBox}
+        icon="file-box"
+        moklyInstance="binary-file"
         title="Download this file to open it"
       />
     ),
@@ -90,49 +105,96 @@ export function specFor(view: FileTabView): FileSpec {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
-        content: <CodeView code={autocompleteHook} />,
+        content: (
+          <codeView.Component
+            code={autocompleteHook}
+            moklyInstance="code-view"
+          />
+        ),
       }
     case 'code-lines':
       return {
         path: 'src/app/checkout/useAddressAutocomplete.ts',
         icon: FileCode,
         meta: `${autocompleteHook.split('\n').length} lines`,
-        content: <CodeView code={autocompleteHook} marked={answerLines} />,
+        content: (
+          <codeView.Component
+            code={autocompleteHook}
+            marked={answerLines}
+            moklyInstance="code-view"
+          />
+        ),
       }
     case 'markdown':
       return {
         path: 'README.md',
         icon: FileText,
-        content: <MarkdownView blocks={readme} />,
+        mode: 'preview',
+        content: (
+          <markdownView.Component
+            blocks={readme}
+            moklyInstance="markdown-view"
+          />
+        ),
       }
     case 'diff':
       return {
         path: 'src/app/checkout/AddressForm.tsx',
         icon: FileDiff,
-        meta: <DiffStat added={38} removed={6} />,
-        content: <DiffView hunks={addressFormDiff} />,
+        meta: (
+          <diffStat.Component
+            added={38}
+            moklyInstance="diff-stat"
+            removed={6}
+          />
+        ),
+        content: (
+          <diffView.Component
+            hunks={addressFormDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'masked-diff':
       return {
         path: maskedDiffPath,
         icon: FileDiff,
-        meta: <DiffStat added={6} removed={0} />,
-        content: <DiffView hunks={seedScriptDiff} />,
+        meta: (
+          <diffStat.Component added={6} moklyInstance="diff-stat" removed={0} />
+        ),
+        content: (
+          <diffView.Component
+            hunks={seedScriptDiff}
+            moklyInstance="diff-view"
+          />
+        ),
       }
     case 'unnamed':
       return {
         path: 'File',
         icon: FileCode,
         content: (
-          <EmptyState icon={FileX} title="This file moved or was deleted" />
+          <emptyState.Component
+            icon="file-x"
+            moklyInstance="missing-file"
+            title="This file moved or was deleted"
+          />
         ),
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, false)
+      return picture(branchPictures.picture, 'form')
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
-      return picture(screenshotCopy.path, true)
+      return picture(screenshotCopy.path, 'covered')
+    case 'screenshot':
+      return picture(answerShot, 'fixed')
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return htmlSpec(view)
   }
 }

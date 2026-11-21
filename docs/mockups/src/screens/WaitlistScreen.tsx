@@ -1,12 +1,11 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { InputFrame } from '@firna/ui/input'
-import { CircleAlert, CirclePause, LogOut } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { useControlSizes } from '../components/common/touch'
-import { PendingInviteList } from '../components/members/PendingInvites'
-import { PersonAvatar } from '../components/orgs/OrgTile'
+import { pendingInviteList } from '../entries/components/members/PendingInvites.mockup'
+import { personAvatar } from '../entries/components/orgs/OrgTile.mockup'
 import {
   typedCode,
   waitingEmail,
@@ -16,7 +15,7 @@ import {
 import { noop } from '../noop'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
-import { SignInFrame } from './signInFrame'
+import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
 import { codeFailures, waitlistCopy as copy } from './waitlistCopy'
 import forms from './forms.module.css'
 import signIn from './SignInScreen.module.css'
@@ -56,9 +55,10 @@ function CodeNotice(props: { state: WaitlistState }) {
   if (code === 'none') return null
   if (code === 'paused') {
     return (
-      <Notice
+      <notice.Component
         body={from === 'link' ? copy.paused.link : copy.paused.typed}
-        icon={CirclePause}
+        icon="circle-pause"
+        moklyInstance="code-notice"
         title={copy.paused.title}
       />
     )
@@ -66,9 +66,10 @@ function CodeNotice(props: { state: WaitlistState }) {
   if (from === 'field') return null
   const text = copy.link[code]
   return (
-    <Notice
+    <notice.Component
       body={text.body}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="code-notice"
       title={text.title}
       tone="danger"
     />
@@ -102,7 +103,9 @@ function CodeField(props: { state: WaitlistState }) {
           value={typed ? typedCode : ''}
         />
         <ScreenLink asChild to={paths.getStarted}>
-          <ActionButton>{copy.useCode}</ActionButton>
+          <actionButton.Component moklyInstance="use-code">
+            {copy.useCode}
+          </actionButton.Component>
         </ScreenLink>
       </div>
       {error ? (
@@ -125,14 +128,16 @@ function Invitations(props: { paused: boolean; stacked: boolean }) {
     <div className={styles.invitations}>
       <p className={styles.intro}>{copy.invitations}</p>
       {props.paused ? (
-        <Notice
+        <notice.Component
           body={copy.paused.invitation}
-          icon={CirclePause}
+          icon="circle-pause"
+          moklyInstance="invitations-paused"
           title={copy.paused.title}
         />
       ) : null}
-      <PendingInviteList
+      <pendingInviteList.Component
         invites={inviteRows(waitingInvites, 'primary')}
+        moklyInstance="invitations"
         stacked={props.stacked}
       />
     </div>
@@ -143,13 +148,19 @@ function Invitations(props: { paused: boolean; stacked: boolean }) {
 function AccountRow() {
   return (
     <div className={styles.account}>
-      <PersonAvatar initials={waitingPerson.initials} size={32} />
+      <personAvatar.Component
+        initials={waitingPerson.initials}
+        moklyInstance="waiting-person"
+        size={32}
+      />
       <span className={styles.person}>
         <span className={styles.name}>{waitingPerson.name}</span>
         <span className={styles.login}>@{waitingPerson.login}</span>
       </span>
       <ScreenLink asChild to={paths.signIn}>
-        <ActionButton icon={LogOut}>{copy.signOut}</ActionButton>
+        <actionButton.Component icon="log-out" moklyInstance="sign-out">
+          {copy.signOut}
+        </actionButton.Component>
       </ScreenLink>
     </div>
   )
@@ -172,7 +183,12 @@ export function WaitlistScreen(props: {
   const { invitations } = props.state
   const verified = props.state.email === 'verified'
   return (
-    <SignInFrame label={copy.title} viewport={props.viewport} wide>
+    <signInFrame.Component
+      label={copy.title}
+      moklyInstance="sign-in-frame"
+      viewport={props.viewport}
+      wide
+    >
       <h1 className={signIn.title}>{copy.title}</h1>
       <p className={signIn.text}>
         {verified ? copy.email(waitingEmail) : copy.noEmail}
@@ -186,6 +202,6 @@ export function WaitlistScreen(props: {
       <CodeNotice state={props.state} />
       <CodeField state={props.state} />
       <AccountRow />
-    </SignInFrame>
+    </signInFrame.Component>
   )
 }

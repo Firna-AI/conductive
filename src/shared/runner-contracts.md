@@ -20,6 +20,21 @@ The `welcome` repeats the version of the runner's `hello`.
 The optional `hello.loginKinds` declares the login kinds the runner can use.
 `runnerSupportsLogin` reads that list. A runner without the list can use
 each login kind except a Codex ChatGPT sign-in.
+The optional `hello.processStartId` names one start of the runner program.
+Only the [runner warnings](../../docs/protocol/runner-warnings.md#process-starts) use it.
+A runner from before this field omits it. It requires no new protocol version.
+The optional `hello.completeToolDetails` offers complete tool details. The
+Worker sets `welcome.completeToolDetails` only to accept that offer. A side
+without the field ignores it, so it requires no new protocol version.
+With acceptance, a detail that fits the tool-detail limit stays a normal
+`tool.updated`. A longer source goes as consecutive `tool.detail.part`
+events of the type `RunnerToolDetailPart`. Only the first part carries
+`start`, a `RunnerToolDetailStart` with the turn and the tool metadata. The
+last part sets `finalPart`. Each part fits `RUNNER_EVENT_MAX_BYTES`.
+The refusal marker of a part names `tool.updated`, because an older client
+cannot read an unknown type. So `RunnerEventRefused` excludes the part type.
+[Tool detail secrets](../../docs/protocol/tool-detail-secrets.md) states the
+filter before the cut.
 The credential of a turn belongs to the session starter, whoever sent the
 message:
 
@@ -45,8 +60,9 @@ sign-in. Replies contain the public code and state, never the sign-in tokens.
 The 1 MiB limit leaves room for the workspace storage wrapper.
 The workspace stores a refusal marker before it confirms a permanent refusal.
 Storage and network failures remain unconfirmed.
-After a refused file tree, changes list, start steps, workspace name, or port list,
-`RunnerReportRefresh` asks for one fresh full report of that `RunnerReportKind`.
+After a refused file tree, changes list, start steps, workspace name, port list,
+or skills report, `RunnerReportRefresh` asks for one fresh full report of that
+`RunnerReportKind`.
 It carries no login and no turn token. A redelivery keeps its command ID.
 `generated/` contains `ListeningPort` and `RunnerPortsUpdated`.
 `ports.ts` keeps the browser report phase and runtime limits.
@@ -58,6 +74,16 @@ filter. The module owns those limits and the shared count limit.
 and the terminal backend.
 [Listening ports](../../docs/protocol/agent-runner.md#listening-ports) states
 that report, its limits, and its refresh kind.
+`generated/` contains `AgentSkill`, `RunnerSkillsUpdated`, `SkillLists`,
+and `SkillsUpdated`. `skills.ts` keeps the report limits and runtime readers.
+`RunnerSkillsUpdated` carries the Claude list and the Codex list,
+each with its whole descriptions, and no path. `SkillsUpdated` carries the
+filtered lists with the descriptions cut for display, or a null `skills`
+when the list is unavailable. A workspace with no `skills.updated` event
+has had no report yet. The display cut applies only after the workspace
+filter.
+[The skills report](../../docs/protocol/skill-mentions.md#the-skills-report)
+states that report, its limits, and its refresh.
 `runner-transport.ts` defines the Worker's in-memory runner test socket boundary.
 `RunnerConnection` and `RunnerConnector` take the type of the Worker's
 messages.

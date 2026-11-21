@@ -13,12 +13,12 @@ async function start(): Promise<Server> {
   return server
 }
 
-afterEach(() => {
-  server?.stop()
+afterEach(async () => {
+  await server?.stop()
   server = null
 })
 
-/** A prompt line of the login Bash, which differs between machines. */
+/** The fixed short prompt of the isolated login Bash. */
 const prompt = /\$ $/m
 
 describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
@@ -26,8 +26,7 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     const tmux = await start()
     const viewer = tmux.connect(12, 60)
     await viewer.waitFor(prompt)
-    viewer.write('seq 1 3000; echo END\r')
-    await viewer.waitFor('END\r\n')
+    await viewer.runCommand('seq 1 3000')
     const { lines, messages } = await viewer.screen()
     expect(messages[0]).toBe('hello;1;60;12')
     const shown = numbers(lines)
@@ -44,8 +43,7 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     const tmux = await start()
     const first = tmux.connect(12, 60)
     await first.waitFor(prompt)
-    first.write('seq 1 100; echo END\r')
-    await first.waitFor('END\r\n')
+    await first.runCommand('seq 1 100')
     first.close()
     const second = tmux.connect(20, 70)
     // The rebuild ends with the cursor modes, after the history.
@@ -96,8 +94,7 @@ describe.skipIf(!runTmuxTests)('the terminal bridge with a real tmux', () => {
     const tmux = await start()
     const first = tmux.connect(12, 60)
     await first.waitFor(prompt)
-    first.write("printf '\\033[31mred1\\nred2\\033[0m\\n'\r")
-    await first.waitFor('red2')
+    await first.runCommand("printf '\\033[31mred1\\nred2\\033[0m\\n'")
     first.close()
     const second = tmux.connect(12, 60)
     await second.waitFor('\x1b[?25h')

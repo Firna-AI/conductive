@@ -1,12 +1,14 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { TableCell, type TableColumn } from '@firna/ui/table'
-import { SearchField } from '../components/common/SearchField'
+import { searchField } from '../entries/components/common/SearchField.mockup'
 import {
+  AccountId,
   DirectoryTable,
   NameCell,
   TargetState,
 } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
+import { orgAccountWords } from '../components/operator/providerCopy'
 import { orgPagePaths } from '../components/operator/targetPages'
 import { NameLink, TargetMark } from '../components/operator/targets'
 import { operatorTotals } from '../fixtures/operator'
@@ -15,6 +17,7 @@ import {
   orgSearches,
   type OrgRow,
 } from '../fixtures/operatorDirectory'
+import { instanceKey } from '../instanceKey'
 
 export const operatorOrgsSchema = {
   type: 'object',
@@ -35,6 +38,7 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
   desktop: [
     { key: 'org', label: 'Org', flex: 1 },
     { key: 'created', label: 'Created', width: 100 },
+    { key: 'account', label: orgAccountWords.term, width: 76 },
     { key: 'members', label: 'Members', align: 'right', width: 76 },
     { key: 'workspaces', label: 'Workspaces', align: 'right', width: 92 },
     { key: 'running', label: 'Running', align: 'right', width: 72 },
@@ -52,7 +56,9 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
  */
 function lineOf(row: OrgRow, viewport: Viewport) {
   const state =
-    row.status === 'active' ? null : <TargetState status={row.status} />
+    row.status === 'active' ? null : (
+      <TargetState id={instanceKey(row.name)} status={row.status} />
+    )
   if (row.match && state) {
     return (
       <>
@@ -65,6 +71,18 @@ function lineOf(row: OrgRow, viewport: Viewport) {
   return viewport === 'mobile' ? `Created ${row.created}` : undefined
 }
 
+/**
+ * The second line of a phone, which has no Account column: the provider
+ * account that the org runs on.
+ */
+function AccountLine(props: { row: OrgRow }) {
+  return (
+    <>
+      {orgAccountWords.runsOn} <AccountId id={props.row.account} />
+    </>
+  )
+}
+
 function cellOf(viewport: Viewport) {
   return function cell(row: OrgRow, key: string) {
     switch (key) {
@@ -73,11 +91,14 @@ function cellOf(viewport: Viewport) {
           <NameCell
             detail={lineOf(row, viewport)}
             mark={<TargetMark size={22} target={{ kind: 'org', ...row }} />}
+            more={viewport === 'mobile' ? <AccountLine row={row} /> : undefined}
             name={<NameLink to={orgPagePaths[row.status]}>{row.name}</NameLink>}
           />
         )
       case 'created':
         return <TableCell muted>{row.created}</TableCell>
+      case 'account':
+        return <AccountId id={row.account} />
       case 'members':
         return <TableCell numeric>{row.members}</TableCell>
       case 'workspaces':
@@ -116,7 +137,9 @@ function results(search: OperatorOrgsState['search']) {
 /**
  * The Orgs tab of the operator: a search over every org, by name, org ID,
  * the ID of a cloud computer, or a preview address. With no search, it
- * lists the newest orgs. Each org opens its page.
+ * lists the newest orgs. Each row gives the provider account of the org by
+ * its ID, in a column on desktop and in a second line on a phone. Each org
+ * opens its page.
  */
 export function OperatorOrgsScreen(props: {
   state: OperatorOrgsState
@@ -125,8 +148,9 @@ export function OperatorOrgsScreen(props: {
   const found = results(props.state.search)
   return (
     <OperatorPage tab="orgs" title="Operator" viewport={props.viewport}>
-      <SearchField
+      <searchField.Component
         label="Search orgs"
+        moklyInstance="search-orgs"
         placeholder="Name, org ID, cloud computer ID, or preview address"
         query={found.query}
       />

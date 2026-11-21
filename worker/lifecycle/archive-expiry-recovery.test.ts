@@ -71,7 +71,7 @@ it('keeps an unresolved Archive request through its actual expiry and later dele
     allocation: { createPayloadCiphertext: saved.ciphertext },
   })
   expect(await saved.actor.storage.get('alarm:lifecycle:archive')).toBe(
-    saved.expiresAt + 30_000,
+    saved.expiresAt + 60_000,
   )
   expect(await saved.leases()).toBe(1)
   expect(fixture.boat.states.has('bx_1')).toBe(true)
@@ -82,7 +82,7 @@ it('keeps an unresolved Archive request through its actual expiry and later dele
   })
   await saved.actor.restart()
   fixture.boat.lostCreateReplies = 0
-  await fixture.advanceTo(saved.expiresAt + 30_000, saved.id)
+  await fixture.advanceTo(saved.expiresAt + 60_000, saved.id)
   expect(fixture.boat.deletedIds).toEqual(['bx_1'])
   expect(fixture.boat.states.has('bx_1')).toBe(false)
   expect(fixture.boat.starts).toEqual(
@@ -97,7 +97,7 @@ it('keeps an unresolved Archive request through its actual expiry and later dele
       sandboxId: 'bx_1',
       providerAccount: 'boat',
       cleanupPending: 0,
-      deletedAt: saved.expiresAt + 30_000,
+      deletedAt: saved.expiresAt + 60_000,
     },
   ])
   expect(await saved.leases()).toBe(0)

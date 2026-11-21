@@ -11,9 +11,20 @@ import styles from './MarkedText.module.css'
 
 type Placed = { span: TextSpan; start: number; end: number }
 
-/** A run of the text that the same spans cover. */
+/**
+ * Draws a run of the text, as the message draws its text: the run, and its
+ * place in the text, from the character `from` to the character `to`.
+ */
+type RenderRun = (text: string, from: number, to: number) => ReactNode
+
+/**
+ * A run of the text that the same spans cover, from the character `from`
+ * of the text to the character `to`.
+ */
 type Segment = {
   text: string
+  from: number
+  to: number
   covers: readonly Placed[]
   starts: readonly Placed[]
   ends: readonly Placed[]
@@ -36,6 +47,8 @@ function segmentsOf(text: string, spans: readonly Placed[]): Segment[] {
     const from = cuts[index]
     return {
       text: text.slice(from, to),
+      from,
+      to,
       covers: spans.filter((p) => p.start <= from && p.end >= to),
       starts: spans.filter((p) => p.start === from),
       ends: spans.filter((p) => p.end === to),
@@ -101,7 +114,7 @@ function SegmentView(props: {
   overlap?: MessageMarks['overlap']
   /** The open menu of the overlap hangs from this run, its first. */
   menuHere: boolean
-  render: (text: string) => ReactNode
+  render: RenderRun
 }) {
   const touch = useTouch()
   const { segment, overlap } = props
@@ -111,7 +124,7 @@ function SegmentView(props: {
   ))
   let content: ReactNode = (
     <>
-      {props.render(segment.text)}
+      {props.render(segment.text, segment.from, segment.to)}
       {ending}
     </>
   )
@@ -180,10 +193,10 @@ function SelectionBox(props: { by?: ReactNode; children: ReactNode }) {
 export function MarkedText(props: {
   text: string
   marks: MessageMarks
-  render: (text: string) => ReactNode
+  render: RenderRun
 }) {
   const spans = placeSpans(props.text, props.marks.spans)
-  if (spans.length === 0) return props.render(props.text)
+  if (spans.length === 0) return props.render(props.text, 0, props.text.length)
   const segments = segmentsOf(props.text, spans)
   const overlapAt = segments.findIndex((s) => marksIn(s.covers).length > 1)
   const views = segments.map((segment, index) => (

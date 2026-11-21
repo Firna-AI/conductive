@@ -1,3 +1,5 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
 
 /**
@@ -8,7 +10,7 @@ export type MentionEntry = {
   path: string
   folder: boolean
   /** The tab that a press on the chip of this file shows, when drawn. */
-  preview?: 'code' | 'markdown'
+  preview?: 'code' | 'markdown' | 'screenshot'
 }
 
 /**
@@ -20,13 +22,14 @@ export const repositoryFolder = '/home/user/code/storefront'
 
 /**
  * The files and folders of Checkout address autocomplete. All files draws
- * the same tree, with some folders closed. The context folder holds a
- * screenshot that an agent took.
+ * the same tree, with some folders closed. The context folder holds the
+ * screenshots that an agent took before and after a fix.
  */
 export const mentionEntries: readonly MentionEntry[] = [
   { path: '.context', folder: true },
   { path: '.context/shots', folder: true },
-  { path: '.context/shots/after.png', folder: false },
+  { path: '.context/shots/after.png', folder: false, preview: 'screenshot' },
+  { path: '.context/shots/before.png', folder: false },
   { path: '.github', folder: true },
   { path: '.github/workflows', folder: true },
   { path: '.github/workflows/ci.yml', folder: false },
@@ -92,9 +95,19 @@ const mentionAsk =
  * The answer of the agent. Its mentions and the path `src/lib` in code show
  * as file chips, and the function name stays code.
  */
-const mentionAnswer: readonly string[] = [
-  'I moved the lookup into a new `lookupAddress` function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
-  'The cart can now import `lookupAddress` from `src/lib`. The checkout tests still pass.',
+const mentionAnswer: readonly TextBlock[] = [
+  p(
+    'I moved the lookup into a new ',
+    code('lookupAddress'),
+    ' function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
+  ),
+  p(
+    'The cart can now import ',
+    code('lookupAddress'),
+    ' from ',
+    code('src/lib'),
+    '. The checkout tests still pass.',
+  ),
 ]
 
 /**

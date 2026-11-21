@@ -1,14 +1,17 @@
 import { expect, it, vi } from 'vitest'
 
+import { createEmailMessages } from './email-messages'
 import type { HttpFetch } from './env'
-import { createInvitationMailer, invitationLink } from './invitation-mailer'
+import { createInvitationMailer } from './invitation-mailer'
 
 const invitation = {
   id: 'invite-1',
   email: 'mira@example.com',
   orgName: 'Example org',
   invitedBy: 'Cal',
-  link: invitationLink('https://app.conductive.build', 'invite-1'),
+  link: createEmailMessages('https://app.conductive.build').invitationLink(
+    'invite-1',
+  ),
 }
 
 function env(origin = 'https://app.conductive.build') {
@@ -55,25 +58,104 @@ it('sends a plain text invitation through Resend with the secret and a stable de
   })
 })
 
-it('reports provider refusal and missing production credentials without logging delivery', async () => {
+it('reports provider refusal and missing production credentials with safe diagnostics', async () => {
+  const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   const refused = createInvitationMailer(
     { ...env(), RESEND_API_KEY: 'secret' },
-    async () => new Response(null, { status: 403 }),
+    async () =>
+      Response.json(
+        { name: 'validation_error', message: 'synthetic-private-mail-canary' },
+        { status: 403 },
+      ),
   )
-  await expect(refused.send(invitation)).rejects.toMatchObject({
-    status: 502,
-    code: 'invite_email_failed',
-  })
-  let calls = 0
-  const missing = createInvitationMailer(env(), async () => {
-    calls++
-    return new Response(null)
-  })
-  await expect(missing.send(invitation)).rejects.toMatchObject({
-    status: 502,
-    code: 'invite_email_failed',
-  })
-  expect(calls).toBe(0)
+  try {
+    await expect(refused.send(invitation)).rejects.toMatchObject({
+      status: 502,
+      code: 'invite_email_failed',
+    })
+    const canary = 'synthetic-private-mail-canary'
+    const unknown = createInvitationMailer(
+      { ...env(), RESEND_API_KEY: canary },
+      async () =>
+        Response.json(
+          {
+            name: canary,
+            code: 'validation_error',
+            message: canary,
+            body: canary,
+            key: canary,
+          },
+          { status: 403 },
+        ),
+    )
+    await expect(
+      unknown.send({
+        ...invitation,
+        email: `${canary}@example.com`,
+        id: canary,
+        link: canary,
+      }),
+    ).rejects.toMatchObject({
+      status: 502,
+      code: 'invite_email_failed',
+    })
+    let calls = 0
+    const missing = createInvitationMailer(env(), async () => {
+      calls++
+      return new Response(null)
+    })
+    await expect(missing.send(invitation)).rejects.toMatchObject({
+      status: 502,
+      code: 'invite_email_failed',
+    })
+    expect(calls).toBe(0)
+    expect(warn.mock.calls).toEqual([
+      [
+        {
+          kind: 'invitation_email_delivery_failed',
+          message:
+            'Invitation email delivery failed. The invitation remains saved.',
+          error: {
+            kind: 'mail',
+            reason: 'provider_refused',
+            status: 403,
+            code: 'validation_error',
+            errorType: null,
+          },
+        },
+      ],
+      [
+        {
+          kind: 'invitation_email_delivery_failed',
+          message:
+            'Invitation email delivery failed. The invitation remains saved.',
+          error: {
+            kind: 'mail',
+            reason: 'provider_refused',
+            status: 403,
+            code: 'unknown',
+            errorType: null,
+          },
+        },
+      ],
+      [
+        {
+          kind: 'invitation_email_delivery_failed',
+          message:
+            'Invitation email delivery failed. The invitation remains saved.',
+          error: {
+            kind: 'mail',
+            reason: 'not_configured',
+            status: null,
+            code: null,
+            errorType: null,
+          },
+        },
+      ],
+    ])
+  } finally {
+    warn.mockRestore()
+  }
 })
 
 it('logs the invitation destination and app link through the development mailer', async () => {
@@ -93,7 +175,10 @@ it('logs the invitation destination and app link through the development mailer'
     await createInvitationMailer(
       { ...env(origin), RESEND_API_KEY: 'local-resend-secret' },
       fetch,
-    ).send({ ...invitation, link: invitationLink(origin, invitation.id) })
+    ).send({
+      ...invitation,
+      link: createEmailMessages(origin).invitationLink(invitation.id),
+    })
     expect(requests).toHaveLength(0)
     expect(messages).toEqual([
       'Cal invited mira@example.com to Example org: http://127.0.0.1:5173/?invite=invite-1',

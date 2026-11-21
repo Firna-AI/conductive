@@ -1,8 +1,7 @@
-import { Plug } from 'lucide-react'
 import { agents, type AgentChoice, type AgentKey } from '../../fixtures/agents'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /** The account with the Connect form of each agent open. */
@@ -21,13 +20,17 @@ export function ConnectAgentNotice(props: { choice: AgentChoice }) {
   const { choice } = props
   const agent = agents[choice.agent].name
   return (
-    <Notice
+    <notice.Component
       action={
         <ScreenLink asChild to={connectPaths[choice.agent]}>
-          <ActionButton icon={Plug}>{`Connect ${agent}`}</ActionButton>
+          <actionButton.Component
+            icon="plug"
+            moklyInstance="connect-agent-login"
+          >{`Connect ${agent}`}</actionButton.Component>
         </ScreenLink>
       }
-      icon={Plug}
+      icon="plug"
+      moklyInstance="connect-agent"
       title={`Connect ${agent} to use ${choice.model}`}
     />
   )

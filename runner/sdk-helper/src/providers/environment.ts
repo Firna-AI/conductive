@@ -5,6 +5,11 @@ import { TOOL_ENV } from '../../../../src/shared/agent-tools'
 import { commitAuthorEnvironment } from '../../../../src/shared/commit-author'
 import type { WorkspaceToolContext } from '../generated/WorkspaceToolContext'
 
+/** Claude keeps its settings and saved sessions here. */
+export function claudeConfigDirectory(home: string): string {
+  return `${home}/.conductive/claude`
+}
+
 export async function prepareProviderHome(home: string): Promise<void> {
   await Promise.all(
     ['claude', 'codex'].map((name) =>
@@ -13,11 +18,9 @@ export async function prepareProviderHome(home: string): Promise<void> {
   )
 }
 
-/** Provider credentials never enter the inherited environment. */
-export function providerEnvironment(
+/** The inherited environment without provider settings, with the shared provider homes. */
+export function agentEnvironment(
   home: string,
-  tools: WorkspaceToolContext,
-  author: CommitAuthor | null,
 ): Record<string, string | undefined> {
   const env = { ...process.env }
   delete env.CONDUCTIVE_MEASURE_LOGIN
@@ -26,10 +29,20 @@ export function providerEnvironment(
       delete env[key]
   }
   env.HOME = home
-  env.CLAUDE_CONFIG_DIR = `${home}/.conductive/claude`
+  env.CLAUDE_CONFIG_DIR = claudeConfigDirectory(home)
   env.CODEX_HOME = `${home}/.conductive/codex`
   env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = '1'
   env.DISABLE_AUTOUPDATER = '1'
+  return env
+}
+
+/** Provider credentials never enter the inherited environment. */
+export function providerEnvironment(
+  home: string,
+  tools: WorkspaceToolContext,
+  author: CommitAuthor | null,
+): Record<string, string | undefined> {
+  const env = agentEnvironment(home)
   env[TOOL_ENV.machineOrigin] = tools.machineOrigin
   env[TOOL_ENV.workspaceToken] = tools.workspaceToken
   env[TOOL_ENV.turnId] = tools.turnId

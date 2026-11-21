@@ -15,6 +15,8 @@ export function WorkspaceNameField(props: {
   name: string | null
   page: boolean
   rename: RowRename
+  /** The style of the place of the field, such as the workspace header. */
+  className?: string
 }) {
   const [draft, setDraft] = useState(props.name ?? '')
   const [saving, setSaving] = useState(false)
@@ -48,7 +50,11 @@ export function WorkspaceNameField(props: {
     <input
       aria-busy={saving || undefined}
       aria-label="Workspace name"
-      className={classes(rowMenu.field, props.page && rowMenu.fieldPage)}
+      className={classes(
+        rowMenu.field,
+        props.page && rowMenu.fieldPage,
+        props.className,
+      )}
       onBlur={finish}
       onChange={(event) => setDraft(event.target.value)}
       onKeyDown={(event) => {

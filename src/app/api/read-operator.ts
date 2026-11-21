@@ -50,13 +50,25 @@ export function readRunning(value: unknown) {
   }
 }
 
+/**
+ * The workspaces in each state, of the Overview, the page of an org, and
+ * the Stats tab of the account. The reply counts every archived workspace
+ * in `archived`, so that an older app adds up, and the removed ones also in
+ * `removed`. Archived here counts the archived workspaces of the list, and
+ * Removed those whose Restore ended, which left it.
+ */
 export function readWorkspaceStates(value: unknown): OperatorWorkspaceStates {
   const states = record(value, 'workspaceStates')
+  const archived = count(states, 'archived')
+  const removed = count(states, 'removed')
+  if (removed > archived)
+    throw new Error('The removed workspaces exceed the archived ones.')
   return {
     running: count(states, 'running'),
     stopped: count(states, 'stopped'),
     failed: count(states, 'failed'),
-    archived: count(states, 'archived'),
+    archived: archived - removed,
+    removed,
   }
 }
 
@@ -110,6 +122,7 @@ function readOrgSummary(value: unknown): OperatorOrgSummary {
   const match = org.match
   return {
     id: text(org, 'id'),
+    providerAccount: text(org, 'providerAccount'),
     name: text(org, 'name'),
     initials: maybeText(org, 'initials'),
     createdAt: count(org, 'createdAt'),

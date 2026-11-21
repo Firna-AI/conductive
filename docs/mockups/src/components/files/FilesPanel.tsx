@@ -1,18 +1,23 @@
 import type { ReactNode } from 'react'
-import { CircleSlash } from 'lucide-react'
-import { splitPath, withPublicOpen } from '../../fixtures/files'
+import {
+  splitPath,
+  withContextOpen,
+  withPublicOpen,
+  type TreeEntry,
+} from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
 import type { BannerState } from '../../fixtures/pullRequests'
 import { checksPaths, paths } from '../../paths'
 import { allFilesUnavailable } from '../chat/lostCopy'
-import { LostUpdateRow } from '../chat/LostUpdate'
-import { EmptyState } from '../common/EmptyState'
-import { LinkTabs } from '../common/LinkTabs'
-import { PanelBar } from '../workspace/PanelBar'
-import { ChangeList } from './ChangeList'
-import { ChecksList } from './ChecksList'
+import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
+import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
+import { changeList } from '../../entries/components/files/ChangeList.mockup'
+import { checksList } from '../../entries/components/files/ChecksList.mockup'
 import type { FileRowMenu } from './FileRowMenu'
-import { FileTree } from './FileTree'
+import { fileTree } from '../../entries/components/files/FileTree.mockup'
+import { defined } from '../../defined'
 import styles from './FilesPanel.module.css'
 
 /** The lists of the files panel. */
@@ -33,8 +38,12 @@ export type TreeState = (typeof treeStates)[number]
  * the code file at a range of lines that an answer named, a Markdown file,
  * a diff, the diff of a file whose label hides a secret value, and a file
  * whose name the app does not know. Then a picture of
- * the branch, an image whose bytes the browser cannot draw, and the copy
- * of an attached screenshot, which All files does not list.
+ * the branch, an image whose bytes the browser cannot draw, the copy of an
+ * attached screenshot, which All files does not list, and the screenshot
+ * of the agent in the closed context folder. Then the HTML report of the
+ * context folder: its page, its source, the wait until its page loads, the
+ * notice of older cloud computer software, and a preview that did not
+ * open.
  */
 export type FileTabView =
   | 'code'
@@ -46,9 +55,15 @@ export type FileTabView =
   | 'image'
   | 'image-not-drawn'
   | 'attachment'
+  | 'screenshot'
+  | 'html'
+  | 'html-source'
+  | 'html-opening'
+  | 'html-older-software'
+  | 'html-failed'
 
 /** The open tab whose row All files marks: a file of the tree. */
-function treeTab(open: FileTabView | undefined) {
+function treeTab(open: FileTabView | undefined): TreeEntry['preview'] {
   switch (open) {
     case 'code-lines':
       return 'code'
@@ -56,9 +71,34 @@ function treeTab(open: FileTabView | undefined) {
     case 'markdown':
     case 'image':
     case 'image-not-drawn':
+    case 'html':
       return open
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
+      return 'html'
     default:
       return undefined
+  }
+}
+
+/**
+ * The tree with the folder of the open file open: the public folder for an
+ * image of the branch, and the context folder for the report.
+ */
+function withOpenFolder(
+  tree: readonly TreeEntry[],
+  open: TreeEntry['preview'],
+): readonly TreeEntry[] {
+  switch (open) {
+    case 'image':
+    case 'image-not-drawn':
+      return withPublicOpen(tree)
+    case 'html':
+      return withContextOpen(tree)
+    default:
+      return tree
   }
 }
 
@@ -69,9 +109,10 @@ function FileTabs(props: {
   banner: BannerState
 }) {
   return (
-    <PanelBar>
-      <LinkTabs
+    <panelBar.Component moklyInstance="files-bar">
+      <linkTabs.Component
         label="Files"
+        moklyInstance="files-tabs"
         tabs={[
           {
             label: 'All files',
@@ -81,7 +122,7 @@ function FileTabs(props: {
           {
             label: 'Changes',
             to: paths.filesChanges,
-            count: props.changes > 0 ? props.changes : undefined,
+            ...(props.changes > 0 ? { count: props.changes } : {}),
             selected: props.view === 'changes',
           },
           {
@@ -91,7 +132,7 @@ function FileTabs(props: {
           },
         ]}
       />
-    </PanelBar>
+    </panelBar.Component>
   )
 }
 
@@ -128,9 +169,7 @@ export function FilesPanel(props: {
     : []
   const names = new Set(changes.map((file) => splitPath(file.path).name))
   const treeOpen = treeTab(open)
-  // The images of the branch lie in the public folder, which their tabs open.
-  const pictures = treeOpen === 'image' || treeOpen === 'image-not-drawn'
-  const shown = pictures ? withPublicOpen(files.tree) : files.tree
+  const shown = withOpenFolder(files.tree, treeOpen)
   const tree = shown.map((entry) =>
     props.edited && (!only || names.has(entry.name))
       ? entry
@@ -141,30 +180,44 @@ export function FilesPanel(props: {
     <div className={styles.files}>
       <FileTabs banner={props.banner} changes={changes.length} view={view} />
       {view === 'checks' ? props.checksTop : null}
-      {view === 'checks' ? <ChecksList state={props.banner} /> : null}
+      {view === 'checks' ? (
+        <checksList.Component
+          moklyInstance="checks-list"
+          state={props.banner}
+        />
+      ) : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (
-        <EmptyState
+        <emptyState.Component
           body={allFilesUnavailable.body}
-          icon={CircleSlash}
+          icon="circle-slash"
+          moklyInstance="all-files-empty"
           title={allFilesUnavailable.title}
         />
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
-          <FileTree entries={tree} menu={props.menu} open={treeOpen} />
+          <fileTree.Component
+            entries={tree}
+            moklyInstance="file-tree"
+            {...defined({ menu: props.menu, open: treeOpen })}
+          />
         </div>
       ) : null}
       {view === 'changes' && lists ? (
-        <ChangeList
+        <changeList.Component
           diffOpen={open === 'diff' || open === 'masked-diff'}
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
-          menu={props.menu}
+          moklyInstance="change-list"
+          {...defined({ menu: props.menu })}
         />
       ) : null}
       {props.tree === 'saved' ? (
-        <LostUpdateRow repair={{ data: 'all-files' }} />
+        <lostUpdateRow.Component
+          moklyInstance="lost-files"
+          repair={{ data: 'all-files' }}
+        />
       ) : null}
     </div>
   )

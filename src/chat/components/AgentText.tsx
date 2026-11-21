@@ -1,106 +1,44 @@
+import { memo, useMemo } from 'react'
+import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
 import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
-import { MarkdownTable } from '../../../docs/mockups/src/components/common/MarkdownTable'
-import { AnswerText } from '../links/LinkedText'
-import { textBlocks, type TextBlock, type TextItem } from './agent-text'
-import { CodeBlock } from './CodeBlock'
-
-/** A cell of a table in an answer, with the formatting of a paragraph. */
-function tableCell(text: string) {
-  return <AnswerText text={text} />
-}
+import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+import { agentBlocks } from '../markdown/agent-blocks'
+import { answerDrawing } from './answer-drawing'
 
 /**
- * The items of a list. An item of one paragraph shows its text alone, as in
- * the file preview. Another item shows its blocks: its text, and the lists,
- * paragraphs, headings, code blocks, and tables that the agent indents
- * under it.
+ * An answer of the agent: paragraphs, headings, lists, code, quotes, rules,
+ * and tables, as `agentBlocks` reads them with the shared Markdown parser,
+ * drawn by the `AgentBlocks` of the mockups. A heading is `h1` to
+ * `h6`, at the level that the agent wrote, and its look comes from the
+ * heading style that the file preview shares. Quotes, rules, bold text,
+ * emphasis, strikethrough, and task boxes take the look of the shared
+ * `MarkdownProse.module.css`. A list item holds the blocks that the agent
+ * indents under it. The text of each block draws through `AnswerText`. The
+ * Markdown image of a picture file in a paragraph or a list item shows as
+ * its picture, read for the message with the ID `id`, the ID of its item in
+ * the transcript. `live` marks an answer that the agent still writes, whose
+ * open marks close at the end of its text.
+ *
+ * Each update of a live answer reads the whole text again, and draws again
+ * only the blocks whose data changed. An answer whose ID, text, and `live`
+ * stay the same draws nothing again.
  */
-function ListItems(props: { items: readonly TextItem[] }) {
-  return props.items.map((item, index) => {
-    const [first] = item
-    const tight = item.length === 1 && first.kind === 'p'
-    return (
-      <li key={index}>
-        {tight ? (
-          <AnswerText text={first.text} />
-        ) : (
-          <AgentBlocks blocks={item} />
-        )}
-      </li>
-    )
-  })
-}
-
-function Block(props: { block: TextBlock }) {
-  const { block } = props
-  switch (block.kind) {
-    case 'p':
-      return (
-        <p>
-          <AnswerText text={block.text} />
-        </p>
-      )
-    case 'heading': {
-      // A heading with no text draws nothing, so a screen reader meets no
-      // empty heading.
-      if (block.text === '') return null
-      const Heading = `h${block.level}` as const
-      return (
-        <Heading>
-          <AnswerText text={block.text} />
-        </Heading>
-      )
-    }
-    case 'ul':
-      return (
-        <ul>
-          <ListItems items={block.items} />
-        </ul>
-      )
-    case 'ol':
-      return (
-        <ol start={block.start}>
-          <ListItems items={block.items} />
-        </ol>
-      )
-    case 'code':
-      return <CodeBlock text={block.text} />
-    case 'table':
-      return (
-        <MarkdownTable
-          align={block.align}
-          head={block.head}
-          renderCell={tableCell}
-          rows={block.rows}
-        />
-      )
-  }
-}
-
-/**
- * The blocks of an answer in order, as `AgentText` and an open message line
- * draw them. The element around them sets the type and the space between.
- */
-export function AgentBlocks(props: { blocks: readonly TextBlock[] }) {
-  return props.blocks.map((block, index) => <Block block={block} key={index} />)
-}
-
-/**
- * An answer of the agent: paragraphs, headings, lists, code, and tables, as
- * it writes them. A heading is `h1` to `h6`, at the level that the agent
- * wrote, and its look comes from the heading style that the file preview
- * shares. A list item holds the blocks that the agent indents under it. The
- * text of a paragraph, a heading, a list item, or a table cell has `code`
- * and **strong** parts, as `chatParts` reads it. Each workspace link outside
- * code is a chip, and so is a Markdown link to a workspace, also with a bold
- * or code label.
- */
-export function AgentText(props: { text: string }) {
+export const AgentText = memo(function AgentText(props: {
+  id: string
+  text: string
+  live?: boolean
+}) {
+  const { id, text } = props
+  const live = props.live === true
+  const blocks = useMemo(() => agentBlocks(text, live), [text, live])
+  const drawing = useMemo(() => answerDrawing(id), [id])
   return (
-    <div className={classes(itemStyles.agent, headingStyles.headings)}>
-      <AgentBlocks blocks={textBlocks(props.text)} />
+    <div
+      className={classes(itemStyles.agent, headingStyles.headings, prose.prose)}
+    >
+      <AgentBlocks blocks={blocks} drawing={drawing} />
     </div>
   )
-}
+})

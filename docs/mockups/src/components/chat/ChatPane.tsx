@@ -3,24 +3,29 @@ import type { Viewport } from '@mokly/mokly'
 import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'
+import { defined, plainData } from '../../defined'
 import { classes } from '../common/classes'
 import { DrawnChoices } from '../mac/CommandActions'
 import { useMacApp } from '../mac/MacApp'
-import { SandboxBar } from '../workspace/SandboxNotice'
-import {
-  replacesComposer,
-  type SandboxNoticeState,
-} from '../workspace/sandboxNoticeState'
-import { StartingCard } from '../workspace/StartingCard'
-import { ChatItemView } from './ChatItemView'
-import { Composer, type ComposerState } from './Composer'
+import { sandboxBar } from '../../entries/components/workspace/SandboxNotice.mockup'
+import type { BarNotice } from '../workspace/SandboxNotice'
+import { replacesComposer } from '../workspace/sandboxNoticeState'
+import { startingCard } from '../../entries/components/workspace/StartingCard.mockup'
+import { chatItemView } from '../../entries/components/chat/ChatItemView.mockup'
+import { ChatPictures, type PictureRead } from './chatPictures'
+import { composer as composerPart } from '../../entries/components/chat/Composer.mockup'
+import { composerData } from '../../entries/components/chat/capabilitiesSlot'
+import type { ComposerState } from './Composer'
 import { groupItems } from './groupItems'
-import { isPendingCommand, PendingCommand } from './PendingCommand'
+import { isPendingCommand } from './PendingCommand'
+import { pendingCommand } from '../../entries/components/chat/PendingCommand.mockup'
 import { isPendingRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { secretRunWords } from './secretRunCopy'
-import { ToolGroup } from './ToolGroup'
-import { WorkFold, type FoldState } from './WorkFold'
+import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
+import type { FoldState } from './WorkFold'
+import { workFold } from '../../entries/components/chat/WorkFold.mockup'
+import { instanceKey } from '../../instanceKey'
 import styles from './ChatPane.module.css'
 
 /**
@@ -56,9 +61,9 @@ export function ChatPane(props: {
    * The sandbox is not running: the bar takes the place of the composer. A
    * failed first start keeps the composer under its bar, so members can
    * still queue messages. A failed start carries its saved message, and a
-   * refused start its reason.
+   * refused start its reason, and an archived workspace its days.
    */
-  problem?: SandboxNoticeState
+  problem?: BarNotice
   starting?: StartingLog
   empty?: ReactNode
   /** A message above the composer, such as a failed create. */
@@ -71,6 +76,11 @@ export function ChatPane(props: {
    * open folds starts at its top.
    */
   fold?: FoldState
+  /**
+   * The reads of the pictures of the answers. The chat reads pictures only
+   * while the cloud computer runs. Without reads, each shows as its link.
+   */
+  pictures?: PictureRead
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -82,11 +92,19 @@ export function ChatPane(props: {
     (entry) => entry.kind !== 'item' || entry.item.id !== props.hide,
   )
   const fold = props.fold ?? 'closed'
-  const box =
+  const box = props.composer ? composerData(props.composer) : null
+  const field =
     props.field !== undefined ? (
       props.field
-    ) : props.composer ? (
-      <Composer {...props.composer} />
+    ) : box ? (
+      <composerPart.Component
+        moklyInstance="composer"
+        {...box.composer}
+        {...defined({
+          capabilitiesPanel: box.capabilitiesPanel,
+          pickerPart: box.pickerPart,
+        })}
+      />
     ) : null
   return (
     <section
@@ -108,36 +126,46 @@ export function ChatPane(props: {
           data-mokly-scroll="chat-transcript"
         >
           <div className={styles.transcript}>
-            {entries.map((entry) => {
-              switch (entry.kind) {
-                case 'tools':
-                  return (
-                    <ToolGroup
-                      calls={entry.calls}
-                      open={entry.open}
-                      key={entry.id}
-                    />
-                  )
-                case 'work':
-                  return (
-                    <WorkFold
-                      key={entry.id}
-                      state={fold}
-                      steps={entry.steps}
-                      viewer={props.viewer}
-                    />
-                  )
-                case 'item':
-                  return (
-                    <ChatItemView
-                      item={entry.item}
-                      key={entry.item.id}
-                      viewer={props.viewer}
-                    />
-                  )
-              }
-            })}
-            {props.starting ? <StartingCard log={props.starting} /> : null}
+            <ChatPictures read={props.pictures}>
+              {entries.map((entry) => {
+                switch (entry.kind) {
+                  case 'tools':
+                    return (
+                      <toolGroup.Component
+                        calls={entry.calls}
+                        key={entry.id}
+                        moklyInstance={`tools-${instanceKey(entry.id)}`}
+                        open={entry.open}
+                      />
+                    )
+                  case 'work':
+                    return (
+                      <workFold.Component
+                        key={entry.id}
+                        moklyInstance={instanceKey(entry.id)}
+                        state={fold}
+                        steps={entry.steps}
+                        viewer={props.viewer}
+                      />
+                    )
+                  case 'item':
+                    return (
+                      <chatItemView.Component
+                        item={entry.item}
+                        key={entry.item.id}
+                        moklyInstance={`item-${instanceKey(entry.item.id)}`}
+                        viewer={props.viewer}
+                      />
+                    )
+                }
+              })}
+            </ChatPictures>
+            {props.starting ? (
+              <startingCard.Component
+                log={props.starting}
+                moklyInstance="starting-card"
+              />
+            ) : null}
           </div>
         </div>
       )}
@@ -160,8 +188,10 @@ export function ChatPane(props: {
               }
               if (!isPendingCommand(item)) return null
               return (
-                <PendingCommand
+                <pendingCommand.Component
+                  id={item.id}
                   key={item.id}
+                  moklyInstance={`pending-${instanceKey(item.id)}`}
                   open={mac?.choicesOpen === true && item === commands[0]}
                   request={item.request}
                 />
@@ -171,8 +201,13 @@ export function ChatPane(props: {
         ) : null}
         {mac?.choicesOpen && commands.length > 0 ? <DrawnChoices /> : null}
         {props.notice}
-        {props.problem ? <SandboxBar {...props.problem} /> : null}
-        {composer ? box : null}
+        {props.problem ? (
+          <sandboxBar.Component
+            moklyInstance="sandbox-bar"
+            state={plainData(props.problem)}
+          />
+        ) : null}
+        {composer ? field : null}
       </div>
     </section>
   )

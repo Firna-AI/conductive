@@ -43,6 +43,12 @@ function starterOf(state: WorkspaceState, workspace: Workspace): PersonKey {
     case 'image':
     case 'image-not-drawn':
     case 'attachment':
+    case 'screenshot':
+    case 'html':
+    case 'html-source':
+    case 'html-opening':
+    case 'html-older-software':
+    case 'html-failed':
     case 'preview':
     case 'preview-behind':
       return isNew(state) ? workspace.owner : workspaceSessions[0].starter

@@ -1,24 +1,32 @@
-import type { LucideIcon } from 'lucide-react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { Archive, CircleAlert, CirclePause } from 'lucide-react'
-import { archivedOn, restoreUntil } from '../../fixtures/archive'
+import { defined } from '../../defined'
+import type { ArchiveDays } from '../../fixtures/archive'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { EmptyState } from '../common/EmptyState'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { refusedIcon } from '../orgs/suspension'
 import styles from './SandboxNotice.module.css'
-import type {
-  ArchiveRestore,
-  SandboxNoticeState,
-  SandboxPanelState,
-  SandboxProblem,
-} from './sandboxNoticeState'
+import type { SandboxNoticeState, SandboxProblem } from './sandboxNoticeState'
+
+type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
+
+/**
+ * A notice as the mockups draw it: the notice of the contract, and for an
+ * archived workspace the days that its bar gives.
+ */
+export type BarNotice =
+  | Exclude<SandboxNoticeState, ArchivedNotice>
+  | (ArchivedNotice & { days: ArchiveDays })
+
+/** What a panel shows: the notice of the bar, or the wait of a start. */
+export type PanelNotice = BarNotice | { problem: 'starting' }
 
 type Problem = {
-  icon: LucideIcon
+  icon: IconKey
   title: string
   /** The text of the bar under the chat. */
   body: string
@@ -46,7 +54,7 @@ const chatSaved = 'Your chat is saved.'
 const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
   {
     stopped: {
-      icon: CirclePause,
+      icon: 'circle-pause',
       title: 'Sandbox stopped',
       body: saved,
       panelBody: saved,
@@ -54,7 +62,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'neutral',
     },
     error: {
-      icon: CircleAlert,
+      icon: 'circle-alert',
       title: "The sandbox couldn't start",
       body: saved,
       panelBody: saved,
@@ -62,7 +70,7 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
       tone: 'danger',
     },
     refused: {
-      icon: refusedIcon,
+      icon: iconKeyOf(refusedIcon),
       title: "The sandbox can't start",
       body: history,
       panelBody: history,
@@ -70,50 +78,92 @@ const problems: Readonly<Record<Exclude<SandboxProblem, 'archived'>, Problem>> =
     },
   }
 
-const archivedTitle = `Archived on ${archivedOn}`
+/** The files and the tools of a cloud computer that the app deleted. */
+const wentWith = 'The files and the tools went with the cloud computer.'
 
 /**
- * An archived workspace: Restore until its last day, no Restore in a
- * suspended org, which promises no files, the day when Restore ended,
- * while a failed delete of the cloud computer can still try again, or the
- * words of a cloud computer that the app deleted.
+ * How far an archived workspace is. In its 14 days: Restore until its last
+ * day, no Restore in a suspended org, which promises no files, or no
+ * cloud computer to bring back. After them it is removed: while a failed
+ * delete of the cloud computer still tries again, or after the delete.
+ * Restore ends with the 14 days, so a removed workspace has none.
  */
-const archived: Readonly<Record<ArchiveRestore | 'deleted', Problem>> = {
-  available: {
-    icon: Archive,
-    title: archivedTitle,
-    body: `Restore it until ${restoreUntil} to bring back its files and sessions.`,
-    panelBody: 'The files and the tools come back with Restore.',
-    action: 'Restore',
-    tone: 'neutral',
-  },
-  refused: {
-    icon: Archive,
-    title: archivedTitle,
-    body: history,
-    panelBody: history,
-    tone: 'neutral',
-  },
-  ended: {
-    icon: Archive,
-    title: archivedTitle,
-    body: `Restore ended on ${restoreUntil}, and the chat is read-only.`,
-    panelBody: history,
-    tone: 'neutral',
-  },
-  deleted: {
-    icon: Archive,
-    title: archivedTitle,
-    body: 'Its cloud computer is deleted, and the chat is read-only.',
-    panelBody: 'The files and the tools went with the cloud computer.',
-    tone: 'neutral',
-  },
+type ArchiveStage = 'available' | 'refused' | 'none' | 'deleting' | 'removed'
+
+function stageOf(notice: ArchivedNotice): ArchiveStage {
+  if (notice.restore === 'ended') return 'deleting'
+  if (notice.removed === true) return 'removed'
+  return notice.restore ?? 'none'
+}
+
+/** Whether an archived workspace left the list, as `stageOf` says. */
+function leftTheList(notice: ArchivedNotice): boolean {
+  const stage = stageOf(notice)
+  return stage === 'deleting' || stage === 'removed'
+}
+
+/**
+ * The words of an archived workspace. Until its 14 days end, the title
+ * gives the day of the Archive, and the body the day when the workspace
+ * leaves the list, also without Restore. After them, the title gives the
+ * day of the removal, and the body says that the workspace left the list,
+ * what happens to its cloud computer, and that the chat is read-only. The
+ * words say "removed" for the workspace, because the app keeps its data.
+ */
+function archivedProblem(
+  notice: ArchivedNotice & { days: ArchiveDays },
+): Problem {
+  const { archivedOn, removedOn } = notice.days
+  const leaves = `It leaves the list on ${removedOn}.`
+  const left = 'It left the list.'
+  const icon: IconKey = 'archive'
+  const listed = { icon, title: `Archived on ${archivedOn}` }
+  const removed = { icon, title: `Removed on ${removedOn}` }
+  const tone = 'neutral'
+  switch (stageOf(notice)) {
+    case 'available':
+      return {
+        ...listed,
+        body: `Restore it until ${removedOn} to bring back its files and sessions. It leaves the list on that day.`,
+        panelBody: 'The files and the tools come back with Restore.',
+        action: 'Restore',
+        tone,
+      }
+    case 'refused':
+      return {
+        ...listed,
+        body: `${history} ${leaves}`,
+        panelBody: history,
+        tone,
+      }
+    case 'none':
+      return {
+        ...listed,
+        body: `Its cloud computer is deleted, and the chat is read-only. ${leaves}`,
+        panelBody: wentWith,
+        tone,
+      }
+    case 'deleting':
+      return {
+        ...removed,
+        body: `${left} Its cloud computer is being deleted, and the chat is read-only.`,
+        panelBody: 'The files and the tools go with the cloud computer.',
+        tone,
+      }
+    case 'removed':
+      return {
+        ...removed,
+        body: `${left} Its cloud computer is deleted, and the chat is read-only.`,
+        panelBody: wentWith,
+        tone,
+      }
+  }
 }
 
 /** The words and the action of a sandbox that is not running. */
-function problemOf(state: SandboxNoticeState): Problem {
+function problemOf(state: BarNotice): Problem {
   if (state.problem !== 'archived') return problems[state.problem]
-  return archived[state.restore ?? 'deleted']
+  return archivedProblem(state)
 }
 
 /**
@@ -121,7 +171,7 @@ function problemOf(state: SandboxNoticeState): Problem {
  * the start of a new cloud computer after the one failed first start that
  * they draw, and the workspace back in its section after a Restore.
  */
-function recoveryPath(state: SandboxNoticeState): string | undefined {
+function recoveryPath(state: BarNotice): string | undefined {
   if (state.problem === 'archived') return paths.restored
   if (state.problem === 'error' && state.firstStart === true) {
     return paths.retrying
@@ -130,8 +180,12 @@ function recoveryPath(state: SandboxNoticeState): string | undefined {
 }
 
 /** The one way forward, as a link where the mockups draw its screen. */
-function RecoveryButton(props: { label: string; state: SandboxNoticeState }) {
-  const button = <ActionButton tone="primary">{props.label}</ActionButton>
+function RecoveryButton(props: { label: string; state: BarNotice }) {
+  const button = (
+    <actionButton.Component moklyInstance="recover" tone="primary">
+      {props.label}
+    </actionButton.Component>
+  )
   const to = recoveryPath(props.state)
   if (to === undefined) return button
   return (
@@ -166,23 +220,31 @@ function barBody(state: SandboxNoticeState, body: string): string {
  * action, because the start stays refused until its cause changes. A start
  * that failed shows the message that the app saved for it, such as the
  * 20-minute limit of a start, before the body. An archived workspace offers
- * Restore until the app deletes its cloud computer.
+ * Restore until the app deletes its cloud computer, and gives the day when
+ * it leaves the list. A removed workspace gives the day of its removal.
  */
-export function SandboxBar(props: SandboxNoticeState) {
+export function SandboxBar(props: BarNotice) {
   const problem = problemOf(props)
   return (
-    <Notice
-      action={
-        problem.action ? (
-          <RecoveryButton label={problem.action} state={props} />
-        ) : undefined
-      }
+    <notice.Component
       body={barBody(props, keptBody(props, problem.body))}
       icon={problem.icon}
+      moklyInstance="sandbox-bar"
       title={problem.title}
       tone={problem.tone}
+      {...defined({
+        action: problem.action ? (
+          <RecoveryButton label={problem.action} state={props} />
+        ) : undefined,
+      })}
     />
   )
+}
+
+/** The title of a panel: the state of an archived workspace, in one word. */
+function panelTitle(state: BarNotice, problem: Problem): string {
+  if (state.problem !== 'archived') return problem.title
+  return leftTheList(state) ? 'Removed' : 'Archived'
 }
 
 /**
@@ -191,8 +253,10 @@ export function SandboxBar(props: SandboxNoticeState) {
  * phone shows the bar only on the Chat tab, so its panels show them too.
  */
 export function SandboxPanel(props: {
-  state: SandboxPanelState
+  state: PanelNotice
   phone: boolean
+  /** The place of the panel, which names it for Mokly. */
+  place: 'file' | 'files' | 'tools' | 'preview'
 }) {
   const theme = useSharedUiTheme()
   const { state } = props
@@ -206,19 +270,21 @@ export function SandboxPanel(props: {
   }
   const problem = problemOf(state)
   return (
-    <EmptyState
-      action={
-        props.phone && problem.action ? (
-          <RecoveryButton label={problem.action} state={state} />
-        ) : undefined
-      }
+    <emptyState.Component
+      moklyInstance={`sandbox-${props.place}`}
+      {...defined({
+        action:
+          props.phone && problem.action ? (
+            <RecoveryButton label={problem.action} state={state} />
+          ) : undefined,
+      })}
       body={
         props.phone && state.problem === 'refused'
           ? state.reason
           : keptBody(state, problem.panelBody)
       }
       icon={problem.icon}
-      title={state.problem === 'archived' ? 'Archived' : problem.title}
+      title={panelTitle(state, problem)}
     />
   )
 }

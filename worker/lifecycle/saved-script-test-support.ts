@@ -1,9 +1,10 @@
 import { execFile } from 'node:child_process'
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
 
 import type { CommandResult } from '../sandbox/provider'
 import { isolatedProcessEnvironment } from '../test-support/process-environment'
+import { testDirectory } from '../test-support/test-directory'
 import { isRecord } from '../http'
 import { shellQuote } from './commands'
 import { legacyRepositoryDirectory } from './repository-locations'
@@ -27,12 +28,8 @@ export async function localSavedScriptFixture(
   repositoryId: string,
   mode: 'build' | 'workspace' | 'retention' = 'workspace',
 ) {
-  const root = resolve(
-    import.meta.dirname,
-    '../../.context/boat-native-remote-workspaces/milestone-5/orchestrator-round-2/saved-bash/local-scripts',
-  )
-  await mkdir(root, { recursive: true })
-  const directory = await mkdtemp(join(root, 'case-'))
+  const files = await testDirectory('saved-script-')
+  const directory = files.path
   const repository = join(directory, 'repository')
   const runtime = join(directory, 'runtime')
   const environment = join(directory, 'env.sh')
@@ -221,6 +218,6 @@ export async function localSavedScriptFixture(
               (error, stdout) => (error ? reject(error) : resolve(stdout)),
             )
           }),
-    dispose: () => rm(directory, { recursive: true, force: true }),
+    dispose: files.remove,
   }
 }

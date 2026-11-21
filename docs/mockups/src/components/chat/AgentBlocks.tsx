@@ -1,87 +1,139 @@
-import type { ReactNode } from 'react'
-import type { AgentBlock } from '../../fixtures/conversations'
-import type { MessageHeading } from '../../fixtures/headingConversations'
-import type { MessageList } from '../../fixtures/listConversations'
+import { memo } from 'react'
+import { samePlainData } from '../../../../../src/chat/components/same-data'
+import type {
+  HeadingLevel,
+  TextBlock,
+  TextItem,
+} from '../../../../../src/chat/markdown/agent-blocks'
+import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
+import { MarkdownItem } from '../../../../../src/markdown/MarkdownItem'
 import { MarkdownTable } from '../common/MarkdownTable'
-import { CodeBlock } from './CodeBlock'
-import { MessageText } from './MessageText'
+import type { AgentDrawing, TextPlace } from './agentDrawing'
+
+/** A paragraph or a list item of an answer, where a picture can show. */
+const withPictures: TextPlace = { line: false, pictures: true }
+
+/** A heading or a table cell of an answer, which keeps the link of an image. */
+const withLinks: TextPlace = { line: false, pictures: false }
 
 /**
- * How the blocks draw a text of the message: the text of a paragraph, with
- * its bold, code, and chips. A chat can draw more over it, such as marks.
+ * The items of a list, as `MarkdownItem` draws them in the file preview too.
+ * An item of one paragraph shows its text alone. Another item shows its
+ * blocks: its text, and the lists, paragraphs, headings, code blocks,
+ * quotes, and tables that the agent indents under it. A task item shows its
+ * fixed check box at the start of its text. The Markdown image of a picture
+ * file in an item can show as its picture.
  */
-type TextOf = (text: string) => ReactNode
-
-/** The text of a paragraph, a heading, a list item, or a table cell. */
-function answerText(text: string) {
-  return <MessageText answer text={text} />
-}
-
-/**
- * A heading at the level that the agent wrote, from `h1` to `h6`, with the
- * text of a paragraph. A heading with no text draws nothing, so a screen
- * reader meets no empty heading.
- */
-function HeadingView(props: { heading: MessageHeading; text: TextOf }) {
-  const { level, text } = props.heading
-  if (text.trim() === '') return null
-  const Heading = `h${level}` as const
-  return <Heading>{props.text(text)}</Heading>
-}
-
-/**
- * A list with the lists under its items. An item with a list keeps its own
- * text in a paragraph, and the list follows it inside the item, as the app
- * draws a Markdown list that the agent indents under an item.
- */
-function ListView(props: { list: MessageList; text: TextOf }) {
-  const items = props.list.items.map((item, index) => (
-    <li key={index}>
-      {item.list ? (
-        <>
-          <p>{props.text(item.text)}</p>
-          <ListView list={item.list} text={props.text} />
-        </>
-      ) : (
-        props.text(item.text)
-      )}
-    </li>
+function ListItems(props: {
+  items: readonly TextItem[]
+  drawing: AgentDrawing
+}) {
+  const { drawing } = props
+  const text = (block: TextBlock) =>
+    block.kind === 'p' ? drawing.text(block.text, withPictures) : null
+  const blocks = (inner: readonly TextBlock[]) => (
+    <AgentBlocks blocks={inner} drawing={drawing} />
+  )
+  return props.items.map((item, index) => (
+    <MarkdownItem blocks={blocks} item={item} key={index} text={text} />
   ))
-  return props.list.numbered ? <ol>{items}</ol> : <ul>{items}</ul>
 }
 
 /**
- * The blocks of a message of the agent, in order: its paragraphs, its
- * headings, its tables, its lists, and its code blocks. Their text keeps its
- * inline code and its bold, and each link to a workspace of the org is a
- * chip. Each mention, and each inline code whose whole text is a path of
- * the tree, is a file chip. A code block stays code. The element around
- * them sets the type and the space between them. `text` draws each text,
- * such as with the marks of explanations in the chat.
+ * A heading of an answer, as `h1` to `h6` at the level that the agent
+ * wrote. A heading whose text shows no words where it draws, as the
+ * `ShowsWords` of the view reads it, draws nothing, so a screen reader
+ * meets no empty heading. It stays a block of its own, so it still ends the
+ * paragraph above it. In the app, it draws once a change of the tree gives
+ * it words, such as the name of the file of an image with no alt text.
+ */
+function AnswerHeading(props: {
+  level: HeadingLevel
+  text: InlineText
+  drawing: AgentDrawing
+}) {
+  const { drawing, text } = props
+  const Heading = `h${props.level}` as const
+  return (
+    <drawing.ShowsWords text={text}>
+      <Heading>{drawing.text(text, withLinks)}</Heading>
+    </drawing.ShowsWords>
+  )
+}
+
+/**
+ * One block of an answer. It draws again only when its data or the drawing
+ * of its message change, so a live update draws only the blocks whose text
+ * changed. A change of what the app reads the text with, such as the
+ * workspaces, still reaches each text inside it, which reads that itself,
+ * and each heading, which draws only when it shows words. A paragraph, a
+ * list item, and a quote can show pictures. A heading and a table cell keep
+ * the link of an image, because a picture breaks the layout of the heading
+ * or of the row.
+ */
+const Block = memo(function Block(props: {
+  block: TextBlock
+  drawing: AgentDrawing
+}) {
+  const { block, drawing } = props
+  switch (block.kind) {
+    case 'p':
+      return <p>{drawing.text(block.text, withPictures)}</p>
+    case 'heading':
+      return (
+        <AnswerHeading
+          drawing={drawing}
+          level={block.level}
+          text={block.text}
+        />
+      )
+    case 'ul':
+      return (
+        <ul>
+          <ListItems drawing={drawing} items={block.items} />
+        </ul>
+      )
+    case 'ol':
+      return (
+        <ol start={block.start}>
+          <ListItems drawing={drawing} items={block.items} />
+        </ol>
+      )
+    case 'code':
+      return drawing.code(block.text)
+    case 'quote':
+      return (
+        <blockquote>
+          <AgentBlocks blocks={block.blocks} drawing={drawing} />
+        </blockquote>
+      )
+    case 'rule':
+      return <hr />
+    case 'table':
+      if (drawing.table) return drawing.table(block)
+      return (
+        <MarkdownTable
+          align={block.align}
+          head={block.head}
+          renderCell={(cell) => drawing.text(cell, withLinks)}
+          rows={block.rows}
+        />
+      )
+  }
+}, samePlainData)
+
+/**
+ * The blocks of an agent message in order, as an answer and the body of an
+ * open message line draw them: paragraphs, headings, lists, code blocks,
+ * quotes, rules, and tables. The app and the mockups share them, and each
+ * gives the `drawing` of its text. The element around the blocks sets the
+ * type, the space between them, and the look of quotes and rules.
  */
 export function AgentBlocks(props: {
-  blocks: readonly AgentBlock[]
-  text?: TextOf
+  blocks: readonly TextBlock[]
+  drawing: AgentDrawing
 }) {
-  const text = props.text ?? answerText
-  return props.blocks.map((block, index) => {
-    if (typeof block === 'string') return <p key={index}>{text(block)}</p>
-    if (block.kind === 'heading') {
-      return <HeadingView heading={block} key={index} text={text} />
-    }
-    if (block.kind === 'list') {
-      return <ListView key={index} list={block} text={text} />
-    }
-    if (block.kind === 'code')
-      return <CodeBlock key={index} text={block.text} />
-    return (
-      <MarkdownTable
-        align={block.align}
-        head={block.head}
-        key={index}
-        renderCell={text}
-        rows={block.rows}
-      />
-    )
-  })
+  return props.blocks.map((block, index) => (
+    <Block block={block} drawing={props.drawing} key={index} />
+  ))
 }

@@ -1,10 +1,13 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import { archivedWorkspaceList } from '../../fixtures/archivedWorkspaces'
+import { postcodeLookup } from '../../fixtures/archivedWorkspaces'
+import { paths } from '../../paths'
 import {
+  archivedRows,
   workspaceSections,
   type SidebarSection,
   type WorkspaceRow,
 } from '../workspaces/sections'
+import { rowLinks, type RowLinks } from './workspaceLinks'
 
 /**
  * A session of a linked workspace, as the chat read it when it loaded: its
@@ -28,22 +31,33 @@ export type ChatSession = {
 export type ChatRow = WorkspaceRow & { sessions?: readonly ChatSession[] }
 
 /**
- * The workspaces of the org that a chat finds for its chips: the rows of
- * the list, with their states and their screens, and the archived
- * workspaces, which the list keeps in its Archived group.
+ * A removed workspace: its 14 days ended, so the list leaves it out. The
+ * app keeps its data, so its chip still shows, with the archived state, and
+ * opens its read-only chat.
  */
-export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
-  const archived = archivedWorkspaceList.map((workspace): WorkspaceRow => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-  }))
-  return [...sections.flatMap((section) => section.rows), ...archived]
+const removed: WorkspaceRow = {
+  workspace: postcodeLookup,
+  status: 'archived',
+  github: postcodeLookup.github,
+  selected: false,
+  to: paths.removed,
 }
 
-const ChatWorkspacesContext = createContext<readonly ChatRow[]>(
-  orgRows(workspaceSections()),
+/**
+ * The workspaces of the org that a chat finds for its chips: the rows of
+ * the list, with their states and their screens, the archived workspaces of
+ * its Archived group, and the removed ones, which only a link opens.
+ */
+export function orgRows(sections: readonly SidebarSection[]): WorkspaceRow[] {
+  return [
+    ...sections.flatMap((section) => section.rows),
+    ...archivedRows(),
+    removed,
+  ]
+}
+
+const ChatWorkspacesContext = createContext<RowLinks>(
+  rowLinks(orgRows(workspaceSections())),
 )
 
 /**
@@ -56,13 +70,16 @@ export function ChatWorkspaces(props: {
   children: ReactNode
 }) {
   return (
-    <ChatWorkspacesContext.Provider value={props.rows}>
+    <ChatWorkspacesContext.Provider value={rowLinks(props.rows)}>
       {props.children}
     </ChatWorkspacesContext.Provider>
   )
 }
 
-/** The workspaces of the org that the chat finds for its chips. */
-export function useChatWorkspaces(): readonly ChatRow[] {
+/**
+ * The workspaces of the org that the chat finds for its chips, with the
+ * workspace links that the reader of the app reads chat text with.
+ */
+export function useChatWorkspaces(): RowLinks {
   return useContext(ChatWorkspacesContext)
 }

@@ -1,4 +1,3 @@
-import { Plus, RotateCw } from 'lucide-react'
 import {
   detectedServers,
   openPort,
@@ -7,14 +6,23 @@ import {
   serversUnavailable,
 } from '../../fixtures/previews'
 import { paths } from '../../paths'
-import { LostUpdateRow } from '../chat/LostUpdate'
-import { IconButton } from '../common/actions'
-import { ExternalLink } from '../common/ExternalLink'
+import { plainData } from '../../defined'
+import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { PortMessage, ServerList } from './PortForm'
-import { PreviewTabs } from './PreviewTabs'
-import { portFormCopy, previewTabLabel, serverDescription } from './previewCopy'
-import { StorefrontPage } from './StorefrontPage'
+import {
+  portMessage,
+  serverList,
+} from '../../entries/components/tools/PortForm.mockup'
+import { previewTabs as previewTabsPart } from '../../entries/components/tools/PreviewTabs.mockup'
+import {
+  expandedPreviewCopy,
+  portFormCopy,
+  previewTabLabel,
+  serverDescription,
+} from './previewCopy'
+import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './PortPreview.module.css'
 
 /**
@@ -54,15 +62,37 @@ function previewTabs(current: number | null) {
   })
 }
 
-/** Reload and Open of the preview that shows. */
-export function PreviewActions() {
+/**
+ * Reload, Expand, and Open of the page that shows. Open opens `href` in a
+ * new tab: by default the launch address of the open port preview. Expand
+ * shows only on desktop, with `expandTo`, the screen of the page in its
+ * large window over the whole app.
+ */
+export function PreviewActions(props: { href?: string; expandTo?: string }) {
   return (
     <>
-      <IconButton icon={RotateCw} label="Reload" />
+      <iconButton.Component
+        icon="rotate-cw"
+        label="Reload"
+        moklyInstance="reload-preview"
+      />
+      {props.expandTo ? (
+        <ScreenLink asChild to={props.expandTo}>
+          <iconButton.Component
+            icon="maximize-2"
+            label={expandedPreviewCopy.expand}
+            moklyInstance="expand-preview"
+          />
+        </ScreenLink>
+      ) : null}
       <span className={styles.link}>
-        <ExternalLink href={previewUrl} label="Open in new tab">
+        <externalLink.Component
+          href={props.href ?? previewUrl}
+          label="Open in new tab"
+          moklyInstance="open-preview"
+        >
           Open
-        </ExternalLink>
+        </externalLink.Component>
       </span>
     </>
   )
@@ -80,25 +110,38 @@ function PhonePreview(props: { adding: boolean }) {
     <div className={styles.preview}>
       <div className={styles.toolbar}>
         {/* Beside the actions of the frame, two named tabs do not fit. */}
-        <PreviewTabs
+        <previewTabsPart.Component
           fadeEnd={!adding}
-          tabs={previewTabs(adding ? null : openPort)}
+          moklyInstance="preview-tabs"
+          tabs={plainData(previewTabs(adding ? null : openPort))}
         />
         {adding ? (
-          <IconButton icon={Plus} label="Preview another port" pressed />
+          <iconButton.Component
+            icon="plus"
+            label="Preview another port"
+            moklyInstance="preview-another-port"
+            pressed
+          />
         ) : (
           <ScreenLink asChild to={paths.previewAnotherPort}>
-            <IconButton icon={Plus} label="Preview another port" />
+            <iconButton.Component
+              icon="plus"
+              label="Preview another port"
+              moklyInstance="preview-another-port"
+            />
           </ScreenLink>
         )}
         <span className={styles.spacer} />
         {adding ? null : <PreviewActions />}
       </div>
       {adding ? (
-        <ServerList servers={unopened()} />
+        <serverList.Component
+          moklyInstance="server-list"
+          servers={unopened()}
+        />
       ) : (
         <div className={styles.frame}>
-          <StorefrontPage />
+          <storefrontPage.Component moklyInstance="storefront-page" />
         </div>
       )}
     </div>
@@ -117,7 +160,11 @@ function PhonePreview(props: { adding: boolean }) {
 function PanelPreview(props: { shown: number | null }) {
   return (
     <div className={styles.preview}>
-      <ServerList current={props.shown} servers={detectedServers} />
+      <serverList.Component
+        current={props.shown}
+        moklyInstance="server-list"
+        servers={detectedServers}
+      />
     </div>
   )
 }
@@ -149,18 +196,39 @@ export function PreviewTool(props: {
     case 'adding':
       return open
     case 'detected':
-      return <ServerList servers={detectedServers} />
+      return (
+        <serverList.Component
+          moklyInstance="server-list"
+          servers={detectedServers}
+        />
+      )
     case 'no-servers':
-      return <PortMessage body={portFormCopy.noServers} />
+      return (
+        <portMessage.Component
+          body={portFormCopy.noServers}
+          moklyInstance="port-message"
+        />
+      )
     case 'no-report':
-      return <PortMessage body={portFormCopy.body} />
+      return (
+        <portMessage.Component
+          body={portFormCopy.body}
+          moklyInstance="port-message"
+        />
+      )
     case 'repair-failed':
       // The notice joins the list, as the notice of a file list joins the
       // file lists. The last list and the field stay usable.
       return (
         <>
-          <ServerList servers={detectedServers} />
-          <LostUpdateRow repair={serversUnavailable} />
+          <serverList.Component
+            moklyInstance="server-list"
+            servers={detectedServers}
+          />
+          <lostUpdateRow.Component
+            moklyInstance="lost-servers"
+            repair={serversUnavailable}
+          />
         </>
       )
   }

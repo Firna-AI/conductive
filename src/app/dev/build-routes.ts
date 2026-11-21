@@ -125,16 +125,24 @@ export function startBuild(backend: DevBackend, org: OrgState): BuildResponse {
   const busy = org.builds.find((item) => item.build.state === 'running')
   if (busy) return busy
   const script = org.settings.installScript
+  const fails = script.includes('exit 1')
   const plan: BuildPlan = {
     id: uniqueId(
       `build-${org.builds.length + 1}`,
       org.builds.map((item) => item.build.id),
     ),
     revision: org.settingsRevision,
-    fails: script.includes('exit 1'),
+    fails,
     lines: [
       'Running the install script',
       ...commands(script).map((command) => `$ ${command}`),
+      // The Worker saves the snapshot only after a good install script.
+      ...(fails
+        ? []
+        : [
+            'Saving the cloud computer image',
+            'Saved the cloud computer image',
+          ]),
     ],
   }
   const chosen = org.repositories.filter((item) => item.selected).length

@@ -1,5 +1,4 @@
-import type { LucideIcon } from 'lucide-react'
-import { Ban, CircleCheck, Laptop, MonitorOff, ShieldOff } from 'lucide-react'
+import { Laptop } from 'lucide-react'
 import { LiteralText } from '../../../../../src/chat/device/LiteralText'
 import {
   safariDuration,
@@ -9,13 +8,17 @@ import {
   type MacCommandState,
 } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
-import { StatusText, type StatusTone } from '../common/StatusText'
+import { defined } from '../../defined'
+import type { IconKey } from '../../entries/components/common/icons'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { StatusTone } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import styles from './MacCommand.module.css'
 
 type StatePresentation = {
   label: string
   tone: StatusTone
-  icon?: LucideIcon
+  icon?: IconKey
   busy?: boolean
 }
 
@@ -23,18 +26,22 @@ const sender = people[thisMac.owner].name
 
 const states: Readonly<Record<MacCommandState, StatePresentation>> = {
   waiting: { label: 'Waiting for approval', tone: 'active', busy: true },
-  denied: { label: 'Denied', tone: 'muted', icon: Ban },
+  denied: { label: 'Denied', tone: 'muted', icon: 'ban' },
   done: {
     label: `Done in ${safariDuration}`,
     tone: 'success',
-    icon: CircleCheck,
+    icon: 'circle-check',
   },
   unavailable: {
     label: 'Mac not available',
     tone: 'warning',
-    icon: MonitorOff,
+    icon: 'monitor-off',
   },
-  'mac-access-off': { label: 'Mac access off', tone: 'muted', icon: ShieldOff },
+  'mac-access-off': {
+    label: 'Mac access off',
+    tone: 'muted',
+    icon: 'shield-off',
+  },
 }
 
 /**
@@ -63,15 +70,18 @@ export function CommandLine(props: { command: string }) {
   )
 }
 
-/** The state of a command on the Mac, as a glyph and a word. */
-export function CommandStatus(props: { state: MacCommandState }) {
+/**
+ * The state of a command on the Mac, as a glyph and a word. `id` is the id
+ * of the chat item of the command, which names the state for Mokly.
+ */
+export function CommandStatus(props: { id: string; state: MacCommandState }) {
   const presentation = states[props.state]
   return (
-    <StatusText
-      busy={presentation.busy}
-      icon={presentation.icon}
+    <statusText.Component
       label={presentation.label}
+      moklyInstance={`command-${props.id}`}
       tone={presentation.tone}
+      {...defined({ busy: presentation.busy, icon: presentation.icon })}
     />
   )
 }
@@ -79,9 +89,12 @@ export function CommandStatus(props: { state: MacCommandState }) {
 /**
  * A command that the agent asked to run on the Mac of the person who sent
  * the turn (decision 62), at its place in the chat: the Mac, the state, the
- * command, its folder and time limit, and the output once it ran.
+ * command, its folder and time limit, and the output once it ran. Long
+ * output shows its first ten lines with a fade and Show all.
  */
 export function MacCommand(props: {
+  /** The id of the chat item of the command. */
+  id: string
   request: MacCommandRequest
   state: MacCommandState
 }) {
@@ -93,7 +106,7 @@ export function MacCommand(props: {
         <Laptop aria-hidden className={styles.icon} size={14} />
         <span className={styles.mac}>{thisMac.name}</span>
         <span className={styles.spacer} />
-        <CommandStatus state={state} />
+        <CommandStatus id={props.id} state={state} />
       </div>
       <CommandLine command={request.command} />
       <span className={styles.meta}>
@@ -101,7 +114,21 @@ export function MacCommand(props: {
         {request.limit}
       </span>
       {state === 'done' ? (
-        <pre className={styles.output}>{safariOutput}</pre>
+        <div className={styles.output}>
+          <pre
+            className={`${styles.outputText} ${styles.outputShort} ${styles.outputFaded}`}
+          >
+            {safariOutput}
+          </pre>
+          <span className={styles.outputMore}>
+            <actionButton.Component
+              moklyInstance={`show-all-${props.id}`}
+              tone="plain"
+            >
+              Show all
+            </actionButton.Component>
+          </span>
+        </div>
       ) : null}
       {note ? <span className={styles.note}>{note}</span> : null}
     </section>

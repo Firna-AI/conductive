@@ -1,4 +1,5 @@
 import type { DeviceCommandRecord } from '../../shared/generated/DeviceCommandRecord'
+import { useRef } from 'react'
 import { Laptop } from 'lucide-react'
 import type { DeviceApprovalAction } from '../../shared/device'
 import styles from '../../../docs/mockups/src/components/chat/PendingCommand.module.css'
@@ -28,6 +29,7 @@ function PendingCommand(props: {
   onAnswer: (requestId: string, action: DeviceApprovalAction) => void
 }) {
   const { request, devices } = props
+  const actions = useRef<HTMLSpanElement>(null)
   const choices = !props.readOnly && canAnswer(devices, request)
   const mac = macLabel(request, choices)
   return (
@@ -40,9 +42,10 @@ function PendingCommand(props: {
         <span className={styles.command}>
           <CommandLine command={request.command} />
         </span>
-        <span className={styles.end}>
+        <span className={styles.end} ref={actions}>
           {choices ? (
             <CommandChoices
+              actions={actions}
               answering={answerOf(devices, request.requestId)}
               onAnswer={(action) => props.onAnswer(request.requestId, action)}
             />

@@ -1,11 +1,11 @@
 //! Stateful runner link consumed through RunnerLink.
 
+use std::path::Path;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_credentials::{LoginKind, RunnerLoginKind};
-use cnd_runner_interface::runner_files::RunnerFileResponse;
 use cnd_runner_interface::runner_handshake::{
     RunnerEventEnvelope, RunnerHello, RunnerProtocolVersion, RunnerToWorkspace,
 };
@@ -14,21 +14,24 @@ use tokio::sync::Mutex;
 use crate::clock::Clock;
 use crate::config::ConnectionRequest;
 use crate::error::Result;
-use crate::limits::bound_event;
 use crate::socket::{Connector, Socket};
 use crate::state::store::EventStore;
 
 use super::ports::{LinkUpdate, RunnerLink};
+use super::tool_detail::prepare;
 
 pub(super) struct Connection {
     pub(super) generation: u64,
     pub(super) socket: Option<Arc<dyn Socket>>,
     pub(super) welcomed: bool,
+    pub(super) complete_tool_details: bool,
 }
 
 /// Configured transport and state dependencies. Tokens stay in memory only.
 pub struct SavedRunnerLink {
     pub(super) workspace_id: String,
+    process_start_id: String,
+    file_server: bool,
     pub(super) request: ConnectionRequest,
     pub(super) connector: Arc<dyn Connector>,
     pub(super) clock: Arc<dyn Clock>,
@@ -36,19 +39,25 @@ pub struct SavedRunnerLink {
     pub(super) connection: Mutex<Connection>,
     connecting: Mutex<()>,
     pub(super) messages: Mutex<()>,
+    emitting: Mutex<()>,
+    repository_folder: Option<String>,
 }
 
 impl SavedRunnerLink {
     /// Compose the link without performing IO. The store must already be loaded.
     pub fn new(
         workspace_id: String,
+        process_start_id: String,
         request: ConnectionRequest,
         connector: Arc<dyn Connector>,
         clock: Arc<dyn Clock>,
         store: Arc<dyn EventStore>,
+        file_server: bool,
     ) -> Self {
         Self {
             workspace_id,
+            process_start_id,
+            file_server,
             request,
             connector,
             clock,
@@ -57,10 +66,19 @@ impl SavedRunnerLink {
                 generation: 0,
                 socket: None,
                 welcomed: false,
+                complete_tool_details: false,
             }),
             connecting: Mutex::new(()),
             messages: Mutex::new(()),
+            emitting: Mutex::new(()),
+            repository_folder: None,
         }
+    }
+
+    /// Name the repository folder in hello. The Worker then may send repository.move.
+    pub fn with_repository_folder(mut self, folder: &Path) -> Self {
+        self.repository_folder = Some(folder.to_string_lossy().into_owned());
+        self
     }
 
     pub(super) async fn disconnect(&self, generation: u64) {
@@ -125,6 +143,8 @@ impl RunnerLink for SavedRunnerLink {
             protocol_version: RunnerProtocolVersion,
             workspace_id: self.workspace_id.clone(),
             stream_id: self.store.snapshot().await.stream_id,
+            process_start_id: Some(self.process_start_id.clone()),
+            file_server: self.file_server.then_some(true),
             login_kinds: Some(vec![
                 RunnerLoginKind::Claude {
                     kind: LoginKind::Token,
@@ -139,6 +159,8 @@ impl RunnerLink for SavedRunnerLink {
                     kind: LoginKind::ApiKey,
                 },
             ]),
+            repository_folder: self.repository_folder.clone(),
+            complete_tool_details: Some(true),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;
@@ -152,14 +174,20 @@ impl RunnerLink for SavedRunnerLink {
     }
 
     async fn emit(&self, event: RunnerEvent, report_command_id: Option<String>) -> Result<()> {
+        let _emitting = self.emitting.lock().await;
+        let complete = self.connection.lock().await.complete_tool_details;
+        let now = self.clock.now()?;
+        let events = prepare(event, complete, &self.store.snapshot().await.stream_id, now)?;
         match self
             .store
-            .append(bound_event(event)?, self.clock.now()?, report_command_id)
+            .append_batch(events, now, report_command_id)
             .await?
         {
-            Some(envelope) => {
-                self.send(RunnerToWorkspace::RunnerEventEnvelope(envelope))
-                    .await
+            Some(envelopes) => {
+                for envelope in envelopes {
+                    self.send(RunnerToWorkspace::RunnerEventEnvelope(envelope))
+                        .await;
+                }
             }
             None => tracing::warn!("The runner event exceeds its byte limit."),
         }
@@ -173,9 +201,8 @@ impl RunnerLink for SavedRunnerLink {
         Ok(())
     }
 
-    async fn reply(&self, response: RunnerFileResponse) -> Result<()> {
-        self.send(RunnerToWorkspace::RunnerFileResponse(response))
-            .await;
+    async fn reply(&self, response: RunnerToWorkspace) -> Result<()> {
+        self.send(response).await;
         Ok(())
     }
 

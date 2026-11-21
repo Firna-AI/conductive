@@ -26,7 +26,7 @@ import { placeMemory } from './chat-place'
 import { ActionNotice, BlockNotice, LinkedSessionNotice } from './ChatNotices'
 import { Composer } from './Composer'
 import type { ComposerFocus } from './composer-requests'
-import { sandboxParts, sessionParts, type ChatHost } from './session-parts'
+import { sandboxParts, useSessionParts, type ChatHost } from './session-parts'
 import {
   EarlierLoading,
   emptyView,
@@ -109,24 +109,18 @@ export function SessionChat(props: SessionChatProps) {
   )
   const status = historyStatus(state)
   const content = showsContent(state, starting !== null)
-  const viewerId = snapshot.account?.user.id ?? null
-  const reader = loginReader(snapshot)
-  const login = session ? sessionLoginOf(session, reader) : null
-  const linked =
-    login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
-  const openSession = (sessionId: string) => {
-    const open = snapshot.sessions.some((item) => item.id === sessionId)
-    void (open ? controller.select(sessionId) : controller.reopen(sessionId))
-  }
-  const parts = sessionParts({
+  const parts = useSessionParts({
     snapshot,
     controller,
     sessionId: id,
     session,
     state,
     readOnly,
-    onOpenSession: openSession,
   })
+  const reader = loginReader(snapshot)
+  const login = session ? sessionLoginOf(session, reader) : null
+  const linked =
+    login?.kind === 'linked' || (login?.kind === 'missing' && login.linked)
   const explain = useExplain({
     snapshot,
     controller,
@@ -160,6 +154,7 @@ export function SessionChat(props: SessionChatProps) {
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
           onConnectAgent={props.onConnectAgent}
+          watch={controller.watchMissingLogin}
         />
       ) : null}
       {!down && session && !block && login?.kind === 'linked' ? (
@@ -230,9 +225,9 @@ export function SessionChat(props: SessionChatProps) {
           <TranscriptView
             inserts={parts.inserts}
             onOpenDiff={props.onOpenDiff}
-            onRetry={(messageId) => id && void controller.retry(id, messageId)}
+            onRetry={parts.onRetry}
             pending={state.pending}
-            readers={{ viewerId, members: snapshot.members }}
+            readers={parts.readers}
             readOnly={readOnly}
             retrying={state.retrying}
             transcript={state.transcript}

@@ -2,13 +2,16 @@ import type { OrgRole } from '../shared/api'
 import type { OrgInvite, OrgMember } from '../shared/members'
 import { keepExistingOwners } from './actionOwners'
 import { errorMessage, type MembersApi } from './api/client'
-import { countOwners } from './people'
+import type { OwnedWorkspace } from './people'
 
 export type MembersData = {
   members: readonly OrgMember[]
   invites: readonly OrgInvite[]
-  /** The number of workspaces that each member owns, by user ID. */
-  owned: Readonly<Record<string, number>>
+  /**
+   * The owner and the Archive of each workspace of the org, also of each
+   * removed workspace. `countOwners` counts those that the list shows.
+   */
+  workspaces: readonly OwnedWorkspace[]
 }
 
 export type MembersAction = 'invite' | 'role' | 'remove' | 'cancel'
@@ -94,20 +97,21 @@ function without(failures: MembersFailures, key: string): MembersFailures {
 }
 
 /**
- * Removes a member and moves their workspace count to the admin who
- * removes them.
+ * Removes a member and moves their workspaces to the admin who removes
+ * them. The removed workspaces of the member move too, because the app
+ * keeps their data.
  */
 function withoutMember(ready: Ready, userId: string, adminId: string): Ready {
-  const owned: Record<string, number> = { ...ready.data.owned }
-  const moved = owned[userId] ?? 0
-  delete owned[userId]
-  if (moved > 0) owned[adminId] = (owned[adminId] ?? 0) + moved
   return {
     ...ready,
     data: {
       ...ready.data,
       members: ready.data.members.filter((member) => member.user.id !== userId),
-      owned,
+      workspaces: ready.data.workspaces.map((workspace) =>
+        workspace.owner.id === userId
+          ? { ...workspace, owner: { id: adminId } }
+          : workspace,
+      ),
     },
   }
 }
@@ -194,7 +198,10 @@ export function createMembersStore(
           data: {
             members: members.members,
             invites: members.invites,
-            owned: countOwners(workspaces.workspaces),
+            workspaces: workspaces.workspaces.map(({ owner, archivedAt }) => ({
+              owner: { id: owner.id },
+              archivedAt,
+            })),
           },
           pending: [],
           failures: new Map(),

@@ -17,15 +17,19 @@ import { followOpenRequests, orgSecretsOf } from './secret-store'
 
 /**
  * The states of secret requests that `secrets=` shows in the session of
- * `checkout-autocomplete`. `waiting`, `value`, and `mixed` wait for an answer
- * just above the composer, so they need `conversation=running`. `late`,
- * `late-value`, `results`, and `ended` sit in the ended turn of the default
- * conversation.
+ * `checkout-autocomplete`. `waiting`, `value`, `mixed`, `invalid-name`, and
+ * `mixed-invalid-name` wait for an answer just above the composer, so they
+ * need `conversation=running`. `invalid-name` asks for the value of a name
+ * that a new secret cannot take, and `mixed-invalid-name` adds that name to
+ * a mixed request. `late`, `late-value`, `results`, and `ended` sit in the
+ * ended turn of the default conversation.
  */
 export const SECRET_SCENARIOS = [
   'waiting',
   'value',
   'mixed',
+  'invalid-name',
+  'mixed-invalid-name',
   'late',
   'late-value',
   'results',
@@ -57,6 +61,16 @@ function eventsOf(scenario: SecretScenario): [WorkspaceEvent, number][] {
     case 'mixed':
       return [
         updated(request('dev-mixed', asks.preview, FAKE_TIME + 8 * second)),
+      ]
+    case 'invalid-name':
+      return [
+        updated(request('dev-places', asks.places, FAKE_TIME + 8 * second)),
+      ]
+    case 'mixed-invalid-name':
+      return [
+        updated(
+          request('dev-providers', asks.providers, FAKE_TIME + 8 * second),
+        ),
       ]
     case 'late':
       return secretTurn(start, [

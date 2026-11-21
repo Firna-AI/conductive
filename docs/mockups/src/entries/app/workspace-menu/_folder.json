@@ -1,1 +1,1 @@
-{ "order": ["move", "reassign", "rename", "archive", "roles"] }
+{ "order": ["move", "reassign", "rename", "archive", "roles", "header"] }

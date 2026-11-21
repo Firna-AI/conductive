@@ -1,13 +1,14 @@
 import type { ReactElement } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { CircleAlert, CornerDownLeft, ImagePlus, Info } from 'lucide-react'
+import { CornerDownLeft, Info } from 'lucide-react'
+import { defined } from '../../defined'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
 import { paths } from '../../paths'
-import { MessageField } from '../chat/MessageField'
-import { ActionButton } from '../common/actions'
+import { messageField } from '../../entries/components/chat/MessageField.mockup'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { ConfirmDialog } from '../common/ConfirmDialog'
-import { Notice } from '../common/Notice'
+import { confirmDialog } from '../../entries/components/common/ConfirmDialog.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import {
   addScreenshotsLabel,
@@ -21,14 +22,19 @@ import {
   sendingLabel,
   sendLabel,
 } from './feedbackCopy'
-import { ReplyFailure, ReplyLine, type FeedbackReply } from './FeedbackReply'
-import { ScreenshotRow } from './ScreenshotRow'
+import {
+  replyFailure,
+  replyLine,
+} from '../../entries/components/feedback/FeedbackReply.mockup'
+import type { FeedbackReply } from './FeedbackReply'
+import { screenshotRow } from '../../entries/components/feedback/ScreenshotRow.mockup'
 import styles from './FeedbackDialog.module.css'
 
 /**
  * What a notice under the message box names: a file that the dialog did
  * not add, because it passes the limit of the screenshots or is of another
- * type, or a send that failed, with the message of the server.
+ * type, or a send that failed, with the message of its error: the message
+ * of the server, or the time when a send over the limit can go.
  */
 export type FeedbackProblem =
   | { kind: 'too-large'; name: string }
@@ -108,14 +114,15 @@ function SendButton(props: {
       />
     )
   const button = (
-    <ActionButton
+    <actionButton.Component
       busy={sending}
       disabled={!ready}
+      moklyInstance="dialog-send"
       tone={ready ? 'primary' : 'secondary'}
-      trailing={key}
+      {...defined({ trailing: key })}
     >
       {sending ? sendingLabel : sendLabel}
-    </ActionButton>
+    </actionButton.Component>
   )
   return linked(button, ready && !sending ? props.to : undefined)
 }
@@ -135,9 +142,13 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
   const phone = props.viewport === 'mobile'
   const sending = props.sending === true
   const words = props.problem ? problemWords(props.problem) : undefined
-  const cancel = <ActionButton disabled={sending}>Cancel</ActionButton>
+  const cancel = (
+    <actionButton.Component disabled={sending} moklyInstance="dialog-cancel">
+      Cancel
+    </actionButton.Component>
+  )
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           {linked(cancel, sending ? undefined : paths.shell)}
@@ -149,30 +160,41 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           />
         </>
       }
+      moklyInstance="feedback-dialog"
       title={sendFeedbackLabel}
       viewport={props.viewport}
       wide
     >
       <div className={styles.box}>
         {props.screenshots.length > 0 ? (
-          <ScreenshotRow screenshots={props.screenshots} />
+          <screenshotRow.Component
+            moklyInstance="screenshots"
+            screenshots={props.screenshots}
+          />
         ) : null}
-        <MessageField
+        <messageField.Component
           lines={shownLines(props.text, phone ? 5 : 6)}
           maxLines={maxLines}
+          moklyInstance="feedback-message"
           placeholder={feedbackPlaceholder}
           text={props.text}
         />
         <div className={styles.bar}>
-          <ActionButton disabled={sending} icon={ImagePlus} tone="plain">
+          <actionButton.Component
+            disabled={sending}
+            icon="image-plus"
+            moklyInstance="add-screenshots"
+            tone="plain"
+          >
             {addScreenshotsLabel}
-          </ActionButton>
+          </actionButton.Component>
         </div>
       </div>
       {words ? (
-        <Notice
+        <notice.Component
           body={words.body}
-          icon={CircleAlert}
+          icon="circle-alert"
+          moklyInstance="feedback-problem"
           title={words.title}
           tone="danger"
         />
@@ -182,9 +204,13 @@ export function FeedbackDialog(props: FeedbackDialogProps) {
           <Info aria-hidden className={styles.factIcon} size={14} />
           <span>{contextLine}</span>
         </li>
-        <ReplyLine reply={props.reply} />
+        <replyLine.Component moklyInstance="reply-line" reply={props.reply} />
       </ul>
-      <ReplyFailure reply={props.reply} retryTo={props.retryTo} />
-    </ConfirmDialog>
+      <replyFailure.Component
+        moklyInstance="reply-failure"
+        reply={props.reply}
+        {...defined({ retryTo: props.retryTo })}
+      />
+    </confirmDialog.Component>
   )
 }

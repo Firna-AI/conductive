@@ -204,7 +204,8 @@ retry route for `Session.retryMessageId`.
 ## Runner warnings
 
 [Runner warnings](runner-warnings.md) gives the warning kinds and the
-fields for runner connections and for turn ends with no Stop request.
+fields for runner connections, for turn ends with no Stop request, and for
+runner work that did not finish.
 
 ## Automation first turns
 
@@ -214,7 +215,11 @@ A finished first turn resets the automation's consecutive failure count.
 A failed first turn adds one failure and stays failed after an in-workspace retry.
 Later turns do not change that run outcome.
 Chat commits the turn before it reports the outcome.
-Each later chat change checks for an unreported outcome, including runner redelivery after a failed D1 write.
+Each later chat change checks for an unreported outcome.
+A failed report does not fail the chat change, so a D1 failure cannot stop the chat or close the runner.
+It logs `automation_report_failed` and stores the `automation-report` due time of the workspace alarm, 30 seconds later.
+The alarm retries the report until it succeeds, as [the object alarm scheduler](../lifecycle/alarm-scheduler.md) says.
+A chat without that alarm, as in some tests, gives the error to the caller, which sends the change again.
 
 ## Report repairs
 
@@ -230,6 +235,17 @@ Presentation fills both fields while it keeps each saved name, state, time, and 
 An older saved update without a GitHub summary presents null.
 The HTTP history route uses the same presentation.
 No origin is saved in the chat records or the history.
+
+## Skill lists
+
+The chat backend keeps the latest skill lists of the workspace, as
+[The list in the workspace](../../docs/protocol/skill-mentions.md#the-list-in-the-workspace)
+says. The lists are the latest `skills.updated` event of the history, so
+each tab gets them, also while the cloud computer sleeps. A runner report
+passes the output filter first. That filter leaves out each skill whose
+name held a secret value. Then `skill-reports.ts` cuts each description.
+`skill-state.ts` stores the result, and it publishes `skills: null` when the
+list is unavailable. [Chat backend key code](key-code.md) gives both files.
 
 ## Tests
 
@@ -299,9 +315,34 @@ Native logins keep their existing cause text.
 `endpoint-models.test.ts` checks background dispatch, owner privacy, and both agents' failure text.
 `endpoint-logins.test.ts` checks queued turns, session metadata, and refused sends for invalid addresses.
 
-`runner-command-preparation.ts` owns the login and runner capability checks
-before dispatch. Own endpoints require support for the agent's API-key
+`runner-command-preparation.ts` owns the login, runner capability, and
+repository folder checks before dispatch. Own endpoints require support for the agent's API-key
 mode. `runner-delivery.ts` owns the prepared command's send.
+
+`runner-input.ts` keeps only `fileServer: true` from a runner hello.
+A missing or false value announces no file server. A value of another
+type logs `runner_file_server_invalid` through `warnWorker`, without the
+value, and leaves the hello valid. `ActiveRunner` and
+`runner-connection-store.ts` keep the announcement across a native socket
+wake. A saved connection without the field announces no file server.
+The [workspace features](../features/README.md) use the current connection
+to gate files preview opens. The
+[file server protocol](../../docs/protocol/file-server.md) gives its rules.
+
+`readRunnerEventIdentity` in `runner-event-identity.ts` reads the identity of
+each runner event for refusal, repair, and turn-context checks. Its policy,
+derived from the shared runner types, gives each known `RunnerEvent['type']`
+the scope `turn` or `workspace`. It also gives the source of the session and
+the turn: the event root, the nested `start`, or none. The reader takes them
+only from that source. A `workspace` event has no source, so it gets no
+session and no turn, also when its payload names them.
+
+A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
+names that public type. The reader takes its session and turn only from an
+object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
+from the saved assembly of its stream, as [Chat backend key code](key-code.md)
+says. An event of an unknown type keeps its root IDs. Each check uses a
+session and a turn only when `verifiedTurn` finds that turn in that session.
 
 ## Related docs
 

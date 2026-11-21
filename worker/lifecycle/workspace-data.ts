@@ -18,6 +18,12 @@ import {
   type WorkspaceCapabilities,
 } from '../../src/shared/secrets'
 import { creationPreapprovals } from '../secrets/capabilities-writes'
+import {
+  parentDepthStatement,
+  requireWorkspaceParentDepth,
+  workspaceInsertStatement,
+  type WorkspaceParent,
+} from './workspace-insert-data'
 
 const columns = `w.id, w.number, w.org_id AS orgId, w.repository_id AS repositoryId,
   w.section_id AS sectionId, w.parent_workspace_id AS parentId, w.owner_user_id AS ownerUserId,
@@ -138,38 +144,9 @@ export async function insertWorkspace(
       'section_not_found',
       'The section is not available.',
     )
-  await db.batch([
-    db
-      .prepare(
-        `WITH destination AS (
-         SELECT COALESCE((SELECT section_id FROM workspaces WHERE org_id = ? AND id = ?), ?) AS section_id
-       ) INSERT INTO workspaces (id, org_id, repository_id, owner_user_id, section_id, parent_workspace_id,
-       name, branch, branch_placeholder, base_branch, provider_account, mac_access, state, created_at, updated_at, last_activity_at, position)
-       SELECT ?, ?, ?, ?, destination.section_id, ?, ?, ?, 1, ?, ?, ?, 'starting', ?, ?, ?,
-         (SELECT COALESCE(MIN(position) - 1, 0) FROM workspaces
-          WHERE org_id = ? AND section_id = destination.section_id AND archived_at IS NULL AND state != 'archived')
-       FROM destination WHERE ${activeOrgIdPredicate('?')}`,
-      )
-      .bind(
-        input.orgId,
-        input.parentId ?? null,
-        section.id,
-        input.id,
-        input.orgId,
-        input.repositoryId,
-        input.user.id,
-        input.parentId ?? null,
-        input.name ?? '',
-        input.branch,
-        input.baseBranch ?? null,
-        input.providerAccount,
-        Number(capabilities.macAccess),
-        input.now,
-        input.now,
-        input.now,
-        input.orgId,
-        input.orgId,
-      ),
+  const results = await db.batch<WorkspaceParent>([
+    parentDepthStatement(db, input.orgId, input.parentId),
+    workspaceInsertStatement(db, input, section.id, capabilities.macAccess),
     db
       .prepare(
         `INSERT INTO workspace_runtime (workspace_id, org_id, created_by_user_id, session_id, first_turn_id, agent, model, effort, fast, first_message_id, repository_locations_json)
@@ -200,6 +177,8 @@ export async function insertWorkspace(
     }),
   ])
   await requireActiveOrg(db, input.orgId)
+  if (input.parentId !== undefined)
+    requireWorkspaceParentDepth(results[0].results[0] ?? null)
   return leasedImage(db, input.orgId, input.id)
 }
 
@@ -235,6 +214,7 @@ export async function deleteProvisionalWorkspace(
   ])
 }
 
+/** Timing `records` of starts go to D1 in the same batch as the state. */
 export async function persistLifecycleState(
   db: D1Database,
   input: {
@@ -248,8 +228,9 @@ export async function persistLifecycleState(
     error: { code: string; message: string } | null
   },
   now: number,
+  records: readonly D1PreparedStatement[] = [],
 ): Promise<void> {
-  await db
+  const update = db
     .prepare(
       `UPDATE workspaces SET state = ?, running_since = ?, last_activity_at = ?, stopped_at = ?,
      next_disk_keepalive_at = ?, last_error_code = ?, last_error_message = ?, updated_at = MAX(updated_at, ?)
@@ -270,7 +251,8 @@ export async function persistLifecycleState(
       input.workspaceId,
       input.orgId,
     )
-    .run()
+  if (records.length) await db.batch([update, ...records])
+  else await update.run()
 }
 
 export async function revokeWorkspacePreviews(

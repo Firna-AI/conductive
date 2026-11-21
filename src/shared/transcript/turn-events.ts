@@ -120,7 +120,7 @@ export function endLostTurn(
 
 /**
  * The text item of an agent message: a part adds to its earlier text. The
- * item stays completed once its `assistant.completed` event came.
+ * item stays complete once its `assistant.completed` event came.
  */
 export function agentItem(
   items: readonly TranscriptItem[],
@@ -131,16 +131,11 @@ export function agentItem(
   const previous = current?.kind === 'agent' ? current.text : ''
   const text =
     event.type === 'assistant.delta' ? previous + event.text : event.text
-  const completed =
-    event.type === 'assistant.completed' ||
-    (current?.kind === 'agent' && current.completed === true)
-  return {
-    kind: 'agent',
-    id,
-    turnId: event.turnId,
-    text,
-    ...(completed ? { completed: true as const } : {}),
-  }
+  const item = { kind: 'agent' as const, id, turnId: event.turnId, text }
+  const done = current?.kind === 'agent' && current.complete === true
+  return event.type === 'assistant.completed' || done
+    ? { ...item, complete: true }
+    : item
 }
 
 function writeAgent(

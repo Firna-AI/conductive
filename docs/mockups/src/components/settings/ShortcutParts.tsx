@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
 import type { TabBrowser } from '../../fixtures/shortcutHosts'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { KeyChips, spokenShortcut, type Shortcut } from '../common/KeyChips'
+import { spokenShortcut, type Shortcut } from '../common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { Linked, ScreenLink } from '../common/ScreenLink'
+import { instanceKey, shortcutKey } from '../../instanceKey'
 import styles from './ShortcutsSections.module.css'
 
 /**
@@ -67,7 +69,11 @@ export function KeyButton(props: {
     : ''
   const name = `Change ${spokenShortcut(props.shortcut)} for ${props.label}${kept}`
   const chips = (
-    <KeyChips dimmed={props.keptBy !== undefined} shortcut={props.shortcut} />
+    <keyChips.Component
+      dimmed={props.keptBy !== undefined}
+      moklyInstance={`${instanceKey(props.label)}-${shortcutKey(props.shortcut)}`}
+      shortcut={props.shortcut}
+    />
   )
   if (props.to) {
     return (
@@ -92,7 +98,10 @@ export function Recorder(props: { shortcut?: Shortcut }) {
   return (
     <span className={styles.recorder}>
       {props.shortcut ? (
-        <KeyChips shortcut={props.shortcut} />
+        <keyChips.Component
+          moklyInstance="recorded"
+          shortcut={props.shortcut}
+        />
       ) : (
         'Press the keys'
       )}
@@ -104,7 +113,9 @@ export function Recorder(props: { shortcut?: Shortcut }) {
 export function CancelButton(props: { to: string }) {
   return (
     <ScreenLink asChild to={props.to}>
-      <ActionButton tone="plain">Cancel</ActionButton>
+      <actionButton.Component moklyInstance="cancel-recording" tone="plain">
+        Cancel
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -116,12 +127,13 @@ export function CancelButton(props: { to: string }) {
  */
 export function RemoveButton(props: { shortcut: Shortcut; label: string }) {
   return (
-    <ActionButton
+    <actionButton.Component
       accessibilityLabel={`Remove ${spokenShortcut(props.shortcut)} from ${props.label}`}
+      moklyInstance="remove-shortcut"
       tone="plain"
     >
       Remove
-    </ActionButton>
+    </actionButton.Component>
   )
 }
 
@@ -135,11 +147,12 @@ export function ConflictActions(props: { held: HeldShortcut; label: string }) {
   return (
     <>
       <Linked to={held.replaceTo}>
-        <ActionButton
+        <actionButton.Component
           accessibilityLabel={`Replace: move ${spokenShortcut(held.shortcut)} from ${held.owner} to ${props.label}`}
+          moklyInstance="replace-shortcut"
         >
           Replace
-        </ActionButton>
+        </actionButton.Component>
       </Linked>
       <CancelButton to={held.cancelTo} />
     </>
@@ -150,7 +163,9 @@ export function ConflictActions(props: { held: HeldShortcut; label: string }) {
 export function ConflictLine(props: { held: HeldShortcut }) {
   return (
     <RowMessage tone="warning">
-      {props.held.owner} uses <KeyChips shortcut={props.held.shortcut} />.
+      {props.held.owner} uses{' '}
+      <keyChips.Component moklyInstance="held" shortcut={props.held.shortcut} />
+      .
     </RowMessage>
   )
 }
@@ -162,7 +177,9 @@ export function ConflictLine(props: { held: HeldShortcut }) {
  */
 export function RefusedLine(props: { refused: RefusedShortcut }) {
   const { label, shortcut } = props.refused
-  const keys = <KeyChips shortcut={shortcut} />
+  const keys = (
+    <keyChips.Component moklyInstance="refused" shortcut={shortcut} />
+  )
   return (
     <RowMessage tone="info">
       {label === undefined ? (

@@ -1,9 +1,9 @@
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { defaultChoice, fastChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
-import { ModelPicker } from '../chat/ModelPicker'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
 import { useControlSizes } from '../common/touch'
-import { Section } from './Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import styles from './AccountSections.module.css'
 
 /**
@@ -57,12 +57,17 @@ export function DefaultsSection(props: {
   fastMenu?: boolean
 }) {
   return (
-    <Section description="How you start new workspaces." title="New workspaces">
+    <section.Component
+      description="How you start new workspaces."
+      moklyInstance="new-workspaces"
+      title="New workspaces"
+    >
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
-        <ModelPicker
+        <modelPicker.Component
           choice={props.fastMenu ? fastChoice : defaultChoice}
-          open={props.fastMenu}
+          moklyInstance="default-model"
+          open={props.fastMenu === true}
           placement="below-start"
         />
         <span className={styles.defaultsLabel}>{viewLabel}</span>
@@ -73,6 +78,6 @@ export function DefaultsSection(props: {
           />
         </div>
       </div>
-    </Section>
+    </section.Component>
   )
 }

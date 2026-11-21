@@ -114,9 +114,18 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
         token: string(record(turn.credential).token),
       }),
     ).toMatchObject({ ok: true, login: { secret: 'adapter-secret' } })
+    // This runner sent no skills report before `runner.ready`.
+    const unavailable = record(await browserInbox.next())
+    expect(unavailable).toMatchObject({
+      type: 'event',
+      envelope: {
+        eventNumber: 4,
+        event: { type: 'skills.updated', skills: null },
+      },
+    })
     expect(await browserInbox.next()).toMatchObject({
       type: 'event',
-      envelope: { eventNumber: 4, event: { type: 'message.sent' } },
+      envelope: { eventNumber: 5, event: { type: 'message.sent' } },
     })
     runner.send(
       JSON.stringify({
@@ -141,7 +150,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
     expect(await browserInbox.next()).toMatchObject({
       type: 'event',
       envelope: {
-        eventNumber: 5,
+        eventNumber: 6,
         event: { type: 'assistant.delta', text: 'Stored in SQLite' },
       },
     })
@@ -171,14 +180,14 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
     expect(await browserInbox.next()).toMatchObject({
       type: 'event',
       envelope: {
-        eventNumber: 6,
+        eventNumber: 7,
         event: { type: 'turn.completed', state: 'finished' },
       },
     })
     expect(await browserInbox.next()).toMatchObject({
       type: 'event',
       envelope: {
-        eventNumber: 7,
+        eventNumber: 8,
         event: { type: 'session.updated', session: { activeTurnId: null } },
       },
     })
@@ -209,17 +218,17 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
     expect(history.status).toBe(200)
     const body: unknown = await history.json()
     expect(body).toMatchObject({
-      throughEventNumber: 9,
+      throughEventNumber: 10,
       events: expect.arrayContaining([
         expect.objectContaining({
-          eventNumber: 5,
+          eventNumber: 6,
           event: expect.objectContaining({ text: 'Stored in SQLite' }),
         }),
       ]),
     })
     expect(
       array(record(body).events, record).map(({ eventNumber }) => eventNumber),
-    ).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    ).toEqual([1, 2, 3, 5, 6, 7, 8, 9, 10])
     expect(JSON.stringify(body)).not.toContain('adapter-secret')
     await verifyAdapterRestart(
       runtime,
@@ -227,6 +236,7 @@ it('serves the actual Durable Object with SQLite storage and authenticated WebSo
       sessionId,
       body,
       string(turn.turnId),
+      [unavailable.envelope],
     )
     await verifyBrowserWake(runtime, headers)
   } finally {

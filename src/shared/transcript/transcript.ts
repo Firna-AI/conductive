@@ -6,7 +6,7 @@ import type { MessageSender } from '../generated/MessageSender'
 import type { UserMessage } from '../generated/UserMessage'
 import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
-import { continuedKey, userKey } from './item-keys'
+import { continuedKey, repositoryChangedKey, userKey } from './item-keys'
 import { hasEnded, noteTurn, takeMessage, type KnownTurn } from './known-turns'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
@@ -22,10 +22,10 @@ export type TranscriptItem =
       turnId: string
       text: string
       /**
-       * The agent finished the message: its `assistant.completed` event
-       * came. A message that the agent still writes has no mark.
+       * Set when `assistant.completed` gave the whole text of the message.
+       * A message that the agent still writes has no mark.
        */
-      completed?: true
+      complete?: true
     }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }
   | {
@@ -66,6 +66,18 @@ export type TranscriptItem =
       member: MessageSender
       branch: string
       baseBranch: string
+    }
+  | {
+      /**
+       * The note of a repository change, at its place in the chat: the
+       * member who changed it, the new repository, and the new branch. It
+       * belongs to no turn.
+       */
+      kind: 'repository-changed'
+      id: string
+      member: MessageSender
+      repository: { id: string; fullName: string }
+      branch: string
     }
 
 export interface RunningTurn {
@@ -110,6 +122,16 @@ export const emptyTranscript: Transcript = {
   stopRequests: {},
 }
 
+/** The transcript with a note at the end, or in the place of its repeat. */
+function withNote(transcript: Transcript, item: TranscriptItem): Transcript {
+  const index = transcript.items.findIndex((entry) => entry.id === item.id)
+  const items =
+    index < 0
+      ? [...transcript.items, item]
+      : replaceAt(transcript.items, index, item)
+  return { ...transcript, items }
+}
+
 /**
  * Applies the note of Continue at its place in the event order. Each new
  * branch has one note in a session, so a repeat of the note replaces it.
@@ -118,19 +140,31 @@ function foldContinued(
   transcript: Transcript,
   event: Extract<ChatEvent, { type: 'workspace.continued' }>,
 ): Transcript {
-  const item: TranscriptItem = {
+  return withNote(transcript, {
     kind: 'continued',
     id: continuedKey(event.branch),
     member: event.member,
     branch: event.branch,
     baseBranch: event.baseBranch,
-  }
-  const index = transcript.items.findIndex((entry) => entry.id === item.id)
-  const items =
-    index < 0
-      ? [...transcript.items, item]
-      : replaceAt(transcript.items, index, item)
-  return { ...transcript, items }
+  })
+}
+
+/**
+ * Applies the note of a repository change at its place in the event order.
+ * Each new branch of a repository has one note in a session, so a repeat of
+ * the note replaces it.
+ */
+function foldRepositoryChanged(
+  transcript: Transcript,
+  event: Extract<ChatEvent, { type: 'workspace.repository-changed' }>,
+): Transcript {
+  return withNote(transcript, {
+    kind: 'repository-changed',
+    id: repositoryChangedKey(event.repository.id, event.branch),
+    member: event.member,
+    repository: event.repository,
+    branch: event.branch,
+  })
 }
 
 /**
@@ -149,6 +183,8 @@ export function foldEvent(
   switch (event.type) {
     case 'workspace.continued':
       return foldContinued(transcript, event)
+    case 'workspace.repository-changed':
+      return foldRepositoryChanged(transcript, event)
     case 'session.updated':
       return foldRecord(transcript, event.session)
     case 'runner.event-refused':

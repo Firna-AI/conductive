@@ -203,12 +203,12 @@ export class WorkspaceModel {
 
   reassigned(workspace: Workspace): void {
     this.org.workspaceActions.reassigned(workspace)
-    this.order.local(workspaceMetadata({ owner: workspace.owner }), false)
+    this.order.local(workspaceMetadata({ owner: workspace.owner }), 'none')
   }
 
   /** Takes the name that the list's Rename action already confirmed. */
   renamed(workspace: Workspace): void {
-    this.order.local(workspaceMetadata({ name: workspace.name }), false)
+    this.order.local(workspaceMetadata({ name: workspace.name }), 'none')
   }
 
   /**
@@ -261,10 +261,12 @@ export class WorkspaceModel {
     // A read that is newer than the stream can name output that no read mark
     // covers yet. It clears after the stream and a mark reach its number.
     if (this.order.through > this.stream.last.get()) return
-    this.order.local((current) =>
-      current.workspace.state === 'unread'
-        ? { ...current, workspace: { ...current.workspace, state: 'ready' } }
-        : current,
+    this.order.local(
+      (current) =>
+        current.workspace.state === 'unread'
+          ? { ...current, workspace: { ...current.workspace, state: 'ready' } }
+          : current,
+      'read',
     )
   }
 }

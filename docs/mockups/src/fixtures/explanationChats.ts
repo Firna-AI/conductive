@@ -6,9 +6,9 @@
  * the production database, so the agent asks to run with a secret.
  */
 
+import { bullets, code, item, p } from './agentText'
 import type { ChatItem, ToolCallItem } from './conversations'
 import { writtenPrompt } from './explanations'
-import { bullets } from './listConversations'
 import { agent, call, run, working } from './secretChatParts'
 import { replicaRequest } from './secretRequests'
 
@@ -38,12 +38,16 @@ function end(id: string, duration: string): ChatItem {
   return { kind: 'turn-end', id, duration, files: [] }
 }
 
-const answerStart =
-  'When the places proxy finds no address, `useAddressAutocomplete` returns no suggestions. The street, city, and'
+const answerStart = [
+  'When the places proxy finds no address, ',
+  code('useAddressAutocomplete'),
+  ' returns no suggestions. The street, city, and',
+] as const
 
 const answer = agent(
   'explain-answer',
-  `${answerStart} postcode fields then stay empty and editable, so you type the address yourself, as before this change.`,
+  ...answerStart,
+  ' postcode fields then stay empty and editable, so you type the address yourself, as before this change.',
 )
 
 const answered: readonly ChatItem[] = [
@@ -72,14 +76,29 @@ const longAnswer: ChatItem = {
   kind: 'agent',
   id: 'explain-long',
   blocks: [
-    'Manual entry is the fallback for any address that the places proxy cannot find.',
-    bullets(
-      '`useAddressAutocomplete` asks the proxy after each pause in typing. When nothing matches, the proxy returns an empty list.',
-      'With an empty list, `AddressForm` shows no suggestions, and the street, city, and postcode fields stay editable.',
-      'The form sends what you typed, as it did before this change.',
-      'The old postcode lookup used to fill the city from the postcode. It is gone, so the city stays as you type it.',
+    p(
+      'Manual entry is the fallback for any address that the places proxy cannot find.',
     ),
-    'The test "keeps manual entry when nothing matches" in `tests/checkout/address.test.ts` covers this path, with a stub proxy that returns no addresses.',
+    bullets(
+      item(
+        code('useAddressAutocomplete'),
+        ' asks the proxy after each pause in typing. When nothing matches, the proxy returns an empty list.',
+      ),
+      item(
+        'With an empty list, ',
+        code('AddressForm'),
+        ' shows no suggestions, and the street, city, and postcode fields stay editable.',
+      ),
+      item('The form sends what you typed, as it did before this change.'),
+      item(
+        'The old postcode lookup used to fill the city from the postcode. It is gone, so the city stays as you type it.',
+      ),
+    ),
+    p(
+      'The test "keeps manual entry when nothing matches" in ',
+      code('tests/checkout/address.test.ts'),
+      ' covers this path, with a stub proxy that returns no addresses.',
+    ),
   ],
 }
 
@@ -89,7 +108,7 @@ export const explanationChats = {
     prompt,
     readHook,
     readForm,
-    agent('explain-answer', answerStart),
+    agent('explain-answer', ...answerStart),
     working('9s'),
   ],
   answered,

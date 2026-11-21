@@ -9,11 +9,20 @@ import {
 
 const MISSING_FOLDERS = 'Missing workspace repository folders'
 
-/** The workspace captures its image folders once. Resume never reads the picker. */
-export async function workspaceRepositoryLocations(
+interface LocationRow {
+  locationsJson: string | null
+  repositoryId: string
+  orgId: string
+  fullName: string
+  defaultBranch: string
+  repositoriesJson: string | null
+  plannedLocationsJson: string | null
+}
+
+async function readLocationRow(
   db: D1Database,
   workspaceId: string,
-): Promise<RepositoryLocation[]> {
+): Promise<LocationRow> {
   const row = await db
     .prepare(
       `SELECT r.repository_locations_json AS locationsJson, w.repository_id AS repositoryId,
@@ -25,16 +34,12 @@ export async function workspaceRepositoryLocations(
     WHERE r.workspace_id = ?`,
     )
     .bind(workspaceId)
-    .first<{
-      locationsJson: string | null
-      repositoryId: string
-      orgId: string
-      fullName: string
-      defaultBranch: string
-      repositoriesJson: string | null
-      plannedLocationsJson: string | null
-    }>()
+    .first<LocationRow>()
   if (!row) throw new Error(MISSING_FOLDERS)
+  return row
+}
+
+function recordedLocations(row: LocationRow): RepositoryLocation[] | null {
   if (row.locationsJson !== null)
     return readRepositoryLocations(JSON.parse(row.locationsJson))
   if (row.repositoriesJson !== null)
@@ -42,14 +47,75 @@ export async function workspaceRepositoryLocations(
       row.plannedLocationsJson,
       readRepositories(JSON.parse(row.repositoriesJson)),
     )
-  return legacyRepositoryLocations([
-    {
-      id: row.repositoryId,
-      orgId: row.orgId,
-      fullName: row.fullName,
-      defaultBranch: row.defaultBranch,
-    },
-  ])
+  return null
+}
+
+/** The workspace captures its image folders once. Resume never reads the picker. */
+export async function workspaceRepositoryLocations(
+  db: D1Database,
+  workspaceId: string,
+): Promise<RepositoryLocation[]> {
+  const row = await readLocationRow(db, workspaceId)
+  return (
+    recordedLocations(row) ??
+    legacyRepositoryLocations([
+      {
+        id: row.repositoryId,
+        orgId: row.orgId,
+        fullName: row.fullName,
+        defaultBranch: row.defaultBranch,
+      },
+    ])
+  )
+}
+
+/**
+ * The recorded folders of a workspace, or null for a workspace with no
+ * record of its folders, such as one created before 7 November 2026. Its
+ * folders then come only from its current repository.
+ */
+export async function recordedRepositoryLocations(
+  db: D1Database,
+  workspaceId: string,
+): Promise<RepositoryLocation[] | null> {
+  return recordedLocations(await readLocationRow(db, workspaceId))
+}
+
+/**
+ * The repositories that the sandbox of a workspace holds, by ID, for the
+ * repository menu. Null when the workspace has no record of its folders, or
+ * no folders yet. A failed read warns and also gives null.
+ */
+export async function heldRepositoryIds(
+  db: D1Database,
+  workspaceId: string,
+): Promise<string[] | null> {
+  try {
+    const locations = await recordedRepositoryLocations(db, workspaceId)
+    return locations && locations.map((location) => location.repositoryId)
+  } catch (error) {
+    if (!(error instanceof Error && error.message === MISSING_FOLDERS))
+      console.warn('Unreadable repository folder', error)
+    return null
+  }
+}
+
+/**
+ * The stored folders of a workspace, or null while it has none, such as
+ * before its first start. Any other failure warns and also gives null, so
+ * its callers go on without the folders.
+ */
+export async function storedRepositoryLocations(
+  db: D1Database,
+  workspaceId: string,
+): Promise<RepositoryLocation[] | null> {
+  try {
+    return await workspaceRepositoryLocations(db, workspaceId)
+  } catch (error) {
+    if (!(error instanceof Error && error.message === MISSING_FOLDERS))
+      console.warn('Unreadable repository folder', error)
+    return null
+  }
 }
 
 /**
@@ -61,14 +127,14 @@ export async function workspaceRepositoryFolder(
   db: D1Database,
   workspace: { id: string; repositoryId: string },
 ): Promise<string | null> {
+  const locations = await storedRepositoryLocations(db, workspace.id)
+  if (!locations) return null
   try {
-    const locations = await workspaceRepositoryLocations(db, workspace.id)
     return repositoryLocation(locations, workspace.repositoryId)
   } catch (error) {
-    // A workspace that has not started has no folders yet. Any other
-    // failure only costs the chips of absolute paths, so the reply goes on.
-    if (!(error instanceof Error && error.message === MISSING_FOLDERS))
-      console.warn('Unreadable repository folder', error)
+    // A missing folder only costs the chips of absolute paths, so the
+    // reply goes on.
+    console.warn('Unreadable repository folder', error)
     return null
   }
 }

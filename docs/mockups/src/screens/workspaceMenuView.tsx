@@ -1,22 +1,19 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { FailureToast } from '../components/common/FailureToast'
+import { failureToast } from '../entries/components/common/FailureToast.mockup'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
-import { ArchivedToast } from '../components/workspace/ArchivedToast'
+import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
 import {
   rowControls,
   type RowFocus,
 } from '../components/workspaces/rowControls'
 import {
+  archivedRows,
   suspendedSections,
   workspaceSections,
   type SidebarSection,
   type WorkspaceRow,
 } from '../components/workspaces/sections'
-import {
-  archivedWorkspaceList,
-  keptArchives,
-} from '../fixtures/archivedWorkspaces'
 import {
   memberViewer,
   people,
@@ -27,7 +24,7 @@ import { suspendedOrg } from '../fixtures/orgs'
 import { defaultSection, sections } from '../fixtures/sections'
 import { workspaceList } from '../fixtures/workspaces'
 import { menuTarget, offline } from '../fixtures/workspaceMenu'
-import { WorkspaceMenuSheet } from './listSheets'
+import { workspaceMenuSheet } from '../entries/components/screens/listSheets.mockup'
 import {
   scenarios,
   type Scenario,
@@ -50,20 +47,6 @@ export type MenuListView = {
   /** A phone sheet, or a toast. */
   over: ReactNode
 }
-
-/**
- * The archived workspaces of Acme. Those of the last 14 days offer Restore
- * on their rows.
- */
-export const archivedRows: readonly WorkspaceRow[] = archivedWorkspaceList.map(
-  (workspace) => ({
-    workspace,
-    status: 'archived',
-    github: workspace.github,
-    selected: false,
-    restoreOpen: keptArchives.has(workspace.key),
-  }),
-)
 
 /**
  * An org whose only section is General: Acme after an admin deleted
@@ -95,7 +78,7 @@ function rowsOf(
   if (list === 'suspended') return { sections: suspendedSections() }
   if (list === 'general-only') return { sections: generalOnlySections() }
   if (scenario.archived === 'open') {
-    return { sections: workspaceSections(), archived: archivedRows }
+    return { sections: workspaceSections(), archived: archivedRows() }
   }
   const target = scenario.target ?? menuTarget
   const isTarget = (row: WorkspaceRow) => row.workspace.key === target
@@ -113,18 +96,22 @@ function rowsOf(
     }
   }
   if (scenario.archived !== 'after-archive') return { sections: all }
-  // The archive took the workspace from its section to the Archived group,
-  // which stays collapsed, because the workspace is not open.
+  // The archive took the workspace from its section to the top of the
+  // Archived group, which stays collapsed, because the workspace is not
+  // open. Its count holds only the archived workspaces of the last 14 days.
   const gone = all.flatMap((item) => item.rows).filter(isTarget)
   return {
     sections: all.map((item) => ({
       ...item,
       rows: item.rows.filter((row) => !isTarget(row)),
     })),
-    archived: gone.map((row): WorkspaceRow => ({
-      ...changedNow(row, 'archived'),
-      restoreOpen: true,
-    })),
+    archived: [
+      ...gone.map((row): WorkspaceRow => ({
+        ...changedNow(row, 'archived'),
+        restoreOpen: true,
+      })),
+      ...archivedRows(),
+    ],
     archivedCollapsed: true,
   }
 }
@@ -146,7 +133,12 @@ export function sheetOf(view: Omit<MenuListView, 'over'>): ReactNode {
     readOnly: false,
     sheet: true,
   })?.open
-  return open ? <WorkspaceMenuSheet menu={open} /> : null
+  return open ? (
+    <workspaceMenuSheet.Component
+      menu={open}
+      moklyInstance="workspace-menu-sheet"
+    />
+  ) : null
 }
 
 function overOf(
@@ -162,8 +154,9 @@ function overOf(
       return viewport === 'mobile' ? sheetOf(view) : null
     case 'rename-failed':
       return (
-        <FailureToast
+        <failureToast.Component
           message={offline}
+          moklyInstance="rename-failed"
           phone={viewport === 'mobile'}
           title="The workspace wasn't renamed."
         />
@@ -172,7 +165,11 @@ function overOf(
       // Archive took the workspace to the Archived group at once, and its
       // toast offers Restore.
       return target ? (
-        <ArchivedToast name={target.name} phone={viewport === 'mobile'} />
+        <archivedToast.Component
+          moklyInstance="archived-toast"
+          name={target.name}
+          phone={viewport === 'mobile'}
+        />
       ) : null
   }
 }

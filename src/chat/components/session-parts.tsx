@@ -1,16 +1,12 @@
 import type { ReactNode } from 'react'
 import type { Session } from '../../shared/generated/Session'
-import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
-import type { TranscriptInsert } from '../../shared/transcript/transcript-entries'
 import { failedFirstStart } from '../../app/first-start'
 import { pendingCommandItems } from '../device/PendingCommands'
-import { sessionCommands } from '../device/session-commands'
-import { sessionSecrets } from '../secrets/session-secrets'
 import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import type { ComposerTool } from './ComposerTools'
-import { SandboxBar, StartingCard, type SandboxProblem } from './SandboxState'
-import { sourceInsert } from './SourceLine'
+import { SandboxBar, StartingCard, workspaceProblemOf } from './SandboxState'
+import { useTranscriptInputs } from './transcript-inputs'
 import { WaitingRequests } from './WaitingRequests'
 
 /**
@@ -32,12 +28,6 @@ export interface ChatHost {
   tools?: readonly ComposerTool[]
 }
 
-function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
-  return state === 'stopped' || state === 'error' || state === 'archived'
-    ? state
-    : null
-}
-
 /**
  * The start steps and the sandbox bar: the host's, or the chat's own. A
  * read-only chat without a host shows only the bar of an archived
@@ -54,7 +44,7 @@ export function sandboxParts(props: {
   if (props.host) return props.host
   const { snapshot, controller } = props
   const { workspace } = snapshot
-  const problem = problemOf(workspace?.state)
+  const problem = workspaceProblemOf(workspace?.state)
   const readOnly = props.readOnly ?? false
   const firstStart = failedFirstStart(workspace, snapshot.start)
   return {
@@ -79,12 +69,14 @@ export function sandboxParts(props: {
 
 /**
  * The parts of the chat of one session that its tab and the popover of an
- * explanation share: the lines and the cards at their places in the
- * transcript, which are the link of a linked session to its source, the
- * Mac commands, and the secret requests, and the requests that wait for an
- * answer just above the field. A read-only workspace takes no answer.
+ * explanation share: the inputs of its transcript, as `useTranscriptInputs`
+ * says, which are the lines and the cards at their places in the
+ * transcript, its readers, and Try again, and the requests that wait for an
+ * answer just above the field. The lines and the cards are the link of a
+ * linked session to its source, the Mac commands, and the secret requests.
+ * A read-only workspace takes no answer.
  */
-export function sessionParts(props: {
+export function useSessionParts(props: {
   snapshot: ChatSnapshot
   controller: ChatController
   sessionId: string | null
@@ -92,39 +84,37 @@ export function sessionParts(props: {
   session: Session | null
   state: SessionState
   readOnly: boolean
-  /** Opens a session that a line names, such as the source of a link. */
-  onOpenSession: (sessionId: string) => void
-}): { inserts: TranscriptInsert<ReactNode>[]; waiting: ReactNode } {
-  const { snapshot, controller, session, state, readOnly } = props
-  const id = props.sessionId
+  /**
+   * Opens a session that a line names, such as the source of a link. The
+   * tab shows that session in its own tab without it.
+   */
+  onOpenSession?: (sessionId: string) => void
+}) {
+  const { snapshot, controller, readOnly } = props
+  const { commands, secrets, inserts, readers, onRetry } = useTranscriptInputs(
+    snapshot,
+    controller,
+    props.sessionId,
+    props.session,
+    props.state,
+    readOnly,
+    props.onOpenSession,
+  )
   const viewerId = snapshot.account?.user.id ?? null
-  const commands = sessionCommands(snapshot, id, state)
-  const secrets = sessionSecrets(snapshot, id, state, {
-    choices: !readOnly,
-    onAnswer: (requestId, answer) =>
-      void controller.answerSecret(requestId, answer),
-  })
-  const source = sourceInsert(snapshot, session, props.onOpenSession)
-  return {
-    inserts: [
-      ...(source ? [source] : []),
-      ...commands.inserts,
-      ...secrets.inserts,
-    ],
-    waiting: (
-      <WaitingRequests
-        items={[
-          ...pendingCommandItems({
-            devices: snapshot.devices,
-            onAnswer: (requestId, action) =>
-              void controller.answerCommand(requestId, action),
-            readOnly,
-            readers: { viewerId, orgName: snapshot.org?.name ?? null },
-            requests: commands.waiting,
-          }),
-          ...secrets.waiting,
-        ]}
-      />
-    ),
-  }
+  const waiting = (
+    <WaitingRequests
+      items={[
+        ...pendingCommandItems({
+          devices: snapshot.devices,
+          onAnswer: (requestId, action) =>
+            void controller.answerCommand(requestId, action),
+          readOnly,
+          readers: { viewerId, orgName: snapshot.org?.name ?? null },
+          requests: commands.waiting,
+        }),
+        ...secrets.waiting,
+      ]}
+    />
+  )
+  return { inserts, readers, onRetry, waiting }
 }

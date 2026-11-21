@@ -11,7 +11,8 @@ import {
 } from 'lucide-react'
 import type { ToolCallItem, ToolKind } from '../../fixtures/conversations'
 import { classes } from '../common/classes'
-import { LeftOut } from './LeftOut'
+import { leftOut as leftOutPart } from '../../entries/components/chat/LeftOut.mockup'
+import { instanceKey } from '../../instanceKey'
 import { leftOutOfCall, leftOutOfRun } from './lostCopy'
 import styles from './ToolGroup.module.css'
 
@@ -42,13 +43,16 @@ export function CallLine(props: { call: ToolCallItem }) {
         <span className={styles.detail}>{call.detail}</span>
       ) : null}
       {call.omittedDetailBytes ? (
-        <LeftOut text={leftOutOfCall(call.omittedDetailBytes)} />
+        <leftOutPart.Component
+          moklyInstance={`left-out-${instanceKey(call.id)}`}
+          text={leftOutOfCall(call.omittedDetailBytes)}
+        />
       ) : null}
       {call.status === 'running' ? (
         <Spinner color={theme.colors.muted} size={12} />
       ) : null}
       {call.status === 'stopped' ? (
-        <span className={styles.detail}>Stopped</span>
+        <span className={styles.ending}>Stopped</span>
       ) : null}
     </>
   )
@@ -92,7 +96,12 @@ export function FoldLine(props: {
           })}
         </span>
       ) : null}
-      {leftOut > 0 ? <LeftOut text={leftOutOfRun(leftOut)} /> : null}
+      {leftOut > 0 ? (
+        <leftOutPart.Component
+          moklyInstance="run-left-out"
+          text={leftOutOfRun(leftOut)}
+        />
+      ) : null}
     </summary>
   )
 }

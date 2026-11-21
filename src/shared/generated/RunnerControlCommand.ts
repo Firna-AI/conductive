@@ -3,9 +3,14 @@ import type { RunnerChangeModel } from './RunnerChangeModel.js'
 import type { RunnerFileCommand } from './RunnerFileCommand.js'
 import type { RunnerInterrupt } from './RunnerInterrupt.js'
 import type { RunnerReportRefresh } from './RunnerReportRefresh.js'
+import type { RunnerRepositoryMove } from './RunnerRepositoryMove.js'
 
 /**
  * RunnerControlCommand wire alternatives.
  */
 export type RunnerControlCommand =
-  RunnerInterrupt | RunnerChangeModel | RunnerFileCommand | RunnerReportRefresh
+  | RunnerInterrupt
+  | RunnerChangeModel
+  | RunnerFileCommand
+  | RunnerReportRefresh
+  | RunnerRepositoryMove

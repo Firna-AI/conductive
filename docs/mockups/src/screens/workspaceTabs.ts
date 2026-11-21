@@ -1,5 +1,5 @@
 import { nameLabel } from '../../../../src/shared/name-label'
-import type { MenuEntry } from '../components/common/Menu'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
@@ -8,6 +8,7 @@ import {
   startedSession,
   workspaceSessions,
 } from '../fixtures/sessions'
+import { answerShot } from '../fixtures/answerFiles'
 import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
 import { previewTabLabel } from '../components/tools/previewCopy'
@@ -16,6 +17,7 @@ import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { explainTabs } from './explainModel'
+import { htmlTab } from './workspaceFileTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
 import { withTemporaryTab } from './workspaceTemporaryTab'
@@ -26,6 +28,15 @@ import { withTemporaryTab } from './workspaceTemporaryTab'
  */
 export function isNew(state: WorkspaceState): boolean {
   return state.workspace === 'saved-carts' || state.run !== undefined
+}
+
+/**
+ * A workspace with one session, whose tab takes the title of the
+ * workspace: a new one, and the removed Postcode lookup for the shipping
+ * and billing forms, which kept the one session that made it.
+ */
+function oneSession(state: WorkspaceState): boolean {
+  return isNew(state) || state.workspace === 'postcode-lookup'
 }
 
 /**
@@ -51,7 +62,7 @@ export function noMessages(state: WorkspaceState): boolean {
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
-export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+export function historyFor(state: WorkspaceState): readonly MenuEntryData[] {
   return isNew(state)
     ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
     : historyEntries
@@ -73,10 +84,10 @@ export function workspaceName(
 
 /**
  * The tab of an image file that the state opens: a picture of the branch,
- * an image whose bytes the browser cannot draw, or the copy of an attached
- * screenshot. A picture takes the icon that All files gives each other
- * file. A read of the copy names it by its file name, because no list
- * names it.
+ * an image whose bytes the browser cannot draw, the copy of an attached
+ * screenshot, or the screenshot of the agent. A picture takes the icon that
+ * All files gives each other file. A read of the copy names it by its file
+ * name, because no list names it.
  */
 function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
   const tab = (key: string, path: string, to: string): WorkspaceTab => ({
@@ -93,6 +104,8 @@ function pictureTab(state: WorkspaceState): WorkspaceTab | undefined {
       return tab('image', branchPictures.damaged, paths.imageNotDrawn)
     case 'attachment':
       return tab('copy', screenshotCopy.path, paths.attachmentOpen)
+    case 'screenshot':
+      return tab('screenshot', answerShot, paths.imageFromAnswer)
     default:
       return undefined
   }
@@ -126,23 +139,24 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * opens, and a move puts the code file between the two sessions. A tab
  * whose file name the app does not know shows "File". The one session of a
  * new workspace takes the title of the workspace, so its tab shows the same
- * name as the header, Untitled before the title comes. While the login of
- * the starter of the first session is not available, that first session
- * leads to its view for the member, beside the linked session. While the
- * starter keeps the login for their own messages, or after an admin removed
- * the org login of the session, the first session leads to that view.
- * After the second session sent its messages, the second
- * session can show, and each session tab leads to its chat of that time.
- * The file or the diff that the state opens can be the temporary tab, as
- * `withTemporaryTab` draws it. The Preview tabs show after the code file.
- * The tabs of the open explanations come last, as `explainTabs` says.
+ * name as the header, Untitled before the title comes, as `oneSession`
+ * says. While the login of the starter of the first session is not
+ * available, that first session leads to its view for the member, beside
+ * the linked session. While the starter keeps the login for their own
+ * messages, or after an admin removed the org login of the session, the
+ * first session leads to that view. After the second session sent its
+ * messages, the second session can show, and each session tab leads to its
+ * chat of that time. The file or the diff that the state opens can be the
+ * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
+ * after the code file. The tabs of the open explanations come last, as
+ * `explainTabs` says.
  */
 export function tabsFor(
   state: WorkspaceState,
   workspace: Workspace,
   running = false,
 ): WorkspaceTab[] {
-  if (isNew(state)) {
+  if (oneSession(state)) {
     const title = workspaceName(state, workspace)
     return [{ key: 'session', kind: 'session', title, selected: true, running }]
   }
@@ -179,6 +193,8 @@ export function tabsFor(
       selected: state.tab === 'code' || state.tab === 'code-lines',
     },
   ]
+  // A repository change closes the file tabs of the old repository.
+  if (state.repositoryMove === 'changed') tabs.pop()
   if (state.tabRow === 'full') tabs.push(...moreTabs)
   if (state.tab === 'markdown') {
     const to = paths.markdown
@@ -203,6 +219,8 @@ export function tabsFor(
   }
   const picture = pictureTab(state)
   if (picture) tabs.push(picture)
+  const html = htmlTab(state)
+  if (html) tabs.push(html)
   tabs.push(...previewTabs(state))
   if (state.tab === 'unnamed-file') {
     tabs.push({

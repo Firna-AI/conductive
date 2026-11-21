@@ -34,8 +34,10 @@ number names a dated record, as
 - A return through the sign-in callback was rejected. Reason: the callback
   refuses a GitHub reply that the app's own sign-in did not start.
 - [The Mac app](desktop-sign-in.md#github-app-install) has its own return.
-- The GitHub App sends pull request, check, status, and push webhooks to
-  the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+- The GitHub App sends pull request, check, status, push, and repository
+  webhooks to the Worker, at `https://api.conductive.build/v1/github/webhooks`.
+  [Repository changes on GitHub](repository-changes-on-github.md) says what
+  a repository webhook changes.
 - A pull request webhook can also start the runs of automations, as
   [Pull request runs](pull-request-runs.md) says.
 - The Worker accepts a GitHub webhook only with a valid GitHub signature.
@@ -289,11 +291,24 @@ marks a draft ready for review, continues, and archives.
   other check counts as passed.
 - The list mark of the workspace shows its
   [GitHub state](#the-github-state), the state of the bar, in the colour of
-  the bar, as [The list mark](workspace-life.md#the-list-mark) says.
+  the bar, as [The list mark](workspace-life.md#the-list-mark) says. While
+  the agent needs input, the mark is blue instead.
 
 ## The GitHub state
 
 [The GitHub state](github-summary.md) gives the requirements and their reasons.
+
+## The merge record
+
+- The Worker records each merged pull request of a workspace branch for
+  the Stats tab, as [The merge record](account-stats.md#the-merge-record)
+  says.
+- It records the merge when a read for a workspace finds the pull request
+  merged.
+- It also records the merge when GitHub sends the event of the merge,
+  also for an archived workspace, without a read from GitHub. Reason:
+  events do not reach an archived workspace, and a pull request can merge
+  on GitHub after its workspace is archived.
 
 ## Layouts
 

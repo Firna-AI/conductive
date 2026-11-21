@@ -40,7 +40,7 @@ function orgWorkspaces(source: PaletteSource): OrgWorkspaces {
     return noWorkspaces
   }
   const { sections, workspaces } = source.list.value
-  const groups = groupWorkspaces(sections, workspaces)
+  const groups = groupWorkspaces(sections, workspaces, source.listTime)
   return {
     sections: groups.sections.map((group) => ({
       label: group.section.name,
@@ -115,9 +115,7 @@ export function actionGroups(source: PaletteBase): PaletteGroup[] {
     )
     orgRows.push(...offeredRows(list))
   }
-  const others = source.orgs.filter(
-    (other) => !other.deletion && other.id !== org?.id,
-  )
+  const others = source.orgs.filter((other) => other.id !== org?.id)
   const window = offers.filter((offer) => offer.scope.kind === 'window')
   return [
     { label: workspace.name, rows: offeredRows(workspace.offers) },

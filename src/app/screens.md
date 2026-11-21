@@ -59,6 +59,12 @@ the Help row of the command palette opens.
   `AccountModel.repositories`, before the org exists. The create sends the
   GitHub IDs of the chosen ones. Create org stays off until the person
   chooses at least one, also while the list is empty or did not load.
+- Create org of an operator also offers the provider account of the org:
+  By weights, the default, or a configured account by its ID, from the
+  operator's providers reply. Only a chosen account goes into the create.
+  The create does not wait for that reply. Nobody else sees the choice or
+  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
 - The tile of the open org shows the colour of the org in its initials
@@ -97,7 +103,8 @@ the Help row of the command palette opens.
   closed while a change of the install script or of the repositories
   waits for a build.
 - A save of the install script and each repository save read the builds
-  again, so the notices and the build that an add starts show at once.
+  again, so the notices show at once. Done of the Repositories tab starts
+  the build of the added repositories, and the build shows at once.
 - A step of a panel, by a key or a drag, starts from the width that the
   panel shows. It stays in a range that holds that width, so a shrink
   never widens a panel that the layout shows narrower than its range. A
@@ -295,8 +302,8 @@ the Help row of the command palette opens.
   [Attached files of a draft](../chat/draft-files.md) says.
 - The page and the dialog have the Capabilities icon, the Blocks icon with
   its label as a native tooltip (secrets decision 6 G). On a computer the
-  page shows it after the attach button, and the dialog before it. Its
-  control opens above the icon. On a phone, one + button, "More options",
+  page and the dialog show it after the attach button. Its control opens
+  above the icon. On a phone, one + button, "More options",
   holds Attach files and Capabilities, which opens the control as a sheet
   (secrets decision 16 G). The control lists the secrets of the org, which
   it reads each time that it opens, with a checkbox that pre-approves each
@@ -306,6 +313,15 @@ the Help row of the command palette opens.
   the next draft starts again from the defaults. The create leaves out
   each pre-approved secret that the last read no longer lists, and a
   refusal of a missing secret reads the secrets again for Try again.
+- The automation page gives its owner the same icon before the model
+  picker, in the bar of the prompt box. Its control has the secrets part
+  only, with no Mac access. On a phone the icon stays in the bar and opens
+  the control as a sheet. A change of the checks turns Save on, and the
+  icon is off while a save runs. Under the prompt, every member reads the
+  line that names the chosen secrets. While the triggers hold a pull
+  request trigger, the pull request hint follows that line. For the owner,
+  both follow the form. For another member, both follow the saved
+  automation.
 - The Secrets tab of the org settings follows the Agents tab (secrets
   decisions 2, 3, and 6). Its rights come from `secretRights` in
   `permissions.ts`: every member adds secrets, a member replaces and

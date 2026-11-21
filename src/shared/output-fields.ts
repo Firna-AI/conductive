@@ -6,6 +6,7 @@ import type { FileResponse } from './generated/FileResponse'
 import type { FileTreeResponse } from './generated/FileTreeResponse'
 import type { RunnerFileEvent } from './generated/RunnerFileEvent'
 import type { RunnerEvent } from './generated/RunnerEvent'
+import type { AgentSkill } from './generated/AgentSkill'
 type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
@@ -42,6 +43,21 @@ function changedFile<T extends ChangedFile>(file: T, text: FilterText): T {
     file.previousDisplayPath === undefined
     ? result
     : { ...result, previousDisplayPath }
+}
+
+/**
+ * Leaves out each skill whose name held a hidden value, because its chip
+ * would name a skill that the agent does not have.
+ */
+function filterSkills(
+  skills: readonly AgentSkill[],
+  text: FilterText,
+): AgentSkill[] {
+  return skills.flatMap((skill) =>
+    text(skill.name) === skill.name
+      ? [{ ...skill, description: text(skill.description) }]
+      : [],
+  )
 }
 
 export function filterTree<T extends FileTreeResponse>(
@@ -151,6 +167,12 @@ export function filterOutput(
         name: port.name === null ? null : text(port.name),
         folder: port.folder === null ? null : text(port.folder),
       })),
+    }
+  if (event.type === 'skills.updated')
+    return {
+      ...event,
+      claude: filterSkills(event.claude, text),
+      codex: filterSkills(event.codex, text),
     }
   if (event.type === 'assistant.delta' || event.type === 'assistant.completed')
     return { ...event, text: text(event.text) }

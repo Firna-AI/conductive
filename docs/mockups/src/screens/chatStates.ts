@@ -8,7 +8,16 @@
  * names, with the lines in view and marked. An image of
  * the branch shows as its picture, or with the state of an image that the
  * browser cannot draw. `attachment` is the copy of an attached screenshot,
- * which a press on its sent chip opens. A phone shows a file in Files.
+ * which a press on its sent chip opens. `screenshot` is the screenshot of
+ * the agent, which a press on its picture in an answer opens. A phone shows
+ * a file in Files.
+ *
+ * `html` shows the HTML report of the context folder in Preview, with its
+ * page in a frame (HTML preview decision 1 A). `html-source` shows its text,
+ * `html-opening` the wait until its page loads, and
+ * `html-older-software` the notice of a cloud computer whose software
+ * cannot serve the files of the workspace yet. `html-failed` shows a
+ * preview that did not open, with the message of the server.
  *
  * `preview` shows the page of port 3000 in its Preview tab, beside the
  * Preview tab of port 6006 (decision 291). `preview-behind` shows the first
@@ -31,6 +40,12 @@ export const tabStates = [
   'image',
   'image-not-drawn',
   'attachment',
+  'screenshot',
+  'html',
+  'html-source',
+  'html-opening',
+  'html-older-software',
+  'html-failed',
   'preview',
   'preview-behind',
   'explanation',
@@ -113,6 +128,13 @@ export const composerStates = [
   'file-chips',
   'file-added',
   'file-chip-pointer',
+  'skill-query',
+  'skill-start',
+  'skill-loading',
+  'skill-unavailable',
+  'skill-none',
+  'skill-chip',
+  'skill-chip-pointer',
   'workspace-link-pointer',
   'attachment-pointer',
   'drop-over',

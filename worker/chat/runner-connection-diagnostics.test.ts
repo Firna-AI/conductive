@@ -28,12 +28,14 @@ it('warns once per runner connection and disconnect, including sockets without h
     workspaceId: 'unknown',
     connectionId: 'unknown',
     streamId: '12345678-1234-4234-8234-123456789abc',
+    processStartId: 'abcdef01-2345-4678-89ab-cdef01234567',
     protocolVersion: 2,
   }
   const hello = {
     type: 'hello',
     workspaceId: WORKSPACE_ID,
     streamId: metadata.streamId,
+    processStartId: metadata.processStartId,
     protocolVersion: 2,
   }
   const connected = {
@@ -73,8 +75,22 @@ it('warns once per runner connection and disconnect, including sockets without h
       [disconnected],
       [connected],
       [disconnected],
-      [{ ...connected, streamId: null, protocolVersion: null }],
-      [{ ...disconnected, streamId: null, protocolVersion: null }],
+      [
+        {
+          ...connected,
+          streamId: null,
+          processStartId: null,
+          protocolVersion: null,
+        },
+      ],
+      [
+        {
+          ...disconnected,
+          streamId: null,
+          processStartId: null,
+          protocolVersion: null,
+        },
+      ],
     ])
   } finally {
     await controls.captureWarnings(false)

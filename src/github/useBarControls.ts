@@ -1,7 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
 import { useWorkspaceStore } from '../app/workspace-store'
-import { BarActions, type BarActionsPorts } from './barActions'
+import { BarActions } from './barActions'
+import type { BarActionsPorts } from './barPorts'
 import { promptOf } from './barPrompts'
 import { barViewOf, type BarControls, type LocalWork } from './barView'
 import type { WorkspaceTarget } from './githubClient'
@@ -49,6 +50,7 @@ export interface BarScreen {
    * Shows the chat when a prompt did not go out, so the reason shows: the
    * session whose composer names a missing login or a failed send, or the
    * chat without an open session. A sent prompt keeps the view.
+   * The caller uses only a result from the connection of the press.
    */
   showChat: () => void
 }

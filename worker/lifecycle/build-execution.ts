@@ -21,7 +21,7 @@ import {
   recordSoftwarePackages,
 } from './build-command-data'
 import { completeBuildPhase } from './build-phase-data'
-import { recoverImageBuildAllocation } from './image-allocation'
+import { recoverImageBuildForCleanup } from './image-allocation'
 import { liveBuildComputers } from './computer-ledger'
 import { startAddedImageBuild } from './first-image-build'
 import { imageIsPublished } from './org-image-data'
@@ -79,7 +79,12 @@ export async function advanceBuildCommand(
     )
   const next: BuildPhase =
     job.phase === 'software' && job.kind !== 'refresh' ? 'install' : 'snapshot'
-  await completeBuildPhase(runtime.env.DB, job.buildId, next)
+  await completeBuildPhase(
+    runtime.env.DB,
+    job.buildId,
+    next,
+    runtime.dependencies.now(),
+  )
   return false
 }
 
@@ -101,7 +106,16 @@ export async function cleanupBuild(
       ...job,
       sandboxId:
         job.sandboxId ??
-        (await recoverImageBuildAllocation(runtime.env.DB, provider, job)),
+        (await recoverImageBuildForCleanup(
+          runtime.env.DB,
+          providerForAccount(
+            runtime.env,
+            runtime.dependencies.fetch,
+            job.providerAccount,
+            'cleanup',
+          ),
+          job,
+        )),
     }
     await updateBuildJob(runtime.env.DB, job.buildId, 'cleanup')
   }
@@ -175,12 +189,7 @@ export async function cleanupBuild(
   }
   await updateBuildJob(runtime.env.DB, job.buildId, 'done')
   await startAddedImageBuild(runtime, job)
-  await scheduleIdleImage(
-    runtime,
-    job.orgId,
-    jobSoftware(job),
-    job.providerAccount,
-  )
+  await scheduleIdleImage(runtime, job.orgId, jobSoftware(job))
   return true
 }
 

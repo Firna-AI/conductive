@@ -1,10 +1,10 @@
 import { defineScreen } from '@mokly/mokly'
 import { orgs } from '../../../../../fixtures/orgs'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 export const suspendedOrgLeave = defineScreen({
   title: 'Leave a suspended org',
@@ -31,6 +31,15 @@ export const suspendedOrgLeave = defineScreen({
       rationale:
         'A leave cannot simply be undone, because no admin can invite a person while the org is suspended. So the app asks first. The workspaces of a member who leaves move to the earliest active admin, as the rules of a leave say.',
       props: { dialog: 'leave-org' },
+    },
+    {
+      slug: 'leaving',
+      title: 'Leaving',
+      description:
+        'Priya pressed Leave org, and the leave runs. A spinner leads Leave org, and the question takes no change: Cancel is off, and Escape and a press outside do nothing. On a phone, the sheet stays open in the same way. When the leave is done, Get started opens.',
+      rationale:
+        'The question stays open until the leave is done, so the error of a failed leave shows in it.',
+      props: { dialog: 'leaving-org' },
     },
   ],
 })

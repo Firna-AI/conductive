@@ -7,6 +7,7 @@ import {
   transferredAttachments,
   type Attachment,
 } from './attachments'
+import { p } from './agentText'
 import type { ChatItem } from './conversations'
 
 /** The first answer of the agent to the message with the screenshot. */
@@ -15,7 +16,9 @@ const filesAnswer: readonly ChatItem[] = [
     kind: 'agent',
     id: 'files-plan',
     blocks: [
-      "The screenshot shows the suggestions over the postcode field, and the log has no errors. So I'll fix the layout of the form.",
+      p(
+        "The screenshot shows the suggestions over the postcode field, and the log has no errors. So I'll fix the layout of the form.",
+      ),
     ],
   },
   {

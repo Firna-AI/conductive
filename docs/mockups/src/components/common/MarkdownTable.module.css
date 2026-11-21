@@ -21,12 +21,18 @@
   font-size: var(--ui-text-sm);
 }
 
+/*
+ * Each cell stands at the top of its row, so a cell of one line stays level
+ * with the first line of a higher cell, from item 12 B of the Markdown
+ * plan.
+ */
 .table th,
 .table td {
   padding: 5px 10px;
   border-right: 1px solid var(--ui-border);
   border-bottom: 1px solid var(--ui-border);
   text-align: left;
+  vertical-align: top;
 }
 
 .table th {

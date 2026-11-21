@@ -1,25 +1,49 @@
 import type { ReactNode } from 'react'
+import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark.mockup'
 import { repositories } from '../../fixtures/repositories'
 import {
   shownShortcut,
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
-import { GitHubMark } from '../common/GitHubMark'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
+import type { Shortcut } from '../common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
+import { instanceKey } from '../../instanceKey'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
-import { OrgTile } from '../orgs/OrgTile'
-import { activityPresentation, listMarkLabel } from '../workspaces/status'
-import { WorkspaceMark } from '../workspaces/WorkspaceMark'
+import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
+import { listMarkLabel } from '../workspaces/status'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../workspaces/WorkspaceName'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
-import { EmptyTab, NoResults } from './PaletteEmpty'
-import { PaletteStatusPart } from './PaletteStatus'
+import {
+  emptyTab,
+  noResults,
+} from '../../entries/components/palette/PaletteEmpty.mockup'
+import { paletteStatusPart } from '../../entries/components/palette/PaletteStatus.mockup'
+import { defined } from '../../defined'
 import styles from './CommandPalette.module.css'
 
-function Lead(props: { lead: CommandLead }) {
+/**
+ * The look of the name of a workspace in each state, as in the list: the
+ * strong weight for unread output, and the muted colour while the workspace
+ * is stopped or archived.
+ */
+const nameEmphasis: EmphasisClasses = {
+  strong: styles.strong,
+  dim: styles.dim,
+}
+
+function Lead(props: {
+  lead: CommandLead
+  /** The key of the row, which names its mark for Mokly. */
+  name: string
+}) {
   const { lead } = props
   switch (lead.kind) {
     case 'icon': {
@@ -27,9 +51,21 @@ function Lead(props: { lead: CommandLead }) {
       return <Icon aria-hidden className={styles.icon} size={14} />
     }
     case 'org':
-      return <OrgTile org={lead.org} size={16} />
+      return (
+        <orgTile.Component
+          moklyInstance={`org-${props.name}`}
+          org={lead.org}
+          size={16}
+        />
+      )
     case 'github':
-      return <GitHubMark className={styles.icon} size={14} />
+      return (
+        <githubMark.Component
+          className={styles.icon}
+          moklyInstance={`github-${props.name}`}
+          size={14}
+        />
+      )
   }
 }
 
@@ -66,10 +102,11 @@ function shortcutOf(row: PaletteRow, keys?: PaletteKeys): Shortcut | undefined {
 
 /**
  * One result. A workspace shows its list mark, its name, its repository,
- * and the age of its last activity, as the list does. When the query
- * matches the label of its number, the label leads the name, as in a chip.
- * A command shows its icon, its label, the page of a setting in a mixed
- * list, and its key.
+ * and the age of its last activity, as the list does. `WorkspaceName` gives
+ * the name the look of the state, as in the list. When the query matches
+ * the label of its number, the label leads the name, as in a chip. A
+ * command shows its icon, its label, the page of a setting in a mixed list,
+ * and its key.
  */
 function Row(props: {
   row: PaletteRow
@@ -79,23 +116,29 @@ function Row(props: {
   const { row, highlighted } = props
   if (row.kind === 'workspace') {
     const { workspace, status, github, to } = row.row
-    const presentation = activityPresentation[status]
     return (
       <RowLink
-        className={classes(
-          styles.row,
-          styles[presentation.emphasis],
-          highlighted && styles.highlighted,
-        )}
+        className={classes(styles.row, highlighted && styles.highlighted)}
         to={to}
       >
         <span className={styles.lead}>
-          <WorkspaceMark github={github} status={status} />
+          {/* Each workspace shows once in a tab, so its key names its mark. */}
+          <workspaceMark.Component
+            github={github}
+            moklyInstance={`palette-${workspace.key}`}
+            status={status}
+          />
         </span>
         {row.number ? (
           <span className={styles.number}>{row.number}</span>
         ) : null}
-        <span className={styles.label}>{workspace.name}</span>
+        <WorkspaceName
+          className={styles.label}
+          emphasis={nameEmphasis}
+          status={status}
+        >
+          {workspace.name}
+        </WorkspaceName>
         <span className={styles.repository}>
           {repositories[workspace.repository].name}
         </span>
@@ -105,19 +148,23 @@ function Row(props: {
     )
   }
   const { command, detail } = row
+  const name = instanceKey(command.label)
   return (
     <RowLink
       className={classes(styles.row, highlighted && styles.highlighted)}
       to={command.to}
     >
       <span className={styles.lead}>
-        <Lead lead={command.lead} />
+        <Lead lead={command.lead} name={name} />
       </span>
       <span className={styles.label}>{command.label}</span>
       {detail ? <span className={styles.detail}>{detail}</span> : null}
       {props.shortcut ? (
         <span className={styles.keys}>
-          <KeyChips shortcut={props.shortcut} />
+          <keyChips.Component
+            moklyInstance={`keys-${name}`}
+            shortcut={props.shortcut}
+          />
         </span>
       ) : null}
     </RowLink>
@@ -136,12 +183,12 @@ export function PaletteResults(props: {
   content: PaletteContent
   keys?: PaletteKeys
 }) {
-  const { groups, query, empty, status } = props.content
+  const { groups, query, empty, status, tab } = props.content
   if (groups.length === 0 && !status) {
     return empty ? (
-      <EmptyTab line={empty} />
+      <emptyTab.Component line={empty} />
     ) : (
-      <NoResults
+      <noResults.Component
         hint="Try a workspace name, a branch, or a repository."
         query={query}
       />
@@ -150,7 +197,11 @@ export function PaletteResults(props: {
   const first = groups[0]?.rows[0]
   return (
     <div className={styles.results} data-mokly-scroll="palette-results">
-      <PaletteStatusPart content={props.content} />
+      <paletteStatusPart.Component
+        query={query}
+        tab={tab}
+        {...defined({ status })}
+      />
       {groups.map((group) => (
         <section
           aria-label={group.label}

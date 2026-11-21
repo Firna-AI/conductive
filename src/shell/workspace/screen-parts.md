@@ -49,9 +49,25 @@ says.
 - A click on a session tab, a new session, or a reopened session makes
   that session the active tab of the view. The address then goes back to
   the chat.
+- `RestoreShownTab` of `restore-tab.tsx` shows the active tab of the
+  saved view again when the screen opens at the address of the workspace
+  alone, as a click on its row in the list does. When that tab is a file,
+  diff, or Preview tab, its address replaces the address of the workspace.
+  It decides once, when the chat first knows the view, so a later move to
+  the address of the workspace, such as a click on a session tab, shows
+  the chat. Such a later move, such as a move back in the browser
+  history, also saves the shown session as the active tab. An address that names a
+  view or a session, a move of the address before the view is known, a
+  phone, and an archived workspace keep the address, as
+  [The tab row](../../../docs/protocol/tab-row.md#the-shown-tab-at-a-return)
+  says. The screen keeps the arrival address in a `TabRestore` for its
+  whole show, so a switch between the phone and the desktop layout
+  restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
-  temporary tab also clears its mark.
+  temporary tab also clears its mark. While the temporary tab shows,
+  Escape closes it in the same way, through `usePageEscape` of the
+  [shortcut layer](../shortcuts/README.md#escape-on-the-page).
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -63,6 +79,13 @@ says.
   shows the right column on desktop, or the Files tab on a phone.
 - An archived workspace shows no file tabs and no file page, and its chat
   gets no files.
+- A record of the workspace with another repository closes each file and
+  diff tab of the view, because its path belongs to the old folder, as
+  [After the change](../../../docs/protocol/repository-change.md#after-the-change)
+  says. The chat then shows the chat of its session, and it saves the
+  view. `LeaveMovedFiles` of `files/moved-files.tsx` replaces a file or
+  diff address with the chat on desktop, and with the Files tab on a
+  phone.
 - The screen gives each of its parts one link opener, `WorkspaceLinks` of
   `link-opening.tsx`, through `LinkOpeningProvider` of
   `../ui/text-links.tsx`. So the links of chat text open as
@@ -164,6 +187,8 @@ Each folder of a path is a part of the address. Another address under
   of the saved view too, though the row of a phone shows no file tabs.
 - The links of the file preview open through the one link opener of the
   screen, as [The chat of the workspace](#the-chat-of-the-workspace) says.
+  The tab of an HTML file shows its page as
+  [The tabs of HTML files](html-tabs.md) says.
 - The lists show while the sandbox is stopped or failed, from the copy
   that the workspace keeps. While the sandbox starts, and while the app
   refuses its start, the sandbox panel shows in place of All files and
@@ -191,10 +216,16 @@ Each folder of a path is a part of the address. Another address under
   Resume.
 - A switch between the preview and the source keeps the tab, so it starts
   nothing. The address of the screen at its first show starts nothing
-  there either, because the open of the workspace resumes the sandbox.
+  there either, because the open of the workspace resumes the sandbox. The
+  address of a restored tab counts as that first address, through
+  `replaceWithoutVisit` of `tab-visits.ts`, so it starts nothing too.
 - A Restore moves no address, so it starts nothing, also while the address
   names a file or diff tab. The next visit that opens a tab resumes the
   sandbox.
+- After a repository change, the kept files mark the tree as unavailable,
+  drop the changes, and read the changes again, as
+  [Store rules](../../files/store.md) says. The reports of the new folder
+  then replace both lists.
 - The kept files, Copy, and Download use the services of the org, as
   [the Files screens](../../files/README.md#integration) say.
 - The tabs of All files, Changes, and Checks name the keys of Go to All
@@ -229,6 +260,12 @@ through them while the workspace loads.
 - A GitHub state of another branch than the workspace's, such as the merged
   state just after Continue, shows as loading. The store then reads the
   state of the branch once.
+- The list mark of the workspace shows the GitHub state of this store
+  while the screen shows it, in the list, the palette, and the chips. So
+  the mark changes with the bar, and does not wait for the next read of
+  the list. `LiveGitHubStates` in `src/app/live-github.ts` puts the state
+  over the summary of each list read, because the Worker copies a new
+  state to the list only after its event.
 - On desktop, the bar tops the right column, with its main action and the
   line of a refusal or a stop under it. The number of a pull request links
   to it on GitHub. After a merge, its Archive archives
@@ -243,7 +280,9 @@ through them while the workspace loads.
 - An agent action sends its prompt through `WorkspaceContext.chat`. A prompt
   that did not go out shows the chat of its session, where the composer
   names the cause: the chat in place of a file on desktop, and the chat tab
-  on a phone.
+  on a phone. A failure that arrives after the screen closed, or after the
+  branch changed, keeps the view and selects no session, as
+  [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
   local work. `LocalWorkList` of the mockups lists that work, as in the
   mockup of the question.

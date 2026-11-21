@@ -12,7 +12,7 @@ import {
 } from '../components/ChatNotices'
 import {
   sandboxParts,
-  sessionParts,
+  useSessionParts,
   type ChatHost,
 } from '../components/session-parts'
 import {
@@ -92,7 +92,7 @@ export function PopoverChat(props: PopoverChatProps) {
   // The bar of a sandbox that does not run takes the place of the field, as
   // in a tab. A read-only workspace shows no field, so no bar either.
   const down = readOnly || (sandboxBar !== null && !keepsComposer)
-  const parts = sessionParts({
+  const parts = useSessionParts({
     snapshot,
     controller,
     sessionId,
@@ -142,6 +142,7 @@ export function PopoverChat(props: PopoverChatProps) {
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
           onConnectAgent={props.onConnectAgent}
+          watch={controller.watchMissingLogin}
         />
       ) : null}
       {!down && session && !block && login?.kind === 'linked' ? (
@@ -184,10 +185,7 @@ export function PopoverChat(props: PopoverChatProps) {
         onOpenDiff={props.onOpenDiff}
         onRetry={props.onRetry}
         pending={state.pending}
-        readers={{
-          viewerId: snapshot.account?.user.id ?? null,
-          members: snapshot.members,
-        }}
+        readers={parts.readers}
         readOnly={readOnly}
         retrying={state.retrying}
         transcript={state.transcript}

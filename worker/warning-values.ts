@@ -1,4 +1,10 @@
+import { d1ErrorReason, type D1ErrorReason } from './d1-errors'
 import { HttpError } from './http'
+import {
+  type MailDiagnosticFields,
+  mailDiagnosticFields,
+} from './mail-diagnostics'
+import { MailDeliveryError } from './mail-sender'
 import { ProviderError } from './sandbox/errors'
 import { CommandFailed } from './warnings'
 
@@ -44,6 +50,13 @@ export class WarningStreamId {
   }
 }
 
+/** A diagnostic value cannot reject a hello or prevent saved connection restore. */
+export function warningProcessStartId(value: unknown): string | null {
+  if (value === undefined || value === null) return null
+  return WarningStreamId.checked(typeof value === 'string' ? value : 'unknown')
+    .text
+}
+
 export function warningProtocolVersion(value: number | null): number | null {
   return value !== null && Number.isSafeInteger(value) && value > 0
     ? value
@@ -59,12 +72,28 @@ export function warningTurnEndState(
   return TURN_END_STATES.find((state) => state === value) ?? 'unknown'
 }
 
+/**
+ * Fixed provider codes that may appear in logs. The codes after
+ * `delete_confirmation_required` are the Boat codes that say why a create,
+ * a resume, or a fork failed.
+ */
 const PROVIDER_CODES = [
   'invalid_path',
   'invalid_name',
   'not_found',
   'save_in_progress',
   'delete_confirmation_required',
+  'resume_failed',
+  'sandbox_stopping',
+  'snapshot_data_expired',
+  'type_too_small',
+  'no_ready_machine',
+  'rate_limited',
+  'limit_reached',
+  'member_limit_reached',
+  'machine_class_plan_required',
+  'environment_forbidden',
+  'unknown_environment',
 ] as const
 
 const HTTP_CODES = [
@@ -74,6 +103,8 @@ const HTTP_CODES = [
   'org_suspended',
   'user_suspended',
   'workspace_archived',
+  'nesting_cycle',
+  'nesting_limit',
   'workspace_start_failed',
   'workspace_start_stopped',
   'image_build_failed',
@@ -87,6 +118,9 @@ const HTTP_CODES = [
   'current_turn_required',
   'github_reconnect_required',
   'github_refresh_failed',
+  'attachment_copy_failed',
+  'attachment_missing',
+  'attachment_not_found',
 ] as const
 
 export type WarningCode = (typeof HTTP_CODES)[number] | 'unknown'
@@ -124,10 +158,14 @@ export type ErrorSummary =
       exitCode: number | null
       timedOut: boolean
     }
+  | { kind: 'd1'; reason: D1ErrorReason }
+  | ({ kind: 'mail' } & MailDiagnosticFields)
   | { kind: 'error' | 'unknown' }
 
 /** Keep fixed error kinds, allowlisted codes and states, and numeric outcomes. */
 export function errorSummary(error: unknown): ErrorSummary {
+  if (error instanceof MailDeliveryError)
+    return { kind: 'mail', ...mailDiagnosticFields(error.diagnostic) }
   if (error instanceof ProviderError)
     return {
       kind: 'provider',
@@ -145,5 +183,7 @@ export function errorSummary(error: unknown): ErrorSummary {
       exitCode: error.exitCode,
       timedOut: error.timedOut,
     }
+  const reason = d1ErrorReason(error)
+  if (reason) return { kind: 'd1', reason }
   return { kind: error instanceof Error ? 'error' : 'unknown' }
 }

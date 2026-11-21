@@ -27,7 +27,7 @@ import {
 } from './drafts'
 import { resumeFiles } from './attachment-actions'
 import { showTarget, takeReply, type SendingView } from './linked-replies'
-import { postMessage, sendFailedTitle } from './message-send'
+import { postMessage, showSendFailed } from './message-send'
 import { confirmWorkspace } from './workspace-records'
 
 function change(
@@ -124,7 +124,7 @@ export async function sendDraft(
         ? { ...back, ...failSentDraft(back, request.attachmentIds, error) }
         : back
     })
-    showNotice(context, holder, sendFailedTitle, error)
+    showSendFailed(context, holder, request.id, error)
     return
   }
   changeDraft(context, draftId, afterSend)

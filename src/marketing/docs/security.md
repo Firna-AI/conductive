@@ -40,6 +40,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
+| A repository change's fetch | The GitHub account of the member who changes the repository |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -74,6 +75,7 @@ It reaches repositories that both the GitHub account and the GitHub App can reac
 GitHub checks the clicking member's access and branch rules for a merge.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
+Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.
 
 ## Understand what agents can reach
 
@@ -86,11 +88,15 @@ That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
 The workspace tools can list workspaces and usable repositories, sections, and models.
+They list repositories in the org's order.
 They can also list sessions and previews.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
-They can also list the names and descriptions of the org's secrets, without values.
-Agents can read archived workspaces and closed sessions, but cannot send messages to them.
+They can also list each org secret's name, description, and environment variable name, without its value.
+Agents can read archived and removed workspaces by ID.
+Workspace lists leave out removed workspaces unless the agent asks for them.
+Agents can also read closed sessions.
+They cannot send messages to archived or removed workspaces or closed sessions.
 The tools reach only the org of the calling workspace.
 
 A workspace token is a credential that lets programs use these tools.
@@ -180,26 +186,37 @@ Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud c
 ChatGPT sign-in needs agent software that supports its temporary credentials.
 If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
+Older agent software could expose the saved login itself.
+Updating or resuming that computer does not revoke a login that someone copied earlier.
+If a login was exposed, revoke it with its provider.
+Removing a login from Account does not revoke a copy held elsewhere.
+
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue also brings the clicking member's GitHub token into the cloud computer while it fetches the latest default branch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
 Code or members with terminal access can read that token during the fetch.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-The computer also uses a credential for its connection to Conductive.
-A copy of that credential can still expose later turn credentials in another member's workspace.
+The computer also uses its workspace token for its connection to Conductive.
+Programs and members with terminal access can read or copy it.
+A copy can still expose later turn credentials and GitHub tokens in another member's workspace.
+This remains possible after removal or suspension.
 
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
 Archive stops its cloud computer and ends that workspace's connection access.
 It also revokes that workspace's token, including copies used to read other chats.
-Conductive keeps its files for 14 days.
+The cloud computer keeps its disk files for 14 days.
 Those files can still hold copied credentials during that window.
+Restore leaves the computer stopped.
+Its next resume gives it a new workspace token.
+Archive and Restore do not revoke logins or GitHub tokens already copied elsewhere.
 
 - [Replace an agent login](/docs/agent-logins#replace-or-remove-a-login)
 - [Manage an org login](/docs/agent-logins#use-an-org-login)
 - [Archive a workspace](/docs/workspaces#archive-a-workspace)
+- [Build the current computer setup](/docs/cloud-computer#apply-setup-changes)
 
 ## Understand environment values
 
@@ -222,14 +239,14 @@ An `author` or `committer` setting in the repository or in the global Git settin
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, and program names and folders in **Preview**.
+The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
 It starts on for a new variable.
 Conductive hides these values in program names and folders before shortening them for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
 Changed or encoded values can still appear.
-File content, diff content, downloaded files, and Terminal do not hide secret values.
+File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
@@ -242,34 +259,69 @@ Values show as dots.
 An admin can reveal one value at a time, also of a secret that another member added.
 Every member sees who revealed a value last, and when.
 
-An agent gets a secret's value only for one command.
-The command gets the value, and the agent sees only the name.
+An agent can ask to run one command with a secret.
+The command gets the value.
+The agent gets the secret's name and environment variable name, without the value.
 Each session needs a member's approval, unless the secret is for **All agents** or pre-approved in the workspace's **Capabilities**.
 Any member who sees the session can allow the request.
 The approval lasts for that session.
-Every member can remove approvals in **Capabilities**.
+Every member can remove an approval under **This session** in **Capabilities**, beside the message box of that session.
+**Capabilities** lists only the approvals of the session where you open it.
+To see the approvals of another session, open that session.
+**Capabilities** hides an approval while the secret is for **All agents** or pre-approved.
+The approval stays, and it shows again when that ends.
 
 A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
-An automation run follows the same rules.
-Text in a pull request can steer its agent to use the secrets that need no new approval.
+An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
 
 While a command runs with a secret, its value is on the cloud computer.
 Programs and members with terminal access can read it then.
 A command can also write it to a file.
 During a turn, a program on the computer can run its own command with each secret that the session may use.
-Conductive hides exact copies of a value in the command's output and in the chat.
+Conductive hides exact copies of a value in the command's output and in the text of the chat.
+Pictures in agent replies do not hide values.
 Changed or encoded values can still appear, also to the agent and its model provider.
 
 - [Add secrets for agents](/docs/cloud-computer#add-secrets-for-agents)
 
+## Choose secrets for automation runs
+
+The owner of an automation can choose org secrets in **Capabilities** on the automation page, beside the model picker.
+Every member sees the chosen secret names under the prompt.
+Only the owner changes the selection.
+Each run workspace starts with those secrets pre-approved.
+Conductive records the owner as the member who approved them.
+
+Agents in every session of that workspace can use them without a new request.
+The same selection serves schedules, pull request triggers, and **Run now**.
+Requests for other secrets still wait for a member, unless another approval allows them.
+
+These pre-approvals stay in a run workspace that you keep.
+Every member can remove them in that workspace's **Capabilities**.
+Changing the automation's selection affects only later run workspaces.
+It does not remove pre-approvals from earlier runs.
+A workspace that the run's agent creates gets no copied pre-approvals.
+
+Text in a pull request, such as a comment or review, can steer the agent to use these secrets.
+The automation page warns every member about this risk when the automation has a pull request trigger and a chosen secret.
+The member who added a chosen secret, or an admin, can replace its value.
+Later runs then use the new value.
+**Mac access** stays off in each new run workspace.
+
 ## Understand previews and Mac commands
 
-Preview apps run on a separate domain from Conductive.
+Preview apps and the pages of HTML files run on a separate domain from Conductive.
 Opening a preview needs your sign-in and workspace access.
 Its address alone does not grant access to another person.
 Closing a preview or stopping the computer ends that preview's access.
 Your browser can still keep the preview files that it loaded, as the preview app's cache rules allow.
+
+The page of an HTML file can load the files of the workspace's repository.
+It cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
+Its scripts can read the files that it can load and send them to another site.
+A secret in a file with another name, such as `key.pem`, stays readable to those scripts.
+Preview only HTML files whose scripts you trust.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
@@ -287,6 +339,7 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 - [Control Mac command permissions](/docs/mac-app#change-saved-permissions)
 - [Use port previews](/docs/terminal-and-previews#preview-a-running-app)
+- [Preview an HTML file](/docs/files-and-changes#preview-an-html-file)
 
 ## Keep the work you need
 
@@ -300,7 +353,10 @@ Restore returns the workspace stopped.
 
 Restore ends after 14 days.
 Conductive then deletes the computer and its files.
-Its chat remains read-only after deletion.
+The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
+A direct link or a chat link still opens its read-only chat.
+The bar says **Removed on** followed by the removal date.
+Conductive keeps its chat history until the org is deleted.
 
 Deleting an org stops its computers and starts a seven-day restore window.
 After that window, deletion removes its data and computers.

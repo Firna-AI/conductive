@@ -4,6 +4,112 @@ D1 applies SQL files in filename order. Each filename starts with a full
 date, hour, and minute: `YYYYMMDDHHMM_description.sql`.
 Never change a migration that has merged or has been applied to a shared database.
 
+## Keep the previous Worker working
+
+Each migration keeps the previous Worker working on the new schema. The
+previous Worker is the version that was live before the deploy.
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says when and for how long it runs on the new schema.
+
+- Do not rename or drop a table, a column, an index, or a trigger that the
+  previous Worker uses.
+- Do not add a check, a `NOT NULL` column without a default, or a unique
+  rule that rejects a write of the previous Worker.
+- Do not rewrite stored values into a form that the previous Worker cannot
+  read.
+- A rebuild of a table is safe when it keeps every name, every column,
+  every default, every unique rule, and every value that the previous
+  Worker reads or writes.
+
+A rename or a drop takes two pull requests:
+
+1. The first pull request keeps the old name working for the previous
+   Worker. Its own Worker code does not read or write the old name, because
+   that code is the previous Worker at the second deploy. It also adds a
+   follow-up item of the kind Post-merge task under `plans/follow-ups/`.
+   The item names the old name and each part of the compatibility path,
+   and asks for their removal.
+   - For a rename, the migration adds the new name and copies the rows.
+     The old table or column stays a real table or column. Triggers copy
+     each write from one name to the other, in both directions. So each
+     Worker sees the rows that the other one writes. Guard each trigger, so
+     that a copied write does not copy back or fail on the row that exists.
+   - Do not replace the old table with a view. D1 counts no changed rows
+     for a write through the triggers of a view. An upsert on a view fails
+     with `cannot UPSERT a view`.
+   - For a drop, the Worker code stops each use of the old name. When the
+     schema rejects a write without the old column, the migration first
+     makes the column accept a missing value, for example with a rebuild.
+2. The second pull request does that follow-up item. It removes the
+   compatibility path and drops the old name with a new migration. It
+   merges only after the deploy of the first pull request has been live
+   for at least one hour. The next deploy can apply its migrations about
+   5 minutes after the first upload, while old Durable Objects still run
+   the Worker from before the first pull request. Two merges close together
+   can also deploy in one run, because GitHub keeps only the newest
+   waiting deploy.
+
+When a migration cannot keep the previous Worker working, ask the user
+before it merges. Then name it in the pull request description and in
+[When a deploy fails](../docs/automatic-deploys.md#when-a-deploy-fails).
+
+## Reserved ranges
+
+Each milestone owns the complete inclusive range below.
+Use a free minute in that range for each new migration.
+These reservations keep concurrent branches from choosing the same prefix.
+UI and wiring milestones normally need no migration. Their ranges stay reserved.
+
+| Milestone | Inclusive prefix range |
+| --- | --- |
+| 4a Contracts | `202611060100`–`202611060159` |
+| 5 Lifecycle | `202611070000`–`202611070059` |
+| 6 App shell | `202611070100`–`202611070159` |
+| 7r Runner | `202611070200`–`202611070259` |
+| 7 Chat backend | `202611070300`–`202611070359` |
+| 8 Chat UI | `202611070400`–`202611070459` |
+| 8i Chat wiring | `202611070500`–`202611070559` |
+| 16a First deployment | `202611070600`–`202611070659` |
+| 9 Files backend | `202611070700`–`202611070759` |
+| 10 Files UI | `202611070800`–`202611070859` |
+| 11 Tools backend | `202611070900`–`202611070959` |
+| 12 Tools UI | `202611071000`–`202611071059` |
+| 13 GitHub backend | `202611071100`–`202611071159` |
+| 14 GitHub UI | `202611071200`–`202611071259` |
+| 15 Agent tools | `202611071300`–`202611071359` |
+| 15a Members backend | `202611071400`–`202611071459` |
+| 15c Members UI | `202611071500`–`202611071559` |
+| 15i Feature wiring | `202611071600`–`202611071659` |
+| 15d Marketing | `202611071700`–`202611071759` |
+| 15e Mac app | `202611072000`–`202611072059` |
+| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
+| 15o Org suspension | `202611080000`–`202611080059` |
+| Agent tool lists and names | `202611081300`–`202611081359` |
+| Workspace link chips | `202611091200`–`202611091259` |
+| Chat attachment metadata | `202611081800`–`202611081859` |
+| Preferences and New workspace dialog | `202611082300`–`202611082359` |
+| Codex logins | `202611100000`–`202611100059` |
+| Computer ledger account merge | `202611100900`–`202611100959` |
+| Software image for first builds | `202611101200`–`202611101259` |
+| 16 Deployment | `202611071800`–`202611071859` |
+| 17 Verification | `202611071900`–`202611071959` |
+| Automations: records and routes | `202611101300`–`202611101359` |
+| Automations: runs and Run now | `202611101400`–`202611101459` |
+| Automations: pull request runs | `202611101500`–`202611101559` |
+| Keyboard shortcuts storage | `202611101600`–`202611101659` |
+| Agent workspace calls | `202611111200`–`202611111259` |
+| Parallel image sources | `202611161200`–`202611161259` |
+| Sub-workspaces | `202611161700`–`202611161759` |
+
+## Key code
+
+- [The test harness](../worker/test-support/harness.ts) applies every SQL
+  migration in filename order to a fresh local D1 database.
+- [Shared contracts](../src/shared/) define the browser and runner payloads.
+- Run `npm run db:migrate` to apply the migrations to local development storage.
+
+## The migrations
+
 `202611060000_worker_core.sql` creates sign-in and the first org records.
 `202611060100_contracts.sql` adds the tables used by the feature backends.
 It keeps existing rows and gives each existing org its General section.
@@ -21,8 +127,10 @@ Existing users get empty values in all four columns.
 A build now records that phase before it asks for its build sandbox, and an older job in `create` may have sent that request already.
 So a build whose create reply was lost finds that sandbox again. When the user who started the build is suspended, the build then removes that sandbox.
 
-Chat history, sessions, runner event cursors, start steps, and banner state
-belong to workspace Durable Object storage. They have no D1 tables.
+Chat history, sessions, runner event cursors, the shown start steps, and
+banner state belong to workspace Durable Object storage. They have no D1
+tables. The job step records of `202611201500_job_step_times.sql` copy the
+times of the start steps for measurement.
 Stored secrets use ciphertext columns. The browser reads metadata, except
 when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
@@ -164,6 +272,20 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
+`202611101100_org_provider_assignment.sql` adds the fixed provider account
+of each org. Existing rows receive `boat`. New production writes name the
+selected account explicitly. The migration also creates the singleton
+assignment weights setting, with `boat` at 100%, and its change events.
+Each setting change can retain its operator and time. Operator references
+become null after account deletion. Existing org, resource, and computer
+ledger records and triggers stay in place.
+
+`202611101110_e2b_provider_state.sql` adds E2B create claims, encrypted traffic tokens,
+and the mapping from app snapshot names to provider snapshot IDs.
+Claims precede provider mutations. They survive ambiguous replies and org removal.
+Completed deletions retain tombstones so old requests cannot allocate again.
+The [E2B client](../worker/sandbox/e2b/README.md) gives the recovery behavior.
+
 `202611101200_software_images.sql` adds `software_images`, which owns each
 software image attempt and its provider account, version, artifact, phase,
 resources, output, and deploy token digest. A partial unique index allows
@@ -179,6 +301,19 @@ runs the apt part once. A build job also keeps an empty version when two
 starts of its software command carried different apt parts.
 [Image builds](../worker/lifecycle/image-builds.md#the-software-step) says
 how a build reads and writes it.
+
+`202611181709_software_image_poll_progress.sql` adds three tables for the
+deploy polls of a software image attempt. `software_image_operations`
+keeps the last finished call of an attempt before its main provider call,
+such as the readiness read, for one phase and revision.
+`software_image_output` keeps the build output that no deploy poll has
+taken yet. `software_image_deploys` links a deploy token digest to the
+attempt that its admission chose, until that deploy token expires. Each
+row references `software_images` with `ON DELETE CASCADE`, so deleting an
+attempt deletes its rows. The migration changes no existing table, column,
+or phase name, so the previous Worker keeps working.
+[Reply budget](../worker/software-image/README.md#reply-budget) says how
+the deploy polls use these tables.
 
 `202611101300_routines.sql` adds org-scoped automations and their run records.
 Automation owners reference users, so membership removal can transfer their records.
@@ -256,6 +391,14 @@ The migration adds `workspaces.mac_access`, on for each existing and new
 row, and `workspace_creation_plans.capabilities_json` for create recovery.
 The [secrets backend](../worker/secrets/README.md) owns these records.
 
+`202611181310_automation_secret_preapprovals.sql` adds the chosen secrets of
+each automation. Composite foreign keys enforce the org of its automation
+and secret. Deleting either removes its rows. Approver IDs are opaque
+attribution IDs, so account removal keeps the choices. The migration adds
+only this table and its indexes for org reads and secret deletion. The
+previous Worker ignores them and keeps its existing reads and writes.
+The [automations backend](../worker/automations/README.md) owns these choices.
+
 `202611161353_secret_reveals.sql` adds retained reveal records with the
 secret ID and name, value version, admin ID, and time. An org foreign key
 removes its records at org purge. Secret and admin IDs have no foreign
@@ -326,57 +469,10 @@ existing workspace, also in a workspace where a member turned it on. The
 `DEFAULT 1` of `workspaces.mac_access` stays, because SQLite changes a
 column default only with a rebuild of the table. Each insert sets the
 column itself, and an absent choice now gives 0. A workspace that the
-previous Worker creates between this migration and the Worker upload
-starts with Mac access on. A member turns it off in its Capabilities.
+previous Worker creates on the new schema starts with Mac access on, as
+[Migrations and the previous Worker](../docs/automatic-deploys.md#migrations-and-the-previous-worker)
+says. A member turns it off in its Capabilities.
 [Mac access](../docs/protocol/secrets.md#mac-access) gives the rule.
-
-## Reserved ranges
-
-Each milestone owns the complete inclusive range below.
-Use a free minute in that range for each new migration.
-These reservations keep concurrent branches from choosing the same prefix.
-UI and wiring milestones normally need no migration. Their ranges stay reserved.
-
-| Milestone | Inclusive prefix range |
-| --- | --- |
-| 4a Contracts | `202611060100`–`202611060159` |
-| 5 Lifecycle | `202611070000`–`202611070059` |
-| 6 App shell | `202611070100`–`202611070159` |
-| 7r Runner | `202611070200`–`202611070259` |
-| 7 Chat backend | `202611070300`–`202611070359` |
-| 8 Chat UI | `202611070400`–`202611070459` |
-| 8i Chat wiring | `202611070500`–`202611070559` |
-| 16a First deployment | `202611070600`–`202611070659` |
-| 9 Files backend | `202611070700`–`202611070759` |
-| 10 Files UI | `202611070800`–`202611070859` |
-| 11 Tools backend | `202611070900`–`202611070959` |
-| 12 Tools UI | `202611071000`–`202611071059` |
-| 13 GitHub backend | `202611071100`–`202611071159` |
-| 14 GitHub UI | `202611071200`–`202611071259` |
-| 15 Agent tools | `202611071300`–`202611071359` |
-| 15a Members backend | `202611071400`–`202611071459` |
-| 15c Members UI | `202611071500`–`202611071559` |
-| 15i Feature wiring | `202611071600`–`202611071659` |
-| 15d Marketing | `202611071700`–`202611071759` |
-| 15e Mac app | `202611072000`–`202611072059` |
-| 15m Marketing and mockup fixes | `202611072200`–`202611072259` |
-| 15o Org suspension | `202611080000`–`202611080059` |
-| Agent tool lists and names | `202611081300`–`202611081359` |
-| Workspace link chips | `202611091200`–`202611091259` |
-| Chat attachment metadata | `202611081800`–`202611081859` |
-| Preferences and New workspace dialog | `202611082300`–`202611082359` |
-| Codex logins | `202611100000`–`202611100059` |
-| Computer ledger account merge | `202611100900`–`202611100959` |
-| Software image for first builds | `202611101200`–`202611101259` |
-| 16 Deployment | `202611071800`–`202611071859` |
-| 17 Verification | `202611071900`–`202611071959` |
-| Automations: records and routes | `202611101300`–`202611101359` |
-| Automations: runs and Run now | `202611101400`–`202611101459` |
-| Automations: pull request runs | `202611101500`–`202611101559` |
-| Keyboard shortcuts storage | `202611101600`–`202611101659` |
-| Agent workspace calls | `202611111200`–`202611111259` |
-| Parallel image sources | `202611161200`–`202611161259` |
-| Sub-workspaces | `202611161700`–`202611161759` |
 
 `202611131221_attachment_download_tokens.sql` adds one-use attachment download grants.
 Each row holds a token digest, the file and destination identities, its expiry, and its claim time.
@@ -386,13 +482,6 @@ Deleting an attachment also removes its grants.
 Existing rows keep null in both columns.
 The partial index serves the cleanup of transferred bytes.
 The attachment record stays after its R2 object is deleted.
-
-## Key code
-
-- [The test harness](../worker/test-support/harness.ts) applies every SQL
-  migration in filename order to a fresh local D1 database.
-- [Shared contracts](../src/shared/) define the browser and runner payloads.
-- Run `npm run db:migrate` to apply the migrations to local development storage.
 
 `202611121610_fast_choices.sql` adds fast mode to workspace runtime records,
 creation plans, account defaults, and automations. Each column starts at 0.
@@ -425,3 +514,58 @@ rows.
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
+24-hour epoch of the delivery key of one feedback email of one user. It
+keeps the user, the delivery key, the time of the first try, the time of
+the hourly count, a generation token, the delivery state, and the number
+of tries that still run. A row keeps no message, screenshot, email
+address, browser string, or secret. Deleting the user deletes the rows
+through the foreign key. Three indexes serve the lookup of a delivery key,
+the hourly count, and the cleanup. The migration changes no existing
+table, so the previous Worker keeps working.
+[The send limit](../worker/app-api/feedback.md#the-send-limit) gives the
+rules of these rows.
+
+`202611181500_repository_order.sql` adds the nullable integer
+`repositories.position` column. It holds the place of a chosen repository
+in the repository order of its org, which counts from 0. The migration
+fills it for each chosen row (`selected = 1`) of each org, in the order of
+the lower-case GitHub name, then the exact name, then the ID. A row that
+is not chosen keeps null. The previous Worker adds and chooses rows
+without a position, and its Remove keeps the position. So the order puts a
+chosen row without a position after the rows with one, and it ignores the
+position of a row that is not chosen. The next add or move gives every
+chosen row a position again.
+[The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_pull_request_merges.sql` adds `pull_request_merges`. Each row
+holds one merged pull request of a workspace branch: the GitHub repository
+ID and the number as the key, the org, the workspace, the owner at the time
+of the record, the GitHub merge time, and the record time. Deleting the org
+deletes the rows through the foreign key. The workspace ID has no foreign
+key, so the org purge can delete the workspaces first. One index serves the
+counts of an owner by merge time, and one serves the cascade of an org. The
+migration copies no data, so the table starts empty. It changes no existing
+table, so the previous Worker keeps working.
+[The merge record](../worker/github/README.md#the-merge-record) gives the
+rules of the rows.
+
+`202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
+with the stop time of idle workspace computers in minutes, 30 at first,
+with its last change and operator. `idle_stop_events` keeps each change
+with its operator and time. The previous Worker reads neither table and
+keeps its fixed 30 minutes.
+[Operator stop time](../worker/operator/idle-stop.md) gives the rules.
+
+`202611201500_job_step_times.sql` adds `job_steps` and `job_runs`, the job
+step records of [Step timing](../docs/protocol/step-timing.md#job-step-records).
+`job_steps` holds the begin and the end of each step of each build,
+refresh, create, and resume, with the key `(job_id, step)`. `job_runs`
+holds one row for each run of a start, with the key `(job_id, run_number)`.
+Neither table has a foreign key. Each write checks that its org exists, so
+a record never fails the batch of the phase change that it measures. The
+org purge deletes the rows of the org, and the 15-minute cron deletes rows
+after 90 days. The migration changes no existing table, so the previous
+Worker keeps working. The [lifecycle README](../worker/lifecycle/README.md#job-step-records)
+gives the writers.

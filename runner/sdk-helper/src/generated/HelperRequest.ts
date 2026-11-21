@@ -2,9 +2,11 @@
 import type { AgentChoice } from './AgentChoice.js'
 import type { HelperOptions } from './HelperOptions.js'
 import type { ProviderInput } from './ProviderInput.js'
+import type { ReadonlyVec } from './ReadonlyVec.js'
+import type { SkillInput } from './SkillInput.js'
 
 /**
- * One runner request. Each request receives one response or error.
+ * One runner request. Scans receive a skills result; other requests receive a response or error.
  */
 export type HelperRequest =
   | {
@@ -28,6 +30,10 @@ export type HelperRequest =
        * Agent input.
        */
       input: ProviderInput
+      /**
+       * Current private Codex paths. Absent for measurement clients.
+       */
+      skills?: ReadonlyVec<SkillInput>
     }
   | {
       type: 'model'
@@ -60,4 +66,23 @@ export type HelperRequest =
        * Request identity.
        */
       requestId: string
+    }
+  | {
+      type: 'skills'
+      /**
+       * Request identity.
+       */
+      requestId: string
+      /**
+       * Repository whose agent skills are listed.
+       */
+      repository: string
+      /**
+       * Shared agent home, including the shared Codex home.
+       */
+      home: string
+      /**
+       * Force a new Codex app-server list after a connect or refresh.
+       */
+      reload: boolean
     }

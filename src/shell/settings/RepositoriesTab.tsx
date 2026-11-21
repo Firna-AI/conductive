@@ -1,23 +1,40 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useToast } from '@firna/ui/toast'
+import { EditRepositoryNotice } from '../../../docs/mockups/src/components/settings/RepositoryNotice'
 import { Section } from '../../../docs/mockups/src/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
-import { useStore, valueOf } from '../../app/store'
+import {
+  addedRepositoryNames,
+  changeRepository,
+  noRepositoryChanges,
+  saveRepositoryChanges,
+  withRepositoryChanges,
+  type RepositoryChanges,
+} from '../../app/settings-actions'
+import { asApiError, useStore, valueOf } from '../../app/store'
 import { MemberRepositoriesTab } from '../../members/MemberRepositoriesTab'
-import type { BuildsResponse } from '../../shared/org-settings'
+import type { BuildsResponse, Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess, useOrgModel } from '../context'
 import { useAction } from '../ui/useAction'
 import { Loaded } from './LoadState'
 import { useMembersApi, useMembersViewport } from './members-api'
-import { RepositoryPicker } from './RepositoryPicker'
+import { RepositoryOrder } from './RepositoryOrder'
+import { RepositoryEditToggle, RepositoryPicker } from './RepositoryPicker'
 import { AdminRepositoryNotice } from './RepositoryChangeNotice'
 
 /**
  * The repositories that the cloud computer of the org holds (decision 10),
- * which an admin adds and removes. An add starts a build, and a removal
- * waits for the next build. The repository notice above the list shows the
+ * which an admin adds, removes, and orders. The tab lists the chosen
+ * repositories in the repository order, with their moves, and Edit opens
+ * every repository that the GitHub App reaches, by name, with Add and
+ * Remove, until Done. Add and Remove change only the open edit. Done
+ * saves them and starts one build when it saved an add. A change that
+ * does not save keeps the edit open, so Done can try it again. Leaving
+ * the tab drops the edit. The repository notice above the list shows the
  * changes that the cloud computer does not hold yet, with Try again or
- * Build computer.
+ * Build computer. While the edit adds repositories, it points to Done
+ * instead, with no button.
  */
 function AdminRepositories(props: {
   org: OrgSummary
@@ -27,19 +44,71 @@ function AdminRepositories(props: {
   const model = useOrgModel(org.id)
   const repositories = useStore(model.repositories)
   const build = useAction(() => model.startBuild(), 'The build did not start')
+  const { toast } = useToast()
+  const [editing, setEditing] = useState(false)
+  const [changes, setChanges] = useState<RepositoryChanges>(noRepositoryChanges)
+  const done = useAction(async (list: readonly Repository[]) => {
+    const saved = await saveRepositoryChanges(model, list, changes)
+    // The edit keeps its changes, and so its notice, until the build start
+    // answers, so the notice offers no build that Done already starts.
+    if (saved.added) {
+      await model.startBuild().catch((cause: unknown) => {
+        toast({
+          title: 'The build did not start',
+          description: asApiError(cause).message,
+          tone: 'error',
+        })
+      })
+    }
+    setChanges(saved.failed)
+    if (saved.failed.size > 0) throw saved.failure
+    setEditing(false)
+  }, 'The repositories did not change')
   useEffect(() => model.watch('repositories'), [model])
+  const loaded = valueOf(repositories)
+  const added = editing && loaded ? addedRepositoryNames(loaded, changes) : []
   return (
     <Section
-      description={`The cloud computer of ${org.name} holds these repositories, and its workspaces start in them. Adding a repository starts a build.`}
+      action={
+        <RepositoryEditToggle
+          busy={done.pending}
+          editing={editing}
+          toggle={() => {
+            if (!editing) {
+              setChanges(noRepositoryChanges)
+              setEditing(true)
+            } else if (loaded) done.run(loaded)
+            else setEditing(false)
+          }}
+        />
+      }
       title="Repositories"
     >
-      <AdminRepositoryNotice build={build} builds={props.builds} />
+      {added.length > 0 ? (
+        <EditRepositoryNotice added={added} />
+      ) : (
+        <AdminRepositoryNotice build={build} builds={props.builds} />
+      )}
       <Loaded
         failure="The repositories did not load"
         retry={() => model.reload('repositories')}
         value={repositories}
       >
-        {(list) => <RepositoryPicker model={model} repositories={list} />}
+        {(list) =>
+          editing ? (
+            <RepositoryPicker
+              change={(repository, selected) => {
+                const saved =
+                  list.find((item) => item.id === repository.id) ?? repository
+                setChanges(changeRepository(changes, saved, selected))
+              }}
+              disabled={done.pending}
+              repositories={withRepositoryChanges(list, changes)}
+            />
+          ) : (
+            <RepositoryOrder model={model} repositories={list} />
+          )
+        }
       </Loaded>
     </Section>
   )
@@ -59,7 +128,10 @@ export function RepositoriesTab(props: { org: OrgSummary }) {
   const builds = valueOf(useStore(model.builds))
   useEffect(() => model.watch('builds'), [model])
   if (mayChangeSettings(access)) {
-    return <AdminRepositories builds={builds} org={props.org} />
+    // The key closes Edit when the screen moves to another org.
+    return (
+      <AdminRepositories builds={builds} key={props.org.id} org={props.org} />
+    )
   }
   return (
     <MemberRepositoriesTab

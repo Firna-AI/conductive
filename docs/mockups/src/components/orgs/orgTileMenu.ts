@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
 import { ArrowDown, ArrowUp } from 'lucide-react'
-import type { MenuEntry } from '../common/Menu'
 
 /** A move of the tile menu: one place up or down the rail. */
 type TileMove = 'up' | 'down'
@@ -33,14 +32,4 @@ export function tileMenuItems(place: number, count: number): TileMenuItem[] {
       disabled: place === count - 1,
     },
   ]
-}
-
-/** The menu of an org tile as a view draws it. */
-export function tileMenuOf(place: number, count: number): MenuEntry[] {
-  return tileMenuItems(place, count).map((item): MenuEntry => ({
-    kind: 'item',
-    label: item.label,
-    icon: item.icon,
-    disabled: item.disabled,
-  }))
 }

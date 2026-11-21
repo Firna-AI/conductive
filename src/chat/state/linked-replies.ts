@@ -6,6 +6,7 @@ import { hydrate } from './history'
 import { applyMoves, saveMovedView, type DraftMove } from './model-moves'
 import { selectSession } from './session-actions'
 import { confirmRecord } from './session-records'
+import { showsSession } from './sessions'
 
 /**
  * Puts the message of a Send or Try again reply in the session that the reply
@@ -94,9 +95,8 @@ export async function showTarget(
     !holdsWork(sessionState(snapshot, target).draft)
   if (!movable && holdsWork(source)) return
   if (!view) {
-    await (movable
-      ? moveWithTab(context, from, target)
-      : selectSession(context, target))
+    if (movable) await moveWithTab(context, from, target)
+    else if (showsSession(snapshot, from)) await selectSession(context, target)
     return
   }
   if (movable) {
