@@ -50,7 +50,14 @@ export const scenarioValues: {
   merge: ['merged', 'moved-head', 'no-right', 'refused', 'unavailable'],
   ready: ['ready', 'no-right', 'pull-changed', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
-  continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
+  continue: [
+    'continued',
+    'question',
+    'clash',
+    'stopped',
+    'move-failed',
+    'turn',
+  ],
 }
 
 function pick<T extends string>(values: readonly T[], value: string | null): T {
