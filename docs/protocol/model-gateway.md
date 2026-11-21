@@ -240,6 +240,10 @@ through a slow turn check. Its pull request keeps these records.
 
 [Streams](model-gateway-requests.md#streams) holds these requirements.
 
+## Long waits
+
+[Long waits](model-gateway-requests.md#long-waits) holds these requirements.
+
 ## No copies
 
 [No copies](model-gateway-requests.md#no-copies) holds these requirements.

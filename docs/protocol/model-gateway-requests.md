@@ -3,10 +3,10 @@
 This doc holds the requirements and the decisions in force for the model
 requests that the gateway sends on to the upstream, and for their answers.
 It covers the upstream of each login, and the routes, the headers, and
-the bodies that pass. It also covers the own endpoints, the streams, and
-the risks, and it says that the gateway keeps no copy. It belongs to
-[Model gateway](model-gateway.md), which covers the turn token, how the
-agents reach the gateway, and the checks of each request. The terms are
+the bodies that pass. It also covers the own endpoints, the streams, the
+long waits, and the risks, and it says that the gateway keeps no copy. It
+belongs to [Model gateway](model-gateway.md), which covers the turn token,
+how the agents reach the gateway, and the checks of each request. The terms are
 those of the [model gateway](model-gateway.md#terms) and of the
 [architecture doc](../architecture.md#terms). A decision number
 names a dated record, as
@@ -16,7 +16,9 @@ decision number names a decision of the change that adds the gateway, as
 decision of the change that adds the egress container, as that doc says.
 A stream drop decision number, such as stream drop decision 1, names a
 decision of the change for model answers that drop before they are
-complete.
+complete. A long wait decision number, such as long wait decision 1,
+names a decision of the change that ends a Codex turn when the upstream
+asks for a long wait.
 
 ## Requests and answers
 
@@ -80,6 +82,8 @@ complete.
   constraints. Reason: Codex must stay on the gateway while the Worker
   follows the real routing for each model request.
 - An error body also passes unchanged, unless it holds the real login.
+  A long wait for Codex is the one other exception, as
+  [Long waits](#long-waits) says.
 - For a ChatGPT sign-in, the gateway never passes on an OpenAI 401.
   [How the agents reach the gateway](model-gateway.md#how-the-agents-reach-the-gateway)
   states its recovery and terminal answers.
@@ -216,10 +220,41 @@ complete.
   renewal. It never copies or replays a model upload. Codex decides its resend.
 - The gateway adds no model filter, no rate limit, and no time or byte
   limit on an answer. The limits of the provider and of the agent program
-  apply.
+  apply. A long wait of the upstream ends a Codex turn, as
+  [Long waits](#long-waits) says.
 - A model filter was rejected, because the agent programs choose their own
   models for work in the background.
 - A rate limit was rejected, because subagents send requests in parallel.
+
+## Long waits
+
+- The upstream can answer a Codex model request with HTTP 429 and a
+  `retry-after` wait of more than 10 minutes. The gateway then sends
+  Codex its own HTTP 429 in place of that answer (long wait decision 1,
+  21 November 2026).
+- A Codex model request is `POST /responses` for an OpenAI API key or a
+  Codex own endpoint login. It is `POST /backend-api/codex/responses` for
+  a ChatGPT sign-in.
+- The wait can be a number of seconds or an HTTP date.
+- The error of the gateway has the error type `usage_limit_reached`, the
+  code `model_rate_limited`, and the reset time in `resets_at`. The reset
+  time is the end of the wait. The error has no `retry-after` header and
+  no part of the upstream body.
+- Codex ends the turn on this error and does not send the request again.
+  The chat shows the failed turn with the reset time, in the time zone of
+  the sandbox.
+- Reason: Codex waits for the whole `retry-after` before it sends the
+  request again, and the chat shows no error during the wait. A wait of
+  38 hours kept two turns at "The agent is still working" for 14 hours.
+- To pass the 429 unchanged was rejected, because the turn then waits
+  with no error.
+- A 429 with a wait of 10 minutes or less, or with no wait that the
+  gateway can read, passes unchanged. Codex then waits and sends the
+  request again.
+- The answers of Claude do not change. Reason: Claude ends its turn by
+  itself when a wait is more than 60 seconds.
+- This rule is interim. A stop of the sandbox and a wake at the reset
+  time will replace it.
 
 ## No copies
 

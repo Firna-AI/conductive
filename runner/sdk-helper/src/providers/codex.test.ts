@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, onTestFinished } from 'vitest'
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
@@ -164,5 +164,26 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     type: 'failed',
     code: 'agent_failed',
     message: 'The service is unavailable for secret-bob.',
+  })
+  vi.stubEnv('TZ', 'Etc/UTC')
+  onTestFinished(() => {
+    vi.unstubAllEnvs()
+  })
+  await resumed.send(turn('6', 'bob', 'codex'))
+  servers.latest.notify('turn/completed', {
+    turn: {
+      id: 'codex-turn-3',
+      status: 'failed',
+      error: {
+        message:
+          'You’ve hit your usage limit. Try again at Nov 23rd, 2026 12:58 AM.',
+      },
+    },
+  })
+  expect(h.events).toContainEqual({
+    type: 'failed',
+    code: 'agent_usage_limit',
+    message:
+      'The agent account reached its usage limit. Check your agent account. Try again at Nov 23rd, 2026 12:58 AM UTC.',
   })
 })
