@@ -16,7 +16,6 @@ import { handleGitHubMerge } from '../github/merge-handler'
 import { authorizeMerge } from '../github/merge-access'
 import { GitHubReader } from '../github/client'
 import { readBranchWork, type BranchWork } from '../github/branch-work'
-import { githubBranchLabels } from '../github/output'
 import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 
@@ -98,10 +97,6 @@ export class WorkspaceGitHub {
           )
           await this.schedule()
         },
-        async (event) => ({
-          ...event,
-          banner: (await githubBranchLabels(this.env, workspace))(event.banner),
-        }),
       ),
     )
     return this.state

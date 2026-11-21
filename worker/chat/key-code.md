@@ -56,9 +56,10 @@ first.
   `browserRequest` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
-- `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
-  a browser tab: the login refresh, the tab registration, the close after
-  a failed start, and the grant check before the history.
+- `browser-subscription.ts`: `subscribeBrowser`, the start of a browser
+  tab in the queue task that `BrowserConnections.subscribe` holds: the
+  login refresh, the tab registration, the close after a failed start, and
+  the grant check before the history.
 - `browser-request.ts`: the queued browser writes and the transcript read
   that yields between history pages.
 - `session-transcript.ts`: the transcript snapshot, metadata reads, and
@@ -85,6 +86,16 @@ first.
   chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
   serves the browser's session history. `history` keeps the forward read
   for the events socket, workspace summary, Continue, and transcript copy.
+- `workspace-event-labels.ts`, `workspace-labels.ts`, and
+  `workspace-labels-data.ts`: the masked labels of events, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says. `eventLabeler` gives the labels of `github.updated` and
+  `workspace.continued` events. `WorkspaceEventLabels` labels with the
+  values of one read. `WorkspaceEventLabelPreparation` makes that read at
+  most once. Its `event` and `history` make it only for such an event.
+  `ChatStore.eventLabels` gives one preparation, through
+  `storedWorkspaceEventLabels`, which finds the org of the workspace in D1.
+  `prepareWorkspaceEventLabels` gives one for a route that knows the org.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
@@ -247,9 +258,10 @@ first.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
-  sockets, and the read of a saved registration. It adds the branch labels
-  of [`worker/github/output.ts`](../github/output.ts) and [`continue-output.ts`](../lifecycle/continue-output.ts)
-  to each GitHub event and Continue note that it sends a tab, also in old history.
+  sockets, and the read of a saved registration. It labels each message
+  that it sends a tab, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says.
 - `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
   `browser` alarm deadlines of physical tab sockets, and the grant check
   before each send. By default,

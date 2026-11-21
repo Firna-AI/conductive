@@ -1,9 +1,5 @@
 import type { SessionsResponse } from '../../src/shared/sessions'
 import type { AppEnv } from '../env'
-import {
-  continueLabels,
-  labelContinueHistory,
-} from '../lifecycle/continue-output'
 import { HttpError, requiredString } from '../http'
 import type { RequestContext } from '../security/gate'
 import {
@@ -22,6 +18,7 @@ import { closeSession, createSession, stopTurn } from './sessions'
 import type { ChatDependencies } from './types'
 import type { WorkspaceLinkContext } from '../data/workspace-link'
 import { presentWorkspaceHistory } from './workspace-events'
+import { prepareWorkspaceEventLabels } from './workspace-labels'
 
 export function afterNumber(url: URL): number {
   const value = url.searchParams.get('after')
@@ -58,15 +55,12 @@ export async function chatRoute(
         through === null ? undefined : counter(Number(through)),
       ),
     )
-    const labels = await continueLabels(env, {
+    const labels = prepareWorkspaceEventLabels(env, {
       id: presentation.workspaceId,
       orgId: presentation.orgId,
     })
     return Response.json(
-      presentWorkspaceHistory(
-        labelContinueHistory(history, labels),
-        presentation,
-      ),
+      presentWorkspaceHistory(await labels.history(history), presentation),
     )
   }
   if (suffix === '/sessions') {
