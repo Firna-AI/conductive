@@ -1,6 +1,7 @@
 import type { ChatEvent } from '../../shared/chat-events'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { record, text } from './json'
+import { label } from './read-changed-file'
 
 function readMember(value: unknown): MessageSender {
   const member = record(value, 'member')
@@ -12,15 +13,24 @@ function readMember(value: unknown): MessageSender {
   }
 }
 
+/**
+ * The note of Continue in one session. `branch` and `baseBranch` stay the
+ * real names, and the optional labels hide each secret value in them. A
+ * note without a label, such as one from an older Worker, reads as before.
+ */
 export function readContinued(
   source: Record<string, unknown>,
 ): Extract<ChatEvent, { type: 'workspace.continued' }> {
+  const displayBranch = label(source.displayBranch)
+  const displayBaseBranch = label(source.displayBaseBranch)
   return {
     type: 'workspace.continued',
     sessionId: text(source.sessionId),
     member: readMember(source.member),
     branch: text(source.branch),
+    ...(displayBranch === undefined ? {} : { displayBranch }),
     baseBranch: text(source.baseBranch),
+    ...(displayBaseBranch === undefined ? {} : { displayBaseBranch }),
   }
 }
 

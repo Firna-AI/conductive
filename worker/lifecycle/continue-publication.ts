@@ -1,6 +1,8 @@
+import { filterContinued } from '../../src/shared/output-fields'
 import { requireActiveOrg } from '../data/user-access'
 import { workspaceRecord } from './workspace-data'
 import { storeContinuedBranch } from './continue-data'
+import { continueLabels, labelContinueEnvelope } from './continue-output'
 import {
   CONTINUE_JOB_KEY,
   continueJobKey,
@@ -29,6 +31,7 @@ export async function publishContinue(
       await requireActiveOrg(options.env.DB, job.binding.orgId)
     },
     async (operation) => {
+      const labels = await continueLabels(options.env, job.binding)
       const replay = await operation.change(async (view) => {
         const saved = await view.github.get<ContinueJob>(continueJobKey(job.id))
         if (saved?.outcome?.ok && saved.outcome.value.state === 'continued')
@@ -37,13 +40,18 @@ export async function publishContinue(
         const workspace = workspaceRecord(row)
         await view.emit({ type: 'workspace.updated', workspace })
         for (const session of await view.sessions())
-          await view.emit({
-            type: 'workspace.continued',
-            sessionId: session.id,
-            member: job.member,
-            branch: job.branch,
-            baseBranch: job.baseBranch,
-          })
+          await view.emit(
+            filterContinued(
+              {
+                type: 'workspace.continued',
+                sessionId: session.id,
+                member: job.member,
+                branch: job.branch,
+                baseBranch: job.baseBranch,
+              },
+              labels,
+            ),
+          )
         const completed = {
           ...job,
           publication: { after, through: view.eventNumber },
@@ -67,7 +75,8 @@ export async function publishContinue(
           const page = await options.chat.store.read(job.binding.id, (view) =>
             view.history(after, replay.through),
           )
-          for (const envelope of page.events) operation.publish(envelope)
+          for (const envelope of page.events)
+            operation.publish(labelContinueEnvelope(envelope, labels))
           if (!page.hasMore) break
           after = page.nextAfterEventNumber
         }

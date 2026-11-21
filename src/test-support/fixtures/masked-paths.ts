@@ -36,6 +36,22 @@ export const MASKED_HEAD = {
 } as const
 
 /**
+ * A default branch of the repository that holds the fake secret value, with
+ * the label that the Worker sends beside it in the question and the note of
+ * Continue. It differs from `MASKED_BASE`, the target of the pull request.
+ */
+export const MASKED_DEFAULT = {
+  baseBranch: `develop/${MASKED_VALUE}`,
+  displayBaseBranch: `develop/${marker}`,
+} as const
+
+/** The new branch of a Continue that holds the fake secret value, with its label. */
+export const MASKED_CONTINUED = {
+  branch: `calummoore/checkout-${MASKED_VALUE}-v2-3f8d`,
+  displayBranch: `calummoore/checkout-${marker}-v2-3f8d`,
+} as const
+
+/**
  * A record of the mockups, whose path is a label, as the Worker sends it:
  * the real path, with the label as its display path when the two differ.
  */

@@ -68,10 +68,11 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
-Its `MASKED_BASE` and `MASKED_HEAD` give a target branch and a workspace
-branch that hold the same fake value, with the labels that the Worker sends
-beside them in a GitHub state. The GitHub view tests use them, and
-`branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`.
+Its `MASKED_BASE`, `MASKED_HEAD`, `MASKED_DEFAULT`, and `MASKED_CONTINUED`
+give a target, a workspace, a default, and a new branch with the same fake
+value. Each has the label that the Worker sends beside it. The view tests
+use them. `branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`, and
+`branches=masked-continue` uses all four.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.
@@ -144,7 +145,7 @@ start and the poll of Continue. `continuedEvents` gives the events of a
 Continue: the workspace on its new branch, a note in each session, the
 changes report of the new branch, and its GitHub state. `fake-bar-dev.ts`
 gives `scenarioFetch`, which answers as the Worker does with its state, for
-the development pages.
+the development pages. `fake-transcript.ts` builds its transcript copies.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.

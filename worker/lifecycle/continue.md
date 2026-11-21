@@ -187,6 +187,39 @@ runs after a good move. It never runs Git again.
   and only then ends the reservation. So no turn starts before the new
   branch is stored and published.
 
+## Labels
+
+The job and each stored `workspace.continued` note keep the real names.
+Git and each request use them. The Worker adds a masked label beside each
+name that a screen shows, as
+[Secrets that users enter](../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
+requires. `continueLabels` in [`continue-output.ts`](continue-output.ts)
+hides each secret value of the last start of the sandbox.
+
+- `publishContinue` reads `continueLabels` inside its authorized
+  operation, before it writes the notes. `filterContinued` of
+  [the output fields](../../src/shared/output-fields.ts) then stores
+  `displayBranch` and `displayBaseBranch` in each new note, beside its
+  real names. It leaves out a label that equals its real name.
+- A replay of a completed job labels each saved note again with
+  `labelContinueEnvelope` and the fresh values, before it publishes it.
+- So a tab that opened before a new start gets the labels of that start.
+  [`output.ts`](../github/output.ts) labels the GitHub state in the same way.
+- Each boundary labels a note again when it sends it, with the values that
+  it read. So a note from before these labels gets labels too. A boundary
+  can only add a mask to a stored label.
+- [`BrowserConnections`](../chat/browser-connections.ts) reads its values
+  when a tab opens or restores. It labels each note that it sends that tab,
+  also in old history.
+- [`chatRoute`](../chat/http-routes.ts) reads them for each page of the
+  session history.
+- [`buildSessionTranscript`](../chat/session-transcript.ts) reads them for
+  each transcript, and labels each page before it folds the page. So the
+  copy and the agent reads show the labels.
+- The routes label the question. They hide each secret value in the stop
+  message of `workspace_continue_failed`, as
+  [Continue routes](continue-routes.md#labels) says.
+
 ## Failures and recovery
 
 [Continue failures](continue-failures.md#failures-and-recovery) gives the
@@ -230,7 +263,13 @@ refusal.
 - [`continue-data.ts`](continue-data.ts): `authorizeContinue`, the access
   check of each phase, and `storeContinuedBranch`, the guarded D1 branch
   write with its read-back check.
-- [`continue-publication.ts`](continue-publication.ts): `publishContinue`.
+- [`continue-publication.ts`](continue-publication.ts): `publishContinue`,
+  with the [labels](#labels) of each new and replayed note.
+- [`continue-output.ts`](continue-output.ts): `continueLabels` and the
+  [labels](#labels) of each boundary. `labelContinueEnvelope` labels one
+  envelope, such as a replayed note. `labelContinueMessage` labels a tab
+  message, and `labelContinueHistory` a page of events.
+  `labelContinueResult` labels the question and the stop error of the routes.
 - [`continue-types.ts`](continue-types.ts): the stored job, its keys, and
   `readContinueJob`, which reads an older job without a provider account
   as the `boat` account. It reads a missing or unrecognized stop cause as
@@ -248,52 +287,5 @@ refusal.
 
 ## Tests
 
-These entries test Continue. The code report gives their commands and
-results.
-
-- [`continue-routes.test.ts`](../features/continue-routes.test.ts) runs
-  Continue through the real routes of the production Worker: the resume,
-  the hold of sends and Archive, the credentials after recovery, and the
-  routing of webhooks to the new branch.
-  [`continue-entry.test-support.ts`](../features/continue-entry.test-support.ts)
-  gives its workspace object the fixed future clock of the fixtures, so the
-  native alarms stay in the future while the test drives each phase.
-  [`continue-routes.test-support.ts`](../features/continue-routes.test-support.ts)
-  builds its production Worker fixture with the fake GitHub repository.
-- [`continue.test.ts`](continue.test.ts): a Continue by another member, the
-  note in every open and closed session, the local-work question, a failed
-  move, a publication that lost its reply, and a move that lost its exit
-  result, also while the read of its branch fails. Each exit status of the
-  failed move saves its stop cause and gives its exact text. The failed
-  read saves the metadata cause until the repair.
-  [`continue.test-support.ts`](continue.test-support.ts) builds its
-  chat fixture with the Continue hold, the fake GitHub repository, and the
-  fake Boat.
-- [`continue-stop-causes.test.ts`](continue-stop-causes.test.ts) uses the
-  same fixture: the causes of a cancel, a provider failure, and a failed
-  start, an uncertain start that never repeats the move, and the read of a
-  missing or unrecognized cause as `unknown`, with its saved error. Each
-  case checks its exact text, also the GitHub access hint of a failed fetch.
-- [`continue-access.test.ts`](continue-access.test.ts): the admission
-  checks, and a member removed while Continue waits for the chat queue.
-- [`continue-concurrency.test.ts`](continue-concurrency.test.ts): the hold
-  of dispatch and of a second Continue, a move after a member removal, and a
-  saved resume.
-- [`continue-credentials.test.ts`](continue-credentials.test.ts): the fetch
-  grant and its end, also when membership ends during the token refresh.
-- [`continue-native.test.ts`](continue-native.test.ts) runs the commands
-  with real Git: the isolated fetch, the kept files and commits, a clash
-  with the new base, and the count of every local branch. It also checks
-  an index lock that stays in place, and a target branch that exists,
-  which is not a clash. Each failed move writes no output.
-  [`continue-native.test-support.ts`](continue-native.test-support.ts)
-  builds its real Git repositories.
-- [`continue-comparisons.test.ts`](continue-comparisons.test.ts) checks the real Git
-  refs, content, and status across fetch, Continue, and a remote default rename.
-  The local default keeps its commit. The new branch has only its `gh-merge-base`
-  setting. Locks on `origin/HEAD` and Git config fail the metadata read until
-  both locks go. The move and each failed read end with status 82 and no
-  output. The next read repairs both without another checkout.
-  Rust repository and report tests check the runner's comparison output.
-- [`branch-context.test.ts`](../chat/branch-context.test.ts): the current
-  branches of each runner command.
+[Continue tests](continue-tests.md) gives the tests of Continue and their
+fixtures.

@@ -84,7 +84,8 @@ the parts of the chat that draw the transcript.
   The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
 - Each `workspace.continued` event of a session becomes one `continued` item at its place among the events.
   The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with `ContinuedLine` of the mockups.
-  The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
+  Each branch shows by its label, which hides each secret value. A note without labels, such as a note of an older Worker, shows the real names.
+  The item takes its ID from the real new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
   A closed session gets the note in its stored history, so a session that opens later shows it.
 - Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
   The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.

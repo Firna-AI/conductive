@@ -68,6 +68,8 @@ export type ChatEvent =
       member: MessageSender
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | {
       /** The note of a repository change in one session. */

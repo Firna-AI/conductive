@@ -30,6 +30,7 @@ this server is the repository root, so it also serves the
 | `bar`      | The GitHub state of the pull request bar, such as `ready-to-merge` or `merged`. The page then uses the app's own Files part, so a phone shows the actions at the top of Checks, and `list` names the list of a phone. |
 | `turn`     | `running` starts the fake with a turn that runs. |
 | `access`, `method`, `merge`, `work`, `continue` | How the actions of the bar end: the member's access, the merge method, the end of a merge, the local work, and the end of Continue. The first value of each is the default. |
+| `branches` | The branch names: `plain`, the default, `masked`, or `masked-continue`. `masked-continue` gives each name of Continue a fake secret value and its label, as [the GitHub development page](../../github/README.md#development-page) says. |
 | `repository` | The cloud computer holds each chosen repository, so the repository in the header opens its menu. The value says how a change ends: `changed`, `question`, `clash`, or `outdated`. Without it, the repository shows as text. |
 
 For example, `?viewport=phone&view=terminal&repair=name,start,all-files,changes`
@@ -59,11 +60,15 @@ With `bar`, `scenarioFetch` of `src/test-support/fake-bar-dev.ts` answers
 the actions of the bar as the Worker does with its state. A completed merge
 publishes the merged state. A Continue publishes the workspace on its new
 branch, a note in each session, the changes report of the new branch, and
-its GitHub state. A message shows the text that it sent. So the page runs
-the real action state, the real chat send, and the real event pipeline.
-For example, `?bar=merged&work=files&continue=question&viewer=member`
-asks the question of Continue, and `?bar=checks-failed&work=none` offers
-Fix checks.
+its GitHub state. A message shows the text that it sent. A copy of a
+transcript builds the text of the session from the fake stream, as
+`src/test-support/fake-transcript.ts` says. It uses `SessionMarkdown`, the
+builder of the Worker. So the page runs the real action state, the real
+chat send, and the real event pipeline. For example,
+`?bar=merged&work=files&continue=question&viewer=member` asks the question
+of Continue, and `?bar=checks-failed&work=none` offers Fix checks. With
+`branches=masked-continue`, the question, the note of each session, its
+copy, and the words of `continue=clash` show the labels.
 
 With `repository`, `repositoryFetch` of
 `src/test-support/fake-repository-change.ts` answers a repository change

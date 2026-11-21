@@ -51,8 +51,13 @@ export type FakeWork = 'none' | 'files' | 'restored' | 'commits' | 'legacy'
 export type FakeContinueEnd =
   'continued' | 'question' | 'clash' | 'stopped' | 'move-failed' | 'turn'
 
-function refusal(code: string, message: string) {
+export function refusal(code: string, message: string) {
   return { error: { code, message } }
+}
+
+/** The safe words of the Worker for changed files that clash with `base`. */
+export function clashWords(base: string, branch: string): string {
+  return `Continue stopped: the changed files clash with the latest ${base}. The workspace stays on ${branch}.`
 }
 
 export function serveAccess(
@@ -193,7 +198,7 @@ export function serveContinue(
   if (end === 'question') server.json('GET', poll, continueQuestionReply)
   if (end === 'clash' || end === 'stopped' || end === 'move-failed') {
     const message = {
-      clash: `Continue stopped: the changed files clash with the latest main. The workspace stays on ${branch}.`,
+      clash: clashWords('main', branch),
       stopped: 'Continue could not finish. Check GitHub access and try again.',
       'move-failed': 'Continue could not finish.',
     }[end]
@@ -231,34 +236,52 @@ function continuedReport(moved: readonly BranchChangedFile[]): ChangesResponse {
 }
 
 /**
+ * The new branch of a Continue and the default branch that it starts from,
+ * with the labels that the Worker sends beside the real names when they
+ * hold a secret value.
+ */
+export interface ContinueNames {
+  branch: string
+  baseBranch: string
+  displayBranch?: string
+  displayBaseBranch?: string
+}
+
+/** The names of a Continue of the fake workspace, which hold no secret. */
+export const plainContinueNames: ContinueNames = {
+  branch: CONTINUED_BRANCH,
+  baseBranch: 'main',
+}
+
+/**
  * The events of a Continue, as the Worker and the runner publish them: the
  * workspace on its new branch and one note for each session, in one chat
  * transaction, the changes report of the new branch with the files that
  * moved, and then the GitHub state of the new branch, which has no commit
- * on GitHub yet.
+ * on GitHub yet. The notes and the GitHub state carry the labels of
+ * `names`, as the Worker sends them to a browser.
  */
 export function continuedEvents(
   workspace: Workspace,
   sessions: readonly Session[],
   member: MessageSender,
   moved: readonly BranchChangedFile[] = [],
+  names: ContinueNames = plainContinueNames,
 ): WorkspaceEvent[] {
-  const record = { ...workspace, branch: CONTINUED_BRANCH, github: null }
+  const record = { ...workspace, branch: names.branch, github: null }
   return [
     { type: 'workspace.updated', workspace: record },
     ...sessions.map((session): WorkspaceEvent => ({
       type: 'workspace.continued',
       sessionId: session.id,
       member,
-      branch: CONTINUED_BRANCH,
-      baseBranch: 'main',
+      ...names,
     })),
     { type: 'changes.updated', changes: continuedReport(moved) },
     {
       type: 'github.updated',
       banner: {
-        branch: CONTINUED_BRANCH,
-        baseBranch: 'main',
+        ...names,
         updatedAt: FAKE_TIME,
         state: 'no-commits',
         pullRequest: null,
