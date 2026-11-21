@@ -4,9 +4,9 @@ import type { Run, RunState } from '../../fixtures/automationRuns'
 import { repositoryOf, type Automation } from '../../fixtures/automations'
 import { orgs } from '../../fixtures/orgs'
 import { classes } from '../common/classes'
-import { ExternalLink } from '../common/ExternalLink'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
 import {
   failureCopy,
   runStateLabels,
@@ -87,7 +87,10 @@ function RunRow(props: RowProps) {
   return (
     <li className={classes(styles.row, to !== undefined && styles.linked)}>
       <span className={styles.glyph}>
-        <StatusGlyph status={markOf(run)} />
+        <statusGlyph.Component
+          moklyInstance={`run-${run.key}`}
+          status={markOf(run)}
+        />
       </span>
       <span className={styles.text}>
         <span className={styles.top}>
@@ -104,9 +107,12 @@ function RunRow(props: RowProps) {
           )}
           {number === undefined ? null : (
             <span className={styles.pr}>
-              <ExternalLink href={pullRequestUrl(props.automation, number)}>
+              <externalLink.Component
+                href={pullRequestUrl(props.automation, number)}
+                moklyInstance={`pr-${run.key}`}
+              >
                 {`#${number}`}
-              </ExternalLink>
+              </externalLink.Component>
             </span>
           )}
           <span className={styles.when}>{run.when}</span>

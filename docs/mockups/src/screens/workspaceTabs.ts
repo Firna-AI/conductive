@@ -1,5 +1,5 @@
 import { nameLabel } from '../../../../src/shared/name-label'
-import type { MenuEntry } from '../components/common/Menu'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
@@ -61,7 +61,7 @@ export function noMessages(state: WorkspaceState): boolean {
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
-export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+export function historyFor(state: WorkspaceState): readonly MenuEntryData[] {
   return isNew(state)
     ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
     : historyEntries

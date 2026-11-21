@@ -85,6 +85,17 @@ export class ChatRecords {
       .map((entry) => entry.command)
   }
 
+  async oldestWaitingMessageAt(): Promise<number | undefined> {
+    let oldest: number | undefined
+    for (const command of await this.pending()) {
+      if (command.type !== 'turn' && command.type !== 'message') continue
+      const message = await this.message(command.messageId)
+      if (message?.state === 'queued')
+        oldest = Math.min(oldest ?? Infinity, message.createdAt)
+    }
+    return oldest
+  }
+
   firstSession(): Promise<FirstSession | undefined> {
     return this.data.get(FIRST_SESSION_KEY)
   }

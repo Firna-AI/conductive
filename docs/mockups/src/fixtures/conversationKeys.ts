@@ -15,6 +15,7 @@ export const conversationKeys = [
   'sandbox-stopped',
   'stopped-from',
   'stopped-from-other',
+  'stopped-from-unknown',
   'failed',
   'model-not-served',
   'queued',

@@ -59,7 +59,7 @@ export async function continueNativeFixture(trackIgnored = false) {
                 : null
               : 0,
             stdout,
-            stderr: stderr || error?.message || '',
+            stderr,
             timedOut: false,
           }),
       )

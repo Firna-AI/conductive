@@ -8,6 +8,7 @@ mod diff;
 mod entries;
 pub mod error;
 pub mod git;
+mod identity_cache;
 mod index;
 pub mod io;
 pub(crate) mod open;

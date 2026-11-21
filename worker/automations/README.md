@@ -39,6 +39,13 @@ A `capabilities` value without a list of string IDs returns `invalid_input`, as 
 The shape has no `macAccess`, because each run workspace keeps Mac access off.
 [Chosen secrets](../../docs/protocol/automations.md#chosen-secrets) gives the rules.
 
+Each detail, create, or update reply also includes `AutomationResponse.chosenSecrets`.
+It gives the ID and the name of each chosen secret, and never a value or a description.
+`readAutomationChosenSecrets` reads them with a join of `automation_secret_preapprovals` and `org_secrets` on the org ID and the secret ID.
+So each entry names a current secret of the same org.
+The entries sort by name, then by ID, as the org secrets list does.
+Every org member reads them, as every member reads the automation and the org secrets list.
+
 `POST` of `automationPaths.runNow` takes a `RunAutomationRequest` with the page's request ID.
 Only the owner can use it, also while the automation is off.
 An automation whose triggers are all pull request triggers refuses Run now.
@@ -167,8 +174,9 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [prepare-automation.ts](prepare-automation.ts) validates a save and prepares its stored record.
 - [automation-data.ts](automation-data.ts) reads automations and checks their repository and section.
 - [automation-capabilities-data.ts](automation-capabilities-data.ts) reads chosen secret IDs within their org.
+  `readAutomationChosenSecrets` reads the IDs and names of the chosen secrets of one automation for its reply.
 - [automation-capability-statements.ts](automation-capability-statements.ts) saves choices in the automation write batch, with the same access and reference checks.
-- [automation-response.ts](automation-response.ts) adds the resolved public login owner to each record reply.
+- [automation-response.ts](automation-response.ts) adds the resolved public login owner and the chosen secret names to each record reply.
 - [automation-write-data.ts](automation-write-data.ts) guards mutations with current membership and ownership.
   It uses `guardedStatement` and `guardedRun` from
   [shell-guard.ts](../app-api/shell-guard.ts) for the shared member check.

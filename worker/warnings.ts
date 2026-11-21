@@ -1,6 +1,7 @@
 import { D1_ERROR_REASONS } from './d1-errors'
 import { mailDiagnosticFields } from './mail-diagnostics'
 import { runnerWorkFields } from './warning-runner-work'
+import { continueEndWarningFields } from './warning-continue'
 import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
@@ -37,6 +38,8 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_continue_ended':
+      return continueEndWarningFields(warning)
     case 'invitation_email_delivery_failed':
     case 'approval_email_delivery_failed':
     case 'feedback_email_delivery_failed':

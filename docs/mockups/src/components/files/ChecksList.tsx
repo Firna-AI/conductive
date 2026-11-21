@@ -1,6 +1,6 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleCheck, CircleX, ListChecks } from 'lucide-react'
+import { CircleCheck, CircleX } from 'lucide-react'
 import {
   checksByState,
   pullRequest,
@@ -9,7 +9,7 @@ import {
   type Check,
 } from '../../fixtures/pullRequests'
 import a11y from '../common/a11y.module.css'
-import { EmptyState } from '../common/EmptyState'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import styles from './ChecksList.module.css'
 
 const stateLabels = {
@@ -35,9 +35,10 @@ export function ChecksList(props: { state: BannerState }) {
   const checks = checksByState[props.state]
   if (checks.length === 0) {
     return (
-      <EmptyState
+      <emptyState.Component
         body="They appear when the branch has a pull request."
-        icon={ListChecks}
+        icon="list-checks"
+        moklyInstance="checks-empty"
         title="GitHub checks show here"
       />
     )

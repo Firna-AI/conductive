@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 5 and 5a are checked complete. The full implementation review found no new issue on 21 November 2026. Runtime verification item 8 needs Cal's answer. The pull request that completes this work deletes this plan.
+Status: Active. [PR #627](https://github.com/Firna-AI/conductive/pull/627) is open on branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`. Cal requested the pull request before verification is complete on 21 November 2026. Watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B remain approved. Milestones 1 to 5 and 5a are checked complete. The full implementation review found no new issue before the latest main integration. Runtime verification item 8 still needs Cal's answer. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -424,9 +424,20 @@ Latest main replaced fixture strings with shared text-block trees. Use the `ui i
 
 Evidence: `.context/watch-session/m5a-report.md` and `.context/watch-session/m5a-root-check.md`.
 
+## Milestone 5b: Keep wakes in registered mockup props
+
+Tags: mockup
+
+Depends on: 5a
+
+Main now registers chat parts with JSON props. Its two transcript schemas must also admit the existing wake fixture. Use the `ui implementor` action. Keep the approved words and appearance.
+
+- [x] Add the existing wake shape to both registered chat item schemas. Keep their other variants and constraints.
+- [ ] Check the combined mockup types and strict build. Preserve main's registered session-link wrapper in the wake line.
+
 ## Milestone 6: Verification, review, and pull request
 
-Depends on: 4, 5, 5a
+Depends on: 4, 5, 5a, 5b
 
 The orchestrator owns this milestone. No delegated tests run beside the gate.
 
@@ -459,6 +470,7 @@ Evidence: `.context/watch-session/m45-integration-main.md` and its preservation 
 - [x] Regenerate shared bindings and verify no uncommitted drift. Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
 - [x] Commit with Conventional Commits and push this branch after the preservation audits.
 - [x] Record and apply the fix rule to the sent-but-unacknowledged wake continuation display finding. Preserve existing member-message placement.
+- [x] Resolve the PR conflicts with main `68342ce4a`. Preserve each upstream path and inspect every combined owner.
 - [x] Review the complete diff against `origin/main` after the push with the `implementation-review` skill. Save the review and findings. Check new findings with the `second-pass review agent`. Fix `fix now` findings, record other findings as follow-up items, re-review once, and report.
 - [ ] Check and review any source correction that Cal chooses for runtime item 8 before the final pull request.
 - [ ] Delete this plan after every earlier TODO is ticked and review rounds are complete. Preserve a permalink and every dated decision in the pull request description.

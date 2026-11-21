@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-a-waiting-request-hides-nj94`, in the docs work for the follow-up item "A waiting request hides Starting from the app".
-- **Location:** `docs/protocol/secret-requests.md`, the sections "Temporary values" at line 189 and "Mixed requests" at line 230. `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 208. `docs/architecture/protocol-docs.md:87-92` and `docs/architecture/protocol-docs-workspaces.md:22-24`, the index entries of the two docs.
+- **Location:** `docs/protocol/secret-requests.md`, the sections "Temporary values" at line 189 and "Mixed requests" at line 230. `docs/protocol/workspace-life.md`, the section "Removed workspaces" at line 209. `docs/architecture/protocol-docs.md:87-92` and `docs/architecture/protocol-docs-workspaces.md:25-27`, the index entries of the two docs.
 - **Reason:** The branch that found it adds one rule to each doc and keeps a narrow scope, and the split moves sections that the branch does not change.
 
 - **Terms:**
@@ -19,8 +19,8 @@
   - Each doc already moved parts to linked pages, and it keeps a stub section for each part. `secret-requests.md` has stubs for "Late requests" and "Late answers", which link to `docs/protocol/secret-late-answers.md`. `workspace-life.md` has stubs for "Create a workspace", "Stop and resume", "Restart the software", and "Continue".
   - In `secret-requests.md`, "Temporary values" runs from line 189 to line 229, and "Mixed requests" from line 230 to line 240. Together they hold 52 lines on one topic: the values that a member types into a request.
   - Two docs link to `secret-requests.md#temporary-values`: `docs/protocol/secrets.md:40` and `docs/protocol/secret-variables.md:42`. No file links to `secret-requests.md#mixed-requests`.
-  - In `workspace-life.md`, "Removed workspaces" runs from line 208 to line 280. Its 73 lines hold one topic: an archived workspace after the end of its Restore, with decisions 518 to 522.
-  - 17 files outside `workspace-life.md` link to `workspace-life.md#removed-workspaces`: 11 in `docs/`, 4 in `src/`, 1 in `worker/`, and 1 in `tools/`. The doc itself links to it at lines 146 and 196.
+  - In `workspace-life.md`, "Removed workspaces" runs from line 209 to line 281. Its 73 lines hold one topic: an archived workspace after the end of its Restore, with decisions 518 to 522.
+  - 17 files outside `workspace-life.md` link to `workspace-life.md#removed-workspaces`: 11 in `docs/`, 4 in `src/`, 1 in `worker/`, and 1 in `tools/`. The doc itself links to it at lines 147 and 197.
   - "Removed workspaces" links to `#archive` of its own doc at lines 216 and 267. Its five other links name other pages in `docs/protocol/`, so they still work from a new page in the same folder.
 - **Problem:** Both docs pass the length target by about 40 lines. The touch on 2026-11-20 split neither doc.
 - **Impact if no action:** Readers and reviewers read long docs to find one rule. Each later change that touches either doc meets the split rule again.

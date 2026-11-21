@@ -52,24 +52,9 @@ export class TurnCompletion {
       end = { state: 'failed', retryMessageId, error }
       delete turn.loginFailure
     }
-    let following = turn.nextTurnId ?? null
-    if (end.state === 'finished' && !turn.closeAfterStop) {
-      const continuation = await continueUnanswered(
-        this.transaction,
-        turn,
-        end.randomId,
-      )
-      if (continuation) {
-        continuation.nextTurnId = following
-        await this.transaction.saveTurn(continuation)
-        if ((await this.transaction.newestTurn(this.session.id)) === turn.id)
-          await this.transaction.saveNewestTurn(
-            this.session.id,
-            continuation.id,
-          )
-        following = continuation.id
-      }
-    }
+    if (end.state === 'finished' && !turn.closeAfterStop)
+      await continueUnanswered(this.transaction, turn, end.randomId)
+    const following = turn.nextTurnId ?? null
     turn.state = end.state
     if (end.state === 'failed') turn.error = end.error
     turn.nextTurnId = null
@@ -98,7 +83,11 @@ export class TurnCompletion {
     })
   }
 
-  async stopped(turn: StoredTurn): Promise<void> {
+  async stopped(turn: StoredTurn, keepQueued?: () => string): Promise<void> {
+    const continuation =
+      keepQueued && !turn.closeAfterStop
+        ? await continueUnanswered(this.transaction, turn, keepQueued, 'queued')
+        : undefined
     if (!turn.loginFailure)
       await this.transaction.emit({
         type: 'turn.completed',
@@ -108,7 +97,11 @@ export class TurnCompletion {
         durationMs: 0,
         files: [],
         omittedFileCount: 0,
-        userMessageIds: turn.messageIds,
+        userMessageIds: continuation
+          ? turn.messageIds.filter(
+              (id) => !continuation.messageIds.includes(id),
+            )
+          : turn.messageIds,
       })
     await this.finish(turn, { state: 'stopped' })
   }

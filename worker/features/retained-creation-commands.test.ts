@@ -44,10 +44,10 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
   }))
   const sandbox = (local = await localSavedScriptFixture(OUTER_REPOSITORY))
   const { id, branch } = await admitRetainedCreation(active)
-  const original = await advanceRetainedCreation(active, id, 'branch')
+  const fetching = await advanceRetainedCreation(active, id, 'fetch')
   const directory = shellQuote(
     repositoryLocation(
-      readRepositoryLocations(original.repositoryLocations),
+      readRepositoryLocations(fetching.repositoryLocations),
       OUTER_REPOSITORY,
     ),
   )
@@ -75,6 +75,11 @@ it('replays a saved branch after Restore with a new journal and preserves the ex
     results.map((result) => result.exitCode),
     JSON.stringify(results),
   ).toEqual([0])
+  const original = await retainedCreationJob(active, id)
+  expect(original).toMatchObject({
+    phase: 'branch',
+    processId: expect.any(Number),
+  })
   expect(
     (
       await sandbox.run(
@@ -158,7 +163,6 @@ it('runs interrupted saved startup after Restore instead of following its dead j
   }
   const { id } = await admitRetainedCreation(active)
   const original = await advanceRetainedCreation(active, id, 'startup')
-  await active.actor(id).advanceStartAlarm()
   expect(results.map((result) => result.exitCode)).toEqual([125])
   expect(await retainedCreationJob(active, id)).toMatchObject({
     phase: 'startup',

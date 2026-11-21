@@ -42,9 +42,14 @@ export type FakeMergeEnd =
  */
 export type FakeWork = 'none' | 'files' | 'restored' | 'commits' | 'legacy'
 
-/** How a Continue of the fake ends. */
+/**
+ * How a Continue of the fake ends. `clash`, `stopped`, and `move-failed`
+ * stop with the Worker's safe words: for changed files that clash with
+ * main, for a stop in the fetch, and for any other stop, such as a move
+ * that stops for another cause.
+ */
 export type FakeContinueEnd =
-  'continued' | 'question' | 'clash' | 'stopped' | 'turn'
+  'continued' | 'question' | 'clash' | 'stopped' | 'move-failed' | 'turn'
 
 function refusal(code: string, message: string) {
   return { error: { code, message } }
@@ -186,11 +191,12 @@ export function serveContinue(
   server.json('POST', start, { state: 'pending', continueId: CONTINUE_ID }, 202)
   const branch = continueQuestionReply.branch
   if (end === 'question') server.json('GET', poll, continueQuestionReply)
-  if (end === 'clash' || end === 'stopped') {
-    const message =
-      end === 'clash'
-        ? `Continue stopped: the changed files clash with the latest main. The workspace stays on ${branch}.`
-        : 'Continue could not finish. Check GitHub access and try again.'
+  if (end === 'clash' || end === 'stopped' || end === 'move-failed') {
+    const message = {
+      clash: `Continue stopped: the changed files clash with the latest main. The workspace stays on ${branch}.`,
+      stopped: 'Continue could not finish. Check GitHub access and try again.',
+      'move-failed': 'Continue could not finish.',
+    }[end]
     server.json('GET', poll, refusal('workspace_continue_failed', message), 409)
   }
 }

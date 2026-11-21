@@ -8,6 +8,7 @@ use futures_util::{StreamExt, stream};
 
 use super::context::path_order;
 use super::error::Result;
+use super::identity_cache::IdentityCache;
 use super::index::TemporaryIndex;
 use super::io::PathKind;
 use super::paths::PathState;
@@ -39,22 +40,33 @@ impl GitRepository {
     async fn read_identities(
         &self,
         entries: &BTreeMap<String, FileEntry>,
+        previous: &IdentityCache,
+        next: &mut IdentityCache,
     ) -> Result<BTreeMap<String, String>> {
         let paths: Vec<_> = entries
             .values()
             .filter(|entry| entry.kind == FileEntryKind::File)
             .map(|entry| entry.path.clone())
             .collect();
-        stream::iter(paths)
+        let reads = stream::iter(paths)
             .map(|path| async move {
                 self.cancellation.check()?;
-                let identity = self.io.identity(self.root.clone(), path.clone()).await?;
+                let identity = self
+                    .io
+                    .identity(self.root.clone(), path.clone(), previous.reusable(&path))
+                    .await?;
                 Ok((path, identity))
             })
             .buffer_unordered(IDENTITY_READ_CONCURRENCY)
             .collect::<Vec<Result<_>>>()
-            .await
+            .await;
+        reads
             .into_iter()
+            .map(|read| {
+                let (path, identity) = read?;
+                let hash = next.record(&path, identity);
+                Ok((path, hash))
+            })
             .collect()
     }
 
@@ -83,6 +95,9 @@ impl GitRepository {
     }
 
     pub(super) async fn capture(&self, branch: &str) -> Result<RepositorySnapshot> {
+        let mut cache = self.identity_cache.lock().await;
+        self.cancellation.check()?;
+        let mut next_cache = IdentityCache::new(self.io.wall_time());
         let (branch, sha) = self.comparison_base(branch).await?;
         let mut index = self.index(Some(&sha)).await?;
         let mut entries = BTreeMap::new();
@@ -95,7 +110,9 @@ impl GitRepository {
             self.add_entry(&mut index, &mut entries, &path, state)
                 .await?;
         }
-        let read_identities = self.read_identities(&entries).await?;
+        let read_identities = self
+            .read_identities(&entries, &cache, &mut next_cache)
+            .await?;
         let changes = self.index_changes(&mut index, &branch, &sha).await?;
         for file in &changes.files {
             if let Some(entry) = entries.get_mut(&file.changed_file.path)
@@ -112,6 +129,8 @@ impl GitRepository {
         let mut entries: Vec<_> = entries.into_values().collect();
         let order = path_order()?;
         entries.sort_by(|a, b| order.compare(&a.path, &b.path));
+        self.cancellation.check()?;
+        *cache = next_cache;
         Ok(RepositorySnapshot {
             entries,
             changes,

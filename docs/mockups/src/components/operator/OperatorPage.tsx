@@ -2,13 +2,18 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { orgList } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import { LinkTabs } from '../common/LinkTabs'
-import { AppFrame, MobileFrame } from '../layout/AppFrame'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
+import {
+  appFrame,
+  mobileFrame,
+} from '../../entries/components/layout/AppFrame.mockup'
 import type { RailState } from '../layout/OrgRail'
-import { Page, type BackLink } from '../layout/Page'
+import type { BackLink } from '../layout/Page'
+import { page as pagePart } from '../../entries/components/layout/Page.mockup'
 import { PauseNotice } from './pause'
 import { stopTimeWords } from './stopTimeCopy'
 import { WaitlistOffNotice, type WaitlistState } from './waitlistSwitch'
+import { defined } from '../../defined'
 
 /** The tabs of the operator section. */
 export type OperatorTab =
@@ -70,13 +75,16 @@ export function OperatorPage(props: {
   const waitlist = props.waitlist ?? 'on'
   const home = { label: 'Workspaces', to: paths.shell }
   const page = (
-    <Page
-      actions={props.actions}
-      back={props.back ?? (mobile ? home : undefined)}
-      subtitle={props.subtitle}
+    <pagePart.Component
+      {...defined({
+        actions: props.actions,
+        back: props.back ?? (mobile ? home : undefined),
+        subtitle: props.subtitle,
+      })}
       tabs={
-        <LinkTabs
+        <linkTabs.Component
           label="Operator"
+          moklyInstance="operator-tabs"
           tabs={tabs.map((tab) => ({
             label: tab.label,
             to: tab.to,
@@ -91,19 +99,22 @@ export function OperatorPage(props: {
       {paused ? <PauseNotice waitlist={waitlist} /> : null}
       {waitlist === 'off' ? <WaitlistOffNotice paused={paused} /> : null}
       {props.children}
-    </Page>
+    </pagePart.Component>
   )
   if (mobile) {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {props.dialog}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   return (
-    <AppFrame overlay={props.dialog} rail={operatorRail}>
+    <appFrame.Component
+      rail={operatorRail}
+      {...defined({ overlay: props.dialog })}
+    >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

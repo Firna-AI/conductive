@@ -292,6 +292,7 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [Shared summary](../../src/shared/github.ts) gives `checksSummary`, which the bar uses, and `githubSummary`, which the copy uses.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
+- [output.ts](output.ts) adds the masked labels `displayBranch` and `displayBaseBranch` to each banner that leaves the Worker, with the secret values of the last start of the sandbox. It labels the fresh and stored replies of `app-handler.ts`, each new `github.updated` event before its write and at each publication, also of a replayed receipt, and each GitHub event that `BrowserConnections` sends a tab, also from old history. Snapshots and receipts keep the real names.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
