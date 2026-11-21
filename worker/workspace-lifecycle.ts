@@ -280,9 +280,9 @@ export class WorkspaceLifecycle
     return this.run(() => this.controller.finishDiskMaintenance())
   }
 
-  protected async alarmLifecycle(): Promise<void> {
-    const { startRecords } = this.integration
-    await this.run(startRecords.queued((turn) => this.controller.alarm(turn)))
+  protected alarmLifecycle(restart?: () => Promise<void>): Promise<void> {
+    const advance = (turn: QueueTurn) => this.controller.alarm(turn, restart)
+    return this.run(this.integration.startRecords.queued(advance))
   }
 
   deviceOperation(

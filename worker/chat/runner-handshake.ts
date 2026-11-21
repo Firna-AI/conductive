@@ -22,7 +22,7 @@ export async function prepareRunnerHello(
 ): Promise<{
   protocolVersion: RunnerProtocolVersion
   cursor: number
-  ready: boolean
+  savedReady: boolean
 } | null> {
   if (active.streamId || message.workspaceId !== active.workspace.id)
     throw new HttpError(
@@ -66,7 +66,7 @@ export async function prepareRunnerHello(
           message.streamId,
           await transaction.cursor(message.streamId),
         ),
-        ready: await transaction.streamReady(message.streamId),
+        savedReady: await transaction.streamReady(message.streamId),
       }
     },
     publish,

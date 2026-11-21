@@ -99,8 +99,12 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  async stopWorkspace(workspaceId: string): Promise<void> {
-    await this.operations.stop(workspaceId)
+  stopWorkspace(workspaceId: string, keepQueued?: boolean): Promise<void> {
+    return this.operations.stop(workspaceId, keepQueued)
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    return this.operations.stopTurnsForRestart(workspaceId)
   }
 
   commitWorkspaceEvent(

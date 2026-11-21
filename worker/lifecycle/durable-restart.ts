@@ -16,6 +16,10 @@ export function workspaceNotRunning(): HttpError {
   )
 }
 
+export function canRestartLifecycle(state: DurableLifecycleState): boolean {
+  return restartableStates.has(state.state) && state.startStop === undefined
+}
+
 /**
  * Restart begins: the workspace shows Starting until the runner is ready
  * again, as `readyLifecycle` says, or until the time limit ends it.
@@ -31,8 +35,7 @@ export function restartingLifecycle(
       'workspace_not_found',
       'The workspace is not available.',
     )
-  if (!restartableStates.has(state.state) || state.startStop !== undefined)
-    throw workspaceNotRunning()
+  if (!canRestartLifecycle(state)) throw workspaceNotRunning()
   return {
     ...state,
     state: 'starting',
@@ -60,8 +63,20 @@ export function failedRestartLifecycle(
     ...state,
     state: 'error',
     softwareRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
     error: { code: 'restart_failed', message: restartCopy.failed, log: null },
   }
+}
+
+export function requiresFreshRunnerReady(
+  state: DurableLifecycleState | undefined,
+): boolean {
+  return (
+    state?.state === 'starting' &&
+    state.automaticRestartSubmitted === true &&
+    state.softwareRestartAt !== undefined &&
+    state.automaticRestartAt === state.softwareRestartAt
+  )
 }
 
 /** The time when the alarm ends a restart whose runner is not back. */
