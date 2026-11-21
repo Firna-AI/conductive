@@ -190,6 +190,7 @@ A client disconnect also cancels the upstream.
 It adds no model filter, rate limit, or answer size limit.
 A Codex model answer of HTTP 429 with a `retry-after` over 600 seconds is the one exception.
 The wait is delay seconds or an IMF-fixdate, RFC 850, or asctime date, as Codex reads it.
+It reads the filtered `retry-after`, so a redacted login is no wait. A wrong weekday or a delay above the signed 64-bit range is no wait either.
 The gateway cancels that answer and returns its own 429 with error type `usage_limit_reached` and `resets_at`.
 It drops `retry-after` and `x-should-retry`, and keeps the other allowed headers.
 A reset after the year 9999 gets no `resets_at`, because Codex cannot show it.

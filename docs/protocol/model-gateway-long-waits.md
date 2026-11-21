@@ -23,7 +23,11 @@ keeps the dated record, as
   429 unchanged.
 - The gateway reads the wait as Codex reads it: a number of seconds, or
   an HTTP date in one of its three forms. These forms are IMF-fixdate,
-  RFC 850, and asctime.
+  RFC 850, and asctime. A date with a wrong weekday, and a number above
+  the largest signed 64-bit number, are not a wait.
+- The gateway reads the wait after it removes the login from the
+  headers. Reason: an upstream can echo a login in `retry-after`, and the
+  reset time must not carry it.
 - The error of the gateway has the error type `usage_limit_reached`, the
   code `model_rate_limited`, and the reset time in `resets_at`. The reset
   time is the end of the wait. The error has no `retry-after` header and
@@ -32,7 +36,8 @@ keeps the dated record, as
   Reason: Codex shows no reset time after that year.
 - Codex ends the turn on this error and does not send the request again.
   The chat shows the failed turn with the reset time, in the time zone of
-  the sandbox.
+  the sandbox. When the time zone of the sandbox has no name, the chat
+  says "sandbox time" in place of the name.
 - A runner older than this rule shows the usage limit cause with no reset
   time. Its turn also ends. The sandbox installs the newer runner when the
   workspace is idle, as

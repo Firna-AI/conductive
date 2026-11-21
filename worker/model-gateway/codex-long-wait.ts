@@ -17,22 +17,24 @@ const lastResetSecond = 253_402_300_799
 /**
  * Returns the error that ends the Codex turn when a model answer is a 429
  * with a wait above the limit. Codex fails the turn on `usage_limit_reached`
- * without a retry, and its message gives the time of `resets_at`.
+ * without a retry, and its message gives the time of `resets_at`. It reads
+ * only the filtered headers, so no part of a removed login can reach the
+ * error.
  */
 export function codexLongWait(
   agent: Agent,
   suffix: string,
-  upstream: Response,
-  headers: Headers,
+  status: number,
+  filteredHeaders: Headers,
   now: number,
 ): Response | null {
-  if (agent !== 'codex' || upstream.status !== 429) return null
+  if (agent !== 'codex' || status !== 429) return null
   if (!modelRoutes.includes(suffix)) return null
-  const seconds = retryAfterSeconds(upstream.headers.get('retry-after'), now)
+  const seconds = retryAfterSeconds(filteredHeaders.get('retry-after'), now)
   if (seconds === null || seconds <= CODEX_LONG_WAIT_SECONDS) return null
   const resetsAt = Math.ceil(now / 1000 + seconds)
   const known = resetsAt <= lastResetSecond
-  const result = new Headers(headers)
+  const result = new Headers(filteredHeaders)
   result.delete('retry-after')
   result.delete('x-should-retry')
   result.set('content-type', 'application/json')

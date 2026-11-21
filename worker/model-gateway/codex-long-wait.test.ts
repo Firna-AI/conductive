@@ -8,7 +8,7 @@ import {
   modelPath,
   tokenGateway,
 } from './codex-token.test-support'
-import { gatewayHttp } from './http.test-support'
+import { gatewayHttp, openModelStream } from './http.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -17,7 +17,10 @@ beforeAll(async () => {
 beforeEach(() => harness.reset())
 afterAll(() => harness.dispose())
 
-const tooManyRequests = (body: string, retryAfter?: string) =>
+const tooManyRequests = (
+  body: string | ReadableStream<Uint8Array>,
+  retryAfter?: string,
+) =>
   new Response(body, {
     status: 429,
     headers: {
@@ -31,11 +34,13 @@ const tooManyRequests = (body: string, retryAfter?: string) =>
 it('ends the Codex turn of an own endpoint on a 429 with a long wait, without the login', async () => {
   const client = await gatewayHttp(harness, CODEX, 'endpoint', 2)
   try {
-    client.ownEndpoint.response = () =>
-      tooManyRequests(
-        `{"error":{"message":"Too many requests for ${client.secret}"}}`,
-        '136323',
-      )
+    const upstream = openModelStream()
+    upstream.source.enqueue(
+      new TextEncoder().encode(
+        `{"error":"Too many requests for ${client.secret}`,
+      ),
+    )
+    client.ownEndpoint.response = () => tooManyRequests(upstream.body, '136323')
     const response = await client.request()
     expect(response.status).toBe(429)
     expect(Object.fromEntries(response.headers)).toEqual({
@@ -53,6 +58,29 @@ it('ends the Codex turn of an own endpoint on a 429 with a long wait, without th
       },
     })
     expect(client.ownEndpoint.requests).toHaveLength(1)
+    await upstream.cancelled
+  } finally {
+    await client.dispose()
+  }
+})
+
+it('does not read a long wait from a login that the header filter removes', async () => {
+  const secret = '987654321098'
+  const client = await gatewayHttp(
+    harness,
+    CODEX,
+    'endpoint',
+    2,
+    undefined,
+    {},
+    { secret },
+  )
+  try {
+    client.ownEndpoint.response = () => tooManyRequests('{}', secret)
+    const response = await client.request()
+    expect(response.status).toBe(429)
+    expect(response.headers.get('retry-after')).toBe('[redacted]')
+    expect(await response.text()).toBe('{}')
   } finally {
     await client.dispose()
   }
@@ -62,7 +90,7 @@ it.each([
   ['an HTTP date', 'Thu, 01 Jan 1970 02:00:00 GMT', 7200],
   ['an RFC 850 date', 'Thursday, 01-Jan-70 02:00:00 GMT', 7200],
   ['an asctime date', 'Thu Jan  1 02:00:00 1970', 7200],
-  ['a time after the year 9999', '99999999999999999999', undefined],
+  ['a time after the year 9999', '9000000000000', undefined],
 ])(
   'ends the Codex turn of a ChatGPT sign-in on a 429 that waits until %s',
   async (_name, retryAfter, resetsAt) => {
@@ -85,6 +113,25 @@ it.each([
     expect(error.resets_at).toBe(resetsAt)
   },
 )
+
+it.each([
+  ['a date with the wrong weekday', 'Fri, 01 Jan 1970 02:00:00 GMT'],
+  ['more seconds than Codex reads', '99999999999999999999'],
+])('passes a ChatGPT 429 with %s unchanged', async (_name, retryAfter) => {
+  const h = await tokenGateway()
+  h.respond(async (request) =>
+    new URL(request.url).pathname === accountPath
+      ? Response.json(accounts())
+      : tooManyRequests('{}', retryAfter),
+  )
+  const response = await h.request(modelPath, {
+    method: 'POST',
+    body: '{"input":[]}',
+  })
+  expect(response?.status).toBe(429)
+  expect(response?.headers.get('retry-after')).toBe(retryAfter)
+  expect(await response?.text()).toBe('{}')
+})
 
 it('passes a long wait on the ChatGPT model list unchanged', async () => {
   const h = await tokenGateway()

@@ -1,7 +1,12 @@
 const months = 'Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec'
 const clock = '(\\d{2}):(\\d{2}):(\\d{2})'
 
+const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+/** Codex reads no delay above the largest signed 64-bit number. */
+const lastDelaySecond = 9_223_372_036_854_775_807n
+
 interface DateParts {
+  weekday: string
   year: number
   month: string
   day: number
@@ -17,9 +22,10 @@ const forms: readonly {
 }[] = [
   {
     pattern: new RegExp(
-      `^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), (\\d{2}) (${months}) (\\d{4}) ${clock} GMT$`,
+      `^(Mon|Tue|Wed|Thu|Fri|Sat|Sun), (\\d{2}) (${months}) (\\d{4}) ${clock} GMT$`,
     ),
-    parts: ([, day, month, year, hour, minute, second]) => ({
+    parts: ([, weekday, day, month, year, hour, minute, second]) => ({
+      weekday,
       year: Number(year),
       month,
       day: Number(day),
@@ -30,9 +36,10 @@ const forms: readonly {
   },
   {
     pattern: new RegExp(
-      `^(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day, (\\d{2})-(${months})-(\\d{2}) ${clock} GMT$`,
+      `^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday), (\\d{2})-(${months})-(\\d{2}) ${clock} GMT$`,
     ),
-    parts: ([, day, month, year, hour, minute, second]) => ({
+    parts: ([, weekday, day, month, year, hour, minute, second]) => ({
+      weekday: weekday.slice(0, 3),
       year: (Number(year) < 70 ? 2000 : 1900) + Number(year),
       month,
       day: Number(day),
@@ -43,9 +50,10 @@ const forms: readonly {
   },
   {
     pattern: new RegExp(
-      `^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (${months}) ( \\d|\\d{2}) ${clock} (\\d{4})$`,
+      `^(Mon|Tue|Wed|Thu|Fri|Sat|Sun) (${months}) ( \\d|\\d{2}) ${clock} (\\d{4})$`,
     ),
-    parts: ([, month, day, hour, minute, second, year]) => ({
+    parts: ([, weekday, month, day, hour, minute, second, year]) => ({
+      weekday,
       year: Number(year),
       month,
       day: Number(day),
@@ -61,7 +69,7 @@ function httpDate(text: string): number | null {
   for (const { pattern, parts } of forms) {
     const match = pattern.exec(text)
     if (!match) continue
-    const { year, month, day, hour, minute, second } = parts(match)
+    const { weekday, year, month, day, hour, minute, second } = parts(match)
     const time = Date.UTC(
       year,
       months.split('|').indexOf(month),
@@ -72,6 +80,7 @@ function httpDate(text: string): number | null {
     )
     const date = new Date(time)
     const real =
+      weekdays[date.getUTCDay()] === weekday &&
       date.getUTCDate() === day &&
       date.getUTCHours() === hour &&
       date.getUTCMinutes() === minute &&
@@ -90,7 +99,8 @@ export function retryAfterSeconds(
   now: number,
 ): number | null {
   const text = value?.trim() ?? ''
-  if (/^\d+$/.test(text)) return Number(text)
+  if (/^\d+$/.test(text))
+    return BigInt(text) > lastDelaySecond ? null : Number(text)
   const time = httpDate(text)
   return time === null ? null : Math.max(0, (time - now) / 1000)
 }

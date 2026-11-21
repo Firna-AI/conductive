@@ -38,8 +38,13 @@ export function authenticationFailure(): Extract<
 function resetTime(message: string): string {
   const time = /try again at ([\w ,:]{1,40}?)\.?\s*$/i.exec(message)?.[1]
   if (!time) return ''
-  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
-  return ` Try again at ${time} ${zone.replace(/^Etc\//, '')}.`
+  // Node gives no IANA name for some TZ values, such as UTC+3.
+  const zone: unknown = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const label =
+    typeof zone === 'string' && zone && zone !== 'Etc/Unknown'
+      ? zone
+      : 'sandbox time'
+  return ` Try again at ${time} ${label}.`
 }
 
 /**

@@ -168,7 +168,7 @@ export async function routeModelGateway(
       const longWait = codexLongWait(
         agent,
         suffix,
-        upstream,
+        upstream.status,
         headers,
         runtime.dependencies.now(),
       )
