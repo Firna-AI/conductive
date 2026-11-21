@@ -208,6 +208,20 @@ These are the non-UI implementor's calls, checked by the orchestrator on 21 Nove
 - On 21 November 2026, preserve ordinary port reports when optional service lookup fails. Reason: service availability must not change existing server detection.
 - On 21 November 2026, keep local MCP identities and schemas outside the Worker-call union. Resolve remote credentials only for a remote call. Reason: local services need neither a workspace token nor an active turn.
 
+### Runner transport and architecture calls
+
+These are the implementors' calls of 21 November 2026, checked by the orchestrator on that date. They implement the approved services contract.
+
+- Define the required native effects in the runner and implement them in `cnd-services`. Reason: this preserves the crate dependency direction and the one shared local manager.
+- Bind private commands and each reply part to the existing accepted socket generation. Keep their typed documents outside numbered storage. Reason: late work must not select a replacement connection or replay after rollback.
+- Persist a higher native revision for each accepted connection, including an unchanged empty catalogue. Reason: the checked Worker ignores equal same-boot revisions.
+- Give private work its own cancelable task set and independent two-second observation schedule. Keep ordinary timers and work counts unchanged. Reason: service state without ports must stay current without delaying updates, moves, or turns.
+- Release the registry during log IO and recheck its original target afterward. Keep controls serialized and skip optional port enrichment while that registry is busy. Reason: an old read must not return a replacement run's output or block ordinary port reports.
+- Return Unconfirmed for an unknown control effect error and a fixed typed failure for a current log error. Reason: neither path can retry an uncertain effect or expose raw diagnostics.
+- Extend the existing constants parity table with the approved app log bounds. Reason: the runtime TypeScript constants now exist, so the same test can check both owners.
+- Put the services data boundary in the architecture's Worker section and link its requirements. Reason: the workspace Durable Object owns the filtered report, control records, and temporary raw-log assembly.
+- Put the service components after Agents and ports. Name the unit helper by its responsibility and keep the summary as "its programs". Reason: architecture describes component ownership without duplicating command reference or an incorrect count.
+
 ### Services UI calls
 
 These are the UI implementor's calls of 20 November 2026, checked by the orchestrator on that date. They follow services decision 19 A.
@@ -364,17 +378,19 @@ Depends on: 4 and 5
 
 The non-UI implementor connects the checked native manager to the checked Worker contract. This milestone activates service reports and app controls.
 
-- [ ] Report the approved services data on changes and reconnect. A service report belongs to no turn.
-- [ ] Enable private traffic only after both hello and welcome accept it. Keep it outside the numbered outbox and preserve event numbering.
-- [ ] Split each complete report, control result, and raw log document within the existing envelope budget. Preserve complete text for final filtering. Add no name or service-count limit.
-- [ ] Send each control and log request to the same local manager. Preserve its request IDs, generation rules, and output-free control receipts.
-- [ ] Keep private log reads and pending controls from blocking ordinary initial port reports, idle updates, or repository relocation. Preserve observed-target checks across asynchronous reads.
-- [ ] Publish a fresh full snapshot after each negotiated connection. Retain a monotonic revision across runner restarts and reject stale connections.
-- [ ] Link owned ports through native and Worker reports without changing existing port selection.
-- [ ] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
-- [ ] Confirm that no runner service path records activity or holds a turn. Run targeted runner and integration checks. Repeat new asynchronous tests 10 times and record their cost.
-- [ ] Extend the existing Rust/TypeScript budget-parity test with the approved app log line and byte bounds from the Worker module.
-- [ ] Update actual runner entry-point docs. Use the docs implementor to update the architecture boundary when both components exist.
+- [x] Report the approved services data on changes and reconnect. A service report belongs to no turn.
+- [x] Enable private traffic only after both hello and welcome accept it. Keep it outside the numbered outbox and preserve event numbering.
+- [x] Split each complete report, control result, and raw log document within the existing envelope budget. Preserve complete text for final filtering. Add no name or service-count limit.
+- [x] Send each control and log request to the same local manager. Preserve its request IDs, generation rules, and output-free control receipts.
+- [x] Keep private log reads and pending controls from blocking ordinary initial port reports, idle updates, or repository relocation. Preserve observed-target checks across asynchronous reads.
+- [x] Publish a fresh full snapshot after each negotiated connection. Retain a monotonic revision across runner restarts and reject stale connections.
+- [x] Link owned ports through native and Worker reports without changing existing port selection.
+- [x] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
+- [x] Confirm that no runner service path records activity or holds a turn. Run targeted runner and integration checks. Repeat new asynchronous tests 10 times and record their cost.
+- [x] Extend the existing Rust/TypeScript budget-parity test with the approved app log line and byte bounds from the Worker module.
+- [x] Update actual runner entry-point docs. Use the docs implementor to update the architecture boundary when both components exist.
+
+Completed on 21 November 2026. Evidence: `.context/services/runner-transport-report.md`, `.context/services/transport-proofs/`, `.context/services/transport-repeats/`, `.context/services/transport-readers-proof.log`, and `.context/services/architecture-root-check.md`.
 
 ## Milestone 5b: Catalogue read failure mockup
 

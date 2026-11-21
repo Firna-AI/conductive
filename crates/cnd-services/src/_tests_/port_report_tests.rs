@@ -31,9 +31,9 @@ async fn owned_ports_keep_labels_and_service_errors_preserve_ordinary_ports() {
         PortScannerMock::scan
             .each_call(matching!())
             .answers_arc(Arc::new(move |_| Ok(vec![port.clone()]))),
-        ServiceManagerMock::snapshot.stub(|each| {
+        ServiceManagerMock::try_snapshot.stub(|each| {
             each.call(matching!())
-                .answers_arc(Arc::new(move |_| Ok(report.clone())))
+                .answers_arc(Arc::new(move |_| Ok(Some(report.clone()))))
                 .once()
                 .then()
                 .answers(&|_| Err(Error::Unit));

@@ -45,7 +45,10 @@ Reads join retained bytes before one UTF-8 decode.
 The socket is `/run/conductive/services/control.sock`, with mode `0600` in
 a `0700` directory. The runtime registry has an exclusive manager lock.
 No call needs a workspace token or an active turn. No call records activity.
-The new Worker transport is not enabled by this crate.
+`RunnerServices` adapts this same manager to the runner-owned private transport.
+An accepted connection gets a full snapshot with a higher persisted revision.
+Log IO releases the registry lock and rechecks its observed run afterward.
+Ordinary port enrichment skips a busy manager and keeps its numeric rows and labels.
 
 ## Quick Start
 
@@ -80,6 +83,9 @@ Real systemd and command behavior needs a native smoke check.
 - [Start](src/manager/start.rs) saves definition identities before launch and keeps running names unchanged.
 - [Controls](src/manager/control.rs) saves durable receipts before Stop and Restart effects.
 - [Reconciliation](src/manager/reconcile.rs) combines actual units and helper results without replaying a launch.
+- [Snapshots](src/manager/calls.rs) keeps ordinary observations stable and persists a higher revision for a newly accepted connection.
+- [Log requests](src/manager/logs.rs) reads outside the registry lock and refuses a replaced run's output under an old target.
+- [Runner adapter](src/runner.rs) implements the runner's private effects over the same local manager and current display root.
 - [Readiness](src/manager/readiness.rs) waits for owned ports while releasing the registry lock between observations.
 - [System units](src/systemd.rs) uses fixed system-manager arguments and the current helper executable.
 - [Helper](src/helper.rs) owns process execution, output pipes, and completion records inside the service unit.

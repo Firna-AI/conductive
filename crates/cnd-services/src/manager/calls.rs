@@ -5,11 +5,11 @@ use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use cnd_runner::ports::metadata::{port_folder, port_name};
 use cnd_runner_interface::services::local::{ServiceLocalRequest, ServiceLocalResponse};
-use cnd_runner_interface::services::logs::{ServiceRawLogResponse, ServiceRawLogResult};
 use cnd_runner_interface::services::process::{ServiceIdentity, ServiceSummary};
 use cnd_runner_interface::services::reports::{ServiceReport, ServiceReportEntry};
 
 use crate::error::{Error, Result};
+use crate::records::Registry;
 
 use super::state::{SavedManager, ServiceManager};
 
@@ -34,6 +34,9 @@ impl ServiceManager for SavedManager {
         if let ServiceLocalRequest::Start { request } = request {
             return self.start_call(request).await;
         }
+        if let ServiceLocalRequest::Logs { request } = request {
+            return self.read_logs(request).await;
+        }
         let mut slot = self.state.lock().await;
         let state = self.loaded(&mut slot).await?;
         self.refresh(state).await?;
@@ -52,31 +55,9 @@ impl ServiceManager for SavedManager {
                 })
             }
             ServiceLocalRequest::Control { request } => self.control(state, request).await,
-            ServiceLocalRequest::Logs { request } => {
-                let service = state.services.get(&request.target.identity.service_id);
-                let result = match service {
-                    None => ServiceRawLogResult::NotFound,
-                    Some(service)
-                        if request.target.boot_id != state.boot_id
-                            || request.target.identity.generation != service.generation =>
-                    {
-                        ServiceRawLogResult::Stale
-                    }
-                    Some(service) => {
-                        let (bytes, omitted) = self.effects.logs.read(&service.service_id).await?;
-                        ServiceRawLogResult::Ready {
-                            text: String::from_utf8_lossy(&bytes).into_owned(),
-                            omitted,
-                        }
-                    }
-                };
-                Ok(ServiceLocalResponse::Logs {
-                    result: ServiceRawLogResponse { request, result },
-                })
-            }
-            ServiceLocalRequest::Start { .. } => Err(Error::internal_message(
-                "Start bypassed its local dispatcher",
-            )),
+            ServiceLocalRequest::Start { .. } | ServiceLocalRequest::Logs { .. } => Err(
+                Error::internal_message("request bypassed its local dispatcher"),
+            ),
         }
     }
 
@@ -84,7 +65,30 @@ impl ServiceManager for SavedManager {
         let mut slot = self.state.lock().await;
         let state = self.loaded(&mut slot).await?;
         self.refresh(state).await?;
-        let repository = state.repository.clone();
+        Ok(self.report(state))
+    }
+
+    async fn fresh_snapshot(&self) -> Result<ServiceReport> {
+        let mut slot = self.state.lock().await;
+        let state = self.loaded(&mut slot).await?;
+        self.refresh(state).await?;
+        self.save(state).await?;
+        Ok(self.report(state))
+    }
+
+    async fn try_snapshot(&self) -> Result<Option<ServiceReport>> {
+        let Ok(mut slot) = self.state.try_lock() else {
+            return Ok(None);
+        };
+        let state = self.loaded(&mut slot).await?;
+        self.refresh(state).await?;
+        Ok(Some(self.report(state)))
+    }
+}
+
+impl SavedManager {
+    fn report(&self, state: &Registry) -> ServiceReport {
+        let repository = &state.repository;
         let services = state
             .services
             .values()
@@ -113,7 +117,7 @@ impl ServiceManager for SavedManager {
                         folder: port_folder(
                             &value.definition.folder,
                             &self.effects.home,
-                            &repository,
+                            repository,
                         ),
                         status: value.status.clone(),
                         ports: value.ports.clone(),
@@ -122,10 +126,10 @@ impl ServiceManager for SavedManager {
                 }
             })
             .collect();
-        Ok(ServiceReport {
+        ServiceReport {
             boot_id: state.boot_id.clone(),
             revision: state.revision,
             services,
-        })
+        }
     }
 }

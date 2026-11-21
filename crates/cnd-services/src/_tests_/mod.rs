@@ -4,6 +4,8 @@
 
 mod boundary_tests;
 mod effects;
+mod held;
+mod isolation_tests;
 mod log_tests;
 mod manager_tests;
 mod port_report_tests;

@@ -22,9 +22,9 @@ pub struct ServicePortScanner {
 impl PortScanner for ServicePortScanner {
     async fn scan(&self) -> Result<Vec<ListeningPort>> {
         let mut ports = self.scanner.scan().await?;
-        let report = match self.manager.snapshot().await {
-            Ok(report) => report,
-            Err(_) => return Ok(ports),
+        let report = match self.manager.try_snapshot().await {
+            Ok(Some(report)) => report,
+            Ok(None) | Err(_) => return Ok(ports),
         };
         let owners: BTreeMap<_, _> =
             report

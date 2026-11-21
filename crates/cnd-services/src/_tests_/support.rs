@@ -68,6 +68,15 @@ impl Fixture {
         Arc::new(SavedManager::new(self.effects.clone()))
     }
 
+    pub(super) fn with_effects(
+        &self,
+        change: impl FnOnce(&mut Dependencies),
+    ) -> Arc<dyn ServiceManager> {
+        let mut effects = self.effects.clone();
+        change(&mut effects);
+        Arc::new(SavedManager::new(effects))
+    }
+
     pub(super) async fn start(&self, id: &str, name: &str, program: &str) -> ServiceStartResult {
         match self.manager.call(start(id, name, program)).await.unwrap() {
             ServiceLocalResponse::Start { result, .. } => result,

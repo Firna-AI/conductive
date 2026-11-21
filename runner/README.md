@@ -120,6 +120,10 @@ outside every turn, in system units of their own.
 The [native services library](../crates/cnd-services/README.md) provides the
 manager, private socket, process reconciliation, cgroup ownership, and logs.
 The [local tool guide](../tools/services.md) gives CLI and MCP calls.
+The runner also negotiates a separate private Worker transport for reports,
+controls, and complete log reads. It captures each request's connection generation.
+Each accepted connection publishes a full snapshot with a higher saved revision.
+Its private jobs hold no turn and never delay an idle update or repository move.
 
 ## Configuration
 

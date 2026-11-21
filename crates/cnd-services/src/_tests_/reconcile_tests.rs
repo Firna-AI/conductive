@@ -147,6 +147,17 @@ async fn terminal_results_and_end_times_stay_stable_after_reconcile() {
     assert_eq!(h.world.lock().unwrap().stopped.len(), 1);
     let reopened = h.reopen();
     assert_eq!(reopened.snapshot().await.unwrap(), first);
+    let fresh = reopened.fresh_snapshot().await.unwrap();
+    assert_eq!(fresh.revision, first.revision + 1);
+    assert_eq!(fresh.services, first.services);
+    assert_eq!(
+        h.world.lock().unwrap().registry.as_ref().unwrap().revision,
+        fresh.revision
+    );
+    let next = h.reopen().fresh_snapshot().await.unwrap();
+    assert_eq!(next.revision, fresh.revision + 1);
+    assert_eq!(next.services, first.services);
+    assert_eq!(h.world.lock().unwrap().launched.len(), 4);
 }
 
 #[tokio::test]

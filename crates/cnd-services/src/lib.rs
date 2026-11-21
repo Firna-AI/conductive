@@ -10,6 +10,7 @@ pub mod ownership;
 pub mod port_reports;
 pub mod ports;
 pub mod records;
+pub mod runner;
 pub mod runtime;
 pub mod settings;
 pub mod socket;

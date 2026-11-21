@@ -22,8 +22,8 @@ tool metadata.
 The hello has an optional `fileServer` capability. A listening file server
 sets it to true. Older runners omit it. The protocol version stays 2.
 The hello and welcome also have optional `services` support fields.
-Both must be true before a connection carries services. Production code
-does not advertise or accept service support yet.
+Both must be true before a connection carries services. The runner advertises
+support when its native effects are composed, and the Worker accepts it after negotiation.
 Service contracts separate local definitions and raw log replies from
 selected public report rows and filtered app log excerpts.
 Reports carry the computer boot ID and revision. Controls carry a durable

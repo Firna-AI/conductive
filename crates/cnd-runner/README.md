@@ -159,7 +159,12 @@ run on an independent two-second timer.
 The executable composes one [native manager](../cnd-services/README.md)
 for local calls. Its independent units own execution and logs as `user`.
 The service scanner adds cgroup ownership to this crate's existing port rows.
-Service lookup failures preserve ordinary port reports.
+Service lookup failures or a busy native manager preserve ordinary port reports.
+The executable also supplies `ServiceEffects` for the independent Worker path.
+Only a hello and welcome that both enable services carry its private parts.
+Each accepted connection gets a persisted higher snapshot revision, including empty catalogues.
+Connection-scoped service jobs never enter ordinary busy, turn, or idle-update accounting.
+Disconnect, relocation, and updates cancel those jobs without stopping service units.
 
 ## Quick Start
 
@@ -259,6 +264,11 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [connection.rs](src/runtime/connection.rs): drives ordinary socket steps while keeping private service jobs outside update and move waits.
+- [ports.rs](src/services/ports.rs): `ServiceEffects` defines the native operations supplied by the composition root.
+- [tasks.rs](src/services/tasks.rs): observes actual service state and dispatches controls and complete log reads independently.
+- [sender.rs](src/services/sender.rs): sends typed documents in byte-aware parts on their captured connection generation.
+- [services.rs](src/link/services.rs): rejects stale or unnegotiated private replies without numbered storage.
 - [startup_log.rs](src/startup_log.rs): `ProcessStartupLog` records the four startup measurements once per process.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.

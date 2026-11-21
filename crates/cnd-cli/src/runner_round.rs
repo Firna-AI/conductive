@@ -31,6 +31,7 @@ use cnd_runner::watcher::linux::LinuxWatchDriver;
 use cnd_runner::watcher::service::ReportWatchService;
 use cnd_services::manager::state::ServiceManager;
 use cnd_services::port_reports::ServicePortScanner;
+use cnd_services::runner::RunnerServices;
 use tokio::sync::watch;
 use uuid::Uuid;
 
@@ -53,14 +54,7 @@ pub(crate) async fn run_once(
     startup_log: Arc<dyn StartupLog>,
     shutdown: watch::Receiver<bool>,
 ) -> Result<RunExit> {
-    if helper
-        .services
-        .repository(configuration.cwd.clone())
-        .await
-        .is_err()
-    {
-        tracing::warn!("The service display folder could not be updated.");
-    }
+    let service_root = configuration.cwd.clone();
     let helpers = Arc::new(NodeHelpers {
         node: helper.node.clone(),
         program: helper.program.clone(),
@@ -82,7 +76,8 @@ pub(crate) async fn run_once(
                 clock.clone(),
                 store.clone(),
             )
-            .with_repository_folder(&configuration.cwd),
+            .with_repository_folder(&configuration.cwd)
+            .with_services(),
     );
     let io = Arc::new(LocalRepositoryIo);
     let folders = RepositoryFolders::new(&configuration, io.clone());
@@ -184,7 +179,20 @@ pub(crate) async fn run_once(
     let runner: Arc<dyn Runner> = Arc::new(
         RunnerCore::new(link, store, clock, handler, releases)
             .with_folders(folders)
+            .with_services(Arc::new(RunnerServices {
+                manager: helper.services.clone(),
+                repository: service_root.clone(),
+            }))
             .with_startup_log(startup_log),
     );
-    runner.run(shutdown).await.internal()
+    let manager = helper.services.clone();
+    let metadata = tokio::spawn(async move {
+        if manager.repository(service_root).await.is_err() {
+            tracing::warn!("The service display folder could not be updated.");
+        }
+    });
+    let result = runner.run(shutdown).await.internal();
+    metadata.abort();
+    let _ = metadata.await;
+    result
 }

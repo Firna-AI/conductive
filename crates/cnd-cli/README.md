@@ -167,7 +167,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
-- [runner_round.rs](src/runner_round.rs) composes each runner round and updates service display context after repository moves.
+- [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
 - [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
 - [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.
 - [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.

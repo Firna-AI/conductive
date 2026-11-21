@@ -46,6 +46,10 @@ pub trait ServiceManager: Send + Sync {
     async fn call(&self, request: ServiceLocalRequest) -> Result<ServiceLocalResponse>;
     /// Capture a complete selected report without activating Worker traffic.
     async fn snapshot(&self) -> Result<ServiceReport>;
+    /// Reconcile and persist a higher revision for a newly accepted connection.
+    async fn fresh_snapshot(&self) -> Result<ServiceReport>;
+    /// Enrich ordinary ports only when no native operation holds the registry.
+    async fn try_snapshot(&self) -> Result<Option<ServiceReport>>;
 }
 
 /// Registry owner. A readiness wait releases the registry lock between observations.
