@@ -1,5 +1,4 @@
-import { ArrowLeft, ArrowRight, PanelLeft } from 'lucide-react'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import type { WindowMode } from './MacApp'
 import styles from './WindowControls.module.css'
@@ -36,13 +35,23 @@ export function WindowControls(props: { mode: WindowMode; corner?: boolean }) {
       {props.mode === 'window' ? (
         <span aria-hidden className={styles.reserved} />
       ) : null}
-      <IconButton
-        icon={PanelLeft}
+      <iconButton.Component
+        icon="panel-left"
         label={props.corner ? 'Show the sidebar' : 'Hide the sidebar'}
+        moklyInstance="sidebar-toggle"
       />
       <span className={styles.spacer} />
-      <IconButton icon={ArrowLeft} label="Back" />
-      <IconButton disabled icon={ArrowRight} label="Forward" />
+      <iconButton.Component
+        icon="arrow-left"
+        label="Back"
+        moklyInstance="back"
+      />
+      <iconButton.Component
+        disabled
+        icon="arrow-right"
+        label="Forward"
+        moklyInstance="forward"
+      />
     </div>
   )
 }

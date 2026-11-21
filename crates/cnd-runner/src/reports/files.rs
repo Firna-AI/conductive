@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::file_changes::RunnerChangesPart;
-use cnd_runner_interface::file_tree::{RunnerFileEvent, RunnerFileRevisionPart};
+use cnd_runner_interface::file_tree::{FileEntryKind, RunnerFileEvent, RunnerFileRevisionPart};
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_files::{
     DiffReadOutcome, FileReadOutcome, RunnerDiffResult, RunnerFileCommand, RunnerFileResponse,
@@ -13,10 +13,12 @@ use cnd_runner_interface::runner_files::{
 use cnd_runner_interface::wire::{WireFalse, WireTrue};
 use futures_util::future::BoxFuture;
 use tokio::sync::Mutex;
+use tokio::time::Instant;
 
 use crate::emitter::EventEmitter;
 use crate::error::Result;
 use crate::repository::service::{Repository, RepositorySnapshot};
+use crate::startup_log::StartupLog;
 use crate::state::records::FileRevisions;
 
 use super::parts::split;
@@ -66,6 +68,7 @@ pub struct FileReporter {
     filter: Arc<dyn ReportFilter>,
     history: Arc<Mutex<History>>,
     queue: Arc<SerialQueue>,
+    startup_log: Option<Arc<dyn StartupLog>>,
 }
 
 impl FileReporter {
@@ -89,7 +92,14 @@ impl FileReporter {
                 unavailable: false,
             })),
             queue: Arc::new(SerialQueue::default()),
+            startup_log: None,
         }
+    }
+
+    /// Share the process startup measurements supplied by the composition root.
+    pub fn with_startup_log(mut self, startup_log: Arc<dyn StartupLog>) -> Self {
+        self.startup_log = Some(startup_log);
+        self
     }
 
     async fn scan(
@@ -99,7 +109,24 @@ impl FileReporter {
         kind: Option<FileReportKind>,
         command_id: Option<String>,
     ) -> Result<()> {
-        let current = match self.repository.snapshot(self.branch.clone()).await {
+        let started = Instant::now();
+        let captured = self.repository.snapshot(self.branch.clone()).await;
+        let duration = started.elapsed();
+        if full
+            && kind.is_none()
+            && command_id.is_none()
+            && let Some(log) = &self.startup_log
+        {
+            let file_count = captured.as_ref().map_or(0, |snapshot| {
+                snapshot
+                    .entries
+                    .iter()
+                    .filter(|entry| entry.kind == FileEntryKind::File)
+                    .count()
+            });
+            log.scanned(duration, file_count);
+        }
+        let current = match captured {
             Ok(current) => current,
             Err(_) => {
                 state.unavailable = true;

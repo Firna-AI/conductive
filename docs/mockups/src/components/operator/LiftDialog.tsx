@@ -1,9 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
-import { LockOpen } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { liftQuestion, type QuestionTarget } from './operatorCopy'
+import { instanceKey } from '../../instanceKey'
 
 /**
  * The operator confirms a lift. The dialog says what comes back, and that
@@ -21,26 +24,39 @@ export function LiftDialog(props: {
   extra?: string
 }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={props.cancel}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={props.done}>
-            <ActionButton icon={LockOpen} tone="primary">
+            <actionButton.Component
+              icon="lock-open"
+              moklyInstance="dialog-lift-suspension"
+              tone="primary"
+            >
               Lift suspension
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="lift-dialog"
       title={`Lift the suspension of ${props.target.name}?`}
       viewport={props.viewport}
     >
       {liftQuestion(props.target).map((text) => (
-        <DialogText key={text}>{text}</DialogText>
+        <dialogText.Component key={text} moklyInstance={instanceKey(text)}>
+          {text}
+        </dialogText.Component>
       ))}
-      {props.extra ? <DialogText>{props.extra}</DialogText> : null}
-    </ConfirmDialog>
+      {props.extra ? (
+        <dialogText.Component moklyInstance={instanceKey(props.extra)}>
+          {props.extra}
+        </dialogText.Component>
+      ) : null}
+    </confirmDialog.Component>
   )
 }

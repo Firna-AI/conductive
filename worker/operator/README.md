@@ -237,7 +237,8 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, pause, and switch dispatch.
 - [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages, and `waitingUserPredicate`, which the switch count shares.
 - [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
-- [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
+- [`approval-email.ts`](approval-email.ts): the immediate send and scheduled retries of the saved approval message.
+  `createEmailMessages` in [`email-messages.ts`](../email-messages.ts) builds that message.
 - [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
 - [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
 - [`waitlist-switch.ts`](waitlist-switch.ts): the switch read with its waiting count, and conditional changes.

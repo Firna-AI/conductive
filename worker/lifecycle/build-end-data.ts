@@ -9,6 +9,10 @@ import {
   switchPublicationStatements,
   type SwitchBuildFailure,
 } from './provider-switch-end'
+import {
+  failedBuildStepsStatement,
+  publishedBuildStepsStatement,
+} from './build-step-data'
 
 type BuildEnd =
   | ({ state: 'failed'; buildId: string; message: string } & SwitchBuildFailure)
@@ -48,6 +52,10 @@ export async function writeBuildEnd(
         end.state === 'failed' ? end.message : null,
         buildId,
       ),
+    // After the final update, so that the publish closes the steps only of a success.
+    end.state === 'failed'
+      ? failedBuildStepsStatement(db, buildId, now)
+      : publishedBuildStepsStatement(db, buildId, now),
   ])
 }
 

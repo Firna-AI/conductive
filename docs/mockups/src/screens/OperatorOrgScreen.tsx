@@ -1,6 +1,5 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Ban, LockOpen } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { LiftDialog } from '../components/operator/LiftDialog'
 import type { QuestionTarget } from '../components/operator/operatorCopy'
@@ -96,17 +95,25 @@ function OrgAction(props: { org: OrgPage; flow: Flow }) {
   if (props.org.suspension !== undefined) {
     return (
       <ScreenLink asChild to={liftOf(props.org, props.flow).open}>
-        <ActionButton icon={LockOpen} tone="primary">
+        <actionButton.Component
+          icon="lock-open"
+          moklyInstance="lift-suspension"
+          tone="primary"
+        >
           Lift suspension
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     )
   }
   return (
     <ScreenLink asChild to={props.flow.suspend}>
-      <ActionButton icon={Ban} tone="danger">
+      <actionButton.Component
+        icon="ban"
+        moklyInstance="suspend-org"
+        tone="danger"
+      >
         Suspend org
-      </ActionButton>
+      </actionButton.Component>
     </ScreenLink>
   )
 }

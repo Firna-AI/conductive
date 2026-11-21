@@ -127,6 +127,8 @@ export async function createHarness(
       await native.reset()
       await db.batch(
         [
+          'job_runs',
+          'job_steps',
           'e2b_traffic_tokens',
           'e2b_snapshot_mappings',
           'e2b_create_operations',

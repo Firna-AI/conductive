@@ -1,5 +1,12 @@
 import { useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
+import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
+import {
+  holdsTable,
+  LineBlocks,
+  type LineState,
+} from '../../../docs/mockups/src/components/chat/LineBlocks'
+import blockStyles from '../../../docs/mockups/src/components/chat/LineBlocks.module.css'
 import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
@@ -7,13 +14,11 @@ import { classes } from '../../../docs/mockups/src/components/common/classes'
 import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
-import { agentBlocks, type TextBlock } from '../markdown/agent-blocks'
+import { agentBlocks } from '../markdown/agent-blocks'
 import { useAnswerReading } from '../markdown/answer-reading'
 import { blockShowsText } from '../markdown/readable-text'
 import { MentionsProvider } from '../mentions/MentionsContext'
-import { AgentBlocks } from './AgentText'
-import local from './chat.module.css'
-import { closedLine, LineBlocks, type LineState } from './LineBlocks'
+import { answerDrawing } from './answer-drawing'
 import { useFold } from './useFold'
 
 /**
@@ -23,26 +28,16 @@ import { useFold } from './useFold'
 const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
 
 /**
- * Whether a block is a table, or a list or a quote that holds one at any
- * depth. A quote that holds the first table of a message counts as that
- * table, as `chat-message-lines.md` says.
- */
-function holdsTable(block: TextBlock): boolean {
-  if (block.kind === 'table') return true
-  if (block.kind === 'quote') return block.blocks.some(holdsTable)
-  if (block.kind !== 'ul' && block.kind !== 'ol') return false
-  return block.items.some((item) => item.blocks.some(holdsTable))
-}
-
-/**
  * A message of the agent in an open work fold: an icon and the first words
  * of the message on one line, cut with an ellipsis. A click grows the line
  * to the full text, with the paragraphs, headings, lists, quotes, rules,
  * and code of the message, and the line keeps its place. Another click cuts
  * it again. Closed, the line shows each line break as a space.
  *
- * A `<summary>` holds no table. So the open line keeps the blocks before
- * the first table, or before the list or the quote that holds it. That
+ * The line draws its blocks with the `LineBlocks` of the mockups, and the
+ * blocks under it with their `AgentBlocks`. A `<summary>` holds no
+ * table. So the open line keeps the blocks before the first table, or
+ * before the list or the quote that holds it, as `holdsTable` says. That
  * block and the blocks after it open under the line. When the line shows no
  * readable text for the blocks that it keeps, as `blockShowsText` reads
  * them with the tree and the links of the screen, it keeps its closed text
@@ -65,7 +60,7 @@ export function MessageLine(props: { id: string; text: string }) {
   const fold = useFold(open, setOpen)
   const { id, text } = props
   const blocks = useMemo(() => agentBlocks(text), [text])
-  const pictures = useMemo(() => ({ message: id }), [id])
+  const drawing = useMemo(() => answerDrawing(id), [id])
   const firstTable = blocks.findIndex(holdsTable)
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
@@ -77,12 +72,12 @@ export function MessageLine(props: { id: string; text: string }) {
   // of the tree while the line is open with a table.
   const reading = useAnswerReading(split)
   const unnamed = split && !lead.some((block) => blockShowsText(block, reading))
-  const state: LineState = open ? { open, pictures } : closedLine
+  const state: LineState = { open, drawing }
   return (
     <details
       className={classes(
         styles.message,
-        local.message,
+        blockStyles.message,
         line.message,
         prose.prose,
       )}
@@ -97,7 +92,10 @@ export function MessageLine(props: { id: string; text: string }) {
               <LinksProvider value={plainLinks}>
                 <PlainLinks>
                   <MentionsProvider value={null}>
-                    <LineBlocks blocks={body} state={closedLine} />
+                    <LineBlocks
+                      blocks={body}
+                      state={{ open: false, drawing }}
+                    />
                   </MentionsProvider>
                 </PlainLinks>
               </LinksProvider>
@@ -106,8 +104,8 @@ export function MessageLine(props: { id: string; text: string }) {
         </span>
       </summary>
       {split ? (
-        <div className={classes(styles.messageBody, local.messageBody)}>
-          <AgentBlocks blocks={body} pictures={state.pictures} />
+        <div className={classes(styles.messageBody, blockStyles.messageBody)}>
+          <AgentBlocks blocks={body} drawing={drawing} />
         </div>
       ) : null}
     </details>

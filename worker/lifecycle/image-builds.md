@@ -161,6 +161,31 @@ step saved.
   `withImageSourceCleanup(env, fetch, hooks)` from `image-sources/members.ts`,
   as the [source loader](repository-layout.md#the-source-loader) says.
 
+## Step records
+
+Each build and refresh writes the job step records of
+[Step timing](../../docs/protocol/step-timing.md#job-step-records).
+`buildPhaseStepStatements` in [`build-step-data.ts`](build-step-data.ts)
+maps each phase to its steps. Each statement commits in the D1 batch of the
+phase change that it measures: `beginBuildAllocation` and
+`completeBuildPhase` in [`build-phase-data.ts`](build-phase-data.ts),
+`failBuild` in [`build-data.ts`](build-data.ts), and `publishBuild` in
+[`build-admission-data.ts`](build-admission-data.ts).
+
+- `phase:allocating` and `computer:request` begin before the request for
+  the build sandbox.
+- `phase:sources` and `computer:boot` begin when the request returns. The
+  first copy heading, `Updating the repositories.`, ends `computer:boot` in
+  its own batch, because a copy command runs only on a ready sandbox. A
+  build without that heading ends it with the next phase.
+- `phase:software`, `phase:install`, `phase:snapshot`, and
+  `phase:publish` begin with their phases. Each new phase ends the open
+  steps.
+- The publish ends the last step with `done`, at the time of
+  `completed_at`. `failBuild` ends the open step with `failed`. Cleanup
+  gets no step.
+- A repeated phase change opens no second row and moves no begin.
+
 ## The software step
 
 `buildSoftwareCommand` in [`build-software.ts`](build-software.ts) composes

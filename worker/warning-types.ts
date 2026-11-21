@@ -26,6 +26,10 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  start_record_failed:
+    'A job step record of a start could not be saved. The start goes on without it.',
+  start_record_send_failed:
+    'The job step records of a start could not be sent. The shown state was saved without them.',
   terminal_restart_refresh_failed:
     'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
@@ -59,6 +63,8 @@ export const SIMPLE_WARNINGS = {
     'Feedback send record cleanup failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
+  job_record_cleanup_failed:
+    'The deletion of old job step records failed. It runs again at the next timer.',
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',

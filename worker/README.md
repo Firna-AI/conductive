@@ -260,6 +260,8 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [automations/run-starter.ts](automations/run-starter.ts) starts queued runs in the name of the automation owner.
 - [automations/pull-request-dispatch.ts](automations/pull-request-dispatch.ts) applies author filters, trust, and loop guards before it stores pull request runs.
 - [automations/schedule-scan.ts](automations/schedule-scan.ts) claims up to 50 due automations and retries up to 50 old queued runs each minute.
+- [email-messages.ts](email-messages.ts): `createEmailMessages` takes the [effective `APP_ORIGIN`](../docs/local-development.md#the-app-origin) of the request.
+  Its `approval()` and `invitation()` build the subject and body of the approval and org invitation emails, with their app links. The product name comes from the brand.
 - [operator/approval-email.ts](operator/approval-email.ts) sends approval messages and retries pending deliveries from the scheduled entry.
 - [mail-sender.ts](mail-sender.ts) shares Resend transport and local logging between the approval, invitation, and feedback emails.
   It writes the sender address, and the name and the media type of each attachment from a `CheckedImage`.

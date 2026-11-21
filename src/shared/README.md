@@ -174,6 +174,13 @@ browser event stream, and the session paths, logins, and replies.
 It uses generated `SessionLogin`, or null when no login serves that owner.
 Every reader gets that value without a secret, endpoint host, or full address.
 It does not change the automation owner's GitHub identity.
+`AutomationResponse.chosenSecrets` gives each chosen secret of the automation as its `id` and `name` from `OrgSecret` in `secrets.ts`.
+It never holds a value.
+It sorts by name, then by ID, as the org secrets list does.
+The current Worker always sends it, as an empty list when no secret is chosen.
+The field is optional, because a reply from a previous Worker omits it.
+The app then takes the names from the org secrets list.
+An older copy of the app ignores the field.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `termsRevision(document)` computes it from the text of `termsDocument` in [`terms.ts`](../marketing/terms.ts): `terms-` and a 14-digit hex digest.

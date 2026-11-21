@@ -1,10 +1,9 @@
-import { Ban, Trash2 } from 'lucide-react'
 import type { OrgMember } from '../../fixtures/operatorDirectory'
 import type { OrgPage } from '../../fixtures/operatorPages'
 import { paths } from '../../paths'
-import { Notice } from '../common/Notice'
-import { DetailList } from '../settings/DetailList'
-import { Section } from '../settings/Section'
+import { notice } from '../../entries/components/common/Notice.mockup'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
 import { AccountSection } from './AccountSection'
 import { TargetState } from './directory'
 import {
@@ -14,6 +13,8 @@ import {
 } from './operatorCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
+import { instanceKey } from '../../instanceKey'
+import { defined } from '../../defined'
 
 /**
  * The notices of a suspended or a deleted org, at the top of its page. An
@@ -26,20 +27,27 @@ function OrgNotices(props: { org: OrgPage }) {
   return (
     <>
       {suspension ? (
-        <Notice
-          body={suspendedOrgBody(org.name, suspension.stopping, deletion)}
-          icon={Ban}
+        <notice.Component
+          icon="ban"
+          {...defined({
+            // A deleted org with no workspace that stops has no body.
+            body:
+              suspendedOrgBody(org.name, suspension.stopping, deletion) ||
+              undefined,
+          })}
+          moklyInstance="suspended-notice"
           title={suspendedTitle(suspension.since, suspension.by)}
         />
       ) : null}
       {deleted ? (
-        <Notice
+        <notice.Component
           body={deletedOrgBody(
             org.name,
             { purge: deleted.purge },
             suspension !== undefined,
           )}
-          icon={Trash2}
+          icon="trash-2"
+          moklyInstance="deleted-notice"
           title={`Deleted on ${deleted.on}`}
         />
       ) : null}
@@ -52,12 +60,14 @@ function OrgNotices(props: { org: OrgPage }) {
  * suspended member.
  */
 function MemberLine(props: { member: OrgMember }) {
-  const { name, suspended } = props.member
+  const { login, name, suspended } = props.member
   return (
     <>
       {name}
       {name && suspended ? ' · ' : null}
-      {suspended ? <TargetState status="suspended" /> : null}
+      {suspended ? (
+        <TargetState id={instanceKey(login)} status="suspended" />
+      ) : null}
     </>
   )
 }
@@ -104,15 +114,16 @@ export function OrgDetails(props: {
   return (
     <>
       <OrgNotices org={org} />
-      <Section title="Details">
-        <DetailList
+      <section.Component moklyInstance="details-section" title="Details">
+        <detailList.Component
+          moklyInstance="org-details-list"
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
             { term: 'Created', value: org.created },
             { term: 'Repositories', value: String(org.repositories) },
           ]}
         />
-      </Section>
+      </section.Component>
       <AccountSection
         account={org.account}
         last={org.lastSwitch}
@@ -125,8 +136,9 @@ export function OrgDetails(props: {
         builds={{ count: org.builds, page: 'org' }}
         counts={org.states}
       />
-      <Section
+      <section.Component
         description={`${members} ${members === 1 ? 'member' : 'members'}`}
+        moklyInstance="members-section"
         title="Members"
       >
         <TargetList label={`Members of ${org.name}`}>
@@ -134,7 +146,7 @@ export function OrgDetails(props: {
             <MemberRow key={member.login} member={member} />
           ))}
         </TargetList>
-      </Section>
+      </section.Component>
     </>
   )
 }

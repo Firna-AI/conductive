@@ -81,11 +81,21 @@ one.
   at the end of the title, a hint, and its content. Secrets and Mac access
   are the parts for now. A later feature, such as MCP servers, adds a part
   to the list that `capabilityParts` gives.
-- The Secrets part lists each secret of the org with its description and
-  a checkbox, which pre-approves it for the workspace. A secret for all
+- The Secrets part has no hint line. It lists each secret of the org with
+  a checkbox, which pre-approves it for the workspace. `SecretOption`
+  draws each row, in the app too. The description shows only in the info
+  box of the info icon after the name: a small raised card under the
+  icon, over the rows below it. A mouse on the icon opens the box, and a
+  press keeps it open until a second press. A secret without a
+  description shows no icon. A secret for all
   agents stays checked, off, with the words "All agents". Manage secrets
   opens the Secrets tab. An org without secrets says so, with Add a
   secret.
+- Above more than ten secrets, the Secrets part shows the shared
+  `SearchField` of `src/components/common/`, with the words "Search
+  secrets". The search narrows the list by name and by description, and a
+  search that matches no secret says so in a line. `secretSearch.ts`
+  holds the limit and the filter, which the app uses too.
 - In a workspace, the Secrets part also lists the approvals of the
   session that the control opens from, under "This session", each with who
   allowed it and when. An approval whose secret the workspace already

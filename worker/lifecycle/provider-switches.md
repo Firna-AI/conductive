@@ -80,6 +80,11 @@ provider retry deadlines use `execution_started_at`, with `started_at`
 as the fallback for older rows. A waiting row has no execution deadline.
 Build computer, Try again, and repository adds use this same admission.
 
+A waiting row writes no [step records](image-builds.md#step-records).
+Its job stays in phase `create` until promotion, so its first steps begin
+at its allocation, after the wait. A hidden switch build writes the step
+records of any build, and the shared end writer closes them.
+
 ## Publication, failure, and stop
 
 The shared end writer publishes the target image, changes the org account,

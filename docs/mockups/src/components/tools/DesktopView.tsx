@@ -1,6 +1,6 @@
 import { MousePointer2 } from 'lucide-react'
-import { StatusText } from '../common/StatusText'
-import { StorefrontPage } from './StorefrontPage'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './DesktopView.module.css'
 
 /**
@@ -11,7 +11,11 @@ export function DesktopView() {
   return (
     <div className={styles.desktop}>
       <div className={styles.toolbar}>
-        <StatusText label="Live" tone="success" />
+        <statusText.Component
+          label="Live"
+          moklyInstance="desktop-live"
+          tone="success"
+        />
       </div>
       <div className={styles.stage}>
         <div
@@ -34,7 +38,10 @@ export function DesktopView() {
             </div>
             <div className={styles.address}>localhost:3000/checkout</div>
             <div className={styles.page}>
-              <StorefrontPage compact />
+              <storefrontPage.Component
+                compact
+                moklyInstance="storefront-page"
+              />
             </div>
           </div>
           <MousePointer2 className={styles.pointer} size={18} />
