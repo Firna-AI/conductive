@@ -20,7 +20,7 @@
   - Ended work is background work that was live earlier in the same agent process and is no longer live. After ended work, the runner waits after a result until a fresh idle message. The helper and the engine use this same rule (`runner/background-work.md:26`).
   - The adapter sets `CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS=1` (`runner/sdk-helper/src/providers/claude.ts:101`). Without it, the pinned program sends no idle or running messages.
   - The helper sends an `activity` event for each idle or running message (`runner/sdk-helper/src/providers/claude-background.ts:49`). It also sends `activity` with `idle: false` at the start of each Stop hook (`runner/sdk-helper/src/providers/claude-background.ts:40`, called at `runner/sdk-helper/src/providers/claude.ts:148`).
-  - The helper reports the end of a notification reply as a `wake-up` event (`runner/sdk-helper/src/providers/claude-events.ts:179`). It drops that result while its `waited` flag is false (`runner/sdk-helper/src/providers/claude-events.ts:99`).
+  - The helper reports the end of a notification reply as a `wake-up` event (`runner/sdk-helper/src/providers/claude-events.ts:179`). It drops that result while `waited` is false, except when it completes a reply continued after a dropped answer (`runner/sdk-helper/src/providers/claude-events.ts:99`).
   - A result that answers each member message sets `waited` while work is live, or after ended work with no fresh idle message (`runner/sdk-helper/src/providers/claude-background.ts:27`, `runner/sdk-helper/src/providers/claude.ts:208`). Member input clears `waited` (`runner/sdk-helper/src/providers/claude-background.ts:32`, `runner/sdk-helper/src/providers/claude.ts:244`).
   - The engine keeps three flags in `crates/cnd-runner/src/engine/background.rs`. `observed` says that this agent process had live work (line 26). `replied` says that a result came after the last `activity` with `idle: false` (line 49). `waiting` lets the limit timer run (line 53).
   - The engine calls `Background::reply` at a result that answers each member message, and at a `wake-up` event (`crates/cnd-runner/src/engine/results.rs:121`, `crates/cnd-runner/src/engine/results.rs:150`). Past the deadline it returns `Limit`.
@@ -67,9 +67,7 @@
 - **Previous examples:**
   - Before PR #417, merged on 16 November 2026 as commit `5fcf1df4b`, the helper and the engine used different wait rules after ended work. That wait had no deadline.
   - The description of PR #417 reports one session that showed "running" for more than 76 hours. It gives a diagnosis from the code, not a trace of the program's messages.
-  - `plans/follow-ups/stream-drop-live-check.md`: local tests use a fake Claude program, so a check with the real program waits until after the merge.
   - On 11 November 2026, commit `6b21ea341` of PR #245 checked the pinned program with a local scripted model endpoint. The repository keeps no harness or trace of that check.
-- **Related:** `plans/follow-ups/stream-drop-live-check.md`: the same code in `runner/sdk-helper/src/providers/claude-events.ts`, and the same need for a run of the real Claude program. A live run of B can share its workspace and its login. Neither item's work covers the other.
 - **Recommendation:** A. It gives the real order of the pinned program with no model login, and its harness can check each later SDK update. D waits for that evidence.
   - In A, do not inject the two orders. Let the program produce each order, or show that it does not.
   - Answer the questions under "What a reproduction needs".
