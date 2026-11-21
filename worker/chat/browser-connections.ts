@@ -9,12 +9,7 @@ import { subscribeBrowser } from './browser-subscription'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
 import type { BrowserPeer, ChatDependencies } from './types'
-import type { AppEnv } from '../env'
-import { githubBranchLabels, labelGitHubMessage } from '../github/output'
-import {
-  continueLabels,
-  labelContinueMessage,
-} from '../lifecycle/continue-output'
+import type { WorkspaceEventLabels } from './workspace-event-labels'
 import { presentWorkspaceMessage } from './workspace-events'
 import { browserRegistration } from './browser-registration'
 
@@ -27,14 +22,12 @@ export interface NativeBrowserConnections {
 export class BrowserConnections extends BrowserTabs {
   private readonly connections = new WeakMap<WebSocket, BrowserPeer>()
   private readonly store: ChatStore
-  private readonly env: AppEnv
   private readonly operation: (id: string) => ChatOperation
   private readonly bind: (id: string) => void
   private readonly native?: NativeBrowserConnections
 
   constructor(
     store: ChatStore,
-    env: AppEnv,
     dependencies: ChatDependencies,
     operation: (id: string) => ChatOperation,
     bind: (id: string) => void,
@@ -42,7 +35,6 @@ export class BrowserConnections extends BrowserTabs {
   ) {
     super(dependencies)
     this.store = store
-    this.env = env
     this.operation = operation
     this.bind = bind
     this.native = native
@@ -59,56 +51,50 @@ export class BrowserConnections extends BrowserTabs {
     peer: BrowserPeer,
     socket?: WebSocket,
   ): Promise<() => void> {
-    const presented = await this.present(peer, access.presentation)
-    let persist:
-      ((registration: BrowserRegistration | null) => Promise<void>) | undefined
-    if (socket) {
-      const native = this.native
-      if (!native) throw new Error('The native browser transport is missing.')
-      const id = crypto.randomUUID()
-      native.sockets.accept(socket, {
-        version: 1,
-        role: 'browser',
-        id,
-        generation: 1,
-        presentation: {
-          origin: access.presentation.origin,
-          number: access.presentation.number,
-        },
+    return this.store.run(async () => {
+      const labels = await this.store.eventLabels(access.workspace.id).prepare()
+      const presented = this.present(peer, access.presentation, labels)
+      let persist:
+        | ((registration: BrowserRegistration | null) => Promise<void>)
+        | undefined
+      if (socket) {
+        const native = this.native
+        if (!native) throw new Error('The native browser transport is missing.')
+        const id = crypto.randomUUID()
+        native.sockets.accept(socket, {
+          version: 1,
+          role: 'browser',
+          id,
+          generation: 1,
+          presentation: {
+            origin: access.presentation.origin,
+            number: access.presentation.number,
+          },
+        })
+        this.connections.set(socket, presented)
+        persist = this.stateWriter(id)
+      }
+      return subscribeBrowser({
+        store: this.store,
+        browsers: this,
+        operation: this.operation(access.workspace.id),
+        access,
+        after,
+        peer: presented,
+        persist,
       })
-      this.connections.set(socket, presented)
-      persist = this.stateWriter(id)
-    }
-    return subscribeBrowser({
-      store: this.store,
-      browsers: this,
-      operation: this.operation(access.workspace.id),
-      access,
-      after,
-      peer: presented,
-      persist,
     })
   }
 
-  private async present(peer: BrowserPeer, presentation: WorkspaceLinkContext) {
-    const workspace = {
-      id: presentation.workspaceId,
-      orgId: presentation.orgId,
-    }
-    const [githubLabels, continuedLabels] = await Promise.all([
-      githubBranchLabels(this.env, workspace),
-      continueLabels(this.env, workspace),
-    ])
+  private present(
+    peer: BrowserPeer,
+    presentation: WorkspaceLinkContext,
+    labels: WorkspaceEventLabels,
+  ) {
     return {
       send: (message: Parameters<typeof presentWorkspaceMessage>[0]) =>
         peer.send(
-          presentWorkspaceMessage(
-            labelContinueMessage(
-              labelGitHubMessage(message, githubLabels),
-              continuedLabels,
-            ),
-            presentation,
-          ),
+          presentWorkspaceMessage(labels.message(message), presentation),
         ),
       close: () => peer.close(),
     }
@@ -147,12 +133,16 @@ export class BrowserConnections extends BrowserTabs {
   ): Promise<boolean> {
     const saved = await this.registration(state)
     if (!saved) return false
-    const peer = await this.present(
+    const labels = await this.store
+      .eventLabels(saved.presentation.workspaceId)
+      .prepare()
+    const peer = this.present(
       {
         send: (message) => socket.send(JSON.stringify(message)),
         close: () => socket.close(1000, 'Connection closed.'),
       },
       saved.presentation,
+      labels,
     )
     this.connections.set(socket, peer)
     await this.restore(peer, saved.registration, this.stateWriter(state.id))

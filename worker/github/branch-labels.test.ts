@@ -6,6 +6,7 @@ import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { encrypt } from '../security/crypto'
 import { TEST_ORIGIN } from '../test-support/harness'
 import { githubUpdated } from './delivery-receipt'
+import type { GitHubWorkspace } from './contracts'
 import { HEAD_SHA } from './fake-pull'
 import { createGitHubHarness, type GitHubTestHarness } from './test-harness'
 
@@ -30,11 +31,10 @@ const labels = {
   displayBaseBranch: 'target/[redacted]',
 }
 
-async function labeledWorkspace() {
-  const seeded = await harness.seed(rawBranches.branch)
+async function captureSecret(workspace: GitHubWorkspace, userId: string) {
   const ciphertext = await encrypt(
     JSON.stringify({ DUMMY: 'fixture-secret' }),
-    orgEnvironmentContext(seeded.orgId),
+    orgEnvironmentContext(workspace.orgId),
     harness.env.BOAT_KEY_ENCRYPTION_KEY,
   )
   await harness.env.DB.prepare(
@@ -43,8 +43,13 @@ async function labeledWorkspace() {
       environment_ciphertext, agent, model, effort, first_message_id)
      VALUES (?, ?, ?, 'unused', 'unused', ?, 'claude', 'test', 'high', 'unused')`,
   )
-    .bind(seeded.workspace.id, seeded.orgId, seeded.userId, ciphertext)
+    .bind(workspace.id, workspace.orgId, userId, ciphertext)
     .run()
+}
+
+async function labeledWorkspace(captured = true) {
+  const seeded = await harness.seed(rawBranches.branch)
+  if (captured) await captureSecret(seeded.workspace, seeded.userId)
   harness.api.branches.set(`refs/heads/${rawBranches.branch}`, HEAD_SHA)
   harness.api.pulls[2].headRefName = rawBranches.branch
   harness.api.pulls[2].baseRefName = rawBranches.baseBranch
@@ -107,7 +112,7 @@ it('stores masked GitHub update labels and preserves them in delivery receipt re
 })
 
 it('adds current masked labels to legacy GitHub history without changing its saved event or cursor', async () => {
-  const { workspace, userId, orgId, session } = await labeledWorkspace()
+  const { workspace, userId, orgId, session } = await labeledWorkspace(false)
   const actor = harness.actor(workspace.id)
   const snapshot = await harness.refresh(workspace, { userId })
   if (!snapshot) throw new Error('Expected a GitHub snapshot')
@@ -115,6 +120,8 @@ it('adds current masked labels to legacy GitHub history without changing its sav
     workspace.id,
     githubUpdated(snapshot),
   )
+  expect(legacy.event).toEqual(githubUpdated(snapshot))
+  await captureSecret(workspace, userId)
   await harness.restart(workspace.id)
   await actor.api.peers.openBrowser('legacy', {
     url: `${TEST_ORIGIN}${workspaceEventsPath(orgId, workspace.id)}`,
