@@ -34,5 +34,14 @@ export const chatAgentStops = defineScreen({
         banner: 'no-commits',
       },
     },
+    {
+      slug: 'unknown-source',
+      title: 'From a workspace not in the list',
+      description:
+        'The agent of a session in a workspace that the list of the org does not hold stopped the turn of Address autocomplete, such as before the list loads. The line still says "Stopped from", then the link of that session as text, in place of a chip. The link holds the IDs of the org, the workspace, and the session, so it is long. A narrow chat breaks it at any character, so it stays inside the line and needs no sideways scroll. The rest of the turn shows as after a Stop, and the composer is ready for the next message.',
+      rationale:
+        'A link to a workspace that the list does not hold stays text, as in a message, because a chip shows only data that the app already shows the reader. The line shows the whole link, so its IDs still name the session. The chat breaks a long word in each of its items to fit the line, as it breaks a long link in a message, so the link never passes the edge of a phone screen. A link cut short with an ellipsis was rejected, because it hides the IDs that name the session.',
+      props: { conversation: 'stopped-from-unknown' },
+    },
   ],
 })
