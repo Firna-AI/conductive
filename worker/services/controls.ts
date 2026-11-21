@@ -1,9 +1,9 @@
-import { ServiceInputError } from '../../src/shared/service-inputs'
 import type { ServiceControlRequest } from '../../src/shared/generated/ServiceControlRequest'
 import type { ServiceControlResult } from '../../src/shared/generated/ServiceControlResult'
 import type { ServiceControlOutcome } from '../../src/shared/generated/ServiceControlOutcome'
 import {
   readServiceControlRequest,
+  ServiceInputError,
   serviceRecord,
 } from '../../src/shared/service-inputs'
 import { checkRunnerEnvelopeBytes } from '../chat/runner-event-limits'
@@ -32,7 +32,7 @@ interface Waiter {
   resolve(result: ServiceControlResult): void
 }
 
-export function sameRequest(
+function sameRequest(
   left: ServiceControlRequest,
   right: ServiceControlRequest,
 ): boolean {
@@ -216,6 +216,31 @@ export class ServiceControls {
           record.binding.generation !== active.generation)
       )
         await this.finish(key, record, { state: 'unconfirmed' })
+    }
+  }
+
+  async discard(active: ActiveRunner, requestId: string): Promise<void> {
+    const key = `${PREFIX}${await hash(requestId)}`
+    const record = await this.read(key)
+    if (
+      record?.outcome === null &&
+      record.binding &&
+      record.binding.connectionId === active.id &&
+      record.binding.generation === active.generation &&
+      (await this.connections.valid(active, record.binding))
+    )
+      await this.finish(key, record, { state: 'unconfirmed' })
+  }
+
+  async clear(workspaceId: string): Promise<void> {
+    await this.end(workspaceId, 'computer_stopped')
+    for (const key of await this.values.keys(PREFIX)) {
+      const record = await this.read(key)
+      if (
+        record &&
+        (!record.binding || record.binding.workspaceId === workspaceId)
+      )
+        await this.values.delete(key)
     }
   }
 }

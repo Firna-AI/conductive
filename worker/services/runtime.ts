@@ -1,8 +1,10 @@
 import type { ServiceControlRequest } from '../../src/shared/generated/ServiceControlRequest'
 import type { ServiceLogRequest } from '../../src/shared/generated/ServiceLogRequest'
-import { ServiceInputError } from '../../src/shared/service-inputs'
+import {
+  ServiceInputError,
+  serviceRecord,
+} from '../../src/shared/service-inputs'
 import { HttpError } from '../http'
-import { workspaceTarget } from '../previews/access'
 import { checkRunnerEnvelopeBytes } from '../chat/runner-event-limits'
 import type { ActiveRunner, ChatStorage } from '../chat/types'
 import type { ChatStore } from '../chat/store'
@@ -18,6 +20,7 @@ import { isServiceMessage, readServiceMessage, ServiceParts } from './parts'
 import { readServiceReport } from './report-input'
 import { readControlResult, readRawLogResponse } from './result-input'
 import { ServiceValues } from './storage'
+import { negotiateServices } from './negotiation'
 
 export class WorkspaceServices {
   private readonly connections: ServiceConnection
@@ -55,20 +58,7 @@ export class WorkspaceServices {
   }
 
   async negotiate(active: ActiveRunner, offered: boolean): Promise<void> {
-    active.services = offered
-    if (!offered) return
-    const target = await workspaceTarget(
-      this.env,
-      active.workspace.orgId,
-      active.workspace.id,
-    )
-    if (
-      this.connections.current() !== active ||
-      !(await active.peer.authorize()) ||
-      this.connections.current() !== active
-    )
-      throw new Error('Service connection ended.')
-    active.serviceBinding = serviceBinding(active, target)
+    await negotiateServices(active, offered, this.env, this.connections)
   }
 
   async welcomed(active: ActiveRunner): Promise<void> {
@@ -139,6 +129,13 @@ export class WorkspaceServices {
       )
         throw error
       parts.discard(value)
+      const input = serviceRecord(value)
+      if (typeof input.requestId === 'string') {
+        if (input.type === 'services.control.result.part')
+          await this.controls.discard(active, input.requestId)
+        if (input.type === 'services.logs.part')
+          this.logs.discard(active, input.requestId)
+      }
       warnWorker({ kind: 'runner_service_message_invalid' })
     }
     return true
@@ -187,6 +184,6 @@ export class WorkspaceServices {
     if (active?.workspace.id === workspaceId) this.parts.delete(active.id)
     this.logs.end(workspaceId)
     await this.reports.clear()
-    await this.controls.end(workspaceId, 'computer_stopped')
+    await this.controls.clear(workspaceId)
   }
 }

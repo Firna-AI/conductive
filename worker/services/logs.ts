@@ -159,4 +159,20 @@ export class ServiceLogs {
     this.pending = null
     read.resolve({ request: read.appRequest, result: { state: 'unavailable' } })
   }
+
+  discard(active: ActiveRunner, requestId: string): void {
+    const read = this.pending
+    if (!read || !this.expects(active, requestId)) return
+    this.pending = null
+    read.resolve({
+      request: read.appRequest,
+      result: {
+        state: 'failed',
+        error: {
+          code: 'service_log_invalid',
+          message: 'The service log could not load. Try again.',
+        },
+      },
+    })
+  }
 }

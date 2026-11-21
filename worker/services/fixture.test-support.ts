@@ -78,7 +78,7 @@ export async function servicesFixture(bundle: string) {
     logs: servicePaths.logs(OUTER_ORG, OUTER_WORKSPACE),
   }
   let connection = 0
-  const connect = async (services = true) => {
+  const connect = async (services = true, accepted = services) => {
     const response = await requestRunner(fixture)
     expect(response.status).toBe(101)
     const socket = response.webSocket
@@ -102,13 +102,30 @@ export async function servicesFixture(bundle: string) {
     )
     const welcome = record(await inbox.next())
     expect(welcome.type).toBe('welcome')
-    if (services)
+    if (accepted)
       expect(record(await inbox.next()).type).toBe('services.report')
+    const emit = async (event: unknown) => {
+      socket.send(
+        JSON.stringify({
+          type: 'event',
+          streamId,
+          eventNumber: ++eventNumber,
+          occurredAt: DEVICE_TEST_NOW,
+          event,
+        }),
+      )
+      expect(await inbox.next()).toEqual({
+        type: 'confirm',
+        streamId,
+        throughEventNumber: eventNumber,
+      })
+    }
     return {
       socket,
       inbox,
       welcome,
       closed,
+      emit,
       send: (value: unknown) => socket.send(JSON.stringify(value)),
       document: (
         type: RunnerServiceMessage['type'],
@@ -134,22 +151,7 @@ export async function servicesFixture(bundle: string) {
             }),
           )
       },
-      fence: async (ports: unknown[] = []) => {
-        socket.send(
-          JSON.stringify({
-            type: 'event',
-            streamId,
-            eventNumber: ++eventNumber,
-            occurredAt: DEVICE_TEST_NOW,
-            event: { type: 'ports.updated', ports },
-          }),
-        )
-        expect(await inbox.next()).toEqual({
-          type: 'confirm',
-          streamId,
-          throughEventNumber: eventNumber,
-        })
-      },
+      fence: (ports: unknown[] = []) => emit({ type: 'ports.updated', ports }),
     }
   }
   const post = (
@@ -196,4 +198,3 @@ export async function servicesFixture(bundle: string) {
 }
 
 export type ServicesFixture = Awaited<ReturnType<typeof servicesFixture>>
-export type ServiceRunner = Awaited<ReturnType<ServicesFixture['connect']>>

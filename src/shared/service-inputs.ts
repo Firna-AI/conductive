@@ -25,7 +25,7 @@ export function serviceCounter(value: unknown): number {
   return value
 }
 
-export function readServiceTarget(value: unknown): ServiceTarget {
+function readServiceTarget(value: unknown): ServiceTarget {
   const input = serviceRecord(value)
   return {
     bootId: serviceString(input.bootId),

@@ -12,10 +12,7 @@ function partCount(value: unknown): number {
   return value === undefined ? 0 : serviceCounter(serviceRecord(value).parts)
 }
 
-export async function readServiceValue(
-  data: ChatData,
-  key: string,
-): Promise<unknown> {
+async function readServiceValue(data: ChatData, key: string): Promise<unknown> {
   const stored: unknown = await data.get(key)
   if (stored === undefined) return undefined
   const parts: string[] = []
@@ -25,7 +22,7 @@ export async function readServiceValue(
   return value
 }
 
-export async function writeServiceValue(
+async function writeServiceValue(
   data: ChatData,
   key: string,
   value: unknown,
@@ -43,10 +40,7 @@ export async function writeServiceValue(
   await data.put(key, { parts })
 }
 
-export async function deleteServiceValue(
-  data: ChatData,
-  key: string,
-): Promise<void> {
+async function deleteServiceValue(data: ChatData, key: string): Promise<void> {
   const count = partCount(await data.get(key))
   for (let part = 0; part < count; part++)
     await data.delete(chunkKey(key, part))

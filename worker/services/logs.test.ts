@@ -34,7 +34,7 @@ it('filters complete raw logs before line and UTF-8 tail cuts and keeps rotation
     request: runnerRequest,
     result: {
       state: 'ready',
-      text: `${'old\n'.repeat(210)}secret-value${'😀'.repeat(16380)}`,
+      text: `${'old\n'.repeat(210)}secret-value${'😀'.repeat(16383)}`,
       omitted: true,
     },
   }
@@ -54,7 +54,7 @@ it('filters complete raw logs before line and UTF-8 tail cuts and keeps rotation
     request,
     result: {
       state: 'ready',
-      text: `d\nold\n[redacted]${'😀'.repeat(16380)}`,
+      text: `ted]${'😀'.repeat(16383)}`,
       omitted: true,
     },
   })

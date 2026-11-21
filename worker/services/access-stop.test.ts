@@ -149,6 +149,11 @@ it('clears the catalogue and all pending operations on computer stop and never r
       key.startsWith('services:v1:catalogue'),
     ),
   ).toEqual([])
+  expect(
+    [...(await active.state()).keys()].filter((key) =>
+      key.startsWith('services:v1:control:'),
+    ),
+  ).toEqual([])
   await active.env.DB.prepare(
     "UPDATE workspaces SET state = 'ready', sandbox_id = 'bx_services_new' WHERE id = ?",
   )
@@ -171,7 +176,7 @@ it('clears the catalogue and all pending operations on computer stop and never r
   })
   expect(
     await (await active.post(active.paths.control, restart)).json(),
-  ).toEqual({ request: restart, outcome: { state: 'computer_stopped' } })
+  ).toEqual({ request: restart, outcome: { state: 'stale' } })
   expect(
     replacement.inbox.received.filter(
       (value) => record(value).type === 'services.control',

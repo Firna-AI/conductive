@@ -43,7 +43,7 @@ export function readServiceMessage(value: unknown): RunnerServiceMessage {
   throw new ServiceInputError('Invalid service message.')
 }
 
-export function transferKey(message: RunnerServiceMessage): string {
+function transferKey(message: RunnerServiceMessage): string {
   return JSON.stringify([
     message.type,
     'transferId' in message ? message.transferId : message.requestId,
@@ -56,7 +56,12 @@ export class ServiceParts {
   discard(value: unknown): void {
     const input = serviceRecord(value)
     this.transfers.delete(
-      JSON.stringify([input.type, input.transferId ?? input.requestId]),
+      JSON.stringify([
+        input.type,
+        input.type === 'services.report.part'
+          ? input.transferId
+          : input.requestId,
+      ]),
     )
   }
 

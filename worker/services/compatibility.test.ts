@@ -124,3 +124,25 @@ it('hides the catalogue after a previous Worker stopped the computer without cle
     snapshot: { bootId: 'new-run', revision: 0, services: [] },
   })
 })
+
+it('declines optional services without failing hello when the workspace has no sandbox identity yet', async () => {
+  const active = (fixture = await servicesFixture(bundle))
+  await active.env.DB.prepare(
+    'UPDATE workspaces SET sandbox_id = NULL WHERE id = ?',
+  )
+    .bind(OUTER_WORKSPACE)
+    .run()
+  const runner = await active.connect(true, false)
+  expect(runner.welcome).toEqual({
+    type: 'welcome',
+    protocolVersion: 2,
+    streamId: 'services-stream-1',
+    confirmedThrough: 0,
+  })
+  await runner.fence()
+  expect(runner.inbox.received.map((value) => record(value).type)).toEqual([
+    'welcome',
+    'confirm',
+  ])
+  expect(await active.catalogue()).toEqual({ state: 'stopped' })
+})
