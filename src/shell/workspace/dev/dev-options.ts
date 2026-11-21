@@ -29,8 +29,9 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  * - `bar=<state>`: the GitHub state of the bar, with the app's own Files
  *   part. `turn=running`, `access`, `method`, `merge`, `work`, and
  *   `continue` choose how the actions of the bar end.
- * - `repository=changed|question|clash|outdated`: the cloud computer holds
- *   each chosen repository, and a repository change ends in that way.
+ * - `repository=changed|question|clash|outdated|fetch-failed`: the cloud
+ *   computer holds each chosen repository, and a repository change ends in
+ *   that way. With `bar`, the change takes the names of `branches`.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -97,6 +98,7 @@ export function readDevOptions(search: string): DevOptions {
         'question',
         'clash',
         'outdated',
+        'fetch-failed',
       ]) ?? null,
   }
 }

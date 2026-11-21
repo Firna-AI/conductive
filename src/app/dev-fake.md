@@ -34,7 +34,9 @@ option overrides this default, including queued chats that show no spinner.
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices in the repository order of
   the Worker. An add goes to the end of the order, and a move of a chosen
-  repository starts no build. Its custom initials
+  repository starts no build. Each repository of its replies gives
+  `imageReady` and `ready` from its current image build and the inputs of
+  that build, as the Worker does. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.

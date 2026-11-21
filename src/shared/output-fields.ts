@@ -9,7 +9,11 @@ import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentSkill } from './generated/AgentSkill'
 import type { GitHubBanner } from './github'
 import type { ChatEvent } from './chat-events'
-import type { ContinueWorkspaceResponse } from './workspaces'
+import type {
+  ChangeRepositoryResponse,
+  ContinueWorkspaceResponse,
+  LocalWork,
+} from './workspaces'
 type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
@@ -56,24 +60,65 @@ export function filterContinued(
   return branchLabel(baseLabel(event, text), text)
 }
 
+export function filterRepositoryChanged(
+  event: Extract<ChatEvent, { type: 'workspace.repository-changed' }>,
+  text: FilterText,
+): typeof event {
+  return branchLabel(baseLabel(event, text), text)
+}
+
+function fileLabels(
+  paths: readonly string[],
+  labels: readonly string[] | undefined,
+  text: FilterText,
+): readonly string[] | undefined {
+  const display = paths.map((path, index) => text(labels?.[index] || path))
+  return labels !== undefined ||
+    display.some((path, index) => path !== paths[index])
+    ? display
+    : undefined
+}
+
+function localWorkLabels(work: LocalWork, text: FilterText): LocalWork {
+  const displayUncommittedFiles = fileLabels(
+    work.uncommittedFiles,
+    work.displayUncommittedFiles,
+    text,
+  )
+  return displayUncommittedFiles === undefined
+    ? work
+    : { ...work, displayUncommittedFiles }
+}
+
 export function filterContinueResponse(
   response: ContinueWorkspaceResponse,
   text: FilterText,
 ): ContinueWorkspaceResponse {
   if (response.state !== 'confirmation-required') return response
-  const work = response.localWork
-  const displayUncommittedFiles = work.uncommittedFiles.map((path, index) =>
-    text(work.displayUncommittedFiles?.[index] || path),
-  )
-  const changed = displayUncommittedFiles.some(
-    (path, index) => path !== work.uncommittedFiles[index],
-  )
   return {
     ...baseLabel(response, text),
-    localWork:
-      changed || work.displayUncommittedFiles !== undefined
-        ? { ...work, displayUncommittedFiles }
-        : work,
+    localWork: localWorkLabels(response.localWork, text),
+  }
+}
+
+export function filterRepositoryChangeResponse(
+  response: ChangeRepositoryResponse,
+  text: FilterText,
+): ChangeRepositoryResponse {
+  if (response.state !== 'confirmation-required') return response
+  const work = response.work
+  const displayCarriedFiles = fileLabels(
+    work.carriedFiles,
+    work.displayCarriedFiles,
+    text,
+  )
+  return {
+    ...response,
+    work: {
+      ...work,
+      localWork: localWorkLabels(work.localWork, text),
+      ...(displayCarriedFiles === undefined ? {} : { displayCarriedFiles }),
+    },
   }
 }
 

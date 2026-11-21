@@ -71,13 +71,14 @@ The [outer Worker tests](outer-worker-tests.md) describe its failed-start and re
 
 ### Branch and path labels
 
-The chat backend adds masked labels to `github.updated` and
-`workspace.continued` events, beside their real names, as
+The chat backend adds masked labels to `github.updated`,
+`workspace.continued`, and `workspace.repository-changed` events, beside
+their real names, as
 [Secrets that users enter](../../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
 requires. The labels hide each secret value of the last start of the
 sandbox. `eventLabeler` in
 [`workspace-event-labels.ts`](../workspace-event-labels.ts) has one case
-for each of these two event types. This step labels no other event type.
+for each of these three event types. This step labels no other event type.
 
 - Emit and publish each of these events with its real names. Do not read
   labels in a feature.

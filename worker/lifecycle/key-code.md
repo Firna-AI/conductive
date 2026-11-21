@@ -23,6 +23,11 @@ points of each part.
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
+  Its `currentImageRepositoryReadiness` reads, in one query, whether the
+  current provider account of the org has a published image, and the
+  repositories of that image. The
+  [repository replies](../app-api/README.md#rules) take their `imageReady`
+  and `ready` from it.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
   It saves the encrypted request in the start job before one outside call makes the create and its D1 writes.

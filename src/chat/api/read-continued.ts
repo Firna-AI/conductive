@@ -39,6 +39,8 @@ export function readRepositoryChanged(
   source: Record<string, unknown>,
 ): Extract<ChatEvent, { type: 'workspace.repository-changed' }> {
   const repository = record(source.repository, 'repository')
+  const displayBranch = label(source.displayBranch)
+  const displayBaseBranch = label(source.displayBaseBranch)
   return {
     type: 'workspace.repository-changed',
     sessionId: text(source.sessionId),
@@ -48,6 +50,8 @@ export function readRepositoryChanged(
       fullName: text(repository.fullName),
     },
     branch: text(source.branch),
+    ...(displayBranch === undefined ? {} : { displayBranch }),
     baseBranch: text(source.baseBranch),
+    ...(displayBaseBranch === undefined ? {} : { displayBaseBranch }),
   }
 }

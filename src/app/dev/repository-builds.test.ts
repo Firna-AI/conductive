@@ -69,8 +69,8 @@ function setup() {
 }
 
 it('builds an added repository once and keeps removals pending with separate change data', async () => {
-  const { org, waiting, removed, builds, save } = setup()
-  await save(waiting.id, true)
+  const { api, org, waiting, removed, builds, save } = setup()
+  const added = await save(waiting.id, true)
   const started = await builds()
   expect(started.builds.map((build) => build.state)).toEqual([
     'running',
@@ -88,8 +88,8 @@ it('builds an added repository once and keeps removals pending with separate cha
     addedRepositories: [],
     removedRepositories: [],
   })
-  await save(waiting.id, true)
-  await save(removed.id, false)
+  const built = await save(waiting.id, true)
+  const dropped = await save(removed.id, false)
   expect(org.builds.map((build) => build.build.state)).toEqual([
     'succeeded',
     'succeeded',
@@ -98,6 +98,30 @@ it('builds an added repository once and keeps removals pending with separate cha
     installScript: false,
     addedRepositories: [],
     removedRepositories: [{ id: removed.id, fullName: removed.fullName }],
+  })
+  // Each repositories reply says whether the current image holds each
+  // repository, as the Worker does. The org has an image all the time.
+  const readiness = (list: readonly Repository[]) => ({
+    waiting: list.find((item) => item.id === waiting.id)?.ready,
+    removed: list.find((item) => item.id === removed.id)?.ready,
+    image: list.every((item) => item.imageReady === true),
+  })
+  const read = await api.get(
+    orgSettingsPaths.repositories(org.org.id),
+    readRepositories,
+  )
+  expect({
+    added: readiness(added),
+    built: readiness(built),
+    dropped: readiness(dropped),
+    read: readiness(read),
+  }).toEqual({
+    // The build of the add runs, so the image lacks the added repository.
+    added: { waiting: false, removed: true, image: true },
+    built: { waiting: true, removed: true, image: true },
+    // The image holds the removed repository until the next build.
+    dropped: { waiting: true, removed: true, image: true },
+    read: { waiting: true, removed: true, image: true },
   })
 })
 

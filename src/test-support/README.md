@@ -73,6 +73,12 @@ give a target, a workspace, a default, and a new branch with the same fake
 value. Each has the label that the Worker sends beside it. The view tests
 use them. `branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`, and
 `branches=masked-continue` uses all four.
+`MASKED_MOVED` is the new branch of a repository change.
+`MASKED_REPOSITORY_WORK` adds files to both lists of its question, with two
+paths in each list that share one label. `branches=masked-repository` uses
+these two, `MASKED_BASE`, `MASKED_HEAD`, and `MASKED_DEFAULT`, through
+`fake-repository-names.ts`. `serveMaskedHead` of `fake-branch-names.ts`
+puts the workspace record and the list of a test on `MASKED_HEAD`.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.

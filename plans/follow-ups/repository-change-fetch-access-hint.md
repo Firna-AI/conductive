@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from the branch `calummoore/follow-up-continue-failures-name-the-6m1b`. A copy check of its Continue stop causes found this problem in the repository change.
-- **Location:** `repositoryChangeFailed` in `worker/lifecycle/repository-change-errors.ts:32-35`. Its callers in the `fetch` phase are `worker/lifecycle/repository-change-command.ts:46`, `:61-62`, and `:139-147`, and `worker/lifecycle/repository-change.ts:212-215`. The shared fetch command `continueFetchCommand` in `worker/lifecycle/continue-commands.ts:17-30`, which `repositoryChangeFetchCommand` in `worker/lifecycle/repository-change-commands.ts:24-33` calls. The exact text in `worker/lifecycle/repository-change.test.ts:197-220`. The toast words in `docs/mockups/src/components/workspace/repositoryMoveCopy.ts:35-39`, and the drawn failure in `docs/mockups/src/entries/app/repository-change/index.mockup.tsx:43-49`. The lock clash of the move at `worker/lifecycle/repository-change-commands.ts:82`.
+- **Location:** `repositoryChangeFailed` in `worker/lifecycle/repository-change-errors.ts:32-35`. Its callers in the `fetch` phase are `worker/lifecycle/repository-change-command.ts:46`, `:61-62`, and `:139-147`, and `worker/lifecycle/repository-change.ts:212-215`. The shared fetch command `continueFetchCommand` in `worker/lifecycle/continue-commands.ts:17-30`, which `repositoryChangeFetchCommand` in `worker/lifecycle/repository-change-commands.ts:24-33` calls. The exact text in `worker/lifecycle/repository-change.test.ts:197-220`. The same words in `fetchWords` of `src/test-support/fake-repository-change.ts:61-63`, and in the masking test of `worker/app-api/repository-change.test.ts:166-192`. The toast words in `docs/mockups/src/components/workspace/repositoryMoveCopy.ts:35-39`, and the drawn failure in `docs/mockups/src/entries/app/repository-change/index.mockup.tsx:43-49`. The lock clash of the move at `worker/lifecycle/repository-change-commands.ts:82`.
 - **Reason:** The problem is on `origin/main`, outside the Continue change that found it, and each option changes toast words that need the user's choice.
 
 - **Source:** Implementation.
@@ -11,7 +11,7 @@
 - **Terms:**
   - **Repository change:** The action that moves a workspace to a new branch in the folder of another repository of its org, in the same cloud computer.
   - **Toast reason:** The text of the Worker error `workspace_repository_change_failed`, which the toast "The repository didn't change." shows.
-  - **Safe app error:** An `HttpError` from `worker/http.ts`, whose code and text the poll returns to the browser as they are.
+  - **Safe app error:** An `HttpError` from `worker/http.ts`, whose code the poll keeps and whose `workspace_repository_change_failed` text has secret values hidden.
   - **Command journal:** The saved result of a detached command in the cloud computer, which `worker/lifecycle/command-journal.sh` writes and a later step reads again.
 - **Background:**
   - The repository change runs as a durable job in the phases `verify`, `resume`, `runner`, `check`, `fetch`, `move`, and `publish`. Its job copies the shape of Continue. `worker/lifecycle/repository-change.md` describes it.
@@ -31,7 +31,7 @@
   - Git ends with status 128 for most fatal errors, such as an access refusal or a network failure. So the status alone does not prove an access problem.
   - The test "keeps the old repository when the fetch fails, and closes the fetch credential" in `worker/lifecycle/repository-change.test.ts:197-220` ends the fetch with status 128. It expects the text with the access sentence.
   - A member or org suspension, or a stop of the cloud computer, cancels the job, as `worker/lifecycle/repository-change.md` says under "Failures and recovery".
-  - `repositoryFailure` gives the toast title and the clash reason. The drawn state `failed` shows the clash. No mockup gives the fetch reason, which lives only in the Worker.
+  - `repositoryFailure` gives the toast title and the clash reason. The drawn state `failed` shows the clash. No mockup gives the fetch reason, which the Worker owns.
   - Continue had the same guess. Continue keeps a GitHub access hint in its own `fetch` phase until the user chooses its stop words.
 - **Problem:** Every stop in the `fetch` phase tells the member to check GitHub access. A cancel, a provider failure before the fetch, and a reattach that finds no result give no access evidence. The fetch may not have run then. A failed fetch command can also have a network or GitHub cause.
 - **Impact if no action:** The member can check GitHub access for a failure that has another cause, and miss the real reason. The toast then does not name the reason, as the protocol requires.
@@ -60,6 +60,6 @@
   - Change `repositoryChangeFailed` and its callers for the chosen option.
   - For C, change `continueFetchCommand`, and keep the Continue fetch working with the new status. Add a native Git test of the reserved status beside the fetch tests in `worker/lifecycle/continue-native.test.ts`.
   - For E, keep the new field optional, so that a previous Worker and the jobs of an older deploy keep working.
-  - Update the exact text in `worker/lifecycle/repository-change.test.ts`. Add a case for a cancel and for a provider failure before the fetch.
+  - Update the exact text in `worker/lifecycle/repository-change.test.ts`. Add a case for a cancel and for a provider failure before the fetch. Update the same words in `fetchWords` of `src/test-support/fake-repository-change.ts` and in the masking test of `worker/app-api/repository-change.test.ts`.
   - Add any new words to `repositoryFailure` in `docs/mockups/src/components/workspace/repositoryMoveCopy.ts`, and draw them beside the `failed` variant in `docs/mockups/src/entries/app/repository-change/index.mockup.tsx`.
   - Keep raw Git text, paths, and tokens out of each text and log.

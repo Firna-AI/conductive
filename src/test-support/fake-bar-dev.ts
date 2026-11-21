@@ -72,7 +72,7 @@ export const scenarioValues: {
     'move-failed',
     'turn',
   ],
-  branches: ['plain', 'masked', 'masked-continue'],
+  branches: ['plain', 'masked', 'masked-continue', 'masked-repository'],
 }
 
 function pick<T extends string>(values: readonly T[], value: string | null): T {

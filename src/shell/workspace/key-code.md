@@ -173,14 +173,17 @@ this guide.
   gives `repositoryChoices`, the rows of the menu, and the store of the
   workspace. `repository/repository-change.ts`: `RepositoryChange`, the
   run of one change and its question. `repository/repository-api.ts`:
-  the requests and the reader of their replies.
+  the requests and the reader of their replies, which reuses `readLocalWork`
+  and `fileLabels` of `../../github/continueActions.ts`.
   `repository/RepositoryQuestion.tsx`: the question.
   `repository/RepositoryMenu.test.tsx` and
   `repository/RepositoryQuestion.test.tsx` mount the whole app over the
   fake API: the menu, the progress, the note, the close of a file tab, a
-  phone sheet, the text in read-only states, the question, and the
-  failure toasts. `repository/repository-test-kit.tsx` holds their
-  helpers, and `test-support/fake-repository-change.ts` the replies.
+  phone sheet, the text in read-only states, the question with the labels
+  of its files, and the failure toasts. `repository/repository-api.test.ts`
+  checks the reader of those labels. `repository/repository-test-kit.tsx`
+  holds their helpers, `../../test-support/fake-repository-change.ts` the
+  replies, and `../../test-support/fake-repository-names.ts` their names.
 - `screen-addons.tsx`: `ScreenAddons`, the parts of the screen with no
   place of their own, in each layout: the question of Continue, the
   palette actions, `RestoreShownTab`, `ResumeOnTabOpen`, `LeaveMovedFiles`
@@ -201,6 +204,9 @@ this guide.
   because the kept chat still holds the prompt. The Worker gets one
   message, and its client ID stays the same after the reply. The draft
   keeps its text and its file, and the file uploads once.
+- `github/NewSessionBranch.test.tsx`: mounts the whole app over the fake
+  API. A new session names the workspace branch by the label of its GitHub
+  state, or by its real name when the GitHub read fails.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped

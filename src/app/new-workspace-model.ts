@@ -36,10 +36,11 @@ import { asApiError, Store, valueOf } from './store'
  * the files, and a file that comes while the create runs does not upload.
  *
  * A draft keeps the repository that the form shows when it gets its first
- * text or file, once the repositories and the builds of the org have
- * loaded. So a build that turns an earlier repository ready moves no
- * written draft. A pick of the user wins over it. A kept repository that
- * the org no longer chose gives way to the one that the form shows.
+ * text or file, once the form knows which repositories wait, as
+ * `withShownRepository` says. So a build that turns an earlier repository
+ * ready moves no written draft. A pick of the user wins over it. A kept
+ * repository that the org no longer chose gives way to the one that the
+ * form shows.
  *
  * Once the server takes the message, the workspace exists. When its first
  * start fails, the workspace keeps the message in its chat, with the saved
@@ -82,8 +83,8 @@ export class NewWorkspaceModel {
       delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
-    // A draft that got its text before the repositories and the builds
-    // loaded takes its repository when they load.
+    // A draft that got its text before the form knew which repositories
+    // wait takes its repository when the repositories or the builds load.
     org.repositories.subscribe(() => this.keepShownRepository())
     org.builds.subscribe(() => this.keepShownRepository())
   }
