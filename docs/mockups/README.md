@@ -175,6 +175,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
+- `ConfirmDialog` and `NewWorkspaceDialog` lay out their cards with the
+  parts of [ModalCard.module.css](src/components/common/ModalCard.module.css).
+  A card taller than the window keeps its head and its foot, and only its
+  body scrolls. The dialogs of the app import the same parts.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
 - A switch at the end of a menu row, such as Fast in the model menu, is a

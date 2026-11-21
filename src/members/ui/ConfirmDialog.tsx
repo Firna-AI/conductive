@@ -1,4 +1,5 @@
 import { useContext, useId, useRef, type ReactNode } from 'react'
+import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
 import { ActionButton } from './actions'
 import { useViewport } from './controls'
 import { DialogClose, useModalDialog } from './modal'
@@ -24,6 +25,9 @@ type ConfirmDialogProps = {
  * ask to cancel in one way. While `busy`, the question refuses and stays
  * open, so the result or the error of the action shows in it. After an
  * action that worked, the caller closes the question.
+ *
+ * A desktop question taller than the room of the window keeps its title
+ * and its actions, and its content scrolls between them.
  */
 export function ConfirmDialog(props: ConfirmDialogProps) {
   const viewport = useViewport()
@@ -74,18 +78,20 @@ function DesktopDialog(
   return (
     <dialog
       aria-labelledby={titleId}
-      className={styles.layer}
+      className={`${styles.layer} ${card.topLayer}`}
       onCancel={onCancel}
       onClick={onClick}
       ref={ref}
     >
-      <div className={styles.dialog}>
-        <h2 className={styles.title} id={titleId}>
+      <div className={`${styles.dialog} ${card.card}`}>
+        <h2 className={`${styles.title} ${card.head}`} id={titleId}>
           {props.title}
         </h2>
         <DialogClose value={dismiss}>
-          {props.children}
-          <div className={styles.actions}>{props.actions}</div>
+          <div className={`${styles.body} ${card.body}`}>{props.children}</div>
+          <div className={`${styles.actions} ${card.foot}`}>
+            {props.actions}
+          </div>
         </DialogClose>
       </div>
     </dialog>

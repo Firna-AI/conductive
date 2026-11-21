@@ -3,6 +3,7 @@ import { CornerDownLeft, Paperclip } from 'lucide-react'
 import { SessionLoginLabel } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import layer from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
+import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import { useNavigation } from '../../app/navigation'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
@@ -109,14 +110,14 @@ function DialogCard(props: {
   const { suspended } = useOrgAccess(org)
   const { sections, section } = useSection(org, model)
   const sending = form.create.state === 'sending'
-  const card = useRef<HTMLElement>(null)
+  const dialog = useRef<HTMLElement>(null)
   const message = useRef<FieldHandle>(null)
   // The file picker opens from the attach button and from the notice of a
   // file over the size limit. Its files go into the text at the caret.
   const picker = useRef<HTMLInputElement>(null)
   const pick = () => picker.current?.click()
   useModalLayer(
-    card,
+    dialog,
     () => {
       if (!sending) props.close()
     },
@@ -143,14 +144,18 @@ function DialogCard(props: {
     <section
       aria-label="New workspace"
       aria-modal
-      className={classes(styles.dialog, drop.dropping && styles.dropping)}
+      className={classes(
+        styles.dialog,
+        card.card,
+        drop.dropping && styles.dropping,
+      )}
       onKeyDownCapture={trapTab}
-      ref={card}
+      ref={dialog}
       role="dialog"
       tabIndex={-1}
       {...drop.handlers}
     >
-      <div className={styles.header}>
+      <div className={classes(styles.header, card.head)}>
         {form.repository && !suspended ? (
           <RepositoryMenu
             chevron={styles.chevron}
@@ -177,43 +182,47 @@ function DialogCard(props: {
       </div>
       {suspended ? (
         // A suspended org refuses each create, as on the page.
-        <div className={classes(styles.notices, local.refused)}>
-          <RefusedBar reason={orgRefusal.reason} />
+        <div className={card.body}>
+          <div className={classes(styles.notices, local.refused)}>
+            <RefusedBar reason={orgRefusal.reason} />
+          </div>
         </div>
       ) : (
         <>
-          <div className={styles.body}>
-            <OrgLinks orgId={org.id}>
-              <ChipTextField
-                caretAtEnd
-                editable={!sending}
-                files={model.filesSource}
-                handle={message}
-                label="Message"
-                lines={7}
-                maxLines={14}
-                onAttach={(files) => model.attach(files)}
-                onChangeText={(text) => model.setText(text)}
-                onEnter={sendKey}
-                owner={model}
-                placeholder="Describe the task"
-                value={form.draft.text}
-              />
-            </OrgLinks>
-          </div>
-          {notices ? (
-            <div className={styles.notices}>
-              {form.failure}
-              {form.buildNotice}
-              {form.notice}
-              <OversizeNotice onAttach={pick} refused={form.draft.refused} />
-              <FolderNotice folder={folder} onAttach={pick} />
-              {unchosen ? (
-                <ChooseRepositoriesNotice open={leave} org={org} />
-              ) : null}
+          <div className={card.body}>
+            <div className={styles.body}>
+              <OrgLinks orgId={org.id}>
+                <ChipTextField
+                  caretAtEnd
+                  editable={!sending}
+                  files={model.filesSource}
+                  handle={message}
+                  label="Message"
+                  lines={7}
+                  maxLines={14}
+                  onAttach={(files) => model.attach(files)}
+                  onChangeText={(text) => model.setText(text)}
+                  onEnter={sendKey}
+                  owner={model}
+                  placeholder="Describe the task"
+                  value={form.draft.text}
+                />
+              </OrgLinks>
             </div>
-          ) : null}
-          <div className={styles.footer}>
+            {notices ? (
+              <div className={styles.notices}>
+                {form.failure}
+                {form.buildNotice}
+                {form.notice}
+                <OversizeNotice onAttach={pick} refused={form.draft.refused} />
+                <FolderNotice folder={folder} onAttach={pick} />
+                {unchosen ? (
+                  <ChooseRepositoriesNotice open={leave} org={org} />
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+          <div className={classes(styles.footer, card.foot)}>
             <IconButton
               disabled={sending}
               icon={Paperclip}
@@ -267,9 +276,10 @@ function DialogCard(props: {
  * its files fill the middle, with the notices of the page under them. The
  * attach button, the Capabilities icon, and the model picker sit at the
  * bottom left, with the label of the org login after the model picker when
- * the first message runs on it. Create sits at the bottom right. The dialog
- * and the page of an org and a section share one draft, so a close keeps
- * the message and its files.
+ * the first message runs on it. Create sits at the bottom right. A dialog
+ * taller than the frame keeps its header and its footer, and the message
+ * and the notices scroll between them. The dialog and the page of an org
+ * and a section share one draft, so a close keeps the message and its files.
  */
 export function NewWorkspaceDialog(props: {
   orgId: string
