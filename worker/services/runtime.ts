@@ -63,7 +63,7 @@ export class WorkspaceServices {
 
   async welcomed(active: ActiveRunner): Promise<void> {
     await this.controls.connected(active)
-    if (active.services !== true) return
+    if (active.state.services !== true) return
     const target = await this.connections.target(active)
     if (!target) return
     const command = {
@@ -78,9 +78,9 @@ export class WorkspaceServices {
 
   /** Private traffic precedes the numbered reader and never enters its watch. */
   async receive(active: ActiveRunner, value: unknown): Promise<boolean> {
-    if (active.services !== true || !isServiceMessage(value)) return false
-    const parts = this.parts.get(active.id) ?? new ServiceParts()
-    this.parts.set(active.id, parts)
+    if (active.state.services !== true || !isServiceMessage(value)) return false
+    const parts = this.parts.get(active.state.id) ?? new ServiceParts()
+    this.parts.set(active.state.id, parts)
     try {
       const message = readServiceMessage(value)
       if (
@@ -105,7 +105,7 @@ export class WorkspaceServices {
       const filter = await serviceTextFilter(
         this.env,
         this.store,
-        active.workspace,
+        active.state.workspace,
       )
       if (!(await this.connections.valid(active, binding))) return true
       if (message.type === 'services.report.part')
@@ -181,7 +181,8 @@ export class WorkspaceServices {
 
   async stopped(workspaceId: string): Promise<void> {
     const active = this.connections.current()
-    if (active?.workspace.id === workspaceId) this.parts.delete(active.id)
+    if (active?.state.workspace.id === workspaceId)
+      this.parts.delete(active.state.id)
     this.logs.end(workspaceId)
     await this.reports.clear()
     await this.controls.clear(workspaceId)

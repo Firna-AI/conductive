@@ -14,10 +14,10 @@ import { RepairDelivery } from './repair-delivery'
 import { acceptRunnerHello } from './runner-hello'
 import { WorkspaceServices } from '../services/runtime'
 import type { AppEnv } from '../env'
-import type { ChatStorage } from './types'
 import { RepositoryMoves } from './runner-repository-move'
 import type {
   ChatDependencies,
+  ChatStorage,
   ChatCallbackPublisher,
   ActiveRunner,
   RunnerPeer,
@@ -51,16 +51,6 @@ export class RunnerChannel {
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
-    this.delivery = new RunnerDelivery(
-      store,
-      dependencies,
-      publish,
-      () => this.flush(),
-      forRunningTurn,
-    )
-    this.repairs = new RepairDelivery(store, publish)
-    this.moves = new RepositoryMoves(dependencies)
-    this.watch = new RunnerWorkWatch(dependencies.runnerWork, dependencies.now)
     this.services = new WorkspaceServices(
       storage,
       env,
@@ -84,6 +74,19 @@ export class RunnerChannel {
       (peer, value) => this.receive(peer, value),
       native,
     )
+    this.moves = new RepositoryMoves(dependencies, (active) =>
+      this.connections.persist(active),
+    )
+    this.delivery = new RunnerDelivery(
+      store,
+      dependencies,
+      publish,
+      () => this.flush(),
+      forRunningTurn,
+      this.moves,
+    )
+    this.repairs = new RepairDelivery(store, publish)
+    this.watch = new RunnerWorkWatch(dependencies.runnerWork, dependencies.now)
   }
 
   open(
@@ -148,7 +151,7 @@ export class RunnerChannel {
         })
       return
     }
-    if (!active.streamId)
+    if (!active.state.streamId)
       throw new HttpError(
         400,
         'runner_hello_required',
@@ -159,16 +162,19 @@ export class RunnerChannel {
       message.type === 'file.diff.result'
     ) {
       progress.stage = 'file_result'
-      if (active.id)
-        await this.dependencies.receiveFileResult(message.value, active.id)
+      if (active.state.id)
+        await this.dependencies.receiveFileResult(
+          message.value,
+          active.state.id,
+        )
       return
     }
     if (message.type === 'repository.move.refused') {
-      this.moves.refused(active, message)
+      await this.moves.refused(active, message)
       await this.flush()
       return
     }
-    if (message.streamId !== active.streamId)
+    if (message.streamId !== active.state.streamId)
       throw new HttpError(
         400,
         'runner_stream_mismatch',
@@ -177,7 +183,7 @@ export class RunnerChannel {
     let stored: WorkspaceEventEnvelope[] = []
     let becameReady = false
     const cursor = await this.store.change(
-      active.workspace.id,
+      active.state.workspace.id,
       async (transaction) => {
         stored = []
         becameReady = false
@@ -185,7 +191,7 @@ export class RunnerChannel {
         if (message.eventNumber !== through + 1) return through
         const receipt = await storeRunnerReceipt(
           transaction,
-          active.workspace,
+          active.state.workspace,
           message,
           this.dependencies,
         )
@@ -213,12 +219,12 @@ export class RunnerChannel {
       throughEventNumber: cursor,
     })
     await this.store.reportTurnEnds()
-    const publish = this.publisher(active.workspace.id)
+    const publish = this.publisher(active.state.workspace.id)
     if (becameReady) {
-      active.ready = true
+      active.state.ready = true
       await this.connections.persist(active)
       this.connections.attachFiles(active)
-      await this.dependencies.runnerReady(active.workspace.id, publish)
+      await this.dependencies.runnerReady(active.state.workspace.id, publish)
     }
     for (const envelope of stored)
       await this.dependencies.runnerEventStored(envelope, publish)
@@ -233,7 +239,7 @@ export class RunnerChannel {
    */
   async checkRepository(): Promise<void> {
     const active = this.connections.current
-    if (!active || active.protocolVersion === null) return
+    if (!active || active.state.protocolVersion === null) return
     if (!(await active.peer.authorize())) return
     try {
       await this.moves.check(active)
@@ -275,7 +281,8 @@ export class RunnerChannel {
     command: RunnerFileCommand,
   ): Promise<boolean> {
     const active = this.connections.current
-    if (!active?.ready || active.workspace.id !== workspaceId) return false
+    if (!active?.state.ready || active.state.workspace.id !== workspaceId)
+      return false
     try {
       await active.peer.send(command)
       return true

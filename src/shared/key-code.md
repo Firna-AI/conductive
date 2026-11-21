@@ -42,10 +42,20 @@ page.
   Continue note.
 - [Session log](transcript/session-log.ts) folds those events and session
   records in event order. It keeps the transcript and each item's first time.
-- [Transcript](transcript/transcript.ts) defines the items and folds each
-  session event with its [turn helpers](transcript/turn-events.ts).
-- [Item placement](transcript/item-placement.ts) keeps late items in their
-  turn. [Command placement](transcript/command-placement.ts) puts each Mac
+  It folds the new entries of each `merge` or `offer` as one
+  [transcript batch](transcript/transcript-batch.ts), a private working copy
+  that publishes one transcript. An older entry makes the next read fold the
+  whole log again.
+- [Transcript](transcript/transcript.ts) defines the items, and its
+  `foldEvent` folds one event as a batch of one. The batch folds each event
+  with its [turn helpers](transcript/turn-events.ts).
+- [Fold items](transcript/fold-items.ts) index the items of a batch, with
+  [fold turns](transcript/fold-turns.ts) and the
+  [item order](transcript/item-order.ts). `FoldItems.place` keeps each item
+  of a turn in that turn, also a late item.
+  [Transcript lookups](transcript/transcript-lookups.ts) index a published
+  transcript for reads such as `turnOf`.
+  [Command placement](transcript/command-placement.ts) puts each Mac
   command after the items that began before it.
 - [Turn work](transcript/turn-work.ts) finds each ended turn's folded work.
   [Transcript entries](transcript/transcript-entries.ts) group the items and

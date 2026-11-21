@@ -67,6 +67,12 @@ export const SIMPLE_WARNINGS = {
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:
     'Feedback send record cleanup failed. It runs again at the next timer.',
+  codex_device_cleanup_failed:
+    'Codex device cleanup failed. It runs again at the next timer.',
+  record_cleanup_failed:
+    'Record cleanup failed. It runs again at the next timer.',
+  lifecycle_alarm_repair_failed:
+    'Lifecycle alarm repair failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
   job_record_cleanup_failed:

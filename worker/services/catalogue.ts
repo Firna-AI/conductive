@@ -101,8 +101,8 @@ export class ServiceReports {
     const active = this.connections.current()
     if (
       !active ||
-      active.services !== true ||
-      active.workspace.id !== target.workspaceId
+      active.state.services !== true ||
+      active.state.workspace.id !== target.workspaceId
     )
       return { state: 'unsupported' }
     const report = await this.current(active, target)

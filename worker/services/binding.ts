@@ -36,8 +36,8 @@ export function serviceBinding(
 ): ServiceBinding {
   if (!target.sandboxId) throw new Error('Missing service computer.')
   return {
-    connectionId: active.id,
-    generation: active.generation,
+    connectionId: active.state.id,
+    generation: active.state.generation,
     workspaceId: target.workspaceId,
     orgId: target.orgId,
     sandboxId: target.sandboxId,
@@ -83,22 +83,25 @@ export class ServiceConnection {
   async target(active: ActiveRunner): Promise<WorkspaceAccessTarget | null> {
     if (
       this.current() !== active ||
-      active.services !== true ||
-      !active.streamId
+      active.state.services !== true ||
+      !active.state.streamId
     )
       return null
     if (!(await active.peer.authorize()) || this.current() !== active)
       return null
     const target = await workspaceTarget(
       this.env,
-      active.workspace.orgId,
-      active.workspace.id,
+      active.state.workspace.orgId,
+      active.state.workspace.id,
     )
     if (
       this.current() !== active ||
       !target.sandboxId ||
-      !active.serviceBinding ||
-      !sameBinding(active.serviceBinding, serviceBinding(active, target)) ||
+      !active.state.serviceBinding ||
+      !sameBinding(
+        active.state.serviceBinding,
+        serviceBinding(active, target),
+      ) ||
       target.state === 'stopped' ||
       target.state === 'archived' ||
       target.ownerActive !== 1 ||

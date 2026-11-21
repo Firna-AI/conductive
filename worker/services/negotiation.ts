@@ -10,14 +10,14 @@ export async function negotiateServices(
   env: AppEnv,
   connections: ServiceConnection,
 ): Promise<void> {
-  active.services = false
-  active.serviceBinding = undefined
+  active.state.services = false
+  active.state.serviceBinding = undefined
   if (!offered) return
   try {
     const target = await workspaceTarget(
       env,
-      active.workspace.orgId,
-      active.workspace.id,
+      active.state.workspace.orgId,
+      active.state.workspace.id,
     )
     if (
       connections.current() !== active ||
@@ -25,8 +25,8 @@ export async function negotiateServices(
       connections.current() !== active
     )
       throw new Error('Service connection ended.')
-    active.serviceBinding = serviceBinding(active, target)
-    active.services = true
+    active.state.serviceBinding = serviceBinding(active, target)
+    active.state.services = true
   } catch (error) {
     if (connections.current() !== active) throw error
     warnWorker({ kind: 'runner_service_negotiation_unavailable' })

@@ -68,7 +68,8 @@ export class WorkspaceFeatures {
       fileServerAvailable: (workspaceId: string) => {
         const runner = chat.runner.connections.current
         return (
-          runner?.workspace.id === workspaceId && runner.fileServer === true
+          runner?.state.workspace.id === workspaceId &&
+          runner.state.fileServer === true
         )
       },
     }

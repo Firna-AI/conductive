@@ -34,25 +34,25 @@ export async function acceptRunnerHello(
     context.publish,
   )
   if (!welcome) return false
-  active.streamId = message.streamId
-  active.processStartId = message.processStartId
-  active.protocolVersion = welcome.protocolVersion
-  active.loginKinds = message.loginKinds
-  active.repositoryFolder = message.repositoryFolder
-  active.fileServer = message.fileServer
+  active.state.streamId = message.streamId
+  active.state.processStartId = message.processStartId
+  active.state.protocolVersion = welcome.protocolVersion
+  active.state.loginKinds = message.loginKinds
+  active.state.repositoryFolder = message.repositoryFolder
+  active.state.fileServer = message.fileServer
   await context.services.negotiate(active, message.services === true)
-  active.ready =
+  active.state.ready =
     welcome.savedReady &&
     !(await context.dependencies.requiresFreshRunnerReady?.())
   await context.connections.persist(active)
   context.connections.reportConnected(active)
-  if (active.ready) context.connections.attachFiles(active)
+  if (active.state.ready) context.connections.attachFiles(active)
   await active.peer.send({
     type: 'welcome',
     protocolVersion: welcome.protocolVersion,
     streamId: message.streamId,
     confirmedThrough: welcome.cursor,
-    ...(active.services === true ? { services: true } : {}),
+    ...(active.state.services === true ? { services: true } : {}),
     ...(message.completeToolDetails === true
       ? { completeToolDetails: true }
       : {}),
@@ -61,13 +61,13 @@ export async function acceptRunnerHello(
   await context.repairs.flush(active)
   await context.moves.check(active)
   await context.dependencies.runnerHello(
-    active.workspace.id,
-    context.publisher(active.workspace.id),
+    active.state.workspace.id,
+    context.publisher(active.state.workspace.id),
   )
-  if (active.ready)
+  if (active.state.ready)
     await context.dependencies.runnerReady(
-      active.workspace.id,
-      context.publisher(active.workspace.id),
+      active.state.workspace.id,
+      context.publisher(active.state.workspace.id),
     )
   return true
 }

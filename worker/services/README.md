@@ -16,6 +16,8 @@ boundary rules. Rust owns the generated service contracts in
 `parseRunnerTransport` and numbered receipt work. A successful optional
 negotiation keeps the connection and sandbox binding in the saved runner
 record. A failed optional negotiation leaves chat available without services.
+`RunnerConnectionState` owns the optional support and binding fields in
+`ActiveRunner.state`. Its saved JSON record keeps those fields flat.
 
 `ServiceParts` joins consecutive fragments once, then the document readers
 copy the known fields. Filtering uses the running environment capture,

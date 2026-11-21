@@ -211,9 +211,9 @@ export class ServiceControls {
       const record = await this.read(key)
       if (
         record?.outcome === null &&
-        record.binding?.workspaceId === active.workspace.id &&
-        (record.binding.connectionId !== active.id ||
-          record.binding.generation !== active.generation)
+        record.binding?.workspaceId === active.state.workspace.id &&
+        (record.binding.connectionId !== active.state.id ||
+          record.binding.generation !== active.state.generation)
       )
         await this.finish(key, record, { state: 'unconfirmed' })
     }
@@ -225,8 +225,8 @@ export class ServiceControls {
     if (
       record?.outcome === null &&
       record.binding &&
-      record.binding.connectionId === active.id &&
-      record.binding.generation === active.generation &&
+      record.binding.connectionId === active.state.id &&
+      record.binding.generation === active.state.generation &&
       (await this.connections.valid(active, record.binding))
     )
       await this.finish(key, record, { state: 'unconfirmed' })

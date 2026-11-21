@@ -30,7 +30,7 @@ export async function receiveRunnerMessage(
   } catch (error) {
     warnWorker({
       kind: 'runner_message_failed',
-      workspaceId: WarningId.checked(active.workspace.id),
+      workspaceId: WarningId.checked(active.state.workspace.id),
       stage: progress.stage,
       error: errorSummary(error),
     })

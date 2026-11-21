@@ -107,8 +107,8 @@ export class ServiceLogs {
   expects(active: ActiveRunner, requestId: string): boolean {
     return (
       this.pending?.runnerRequest.requestId === requestId &&
-      this.pending.binding.connectionId === active.id &&
-      this.pending.binding.generation === active.generation
+      this.pending.binding.connectionId === active.state.id &&
+      this.pending.binding.generation === active.state.generation
     )
   }
 
@@ -136,7 +136,7 @@ export class ServiceLogs {
     const filter = await serviceTextFilter(
       this.env,
       this.store,
-      active.workspace,
+      active.state.workspace,
     )
     const result = filteredLog(response.result, filter)
     if (
