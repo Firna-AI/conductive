@@ -1,5 +1,3 @@
-import { warnWorker } from '../warnings'
-
 /**
  * The D1 statements of the job step records: the begin and the end of each
  * step of a build, refresh, create, or resume, and one row for each run of
@@ -206,14 +204,10 @@ export async function deleteOldJobRecords(
   ])
 }
 
-/** The cron step: a failure warns, and the next timer tries again. */
+/** Deletes old job records during scheduled cleanup. */
 export async function cleanupOldJobRecords(
   db: D1Database,
   now: number,
 ): Promise<void> {
-  try {
-    await deleteOldJobRecords(db, now)
-  } catch {
-    warnWorker({ kind: 'job_record_cleanup_failed' })
-  }
+  await deleteOldJobRecords(db, now)
 }
