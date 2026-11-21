@@ -205,13 +205,13 @@ Depends on: 1
 
 Depends on: every other milestone
 
-- [ ] Run `cargo fmt --all -- --check`,
+- [x] Run `cargo fmt --all -- --check`,
       `cargo clippy --workspace --all-targets -- -D warnings`, and
       `cargo test --workspace`.
-- [ ] Run the targeted Worker tests, then the complete gate
+- [x] Run the targeted Worker tests, then the complete gate
       `npm run check`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -224,10 +224,14 @@ Depends on: every other milestone
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After the deploy, fill the `.context/` folder of a test workspace
+- [x] After the deploy, fill the `.context/` folder of a test workspace
       with many files, and let it become idle with a newer release ready.
       Check that the runner installs the release and connects again within
       a few minutes.
-- [ ] Stop the runner of a test workspace on purpose, send a message, and
+- [x] Stop the runner of a test workspace on purpose, send a message, and
       check that the Worker restarts the runner and the message gets its
       reply.
+
+The two post-merge tasks are now the follow-up items
+`plans/follow-ups/idle-update-large-context-smoke-test.md` and
+`plans/follow-ups/automatic-restart-smoke-test.md`.
