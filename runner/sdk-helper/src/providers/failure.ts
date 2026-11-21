@@ -42,9 +42,13 @@ function resetTime(message: string): string {
   return ` Try again at ${time} ${zone.replace(/^Etc\//, '')}.`
 }
 
-/** Known causes get a short recovery action. Other causes keep their meaning. */
+/**
+ * Known causes get a short recovery action. Other causes keep their meaning.
+ * Only a Codex event gives the reset time of a usage limit.
+ */
 export function failureCause(
   value: unknown,
+  codex = false,
 ): Extract<ProviderEvent, { type: 'failed' }> {
   const message = errorText(value) ?? 'The agent request failed. Try again.'
   if (
@@ -62,7 +66,7 @@ export function failureCause(
     return {
       type: 'failed',
       code: 'agent_usage_limit',
-      message: `The agent account reached its usage limit. Check your agent account.${resetTime(message)}`,
+      message: `The agent account reached its usage limit. Check your agent account.${codex ? resetTime(message) : ''}`,
     }
   }
   if (/429|rate.?limit|overloaded|capacity/i.test(message)) {

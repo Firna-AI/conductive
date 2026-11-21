@@ -59,8 +59,10 @@ it('ends the Codex turn of an own endpoint on a 429 with a long wait, without th
 })
 
 it.each([
-  ['a far HTTP date', 'Thu, 01 Jan 1970 02:00:00 GMT', 7200],
-  ['more seconds than a date holds', '99999999999999999999', 8_640_000_000_000],
+  ['an HTTP date', 'Thu, 01 Jan 1970 02:00:00 GMT', 7200],
+  ['an RFC 850 date', 'Thursday, 01-Jan-70 02:00:00 GMT', 7200],
+  ['an asctime date', 'Thu Jan  1 02:00:00 1970', 7200],
+  ['a time after the year 9999', '99999999999999999999', undefined],
 ])(
   'ends the Codex turn of a ChatGPT sign-in on a 429 that waits until %s',
   async (_name, retryAfter, resetsAt) => {
@@ -76,16 +78,28 @@ it.each([
     })
     expect(response?.status).toBe(429)
     expect(response?.headers.has('retry-after')).toBe(false)
-    expect(await response?.json()).toMatchObject({
-      error: { type: 'usage_limit_reached', resets_at: resetsAt },
-    })
+    const { error } = (await response?.json()) as {
+      error: { type: string; resets_at?: number }
+    }
+    expect(error.type).toBe('usage_limit_reached')
+    expect(error.resets_at).toBe(resetsAt)
   },
 )
+
+it('passes a long wait on the ChatGPT model list unchanged', async () => {
+  const h = await tokenGateway()
+  h.respond(async () => tooManyRequests('{"detail":"slow"}', '136323'))
+  const response = await h.request('/backend-api/codex/models')
+  expect(response?.status).toBe(429)
+  expect(response?.headers.get('retry-after')).toBe('136323')
+  expect(await response?.text()).toBe('{"detail":"slow"}')
+})
 
 it.each([
   ['a Codex wait of 10 minutes', CODEX, '600'],
   ['a Codex 429 without a wait', CODEX, undefined],
   ['a Codex wait that is not a number or a date', CODEX, 'soon'],
+  ['a Codex wait as a date with no time', CODEX, '2030-01-01'],
   ['a Claude wait of hours', CLAUDE, '136323'],
 ] as const)('passes %s unchanged', async (_name, choice, retryAfter) => {
   const client = await gatewayHttp(harness, choice, 'endpoint', 2)

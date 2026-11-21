@@ -107,7 +107,10 @@ This page lists each protocol doc and what it covers.
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
     the upstream of each login, what passes to it and back, the own
-    endpoints, the streams, the long waits, and the risks.
+    endpoints, the streams, and the risks.
+  - [Model gateway: long waits](../protocol/model-gateway-long-waits.md):
+    the error that ends a Codex turn when the upstream asks for a long
+    wait.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary

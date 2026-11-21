@@ -242,7 +242,7 @@ through a slow turn check. Its pull request keeps these records.
 
 ## Long waits
 
-[Long waits](model-gateway-requests.md#long-waits) holds these requirements.
+[Model gateway: long waits](model-gateway-long-waits.md) holds these requirements.
 
 ## No copies
 

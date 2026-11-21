@@ -1,25 +1,18 @@
 import type { Agent } from '../../src/shared/generated/Agent'
 import { codexTokenPaths } from './paths'
+import { retryAfterSeconds } from './retry-after'
 
 /**
  * A long upstream wait ends the Codex turn. Codex otherwise sleeps for the
  * whole `retry-after` with no error in the chat. The
- * [long waits](../../docs/protocol/model-gateway-requests.md#long-waits)
- * rules state the requirement.
+ * [long waits](../../docs/protocol/model-gateway-long-waits.md) protocol
+ * doc states the requirement.
  */
 const CODEX_LONG_WAIT_SECONDS = 10 * 60
 
 const modelRoutes: readonly string[] = ['/responses', codexTokenPaths.responses]
-/** The last second that a JavaScript date can hold. */
-const lastResetSecond = 8_640_000_000_000
-
-/** Reads delay seconds or an HTTP date, as Codex reads `retry-after`. */
-function waitSeconds(value: string | null, now: number): number | null {
-  const text = value?.trim() ?? ''
-  if (/^\d+$/.test(text)) return Number(text)
-  const date = text ? Date.parse(text) : Number.NaN
-  return Number.isNaN(date) ? null : Math.max(0, (date - now) / 1000)
-}
+/** The last second of the year 9999. Codex shows no later reset time. */
+const lastResetSecond = 253_402_300_799
 
 /**
  * Returns the error that ends the Codex turn when a model answer is a 429
@@ -35,9 +28,10 @@ export function codexLongWait(
 ): Response | null {
   if (agent !== 'codex' || upstream.status !== 429) return null
   if (!modelRoutes.includes(suffix)) return null
-  const seconds = waitSeconds(upstream.headers.get('retry-after'), now)
+  const seconds = retryAfterSeconds(upstream.headers.get('retry-after'), now)
   if (seconds === null || seconds <= CODEX_LONG_WAIT_SECONDS) return null
-  const resetsAt = Math.min(Math.ceil(now / 1000 + seconds), lastResetSecond)
+  const resetsAt = Math.ceil(now / 1000 + seconds)
+  const known = resetsAt <= lastResetSecond
   const result = new Headers(headers)
   result.delete('retry-after')
   result.delete('x-should-retry')
@@ -48,8 +42,10 @@ export function codexLongWait(
         type: 'usage_limit_reached',
         code: 'model_rate_limited',
         param: null,
-        message: `The model service limits this login until ${new Date(resetsAt * 1000).toISOString()}. Try again then.`,
-        resets_at: resetsAt,
+        message: known
+          ? `The model service limits this login until ${new Date(resetsAt * 1000).toISOString()}. Try again then.`
+          : 'The model service limits this login. Try again later.',
+        ...(known ? { resets_at: resetsAt } : {}),
       },
     },
     { status: 429, headers: result },
