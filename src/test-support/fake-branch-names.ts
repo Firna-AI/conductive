@@ -70,8 +70,18 @@ export const maskedQuestionReply = {
  * of the question, and the new branch. The question, each note and its
  * copy, and the words of a clash show the labels. The GitHub state of the
  * new branch keeps its own names.
+ *
+ * `masked-repository` keeps the workspace on `MASKED_HEAD` and the target
+ * as `masked-continue` does, and gives each name of a repository change the
+ * value, with its label: the changed files of both lists of the question,
+ * the new branch, and the default branch of the new repository, as
+ * `repositoryNamesWith` and `questionWith` say. The question, the New
+ * session text, each note and its copy, the words of a failed fetch, and
+ * the GitHub state of the new branch show the labels. A Continue keeps its
+ * plain names.
  */
-export type FakeBranches = 'plain' | 'masked' | 'masked-continue'
+export type FakeBranches =
+  'plain' | 'masked' | 'masked-continue' | 'masked-repository'
 
 /** A banner with the branch names of `branches`. */
 export function bannerWith(
@@ -84,6 +94,7 @@ export function bannerWith(
     case 'masked':
       return { ...banner, ...MASKED_BASE }
     case 'masked-continue':
+    case 'masked-repository':
       return banner.branch === FAKE_HEAD
         ? { ...banner, ...MASKED_HEAD, ...MASKED_BASE }
         : banner
@@ -119,7 +130,10 @@ export async function replyWith(
   return Response.json({ state: { ...stored, banner } })
 }
 
-/** The workspace of the fake on the workspace branch of `masked-continue`. */
+/**
+ * The workspace of the fake on the workspace branch of `masked-continue`
+ * and `masked-repository`.
+ */
 function onMaskedHead(workspace: Workspace): Workspace {
   return workspace.id === id && workspace.branch === FAKE_HEAD
     ? { ...workspace, branch: MASKED_HEAD.branch }
@@ -128,17 +142,20 @@ function onMaskedHead(workspace: Workspace): Workspace {
 
 /**
  * A read of the workspace record or of the workspace list of the fake,
- * with the workspace branch of `branches`. `masked-continue` keeps the
- * workspace on `MASKED_HEAD` until a Continue moves it, so the record, its
- * GitHub state, the question, and the request name the same real branch.
- * Every other reply stays as it is.
+ * with the workspace branch of `branches`. `masked-continue` and
+ * `masked-repository` keep the workspace on `MASKED_HEAD` until a Continue
+ * or a repository change moves it, so the record, its GitHub state, the
+ * question, and the request name the same real branch. Every other reply
+ * stays as it is.
  */
 export async function recordWith(
   branches: FakeBranches,
   pathname: string,
   response: Response,
 ): Promise<Response> {
-  if (branches !== 'masked-continue' || !response.ok) return response
+  const masked =
+    branches === 'masked-continue' || branches === 'masked-repository'
+  if (!masked || !response.ok) return response
   const body: unknown = await response.clone().json()
   if (pathname === workspacesPath(org)) {
     return Response.json({ workspaces: readWorkspaces(body).map(onMaskedHead) })
@@ -146,6 +163,22 @@ export async function recordWith(
   if (pathname !== workspacePath(org, id)) return response
   const detail = readOrderedWorkspaceResponse(body)
   return Response.json({ ...detail, workspace: onMaskedHead(detail.workspace) })
+}
+
+/**
+ * Puts the fake workspace on `MASKED_HEAD` in the reads of its record and
+ * of the workspace list, as `recordWith` does for a development page. For
+ * tests.
+ */
+export async function serveMaskedHead(server: FakeApiServer): Promise<void> {
+  for (const path of [workspacePath(org, id), workspacesPath(org)]) {
+    const reply = await recordWith(
+      'masked-repository',
+      path,
+      await server.fetch(path),
+    )
+    server.json('GET', path, await reply.json())
+  }
 }
 
 /** The new branch and the default branch of a Continue with `branches`. */

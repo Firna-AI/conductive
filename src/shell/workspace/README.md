@@ -77,7 +77,9 @@ the mockups' `RepositoryPicker` and `repositoryMoveCopy`.
 - Work that the workspace stops following ends the run with the question
   of `RepositoryQuestion`. Its text is `RepositoryChangeText` of the
   mockups. Change repository asks again with `allowWork`, and Cancel sends
-  nothing.
+  nothing. The question names each changed file of both lists by its
+  label, or by its real path when the reply has no label. The requests
+  keep the real names.
 - A refused or failed change shows the toast "The repository didn't
   change." with the message of the Worker.
 - After the change, the chat closes the file and diff tabs of the old

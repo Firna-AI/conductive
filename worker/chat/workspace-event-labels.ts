@@ -1,6 +1,7 @@
 import {
   filterContinued,
   filterGitHubBanner,
+  filterRepositoryChanged,
 } from '../../src/shared/output-fields'
 import type {
   WorkspaceEvent,
@@ -21,6 +22,8 @@ function eventLabeler(
       })
     case 'workspace.continued':
       return (text) => filterContinued(event, text)
+    case 'workspace.repository-changed':
+      return (text) => filterRepositoryChanged(event, text)
   }
 }
 

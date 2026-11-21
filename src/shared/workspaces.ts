@@ -116,6 +116,7 @@ export interface RepositoryChangeWork {
   pushedCommits: number
   /** The changed files of the new folder, which move to the new branch. */
   carriedFiles: readonly string[]
+  displayCarriedFiles?: readonly string[]
 }
 
 export type ChangeRepositoryResponse =

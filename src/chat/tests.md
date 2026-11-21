@@ -22,6 +22,9 @@ a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/NewSessionText.test.tsx` checks that the New session text names
+the branch of the chat's record by its real name when the host gives the
+GitHub state of another branch, or of that branch without a label.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that

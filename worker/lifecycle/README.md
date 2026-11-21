@@ -107,9 +107,9 @@ of its fetch.
 
 [Repository change](repository-change.md) gives the routes and errors, the
 admission and the reservation that it shares with Continue, its phases,
-the move command with the context copy, the publication, and the
-recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns both jobs for the
-workspace object.
+the move command with the context copy, the publication, the masked
+labels, and the recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns
+both jobs for the workspace object.
 
 ### Builds and refreshes
 
