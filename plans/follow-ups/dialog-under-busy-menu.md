@@ -9,7 +9,7 @@
 - **Terms:**
   - **Owner menu:** the menu of the workspace header where an admin reassigns the workspace to another member.
   - **Busy menu:** a members menu while its change runs. It stays open, and Escape, a press outside, and Tab do nothing, as `src/members/README.md` says.
-- **Background:** The owner menu opens in the browser's top layer, above every box of the page. While its change runs, it stays open, so the person sees how the change ends. A shell dialog drawn with `src/shell/ui/Dialog.tsx` opens in the overlay of the frame and makes the rest of the frame take no input.
+- **Background:** The owner menu opens in the browser's top layer, above every box of the page. While its change runs, it stays open, so the person sees how the change ends. A shell dialog drawn with `src/shell/ui/Dialog.tsx` opens in the overlay of the frame and makes the rest of the frame take no input. The content of a shell dialog is also a Tab stop while its text overflows and holds no control, through `tabWithScrollingBody` of `src/shell/ui/tab-stops.ts`. A move of the shell dialogs to the top layer must keep that stop and the first focus on Cancel or on `initial`. The native question of `src/members/ui/ConfirmDialog.tsx` keeps both in the top layer.
 - **Problem:** When a person opens a shell dialog while the owner change runs, the dialog draws under the busy owner menu. The menu sits in the frame, so it also takes no input. The person then sees two layers, and neither works fully.
 - **Impact if no action:** In this rare case the person can not finish or read the owner change until the dialog closes.
 - **Root question:** What happens to the page while a busy menu shows the end of its change?
@@ -20,6 +20,5 @@
 - **Left out:** Change nothing, because the two layers then stay in conflict.
 - **Wider fix:** A. One rule then keeps every layer, also a later one, from opening over a busy menu.
 - **Previous examples:** Commit `c6e038c` made busy menus stay open. The command palette branch stops its own key and Search row while a menu refuses to close.
-- **Related:** `plans/follow-ups/dialog-scroll-body-keyboard-reach.md`: options that conflict. Its native-modal alternative D changes this layering question. Its recommended shared trap fix B does not depend on this item's answer.
 - **Recommendation:** A. It extends the rule that the palette now follows to every layer.
 - **Action:** ask the user, because A changes how the page behaves while a change runs.

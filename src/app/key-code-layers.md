@@ -93,6 +93,20 @@ the folder of this page.
   and of `../members/ui/ConfirmDialog.tsx`, and the New workspace dialog
   use them. `.topLayer` keeps the question of the members UI, a native
   dialog element in the top layer of the browser, inside the window.
+- `../shell/ui/tab-stops.ts`: `controlsOf` gives the controls of a layer
+  that Tab reaches. `tabWithScrollingBody` gives the `.body` of a modal
+  card a Tab stop while it scrolls text without a control.
+  `../shell/ui/Dialog.tsx` uses it through `trapTab`, the `ConfirmDialog`
+  of `../chat/ui/overlays.tsx` through `useFocusTrap`, and the
+  `ConfirmDialog` of `../members/ui/ConfirmDialog.tsx` directly. Each body
+  stays out of the native Tab order. Each dialog keeps its first focus,
+  such as Cancel in a question or the chosen field of a form. Any other
+  card keeps the Tab order of its controls.
+- [dialog-scroll-keyboard.spec.ts](../../desktop/tests/dialog-scroll-keyboard.spec.ts):
+  the check that the keyboard reaches the whole Change repository work
+  list at the 480 px minimum height of the Mac window. Run
+  `npm --prefix desktop run test:electron -- tests/dialog-scroll-keyboard.spec.ts`.
+  The suite runs only Electron, so check a change in Safari by hand.
 - `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
   New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
   way that each place opens New workspace as the dialog or the page.

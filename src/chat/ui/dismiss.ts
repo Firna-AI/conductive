@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { useMenuLayer } from '../../shell/ui/layers'
 import { useLostFocus } from '../../shell/ui/lost-focus'
+import { controlsOf, tabWithScrollingBody } from '../../shell/ui/tab-stops'
 
 /** Calls `close` when the user presses Escape. */
 export function useEscape(close: () => void, active = true): void {
@@ -75,27 +76,22 @@ export function useFocusInside(
   useLostFocus(part, first)
 }
 
-const FOCUSABLE = [
-  'a[href]',
-  'button:not([disabled])',
-  'input:not([disabled])',
-  'textarea:not([disabled])',
-  'select:not([disabled])',
-  '[tabindex]:not([tabindex="-1"])',
-].join(', ')
-
 /**
  * Keeps Tab and Shift+Tab inside an open dialog or sheet: the focus wraps
- * from the last control to the first, and back.
+ * from the last control to the first, and back. `body` is the box of a
+ * dialog that scrolls its content. While it scrolls text without a
+ * control, it is a stop too, as `tabWithScrollingBody` says.
  */
-export function useFocusTrap(container: RefObject<HTMLElement | null>): void {
+export function useFocusTrap(
+  container: RefObject<HTMLElement | null>,
+  body?: RefObject<HTMLElement | null>,
+): void {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const node = container.current
       if (event.key !== 'Tab' || !node) return
-      const items = [...node.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
-        (item) => item.tabIndex >= 0,
-      )
+      const items = controlsOf(node)
+      if (tabWithScrollingBody(event, items, body?.current ?? null)) return
       const first = items[0]
       const last = items.at(-1)
       const active = document.activeElement
@@ -115,5 +111,5 @@ export function useFocusTrap(container: RefObject<HTMLElement | null>): void {
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [container])
+  }, [container, body])
 }

@@ -1,5 +1,14 @@
-import { useContext, useId, useRef, type ReactNode } from 'react'
+import {
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react'
 import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
+import { controlsOf, tabWithScrollingBody } from '../../shell/ui/tab-stops'
+import ui from '../../shell/ui/ui.module.css'
 import { ActionButton } from './actions'
 import { useViewport } from './controls'
 import { DialogClose, useModalDialog } from './modal'
@@ -27,7 +36,9 @@ type ConfirmDialogProps = {
  * action that worked, the caller closes the question.
  *
  * A desktop question taller than the room of the window keeps its title
- * and its actions, and its content scrolls between them.
+ * and its actions, and its content scrolls between them. While that
+ * content is text without a control, Tab stops on it too, in each browser,
+ * so the keys of the keyboard scroll it. It never takes the first focus.
  */
 export function ConfirmDialog(props: ConfirmDialogProps) {
   const viewport = useViewport()
@@ -69,11 +80,28 @@ function DesktopDialog(
   props: Omit<ConfirmDialogProps, 'action'> & { actions: ReactNode },
 ) {
   const ref = useRef<HTMLDialogElement>(null)
+  const body = useRef<HTMLDivElement>(null)
   const { dismiss, onCancel, onClick } = useModalDialog(
     ref,
     props.onCancel,
     props.busy,
   )
+  // Chromium and Safari give the first focus of `showModal()` to the first
+  // element that can take it, also one that only the code focuses, such as
+  // the body. Keep the first focus on the first control: Cancel, or the
+  // first field of a form. A control with `data-autofocus` has it already.
+  useEffect(() => {
+    const dialog = ref.current
+    if (dialog && document.activeElement === body.current) {
+      controlsOf(dialog)[0]?.focus()
+    }
+  }, [])
+  // The browser leaves the body out of Tab, as the code alone focuses it.
+  // So while it scrolls text, the question moves each Tab itself.
+  const tabThroughBody = (event: KeyboardEvent<HTMLDialogElement>) => {
+    if (event.key !== 'Tab') return
+    tabWithScrollingBody(event, controlsOf(event.currentTarget), body.current)
+  }
   const titleId = useId()
   return (
     <dialog
@@ -81,6 +109,7 @@ function DesktopDialog(
       className={`${styles.layer} ${card.topLayer}`}
       onCancel={onCancel}
       onClick={onClick}
+      onKeyDownCapture={tabThroughBody}
       ref={ref}
     >
       <div className={`${styles.dialog} ${card.card}`}>
@@ -88,7 +117,13 @@ function DesktopDialog(
           {props.title}
         </h2>
         <DialogClose value={dismiss}>
-          <div className={`${styles.body} ${card.body}`}>{props.children}</div>
+          <div
+            className={`${styles.body} ${card.body} ${ui.focusable}`}
+            ref={body}
+            tabIndex={-1}
+          >
+            {props.children}
+          </div>
           <div className={`${styles.actions} ${card.foot}`}>
             {props.actions}
           </div>

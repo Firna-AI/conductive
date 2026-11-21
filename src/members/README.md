@@ -279,7 +279,10 @@ callbacks and `FakeApiServer`. The other test files run in Node.
   card parts of
   [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css).
   So a desktop question taller than the window keeps its title and its
-  actions, and only its content scrolls.
+  actions, and only its content scrolls. While that content is text
+  without a control, Tab stops on it too, in each browser, through
+  `tabWithScrollingBody` of `../shell/ui/tab-stops.ts`. So a keyboard can
+  scroll it. The content never takes the first focus.
   [Shared UI lacks parts](../../plans/follow-ups/firna-ui-missing-parts.md)
   records the gap in `@firna/ui`.
 - `dev/`: the dev page and its fake server.
