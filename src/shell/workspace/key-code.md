@@ -272,9 +272,11 @@ this guide.
   of an archived workspace offers Restore until its last day, and gives
   the day when the workspace leaves the list, also without Restore. After
   that day it has the title "Removed on" and the day, and its panels have
-  the title Removed. `notice-copy.ts` takes the stages of the mockups from
-  the `restore` and `removed` marks of the notice. `notice-copy.test.ts`
-  checks the words of each stage. `useArchiveActions.ts` runs Archive and Restore for
+  the title Removed. `notice-copy.ts` takes each stage from `archiveStage`
+  of the mockups, which reads the `computer`, `restore`, and `removed` marks
+  of the notice. A missing or `unknown` `computer` keeps the reading from
+  Restore alone. `notice-copy.test.ts` checks the words of each stage, also
+  for each computer state. `useArchiveActions.ts` runs Archive and Restore for
   each control, with their toasts. Archive from the row of the open
   workspace, by its shortcut or its menu, acts once, also during the first
   read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
@@ -288,14 +290,19 @@ this guide.
   Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
   `contentState` gives the tools and the file pages the wait of a start,
   with no Resume. The lists keep their saved copy. A tab that opens then
-  sends no second Resume. `WorkspaceScreen.tsx` sets the `removed` mark of
-  the bar at the end of Restore, from `archivedAt`, also without a kept
-  cloud computer. `useArchiveEnds` in `archive-ends.ts` gives it that mark
-  and the end of Restore, and renders the screen again at each of them.
-  `ArchivedRestore.test.tsx` mounts the whole app
-  for Restore by a member and for its end at the last day, when the
-  workspace also leaves the list. `LinkChips.test.tsx` opens a removed
-  workspace from its chip.
+  sends no second Resume. `WorkspaceScreen.tsx` gives the bar
+  `workspace.archivedComputer?.state` as its `computer` mark. It sets the
+  `removed` mark at the end of the 14 days, also without a kept cloud
+  computer. `archiveEnd` in `archive-ends.ts` gives that end: the cutoff
+  `archivedComputer.restoreUntil`, or else `archivedAt` plus 14 days for a
+  record of an older Worker. The day on the bar and the day of the toast
+  after Archive use it too. `useArchiveEnds` gives the `removed` mark at
+  that end, and the end of Restore at the legacy `restoreUntil`. It renders
+  the screen again at each of them. `ArchivedRestore.test.tsx` mounts the
+  whole app for Restore by a member and for its end at the last day, when
+  the workspace also leaves the list. It also mounts an unresolved cloud
+  computer, which offers no Restore, and its notice at the end of the 14
+  days. `LinkChips.test.tsx` opens a removed workspace from its chip.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
   `dev/main.tsx` supplies the real window host, keyboard, and key events

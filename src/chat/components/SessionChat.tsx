@@ -96,6 +96,7 @@ function sandboxParts(props: SessionChatProps): ChatHost {
       problem && workspace && (problem === 'archived' || !readOnly) ? (
         <SandboxBar
           archivedAt={workspace.archivedAt}
+          archivedComputer={workspace.archivedComputer}
           busy={snapshot.resuming}
           firstStart={firstStart}
           message={snapshot.savedError}

@@ -260,6 +260,13 @@ per-target outer alias and no credential.
   JSON readers and its readers of the owner and the agent choice. Each area
   also gives its own error for an unknown state. `WORKSPACE_STATES` lists
   the known workspace states.
+- [The archived computer reader](archived-computer-read.ts) reads the
+  optional `Workspace.archivedComputer`. The workspace record reader and
+  `createdWorkspace` in `worker/tools/workspace-replies.ts` use it.
+  `readArchivedComputer` keeps a known state with a safe, non-negative
+  cutoff time. It drops a missing, malformed, or future value, and it
+  rejects no record for it. The record then keeps the older notice.
+  `ARCHIVED_COMPUTER_STATES` lists the known states.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use
