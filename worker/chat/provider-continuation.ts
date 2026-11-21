@@ -1,17 +1,10 @@
 import type { Session } from '../../src/shared/generated/Session'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
-import { productName } from '../../docs/mockups/src/brand'
 import type { ChatTransaction } from './store'
 import type { PendingCommand, StoredTurn } from './types'
 import { turnChainStartedAt } from './turn-chain'
-
-const PROVIDER_CONTINUATION_TEXT =
-  `This message comes from ${productName}, not from a member. ` +
-  'The cloud computer of this workspace stopped while you worked, and it started again. ' +
-  'Your processes may have ended, also background tasks, dev servers, and shells. ' +
-  'Continue the task from where you stopped. Do not repeat work that is done. ' +
-  'Before you repeat an action outside this computer, such as a push, a pull request, or a message, check whether it already happened.'
+import { continuationMessage } from './continuation-message'
 
 export async function prepareProviderContinuation(
   view: ChatTransaction,
@@ -40,6 +33,7 @@ export async function prepareProviderContinuation(
     nextTurnId: previous.nextTurnId ?? null,
     chainStartedAt: await turnChainStartedAt(view, previous),
     providerContinuationStartedAt: null,
+    providerContinuationSourceSessionId: session.id,
   }
   if (started)
     commands.push(
@@ -69,6 +63,7 @@ export async function prepareProviderContinuation(
   if ((await view.newestTurn(session.id)) === previous.id)
     await view.saveNewestTurn(session.id, next.id)
   previous.nextTurnId = next.id
+  previous.providerStop = { next: 'turn', continuationTurnId: next.id }
   return { turn: next, commands }
 }
 
@@ -79,26 +74,27 @@ export async function prependProviderContinuation(
   sender: MessageSender,
   randomId: () => string,
 ): Promise<PendingCommand> {
-  const id = `continuation:${randomId()}`
   const message: UserMessage = {
-    id,
+    ...continuationMessage(
+      next.providerContinuationSourceSessionId ?? session.id,
+      randomId,
+    ),
     sessionId: session.id,
     sender,
-    text: PROVIDER_CONTINUATION_TEXT,
     choice: session.choice,
     attachments: [],
     createdAt: view.now,
     state: 'queued',
   }
   await view.saveMessage(message)
-  next.messageIds.unshift(id)
-  await view.saveMessageTurn(id, next.id)
+  next.messageIds.unshift(message.id)
+  await view.saveMessageTurn(message.id, next.id)
   return {
     type: 'turn',
     commandId: randomId(),
     sessionId: session.id,
     turnId: next.id,
-    messageId: id,
+    messageId: message.id,
     attachments: [],
   }
 }

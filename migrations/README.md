@@ -329,6 +329,14 @@ Message indexes support first-turn reports and creation recovery.
 The starter records the agent, model, and effort together before it checks the login.
 Existing runs keep null because their original choice is not known.
 
+`202611202344_automation_run_error_source.sql` adds the nullable
+`automation_runs.error_source` column. Existing rows keep null.
+A failure at the end of a provider-stop chain stores `provider_stop`.
+The run API exposes it as optional `error.source`, so the app can distinguish
+a missing login at that stop from a login failure in a turn.
+The previous Worker keeps using its existing columns and statements.
+The migration rewrites no row and adds no required value.
+
 `202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.

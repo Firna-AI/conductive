@@ -19,6 +19,7 @@ export interface RunProjectionRow extends Omit<
   archivedAt: number | null
   errorCode: string | null
   errorMessage: string | null
+  errorSource: string | null
   attemptState: string | null
   attemptErrorCode: string | null
   attemptErrorMessage: string | null
@@ -31,7 +32,7 @@ export const runProjectionColumns = `r.id, r.automation_id AS automationId, r.or
   u.display_name AS displayName, u.avatar_url AS avatarUrl,
   r.trigger_json AS triggerJson, r.state AS runState, w.id AS workspaceId,
   w.state AS workspaceState, w.archived_at AS archivedAt, r.error_code AS errorCode,
-  r.error_message AS errorMessage, a.state AS attemptState, a.error_code AS attemptErrorCode,
+  r.error_message AS errorMessage, r.error_source AS errorSource, a.state AS attemptState, a.error_code AS attemptErrorCode,
   a.error_message AS attemptErrorMessage, w.last_error_code AS workspaceErrorCode,
   w.last_error_message AS workspaceErrorMessage, r.created_at AS createdAt,
   r.updated_at AS updatedAt`
@@ -51,7 +52,13 @@ export function projectedRun(row: RunProjectionRow): AutomationRun {
     error =
       row.errorCode === null
         ? null
-        : { code: row.errorCode, message: row.errorMessage ?? '' }
+        : {
+            code: row.errorCode,
+            message: row.errorMessage ?? '',
+            ...(row.errorSource === 'provider_stop'
+              ? { source: 'provider_stop' as const }
+              : {}),
+          }
   } else if (row.workspaceId !== null) {
     state =
       row.archivedAt === null ? (row.workspaceState ?? 'starting') : 'archived'

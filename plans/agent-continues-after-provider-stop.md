@@ -256,7 +256,9 @@ same day, and added what an open tab shows before the automatic start.
     dev servers, and shells. Continue the task from where you stopped. Do
     not repeat work that is done. Before you repeat an action outside this
     computer, such as a push, a pull request, or a message, check whether
-    it already happened."
+    it already happened. The work is in session <session ID>. If you lack
+    the context of the task, use read_session to read session <session ID>
+    before you continue."
 - **A log.** The Worker logs one warning for each provider stop during a
   turn, with the workspace ID and the provider account.
 - **No runner change.** The runner gets a normal `turn` command, so every
@@ -273,6 +275,19 @@ same day, and added what an open tab shows before the automatic start.
   provider", so that its name differs from the page. The warning of "A
   log" is a requirement in Runner warnings, so the Privacy page names the
   new log record.
+- **Stored chain and failure source (decision 6).** My call of
+  20 November 2026: optional `providerStop` on a stopped turn keeps its
+  successor ID or the final `next` value. Completion can clear the live
+  waiting-turn link without losing the automation chain. D1 stores the
+  nullable `automation_runs.error_source` and the API exposes optional
+  `error.source: 'provider_stop'`. This distinguishes the login check words
+  needed by Milestone 10 from a failed turn's login words. Existing rows
+  and older Worker writes keep null.
+- **The source session (decision 7).** My call of 20 November 2026:
+  `continuation-message.ts` builds the hidden text and its fresh ID for
+  automatic recovery and retries. Optional `providerContinuationSourceSessionId`
+  keeps the original reference across linked and repeated retries. A legacy
+  retry without the field uses the failed message's session.
 - **Automation runs after a provider stop (decision 6).** My calls of
   20 November 2026, from the mockups of Milestone 7. The mockup page
   `app/automations/runs/failed` shows them.
@@ -545,10 +560,10 @@ are in `.context/agent-continues-after-provider-stop/milestone-8/`.
 
 Depends on: 8
 
-- [ ] Decision 5: set a new `TERMS_VERSION` in `src/shared/terms.ts`, and
+- [x] Decision 5: set a new `TERMS_VERSION` in `src/shared/terms.ts`, and
       set the effective dates of `src/marketing/terms.ts` and
       `src/marketing/privacy.ts` to the date of the change.
-- [ ] Decision 6: the automation run report follows the first turn's
+- [x] Decision 6: the automation run report follows the first turn's
       chain to its last turn, through a stored link from each stopped turn
       to its continuation. A chain that ends with no continuation fails the
       run with `agent_login_required` or `cloud_computer_stopped`, and
@@ -557,12 +572,15 @@ Depends on: 8
       workspace and the same code, but the design gives them different
       words. Tests: a continuation that finishes, one that fails, the
       guard, the 30-day end, a lost login, and the turn-off after three.
-- [ ] Decision 7: one builder writes each continuation message. It names
+- [x] Decision 7: one builder writes each continuation message. It names
       the session of the stopped turn and tells the agent to read it with
       `read_session` when it lacks the context. Try again into a linked
       session keeps that name. Tests: the automatic continuation, Try again
       in the same session, and Try again into a linked session.
-- [ ] Update the chat and automation READMEs.
+- [x] Update the chat and automation READMEs.
+
+Evidence: the targeted results, failure proofs, repeated test runs, and gate
+log are in `.context/agent-continues-after-provider-stop/milestone-9/`.
 
 ## Milestone 10: The new run cause in the app
 

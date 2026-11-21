@@ -203,17 +203,31 @@ fields for runner connections and for turn ends with no Stop request.
 
 ## Automation first turns
 
-A run workspace reports the stored outcome of its first turn to its D1 run record.
-The report keeps the failure cause, including a login failure before dispatch.
-A finished first turn resets the automation's consecutive failure count.
-A failed first turn adds one failure and stays failed after an in-workspace retry.
-Later turns do not change that run outcome.
+A run workspace follows the provider-continuation chain of its first turn.
+`providerStop.continuationTurnId` survives completion of each stopped turn,
+independently of the live waiting-turn link.
+The run has no outcome while its last turn stays queued or runs.
+A finished last turn resets the automation's consecutive failure count.
+A failed last turn adds one failure and keeps that failure after a manual retry.
+A provider stop with no successor fails the run too.
+Its saved `next` determines the cause: `reconnect` means `agent_login_required`,
+and `message` means `cloud_computer_stopped`.
+The run API marks these causes with `error.source: 'provider_stop'`.
+This distinguishes login loss at a provider stop from a failed turn's login error.
+Later member turns and manual retries do not change a terminal run outcome.
 Chat commits the turn before it reports the outcome.
 Each later chat change checks for an unreported outcome.
 A failed report does not fail the chat change, so a D1 failure cannot stop the chat or close the runner.
 It logs `automation_report_failed` and stores the `automation-report` due time of the workspace alarm, 30 seconds later.
 The alarm retries the report until it succeeds, as [the object alarm scheduler](../lifecycle/alarm-scheduler.md) says.
 A chat without that alarm, as in some tests, gives the error to the caller, which sends the change again.
+
+`continuation-message.ts` builds the hidden message for automatic recovery
+and Try again. It names the interrupted session and tells an agent without
+task context to read it through `read_session`.
+Each continuation retry keeps that original session reference, including
+retries in linked sessions. The stored source-session field is optional
+for older turns. A legacy retry uses its failed message's session.
 
 ## Report repairs
 

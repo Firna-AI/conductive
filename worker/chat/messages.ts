@@ -11,6 +11,7 @@ import { sessionFor } from './session-record'
 import { queueModel, sameAgent } from './sessions'
 import type { ChatTransaction } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
+import type { ContinuationInput } from './continuation-message'
 import type { ChatDependencies, ResolvedAttachments, StoredTurn } from './types'
 
 export async function existingMessage(
@@ -64,7 +65,7 @@ export async function acceptMessage(
   attachments: ResolvedAttachments,
   randomId: () => string,
   readWorkspace: ChatDependencies['readAutomaticTitleWorkspace'],
-  continuationChainStartedAt?: number,
+  continuation?: ContinuationInput,
 ): Promise<SendMessageResponse> {
   const existing = await existingMessage(transaction, sessionId, input, user)
   if (existing) return existing
@@ -77,7 +78,7 @@ export async function acceptMessage(
       'Reopen the session to send a message.',
     )
   }
-  if (continuationChainStartedAt === undefined)
+  if (!continuation)
     await applyMessageSessionTitle(
       transaction,
       session,
@@ -115,10 +116,12 @@ export async function acceptMessage(
   await transaction.saveNewestTurn(sessionId, turn.id)
   const type = turn.messageIds.length === 0 ? 'turn' : 'message'
   turn.messageIds.push(message.id)
-  turn.chainStartedAt = continuationChainStartedAt ?? transaction.now
-  if (continuationChainStartedAt === undefined)
-    delete turn.providerContinuationStartedAt
-  else turn.providerContinuationStartedAt = null
+  turn.chainStartedAt = continuation?.chainStartedAt ?? transaction.now
+  if (!continuation) delete turn.providerContinuationStartedAt
+  else {
+    turn.providerContinuationStartedAt = null
+    turn.providerContinuationSourceSessionId = continuation.sourceSessionId
+  }
   await transaction.saveTurn(turn)
   await transaction.saveMessageTurn(message.id, turn.id)
   await transaction.saveCommand({
@@ -129,7 +132,7 @@ export async function acceptMessage(
     messageId: message.id,
     attachments: attachments.paths,
   })
-  if (continuationChainStartedAt === undefined)
+  if (!continuation)
     await transaction.emit({ type: 'message.accepted', message })
   await transaction.saveSession(session)
   await transaction.emit({ type: 'session.updated', session })

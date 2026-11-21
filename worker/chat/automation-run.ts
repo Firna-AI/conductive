@@ -5,6 +5,7 @@ import {
 import { warnWorker } from '../warnings'
 import { errorSummary, WarningId } from '../warning-values'
 import type { ChatStore } from './store'
+import { automationChainOutcome } from './automation-outcome'
 
 /** The delay of the first retry after a failed report. */
 const AUTOMATION_REPORT_RETRY_MS = 30_000
@@ -17,25 +18,11 @@ export async function reportAutomationFirstTurn(
 ): Promise<void> {
   const run = await firstTurnAutomationRun(db, workspaceId)
   if (!run) return
-  const turn = await store.read(workspaceId, (view) => view.turn(run.turnId))
-  if (turn?.state === 'finished' || turn?.state === 'failed')
-    await finishAutomationRun(
-      db,
-      run.orgId,
-      run.id,
-      turn.state === 'finished'
-        ? { state: 'finished' }
-        : {
-            state: 'failed',
-            error: turn.error ?? {
-              code: 'agent_turn_failed',
-              message:
-                'The agent could not finish. Try again in the workspace.',
-            },
-          },
-      now,
-      workspaceId,
-    )
+  const outcome = await store.read(workspaceId, (view) =>
+    automationChainOutcome(view, run.turnId),
+  )
+  if (outcome)
+    await finishAutomationRun(db, run.orgId, run.id, outcome, now, workspaceId)
 }
 
 /**

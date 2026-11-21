@@ -61,6 +61,8 @@ it('waits for the old end and uses a replayed start before dispatching recovery 
     },
   })
   if (recovery?.type !== 'turn') throw new Error('Missing recovery turn')
+  expect(recovery.message.text).toContain(`read_session`)
+  expect(recovery.message.text).toContain(session.id)
   expect(messageCommands(fixture.runner, 'source')).toHaveLength(1)
   expect(messageCommands(fixture.runner, 'unanswered').at(-1)).toMatchObject({
     type: 'message',

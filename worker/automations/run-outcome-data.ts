@@ -1,7 +1,6 @@
-interface RunError {
-  code: string
-  message: string
-}
+import type { AutomationRun } from '../../src/shared/automations'
+
+type RunError = NonNullable<AutomationRun['error']>
 
 export async function finishAutomationRun(
   db: D1Database,
@@ -34,7 +33,7 @@ export async function finishAutomationRun(
       ),
     db
       .prepare(
-        `UPDATE automation_runs SET state = ?, error_code = ?, error_message = ?,
+        `UPDATE automation_runs SET state = ?, error_code = ?, error_message = ?, error_source = ?,
       workspace_id = COALESCE(?, workspace_id), updated_at = MAX(updated_at, ?)
       WHERE org_id = ? AND id = ? AND state IN ('queued', 'started')`,
       )
@@ -42,6 +41,7 @@ export async function finishAutomationRun(
         outcome.state,
         failed ? outcome.error.code : null,
         failed ? outcome.error.message : null,
+        failed ? (outcome.error.source ?? null) : null,
         workspaceId,
         now,
         orgId,

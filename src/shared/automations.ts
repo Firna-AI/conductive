@@ -123,7 +123,7 @@ export interface AutomationRun {
   trigger: AutomationRunTrigger
   state: WorkspaceState | 'queued' | 'failed' | 'skipped'
   workspaceId: string | null
-  error: { code: string; message: string } | null
+  error: { code: string; message: string; source?: 'provider_stop' } | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }

@@ -33,6 +33,8 @@ it.each(['same', 'linked'] as const)(
       (command) => command.type === 'turn',
     )
     if (continuation?.type !== 'turn') throw new Error('Missing continuation')
+    expect(continuation.message.text).toContain(`read_session`)
+    expect(continuation.message.text).toContain(session.id)
     runner.emit(terminalEvent(continuation, 'failed'))
     await fixture.drain()
     await fixture.disconnect(runner)
@@ -106,5 +108,23 @@ it.each(['same', 'linked'] as const)(
         },
       },
     ])
+    const repeated = replacement.commands.find(
+      (command) => command.type === 'turn',
+    )
+    if (repeated?.type !== 'turn') throw new Error('Missing retried turn')
+    replacement.emit(terminalEvent(repeated, 'failed'))
+    await fixture.drain()
+    await fixture.disconnect(replacement)
+    const secondResponse = await retryRequest(
+      fixture,
+      retried.session.id,
+      retried.message.id,
+      fixture.memberCookie,
+    )
+    expect(secondResponse.status).toBe(202)
+    const secondRetry: SendMessageResponse = await secondResponse.json()
+    expect(secondRetry.message.text).toBe(continuation.message.text)
+    expect(secondRetry.message.id).toMatch(/^continuation:/)
+    expect(secondRetry.message.id).not.toBe(retried.message.id)
   },
 )

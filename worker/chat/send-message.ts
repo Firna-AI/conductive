@@ -14,6 +14,10 @@ import { sessionFor } from './session-record'
 import { createSession, sameAgent } from './sessions'
 import type { ChatDependencies } from './types'
 import { turnChainStartedAt } from './turn-chain'
+import {
+  continuationMessage,
+  type ContinuationInput,
+} from './continuation-message'
 
 export async function send(
   operation: ChatOperation,
@@ -25,7 +29,7 @@ export async function send(
     transaction: ChatTransaction,
     response: SendMessageResponse,
   ) => Promise<void>,
-  continuationChainStartedAt?: number,
+  continuation?: ContinuationInput,
 ): Promise<SendMessageResponse> {
   input = { ...input, choice: dependencies.normalizeChoice(input.choice) }
   const existing = await operation.read((view) =>
@@ -95,7 +99,7 @@ export async function send(
       attachments,
       dependencies.randomId,
       dependencies.readAutomaticTitleWorkspace,
-      continuationChainStartedAt,
+      continuation,
     )
     if (target.id !== source.id) {
       await transaction.saveMessageSource(input.id, source.id)
@@ -132,27 +136,35 @@ export async function retryMessage(
       'Only the newest failed request can run again. Send a new message.',
     )
   const continuation = previous.id.startsWith('continuation:')
-  const chainStartedAt = continuation
+  const continuationInput = continuation
     ? await operation.read(async (view) => {
         const turnId = await view.messageTurn(messageId)
         const turn = turnId ? await view.turn(turnId) : undefined
-        return turn ? turnChainStartedAt(view, turn) : previous.createdAt
+        return {
+          chainStartedAt: turn
+            ? await turnChainStartedAt(view, turn)
+            : previous.createdAt,
+          sourceSessionId:
+            turn?.providerContinuationSourceSessionId ?? previous.sessionId,
+        }
       })
     : undefined
   return send(
     operation,
     sessionId,
     sendMessage({
-      id: continuation
-        ? `continuation:${dependencies.randomId()}`
-        : dependencies.randomId(),
-      text: previous.text,
+      ...(continuationInput
+        ? continuationMessage(
+            continuationInput.sourceSessionId,
+            dependencies.randomId,
+          )
+        : { id: dependencies.randomId(), text: previous.text }),
       attachmentIds: previous.attachments.map((attachment) => attachment.id),
       choice: previous.choice,
     }),
     context.user,
     dependencies,
     undefined,
-    chainStartedAt,
+    continuationInput,
   )
 }

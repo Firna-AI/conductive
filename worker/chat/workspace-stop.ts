@@ -38,6 +38,11 @@ export async function stopDispatchedTurns(
             randomId,
           )
         : undefined
+    if (!next)
+      turn.providerStop = {
+        next:
+          allowed && permission.next === 'reconnect' ? 'reconnect' : 'message',
+      }
     await new TurnCompletion(transaction, session).stopped(
       turn,
       'cloud_computer_stopped',

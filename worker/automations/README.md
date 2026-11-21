@@ -49,7 +49,13 @@ An accepted failed first start keeps its workspace link and its failure cause.
 Try again in that workspace replaces its failed sandbox.
 Attempt failures retain their cause for recovery if the run outcome write stops.
 A failure before workspace admission has no public workspace link.
-A failed first turn keeps its workspace link and its failure cause.
+A failed last turn of the first turn's continuation chain keeps its workspace
+link and its failure cause. A chain that a provider stop ends without a
+successor keeps its workspace too. Its `error.source` is `provider_stop`.
+The code is `agent_login_required` for a missing session login, and
+`cloud_computer_stopped` for the other ends, including the time limits and
+loss of access to a working login. The login source mark lets the app show
+the login-check words and action instead of a failed turn's stored words.
 For an author or sender skip, the pull request trigger includes `skipLogin`.
 It is the account login from the event that caused the skip.
 Older runs and skips without an account omit this field.
@@ -84,11 +90,13 @@ Opened and pushed runs pass the head branch and event commit to the internal cre
 Merged runs pass the pull request base branch.
 Both use the published org image of the org's fixed provider account, through the shared create path.
 
-Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
+Failed checks, starts, and chain outcomes update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.
 Outcomes count in the order their batches commit.
-A finished first turn resets the count.
-Queued, skipped, and stopped turns do not change it.
+A finished last turn resets the count.
+Queued and skipped runs do not change it.
+Provider-stopped turns with a successor leave the outcome pending.
+A chain with no successor adds one failure. Member Stop adds no outcome.
 At three failures, the automation turns off with `failed_runs` and no next scheduled time.
 Owner activation resets the count.
 An edit preserves failures and automatic turn-off committed after its earlier read.
@@ -166,6 +174,7 @@ The batch-limit test passes 2 for each limit and checks the stored operation cou
 - [run-choice-data.ts](run-choice-data.ts) saves the first agent choice atomically for concurrent starters.
 - [run-text.ts](run-text.ts) formats the prompt and trigger facts without pull request titles or bodies.
 - [run-outcome-data.ts](run-outcome-data.ts) records terminal outcomes and updates the failure count once.
+- [automation-outcome.ts](../chat/automation-outcome.ts) follows the stored first-turn chain and selects its terminal outcome.
 - [run-list-data.ts](run-list-data.ts) reads the latest 50 runs and older pages.
 - [run-projection.ts](run-projection.ts) shares state projection between run history, Run now, and automation lists.
 - [stored-run.ts](stored-run.ts) parses saved trigger facts.

@@ -33,7 +33,7 @@ import type { AgentLogin } from './login-kind'
 import type { RepositoryMoveState } from './runner-repository-move'
 import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 import type { RunnerRepositoryRecord } from './branch-data'
-import type { ProviderRecovery } from './provider-recovery'
+import type { ProviderTurnState } from './provider-turn'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -63,7 +63,7 @@ export interface RunnerWorkspaceRecord extends WorkspaceRecord {
   tokenHash: string
 }
 
-export interface StoredTurn {
+export interface StoredTurn extends ProviderTurnState {
   id: string
   sessionId: string
   senderId: string
@@ -74,8 +74,6 @@ export interface StoredTurn {
   started?: boolean
   startedAt?: number
   chainStartedAt?: number
-  providerContinuationStartedAt?: number | null
-  providerRecovery?: ProviderRecovery
   endReason?: TurnEndReason
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true

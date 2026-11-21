@@ -41,6 +41,16 @@ readers. No `message.accepted` event exposes it. Before input selection,
 the first original message stays first, including after a replayed start.
 A failure before selection therefore retries that original message.
 
+`continuation-message.ts` builds each fresh message with its source session
+ID and instructions to use `read_session` when task context is missing.
+The successor stores `providerContinuationSourceSessionId`.
+Retries keep that source through linked sessions and repeated retries.
+
+Each stopped source also keeps `providerStop`, with its successor ID or
+its final `next` value. Completion clears the live waiting-turn link but
+keeps this record. Automation reporting follows it to the last turn and
+records a terminal result only once.
+
 Try again of a failed continuation sends the same text in another hidden
 message with a fresh prefixed ID. It acts for the member who retries and
 keeps the failed turn's chain start. The normal login rules can open a

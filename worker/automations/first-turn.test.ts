@@ -7,6 +7,7 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { FakeRunner } from '../test-support/fake-runner'
 import { seedChatRun, twoEarlierFailures } from './first-turn.test-support'
 import { readAutomation } from './automation-data'
+import { readAutomationRun } from './run-list-data'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -131,6 +132,10 @@ it('reports a queued first turn failure when its login disappears before dispatc
       .failedRunsInARow,
   ).toBe(1)
   expect(runner.commands).toEqual([])
+  expect(
+    (await readAutomationRun(fixture.env.DB, fixture.org.id, 'first-run'))
+      .error,
+  ).not.toHaveProperty('source')
   await fixture.chat.closeConnections()
 })
 
