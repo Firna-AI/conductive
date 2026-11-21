@@ -3,6 +3,7 @@ import { ModelPicker } from '../components/chat/ModelPicker'
 import { pickerMenu } from '../components/chat/pickers'
 import { classes } from '../components/common/classes'
 import { Menu } from '../components/common/Menu'
+import { plainEntry } from '../entries/components/common/menuEntries'
 import { useShortcutHint } from '../components/common/ShortcutTip'
 import { HistoryAnchor } from '../components/workspace/WorkspaceTabs'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
@@ -63,7 +64,9 @@ function PlacedModelMenu() {
   return (
     <div className={classes(styles.above, styles.model)}>
       <Menu
-        entries={pickerMenu(choice, choice.agent, undefined, fastKey)}
+        entries={pickerMenu(choice, choice.agent, undefined, fastKey).map(
+          plainEntry,
+        )}
         label="Model and effort"
         placement="point"
       />
@@ -101,7 +104,7 @@ function HistoryMenuScreen(props: { viewport: Viewport }) {
           phone ? undefined : (
             <div className={classes(styles.above, styles.history)}>
               <Menu
-                entries={historyFor(historyState)}
+                entries={historyFor(historyState).map(plainEntry)}
                 label="Session history"
                 placement="point"
                 wide

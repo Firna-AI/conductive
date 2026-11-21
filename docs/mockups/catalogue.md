@@ -257,3 +257,10 @@ pages of `app/attachments` and `app/files`, and their related flow.
 `app/org-settings/secrets` and `app/secret-requests`, the pages of the
 Capabilities control in a browser and in the Mac app, and the flow
 `user-flows/secret-request`.
+
+`components` holds the registered shared parts, in a folder named after
+their folder of `src/components/`, and `components/screens` for the
+registered helper parts of `src/screens/`. A shared part without a
+registration has no page there. Each part has its own page and at most four
+variants, such as `components/workspaces/workspace-mark`.
+[Registered parts](registered-parts.md) gives the rules.
