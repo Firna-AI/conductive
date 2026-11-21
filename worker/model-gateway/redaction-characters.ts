@@ -16,8 +16,7 @@ export function wordCode(code: number | undefined): boolean {
     ((code >= 48 && code <= 57) ||
       (code >= 65 && code <= 90) ||
       (code >= 97 && code <= 122) ||
-      code === 95 ||
-      code >= 128)
+      code === 95)
   )
 }
 

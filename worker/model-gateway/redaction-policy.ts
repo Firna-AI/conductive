@@ -8,6 +8,13 @@ const booleanHeaders = new Set([
   'x-codex-safety-buffering-enabled',
   'x-codex-safety-buffering-faster-model',
 ])
+const token = "[\\w!#$%&'*+.^`|~-]+"
+const quotedString = String.raw`"(?:[^"\\]|\\.)*"`
+const parameter = `${token}=(?:${token}|${quotedString})`
+// Whitespace belongs to a following parameter or the next semicolon.
+const contentType = new RegExp(
+  String.raw`^${token}/${token}(?:\s*;(?:\s*${parameter})?)*$`,
+)
 
 function patterns(values: readonly string[]) {
   return [
@@ -124,10 +131,7 @@ export class RedactionPolicy {
   }
 
   private preservesHeader(name: string, value: string): boolean {
-    if (name === 'content-type')
-      return /^[\w!#$%&'*+.^`|~-]+\/[\w!#$%&'*+.^`|~-]+(?:\s*;\s*[\w-]+=(?:[\w!#$%&'*+.^`|~-]+|"(?:[^"\\]|\\.)*"))*$/.test(
-        value,
-      )
+    if (name === 'content-type') return contentType.test(value)
     if (booleanHeaders.has(name)) return /^(true|false)$/.test(value)
     if (name === 'retry-after')
       return /^(?:\d+|(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), \d{2} [A-Z][a-z]{2} \d{4} \d{2}:\d{2}:\d{2} GMT)$/.test(

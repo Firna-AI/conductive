@@ -120,8 +120,8 @@ These are JSON structure, property names, string escapes, literals, and numbers.
 Fixed-format header values also stay unchanged when they pass their header's grammar.
 Examples include content types, retry times, and rate-limit values.
 A header value that fails its grammar counts as other text.
-In JSON string values, request IDs, and other text, a shorter key or token matches only as a whole token.
-It does not match inside a longer word.
+In JSON string values, request IDs, and other text, a shorter key or token does not match where it continues a word.
+Only ASCII letters, digits, and `_` are word characters. Each other character ends a word, also a space, punctuation, or a non-ASCII letter.
 The policy replaces in one pass, so it never changes its own `[redacted]` marker.
 Error bodies redact these values across chunk boundaries.
 Success body chunks pass directly, with no text decoding or copy.

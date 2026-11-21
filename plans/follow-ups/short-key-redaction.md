@@ -1,0 +1,51 @@
+# Short keys can damage replies or expose credentials
+
+- **Severity:** High. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-11, finding 76 of review round 2 on branch `calummoore/cli-proxy-setup`, first seen in the check of finding 14 of round 1.
+- **Updated:** 2026-11-21. A review of the proposed B implementation proved that its JSON preservation and the absolute secret promise conflict. No new policy decision from Cal is recorded.
+- **Source:** Review.
+- **Category:** Security.
+- **Location:** `worker/model-gateway/headers.ts` filters allowed response headers. `worker/model-gateway/redact.ts` filters streamed error bytes. `worker/model-gateway/redaction-policy.ts` and `worker/model-gateway/redaction-context.ts` hold the proposed short-key rules. `src/shared/endpoint-address.ts` supplies saved address forms. `worker/app-api/boot.ts` requires a key when it saves a personal own endpoint login.
+- **Reason:** The requested B fix cannot both preserve protocol values and hide every copy of a saved short key. Cal must choose the policy.
+
+- **Terms:**
+  - **Own endpoint login:** a login that sends an agent's model requests to a gateway or proxy that the user chose, with the user's key.
+  - **Model gateway:** the Worker component that adds the login and forwards model requests, so that the cloud computer gets no login credential.
+  - **Short key:** a saved key with fewer than 12 characters, such as the placeholder `x` or the LiteLLM sample key `sk-1234`.
+  - **Protocol value:** JSON structure, property names, literals, numbers, or a fixed-format response header value.
+- **Background:**
+  - `docs/protocol/model-gateway-requests.md` says that no response header or error body carries the real login. It also requires streamed answers without a whole-body hold.
+  - `src/marketing/terms.ts`, `src/marketing/privacy-uses.ts`, and `src/marketing/docs/agent-logins.md` restate the key and address promise. A changed promise needs the full legal and public-guide audit that `AGENTS.md` requires.
+  - The form and the save require a key. A user of an endpoint that checks no key therefore types a placeholder, such as `x`.
+  - On `main`, both filters replace the key as a plain substring at every length. The body filter replaces in one pass. The header filter repeats replacements.
+  - With key `x`, `text/event-stream` becomes `te[redacted]t/event-stream`. English model error text also changes, so the runner can report `agent_failed` instead of `agent_model_unavailable`.
+  - Key `1` can turn a JSON number into an unquoted `[redacted]`. Key `e` can change `x-should-retry: true` and damage an earlier replacement marker.
+  - The item originally directed B: one shared policy, short-key protection for protocol values, and one-pass replacement. The work order applied that action. It was not a new Cal decision about exceptions to the secret promise.
+  - Saved address forms include whole addresses, origin, host, encoded forms, and saved relative paths. Individual path and query parts need at least 12 characters. All existing forms must stay hidden.
+- **Problem:** B needs an exception to the existing secret promise. A filter cannot distinguish a short key from identical protocol data.
+  - With dummy key `12345`, B keeps `{"key":12345}` and `retry-after: 12345` unchanged. The filter on `main` masks each copy.
+  - With dummy key `sk-1234`, B keeps the property name in `{"sk-1234":"unknown key"}`. B also keeps `null` and `true` where they are protocol values.
+  - Streaming adds another conflict. Use the dummy key that is one double quote, U+0022. Two bodies start with that quote and 40 letters `x`.
+  - One body then ends, so it is invalid JSON and still exposes the key. The other adds a closing quote, so it is valid JSON.
+  - A bounded reader must send the shared start before it sees the ending. Masking that start breaks the valid body. Keeping it exposes the key in the invalid body.
+  - The same conflict occurs with key `[` and a long run of spaces before either invalid text or a valid array ending.
+  - Larger bounded holds only move the conflict. A hold to the end changes the stream requirement and still does not solve identical valid protocol data.
+- **Impact if no action:** Do not merge the B candidate without a policy choice. It can send a saved short key to sandbox code while the public text promises otherwise. The original short-key response damage remains on `main`.
+- **Root question:** Which short-key policy should the gateway enforce?
+- **Options:**
+  - **B.** Keep the shared contextual policy, and approve explicit exceptions for short keys in protocol values and undecided JSON prefixes. Hide other copies with the strongest bounded rule. Update the protocol and each legal or guide sentence that promises otherwise. Cost: a real short key can reach sandbox code in an exempt value. Real short keys keep working. Effort: Medium.
+  - **D.** Hide a short key only in known credential forms, such as `Bearer <key>`, `"api_key":"<key>"`, an API-key field, or `key=<key>`. Keep long keys and address forms unconditional. Update the public promise. Cost: an echo such as `Invalid key x` can reach sandbox code. The rule is simpler than contextual JSON recognition, but it hides fewer echoes. Effort: Medium.
+  - **E.** Make the own endpoint key optional. Send no key header when it is empty. Refuse a nonempty key with fewer than 12 characters. Existing short-key logins need a compatible reconnect or key-replacement path, without discarding their saved data. Cost: a working short key such as `sk-1234` can no longer connect. This adds a new refusal. Effort: Medium.
+- **Left out:**
+  - Original A, token boundaries alone: it still changes JSON literals and numbers, so it does not fix the item.
+  - Keep the current raw replacement rule: it keeps hiding keys but keeps the broken answers too.
+  - Skip every short key: D hides more echoes with the same public-promise cost.
+  - A larger bounded hold: the same failure occurs after a longer shared start.
+  - Hold every error body to its end: it changes the stream contract, has no fixed retention bound, and still leaves the valid protocol-value collision.
+  - Replace when unsure: it brings back invalid JSON and damaged protocol values, including `"param":[redacted]` for key `null`.
+- **Wider fix:** E. Represent an endpoint credential as no key or a key outside the short matching domain, instead of guessing whether protocol characters are secret.
+- **Previous examples:** Commit `216ed679` separated masked display text from operational identifiers in `src/shared/output-fields.ts`. That separation cannot distinguish identical credential and protocol bytes here.
+- **Recommendation:** E. It keeps credentials out of untrusted sandbox code and removes the ambiguous short-key parser. The earlier recommendation was B. B is the compatibility choice if Cal accepts and documents the privacy exceptions.
+- **Action:** ask the user, because E adds a key refusal that the task reserves for Cal, while B and D narrow the secret promise. No recorded Cal decision covers either change.
+- **Done when:** Cal's policy is implemented with its tests and docs, and one pull request into `main` deletes this item. No doc or README status line links it.

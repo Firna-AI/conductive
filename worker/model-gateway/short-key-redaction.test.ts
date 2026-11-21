@@ -111,6 +111,30 @@ it('keeps fixed response header values and redacts short echoes in opaque header
         'retry-after': 'Bearer [redacted]',
       })
   }
+  for (const [value, expected] of [
+    ['text/event-stream; x.foo=bar', 'text/event-stream; x.foo=bar'],
+    ['application/x-ndjson;', 'application/x-ndjson;'],
+    ['application/x-ndjson; foo', 'application/[redacted]-ndjson; foo'],
+    [
+      'application/x-ndjson; foo="a; \\"b"',
+      'application/x-ndjson; foo="a; \\"b"',
+    ],
+  ])
+    expect
+      .soft(
+        downstreamHeaders(
+          new Headers({ 'content-type': value }),
+          new RedactionPolicy(['x']),
+        ).get('content-type'),
+        value,
+      )
+      .toBe(expected)
+  expect(
+    downstreamHeaders(
+      new Headers({ 'x-request-id': 'Invalid key: x' }),
+      new RedactionPolicy(['x']),
+    ).get('x-request-id'),
+  ).toBe('Invalid key: [redacted]')
 })
 
 it('keeps JSON string escapes and property names while redacting split escaped key echoes', async () => {
@@ -140,6 +164,22 @@ it('keeps JSON string escapes and property names while redacting split escaped k
       'x',
     ]),
   ).toBe('{"message":"\\n[redacted] [redacted]\\n \\u0078ylophone"}')
+  for (const [text, expected] of [
+    ['Invalid API key: “sk-1234”', 'Invalid API key: “[redacted]”'],
+    [
+      '{"message":"Invalid API key: “sk-1234”"}',
+      '{"message":"Invalid API key: “[redacted]”"}',
+    ],
+    [
+      '{"message":"Invalid API key: \\u201Csk-1234\\u201D"}',
+      '{"message":"Invalid API key: \\u201C[redacted]\\u201D"}',
+    ],
+    ['密钥sk-1234无效', '密钥[redacted]无效'],
+    ['キーsk-1234は無効です', 'キー[redacted]は無効です'],
+    ['sk-1234는', '[redacted]는'],
+    ['keyʼsk-1234ʼ', 'keyʼ[redacted]ʼ'],
+  ])
+    expect.soft(await filteredText(text, ['sk-1234']), text).toBe(expected)
 })
 
 it('keeps long key and saved address matches in protocol values and nested markers out of replacements', async () => {
