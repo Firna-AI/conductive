@@ -26,7 +26,9 @@ The Rust reader accepts the Node state format.
 
 The runner requests a background update check after each start.
 The check timer also runs after boot and every 10 minutes.
-A start never waits for its download.
+A start never waits for the download of a newer release.
+A start downloads only a missing part of the release that it starts, as the
+[cnd-cli README](../../crates/cnd-cli/README.md) says.
 The next start applies a complete newer release before the runner works.
 
 While it runs, the runner also installs a complete newer release when its
