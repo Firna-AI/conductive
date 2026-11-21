@@ -1,6 +1,5 @@
-import { CircleAlert } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { thisMacWords } from './capabilitiesCopy'
 import { startCauses, type FailedStart } from './MacAccessPart'
 
@@ -14,14 +13,18 @@ import { startCauses, type FailedStart } from './MacAccessPart'
  */
 export function StartFailedNotice(props: { failure: FailedStart }) {
   return (
-    <Notice
+    <notice.Component
       action={
-        <ActionButton accessibilityLabel={thisMacWords.tryAgainLabel}>
+        <actionButton.Component
+          accessibilityLabel={thisMacWords.tryAgainLabel}
+          moklyInstance="grant-try-again"
+        >
           {thisMacWords.tryAgain}
-        </ActionButton>
+        </actionButton.Component>
       }
       body={startCauses[props.failure]}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="grant-not-started"
       title={thisMacWords.noticeTitle}
       tone="danger"
     />
