@@ -225,6 +225,10 @@ These are the UI implementor's calls of 20 November 2026, checked by the orchest
 - Draw no menu or Stop question without the control right. Keep the read-only header state as plain text. Reason: the mockups must follow the same access rule at both surfaces.
 - Use the shared header Restart copy to name ordinary agent commands separately from services and terminal commands. Keep its confirmation title. Reason: the existing software restart preserves service units.
 
+### Guidance scheduling call
+
+On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
+
 ## Milestone 1: Services mockups
 
 Tags: mockup
@@ -359,7 +363,7 @@ The UI implementor builds the approved mockups against real runner data.
 
 ## Milestone 7: Agent guidance
 
-Depends on: 4 and 5a
+Depends on: 4
 
 The non-UI implementor adds service guidance in the same sandbox software release as the command.
 
