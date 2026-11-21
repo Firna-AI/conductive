@@ -371,10 +371,10 @@ Depends on: 6
 
 Depends on: every other milestone
 
-- [ ] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then
+- [x] Run `npm --prefix desktop ci` and `npm ci --prefix runner`, then
       the targeted tests and `npm run check`. Run the Rust checks.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
@@ -388,4 +388,5 @@ Depends on: every other milestone
 ## Post-merge follow-up (non-blocking)
 
 - [ ] Explain a passage on `conductive.build`, close the popover while it
-      runs, and open it again from the mark.
+      runs, and open it again from the mark. Follow-up item:
+      `plans/follow-ups/explain-deployed-smoke-test.md`.
