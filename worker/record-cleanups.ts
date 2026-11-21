@@ -1,6 +1,6 @@
 import { cleanupFeedbackSends } from './app-api/feedback-quota-data'
 import { cleanupCodexDevices } from './codex-auth/device-store'
-import { cleanupOldJobRecords } from './lifecycle/job-steps'
+import { deleteOldJobRecords } from './lifecycle/job-steps'
 import { runScheduledStep } from './scheduled-step'
 
 /** The record cleanups of the 15-minute cron, in their order. */
@@ -15,6 +15,6 @@ export async function runRecordCleanups(
     cleanupCodexDevices(db, now),
   )
   await runScheduledStep('job_record_cleanup_failed', () =>
-    cleanupOldJobRecords(db, now),
+    deleteOldJobRecords(db, now),
   )
 }

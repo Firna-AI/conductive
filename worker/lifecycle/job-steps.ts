@@ -203,11 +203,3 @@ export async function deleteOldJobRecords(
       .bind(before, limit),
   ])
 }
-
-/** Deletes old job records during scheduled cleanup. */
-export async function cleanupOldJobRecords(
-  db: D1Database,
-  now: number,
-): Promise<void> {
-  await deleteOldJobRecords(db, now)
-}
