@@ -147,6 +147,7 @@ export class WorkspaceChat {
     )
     this.browsers = new BrowserConnections(
       this.store,
+      env,
       this.dependencies,
       (id) => this.operation(id),
       (id) => this.binding.bind(id),

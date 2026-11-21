@@ -13,7 +13,7 @@ import {
   type LocalWorkKind,
 } from '../../docs/mockups/src/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
-import { bannerStatus } from './bannerStatus'
+import { bannerStatus, baseBranchLabel, branchLabel } from './bannerStatus'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
 
@@ -180,7 +180,11 @@ function messageOf(
   banner: GitHubBanner,
 ): BarMessage | null {
   const url = banner.pullRequest?.url ?? null
-  const branches = { branch: banner.branch, base: banner.baseBranch }
+  // The messages show the labels, which hide each secret value.
+  const branches = {
+    branch: branchLabel(banner),
+    base: baseBranchLabel(banner),
+  }
   const waits: BarMessage = {
     text: barMessageText('continue-waits', branches),
     tone: 'status',

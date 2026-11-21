@@ -7,6 +7,7 @@ import type { FileTreeResponse } from './generated/FileTreeResponse'
 import type { RunnerFileEvent } from './generated/RunnerFileEvent'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentSkill } from './generated/AgentSkill'
+import type { GitHubBanner } from './github'
 type FilterText = (value: string) => string
 
 function pathLabel<T extends { path: string; displayPath?: string }>(
@@ -27,6 +28,17 @@ function baseLabel<
     value.displayBaseBranch === undefined
     ? value
     : { ...value, displayBaseBranch }
+}
+
+export function filterGitHubBanner<T extends GitHubBanner>(
+  banner: T,
+  text: FilterText,
+): T {
+  const result = baseLabel(banner, text)
+  const displayBranch = text(banner.displayBranch || banner.branch)
+  return displayBranch === banner.branch && banner.displayBranch === undefined
+    ? result
+    : { ...result, displayBranch }
 }
 
 function fileEntry(entry: FileEntry, text: FilterText): FileEntry {
