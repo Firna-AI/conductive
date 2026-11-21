@@ -1,7 +1,7 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { LogoTile } from '../components/brand/Logo'
+import { logoTile } from '../entries/components/brand/Logo.mockup'
 import { previewOpeningCopy } from '../components/tools/previewCopy'
 import styles from './PreviewOpeningScreen.module.css'
 
@@ -27,7 +27,7 @@ export function PreviewOpeningScreen(props: { state: PreviewOpeningState }) {
   const failed = props.state.state === 'failed'
   return (
     <main className={styles.page}>
-      <LogoTile size={40} />
+      <logoTile.Component moklyInstance="logo" size={40} />
       <div className={styles.status} role="status">
         {failed ? (
           <>

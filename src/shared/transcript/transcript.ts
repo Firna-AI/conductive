@@ -23,7 +23,14 @@ export type TranscriptItem =
       changes: CapabilityChangeNote['changes']
     }
   | { kind: 'user'; id: string; message: UserMessage }
-  | { kind: 'agent'; id: string; turnId: string; text: string }
+  | {
+      kind: 'agent'
+      id: string
+      turnId: string
+      text: string
+      /** Set when `assistant.completed` gave the whole text of the message. */
+      complete?: true
+    }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }
   | {
       kind: 'turn-end'

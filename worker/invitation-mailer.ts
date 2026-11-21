@@ -1,4 +1,4 @@
-import { productName } from '../docs/mockups/src/brand'
+import { createEmailMessages } from './email-messages'
 import type { AppEnv, HttpFetch } from './env'
 import { HttpError } from './http'
 import { hash } from './security/crypto'
@@ -18,27 +18,23 @@ export interface InvitationMailer {
   send(invitation: InvitationEmail): Promise<void>
 }
 
-export function invitationLink(appOrigin: string, inviteId: string): string {
-  const url = new URL('/', appOrigin)
-  url.searchParams.set('invite', inviteId)
-  return url.href
-}
-
 export function createInvitationMailer(
   env: Pick<AppEnv, 'APP_ORIGIN' | 'RESEND_API_KEY'>,
   fetch: HttpFetch,
 ): InvitationMailer {
   const sender = createMailSender(env, fetch)
+  const messages = createEmailMessages(env.APP_ORIGIN)
   return {
     async send(invitation) {
       try {
+        const message = messages.invitation(invitation)
         await sender.send({
           recipient: invitation.email,
-          subject: `Join ${invitation.orgName} on ${productName}`,
-          text: `${invitation.invitedBy} invited you to join ${invitation.orgName} on ${productName}.\n\nSign in with GitHub and accept your invitation:\n${invitation.link}`,
+          subject: message.subject,
+          text: message.body,
           deliveryKey: async (body) =>
             `org-invite/${invitation.id}/${await hash(body)}`,
-          developmentLog: `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${invitation.link}`,
+          developmentLog: `${invitation.invitedBy} invited ${invitation.email} to ${invitation.orgName}: ${message.link}`,
         })
       } catch (error) {
         warnWorker({

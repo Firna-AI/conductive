@@ -70,3 +70,12 @@ export const previewOpenFailedCopy = {
   title: "The preview couldn't open",
   retry: 'Try again',
 } as const
+
+/**
+ * The words of Expand, which shows the page of a Preview tab or of an HTML
+ * file in a large window over the whole app, and of the window itself.
+ */
+export const expandedPreviewCopy = {
+  expand: 'Expand',
+  close: 'Close',
+} as const

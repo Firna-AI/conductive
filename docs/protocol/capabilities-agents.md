@@ -127,8 +127,12 @@ is open. Its pull request keeps them after the merge.
   message during a turn does (capability prompts decision 1 A). The turn
   keeps its sender, as [Access](message-lines.md#access) says.
 - In an idle session, the change note waits (capability prompts decision
-  3 A). The agent gets it with the next turn of the session, before the
-  message that starts that turn.
+  3 A). The agent gets it with the next turn of the session, in the same
+  prompt as the message that starts that turn. The notes come after the
+  sender lines of that message.
+- Reason: the agent reads the whole prompt before it acts. A skill text at
+  the start of the member's text still starts the prompt, as
+  [Skills of a message](skill-input.md) says.
 - No turn starts for a change note.
 - A change note that the agent did not get before the end of its turn
   waits for the next turn.

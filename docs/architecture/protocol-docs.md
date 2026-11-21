@@ -30,10 +30,13 @@ This page lists each protocol doc and what it covers.
     - [File mentions: files in answers](../protocol/file-mentions-answers.md):
       the file chips, the file links, and the pictures in the answers of
       the agents, and their line targets.
+  - [Skill mentions](../protocol/skill-mentions.md): the list of `/` in the
+    composer, the skill chips and their text, and the skills report of the
+    runner that fills the list.
   - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
     its events and their limits, its turns, what an out-of-memory kill ends,
     the background work of Claude turns with its note and its time limit,
-    its port reports, and the repair of lost workspace updates.
+    its port reports, its skills report, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
       the wait of a Claude turn for background work, its note, and its time
       limit.
@@ -102,7 +105,8 @@ This page lists each protocol doc and what it covers.
     an attached file in parts, with the gate rules and the body limit of
     its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
-    the preview replies and of the create reply, and what it may hold.
+    the preview replies and of the create reply, and what it may hold, and
+    the job step records of builds and starts.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
@@ -203,20 +207,25 @@ This page lists each protocol doc and what it covers.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
-  messages in the chat, with their headings and lists, and their lines in
-  the work of a turn.
+  messages in the chat, with their headings, lists, quotes, and line
+  breaks.
   - [Chat tables](../protocol/chat-tables.md): the tables of agent
     messages, their short rows and wide tables, and the table rules that
     they share with the file preview.
   - [Chat links](../protocol/chat-links.md): the links of agent messages
-    and of sent messages, the labels of Markdown links, local addresses,
-    and links in code.
+    and of sent messages, the labels of Markdown links, the images of
+    agent messages, local addresses, and links in code.
+  - [Chat message lines](../protocol/chat-message-lines.md): how each agent
+    message shows as one line in the work of a turn, closed and open, with
+    its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
   GitHub actions of the Worker as a member, and the GitHub tokens that an
   image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
-  agent session gets.
+  agent session gets, and the skills of a message.
+  - [Session instructions](../protocol/session-instructions.md): the same
+    instructions for the life of a session, and how each agent gets them.
   - [Message lines](../protocol/message-lines.md): the sender line, the
     repository line, and the branch line of each message, the app header
     of a change note, and the access of a turn, which does not depend on

@@ -156,7 +156,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
         servers that run in the cloud computer of a workspace: the port,
-        a short program name, and the folder of each server. The files
+        a short program name, and the folder of each server. It also keeps
+        the latest list of the skills of each workspace, with the name and
+        the description of each skill. The files
         that you attach to a message stay in the storage of
         ${productName} at Cloudflare until the agent starts work on the
         message. The cloud computer of the workspace then downloads them.
@@ -168,12 +170,25 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including
         whether they finished, stopped, or failed.
+        It also records work on a message from that program when a restart
+        of the service ends that work. That record holds the kind of the
+        work, how far it got, the event type and number, and the size of the
+        message. To find such work, ${productName} keeps a short note of
+        the work that starts in the first 30 seconds after the program
+        connects. It keeps the note while the work runs, and after a
+        restart until the program connects again.
         These records include the workspace ID and any available turn,
         connection, and event stream IDs, and communication protocol version.
         When available, they also include a random ID for each start of that
         program. The team uses these logs to investigate connection problems,
         program restarts, and interrupted agent work. These logs hold no tokens,
-        secret values, message text, file contents, or connection close reasons.`,
+        secret values, message text, file contents, or connection close reasons.
+        ${productName} also records when each step of a cloud computer
+        build and of a workspace start begins and ends, with the IDs of the
+        org, the workspace, and the build or the start, and the time of its calls to
+        other services. The team uses these records to make builds and
+        starts faster. They hold no names of repositories or branches, and
+        no message text, file contents, or secret values.`,
       text`Mac commands: ${productName} keeps each request and its result.
         They record the command, its folder, its reason, its time limit,
         and the output. A request also names the Mac that gets it.
@@ -206,6 +221,15 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repository, which GitHub sends to ${productName}. An automation
         also uses the GitHub accounts that open, push to, or merge a pull
         request, to decide whether the event starts a run.`,
+      text`Merge records: ${productName} keeps one record for each merged
+        pull request of a workspace branch. The record holds the GitHub
+        repository ID, the pull request number, the org, the workspace, the
+        workspace owner at the time of the record, the merge time from
+        GitHub, and the time of the record. ${productName} writes it when it
+        reads a merged pull request from GitHub for a workspace, and when
+        GitHub sends the event of the merge, also for an archived workspace.
+        The records are for the counts of merged pull requests on the Stats
+        tab of your account page.`,
       text`Feedback: your message and any screenshots help the team answer
         questions, find problems, and improve ${productName}. Each message
         includes your ${productName} user ID, GitHub user ID and login, the

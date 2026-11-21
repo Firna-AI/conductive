@@ -10,7 +10,10 @@ failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 the agent of another session stopped with a workspace tool, from decision
 279. Its line says "Stopped from" and shows the session chip of that
 session, for a session of the same workspace and, in `other-workspace`, of
-another workspace. `app/chat/work` draws the work of ended
+another workspace. In `unknown-source`, the list of the org does not hold
+the workspace of that session. So the line shows the whole session link
+as text. The link breaks to fit the line.
+`app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac
@@ -18,12 +21,23 @@ command card and a lost line at their place, and a turn whose open work
 holds two messages with tables, one closed and one open. The `fold` state
 opens the folds. `app/chat/tables` draws tables in replies: the resources
 of the cloud computer, a short row whose last cell spans the missing
-columns, a wide table that scrolls sideways inside the reply, and the
-reply while the agent writes it, before its separator row arrives and
-after its table appears. `app/chat/lists` draws a reply with a numbered
+columns, a wide table that scrolls sideways inside the reply, cells with
+line breaks, and the reply while the agent writes it, before its
+separator row arrives and after its table appears. Its saved states
+`short-row`, `wide`, `header`, and `rows` moved into their own folders and
+kept their paths, so the page shows only its canonical screen. The new
+child page `app/chat/tables/line-break` compares the two address providers
+in a table whose cells hold two lines, where the agent wrote `<br>`,
+`<br/>`, or `<br />`, from item 1 of the Markdown plan. Each cell stands
+at the top of its row, from item 12 B of 18 November 2026. `app/chat/lists` draws a reply with a numbered
 list of choices, each with its options in a list under its text, as the
 user chose on 10 November 2026, and an open message line in the work of a
-turn with a plan whose steps sit under each item. `app/chat/headings`
+turn with a plan whose steps sit under each item. Its `tasks` variant draws
+a reply with a task list, whose fixed check boxes take the place of the
+bullets, from item 14 B of the Markdown plan of 18 November 2026. Its
+`tasks-work` variant draws the work of the same turn: two closed message
+lines with the boxes before the words of their tasks, and an open message
+line with the boxes in the place of the bullets. `app/chat/headings`
 draws headings in a reply, as the user chose on 11 November 2026: a review
 with a title at level 1, the section Needs your answer at level 2, a
 heading at level 3 for each choice with its bold fields under it, and a
@@ -31,6 +45,29 @@ heading at level 4 inside the first choice. Its `work` variant has the
 open work of a turn: a closed message line that shows its heading as text
 in the line, and an open message line that shows its heading on its own
 line, in the weight of a heading.
+
+`app/chat/formatting` draws the quotes, the rules, the emphasis, the
+strikethrough, and the line breaks of a reply, from items 8 D and 5 A of
+the Markdown plan, which the user chose on 17 November 2026, and item 1 of
+16 November 2026. Its canonical screen has an answer that quotes the two
+review comments of Priya, with a rule between them, a word in italics, an
+option with a line through it, an address on two lines, and a bold label.
+Its variants:
+
+- `work` has the open work of a turn. Its closed message lines show a
+  quote as its text, a rule as a middle dot, and a line break in a table
+  cell as a space. Its open message line shows a quote and a rule as
+  blocks, and a line break as a new line.
+- `writing` has the same answer while the agent writes it: the bold label
+  at its end has no closing `**` yet, and the open mark closes at the end
+  of the text, so the label shows bold at once, from item 9 C of
+  18 November 2026.
+- `as-typed` has marks without a pair, which show as typed, and `<kbd>`
+  tags, which show as text.
+- `pictures` has a picture at a web address, which shows its alt text as
+  a link, a picture at a path that no file has, which shows its alt text
+  only, and the screenshot of the workspace, which shows as its picture
+  and opens its file, as `app/file-mentions/answers` shows.
 
 `app/chat/links` draws the links of chat text, as the user chose on 10
 November 2026 with D of chat link decision 1, C of chat link decision 2,

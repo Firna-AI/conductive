@@ -50,7 +50,7 @@ pub trait HelperPort: Send + Sync {
 #[cfg_attr(test, unimock::unimock(api = StartupMock))]
 #[async_trait]
 pub trait Startup: Send + Sync {
-    /// Remove stale credentials and warm the Claude executable once.
+    /// Remove stale agent credentials once, before the first connection.
     async fn prepare(&self) -> Result<()>;
     /// Confirm the release once, only after the first valid welcome.
     async fn welcomed(&self) -> Result<()>;
@@ -62,7 +62,7 @@ pub trait HelperEvents: Send + Sync {
     fn output(&self, output: HelperOutput);
 }
 
-/// Opens private helper processes for the SDK and startup warm-up.
+/// Opens private helper processes for agent starts and skill scans.
 #[cfg_attr(test, unimock::unimock(api = HelperPortsMock))]
 pub trait HelperPorts: Send + Sync {
     /// Open a process with private stdin and stdout.

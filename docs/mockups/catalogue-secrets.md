@@ -33,12 +33,17 @@ suspended org, with no action.
 New workspace page: the secrets of Acme with FIGMA_TOKEN pre-approved, and
 Mac access off. A phone opens it as a sheet from the menu of the + button.
 Its `no-secrets` variant has Firna without secrets, and its `menu` variant
-has that menu open on a phone. `app/new-workspace/dialog/capabilities` has
+has that menu open on a phone. Its `search` variant has twelve secrets,
+with a Search secrets field above them and "deploy" typed in it. Its
+`info` variant has the info box of PROD_DATABASE_URL open, with its
+description, after a press on its info icon. STAGING_API_KEY there has no
+description, so it has no info icon. `app/new-workspace/dialog/capabilities` has
 the same control in the dialog.
 
 `app/capabilities` has the control of Checkout address autocomplete, with
-the approvals of its sessions and its value for the workspace, each with
-Remove. Its child pages:
+the approval of its open session and its value for the workspace, each with
+Remove. It hides an approval of the pre-approved FIGMA_TOKEN and an
+approval of another session. Its child pages:
 
 - `mac-access-off` has Mac access off. The `mac-access-off` variant of
   `app/mac-commands` has a Mac command that the workspace refused for that

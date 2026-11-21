@@ -234,4 +234,7 @@ pub enum RunnerReportKind {
     /// ports.updated.
     #[serde(rename = "ports.updated")]
     PortsUpdated,
+    /// skills.updated.
+    #[serde(rename = "skills.updated")]
+    SkillsUpdated,
 }

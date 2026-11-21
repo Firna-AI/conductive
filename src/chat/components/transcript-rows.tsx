@@ -78,17 +78,22 @@ export const WorkRow = memo(function WorkRow(props: {
   )
 }, sameData)
 
-/** A message, an answer, a failure, a lost event, or a note. */
+/**
+ * A message, an answer, a failure, a lost event, or a note. `live` marks
+ * the agent message that the agent writes now.
+ */
 export const ItemRow = memo(function ItemRow(props: {
   item: PlainItem
   actions: ItemActions
   readers: ChatReaders
+  live?: boolean
 }) {
   return (
     <Row id={`item:${props.item.id}`}>
       <ItemView
         actions={props.actions}
         item={props.item}
+        live={props.live}
         readers={props.readers}
       />
     </Row>

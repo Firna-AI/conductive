@@ -31,6 +31,10 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  start_record_failed:
+    'A job step record of a start could not be saved. The start goes on without it.',
+  start_record_send_failed:
+    'The job step records of a start could not be sent. The shown state was saved without them.',
   terminal_restart_refresh_failed:
     'The terminal credentials and support could not be refreshed after Restart.',
   automation_schedule_failed:
@@ -64,6 +68,8 @@ export const SIMPLE_WARNINGS = {
     'Feedback send record cleanup failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
+  job_record_cleanup_failed:
+    'The deletion of old job step records failed. It runs again at the next timer.',
   software_image_cleanup_failed:
     'Software image cleanup failed. It runs again at the next timer.',
   attachment_cleanup_retry: 'An attachment cleanup will retry.',
@@ -96,6 +102,26 @@ export const RUNNER_MESSAGE_STAGES = [
 
 export type RunnerMessageStage = (typeof RUNNER_MESSAGE_STAGES)[number]
 
+/** The runner work that a workspace marks just after a runner connects. */
+export const RUNNER_WORK_KINDS = [
+  'hello',
+  'event',
+  'file_result',
+  'move_refused',
+  'flush',
+] as const
+
+type RunnerWorkKind = (typeof RUNNER_WORK_KINDS)[number]
+
+/** Values that `runner_work_interrupted` checks again before it logs them. */
+export interface RunnerWorkFields {
+  work: RunnerWorkKind | 'unknown'
+  stage: RunnerMessageStage | null
+  eventType: string | null
+  eventNumber: number | null
+  size: number | null
+}
+
 /** The provider step of a file check or download into a cloud computer. */
 export const ATTACHMENT_STEPS = ['check', 'start', 'status', 'command'] as const
 
@@ -114,6 +140,8 @@ export type WorkerWarning =
   | (RunnerWarningFields & {
       kind: 'runner_connected' | 'runner_disconnected'
     })
+  | (RunnerWarningFields &
+      RunnerWorkFields & { kind: 'runner_work_interrupted' })
   | (RunnerWarningFields & {
       kind: 'turn_ended_without_stop_request'
       turnId: WarningId

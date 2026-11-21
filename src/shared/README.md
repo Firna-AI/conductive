@@ -174,8 +174,19 @@ browser event stream, and the session paths, logins, and replies.
 It uses generated `SessionLogin`, or null when no login serves that owner.
 Every reader gets that value without a secret, endpoint host, or full address.
 It does not change the automation owner's GitHub identity.
+`AutomationResponse.chosenSecrets` gives each chosen secret of the automation as its `id` and `name` from `OrgSecret` in `secrets.ts`.
+It never holds a value.
+It sorts by name, then by ID, as the org secrets list does.
+The current Worker always sends it, as an empty list when no secret is chosen.
+The field is optional, because a reply from a previous Worker omits it.
+The app then takes the names from the org secrets list.
+An older copy of the app ignores the field.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
+`termsRevision(document)` computes it from the text of `termsDocument` in [`terms.ts`](../marketing/terms.ts): `terms-` and a 14-digit hex digest.
+A change to any word of the Terms gives a new revision, so nobody sets it by hand.
+The digest covers the whole `LegalDocument` data, also its block kinds and its paragraph breaks.
+So a new field or a new paragraph break also gives a new revision, and each user then records a new time of first acceptance.
 `acceptedTermsSignInPath(inviteCode?)` gives the sign-in path that carries that revision and an optional join code.
 [Terms consent](../../worker/security/README.md#terms-consent) gives the rules of sign-in.
 `operator.ts` defines the operator overview, directories, and user and org
@@ -234,6 +245,12 @@ per-target outer alias and no credential.
   `workspaceRestoreUntil`, and `workspaceRemovedAt` between the Worker and
   the app. `workspaceRemovedAt(archivedAt, now)` returns the removal time
   when it is at or before `now`, else null. It needs no cloud computer ID.
+- [The workspace record reader](workspace-read.ts) reads each field of a
+  `Workspace` record for the app, the chat, and the Members tab. Each area
+  makes its reader with `createWorkspaceReader`. Each area gives it its own
+  JSON readers and its readers of the owner and the agent choice. Each area
+  also gives its own error for an unknown state. `WORKSPACE_STATES` lists
+  the known workspace states.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

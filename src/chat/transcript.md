@@ -132,6 +132,10 @@ the parts of the chat that draw the transcript.
   `readers`, draws each row that uses it again. `components/same-data.ts`
   also holds `KeptParts` and `sameElement`. They keep each card of
   `sessionCommands` and `sessionSecrets` while its data stays the same.
+  Its `samePlainData` compares the blocks and the text of an answer at
+  each depth, as [Agent text](agent-text.md#drawing) says. `TranscriptRows`
+  also names the agent message that the agent writes now, whose row gets
+  `live`.
 - `components/turn-facts.ts`: `endFacts` gives what the end of a finished
   turn shows from the rest of the transcript, such as its end reason.
   `stopFacts` gives the notes of a stopped turn and who stopped it.

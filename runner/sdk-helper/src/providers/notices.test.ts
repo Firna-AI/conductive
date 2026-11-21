@@ -28,7 +28,7 @@ const appText =
   'Line of the app: no member wrote this text.\n\nPriya approved API_TOKEN.\nPriya turned Mac access on.'
 
 it.each(['claude', 'codex'] as const)(
-  'puts %s turn notes before the member sender and current context',
+  'puts %s turn notes after the member text, sender, and current context',
   async (agent) => {
     const h = await providerFixture(agent)
     const adapter = instructionProviders(agent)
@@ -52,11 +52,16 @@ it.each(['claude', 'codex'] as const)(
     expect(request).toEqual({ type: 'send', requestId: '1', input: command })
     if (request.type !== 'send') throw new Error('Expected send request.')
     await provider.send(request.input)
-    const text = `${appText}\n\nSender: @alice [member ID: "alice"]\nCurrent repository: "acme/new" in the folder "/repo/new". The workspace now works in this folder. Its context folder is "/repo/new/.context".\nCurrent branches: workspace "new"; target "trunk".\n\nChange the file.`
+    const lines = `Sender: @alice [member ID: "alice"]\nCurrent repository: "acme/new" in the folder "/repo/new". The workspace now works in this folder. Its context folder is "/repo/new/.context".\nCurrent branches: workspace "new"; target "trunk".\n\n${appText}`
     expect(await adapter.input()).toMatchObject(
       agent === 'claude'
-        ? { content: text }
-        : { input: [{ type: 'text', text, text_elements: [] }] },
+        ? { content: `Change the file.\n\n${lines}` }
+        : {
+            input: [
+              { type: 'text', text: 'Change the file.', text_elements: [] },
+              { type: 'text', text: lines, text_elements: [] },
+            ],
+          },
     )
   },
 )

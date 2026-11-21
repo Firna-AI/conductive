@@ -18,6 +18,7 @@ export interface StoredRunnerConnection {
   repositoryFolder?: string
   fileServer?: boolean
   capabilityNotices?: boolean
+  watchUntil?: number
   ready: boolean
   checkAt: number
 }
@@ -86,6 +87,11 @@ function readConnection(value: unknown): StoredRunnerConnection {
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
     ...(value.capabilityNotices === true ? { capabilityNotices: true } : {}),
+    // A diagnostic value cannot prevent the restore of the connection.
+    ...(typeof value.watchUntil === 'number' &&
+    Number.isFinite(value.watchUntil)
+      ? { watchUntil: value.watchUntil }
+      : {}),
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),

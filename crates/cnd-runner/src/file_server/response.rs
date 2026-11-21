@@ -1,11 +1,10 @@
 //! File response headers and seek-before-stream assembly.
 
 use std::io::SeekFrom;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use hyper::header::{
-    ACCEPT_RANGES, CACHE_CONTROL, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, IF_MODIFIED_SINCE,
-    LAST_MODIFIED,
+    ACCEPT_RANGES, CACHE_CONTROL, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, ETAG,
+    IF_MODIFIED_SINCE, IF_NONE_MATCH, LAST_MODIFIED,
 };
 use hyper::{Method, Request, Response, StatusCode};
 use tokio::io::AsyncSeekExt;
@@ -33,22 +32,46 @@ pub(super) fn empty(status: StatusCode) -> Response<Body> {
     response
 }
 
-fn unchanged(request: &Request<()>, modified: SystemTime) -> bool {
+fn etag_matches(mut values: &str, etag: &str) -> bool {
+    if values.trim() == "*" {
+        return true;
+    }
+    let mut matched = false;
+    loop {
+        values = values.trim_start_matches([',', ' ', '\t']);
+        if values.is_empty() {
+            return matched;
+        }
+        let strong = values.strip_prefix("W/").unwrap_or(values);
+        let Some(quoted) = strong.strip_prefix('"') else {
+            return false;
+        };
+        let Some(end) = quoted.find('"') else {
+            return false;
+        };
+        matched |= &strong[..end + 2] == etag;
+        values = strong[end + 2..].trim_start_matches([' ', '\t']);
+        if !values.is_empty() && !values.starts_with(',') {
+            return false;
+        }
+    }
+}
+
+fn unchanged(request: &Request<()>, content: &FileContent) -> bool {
+    if request.headers().contains_key(IF_NONE_MATCH) {
+        return request
+            .headers()
+            .get_all(IF_NONE_MATCH)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .any(|value| etag_matches(value, &content.etag));
+    }
     request
         .headers()
         .get(IF_MODIFIED_SINCE)
         .and_then(|value| value.to_str().ok())
         .and_then(|value| httpdate::parse_http_date(value).ok())
-        .is_some_and(|since| {
-            since
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_secs()
-                >= modified
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap_or_default()
-                    .as_secs()
-        })
+        .is_some_and(|since| since >= content.modified)
 }
 
 pub(super) async fn file(
@@ -57,6 +80,9 @@ pub(super) async fn file(
     mut content: FileContent,
 ) -> Result<Response<Body>> {
     let mut response = empty(StatusCode::OK);
+    response
+        .headers_mut()
+        .insert(ETAG, content.etag.parse().internal()?);
     response.headers_mut().insert(
         LAST_MODIFIED,
         httpdate::fmt_http_date(content.modified)
@@ -66,7 +92,7 @@ pub(super) async fn file(
     response
         .headers_mut()
         .insert(CONTENT_TYPE, content_type(path).parse().internal()?);
-    if unchanged(request, content.modified) {
+    if unchanged(request, &content) {
         *response.status_mut() = StatusCode::NOT_MODIFIED;
         response.headers_mut().remove(CONTENT_LENGTH);
         return Ok(response);

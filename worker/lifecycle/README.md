@@ -84,6 +84,8 @@ and how `createApp` routes it.
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
+[The start loop](start-loop.md) gives how far one run advances a start,
+when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -137,9 +139,44 @@ Its system installer links `/usr/local/bin/conductive` to the active program.
 Disk retention starts do not bootstrap or restart the runner.
 [Installation](../../image/install.md) gives the command sequence and release layout.
 
+### Job step records
+
+[`job-steps.ts`](job-steps.ts) holds the D1 statements of the job step
+records that [Step timing](../../docs/protocol/step-timing.md#job-step-records)
+requires: `job_steps` for the steps of builds, refreshes, creates, and
+resumes, and `job_runs` for the runs of a start. Each statement checks its
+org and is safe to repeat. `rememberWorkerVersion` keeps the Worker version
+of the isolate when a workspace object starts, and each row holds it. The
+15-minute cron calls `deleteOldJobRecords`, and `purgeOrgRecords` deletes
+the rows of a purged org.
+
+- Builds and refreshes: [Step records](image-builds.md#step-records).
+- Starts: [Start step records](workspace-object.md#start-step-records).
+
 ## Settings
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.
+
+## The stop time
+
+The operator saves the stop time of idle sandboxes on the Settings tab, as
+[Stop and resume](../../docs/protocol/stop-and-resume.md#the-stop) says.
+[`idle-stop.ts`](idle-stop.ts) reads it from the `idle_stop_settings` row.
+
+- Each workspace object reads it through the `idleMs` hook and keeps it for
+  60 seconds. A failed read keeps the last value, or 30 minutes before the
+  first read.
+- The alarm and its schedule use it for the idle stop. `idleMs` is a
+  required hook, so no lifecycle can drop the setting.
+- When the alarm fires before the stop time ends, at least 15 minutes after
+  the last activity, with the runner connected and no restore watch due, it
+  extends the provider auto-stop. So a longer stop time reaches a running
+  sandbox before its old provider auto-stop ends.
+- Each workspace create, resume, and auto-stop call sets the provider
+  auto-stop to the stop time plus 60 seconds, from
+  `workspaceAutoStopSeconds`. When the read fails, it uses the longest
+  choice, so that the provider never stops a sandbox early.
+- Image builds and the disk retention restarts keep 1,800 seconds.
 
 ## Provider accounts
 
@@ -161,7 +198,7 @@ Archive, Restore, and deleted-org stops also clear it in their direct D1 writes.
 A deleted-org disk restart saves its restart time.
 The [operator Overview](../operator/overview.md) reads this current run time without a provider call.
 The migration leaves existing times null until their next lifecycle save.
-The save runs within 5 minutes during a turn, and within 30 minutes otherwise.
+The save runs within 5 minutes during a turn, and within the stop time otherwise.
 
 The [provider accounts page](provider-accounts.md#the-computer-ledger) describes
 the persisted resource records and the retained computer ledger.

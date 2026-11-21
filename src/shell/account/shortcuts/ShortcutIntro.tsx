@@ -19,8 +19,8 @@ function TerminalLine(props: { keyboard: ShortcutKeyboard }) {
   if (props.keyboard === 'mac') {
     return (
       <p className={styles.introLine}>
-        Keys without <KeyChips shortcut="⌘" /> go to the terminal while it has
-        the focus.
+        Keys without <KeyChips shortcut={['⌘']} /> go to the terminal while it
+        has the focus.
       </p>
     )
   }

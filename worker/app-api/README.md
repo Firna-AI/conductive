@@ -189,6 +189,14 @@ View writes cannot change this branch.
   add. A repeated save and a removal start no build. A running job takes the request without starting another job.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
+- `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
+  an admin. Each reply is `RepositoriesResponse`: the stored repositories
+  after the save, merged with the GitHub repositories of the admin. The
+  route reads those GitHub repositories once, before the save, so that no
+  call to GitHub can fail a change that saved. A failed read fails the
+  change before it saves. A removal by an admin without a saved GitHub
+  connection reads nothing from GitHub. Its reply holds the stored
+  repositories only.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
   gives the repository order of an org. The chosen repositories come
   first, by `position`, then a chosen row without a position, then the

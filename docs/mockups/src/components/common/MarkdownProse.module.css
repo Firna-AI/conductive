@@ -1,0 +1,117 @@
+/*
+ * The quotes, the rules, the bold text, the emphasis, the strikethrough,
+ * and the task boxes of Markdown, in the look that the replies of the chat
+ * and the file preview share. A view adds `.prose` to the element around
+ * its blocks, and sets the space above and below its quotes and rules. A
+ * summary holds no quote or rule element, so a message line in the work of
+ * a turn gives its spans `.quote` and `.rule` in their place.
+ *
+ * A quote has a 2px line in the strong border colour at its left, 12px
+ * from its text, and its text is muted. The line is no accent: the quote
+ * has no fill and no other border. A rule is a 1px line in the border
+ * colour across the width of the text. Bold text has weight 700, emphasis
+ * is italic, and strikethrough draws a line through its text. Each mark
+ * keeps the colour of the text around it.
+ */
+.prose blockquote,
+.quote {
+  margin-inline: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-border2);
+  color: var(--ui-muted);
+}
+
+.prose hr,
+.rule {
+  height: 0;
+  margin-inline: 0;
+  border: 0;
+  border-top: 1px solid var(--ui-border);
+}
+
+/*
+ * Bold text has weight 700 in both views, from item 11 C of the Markdown
+ * plan. It is heavier than a heading, also inside a heading or a header
+ * cell, and it keeps the colour of the text around it, so bold text in a
+ * quote stays muted.
+ */
+.prose strong {
+  font-weight: 700;
+}
+
+.prose em {
+  font-style: italic;
+}
+
+.prose del {
+  text-decoration: line-through;
+}
+
+/*
+ * A task item of a list, `- [ ]` or `- [x]`, from item 14 B of the
+ * Markdown plan. Its fixed check box, which `.taskBox` draws, takes the
+ * place of its bullet in the indent of the list, so its text stays in line
+ * with the text of the other items. In an item with more blocks, the box
+ * starts its first paragraph, as on GitHub. A message line places its
+ * boxes with MessageLine.module.css.
+ */
+.task {
+  list-style: none;
+}
+
+.task > input,
+.task > p:first-child > input:first-child {
+  margin: 0 6px 0 -18px;
+  vertical-align: -1px;
+}
+
+/*
+ * The fixed check box of a task item, in a reply, in a message line, and
+ * in the file preview, from item 82 B of the Markdown plan. It stays a
+ * disabled check box, so a press changes nothing and a screen reader reads
+ * whether the task is done, but it has the look of the design, not of the
+ * browser. The box is 13px, as the box of the browser is, with the small
+ * radius. An open box is empty, with a 1px border in the muted colour. A
+ * done box has the ink fill and a check in the surface colour, so the check
+ * reads well in both schemes. A mask in the shape of the check cuts it from
+ * a layer in the surface colour, so the check takes the colours of the
+ * scheme. The box keeps its colours when the page prints. With forced
+ * colours, the box takes the look of the system again, which shows its
+ * state in the colours that the reader chose.
+ */
+.taskBox {
+  position: relative;
+  box-sizing: border-box;
+  width: 13px;
+  height: 13px;
+  border: 1px solid var(--ui-muted);
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  appearance: none;
+  print-color-adjust: exact;
+}
+
+.taskBox:checked {
+  border-color: var(--ui-ink);
+  background: var(--ui-ink);
+}
+
+.taskBox:checked::before {
+  position: absolute;
+  inset: 0;
+  background: var(--ui-surface);
+  content: '';
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 6 9 17l-5-5' fill='none' stroke='%23000' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-size: 100%;
+}
+
+@media (forced-colors: active) {
+  .taskBox {
+    appearance: auto;
+  }
+
+  .taskBox:checked::before {
+    content: none;
+  }
+}

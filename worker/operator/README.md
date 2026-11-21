@@ -6,7 +6,8 @@ It reads app-wide numbers.
 It can suspend a user or an org after an abuse report. A user
 suspension signs the user out, stops every cloud computer that the user
 owns, and blocks each new start.
-It also lists and approves people who wait, manages invite codes, pauses
+It also sets the stop time of idle cloud computers, lists and approves
+people who wait, manages invite codes, pauses
 sign-ups, and turns the waitlist off and on.
 [Waitlist routes](#waitlist-codes-and-sign-ups) describes these entry
 points.
@@ -24,6 +25,11 @@ their search, their pages, and the fields of each reply.
 
 The [provider weights guide](providers.md) gives the GET and PUT routes,
 configured accounts, org counts, and atomic change records.
+
+## Stop time
+
+The [stop time guide](idle-stop.md) gives the GET and PUT routes of the
+stop time of idle cloud computers, its choices, and its change records.
 
 ## Waitlist, codes, and sign-ups
 
@@ -163,7 +169,8 @@ The [operator test guide](tests.md) gives the commands and native provider setup
 - [`waitlist-route.ts`](waitlist-route.ts): the waitlist, approval, code, pause, and switch dispatch.
 - [`waitlist-directory.ts`](waitlist-directory.ts): waiting account search and cursor pages, and `waitingUserPredicate`, which the switch count shares.
 - [`approval-data.ts`](approval-data.ts): the atomic approval batch and email state queries.
-- [`approval-email.ts`](approval-email.ts): the approval message, immediate send, and scheduled retries.
+- [`approval-email.ts`](approval-email.ts): the immediate send and scheduled retries of the saved approval message.
+  `createEmailMessages` in [`email-messages.ts`](../email-messages.ts) builds that message.
 - [`code-data.ts`](code-data.ts): code search, creation, disable, and public mapping.
 - [`signup-pause.ts`](signup-pause.ts): the pause read and conditional changes.
 - [`waitlist-switch.ts`](waitlist-switch.ts): the switch read with its waiting count, and conditional changes.

@@ -1,9 +1,9 @@
 import type { OrgRole } from '../../shared/api'
 import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
+import { WORKSPACE_STATES } from '../../shared/workspace-read'
 import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
-import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
 import {

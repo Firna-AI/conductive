@@ -1,18 +1,19 @@
 import { useId } from 'react'
 import { agentKeys, agents, type AgentKey } from '../../fixtures/agents'
 import {
-  loginLabels,
   shareNotSavedCause,
   type AgentLogin,
   type AgentLogins,
 } from '../../fixtures/logins'
+import { plainData } from '../../defined'
+import { endpointDetails } from '../../entries/components/settings/EndpointDetails.mockup'
 import { noop } from '../../noop'
 import { ActionButton } from '../common/actions'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
+import { loginLabels } from './agentConnectCopy'
 import { AgentConnectForm } from './AgentConnectForm'
 import { connected, type OpenAgentForm } from './AgentList'
-import { EndpointDetails } from './EndpointDetails'
 import type { ReadOnlyCause } from './OrgSections'
 import { orgAgentsCopy } from './orgAgentsCopy'
 import { Section } from './Section'
@@ -173,9 +174,10 @@ export function OrgAgentsTab(props: {
                 )}
               </div>
               {login?.kind === 'endpoint' ? (
-                <EndpointDetails
+                <endpointDetails.Component
                   agent={key}
-                  login={login}
+                  login={plainData(login)}
+                  moklyInstance={`endpoint-${key}`}
                   owner="org"
                   readOnly={readOnly}
                 />

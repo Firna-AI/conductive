@@ -2,11 +2,13 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them.
+and the guidance in them, and the skills of a message.
 [Agent instructions: facts that change](agent-instructions-changes.md)
-states the same text for the life of a session, and the facts that can
-change during a session. [Message lines](message-lines.md) states the
-sender line, the repository line, and the branch line of each message.
+states the facts that can change during a session.
+[Message lines](message-lines.md) states the sender line, the repository
+line, and the branch line of each message.
+[Session instructions](session-instructions.md) states how a session keeps
+its instructions and how each agent gets them.
 [Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
 agents and their sessions. [Agent tools](agent-tools.md) states the tools
@@ -31,7 +33,7 @@ tells each agent the capabilities of its session, as
   guidance for the tools of the product.
 - **System instructions:** the text that an agent takes before its
   conversation, apart from the messages.
-- **Sender line:** one line at the start of each message to the agent. It
+- **Sender line:** one line at the end of each message to the agent. It
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
@@ -162,7 +164,7 @@ tells each agent the capabilities of its session, as
   already, with no request. The agent then does not ask a member for it.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
-  [The same text for the life of a session](agent-instructions-changes.md#the-same-text-for-the-life-of-a-session)
+  [The same text for the life of a session](session-instructions.md#the-same-text-for-the-life-of-a-session)
   says.
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave
@@ -229,11 +231,20 @@ a repository change.
 [The branch line](message-lines.md#the-branch-line) holds the
 requirements of the line that names the current branches.
 
+## Skills of a message
+
+[Skills of a message](skill-input.md) states how each agent gets the
+skills that a member names in a message.
+
 ## The same text for the life of a session
 
-[The same text for the life of a session](agent-instructions-changes.md#the-same-text-for-the-life-of-a-session)
-states that a session keeps its instructions, and how the agent learns of
-the facts that change.
+[Session instructions](session-instructions.md#the-same-text-for-the-life-of-a-session)
+states how a session keeps its instructions across turns and changes.
+
+## Session instructions
+
+[Session instructions](session-instructions.md) states that a session
+keeps the same agent instructions for its whole life.
 
 ## How each agent gets them
 

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { classes } from '../components/common/classes'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { MobileFrame } from '../components/layout/AppFrame'
+import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { useMacApp } from '../components/mac/MacApp'
 import { LegalLinks } from '../components/marketing/LegalLinks'
 import { Wordmark } from '../components/marketing/Wordmark'
@@ -31,7 +31,11 @@ function Header() {
         mac?.mode === 'window' && frame.windowButtons,
       )}
     >
-      <Wordmark height={mac ? macLockup : undefined} to={paths.marketing} />
+      <Wordmark
+        height={mac ? macLockup : undefined}
+        place="sign-in"
+        to={paths.marketing}
+      />
     </header>
   )
 }
@@ -71,6 +75,6 @@ export function SignInFrame(props: {
       </footer>
     </div>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return <div className={forms.standalone}>{page}</div>
 }

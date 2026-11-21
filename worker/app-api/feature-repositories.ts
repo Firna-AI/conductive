@@ -77,7 +77,9 @@ export async function shellRepositoryChoices(
  * Adds or removes one repository of the org. An add starts a build unless
  * `build` is false: the app then starts one build at Done, after all the
  * adds of one edit. A request without `build`, from an older app, still
- * starts a build at each add.
+ * starts a build at each add. The reply merges fresh stored rows with the
+ * GitHub catalogue read before the save, so a later GitHub failure cannot
+ * fail a saved change.
  */
 export async function changeShellRepository(
   env: AppEnv,
@@ -91,9 +93,13 @@ export async function changeShellRepository(
   await assertCanChangeSharedSettings(env.DB, orgId, userId)
   const stored = await shellRepositories(env.DB, orgId)
   let repository = stored.find((entry) => entry.id === repositoryId)
+  if (!selected && !repository) throw repositoryNotFound()
+  const availableRepositories =
+    selected || (await readGitHubConnection(env.DB, userId))
+      ? (await shellGitHubAccess(env, userId, dependencies)).repositories
+      : []
   if (selected) {
-    const access = await shellGitHubAccess(env, userId, dependencies)
-    const available = access.repositories.find((entry) =>
+    const available = availableRepositories.find((entry) =>
       repository
         ? entry.githubId === repository.githubId
         : shellRepositoryId(orgId, entry.githubId) === repositoryId,
@@ -135,12 +141,12 @@ export async function changeShellRepository(
       warnWorker({ kind: 'repository_image_build_start_failed' })
     }
   }
+  await requireOrgMember(env.DB, orgId, userId)
   return Response.json({
-    repositories: await shellRepositoryChoices(
-      env,
+    repositories: mergeRepositories(
       orgId,
-      userId,
-      dependencies,
+      await shellRepositories(env.DB, orgId),
+      availableRepositories,
     ),
   })
 }

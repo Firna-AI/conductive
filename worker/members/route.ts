@@ -14,9 +14,10 @@ import {
   restoreOrgPath,
 } from '../../src/shared/orgs'
 
+import { createEmailMessages } from '../email-messages'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError, requiredString } from '../http'
-import { createInvitationMailer, invitationLink } from '../invitation-mailer'
+import { createInvitationMailer } from '../invitation-mailer'
 import type { RequestContext } from '../security/gate'
 import { deleteOrg } from './deletion'
 import { cancelOrgInvite, inviteOrgMember } from './invites'
@@ -136,7 +137,7 @@ export async function membersRoute(
       email: invite.email,
       orgName: context.org.name,
       invitedBy: context.user.displayName ?? context.user.githubLogin,
-      link: invitationLink(env.APP_ORIGIN, invite.id),
+      link: createEmailMessages(env.APP_ORIGIN).invitationLink(invite.id),
     })
     return Response.json({ invite }, { status: 201 })
   }

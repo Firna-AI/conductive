@@ -307,8 +307,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The marks](design-marks.md) give the list mark, the mark
   of the header, and the marks of automation runs. They also give the mark of
   an agent.
-- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
-  gives the chips, the list of `@`, and chip removal.
+- [Workspace, session, file, and skill chips](design-chat.md#workspace-session-file-and-skill-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, skill chips, the list of `/`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
 - The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
@@ -398,10 +399,13 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The workspace](design-workspace.md) gives the messages that wait for
   the sandbox, the tab row with its temporary tab, and the number with Copy
   link. It also gives the bars of the cloud computer.
-- [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables and headings of a reply and of a file preview, and the
+- [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [The Markdown of replies](design-markdown.md) gives the tables, the
+  headings, the quotes, the rules, the marks, the line breaks, and the
+  pictures of a reply and of a file preview, and how a message line in the
+  work of a turn shows them.
 - [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
   the org settings, the Capabilities icon beside every message box with
   its control, and the requests and results of the secrets in the chat.

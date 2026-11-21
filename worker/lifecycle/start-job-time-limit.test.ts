@@ -87,8 +87,11 @@ it('gives each resume its own deadline and restores an old saved start when its 
       processId: null,
     }),
   ).toBe(true)
+  fixture.boat.beforeSandboxRead = async () => {
+    if (fixture.boat.resumeIds.length)
+      fixture.boat.states.set('bx_1', 'provisioning')
+  }
   await start.tick(TEST_TIME + 301_000)
-  fixture.boat.states.set('bx_1', 'provisioning')
   await start.tick(TEST_TIME + 1_499_999)
   const before = await start.job()
   const alarm = await start.storage.getAlarm()
@@ -144,7 +147,6 @@ it('fails a start when terminal preparation completes at the deadline before pub
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
   await start.advance()
-  await start.advance()
   const terminal = await start.job()
   expect(terminal).toMatchObject({
     phase: 'terminal',
@@ -171,7 +173,12 @@ it('fails a start when terminal preparation completes at the deadline before pub
 it('fails a start when its terminal password read completes at the deadline before publishing success', async () => {
   const fixture = await backendFixture()
   const start = await startRetryFixture(fixture)
-  for (let step = 0; step < 3; step++) await start.advance()
+  await start.advance()
+  fixture.boat.beforeStatus = async () => {
+    fixture.boat.beforeStatus = undefined
+    await fixture.setTime(fixture.runtime.dependencies.now() + 5_000)
+  }
+  await start.advance()
   expect(await start.job()).toMatchObject({ phase: 'terminal-password' })
   const fetch = fixture.runtime.dependencies.fetch
   fixture.runtime.dependencies.fetch = async (request) => {

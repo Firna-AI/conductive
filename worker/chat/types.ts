@@ -114,6 +114,8 @@ export interface ActiveRunner {
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean
   capabilityNotices?: boolean
+  /** The end of the watch window of runner work, from the hello. */
+  watchUntil?: number
   ready: boolean
 }
 
@@ -197,6 +199,8 @@ export interface ChatDependencies {
   browserAlarm?: (at: number | null) => Promise<void>
   scheduleRunnerCheck?: ConnectionScheduler
   runnerAlarm?: (at: number | null) => Promise<void>
+  /** Keeps the mark of runner work. Without it, the workspace marks nothing. */
+  runnerWork?: import('./runner-work-watch').RunnerWorkStorage
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>

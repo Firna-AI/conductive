@@ -93,61 +93,9 @@ is relative to `src/chat/`, the folder of this guide.
   session of a session address, behind `ChatController.showAddress`. A
   missing session gets one read of the list, of which only that record
   counts, and a later choice of a tab or an abort stops the lookup.
-- `links/`: `workspace-links.ts`, the link syntax, the reader of the
-  links of a message field, and `linkTarget`, with the session of a
-  session link. Its `sessionTarget` gives the same target for a session
-  that the chat names by its IDs. `chat-parts.ts` is the one reading of
-  sent messages and answers, over the tokens of `chat-tokens.ts`. In it,
-  each mention of a file of the message is an
-  `AttachmentPart`, also when the tree holds that path, and also without a
-  tree. Its `filesWithoutChip` gives the files of a message that no part
-  shows as a chip. `link-parts.ts` gives the `LinkPart` of a web link with
-  its words, and the `CodePart` of code that holds one address alone.
-  `LinksContext.tsx` gives the workspaces that chips find
-  the open of a chip, and the origin of the chat's workspace link.
-  `LinkedText.tsx` holds `useChatParts` and
-  `ChatText`. `useChatParts` reads the parts of a text with the workspaces
-  and the tree of the chat, the files of a sent message, and the web links
-  of `useTextLinks` in `../shell/ui/text-links.tsx`. `ChatText`
-  draws the parts with their workspace and session chips, and their
-  links through `WebLinkText.tsx`. `FileChips.tsx` draws the file chips,
-  and each `AttachmentPart` as the mockups' `SentFileChip`.
-  `SessionLinkText` draws a session that the chat names by its IDs, such
-  as the session whose agent stopped a turn, with the same session chip.
-  [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
-  states the rules of that chip. The chip opens the file tab of its copy
-  through `openFile` and `href` of `ChatMentions`. It opens nothing when
-  `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
-  `AnswerText` reads and draws the text of an answer in one step. With
-  `pictures`, the ID of the agent message, it draws each part of a
-  Markdown image of a picture file with `FilePicture.tsx`. That part
-  draws the mockups' `AnswerPicture`, and `picture-read.ts` reads and
-  decodes its file, as
-  [Pictures in answers](agent-text.md#pictures-in-answers) says.
-  `mention-copy.ts` makes
-  the browser's own copy of chat text give the text of each chip that has
-  a `data-mention` mark: each file chip, each `SentFileChip`, and each
-  picture of an answer, with the box of its label. Each such
-  chip holds its copy text in a `ChipCopyText`, which shows only while the
-  root of the page has `COPYING_CLASS`. The style sheet of `ChipCopyText`
-  gives that class, so the class name has one source. The copy sets the class, moves an
-  edge of the selection inside a chip to the edge of the chip, and the
-  next animation frame removes the class before the page paints.
-  `chipOf` in `LinksContext.tsx` gives what a chip shows of its workspace.
-- `links/session-links.ts`: `useLinkedSession`, the session that a chip
-  finds: a live session of the chat's workspace, or one of the one read of
-  another workspace in `session-reads.ts`, made again for each load of a
-  chat or of New workspace. `chat-links.ts` gives a chat its links, with
-  the origin of the link of its workspace.
-- `mentions/`: `mention-rows.ts` gives the entries that the list offers and
-  their order. `MentionsContext.tsx` gives the files that the chat gets and
-  the tree that the list and the chips find, with one value for each tree.
-  Its `useFilesMentionTree` gives that tree to a part outside the chat,
-  such as Add to chat of the Files panel, and `MentionTarget` names a file
-  or a folder of a mention.
-  `MentionIcon.tsx` gives the icon of All files for an entry.
-  [`mention-text.ts`](../shared/mention-text.ts) in the shared contracts
-  owns the text of a mention, which the chat shares with the Worker.
+- [Text key code](text-key-code.md): the links, the chips, the mentions,
+  the pictures, and the Markdown of chat text, in `links/`, `mentions/`,
+  and `markdown/`.
 - `state/workspace-list.ts`: `WorkspaceList`, the list that the chips
   read, and `ownWorkspaceList`, the reads of a chat without sources.
 - `state/sources.ts`: `ChatSources`, the app values that a kept chat
@@ -244,13 +192,6 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/WorkFold.tsx` and `components/MessageLine.tsx`: the work fold
   of an ended turn with its steps, and the message line that grows to the
   full text. A message line with a table opens the table under the line.
-- `components/agent-text.ts`: `textBlocks`, the paragraphs, headings,
-  lists, code blocks, and tables of an agent message, with `TextTable`.
-  `components/agent-paragraph.ts`: `Paragraph`, the lines of a paragraph,
-  with the text that an underline turns into a heading.
-  `components/AgentText.tsx`: `AgentText`, which draws them, with the
-  heading style that the file preview shares, and `AgentBlocks`, which the
-  message line shares. Their text draws through `AnswerText` of `links/`.
 - `components/ToolGroup.tsx`: a run of tool calls, with `FoldLine` and
   `CallLine`, which the work fold shares.
 - `components/reading-place.ts`: the keeper of the reader's place, which

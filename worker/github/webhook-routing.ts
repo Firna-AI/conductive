@@ -11,6 +11,8 @@ export interface GitHubPullRequestEvent {
   senderId: number
   authorLogin?: string
   senderLogin?: string
+  /** The GitHub merge time of a merged pull request, when the event has one. */
+  mergedAt?: number
   trigger: Extract<AutomationRunTrigger, { kind: 'pull-request' }>
 }
 
@@ -50,6 +52,13 @@ function login(value: unknown): string | undefined {
   return isRecord(value) && typeof value.login === 'string'
     ? value.login
     : undefined
+}
+
+/** A merge time that does not parse leaves the time to the caller. */
+function mergeTime(kind: string, value: unknown): { mergedAt?: number } {
+  if (kind !== 'merged' || typeof value !== 'string') return {}
+  const time = Date.parse(value)
+  return Number.isSafeInteger(time) ? { mergedAt: time } : {}
 }
 
 export function webhookRepository(
@@ -131,6 +140,7 @@ export function webhookRoute(
         senderId: id(value.sender),
         authorLogin: login(value.pull_request.user),
         senderLogin: login(value.sender),
+        ...mergeTime(kind, value.pull_request.merged_at),
         trigger: {
           kind: 'pull-request',
           event: kind,

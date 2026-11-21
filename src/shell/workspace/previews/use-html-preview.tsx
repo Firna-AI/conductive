@@ -45,11 +45,19 @@ type OpenFailure = Extract<HtmlPageView, { kind: 'failed' | 'older-software' }>
  * as after a Restart or a resume, the next show that the hook serves opens
  * the files preview again also while the app keeps one: the show that runs,
  * or the first show after it. The open answers the one that lives.
- * It waits while the sandbox does not run and while an open runs. After a
- * failed open, it asks again only at the next show, so a refusal sends no
- * loop of requests, as `useTabPreview` does for a Preview tab. A files
- * preview that ends while the page shows keeps the page until the next
- * show, because the protocol opens a new one at the next show of the tab.
+ * It waits while the cloud computer does not run and while an open runs.
+ * After a failed open, it asks again only at the next show, so a refusal
+ * sends no loop of requests, as `useTabPreview` does for a Preview tab. A
+ * files preview that ends while the page shows keeps the page until the
+ * next show, because the protocol opens a new one at the next show of the
+ * tab.
+ *
+ * The cloud computer runs only in a running period of the files preview
+ * store, which the open of the visit confirms, as
+ * `useFilesPreviewConnection` says, and while the screen shows Ready. So a
+ * return that first shows the saved Ready state opens nothing until the
+ * visit confirms it. The tab shows the wait meanwhile, and the start of the
+ * period is a show.
  *
  * While the cloud computer does not run, the hook builds no page from the
  * files preview record, which a Restart keeps. A tab keeps only the page
@@ -65,10 +73,10 @@ type OpenFailure = Extract<HtmlPageView, { kind: 'failed' | 'older-software' }>
  * keeps the page loaded, as `KeptPageFrames` says. On a phone the page
  * shows its own frame.
  *
- * An open belongs to the connection of the screen in which it started. Its
- * answer after the end of that connection changes nothing, and a show that
- * a new connection finds opens again, because the end of the connection
- * forgot the files preview.
+ * An open belongs to the period of the store in which it started. Its
+ * answer in a later period changes nothing, also no failure and no page of
+ * the tab. A show that a new connection finds opens again, because the end
+ * of the connection forgot the files preview.
  */
 export function useHtmlPreview(
   context: WorkspaceContext,
@@ -97,10 +105,11 @@ export function useHtmlPreview(
   const [shows, setShows] = useState(0)
   /**
    * The show from which the hook opens the files preview again, also while
-   * the app has one: the count of shows when the workspace left Starting.
+   * the app has one: the count of shows when the last running period
+   * started.
    */
   const [renews, setRenews] = useState<number | null>(null)
-  /** The last show that its open served, as its connection and its count. */
+  /** The last show that its open served, as its period and its count. */
   const served = useRef<string | null>(null)
   /** The renewal that an open already served, so each renewal opens once. */
   const renewed = useRef<number | null>(null)
@@ -121,11 +130,16 @@ export function useHtmlPreview(
     setShownPage(null)
     setReloads(0)
   }
-  // The return of the sandbox, as when the workspace leaves Starting after
-  // a Restart or a resume, is a show that opens the files preview again,
-  // also while the app keeps one. The open answers the one that lives, or
-  // a new one after the end of the old one.
-  const ready = context.sandbox === 'ready'
+  // The cloud computer runs in a running period of the store while the
+  // screen shows Ready. The store ends a period only after the render of
+  // the new state, so the shown state ends it at once for the tab.
+  const { preview, opening, running, period } = state
+  const ready = running && context.sandbox === 'ready'
+  // The start of a running period, as when the workspace leaves Starting
+  // after a Restart or a resume, or when the open of a visit confirms
+  // Ready, is a show that opens the files preview again, also while the
+  // app keeps one. The open answers the one that lives, or a new one after
+  // the end of the old one.
   const [wasReady, setWasReady] = useState(ready)
   if (ready !== wasReady) {
     setWasReady(ready)
@@ -147,38 +161,46 @@ export function useHtmlPreview(
     return () => setShowing(false)
   }, [])
 
-  const { preview, opening, connection } = state
   const openFailure = failure?.path === path ? failure.failure : null
   useEffect(() => {
     if (path === null || !showing) return
-    // The store, not this render, says whether an open runs, so a second
-    // run of the effect starts no second open. A show counts as served in
-    // one connection: a new connection forgot the files preview.
+    // The store, not this render, says whether the period runs and whether
+    // an open runs, so a second run of the effect starts no second open. A
+    // show counts as served in one period: a new connection forgot the
+    // files preview.
     const current = store.getSnapshot()
-    const thisShow = `${current.connection}:${shows}`
-    if (served.current === thisShow || !ready || current.opening) return
+    const thisShow = `${current.period}:${shows}`
+    if (
+      served.current === thisShow ||
+      !ready ||
+      !current.running ||
+      current.opening
+    ) {
+      return
+    }
     served.current = thisShow
     if (openFailure !== null) return
-    // The first show that the hook serves after the workspace left Starting
+    // The first show that the hook serves after a running period started
     // renews the files preview: the show that runs, or a show that starts
     // with the page, which the hook builds again only once the sandbox runs.
     const renewing = renews !== null && renewed.current !== renews
     if (current.preview !== null && !renewing) return
     renewed.current = renews
-    const startedIn = current.connection
+    const startedIn = current.period
     store.dispatch({ type: 'open' })
     void openFilesPreview(requests).then((result) => {
-      // The answer of a connection that ended is no longer current.
-      if (store.getSnapshot().connection !== startedIn) return
+      // The answer of a period that ended is no longer current, so it
+      // changes neither the store nor the failure and the page of the tab.
+      if (store.getSnapshot().period !== startedIn) return
       if (result.ok) {
         store.dispatch({
           type: 'opened',
           preview: result.value,
-          connection: startedIn,
+          period: startedIn,
         })
         return
       }
-      store.dispatch({ type: 'open-failed', connection: startedIn })
+      store.dispatch({ type: 'open-failed', period: startedIn })
       const { code, message } = result.error
       setShownPage(null)
       setFailure({
@@ -197,7 +219,7 @@ export function useHtmlPreview(
     ready,
     opening,
     preview,
-    connection,
+    period,
     openFailure,
     store,
     requests,
@@ -257,6 +279,9 @@ export function useHtmlPreview(
     view,
     open: live ? <OpenInNewTab path={path} preview={live.preview} /> : null,
     reload,
+    // Only a kept frame can show in the large window, so a phone has none.
+    expand:
+      live && frames && openFailure === null ? () => frames.expand(path) : null,
     show,
   }
 }

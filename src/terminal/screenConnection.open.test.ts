@@ -123,3 +123,25 @@ it('applies the colour changes and resets of output that came before the screen 
   ])
   end()
 })
+
+it('discards the program colours from before a hidden screen changes its theme, and keeps later program colours when it opens', async () => {
+  const { parts, transport, show, end } = hiddenScreen({
+    background: '#202020',
+  })
+  transport.emit('\x1b]11;#111111\x07')
+  await parsed(parts.xterm)
+
+  parts.xterm.options.theme = { background: '#fafafa' }
+  transport.emit('\x1b]10;#123456\x07')
+  await parsed(parts.xterm)
+  await show()
+
+  transport.emit('\x1b]11;?\x07\x1b]10;?\x07')
+  await parsed(parts.xterm)
+
+  expect(transport.inputs).toEqual([
+    '\x1b]11;rgb:fafa/fafa/fafa\x1b\\',
+    '\x1b]10;rgb:1212/3434/5656\x1b\\',
+  ])
+  end()
+})

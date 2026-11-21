@@ -110,8 +110,8 @@ new runner command, a waiting store, and a chat note.
   - While a turn runs, the Worker sends the command at once, and the lines
     join the turn as a steer.
   - In an idle session, the lines wait. The Worker sends them with the next
-    turn command of that session, before it. The agent reads them before
-    the member's message.
+    turn command of that session. The agent reads them in the same prompt
+    as the member's message, after its sender lines.
   - A line that the runner did not take before its turn ended goes back to
     the waiting store, in order. It never starts a turn and never moves
     into a member's turn as a message.
@@ -233,6 +233,14 @@ Design calls from the app, by Claude on 2026-11-21:
 - The dev fake seeds the notes with the address option `?capabilities=`,
   in the pattern of `?secrets=`. It does not compute notes on each write.
   Reason: a copy of the Worker's difference in the fake could drift.
+
+Design call from the merge of `main`, by Claude on 2026-11-21:
+
+- The notes of a turn come after the sender lines of the member's
+  message, in the same prompt, not before the message. Reason: `main`
+  now puts the member's text first, so that a skill at the start of the
+  text starts the prompt (#358). Notes first would stop a Claude skill.
+  The agent still reads the notes before it acts.
 
 Contract owners:
 

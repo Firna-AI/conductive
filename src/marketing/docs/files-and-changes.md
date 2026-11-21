@@ -45,6 +45,8 @@ Its title shows in italics.
 The next click on another file replaces it in the same place.
 This applies to **All files**, **Changes**, and file chips in chat.
 If a file already has a tab, a click shows that tab.
+Press **Escape** to close the temporary tab while it shows.
+Escape first closes an open menu or dialog, and it does nothing in the message field.
 
 On a phone, each file opens within **Files**.
 Use its back action to return to **All files**.
@@ -83,6 +85,7 @@ For example, an agent can write a report as a web page in `.context/`.
 
 The page runs on a separate domain from Conductive, as a port preview does.
 Use **Reload** to load the page again.
+Use **Expand** to show the page in a large window over the whole app.
 Use **Open** to show the page in a new browser tab.
 In the Mac app, **Open** uses your default browser.
 

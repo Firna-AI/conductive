@@ -7,6 +7,7 @@ import { prepareStartSuccess } from './start-completion'
 import { publishStartCompletion } from './start-result'
 import { durableStartStorage } from './start-storage'
 import type { StartCall } from './start-guard'
+import { advanceToRunner } from './start-resume-test-support'
 
 const fixtureForTest = setupBackendTests()
 
@@ -17,7 +18,7 @@ it('keeps the start job when the runner disconnects during the final user check 
   const actor = job && fixture.actors.get(job.workspaceId)
   if (!actor) throw new Error('Missing start actor')
   const endpoint = actor.endpoint()
-  for (let step = 0; step < 4; step++) await start.advance()
+  await advanceToRunner(start)
   expect(await start.job()).toMatchObject({ phase: 'runner' })
   await endpoint.reportRunnerLifecycle({ type: 'runner.ready' })
   const storage = durableStartStorage(

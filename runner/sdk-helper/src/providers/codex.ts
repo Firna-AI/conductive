@@ -4,12 +4,8 @@ import {
 } from '../../../../src/shared/agent-tools'
 
 import { object, string } from '../parse'
-import {
-  ATTACHMENT_IMAGE_MAX_BYTES,
-  attachmentDescription,
-  attachmentReadInstruction,
-} from './attachment-description'
 import { codexBinary } from './binaries'
+import { codexInput } from './codex-input'
 import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { codexStdioServer } from './codex-mcp'
@@ -20,61 +16,10 @@ import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import { InputReceipts } from './input-receipts'
-import { providerMessage, type FixedContext } from './message'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
+import { noSkills, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
-import type { ProviderInput } from '../generated/ProviderInput'
-
-function input(command: ProviderInput, fixed: FixedContext) {
-  if (command.type === 'notice')
-    return [
-      {
-        type: 'text',
-        text: providerMessage(command, fixed),
-        text_elements: [],
-      },
-    ]
-  const images = command.attachments.filter((attachment) => {
-    const metadata = command.message.attachments.find(
-      (item) => item.id === attachment.attachmentId,
-    )
-    return (
-      metadata?.kind === 'image' &&
-      metadata.sizeBytes <= ATTACHMENT_IMAGE_MAX_BYTES
-    )
-  })
-  return [
-    {
-      type: 'text',
-      text: providerMessage(command, fixed),
-      text_elements: [],
-    },
-    ...(command.attachments.length
-      ? [
-          {
-            type: 'text',
-            text:
-              attachmentReadInstruction +
-              (images.length
-                ? ' Only an image that comes right after its file line is also in this message.'
-                : ''),
-            text_elements: [],
-          },
-        ]
-      : []),
-    ...command.attachments.flatMap((attachment) => {
-      const description = {
-        type: 'text',
-        text: attachmentDescription(command, attachment),
-        text_elements: [],
-      }
-      return images.includes(attachment)
-        ? [description, { type: 'localImage', path: attachment.path }]
-        : [description]
-    }),
-  ]
-}
 
 /**
  * Codex runs each subagent in its own thread, and the App Server sends the
@@ -93,9 +38,11 @@ function otherThread(params: unknown, threadId: string | null): boolean {
   )
 }
 
+/** `skills` gives the current Codex list at each send, also during a turn. */
 export function createCodexFactory(
   start: StartProcess = startProcess,
   credentials = writeCodexCredentials,
+  skills: SkillSource = noSkills,
 ): ProviderFactory {
   return async (options) => {
     options.signal?.throwIfAborted()
@@ -233,7 +180,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: inputId,
-                input: input(command, options),
+                input: codexInput(command, skills, options),
               })
             } catch (error) {
               userIds = before
@@ -247,7 +194,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: input(command, options),
+                input: codexInput(command, skills, options),
                 clientUserMessageId: inputId,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
