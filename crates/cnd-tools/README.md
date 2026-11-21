@@ -1,13 +1,13 @@
 # cnd-tools
 
 This crate implements the workspace CLI and stdio MCP server of Conductive.
-Use it from the `conductive` executable to call the Worker's machine routes.
+Use it from `conductive` for Worker calls and local service operations.
 Use `cnd-runner-interface` for the shared wire types.
 
 ## Responsibilities
 
 Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
-requests. Validate replies. Serve the same 26 calls through CLI and MCP.
+requests. Validate replies. Serve 26 Worker calls and five local service calls through CLI and MCP.
 Run commands with approved secrets under their variable names, and filter their output.
 
 ## What This Crate Does
@@ -53,9 +53,10 @@ The CLI prints that message and exits 1. MCP returns the status with `isError: t
 The [service calls](../../docs/protocol/service-calls.md) start, list,
 stop, and restart the services of the same cloud computer, and read their
 logs. They reach the local runner, not the Worker, and they need no
-workspace token. This crate does not implement them yet. Keep their
-descriptors, help, routing, and adapters in their own services sections.
-Never print an environment value of a service.
+workspace token or active turn. Their descriptors, help, and adapters live
+in a separate services section. Start keeps literal argv and the caller's
+folder. Restart uses its saved definition. Printable results contain no
+environment map. [Local service tools](../../tools/services.md) gives the flags and fields.
 
 The server negotiates MCP `2025-11-25`. It requires initialization before
 tool calls, ignores notifications, answers ping while HTTP calls wait,
@@ -84,6 +85,7 @@ cargo run -p cnd-cli -- workspaces move --workspace workspace-id --parent parent
 cargo run -p cnd-cli -- workspaces move --workspace workspace-id --top-level
 cargo run -p cnd-cli -- sessions send --session session-id --message-file task.md
 cargo run -p cnd-cli -- secrets list
+cargo run -p cnd-cli -- services start --name web -- npm run dev
 cargo run -p cnd-cli -- secrets run --secret API_TOKEN --reason 'Deploy the service' -- ./deploy
 cargo run -p cnd-cli -- mcp
 ```
@@ -107,6 +109,10 @@ isolation and filtered output. Worker route tests need no Rust build.
 
 - [cli.rs](src/cli.rs) exposes the `Program` boundary and composes both adapters.
 - [client.rs](src/client.rs) authenticates requests and validates typed replies.
+- [lazy_client.rs](src/lazy_client.rs) resolves remote credentials only for a remote MCP call.
+- [Local services](src/services/tools.rs) supplies the CLI/MCP boundary and caller context.
+- [Service dispatch](src/services/dispatch.rs) targets the observed generation and keeps lost replies Unconfirmed.
+- [mcp-services.json](src/mcp-services.json) holds only local service descriptors and schemas.
 - [input](src/input/mod.rs) validates untrusted fields without changing text.
 - [request.rs](src/request.rs) maps typed calls to fixed HTTP routes.
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.

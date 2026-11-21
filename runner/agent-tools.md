@@ -45,10 +45,11 @@ A message from another member or a deferred model change keeps the
 active turn's context. Each new turn starts fresh tool processes.
 Closing the SDK or App Server also stops its workspace MCP child.
 
-The tools give 24 calls across the org. They manage workspaces,
+The tools give 26 Worker calls across the org. They manage workspaces,
 sessions, and messages, create and delete sections, and open, list, and
 close private port previews. They also list repositories, sections, and
 models, and ask to run Mac commands.
+They also list secrets and run commands with approved values.
 [Workspace tool calls](../tools/calls.md) gives each call with its
 options, defaults, transcript continuation, and retry IDs.
 
@@ -68,6 +69,14 @@ options, defaults, transcript continuation, and retry IDs.
 The runner puts this guidance in each new session's instructions.
 An existing session keeps its saved instructions after a restart. A new
 session gets the current guidance.
+
+## Local service tools
+
+The same server gives five [local service calls](../tools/services.md).
+They start, list, stop, and restart services, and read their retained output.
+They need no workspace token or active turn and reach only this computer.
+The runner owns the socket. Each separate service unit owns its process and log writer.
+Service processes and calls add no activity and hold no agent turn open.
 
 ## Sender IDs
 

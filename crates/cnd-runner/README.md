@@ -155,12 +155,11 @@ capture and skips waiting scans. A canceled capture saves no report or
 receipt. Restore polling reopens the live repository path once. Port scans
 run on an independent two-second timer.
 
-[Services](../../docs/protocol/services.md) run outside every turn. This
-crate does not manage them yet. Keep one serialized service manager for
-local calls and Worker controls. Start each service as `user` in its own
-system unit, through noninteractive sudo, with an opaque unit identity.
-Pass names, folders, and commands as arguments, never as privileged shell
-text. Match ports to services through control groups.
+[Services](../../docs/protocol/services.md) run outside every turn.
+The executable composes one [native manager](../cnd-services/README.md)
+for local calls. Its independent units own execution and logs as `user`.
+The service scanner adds cgroup ownership to this crate's existing port rows.
+Service lookup failures preserve ordinary port reports.
 
 ## Quick Start
 
@@ -250,6 +249,7 @@ and connection drops. It does not run the Worker.
 
 ### Key Code
 
+- [Native services](../cnd-services/README.md#key-code): manager, socket, reconciliation, cgroup ownership, and rotating output.
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
 - [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.

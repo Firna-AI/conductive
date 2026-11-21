@@ -24,7 +24,7 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
+`previews`, `mac`, `secrets`, and `services`. The workspace commands and `mcp` run 26 Worker calls and five local service calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
 `secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
@@ -43,6 +43,10 @@ The credential helper keeps the caller's turn ID even when the file has another 
 resolve Node and the helper beside the running release executable. Local
 builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
 SIGTERM and SIGINT end live turns, save pending events, and close the connection.
+They end no service unit. One native service manager and its private socket
+stay shared across runner rounds. A new runner reconciles saved runtime
+records with actual units. The hidden `service-exec` entry owns each unit's
+child and rotating output writer as `user`.
 The installed service runs this Rust runner. Its first valid welcome confirms
 the release through the pinned executable. It keeps the Node-format state file.
 
@@ -146,6 +150,9 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [runner_round.rs](src/runner_round.rs) composes each runner round and updates service display context after repository moves.
+- [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
+- [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.
 - [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.
 - [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
 - [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.

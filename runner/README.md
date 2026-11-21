@@ -116,9 +116,10 @@ image installs the runner as a systemd service, and how that service starts.
 ## Services of a workspace
 
 [Services](../docs/protocol/services.md) are named programs that run
-outside every turn, in system units of their own. The runner does not
-manage them yet. The [runner library](../crates/cnd-runner/README.md#what-this-crate-does)
-gives the rules for its service manager.
+outside every turn, in system units of their own.
+The [native services library](../crates/cnd-services/README.md) provides the
+manager, private socket, process reconciliation, cgroup ownership, and logs.
+The [local tool guide](../tools/services.md) gives CLI and MCP calls.
 
 ## Configuration
 

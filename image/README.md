@@ -150,12 +150,13 @@ startup command, service gates, and runner settings.
 ## Services
 
 [Services](../docs/protocol/services.md) run outside every agent turn.
-No code creates them yet, and the image installs no unit for them. Create
-each service unit at run time from the runner, as `user`, outside
-`conductive-runner.service`. Then a restart of the runner unit, with its
-`KillMode=control-group`, ends no service. A stop of the sandbox ends each
-service. Keep service definitions and logs in memory-backed runtime
-storage, which no saved disk or org image holds.
+The image installs no project service unit. The runner's
+[native manager](../crates/cnd-services/README.md) creates each unit at run
+time through noninteractive sudo. Systemd sets its user and group to `user`
+before the helper reads private command, folder, and environment data.
+Its independent cgroup survives a runner restart. Its unit-owned writer
+stores output under `/run/conductive/services`, with definitions and receipts.
+No saved disk or org image holds these runtime files.
 
 ## Git credentials
 

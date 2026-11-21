@@ -5,6 +5,7 @@ use serde_json::{Map, Value};
 use crate::call::Name;
 use crate::cli_secrets;
 use crate::error::{Error, InputError, Result};
+use crate::services;
 
 pub(crate) struct Arguments {
     pub(crate) name: Name,
@@ -19,6 +20,9 @@ pub(crate) fn help(args: &[String]) -> bool {
     }
     if args[0] == "secrets" {
         return cli_secrets::help(args);
+    }
+    if args[0] == "services" {
+        return services::cli::help(args);
     }
     if args.first().is_none_or(|value| value != "sessions") {
         return args.iter().any(|value| value == "--help");
