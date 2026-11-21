@@ -16,6 +16,7 @@ import {
   CONTINUED_BRANCH,
   continuedEvents,
   continuedReply,
+  continueQuestionReply,
   serveAccess,
   serveContinue,
   serveMerge,
@@ -26,8 +27,10 @@ import {
   type FakeMergeEnd,
   type FakeWork,
 } from './fake-bar'
+import { eventWith, replyWith, type FakeBranches } from './fake-branch-names'
 import { serveReady, type FakeReadyEnd } from './fake-ready'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
+import { MASKED_BASE } from './fixtures/masked-paths'
 import { toolFixtures } from './fixtures/tools'
 import { nextEnvelope } from './recorded-repairs'
 
@@ -39,6 +42,8 @@ export interface BarScenario {
   ready: FakeReadyEnd
   work: FakeWork
   continue: FakeContinueEnd
+  /** The branch names of the bar, as `FakeBranches` says. */
+  branches: FakeBranches
 }
 
 /** The answers that the address of a development page can choose. */
@@ -51,6 +56,7 @@ export const scenarioValues: {
   ready: ['ready', 'no-right', 'pull-changed', 'refused'],
   work: ['none', 'files', 'restored', 'commits', 'legacy'],
   continue: ['continued', 'question', 'clash', 'stopped', 'turn'],
+  branches: ['plain', 'masked'],
 }
 
 function pick<T extends string>(values: readonly T[], value: string | null): T {
@@ -60,10 +66,10 @@ function pick<T extends string>(values: readonly T[], value: string | null): T {
 /**
  * The answers in the address. The first value of each answer is the
  * default: a member with write access and squash, a merge and a Continue
- * that succeed, and no local work.
+ * that succeed, no local work, and plain branch names.
  */
 export function readScenario(query: URLSearchParams): BarScenario {
-  const { access, method, merge, work } = scenarioValues
+  const { access, method, merge, work, branches } = scenarioValues
   return {
     access: pick(access, query.get('access')),
     method: pick(method, query.get('method')),
@@ -71,6 +77,7 @@ export function readScenario(query: URLSearchParams): BarScenario {
     ready: pick(scenarioValues.ready, query.get('ready')),
     work: pick(work, query.get('work')),
     continue: pick(scenarioValues.continue, query.get('continue')),
+    branches: pick(branches, query.get('branches')),
   }
 }
 
@@ -96,7 +103,8 @@ export function bodyOf(init: RequestInit | undefined) {
  * as the Worker does with its state. A completed merge publishes the merged
  * state, Ready for review publishes Ready to merge, a Continue publishes the workspace on its new branch with a note
  * in each session, and a message shows the text that it sent. Every other
- * request gets the recorded reply. Development only.
+ * request gets the recorded reply. Each GitHub state, in a reply or an
+ * event, has the branch names of the scenario. Development only.
  */
 export function scenarioFetch(
   server: FakeApiServer,
@@ -104,6 +112,7 @@ export function scenarioFetch(
   member: MessageSender,
   now: () => number,
 ): FetchLike {
+  const { branches } = scenario
   serveAccess(
     server,
     scenario.access,
@@ -113,9 +122,18 @@ export function scenarioFetch(
   serveReady(server, scenario.ready)
   serveWork(server, scenario.work)
   serveContinue(server, scenario.continue)
+  // The default branch of the repository is the target of the pull request.
+  if (scenario.continue === 'question' && branches === 'masked') {
+    server.json('GET', workspacePaths.continueResult(org, id, CONTINUE_ID), {
+      ...continueQuestionReply,
+      baseBranch: MASKED_BASE.baseBranch,
+    })
+  }
   let continues = scenario.continue === 'continued'
   const emit = (event: WorkspaceEvent) =>
-    server.events.emit(nextEnvelope(server.events, event, now()))
+    server.events.emit(
+      nextEnvelope(server.events, eventWith(branches, event), now()),
+    )
   const showGitHub = (event: WorkspaceEvent) => {
     if (event.type !== 'github.updated') return
     server.json('GET', githubPaths.banner(org, id), { banner: event.banner })
@@ -228,6 +246,12 @@ export function scenarioFetch(
       pathname === workspacePaths.continueResult(org, id, CONTINUE_ID)
     ) {
       if (continues) await publishContinue()
+    }
+    const github =
+      pathname === githubPaths.banner(org, id) ||
+      pathname === githubPaths.stored(org, id)
+    if (method === 'GET' && github) {
+      return replyWith(branches, await server.fetch(input, init))
     }
     return server.fetch(input, init)
   }

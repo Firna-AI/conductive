@@ -3,9 +3,24 @@ import { GitBranchPlus } from 'lucide-react'
 import { continueQuestion } from '../../../docs/mockups/src/components/workspace/barCopy'
 import { LocalWorkList } from '../../../docs/mockups/src/components/workspace/LocalWorkList'
 import type { BarActions } from '../../github/barActions'
+import { baseBranchLabel } from '../../github/bannerStatus'
+import type { GitHubFeed } from '../../github/githubStore'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
-import { useScreenBar } from './github/WorkspaceGitHub'
+import { useGitHubFeed, useScreenBar } from './github/WorkspaceGitHub'
+
+/**
+ * The name that the question shows for the branch that Continue starts
+ * from. The question names the real branch. The GitHub state of the
+ * screen gives its label, which hides each secret value, only when that
+ * state names the same target. So the question never names another branch.
+ */
+function startLabel(base: string, github: GitHubFeed | null): string {
+  const state = github?.state
+  if (state?.status !== 'ready') return base
+  const { banner } = state.snapshot
+  return banner.baseBranch === base ? baseBranchLabel(banner) : base
+}
 
 function Question(props: { actions: BarActions }) {
   const { actions } = props
@@ -13,9 +28,11 @@ function Question(props: { actions: BarActions }) {
     actions.subscribe,
     actions.getSnapshot,
   )
+  const github = useGitHubFeed()
   if (!question) return null
   const cancel = () => actions.cancelContinue()
   const { uncommittedFiles, unpushedCommits } = question.localWork
+  const base = startLabel(question.baseBranch, github)
   return (
     <Dialog
       action={
@@ -31,7 +48,7 @@ function Question(props: { actions: BarActions }) {
       close={cancel}
       title={continueQuestion.title}
     >
-      <DialogText>{continueQuestion.intro(question.baseBranch)}</DialogText>
+      <DialogText>{continueQuestion.intro(base)}</DialogText>
       <LocalWorkList commits={unpushedCommits} files={uncommittedFiles} />
       <DialogText>{continueQuestion.outcome(unpushedCommits)}</DialogText>
     </Dialog>
