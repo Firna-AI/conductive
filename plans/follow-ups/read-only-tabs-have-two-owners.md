@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-09, from round 1 finding 3 of the review of branch `calummoore/tab-drag-and-drop`. Extended on 2026-11-21 with the suspension lift symptom from a finding check of branch `calummoore/follow-up-history-pages-change-the-saved-cj6o`.
-- **Location:** `src/chat/state/archive-view.ts`, `showLocally` and `closeLocally`. `src/chat/state/sessions.ts:117`, the place that `placeSession` gives an arriving session. `src/chat/WorkspaceChat.tsx`, the `rowOf` call that draws the tab row. `afterRestore` at `src/chat/state/archive-view.ts:149`, which `withRecord` at `src/chat/state/workspace-records.ts:59` calls only when the workspace leaves the archived state.
+- **Location:** `src/chat/state/archive-view.ts`, `showLocally` and `closeLocally`. `src/chat/state/sessions.ts:138`, the place that `placeSession` gives an arriving session. `src/chat/WorkspaceChat.tsx`, the `rowOf` call that draws the tab row. `afterRestore` at `src/chat/state/archive-view.ts:149`, which `withRecord` at `src/chat/state/workspace-records.ts:59` calls only when the workspace leaves the archived state.
 - **Reason:** The branch that found it fixed the wrong order directly. This wider fix changes who owns the tab state of a read-only workspace, which reaches beyond that feature.
 
 - **Terms:**
@@ -14,7 +14,8 @@
   - The tab row draws the tabs in the order of the saved view, through `rowTabs` in `src/chat/state/tab-order.ts`. A tab opens at the end of the row, as "The tab row" in `docs/protocol/agents-and-sessions.md` says.
   - In a read-only workspace, Close and Reopen of a session change `archiveTabs` in the browser. Close shows the next session of `archiveTabs`.
   - So two lists hold the order of the read-only tabs: the browser copy of the view, which the row draws, and `archiveTabs`, which Close uses. The direct fix keeps them in step at each local Close and Reopen.
-  - `placeSession` gives an arriving open session a place in the view. In a suspended org, an update from the stream can then put back a place that the reader closed.
+  - `placeSession` gives an arriving open session a place in the view. While `archiveTabs` is not null, the shared step of the next bullet changes only the open and the closed sessions. So in a suspended org, an update from the stream does not put back a place that the reader closed.
+  - A live record of the stream and the end of a replay both place a session through one shared step. That step always puts a session in the open or the closed sessions of the snapshot. It changes the tabs, their order, the shown tab, and the view only while `archiveTabs` is null. While `archiveTabs` is not null, each page of a replay also updates the open and the closed sessions. Option B makes `placeSession` skip its place step while read-only. That skip must keep this update, so that live and replayed records still reach the open and the closed sessions. When B removes `archiveTabs`, the test `archiveTabs !== null` of that step must read the read-only state. The fix of [`plans/follow-ups/replay-completion-skips-final-placement.md`](https://github.com/Firna-AI/conductive/blob/878727a4294ee61406210cdf2ca1e8a2ce25eacc/plans/follow-ups/replay-completion-skips-final-placement.md) added this step. It does not remove the two owners of the tab order.
   - The follow-up item `plans/follow-ups/read-only-session-click-over-file.md` records a second symptom of the same split: a session click in a suspended org does not change the active tab of the view.
   - A lift ends the suspension of an org, but the chat keeps its local tab IDs. `withRecord` at `src/chat/state/workspace-records.ts:59` calls `afterRestore` only when the workspace leaves the archived state, and a lift changes no workspace state. So `archiveTabs` outlives the read-only mode. A finding check on branch `calummoore/follow-up-history-pages-change-the-saved-cj6o` saw it on 2026-11-21:
     1. Start with the open sessions `autocomplete` and `debounce`, and the closed session `postcode`, at event 30.
@@ -34,8 +35,6 @@
 - **Left out:** Save the read-only tabs to the server, because a read-only workspace sends no write. Keep the old place on a reopen, because a reopened tab opens at the end.
 - **Wider fix:** B, because one owner removes the class.
 - **Previous examples:** `plans/follow-ups/read-only-session-click-over-file.md`.
-- **Related:**
-  - `plans/follow-ups/read-only-session-click-over-file.md`, a shared wider fix: B also fixes that item.
-  - `plans/follow-ups/replay-completion-skips-final-placement.md`, the same code and a shared part of the wider fix. B makes `placeSession` skip its place step while read-only. That skip needs the membership-only split of option E of that item, so that live and replayed records still update the open and closed sessions. When B removes `archiveTabs`, the local test `archiveTabs !== null` of that split must read the read-only state. B does not change the end of a replay, so it does not fix that item. That item does not fix the two owners of the tab order.
+- **Related:** `plans/follow-ups/read-only-session-click-over-file.md`, a shared wider fix: B also fixes that item.
 - **Recommendation:** B. One store of the read-only tabs makes both rules follow, also for a later read-only action.
 - **Action:** fix after merge, apply B, because it changes who owns the read-only tab state, beyond the feature that found it.

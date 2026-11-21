@@ -67,7 +67,6 @@ async function loadHistory(
   newest: (through: number | null) => void,
 ): Promise<number | null> {
   const replay = replaySessionRecords(context)
-  let complete = false
   const mark = (hydration: 'loading' | 'ready' | 'failed') =>
     context.store.update((snapshot) =>
       withSession(snapshot, sessionId, (current) => ({
@@ -81,14 +80,13 @@ async function loadHistory(
     const through = await readPages(context, sessionId, newest, replay)
     if (through === null || !context.live()) return null
     mark('ready')
-    complete = true
     return through
   } catch {
     if (!context.live()) return null
     mark('failed')
     return null
   } finally {
-    replay.finish(complete)
+    replay.finish()
     newest(null)
   }
 }
