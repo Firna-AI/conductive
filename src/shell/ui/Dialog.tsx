@@ -1,6 +1,7 @@
 import { useRef, type ReactNode, type RefObject } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
+import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
 import { ActionButton } from './actions'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { Sheet, trapTab } from './Sheet'
@@ -21,6 +22,9 @@ import { useViewport } from './viewport'
  * result or the error of the write shows in the question. A question that
  * closes before its write starts gives `busy={false}`. After a write that
  * worked, the caller closes the question.
+ *
+ * A desktop dialog taller than the room of the frame keeps its title and
+ * its actions, and its content scrolls between them.
  */
 export function Dialog(props: {
   title: string
@@ -90,15 +94,15 @@ function DialogBox(props: {
     <section
       aria-label={props.title}
       aria-modal
-      className={classes(styles.dialog, props.wide && styles.wide)}
+      className={classes(styles.dialog, card.card, props.wide && styles.wide)}
       onKeyDownCapture={trapTab}
       ref={dialog}
       role="dialog"
       tabIndex={-1}
     >
-      <h2 className={styles.title}>{props.title}</h2>
-      {props.children}
-      <div className={styles.actions}>{props.actions}</div>
+      <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+      <div className={classes(styles.body, card.body)}>{props.children}</div>
+      <div className={classes(styles.actions, card.foot)}>{props.actions}</div>
     </section>
   )
 }

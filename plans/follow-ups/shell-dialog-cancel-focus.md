@@ -61,6 +61,7 @@
 - **Wider fix:** B, because the one shared Cancel covers every shell question. The class beyond Cancel lives in other shared buttons, which the items under **Related** track.
 - **Previous examples:** `keepFocus` on the Save buttons of `src/shell/settings/ScriptSection.tsx:41`, `src/shell/settings/GeneralTab.tsx:66`, and `src/shell/automations/AutomationEditor.tsx:115`. The test at `src/shell/ui/actions.test.tsx:41` checks that a button that turns off with the focus keeps it, looks and acts off, and is natively off when the focus leaves.
 - **Related:**
+  - `plans/follow-ups/dialog-scroll-body-keyboard-reach.md`: the same focus code. Its shared trap fix keeps the initial focus on the safe action and must preserve the busy question's focus behavior.
   - `plans/follow-ups/busy-buttons-lose-focus.md`: the same class, a natively disabled button that loses the focus. There the pressed busy button itself turns off, in the chat `ActionButton` and two shell callers. Here a Cancel that had the first focus turns off when another button starts the write. Neither fix covers the other.
   - `plans/follow-ups/busy-menu-escape-loses-focus.md`: the same class, for the trigger of a busy shell menu after Escape. Neither fix covers the other.
   - `plans/follow-ups/shell-button-focus-default.md`: the same class, as a choice for every shell button. Its option C, a `keepFocus` default in the shell `ActionButton`, would give the shared Cancel the behaviour of B here. This item does not wait for that answer.

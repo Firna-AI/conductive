@@ -15,15 +15,19 @@
   background: rgba(4, 6, 8, 0.55);
 }
 
-/* A card with a full hairline outline, as every card of the app. */
+/*
+ * A card with a full hairline outline, as every card of the app. The parts
+ * of `ModalCard.module.css` keep it inside the layer: the title and the
+ * actions stay, and the content between them scrolls when it is taller
+ * than the room. Each part has its own padding, so the content scrolls
+ * across the full width of the card.
+ */
 .dialog {
   display: flex;
   position: relative;
   flex-direction: column;
-  gap: 12px;
   width: 100%;
   max-width: 420px;
-  padding: 20px 20px 16px;
   border: 1px solid var(--ui-border2);
   border-radius: var(--ui-radius-xl);
   background: var(--ui-composer);
@@ -38,11 +42,23 @@
 
 .title {
   margin: 0;
+  padding: 20px 20px 0;
   color: var(--ui-ink);
   font-size: var(--ui-text-xl);
   font-weight: var(--ui-weight-heading);
   letter-spacing: var(--ui-tracking-heading);
   line-height: 1.35;
+}
+
+/*
+ * The content, 12 px under the title. Its padding also leaves the room of a
+ * focus ring inside the box that scrolls.
+ */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px;
 }
 
 .text {
@@ -52,11 +68,12 @@
   line-height: 1.55;
 }
 
+/* The actions, 16 px under the content. */
 .actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 4px;
+  padding: 4px 20px 16px;
 }
 
 .sheetBody {
