@@ -55,7 +55,7 @@ function Reason(props: RowProps) {
  * One run: its mark and state, its trigger, its time, and, for a pull
  * request, a link to the pull request on GitHub. A run with a workspace
  * opens it from the whole row, also a run whose first start or first turn
- * failed.
+ * failed, and a run whose chain a provider stop ended.
  */
 function RunRow(props: RowProps) {
   const { run } = props

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { MessageSender } from '../../shared/generated/MessageSender'
+import { routes } from '../../app/router'
 import type {
   AutomationPullRequestEvent,
   AutomationRun,
@@ -95,11 +96,15 @@ describe('the words of a skipped run', () => {
   })
 })
 
-/** A failed run of a pull request event, with the facts that the Worker kept. */
+/**
+ * A failed run of a pull request event, with the facts that the Worker kept.
+ * A run whose chain a provider stop ended has the source of its failure.
+ */
 function failed(
   facts: Pick<AutomationRun, 'agent' | 'owner' | 'workspaceId'>,
   code: string,
   message: string,
+  source?: 'provider_stop',
 ): AutomationRun {
   return {
     id: 'run-2',
@@ -108,15 +113,24 @@ function failed(
     ...facts,
     trigger: pullRequestTrigger('storefront', 'opened', 488),
     state: 'failed',
-    error: { code, message },
+    error: { code, message, ...(source ? { source } : {}) },
     createdAt: FAKE_TIME,
     updatedAt: FAKE_TIME,
   }
 }
 
+/** Priya, a member of Acme who does not own the automation. */
+const priya = 'priya'
+
 /** The words that the Worker stores for each cause of a failed check. */
 const loginWords = 'Connect Claude to run this automation.'
 const githubWords = 'GitHub access expired. Sign in with GitHub again.'
+
+/** The words that the Worker stores for each end of a chain that a provider stop ended. */
+const stoppedWords =
+  'The cloud computer stopped before the agent finished. Send a message in the workspace to continue.'
+const lostLoginWords =
+  'Connect the agent login again to continue in the workspace.'
 
 describe('the words of a failed run', () => {
   test('name the owner of the run after the automation moved to another owner, who gets no action', () => {
@@ -171,6 +185,51 @@ describe('the words of a failed run', () => {
       senderLeft: { text: senderLeft, action: null },
       noAgent: { text: loginWords, action: null },
       noOwner: { text: githubWords, action: null },
+    })
+  })
+
+  test('a chain that a provider stop ended says what stopped, and how to continue only where someone can act', () => {
+    const run = failed(
+      { agent: 'claude', owner: cal, workspaceId: 'review-prs-pushed-483' },
+      'cloud_computer_stopped',
+      stoppedWords,
+      'provider_stop',
+    )
+    expect({
+      member: failureCopy(run, priya),
+      nobody: failureCopy(run, null),
+    }).toEqual({
+      member: {
+        text: 'The cloud computer stopped before the agent finished. Send a message in the workspace to continue.',
+        action: null,
+      },
+      nobody: {
+        text: 'The cloud computer stopped before the agent finished.',
+        action: null,
+      },
+    })
+  })
+
+  test('a login that was gone at the provider stop reads as a failed check of the login, though the run kept its workspace', () => {
+    const run = failed(
+      { agent: 'claude', owner: cal, workspaceId: 'review-prs-pushed-481' },
+      'agent_login_required',
+      lostLoginWords,
+      'provider_stop',
+    )
+    expect({
+      owner: failureCopy(run, cal.id),
+      member: failureCopy(run, priya),
+    }).toEqual({
+      owner: {
+        text: "Your Claude login isn't connected.",
+        action: {
+          label: 'Connect Claude',
+          to: routes.account('claude'),
+          leavesApp: false,
+        },
+      },
+      member: { text: "Cal's Claude login isn't connected.", action: null },
     })
   })
 })

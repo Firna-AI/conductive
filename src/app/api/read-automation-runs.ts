@@ -72,6 +72,20 @@ function readAgent(value: unknown): Agent {
 }
 
 /**
+ * The error of a run. Only a failure at the end of a chain that a provider
+ * stop ended has a source. An older Worker sends none, and a source that
+ * this app does not know reads as none.
+ */
+function readRunError(value: unknown): NonNullable<AutomationRun['error']> {
+  const error = record(value, 'error')
+  return {
+    code: text(error, 'code'),
+    message: text(error, 'message'),
+    ...(error.source === 'provider_stop' ? { source: error.source } : {}),
+  }
+}
+
+/**
  * A run with the agent and the owner that it ran with. A run from before
  * the Worker kept them has null in their place.
  */
@@ -86,10 +100,7 @@ export function readRun(value: unknown): AutomationRun {
     trigger: nested(run, 'trigger', readRunTrigger),
     state: choice(run, 'state', RUN_STATES),
     workspaceId: maybeText(run, 'workspaceId'),
-    error: maybeNested(run, 'error', (item) => {
-      const error = record(item, 'error')
-      return { code: text(error, 'code'), message: text(error, 'message') }
-    }),
+    error: maybeNested(run, 'error', readRunError),
     createdAt: count(run, 'createdAt'),
     updatedAt: count(run, 'updatedAt'),
   }

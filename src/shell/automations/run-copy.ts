@@ -28,12 +28,18 @@ export function runTriggerLabel(trigger: AutomationRunTrigger): string {
 const startFailed = 'workspace_start_failed'
 
 /**
+ * The code that a run stores when a provider stop ended the chain of its
+ * first turn, and no turn continues the work.
+ */
+const cloudComputerStopped = 'cloud_computer_stopped'
+
+/**
  * The state whose mark a run shows. A failed run keeps the mark of its
  * failure, also after Try again in its workspace, because the run keeps its
  * failed outcome. A run whose first start failed shows the cross of its
- * workspace in the error state. A failed check and a failed first turn show
- * the slash of a failed run: after a failed turn, the mark of the workspace
- * would show a finished turn.
+ * workspace in the error state. Each other failure shows the slash of a
+ * failed run: after a failed turn or a provider stop, the mark of the
+ * workspace would hide the failure.
  */
 export function runMark(run: AutomationRun): AutomationRun['state'] {
   return run.state === 'failed' && run.error?.code === startFailed
@@ -70,6 +76,40 @@ function whose(owner: MessageSender, own: boolean): string {
 }
 
 /**
+ * The words of a run whose chain a provider stop ended with no turn to
+ * continue it. They name what stopped, not the limit that ended the turns,
+ * as the stopped line of the chat does. A stopped turn has no Try again, so
+ * a person who can act also reads that a message in the workspace continues
+ * the work. Where nobody can act, the words stop at what stopped.
+ */
+function stoppedCopy(viewer: string | null): FailureCopy {
+  const stopped = 'The cloud computer stopped before the agent finished.'
+  return {
+    text:
+      viewer === null
+        ? stopped
+        : `${stopped} Send a message in the workspace to continue.`,
+    action: null,
+  }
+}
+
+/**
+ * Whether a run failed for a missing login, so that it reads as a failed
+ * check of the login: the check before the create, which leaves the run
+ * with no workspace, or the end of a chain that a provider stop ended while
+ * the login of the session was gone. A first turn whose sender lost access
+ * stores the same code with a workspace and no source, and keeps its own
+ * words.
+ */
+function loginMissing(run: AutomationRun): boolean {
+  const { error } = run
+  return (
+    error?.code === 'agent_login_required' &&
+    (run.workspaceId === null || error.source === 'provider_stop')
+  )
+}
+
+/**
  * The cause of a failed run in words, from the run alone: its stored error,
  * its agent, and its owner. So a later change of the agent of its automation,
  * or a move of the automation to another owner, changes no past row. The
@@ -86,6 +126,10 @@ function whose(owner: MessageSender, own: boolean): string {
  *   stored error of the turn. A first turn whose sender lost access, such
  *   as after the owner left the org, stores the code of a missing login
  *   with its own words.
+ * - A provider stop that ended the chain of the first turn, with no turn to
+ *   continue it, kept the workspace too. A login that was gone at that stop
+ *   reads as a failed check of the login, with its action. Each other such
+ *   end reads as a stopped cloud computer, with no action.
  * - A run from before runs kept their agent and owner shows the stored
  *   words of a failed check, with no action.
  */
@@ -97,10 +141,11 @@ export function failureCopy(
   if (code === startFailed) {
     return { text: "The cloud computer didn't start.", action: null }
   }
+  if (code === cloudComputerStopped) return stoppedCopy(viewer)
   const { agent, owner } = run
   if (agent === null || owner === null) return storedCopy(run)
   const own = owner.id === viewer
-  if (code === 'agent_login_required' && run.workspaceId === null) {
+  if (loginMissing(run)) {
     const name = agentNames[agent]
     return {
       text: `${whose(owner, own)} ${name} login isn't connected.`,

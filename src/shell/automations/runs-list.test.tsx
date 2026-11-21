@@ -132,6 +132,7 @@ describe('the Runs list of an automation', () => {
       'Open the workspace of PR pushed #486',
       'Open the workspace of PR opened #486',
       'Open the workspace of PR pushed #483',
+      'Open the workspace of PR pushed #481',
     ])
     const ownerMarks = marks(owner)
     owner.remove()
@@ -165,12 +166,13 @@ describe('the Runs list of an automation', () => {
       ],
       // A failed first turn and a failed start keep their workspace, and so
       // does a first turn that the cloud computer stopped with no turn to
-      // continue it.
+      // continue it, also when its login was gone at the stop.
       workspaces: [
         null,
         routes.workspace(org, 'review-prs-pushed-486'),
         routes.workspace(org, 'review-prs-opened-486'),
         routes.workspace(org, 'review-prs-pushed-483'),
+        routes.workspace(org, 'review-prs-pushed-481'),
       ],
       // A failed start shows the cross of its workspace, and each other
       // failure the slash.

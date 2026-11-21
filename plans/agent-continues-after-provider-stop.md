@@ -325,6 +325,11 @@ same day, and added what an open tab shows before the automatic start.
     stays on. The mockups draw no workspace for these three runs, so their
     rows show no chevron, as the row of PR opened #485 does.
     `app/chat/cloud-computer-stops` draws the lines of their chat.
+  - The test fixtures of the app mark the mockup run of a lost login by its
+    key, in `src/test-support/fixtures/automation-run-errors.ts`. Such a run
+    then has a workspace and the stored error of the Worker. My call of
+    21 November 2026: the mockups give that run the cause of a failed check,
+    and Milestone 10 changes no mockup.
 
 Not in this change:
 
@@ -588,19 +593,28 @@ Tags: ui
 
 Depends on: 9
 
-- [ ] Show the new cause in `src/shell/automations/run-copy.ts`, as in the
+- [x] Show the new cause in `src/shell/automations/run-copy.ts`, as in the
       mockup. Give only its first sentence when nobody can act. Add the dev
       fixture and the tests.
-- [ ] Show a lost login at the end of a chain with the words and the action
+- [x] Show a lost login at the end of a chain with the words and the action
       of the failed login check, as the mockup does. Today `failureCopy`
       shows the stored words of `agent_login_required` for each run with a
       workspace. Add the dev fixture and the tests.
-- [ ] Give the mockup run of a lost login at the end of a chain a mark that
+- [x] Read the optional `error.source` of a run in
+      `src/app/api/read-automation-runs.ts`. The reader dropped it, so the
+      app could not tell a lost login at the end of a chain from the login
+      error of a failed turn. A source that the app does not know reads as
+      none.
+- [x] Give the mockup run of a lost login at the end of a chain a mark that
       says it has a workspace. `src/test-support/fixtures/automation-runs.ts`
       finds the workspace of a mockup run from its cause, and it finds none
       for `agent-login`.
-- [ ] Check the Runs list in a browser, and save a screenshot in
+- [x] Check the Runs list in a browser, and save a screenshot in
       `.context/`.
+
+Evidence: the screenshots, the click check, the check logs, the ten-run
+results, and the failure proofs are in
+`.context/agent-continues-after-provider-stop/milestone-10/`.
 
 ## Milestone 11: Verification, review, and pull request
 

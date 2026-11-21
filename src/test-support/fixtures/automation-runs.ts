@@ -1,10 +1,8 @@
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import {
   runsOf,
-  type FailedRun,
   type ListedRun,
   type Run,
-  type SkipReason,
 } from '../../../docs/mockups/src/fixtures/automationRuns'
 import { automations as mockupAutomations } from '../../../docs/mockups/src/fixtures/automations'
 import {
@@ -18,6 +16,7 @@ import type {
   AutomationRunsResponse,
   AutomationRunTrigger,
 } from '../../shared/automations'
+import { checkFailed, failureOf, skipOf } from './automation-run-errors'
 import { FAKE_TIME } from './core'
 
 const day = 86_400_000
@@ -61,48 +60,6 @@ export function pullRequestTrigger(
   }
 }
 
-/** Each cause of a failed run, as the Worker stores it. */
-const failures: Readonly<
-  Record<Exclude<FailedRun['cause'], 'turn'>, { code: string; message: string }>
-> = {
-  'agent-login': {
-    code: 'agent_login_required',
-    message: 'Connect Claude to run this automation.',
-  },
-  'github-access': {
-    code: 'github_reconnect_required',
-    message: 'GitHub access expired. Sign in with GitHub again.',
-  },
-  start: {
-    code: 'workspace_start_failed',
-    message: 'The cloud computer could not start. Try again.',
-  },
-  'cloud-computer-stopped': {
-    code: 'cloud_computer_stopped',
-    message:
-      'The cloud computer stopped before the agent finished. Send a message in the workspace to continue.',
-  },
-}
-
-/** Each reason of a skipped run, as the Worker stores it. */
-function skipOf(skip: SkipReason): { code: string; message: string } {
-  switch (skip.who) {
-    case 'author':
-      return {
-        code: 'author_not_allowed',
-        message:
-          'The pull request author is outside the org and is not in Author is.',
-      }
-    case 'sender':
-      return {
-        code: 'sender_not_allowed',
-        message: 'The event sender is outside the org and is not in Author is.',
-      }
-    case 'org':
-      return { code: 'org_suspended', message: 'The org is suspended.' }
-  }
-}
-
 /** The login of the account outside the org that a skip names, if any. */
 function skipLogin(run: Run): string | undefined {
   if (run.state !== 'skipped' || run.skip.who === 'org') return undefined
@@ -113,8 +70,9 @@ function skipLogin(run: Run): string | undefined {
  * Whether a run has a workspace: a run in the state of a workspace, and a
  * run whose first start or first turn failed, which keeps its workspace. A
  * run whose first turn the cloud computer stopped, with no turn to continue
- * it, keeps its workspace too. A queued or skipped run has none, and
- * neither has a run that a check failed before the create.
+ * it, keeps its workspace too, also when its login was gone at the stop. A
+ * queued or skipped run has none, and neither has a run that a check failed
+ * before the create.
  */
 function hasWorkspace(run: Run): boolean {
   switch (run.state) {
@@ -122,11 +80,7 @@ function hasWorkspace(run: Run): boolean {
     case 'skipped':
       return false
     case 'failed':
-      return (
-        run.cause === 'start' ||
-        run.cause === 'turn' ||
-        run.cause === 'cloud-computer-stopped'
-      )
+      return !checkFailed(run)
     default:
       return true
   }
@@ -191,9 +145,7 @@ function apiRun(
     workspaceId: hasWorkspace(run) ? `${automation.id}-${run.key}` : null,
     error:
       run.state === 'failed'
-        ? run.cause === 'turn'
-          ? { code: 'agent_unavailable', message: run.message }
-          : failures[run.cause]
+        ? failureOf(run)
         : run.state === 'skipped'
           ? skipOf(run.skip)
           : null,
