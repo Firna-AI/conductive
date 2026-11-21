@@ -1,7 +1,8 @@
-import { LinkTabs } from '../components/common/LinkTabs'
+import { linkTabs } from '../entries/components/common/LinkTabs.mockup'
 import type { Automation } from '../fixtures/automations'
 import { paths } from '../paths'
 import type { AutomationState } from './automationState'
+import { defined } from '../defined'
 
 /** The pages of the two tabs of an automation, where the mockups draw them. */
 type TabPages = { automation?: string; runs?: string }
@@ -36,15 +37,20 @@ export function AutomationTabs(props: {
       }
     : (tabPages[props.automation.key] ?? {})
   return (
-    <LinkTabs
+    <linkTabs.Component
       label="Automation"
+      moklyInstance="automation-tabs"
       tabs={[
         {
           label: 'Automation',
-          to: pages.automation,
           selected: props.tab === 'automation',
+          ...defined({ to: pages.automation }),
         },
-        { label: 'Runs', to: pages.runs, selected: props.tab === 'runs' },
+        {
+          label: 'Runs',
+          selected: props.tab === 'runs',
+          ...defined({ to: pages.runs }),
+        },
       ]}
     />
   )

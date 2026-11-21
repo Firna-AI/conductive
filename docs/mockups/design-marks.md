@@ -33,7 +33,7 @@ with Copy link.
     workspace, such as bold text for unread output. It reads that emphasis
     from `activityPresentation` in `status.ts`. The list, the rows of the
     command palette, and the
-    [workspace and session chips](design-chat.md#workspace-session-and-file-chips)
+    [workspace and session chips](design-chips.md)
     use it. So one part chooses the emphasis in each of these places.
   - Each place gives its own class for each emphasis that it shows, so it
     keeps its own look. Each place must give the class of unread output,

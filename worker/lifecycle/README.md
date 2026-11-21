@@ -139,6 +139,20 @@ Its system installer links `/usr/local/bin/conductive` to the active program.
 Disk retention starts do not bootstrap or restart the runner.
 [Installation](../../image/install.md) gives the command sequence and release layout.
 
+### Job step records
+
+[`job-steps.ts`](job-steps.ts) holds the D1 statements of the job step
+records that [Step timing](../../docs/protocol/step-timing.md#job-step-records)
+requires: `job_steps` for the steps of builds, refreshes, creates, and
+resumes, and `job_runs` for the runs of a start. Each statement checks its
+org and is safe to repeat. `rememberWorkerVersion` keeps the Worker version
+of the isolate when a workspace object starts, and each row holds it. The
+15-minute cron calls `deleteOldJobRecords`, and `purgeOrgRecords` deletes
+the rows of a purged org.
+
+- Builds and refreshes: [Step records](image-builds.md#step-records).
+- Starts: [Start step records](workspace-object.md#start-step-records).
+
 ## Settings
 
 [Lifecycle settings](settings.md) gives the environment inputs and captured secret values.

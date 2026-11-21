@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { RightColumn } from './RightColumn'
+import { defined } from '../../defined'
+import { rightColumn } from '../../entries/components/workspace/RightColumn.mockup'
 import styles from './WorkspaceBody.module.css'
 
 /**
@@ -30,13 +31,15 @@ export function WorkspaceBody(props: {
         {props.tabs}
         {props.center}
       </div>
-      <RightColumn
+      <rightColumn.Component
         files={props.files}
-        filesShare={props.filesShare}
-        hidden={props.rightHidden}
         pullRequest={props.pullRequest}
-        tools={props.tools}
-        width={props.rightWidth}
+        {...defined({
+          filesShare: props.filesShare,
+          hidden: props.rightHidden,
+          tools: props.tools,
+          width: props.rightWidth,
+        })}
       />
     </div>
   )

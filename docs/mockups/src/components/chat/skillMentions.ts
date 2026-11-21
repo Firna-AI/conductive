@@ -1,41 +1,5 @@
 import { skills, type Skill } from '../../fixtures/skills'
 
-/** A skill in a text: `/` and the name of a skill of the list. */
-export type SkillPart = {
-  kind: 'skill'
-  skill: Skill
-  /** The skill as the text has it, such as `/plans`. */
-  source: string
-}
-
-/**
- * `/` at the start of the text or after a space or a line break, then a
- * name up to the next space. So `src/a` and a link hold no skill text.
- */
-const skillPattern = /(?<=^|\s)\/(\S+)/g
-
-/**
- * Splits a text into plain text and its skills. Only a name of the list
- * of skills is a skill. Every other such text, such as `/tmp`, stays text.
- */
-export function skillParts(
-  text: string,
-): ({ kind: 'text'; text: string } | SkillPart)[] {
-  const parts: ({ kind: 'text'; text: string } | SkillPart)[] = []
-  let end = 0
-  for (const match of text.matchAll(skillPattern)) {
-    const skill = skills.find((item) => item.name === match[1])
-    if (!skill) continue
-    if (match.index > end) {
-      parts.push({ kind: 'text', text: text.slice(end, match.index) })
-    }
-    parts.push({ kind: 'skill', skill, source: match[0] })
-    end = match.index + match[0].length
-  }
-  if (end < text.length) parts.push({ kind: 'text', text: text.slice(end) })
-  return parts
-}
-
 /** The most rows that the list shows. A longer query narrows it. */
 const skillRowLimit = 100
 

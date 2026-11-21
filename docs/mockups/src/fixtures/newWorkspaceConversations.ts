@@ -1,3 +1,4 @@
+import { p } from './agentText'
 import type { ChatItem } from './conversations'
 
 /** The first message of the workspace that the create flow makes. */
@@ -50,7 +51,7 @@ export const newWorkspaceConversations = {
     {
       kind: 'agent',
       id: 'plan',
-      blocks: ["I'll check how carts and sessions work today."],
+      blocks: [p("I'll check how carts and sessions work today.")],
     },
     {
       kind: 'tool',

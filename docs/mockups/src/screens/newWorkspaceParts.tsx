@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import type { SessionLogin } from '../components/chat/SessionLogin'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
-import { CreateFailedNotice } from '../components/new-workspace/notices'
+import { createFailedNotice } from '../entries/components/new-workspace/notices.mockup'
 import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
 import {
   firstMessageBeforeDrop,
@@ -14,6 +14,7 @@ import { orgWithLogin } from '../fixtures/orgLogins'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
 import { followUpTask } from '../fixtures/workspaceLinkConversations'
 import { savedCarts } from '../fixtures/workspaces'
+import { plainData } from '../defined'
 
 /**
  * The state of the form of a new workspace that the New workspace page and
@@ -70,9 +71,12 @@ export const newWorkspaceFormProperties = {
    * or drawn open (secrets decision 6). It holds the secrets that the new
    * workspace pre-approves, and Mac access. `menu` opens the menu of the
    * one button of a phone, which holds Attach files and Capabilities
-   * (secrets decision 16 G). A computer has no such menu.
+   * (secrets decision 16 G). A computer has no such menu. `search` draws
+   * the control open on an org with more than ten secrets, with a search
+   * typed above them. `info` draws it open with the description of
+   * PROD_DATABASE_URL shown under its name.
    */
-  capabilities: { enum: ['closed', 'open', 'menu'] },
+  capabilities: { enum: ['closed', 'open', 'menu', 'search', 'info'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties
@@ -164,10 +168,22 @@ export function formNotices(
 ): ReactNode[] {
   const notices: ReactNode[] = []
   if (failed) {
-    notices.push(<CreateFailedNotice key="failed" ready={ready} />)
+    notices.push(
+      <createFailedNotice.Component
+        key="failed"
+        moklyInstance="create-failed-notice"
+        ready={ready}
+      />,
+    )
   }
   if (state.login === 'missing') {
-    notices.push(<ConnectAgentNotice choice={newWorkspaceChoice} key="login" />)
+    notices.push(
+      <connectAgentNotice.Component
+        choice={plainData(newWorkspaceChoice)}
+        key="login"
+        moklyInstance="connect-agent-notice"
+      />,
+    )
   }
   return notices
 }

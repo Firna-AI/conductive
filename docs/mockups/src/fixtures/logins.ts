@@ -48,7 +48,7 @@ export const accountLogins: Readonly<Record<AgentKey, AgentLogin>> = {
 }
 
 /** The host of Cal's proxy, which serves both agents. */
-const endpointHost = 'proxy.example.com'
+export const endpointHost = 'proxy.example.com'
 
 /** The logins of the account after Cal connected both agents to the proxy. */
 export const endpointLogins: AgentLogins = {

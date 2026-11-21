@@ -287,6 +287,54 @@ create and resume. The workspace object runs that start:
   saved failure message. Late runner reports cannot revive that failed
   start.
 
+## Start step records
+
+`StartJobRecords` in [`start-job-records.ts`](start-job-records.ts) keeps
+the job step records of the creates and resumes of one workspace object.
+[Job step records](README.md#job-step-records) gives the D1 statements.
+
+- `createWorkspaceIntegration` makes one `StartJobRecords` for each
+  object, and gives its `env` to the lifecycle controller. That env reads
+  each value from the env of the object, except its D1 binding, which
+  comes from [`timed-d1.ts`](timed-d1.ts). `observeProviders` in
+  [`client.ts`](../sandbox/client.ts) marks that binding. So
+  `providerForAccount` gives each provider of that env, and of a copy of
+  it, through [`timed-provider.ts`](timed-provider.ts).
+- `StartRunTimer` in [`start-run-timer.ts`](start-run-timer.ts) adds each
+  D1 and provider call to the open run of a start. A command status read
+  counts as a poll. `WorkspaceLifecycle.alarmLifecycle` gives the timer the
+  wait to enter the chat queue, and `startGuard` gives the wait to enter it
+  again after each outside call. A call of another queue turn during an
+  outside call of the run also counts in the run. A call while no run is
+  open counts nowhere.
+- `runWorkspaceAlarm` calls `begin` with the `dueAt` of
+  `WorkspaceAlarms.begin`, and `end` after the `finish` of the run. A run
+  whose begin finds a start job that is not cancelled is a run of the
+  start. Its end adds one run row with the next run number of the job.
+- `startJobStorage` in [`start-record-storage.ts`](start-record-storage.ts)
+  wraps the start storage. The begin of a job saves the record meta of the
+  job and opens its first phase. Each phase change of a running job closes
+  the old phase and opens the new phase. The end of the job closes each
+  step that is still open, as `done` or `failed`.
+- In the `machine` and `ready` phases, a create or resume request opens
+  `computer:request`. Its reply closes that step and opens
+  `computer:boot`. The first read that shows a ready sandbox closes
+  `computer:boot`. These marks wait in memory until the next write of the
+  records in the queue.
+- [`start-record-buffer.ts`](start-record-buffer.ts) keeps each row under
+  its own key in the object storage. Only a job with record meta gets
+  rows, so a job from before the records gets none. A step row of the
+  running job stays after its send, so that later changes merge into it.
+- [`start-record-send.ts`](start-record-send.ts) sends the rows.
+  `WorkspaceStateProjection` gives them to `persistLifecycleState`, which
+  writes at most 50 rows in the D1 batch of the shown state. Each send
+  first copies the steps of the running start from the lifecycle state,
+  for the step IDs that the Worker sets. When that batch fails, the shown
+  state is written alone and the rows are dropped. The run that ends a
+  start sends the rest of the rows in more batches.
+- A failed record is dropped with the warning `start_record_failed` or
+  `start_record_send_failed`, and the start goes on.
+
 ## The git credential sender
 
 [The git credential sender](git-credentials.md) gives how

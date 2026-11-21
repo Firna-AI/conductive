@@ -15,6 +15,7 @@ import type { WorkspaceArchive } from './archive-state'
 import type { ComputerStopTask } from './computer-stop-task'
 import type { QueueTurn } from '../chat/queue-turn'
 import { StartSuperseded } from './start-guard'
+import type { StartJobRecords } from './start-job-records'
 import { providerRetryPending } from './provider-retry'
 
 const START_PHASE_ORDER = {
@@ -44,12 +45,14 @@ export async function runWorkspaceAlarm(input: {
   accessStop: WorkspaceAccessStop
   archive: WorkspaceArchive
   computerStops: ComputerStopTask
+  runs?: Pick<StartJobRecords, 'begin'>
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
   const startedAt = dependencies.now()
   const run = await alarms.begin(startedAt, (source) =>
     source.startsWith('lifecycle'),
   )
+  const record = await input.runs?.begin(run.dueAt)
   const { due, recovering: recoveringRun } = run
   const requested = (source: string) =>
     !due.size || recoveringRun || due.has(source)
@@ -221,6 +224,7 @@ export async function runWorkspaceAlarm(input: {
     }
   } finally {
     await run.finish(dependencies.now())
+    await record?.end()
   }
 }
 
