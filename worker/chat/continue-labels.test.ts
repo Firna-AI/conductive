@@ -6,7 +6,11 @@ import { chatHistoryPath } from '../../src/shared/events'
 import { sessionTranscriptPath } from '../../src/shared/sessions'
 import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { continueFixture } from '../lifecycle/continue.test-support'
-import { continueJobKey, type ContinueJob } from '../lifecycle/continue-types'
+import {
+  CONTINUE_JOB_KEY,
+  continueJobKey,
+  type ContinueJob,
+} from '../lifecycle/continue-types'
 import { encrypt } from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { WORKSPACE_ID, type ChatFixture } from './harness.test-support'
@@ -23,9 +27,12 @@ afterAll(async () => {
   await harness.dispose()
 })
 
-async function captureSecret(f: ChatFixture) {
+async function captureSecret(
+  f: ChatFixture,
+  values: Record<string, string> = { DUMMY: 'fixture-secret' },
+) {
   const ciphertext = await encrypt(
-    JSON.stringify({ DUMMY: 'fixture-secret' }),
+    JSON.stringify(values),
     orgEnvironmentContext(f.org.id),
     f.env.BOAT_KEY_ENCRYPTION_KEY,
   )
@@ -42,17 +49,27 @@ async function captureSecret(f: ChatFixture) {
 
 it('labels new and replayed Continue notes while jobs and Git commands keep real branches', async () => {
   const f = await continueFixture(harness)
-  await captureSecret(f)
+  await captureSecret(f, { DUMMY: 'earlier-fixture-secret' })
   await f.env.DB.prepare('UPDATE workspaces SET name = ? WHERE id = ?')
-    .bind('fixture-secret', WORKSPACE_ID)
+    .bind('fixture-secret-replay-secret', WORKSPACE_ID)
     .run()
-  f.api.defaultBranch = 'target/fixture-secret'
-  f.api.branches.set('refs/heads/target/fixture-secret', 'latest-default')
+  f.api.defaultBranch = 'target/fixture-secret-replay-secret'
+  f.api.branches.set(
+    'refs/heads/target/fixture-secret-replay-secret',
+    'latest-default',
+  )
   const session = await f.createSession()
   const tab = await f.tab()
   const pending = await f.start()
   if (pending.state !== 'pending') throw new Error('Expected pending Continue.')
-  await f.finish()
+  await f.advanceTo('publish')
+  await captureSecret(f)
+  const publish = async () => {
+    await f.storage.put('alarm:continue', f.clock.now())
+    await f.actor.api.controls.dispatchAlarm()
+    await f.drain()
+  }
+  await publish()
   const job = await f.storage.get<ContinueJob>(
     continueJobKey(pending.continueId),
   )
@@ -66,24 +83,24 @@ it('labels new and replayed Continue notes while jobs and Git commands keep real
     sessionId: session.id,
     member: job.member,
     branch: job.branch,
-    baseBranch: 'target/fixture-secret',
+    baseBranch: 'target/fixture-secret-replay-secret',
   }
-  expect(saved?.event).toEqual(rawNote)
   expect(job.request).toEqual({ expectedBranch: 'octocat/test' })
-  expect(job.baseBranch).toBe('target/fixture-secret')
-  expect(job.branch).toMatch(/^octocat\/fixture-secret-v2-[a-z0-9]{4}$/)
+  expect(job.baseBranch).toBe('target/fixture-secret-replay-secret')
+  expect(job.branch).toMatch(
+    /^octocat\/fixture-secret-replay-secret-v2-[a-z0-9]{4}$/,
+  )
   expect(f.boat.commands.join('\n')).toContain(
-    "'+refs/heads/target/fixture-secret:refs/heads/continue-base'",
+    "'+refs/heads/target/fixture-secret-replay-secret:refs/heads/continue-base'",
   )
   expect(f.boat.commands.join('\n')).toContain(`'${job.branch}'`)
-  const expected = {
-    ...saved,
-    event: {
-      ...rawNote,
-      displayBranch: job.branch.replace('fixture-secret', '[redacted]'),
-      displayBaseBranch: 'target/[redacted]',
-    },
+  const expectedNote = {
+    ...rawNote,
+    displayBranch: job.branch.replace('fixture-secret', '[redacted]'),
+    displayBaseBranch: 'target/[redacted]-replay-secret',
   }
+  expect(saved.event).toEqual(expectedNote)
+  const expected = { ...saved, event: expectedNote }
   const notes = () =>
     tab.messages.flatMap((message) =>
       message.type === 'event' &&
@@ -93,15 +110,22 @@ it('labels new and replayed Continue notes while jobs and Git commands keep real
     )
   expect.soft(notes()).toEqual([expected])
   tab.messages.length = 0
-  await f.chat.authorizedWorkspaceOperation(
-    WORKSPACE_ID,
-    async () => undefined,
-    async (operation) => {
-      await operation.publish(saved)
+  await captureSecret(f, { DUMMY: 'fixture-secret', REPLAY: 'replay-secret' })
+  await f.storage.put(CONTINUE_JOB_KEY, job)
+  await publish()
+  expect.soft(notes()).toEqual([
+    {
+      ...saved,
+      event: {
+        ...rawNote,
+        displayBranch: job.branch.replace(
+          'fixture-secret-replay-secret',
+          '[redacted]-[redacted]',
+        ),
+        displayBaseBranch: 'target/[redacted]-[redacted]',
+      },
     },
-  )
-  await f.drain()
-  expect.soft(notes()).toEqual([expected])
+  ])
   expect(
     (await f.actor.api.controls.history(WORKSPACE_ID)).events.find(
       ({ event }) => event.type === 'workspace.continued',

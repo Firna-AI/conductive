@@ -191,23 +191,31 @@ runs after a good move. It never runs Git again.
 
 The job and each stored `workspace.continued` note keep the real names.
 Git and each request use them. The Worker adds a masked label beside each
-name that a screen shows. It does this at each read that a browser gets, as
+name that a screen shows, as
 [Secrets that users enter](../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
-requires. So an old note gets labels too.
+requires. `continueLabels` in [`continue-output.ts`](continue-output.ts)
+hides each secret value of the last start of the sandbox.
 
-- `continueLabels` in [`continue-output.ts`](continue-output.ts) hides
-  each secret value of the last start of the sandbox, as
-  [`output.ts`](../github/output.ts) does for the GitHub state.
-- `filterContinued` of [the output fields](../../src/shared/output-fields.ts)
-  gives a note `displayBranch` and `displayBaseBranch`. It leaves out a
-  label that equals its real name.
-- [`BrowserConnections`](../chat/browser-connections.ts) labels each note
-  that it sends a tab: a live or replayed event, and the old history.
-- [`chatRoute`](../chat/http-routes.ts) labels each page of the session
-  history.
-- [`buildSessionTranscript`](../chat/session-transcript.ts) labels each
-  page of a transcript before it folds the page. So the copy and the
-  agent reads show the labels.
+- `publishContinue` reads `continueLabels` inside its authorized
+  operation, before it writes the notes. `filterContinued` of
+  [the output fields](../../src/shared/output-fields.ts) then stores
+  `displayBranch` and `displayBaseBranch` in each new note, beside its
+  real names. It leaves out a label that equals its real name.
+- A replay of a completed job labels each saved note again with
+  `labelContinueEnvelope` and the fresh values, before it publishes it.
+- So a tab that opened before a new start gets the labels of that start.
+  [`output.ts`](../github/output.ts) labels the GitHub state in the same way.
+- Each boundary labels a note again when it sends it, with the values that
+  it read. So a note from before these labels gets labels too. A boundary
+  can only add a mask to a stored label.
+- [`BrowserConnections`](../chat/browser-connections.ts) reads its values
+  when a tab opens or restores. It labels each note that it sends that tab,
+  also in old history.
+- [`chatRoute`](../chat/http-routes.ts) reads them for each page of the
+  session history.
+- [`buildSessionTranscript`](../chat/session-transcript.ts) reads them for
+  each transcript, and labels each page before it folds the page. So the
+  copy and the agent reads show the labels.
 - The routes label the question. They hide each secret value in the stop
   message of `workspace_continue_failed`, as
   [Continue routes](continue-routes.md#labels) says.
@@ -255,9 +263,11 @@ refusal.
 - [`continue-data.ts`](continue-data.ts): `authorizeContinue`, the access
   check of each phase, and `storeContinuedBranch`, the guarded D1 branch
   write with its read-back check.
-- [`continue-publication.ts`](continue-publication.ts): `publishContinue`.
+- [`continue-publication.ts`](continue-publication.ts): `publishContinue`,
+  with the [labels](#labels) of each new and replayed note.
 - [`continue-output.ts`](continue-output.ts): `continueLabels` and the
-  [labels](#labels) of each boundary. `labelContinueMessage` labels a tab
+  [labels](#labels) of each boundary. `labelContinueEnvelope` labels one
+  envelope, such as a replayed note. `labelContinueMessage` labels a tab
   message, and `labelContinueHistory` a page of events.
   `labelContinueResult` labels the question and the stop error of the routes.
 - [`continue-types.ts`](continue-types.ts): the stored job, its keys, and

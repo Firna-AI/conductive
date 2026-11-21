@@ -24,7 +24,7 @@ export async function continueLabels(
   return (value) => output.text(value)
 }
 
-function labelEnvelope(
+export function labelContinueEnvelope(
   envelope: WorkspaceEventEnvelope,
   labels: ContinueLabels,
 ): WorkspaceEventEnvelope {
@@ -39,7 +39,9 @@ export function labelContinueHistory<
 >(history: Page, labels: ContinueLabels): Page {
   return {
     ...history,
-    events: history.events.map((envelope) => labelEnvelope(envelope, labels)),
+    events: history.events.map((envelope) =>
+      labelContinueEnvelope(envelope, labels),
+    ),
   }
 }
 
@@ -48,7 +50,7 @@ export function labelContinueMessage(
   labels: ContinueLabels,
 ): WorkspaceSocketMessage {
   return message.type === 'event'
-    ? { ...message, envelope: labelEnvelope(message.envelope, labels) }
+    ? { ...message, envelope: labelContinueEnvelope(message.envelope, labels) }
     : { ...message, history: labelContinueHistory(message.history, labels) }
 }
 

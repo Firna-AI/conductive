@@ -60,7 +60,8 @@ results.
   A refusal for a missing workspace or a workspace of another org passes
   unchanged, and the route reads no secret value for it.
 - [`continue-labels.test.ts`](../chat/continue-labels.test.ts): the
-  [labels](continue.md#labels) of a new and a replayed note. It also checks
-  an old note in the history of a new tab, a page of the session history,
-  and the transcript copy. The job, the Git commands, and the stored events
-  keep the real names.
+  [labels](continue.md#labels) of a new and a replayed note, on a tab that
+  opened before the secret values changed. The saved note keeps its real
+  names beside its labels. The job and the Git commands keep the real
+  names. It also checks an old note without labels in the history of a new
+  tab, a page of the session history, and the transcript copy.

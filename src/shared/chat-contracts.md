@@ -73,11 +73,13 @@ states the rules of the request and of a failed repair.
 or to the runner events. Only the Worker writes it. It names its
 `sessionId`, the `member` who pressed Continue, the new `branch`, and its
 `baseBranch`. The optional `displayBranch` and `displayBaseBranch` are
-masked labels of these real names. The stored note has no labels. At each
-read that a browser gets, `filterContinued` in `output-fields.ts` adds them.
-It leaves out a label that equals its real name, as
-[Labels](../../worker/lifecycle/continue.md#labels) in the Continue guide
-says.
+masked labels of these real names. A new note is stored with them, from
+the secret values that the Worker reads just before it writes the note.
+An older note has none. At each read that a browser gets,
+`filterContinued` in `output-fields.ts` masks the stored label, or else the
+real name, with the values of that read. It leaves out a label that equals
+its real name, as [Labels](../../worker/lifecycle/continue.md#labels) in
+the Continue guide says.
 
 ## The browser stream
 
