@@ -5,10 +5,6 @@ import { configuredModels } from '../app-api/models'
 import { workspaceLink } from '../data/workspace-link'
 import { readDeviceCommands } from '../devices/record-read'
 import type { AppEnv } from '../env'
-import {
-  continueLabels,
-  labelContinueHistory,
-} from '../lifecycle/continue-output'
 import { orgMembers } from '../members/member-data'
 import type { BrowserAccess } from './browser-authorization'
 import { invalidInput } from './inputs'
@@ -16,6 +12,7 @@ import { transcriptWorkspaceName } from './queries'
 import { sessionFor } from './session-record'
 import type { ChatStore } from './store'
 import type { ChatStorage } from './types'
+import { prepareWorkspaceEventLabels } from './workspace-labels'
 
 export async function sessionTranscript(
   request: Request,
@@ -101,18 +98,20 @@ export async function buildSessionTranscript(
     }),
   )
   const builder = new SessionMarkdown(document)
-  const labels = await continueLabels(env, {
+  const labels = prepareWorkspaceEventLabels(env, {
     id: workspaceId,
     orgId: access.orgId,
   })
   let after = 0
   for (;;) {
     const page = await store.run(() =>
-      store.read(workspaceId, (view) =>
-        view.history(after, document.eventNumber, { sessionId }),
+      store.read(workspaceId, async (view) =>
+        labels.history(
+          await view.history(after, document.eventNumber, { sessionId }),
+        ),
       ),
     )
-    builder.merge(labelContinueHistory(page, labels).events)
+    builder.merge(page.events)
     if (!page.hasMore) break
     after = page.nextAfterEventNumber
   }

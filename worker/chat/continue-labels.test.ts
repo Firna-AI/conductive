@@ -13,7 +13,11 @@ import {
 } from '../lifecycle/continue-types'
 import { encrypt } from '../security/crypto'
 import { createHarness, type TestHarness } from '../test-support/harness'
-import { WORKSPACE_ID, type ChatFixture } from './harness.test-support'
+import {
+  createChatFixture,
+  WORKSPACE_ID,
+  type ChatFixture,
+} from './harness.test-support'
 import { transcriptFixture } from './transcript.test-support'
 
 let harness: TestHarness
@@ -46,6 +50,46 @@ async function captureSecret(
     .bind(WORKSPACE_ID, f.org.id, f.owner.id, ciphertext)
     .run()
 }
+
+it('labels a raw shared publication after a new capture for a tab opened before that capture', async () => {
+  const f = await createChatFixture(harness)
+  const session = await f.createSession()
+  await captureSecret(f, { DUMMY: 'earlier-fixture-secret' })
+  const tab = await f.tab()
+  tab.messages.length = 0
+  await captureSecret(f)
+  const rawNote: Extract<ChatEvent, { type: 'workspace.continued' }> = {
+    type: 'workspace.continued',
+    sessionId: session.id,
+    member: {
+      id: f.member.id,
+      githubLogin: 'teammate',
+      displayName: 'Teammate',
+      avatarUrl: null,
+    },
+    branch: 'feature/fixture-secret',
+    baseBranch: 'target/fixture-secret',
+  }
+  const saved = await f.changeWorkspace(WORKSPACE_ID, async (view) => {
+    const note = await view.emit(rawNote)
+    const updated = await view.emit({ type: 'session.updated', session })
+    return [note, updated]
+  })
+  const labeledNote = {
+    ...rawNote,
+    displayBranch: 'feature/[redacted]',
+    displayBaseBranch: 'target/[redacted]',
+  }
+  expect(tab.messages).toEqual([
+    { type: 'event', envelope: { ...saved[0], event: labeledNote } },
+    { type: 'event', envelope: saved[1] },
+  ])
+  expect(saved[0].event).toEqual(labeledNote)
+  expect(saved[1].eventNumber).toBe(saved[0].eventNumber + 1)
+  expect(
+    (await f.actor.api.controls.history(WORKSPACE_ID)).events.slice(-2),
+  ).toEqual(saved)
+})
 
 it('labels new and replayed Continue notes while jobs and Git commands keep real branches', async () => {
   const f = await continueFixture(harness)

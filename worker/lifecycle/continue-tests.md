@@ -65,3 +65,7 @@ results.
   names beside its labels. The job and the Git commands keep the real
   names. It also checks an old note without labels in the history of a new
   tab, a page of the session history, and the transcript copy.
+  It also checks a note that a plain `changeWorkspace` writes with its real
+  names only, after the secret values changed. A tab that opened before the
+  change gets the note with the new labels. The stored note keeps the same
+  labels, and the next event gets the next number.
