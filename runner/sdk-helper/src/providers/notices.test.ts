@@ -7,7 +7,7 @@ import { providerFixture } from '../../test-support/fixture'
 import { instructionProviders } from '../../test-support/instructions'
 import { fakeClaudeProfile } from '../../test-support/profile'
 import type { RunnerNotice } from '../generated/RunnerNotice'
-import { string } from '../parse'
+import { object, string } from '../parse'
 import { readRequest } from '../read-request'
 import { createClaudeFactory } from './claude'
 import { createCodexFactory } from './codex'
@@ -112,6 +112,15 @@ it.each(['claude', 'codex'] as const)(
         params: {
           expectedTurnId: 'codex-turn-1',
           input: [{ type: 'text', text: appText, text_elements: [] }],
+        },
+      })
+      const steer = servers.latest.writes.find(
+        (write) => write.method === 'turn/steer',
+      )
+      servers.latest.notify('item/completed', {
+        item: {
+          type: 'userMessage',
+          clientId: string(object(steer?.params).clientUserMessageId),
         },
       })
       servers.latest.notify('item/completed', {

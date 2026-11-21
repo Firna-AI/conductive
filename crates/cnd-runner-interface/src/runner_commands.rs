@@ -52,7 +52,7 @@ pub enum RunnerTurn {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         capabilities: Option<RunnerCapabilities>,
-        /// App notes to read before the member's message.
+        /// App notes the agent gets in the same prompt as the member's message.
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[ts(as = "Option<ReadonlyVec<RunnerNoticeLine>>", optional)]
         notices: Vec<RunnerNoticeLine>,

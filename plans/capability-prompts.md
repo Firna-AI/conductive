@@ -72,8 +72,9 @@ new runner command, a waiting store, and a chat note.
   at most 10 secrets as JSON, then "and N more". It says that
   `run_with_secrets` uses them with no request, and whether Mac access is
   on. For Mac access, it says that a request goes to the Mac of the member
-  whose message started the turn, and that the Mac app still asks unless
-  its user always allowed the command. It ends with this: members can
+  whose message started the turn. It also says this: "The Mac app asks
+  before each command, unless a permission that its user chose there
+  covers it." It ends with this: members can
   change the capabilities, and the app then tells the agent in a line of
   the app.
 - **A change.** A change is a difference in the facts of a session. The

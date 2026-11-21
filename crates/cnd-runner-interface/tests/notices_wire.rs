@@ -48,10 +48,20 @@ fn turn_notices_are_optional_and_keep_their_order() -> Result<(), serde_json::Er
 
 #[test]
 fn notice_receipts_are_optional_on_each_acknowledgement() -> Result<(), serde_json::Error> {
+    let started = json!({"type": "turn.started", "sessionId": "session", "turnId": "turn", "senderId": "member", "choice": {"agent": "claude", "model": "model", "effort": "high", "fast": false}, "startedAt": 100, "messageIds": ["message"]});
+    let parsed: AgentChatEvent = serde_json::from_value(started.clone())?;
+    assert_eq!(serde_json::to_value(parsed)?, started);
+    let mut frame = started.clone();
+    frame["noticeIds"] = json!([]);
+    let parsed: AgentChatEvent = serde_json::from_value(frame.clone())?;
+    assert_eq!(serde_json::to_value(parsed)?, started);
+    frame["noticeIds"] = json!(["note-2", "note-1"]);
+    let parsed: AgentChatEvent = serde_json::from_value(frame)?;
+    assert_eq!(serde_json::to_value(parsed)?, started);
     let events = [
-        json!({"type": "turn.started", "sessionId": "session", "turnId": "turn", "senderId": "member", "choice": {"agent": "claude", "model": "model", "effort": "high", "fast": false}, "startedAt": 100, "messageIds": ["message"]}),
         json!({"type": "assistant.completed", "sessionId": "session", "turnId": "turn", "messageId": "answer", "text": "Done.", "userMessageIds": ["message"]}),
         json!({"type": "turn.completed", "sessionId": "session", "turnId": "turn", "state": "finished", "durationMs": 100, "files": [], "omittedFileCount": 0, "userMessageIds": ["message"]}),
+        json!({"type": "turn.failed", "sessionId": "session", "turnId": "turn", "error": {"code": "agent_failed", "message": "The agent failed."}, "retryMessageId": "message", "durationMs": 100}),
     ];
     for original in events {
         let parsed: AgentChatEvent = serde_json::from_value(original.clone())?;

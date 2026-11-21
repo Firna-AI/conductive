@@ -40,7 +40,7 @@
   },
   {
     "name": "run_mac_command",
-    "description": "Ask to run a command when the task needs the member's Mac. Needs an active calling turn and Mac access on in the Capabilities of the workspace. The request goes to the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow.",
+    "description": "Ask to run a command when the task needs the member's Mac. Needs an active calling turn and Mac access on in the Capabilities of the workspace. The request goes to the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.",
     "inputSchema": {
       "type": "object",
       "properties": {

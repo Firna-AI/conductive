@@ -84,7 +84,8 @@ it('keeps idle notes in order and retries unread notes before the next message',
     { id: notes[0].id, text: 'Octocat turned Mac access off.' },
     { id: notes[1].id, text: 'Octocat pre-approved `NEXT_KEY`.' },
   ])
-  await f.acknowledgeStart(second, [notes[0].id])
+  await f.acknowledgeStart(second)
+  await f.answer(second, [notes[0].id])
   await f.finish(second)
   expect(await f.waitingNotes(session.id)).toMatchObject([
     { id: notes[1].id, sentTurnId: null },
@@ -93,7 +94,7 @@ it('keeps idle notes in order and retries unread notes before the next message',
   const third = f.runner.commands.at(-1)
   if (third?.type !== 'turn') throw new Error('The retry turn is missing.')
   expect(third.notices?.map((note) => note.id)).toEqual([notes[1].id])
-  await f.acknowledgeStart(third, [notes[1].id])
+  await f.answer(third, [notes[1].id])
   expect(await f.waitingNotes(session.id)).toEqual([])
   expect(await f.notes(session.id)).toHaveLength(2)
 })

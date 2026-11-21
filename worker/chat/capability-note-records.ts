@@ -1,10 +1,11 @@
 import type { CapabilityChangeNote } from '../../src/shared/capability-change'
 import { capabilityChangeText } from '../../src/shared/capability-change'
 import type { RunnerNoticeLine } from '../../src/shared/generated/RunnerNoticeLine'
-import { warnWorker } from '../warnings'
-import { identifier, number, record, string, strings } from './inputs'
+import { ChatRecords } from './chat-records'
+import { sessionHasDispatch } from './capability-start-evidence'
+import { readCapabilityHistory } from './history-session-records'
+import { identifier, number, record, strings } from './inputs'
 import { chatKey } from './storage-keys'
-import type { ChatData } from './types'
 
 export interface CapabilityNote extends Omit<
   CapabilityChangeNote,
@@ -15,95 +16,69 @@ export interface CapabilityNote extends Omit<
   sentTurnId: string | null
 }
 
-function readNote(value: unknown): CapabilityNote {
-  const note = record(value)
-  const member = record(note.member)
-  if (!Array.isArray(note.changes))
-    throw new Error('Invalid capability changes.')
-  const changes: CapabilityChangeNote['changes'] = note.changes.map(
-    (value: unknown) => {
-      const change = record(value)
-      if (change.kind === 'mac-access' && typeof change.on === 'boolean')
-        return { kind: change.kind, on: change.on }
-      if (
-        change.kind === 'pre-approved' ||
-        change.kind === 'pre-approval-removed' ||
-        change.kind === 'session-approval-removed' ||
-        change.kind === 'value-given' ||
-        change.kind === 'value-removed'
-      )
-        return { kind: change.kind, names: strings(change.names) }
-      throw new Error('Invalid capability change.')
-    },
-  )
-  return {
-    id: identifier(note.id),
-    sessionId: identifier(note.sessionId),
-    createdAt: number(note.createdAt),
-    sentTurnId: note.sentTurnId === null ? null : identifier(note.sentTurnId),
-    member: {
-      id: identifier(member.id),
-      githubLogin: string(member.githubLogin),
-      displayName:
-        member.displayName === null ? null : string(member.displayName),
-      avatarUrl: member.avatarUrl === null ? null : string(member.avatarUrl),
-    },
-    changes,
-  }
+interface CapabilityDelivery {
+  readThrough: number
+  readIds: string[]
+  inFlight: { turnId: string; noteIds: string[] } | null
 }
 
-export class CapabilityNoteRecords {
-  private readonly data: ChatData
-  constructor(data: ChatData) {
-    this.data = data
+export class CapabilityNoteRecords extends ChatRecords {
+  eligible(sessionId: string): Promise<boolean> {
+    return sessionHasDispatch(this, sessionId)
   }
 
-  async eligible(sessionId: string): Promise<boolean> {
-    return (
-      (await this.data.get(chatKey('capabilities-prepared', sessionId))) ===
-      true
+  private async read(sessionId: string): Promise<CapabilityDelivery> {
+    const value = await this.data.get<unknown>(
+      chatKey('capability-delivery', sessionId),
     )
+    if (value === undefined)
+      return { readThrough: 0, readIds: [], inFlight: null }
+    const saved = record(value)
+    const batch = saved.inFlight === null ? null : record(saved.inFlight)
+    return {
+      readThrough: number(saved.readThrough),
+      readIds: strings(saved.readIds),
+      inFlight: batch
+        ? { turnId: identifier(batch.turnId), noteIds: strings(batch.noteIds) }
+        : null,
+    }
   }
 
-  prepared(sessionId: string): Promise<void> {
-    return this.data.put(chatKey('capabilities-prepared', sessionId), true)
+  private save(sessionId: string, progress: CapabilityDelivery) {
+    return this.data.put(chatKey('capability-delivery', sessionId), progress)
+  }
+
+  private async activeBatch(sessionId: string, progress: CapabilityDelivery) {
+    const batch = progress.inFlight
+    if (!batch) return null
+    const session = await this.session(sessionId)
+    if (session?.activeTurnId !== batch.turnId) return null
+    const turn = await this.turn(batch.turnId)
+    return turn?.sessionId === sessionId &&
+      (turn.state === 'queued' ||
+        turn.state === 'running' ||
+        turn.state === 'stopping')
+      ? batch
+      : null
   }
 
   async waiting(sessionId: string): Promise<CapabilityNote[]> {
-    const key = chatKey('capability-notes', sessionId)
-    const count = (await this.data.get<number>(key)) ?? 0
-    if (!count) return []
-    const parts: string[] = []
-    for (let part = 0; part < count; part++)
-      parts.push(string(await this.data.get(`${key}:${part}`)))
-    const value: unknown = JSON.parse(parts.join(''))
-    if (!Array.isArray(value)) throw new Error('Invalid capability notes.')
-    return value.map(readNote)
-  }
-
-  private async save(sessionId: string, notes: readonly CapabilityNote[]) {
-    const key = chatKey('capability-notes', sessionId)
-    const old = (await this.data.get<number>(key)) ?? 0
-    const text = notes.length ? JSON.stringify(notes) : ''
-    const parts = Math.ceil(text.length / 16_000)
-    for (let part = 0; part < parts; part++)
-      await this.data.put(
-        `${key}:${part}`,
-        text.slice(part * 16_000, (part + 1) * 16_000),
-      )
-    for (let part = parts; part < old; part++)
-      await this.data.delete(`${key}:${part}`)
-    if (parts) await this.data.put(key, parts)
-    else await this.data.delete(key)
-  }
-
-  async add(note: CapabilityNote) {
-    const notes = [...(await this.waiting(note.sessionId)), note]
-    if (notes.length > 50) {
-      notes.splice(0, notes.length - 50)
-      warnWorker({ kind: 'capability_notes_limited' })
-    }
-    await this.save(note.sessionId, notes)
+    const progress = await this.read(sessionId)
+    const batch = await this.activeBatch(sessionId, progress)
+    const read = new Set(progress.readIds)
+    const sent = new Set(batch?.noteIds)
+    return (
+      await readCapabilityHistory(this.data, sessionId, progress.readThrough)
+    )
+      .filter(({ event }) => !read.has(event.noteId))
+      .map(({ event, occurredAt }) => ({
+        id: event.noteId,
+        sessionId: event.sessionId,
+        member: event.member,
+        changes: event.changes,
+        createdAt: occurredAt,
+        sentTurnId: sent.has(event.noteId) ? (batch?.turnId ?? null) : null,
+      }))
   }
 
   async take(
@@ -111,14 +86,16 @@ export class CapabilityNoteRecords {
     turnId: string,
     includeUnsent = true,
   ): Promise<RunnerNoticeLine[]> {
-    const notes = await this.waiting(sessionId)
-    const taken = notes.filter(
+    const taken = (await this.waiting(sessionId)).filter(
       (note) =>
         (includeUnsent && note.sentTurnId === null) ||
         note.sentTurnId === turnId,
     )
-    for (const note of taken) note.sentTurnId = turnId
-    if (taken.length) await this.save(sessionId, notes)
+    if (taken.length) {
+      const progress = await this.read(sessionId)
+      progress.inFlight = { turnId, noteIds: taken.map((note) => note.id) }
+      await this.save(sessionId, progress)
+    }
     return taken.map((note) => ({
       id: note.id,
       text: capabilityChangeText(note.member, note.changes),
@@ -126,21 +103,30 @@ export class CapabilityNoteRecords {
   }
 
   async acknowledge(sessionId: string, turnId: string, ids: readonly string[]) {
-    const notes = await this.waiting(sessionId)
-    const remaining = notes.filter(
-      (note) => note.sentTurnId !== turnId || !ids.includes(note.id),
-    )
-    if (remaining.length !== notes.length) await this.save(sessionId, remaining)
+    const progress = await this.read(sessionId)
+    const batch = await this.activeBatch(sessionId, progress)
+    if (batch?.turnId !== turnId) return
+    const received = new Set(ids.filter((id) => batch.noteIds.includes(id)))
+    if (!received.size) return
+    const read = new Set([...progress.readIds, ...received])
+    for (const { eventNumber, event } of await readCapabilityHistory(
+      this.data,
+      sessionId,
+      progress.readThrough,
+    )) {
+      if (!read.delete(event.noteId)) break
+      progress.readThrough = eventNumber
+    }
+    progress.readIds = [...read]
+    const remaining = batch.noteIds.filter((id) => !received.has(id))
+    progress.inFlight = remaining.length ? { turnId, noteIds: remaining } : null
+    await this.save(sessionId, progress)
   }
 
   async release(sessionId: string, turnId: string) {
-    const notes = await this.waiting(sessionId)
-    let changed = false
-    for (const note of notes) {
-      if (note.sentTurnId !== turnId) continue
-      note.sentTurnId = null
-      changed = true
-    }
-    if (changed) await this.save(sessionId, notes)
+    const progress = await this.read(sessionId)
+    if (progress.inFlight?.turnId !== turnId) return
+    progress.inFlight = null
+    await this.save(sessionId, progress)
   }
 }

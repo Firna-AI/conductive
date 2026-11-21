@@ -39,7 +39,6 @@ pub(crate) fn started(id: &str) -> RunnerEvent {
         },
         started_at: Timestamp(100),
         message_ids: vec![format!("message-{id}")],
-        notice_ids: vec![],
     })
 }
 

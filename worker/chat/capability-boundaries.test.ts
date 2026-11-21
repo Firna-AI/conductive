@@ -101,18 +101,20 @@ it('ignores a receipt for a different session or a previous turn', async () => {
   expect(await f.waitingNotes(session.id)).toMatchObject([
     { id: notes[0].id, sentTurnId: second.turnId },
   ])
-  await f.acknowledgeStart(second, [notes[0].id])
+  await f.answer(second, [notes[0].id])
   expect(await f.waitingNotes(session.id)).toEqual([])
 })
 
-it('bounds waiting notes and warns when it drops the oldest note', async () => {
+it('delivers all 51 unread notes in change order in the next turn', async () => {
   const f = await noticeFixture(harness)
   const session = await f.createSession()
-  await f.actor.api.controls.captureWarnings(true)
+  const first = await f.start(session.id, 'first')
+  await f.finish(first)
   await f.changeWorkspace(WORKSPACE_ID, async (view) => {
     for (let index = 0; index < 51; index++)
-      await view.capabilityNotes.add({
-        id: `note-${index}`,
+      await view.emit({
+        type: 'capabilities.changed',
+        noteId: `note-${index}`,
         sessionId: session.id,
         member: {
           id: f.owner.id,
@@ -120,18 +122,28 @@ it('bounds waiting notes and warns when it drops the oldest note', async () => {
           displayName: 'Octocat',
           avatarUrl: null,
         },
-        changes: [{ kind: 'mac-access', on: true }],
-        createdAt: index,
-        sentTurnId: null,
+        changes: [{ kind: 'pre-approved', names: [`KEY_${index}`] }],
       })
   })
   const notes = await f.waitingNotes(session.id)
-  expect(notes).toHaveLength(50)
-  expect(notes[0].id).toBe('note-1')
+  expect(notes).toHaveLength(51)
+  expect(notes[0].id).toBe('note-0')
   expect(notes.at(-1)?.id).toBe('note-50')
-  expect((await f.actor.api.controls.warningCalls()).flat()).toContainEqual(
-    expect.objectContaining({ kind: 'capability_notes_limited' }),
+  await f.send(session.id, 'next')
+  const next = f.runner.commands.at(-1)
+  if (next?.type !== 'turn') throw new Error('The next turn is missing.')
+  expect(next.notices).toEqual(
+    Array.from({ length: 51 }, (_, index) => ({
+      id: `note-${index}`,
+      text: `Octocat pre-approved \`KEY_${index}\`.`,
+    })),
   )
+  await f.finish(
+    next,
+    notes.map((note) => note.id),
+  )
+  expect(await f.waitingNotes(session.id)).toEqual([])
+  expect(await f.notes(session.id)).toHaveLength(51)
 })
 
 it('accepts only a true capability announcement without refusing older or malformed hellos', () => {

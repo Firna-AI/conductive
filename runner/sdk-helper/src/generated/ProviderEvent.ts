@@ -115,4 +115,8 @@ export type ProviderEvent =
        * Displayable failure cause.
        */
       message: string
+      /**
+       * Exact app notes read before this failure.
+       */
+      noticeIds?: ReadonlyVec<string>
     }

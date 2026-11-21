@@ -64,7 +64,7 @@ fn explains_mac_access_without_naming_any_secrets() -> Result<()> {
             mac_access: true,
         }),
         &[
-            "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow. Members can change these capabilities. The app then tells you in a line of the app.",
+            "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it. Members can change these capabilities. The app then tells you in a line of the app.",
         ],
     )
 }
@@ -77,7 +77,7 @@ fn names_secrets_and_explains_mac_access_together() -> Result<()> {
             mac_access: true,
         }),
         &[
-            r#"Use run_with_secrets to use these secrets with no request: "DEPLOY_KEY". Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow. Members can change these capabilities. The app then tells you in a line of the app."#,
+            r#"Use run_with_secrets to use these secrets with no request: "DEPLOY_KEY". Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it. Members can change these capabilities. The app then tells you in a line of the app."#,
         ],
     )
 }

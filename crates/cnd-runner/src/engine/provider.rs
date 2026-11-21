@@ -115,7 +115,14 @@ impl Session {
         let turn = self.active.as_mut().ok_or(Error::InvalidCommand)?;
         let helper = turn.helper.clone().ok_or(Error::HelperExited)?;
         if matches!(&input, ProviderInput::Notice(_)) {
-            turn.control.run(helper.send(input.clone())).await?;
+            match turn.control.run(helper.send(input.clone())).await {
+                Ok(()) => {}
+                Err(Error::Canceled) => return Err(Error::Canceled),
+                Err(_) => {
+                    tracing::warn!("The app note could not reach the agent.");
+                    return Ok(HelperModelResult::Applied);
+                }
+            }
             turn.track_notices(&input);
             return Ok(HelperModelResult::Applied);
         }
@@ -135,9 +142,12 @@ impl Session {
 
 impl ActiveTurn {
     fn track_notices(&mut self, input: &ProviderInput) {
-        if let ProviderInput::Notice(RunnerNotice::Notice { notices, .. }) = input {
-            self.notice_ids
-                .extend(notices.iter().map(|notice| notice.id.clone()));
-        }
+        let notices = match input {
+            ProviderInput::Turn(RunnerTurn::Turn { notices, .. })
+            | ProviderInput::Notice(RunnerNotice::Notice { notices, .. }) => notices,
+            ProviderInput::Message(_) => return,
+        };
+        self.notice_ids
+            .extend(notices.iter().map(|notice| notice.id.clone()));
     }
 }

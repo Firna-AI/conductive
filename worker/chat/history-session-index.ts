@@ -1,5 +1,6 @@
 import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import {
+  capabilityHistoryKey,
   historySessionKey,
   SESSION_INDEX_THROUGH,
 } from './history-session-keys'
@@ -28,6 +29,11 @@ export class SessionHistoryIndex {
     if (sessionId !== undefined)
       await this.data.put(
         historySessionKey(sessionId, envelope.eventNumber),
+        envelope.eventNumber,
+      )
+    if (envelope.event.type === 'capabilities.changed')
+      await this.data.put(
+        capabilityHistoryKey(envelope.event.sessionId, envelope.eventNumber),
         envelope.eventNumber,
       )
   }

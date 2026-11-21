@@ -115,24 +115,6 @@ export async function recordCapabilityChanges(
     const changes = difference(previous, current, touches, sessionId)
     if (!changes.length) continue
     const id = randomToken()
-    await view.capabilityNotes.add({
-      id,
-      sessionId,
-      member,
-      changes,
-      createdAt: view.now,
-      sentTurnId: null,
-    })
-    const waiting = new Set(
-      (await view.capabilityNotes.waiting(sessionId)).map((note) => note.id),
-    )
-    for (const command of await view.pending())
-      if (
-        command.type === 'notice' &&
-        command.sessionId === sessionId &&
-        !command.notices.some((note) => waiting.has(note.id))
-      )
-        await view.removeCommand(command.commandId)
     await view.emit({
       type: 'capabilities.changed',
       sessionId,

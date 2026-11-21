@@ -33,7 +33,7 @@ fn capability_text(capabilities: &RunnerCapabilities) -> Result<Option<String>> 
         ));
     }
     sentences.push(if capabilities.mac_access {
-        "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow.".into()
+        "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.".into()
     } else {
         "Mac access is off. The app refuses run_mac_command until a member turns Mac access on in the Capabilities of the workspace.".into()
     });

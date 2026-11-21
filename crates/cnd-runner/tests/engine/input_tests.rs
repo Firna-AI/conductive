@@ -72,6 +72,7 @@ async fn defers_input_in_order_with_original_token_author_and_turn_context() -> 
     second.event(ProviderEvent::Failed {
         code: "provider_failed".into(),
         message: "The provider failed.".into(),
+        notice_ids: vec![],
     });
     h.engine.idle().await?;
     assert_eq!(

@@ -126,6 +126,7 @@ export function createClaudeFactory(
         )
         return uuid
       },
+      receipts.read,
     )
     let closed = false
     let stream: ClaudeQuery
@@ -211,13 +212,13 @@ export function createClaudeFactory(
           }
         }
         if (!closed)
-          options.event({
+          receipts.emit({
             type: 'failed',
             code: 'agent_exited',
             message: 'The agent process ended.',
           })
       } catch (error) {
-        if (!closed) options.event(failureCause(error))
+        if (!closed) receipts.emit(failureCause(error))
       }
     })()
     let closing: Promise<void> | null = null
@@ -237,7 +238,7 @@ export function createClaudeFactory(
       return closing
     }
     const abort = () => {
-      void close().catch((error: unknown) => options.event(failureCause(error)))
+      void close().catch((error: unknown) => receipts.emit(failureCause(error)))
     }
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()

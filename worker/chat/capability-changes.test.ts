@@ -14,6 +14,7 @@ import { readEnvelope } from '../../src/chat/api/read-workspace'
 import { sessionTranscriptPath } from '../../src/shared/sessions'
 import { workspaceCapabilitiesPath } from '../../src/shared/secrets'
 import { CLAUDE } from './harness.test-support'
+import { capabilityHistoryPrefix } from './history-session-keys'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -123,10 +124,7 @@ it('attributes concurrent edits to their members and publishes and replays each 
     .filter(({ event }) => event.type === 'capabilities.changed')
   expect(replayed).toEqual(live)
   for (const envelope of replayed)
-    expect(readEnvelope(envelope)).toMatchObject({
-      event: null,
-      eventNumber: envelope.eventNumber,
-    })
+    expect(readEnvelope(envelope)).toEqual({ ...envelope, late: false })
   await f.setEnvironment({
     CONDUCTIVE_MODELS: JSON.stringify([
       { ...CLAUDE, label: 'Test model', efforts: ['high'] },
@@ -150,7 +148,9 @@ it('returns saved capabilities when note storage fails after the D1 write', asyn
   await f.setStorageHooks({
     beforeCommit: async (commit) => {
       if (
-        commit.writes.some((key) => key.startsWith('chat:v1:capability-notes:'))
+        commit.writes.some((key) =>
+          key.startsWith(capabilityHistoryPrefix(session.id)),
+        )
       )
         throw new Error('Note storage failed.')
     },

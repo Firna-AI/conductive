@@ -37,11 +37,12 @@ const changeOrder: readonly CapabilityChange['kind'][] = [
 
 /**
  * The rules that follow Mac access on, as the instructions of a new
- * session give them: whose Mac a command goes to, and that the Mac app
- * still asks (decision 62).
+ * session give them: whose Mac a command goes to, and when the Mac app
+ * asks (decision 62). The words name no single permission, so that they
+ * stay true for each permission of the Mac app.
  */
 const macAccessRules =
-  'Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow.'
+  'Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.'
 
 /** Items as one list, as English writes it: "A", "A and B", "A, B, and C". */
 function inList(items: readonly (readonly NotePiece[])[]): NotePiece[] {

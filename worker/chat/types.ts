@@ -68,7 +68,6 @@ export interface StoredTurn {
   error?: { code: string; message: string }
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
-  runnerStarted?: boolean
   startedAt?: number
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true

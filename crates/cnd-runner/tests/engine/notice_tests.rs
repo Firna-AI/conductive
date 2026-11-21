@@ -12,7 +12,7 @@ use cnd_runner_interface::sdk_helper_options::ProviderInput;
 use super::builders::{input_ids, message, stop, turn};
 use super::support::{Fixture, TestResult};
 
-fn notice(session: &str, turn: &str, id: &str) -> RunnerCommand {
+pub(super) fn notice(session: &str, turn: &str, id: &str) -> RunnerCommand {
     RunnerCommand::RunnerNotice(RunnerNotice::Notice {
         command_id: format!("command-{id}"),
         session_id: session.into(),
@@ -26,8 +26,8 @@ fn notice(session: &str, turn: &str, id: &str) -> RunnerCommand {
 
 fn receipt(event: &AgentChatEvent) -> Vec<String> {
     match event {
-        AgentChatEvent::TurnStarted { notice_ids, .. }
-        | AgentChatEvent::AssistantCompleted { notice_ids, .. }
+        AgentChatEvent::AssistantCompleted { notice_ids, .. }
+        | AgentChatEvent::TurnFailed { notice_ids, .. }
         | AgentChatEvent::TurnCompleted { notice_ids, .. } => notice_ids.clone(),
         _ => vec![],
     }
@@ -60,7 +60,7 @@ async fn notice_steers_and_reports_only_the_lines_read() -> TestResult {
         message_id: "answer".into(),
         text: "Understood.".into(),
         user_message_ids: vec!["message-first".into()],
-        notice_ids: vec!["read".into()],
+        notice_ids: vec!["read".into(), "not-delivered".into()],
     });
     helper.event(ProviderEvent::Result {
         state: ProviderResultState::Finished,
@@ -103,7 +103,7 @@ async fn notice_to_unknown_wrong_or_ended_turn_is_dropped_without_ack() -> TestR
 }
 
 #[tokio::test]
-async fn turn_notices_reach_the_helper_and_are_acknowledged_at_start() -> TestResult {
+async fn turn_notices_reach_the_helper_and_are_acknowledged_only_when_read() -> TestResult {
     let h = Fixture::new().await?;
     let mut command = turn("session", "first")?;
     let RunnerCommand::RunnerTurn(RunnerTurn::Turn { notices, .. }) = &mut command else {
@@ -120,12 +120,29 @@ async fn turn_notices_reach_the_helper_and_are_acknowledged_at_start() -> TestRe
         },
     ];
     h.command(command.clone()).await?;
-    assert_eq!(receipt(&h.events().await[0]), ["before-1", "before-2"]);
-    let inputs = h.latest()?.inputs.lock().map_err(|_| "test lock")?.clone();
+    assert_eq!(receipt(&h.events().await[0]), Vec::<String>::new());
+    let helper = h.latest()?;
+    let inputs = helper.inputs.lock().map_err(|_| "test lock")?.clone();
     assert_eq!(
         serde_json::to_value(&inputs[0])?,
         serde_json::to_value(command)?
     );
+    helper.event(ProviderEvent::Answer {
+        message_id: "answer".into(),
+        text: "Understood.".into(),
+        user_message_ids: vec!["message-first".into()],
+        notice_ids: vec!["before-1".into()],
+    });
+    helper.event(ProviderEvent::Result {
+        state: ProviderResultState::Finished,
+        user_message_ids: vec!["message-first".into()],
+        notice_ids: vec!["before-2".into()],
+        end_reason: None,
+    });
+    h.engine.idle().await?;
+    let events = h.events().await;
+    assert_eq!(receipt(&events[1]), ["before-1"]);
+    assert_eq!(receipt(&events[2]), ["before-1", "before-2"]);
     h.close().await
 }
 

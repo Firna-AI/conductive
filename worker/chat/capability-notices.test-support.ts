@@ -28,10 +28,7 @@ export async function noticeFixture(harness: TestHarness, capable = true) {
     await f.drain()
     return response
   }
-  const acknowledgeStart = async (
-    command: RunnerTurn,
-    noticeIds?: readonly string[],
-  ) => {
+  const acknowledgeStart = async (command: RunnerTurn) => {
     runner.emit({
       type: 'turn.started',
       sessionId: command.sessionId,
@@ -40,7 +37,18 @@ export async function noticeFixture(harness: TestHarness, capable = true) {
       choice: command.message.choice,
       startedAt: f.clock.now(),
       messageIds: [command.message.id],
-      ...(noticeIds ? { noticeIds } : {}),
+    })
+    await f.drain()
+  }
+  const answer = async (turn: RunnerTurn, noticeIds: readonly string[]) => {
+    runner.emit({
+      type: 'assistant.completed',
+      sessionId: turn.sessionId,
+      turnId: turn.turnId,
+      messageId: `answer-${turn.turnId}`,
+      text: 'Ready.',
+      userMessageIds: [turn.message.id],
+      noticeIds,
     })
     await f.drain()
   }
@@ -81,6 +89,7 @@ export async function noticeFixture(harness: TestHarness, capable = true) {
     finish,
     notes,
     acknowledgeStart,
+    answer,
     waitingNotes,
   }
 }

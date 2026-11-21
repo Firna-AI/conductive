@@ -108,5 +108,9 @@ pub enum ProviderEvent {
         code: String,
         /// Displayable failure cause.
         message: String,
+        /// Exact app notes read before this failure.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[ts(as = "Option<ReadonlyVec<String>>", optional)]
+        notice_ids: Vec<String>,
     },
 }

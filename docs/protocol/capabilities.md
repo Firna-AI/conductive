@@ -129,8 +129,9 @@ automations, as [Automations](automations.md) says.
   because they kept a default that no member chose.
 - While Mac access is off, the Worker refuses each Mac command request of
   the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
-- While it is on, the Mac app still asks before each command that its user
-  did not always allow, as decision 62 says.
+- While it is on, the Mac app asks before each command, unless a
+  permission that its user chose there covers it, as
+  [The choices](desktop-commands.md#the-choices) says.
 - Mac access that starts on in each new workspace was rejected, because
   agents could then reach a Mac before a member chooses it. Mac access
   that is on for workspaces that members create, and off only for

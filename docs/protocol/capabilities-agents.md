@@ -105,8 +105,8 @@ is open. Its pull request keeps them after the merge.
   access off."
 - When the write turns Mac access on, the note gives the rules of a Mac
   command after its sentence: "Agents can ask to run commands on the Mac
-  of the member whose message started the turn. The Mac app still asks
-  before each command that its user did not always allow."
+  of the member whose message started the turn. The Mac app asks before
+  each command, unless a permission that its user chose there covers it."
 - Reason: one sentence keeps the note short, and the rules follow the
   change that they explain.
 - A change note names secrets only. It never holds a value.

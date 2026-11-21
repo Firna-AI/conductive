@@ -57,8 +57,8 @@ agent the capabilities of its session, as
   rules of a Mac command that the
   [change note](capabilities-agents.md#the-change-note) gives too. A
   request goes to the Mac of the member whose message started the turn.
-  The Mac app still asks before each command that its user did not always
-  allow.
+  The Mac app asks before each command, unless a permission that its user
+  chose there covers it.
 - It ends by saying that members can change the capabilities, and that
   the app then tells the agent of each change.
 - A turn that brings no capabilities, such as a turn from an older Worker,

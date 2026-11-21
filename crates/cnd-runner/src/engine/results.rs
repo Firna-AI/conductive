@@ -89,8 +89,9 @@ impl Session {
             }
             _ => {}
         }
-        if let ProviderEvent::Answer { notice_ids, .. } | ProviderEvent::Result { notice_ids, .. } =
-            &event
+        if let ProviderEvent::Answer { notice_ids, .. }
+        | ProviderEvent::Result { notice_ids, .. }
+        | ProviderEvent::Failed { notice_ids, .. } = &event
         {
             turn.read_notice_ids.extend(
                 notice_ids
@@ -99,7 +100,7 @@ impl Session {
                     .cloned(),
             );
         }
-        let events = turn.output.accept(&event);
+        let events = turn.output.accept(&event, &turn.notice_ids);
         self.emit(events).await?;
         let Some(turn) = &self.active else {
             return Ok(());
@@ -116,7 +117,7 @@ impl Session {
                 }
                 Ok(())
             }
-            ProviderEvent::Failed { code, message } => {
+            ProviderEvent::Failed { code, message, .. } => {
                 self.finish(End::Failed(Error::Agent { code, message }))
                     .await
             }

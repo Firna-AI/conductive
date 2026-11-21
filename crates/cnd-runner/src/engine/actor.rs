@@ -229,6 +229,7 @@ impl Session {
                     error: failure(error),
                     retry_message_id: message.id,
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }

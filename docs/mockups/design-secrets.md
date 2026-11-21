@@ -214,7 +214,7 @@ one.
   monospace font. No note holds a value.
 - The changes keep a fixed order, with Mac access last. Mac access on adds
   the rules of a Mac command: "Agents can ask to run commands on the Mac
-  of the member whose message started the turn. The Mac app still asks
-  before each command that its user did not always allow."
+  of the member whose message started the turn. The Mac app asks before
+  each command, unless a permission that its user chose there covers it."
 - `capabilityChangeCopy.ts` holds the words, as pieces of text and names
   of secrets. The agent gets the same words, with the name of the member.

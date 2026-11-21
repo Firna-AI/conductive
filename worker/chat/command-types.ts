@@ -26,7 +26,7 @@ export type PendingCommand =
     }
   | RunnerInterrupt
   | RunnerChangeModel
-  | RunnerNotice
+  | (Omit<RunnerNotice, 'notices'> & { noticeIds: readonly string[] })
 
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }

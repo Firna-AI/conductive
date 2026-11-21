@@ -177,7 +177,7 @@ See [Secret variables](../docs/protocol/secret-variables.md) and
 Use `mac run` or `run_mac_command` when the task needs the member's Mac.
 The call needs Mac access on in the Capabilities of the workspace.
 The request goes to the Mac of the member whose message started the turn.
-The Mac app still asks before each command that its user did not always allow.
+The Mac app asks before each command, unless a permission that its user chose there covers it.
 
 Mac commands use the same runtime token and active turn context.
 The Worker selects the stored sender, not the workspace owner or a caller-supplied user.

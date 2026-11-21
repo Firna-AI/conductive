@@ -33,7 +33,7 @@ it('uses the login as fallback and includes the Mac command rules only when enab
       { kind: 'mac-access', on: true },
     ]),
   ).toBe(
-    'priya turned Mac access on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app still asks before each command that its user did not always allow.',
+    'priya turned Mac access on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.',
   )
   expect(
     capabilityChangeNoteWords(

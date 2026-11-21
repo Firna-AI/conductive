@@ -1,3 +1,4 @@
+import { capabilityChangeText } from '../../src/shared/capability-change'
 import type { AgentLogin } from './login-kind'
 import { runnerSupportsLogin } from '../../src/shared/runner'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
@@ -46,13 +47,27 @@ export class RunnerCommandPreparation {
       const waiting = await this.store.read(active.workspace.id, (view) =>
         view.capabilityNotes.waiting(command.sessionId),
       )
-      const notices = command.notices.filter((line) =>
-        waiting.some(
-          (note) => note.id === line.id && note.sentTurnId === command.turnId,
-        ),
-      )
+      const notices = waiting
+        .filter(
+          (note) =>
+            command.noticeIds.includes(note.id) &&
+            note.sentTurnId === command.turnId,
+        )
+        .map((note) => ({
+          id: note.id,
+          text: capabilityChangeText(note.member, note.changes),
+        }))
       return notices.length
-        ? { state: 'send', command: { ...command, notices } }
+        ? {
+            state: 'send',
+            command: {
+              type: 'notice',
+              commandId: command.commandId,
+              sessionId: command.sessionId,
+              turnId: command.turnId,
+              notices,
+            },
+          }
         : { state: 'skip' }
     }
     if (command.type === 'interrupt' || command.type === 'model')
@@ -156,12 +171,11 @@ export class RunnerCommandPreparation {
     const notices = await this.store.change(
       active.workspace.id,
       async (view) => {
-        await view.capabilityNotes.prepared(command.sessionId)
         if (active.capabilityNotices !== true) return []
         const steered = new Set(
           (await view.pending()).flatMap((pending) =>
             pending.type === 'notice' && pending.turnId === command.turnId
-              ? pending.notices.map((notice) => notice.id)
+              ? pending.noticeIds
               : [],
           ),
         )

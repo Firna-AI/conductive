@@ -33,10 +33,6 @@ export type AgentChatEvent =
        */
       messageIds: ReadonlyVec<string>
       /**
-       * App notes taken from the turn command.
-       */
-      noticeIds?: ReadonlyVec<string>
-      /**
        * sessionId.
        */
       sessionId: string
@@ -90,7 +86,7 @@ export type AgentChatEvent =
        */
       userMessageIds: ReadonlyVec<string>
       /**
-       * Steered app notes read by the agent for this answer.
+       * App notes read by the agent for this answer.
        */
       noticeIds?: ReadonlyVec<string>
       /**
@@ -153,7 +149,7 @@ export type AgentChatEvent =
        */
       userMessageIds: ReadonlyVec<string>
       /**
-       * Steered app notes read before this turn ended.
+       * App notes read before this turn ended.
        */
       noticeIds?: ReadonlyVec<string>
       /**
@@ -179,6 +175,10 @@ export type AgentChatEvent =
        * durationMs.
        */
       durationMs: number
+      /**
+       * App notes read before this turn failed.
+       */
+      noticeIds?: ReadonlyVec<string>
       /**
        * sessionId.
        */

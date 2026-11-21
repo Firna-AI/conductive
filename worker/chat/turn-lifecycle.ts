@@ -8,6 +8,7 @@ import { TurnCompletion, type TurnEnd } from './turn-completion'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
 import type { PendingCommand } from './command-types'
+import { turnHasRunnerStart } from './capability-start-evidence'
 
 /** Owns the active turn and its stored chain of waiting turns. */
 export class TurnLifecycle {
@@ -58,7 +59,7 @@ export class TurnLifecycle {
       return false
     const turn = await this.transaction.turn(command.turnId)
     if (command.type === 'notice')
-      return turn?.state === 'running' && turn.runnerStarted === true
+      return !!turn && turnHasRunnerStart(this.transaction, turn)
     if (command.type === 'interrupt') return turn?.state === 'stopping'
     if (command.type === 'message') return turn?.state === 'running'
     return turn?.state === 'queued' || turn?.state === 'running'

@@ -43,7 +43,7 @@ export type RunnerTurn = {
    */
   capabilities?: RunnerCapabilities
   /**
-   * App notes to read before the member's message.
+   * App notes the agent gets in the same prompt as the member's message.
    */
   notices?: ReadonlyVec<RunnerNoticeLine>
   /**

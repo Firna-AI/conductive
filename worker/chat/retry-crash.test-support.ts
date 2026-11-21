@@ -48,7 +48,6 @@ export async function createRunningRetryFixture(harness: TestHarness) {
     stopRequest: null,
     nextTurnId: null,
     started: true,
-    runnerStarted: true,
     startedAt: TEST_TIME,
     gateway,
   }

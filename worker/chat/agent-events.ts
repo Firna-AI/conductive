@@ -98,9 +98,6 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         choice: choice(input.choice),
         startedAt: number(input.startedAt),
         messageIds: strings(input.messageIds),
-        ...(input.noticeIds === undefined
-          ? {}
-          : { noticeIds: strings(input.noticeIds) }),
       }
     case 'turn.thinking':
       return { ...context, type: input.type }
@@ -160,6 +157,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         error: { code: identifier(error.code), message: string(error.message) },
         retryMessageId: identifier(input.retryMessageId),
         durationMs: number(input.durationMs),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     }
     default:

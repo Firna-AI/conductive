@@ -54,6 +54,7 @@ impl Session {
                     },
                     retry_message_id: message.id.clone(),
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }
@@ -67,6 +68,7 @@ impl Session {
                     },
                     retry_message_id: message.id.clone(),
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }
@@ -136,7 +138,7 @@ impl Session {
         if self.active.is_some() {
             return self.steer(input, received_at).await;
         }
-        let ProviderInput::Turn(first @ RunnerTurn::Turn { notices, .. }) = &input else {
+        let ProviderInput::Turn(first) = &input else {
             return Ok(());
         };
         self.choice = Some(message.choice.clone());
@@ -147,7 +149,6 @@ impl Session {
             choice: message.choice.clone(),
             started_at: Timestamp(started_at),
             message_ids: vec![message.id.clone()],
-            notice_ids: notices.iter().map(|notice| notice.id.clone()).collect(),
         };
         self.active = Some(ActiveTurn {
             first: first.clone(),
