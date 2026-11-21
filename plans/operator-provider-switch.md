@@ -551,9 +551,25 @@ Depends on: every other milestone
 
 - [x] Run the targeted tests and `npm run check`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report. Three rounds ran. Findings 1, 3, and 4 are fixed. Finding 2 is deferred to `plans/follow-ups/switch-stale-wake-fails-build.md`.
+- [x] Delete this plan when the `plans` skill says, under "Deleting the plan". The work spans two pull requests, so this one keeps the plan, and the activation pull request of Milestone 7 deletes it.
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds. It names e2b decision 222 as changed.
+
+## Milestone 7: Activation
+
+Depends on: 6, and the merge of its pull request
+
+The first pull request ships the switch with the Worker variable
+`PROVIDER_SWITCH` set to `"off"`. This milestone turns it on, in a second
+pull request from a new workspace. Reason: the previous Worker of the
+activation deploy then knows switches, as the calls of the review say.
+
+- [ ] Wait until the deploy of the first pull request has been live on production for at least one hour.
+- [ ] Set `PROVIDER_SWITCH` to `"on"` in `wrangler.jsonc`. Update `docs/automatic-deploys.md`, `worker/operator/README.md`, and `worker/lifecycle/provider-switches.md` so that they describe the switch as on.
+- [ ] Run the targeted switch tests and `npm run check`. Commit and push.
+- [ ] Review the diff against `origin/main` with the `implementation-review` skill, and apply the fix rule.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
+- [ ] Open the activation pull request.
 
 ## Post-merge follow-up (non-blocking)
 
