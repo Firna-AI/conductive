@@ -68,6 +68,10 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+Its `MASKED_BASE` and `MASKED_HEAD` give a target branch and a workspace
+branch that hold the same fake value, with the labels that the Worker sends
+beside them in a GitHub state. The GitHub view tests use them, and
+`branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { chmod, mkdir, open, readdir, rm, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, open, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 export interface ClaudeProfile {
@@ -14,15 +14,21 @@ export async function writeClaudeProfile(
   endpoint: string,
   token: string,
 ): Promise<ClaudeProfile> {
-  const directory = join(home, '.conductive', 'anthropic')
+  const root = join(home, '.conductive', 'anthropic')
+  await privateDirectory(root)
+  // Older runners remove abandoned process folders here after rollback.
+  const processes = join(root, 'credentials')
+  await privateDirectory(processes)
+  const directory = await mkdtemp(join(processes, 'process-'))
   const name = `session-${createHash('sha256').update(sessionId).digest('hex')}`
   const configs = join(directory, 'configs')
   const credentials = join(directory, 'credentials')
-  await privateDirectory(directory)
-  await Promise.all([privateDirectory(configs), privateDirectory(credentials)])
   const credential = join(credentials, `${name}.json`)
-  const remove = () => rm(credential, { force: true })
+  const remove = () => rm(directory, { recursive: true, force: true })
   try {
+    await privateDirectory(directory)
+    await privateDirectory(configs)
+    await privateDirectory(credentials)
     await writeFile(
       join(configs, `${name}.json`),
       JSON.stringify({
@@ -47,21 +53,4 @@ export async function writeClaudeProfile(
 async function privateDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true, mode: 0o700 })
   await chmod(path, 0o700)
-}
-
-export async function clearClaudeCredentials(home: string): Promise<void> {
-  const directory = join(home, '.conductive', 'anthropic', 'credentials')
-  let entries: string[]
-  try {
-    entries = await readdir(directory)
-  } catch (error) {
-    if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
-      return
-    throw error
-  }
-  await Promise.all(
-    entries.map((name) =>
-      rm(join(directory, name), { recursive: true, force: true }),
-    ),
-  )
 }

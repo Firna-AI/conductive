@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 const decision =
   'The user chose option F of repository-order decision 1 on 18 November 2026: an admin moves a chosen repository by a drag, by its row menu with Make default, Move up, and Move down, or by Alt and Up or Down on a focused row, as an org tile of the rail moves. The first repository is the default, and its row shows Default.'

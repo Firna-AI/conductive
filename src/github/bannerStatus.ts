@@ -20,6 +20,21 @@ export type PullRequestBanner = Extract<
   { pullRequest: PullRequest }
 >
 
+/**
+ * The name that a screen shows for the branch: its label, which hides each
+ * secret value. The Worker leaves the label out when it equals the real
+ * name, and an older Worker sends none, so a banner without one shows its
+ * real name. A label is text only: prompts and requests keep the real name.
+ */
+export function branchLabel(banner: GitHubBanner): string {
+  return banner.displayBranch ?? banner.branch
+}
+
+/** The name that a screen shows for the target branch, as `branchLabel` says. */
+export function baseBranchLabel(banner: GitHubBanner): string {
+  return banner.displayBaseBranch ?? banner.baseBranch
+}
+
 /** A state tints the whole bar. Its edges stay neutral. */
 type BannerTone = 'neutral' | 'success' | 'warning' | 'danger' | 'merged'
 
@@ -84,7 +99,7 @@ export function bannerStatus(
     case 'ready-to-merge':
       return still(CircleCheck, 'Ready to merge', 'success')
     case 'merged':
-      return still(GitMerge, `Merged into ${banner.baseBranch}`, 'merged')
+      return still(GitMerge, `Merged into ${baseBranchLabel(banner)}`, 'merged')
     case 'conflict':
       return still(GitMergeConflict, 'Merge conflict', 'warning')
     case 'changes-requested':
@@ -118,7 +133,7 @@ export function bannerDetail(
     case 'merged':
       return timeAgo(banner.mergedAt, now)
     case 'conflict':
-      return `with ${banner.baseBranch}`
+      return `with ${baseBranchLabel(banner)}`
     case 'changes-requested':
       return reviewers(banner.changesRequestedBy)
     case 'closed':

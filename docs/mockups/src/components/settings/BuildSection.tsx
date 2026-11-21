@@ -1,4 +1,3 @@
-import { Hammer, RotateCw } from 'lucide-react'
 import {
   buildLimit,
   failedBuild,
@@ -8,11 +7,15 @@ import {
   type FailedBuild,
 } from '../../fixtures/computer'
 import type { TerminalLine } from '../../fixtures/terminal'
-import { ActionButton } from '../common/actions'
-import { StatusText } from '../common/StatusText'
-import { TerminalView } from '../tools/TerminalView'
-import { BuildHistory, BuildResult } from './BuildHistory'
-import { SectionText } from './Section'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { terminalView } from '../../entries/components/tools/TerminalView.mockup'
+import {
+  buildHistory,
+  buildResult,
+} from '../../entries/components/settings/BuildHistory.mockup'
+import { buildOf } from './BuildHistory'
+import { sectionText } from '../../entries/components/settings/Section.mockup'
 import styles from './BuildSection.module.css'
 
 /**
@@ -56,7 +59,12 @@ export function failedBuildOf(state: BuildState): FailedBuild | undefined {
 function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
   return (
     <div className={styles.log}>
-      <TerminalView cursor={props.live} extraKeys={false} lines={props.lines} />
+      <terminalView.Component
+        cursor={props.live}
+        extraKeys={false}
+        lines={props.lines}
+        moklyInstance="build-log"
+      />
     </div>
   )
 }
@@ -67,34 +75,51 @@ function HeadAction(props: { state: BuildState; readOnly: boolean }) {
   switch (props.state) {
     case 'building':
       return (
-        <ActionButton disabled icon={Hammer}>
+        <actionButton.Component
+          disabled
+          icon="hammer"
+          moklyInstance="build-action"
+        >
           Build computer
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'failed':
     case 'time-limit':
       return (
-        <ActionButton icon={RotateCw} tone="primary">
+        <actionButton.Component
+          icon="rotate-cw"
+          moklyInstance="build-action"
+          tone="primary"
+        >
           Try again
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'none':
       return (
-        <ActionButton icon={Hammer} tone="primary">
+        <actionButton.Component
+          icon="hammer"
+          moklyInstance="build-action"
+          tone="primary"
+        >
           Build computer
-        </ActionButton>
+        </actionButton.Component>
       )
     case 'ready':
-      return <ActionButton icon={Hammer}>Build computer</ActionButton>
+      return (
+        <actionButton.Component icon="hammer" moklyInstance="build-action">
+          Build computer
+        </actionButton.Component>
+      )
   }
 }
 
 function Head(props: { state: BuildState; builds: OrgBuilds }) {
   if (props.state === 'building') {
     return (
-      <StatusText
+      <statusText.Component
         busy
         label={`Building · ${runningBuild.elapsed}`}
+        moklyInstance="build-state"
         tone="active"
       />
     )
@@ -107,7 +132,11 @@ function Head(props: { state: BuildState; builds: OrgBuilds }) {
     <>
       <span className={styles.label}>Last build</span>
       <span className={styles.when}>{build.when}</span>
-      <BuildResult build={build} />
+      <buildResult.Component
+        build={buildOf(build)}
+        id="last"
+        moklyInstance="last-build"
+      />
     </>
   )
 }
@@ -134,7 +163,9 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
   if (state === 'none') {
     return (
       <div className={styles.body}>
-        <SectionText muted>Workspaces start from the first build.</SectionText>
+        <sectionText.Component moklyInstance="first-build-note" muted>
+          Workspaces start from the first build.
+        </sectionText.Component>
       </div>
     )
   }
@@ -142,7 +173,9 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
     return (
       <div className={styles.body}>
         <Log lines={builds.logs.building} live />
-        <SectionText muted>{buildingNote(builds.lastGood)}</SectionText>
+        <sectionText.Component moklyInstance="building-note" muted>
+          {buildingNote(builds.lastGood)}
+        </sectionText.Component>
       </div>
     )
   }
@@ -151,12 +184,14 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
   const log: LogState = state === 'time-limit' ? 'time-limit' : 'failed'
   return (
     <div className={styles.body}>
-      <SectionText>{failed.error}</SectionText>
+      <sectionText.Component moklyInstance="build-error">
+        {failed.error}
+      </sectionText.Component>
       <Log lines={builds.logs[log]} live={false} />
       {builds.lastGood ? (
-        <SectionText muted>
+        <sectionText.Component moklyInstance="last-good-note" muted>
           {`Workspaces still start from the build of ${builds.lastGood.when}.`}
-        </SectionText>
+        </sectionText.Component>
       ) : null}
     </div>
   )
@@ -189,8 +224,9 @@ export function BuildSection(props: {
       </div>
       <Body builds={builds} state={state} />
       {state === 'none' ? null : (
-        <BuildHistory
-          builds={builds.history}
+        <buildHistory.Component
+          builds={builds.history.map(buildOf)}
+          moklyInstance="history"
           open={state === 'ready' && props.changeWaits !== true}
         />
       )}

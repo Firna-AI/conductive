@@ -15,7 +15,8 @@ item 8 D, that the chat draws each part as the file preview draws it. On
 and on 20 November 2026 item 82 B, which this page gives at their parts.
 The fixtures write each agent message as the blocks and the inline tree
 that the app reads from the Markdown of the agent. The mockups read the
-chips, the links, and the files of that tree with their own small reader.
+chips, the links, and the files of that tree with `answerParts`, the
+reader of the app.
 
 ## The parts
 
@@ -32,7 +33,7 @@ chips, the links, and the files of that tree with their own small reader.
     show there.
   - `fixtureDrawing.tsx` gives the drawing of the mockups. It draws the
     text with `AnswerText`, a code block with `CodeBlock`, and a heading
-    only when `answerNodes.ts` finds words in its text.
+    only when `answerShowsWords` of the app finds words in its text.
   - `agentText.ts` in `src/fixtures/` gives the builders of the blocks and
     of the inline text, such as `p`, `heading`, `bullets`, `task`,
     `strong`, and `link`. A string is a text node with exactly its
@@ -155,7 +156,7 @@ chips, the links, and the files of that tree with their own small reader.
   in `src/components/common/` reads the marks of a file preview.
   `markFlanking.ts` beside it gives the flanking rules of CommonMark, which
   decide whether a mark can open or close. `MarkedNodes` beside it draws
-  each mark as `strong`, `em`, or `del`.
+  each mark of a file preview as `strong`, `em`, or `del`.
   - A mark pairs only where CommonMark lets it open and close, so a mark
     without a pair shows as typed: the `**` and the `*` of a file pattern
     such as `tests/**/*.test.ts`, a `*` between two spaces, and a single
@@ -174,14 +175,15 @@ chips, the links, and the files of that tree with their own small reader.
     mark closed.
   - Bold text around code holds the code, so a chip from code inside bold
     text is bold too, from design call 7 of the Markdown plan.
-- `answerNodes.ts` in `src/components/chat/` reads the inline tree of a
-  fixture. The tree holds code, links, images, line breaks, and marks as
-  nodes. So the marks do not read into code, links, or chips, and a path
-  keeps its `_`. In the text nodes, the reader finds the mentions and the
-  bare addresses. A mention can start right after a mark, as in
-  `*@src/app.ts*`, and it ends before the closing mark, from design call
-  11. `AnswerText` beside it draws the text, and `PreviewText` in
-  `src/components/files/` draws the text of a file preview.
+- `answerParts` in `src/chat/markdown/answer-parts.ts` of the app reads
+  the inline tree of a fixture. The tree holds code, links, images, line
+  breaks, and marks as nodes. So the marks do not read into code, links,
+  or chips, and a path keeps its `_`. In the text nodes, the reader finds
+  the mentions and the bare addresses. A mention can start right after a
+  mark, as in `*@src/app.ts*`, and it ends before the closing mark, from
+  design call 11. `AnswerText` in `src/components/chat/` draws the text,
+  and `PreviewText` in `src/components/files/` draws the text of a file
+  preview.
 - A line-break tag, `<br>`, `<br/>`, or `<br />` in any letter case, draws
   a line break in a paragraph, a heading, a list item, or a table cell, of
   a reply and of a file preview, from item 1 of the Markdown plan.
@@ -191,9 +193,9 @@ chips, the links, and the files of that tree with their own small reader.
   `app/chat/formatting/as-typed` show, and so does a tag in code.
   - A break at the start or at the end of a block draws nothing, so a
     block of only breaks draws nothing. Two or more breaks in a row draw
-    at most one empty line. `answerNodes.ts` keeps the breaks of a reply
-    by the rule of `src/markdown/kept-breaks.ts` of the app. The mockups
-    do not draw these cases.
+    at most one empty line. `answerParts` keeps the breaks of a reply by
+    the rule of `src/markdown/kept-breaks.ts` of the app. The mockups do
+    not draw these cases.
   - `app/chat/formatting` shows an address on two lines.
 - A Markdown image of a reply whose target is no file of the workspace
   shows its alt text, and no picture loads, from item 5 A of the Markdown

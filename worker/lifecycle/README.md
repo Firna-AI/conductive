@@ -84,6 +84,8 @@ and how `createApp` routes it.
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
+[The start loop](start-loop.md) gives how far one run advances a start,
+when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
