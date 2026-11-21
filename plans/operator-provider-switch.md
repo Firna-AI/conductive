@@ -1,6 +1,6 @@
 # An operator switches the provider account of an org
 
-Status: Active. On branch `calummoore/operator-switch-user-boat-e2b-rn5q`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #617](https://github.com/Firna-AI/conductive/pull/617) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 Today each org runs on one provider account, `boat` or `e2b`, for its whole
 life (e2b decision 222). An org gets its account once, when it is created.
@@ -553,7 +553,7 @@ Depends on: every other milestone
 - [x] Commit with Conventional Commits and push the branch.
 - [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report. Three rounds ran. Findings 1, 3, and 4 are fixed. Finding 2 is deferred to `plans/follow-ups/switch-stale-wake-fails-build.md`.
 - [x] Delete this plan when the `plans` skill says, under "Deleting the plan". The work spans two pull requests, so this one keeps the plan, and the activation pull request of Milestone 7 deletes it.
-- [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds. It names e2b decision 222 as changed.
+- [x] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, and the follow-up items that the change adds. It names e2b decision 222 as changed.
 
 ## Milestone 7: Activation
 
