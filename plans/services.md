@@ -422,4 +422,4 @@ Lifetime evidence: `.context/services/lifetime-progress.md`, `.context/services/
 
 ## Post-merge follow-up (non-blocking)
 
-- [ ] After deployment, smoke-test a service in a production test workspace. Check the chosen app controls and software-update compatibility.
+- [ ] [Check services after the production deploy](follow-ups/services-production-smoke.md). Check the chosen app controls and software-update compatibility in an isolated production test workspace.
