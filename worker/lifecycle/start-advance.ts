@@ -52,6 +52,7 @@ export async function advanceStartPhases(input: {
       await storage.update({
         ...job,
         ...next,
+        waitStartedAt: dependencies.now(),
         providerRetry: null,
         processId: null,
         stdoutOffset: 0,

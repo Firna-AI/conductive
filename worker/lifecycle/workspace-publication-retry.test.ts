@@ -78,7 +78,11 @@ async function queuedResumeWithBlockedPublication() {
   expect(response.workspace.state).toBe('starting')
   expect(await start.job()).toMatchObject({ kind: 'resume', phase: 'machine' })
   expect(await publicationState()).toBe('pending')
-  return context
+  const publicationAt = idleAt + 1_000
+  expect(await start.storage.get('alarm:lifecycle:publication')).toBe(
+    publicationAt,
+  )
+  return { ...context, publicationAt }
 }
 
 it('keeps the original idle alarm after a stored creation result retries its D1 publication', async () => {
@@ -136,26 +140,32 @@ it('stops at the original idle deadline while the completed creation still needs
 })
 
 it('retains an older creation publication retry after a resume completes', async () => {
-  const { fixture, start, actor, publicationState, allowPublication } =
-    await queuedResumeWithBlockedPublication()
+  const {
+    fixture,
+    start,
+    actor,
+    publicationAt,
+    publicationState,
+    allowPublication,
+  } = await queuedResumeWithBlockedPublication()
   await advanceToRunner(start)
   const resumedAt = fixture.runtime.dependencies.now()
-  expect(await start.storage.getAlarm()).toBe(resumedAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(publicationAt)
   await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
   await start.tick(resumedAt)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toEqual({ ok: true })
   expect(await publicationState()).toBe('pending')
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])
-  expect(await start.storage.getAlarm()).toBe(resumedAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(publicationAt)
   const resumed = await start.endpoint.readLifecycle()
   await start.restart()
-  await start.tick(resumedAt + 1_000)
+  await start.tick(publicationAt)
   expect(await publicationState()).toBe('pending')
-  expect(await start.storage.getAlarm()).toBe(resumedAt + 2_000)
+  expect(await start.storage.getAlarm()).toBe(publicationAt + 1_000)
   await allowPublication()
   await start.restart()
-  await start.tick(resumedAt + 2_000)
+  await start.tick(publicationAt + 1_000)
   expect(await publicationState()).toBe('succeeded')
   expect(await start.endpoint.readLifecycle()).toEqual(resumed)
   expect(await start.storage.getAlarm()).toBe(resumedAt + 5_000)
@@ -168,18 +178,24 @@ it('retains an older creation publication retry after a resume completes', async
 })
 
 it('recovers publication during runner wait without moving the resume deadline', async () => {
-  const { fixture, start, actor, idleAt, publicationState, allowPublication } =
-    await queuedResumeWithBlockedPublication()
+  const {
+    fixture,
+    start,
+    actor,
+    idleAt,
+    publicationAt,
+    publicationState,
+    allowPublication,
+  } = await queuedResumeWithBlockedPublication()
   await advanceToRunner(start)
-  const waitingAt = fixture.runtime.dependencies.now()
   expect(await start.job()).toMatchObject({
     phase: 'runner',
     deadlineAt: idleAt + 1_200_000,
   })
-  expect(await start.storage.getAlarm()).toBe(waitingAt + 1_000)
+  expect(await start.storage.getAlarm()).toBe(publicationAt)
   await allowPublication()
   await start.restart()
-  await start.tick(waitingAt + 1_000)
+  await start.tick(publicationAt)
   expect(await publicationState()).toBe('succeeded')
   expect(await start.job()).toMatchObject({
     phase: 'runner',
@@ -187,7 +203,7 @@ it('recovers publication during runner wait without moving the resume deadline',
   })
   expect(await start.storage.getAlarm()).toBe(idleAt + 1_200_000)
   await actor.endpoint().reportRunnerLifecycle({ type: 'runner.ready' })
-  await start.tick(waitingAt + 1_000)
+  await start.tick(publicationAt)
   expect(await start.job()).toBeUndefined()
   expect(await start.wait()).toEqual({ ok: true })
   expect(fixture.boat.resumeIds).toEqual(['bx_1'])

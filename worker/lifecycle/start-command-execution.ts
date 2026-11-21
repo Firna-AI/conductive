@@ -1,4 +1,4 @@
-import type { AppDependencies, AppEnv, HttpFetch } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   startWorkspaceTerminal,
@@ -38,7 +38,7 @@ export async function advanceStartCommand(
   job: WorkspaceStartJob,
   label: string,
   call: StartCall,
-  releaseFetch: HttpFetch,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
 ): Promise<boolean> {
   const sandboxId = row.sandboxId
   if (!sandboxId) throw new WorkspaceStartError(null)
@@ -50,8 +50,15 @@ export async function advanceStartCommand(
   )
     throw new WorkspaceStartError(null)
   const phase = job.phase
-  const autoStop = await call(() => workspaceAutoStopSeconds(env.DB))
-  await call(() => provider.setAutoStop(sandboxId, autoStop))
+  if (
+    job.autoStopSetAt === undefined ||
+    dependencies.now() - job.autoStopSetAt >= 60_000
+  ) {
+    const autoStop = await call(() => workspaceAutoStopSeconds(env.DB))
+    await call(() => provider.setAutoStop(sandboxId, autoStop))
+    job.autoStopSetAt = dependencies.now()
+    await storage.update(job)
+  }
   if (job.processId === null) {
     const secrets = await call(async () => {
       const values = await workspaceEnvironmentSettings(
@@ -70,7 +77,9 @@ export async function advanceStartCommand(
     let bootstrap: StartupBootstrap | undefined
     if (job.phase === 'startup') {
       try {
-        bootstrap = { release: await latestSoftwareRelease(env, releaseFetch) }
+        bootstrap = {
+          release: await latestSoftwareRelease(env, dependencies.fetch),
+        }
       } catch {
         bootstrap = {
           warning:
@@ -144,10 +153,12 @@ export async function nextStartCommand(
   storage: StartJobStorage,
   job: WorkspaceRunningStartJob,
   phase: WorkspaceMachinePhase,
+  now: number,
 ): Promise<void> {
   await storage.update({
     ...job,
     phase,
+    waitStartedAt: now,
     afterReadyPhase:
       job.kind === 'create' && phase === 'terminal'
         ? 'startup'

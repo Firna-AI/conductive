@@ -54,7 +54,9 @@ refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
-- runs the queued start of a create or a resume, one phase at a time
+- runs the queued start of a create or a resume. One run can advance the
+  start by more than one phase, as
+  [The start loop](start-loop.md) says
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
@@ -248,6 +250,9 @@ create and resume. The workspace object runs that start:
   differs from the first, the call throws `StartSuperseded`. The advance
   then ends with no further write, as after a lost reply. The lifecycle
   run sets the start due time one second later.
+- One lifecycle run can advance the start through more than one phase,
+  and it polls a running command or a sandbox that is not ready every
+  250 milliseconds. [The start loop](start-loop.md) gives the rules.
 - The storage reads and writes of a start stay in its queue task. So do
   its calls to the controller and to `DurableLifecycle`, with each
   lifecycle state write. The token write, the admission, the runner
