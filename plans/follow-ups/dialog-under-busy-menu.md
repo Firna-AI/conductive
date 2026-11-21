@@ -20,5 +20,6 @@
 - **Left out:** Change nothing, because the two layers then stay in conflict.
 - **Wider fix:** A. One rule then keeps every layer, also a later one, from opening over a busy menu.
 - **Previous examples:** Commit `c6e038c` made busy menus stay open. The command palette branch stops its own key and Search row while a menu refuses to close.
+- **Related:** `plans/follow-ups/dialog-scroll-body-keyboard-reach.md`: options that conflict. Its native-modal alternative D changes this layering question. Its recommended shared trap fix B does not depend on this item's answer.
 - **Recommendation:** A. It extends the rule that the palette now follows to every layer.
 - **Action:** ask the user, because A changes how the page behaves while a change runs.

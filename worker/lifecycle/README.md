@@ -27,6 +27,7 @@ gives the create, read, resume, and activity routes of a workspace to
   Other provider kinds get no disk retention restart.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
+- Re-arm the image coordinator for each eligible open provider switch on every Cron run.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -36,8 +37,10 @@ gives the create, read, resume, and activity routes of a workspace to
   sandbox and sessions.
 - Change the repository of a workspace to another repository that its
   sandbox holds, with the same sandbox and sessions.
-- Restart the runner, preview relay, and terminal service of a running workspace, after
-  an update check, as [Restart](routes.md#restart) says.
+- Restart the runner, preview relay, and terminal service of a running workspace after
+  an update check. A member can use [Restart](routes.md#restart). The workspace
+  alarm can also start it for a runner that stays away while a message waits, as
+  [Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -49,7 +52,7 @@ gives the create, read, resume, and activity routes of a workspace to
 of a create.
 
 The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
-The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
+The create reads the account of the org, and that account selects the published org image independently of those branch fields.
 The creation claim keeps them in its saved plan.
 The fetch updates `refs/remotes/origin/<base branch>`.
 The branch phase uses the event commit when it exists, or the fetched head otherwise.
@@ -84,6 +87,8 @@ and how `createApp` routes it.
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
+[The start loop](start-loop.md) gives how far one run advances a start,
+when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
@@ -92,6 +97,7 @@ turn repair from the committed chat and the one writer of the shown state.
 [Continue](continue.md) gives the admission and reservation of Continue,
 its phases, the staged fetch and the branch move, the publication, and the
 recovery. [Continue routes](continue-routes.md) gives its routes and errors.
+[Continue failures](continue-failures.md) gives its failures, recovery, and stop causes.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
 
@@ -107,6 +113,8 @@ workspace object.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+[Provider switches](provider-switches.md) gives hidden switch builds, member
+build waits, and the atomic publication of a new account.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 
@@ -206,6 +214,7 @@ the persisted resource records and the retained computer ledger.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
+- [automatic-restart.ts](automatic-restart.ts): checks the saved absence, waiting messages, and provider state. It claims the shared restart and sends its commands outside the chat queue.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

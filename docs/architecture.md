@@ -17,8 +17,9 @@ each feature.
 - **Admin** and **member:** the two roles in an org. Each person in an org
   has one of them.
 - **Operator:** the person who runs the app, as opposed to the admin of an
-  org. Only an operator can suspend a user or an org, or lift a
-  suspension. Only an operator opens the operator section.
+  org. Only an operator can suspend a user or an org, lift a suspension,
+  or switch an org to another provider account. Only an operator opens
+  the operator section.
 - **Suspension:** the block of one user or one org by an operator, until
   an operator lifts it. It stops the sandboxes of the workspaces that the
   user owns, or of every workspace of the org, and blocks new starts. A
@@ -81,13 +82,19 @@ each feature.
   as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Provider account:** an account of the app with a sandbox provider:
   `boat` with Boat, or `e2b` with E2B. Each org runs in one provider
-  account for its whole life. The Worker holds the credentials of each
+  account at a time, the account of the org. Each workspace keeps the
+  account that it started on. The Worker holds the credentials of each
   account, and reaches it through its own client.
 - **Boat key** and **E2B key:** the one key of the app's account with Boat
   or with E2B. Each key reaches every sandbox and every org image of the
   orgs on its account. Each is a Worker secret.
 - **Weights:** the chance, in percent, that a new org gets each provider
   account. An operator sets them.
+- **Switch:** the change of the provider account of one org by an
+  operator. Its switch build builds the org image on the new account, and
+  members do not see that build. New workspaces of the org start on the
+  new account when that build succeeds, as
+  [Switch account](protocol/switch-account.md) says.
 - **Sandbox:** the cloud computer of one workspace, on Boat or on E2B. The
   product calls it a cloud computer or a sandbox.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
@@ -174,9 +181,9 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new org, a new workspace, chat, a run with secrets, the
-terminal, previews, the desktop, GitHub events, a merge, Continue,
-automation runs, and stops.
+together for a new org, a switch of its account, a new workspace, chat, a
+run with secrets, the terminal, previews, the desktop, GitHub events, a
+merge, Continue, automation runs, and stops.
 
 ## Where data lives
 

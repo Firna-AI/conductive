@@ -68,6 +68,10 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+Its `MASKED_BASE` and `MASKED_HEAD` give a target branch and a workspace
+branch that hold the same fake value, with the labels that the Worker sends
+beside them in a GitHub state. The GitHub view tests use them, and
+`branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.
@@ -174,6 +178,7 @@ The session reply has app access, and `GET /api/waitlist` answers with `accessSt
 The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Ten of them wait, with the names of the waitlist mockups. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them, Sam Okafor and Kenji Watanabe, who wait with and without a verified email, and Zed K, the newest person who waits, as `SAMPLE_IDS.newestWaiting`.
 `fixtures/operator-access-samples.ts` gives the way in of each user who came after the waitlist, the age of each GitHub account, the referral code of each user with app access, and the invite codes of the mockups. `fixtures/operator-access.ts` turns them into the app access of a user, the waitlist, and the codes, with the records that an operator changes: the approvals, the open sign-ups in `openSignups`, the codes, the pause, and the switch in `waitlistSwitch`. `sampleAccessRecords` in `fixtures/operator-access-records.ts` builds those records at a time, with the waitlist on. An open sign-up names its operator on the page of a user. The approval email of Ana Pereira went, and the one of Joe Quinn never went. The suspension of Dana Kim disabled her referral code.
 `fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read and the count of the people who wait. The dev fake changes the records with Suspend, Lift, Approve, New code, Disable, the pause, and the switch. Its waitlist reads the same codes, pause, and switch, and a code that works there counts its use and gives a referral code.
+The operator switch fixtures set `switchAvailable: true`, so switch tests and the dev fake keep the complete flow while production admission is off.
 The Overview also includes long runs with workspace, org, and owner identities and raw Unix millisecond times.
 These samples include deleted and suspended orgs, a suspended owner, and a start without a cloud computer ID.
 `operatorOverview` accepts a fixed sample time separately from the read time, so a dev refresh keeps each start.

@@ -84,6 +84,14 @@ export const buildHistory: readonly Build[] = [
 export const runningBuild = { elapsed: '2m 14s' } as const
 
 /**
+ * The build that an admin started while another update of the cloud
+ * computer runs, which members do not see, such as the switch build of an
+ * operator. It waits for that update. The tab shows it as a build that
+ * runs, with its time from Build computer.
+ */
+export const waitingBuild = { elapsed: '1m 05s' } as const
+
+/**
  * The first build of the cloud computer of a new org, which Create org
  * starts when the org has a repository: it runs, it succeeded, it failed,
  * or none runs, such as after a start that failed. Until it succeeds, the
@@ -143,4 +151,17 @@ export const timedOutBuild: FailedBuild = {
   duration: '1h 00m',
   error:
     'The cloud computer image did not build within the 60-minute limit. Check the log and try again.',
+}
+
+/**
+ * The build that an operator ended for another update of the cloud
+ * computer, which members do not see, such as the switch build of an
+ * operator. Members see a failed build with Try again, and its message
+ * names no provider and no switch.
+ */
+export const endedBuild: FailedBuild = {
+  when: '3 minutes ago',
+  result: 'failed',
+  duration: '6m 12s',
+  error: 'Another update of the cloud computer stopped this build. Try again.',
 }

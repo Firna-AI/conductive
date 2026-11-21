@@ -266,6 +266,7 @@ impl CommandHandler for ReportCommandHandler {
             }
         };
         let turns = self.dependencies.next.shutdown();
+        let files = self.dependencies.files.close();
         let ports = async {
             if let Some(ports) = &self.dependencies.ports {
                 ports.close().await;
@@ -276,7 +277,7 @@ impl CommandHandler for ReportCommandHandler {
                 skills.close().await;
             }
         };
-        let (turns, _, _, _) = tokio::join!(turns, ports, watches, skills);
+        let (turns, _, _, _, _) = tokio::join!(turns, files, ports, watches, skills);
         let jobs = std::mem::take(&mut *self.jobs.lock().or(Err(Error::InvalidCommand))?);
         for job in jobs {
             let _ = job.await;

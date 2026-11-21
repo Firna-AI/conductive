@@ -234,8 +234,8 @@ export function createWorkspaceController(
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },
-    async runnerLifecycleDisconnected(publish): Promise<void> {
-      await lifecycle.runnerDisconnected(publish)
+    async runnerLifecycleDisconnected(publish, at): Promise<void> {
+      await lifecycle.runnerDisconnected(publish, at)
     },
     runnerProtocolUnsupported: (reason) => starts.runnerUnsupported(reason),
     async scheduleImage(state: ImageCoordinatorState): Promise<void> {
@@ -253,15 +253,15 @@ export function createWorkspaceController(
         lifecycle,
       )
     },
-    async alarm(turn): Promise<void> {
+    async alarm(turn, restart): Promise<void> {
       await runWorkspaceAlarm({
         turn,
         storage: platform.storage,
-        env: env,
-        dependencies: dependencies,
-        images: images,
-        starts: starts,
-        lifecycle: lifecycle,
+        env,
+        dependencies,
+        images,
+        starts,
+        lifecycle,
         accessStop,
         alarms,
         startStorage,
@@ -270,6 +270,7 @@ export function createWorkspaceController(
         archive,
         computerStops,
         runs: platform.startRecords,
+        restart,
       })
     },
   }

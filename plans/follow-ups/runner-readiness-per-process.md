@@ -1,0 +1,45 @@
+# Saved runner readiness ends Starting too early
+
+- **Severity:** High. **Likelihood:** Rare. **Effort:** Large. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`: the wider fix of review finding 1, and a problem outside the scope that the check of that finding found.
+- **Location:** `worker/chat/runner-handshake.ts:69` (`prepareRunnerHello` reads the saved flag), `worker/chat/runner-channel.ts:114` and `:135` (the hello sets `active.ready` and calls `runnerReady`), `worker/chat/runner-receipt.ts:161` (`saveStreamReady`), `worker/chat/chat-records.ts:32-36`, `worker/chat/runner-delivery.ts:58`, `worker/lifecycle/durable-start.ts:70` (`readyLifecycle`), `worker/lifecycle/durable-restart.ts:71` (`requiresFreshRunnerReady`), `crates/cnd-runner/src/state/store.rs:91`, `docs/protocol/runner-warnings.md` (Process starts), `docs/protocol/agent-runner.md` (The agent runner).
+- **Reason:** Readiness for each runner process crosses the runner protocol and needs a compatible path for older runners. It also changes Restart and each resume on `origin/main`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Agent runner:** the process on a cloud computer that runs agents and reports their work to the Worker, the server that stores the state of each workspace.
+  - **Event stream:** the numbered history of runner events that the runner saves in `~/.conductive/runner-state.json` and replays until the Worker confirms each event.
+  - **Ready event:** the `runner.ready` event that the runner sends on each connection after its initial reports.
+  - **Process-start ID:** the random ID that the runner makes at each runner start and sends in each `hello` as `processStartId`.
+  - **Starting:** the state that the header shows during a start, a resume, Restart, and the automatic restart, until the runner is ready.
+- **Background:**
+  - The runner keeps the same stream ID across process restarts, because each start loads the saved state file (`DurableStore::load` in `crates/cnd-runner/src/state/store.rs:91`).
+  - The Worker saves one ready flag for each stream ID, not for each process (`saveStreamReady` in `worker/chat/runner-receipt.ts:161`, `streamReady` in `worker/chat/chat-records.ts:32`).
+  - At each `hello`, `prepareRunnerHello` reads that flag (`worker/chat/runner-handshake.ts:69`). When it is set, the connection counts as ready at once.
+  - A ready connection gets the waiting commands (`worker/chat/runner-delivery.ts:58`). The Worker also calls `runnerReady`, which runs `readyLifecycle`. That ends Starting, clears the restart time limit, and ends the away period of the runner.
+  - A new runner process starts with an empty hash cache, so its first scan reads every file. Its ready event comes after that scan. In workspace W-153 on 20 November 2026, that scan took 25 to 30 seconds.
+  - So every option below that waits for a fresh ready event counts the first scan against the 3-minute limit of a restart. A repository folder with very many files can then fail a good restart.
+  - `docs/protocol/restart-the-software.md` says that the header shows Starting from the press of Restart until the runner is ready again. The automatic restart does the same.
+  - The branch that found this applied option A below for the automatic restart. After the automatic restart submits its restart command, a hello with the saved flag no longer counts. `requiresFreshRunnerReady` in `worker/lifecycle/durable-restart.ts` holds that rule. The test replacement in `worker/lifecycle/automatic-restart.test-support.ts` now reuses the saved stream, as a real runner does.
+- **Problem:**
+  - Restart in the workspace header and each resume still end Starting at the hello of the new runner process. The proof is the ready flag that an earlier process saved.
+  - The Worker then sends the waiting messages to a process that has not finished its first scan.
+  - The automatic restart keeps the same gap before it submits its command. Each later reader of the saved flag repeats it.
+- **Impact if no action:** A new runner process that connects and then stalls before its ready event gets the waiting message. The workspace shows Ready or Working, with no restart error and no failed start. The message gets no reply.
+- **Root question:** How does the Worker end Starting, and release waiting messages, only on proof from the runner process that runs now?
+- **Options:**
+  - **A.** During an automatic restart, wait for a fresh ready event before Starting ends or a waiting message goes out. Test a replacement that reuses the saved stream. The branch applied this option. Effort: Small.
+  - **B.** Bind readiness to the runner process across the handshake, the event log, and delivery. A reconnect of the same process keeps its readiness. A new process waits for its own ready event. Keep replay on the saved stream, and keep older runners working during the rollout. B needs a process identity at the hello. `docs/protocol/runner-warnings.md` says that the process-start ID serves only the warnings. Cal chose to add the ID for that use on 17 November 2026. So B changes that rule or adds a new field, and it updates that doc and `docs/protocol/agent-runner.md`. Effort: Large.
+  - **C.** Extend the rule of A to every restart of the software. While Restart or the automatic restart shows Starting, a hello with the saved flag does not end it. Only a ready event on the current connection does. C changes Restart on `origin/main`, so it needs the approval of the user. It does not cover a resume. Effort: Small.
+  - **D.** Bind the saved flag to the process-start ID in the Worker. Save the ID of the process that sent the ready event. Count the saved flag at a hello only when the hello carries the same ID. A hello without an ID, from an older runner, keeps today's rule. D changes the rule that the ID serves only the warnings, so it needs a decision and an update of `docs/protocol/runner-warnings.md`. Effort: Medium.
+  - **E.** Drop the saved flag at the hello. Each connection waits for its own ready event, which the runner sends on each connection. Delivery then pauses after each reconnect and each Worker deploy, until the initial reports of the runner end. First check that each runner version that a live sandbox can hold sends a ready event on each connection. Effort: Medium.
+  - **F.** Accept the start of the waiting turn as proof. Keep delivery at the hello. End Starting and the restart time limit only at a ready event, or at the `turn.started` of a delivered turn. F changes the rule that Starting lasts until the runner is ready, so it needs a decision. Effort: Medium.
+- **Left out:** A new stream for each runner process, because the Worker would then need a new way to replay the unconfirmed events of the previous stream.
+- **Wider fix:** B. It separates the readiness of the current process from the history that the process can replay.
+- **Previous examples:** Commit `433200689` fixed readiness and timeout cleanup for workspace starts. Commit `6b82c5176` added the process-start ID, a separate identity for each runner process.
+- **Related:**
+  - `plans/follow-ups/restart-hold-delivery-after-submission.md`: the same code and a shared wider fix. One rule can serve both items. A ready event before the restart command is submitted cancels the restart. After the submission, only the ready event of a process that connected after the command ends the restart. Test the two fixes together.
+  - `plans/follow-ups/worker-stopped-ends-mark-files-unavailable.md`: only its option C waits for this item, because C needs a fresh readiness signal.
+- **Recommendation:** B. It ends the false proof on each path, and it keeps the readiness of a reconnect of the same process. C is the smallest step for Restart alone.
+- **Action:** ask the user, because B changes how Restart and each resume on `origin/main` decide readiness, and it changes the rule in `docs/protocol/runner-warnings.md` that the process-start ID serves only the warnings. No recorded user decision covers either change.

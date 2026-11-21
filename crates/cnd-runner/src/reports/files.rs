@@ -1,22 +1,20 @@
 //! Serialized file scans, durable revisions, and independent file responses.
 
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use async_trait::async_trait;
 use cnd_runner_interface::file_changes::RunnerChangesPart;
 use cnd_runner_interface::file_tree::{FileEntryKind, RunnerFileEvent, RunnerFileRevisionPart};
 use cnd_runner_interface::runner::RunnerEvent;
-use cnd_runner_interface::runner_files::{
-    DiffReadOutcome, FileReadOutcome, RunnerDiffResult, RunnerFileCommand, RunnerFileResponse,
-    RunnerFileResult, RunnerReadDiff, RunnerReadFile,
-};
-use cnd_runner_interface::wire::{WireFalse, WireTrue};
+use cnd_runner_interface::runner_files::{RunnerFileCommand, RunnerFileResponse};
 use futures_util::future::BoxFuture;
 use tokio::sync::Mutex;
 use tokio::time::Instant;
 
 use crate::emitter::EventEmitter;
 use crate::error::Result;
+use crate::repository::error::Error;
 use crate::repository::service::{Repository, RepositorySnapshot};
 use crate::startup_log::StartupLog;
 use crate::state::records::FileRevisions;
@@ -24,6 +22,7 @@ use crate::state::records::FileRevisions;
 use super::parts::split;
 use super::prepare::ReportFilter;
 use super::queue::SerialQueue;
+use super::requests::respond;
 use super::updates::{changes_updated, tree_update};
 
 /// Select only one kind for a report request.
@@ -41,13 +40,15 @@ pub enum FileReportKind {
 pub trait FileReports: Send + Sync {
     /// Prepare context storage. A failure warns without blocking startup.
     async fn start(&self) -> Result<()>;
-    /// Serialize with earlier scans and emit captured parts in order.
+    /// Serialize with earlier scans. Watch refreshes share a waiting scan.
     fn refresh(
         &self,
         full: bool,
         kind: Option<FileReportKind>,
         command_id: Option<String>,
     ) -> BoxFuture<'static, Result<()>>;
+    /// Cancel capture, skip waiting scans, and wait for active work to finish.
+    async fn close(&self);
     /// File reads and diffs bypass the scan queue.
     async fn request(&self, command: RunnerFileCommand) -> RunnerFileResponse;
 }
@@ -68,11 +69,14 @@ pub struct FileReporter {
     filter: Arc<dyn ReportFilter>,
     history: Arc<Mutex<History>>,
     queue: Arc<SerialQueue>,
+    stopped: Arc<AtomicBool>,
+    queued: Arc<AtomicBool>,
     startup_log: Option<Arc<dyn StartupLog>>,
 }
 
 impl FileReporter {
-    /// Compose a reporter with revisions from the loaded durable state.
+    /// Compose with an independent repository and revisions from the loaded durable state.
+    /// Closing this reporter cancels its repository instance.
     pub fn new(
         repository: Arc<dyn Repository>,
         branch: String,
@@ -92,6 +96,8 @@ impl FileReporter {
                 unavailable: false,
             })),
             queue: Arc::new(SerialQueue::default()),
+            stopped: Arc::new(AtomicBool::new(false)),
+            queued: Arc::new(AtomicBool::new(false)),
             startup_log: None,
         }
     }
@@ -109,8 +115,14 @@ impl FileReporter {
         kind: Option<FileReportKind>,
         command_id: Option<String>,
     ) -> Result<()> {
+        if self.stopped.load(Ordering::Acquire) {
+            return Ok(());
+        }
         let started = Instant::now();
         let captured = self.repository.snapshot(self.branch.clone()).await;
+        if self.stopped.load(Ordering::Acquire) || matches!(&captured, Err(Error::Canceled)) {
+            return Ok(());
+        }
         let duration = started.elapsed();
         if full
             && kind.is_none()
@@ -224,9 +236,18 @@ impl FileReports for FileReporter {
         kind: Option<FileReportKind>,
         command_id: Option<String>,
     ) -> BoxFuture<'static, Result<()>> {
+        let watch_refresh = !full && kind.is_none() && command_id.is_none();
+        if self.stopped.load(Ordering::Acquire)
+            || (watch_refresh && self.queued.swap(true, Ordering::AcqRel))
+        {
+            return Box::pin(async { Ok(()) });
+        }
         let reporter = self.clone();
         self.queue.run(async move {
             let mut state = reporter.history.lock().await;
+            if watch_refresh {
+                reporter.queued.store(false, Ordering::Release);
+            }
             let result = reporter.scan(&mut state, full, kind, command_id).await;
             if result.is_err() {
                 state.unavailable = true;
@@ -235,37 +256,14 @@ impl FileReports for FileReporter {
         })
     }
 
+    async fn close(&self) {
+        self.stopped.store(true, Ordering::Release);
+        self.repository.cancel();
+        let _active = self.history.lock().await;
+    }
+
     async fn request(&self, command: RunnerFileCommand) -> RunnerFileResponse {
-        match command {
-            RunnerFileCommand::Read(RunnerReadFile::Read {
-                request_id,
-                path,
-                max_bytes,
-            }) => {
-                let result = match self.repository.read(path, max_bytes).await {
-                    Ok(file) => FileReadOutcome::Success { ok: WireTrue, file },
-                    Err(error) => FileReadOutcome::Failure {
-                        ok: WireFalse,
-                        error: error.file_error(),
-                    },
-                };
-                RunnerFileResponse::File(RunnerFileResult::Read { request_id, result })
-            }
-            RunnerFileCommand::Diff(RunnerReadDiff::Diff {
-                request_id,
-                path,
-                default_branch,
-            }) => {
-                let result = match self.repository.diff(path, default_branch).await {
-                    Ok(diff) => DiffReadOutcome::Success { ok: WireTrue, diff },
-                    Err(error) => DiffReadOutcome::Failure {
-                        ok: WireFalse,
-                        error: error.file_error(),
-                    },
-                };
-                RunnerFileResponse::Diff(RunnerDiffResult::Diff { request_id, result })
-            }
-        }
+        respond(self.repository.as_ref(), command).await
     }
 }
 

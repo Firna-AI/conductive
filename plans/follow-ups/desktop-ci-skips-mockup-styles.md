@@ -26,6 +26,6 @@
 - **Recommendation:** B. It closes the gap with one line in each of two files, and mockup-only pull requests are few.
 - **Action:** ask the user, because the option changes when an existing gate runs, and the Mac runner minutes are a cost that the user chose to limit.
 
-- **Related:** `plans/follow-ups/dialog-content-outside-window.md` will add a browser layout regression. Its initial test-file edit starts the existing workflow. Later CSS-only edits still need the coverage decision.
+The browser layout regression `desktop/tests/new-workspace-height.spec.ts` opens a tall New workspace dialog at the 480 px minimum height of the Mac window. The change that added it started the existing workflow, because it changed `desktop/**`. A later change to only the mockup styles of that dialog, such as `docs/mockups/src/components/common/ModalCard.module.css`, starts no Mac CI job. Such a change still needs the coverage decision.
 
 The second-pass check of the New workspace dialog on 9 November 2026 found the same gap. It proposed E and F as other approaches. It recorded that shared components and styles under `docs/mockups/` can alter the real app while the ordinary mockup build checks rendering and types without these browser interactions. E also prevents path-filter drift while retaining the current Mac journeys.

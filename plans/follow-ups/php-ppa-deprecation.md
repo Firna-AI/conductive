@@ -162,8 +162,8 @@
   - Turn on the Label option for every apt command, with a global apt setting. It covers only `Label` changes. A removal of the archive, or a change of its `Origin` or `Codename`, still fails. It also loosens the check for every apt command that members and agents run.
   - Remove PHP from each Boat image. It fails the goal for orgs that use PHP. Only the production inventory above can show whether any org uses it.
   - A base image of the app's own on Boat, like the E2B template. Boat's FAQ says that all customers get one image. B or E also gives the same result for this source at a lower cost.
-  - Let the apt part warn and continue when `apt-get update` fails. It breaks a requirement that stays. `docs/protocol/sandbox-software.md:201-205` says that a change of the apt part still upgrades the packages. After a failed update that only warns, the step can record the change but leave `tmux` or `gh` old.
-  - Ship `ttyd`, `tmux`, and `gh` in the app's release, and drop apt from builds. It breaks a requirement that stays. `docs/protocol/sandbox-software.md:198-200` says that the software step installs these packages with apt.
+  - Let the apt part warn and continue when `apt-get update` fails. It breaks a requirement that stays. `docs/protocol/sandbox-software.md:209-213` says that a change of the apt part still upgrades the packages. After a failed update that only warns, the step can record the change but leave `tmux` or `gh` old.
+  - Ship `ttyd`, `tmux`, and `gh` in the app's release, and drop apt from builds. It breaks a requirement that stays. `docs/protocol/sandbox-software.md:206-208` says that the software step installs these packages with apt.
   - Drop `apt-get update` from the apt part. It fails the goal, because the cached lists get old, and the install then fails on removed package files.
 - **Wider fix:** F. It stops a change in any apt source that the app's packages do not need from failing the apt part. It does not cover PHP fixes or plain apt commands in org scripts.
 - **Previous examples:**
