@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
 import { Archive, FolderInput, Pencil, UserRoundPen } from 'lucide-react'
-import type { MenuEntry } from '../common/Menu'
 import { linkItem } from '../workspace/linkCopy'
 
 /** An action of the workspace menu that opens its choices beside the menu. */
@@ -81,24 +80,4 @@ export function renames(access: RowAccess): boolean {
   return workspaceMenuItems(access).some(
     (item) => item.kind === 'action' && item.action === 'rename',
   )
-}
-
-/**
- * The menu of a workspace row as a view draws it. `open` is the submenu
- * that shows its choices.
- */
-export function workspaceMenuOf(
-  access: RowAccess,
-  open?: Submenu,
-): MenuEntry[] {
-  return workspaceMenuItems(access).map((item): MenuEntry => {
-    if (item.kind === 'divider') return item
-    const entry: Extract<MenuEntry, { kind: 'item' }> = {
-      kind: 'item',
-      label: item.label,
-      icon: item.icon,
-    }
-    if (!item.submenu) return entry
-    return { ...entry, submenu: open === item.action ? 'open' : 'closed' }
-  })
 }

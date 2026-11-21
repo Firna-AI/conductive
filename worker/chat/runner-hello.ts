@@ -41,7 +41,9 @@ export async function acceptRunnerHello(
   active.repositoryFolder = message.repositoryFolder
   active.fileServer = message.fileServer
   await context.services.negotiate(active, message.services === true)
-  active.ready = welcome.ready
+  active.ready =
+    welcome.savedReady &&
+    !(await context.dependencies.requiresFreshRunnerReady?.())
   await context.connections.persist(active)
   context.connections.reportConnected(active)
   if (active.ready) context.connections.attachFiles(active)

@@ -1,8 +1,8 @@
 import { MessageSquareText } from 'lucide-react'
+import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
 import type { ChatItem } from '../../fixtures/conversations'
 import { classes } from '../common/classes'
 import prose from '../common/MarkdownProse.module.css'
-import { AgentBlocks } from './AgentBlocks'
 import { fixtureDrawing } from './fixtureDrawing'
 import { holdsTable, LineBlocks, type LineState } from './LineBlocks'
 import blockStyles from './LineBlocks.module.css'
@@ -54,7 +54,11 @@ export function MessageLine(props: { message: AgentItem; open: boolean }) {
       </summary>
       {rest.length > 0 ? (
         <div className={classes(styles.messageBody, blockStyles.messageBody)}>
-          <AgentBlocks blocks={rest} drawing={fixtureDrawing} />
+          <agentBlocks.Component
+            blocks={rest}
+            id={props.message.id}
+            moklyInstance="blocks"
+          />
         </div>
       ) : null}
     </details>

@@ -175,6 +175,13 @@ export class WorkspaceServices {
     await this.controls.end(workspaceId, 'unconfirmed', connectionId)
   }
 
+  readonly stoppedHook = async (
+    workspaceId: string,
+    restartFailed?: boolean,
+  ): Promise<void> => {
+    if (!restartFailed) await this.stopped(workspaceId)
+  }
+
   async stopped(workspaceId: string): Promise<void> {
     const active = this.connections.current()
     if (active?.workspace.id === workspaceId) this.parts.delete(active.id)

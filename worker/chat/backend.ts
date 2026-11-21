@@ -99,8 +99,12 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  async stopWorkspace(workspaceId: string): Promise<void> {
-    await this.operations.stop(workspaceId)
+  stopWorkspace(...input: Parameters<WorkspaceOperations['stop']>) {
+    return this.operations.stop(...input)
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    return this.operations.stopTurnsForRestart(workspaceId)
   }
 
   commitWorkspaceEvent(
@@ -147,6 +151,7 @@ export class WorkspaceChat {
     )
     this.browsers = new BrowserConnections(
       this.store,
+      env,
       this.dependencies,
       (id) => this.operation(id),
       (id) => this.binding.bind(id),
@@ -174,6 +179,7 @@ export class WorkspaceChat {
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
       closeRunner: (id) => this.runner.stop(id),
+      closeRunnerAfterRestartFailure: () => this.closeRunner(),
       flushRunner: () => this.runner.flush(),
     })
   }

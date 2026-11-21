@@ -12,6 +12,7 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
+import { requiresFreshRunnerReady } from '../lifecycle/durable-restart'
 import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
 import {
   lifecycleDependencies,
@@ -88,7 +89,7 @@ export function createWorkspaceIntegration(
     nativeAlarmStorage(context.storage),
   )
   const sockets = new WorkspaceSockets(context)
-  const stoppedHooks: ((id: string) => Promise<void>)[] = []
+  const stoppedHooks: ((id: string, failed?: boolean) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
     dependencies.randomToken,
@@ -122,6 +123,8 @@ export function createWorkspaceIntegration(
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
+      requiresFreshRunnerReady: async () =>
+        requiresFreshRunnerReady(await controller.readLifecycle()),
       runnerUnsupported: async () =>
         controller.runnerProtocolUnsupported(unsupportedRunnerReason),
       ...observeWorkspaceCallbacks(
@@ -136,9 +139,7 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(
-                Promise.all([devices.reconcile(), secrets.reconcile()]),
-              )
+              context.waitUntil(reconcileStopped())
             }
           },
           receiveFileResult: async (value, connectionId) => {
@@ -153,8 +154,11 @@ export function createWorkspaceIntegration(
               callbackPublisher(publish),
             )
           },
-          runnerDisconnected: async (_id, publish) =>
-            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+          runnerDisconnected: async (_id, publish, at) =>
+            controller.runnerLifecycleDisconnected(
+              callbackPublisher(publish),
+              at,
+            ),
           turnDispatching: async (_id, turn, publish) => {
             if (await pendingWorkspaceChange(storage)) return false
             const state = await controller.readLifecycle()
@@ -221,6 +225,9 @@ export function createWorkspaceIntegration(
     }),
   )
   const startRecords = new StartJobRecords(env, platform.storage, now)
+  const reconcileStopped = async () => {
+    await Promise.all([devices.reconcile(), secrets.reconcile()])
+  }
   const controller: WorkspaceController = createWorkspaceController(
     startRecords.env,
     dependencies,
@@ -247,10 +254,7 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () =>
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        ),
+      chatRecovered: () => context.waitUntil(reconcileStopped()),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -272,12 +276,10 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id) => {
-        for (const hook of stoppedHooks) await hook(id)
-        await chat.stopWorkspace(id)
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        )
+      stopped: async (id, keepQueued, restartFailed) => {
+        for (const hook of stoppedHooks) await hook(id, restartFailed)
+        await chat.stopWorkspace(id, keepQueued, restartFailed)
+        context.waitUntil(reconcileStopped())
       },
     },
   )
@@ -292,9 +294,7 @@ export function createWorkspaceIntegration(
     sockets,
     startRecords,
     withGeneration: generations.withGeneration,
-    reconcileStopped: async () => {
-      await Promise.all([devices.reconcile(), secrets.reconcile()])
-    },
-    onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
+    reconcileStopped,
+    onStopped: (hook: (typeof stoppedHooks)[number]) => stoppedHooks.push(hook),
   }
 }

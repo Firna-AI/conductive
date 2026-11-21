@@ -1,7 +1,7 @@
-import { CircleAlert, FolderGit2 } from 'lucide-react'
+import { defined } from '../../defined'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 
 /**
@@ -10,14 +10,19 @@ import { ScreenLink } from '../common/ScreenLink'
  */
 export function CreateFailedNotice(props: { ready?: boolean }) {
   return (
-    <Notice
+    <notice.Component
       action={
-        <ActionButton disabled={props.ready === false} tone="primary">
+        <actionButton.Component
+          disabled={props.ready === false}
+          moklyInstance="retry-create"
+          tone="primary"
+        >
           Try again
-        </ActionButton>
+        </actionButton.Component>
       }
       body="The app can't reach the server. Your message is kept."
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="create-failed"
       title="The workspace wasn't created"
       tone="danger"
     />
@@ -41,7 +46,12 @@ function adminChoosesRepositories(org: string): string {
 export function ChooseRepositoriesButton() {
   return (
     <ScreenLink asChild to={paths.repositories}>
-      <ActionButton icon={FolderGit2}>Choose repositories</ActionButton>
+      <actionButton.Component
+        icon="folder-git-2"
+        moklyInstance="choose-repositories"
+      >
+        Choose repositories
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -57,9 +67,12 @@ export function ChooseRepositoriesNotice(props: {
   admin: boolean
 }) {
   return (
-    <Notice
-      action={props.admin ? <ChooseRepositoriesButton /> : undefined}
-      icon={FolderGit2}
+    <notice.Component
+      icon="folder-git-2"
+      moklyInstance="choose-repositories-notice"
+      {...defined({
+        action: props.admin ? <ChooseRepositoriesButton /> : undefined,
+      })}
       title={
         props.admin
           ? chooseRepositoriesFirst(props.org)

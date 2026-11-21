@@ -33,8 +33,7 @@ export function MarketingScreen(props: { viewport: Viewport }) {
   return (
     <SitePage viewport={viewport}>
       <Hero
-        device={hero.device}
-        picture={hero.picture}
+        picture={hero}
         signIn={paths.signIn}
         text={productSummary.heroText}
         title={productSummary.heroTitle}

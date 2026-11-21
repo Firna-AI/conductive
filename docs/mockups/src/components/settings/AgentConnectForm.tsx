@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react'
 import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { TriangleAlert } from 'lucide-react'
 import { productName } from '../../brand'
 import { agents, type AgentKey } from '../../fixtures/agents'
 import { pastedKey, type LoginKind } from '../../fixtures/logins'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { ExternalLink } from '../common/ExternalLink'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import {
@@ -17,8 +16,9 @@ import {
   loginLabels,
   orgConnectKinds,
 } from './agentConnectCopy'
-import { ChatGptSignIn } from './ChatGptSignIn'
-import { EndpointFields, type EndpointEntry } from './EndpointFields'
+import { chatGptSignIn } from '../../entries/components/settings/ChatGptSignIn.mockup'
+import { endpointFields } from '../../entries/components/settings/EndpointFields.mockup'
+import type { EndpointEntry } from './EndpointFields'
 import type { SignInStep } from './chatGptSignInCopy'
 import styles from './AgentConnectForm.module.css'
 
@@ -51,7 +51,12 @@ function keyAsk(agent: AgentKey, org: string | undefined): SecretAsk {
     text: (
       <>
         {key.text(agent, whose)}{' '}
-        <ExternalLink href={key.pages[agent]}>{key.link(agent)}</ExternalLink>
+        <externalLink.Component
+          href={key.pages[agent]}
+          moklyInstance={`${agent}-keys`}
+        >
+          {key.link(agent)}
+        </externalLink.Component>
       </>
     ),
     label: key.label(agent),
@@ -103,19 +108,24 @@ function FormEnd(props: FormEndProps) {
   return (
     <>
       {props.failed ? (
-        <Notice
+        <notice.Component
           body={props.failed}
-          icon={TriangleAlert}
+          icon="triangle-alert"
+          moklyInstance="connect-failed"
           title={title}
           tone="danger"
         />
       ) : null}
       <div className={styles.actions}>
-        {props.cancel ? <ActionButton>Cancel</ActionButton> : null}
+        {props.cancel ? (
+          <actionButton.Component moklyInstance="cancel-connect">
+            Cancel
+          </actionButton.Component>
+        ) : null}
         <ScreenLink asChild to={props.connectTo}>
-          <ActionButton tone="primary">
+          <actionButton.Component moklyInstance="connect-login" tone="primary">
             {props.replace ? 'Replace' : 'Connect'}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       </div>
     </>
@@ -201,19 +211,21 @@ export function AgentConnectForm(props: {
       />
       {ask.type === 'endpoint' ? (
         <>
-          <EndpointFields
+          <endpointFields.Component
             agent={props.agent}
             entry={props.endpoint ?? 'empty'}
             keyHint={keepHint}
+            moklyInstance="endpoint-fields"
           />
           <FormEnd {...end} />
         </>
       ) : ask.type === 'secret' ? (
         <SecretFields ask={ask} end={end} />
       ) : (
-        <ChatGptSignIn
+        <chatGptSignIn.Component
           cancel={props.cancel}
           codeTo={props.connectTo}
+          moklyInstance="chatgpt-sign-in"
           step={props.signIn ?? 'start'}
         />
       )}

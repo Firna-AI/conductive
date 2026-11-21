@@ -23,6 +23,7 @@ import type { WorkspaceContinue } from './lifecycle/continue'
 import type { WorkspaceRepositoryChange } from './lifecycle/repository-change'
 import { WorkspaceJobs } from './lifecycle/workspace-jobs'
 import { changeRestart, type RestartStep } from './lifecycle/software-restart'
+import { createAutomaticRestart } from './lifecycle/automatic-restart'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
@@ -70,7 +71,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
-    this.integration.onStopped((id) => this.chat.runner.services.stopped(id))
+    this.integration.onStopped(this.chat.runner.services.stoppedHook)
     this.github = new WorkspaceGitHub(
       this.integration.storage,
       env,
@@ -93,6 +94,13 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       run: (operation) => this.run(operation),
     })
+    const restart = createAutomaticRestart({
+      ...this.integration,
+      env,
+      dependencies,
+      run: (work) => this.run(work),
+      refreshTerminal: (target) => this.features.refreshTerminal(target),
+    })
     this.alarmRunner = new WorkspaceAlarmRunner({
       context,
       env,
@@ -107,7 +115,8 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       jobs: this.jobs,
       features: this.features,
-      lifecycle: () => this.alarmLifecycle(),
+      lifecycle: (dispatch) =>
+        this.alarmLifecycle(dispatch && (() => restart(dispatch))),
       automationReport: () =>
         retryAutomationReport(env.DB, this.chat.store, now),
     })

@@ -147,6 +147,7 @@ export class RunnerConnections {
         },
         () => {
           if (this.current !== active) return
+          const at = this.dependencies.now()
           this.reportConnected(active)
           warnRunnerConnection('runner_disconnected', active)
           this.current = null
@@ -166,6 +167,7 @@ export class RunnerConnections {
                       this.publish,
                     )
                   },
+                  at,
                 ),
               ),
             ]),

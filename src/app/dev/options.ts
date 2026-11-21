@@ -155,6 +155,10 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  *   fails. Without it, the accounts are `boat` and `e2b`.
  * - `providerSave=fail`: each save of the weights of new orgs fails, so
  *   the Providers tab shows that the weights were not saved.
+ * - `switches=1`: sample orgs of the operator section show each state of a
+ *   switch of the provider account, as `switch-seed.ts` lists them.
+ * - `switchSave=fail`: each Switch account and Stop switch fails, so the
+ *   question shows its error.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
@@ -194,6 +198,8 @@ export interface DevOptions {
   inviteCode: DevInviteCode
   providers: DevProviderPreset
   providerSaveFails: boolean
+  switches: boolean
+  switchSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
 }
@@ -252,6 +258,8 @@ export function readDevOptions(search: string): DevOptions {
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
+    switches: params.get('switches') === '1',
+    switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }

@@ -116,10 +116,13 @@ folders that this doc uses. The terms are those of the
 - A refresh that finds the repository by its ID, not by its name, was
   rejected. Reason: the checks that guard each copy of a repository then
   change, and the folder takes the new name only at a later manual build.
-- The app starts no build when the newest build failed. The change then
-  waits for Try again, which builds the saved values. Reason: the app
-  starts no build by itself after a failed build (decision 12), as
-  [The org image](org-image.md) says.
+- The app starts no build when the newest build on the account of the org
+  failed. The change then waits for Try again, which builds the saved
+  values. Reason: the app starts no build by itself after a failed build
+  (decision 12), as [The org image](org-image.md) says.
+- A failed switch build runs on another account, so it does not count.
+  Reason: members do not see it, and their image still works, as
+  [What members see](switch-account.md#what-members-see) says.
 
 ## Folders
 

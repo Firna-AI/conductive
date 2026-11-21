@@ -2,7 +2,7 @@
  * Terminal sessions. Each line is a list of coloured segments.
  */
 
-import { failedBuild, timedOutBuild } from './computer'
+import { endedBuild, failedBuild, timedOutBuild } from './computer'
 import { checkoutAutocomplete, savedCarts } from './workspaces'
 
 export type TerminalTone =
@@ -187,6 +187,30 @@ export const failedBuildLog: readonly TerminalLine[] = [
 ]
 
 /**
+ * A build that an admin started while another update of the cloud computer
+ * runs, which members do not see. Its first step waits for that update, so
+ * the log names the wait as that step starts. The steps of the build follow
+ * when the wait ends.
+ */
+export const waitingBuildLog: readonly TerminalLine[] = [
+  muted('Waiting for another update of the cloud computer to finish'),
+]
+
+/**
+ * The end of a build of Acme that an operator ended for another update of
+ * the cloud computer. The app adds the saved message of the build as the
+ * last line.
+ */
+export const endedBuildLog: readonly TerminalLine[] = [
+  ...acmeBuildLog([
+    'acme/storefront',
+    'acme/billing-service',
+    'acme/marketing-site',
+  ]),
+  muted(endedBuild.error),
+]
+
+/**
  * The end of a build that passed its 60-minute limit: a postinstall script
  * watches its files, so the install script never ends. The app then adds
  * the saved message of the build as the last line.
@@ -229,6 +253,15 @@ export const failedFirstBuildLog: readonly TerminalLine[] = [
   ...firstBuildLog,
   muted('Saving the cloud computer image'),
   muted(failedBuild.error),
+]
+
+/**
+ * The first build of Firna, which an operator ended for another update of
+ * the cloud computer, as a switch question can end a first build.
+ */
+export const endedFirstBuildLog: readonly TerminalLine[] = [
+  ...firstBuildLog,
+  muted(endedBuild.error),
 ]
 
 /**

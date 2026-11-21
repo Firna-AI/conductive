@@ -17,6 +17,25 @@ const MASKED_VALUE = 'acme-7f3k'
 const marker = '[redacted]'
 
 /**
+ * A target branch that holds the fake secret value, with the label that
+ * the Worker sends beside it in a GitHub state.
+ */
+export const MASKED_BASE = {
+  baseBranch: `release/${MASKED_VALUE}`,
+  displayBaseBranch: `release/${marker}`,
+} as const
+
+/**
+ * A workspace branch that holds the fake secret value, with its label. A
+ * screen of a workspace compares the real branch with the branch of the
+ * workspace record, so only a GitHub state without a record takes it.
+ */
+export const MASKED_HEAD = {
+  branch: `calummoore/checkout-${MASKED_VALUE}`,
+  displayBranch: `calummoore/checkout-${marker}`,
+} as const
+
+/**
  * A record of the mockups, whose path is a label, as the Worker sends it:
  * the real path, with the label as its display path when the two differ.
  */

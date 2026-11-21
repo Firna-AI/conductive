@@ -341,9 +341,10 @@ session and no turn, also when its payload names them.
 A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
 names that public type. The reader takes its session and turn only from an
 object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
-from the saved assembly of its stream, as [Chat backend key code](key-code.md)
-says. An event of an unknown type keeps its root IDs. Each check uses a
-session and a turn only when `verifiedTurn` finds that turn in that session.
+from the saved assembly of its stream, as
+[Key code: tool details](key-code-tool-details.md) says. An event of an
+unknown type keeps its root IDs. Each check uses a session and a turn only
+when `verifiedTurn` finds that turn in that session.
 
 ## Related docs
 

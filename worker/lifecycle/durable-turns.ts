@@ -1,5 +1,6 @@
 import type { DurableLifecycleState, LifecycleHooks } from './durable-types'
 import { reconciledLifecycle } from './durable-reconciliation'
+import { isFailedRestart } from './durable-restart'
 
 export async function applyLifecycleTurn(
   state: DurableLifecycleState,
@@ -10,6 +11,8 @@ export async function applyLifecycleTurn(
   const remote = await hooks.extendDeadline()
   if (state.state === 'stopped' || state.state === 'archived') return state
   if (remote) return reconciledLifecycle(state, remote, now())
+  if (state.automaticRestartAt !== undefined && isFailedRestart(state))
+    return state
   const sessions = new Set(state.runningSessions)
   if (change.running) sessions.add(change.sessionId)
   else sessions.delete(change.sessionId)

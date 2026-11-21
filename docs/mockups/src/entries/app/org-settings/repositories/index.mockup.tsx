@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../screens/OrgSettingsScreen'
+} from '../../../../screens/orgSettingsState'
 
 const decisions =
   'The user chose option B and C of decision 240 and option C of decision 241 on 10 November 2026: an added repository starts a build, and a repository change gets its own notice on the Repositories and Cloud computer tabs, for admins and members, while the cloud computer lacks a chosen repository or still holds a removed one.'
