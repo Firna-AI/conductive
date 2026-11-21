@@ -344,6 +344,7 @@ The non-UI implementor connects the checked native manager to the checked Worker
 - [ ] Enable private traffic only after both hello and welcome accept it. Keep it outside the numbered outbox and preserve event numbering.
 - [ ] Split each complete report, control result, and raw log document within the existing envelope budget. Preserve complete text for final filtering. Add no name or service-count limit.
 - [ ] Send each control and log request to the same local manager. Preserve its request IDs, generation rules, and output-free control receipts.
+- [ ] Keep private log reads and pending controls from blocking ordinary initial port reports, idle updates, or repository relocation. Preserve observed-target checks across asynchronous reads.
 - [ ] Publish a fresh full snapshot after each negotiated connection. Retain a monotonic revision across runner restarts and reject stale connections.
 - [ ] Link owned ports through native and Worker reports without changing existing port selection.
 - [ ] Check a new runner with the previous Worker, a rollback with pending or live service traffic, and reconnect after a runner restart.
