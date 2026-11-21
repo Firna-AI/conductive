@@ -390,6 +390,7 @@ Depends on: every other milestone
 The orchestrator owns the combined gate, implementation review, and pull request. It checks each delegated result before ticking its TODO.
 
 - [ ] Recheck every completed milestone against the diff and the repository rules.
+- [x] Fix the unused service-copy exports found by the existing export check. Keep their module-local uses.
 - [ ] In an isolated test workspace, start a service, end its agent turn, and confirm that it stays usable. Restart only that workspace's runner and confirm service survival. Check computer stop and the selected resume behavior.
 - [ ] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
 - [ ] Run `npm run format:check` and `npm run lint` before the long gate.
@@ -404,6 +405,8 @@ The orchestrator owns the combined gate, implementation review, and pull request
 - [ ] Merge current `main` into this branch when required by the delegation and finish rules. Resolve only services conflicts. Rerun checks for the combined tree.
 - [ ] Delete this plan when all other milestone TODOs are ticked and the review rounds are done. Preserve its dated decisions in the pull request description.
 - [ ] Open the pull request into `main`. Keep it unmerged. Watch the final commit until `Complete gate` and `Rust gate` are green.
+
+Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.context/services/pre-worker-exports-fixed.log`, and `.context/services/pre-worker-export-typecheck.log`.
 
 ## Outside this change
 

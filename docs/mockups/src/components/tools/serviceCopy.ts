@@ -10,7 +10,7 @@
 import { nameLabel } from '../../../../../src/shared/name-label'
 
 /** How the last run of a service ended, as the report gives it. */
-export type ServiceResult =
+type ServiceResult =
   /** Its process exited with this code. */
   | { kind: 'exit'; code: number }
   /** A signal ended its process, such as `SIGSEGV`. */
@@ -89,7 +89,7 @@ export const serviceStateLabels: Readonly<
 }
 
 /** The result of a run, such as `Exit code 1` or `Out of memory`. */
-export function serviceResultText(result: ServiceResult): string {
+function serviceResultText(result: ServiceResult): string {
   switch (result.kind) {
     case 'exit':
       return `Exit code ${result.code}`
