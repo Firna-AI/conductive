@@ -49,7 +49,7 @@ it.each(['running', 'finished'] as const)(
       session.activeTurnId = state === 'running' ? 'legacy-turn' : null
       await view.saveSession(session)
     })
-    await f.patch({ macAccess: false })
+    await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
     expect(await f.notes(session.id)).toHaveLength(1)
     if (state === 'finished') await f.send(session.id, 'next')
     expect(f.runner.commands.at(-1)).toMatchObject({
@@ -96,7 +96,7 @@ it.each(['ended', 'missing'] as const)(
     const f = await noticeFixture(harness)
     const session = await f.createSession()
     const first = await f.start(session.id, 'first')
-    await f.patch({ macAccess: false })
+    await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
     const notice = f.runner.commands.at(-1)
     if (notice?.type !== 'notice') throw new Error('The notice is missing.')
     const turn = await f.chat.readWorkspace(WORKSPACE_ID, (view) =>

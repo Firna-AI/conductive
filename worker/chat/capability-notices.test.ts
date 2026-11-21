@@ -24,7 +24,10 @@ it('steers only a started session and acknowledges the note without a member mes
   const empty = await f.createSession()
   const turn = await f.start(session.id, 'first')
   const secret = await capabilitySecret(f, 'DEPLOY_KEY')
-  await f.patch({ preapprovedSecretIds: [secret.id] })
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approved', names: ['DEPLOY_KEY'] }],
+  )
   expect(await f.notes(session.id)).toHaveLength(1)
   expect(await f.notes(empty.id)).toEqual([])
   expect(f.runner.commands.at(-1)).toMatchObject({
@@ -71,9 +74,11 @@ it('keeps idle notes in order and retries unread notes before the next message',
   const first = await f.start(session.id, 'first')
   await f.finish(first)
   const count = f.runner.commands.length
-  await f.patch({ macAccess: false })
-  const secret = await capabilitySecret(f, 'NEXT_KEY')
-  await f.patch({ preapprovedSecretIds: [secret.id] })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approved', names: ['NEXT_KEY'] }],
+  )
   expect(f.runner.commands).toHaveLength(count)
   const notes = await f.waitingNotes(session.id)
   expect(notes.map((note) => note.sentTurnId)).toEqual([null, null])
@@ -103,7 +108,7 @@ it('keeps notes across session close and object restart until a capable runner r
   const f = await noticeFixture(harness, false)
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
-  await f.patch({ macAccess: false })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
   expect(f.runner.commands.some((command) => command.type === 'notice')).toBe(
     false,
   )
@@ -120,7 +125,7 @@ it('keeps notes across session close and object restart until a capable runner r
       })
     ).status,
   ).toBe(200)
-  await f.patch({ macAccess: true })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: true }])
   expect(await f.waitingNotes(session.id)).toHaveLength(2)
   await f.restart()
   const current = await f.connect(
@@ -146,7 +151,7 @@ it('resends a pending notice after reconnect and returns it to waiting after a f
   const f = await noticeFixture(harness)
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
-  await f.patch({ macAccess: false })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
   const notice = f.runner.commands.at(-1)
   expect(notice?.type).toBe('notice')
   if (notice?.type !== 'notice') throw new Error('The notice is missing.')

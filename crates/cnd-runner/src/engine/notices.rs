@@ -2,11 +2,12 @@
 
 use cnd_runner_interface::provider_events::ProviderResultState;
 use cnd_runner_interface::runner_commands::RunnerNotice;
-use cnd_runner_interface::sdk_helper::HelperModelResult;
 use cnd_runner_interface::sdk_helper_options::ProviderInput;
 
 use crate::error::Result;
 
+use super::background::InputKind;
+use super::provider::DeliveryOutcome;
 use super::types::Session;
 
 impl Session {
@@ -36,17 +37,27 @@ impl Session {
             return Ok(());
         }
         let was_waiting = turn.background.as_ref().is_some_and(|b| b.waiting);
-        if let Some(background) = &mut turn.background {
-            background.input(received_at, self.dependencies.background_limit);
+        let kind = match &input {
+            ProviderInput::Turn(_) | ProviderInput::Message(_) => InputKind::Member,
+            ProviderInput::Notice(_) => InputKind::Notice,
+        };
+        let outcome = if turn.waiting.is_empty() {
+            self.deliver(input.clone()).await?
+        } else {
+            DeliveryOutcome::Deferred
+        };
+        if outcome == DeliveryOutcome::Rejected {
+            return Ok(());
         }
-        if !turn.waiting.is_empty() {
-            turn.waiting.push_back(input);
-        } else if self.deliver(input.clone()).await? == HelperModelResult::Deferred
-            && let Some(turn) = &mut self.active
-        {
-            turn.waiting.push_back(input);
+        if let Some(turn) = &mut self.active {
+            if let Some(background) = &mut turn.background {
+                background.input(kind, received_at, self.dependencies.background_limit);
+            }
+            if outcome == DeliveryOutcome::Deferred {
+                turn.waiting.push_back(input);
+            }
         }
-        if was_waiting && self.active.as_ref().is_some_and(|t| !t.waiting.is_empty()) {
+        if was_waiting && outcome == DeliveryOutcome::Deferred {
             self.result(ProviderResultState::Finished, vec![], None, false)
                 .await?;
         }

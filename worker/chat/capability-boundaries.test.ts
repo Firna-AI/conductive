@@ -23,8 +23,8 @@ it('holds a change between turn preparation and runner start and then sends it o
   await f.send(session.id, 'first')
   const turn = f.runner.commands.at(-1)
   if (turn?.type !== 'turn') throw new Error('The turn is missing.')
-  await f.patch({ macAccess: false })
-  await f.patch({ macAccess: true })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: true }])
   expect(
     f.runner.commands.filter((command) => command.type === 'notice'),
   ).toEqual([])
@@ -79,7 +79,7 @@ it('ignores a receipt for a different session or a previous turn', async () => {
   const other = await f.createSession()
   const first = await f.start(session.id, 'first')
   const otherTurn = await f.start(other.id, 'other')
-  await f.patch({ macAccess: false })
+  await f.seedNotes([session.id, other.id], [{ kind: 'mac-access', on: false }])
   const notes = await f.waitingNotes(session.id)
   expect(notes).toHaveLength(1)
   await f.finish(otherTurn, [notes[0].id])

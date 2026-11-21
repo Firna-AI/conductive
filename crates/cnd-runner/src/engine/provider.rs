@@ -17,6 +17,14 @@ use super::control::Control;
 use super::mailbox::Mailbox;
 use super::types::{ActiveTurn, Session, Work, identity};
 
+/// An input can be delivered, queued for a handoff, or rejected.
+#[derive(PartialEq, Eq)]
+pub(super) enum DeliveryOutcome {
+    Applied,
+    Deferred,
+    Rejected,
+}
+
 struct ForwardOutput {
     mailbox: Mailbox,
     generation: u64,
@@ -111,7 +119,7 @@ impl Session {
         Ok(())
     }
 
-    pub(super) async fn deliver(&mut self, input: ProviderInput) -> Result<HelperModelResult> {
+    pub(super) async fn deliver(&mut self, input: ProviderInput) -> Result<DeliveryOutcome> {
         let turn = self.active.as_mut().ok_or(Error::InvalidCommand)?;
         let helper = turn.helper.clone().ok_or(Error::HelperExited)?;
         if matches!(&input, ProviderInput::Notice(_)) {
@@ -120,23 +128,23 @@ impl Session {
                 Err(Error::Canceled) => return Err(Error::Canceled),
                 Err(_) => {
                     tracing::warn!("The app note could not reach the agent.");
-                    return Ok(HelperModelResult::Applied);
+                    return Ok(DeliveryOutcome::Rejected);
                 }
             }
             turn.track_notices(&input);
-            return Ok(HelperModelResult::Applied);
+            return Ok(DeliveryOutcome::Applied);
         }
         let (_, _, message) = identity(&input).ok_or(Error::InvalidCommand)?;
         let id = message.id.clone();
         self.choice = Some(message.choice.clone());
         let result = turn.control.run(helper.model(message.choice.clone())).await;
         if matches!(result, Ok(HelperModelResult::Deferred)) {
-            return result;
+            return Ok(DeliveryOutcome::Deferred);
         }
         turn.message_ids.push(id);
         result?;
         turn.control.run(helper.send(input)).await?;
-        Ok(HelperModelResult::Applied)
+        Ok(DeliveryOutcome::Applied)
     }
 }
 

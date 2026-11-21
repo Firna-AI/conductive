@@ -20,8 +20,8 @@ it('keeps note events through history compaction for later delivery', async () =
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
   await f.finish(first)
-  await f.patch({ macAccess: false })
-  await f.patch({ macAccess: true })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: true }])
   const notes = await f.notes(session.id)
   expect(notes).toHaveLength(2)
   await f.changeWorkspace(WORKSPACE_ID, async (view) => {
@@ -75,7 +75,8 @@ it('receipts only notes read by the failed turn and retains gaps in read order a
   const other = await f.createSession()
   const first = await f.start(session.id, 'first')
   const otherTurn = await f.start(other.id, 'other')
-  for (const macAccess of [false, true, false]) await f.patch({ macAccess })
+  for (const on of [false, true, false])
+    await f.seedNotes([session.id, other.id], [{ kind: 'mac-access', on }])
   const notes = await f.waitingNotes(session.id)
   const failed = (turn: typeof first, noticeIds: readonly string[]) => ({
     type: 'turn.failed' as const,
@@ -116,7 +117,7 @@ it('receipts only notes read by the failed turn and retains gaps in read order a
   expect(await f.waitingNotes(session.id)).toHaveLength(2)
   await f.finish(next, [notes[0].id, notes[2].id])
   expect(await f.waitingNotes(session.id)).toEqual([])
-  await f.patch({ macAccess: true })
+  await f.seedNotes([session.id, other.id], [{ kind: 'mac-access', on: true }])
   expect(await f.waitingNotes(session.id)).toHaveLength(1)
   expect(await f.notes(session.id)).toHaveLength(4)
 })

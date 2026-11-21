@@ -1,5 +1,6 @@
 import { expect } from 'vitest'
 
+import type { CapabilityChangeNote } from '../../src/shared/capability-change'
 import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
 import type { UpdateWorkspaceCapabilitiesRequest } from '../../src/shared/secrets'
 import { workspaceCapabilitiesPath } from '../../src/shared/secrets'
@@ -81,6 +82,29 @@ export async function noticeFixture(harness: TestHarness, capable = true) {
     f.chat.readWorkspace(WORKSPACE_ID, (view) =>
       view.capabilityNotes.waiting(sessionId),
     )
+  let nextNoteId = 0
+  const seedNotes = async (
+    sessionIds: readonly string[],
+    changes: CapabilityChangeNote['changes'],
+  ) => {
+    await f.chat.changeWorkspace(WORKSPACE_ID, async (view) => {
+      for (const sessionId of sessionIds)
+        await view.emit({
+          type: 'capabilities.changed',
+          sessionId,
+          noteId: `seeded-note-${nextNoteId++}`,
+          member: {
+            id: f.owner.id,
+            githubLogin: 'octocat',
+            displayName: 'Octocat',
+            avatarUrl: null,
+          },
+          changes,
+        })
+    })
+    await f.chat.flushRunner()
+    await f.drain()
+  }
   return {
     ...f,
     runner,
@@ -91,5 +115,6 @@ export async function noticeFixture(harness: TestHarness, capable = true) {
     acknowledgeStart,
     answer,
     waitingNotes,
+    seedNotes,
   }
 }

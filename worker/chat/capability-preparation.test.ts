@@ -73,7 +73,7 @@ it('keeps later notes unsent when a turn is resent before its start receipt', as
   const f = await noticeFixture(harness)
   const session = await f.createSession()
   await f.send(session.id, 'first')
-  await f.patch({ macAccess: false })
+  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
   const replacement = await f.connect(
     new FakeRunner({ workspaceId: WORKSPACE_ID, capabilityNotices: true }),
   )

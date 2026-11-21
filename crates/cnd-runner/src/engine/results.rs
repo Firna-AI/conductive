@@ -2,11 +2,12 @@
 
 use cnd_runner_interface::chat_events::{ToolCallState, TurnEndReason, TurnSpeed};
 use cnd_runner_interface::provider_events::{ProviderEvent, ProviderResultState};
-use cnd_runner_interface::sdk_helper::{HelperModelResult, HelperOutput};
+use cnd_runner_interface::sdk_helper::HelperOutput;
 
 use crate::error::{Error, Result};
 
 use super::background::Disposition;
+use super::provider::DeliveryOutcome;
 use super::types::{End, Session, identity};
 
 impl Session {
@@ -212,7 +213,7 @@ impl Session {
             let Some(next) = next else {
                 break;
             };
-            if self.deliver(next.clone()).await? == HelperModelResult::Deferred {
+            if self.deliver(next.clone()).await? == DeliveryOutcome::Deferred {
                 if let Some(turn) = &mut self.active {
                     turn.waiting.push_front(next);
                 }
