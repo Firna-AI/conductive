@@ -63,18 +63,7 @@ export function valueDetail(who: string, when: string): string {
  */
 export const macAccessWords = {
   title: 'Mac access',
-  /**
-   * The hint of the shared switch before decision 7. No mockup shows it.
-   * The app reads it until it draws one switch.
-   */
-  hint: 'Lets agents ask to run commands on the Mac of the member who sent the message.',
 } as const
-
-/**
- * The label of the line of this Mac before decision 7, which no mockup
- * shows.
- */
-const thisMacLine = 'Allow all commands on this Mac'
 
 /**
  * The words of this Mac in the Mac access part. In the Mac app, the switch
@@ -82,23 +71,8 @@ const thisMacLine = 'Allow all commands on this Mac'
  * access decision 7). The part shows only short results: Not started with
  * its cause, and This Mac is not available. The notice of a new workspace
  * whose grant did not start has its own title and Try again.
- *
- * `offHint`, `line`, `lineHint`, `fifteenMinutesHint`, and `browserNote`
- * are the words of the shared switch, its line, and the note of a browser,
- * from before decision 7. No mockup shows them. The app reads them until
- * it draws one switch and hides the part in a browser.
  */
 export const thisMacWords = {
-  offHint: `${macAccessWords.hint} When you turn it on, this Mac also allows all commands until you stop.`,
-  line: thisMacLine,
-  lineHint: {
-    create:
-      'Commands from the new workspace run without asking, until you stop.',
-    workspace:
-      'Commands from this workspace run without asking, until you stop.',
-  },
-  fifteenMinutesHint: (left: string) =>
-    `${left} left of the 15 minutes. Check this to keep them until you stop.`,
   /**
    * The words under the switch, off and disabled, while the page cannot
    * read this Mac.
@@ -109,7 +83,6 @@ export const thisMacWords = {
   /** Why a start failed when it found this Mac not available. */
   notAvailable:
     'This Mac is not available, so each command still asks first. Try again once it connects.',
-  browserNote: `To allow all commands on your Mac, use ${thisMacLine} in the Mac app.`,
   /** The notice in a new workspace whose grant did not start. */
   noticeTitle: 'Could not allow all commands on this Mac',
   tryAgain: 'Try again',

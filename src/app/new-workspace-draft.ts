@@ -6,6 +6,13 @@ import { filesWait, type DraftFile } from './draft-files'
 import { markedFiles } from './draft-file-state'
 import { withoutMarks } from './draft-marks'
 
+/**
+ * The choices of the Capabilities control that a create sends: only the
+ * pre-approved secrets, because the stored Mac access gates nothing (Mac
+ * access decision 7).
+ */
+type SentCapabilities = Pick<WorkspaceCapabilities, 'preapprovedSecretIds'>
+
 /** The first message of a workspace that does not exist yet. */
 export interface Draft {
   text: string
@@ -23,17 +30,16 @@ export interface Draft {
    */
   sectionId: string | null
   /**
-   * The choices of the Capabilities control: the secrets that the new
-   * workspace pre-approves, and its Mac access. A send ends them, so each
+   * The choices of the Capabilities control that the create sends: the
+   * secrets that the new workspace pre-approves. A send ends them, so each
    * new workspace starts from `NEW_WORKSPACE_CAPABILITIES`.
    */
-  capabilities: WorkspaceCapabilities
+  capabilities: SentCapabilities
   /**
-   * The line Allow all commands on this Mac, which only the Mac app shows
-   * while Mac access is on. Turning the switch on checks it. The create
-   * does not take it: after the create, the page of the Mac app starts the
-   * grant until Stop of the new workspace on this Mac, only while it is
-   * checked. A send ends it with the other choices.
+   * The switch of Mac access, which only the Mac app shows. The create does
+   * not send it: after the create, the page of the Mac app starts the grant
+   * until Stop of the new workspace on this Mac, only while it is on. A
+   * send ends it with the other choices.
    */
   allowThisMac: boolean
   /** The files, each with its upload. Only ready ones go with the message. */
@@ -108,15 +114,13 @@ export function withShownRepository(
  * such as one that a member deleted. Before any read, the draft has none.
  */
 export function sentCapabilities(
-  capabilities: WorkspaceCapabilities,
+  capabilities: SentCapabilities,
   secrets: readonly OrgSecret[] | undefined,
-): WorkspaceCapabilities {
-  const { preapprovedSecretIds, macAccess } = capabilities
+): SentCapabilities {
   if (!secrets) return capabilities
   return {
-    preapprovedSecretIds: preapprovedSecretIds.filter((id) =>
+    preapprovedSecretIds: capabilities.preapprovedSecretIds.filter((id) =>
       secrets.some((secret) => secret.id === id),
     ),
-    macAccess,
   }
 }

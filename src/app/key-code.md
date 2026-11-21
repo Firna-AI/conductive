@@ -118,12 +118,12 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-secrets.ts` reads them and the capabilities of a workspace,
   and keeps no value from a reply of the list.
 - `capabilities-model.ts`: `WorkspaceCapabilitiesModel`, the pre-approved
-  secrets, the approvals of the sessions, the values for the workspace, and
-  Mac access of one workspace, with their changes. It reads the values from
-  the list of the secret requests, and removes one with its route.
-- `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
-  workspace and the line of this Mac, `allowThisMac`, and the pure rules of
-  a draft that `new-workspace-model.ts` applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
+  secrets, the approvals of the sessions, and the values for the workspace
+  of one workspace, with their changes. It reads the values from the list
+  of the secret requests, and removes one with its route.
+- `new-workspace-draft.ts`: `Draft`, with the pre-approved secrets of New
+  workspace and the switch of Mac access, `allowThisMac`, and the pure
+  rules of a draft that `new-workspace-model.ts` applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
   [`../shared/secrets.ts`](../shared/secrets.ts).
 - `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
   Secrets tab, beside the other rights of an org.

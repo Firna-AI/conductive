@@ -3,6 +3,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { DEVICE_SETTINGS_PATH } from '../../shared/device'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
+import type { FakeApiServer } from '../../test-support/fake-api'
 import {
   FAKE_PAIRING,
   fakeSettingsReply,
@@ -16,23 +17,17 @@ import { openTab } from '../new-workspace/dialog-test-kit'
 import { click, settle } from '../test-mount'
 import { bodiesOf } from '../workspace/kept-test-kit'
 import {
-  answerMacAccess,
-  barLabel,
-  boxState,
-  line,
-  lineBox,
-  macAccessOff,
+  barText,
   macAccessText,
   macRequests,
   noGrants,
   openControl,
-  path,
-  pressLine,
   reopenControl,
-  savedMacAccess,
   serverOf,
+  settingsOf,
   start,
   stop,
+  stopped,
   switchOf,
   switchState,
   untilStop,
@@ -41,163 +36,104 @@ import {
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
-// A switch-off ends the period of Mac access of the workspace (Mac access
-// decision 6 C). So a start or a Keep of the grant of this Mac that the
-// member asked for before it must never take effect in a later period,
-// such as after another member turns Mac access on again, and the Stop of
-// the switch-off always goes.
+// A switch-off is never kept waiting. It takes back a start or a Keep of
+// the grant of this Mac that waits, so that change never takes effect, and
+// its Stop always goes, also after a change that is already on its way to
+// the Mac.
 
-/** The line while Mac access is on, this Mac is current, and no grant runs. */
-const lineOn = `${line} Commands from this workspace run without asking, until you stop.`
+/**
+ * Waits until the Mac got a change after the first `posts` and the switch
+ * takes a change again, so no change of the grant waits any more, then
+ * lets the last reply show.
+ */
+async function changesEnd(
+  server: FakeApiServer,
+  control: HTMLElement,
+  posts: number,
+): Promise<void> {
+  await waitFor(
+    () => macRequests(server, 'POST') > posts && !switchState(control).locked,
+    'the end of the changes of the grant',
+  )
+  await settle()
+}
 
-describe('a switch-off of Mac access while a start or a Keep of the grant of this Mac waits', () => {
-  test('takes the start back while it waits for its read, so the switch takes a switch-on at once, and the start never goes, also once another member turns Mac access on again', async () => {
-    const server = serverOf({ macAccess: false, onMac: true })
-    server.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
+describe('a switch-off of Mac access while a change of the grant of this Mac waits', () => {
+  test('takes back a start that waits for its read of this Mac, so the start never goes, and its Stop ends the 15 minutes', async () => {
+    const server = serverOf({ onMac: true })
     const tab = await openTab(server, { macApp: true })
     const control = await openControl(tab.view)
+    await waitFor(() => !switchState(control).locked, 'the settings')
     const from = server.requests.length
     const gets = macRequests(server, 'GET')
+    const posts = macRequests(server, 'POST')
     const read = deferred<unknown>()
     server.json('GET', DEVICE_SETTINGS_PATH, read.promise)
-    answerMacAccess(server, true)
     click(switchOf(control))
     await waitFor(() => macRequests(server, 'GET') > gets, 'the start read')
-    answerMacAccess(server, false)
-    click(switchOf(control))
-    await settle()
-    const off = switchState(control)
-    read.resolve(fakeSettingsReply(noGrants))
-    // Another member turns Mac access on, and the control reads it again.
-    server.json('GET', path, savedMacAccess(true))
-    const reopened = await reopenControl(tab.view)
-    await waitFor(() => macRequests(server, 'GET') > gets + 1, 'a read again')
-    await settle()
-    expect({
-      off,
-      box: boxState(lineBox(reopened)),
-      text: macAccessText(reopened),
-      bar: queryByRole('region', barLabel, tab.view),
-      writes: writesOf(server, from),
-    }).toEqual({
-      off: { on: false, locked: false },
-      box: { checked: false, off: false },
-      text: lineOn,
-      bar: null,
-      writes: [`PATCH ${path}`, `PATCH ${path}`],
-    })
-  })
-
-  test('lets a later switch-on start the grant once, while the start that the switch-off took back still waits for its read', async () => {
-    const server = serverOf({ macAccess: false, onMac: true })
-    server.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
-    const tab = await openTab(server, { macApp: true })
-    const control = await openControl(tab.view)
-    const from = server.requests.length
-    const gets = macRequests(server, 'GET')
-    const read = deferred<unknown>()
-    server.json('GET', DEVICE_SETTINGS_PATH, read.promise)
-    server.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply(untilStop))
-    answerMacAccess(server, true)
-    click(switchOf(control))
-    await waitFor(() => macRequests(server, 'GET') > gets, 'the start read')
-    answerMacAccess(server, false)
-    click(switchOf(control))
-    await settle()
-    answerMacAccess(server, true)
-    click(switchOf(control))
-    await settle()
-    read.resolve(fakeSettingsReply(noGrants))
-    await waitFor(() => macRequests(server, 'POST') > 0, 'the start')
-    await settle()
-    expect({
-      box: boxState(lineBox(control)),
-      writes: writesOf(server, from),
-      changes: await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, from),
-    }).toEqual({
-      box: { checked: true, off: false },
-      writes: [
-        `PATCH ${path}`,
-        `PATCH ${path}`,
-        `PATCH ${path}`,
-        `POST ${DEVICE_SETTINGS_PATH}`,
-      ],
-      changes: [{ ...FAKE_PAIRING, operation: start }],
-    })
-  })
-
-  test('keeps no result of a start that was on its way to this Mac, so the refusal of Mac access off never shows under the line once another member turns Mac access on again', async () => {
-    const server = serverOf({ macAccess: false, onMac: true })
-    server.json('GET', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
-    const tab = await openTab(server, { macApp: true })
-    const control = await openControl(tab.view)
-    const from = server.requests.length
-    const refused = deferred<unknown>()
-    server.json('POST', DEVICE_SETTINGS_PATH, refused.promise, 403)
-    answerMacAccess(server, true)
-    click(switchOf(control))
-    await waitFor(() => macRequests(server, 'POST') > 0, 'the start')
-    answerMacAccess(server, false)
-    click(switchOf(control))
-    await settle()
-    const gets = macRequests(server, 'GET')
-    refused.resolve(macAccessOff)
-    await waitFor(() => macRequests(server, 'GET') > gets, 'the read after it')
-    // Another member turns Mac access on, and the control reads it again.
-    server.json('GET', path, savedMacAccess(true))
-    const reopened = await reopenControl(tab.view)
-    await waitFor(() => lineBox(reopened), 'the line')
-    await settle()
-    expect({
-      box: boxState(lineBox(reopened)),
-      text: macAccessText(reopened),
-      writes: writesOf(server, from),
-    }).toEqual({
-      box: { checked: false, off: false },
-      text: lineOn,
-      writes: [
-        `PATCH ${path}`,
-        `POST ${DEVICE_SETTINGS_PATH}`,
-        `PATCH ${path}`,
-      ],
-    })
-  })
-
-  test('still sends the Stop of the switch-off while the 15 minutes run, and no start, so the bar ends', async () => {
-    const server = serverOf({ macAccess: true, onMac: true })
-    const tab = await openTab(server, { macApp: true })
-    const control = await openControl(tab.view)
-    await waitFor(() => macAccessText(control).includes('left'), 'the time')
-    const from = server.requests.length
-    const gets = macRequests(server, 'GET')
-    const read = deferred<unknown>()
-    server.json('GET', DEVICE_SETTINGS_PATH, read.promise)
-    pressLine(control)
-    await waitFor(() => macRequests(server, 'GET') > gets, 'the start read')
-    answerMacAccess(server, false)
+    const starting = switchState(control)
     server.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
     click(switchOf(control))
     await settle()
-    // The Mac still lists the 15 minutes, because no Stop reached it yet.
+    const stopping = switchState(control)
+    // The Mac still lists the 15 minutes, because no change reached it yet.
     read.resolve(fakeSettingsReply())
-    await waitFor(
-      () => queryByRole('region', barLabel, tab.view) === null,
-      'the end of the bar',
-    )
-    await settle()
+    await changesEnd(server, control, posts)
     expect({
+      starting,
+      stopping,
       mac: switchState(control),
+      text: macAccessText(control),
+      bar: barText(tab.view),
       writes: writesOf(server, from),
       changes: await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, from),
     }).toEqual({
+      starting: { on: true, locked: false },
+      stopping: { on: false, locked: true },
       mac: { on: false, locked: false },
-      writes: [`PATCH ${path}`, `POST ${DEVICE_SETTINGS_PATH}`],
+      text: `Mac access ${stopped}`,
+      bar: stopped,
+      writes: [`POST ${DEVICE_SETTINGS_PATH}`],
       changes: [{ ...FAKE_PAIRING, operation: stop }],
     })
   })
 
-  test('takes back a Keep of the bar that waits behind a read of this Mac, and still sends the Stop, so the Keep never goes and the bar ends', async () => {
-    const server = serverOf({ macAccess: true, onMac: true })
+  test('sends its Stop after a start that is already on its way to this Mac, so the grant that the start makes ends', async () => {
+    const server = serverOf({ onMac: true })
+    settingsOf(server, noGrants)
+    const tab = await openTab(server, { macApp: true })
+    const control = await openControl(tab.view)
+    await waitFor(() => !switchState(control).locked, 'the settings')
+    const from = server.requests.length
+    const posts = macRequests(server, 'POST')
+    const started = deferred<unknown>()
+    server.json('POST', DEVICE_SETTINGS_PATH, started.promise)
+    click(switchOf(control))
+    await waitFor(() => macRequests(server, 'POST') > posts, 'the start')
+    click(switchOf(control))
+    await settle()
+    server.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
+    // The Mac made the start, so its reply lists the grant until Stop.
+    started.resolve(fakeSettingsReply(untilStop))
+    await changesEnd(server, control, posts)
+    expect({
+      mac: switchState(control),
+      text: macAccessText(control),
+      bar: barText(tab.view),
+      changes: await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, from),
+    }).toEqual({
+      mac: { on: false, locked: false },
+      text: `Mac access ${stopped}`,
+      bar: stopped,
+      changes: [
+        { ...FAKE_PAIRING, operation: start },
+        { ...FAKE_PAIRING, operation: stop },
+      ],
+    })
+  })
+
+  test('takes back a Keep of the bar that waits behind a read of this Mac, which shows the switch on, and its Stop ends the 15 minutes', async () => {
+    const server = serverOf({ onMac: true })
     const tab = await openTab(server, { macApp: true })
     await openControl(tab.view)
     await waitFor(
@@ -206,6 +142,7 @@ describe('a switch-off of Mac access while a start or a Keep of the grant of thi
     )
     const from = server.requests.length
     const gets = macRequests(server, 'GET')
+    const posts = macRequests(server, 'POST')
     const read = deferred<unknown>()
     server.json('GET', DEVICE_SETTINGS_PATH, read.promise)
     // The control reads this Mac again as it opens, and that read waits.
@@ -213,24 +150,26 @@ describe('a switch-off of Mac access while a start or a Keep of the grant of thi
     await waitFor(() => macRequests(server, 'GET') > gets, 'the read again')
     click(byRole('button', 'Keep until I stop', tab.view))
     await settle()
-    answerMacAccess(server, false)
+    const keeping = switchState(control)
     server.json('POST', DEVICE_SETTINGS_PATH, fakeSettingsReply(noGrants))
     click(switchOf(control))
     await settle()
     // The Mac still lists the 15 minutes, because no change reached it yet.
     read.resolve(fakeSettingsReply())
-    await waitFor(
-      () => queryByRole('region', barLabel, tab.view) === null,
-      'the end of the bar',
-    )
-    await settle()
+    await changesEnd(server, control, posts)
     expect({
+      keeping,
       mac: switchState(control),
+      text: macAccessText(control),
+      bar: barText(tab.view),
       writes: writesOf(server, from),
       changes: await bodiesOf(server, 'POST', DEVICE_SETTINGS_PATH, from),
     }).toEqual({
+      keeping: { on: true, locked: false },
       mac: { on: false, locked: false },
-      writes: [`PATCH ${path}`, `POST ${DEVICE_SETTINGS_PATH}`],
+      text: `Mac access ${stopped}`,
+      bar: stopped,
+      writes: [`POST ${DEVICE_SETTINGS_PATH}`],
       changes: [{ ...FAKE_PAIRING, operation: stop }],
     })
   })

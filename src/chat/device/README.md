@@ -4,9 +4,9 @@ The Mac commands of the chat: the requests that an agent sends to the Mac
 of the person who sent the turn, their answers in the Mac app, and the
 settings that the Mac keeps. The chat shows the requests of each session.
 The Mac app adds `ThisMacSection` to the account and `AllowAllBar` to the
-top of the workspace. The line Allow all commands on this Mac of the
-Capabilities control, in `src/shell/capabilities/`, reads and changes the
-same settings. See [the chat](../README.md) for the whole chat.
+top of the workspace. The switch of Mac access of the Capabilities
+control, in `src/shell/capabilities/`, reads and changes the same
+settings. See [the chat](../README.md) for the whole chat.
 
 ## Use it in the app
 
@@ -18,12 +18,13 @@ app shows that tab. It reads the Mac's settings through
 `AppServices.api`, because a new client makes a new settings controller.
 
 `WorkspaceMacBar` in `src/shell/workspace/` mounts `AllowAllBar` at the top
-of the workspace. It shares one settings controller with the line of the
-Capabilities control and with the notice of a new workspace: `ThisMac` of
-[`this-mac.ts`](../../shell/mac/this-mac.ts), one for each Mac app window
-and person, which `useThisMac` gives. So a start from the line or from a
-create shows on the bar at once. In a browser, `useThisMac` gives `null`,
-so the bar, the line, and the notice draw nothing and send no request.
+of the workspace. It shares one settings controller with the switch of
+the Capabilities control and with the notice of a new workspace: `ThisMac`
+of [`this-mac.ts`](../../shell/mac/this-mac.ts), one for each Mac app
+window and person, which `useThisMac` gives. So a start from the switch or
+from a create shows on the bar at once. In a browser, `useThisMac` gives
+`null`, so the bar and the notice draw nothing, the control shows no Mac
+access part, and none of them sends a request.
 `WorkspaceMacBar` calls `refresh` after the `workspace.updated` events of
 the workspace stream, which follow each change of a Mac command, so the bar
 shows the grant that an answer started. One burst of events, such as
@@ -119,43 +120,43 @@ const state = useThisMacState(mac)
   its result repeats the same change through the current pairing, only
   when the user presses it. A failed Keep shows only while its 15 minutes
   run, so the bar never repeats a Keep.
-- The line Allow all commands on this Mac of the Capabilities control
-  reads the same settings, and only the Mac app shows it. Its check sends
-  the settings action `start-workspace-until-stop` with the workspace ID.
-  That action is not the approval answer `allow-workspace-until-stop`,
-  which answers one request. Its uncheck sends Stop. A start is done or
+- The switch of Mac access of the Capabilities control reads the same
+  settings, and only the Mac app shows it (Mac access decision 7). It is
+  on only while the current settings list a grant until Stop of the
+  workspace, so it is off while the 15 minutes run. Its switch-on sends the
+  settings action `start-workspace-until-stop` with the workspace ID. That
+  action is not the approval answer `allow-workspace-until-stop`, which
+  answers one request. Its switch-off sends Stop. A start is done or
   failed, never done but not saved, because the Mac keeps a grant until
-  Stop only in memory. The line reads only current settings. With kept
-  settings, it shows unchecked and off, with This Mac is not available,
-  because a grant that they list may have ended.
-- The page starts a grant from the line, after a switch-on of Mac access
-  that saved, and after a create of New workspace whose line was checked.
-  Each start goes through `changeOnCurrent`, which reads the pairing and
-  the settings of this Mac first, so the start reaches the connection of
-  now. When the read finds no Mac or fails, the start fails as not
-  reached, and nothing goes.
-- When Mac access of the workspace goes off, at a switch-off in this page
-  or in a read of its Capabilities, `ThisMac.forget` takes back each change
-  of its grant that waits and increases the grant: a start, a Keep, or an
-  Extend. It uses `cancel`. Such a change never goes, also when another
-  member turns Mac access on again before its turn, because its choice
-  was taken back by the page. It keeps no result, also
-  when it already went to the Mac, and its control is free at once.
-- A switch-off that saved sends Stop when the settings that show, current
-  or kept, list a grant of the workspace, also when a start, a Keep, or an
-  Extend of that grant waited. While the switch shows Mac access off and a
-  change of that grant waits, such as that Stop, the switch takes no
-  switch-on, because a start does not go while another change of the grant
-  waits. A switch-off never waits.
+  Stop only in memory. With kept settings, or with no settings, the switch
+  shows off and disabled, with This Mac is not available, because a grant
+  that kept settings list may have ended.
+- While a change of the grant waits, the switch shows the grant that the
+  change ends with. A waiting start or Keep shows it on, so a switch-off
+  can take that change back. A waiting Stop or Extend shows it off, and
+  the switch takes no switch-on, because a start does not go while
+  another change of the grant waits.
+- The page starts a grant from the switch, and after a create of New
+  workspace whose switch was on. Each start goes through `changeOnCurrent`,
+  which reads the pairing and the settings of this Mac first, so the start
+  reaches the connection of now. When the read finds no Mac or fails, the
+  start fails as not reached, and nothing goes.
+- A switch-off, `ThisMac.stop`, never waits. It takes back each change of
+  the grant that waits and increases the grant: a start, a Keep, or an
+  Extend. It uses `cancel`. Such a change never goes, also after the read
+  that it waits for. It keeps no result, also when it already went to the
+  Mac, and its control is free at once. Then the Stop goes through the
+  settings that show, current or kept, also when they list no grant,
+  because a change that the page took back may already be on its way to
+  the Mac. The Stop then reaches the Mac after it.
 - `countedOutcome` counts a start as done only when the returned settings
   list its grant with no end. Otherwise the start fails with a cause.
 - A start shares the control of the grant of its workspace with Stop and
-  Keep, so each keeps the result of the last of them. The line shows a
+  Keep, so each keeps the result of the last of them. The switch shows a
   start that failed, and the result of a Stop. The bar never shows the
   result of a start. A start that failed after a create also shows as a
-  notice over the composer of the new workspace, with Try again. When Mac
-  access of the workspace goes off, in this page or in a read of its
-  Capabilities, the result goes.
+  notice over the composer of the new workspace, with Try again, until the
+  next start from the switch or the next Stop.
 - The Worker checks that a start names an existing workspace that is not
   archived and belongs to an active org of the member. The stored Mac
   access field does not gate starts or Mac command requests.
@@ -164,10 +165,12 @@ const state = useThisMacState(mac)
 
 Run `npm run test -- src/chat/device src/shared/transcript/command-placement.test.ts`. The tests drive the settings
 controller on a fake Mac, and mount the parts with `mount` from
-`src/test-support/`. The tests of the line, of a switch-off while a start
-waits, and of the start after a create mount the whole app in the Mac app:
-run `npm run test -- src/shell/capabilities/MacAccessLine.test.tsx
+`src/test-support/`. The tests of the switch, of a switch-off while a
+change waits, of a Mac that the page cannot read, and of the start after a
+create mount the whole app in the Mac app: run `npm run test --
+src/shell/capabilities/MacAccessSwitch.test.tsx
 src/shell/capabilities/MacAccessSwitchOff.test.tsx
+src/shell/capabilities/MacAccessWithoutMac.test.tsx
 src/shell/new-workspace/NewWorkspaceMacGrant.test.tsx`.
 
 The layout of the requests needs a real browser. The Electron check
@@ -206,8 +209,8 @@ menu of Allow over the region. Build the Mac app first, then run
 ### Related docs
 
 - [Mac app](../../../docs/protocol/desktop-app.md)
-- [Capabilities](../../../docs/protocol/capabilities.md): Mac access and
-  the line of this Mac.
+- [Capabilities](../../../docs/protocol/capabilities.md): the control,
+  with the switch of Mac access.
 - [Chat and events](../../../docs/protocol/chat-and-events.md)
 - [Mockups](../../../docs/mockups/README.md): the visual spec.
 - [Shared contracts](../../shared/README.md) and

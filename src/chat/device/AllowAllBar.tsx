@@ -50,7 +50,7 @@ const looks = {
  * until Stop. A Stop that the Mac did not save or did not make shows until
  * the next change, also when a later read shows the saved 15 minutes
  * again. A Keep that failed shows only while its 15 minutes run. A start
- * from the Capabilities control shows its result on the line of that
+ * shows its result under the switch of Mac access of the Capabilities
  * control and in the notice of a new workspace, never on the bar.
  */
 function shownResult(

@@ -307,7 +307,8 @@ Text in a pull request, such as a comment or review, can steer the agent to use 
 The automation page warns every member about this risk when the automation has a pull request trigger and a chosen secret.
 The member who added a chosen secret, or an admin, can replace its value.
 Later runs then use the new value.
-**Mac access** stays off in each new run workspace.
+Text in a pull request can also steer the agent to ask for a command on the owner's Mac, from the first turn of a run.
+A command that the owner always allowed then runs without asking.
 
 ## Understand previews and Mac commands
 
@@ -325,26 +326,23 @@ Preview only HTML files whose scripts you trust.
 
 Mac commands run locally with the Mac user's permissions.
 Only the connected Mac that receives a request can approve it.
-**Mac access** starts off in each new workspace, also in one that an agent or an automation creates.
-While it is off, the agents of that workspace cannot ask for Mac commands.
-Any member can turn it on or off in a workspace's **Capabilities**.
+Agents can ask for Mac commands in every workspace, from its first turn.
+This includes a new workspace and one that an agent or an automation creates.
+The Mac app asks first, unless you already allowed the command or all commands from that workspace.
 
-Turning **Mac access** on in an updated Mac app also allows every command from that workspace on your Mac until you stop.
-An older Mac app only saves the switch setting.
+In the Mac app, the **Mac access** switch in **Capabilities** acts only on your own Mac.
+Turning it on allows every command from that workspace on your Mac until you stop.
+Turning it off stops that permission.
 Other members' Macs still ask, unless their users already allowed the commands.
-While it is on, each member can start or stop that permission with **Allow all commands on this Mac** in the Mac app.
-If permission cannot start, **Mac access** stays on, and the control shows the cause.
-In **New workspace** in the Mac app, permission starts after creation if **Allow all commands on this Mac** stays checked.
+If permission cannot start, the switch stays off, and the control shows the cause.
+In **New workspace** in the Mac app, permission starts after creation if the switch is on.
 
-In a browser, **Mac access** only lets agents ask.
-The browser control directs you to **Allow all commands on this Mac** in the Mac app.
+A browser shows no **Mac access** switch, and it cannot start this permission.
+An older Mac app shows an earlier **Mac access** switch that every member shares.
+That switch no longer stops agents from asking.
+Install an update when one is available.
 
-Use **Stop** in **This Mac** or in the workspace bar to end a workspace's permission on that Mac at once.
-An updated Mac app also ends that permission when any member turns **Mac access** off.
-Turning it on again does not restore that permission.
-An older Mac app can keep permission until **Stop** or the end of its 15 minutes.
-That permission can allow commands again after **Mac access** turns on.
-Install an update with this feature when one is available.
+Use **Stop** in **This Mac** or in the workspace bar, or turn the switch off, to end a workspace's permission on that Mac at once.
 
 **Always allow** covers the exact command text in any requested folder on that Mac.
 Workspace permission covers every command from one workspace for 15 minutes, or until you stop it.

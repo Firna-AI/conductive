@@ -147,7 +147,7 @@ export function ChatArea(props: {
   const { context, notice } = props
   const { sandbox, workspace } = context
   const phone = context.viewport === 'phone'
-  const startNotice = useStartFailedNotice(context.org.id, workspace.id)
+  const startNotice = useStartFailedNotice(workspace.id)
   const starting =
     sandbox === 'starting' && props.start ? (
       <StartingCard start={props.start} />

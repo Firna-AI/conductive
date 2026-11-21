@@ -189,22 +189,3 @@
   line-height: 1.45;
   overflow-wrap: anywhere;
 }
-
-/*
- * The line of this Mac under the switch, and the result under it, from
- * before Mac access decision 7. No mockup draws the line. The app draws it
- * until it shows one switch.
- */
-.line {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.lineLabel {
-  color: var(--ui-ink);
-  font-size: var(--ui-text-sm);
-  font-weight: 500;
-  line-height: 1.45;
-}

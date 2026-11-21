@@ -83,7 +83,10 @@ This page lists each protocol doc and what it covers.
       Reveal, the mark for all agents, the grants, and their risks.
       - [Capabilities](../protocol/capabilities.md): the control of New
         workspace, of each workspace, and of an automation, with its
-        secrets part and Mac access.
+        secrets part.
+        - [Mac access](../protocol/mac-access.md): the requests that agents
+          can always send to a Mac, the Mac access switch of the Mac app,
+          the grant that it starts on this Mac, and the risks.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.

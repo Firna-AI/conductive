@@ -208,8 +208,9 @@ adds this order. The pull request of that change keeps its record.
   for all agents and reveals a value (secrets decisions 2 A and 3 B).
   [Rights](secrets.md#rights) gives the reasons.
 - Every member can see and change the Capabilities of each workspace: its
-  pre-approved secrets, its Mac access, and its other grants
-  (secrets decision 8 B).
+  pre-approved secrets and its other grants of secrets
+  (secrets decision 8 B). The Mac access switch acts only on the Mac of the
+  member who uses it, as [Mac access](mac-access.md#the-switch) says.
 - Every member who sees a session can answer its secret requests
   (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).

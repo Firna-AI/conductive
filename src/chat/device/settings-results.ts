@@ -32,7 +32,7 @@ export const notAvailableCause =
 
 /**
  * Why a start failed when the Mac said done but its settings do not list
- * the grant until Stop, such as after Mac access went off meanwhile.
+ * the grant until Stop.
  */
 const notListedCause = 'The Mac could not change this permission. Try again.'
 

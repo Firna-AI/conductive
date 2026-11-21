@@ -19,12 +19,13 @@ says.
   capabilities of the workspace when the workspace first shows, and the
   app keeps them while it is open. So the control shows them at once. Each
   open reads them again behind the shown values. Every member
-  changes the pre-approved secrets and Mac access there, and removes each
+  changes the pre-approved secrets there, and removes each
   approval of a session, which names its session by the title that the
   chat holds, and each value that a member gave for the workspace. The control shows only where the composer shows.
-- In the Mac app, Mac access of that control also has the line Allow all
-  commands on this Mac, from `../capabilities/workspace-line.ts`, and a
-  browser shows a note in its place. The shell gives the chat
+- In the Mac app, that control ends with the switch of Mac access of this
+  Mac, from `../capabilities/mac-switch.ts`. It starts or stops the grant
+  until Stop of the workspace on this Mac, and saves nothing in the
+  workspace. A browser shows no Mac access part. The shell gives the chat
   `host.notice`, from `../capabilities/StartFailedNotice.tsx`: the notice
   over the composer of a new workspace whose grant of this Mac did not
   start after the create, with Try again. A read-only workspace shows no
@@ -310,8 +311,9 @@ through them while the workspace loads.
   workspace, also while a file shows in place of the chat. It mounts
   `AllowAllBar`, the bar of the 15 minutes, of the
   [Mac commands](../../chat/device/README.md). It reads the settings of
-  this Mac that the window shares, from `../mac/this-mac.ts`, with the line
-  of the Capabilities control. A browser draws nothing there.
+  this Mac that the window shares, from `../mac/this-mac.ts`, with the
+  switch of Mac access of the Capabilities control. A browser draws
+  nothing there.
 - Each part sends through the services of the org, from `useOrgServices`
   of `../context.ts`. Their client and fetch mark the org on
   `org_suspended`, so a page with an old org list turns read-only at once.

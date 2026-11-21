@@ -36,7 +36,7 @@ A create without it stores an empty list.
 An update without it keeps the stored list, so an older app tab keeps the choices.
 A save drops each ID that names no secret of the org and stores the rest.
 A `capabilities` value without a list of string IDs returns `invalid_input`, as other bad fields do.
-The shape has no `macAccess`, because each run workspace keeps Mac access off.
+The shape has no `macAccess`, because the Mac access switch acts only on the Mac of the member who uses it in the Mac app, and no person uses it for a run.
 [Chosen secrets](../../docs/protocol/automations.md#chosen-secrets) gives the rules.
 
 Each detail, create, or update reply also includes `AutomationResponse.chosenSecrets`.

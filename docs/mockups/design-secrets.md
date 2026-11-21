@@ -120,17 +120,14 @@ one.
   cause of a start that failed, or the result of the Stop of a switch-off.
 - In New workspace, the switch is a choice of the draft, and it starts
   off. The create starts the grant only while the switch is on.
-- `BrowserNote.tsx` draws the note of a browser from before Mac access
-  decision 7. No mockup draws it. The app draws it until it hides the Mac
-  access part in a browser.
 - `StartFailedNotice` draws the notice over the composer of a new workspace
   whose grant did not start after the create: the cause, and Try again.
 - The control of an automation has the Secrets part only, from
   `automationCapabilityParts`: no grants, and no Mac access part, because
-  run workspaces keep Mac access off (automation capabilities decision
-  2 A). Its line says what agents in each run can use, and its hint says
-  that each run workspace starts with the checked secrets pre-approved. A
-  check changes the form, so Save turns on.
+  no person watches the Mac of the owner during a run (automation
+  capabilities decision 2 A). Its line says what agents in each run can
+  use, and its hint says that each run workspace starts with the checked
+  secrets pre-approved. A check changes the form, so Save turns on.
 - Under the prompt box of an automation, a muted line with the key icon
   names the chosen secrets for every member, each in the monospace font,
   such as "Runs can use FIGMA_TOKEN and VERCEL_TOKEN with no question."

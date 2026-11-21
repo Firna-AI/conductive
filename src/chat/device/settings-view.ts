@@ -52,7 +52,8 @@ export function readyView(reply: DeviceSettingsResponse): MacSettingsView {
  * The pairing and the settings that show, current or kept, or null while
  * none show. A part that keeps Stop for a grant that may still run, such
  * as the bar, reads them. A part that says that a grant runs, such as the
- * line of the Capabilities control, reads only current settings.
+ * switch of Mac access of the Capabilities control, reads only current
+ * settings.
  */
 export function shownSettings(view: MacSettingsView): ShownSettings | null {
   return view.kind === 'ready' || view.kind === 'kept' ? view : null

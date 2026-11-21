@@ -1,6 +1,6 @@
 import { DEVICE_SETTINGS_PATH, type DeviceSettings } from '../../shared/device'
 import { secretsPath, workspaceCapabilitiesPath } from '../../shared/secrets'
-import { byRole, queryByLabel } from '../../test-support/dom-queries'
+import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import {
   fakeMacSettings,
@@ -11,15 +11,15 @@ import { click, settle } from '../test-mount'
 import { textOf } from '../test-render'
 import { id, org } from '../workspace/kept-test-kit'
 
-// The helpers of the tests of Mac access in the Capabilities control of a
-// workspace, in the Mac app and in a browser.
+// The helpers of the tests of the switch of Mac access in the Capabilities
+// control of a workspace, in the Mac app and in a browser.
 
 const { secrets, grants } = secretFixtures()
 
 /** The route of the Capabilities of the fake workspace. */
-export const path = workspaceCapabilitiesPath(org, id)
+const path = workspaceCapabilitiesPath(org, id)
 
-export const barLabel = 'Commands that run without asking'
+const barLabel = 'Commands that run without asking'
 
 /** The settings of the fake Mac with no grant of any workspace. */
 export const noGrants: DeviceSettings = {
@@ -36,30 +36,23 @@ export const untilStop: DeviceSettings = {
   })),
 }
 
-/** The title and the hint of Mac access, in a browser or while it is on. */
-export const hint =
-  'Mac access Lets agents ask to run commands on the Mac of the member who sent the message.'
-
-/** The part up to the hint of the line of this Mac. */
-export const line = `${hint} Allow all commands on this Mac`
-
 export const start = { action: 'start-workspace-until-stop', workspaceId: id }
 export const stop = { action: 'stop-workspace', workspaceId: id }
 
+/** The words under the switch after a Stop that the Mac made and saved. */
+export const stopped = 'Stopped Each command from this workspace asks first.'
+
 /**
  * The fake API with the secrets of Acme and the Capabilities of the
- * workspace, whose Mac access is `macAccess`. With `onMac`, the window has
- * a device connection.
+ * workspace. The stored Mac access of the workspace is off, because it
+ * gates nothing, so the switch must not follow it. With `onMac`, the
+ * window has a device connection, and its Mac holds the 15 minutes of the
+ * workspace.
  */
-export function serverOf(options: {
-  macAccess: boolean
-  onMac: boolean
-}): FakeApiServer {
+export function serverOf(options: { onMac: boolean }): FakeApiServer {
   const server = new FakeApiServer({ onMac: options.onMac })
   server.json('GET', secretsPath(org), { secrets })
-  server.json('GET', path, {
-    capabilities: { ...grants, macAccess: options.macAccess },
-  })
+  server.json('GET', path, { capabilities: { ...grants, macAccess: false } })
   return server
 }
 
@@ -77,24 +70,6 @@ export function settingsOf(
   )
 }
 
-/** The answer of the next save of Mac access: the capabilities with `on`. */
-export const savedMacAccess = (on: boolean) => ({
-  capabilities: { ...grants, macAccess: on },
-})
-
-/** The next switch of Mac access saves `on`. */
-export function answerMacAccess(server: FakeApiServer, on: boolean): void {
-  server.json('PATCH', path, savedMacAccess(on))
-}
-
-/** The refusal of the Worker of a start while Mac access is off. */
-export const macAccessOff = {
-  error: {
-    code: 'mac_access_off',
-    message: 'Mac access is off in the Capabilities of this workspace.',
-  },
-}
-
 /** The open Capabilities control of the workspace. */
 export async function openControl(view: HTMLElement): Promise<HTMLElement> {
   click(byRole('button', 'Capabilities', view))
@@ -104,7 +79,7 @@ export async function openControl(view: HTMLElement): Promise<HTMLElement> {
 
 /**
  * Closes the open control with a second press of its tool, then opens it
- * again, so it reads Mac access and the settings of this Mac again.
+ * again, so it reads the settings of this Mac again.
  */
 export async function reopenControl(view: HTMLElement): Promise<HTMLElement> {
   click(byRole('button', 'Capabilities', view))
@@ -131,20 +106,10 @@ export function switchState(control: HTMLElement) {
   }
 }
 
-/** The box of the line of this Mac, or null while no line shows. */
-export function lineBox(control: HTMLElement): HTMLInputElement | null {
-  const box = queryByLabel('Allow all commands on this Mac', control)
-  return box instanceof HTMLInputElement ? box : null
-}
-
-export const boxState = (box: HTMLInputElement | null) =>
-  box ? { checked: box.checked, off: box.disabled } : null
-
-/** Presses the box of the line, which must show. */
-export function pressLine(control: HTMLElement): void {
-  const box = lineBox(control)
-  if (!box) throw new Error('No line of this Mac shows.')
-  click(box)
+/** The bar of the grant at the top of the workspace, as a person reads it. */
+export function barText(view: HTMLElement): string | null {
+  const bar = queryByRole('region', barLabel, view)
+  return bar ? textOf(bar.innerHTML) : null
 }
 
 /** The writes of the page from `from` on, each as its method and path. */

@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { Blocks } from 'lucide-react'
 import {
@@ -26,7 +26,7 @@ import { inSentence, useWhen } from '../settings/when'
 import { useAction } from '../ui/useAction'
 import { capabilityParts } from './capability-parts'
 import { GrantList, type ShownApproval, type ShownValue } from './GrantList'
-import { useWorkspaceLine } from './workspace-line'
+import { useMacSwitch } from './mac-switch'
 
 /** The session whose message box shows the control, or null. */
 function useActiveSession(chat: ChatController): string | null {
@@ -79,12 +79,10 @@ function useChange() {
  * every member changes them. A change applies to
  * each session of the workspace from that moment.
  *
- * In the Mac app, Mac access also has the line of this Mac, and each open
- * reads the settings of this Mac again. A switch-on saves Mac access first,
- * then starts the grant until Stop of this Mac. A switch-off saves, then
- * stops that grant, and a start or a Keep of that grant that still waits
- * never goes, also after another member turns Mac access on again. A start
- * that fails keeps Mac access on, and its line shows the cause.
+ * In the Mac app, the control also has the switch of Mac access of this
+ * Mac, as `useMacSwitch` says, and each open reads the settings of this Mac
+ * again. The switch changes only the grant of this Mac, so it saves nothing
+ * in the workspace. A browser shows no Mac access part.
  */
 function WorkspaceCapabilitiesPanel(props: {
   org: OrgSummary
@@ -104,8 +102,7 @@ function WorkspaceCapabilitiesPanel(props: {
   const { when } = useWhen(60_000)
   const change = useChange()
   const mac = useThisMac()
-  const [reveal, setReveal] = useState(0)
-  const line = useWorkspaceLine(mac, workspaceId, reveal)
+  const macAccess = useMacSwitch(mac, workspaceId)
   useEffect(() => {
     void secrets.read()
     void model.read()
@@ -151,20 +148,7 @@ function WorkspaceCapabilitiesPanel(props: {
         () => model.setPreapproved(secretId, on),
         `The pre-approval of ${nameOf(secretId)} was not saved`,
       ),
-    macAccess: shown?.macAccess ?? null,
-    setMacAccess: (on) => {
-      if (on) setReveal((count) => count + 1)
-      change.run(async () => {
-        await model.setMacAccess(on)
-        // The controls do not wait for this Mac, so a slow Mac never keeps
-        // the member from a switch-off, which takes back a start or a Keep
-        // that waits. While another change of the grant waits, such as the
-        // Stop of a switch-off, the switch takes no switch-on, as
-        // `switchLocked` says.
-        void mac?.switched(workspaceId, on)
-      }, 'Mac access was not saved')
-    },
-    line,
+    macAccess,
     disabled: change.pending || shown === undefined,
     grants: (
       <GrantList

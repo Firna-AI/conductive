@@ -99,17 +99,6 @@ export class SettingsControls {
     return true
   }
 
-  /**
-   * Takes away the result of the last change of the control of `change`.
-   * Returns whether the control had one.
-   */
-  forget(change: SettingsChange): boolean {
-    const key = controlOf(change)
-    if (!Object.hasOwn(this.kept, key)) return false
-    this.kept = without(this.kept, key)
-    return true
-  }
-
   /** Gives each control to its change in `holds`, with its action. */
   private hand(holds: Readonly<Record<string, Hold>>): void {
     this.holds = holds

@@ -349,6 +349,13 @@ My calls, 20 November 2026, unless a decision above says otherwise:
   The earlier calls on the scroll of the line, and the line itself, no
   longer apply.
 
+- From the one-switch control, 21 November 2026, my calls: while a start
+  or Keep waits, the switch shows on, so a switch-off can take that change
+  back. While a Stop waits, it shows off and disabled. A switch-off always
+  sends Stop when the page shows settings, also when no grant is listed,
+  so that a start already on its way leaves no grant. The page no longer
+  sends `macAccess` in a capabilities change or a create.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -494,11 +501,11 @@ Depends on: 5
 
 Depends on: 6
 
-- [ ] Update `docs/protocol/capabilities.md`, `desktop-commands.md`, and
+- [x] Update `docs/protocol/capabilities.md`, `desktop-commands.md`, and
       `agent-tools.md` with decision 7. Remove the period rules.
-- [ ] Read both legal pages and each public guide in full. Update each
+- [x] Read both legal pages and each public guide in full. Update each
       sentence that restates these facts. Set the Terms effective date.
-- [ ] Update the READMEs and the automation follow-up item.
+- [x] Update the READMEs and the automation follow-up item.
 
 ## Milestone 8: Backend for one switch
 
@@ -519,15 +526,15 @@ Tags: ui
 
 Depends on: 6, 8. It runs beside Milestone 7, because decision 7 states the requirement.
 
-- [ ] Replace the shared switch and the line with one switch in the Mac
+- [x] Replace the shared switch and the line with one switch in the Mac
       app control and in New workspace. Hide the part in a browser.
-- [ ] Keep the results and the take-back of a waiting change.
+- [x] Keep the results and the take-back of a waiting change.
 
 ## Milestone 10: Verification and review
 
 Depends on: 9
 
-- [ ] Run the complete gate. Commit and push.
+- [x] Run the complete gate. Commit and push.
 - [ ] Review the diff against `origin/main` with the
       `implementation-review` skill, apply the fix rule, and update the
       pull request description.

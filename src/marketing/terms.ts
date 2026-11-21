@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 20 November 2026.`,
+  accepted it. Effective date: 21 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -146,30 +146,25 @@ export const termsDocument: LegalDocument = {
         paragraph`In the Mac app, an agent can ask to run a command on
           your Mac. The Mac app asks first unless you already allowed the
           command or all commands from that workspace.`,
-        paragraph`Each workspace has a Mac access switch, which starts off.
-          Any member of the org can turn it on or off again. While it is
-          off, the agents of that workspace cannot ask for a command.`,
-        paragraph`When you turn Mac access on, an updated Mac app also allows
-          every command from that workspace on this Mac until you stop.
-          An older Mac app only saves the switch setting.
-          Other members' Macs still ask, unless their users already allowed
-          the commands.`,
-        paragraph`If this permission cannot start, Mac access stays on and
-          the Mac app shows the cause.`,
-        paragraph`While Mac access is on, Allow all commands on this Mac in
-          Capabilities starts or stops this permission on your own Mac.
-          In New workspace in the Mac app, the permission starts when you
-          create the workspace with this choice checked.`,
-        paragraph`In a browser, Mac access only lets agents ask. To allow all
-          commands, use Allow all commands on this Mac in the Mac app.`,
-        paragraph`Use Stop in This Mac or in the workspace bar to end a
-          workspace's permission on that Mac at once. An updated Mac app
-          also ends that permission when any member turns Mac access off.
-          Turning it on again does not restore that permission.
-          An older Mac app can keep permission until Stop or the end of
-          its 15 minutes. That permission can allow commands again after
-          Mac access turns on. Install an update with this feature when
-          one is available.`,
+        paragraph`Agents can ask in every workspace, from its first turn.
+          This includes a new workspace, an automation run, and a workspace
+          that an agent creates. When the Mac app asks, you can deny the
+          request.`,
+        paragraph`In the Mac app, Capabilities has a Mac access switch for
+          your own Mac. When you turn it on, the Mac app allows every
+          command from that workspace on your Mac until you stop. Turning
+          it off stops this permission. Other members' Macs still ask,
+          unless their users already allowed the commands.`,
+        paragraph`If this permission cannot start, the switch stays off and
+          the Mac app shows the cause. In New workspace in the Mac app, the
+          permission starts when you create the workspace with the switch
+          on.`,
+        paragraph`A browser shows no Mac access switch, and it cannot start
+          this permission. An older Mac app shows an earlier Mac access
+          switch that every member shares. That switch no longer stops
+          agents from asking.`,
+        paragraph`Use Stop in This Mac or in the workspace bar, or turn the
+          switch off, to end a workspace's permission on that Mac at once.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
@@ -178,6 +173,10 @@ export const termsDocument: LegalDocument = {
         paragraph`While workspace permission runs, each command from that
           workspace runs on your Mac without asking. This includes a command
           that text read by the agent steers it to request.`,
+        paragraph`An automation run acts for its owner, also while nobody
+          watches. Text that steers its agent can make it ask for a command
+          on the owner's Mac. A command that the owner always allowed then
+          runs without asking.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,

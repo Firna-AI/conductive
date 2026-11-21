@@ -15,9 +15,8 @@ Its plan keeps the dated record while the change is open. Its pull request
 keeps it after the merge.
 
 A Mac access decision names a decision of the change that makes
-[Mac access](capabilities.md#mac-access) allow all commands. Its plan keeps
-the dated record while the change is open. Its pull request keeps it after
-the merge.
+[Mac access](mac-access.md) allow all commands. Its plan keeps the dated
+record while the change is open. Its pull request keeps it after the merge.
 
 ## Permissions
 
@@ -30,17 +29,16 @@ the merge.
 - The page can only answer a request that waits, remove an always-allowed
   command, and stop a [grant](#the-choices) that runs. It can extend the
   running 15 minutes, or keep them until Stop. It can also start a grant
-  until Stop of one workspace from the Capabilities control, as
-  [Allow all commands on this Mac](capabilities.md#allow-all-commands-on-this-mac)
-  says. The answer goes through the Worker to the Mac app on the Mac that
-  got the request. Each change goes through the Worker to the Mac app that
-  shows the page.
+  until Stop of one workspace with the Mac access switch of the
+  Capabilities control, as [The switch](mac-access.md#the-switch) says. The
+  answer goes through the Worker to the Mac app on the Mac that got the
+  request. Each change goes through the Worker to the Mac app that shows
+  the page.
 - A grant starts only from a choice of the user in the page of the Mac app
   on that Mac. These choices start one: the answers Allow all commands for
-  15 minutes and Allow all commands until I stop, the switch of Mac access
-  when it turns on, and the line Allow all commands on this Mac. A browser
-  never starts a grant (Mac access decision 5 A).
-  [In a browser](capabilities.md#in-a-browser) gives the reason.
+  15 minutes and Allow all commands until I stop, and the Mac access switch
+  when it turns on. A browser never starts a grant (Mac access decision
+  5 A). [In a browser](mac-access.md#in-a-browser) gives the reason.
 - The Mac app decides each change, and the Worker stores no grant, as
   [Saved choices](#saved-choices) says.
 - The Worker never sends a start of a grant to a Mac by itself. Reason: a
@@ -57,8 +55,9 @@ the merge.
 
 This section states the side of the Mac app.
 [Agent tools](agent-tools.md#mac-commands) states the requests, their
-limits, their results, and what the chat shows. A workspace with
-[Mac access](secrets.md#mac-access) off sends no request to a Mac.
+limits, their results, and what the chat shows. The agents of each
+workspace can ask, as
+[Agents can always ask](mac-access.md#agents-can-always-ask) says.
 
 ### The device
 
@@ -108,26 +107,18 @@ limits, their results, and what the chat shows. A workspace with
 - Reason: the user asked that each command needs permission, with these
   choices. The user later asked for the choice until Stop, for work that
   needs more than 15 minutes.
-- In the Mac app, the Capabilities control starts the same grant until
-  Stop with no request: the switch of Mac access when it turns on, and
-  the line Allow all commands on this Mac (Mac access decisions 1 C and
-  4 A). An uncheck of the line stops the grant, as Stop does.
+- In the Mac app, the Mac access switch of the Capabilities control starts
+  the same grant until Stop with no request (Mac access decisions 1 C and
+  7). A switch-off stops the grant, as Stop does.
 - Such a start also runs each request of that workspace that waits on
   that Mac, as Allow all commands until I stop does. Reason: the user chose
   all commands of the workspace.
 - A grant is the permission of the 15 minutes or until Stop. It covers
   every command from one workspace on one Mac.
-- A grant covers only the requests of the period of Mac access of its
-  start (Mac access decision 6 C).
-  [When Mac access goes off](capabilities.md#when-mac-access-goes-off)
-  states the periods.
-- The period can only end a grant. It never allows a command. Always
-  allow has no period, because it covers one command text in every
-  workspace.
-- Only Stop, a quit of the Mac app, a sign-out of its account, or a
-  switch-off of Mac access in its workspace ends a grant until Stop (Mac
-  until-stop decision 1, Mac access decision 6 C). A sleep of the Mac and
-  a new device connection keep it.
+- Only Stop, a quit of the Mac app, or a sign-out of its account ends a
+  grant until Stop (Mac until-stop decision 1). A switch-off on that Mac is
+  a Stop. A sleep of the Mac and a new device connection keep the grant.
+  So does a switch-off on another Mac.
 - Reason: a grant without an end must not outlive the run of the Mac app,
   so a forgotten grant ends at the next restart.
 - A grant that ends with its turn, a long fixed limit, a saved grant that
@@ -182,9 +173,6 @@ limits, their results, and what the chat shows. A workspace with
   keeps a grant until Stop only in memory and never saves it (Mac
   until-stop decision 1).
 - A saved end of the 15 minutes includes an end that Extend set.
-- The saved 15 minutes keep their period of Mac access. Saved 15 minutes
-  without a period cover no request. Reason: the Mac app cannot tell
-  whether Mac access went off after they started.
 - Reason: the Mac then decides what runs on it, and no record on the
   server can allow a command.
 - The account page of the Mac app has a This Mac tab, after Stats. It
@@ -223,12 +211,6 @@ limits, their results, and what the chat shows. A workspace with
 - Keep until I stop and a start from the Capabilities control report done
   or failed, never done but not saved. Reason: the Mac app never saves a
   grant until Stop.
-- The settings of a result never list a grant of an older period of Mac
-  access. So the bar, This Mac, and the line of the Capabilities control
-  never show a grant that covers no request.
-- Reason: the Worker holds the current period of each workspace. So each
-  page shows the same grants, also for a Mac that was asleep at the
-  switch-off.
 - This Mac shows the result of each control. The bar shows the result of
   Stop even when the grant no longer runs. It shows the result of a Keep
   that failed while the grant runs.

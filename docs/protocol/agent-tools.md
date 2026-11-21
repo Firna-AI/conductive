@@ -29,8 +29,7 @@ decision number names a decision of the change that adds
 decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
 says. A Mac access decision names a decision of the change that makes
-[Mac access](capabilities.md#mac-access) allow all commands, as that doc
-says.
+[Mac access](mac-access.md) allow all commands, as that doc says.
 
 ## Workspace tools
 
@@ -151,16 +150,16 @@ a choice of that person covers the command, as
   how the Worker finds the sender.
 - When the sender has no available Mac, the agent gets the answer that the
   Mac is not available.
-- A workspace with [Mac access](secrets.md#mac-access) off sends no
-  request to a Mac (secrets decision 6 G). The Worker refuses each request
-  of that workspace at once. The reason says that Mac access is off in the
-  Capabilities of the workspace.
+- The agents of each workspace can ask, also in a new workspace and in an
+  automation run (Mac access decision 7). The Worker refuses no request
+  because of Mac access, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says.
 - Risk: every process in the sandbox can ask in the name of a turn that
   runs now. So a member with a terminal in the same sandbox can ask for a
   command on the Mac of that sender. The Mac still asks first, unless
-  Always allow or a grant covers the command. In the Mac app, turning Mac
-  access on starts such a grant (Mac access decision 1 C).
-  [Risks](capabilities.md#risks) states what such a grant allows.
+  Always allow or a grant covers the command. In the Mac app, the Mac
+  access switch starts such a grant (Mac access decision 1 C).
+  [Risks](mac-access.md#risks) states what such a grant allows.
 
 ### The request
 
@@ -184,11 +183,9 @@ a choice of that person covers the command, as
 ### Results
 
 - Each request ends with one result for the agent: the command ran, the
-  user denied it, the Mac is not available, or Mac access is off.
-- When a member turns Mac access off, each request of the workspace that
-  waits ends with that result. A command that runs goes on to its end.
-  Reason: the Mac app owns a running command, and a stop there is a
-  separate choice.
+  user denied it, or the Mac is not available.
+- A request that the Worker refused while the Mac access of its workspace
+  was off keeps that result, with its reason. No new request gets it.
 - After a run, the agent gets the output of the command and how it ended:
   its exit code, the end of its time limit, or a failure to start.
 - The command stops at its time limit.
@@ -228,8 +225,8 @@ a choice of that person covers the command, as
   the agent runner is ready, needs input shows again while a request
   waits, as [Secret requests](secret-requests.md#the-request) says.
 - After its result, the command shows at its place in the chat: denied,
-  done with its output, Mac not available, or Mac access off with its
-  reason.
+  done with its output, or Mac not available. A request that kept the
+  result Mac access off shows it with its reason.
 - The [requests of secrets](secret-requests.md#the-request) wait in the
   same place above the composer.
 - When its turn ends, the result folds with the work of the turn, at its

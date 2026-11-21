@@ -45,10 +45,9 @@ type CapabilityChoice = 'capabilities' | 'allowThisMac'
  * start fails, the workspace keeps the message in its chat, with the saved
  * cause and Try again, so the form gives nothing back.
  *
- * The create also takes the choices of the Capabilities control: the
- * secrets that the new workspace pre-approves, and its Mac access. The
- * line of this Mac is a choice of the draft too, which the create does
- * not take, as `Draft.allowThisMac` says.
+ * The create also takes the secrets of the Capabilities control that the
+ * new workspace pre-approves. The switch of Mac access is a choice of the
+ * draft too, which the create does not take, as `Draft.allowThisMac` says.
  */
 export class NewWorkspaceModel {
   readonly draft: Store<Draft>
@@ -101,7 +100,9 @@ export class NewWorkspaceModel {
       repository: keep?.repository?.picked ? keep.repository : null,
       choice: keep?.choice ?? null,
       sectionId: null,
-      capabilities: NEW_WORKSPACE_CAPABILITIES,
+      capabilities: {
+        preapprovedSecretIds: NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
+      },
       allowThisMac: false,
       files: [],
       detached: [],
@@ -148,23 +149,11 @@ export class NewWorkspaceModel {
           secretId,
           on,
         ),
-        macAccess: capabilities.macAccess,
       },
     }))
   }
 
-  /**
-   * Turns Mac access of the new workspace on or off. The line of this Mac
-   * follows the switch, so a switch-on checks it (Mac access decision 1 C).
-   */
-  setMacAccess(macAccess: boolean): void {
-    this.changeChoices(({ capabilities }) => ({
-      capabilities: { ...capabilities, macAccess },
-      allowThisMac: macAccess,
-    }))
-  }
-
-  /** Checks or unchecks the line Allow all commands on this Mac. */
+  /** Turns the switch of Mac access of the draft on or off. */
   setAllowThisMac(allowThisMac: boolean): void {
     this.changeChoices(() => ({ allowThisMac }))
   }

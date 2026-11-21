@@ -149,12 +149,12 @@ export class MacSettingsController {
    * Makes a change through the pairing of now: it reads the pairing and the
    * settings of this Mac first, then sends the change, so the change reaches
    * the Mac app of this window as it is connected now. The start of a grant
-   * uses it, because the page asks for the start on its own, such as after
-   * the switch of Mac access or a create. The change goes only after a read
-   * that worked. When the read finds no Mac or fails, the change fails as
-   * not reached, and nothing goes to a Mac, also while kept settings show.
-   * A change that the page takes back before its turn reads nothing, and
-   * one that the page takes back during its read never goes.
+   * uses it, because the start can wait behind other changes, such as at
+   * the switch of Mac access, or come after a create. The change goes only
+   * after a read that worked. When the read finds no Mac or fails, the
+   * change fails as not reached, and nothing goes to a Mac, also while kept
+   * settings show. A change that the page takes back before its turn reads
+   * nothing, and one that the page takes back during its read never goes.
    */
   readonly changeOnCurrent = (change: SettingsChange): Promise<void> => {
     if (this.controls.busy(change)) return Promise.resolve()
@@ -178,23 +178,14 @@ export class MacSettingsController {
 
   /**
    * Takes back `change` while it waits, such as a start or a Keep of a grant
-   * after Mac access of its workspace went off. When the change that holds the
-   * control of `change` has its action, that change never goes to the Mac,
-   * also after the read that it waits for, and its control is free at once.
-   * It keeps no result, also when it already went to the Mac. Another
-   * change of that control, such as a Stop, still goes.
+   * at a switch-off of Mac access. When the change that holds the control of
+   * `change` has its action, that change never goes to the Mac, also after
+   * the read that it waits for, and its control is free at once. It keeps no
+   * result, also when it already went to the Mac. Another change of that
+   * control, such as a Stop, still goes.
    */
   readonly cancel = (change: SettingsChange): void => {
     if (this.controls.cancel(change)) this.publish()
-  }
-
-  /**
-   * Takes away the result of the last change of the control of `change`,
-   * such as the result of a start after Mac access of its workspace went
-   * off. A change that waits keeps its control busy.
-   */
-  readonly forget = (change: SettingsChange): void => {
-    if (this.controls.forget(change)) this.publish()
   }
 
   /**

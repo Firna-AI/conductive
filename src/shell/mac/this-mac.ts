@@ -4,16 +4,13 @@ import { Store, useStore, type Readable } from '../../app/store'
 import { createDeviceApi } from '../../chat/device/device-api'
 import { MacSettingsController } from '../../chat/device/mac-settings'
 import { controlOf } from '../../chat/device/settings-results'
-import {
-  shownSettings,
-  type MacSettingsState,
-} from '../../chat/device/settings-view'
+import type { MacSettingsState } from '../../chat/device/settings-view'
 import { useApp } from '../context'
 import { useMacApp } from './mac-app'
 
 /**
- * Where the page asked for the start of a grant: the switch or the line of
- * the Capabilities control, or a create of New workspace.
+ * Where the page asked for the start of a grant: the switch of the
+ * Capabilities control, or a create of New workspace.
  */
 export type StartPlace = 'control' | 'create'
 
@@ -39,15 +36,15 @@ const increasesOf = (workspaceId: string) =>
 
 /**
  * The settings of this Mac that every page of one Mac app window shares
- * for the person signed in: the bar of each workspace, the line Allow all
- * commands on this Mac of the Capabilities control, and the notice of a
- * new workspace whose grant did not start. They share one controller, so
- * a start from the line or a create shows on the bar at once, and the
- * result of a start stays after the control closes or New workspace opens
- * the new workspace. A start, a Stop, and Keep share the control of the
- * grant of a workspace, so each keeps the result of the last of them.
- * When Mac access of a workspace goes off, a start, a Keep, or an Extend of
- * its grant that waits never goes, as `forget` says.
+ * for the person signed in: the bar of each workspace, the switch of Mac
+ * access of the Capabilities control, and the notice of a new workspace
+ * whose grant did not start. They share one controller, so a start from
+ * the switch or a create shows on the bar at once, and the result of a
+ * start stays after the control closes or New workspace opens the new
+ * workspace. A start, a Stop, and Keep share the control of the grant of a
+ * workspace, so each keeps the result of the last of them. A switch-off
+ * takes back a start, a Keep, or an Extend of its grant that waits, as
+ * `stop` says.
  */
 export class ThisMac {
   readonly controller: MacSettingsController
@@ -86,54 +83,23 @@ export class ThisMac {
     return this.controller.changeOnCurrent(change)
   }
 
-  /** Stops the grant of the workspace on this Mac, as Stop of the bar does. */
+  /**
+   * Stops the grant of the workspace on this Mac, as Stop of the bar does:
+   * the switch-off of Mac access. A waiting change never keeps the member
+   * from it. A start, a Keep, or an Extend of that grant that waits never
+   * goes, also after the read that it waits for. It keeps no result, and
+   * its control is free at once. Then the Stop goes through the settings
+   * that show, current or kept. It goes also when they list no grant,
+   * because a change that the page took back may already be on its way to
+   * the Mac, and the Stop reaches the Mac after it. With no settings to
+   * show, nothing more goes, because no change can be on its way then.
+   */
   stop(workspaceId: string): Promise<void> {
-    this.mark(workspaceId, null)
-    return this.controller.change(stopOf(workspaceId))
-  }
-
-  /**
-   * Follows the switch of Mac access of the workspace, after it saved. On:
-   * the start of the grant of this Mac (Mac access decision 1 C). Off: a
-   * start, a Keep, or an Extend of that grant that waits never goes, as
-   * `forget` says. Then the Stop of that grant goes when the settings that
-   * show list one, also kept settings after a read that failed, because
-   * that grant may still run. The Stop goes also when such a change waited,
-   * because that change no longer holds the control of the grant. The Stop
-   * shows no result, because a switch-off ends the grants of every Mac (Mac
-   * access decision 6 C).
-   */
-  async switched(workspaceId: string, on: boolean): Promise<void> {
-    if (on) return this.start(workspaceId, 'control')
-    this.forget(workspaceId)
-    const shown = shownSettings(this.controller.get())
-    const listed =
-      shown?.settings.workspaceWindows.some(
-        (grant) => grant.workspaceId === workspaceId,
-      ) ?? false
-    if (!listed) return
-    const stop = stopOf(workspaceId)
-    await this.controller.change(stop)
-    this.controller.forget(stop)
-  }
-
-  /**
-   * Mac access of the workspace is off, in this page or in a read of its
-   * Capabilities. So a change of its grant that waits and increases the
-   * grant never goes: a start, a Keep, or an Extend. It does not go also
-   * when another member turns Mac access on again before its turn, because
-   * its choice belongs to a period of Mac access that ended (Mac access
-   * decision 6 C). That change keeps no result, also when it already went
-   * to the Mac, and its control is free at once, so the Stop of a switch-off
-   * can take it. The result of the last start or Stop goes too, and the
-   * notice of a new workspace with it.
-   */
-  forget(workspaceId: string): void {
     this.mark(workspaceId, null)
     for (const increase of increasesOf(workspaceId)) {
       this.controller.cancel(increase)
     }
-    this.controller.forget(stopOf(workspaceId))
+    return this.controller.change(stopOf(workspaceId))
   }
 
   /**

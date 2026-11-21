@@ -83,9 +83,9 @@ export interface NewWorkspaceForm {
  * its first text or file, as `NewWorkspaceModel` says. When the server
  * accepts the create, the app opens the new workspace, also when the form
  * closed while the create ran. In the Mac app, the page then starts the
- * grant until Stop of the new workspace on this Mac, when the draft had Mac
- * access on and its line checked. A start that fails shows as a notice in
- * the new workspace, as `useStartFailedNotice` says. `open` goes to another
+ * grant until Stop of the new workspace on this Mac, when the switch of Mac
+ * access of the draft was on. A start that fails shows as a notice in the
+ * new workspace, as `useStartFailedNotice` says. `open` goes to another
  * page from a notice, such as Connect.
  */
 export function useNewWorkspaceForm(
@@ -142,9 +142,8 @@ export function useNewWorkspaceForm(
       : null
   const send = () => {
     if (!defaults) return
-    // The draft empties after the create, so the line is read at the send.
-    const sent = model.draft.get()
-    const starts = sent.capabilities.macAccess && sent.allowThisMac ? mac : null
+    // The draft empties after the create, so the switch is read at the send.
+    const starts = model.draft.get().allowThisMac ? mac : null
     void model.send(defaults, (created) => {
       go(routes.workspace(org.id, created.workspace.id))
       void starts?.start(created.workspace.id, 'create')

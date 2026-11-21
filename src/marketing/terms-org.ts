@@ -150,7 +150,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         chosen secret, or an admin, can replace its value. Later runs then
         use the new value. A request for another
         secret still waits for a member unless another approval allows it.
-        Mac access starts off in each run workspace.`,
+        Agents in a run workspace can also ask for commands on the owner's
+        Mac.`,
       text`The run of an automation for a pull request reads that pull request,
         also the comments, reviews, and descriptions of other GitHub
         accounts. Such text can steer the agent while the run uses the
@@ -175,7 +176,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         that they added. In an active org, admins can replace and delete each secret, mark a
         secret for all agents, and reveal one value at a time. Every member
         can change what each workspace allows, such as its pre-approved
-        secrets and its Mac access.`,
+        secrets. The Mac access switch acts only on your own Mac.`,
     ),
   ],
 }
