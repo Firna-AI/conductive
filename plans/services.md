@@ -229,6 +229,12 @@ These are the UI implementor's calls of 20 November 2026, checked by the orchest
 
 On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
 
+The non-UI implementor made these guidance calls on 21 November 2026. The orchestrator checked them on that date.
+
+- Append Services after the existing common guidance. Select only the temporary-server instruction by agent. Reason: the approved server rules differ for Claude and Codex, while their service lifecycle is the same.
+- Keep saved-session text unchanged and use the existing runtime note-output tests. Reason: this release changes guidance, not saved-session recovery or background-work bookkeeping.
+- Update only the direct guidance entry-point descriptions. Reason: the protocols and public guides already state the approved behavior.
+
 ## Milestone 1: Services mockups
 
 Tags: mockup
@@ -367,13 +373,15 @@ Depends on: 4
 
 The non-UI implementor adds service guidance in the same sandbox software release as the command.
 
-- [ ] Add a separate services section to `crates/cnd-runner/src/engine/instructions.rs`.
-- [ ] Tell agents to end temporary check servers before their reply. Claude uses tracked background work. Codex keeps the process ID.
-- [ ] Tell agents to start a server that must outlive the reply as a service.
-- [ ] Tell agents to report the service name and port. State that it runs until the computer stops and that preview use adds no awake time.
-- [ ] Update the Claude background note's server guidance without changing its trigger, wait rules, or deadline.
-- [ ] Keep watch guidance unchanged. Check the CLI help and MCP descriptions against the approved service contract.
-- [ ] Keep the protocol and public guides aligned with final wording and actual behavior.
+- [x] Add a separate services section to `crates/cnd-runner/src/engine/instructions.rs`.
+- [x] Tell agents to end temporary check servers before their reply. Claude uses tracked background work. Codex keeps the process ID.
+- [x] Tell agents to start a server that must outlive the reply as a service.
+- [x] Tell agents to report the service name and port. State that it runs until the computer stops and that preview use adds no awake time.
+- [x] Update the Claude background note's server guidance without changing its trigger, wait rules, or deadline.
+- [x] Keep watch guidance unchanged. Check the CLI help and MCP descriptions against the approved service contract.
+- [x] Keep the protocol and public guides aligned with final wording and actual behavior.
+
+Completed on 21 November 2026. Evidence: `.context/services/guidance-report.md` and `.context/services/guidance-root-check.log`.
 
 ## Milestone 8: Verification, commit, review, and pull request
 
