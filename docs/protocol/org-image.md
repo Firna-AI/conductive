@@ -4,7 +4,7 @@ This doc holds the requirements and the decisions in force for the org
 image that every sandbox of an org starts from. It covers the builds and
 the refreshes of the org image, the first build of a new org, and the
 builds and the notices of a change of the repositories.
-[Sandbox software](sandbox-software.md) holds the software image that a
+[Software image](software-image.md) holds the software image that a
 first build starts from. It
 belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md). The
 terms are those of the [architecture doc](../architecture.md#terms). A
@@ -105,7 +105,7 @@ says.
   of its account, when that account has a ready one. It copies the
   repositories, installs the newest release of the sandbox software, and
   runs the install script, as
-  [The software image](sandbox-software.md#the-software-image) says.
+  [The software image](software-image.md#the-software-image) says.
 - When the first build cannot start, Create org still creates the org. An
   admin can then start a build on the Cloud computer tab, with Build
   computer or Try again. Reason: the org is valid without a build.
@@ -147,8 +147,8 @@ says.
 
 ## The software image
 
-[The software image](sandbox-software.md#the-software-image) holds the
-saved snapshot of the app's own software that a first build starts from.
+[Software image](software-image.md) holds the saved snapshot of the app's
+own software that a first build starts from.
 
 ## Repository changes
 

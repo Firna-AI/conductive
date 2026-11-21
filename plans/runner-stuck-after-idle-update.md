@@ -95,7 +95,7 @@ Contract owners:
   error state "The software didn't restart. Try again." when the runner is
   still not ready.
 - It runs at most once for each away period. After a failed automatic
-  restart, the member uses Try again or Restart.
+  restart, the member uses Try again.
 - The Boat commands run outside the chat queue and outside the serial
   lifecycle step, through `QueueTurn.outside`. The alarm uses the provider
   of the org, as the Boat state read does.
@@ -122,6 +122,15 @@ These are agent design calls of 20 November 2026. Cal can change each one.
 - The same commands as Restart, with the update check first. Reason: a
   newer release can hold the fix of a broken one.
 - The hash reuse rule and its 2-second racy window, as the design says.
+- A waiting message starts the automatic restart also when another turn
+  runs, and that turn then ends. Reason: after 3 minutes away the runner
+  is almost certainly stuck, and a turn that only looks like it runs must
+  not hold the restart back.
+- The automatic restart shows no toast for a failed download, and it goes
+  on with the installed release. Reason: no member pressed Restart.
+- After a failed automatic restart, the error state offers Try again, as
+  after a failed Restart. Reason: Restart is not in the menu of that
+  state, and adding it would be a new requirement.
 - The hash cache stays in memory only. Reason: a new runner process scans
   once at its start, and a cache file would need its own cleanup.
 
@@ -132,58 +141,61 @@ Depends on: none
 The protocol docs state the automatic restart. The runner changes keep
 the behaviour, so they change no protocol doc.
 
-- [ ] Update `docs/protocol/sandbox-software.md`, "Installs at idle":
+- [x] Update `docs/protocol/sandbox-software.md`, "Installs at idle":
       replace the rule that no check guards a release that never
       connects. Name the automatic restart of the Worker, its risk, and
       Cal's decision of 20 November 2026.
-- [ ] Add a section on the automatic restart to
+- [x] Add a section on the automatic restart to
       `docs/protocol/restart-the-software.md`: when it runs, what the
       member sees, and its limit of one restart for each away period.
-- [ ] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
+- [x] Read `src/marketing/terms.ts`, `src/marketing/privacy.ts`, and each
       public guide in `src/marketing/docs/` in full. Update each sentence
       that restates a changed fact.
-- [ ] Update `worker/lifecycle/README.md` and
-      `worker/lifecycle/workspace-object.md` for the away time and the
-      alarm step.
 
 ## Milestone 2: Runner scan queue and shutdown
 
 Depends on: none
 
-- [ ] Merge waiting watcher file refreshes into one waiting scan in
+- [x] Merge waiting watcher file refreshes into one waiting scan in
       `crates/cnd-runner/src/reports/files.rs`.
-- [ ] Add `FileReports::close`, and cancel the running snapshot and each
+- [x] Add `FileReports::close`, and cancel the running snapshot and each
       waiting scan.
-- [ ] Close the file reporter in `ReportCommandHandler::shutdown`.
-- [ ] Stop the queued scans of the watcher task at a stop in
+- [x] Close the file reporter in `ReportCommandHandler::shutdown`.
+- [x] Stop the queued scans of the watcher task at a stop in
       `crates/cnd-runner/src/watcher/service.rs`.
-- [ ] Add a regression test: a slow repository, a burst of watcher
+- [x] Add a regression test: a slow repository, a burst of watcher
       events, then a shutdown. The shutdown ends without waiting for the
       queued scans. At most two file scans run for the burst.
-- [ ] Update `crates/cnd-runner/README.md`.
+- [x] Update `crates/cnd-runner/README.md`.
 
 ## Milestone 3: Runner hash reuse
 
 Depends on: 2
 
-- [ ] Keep the hash cache in `crates/cnd-runner/src/repository/`, and use
+- [x] Keep the hash cache in `crates/cnd-runner/src/repository/`, and use
       it in `snapshot.rs`.
-- [ ] Add tests: an unchanged file is not read again, a changed file is
+- [x] Add tests: an unchanged file is not read again, a changed file is
       read again, a file inside the racy window is read again, and a
       removed file leaves the cache.
-- [ ] Update `crates/cnd-runner/README.md`.
+- [x] Update `crates/cnd-runner/README.md`.
 
 ## Milestone 4: Worker automatic restart
 
 Depends on: 1
 
-- [ ] Record the disconnect time in the lifecycle state, and clear it at
+- [x] Record the disconnect time in the lifecycle state, and clear it at
       ready. Keep the stored state readable by the previous Worker.
-- [ ] Add the restart condition to the alarm step, and run the restart
+- [x] Add the restart condition to the alarm step, and run the restart
       commands outside the chat queue and the serial lifecycle step.
-- [ ] Share the restart commands and the state change with
+- [x] Share the restart commands and the state change with
       `worker/lifecycle/software-restart.ts`.
-- [ ] Add tests with the existing restart and lifecycle fixtures: a
+- [x] Update `worker/lifecycle/README.md` and
+      `worker/lifecycle/workspace-object.md` for the away time and the
+      alarm step.
+- [x] Add two or three sentences on the automatic restart to the
+      "Restart the software" part of the workspaces guide in
+      `src/marketing/docs/`.
+- [x] Add tests with the existing restart and lifecycle fixtures: a
       waiting message and a runner away for 3 minutes gives one restart.
       No restart for a running turn, a short absence, a stopped sandbox,
       a suspended owner, or a running Continue. A second away period after

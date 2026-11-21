@@ -72,6 +72,8 @@ command start. For a workspace object, it:
 - applies the state in each deadline reply, even when the saved runner
   flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- checks for an [automatic restart](#automatic-restart) after it completes
+  the regular lifecycle step of a running workspace with a runner that is away
 - watches the restore after each create and resume until Boat reports its
   end, or until a stop, an error, an archive, or a new start, as
   [Creates and resumes](#creates-and-resumes) says
@@ -127,6 +129,27 @@ production `Workspace` sends each `workspace.updated` and `start.updated`
 event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event
 history, with chat and lifecycle events.
+
+### Automatic restart
+
+`runnerDisconnectedAt` in the lifecycle state holds the time when the
+runner connection closed. For an older state with no time, the alarm
+starts the count when it first sees the runner away. `automaticRestartAt`
+records the attempt until the runner is ready again. The same state write
+sets `softwareRestartAt` for the shared restart deadline and shows Starting.
+
+The lifecycle alarm finishes its reconciliation and stop checks first.
+It reads the oldest queued message from the pending chat commands. When
+the two times are due, it confirms that the provider still shows a
+running sandbox and checks access to the captured sandbox and account.
+[Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart)
+gives the requirements.
+
+The alarm runner tracks the restart commands in a separate task.
+`QueueTurn.outside` releases the chat queue during each command. The
+regular alarm can apply the restart deadline while a command waits. Before
+the runner restarts, the chat ends its running turns and keeps their
+undelivered messages for the next ready runner.
 
 ## Creates and resumes
 

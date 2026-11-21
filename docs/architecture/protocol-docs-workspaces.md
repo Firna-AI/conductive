@@ -8,8 +8,11 @@ protocol docs.
 - [Provider accounts](../protocol/provider-accounts.md): the account of
   each org, its weights, and the regions of the accounts.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
-  app's own software, the updates of each sandbox, the install in a
-  build, and the software image.
+  app's own software, the updates of each sandbox, and the install in a
+  build.
+  - [Software image](../protocol/software-image.md): the software image
+    that a first build starts from, its build at each deploy, and the
+    images that the app keeps.
 - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, its Capabilities icon, the create, the branch, and
   a failed first start.
@@ -28,8 +31,9 @@ protocol docs.
     idle sandbox, the resume, the starts from the agent tools, and the
     restart near day 14 of a stop.
   - [Restart the software](../protocol/restart-the-software.md): Restart
-    in the workspace header, what it restarts, and the download of the
-    newest release before it.
+    in the workspace header, what it restarts, the download of the newest
+    release before it, and the automatic restart of an agent runner that
+    stays away while a message waits.
 - [Continue](../protocol/continue.md): the next task of a workspace after a
   merge, on a new branch with the same sandbox and sessions.
 - [Repository change](../protocol/repository-change.md): the move of a

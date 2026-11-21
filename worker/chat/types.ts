@@ -194,6 +194,7 @@ export interface ChatDependencies {
   runnerDisconnected(
     workspaceId: string,
     publish: ChatCallbackPublisher,
+    at: number,
   ): Promise<void>
   runnerUnsupported(
     workspaceId: string,

@@ -153,8 +153,11 @@ export function createWorkspaceIntegration(
               callbackPublisher(publish),
             )
           },
-          runnerDisconnected: async (_id, publish) =>
-            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+          runnerDisconnected: async (_id, publish, at) =>
+            controller.runnerLifecycleDisconnected(
+              callbackPublisher(publish),
+              at,
+            ),
           turnDispatching: async (_id, turn, publish) => {
             if (await pendingWorkspaceChange(storage)) return false
             const state = await controller.readLifecycle()
@@ -221,6 +224,9 @@ export function createWorkspaceIntegration(
     }),
   )
   const startRecords = new StartJobRecords(env, platform.storage, now)
+  const reconcileStopped = async () => {
+    await Promise.all([devices.reconcile(), secrets.reconcile()])
+  }
   const controller: WorkspaceController = createWorkspaceController(
     startRecords.env,
     dependencies,
@@ -247,10 +253,7 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () =>
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        ),
+      chatRecovered: () => context.waitUntil(reconcileStopped()),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -272,12 +275,10 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id) => {
+      stopped: async (id, keepQueued) => {
         for (const hook of stoppedHooks) await hook(id)
-        await chat.stopWorkspace(id)
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        )
+        await chat.stopWorkspace(id, keepQueued)
+        context.waitUntil(reconcileStopped())
       },
     },
   )
@@ -292,9 +293,7 @@ export function createWorkspaceIntegration(
     sockets,
     startRecords,
     withGeneration: generations.withGeneration,
-    reconcileStopped: async () => {
-      await Promise.all([devices.reconcile(), secrets.reconcile()])
-    },
+    reconcileStopped,
     onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
   }
 }

@@ -36,8 +36,10 @@ gives the create, read, resume, and activity routes of a workspace to
   sandbox and sessions.
 - Change the repository of a workspace to another repository that its
   sandbox holds, with the same sandbox and sessions.
-- Restart the runner, preview relay, and terminal service of a running workspace, after
-  an update check, as [Restart](routes.md#restart) says.
+- Restart the runner, preview relay, and terminal service of a running workspace after
+  an update check. A member can use [Restart](routes.md#restart). The workspace
+  alarm can also start it for a runner that stays away while a message waits, as
+  [Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -206,6 +208,7 @@ the persisted resource records and the retained computer ledger.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
+- [automatic-restart.ts](automatic-restart.ts): checks the saved absence, waiting messages, and provider state. It claims the shared restart and sends its commands outside the chat queue.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.
