@@ -52,7 +52,7 @@ import {
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 import { acmeSkillsComputer } from './settingsSkills'
 
 /** The org whose settings show, and what its tabs hold. */

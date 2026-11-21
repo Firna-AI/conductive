@@ -1,15 +1,18 @@
 import { Input } from '@firna/ui/input'
-import { FolderSearch, Lock, type LucideIcon, SearchX } from 'lucide-react'
 import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { InlineText } from '../common/InlineText'
-import { LoadFailure } from '../common/LoadFailure'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { IconKey } from '../../entries/components/common/icons'
+import { inlineText } from '../../entries/components/common/InlineText.mockup'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { useControlSizes } from '../common/touch'
-import { type Detail, DetailList } from './DetailList'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import type { ReadOnlyCause } from './OrgSections'
-import { Section, SectionText } from './Section'
-import { SkillList } from './SkillList'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
+import { skillList } from '../../entries/components/settings/SkillList.mockup'
 import {
   type NoSkillsCause,
   type SkillsLookup,
@@ -18,11 +21,11 @@ import {
   type SkillsViewer,
 } from './skillsCopy'
 import {
-  SavedTrustHint,
-  type SkillsTrust,
-  trustDetail,
-  TrustSwitch,
-} from './SkillsTrust'
+  savedTrustHint,
+  trustSwitch,
+} from '../../entries/components/settings/SkillsTrust.mockup'
+import { type SkillsTrust, trustDetail } from './SkillsTrust'
+import { defined } from '../../defined'
 
 /**
  * The field of an admin. It takes owner/name or a link from GitHub, and
@@ -47,10 +50,10 @@ function RepositoryField(props: { value: string }) {
 }
 
 /** The icon of each notice of a repository that gives no skills. */
-const noSkillsIcons: Readonly<Record<NoSkillsCause, LucideIcon>> = {
-  private: Lock,
-  'not-found': SearchX,
-  'without-skills': FolderSearch,
+const noSkillsIcons: Readonly<Record<NoSkillsCause, IconKey>> = {
+  private: 'lock',
+  'not-found': 'search-x',
+  'without-skills': 'folder-search',
 }
 
 /**
@@ -65,9 +68,12 @@ function NoSkillsNotice(props: {
 }) {
   const text = skillsNoticeText(props)
   return (
-    <Notice
-      body={<InlineText text={text.body} />}
+    <notice.Component
+      body={
+        <inlineText.Component moklyInstance="no-skills-text" text={text.body} />
+      }
       icon={noSkillsIcons[props.cause]}
+      moklyInstance="no-skills"
       title={text.title}
     />
   )
@@ -89,7 +95,13 @@ function LookupResult(props: {
   if (lookup === undefined || repository === '') return null
   switch (lookup.result) {
     case 'failed':
-      return <LoadFailure body={copy.failed.body} title={copy.failed.title} />
+      return (
+        <loadFailure.Component
+          body={copy.failed.body}
+          moklyInstance="skills-failed"
+          title={copy.failed.title}
+        />
+      )
     case 'private':
     case 'not-found':
       return (
@@ -109,7 +121,13 @@ function LookupResult(props: {
           />
         )
       }
-      return <SkillList incomplete={lookup.incomplete} skills={lookup.skills} />
+      return (
+        <skillList.Component
+          moklyInstance="skill-list"
+          skills={lookup.skills}
+          {...defined({ incomplete: lookup.incomplete })}
+        />
+      )
   }
 }
 
@@ -119,12 +137,21 @@ function LookupResult(props: {
  */
 function SavedSkills(props: { repository: string; trust?: SkillsTrust }) {
   const { trust } = props
-  const rows: Detail[] = [{ term: copy.label, value: props.repository }]
-  if (trust) rows.push(trustDetail(trust.saved))
   return (
     <>
-      <DetailList rows={rows} />
-      {trust ? <SavedTrustHint trusted={trust.saved} /> : null}
+      <detailList.Component
+        moklyInstance="saved-repository"
+        rows={[
+          { term: copy.label, value: props.repository },
+          ...(trust ? [trustDetail(trust.saved)] : []),
+        ]}
+      />
+      {trust ? (
+        <savedTrustHint.Component
+          moklyInstance="saved-trust"
+          trusted={trust.saved}
+        />
+      ) : null}
     </>
   )
 }
@@ -157,34 +184,52 @@ export function SkillsSection(props: {
   const { trust } = props
   if (props.readOnly) {
     return (
-      <Section description={copy.description} title={copy.title}>
+      <section.Component
+        description={copy.description}
+        moklyInstance="skills"
+        title={copy.title}
+      >
         {saved ? (
           <SavedSkills repository={saved} trust={trust} />
         ) : (
-          <SectionText muted>{copy.empty[props.readOnly]}</SectionText>
+          <sectionText.Component moklyInstance="no-repository" muted>
+            {copy.empty[props.readOnly]}
+          </sectionText.Component>
         )}
         <LookupResult
           lookup={props.lookup}
           repository={saved}
           viewer={props.readOnly}
         />
-      </Section>
+      </section.Component>
     )
   }
   const value = props.draft ?? saved
   const trusted = trust ? (trust.draft ?? trust.saved) : false
   const changed = value !== saved || (trust ? trusted !== trust.saved : false)
   return (
-    <Section
-      actions={<ActionButton disabled={!changed}>{copy.save}</ActionButton>}
+    <section.Component
+      actions={
+        <actionButton.Component
+          disabled={!changed}
+          moklyInstance="save-repository"
+        >
+          {copy.save}
+        </actionButton.Component>
+      }
       description={copy.description}
+      moklyInstance="skills"
       title={copy.title}
     >
       <RepositoryField value={value} />
       {trust ? (
-        <TrustSwitch replaced={value !== saved} trusted={trusted} />
+        <trustSwitch.Component
+          moklyInstance="trust"
+          replaced={value !== saved}
+          trusted={trusted}
+        />
       ) : null}
       <LookupResult lookup={props.lookup} repository={saved} viewer="admin" />
-    </Section>
+    </section.Component>
   )
 }

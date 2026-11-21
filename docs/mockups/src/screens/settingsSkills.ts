@@ -9,11 +9,11 @@ import {
   skillsRepository,
   skillsRepositoryLink,
 } from '../fixtures/computer'
-import type { OrgSettingsState } from './OrgSettingsScreen'
+import type { OrgSettingsState } from './orgSettingsState'
 
 /**
  * The parts of the state of the org settings that the Skills section of
- * the Cloud computer tab shows. `OrgSettingsScreen.tsx` adds them to the
+ * the Cloud computer tab shows. `orgSettingsState.ts` adds them to the
  * state of the screen.
  */
 export const skillsProperties = {

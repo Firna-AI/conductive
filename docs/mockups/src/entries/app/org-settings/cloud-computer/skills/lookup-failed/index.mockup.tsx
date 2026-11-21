@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../../screens/OrgSettingsScreen'
+} from '../../../../../../screens/orgSettingsState'
 
 export const computerSkillsLookupFailed = defineScreen({
   title: 'List that did not load',

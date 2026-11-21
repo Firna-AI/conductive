@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../screens/OrgSettingsScreen'
+} from '../../../../screens/orgSettingsState'
 
 /** Why the tab has a Skills section, and why it comes last. */
 const skills =

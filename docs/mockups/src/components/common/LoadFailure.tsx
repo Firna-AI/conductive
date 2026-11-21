@@ -1,6 +1,5 @@
-import { RotateCw, TriangleAlert } from 'lucide-react'
-import { ActionButton } from './actions'
-import { Notice } from './Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from './ScreenLink'
 
 /** The message of the server when the app cannot reach it. */
@@ -19,9 +18,11 @@ export function LoadFailure(props: {
   body?: string
   to?: string
 }) {
-  const button = <ActionButton icon={RotateCw}>Try again</ActionButton>
+  const button = (
+    <actionButton.Component icon="rotate-cw">Try again</actionButton.Component>
+  )
   return (
-    <Notice
+    <notice.Component
       action={
         props.to ? (
           <ScreenLink asChild to={props.to}>
@@ -32,7 +33,7 @@ export function LoadFailure(props: {
         )
       }
       body={props.body ?? offlineMessage}
-      icon={TriangleAlert}
+      icon="triangle-alert"
       title={props.title}
       tone="danger"
     />

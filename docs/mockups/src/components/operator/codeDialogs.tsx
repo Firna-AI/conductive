@@ -1,12 +1,14 @@
 import type { Viewport } from '@mokly/mokly'
-import { Ban, Plus } from 'lucide-react'
 import { Input } from '@firna/ui/input'
 import { newCode } from '../../fixtures/operatorCodes'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { InlineText } from '../common/InlineText'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
+import { inlineText } from '../../entries/components/common/InlineText.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { disableCodeWords, newCodeWords } from './codeCopy'
@@ -18,23 +20,30 @@ import { disableCodeWords, newCodeWords } from './codeCopy'
 export function NewCodeDialog(props: { viewport: Viewport }) {
   const { field } = useControlSizes()
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.operatorCodes}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.operatorCodesMade}>
-            <ActionButton icon={Plus} tone="primary">
+            <actionButton.Component
+              icon="plus"
+              moklyInstance="dialog-make-code"
+              tone="primary"
+            >
               {newCodeWords.make}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="new-code-dialog"
       title={newCodeWords.title}
       viewport={props.viewport}
     >
-      <DialogText>{newCodeWords.text}</DialogText>
+      <dialogText.Component>{newCodeWords.text}</dialogText.Component>
       <Input
         hint={newCodeWords.labelHint}
         label={newCodeWords.label}
@@ -50,7 +59,7 @@ export function NewCodeDialog(props: { viewport: Viewport }) {
         size={field}
         value={String(newCode.limit)}
       />
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }
 
@@ -70,27 +79,36 @@ export function DisableCodeDialog(props: {
   done: string
 }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={props.cancel}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={props.done}>
-            <ActionButton icon={Ban} tone="danger">
+            <actionButton.Component
+              icon="ban"
+              moklyInstance="dialog-disable-code"
+              tone="danger"
+            >
               {disableCodeWords.action}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="disable-code-dialog"
       title={props.title}
       viewport={props.viewport}
     >
-      <DialogText>
-        <InlineText text={disableCodeWords.stops(props.code)} />{' '}
+      <dialogText.Component moklyInstance="what-stops">
+        <inlineText.Component text={disableCodeWords.stops(props.code)} />{' '}
         {disableCodeWords.keeps(props.used)}
-      </DialogText>
-      <DialogText>{disableCodeWords.final(props.kind)}</DialogText>
-    </ConfirmDialog>
+      </dialogText.Component>
+      <dialogText.Component moklyInstance="disable-is-final">
+        {disableCodeWords.final(props.kind)}
+      </dialogText.Component>
+    </confirmDialog.Component>
   )
 }

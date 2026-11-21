@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { Paperclip } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import {
@@ -7,17 +6,20 @@ import {
   type CapabilitiesControl,
 } from '../capabilities/CapabilitiesButton'
 import { ScreenLink } from '../common/ScreenLink'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { useTouch } from '../common/touch'
 import { SendButton, StopButton } from './ComposerButtons'
 import { ComposerMenu, type ComposerMenuState } from './ComposerMenu'
-import { FileMentionList, type MentionTree } from './FileMentionList'
-import { MentionAnchor } from './MentionList'
-import { MessageField } from './MessageField'
-import { ModelPicker } from './ModelPicker'
-import { SessionLoginLabel, type SessionLogin } from './SessionLogin'
+import type { MentionTree } from './FileMentionList'
+import { fileMentionList } from '../../entries/components/chat/FileMentionList.mockup'
+import { mentionAnchor } from '../../entries/components/chat/MentionList.mockup'
+import { messageField } from '../../entries/components/chat/MessageField.mockup'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
+import type { SessionLogin } from './SessionLogin'
+import { sessionLoginLabel } from '../../entries/components/chat/SessionLogin.mockup'
 import { SkillMentionList, type SkillSource } from './SkillMentionList'
+import { defined } from '../../defined'
 import styles from './Composer.module.css'
 
 export type ComposerState = {
@@ -155,12 +157,19 @@ export function Composer(props: ComposerState & { lines?: number }) {
   const uploads = props.attachments.some((file) => file.state !== undefined)
   const off = props.blocked === true || uploads
   const phone = useTouch()
-  const attach = <IconButton icon={Paperclip} label="Attach files" />
+  const attach = (
+    <iconButton.Component
+      icon="paperclip"
+      label="Attach files"
+      moklyInstance="attach-files"
+    />
+  )
   return (
     <div className={styles.wrap}>
-      <MentionAnchor>
+      <mentionAnchor.Component moklyInstance="mention-anchor">
         {props.mention ? (
-          <FileMentionList
+          <fileMentionList.Component
+            moklyInstance="file-mentions"
             query={queryAfter(props.draft, '@')}
             tree={props.mention}
           />
@@ -174,14 +183,14 @@ export function Composer(props: ComposerState & { lines?: number }) {
         <div
           className={classes(styles.composer, props.drop && styles.dropping)}
         >
-          <MessageField
-            caret={props.caret}
+          <messageField.Component
             files={props.attachments}
             lines={props.lines ?? 2}
             maxLines={8}
+            moklyInstance="message-field"
             placeholder={placeholder}
-            pointer={props.pointer}
             text={props.draft}
+            {...defined({ caret: props.caret, pointer: props.pointer })}
           />
           <div className={styles.bar}>
             {phone ? (
@@ -208,16 +217,22 @@ export function Composer(props: ComposerState & { lines?: number }) {
               </>
             )}
             {props.pickerPart ?? (
-              <ModelPicker
+              <modelPicker.Component
                 choice={props.choice}
-                fastKey={props.fastKey}
-                hiddenModels={props.hiddenModels}
-                open={props.picker}
-                sessionAgent={props.sessionAgent}
+                moklyInstance="model-picker"
+                {...defined({
+                  fastKey: props.fastKey,
+                  hiddenModels: props.hiddenModels,
+                  open: props.picker,
+                  sessionAgent: props.sessionAgent,
+                })}
               />
             )}
             {props.sessionLogin ? (
-              <SessionLoginLabel {...props.sessionLogin} />
+              <sessionLoginLabel.Component
+                moklyInstance="session-login"
+                owner={props.sessionLogin.owner}
+              />
             ) : null}
             <span className={styles.spacer} />
             {props.running ? <StopButton /> : null}
@@ -230,7 +245,7 @@ export function Composer(props: ComposerState & { lines?: number }) {
             )}
           </div>
         </div>
-      </MentionAnchor>
+      </mentionAnchor.Component>
     </div>
   )
 }

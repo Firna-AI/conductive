@@ -1,9 +1,8 @@
 import { useId } from 'react'
 import { Switch } from '@firna/ui/switch'
 import { noop } from '../../noop'
-import { ExternalLink } from '../common/ExternalLink'
+import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { useControlSizes } from '../common/touch'
-import type { Detail } from './DetailList'
 import { skillsTrustCopy as copy, trustHint } from './skillsTrustCopy'
 import styles from './SkillsTrust.module.css'
 
@@ -23,7 +22,12 @@ function TrustHint(props: { trusted: boolean; replaced: boolean }) {
   return (
     <p className={styles.hint}>
       {trustHint(props)} {copy.note}{' '}
-      <ExternalLink href={copy.guide.href}>{copy.guide.label}</ExternalLink>
+      <externalLink.Component
+        href={copy.guide.href}
+        moklyInstance="trust-guide"
+      >
+        {copy.guide.label}
+      </externalLink.Component>
     </p>
   )
 }
@@ -58,8 +62,11 @@ export function TrustSwitch(props: { trusted: boolean; replaced: boolean }) {
   )
 }
 
-/** The saved choice as a row of the read-only details, under the repository. */
-export function trustDetail(trusted: boolean): Detail {
+/**
+ * The saved choice as a row of the read-only details, under the repository.
+ * Its value is text, so the row is data for the registered detail list.
+ */
+export function trustDetail(trusted: boolean): { term: string; value: string } {
   return { term: copy.term, value: trusted ? copy.trusted : copy.untrusted }
 }
 
