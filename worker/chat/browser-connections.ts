@@ -9,6 +9,8 @@ import { subscribeBrowser } from './browser-subscription'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
 import type { BrowserPeer, ChatDependencies } from './types'
+import type { AppEnv } from '../env'
+import { githubBranchLabels, labelGitHubMessage } from '../github/output'
 import { presentWorkspaceMessage } from './workspace-events'
 import { browserRegistration } from './browser-registration'
 
@@ -21,12 +23,14 @@ export interface NativeBrowserConnections {
 export class BrowserConnections extends BrowserTabs {
   private readonly connections = new WeakMap<WebSocket, BrowserPeer>()
   private readonly store: ChatStore
+  private readonly env: AppEnv
   private readonly operation: (id: string) => ChatOperation
   private readonly bind: (id: string) => void
   private readonly native?: NativeBrowserConnections
 
   constructor(
     store: ChatStore,
+    env: AppEnv,
     dependencies: ChatDependencies,
     operation: (id: string) => ChatOperation,
     bind: (id: string) => void,
@@ -34,6 +38,7 @@ export class BrowserConnections extends BrowserTabs {
   ) {
     super(dependencies)
     this.store = store
+    this.env = env
     this.operation = operation
     this.bind = bind
     this.native = native
@@ -44,13 +49,17 @@ export class BrowserConnections extends BrowserTabs {
     })
   }
 
-  subscribe(
+  async subscribe(
     access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
   ): Promise<() => void> {
-    const presented = this.present(peer, access.presentation)
+    const presented = this.present(
+      peer,
+      access.presentation,
+      await githubBranchLabels(this.env, access.workspace),
+    )
     let persist:
       ((registration: BrowserRegistration | null) => Promise<void>) | undefined
     if (socket) {
@@ -81,10 +90,19 @@ export class BrowserConnections extends BrowserTabs {
     })
   }
 
-  private present(peer: BrowserPeer, presentation: WorkspaceLinkContext) {
+  private present(
+    peer: BrowserPeer,
+    presentation: WorkspaceLinkContext,
+    labels: Awaited<ReturnType<typeof githubBranchLabels>>,
+  ) {
     return {
       send: (message: Parameters<typeof presentWorkspaceMessage>[0]) =>
-        peer.send(presentWorkspaceMessage(message, presentation)),
+        peer.send(
+          presentWorkspaceMessage(
+            labelGitHubMessage(message, labels),
+            presentation,
+          ),
+        ),
       close: () => peer.close(),
     }
   }
@@ -128,6 +146,10 @@ export class BrowserConnections extends BrowserTabs {
         close: () => socket.close(1000, 'Connection closed.'),
       },
       saved.presentation,
+      await githubBranchLabels(this.env, {
+        id: saved.registration.identity.workspaceId,
+        orgId: saved.registration.identity.orgId,
+      }),
     )
     this.connections.set(socket, peer)
     await this.restore(peer, saved.registration, this.stateWriter(state.id))

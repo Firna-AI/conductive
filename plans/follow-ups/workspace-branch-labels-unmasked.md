@@ -1,0 +1,42 @@
+# New session and repository change show raw names
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-21, from the branch `calummoore/follow-up-github-branch-labels-are-not-knov`, outside the scope of its fix of the GitHub screens.
+- **Location:** `src/chat/components/SessionStatus.tsx:148`, `worker/lifecycle/repository-change-publication.ts:42`, `worker/lifecycle/repository-change-errors.ts:32`, `worker/lifecycle/repository-change-progress.ts:99`, `src/shell/workspace/repository/RepositoryQuestion.tsx:40`, `src/shell/workspace/repository/RepositoryControl.tsx:40`, `src/chat/api/read-continued.ts:28`, `src/chat/components/TranscriptItem.tsx:138`, and `src/shared/transcript/markdown-items.ts:165`.
+- **Reason:** The branch that found these screens fixes only the GitHub state, which none of these screens reads.
+
+- **Terms:**
+  - **Masked label:** the text that a screen shows in place of a path or a branch name. It has `[redacted]` in place of each exact copy of a secret value.
+  - **Repository change:** the action that moves a workspace to a new branch of another repository of its org, in the same cloud computer. It starts the new branch from the latest default branch of the new repository.
+  - **Repository change note:** the chat line of each session after a repository change, such as "Ana moved the workspace to `acme/shop`, on the new branch `ana/carts-7k2q`".
+  - **New session text:** the text of a new session without messages: "The agent works on `<branch>`, on the same cloud computer as the other sessions."
+- **Background:**
+  - `docs/protocol/tokens-and-secrets.md`, under "Secrets that users enter", requires a separate masked label of each path and branch name on screens. The browser still gets the real names, because reads and Git steps need them (decision 145, 8 November 2026).
+  - The Privacy page in `src/marketing/privacy.ts` promises the same for file paths and for the names of the default and base branches.
+  - `docs/protocol/session-transcripts.md` says that a transcript copy uses the words of the chat and shows each path by its label.
+  - The Worker already sends masked labels for the file data and for the GitHub state, the banner record of the pull request bar. `pathLabel`, `baseLabel`, and `filterGitHubBanner` of `src/shared/output-fields.ts` fill the optional `displayPath`, `displayBaseBranch`, and `displayBranch`. They leave out a label that equals its real name.
+  - The labels use the secret values of the last start of the sandbox, from `runningOutputSecrets` in `worker/lifecycle/output-secrets.ts`. The Worker keeps this list of values to match and sends it to no browser. The real names in the browser data can still hold a copy of a value, as decision 145 allows. `worker/github/output.ts` adds the GitHub labels at each boundary, and stored events keep the real names.
+  - The workspace record, `Workspace`, carries the real `branch` to the workspace reads, the list, `workspace.updated`, and the agent tools. It has no label. Rust owns the type in `crates/cnd-runner-interface/src/tools/workspace_types.rs`, and `ts-rs` writes `src/shared/generated/Workspace.ts` from it.
+  - The workspace screen shows a GitHub state only when its `branch` equals the branch of the workspace record, as `src/shell/workspace/github/bar-feed.ts` checks. That state carries `displayBranch` when the label differs from the real name.
+- **Problem:**
+  - The New session text shows the raw `workspace.branch`. The mockup draws the same words in `docs/mockups/src/screens/workspaceChat.tsx:54`.
+  - The note: `publishRepositoryChange` emits `workspace.repository-changed` with the raw `branch` and `baseBranch`. `readRepositoryChanged` keeps only those fields. `RepositoryChangedLine` and the transcript copy show the raw branch.
+  - The failure: `repositoryChangeFailed` writes the raw default branch of the new repository into "The latest … of … could not be fetched." The toast "The repository didn't change." shows that text.
+  - The question: the `confirmation-required` reply of a repository change carries the raw path of each changed file, in `work.localWork.uncommittedFiles` and `work.carriedFiles`. `RepositoryQuestion` lists each path through `LocalWorkList`. Its `branch` and `baseBranch` show on no screen.
+- **Impact if no action:** A screenshot or a copied transcript can show a secret value that the app must hide. The repository change screens do not keep the Privacy promise about default branch names and file paths.
+- **Root question:** How do the New session text and the repository change screens name a branch and a file with a masked label, while the Git steps, the checks, and the requests keep the real names?
+- **Options:**
+  - **A.** Add the labels at each boundary where the Worker sends repository change data, as the GitHub state does. Label each `workspace.repository-changed` event in the browser stream and its old history, in the session history pages, and in the transcript route. Add the file labels to the question at its outer route, and mask the text of each failure message. The New session text shows the `displayBranch` of the GitHub state, or else the real name, as the GitHub screens fall back. While no GitHub state of the branch shows, the real name still shows there. Effort: Medium.
+  - **B.** As A, but while no GitHub state of the branch shows, the New session text leaves out the branch name. This needs new words, a mockup state, and a choice of the user. Effort: Medium.
+  - **C.** As A, and the workspace record gets an optional `displayBranch` at each boundary: the workspace reads, the list, and `workspace.updated`. The New session text and each later screen that names the workspace branch then show it. Each list read then loads the secret values of the last start of each workspace in the list. Effort: Large.
+- **Left out:** Masking in the browser, because the browser then needs the secret values, and that exposes stored credentials. Words without the names on each screen, because they change the approved words and drop a fact that the member needs. Masked names in place of the real names in the events and the replies, because two paths that differ only in a secret value then become equal, and the browser must keep the real names.
+- **Wider fix:** C. A label on the workspace record covers each screen that names the workspace branch, now and later.
+- **Previous examples:** Commit `216ed6791` split the real paths and base branches of the file data from their masked labels. `worker/github/output.ts` gives the GitHub state its labels at each boundary.
+- **Related:**
+  - `plans/follow-ups/continue-branch-labels-unmasked.md` has the same class for the Continue screens, and it waits for the fix of the Continue stop causes. They share the boundary helper and the files `src/chat/api/read-continued.ts`, `src/chat/components/TranscriptItem.tsx`, and `src/shared/transcript/markdown-items.ts`. The first fix to merge adds the helper, and the other reuses it.
+  - `plans/follow-ups/shared-branch-move-job.md` gives Continue and the repository change one job, so that one fix of their messages reaches both.
+- **Recommendation:** A. It masks each repository change screen, and the New session text whenever the screen knows the label, with no new words. C best protects the codebase, but it adds a secret read for each listed workspace.
+- **Action:** fix after merge, apply A, because the branch that found it changes only the GitHub state, and C costs too much for one text.
+
+Add a regression for each screen with a marked fake value in the new branch, the default branch of the new repository, and a changed file. Assert the exact masked label on each screen and in the copied transcript. Assert the exact real name in the Git command and in the request.

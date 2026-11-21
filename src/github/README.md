@@ -193,8 +193,15 @@ mounts it, and the production build leaves it out.
   chat that sends the prompts, and the files store of the local work.
   `access` is `write`, `read`, or `unknown`, and `method` is a merge method
   or `none`. `merge` chooses how a merge ends, `work` the local work, `turn`
-  a turn that runs, and `continue` how Continue ends. `scenarioFetch` of
-  `src/test-support/fake-bar-dev.ts` answers as the Worker does.
+  a turn that runs, and `continue` how Continue ends. `branches` is
+  `plain`, the default, or `masked`. `masked` gives the target branch a fake
+  secret value and its label, in the stored and fresh replies, the live
+  events, and the question of Continue. So the screens show "[redacted]",
+  and the prompts keep the real name. The workspace branch stays plain,
+  because the screen compares it with the workspace record.
+  `src/test-support/fake-branch-names.ts` holds that rule. `scenarioFetch`
+  of `src/test-support/fake-bar-dev.ts` answers as the Worker does, also on
+  the workspace development page.
 - Under the frames, the page shows the last message of the chat, such as
   the prompt of an action, and the question of Continue with its Cancel and
   Continue anyway. The [workspace development page](../shell/workspace/development-page.md)
@@ -237,7 +244,8 @@ mounts it, and the production build leaves it out.
 - [Shared state comparison](../shared/github-state.ts) compares two GitHub states, without the banner time.
 - `githubClient.ts` and `githubParse.ts`: read the API replies of the
   banner, the checks, and the stored state, and check them against the
-  contract, with the head commit of the pull request.
+  contract, with the head commit of the pull request. They keep the
+  optional labels `displayBranch` and `displayBaseBranch` of the banner.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.
@@ -245,7 +253,10 @@ mounts it, and the production build leaves it out.
   `ChecksList.tsx`: the views.
 - `bannerStatus.ts` and `checkStatus.ts`: the words, the icons, and the tints
   of each state. The `tint` of `barView.ts` gives the main action the tint
-  of its bar.
+  of its bar. `branchLabel` and `baseBranchLabel` give the names that a
+  screen shows: the label of each branch, which hides each secret value, or
+  the real name when the banner has none. Prompts and requests keep the
+  real names.
 - `bannerParts.tsx`: the parts of the bar. `PullRequestNumber` links the
   number of a pull request to GitHub, so the desktop bar of a pull request
   shows no other link to it.

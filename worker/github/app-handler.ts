@@ -14,6 +14,7 @@ import type {
 } from './contracts'
 import { activeWorkspace } from './data'
 import { githubFailure } from './parsers'
+import { githubBranchLabels } from './output'
 
 export interface GitHubAppDependencies {
   now: () => number
@@ -25,28 +26,31 @@ export interface GitHubAppDependencies {
  * The stored state of the current branch, or null. A state of an earlier
  * branch, such as the merged branch before Continue, does not apply.
  */
-function storedBody(
+async function storedBody(
+  env: AppEnv,
   workspace: GitHubWorkspace,
   stored: GitHubSnapshot | undefined,
-): GitHubStoredResponse {
+): Promise<GitHubStoredResponse> {
   if (!stored || stored.banner.branch !== workspace.branch)
     return { state: null }
-  return { state: { banner: stored.banner, checks: stored.checks } }
+  const labels = await githubBranchLabels(env, workspace)
+  return { state: { banner: labels(stored.banner), checks: stored.checks } }
 }
 
 async function readBody(
+  env: AppEnv,
   workspace: GitHubWorkspace,
   route: string | undefined,
   userId: string,
   dependencies: GitHubAppDependencies,
 ) {
   if (route === '/stored')
-    return storedBody(workspace, await dependencies.stored(workspace))
+    return storedBody(env, workspace, await dependencies.stored(workspace))
   const snapshot = await dependencies.refresh(workspace, { userId })
   if (snapshot === null) throw githubFailure()
-  return route === '/checks'
-    ? (snapshot.checks satisfies GitHubChecksResponse)
-    : ({ banner: snapshot.banner } satisfies GitHubBannerResponse)
+  if (route === '/checks') return snapshot.checks satisfies GitHubChecksResponse
+  const labels = await githubBranchLabels(env, workspace)
+  return { banner: labels(snapshot.banner) } satisfies GitHubBannerResponse
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */
@@ -92,6 +96,7 @@ export async function handleGitHubRead(
         'The workspace is not available.',
       )
     const body = await readBody(
+      env,
       workspace,
       match[2],
       context.user.id,
