@@ -44,11 +44,12 @@ first.
   stopping turn as stopped with `TurnCompletion.stopped`.
   `WorkspaceOperations.stop` runs it when the lifecycle state becomes
   stopped or error. `WorkspaceOperations.stopTurnsForRestart` runs it
-  before an automatic restart sends its restart command. With the
-  `keepQueued` ID source, it first moves each message that the runner has
-  not received to a new turn, so that the message waits for the next
-  runner. The restart always passes that source. The stop passes it only
-  after a failed automatic restart.
+  in the chat queue after the final access checks and the submission
+  record of an automatic restart. The Worker then sends the restart
+  command outside the queue. With the `keepQueued` ID source, it first
+  moves each message that the runner has not received to a new turn, so
+  that the message waits for the next runner. The restart always passes
+  that source. The stop passes it only after a failed automatic restart.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object. With the body that the gate already read, it runs
   `gateAccess` in place of `gate`, and finds the workspace again.

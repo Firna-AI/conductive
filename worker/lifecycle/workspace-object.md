@@ -149,13 +149,18 @@ gives the requirements.
 
 The alarm runner tracks the restart commands in a separate task.
 `QueueTurn.outside` releases the chat queue during each command. The
-regular alarm can apply the restart deadline while a command waits. Before
-the runner restarts, the chat ends its running turns and keeps their
-undelivered messages for the next ready runner.
+regular alarm can apply the restart deadline while a command waits.
+Before the restart command, the alarm checks receiver and workspace access
+outside the chat queue. Readiness during these checks cancels the restart
+and keeps the running turns active.
 
-The alarm saves `automaticRestartSubmitted` just before it submits the
-restart command. Readiness can cancel the restart before this point. After
-submission, a hello on the saved stream resumes replay and keeps Starting.
+Back in the queue, the alarm checks that the attempt is current and its
+deadline is still open. It saves `automaticRestartSubmitted` and ends the
+running turns. Chat keeps their undelivered messages for the next ready
+runner. The alarm then submits the command outside the queue.
+
+After the submission record, a hello on the saved stream resumes replay
+and keeps Starting.
 A new `runner.ready` before the deadline ends Starting and releases the
 waiting messages.
 

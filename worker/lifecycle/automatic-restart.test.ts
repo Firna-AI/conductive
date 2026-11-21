@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { heldOperation } from '../test-support/held-operation'
+import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import { automaticRestartFixture } from './automatic-restart.test-support'
 import { setupBackendTests } from './backend-test-hooks'
 import { CONTINUE_JOB_KEY } from './continue-types'
@@ -9,6 +9,12 @@ import { RESTART_COMMAND, UPDATE_CHECK_COMMAND } from './software-restart'
 import { expectSettled } from './start-outside.test-support'
 
 const fixtureForTest = setupBackendTests()
+const welcome = (confirmedThrough: number) =>
+  expect.objectContaining({ type: 'welcome', confirmedThrough })
+const sentMessage = (id: string) =>
+  expect.objectContaining({ id, state: 'sent' })
+const sentCommand = (type: 'turn' | 'message', id: string) =>
+  expect.objectContaining({ type, message: sentMessage(id) })
 
 it('restarts once after three minutes away and delivers the waiting message at readiness', async () => {
   const f = await automaticRestartFixture(fixtureForTest())
@@ -35,24 +41,13 @@ it('restarts once after three minutes away and delivers the waiting message at r
   expect(f.commands()).toHaveLength(2)
 
   const replacement = await f.connect('replacement')
-  expect(await replacement.take()).toEqual([
-    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
-  ])
+  expect(await replacement.take()).toEqual([welcome(2)])
   expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
   await replacement.ready()
   expect(await replacement.take()).toEqual([
     expect.objectContaining({ type: 'confirm', throughEventNumber: 3 }),
-    expect.objectContaining({
-      type: 'turn',
-      message: expect.objectContaining({
-        id: 'waiting-message',
-        state: 'sent',
-      }),
-    }),
-    expect.objectContaining({
-      type: 'message',
-      message: expect.objectContaining({ id: 'newer-message', state: 'sent' }),
-    }),
+    sentCommand('turn', 'waiting-message'),
+    sentCommand('message', 'newer-message'),
   ])
   const ready = await f.lifecycle()
   expect(ready).toMatchObject({ runnerConnected: true, state: 'working' })
@@ -72,9 +67,7 @@ it('ends an automatic restart at its deadline if the replacement only says hello
     softwareRestartAt: f.awayAt + 180_000,
   }
   expect(await f.lifecycle()).toMatchObject(starting)
-  expect(await replacement.take()).toEqual([
-    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
-  ])
+  expect(await replacement.take()).toEqual([welcome(2)])
   await f.tick(359_999)
   expect(await f.lifecycle()).toMatchObject(starting)
   await f.tick(360_000)
@@ -88,37 +81,54 @@ it('ends an automatic restart at its deadline if the replacement only says hello
 it('cancels the automatic restart when the runner recovers before command submission', async () => {
   const f = await automaticRestartFixture(fixtureForTest())
   await f.send()
-  const held = heldOperation()
-  f.fixture.boat.beforeCommand = async (command) => {
-    if (command === UPDATE_CHECK_COMMAND) await held.wait()
-  }
-  const restarting = f.tick(180_000)
-  let recovered: Awaited<ReturnType<typeof f.connect>>
-  try {
-    await expectSettled(held.entered)
-    recovered = await expectSettled(f.connect('recovered'))
-    expect(await expectSettled(f.lifecycle())).toMatchObject({
-      runnerConnected: true,
-    })
-  } finally {
-    held.release()
-    await restarting
-  }
+  const recovered = await f.duringRestart(
+    f.holdCommand(UPDATE_CHECK_COMMAND),
+    async () => {
+      const runner = await expectSettled(f.connect('recovered'))
+      expect(await expectSettled(f.lifecycle())).toMatchObject({
+        runnerConnected: true,
+      })
+      return runner
+    },
+  )
   expect(await recovered.take()).toEqual([
-    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
-    expect.objectContaining({
-      type: 'turn',
-      message: expect.objectContaining({
-        id: 'waiting-message',
-        state: 'sent',
-      }),
-    }),
+    welcome(2),
+    sentCommand('turn', 'waiting-message'),
   ])
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND])
   expect(await f.lifecycle()).toMatchObject({
     state: 'working',
     runnerConnected: true,
   })
+})
+
+it('keeps the original turn running when readiness cancels the restart during access checks', async () => {
+  const f = await automaticRestartFixture(fixtureForTest(), 'started')
+  await f.send()
+  const held = f.holdRestartAccess()
+  const recovered = await f.duringRestart(held, async () => {
+    const runner = await expectSettled(
+      f.connect('recovered', 'recovered-stream'),
+    )
+    expect(await runner.take()).toEqual([welcome(0)])
+    await expectSettled(runner.ready())
+    return runner
+  })
+  const { sessionId, turnId } = f.firstTurn
+  expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND])
+  expect(await f.originalTurnEnds()).toEqual([])
+  expect(await f.lifecycle()).toMatchObject({
+    state: 'working',
+    runnerConnected: true,
+    runningSessions: [sessionId],
+  })
+  expect(await recovered.take()).toContainEqual(
+    expect.objectContaining({
+      type: 'message',
+      turnId,
+      message: sentMessage('waiting-message'),
+    }),
+  )
 })
 
 it('counts a saved disconnect with no time from the first alarm that sees it', async () => {
@@ -140,11 +150,9 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
   const replacement = await f.connect('replacement')
-  expect(await replacement.take()).toEqual([
-    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
-  ])
+  expect(await replacement.take()).toEqual([welcome(2)])
   const { sessionId, turnId, message } = f.firstTurn
-  await replacement.emit({
+  const recoveredEnd = {
     type: 'turn.completed',
     sessionId,
     turnId,
@@ -154,7 +162,8 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
     filesUnavailable: true,
     omittedFileCount: 0,
     userMessageIds: [message.id],
-  })
+  } satisfies RunnerEvent
+  await replacement.emit(recoveredEnd)
   expect(await replacement.take()).toEqual([
     expect.objectContaining({ type: 'confirm', throughEventNumber: 3 }),
   ])
@@ -163,11 +172,19 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
   expect(sent).toEqual([
     expect.objectContaining({
       turnId: expect.not.stringMatching(turnId),
-      message: expect.objectContaining({
-        id: 'waiting-message',
-        state: 'sent',
-      }),
+      message: sentMessage('waiting-message'),
     }),
+  ])
+  expect(await f.originalTurnEnds()).toEqual([
+    {
+      late: undefined,
+      event: expect.objectContaining({
+        type: 'turn.completed',
+        state: 'stopped',
+        userMessageIds: [message.id],
+      }),
+    },
+    { late: true, event: recoveredEnd },
   ])
 })
 
@@ -259,39 +276,20 @@ it('shows a failed automatic restart and gives the same absence no second attemp
 it('handles chat and expires at the restart deadline while the provider command is held', async () => {
   const f = await automaticRestartFixture(fixtureForTest())
   await f.send()
-  const held = heldOperation()
-  f.fixture.boat.beforeCommand = async (command) => {
-    if (command === UPDATE_CHECK_COMMAND) f.fixture.boat.synchronousExitCode = 1
-    if (command === RESTART_COMMAND) {
-      f.fixture.boat.synchronousExitCode = 0
-      await held.wait()
-    }
-  }
-  const restarting = f.tick(180_000)
   let deadline: Promise<void> | undefined
-  try {
-    await expectSettled(held.entered)
-    await expectSettled(f.send('during-restart'))
-    await expectSettled(f.connect('replacement'))
-    expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
-    let markExpired = () => {}
-    const expired = new Promise<void>((resolve) => {
-      markExpired = resolve
+  await f
+    .duringRestart(f.holdCommand(RESTART_COMMAND, 1), async () => {
+      await expectSettled(f.send('during-restart'))
+      await expectSettled(f.connect('replacement'))
+      expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
+      const expired = f.restartFailure()
+      await f.setOffset(360_000)
+      deadline = f.actor.native.api.controls.dispatchAlarm()
+      await expectSettled(expired)
     })
-    f.actor.observePublication(async ({ event }) => {
-      if (
-        event.type === 'workspace.updated' &&
-        event.workspace.state === 'error'
-      )
-        markExpired()
+    .finally(async () => {
+      await deadline
     })
-    await f.setOffset(360_000)
-    deadline = f.actor.native.api.controls.dispatchAlarm()
-    await expectSettled(expired)
-  } finally {
-    held.release()
-    await Promise.all([restarting, deadline])
-  }
   expect(await f.lifecycle()).toMatchObject({
     state: 'error',
     error: { code: 'restart_failed' },

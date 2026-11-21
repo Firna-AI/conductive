@@ -111,19 +111,17 @@ export function createAutomaticRestart(input: {
       const restarted = await run(async (turn) => {
         try {
           await runSoftwareRestart(async (command) => {
-            const current = await requireCurrentRestart()
+            await requireCurrentRestart()
             if (await busy()) throw workspaceNotRunning()
             if (command === RESTART_COMMAND) {
-              if (current.runningSessions.length) {
-                await verifyTarget(env, target, undefined, false)
-                await chat.stopTurnsForRestart(workspaceId)
-              }
               await turn.outside(verifyRestartTarget)
-              await requireCurrentRestart()
+              const current = await requireCurrentRestart()
               await controller.changeLifecycle((state) => ({
                 ...state,
                 automaticRestartSubmitted: true,
               }))
+              if (current.runningSessions.length)
+                await chat.stopTurnsForRestart(workspaceId)
               return turn.outside(() => provider.runCommand(sandboxId, command))
             }
             return turn.outside(async () => {
