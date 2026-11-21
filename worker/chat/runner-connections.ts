@@ -124,6 +124,9 @@ export class RunnerConnections {
     const saved = this.retained ? this.saved : undefined
     const active: ActiveRunner = {
       id: record.id,
+      generation: record.generation,
+      services: record.services,
+      serviceBinding: record.serviceBinding,
       workspace: record.workspace,
       streamId: record.streamId,
       processStartId: record.processStartId,
@@ -239,6 +242,8 @@ export class RunnerConnections {
     record.loginKinds = active.loginKinds
     record.repositoryFolder = active.repositoryFolder
     record.fileServer = active.fileServer
+    record.services = active.services
+    record.serviceBinding = active.serviceBinding
     record.watchUntil = active.watchUntil
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)

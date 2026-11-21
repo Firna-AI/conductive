@@ -22,7 +22,7 @@ interface WorkspaceOperationOptions {
   workspaceId(): string | null
   bind(id: string): void
   publish(events: readonly WorkspaceEventEnvelope[]): void
-  closeRunner(): void
+  closeRunner(workspaceId: string): Promise<void>
   flushRunner(): Promise<void>
 }
 
@@ -114,7 +114,7 @@ export class WorkspaceOperations {
   async stop(workspaceId: string): Promise<void> {
     const { store, bind, publish, closeRunner } = this.options
     bind(workspaceId)
-    closeRunner()
+    await closeRunner(workspaceId)
     await store.change(
       workspaceId,
       async (transaction) => {

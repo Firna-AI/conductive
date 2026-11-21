@@ -70,6 +70,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
+    this.integration.onStopped((id) => this.chat.runner.services.stopped(id))
     this.github = new WorkspaceGitHub(
       this.integration.storage,
       env,

@@ -164,7 +164,7 @@ export class WorkspaceChat {
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.binding.bind(id),
-      native,
+      { native, env, storage },
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -173,7 +173,7 @@ export class WorkspaceChat {
       workspaceId: () => this.binding.id,
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
-      closeRunner: () => this.runner.close(),
+      closeRunner: (id) => this.runner.stop(id),
       flushRunner: () => this.runner.flush(),
     })
   }

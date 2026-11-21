@@ -14,6 +14,8 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  runner_service_message_invalid:
+    'A private service transfer was discarded. The runner connection stays open.',
   provider_accounts_invalid:
     'Some sandbox provider accounts are not configured correctly.',
   provider_assignment_weights_recovered:

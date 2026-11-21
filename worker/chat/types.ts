@@ -32,6 +32,7 @@ import type { TitleModelCall } from './title-model'
 import type { AgentLogin } from './login-kind'
 import type { RepositoryMoveState } from './runner-repository-move'
 import type { RunnerRepositoryRecord } from './branch-data'
+import type { ServiceRunnerState } from '../services/runner-state'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -128,7 +129,7 @@ export interface RunnerPeer {
   close(): void
 }
 
-export interface ActiveRunner {
+export interface ActiveRunner extends ServiceRunnerState {
   id: string
   peer: AuthenticatedRunner
   workspace: RunnerWorkspaceRecord
