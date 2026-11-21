@@ -64,8 +64,8 @@ Sources for the review:
 - [E2B's terms](https://e2b.dev/terms) identify its contracting company as
   FoundryLabs, Inc., a Delaware corporation. They require written consent
   to give others access to its service and to build an application that
-  interacts with it. The operator requests authorization for Conductive's
-  hosted use before any real org runs there.
+  interacts with it. The user reported on 20 November 2026 that E2B gave
+  that consent for Conductive's hosted use.
 - [E2B's privacy policy](https://e2b.dev/privacy) identifies the same US
   company and describes possible processing in the United States. It
   does not establish that all account, support, or other operations stay
@@ -101,8 +101,8 @@ page does not promise that every provider operation stays in the EU. It
 makes no claim that Firna has signed E2B's data processing addendum,
 standard contractual clauses, or UK transfer terms. The
 [deployment guide](../../docs/deployment.md) gives the operator's setup
-steps. Keep the E2B weight at zero until its required authorization and
-processing terms are confirmed.
+steps. Keep the E2B weight at zero until its processing terms are
+confirmed.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as

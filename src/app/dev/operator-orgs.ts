@@ -10,8 +10,10 @@ import {
   type OperatorRecords,
 } from '../../test-support/fixtures/operator'
 import { sampleOrgs } from '../../test-support/fixtures/operator-samples'
+import { withSampleSwitch } from '../../test-support/fixtures/operator-switch'
 import type { DevBackend } from './backend'
 import type { OrgState } from './state'
+import { withSwitches } from './switch-routes'
 
 /** The samples count their days back from the first time of the dev clock. */
 const BASE = FAKE_TIME
@@ -56,7 +58,10 @@ function madeOrgDetail(
   const deletion = org.deletion
     ? { deletedAt: org.deletion.deletedAt, purgeAt: org.deletion.deletesAt }
     : null
-  return {
+  const builds = item.builds.filter(
+    (entry) => entry.build.state === 'running',
+  ).length
+  const detail: OperatorOrgDetail = {
     id: org.id,
     providerAccount: made.providerAccount,
     name: org.name,
@@ -65,11 +70,7 @@ function madeOrgDetail(
     repositories: item.repositories.filter((repository) => repository.selected)
       .length,
     workspaceStates,
-    running: {
-      workspaces: workspaceStates.running,
-      builds: item.builds.filter((entry) => entry.build.state === 'running')
-        .length,
-    },
+    running: { workspaces: workspaceStates.running, builds },
     members: item.members.members.map(({ user, role }) => ({
       githubId: user.githubId,
       login: user.githubLogin,
@@ -80,13 +81,14 @@ function madeOrgDetail(
     suspension: records.orgSuspensions.get(org.id) ?? null,
     deletion,
   }
+  return withSampleSwitch(detail, now)
 }
 
 /**
  * The orgs of the operator section of the dev fake, newest first: the orgs
  * that Create org made in the page, with their accounts, and then the
  * samples of the mockups, which are on `boat`, as the orgs from before the
- * second provider are.
+ * second provider are. Each has its switches of the provider account.
  */
 export function operatorOrgDetails(
   backend: DevBackend,
@@ -98,5 +100,7 @@ export function operatorOrgDetails(
     return record ? [madeOrgDetail(item, record, records, backend.now())] : []
   })
   const samples = sampleOrgs.map((org) => sampleOrgDetail(org, records, BASE))
-  return [...made.reverse(), ...samples]
+  return [...made.reverse(), ...samples].map((detail) =>
+    withSwitches(detail, state.switches),
+  )
 }

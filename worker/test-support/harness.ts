@@ -33,6 +33,7 @@ export async function createHarness(
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
     BOAT_API_KEY: 'boat-first',
     BOAT_ORG_ID: 'app-org',
+    PROVIDER_SWITCH: 'on',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
   const native = await createNativeRuntime(

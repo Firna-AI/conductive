@@ -6,7 +6,11 @@ what each covers. [Protocol docs](protocol-docs.md) lists the other
 protocol docs.
 
 - [Provider accounts](../protocol/provider-accounts.md): the account of
-  each org, its weights, and the regions of the accounts.
+  each org and of each workspace, the weights, and the regions of the
+  accounts.
+  - [Switch account](../protocol/switch-account.md): the switch of an org
+    to another provider account by an operator, its switch build, what
+    members see of it, and its box on the page of the org.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
   app's own software, the updates of each sandbox, and the install in a
   build.

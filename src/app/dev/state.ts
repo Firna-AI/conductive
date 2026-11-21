@@ -22,6 +22,7 @@ import type { Section } from '../../shared/sections'
 import type { WorkspaceResponse } from '../../shared/workspaces'
 import { coreFixtures } from '../../test-support/fixtures/core'
 import type { OperatorRecords } from '../../test-support/fixtures/operator'
+import type { DevSwitches } from './switch-routes'
 
 /** The start steps and the start error of one workspace. */
 export type StartRecord = Pick<WorkspaceResponse, 'start' | 'error'>
@@ -123,6 +124,8 @@ export interface DevState {
   shareSaveFails: boolean
   waitlist: DevWaitlist
   providers: DevProviders
+  /** The switches of the provider account of each org. */
+  switches: DevSwitches
 }
 
 /**
