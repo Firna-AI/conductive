@@ -1,0 +1,65 @@
+.clusters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cloud {
+  padding: 8px;
+  border: 1px solid var(--ui-primary-border);
+  border-radius: 6px;
+  background: var(--ui-primary-soft);
+}
+
+.name,
+.where {
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+}
+
+.where {
+  color: var(--ui-primary-deep);
+  font-family: var(--ui-font-sans);
+}
+
+/* Five squares a row, with a 2 px gap of the surface between them. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 12px);
+  gap: 2px;
+}
+
+.square {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  box-sizing: border-box;
+}
+
+.cloud .square {
+  border: 1px solid var(--ui-primary-border);
+}
+
+.key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+}
+
+.unit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

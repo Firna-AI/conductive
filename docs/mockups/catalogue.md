@@ -11,6 +11,7 @@ how a screen is built, and links to the other pages.
 | `marketing/terms`   | The Terms of use, with the operator details, suspension, and abuse reports     |
 | `marketing/privacy` | The Privacy notice, with the operator details and legal contact address       |
 | `marketing/not-found` | The page of the site for an address that it does not have                   |
+| `marketing/worktree-space` | Draft: a section of the home page on the disk space of local worktrees, in six variations of its graphic, one on each child page |
 | `marketing/pictures` | One capture page for each picture of the home page, without a frame         |
 | `app`               | A ready workspace: two sessions and a file tab, and a pull request to merge   |
 | `app/sign-in`       | GitHub sign-in with the agreement to the Terms, the page before GitHub, the waitlist, the sign-in of an invite link, and the invitations that wait after it. Get started, the only first run, in three steps, with the first build of the new org, and its agent step done by an org login. The return page after a GitHub App install in the Mac app. |
