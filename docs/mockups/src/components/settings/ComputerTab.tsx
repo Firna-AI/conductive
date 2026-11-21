@@ -9,12 +9,16 @@ import { scriptSection } from '../../entries/components/settings/EnvironmentSect
 import { envVarsSection } from '../../entries/components/settings/EnvVarsSection.mockup'
 import type { EnvVarForm } from './EnvVarsSection'
 import type { ReadOnlyCause } from './OrgSections'
+import type { SkillsLookup } from './skillsCopy'
+import { skillsSection } from '../../entries/components/settings/SkillsSection.mockup'
+import type { SkillsTrust } from './SkillsTrust'
 import { tabIntro } from '../../entries/components/settings/TabIntro.mockup'
 import { defined } from '../../defined'
 
 /**
- * The cloud computer of an org: its builds, its scripts, and its env vars.
- * A new org starts with empty scripts and no env vars.
+ * The cloud computer of an org: its builds, its scripts, its env vars, and
+ * its skills repository. A new org starts with empty scripts, no env vars,
+ * and no skills repository.
  */
 export type OrgComputer = OrgBuilds & {
   installScript: string
@@ -22,6 +26,10 @@ export type OrgComputer = OrgBuilds & {
   changedInstallScript: string
   startupScript: string
   envVars: readonly EnvVar[]
+  /** The GitHub repository of skills, as owner/name, when the org has one. */
+  skillsRepository?: string
+  /** What the lookup of the skills repository found on GitHub, when it has one. */
+  skillsLookup?: SkillsLookup
 }
 
 /**
@@ -94,11 +102,14 @@ function buildsOf(computer: OrgComputer): OrgBuilds {
 }
 
 /**
- * The org's cloud computer: its builds, its scripts, and its env vars.
- * `readOnly` shows them without edit fields and actions, for a member who
- * is not an admin (decision 57), and for everyone in a suspended org.
- * `envForm` opens a form of the env vars. `repositoryNotice` shows the
- * repository changes that the computer does not hold yet, under the intro.
+ * The org's cloud computer: its builds, its scripts, its env vars, and its
+ * skills repository. `readOnly` shows them without edit fields and
+ * actions, for a member who is not an admin (decision 57), and for
+ * everyone in a suspended org. `envForm` opens a form of the env vars.
+ * `skillsDraft` is the unsaved text of the Skills field, and `skillsTrust`
+ * the trust choice of the repository that the section names.
+ * `repositoryNotice` shows the repository changes that the computer does
+ * not hold yet, under the intro.
  */
 export function ComputerTab(props: {
   org: string
@@ -108,6 +119,10 @@ export function ComputerTab(props: {
   computer: OrgComputer
   readOnly?: ReadOnlyCause
   envForm?: EnvVarForm
+  /** The text of the Skills field, when an admin changed it and has not saved. */
+  skillsDraft?: string
+  /** The trust choice, while the Skills section names a repository. */
+  skillsTrust?: SkillsTrust
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
 }) {
@@ -161,6 +176,16 @@ export function ComputerTab(props: {
         readOnly={readOnly}
         vars={computer.envVars}
         {...defined({ form: props.envForm })}
+      />
+      <skillsSection.Component
+        moklyInstance="skills"
+        {...defined({
+          draft: props.skillsDraft,
+          lookup: computer.skillsLookup,
+          readOnly: props.readOnly,
+          repository: computer.skillsRepository,
+          trust: props.skillsTrust,
+        })}
       />
     </>
   )

@@ -31,6 +31,27 @@ Its imports carry types only.
 `nameLabel` in `name-label.ts` gives the display label "Untitled" for null.
 
 Each area owns its paths and payloads. Import from that area directly.
+`OrgSettings.skillsRepository` in `org-settings.ts` gives the saved text.
+Older replies may omit it. `UpdateOrgSettingsRequest.skillsRepository`
+changes it. `OrgSettings.trustedSkillsRepository` gives the trusted name,
+or empty text. Older replies may omit it and mean untrusted.
+`UpdateOrgSettingsRequest.trustedSkillsRepository` grants trust to that name
+or clears trust with empty text. `savedSkillsRepositorySettings` in
+`skills-repository-settings.ts` resolves both fields against the current
+settings on each save attempt. It normalizes links and compares valid
+names without letter case. The saved source keeps its display spelling.
+`effectiveTrustedSkillsRepository` gives the matching lowercase identity,
+or empty text, for startup environment construction.
+`orgSettingsPaths.skills` names the separate lookup route.
+`SkillsRepositoryLookupResponse` gives the saved `repository`, sorted skill
+names, `notice`, and name `clashes`. No repository means empty names and no
+notice. The notice is `private`, `not-found`, `no-skills`, `incomplete`,
+`failed`, or null. An incomplete list can still have skill names.
+`findSkillFolders` in `skill-folders.ts` takes relative repository file
+paths and the repository name. It returns sorted `{ name, path }` skills
+and `{ name, keptPath, skippedPath }` clashes. A root skill has path `.`.
+`isSkillsRepository` checks the strict `owner/name` form before a URL or
+command uses it. Both functions have no runtime imports.
 `org-settings.ts` owns org login paths beside the other org settings paths.
 `org-agent-logins.ts` defines org login writes, metadata, and model-read
 responses. A member's metadata omits the optional endpoint model list.

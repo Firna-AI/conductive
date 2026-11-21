@@ -121,6 +121,11 @@ export interface DevState {
   operator: OperatorRecords
   /** Each change of a share setting fails, from `shareSave=fail`. */
   shareSaveFails: boolean
+  /**
+   * The next save of the skills repository or its trust fails, from
+   * `skillsSave=fail`. That failure turns it off.
+   */
+  skillsSaveFails: boolean
   waitlist: DevWaitlist
   providers: DevProviders
 }

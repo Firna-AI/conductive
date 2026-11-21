@@ -254,6 +254,16 @@ of the data that the screens read and write.
   not the settings, say which saved changes the org image lacks, in
   `BuildsResponse.changes`. They read again while a build runs and at
   its end, so the end of a build reads no settings.
+- Each opening of the Cloud computer tab looks up the skills repository
+  on GitHub, through the Worker, beside the read of the settings. Nothing
+  keeps the list after the tab closes, as
+  [The list of skills](../../docs/protocol/org-skills-list.md#the-list-of-skills)
+  says. A save of the repository that succeeds removes the list of the
+  old repository at once, and looks it up again while the tab shows. Only
+  the answer of the newest lookup shows, so the lookup after a save wins
+  over an older one. An answer after the tab closed changes nothing. A
+  failed lookup shows its notice in the Skills section only, and the other
+  settings still show.
 - While the tab shows, `ComputerModel` owns one `BuildLogFollower` for the
   log of the newest build that runs or failed. A newer build replaces the
   follower, so an answer for an older build changes neither the log nor

@@ -23,12 +23,18 @@ plan limits.
   waitlist screen, where Accept invitation also gives app access, as
   `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
-  the env vars, and the org logins, from decisions 54 and 57. A member sees
-  the General, Repositories, Cloud computer, and Agents tabs read-only: the
-  values, without edit fields, Save, Build computer, or Connect. The
-  General tab of a member is the child page `app/org-settings/member`,
-  because `app/org-settings` has child pages. `DetailList` in
-  `src/components/settings/` shows such values.
+  the env vars, the skills repository and its trust choice, and the org
+  logins, from decisions 54 and 57, decision 2 of the org skills
+  repository plan, and decision 403 of the skills trust plan. A member sees the General,
+  Repositories, Cloud computer, and Agents tabs read-only: the values, without edit
+  fields, Save, Build computer, or Connect. The General tab of a member is the child
+  page `app/org-settings/member`, because `app/org-settings` has child
+  pages. `DetailList` in `src/components/settings/` shows such values.
+  A member also sees the skills that the lookup of the skills repository
+  finds, and each notice in place of that list, from decision 7 of the
+  org skills repository plan. A notice that asks for a change of the
+  repository says that an admin can make it, as
+  `app/org-settings/cloud-computer/member/private-skills` shows.
 - Every member adds secrets on the Secrets tab, and replaces or deletes
   the secrets that they added, from secrets decision 3. Only an admin
   switches the mark for all agents and reveals a value, as

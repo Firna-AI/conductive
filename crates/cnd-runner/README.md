@@ -21,6 +21,8 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Watch recursive repository changes and repair watches after a restore.
 - Prepare ignored context storage, including linked Git worktrees.
 - Run independent sessions through private Node SDK helper processes.
+- Copy the public org skills repository in the background and retain complete snapshots for agent starts.
+- Give each agent start the org skills trust policy from the configured and trusted repository names.
 - Filter credentials before saving chat output and preparing report labels.
 - Offer complete tool details in hello, and send each accepted long source as private parts.
 - Cancel pending turns, helper requests, and repository reads on Stop or shutdown.
@@ -130,6 +132,27 @@ The server shares descriptor checks with file reads. It streams files
 without the file-tab size limit and refuses dot files and links to dot files.
 It reads the current repository folder of the runner at each request, so a
 repository move points it at the new folder with no new bind.
+
+The skills schedule runs its first copy without blocking startup and checks
+every five minutes. It retains the last complete copy across failed fetches
+and resumes. A removed or replaced selection deletes the old repository.
+Git runs with a clean environment, no credential helper, and a thirty-second
+time limit. The export replaces the whole tree, including an empty tree.
+Before publication, it removes links that escape the copy or point nowhere.
+Each helper leases the current folder until it closes. The background job
+reclaims unleased retired copies. At startup it also removes crash staging
+and abandoned helper views, and prunes unreachable Git objects.
+The helper owns skill folder selection and the safe agent view.
+Failures warn and stop no start or turn. An unborn repository gives no
+skills and warns only when its state changes.
+Configuration reads the configured and trusted repository names once at
+service start. A missing, invalid, or different trusted name means
+untrusted. Each helper start gets the optional `HelperOptions.org_skills`
+value with both names and the leased folder, when one exists. Its `OrgSkills`
+fields are `repository`, `trusted_repository`, and `directory`.
+A valid configured name
+sends the value also before the first copy completes, so its trust policy
+applies at once. Without a valid configured name, the start has no value.
 
 File reports keep separate tree and changes histories. Filtering runs on each
 complete report before splitting. Multipart reports keep whole entries and
@@ -252,6 +275,11 @@ and connection drops. It does not run the Worker.
 - [driver.rs](src/helper/driver.rs): `HelperConnection` correlates requests while agent events stream.
 - [process.rs](src/helper/process.rs): `NodeHelpers` owns private pipes and process-group cleanup.
 - [startup.rs](src/helper/startup.rs): `RunnerStartup` clears stale agent credentials before the first connection and confirms a welcome.
+- [service.rs](src/skills/service.rs): `SkillsCopy` owns the background copy schedule and current complete folder.
+- [disk.rs](src/skills/disk.rs): `DiskSkills` owns selection cleanup and atomic publication of Git snapshots.
+- [lease.rs](src/skills/lease.rs): `SkillsLease` retains a complete copy while a helper reads it.
+- [sweep.rs](src/skills/sweep.rs): the background sweep reclaims retired copies and crash leftovers.
+- [git.rs](src/skills/git.rs): `CleanGit` owns credential-free Git children and their time limit.
 - [runner_command.rs](../cnd-cli/src/runner_command.rs): the CLI makes the process-start ID once, and composes the full runner and signal handling.
 - [limits.rs](src/limits.rs): `bound_event` applies serialized chat excerpts.
 - [tool_detail.rs](src/link/tool_detail.rs): `prepare` keeps a fitting tool detail whole, or splits a longer complete source into private parts that each fit the envelope.
@@ -275,6 +303,8 @@ and connection drops. It does not run the Worker.
 ### Related Docs
 
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
+- [Org skills](../../docs/protocol/org-skills.md)
+- [Org skills: repository trust](../../docs/protocol/org-skills-trust.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)

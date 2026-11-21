@@ -19,8 +19,10 @@ export function DevLiveComputer(props: { org: Org; viewport: Viewport }) {
         builds={live.builds}
         log={live.log}
         now={FAKE_TIME}
+        onRetrySkills={() => undefined}
         org={props.org}
         settings={live.settings}
+        skills={{ status: 'ready', value: live.skills }}
         viewport={props.viewport}
       />
       <div className={styles.devControls}>

@@ -45,6 +45,56 @@ set -euo pipefail
 redis-server --daemonize yes`
 
 /**
+ * The GitHub repository of skills that an admin of Acme chose, as
+ * owner/name. The agents of every workspace of the org use its skills. A
+ * new org has none.
+ */
+export const skillsRepository = 'acme/agent-skills'
+
+/** The same repository as a link from GitHub, which an admin can paste. */
+export const skillsRepositoryLink = `https://github.com/${skillsRepository}`
+
+/**
+ * The skill folders of acme/agent-skills, in name order, as the lookup of
+ * the Skills section lists them. Acme keeps its own copy of skills that
+ * futex-ai/skills also has.
+ */
+export const agentSkills: readonly string[] = [
+  'brainstorming',
+  'databases',
+  'decisions-and-findings',
+  'documentation',
+  'git-commit',
+  'git-merge',
+  'implementation-review',
+  'mockups',
+  'plans',
+  'product-ui',
+  'testing',
+  'typescript',
+]
+
+/**
+ * The skills in a file tree of acme/agent-skills that GitHub cut short, as
+ * it does for a very large repository: the ones before the cut. The cloud
+ * computer still copies every skill.
+ */
+export const cutTreeSkills: readonly string[] = agentSkills.slice(0, 7)
+
+/** acme/agent-skills with a typo, which GitHub does not find. */
+export const misspelledSkillsRepository = 'acme/agent-skils'
+
+/**
+ * The name of the repository without its owner. It is neither owner/name
+ * nor a link from GitHub, so Save stores it as typed, and it names no
+ * repository that an admin can trust.
+ */
+export const invalidSkillsRepository = 'agent-skills'
+
+/** Another repository of Acme, which an admin types in place of the saved one. */
+export const replacementSkillsRepository = 'acme/team-skills'
+
+/**
  * An env var of the org: its name, and its Secret mark. The chat and the
  * start logs hide the value of a secret variable. No screen shows a value.
  */

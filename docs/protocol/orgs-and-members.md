@@ -193,6 +193,9 @@ adds this order. The pull request of that change keeps its record.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin changes the skills repository, as
+  [The Skills section](org-skills.md#the-skills-section) says. Other
+  members see it read-only.
 - Only an admin changes the org's name, initials, and colour. Other
   members see them read-only.
 - Only an admin connects, replaces, or removes an org login, and changes

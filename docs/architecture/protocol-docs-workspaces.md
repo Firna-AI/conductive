@@ -19,6 +19,11 @@ protocol docs.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.
+- [Org skills](../protocol/org-skills.md): the skills repository of an
+  org and the skills that load, with the linked pages
+  [the copy](../protocol/org-skills-copy.md),
+  [the list of skills](../protocol/org-skills-list.md), and
+  [repository trust](../protocol/org-skills-trust.md).
 - [Life of a workspace](../protocol/workspace-life.md): the start steps,
   the time limits, the states, the archive, the restore, the removal from
   the list after 14 days, and Continue.

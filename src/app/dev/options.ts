@@ -58,6 +58,19 @@ const SESSION_LOGINS = ['org', 'removed', 'empty'] as const
 /** The states of the invite code of the user, besides the pause. */
 const INVITE_CODES = ['left', 'used-up', 'disabled'] as const
 
+/** The states of the skills repository of Acme, as the mockups name them. */
+const SKILLS = [
+  'none',
+  'private',
+  'not-found',
+  'without-skills',
+  'incomplete',
+  'lookup-failed',
+  'expired',
+] as const
+
+export type DevSkills = (typeof SKILLS)[number]
+
 type DevInviteCode = (typeof INVITE_CODES)[number]
 
 /**
@@ -149,6 +162,16 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
+ * - `skills=<state>`: the skills repository of Acme. Without it, Acme saved
+ *   acme/agent-skills, whose lookup lists its skills, and the lookup finds
+ *   no other repository. `none`: no repository is saved. `not-found`: the
+ *   saved acme/agent-skils is not found. `private`, `without-skills`,
+ *   `incomplete`, and `lookup-failed`: the lookup of each saved repository
+ *   answers so. `expired`: the GitHub sign-in of the user expired.
+ * - `skillsTrust=trusted`: Acme trusts its saved skills repository. Without
+ *   it, the repository starts untrusted, as each repository does.
+ * - `skillsSave=fail`: the first save of the page that names the skills
+ *   repository or its trust fails, so the next one saves.
  * - `providers=one|three|fail`: the configured provider accounts of the
  *   Providers tab and of the account choice of Create org: `boat` only,
  *   `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that
@@ -181,6 +204,8 @@ export interface DevOptions {
   /** What each file upload does. */
   upload: DevUploadMode
   shareSaveFails: boolean
+  /** The first save of the skills repository fails. */
+  skillsSaveFails: boolean
   feedback: (typeof FEEDBACK)[number]
   /** The run list of Review pull requests in place of its newest runs. */
   reviewRuns: (typeof REVIEW_RUNS)[number] | null
@@ -192,6 +217,10 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** The state of the skills repository of Acme, or `null` for its list. */
+  skills: DevSkills | null
+  /** Acme trusts its saved skills repository. */
+  skillsTrusted: boolean
   providers: DevProviderPreset
   providerSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
@@ -242,6 +271,7 @@ export function readDevOptions(search: string): DevOptions {
     stopAfterMs: stopAfter(params.get('stop')),
     upload: pick(params, 'upload', UPLOADS) ?? 'ready',
     shareSaveFails: params.get('shareSave') === 'fail',
+    skillsSaveFails: params.get('skillsSave') === 'fail',
     feedback: pick(params, 'feedback', FEEDBACK) ?? 'ready',
     reviewRuns: pick(params, 'runs', REVIEW_RUNS) ?? null,
     runWorkspace: pick(params, 'run', RUN_WORKSPACES) ?? null,
@@ -250,6 +280,8 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    skills: pick(params, 'skills', SKILLS) ?? null,
+    skillsTrusted: params.get('skillsTrust') === 'trusted',
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,

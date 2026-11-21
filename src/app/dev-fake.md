@@ -38,6 +38,22 @@ option overrides this default, including queued chats that show no spinner.
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- `dev/skills-routes.ts` keeps the skills repository of each org. Acme
+  starts with acme/agent-skills. A save trims spaces and line breaks at
+  both ends, then stores a valid GitHub link as owner/name and keeps other
+  trimmed text. It uses the same rule as the Worker. The lookup of
+  the Skills section knows only acme/agent-skills, whose 12 skills it
+  lists, so it does not find any other repository. `?skills=<state>`
+  gives Acme each state of the mockups: `none` saves no repository, and
+  `not-found` saves acme/agent-skils. `private`, `without-skills`,
+  `incomplete`, and `lookup-failed` give that answer for each saved
+  repository, and `expired` refuses the lookup as an expired GitHub
+  sign-in. Each repository starts untrusted. `?skillsTrust=trusted` makes
+  Acme trust its saved repository, so a member and a suspended org see
+  Trusted. `?skillsSave=fail` fails the first save of the page that names
+  the skills repository or its trust, and that save changes nothing. The
+  next save works, so Save repository can show a failed save and its
+  retry.
 - Acme also holds Postcode lookup for the shipping and billing forms,
   `postcode-lookup`, which a member archived 3 weeks before the clock of
   the fake starts. Its 14 days ended, so the workspace list and the

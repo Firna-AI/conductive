@@ -15,6 +15,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { termsOrgSection } from './terms-org'
+import { termsServiceSection } from './terms-service'
 import { termsWorkSection } from './terms-work'
 
 /**
@@ -45,17 +46,7 @@ export const termsDocument: LegalDocument = {
           ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      title: 'The service',
-      blocks: [
-        paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace has its own cloud computer, where agents
-          powered by Claude and Codex work. A workspace can hold one task
-          after another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
-      ],
-    },
+    termsServiceSection,
     {
       title: 'Your accounts',
       blocks: [
@@ -66,6 +57,11 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
+          text`When an admin saves a skills repository, and when a member
+            opens Skills, ${productName} reads its repository details and
+            file tree on GitHub. The lookup uses that member's GitHub
+            sign-in. The cloud computer copies and updates the public
+            repository without a GitHub token.`,
           text`${productName} runs each org's cloud computers in one of its
             own accounts with a cloud computer provider. The org keeps
             that account for its life. You need no account or key of your

@@ -74,3 +74,47 @@ Acme, which adds acme/admin-dashboard and removes acme/marketing-site:
   has the notice of a member. `app/org-settings/cloud-computer/script-changed`
   keeps the notice of the install script, which shows only for a change
   of the install script.
+
+## The skills repository
+
+The Skills section of the Cloud computer tab comes from decisions 1 to 3,
+6, and 7 of the org skills repository plan, of 13 and 16 November 2026.
+It names one public GitHub repository, and the agents of every workspace
+use its skills. At Save and at each load, the section looks up the
+repository on GitHub. It lists the skills that it finds, or it shows a
+notice in place of the list. It is the last section of the tab, after the
+environment variables:
+
+- `app/org-settings/cloud-computer` has acme/agent-skills in the field of
+  an admin, with the switch "Trust this skills repository" off under the
+  field, and Save repository off until the field or the switch changes.
+  Its 12 skills show under the switch.
+- `app/org-settings/cloud-computer/skills` has Acme before an admin chose
+  a repository, with the placeholder in the empty field and no trust
+  switch. Its child pages show the other states of the section:
+  - `trust` has a trusted repository, from decision 403 of the skills
+    trust plan, of 17 and 18 November 2026. The hint of the switch says
+    what the value does, and "How trust works" opens the guide. Its
+    `unsaved` variant has the switch turned on before Save, its
+    `replaced` variant has acme/team-skills typed in place of the trusted
+    repository, with the switch off, and its `member` variant has the
+    choice as read-only text.
+  - `pasted-link` has a link from GitHub in the field, with the trust
+    switch off and Save repository on.
+  - `private` has the notice of a private repository.
+  - `not-found` has the notice of a repository that GitHub does not find.
+  - `invalid` has the same notice for saved text that is not owner/name,
+    without a trust switch.
+  - `without-skills` has the notice of a repository without skills, which
+    says where the skill folders go.
+  - `incomplete` has the list from a file tree that GitHub cut short,
+    with the note that the list can be incomplete.
+  - `lookup-failed` has the notice of a list that did not load, with Try
+    again.
+- `app/org-settings/cloud-computer/member` shows the repository and its
+  trust choice as text to a member, with the same list. Its `no-skills` variant has the empty text
+  of a member. Its `private-skills` and `skills-not-found` variants have
+  the notices of a member, which say that an admin can act. The other
+  notices read the same for a member as for an admin.
+- A new org has no repository, as `app/org-settings/cloud-computer/first-build`
+  shows.

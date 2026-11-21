@@ -8,7 +8,9 @@ repositories. An image job is a build or a refresh of the org image.
 rules. A decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A parallel
 copy decision number names a decision of the change that copies the
-repositories of an image job in parallel.
+repositories of an image job in parallel. A skills decision number names
+a decision of the change that adds the
+[skills repository](org-skills.md), as that doc says.
 
 ## Git and the GitHub CLI
 
@@ -182,6 +184,29 @@ repositories of an image job in parallel.
   data.
 - A workspace sandbox never gets an installation token. Its Git gets
   GitHub tokens only from the git credential helper.
+
+## The skills repository
+
+- The runner copies the [skills repository](org-skills.md) of the org,
+  and checks it for new commits, with no GitHub token (skills
+  decision 6 A). So only a public repository gives skills.
+- For the copy and its checks, Git gets no token from the git credential
+  helper, and it asks for no password. So a private or missing repository
+  fails at once.
+- Reason: the copy and its checks run outside any agent turn, and Git
+  gets no GitHub access there, as
+  [Git and the GitHub CLI](#git-and-the-github-cli) says.
+  [Public repositories only](org-skills.md#public-repositories-only)
+  gives the ways with a token that were rejected.
+- The Worker looks up the skills repository for the Skills section of the
+  org settings, as [The list of skills](org-skills.md#the-list-of-skills)
+  says. It reads GitHub with the GitHub sign-in of the member who views
+  the section. The answer goes only to that member.
+- The lookup only reads. It reads the record of the repository and the
+  file tree of its default branch.
+- Reason: one request for the file tree finds every skill. A sign-in gets
+  a higher GitHub rate limit than a request with no token. A lookup with
+  no token was rejected for that reason.
 
 ## The Actions permission
 
