@@ -122,7 +122,10 @@ export async function runWorkspaceAlarm(input: {
           let job = await storage.get('job', START_JOB_KEY)
           for (
             let advances = 0;
-            advances < 6 && dependencies.now() - startedAt < 5_000;
+            // The first advance always runs, so slow earlier owners of the
+            // run never leave a due start without progress.
+            advances === 0 ||
+            (advances < 6 && dependencies.now() - startedAt < 5_000);
             advances++
           ) {
             const before = job

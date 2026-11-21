@@ -15,8 +15,10 @@ provider auto-stop.
   stopped gets at most one resume call in each run. The move out of
   `records` also ends the loop, so the `machine` phase starts one second
   after the admission. The move to `runner` ends it too. One run makes at
-  most 6 advances. It starts no advance when 5 seconds or more have passed
-  since the run began. Each advance runs in full, with the access checks,
+  most 6 advances. The first advance always runs. The run starts no
+  further advance when 5 seconds or more have passed since the run began.
+  So slow earlier work in the same run, such as a retry of a create
+  publication, never leaves a due start without progress. Each advance runs in full, with the access checks,
   the archive check, the time limit, and the start guard.
 - The command phases are `fetch`, `branch`, `startup`, and `terminal`.
   When the start moves to the `ready` phase or to a command phase, it saves

@@ -62,3 +62,53 @@ it('limits a lifecycle run to six full advances and leaves the next phase for an
     TEST_TIME + 1_000,
   )
 })
+
+it('still advances a due start once when earlier work used the five-second run budget', async () => {
+  const fixture = fixtureForTest()
+  const id = 'slow-owner-start'
+  fixture.runtime.workspace(id)
+  const actor = fixture.actors.get(id)
+  if (!actor) throw new Error('Missing alarm actor')
+  const storage = nativeWorkspaceStorage(actor.storage)
+  await storage.put(
+    'job',
+    START_JOB_KEY,
+    serializeStartJob(outsideResumeJob(fixture, id, 'bx_1')),
+  )
+  const controller = createWorkspaceController(
+    fixture.runtime.env,
+    fixture.runtime.dependencies,
+    {
+      storage,
+      blockConcurrencyWhile: (operation) => operation(),
+      waitUntil: () => {},
+      publish: async () => {},
+    },
+  )
+  const pending = WorkspaceStartCoordinator.prototype.pending
+  let slowed = false
+  vi.spyOn(WorkspaceStartCoordinator.prototype, 'pending').mockImplementation(
+    async function (this: WorkspaceStartCoordinator) {
+      // An earlier owner of the run, such as a slow publication retry,
+      // takes six seconds before the start work begins.
+      if (!slowed) {
+        slowed = true
+        fixture.setTime(TEST_TIME + 6_000)
+      }
+      return pending.call(this)
+    },
+  )
+  const advance = vi
+    .spyOn(WorkspaceStartCoordinator.prototype, 'advance')
+    .mockImplementation(async () => {
+      const job = await storage.get('job', START_JOB_KEY)
+      if (job?.kind !== 'resume') throw new Error('Missing alarm checkpoint')
+      await storage.put('job', START_JOB_KEY, { ...job, phase: 'fetch' })
+      return false
+    })
+  await controller.alarm()
+  expect(advance).toHaveBeenCalledTimes(1)
+  expect(await storage.get('job', START_JOB_KEY)).toMatchObject({
+    phase: 'fetch',
+  })
+})
