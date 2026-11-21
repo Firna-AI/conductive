@@ -12,6 +12,7 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
+import { requiresFreshRunnerReady } from '../lifecycle/durable-restart'
 import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
 import {
   lifecycleDependencies,
@@ -122,6 +123,8 @@ export function createWorkspaceIntegration(
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
+      requiresFreshRunnerReady: async () =>
+        requiresFreshRunnerReady(await controller.readLifecycle()),
       runnerUnsupported: async () =>
         controller.runnerProtocolUnsupported(unsupportedRunnerReason),
       ...observeWorkspaceCallbacks(
@@ -136,9 +139,7 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(
-                Promise.all([devices.reconcile(), secrets.reconcile()]),
-              )
+              context.waitUntil(reconcileStopped())
             }
           },
           receiveFileResult: async (value, connectionId) => {

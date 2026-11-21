@@ -44,6 +44,7 @@ export interface DurableLifecycleState {
   runnerDisconnectedAt?: number
   /** The attempt already made in the current absence. */
   automaticRestartAt?: number
+  automaticRestartSubmitted?: true
   startupPrepared?: boolean
   restoreWatchAt?: number
   startStop?: 'pending' | 'stopped' | 'error'

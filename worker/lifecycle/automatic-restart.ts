@@ -84,6 +84,7 @@ export function createAutomaticRestart(input: {
     await controller.changeLifecycle((current) => ({
       ...restartingLifecycle(current, workspaceId, at),
       automaticRestartAt: at,
+      automaticRestartSubmitted: undefined,
     }))
 
     const currentRestart = async () => {
@@ -95,25 +96,38 @@ export function createAutomaticRestart(input: {
       )
         return current
     }
+    const requireCurrentRestart = async () => {
+      const current = await currentRestart()
+      if (!current || (restartDeadline(current) ?? 0) <= now())
+        throw workspaceNotRunning()
+      return current
+    }
+    const verifyRestartTarget = async () => {
+      if (!(await currentRestart())) throw workspaceNotRunning()
+      await assertReceiverActive(storage)
+      await verifyTarget(env, target, undefined, false)
+    }
     dispatch(async () => {
       const restarted = await run(async (turn) => {
         try {
           await runSoftwareRestart(async (command) => {
-            const current = await currentRestart()
-            if (
-              !current ||
-              (restartDeadline(current) ?? 0) <= now() ||
-              (await busy())
-            )
-              throw workspaceNotRunning()
-            if (command === RESTART_COMMAND && current.runningSessions.length) {
-              await verifyTarget(env, target, undefined, false)
-              await chat.stopTurnsForRestart(workspaceId)
+            const current = await requireCurrentRestart()
+            if (await busy()) throw workspaceNotRunning()
+            if (command === RESTART_COMMAND) {
+              if (current.runningSessions.length) {
+                await verifyTarget(env, target, undefined, false)
+                await chat.stopTurnsForRestart(workspaceId)
+              }
+              await turn.outside(verifyRestartTarget)
+              await requireCurrentRestart()
+              await controller.changeLifecycle((state) => ({
+                ...state,
+                automaticRestartSubmitted: true,
+              }))
+              return turn.outside(() => provider.runCommand(sandboxId, command))
             }
             return turn.outside(async () => {
-              if (!(await currentRestart())) throw workspaceNotRunning()
-              await assertReceiverActive(storage)
-              await verifyTarget(env, target, undefined, false)
+              await verifyRestartTarget()
               return provider.runCommand(sandboxId, command)
             })
           })

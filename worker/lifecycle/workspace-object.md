@@ -151,6 +151,12 @@ regular alarm can apply the restart deadline while a command waits. Before
 the runner restarts, the chat ends its running turns and keeps their
 undelivered messages for the next ready runner.
 
+The alarm saves `automaticRestartSubmitted` just before it submits the
+restart command. Readiness can cancel the restart before this point. After
+submission, a hello on the saved stream resumes replay and keeps Starting.
+A new `runner.ready` before the deadline ends Starting and releases the
+waiting messages.
+
 ## Creates and resumes
 
 The [browser routes](README.md#browser-routes) queue the start of each

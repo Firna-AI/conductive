@@ -63,6 +63,7 @@ export function beginningLifecycleStart(
     startStop: undefined,
     diskRetentionCommand: undefined,
     softwareRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
   }
 }
 
@@ -92,6 +93,7 @@ export function readyLifecycle(
     runnerConnected: true,
     runnerDisconnectedAt: undefined,
     automaticRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
     softwareRestartAt: undefined,
     error: null,
     stoppedAt: null,

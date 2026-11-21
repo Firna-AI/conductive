@@ -15,7 +15,7 @@ let workspaceNumber = 0
 
 export async function automaticRestartFixture(
   fixture: Awaited<ReturnType<typeof backendFixture>>,
-  keepRunning = false,
+  initialTurn: 'finished' | 'running' | 'started' = 'finished',
 ) {
   const { actor, id: workspaceId } = await seededCompletedWorkspace(fixture, {
     workspaceId: `automatic-restart-${++workspaceNumber}`,
@@ -24,9 +24,10 @@ export async function automaticRestartFixture(
   const { peers, controls } = actor.native.api
   const token = await readWorkspaceToken(runtime.env, workspaceId)
   const now = runtime.dependencies.now
+  const streamId = 'runner-stream'
+  let eventNumber = 0
+  let processNumber = 0
   const connect = async (id: string) => {
-    const streamId = `stream-${id}`
-    let eventNumber = 0
     await peers.connectRunner(id, {
       url: `${runtime.env.MACHINE_ORIGIN}${MACHINE_PATHS.runner}`,
       headers: { Authorization: `Bearer ${token}` },
@@ -40,6 +41,7 @@ export async function automaticRestartFixture(
       type: 'hello',
       workspaceId,
       streamId,
+      processStartId: `00000000-0000-4000-8000-${String(++processNumber).padStart(12, '0')}`,
       protocolVersion: 2,
     })
     const emit = (event: RunnerEvent) =>
@@ -61,7 +63,17 @@ export async function automaticRestartFixture(
   const firstTurn = (await first.take()).find((value) => value.type === 'turn')
   if (!firstTurn) throw new Error('The first turn was not delivered.')
   const { sessionId, turnId, message } = firstTurn
-  if (!keepRunning)
+  if (initialTurn === 'started')
+    await first.emit({
+      type: 'turn.started',
+      sessionId,
+      turnId,
+      senderId: message.sender.id,
+      startedAt: now(),
+      choice: message.choice,
+      messageIds: [message.id],
+    })
+  if (initialTurn === 'finished')
     await first.emit({
       type: 'turn.completed',
       sessionId,

@@ -63,8 +63,20 @@ export function failedRestartLifecycle(
     ...state,
     state: 'error',
     softwareRestartAt: undefined,
+    automaticRestartSubmitted: undefined,
     error: { code: 'restart_failed', message: restartCopy.failed, log: null },
   }
+}
+
+export function requiresFreshRunnerReady(
+  state: DurableLifecycleState | undefined,
+): boolean {
+  return (
+    state?.state === 'starting' &&
+    state.automaticRestartSubmitted === true &&
+    state.softwareRestartAt !== undefined &&
+    state.automaticRestartAt === state.softwareRestartAt
+  )
 }
 
 /** The time when the alarm ends a restart whose runner is not back. */

@@ -35,12 +35,13 @@ it('restarts once after three minutes away and delivers the waiting message at r
   expect(f.commands()).toHaveLength(2)
 
   const replacement = await f.connect('replacement')
-  expect((await replacement.take()).map(({ type }) => type)).toEqual([
-    'welcome',
+  expect(await replacement.take()).toEqual([
+    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
   ])
+  expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
   await replacement.ready()
   expect(await replacement.take()).toEqual([
-    expect.objectContaining({ type: 'confirm' }),
+    expect.objectContaining({ type: 'confirm', throughEventNumber: 3 }),
     expect.objectContaining({
       type: 'turn',
       message: expect.objectContaining({
@@ -56,6 +57,68 @@ it('restarts once after three minutes away and delivers the waiting message at r
   const ready = await f.lifecycle()
   expect(ready).toMatchObject({ runnerConnected: true, state: 'working' })
   expect(ready?.runnerDisconnectedAt).toBeUndefined()
+  expect(ready?.softwareRestartAt).toBeUndefined()
+})
+
+it('ends an automatic restart at its deadline if the replacement only says hello on the saved stream', async () => {
+  const f = await automaticRestartFixture(fixtureForTest())
+  await f.send()
+  await f.tick(180_000)
+  expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
+  const replacement = await f.connect('replacement')
+  const starting = {
+    state: 'starting',
+    runnerConnected: false,
+    softwareRestartAt: f.awayAt + 180_000,
+  }
+  expect(await f.lifecycle()).toMatchObject(starting)
+  expect(await replacement.take()).toEqual([
+    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
+  ])
+  await f.tick(359_999)
+  expect(await f.lifecycle()).toMatchObject(starting)
+  await f.tick(360_000)
+  expect(await f.lifecycle()).toMatchObject({
+    state: 'error',
+    error: { code: 'restart_failed' },
+  })
+  expect(await replacement.take()).toEqual([])
+})
+
+it('cancels the automatic restart when the runner recovers before command submission', async () => {
+  const f = await automaticRestartFixture(fixtureForTest())
+  await f.send()
+  const held = heldOperation()
+  f.fixture.boat.beforeCommand = async (command) => {
+    if (command === UPDATE_CHECK_COMMAND) await held.wait()
+  }
+  const restarting = f.tick(180_000)
+  let recovered: Awaited<ReturnType<typeof f.connect>>
+  try {
+    await expectSettled(held.entered)
+    recovered = await expectSettled(f.connect('recovered'))
+    expect(await expectSettled(f.lifecycle())).toMatchObject({
+      runnerConnected: true,
+    })
+  } finally {
+    held.release()
+    await restarting
+  }
+  expect(await recovered.take()).toEqual([
+    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
+    expect.objectContaining({
+      type: 'turn',
+      message: expect.objectContaining({
+        id: 'waiting-message',
+        state: 'sent',
+      }),
+    }),
+  ])
+  expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND])
+  expect(await f.lifecycle()).toMatchObject({
+    state: 'working',
+    runnerConnected: true,
+  })
 })
 
 it('counts a saved disconnect with no time from the first alarm that sees it', async () => {
@@ -72,11 +135,14 @@ it('counts a saved disconnect with no time from the first alarm that sees it', a
 })
 
 it('restarts when a waiting message shares a running turn and delivers it in a new turn', async () => {
-  const f = await automaticRestartFixture(fixtureForTest(), true)
+  const f = await automaticRestartFixture(fixtureForTest(), 'started')
   await f.send()
   await f.tick(180_000)
   expect(f.commands()).toEqual([UPDATE_CHECK_COMMAND, RESTART_COMMAND])
   const replacement = await f.connect('replacement')
+  expect(await replacement.take()).toEqual([
+    expect.objectContaining({ type: 'welcome', confirmedThrough: 2 }),
+  ])
   const { sessionId, turnId, message } = f.firstTurn
   await replacement.emit({
     type: 'turn.completed',
@@ -85,9 +151,13 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
     state: 'stopped',
     durationMs: 180_000,
     files: [],
+    filesUnavailable: true,
     omittedFileCount: 0,
     userMessageIds: [message.id],
   })
+  expect(await replacement.take()).toEqual([
+    expect.objectContaining({ type: 'confirm', throughEventNumber: 3 }),
+  ])
   await replacement.ready()
   const sent = (await replacement.take()).filter(({ type }) => type === 'turn')
   expect(sent).toEqual([
@@ -102,7 +172,7 @@ it('restarts when a waiting message shares a running turn and delivers it in a n
 })
 
 it('leaves a running turn alone when no message waits', async () => {
-  const f = await automaticRestartFixture(fixtureForTest(), true)
+  const f = await automaticRestartFixture(fixtureForTest(), 'running')
   await f.tick(180_000)
   expect(await f.lifecycle()).toMatchObject({ state: 'working' })
   expect(f.commands()).toEqual([])
@@ -168,7 +238,7 @@ it('leaves the computer with Continue while its job is pending', async () => {
 })
 
 it('shows a failed automatic restart and gives the same absence no second attempt', async () => {
-  const f = await automaticRestartFixture(fixtureForTest(), true)
+  const f = await automaticRestartFixture(fixtureForTest(), 'running')
   await f.send()
   f.fixture.boat.beforeCommand = async (command) => {
     if (command === RESTART_COMMAND) f.fixture.boat.synchronousExitCode = 1
@@ -202,6 +272,7 @@ it('handles chat and expires at the restart deadline while the provider command 
   try {
     await expectSettled(held.entered)
     await expectSettled(f.send('during-restart'))
+    await expectSettled(f.connect('replacement'))
     expect(await f.lifecycle()).toMatchObject({ state: 'starting' })
     let markExpired = () => {}
     const expired = new Promise<void>((resolve) => {
