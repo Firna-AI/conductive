@@ -19,6 +19,7 @@ import { classes } from '../common/classes'
 import dialog from '../common/ConfirmDialog.module.css'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import card from '../common/ModalCard.module.css'
 import styles from './NewWorkspaceDialog.module.css'
 
 /**
@@ -186,7 +187,9 @@ export type NewWorkspaceDialogProps = {
  * button puts each picked file at the caret. The whole card takes a drop
  * of files, and its full border shows the drop state while they hover over
  * it. A phone always opens the page instead. The files show the chips of
- * every composer, and Create waits for their uploads, as Send does.
+ * every composer, and Create waits for their uploads, as Send does. A
+ * dialog taller than the room of the window keeps its header and its
+ * footer, and the message and the notices scroll between them.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
   const uploads = props.attachments.some((file) => file.state !== undefined)
@@ -196,10 +199,14 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
       <section
         aria-label="New workspace"
         aria-modal
-        className={classes(styles.dialog, props.drop && styles.dropping)}
+        className={classes(
+          styles.dialog,
+          card.card,
+          props.drop && styles.dropping,
+        )}
         role="dialog"
       >
-        <div className={styles.header}>
+        <div className={classes(styles.header, card.head)}>
           {props.repository ? (
             <RepositoryPicker
               menu={props.repositoryMenu}
@@ -212,21 +219,23 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
             section={props.section}
           />
         </div>
-        <div className={styles.body}>
-          <messageField.Component
-            files={props.attachments}
-            lines={7}
-            maxLines={14}
-            moklyInstance="message-field"
-            placeholder={props.placeholder}
-            text={props.text}
-            {...defined({ caret: props.caret })}
-          />
+        <div className={card.body}>
+          <div className={styles.body}>
+            <messageField.Component
+              files={props.attachments}
+              lines={7}
+              maxLines={14}
+              moklyInstance="message-field"
+              placeholder={props.placeholder}
+              text={props.text}
+              {...defined({ caret: props.caret })}
+            />
+          </div>
+          {props.notices === undefined ? null : (
+            <div className={styles.notices}>{props.notices}</div>
+          )}
         </div>
-        {props.notices === undefined ? null : (
-          <div className={styles.notices}>{props.notices}</div>
-        )}
-        <div className={styles.footer}>
+        <div className={classes(styles.footer, card.foot)}>
           <iconButton.Component
             icon="paperclip"
             label="Attach files"

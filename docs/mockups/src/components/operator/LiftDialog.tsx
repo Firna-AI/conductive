@@ -12,7 +12,8 @@ import { instanceKey } from '../../instanceKey'
  * The operator confirms a lift. The dialog says what comes back, and that
  * the files of a workspace on the `boat` account that stopped 14 days ago
  * or more can be gone. A deleted org stays deleted, so the dialog promises
- * it no access.
+ * it no access. `extra` adds a paragraph, such as the switch build that
+ * the lift starts.
  */
 export function LiftDialog(props: {
   target: QuestionTarget
@@ -20,6 +21,7 @@ export function LiftDialog(props: {
   /** The page that Cancel returns to, and the page after the lift. */
   cancel: string
   done: string
+  extra?: string
 }) {
   return (
     <confirmDialog.Component
@@ -50,6 +52,11 @@ export function LiftDialog(props: {
           {text}
         </dialogText.Component>
       ))}
+      {props.extra ? (
+        <dialogText.Component moklyInstance={instanceKey(props.extra)}>
+          {props.extra}
+        </dialogText.Component>
+      ) : null}
     </confirmDialog.Component>
   )
 }

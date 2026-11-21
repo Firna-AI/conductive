@@ -41,8 +41,22 @@ export const orgSettingsSchema = {
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
      * with no build yet, such as a new org whose first build did not start.
+     * `waiting` is a build of an admin that waits for another update of the
+     * cloud computer, which members do not see, and that the tab shows as a
+     * build that runs. `ended` is a build that an operator ended for such an
+     * update, which the tab shows as a failed build.
      */
-    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'none'] },
+    build: {
+      enum: [
+        'ready',
+        'building',
+        'waiting',
+        'failed',
+        'time-limit',
+        'ended',
+        'none',
+      ],
+    },
     /**
      * The install script: the one that the newest build started with, or
      * one that an admin changed and saved after that start, which a later

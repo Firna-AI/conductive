@@ -275,6 +275,11 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,
   `ConfirmDialog`, and `Sheet`, where `@firna/ui` has none. They copy the
   local parts of the mockups, because the app has no shared UI folder yet.
+  `ConfirmDialog` copies the look of its card, but it imports the shared
+  card parts of
+  [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css).
+  So a desktop question taller than the window keeps its title and its
+  actions, and only its content scrolls.
   [Shared UI lacks parts](../../plans/follow-ups/firna-ui-missing-parts.md)
   records the gap in `@firna/ui`.
 - `dev/`: the dev page and its fake server.

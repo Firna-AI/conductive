@@ -471,6 +471,7 @@ Evidence: `.context/watch-session/m45-integration-main.md` and its preservation 
 - [x] Commit with Conventional Commits and push this branch after the preservation audits.
 - [x] Record and apply the fix rule to the sent-but-unacknowledged wake continuation display finding. Preserve existing member-message placement.
 - [x] Resolve the PR conflicts with main `68342ce4a`. Preserve each upstream path and inspect every combined owner.
+- [x] Integrate main `558838e09` after it moved during the first PR merge. Keep its catalogue rows and the watch entry.
 - [x] Review the complete diff against `origin/main` after the push with the `implementation-review` skill. Save the review and findings. Check new findings with the `second-pass review agent`. Fix `fix now` findings, record other findings as follow-up items, re-review once, and report.
 - [ ] Check and review any source correction that Cal chooses for runtime item 8 before the final pull request.
 - [ ] Delete this plan after every earlier TODO is ticked and review rounds are complete. Preserve a permalink and every dated decision in the pull request description.

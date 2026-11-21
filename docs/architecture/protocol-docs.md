@@ -149,6 +149,9 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Repository order](../protocol/repository-order.md): the order of the
+    chosen repositories of an org, its default repository, and the moves
+    of an admin.
   - [Get started](../protocol/get-started.md): the first run, its steps,
     the agent step, the state of the first build in its org step, and its
     finish.

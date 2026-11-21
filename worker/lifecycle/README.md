@@ -27,6 +27,7 @@ gives the create, read, resume, and activity routes of a workspace to
   Other provider kinds get no disk retention restart.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
+- Re-arm the image coordinator for each eligible open provider switch on every Cron run.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -51,7 +52,7 @@ gives the create, read, resume, and activity routes of a workspace to
 of a create.
 
 The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
-The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
+The create reads the account of the org, and that account selects the published org image independently of those branch fields.
 The creation claim keeps them in its saved plan.
 The fetch updates `refs/remotes/origin/<base branch>`.
 The branch phase uses the event commit when it exists, or the fetched head otherwise.
@@ -112,6 +113,8 @@ workspace object.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+[Provider switches](provider-switches.md) gives hidden switch builds, member
+build waits, and the atomic publication of a new account.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 
