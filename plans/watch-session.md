@@ -1,6 +1,6 @@
 # Wake a session when a watched turn ends
 
-Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 5 and 5a are checked complete. Runtime verification item 8 needs Cal's answer. The pull request that completes this work deletes this plan.
+Status: Active. On branch `calummoore/wake-a-session-when-a-turn-ends-b5kh`, no pull request yet. Cal approved watch decisions 2 D, 3 C, 4 C, 5 D, and 6 B on 20 November 2026. Milestones 1 to 5 and 5a are checked complete. The full implementation review found no new issue on 21 November 2026. Runtime verification item 8 needs Cal's answer. The pull request that completes this work deletes this plan.
 
 Conductive agents hand work to other sessions. No workspace tool tells the caller when that work ends. A waiting parent keeps its turn and cloud computer active. This change adds a one-shot watch. The Worker wakes the calling session when the watched turn finishes, fails, or stops.
 
@@ -459,6 +459,7 @@ Evidence: `.context/watch-session/m45-integration-main.md` and its preservation 
 - [x] Regenerate shared bindings and verify no uncommitted drift. Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`.
 - [x] Commit with Conventional Commits and push this branch after the preservation audits.
 - [x] Record and apply the fix rule to the sent-but-unacknowledged wake continuation display finding. Preserve existing member-message placement.
-- [ ] Review the complete diff against `origin/main` after the push with the `implementation-review` skill. Save the review and findings. Check new findings with the `second-pass review agent`. Fix `fix now` findings, record other findings as follow-up items, re-review once, and report.
+- [x] Review the complete diff against `origin/main` after the push with the `implementation-review` skill. Save the review and findings. Check new findings with the `second-pass review agent`. Fix `fix now` findings, record other findings as follow-up items, re-review once, and report.
+- [ ] Check and review any source correction that Cal chooses for runtime item 8 before the final pull request.
 - [ ] Delete this plan after every earlier TODO is ticked and review rounds are complete. Preserve a permalink and every dated decision in the pull request description.
 - [ ] Open the pull request into `main`. Wait for green `Complete gate` and `Rust gate` checks on its last commit. Report its URL, commit, decisions, checks, and remaining follow-up items. Do not merge it.
