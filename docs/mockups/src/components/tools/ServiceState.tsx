@@ -4,6 +4,7 @@ import {
   servicePhaseDetail,
   serviceStateLabels,
   type ServicePhase,
+  type ServiceShownState,
 } from './serviceCopy'
 import styles from './ServiceState.module.css'
 
@@ -11,12 +12,12 @@ import styles from './ServiceState.module.css'
  * The tone and the glyph of a state, so it never depends on colour alone:
  * a spinner while a control runs, and an icon for a failed run.
  */
-export function serviceStatusOf(phase: ServicePhase): {
+export function serviceStatusOf(kind: ServiceShownState): {
   tone: StatusTone
   busy: boolean
   failed: boolean
 } {
-  switch (phase.kind) {
+  switch (kind) {
     case 'running':
       return { tone: 'success', busy: false, failed: false }
     case 'stopping':
@@ -32,7 +33,7 @@ export function serviceStatusOf(phase: ServicePhase): {
 
 /** The state of a service and the time after it, as a row and its log show. */
 export function ServiceState(props: { phase: ServicePhase }) {
-  const status = serviceStatusOf(props.phase)
+  const status = serviceStatusOf(props.phase.kind)
   const detail = servicePhaseDetail(props.phase)
   return (
     <>

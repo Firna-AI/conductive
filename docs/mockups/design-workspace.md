@@ -133,8 +133,9 @@ link, and the bars of the cloud computer.
   - `ServiceResultToast` shows a failed control as the toast of a failed
     change, an unconfirmed control as a warning toast, and a control for a
     run that ended as an info toast.
-  - `serviceCopy.ts` beside them holds the words, and the shapes that the
-    words read. It imports no fixture, so the app can share it.
+  - `serviceCopy.ts` beside them holds the words, which take plain values
+    or the types of the report, and the sample shapes of the mockups. It
+    imports no fixture, so the app shares its words.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette

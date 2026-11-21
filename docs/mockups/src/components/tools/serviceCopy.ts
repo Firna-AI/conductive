@@ -3,49 +3,38 @@
  * row, the question before Stop, the results of a control, and the log.
  * A service is a named server that runs outside every agent turn, until
  * the cloud computer stops. This module imports no fixture, so the app can
- * use it too. It also gives the shapes that the words read, until the
- * runner contract of services gives them.
+ * use it too. Its words take plain values or the types of the report. The
+ * sample shapes below serve only the mockups.
  */
 
+import type { ServiceProcessResult } from '../../../../../src/shared/generated/ServiceProcessResult'
+import type { ServiceSource } from '../../../../../src/shared/generated/ServiceSource'
+import type { ServiceState } from '../../../../../src/shared/generated/ServiceState'
 import { nameLabel } from '../../../../../src/shared/name-label'
 
-/** How the last run of a service ended, as the report gives it. */
-type ServiceResult =
-  /** Its process exited with this code. */
-  | { kind: 'exit'; code: number }
-  /** A signal ended its process, such as `SIGSEGV`. */
-  | { kind: 'signal'; signal: string }
-  /** The cloud computer ran out of memory, so the service was stopped. */
-  | { kind: 'memory' }
-  /** Its command did not start, such as a program that is not installed. */
-  | { kind: 'start' }
+/**
+ * The state that a row shows: the state of the run from the latest report,
+ * or a Stop or a Restart that runs.
+ */
+export type ServiceShownState = ServiceState | 'stopping' | 'restarting'
 
 /**
- * The state of a service: its actual state from the latest report, or a
- * Stop or a Restart that runs. `started` and `at` are the times that the
- * row shows, such as `12m ago`.
+ * The state of a sample service: its shown state, with the times that the
+ * row shows, such as `12m ago`, and the result of an ended run.
  */
 export type ServicePhase =
   | { kind: 'running'; started: string }
   | { kind: 'stopping' }
   | { kind: 'restarting' }
   | { kind: 'stopped'; at: string }
-  | { kind: 'ended'; result: ServiceResult; at: string }
-  | { kind: 'failed'; result: ServiceResult; at: string }
+  | { kind: 'ended'; result: ServiceProcessResult; at: string }
+  | { kind: 'failed'; result: ServiceProcessResult; at: string }
 
 /**
- * Where a service started: a session that the workspace matched to the
- * call, or a command on the cloud computer that it did not match, such as
- * one in a terminal. It is context, not the name of a person, and it gives
- * no rights.
- */
-export type ServiceSource =
-  { kind: 'session'; title: string | null } | { kind: 'local' }
-
-/**
- * A service as the Preview tool lists it: its exact name, the filtered
- * label of its program and its folder, each null when the report has none,
- * its state, the ports that it listens on, and where it started.
+ * A sample service as the Preview tool lists it: its exact name, the
+ * filtered label of its program and its folder, each null when the report
+ * has none, its state, the ports that it listens on, and where it started.
+ * The source is context, not the name of a person, and it gives no rights.
  */
 export type ServiceEntry = {
   name: string
@@ -79,9 +68,7 @@ export const servicesCopy = {
 } as const
 
 /** The word of each state, as the row and the log show it. */
-export const serviceStateLabels: Readonly<
-  Record<ServicePhase['kind'], string>
-> = {
+export const serviceStateLabels: Readonly<Record<ServiceShownState, string>> = {
   running: 'Running',
   stopping: 'Stopping…',
   restarting: 'Restarting…',
@@ -91,27 +78,44 @@ export const serviceStateLabels: Readonly<
 }
 
 /** The result of a run, such as `Exit code 1` or `Out of memory`. */
-function serviceResultText(result: ServiceResult): string {
+function serviceResultText(result: ServiceProcessResult): string {
   switch (result.kind) {
     case 'exit':
       return `Exit code ${result.code}`
     case 'signal':
       return `Signal ${result.signal}`
-    case 'memory':
+    case 'out_of_memory':
       return servicesCopy.memory
-    case 'start':
+    case 'start_failed':
       return servicesCopy.notStarted
   }
 }
 
+/** The words after the state of a run that runs, such as `Started 12m ago`. */
+export function serviceStartedText(ago: string): string {
+  return `Started ${ago}`
+}
+
+/**
+ * The words after the state of a run that ended: its result and the time of
+ * its end, such as `Exit code 1 · 2m ago`. Without a result, the time alone.
+ */
+export function serviceEndedText(
+  result: ServiceProcessResult | null,
+  ago: string,
+): string {
+  return result === null ? ago : `${serviceResultText(result)} · ${ago}`
+}
+
 /**
  * The words after the state: the start of a run, or the result and the
- * time of its end. A control that runs shows none.
+ * time of its end. A Stop shows the time alone, and a control that runs
+ * shows none.
  */
 export function servicePhaseDetail(phase: ServicePhase): string | null {
   switch (phase.kind) {
     case 'running':
-      return `Started ${phase.started}`
+      return serviceStartedText(phase.started)
     case 'stopping':
     case 'restarting':
       return null
@@ -119,7 +123,7 @@ export function servicePhaseDetail(phase: ServicePhase): string | null {
       return phase.at
     case 'ended':
     case 'failed':
-      return `${serviceResultText(phase.result)} · ${phase.at}`
+      return serviceEndedText(phase.result, phase.at)
   }
 }
 
@@ -138,13 +142,17 @@ export function serviceSourceLabel(source: ServiceSource): string {
 }
 
 /**
- * The tooltip and the spoken name of a service: its name, its label, and
- * its folder, such as `storybook, storybook dev in packages/ui`.
+ * The tooltip and the spoken name of a service: its name, the label of its
+ * program, and its folder, such as `storybook, storybook dev in packages/ui`.
  */
-export function serviceDescription(service: ServiceEntry): string {
-  const label = service.label === null ? '' : `, ${service.label}`
-  const folder = service.folder === null ? '' : ` in ${service.folder}`
-  return `${service.name}${label}${folder}`
+export function serviceDescription(
+  name: string,
+  program: string | null,
+  folder: string | null,
+): string {
+  const label = program === null ? '' : `, ${program}`
+  const place = folder === null ? '' : ` in ${folder}`
+  return `${name}${label}${place}`
 }
 
 /** The words that name one service in a control. */

@@ -28,7 +28,12 @@ import {
   fakeUsers,
 } from '../../../test-support/fixtures/core'
 import { senderSnapshot } from '../../../test-support/fixtures/workspaces'
-import { storeFailedRepairs } from '../../../test-support/recorded-repairs'
+import { serveFakeServices } from '../../../test-support/fake-services'
+import {
+  fullReport,
+  nextEnvelope,
+  storeFailedRepairs,
+} from '../../../test-support/recorded-repairs'
 import { seedFirstStart } from './dev-first-start'
 import { readDevOptions } from './dev-options'
 import { DevPage } from './DevPage'
@@ -53,6 +58,12 @@ const server = new FakeApiServer(
     : {},
 )
 storeFailedRepairs(server.events, options.repair, now())
+// The services answer as the Worker does, beside the servers of a report.
+if (options.services) {
+  serveFakeServices(server, options.services, { now, hold: 1_500 })
+  const ports = fullReport('ports.updated')
+  server.events.emit(nextEnvelope(server.events, ports, now()))
+}
 if (bar && options.member) server.signIn(fakeUsers[1])
 const member = senderSnapshot(options.member ? fakeUsers[1] : fakeUser)
 // The actions of the bar answer as the Worker does, with its state.

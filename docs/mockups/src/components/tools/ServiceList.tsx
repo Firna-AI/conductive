@@ -123,11 +123,16 @@ function ServiceRow(props: {
 }) {
   const { service, links } = props
   const open = props.menu?.name === service.name
-  const pending = serviceStatusOf(service.phase).busy
+  const pending = serviceStatusOf(service.phase.kind).busy
+  const description = serviceDescription(
+    service.name,
+    service.label,
+    service.folder,
+  )
   return (
     <li className={classes(styles.service, open && styles.open)}>
       <div className={styles.top}>
-        <span className={styles.what} title={serviceDescription(service)}>
+        <span className={styles.what} title={description}>
           <span className={styles.name}>{service.name}</span>
           {service.label === null ? null : (
             <span className={styles.label}>{service.label}</span>

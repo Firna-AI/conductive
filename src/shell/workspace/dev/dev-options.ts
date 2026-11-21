@@ -7,6 +7,10 @@ import {
   type BarScenario,
 } from '../../../test-support/fake-bar-dev'
 import type { FakeRepositoryEnd } from '../../../test-support/fake-repository-change'
+import {
+  fakeServiceStates,
+  type FakeServiceState,
+} from '../../../test-support/fake-services'
 import type { ColorScheme } from '../../ui/ThemeRoot'
 import type { Viewport } from '../../ui/viewport'
 import type { PhoneView } from '../WorkspaceColumns'
@@ -32,6 +36,8 @@ import { firstStartStates, type FirstStartState } from './dev-first-start'
  * - `repository=changed|question|clash|outdated|fetch-failed`: the cloud
  *   computer holds each chosen repository, and a repository change ends in
  *   that way. With `bar`, the change takes the names of `branches`.
+ * - `services=running|ended|empty|load-failed`: the Preview tool lists
+ *   these services above the servers of the stored report of the ports.
  */
 export interface DevOptions {
   repair: readonly RunnerReportKind[]
@@ -44,6 +50,7 @@ export interface DevOptions {
   member: boolean
   bar: DevBar | null
   repository: FakeRepositoryEnd | null
+  services: FakeServiceState | null
 }
 
 /** The GitHub state of the bar, a turn that runs, and the answers of its actions. */
@@ -100,6 +107,7 @@ export function readDevOptions(search: string): DevOptions {
         'outdated',
         'fetch-failed',
       ]) ?? null,
+    services: pick(query, 'services', fakeServiceStates) ?? null,
   }
 }
 

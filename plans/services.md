@@ -260,6 +260,30 @@ These are the UI implementor's calls of 21 November 2026, checked by the orchest
 - Reuse the registered failure wrapper with its own instance name. Give the notice the row width and the hint's six-pixel space below it. Link Try again to the list page. Reason: the shared notice and navigation already show how a successful read follows a failure.
 - State that no port leaves Servers for a service while no service row shows. Keep the ordinary phone rule for open previews. Reason: the error view adds no service ownership without changing the existing port filter.
 
+### App implementation calls
+
+These are the UI implementor's calls of 21 November 2026, checked by the orchestrator on that date. They implement the approved service surface and current app lifecycle.
+
+- Keep the store, API, readers, and state under the Preview area. Let the shell draw rows and dialogs. Reason: the tool needs no shell dependency, and the shell owns navigation and access.
+- Derive the ports to omit from the service rows actually shown. Reason: unsupported, loading, and first-read failure states must keep ordinary servers.
+- Clear the catalogue at the end of its screen connection. Keep submitted controls until their answers. Reason: a return reads fresh data while a view close cannot cancel a submitted control.
+- Match pending controls to the observed boot, service, and generation. Refresh actual state after an answer. Reason: an older result must not overwrite a newer run or resend an uncertain control.
+- Watch only a shown Preview surface. On desktop, also require the right column to show. Read again when it reopens. Use the existing nullable panel context through its owner. Reason: a hidden column stays mounted, but it must stop periodic service reads. The phone path has no required panel layout.
+- Use the app's existing short relative-time formatter, including "now". Reason: actual report times must follow the app's clock and its existing words.
+- Render a log as one text node in a focusable preformatted block. Refresh the catalogue after a stale read. Keep the Worker's log correlation and check the echoed request for controls. Reason: output stays literal and stale targets have a recovery path.
+- Add ViewDialog over the same frame as Dialog. Reason: the log needs its own Reload and Close actions while retaining the existing keyboard and sheet behavior.
+- Let the menu trigger report its open state to the row. Reason: the row keeps its approved open fill without inspecting another component's DOM.
+- Keep default development and test service catalogues unsupported. Reason: existing Preview cases retain their ordinary server surface unless they explicitly select services.
+
+### Current-main integration calls
+
+These are the non-UI implementor's calls of 21 November 2026, checked by the orchestrator on that date.
+
+- Put optional service support and its exact sandbox binding in main's single saved runner state. Move every service consumer to that owner directly. Keep the saved JSON flat. Reason: main's wake fix persists the entire shared state object, and the previous Worker must still read it.
+- Retain the existing hello helper and its ordered work. Share main's one persisted repository-move handler with delivery. Reason: negotiation, saved-ready checks, welcome, report requests, repairs, moves, and callbacks must retain their order without duplicating state or exceeding the file limit.
+- Delete the replaced private service-state interface after every consumer moves. Reason: no remaining code, test, registry, public entry point, or requirement uses it.
+- Preserve every incoming main path, including its fixed follow-up deletions. Keep main's connection implementation, active-runner definition, and watch implementation unchanged. Reason: this branch adds services and must retain the current production work.
+
 ### Guidance scheduling call
 
 On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
@@ -269,6 +293,12 @@ The non-UI implementor made these guidance calls on 21 November 2026. The orches
 - Append Services after the existing common guidance. Select only the temporary-server instruction by agent. Reason: the approved server rules differ for Claude and Codex, while their service lifecycle is the same.
 - Keep saved-session text unchanged and use the existing runtime note-output tests. Reason: this release changes guidance, not saved-session recovery or background-work bookkeeping.
 - Update only the direct guidance entry-point descriptions. Reason: the protocols and public guides already state the approved behavior.
+
+## Replaced ways
+
+The current-main integration replaces the branch-local service connection state with main's single `RunnerConnectionState`. Its consumers are the hello path and the service binding, catalogue, controls, logs, negotiation, and runtime modules. Their checked migration and deletion tasks are in Milestone 8. Persisted JSON remains flat, so the previous Worker needs no converter.
+
+The shared copy helpers now use generated service source and process-result types or primitive arguments. The mockup fixtures remain presentation samples. No app row converts to their sample model.
 
 ## Milestone 1: Services mockups
 
@@ -424,14 +454,16 @@ Depends on: 1, 5a, and 5b
 
 The UI implementor builds the approved mockups against real runner data.
 
-- [ ] Add the chosen service surface with the approved metadata and actual report state.
-- [ ] Keep services without ports reachable. Keep each service in the phone list after "+", also when its preview is open. Link reported ports to their previews and list each owned port only in its service row.
-- [ ] Add Stop, Restart, selected confirmations, pending results, and recoverable errors under the selected access rule. Use the same failure toast for Restart, with its Restart wording.
-- [ ] Add the selected log view. Render output and all service metadata as untrusted text.
-- [ ] Keep absent support distinct from an empty report. Keep old runners, stopped computers, and old Mac app versions working.
-- [ ] Keep preview close separate from process Stop. Preserve the current Preview tab behavior.
-- [ ] Test only the new state and control behavior that lower-level tests do not cover.
-- [ ] Run the typecheck, lint, and relevant app checks. Open the changed phone and desktop views in the browser. Save PNG screenshots under `.context/services/`.
+- [x] Add the chosen service surface with the approved metadata and actual report state.
+- [x] Keep services without ports reachable. Keep each service in the phone list after "+", also when its preview is open. Link reported ports to their previews and list each owned port only in its service row.
+- [x] Add Stop, Restart, selected confirmations, pending results, and recoverable errors under the selected access rule. Use the same failure toast for Restart, with its Restart wording.
+- [x] Add the selected log view. Render output and all service metadata as untrusted text.
+- [x] Keep absent support distinct from an empty report. Keep old runners, stopped computers, and old Mac app versions working.
+- [x] Keep preview close separate from process Stop. Preserve the current Preview tab behavior.
+- [x] Test only the new state and control behavior that lower-level tests do not cover.
+- [x] Run the typecheck, lint, and relevant app checks. Open the changed phone and desktop views in the browser. Save PNG screenshots under `.context/services/`.
+
+Completed on 21 November 2026. Evidence: `.context/services/ui-report.md`, `.context/services/m6-root-check.md`, `.context/services/m6-root-proof-audit.json`, `.context/services/m6-repeats/summary.json`, `.context/services/m6-repeats-list/summary.json`, and the app PNGs named in the report.
 
 ## Milestone 7: Agent guidance
 
@@ -455,16 +487,26 @@ Depends on: every other milestone
 
 The orchestrator owns the combined gate, implementation review, and pull request. It checks each delegated result before ticking its TODO.
 
-- [ ] Recheck every completed milestone against the diff and the repository rules.
+- [x] Recheck every completed milestone against the diff and the repository rules.
+- [x] Put optional services support and its sandbox binding in main's shared runner-state owner and saved-record reader.
+- [x] Move the hello consumer directly to the shared state.
+- [x] Move the service binding consumer directly to the shared state.
+- [x] Move the catalogue consumer directly to the shared state.
+- [x] Move the controls consumer directly to the shared state.
+- [x] Move the logs consumer directly to the shared state.
+- [x] Move the negotiation consumer directly to the shared state.
+- [x] Move the runtime consumer directly to the shared state.
+- [x] Remove the replaced private service-state interface and stale references after all consumers move.
+- [x] Check the current-main merge and the previous Worker's saved-record compatibility. Restore the checked app work without a changed byte.
 - [x] Fix the unused service-copy exports found by the existing export check. Keep their module-local uses.
 - [x] In an isolated test workspace, start a service, end its agent turn, and confirm that it stays usable. Restart only that workspace's runner and confirm service survival. Check computer stop and the selected resume behavior.
-- [ ] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
-- [ ] Run `npm run format:check` and `npm run lint` before the long gate.
+- [x] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
+- [x] Run `npm run format:check` and `npm run lint` before the long gate.
 - [x] Install gate dependencies with Node 24: `npm --prefix desktop ci` and `npm ci --prefix runner`, after the root dependencies.
 - [ ] Run `npm run check` on the combined final tree.
-- [ ] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
-- [ ] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Prepare the target and musl tools if needed.
-- [ ] Regenerate shared types and confirm that the committed output has no drift.
+- [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
+- [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Prepare the target and musl tools if needed.
+- [x] Regenerate shared types and confirm that the committed output has no drift.
 - [ ] Run the deletion audit. Commit with Conventional Commits and push this branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Apply the fix rule, record follow-up items, and re-review once.
 - [ ] Resolve each finding that needs Cal before the final pull request. Record outside-scope problems without fixing them here.
@@ -475,6 +517,10 @@ The orchestrator owns the combined gate, implementation review, and pull request
 Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.context/services/pre-worker-exports-fixed.log`, and `.context/services/pre-worker-export-typecheck.log`.
 
 Lifetime evidence: `.context/services/lifetime-progress.md`, `.context/services/idle-observations.jsonl`, `.context/services/lifetime-stage5-report.md`, and `.context/services/lifetime-cleanup-report.md`. The isolated test workspace is cleaned and archived. Dependency installation evidence: `.context/services/desktop-install.log` and `.context/services/runner-install.log`.
+
+Final Rust input evidence: `.context/services/m5a-root-rust-results.json` and `.context/services/final-rust-input-comparison.json`. The full Rust checks, release build, and generator cover the unchanged native and generated inputs. Early final static evidence: `.context/services/final-format.log` and `.context/services/final-lint.log`.
+
+Current-main integration evidence: `.context/services/final-main-worker-integration-report.md`, `.context/services/final-main-merge-audit.txt`, `.context/services/final-main-root-check.md`, and `.context/services/m6-stash-restoration.json`.
 
 ## Outside this change
 

@@ -69,7 +69,8 @@ function servicesOf(state: WorkspaceState): readonly ServiceEntry[] | null {
 /** The screens that the drawn controls of a row lead to. */
 function linksFor(service: ServiceEntry): ServiceLinks {
   const failedForMemory =
-    service.phase.kind === 'failed' && service.phase.result.kind === 'memory'
+    service.phase.kind === 'failed' &&
+    service.phase.result.kind === 'out_of_memory'
   const logs: Readonly<Record<string, string>> = {
     [webService.name]: servicePaths.log,
     [workerService.name]: servicePaths.emptyLog,

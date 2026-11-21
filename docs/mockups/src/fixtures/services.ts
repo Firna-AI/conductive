@@ -1,7 +1,7 @@
+import type { ServiceSource } from '../../../../src/shared/generated/ServiceSource'
 import type {
   ServiceEntry,
   ServicePhase,
-  ServiceSource,
 } from '../components/tools/serviceCopy'
 import { workspaceSessions } from './sessions'
 
@@ -16,15 +16,19 @@ import { workspaceSessions } from './sessions'
 
 const firstSession: ServiceSource = {
   kind: 'session',
+  sessionId: workspaceSessions[0].key,
   title: workspaceSessions[0].title,
+  agent: 'claude',
 }
 
 const secondSession: ServiceSource = {
   kind: 'session',
+  sessionId: workspaceSessions[1].key,
   title: workspaceSessions[1].title,
+  agent: 'claude',
 }
 
-const local: ServiceSource = { kind: 'local' }
+const local: ServiceSource = { kind: 'local_command' }
 
 const running = (started: string): ServicePhase => ({
   kind: 'running',
@@ -127,7 +131,7 @@ export const endedServices: readonly ServiceEntry[] = [
     name: 'emails',
     label: 'email dev',
     folder: 'packages/emails',
-    phase: { kind: 'failed', result: { kind: 'start' }, at: '1m ago' },
+    phase: { kind: 'failed', result: { kind: 'start_failed' }, at: '1m ago' },
     ports: [],
     source: secondSession,
   },
@@ -158,7 +162,7 @@ export const endedServices: readonly ServiceEntry[] = [
 /** `storybook` after the cloud computer ran out of memory. */
 export const memoryService: ServiceEntry = {
   ...storybook,
-  phase: { kind: 'failed', result: { kind: 'memory' }, at: '1m ago' },
+  phase: { kind: 'failed', result: { kind: 'out_of_memory' }, at: '1m ago' },
   ports: [],
 }
 
