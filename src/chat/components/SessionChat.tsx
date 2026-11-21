@@ -32,6 +32,7 @@ import {
   historyStatus,
   HistoryFailure,
   showsContent,
+  type GitHubBranch,
 } from './SessionStatus'
 import { useTranscriptInputs } from './transcript-inputs'
 import { TranscriptView } from './TranscriptView'
@@ -54,6 +55,12 @@ export interface ChatHost {
   keepsComposer: boolean
   /** The tools of the composer, as `ComposerTool` says. */
   tools?: readonly ComposerTool[]
+  /**
+   * The branch of the GitHub state that the app shows, with its label. The
+   * New session text takes the label only for the workspace branch of the
+   * chat's own record. Without it, the text names the real branch.
+   */
+  github?: GitHubBranch | null
 }
 
 export interface SessionChatProps {
@@ -262,6 +269,7 @@ export function SessionChat(props: SessionChatProps) {
         controller,
         starting: starting !== null,
         readOnly,
+        github: props.host?.github,
       })}
       footer={footer}
       mobile={props.mobile}

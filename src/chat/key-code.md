@@ -54,8 +54,8 @@ is relative to `src/chat/`, the folder of this guide.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps, the sandbox bar, and the tools of the
-  composer that the app can give. `components/transcript-inputs.ts`:
+  `ChatHost`, the start steps, the sandbox bar, the tools of the composer,
+  and the GitHub branch that the app can give. `components/transcript-inputs.ts`:
   `useTranscriptInputs`, the Mac commands and the secret requests of the
   open session, and the inserts, the readers, and Try again that its
   transcript gets. Each keeps its value while its data stays the same.
@@ -232,8 +232,9 @@ is relative to `src/chat/`, the folder of this guide.
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
-  `api/read-continued.ts` reads the note of Continue with its real branches
-  and their optional labels, with the same `label` reader.
+  `api/read-continued.ts` reads the note of Continue and the note of a
+  repository change with their real branches and their optional labels,
+  with the same `label` reader.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the

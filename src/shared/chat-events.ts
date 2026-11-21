@@ -79,6 +79,8 @@ export type ChatEvent =
       repository: { id: string; fullName: string }
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | RunnerEventRefused
   | { type: 'message.accepted'; message: UserMessage }

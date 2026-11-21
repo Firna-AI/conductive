@@ -165,12 +165,14 @@ export function itemMarkdown(
       return note(`${words.before}${branch}${words.after}`)
     }
     case 'repository-changed': {
-      // The words of the note of the chat, with the names as code.
+      // The words of the note of the chat, with the names as code, and the
+      // new branch by its label, or by its real name without one.
       const words = repositoryChangedNote(
         plainText(continuedBy(item.member, readers)),
       )
+      const branch = inlineCode(item.displayBranch ?? item.branch)
       return note(
-        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
+        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${branch}`,
       )
     }
   }

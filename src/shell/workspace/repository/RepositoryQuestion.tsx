@@ -43,11 +43,13 @@ export function RepositoryQuestion(props: {
         work={{
           left: {
             files: localWork.uncommittedFiles,
+            displayFiles: localWork.displayUncommittedFiles,
             commits: localWork.unpushedCommits,
           },
           pullRequest: question.work.pullRequest?.number ?? null,
           pushedCommits: question.work.pushedCommits,
           carriedFiles: question.work.carriedFiles,
+          displayCarriedFiles: question.work.displayCarriedFiles,
         }}
       />
     </Dialog>

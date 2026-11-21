@@ -80,6 +80,7 @@ export type TranscriptItem =
       member: MessageSender
       repository: { id: string; fullName: string }
       branch: string
+      displayBranch?: string
     }
 
 export interface RunningTurn {
@@ -165,12 +166,14 @@ function foldRepositoryChanged(
   transcript: Transcript,
   event: Extract<ChatEvent, { type: 'workspace.repository-changed' }>,
 ): Transcript {
+  const { displayBranch } = event
   return withNote(transcript, {
     kind: 'repository-changed',
     id: repositoryChangedKey(event.repository.id, event.branch),
     member: event.member,
     repository: event.repository,
     branch: event.branch,
+    ...(displayBranch === undefined ? {} : { displayBranch }),
   })
 }
 

@@ -26,7 +26,7 @@ function label(value: unknown): string | undefined {
  * nothing. A list that does not match the paths one to one gives nothing,
  * and an item that is not a label gives its real path.
  */
-function fileLabels(
+export function fileLabels(
   value: unknown,
   paths: readonly string[],
 ): readonly string[] | undefined {

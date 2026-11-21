@@ -86,6 +86,29 @@ it('reads exact positive omission counts from browser event envelopes', () => {
   }
 })
 
+it('keeps repository note labels and ignores missing or unreadable optional labels', () => {
+  const { workspace } = workspaceFixtures().created
+  const event = {
+    type: 'workspace.repository-changed',
+    sessionId: 'session-1',
+    member: senderSnapshot(workspace.owner),
+    repository: { id: 'billing', fullName: 'example/billing' },
+    branch: 'owner/next-acme-7f3k',
+    baseBranch: 'develop/acme-7f3k',
+  }
+  const labeled = {
+    ...event,
+    displayBranch: 'owner/next-[redacted]',
+    displayBaseBranch: 'develop/[redacted]',
+  }
+  const read = (value: unknown) => readEnvelope(envelope(value)).event
+  expect([
+    read(labeled),
+    read(event),
+    read({ ...event, displayBranch: 7, displayBaseBranch: '' }),
+  ]).toEqual([labeled, event, event])
+})
+
 it('keeps a known optional end reason and reads older or unknown reasons without it', () => {
   const event = { ...completed, state: 'finished' }
   const ended = { ...event, endReason: 'background_work_limit' }

@@ -89,10 +89,11 @@ first.
 - `workspace-event-labels.ts`, `workspace-labels.ts`, and
   `workspace-labels-data.ts`: the masked labels of events, as
   [Branch and path labels](integration/README.md#branch-and-path-labels)
-  says. `eventLabeler` gives the labels of `github.updated` and
-  `workspace.continued` events. `WorkspaceEventLabels` labels with the
-  values of one read. `WorkspaceEventLabelPreparation` makes that read at
-  most once. Its `event` and `history` make it only for such an event.
+  says. `eventLabeler` gives the labels of `github.updated`,
+  `workspace.continued`, and `workspace.repository-changed` events.
+  `WorkspaceEventLabels` labels with the values of one read.
+  `WorkspaceEventLabelPreparation` makes that read at most once. Its
+  `event` and `history` make it only for such an event.
   `ChatStore.eventLabels` gives one preparation, through
   `storedWorkspaceEventLabels`, which finds the org of the workspace in D1.
   `prepareWorkspaceEventLabels` gives one for a route that knows the org.
