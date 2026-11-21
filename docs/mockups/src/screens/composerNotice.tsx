@@ -1,4 +1,3 @@
-import { CircleAlert, MessageSquarePlus, Paperclip } from 'lucide-react'
 import {
   attachFilesLabel,
   folderBody,
@@ -6,19 +5,20 @@ import {
   smallerFileLabel,
   tooLargeBody,
 } from '../components/chat/attachmentCopy'
-import { ConnectAgentNotice } from '../components/chat/ConnectAgentNotice'
+import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import {
   linkedReasonText,
   linkedTitle,
   type LinkedReason,
 } from '../components/chat/linkedCopy'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { agents } from '../fixtures/agents'
 import { droppedFolder, largeRecording } from '../fixtures/attachments'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { plainData } from '../defined'
 import { loginOwnerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
 
@@ -43,15 +43,21 @@ function linkedReason(state: WorkspaceState): LinkedReason | undefined {
  */
 function tooLargeNotice() {
   return (
-    <Notice
+    <notice.Component
       action={
         // The mockups draw one upload, which the chosen file leads to.
         <ScreenLink asChild to={paths.attachments}>
-          <ActionButton icon={Paperclip}>{smallerFileLabel}</ActionButton>
+          <actionButton.Component
+            icon="paperclip"
+            moklyInstance="attach-smaller-file"
+          >
+            {smallerFileLabel}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={tooLargeBody}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="composer-notice"
       title={notAttachedTitle(largeRecording.name)}
       tone="danger"
     />
@@ -66,15 +72,21 @@ function tooLargeNotice() {
  */
 function folderNotice() {
   return (
-    <Notice
+    <notice.Component
       action={
         // The mockups draw one upload, which the chosen files lead to.
         <ScreenLink asChild to={paths.attachments}>
-          <ActionButton icon={Paperclip}>{attachFilesLabel}</ActionButton>
+          <actionButton.Component
+            icon="paperclip"
+            moklyInstance="attach-folder-files"
+          >
+            {attachFilesLabel}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={folderBody}
-      icon={CircleAlert}
+      icon="circle-alert"
+      moklyInstance="composer-notice"
       title={notAttachedTitle(droppedFolder)}
       tone="danger"
     />
@@ -112,9 +124,10 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const fresh = state.tab === 'new-session'
   if (owner !== undefined && reason !== undefined && !fresh) {
     return (
-      <Notice
+      <notice.Component
         body={linkedReasonText(reason, owner, agent)}
-        icon={MessageSquarePlus}
+        icon="message-square-plus"
+        moklyInstance="composer-notice"
         title={linkedTitle}
       />
     )
@@ -122,5 +135,10 @@ export function composerNotice(state: WorkspaceState, workspace: Workspace) {
   const noLogin =
     state.composer === 'no-agent' || state.composer === 'no-starter-login'
   if (!noLogin || owner !== undefined) return undefined
-  return <ConnectAgentNotice choice={choice} />
+  return (
+    <connectAgentNotice.Component
+      choice={plainData(choice)}
+      moklyInstance="connect-agent-notice"
+    />
+  )
 }

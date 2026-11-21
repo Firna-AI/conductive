@@ -110,6 +110,7 @@ const Block = memo(function Block(props: {
     case 'rule':
       return <hr />
     case 'table':
+      if (drawing.table) return drawing.table(block)
       return (
         <MarkdownTable
           align={block.align}

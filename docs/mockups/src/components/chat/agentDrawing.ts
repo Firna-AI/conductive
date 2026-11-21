@@ -1,4 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
+import type { TextTable } from '../../../../../src/chat/markdown/agent-blocks'
 import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
 
 /**
@@ -28,6 +29,8 @@ export interface AgentDrawing {
   text: (text: InlineText, place: TextPlace) => ReactNode
   /** Draws a code block of an answer, with its text as the agent wrote it. */
   code: (text: string) => ReactNode
+  /** Draws a table through its registration when it has a stable name. */
+  table?: (table: TextTable) => ReactNode
   /**
    * Draws `children` only while `text` shows words where it draws, so a
    * heading that shows no words draws nothing, also no space in a line.

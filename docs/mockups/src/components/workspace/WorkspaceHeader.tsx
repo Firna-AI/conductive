@@ -1,22 +1,25 @@
 import type { Viewport } from '@mokly/mokly'
-import { ChevronLeft, PanelRight } from 'lucide-react'
+import { defined } from '../../defined'
 import { people } from '../../fixtures/members'
 import type { ActivityStatus, Workspace } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { ShortcutTip } from '../common/ShortcutTip'
+import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
 import { classes } from '../common/classes'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useCornerControls } from '../layout/sidebarPlace'
 import { workspaceLabel } from '../workspaces/label'
 import rowMenu from '../workspaces/RowMenu.module.css'
-import { CopyLinkButton, type CopyResult } from './CopyLinkButton'
+import { copyLinkButton } from '../../entries/components/workspace/CopyLinkButton.mockup'
+import type { CopyResult } from './CopyLinkButton'
 import { HeaderState } from './HeaderState'
 import { NameMenuButton } from './NameMenuButton'
-import { OwnerPicker } from './OwnerPicker'
+import { ownerPicker } from '../../entries/components/workspace/OwnerPicker.mockup'
 import { RepositoryPicker } from './RepositoryPicker'
-import { RunLinks, type RunSource } from './RunLinks'
+import { runLinks } from '../../entries/components/workspace/RunLinks.mockup'
+import type { RunSource } from './RunLinks'
 import styles from './WorkspaceHeader.module.css'
 
 /**
@@ -66,7 +69,7 @@ export function WorkspaceHeader(props: {
    * The workspace menu that the name opened, below the name on desktop. A
    * phone shows it as a sheet.
    */
-  menu?: readonly MenuEntry[]
+  menu?: readonly MenuEntryData[]
   /** Rename of the workspace menu put the field in place of the name. */
   renaming?: boolean
 }) {
@@ -82,11 +85,11 @@ export function WorkspaceHeader(props: {
     />
   )
   const owner = (
-    <OwnerPicker
+    <ownerPicker.Component
       compact={props.viewport === 'mobile'}
-      open={props.ownerOpen}
       owner={people[workspace.owner]}
       readOnly={!props.canReassign}
+      {...defined({ open: props.ownerOpen })}
     />
   )
   const label = workspaceLabel(workspace.number)
@@ -104,26 +107,39 @@ export function WorkspaceHeader(props: {
     <span className={styles.nameAnchor}>
       <NameMenuButton name={name} open />
       <span className={styles.nameMenu}>
-        <Menu entries={props.menu} label={name} placement="point" />
+        <menuPart.Component
+          entries={props.menu}
+          label={name}
+          moklyInstance="name-menu"
+          placement="point"
+        />
       </span>
     </span>
   ) : (
     <NameMenuButton name={name} />
   )
   const copyLink = (
-    <ShortcutTip command="copy-link" label={`Copy link to ${label}`}>
-      <CopyLinkButton
+    <shortcutTip.Component
+      command="copy-link"
+      label={`Copy link to ${label}`}
+      moklyInstance="copy-link-tip"
+    >
+      <copyLinkButton.Component
         inline={props.viewport === 'mobile'}
         label={label}
-        result={props.copy}
+        {...defined({ result: props.copy })}
       />
-    </ShortcutTip>
+    </shortcutTip.Component>
   )
   const header =
     props.viewport === 'mobile' ? (
       <header className={styles.mobile}>
         <ScreenLink asChild to={props.back ?? paths.shell}>
-          <IconButton icon={ChevronLeft} label="All workspaces" />
+          <iconButton.Component
+            icon="chevron-left"
+            label="All workspaces"
+            moklyInstance="all-workspaces"
+          />
         </ScreenLink>
         <div className={styles.titles}>
           {title}
@@ -155,8 +171,9 @@ export function WorkspaceHeader(props: {
           open={props.stateOpen}
           status={props.status}
         />
-        <IconButton
-          icon={PanelRight}
+        <iconButton.Component
+          icon="panel-right"
+          moklyInstance="toggle-right-column"
           label={
             props.rightHidden
               ? 'Show the right column'
@@ -169,7 +186,7 @@ export function WorkspaceHeader(props: {
   return (
     <>
       {header}
-      <RunLinks run={props.run} />
+      <runLinks.Component run={props.run} />
     </>
   )
 }
