@@ -39,6 +39,12 @@ If GitHub deletes the workspace's base branch, Conductive fetches the default br
 The cloud computer uses the new base only after that fetch succeeds.
 The bar explains that change until a pull request opens.
 
+A workspace that targets the default branch also follows a later rename of that default branch.
+This includes a workspace after a repository change.
+Conductive fetches the new default before the cloud computer targets it.
+A stopped computer completes this move when it resumes.
+A workspace that targets another branch keeps that target.
+
 If the computer cannot complete the move, Conductive retries it automatically, also when the computer resumes.
 The pull request bar still shows GitHub state while that update waits.
 

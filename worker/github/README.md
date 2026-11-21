@@ -30,6 +30,18 @@ The [shared contracts](../../src/shared/github.ts) define the response bodies.
   [REACHED_REPOSITORY_ROWS](repository-reach.ts) picks the saved rows that the install of an event may update: rows of that install, and after a move, rows of an org that already uses the new install for another repository.
   It reads the current values from GitHub through [readGitHubRepository](repository-read.ts), with a metadata token that it revokes.
   [syncRepositoryValues](repository-sync.ts) saves them, with the install of the event, only while no other save came after the read, then reads GitHub again to confirm them.
+  Before a changed default is saved, its `prepareDefaultBranchChange` callback saves one move job in each live workspace with a null base.
+  The callback uses the existing workspace `refreshGitHub` entry point with the internal `repositoryDefault` signal and makes no GitHub or cloud request there.
+  A failed job save leaves the repository save and delivery retryable.
+  [saveRepositoryDefaultChange](../lifecycle/repository-default-change.ts) records the proposed target and the alarm together.
+  The move reads its authoritative target from the saved repository, so an older preparation cannot lose a newer default.
+  Each guarded save attempt has an internal receipt in the existing delivery table.
+  The write requires that receipt to remain open, and the attempt closes it when it ends.
+  After installation, the move closes unfinished receipts and keeps its retry.
+  A rejected save prepares again with a fresh receipt.
+  An interrupted sync cannot retain the job forever or lose a later transition.
+  Repeated prepares keep one job ID and its retry count, with a new revision for each changed preparation.
+  Explicit bases and archived workspaces get no job.
   It then calls `repositoryChange.changed`, which in production runs [wakeImagesForRepositoryChange](../lifecycle/repository-change-builds.ts).
   A failed read leaves the delivery retryable. A failed wake only warns, because the image coordinator checks the saved values at each alarm.
   [checkRepositoryValues](repository-values-check.ts) compares the repository name, default branch, and install of each push, pull request, check, and status webhook with the saved values.
@@ -334,6 +346,8 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [Cloud base tests](../features/base-moved.test.ts) use native storage, saved alarms, and hibernation to check growing retries, resume, and failed D1 publication. The recovery push names an unrelated branch.
 - [Owner credential tests](../features/base-moved-credentials.test.ts) check the trusted fetch scope and keep tokens out of commands, saved state, logs, and banner replies.
 - [Native Git base tests](../lifecycle/base-change-native.test.ts) check an advancing merge commit, Changes, diffs, and a refused owner fetch.
+- [Default rename tests](../features/default-branch-rename.test.ts) run the saved move through native Git for running and stopped computers, and check explicit bases and an inactive repository.
+- [Overlapping rename tests](../lifecycle/repository-default-race.test.ts) control delivery and fetch order, unfinished writes, and receipt recovery with real D1 and native object storage.
 - [check-rollup.ts](check-rollup.ts) selects and pages one commit's checks while checking commit IDs.
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.

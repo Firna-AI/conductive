@@ -601,6 +601,42 @@ Design calls from the renumbering of Milestone 18, made on 21 November 2026:
   numbers. Reason: the start of "Decisions" holds the map from the old
   numbers to the new ones.
 
+Design calls from Milestone 19, made on 21 November 2026:
+
+- The webhook saves each default-base move and its alarm before its guarded
+  repository write. The job waits while the earlier repository values still
+  hold. Reason: a failed workspace call must leave the default unchanged,
+  so a repeated delivery can save every move before the earlier name goes.
+- The internal GitHub refresh signal carries this prepare request through
+  the existing workspace entry point. It performs no GitHub read or cloud
+  command. Reason: reuse the durable move and its retry without a new
+  browser, Mac app, or runner contract.
+- The repository publication checks the effective base after its write,
+  while its regression test also reads the raw stored value. Reason: the
+  workspace reader resolves null to the repository default.
+- The repository-change protocol keeps its After the change heading and
+  links to a new page for that section. Reason: the doc must stay near
+  250 lines, and existing links to the heading must keep working.
+
+Design calls from the Milestone 19 overlap repair, made on 21 November 2026:
+
+- Cal selected option A of the overlap finding: repair the existing job,
+  with no migration. The job reads the authoritative saved default before
+  each attempt. This replaces the earlier call to wait while the previous
+  repository values hold. Reason: two guarded saves and their workspace
+  preparations can finish in different orders.
+- Each guarded save attempt has an internal receipt in the existing
+  webhook delivery table. Closing that receipt prevents a delayed write.
+  After installation, the move closes unfinished receipts and keeps its
+  retry. A rejected write prepares again under a fresh receipt. Reason:
+  an unfinished transition must retain its move, and an interrupted sync
+  must not retain the job forever.
+- The one move job keeps its ID and growing retry count. Changed
+  preparations and target resolution each get a new revision. Credential
+  checks, retries, completion, and isolated stages use that revision.
+  Reason: an older fetch must not install after it observes a newer
+  revision or remove the newer move.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -963,21 +999,33 @@ list of each changed reference, and the check results.
 
 Depends on: 18
 
-- [ ] In `docs/protocol/base-branches.md` and the doc of the repository
+- [x] In `docs/protocol/base-branches.md` and the doc of the repository
       change, state decisions 310 and 312. Read the legal pages and the
       public guides for the same facts.
-- [ ] Build decision 310: the webhook save of a new default branch saves
+- [x] Build decision 310: the webhook save of a new default branch saves
       one base move for each live workspace of the repository whose base is
       null, through the operation of decisions 307 and 308.
-- [ ] Build decision 312 in `worker/lifecycle/repository-change-progress.ts`
+  - [x] Keep the newest default move when two repository deliveries
+        prepare jobs before their guarded saves finish. Add a failing
+        regression for the stale job that loses the newer move.
+- [x] Build decision 312 in `worker/lifecycle/repository-change-progress.ts`
       and `worker/lifecycle/repository-change-data.ts`, with the check after
       the write that accepts null.
-- [ ] Delete `plans/follow-ups/saved-default-branch-after-github-rename.md`
+- [x] Delete `plans/follow-ups/saved-default-branch-after-github-rename.md`
       (decision 311), and remove each link to it.
 - [ ] Test a rename with a running and with a stopped cloud computer, a
       workspace with a stored base that the rename does not move, and a
       repository change to the default branch.
-- [ ] Update the READMEs of `worker/github/` and `worker/lifecycle/`.
+  - [x] Verify the running rename, one saved move, explicit bases, and an
+        inactive repository.
+  - [ ] Verify the stopped-computer rename and its required repeat runs.
+  - [x] Verify that a repository change to the default stores null.
+- [x] Update the READMEs of `worker/github/` and `worker/lifecycle/`.
+
+Evidence: `.context/start-from-branch/m19-progress.md` and `m19-report.md` in that folder.
+The stopped-computer test remains unverified after three timeouts.
+The overlap repair and its deterministic regressions are recorded in
+`.context/start-from-branch/m19-race.md`.
 
 ## Milestone 9: Verification, commit, review, and pull request
 

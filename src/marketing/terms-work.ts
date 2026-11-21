@@ -44,10 +44,13 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
     paragraph`A repository change moves a workspace to a new branch of
       another repository of the org. It keeps the cloud computer and
       its sessions. The old branch, its pull request, and the files in
-      the folder of the old repository stay.`,
+      the folder of the old repository stay. Its base follows the new
+      repository's default branch, also after a later rename.`,
     paragraph`When GitHub deletes a workspace's base branch,
       ${productName} fetches the repository's default branch into its
-      cloud computer. The cloud computer uses the new base only after
+      cloud computer. A workspace whose base follows the default also
+      gets this fetch when GitHub changes that default branch.
+      The cloud computer uses the new base only after
       that fetch succeeds. When no member starts the move, the fetch
       uses the workspace owner's GitHub token. This includes moves from
       GitHub events, automatic retries, and resumes of stopped cloud

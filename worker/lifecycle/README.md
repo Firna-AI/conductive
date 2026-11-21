@@ -70,7 +70,7 @@ A null stored base uses the repository default branch.
 Each startup command tries to set `gh-merge-base` and `origin/HEAD` from the current stored base before the startup script and runner run.
 The metadata command does not depend on the current HEAD, and a failed update does not block startup.
 It leaves both settings unchanged when the new base has no remote-tracking reference.
-An unfinished deleted-base move uses [the saved move job](#moved-bases) before startup.
+An unfinished base move uses [the saved move job](#moved-bases) before startup.
 That startup skips its ordinary metadata command, so it cannot apply an unfinished move before the fetch.
 Try again keeps the saved start and base branches with its new allocation.
 
@@ -114,7 +114,7 @@ of its fetch.
 
 ### Moved bases
 
-`WorkspaceBaseChanges` in [`workspace-base.ts`](workspace-base.ts) owns each deleted-base move.
+`WorkspaceBaseChanges` in [`workspace-base.ts`](workspace-base.ts) owns deleted-base moves and default-branch changes.
 [`saveBaseChangeJob`](base-change-job.ts) saves one `baseChange:job` with the GitHub snapshot marker and alarm source.
 [`baseChangeChatStorage`](base-change-storage.ts) registers the native alarm in that same transaction.
 The job repairs D1 before it changes the cloud computer.
@@ -123,6 +123,19 @@ Its retry delay starts at one second, doubles after each failure, and stops grow
 A stopped computer keeps the job until it can run again.
 Each resume attempts the same job before startup, even when its retry time is later.
 A failed attempt leaves the job and does not fail the resume.
+
+[`saveRepositoryDefaultChange`](repository-default-change.ts) saves a default-branch move before the webhook changes the repository row.
+It rechecks the workspace binding, null base, and archive state.
+[`currentRepositoryDefaultJob`](repository-default-job.ts) resolves the target against the authoritative saved repository before each attempt.
+After installation, it closes unfinished metadata-sync receipts and keeps its retry.
+A rejected save prepares again with a fresh receipt before it can change the default.
+Repeated preparation and target resolution retain one job ID and its retry count.
+Each changed revision has its own isolated fetch stage.
+Credential checks, retries, and completion reject an older revision.
+The job checks its revision before installation and again before completion.
+The guarded webhook write remains the owner of the repository values.
+The job uses the same isolated fetch, target installation, and retry path as a deleted-base move.
+The workspace base stays null, and the webhook adds no deleted-branch message to the banner.
 
 [`base-change-commands.ts`](base-change-commands.ts) shares the isolated fetch and reference installation with Continue.
 The fetch uses a bare stage outside the working repository.
@@ -141,6 +154,8 @@ No token or provider output enters the saved job, command, logs, or reply.
 [Native Git tests](base-change-native.test.ts) check merge-base comparisons after a merge commit and a refused fetch.
 [Native workspace tests](../features/base-moved.test.ts) check D1 repair, retries, hibernation, and resume.
 [Credential tests](../features/base-moved-credentials.test.ts) check the owner scope and secret handling.
+[Overlap tests](repository-default-race.test.ts) check delivery ordering, unfinished default changes, stale fetches, and interrupted metadata saves.
+
 ### Repository change
 
 [Repository change](repository-change.md) gives the routes and errors, the
@@ -148,6 +163,10 @@ admission and the reservation that it shares with Continue, its phases,
 the move command with the context copy, the publication, and the
 recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns both jobs for the
 workspace object.
+
+[`repository-change-progress.ts`](repository-change-progress.ts) keeps the new target's default base null in its binding.
+[`storeChangedRepository`](repository-change-data.ts) stores a base equal to that default as null and checks the effective base after publication.
+Saved jobs with the earlier named default still publish through the same path.
 
 ### Builds and refreshes
 

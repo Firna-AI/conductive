@@ -49,7 +49,9 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         latest default branch of the new repository with the token of the
         member who changes the repository. When GitHub deletes a
         workspace's base branch, ${productName} fetches the default branch
-        into its cloud computer. The cloud computer uses the new base only
+        into its cloud computer. A workspace whose base follows the default
+        also gets this fetch when GitHub changes that default branch.
+        The cloud computer uses the new base only
         after that fetch succeeds. When no member starts the move, the fetch
         uses the workspace owner's GitHub token. This includes moves from
         GitHub events, automatic retries, and resumes of stopped cloud

@@ -12,6 +12,20 @@ export interface BaseChangeJob {
   change: { from: string; to: string }
   at: number
   failures: number
+  revision?: string
+  repositoryDeliveries?: string[]
+  repositoryBeforeSave?: {
+    fullName: string
+    defaultBranch: string
+    installationId: number
+  }
+}
+
+export function sameBaseChangeJob(
+  pending: BaseChangeJob | null | undefined,
+  job: BaseChangeJob,
+): pending is BaseChangeJob {
+  return pending?.id === job.id && pending.revision === job.revision
 }
 
 /** The marker, retry record, and alarm source share the snapshot transaction. */

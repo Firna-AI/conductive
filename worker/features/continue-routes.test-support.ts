@@ -38,6 +38,15 @@ export async function continueRoutesFixture(
       const path = new URL(request.url).pathname
       if (path === '/app/installations/1/access_tokens')
         return Promise.resolve(Response.json({ token: 'server-read-token' }))
+      if (path === '/installation/token' && request.method === 'DELETE')
+        return Promise.resolve(new Response(null, { status: 204 }))
+      if (path === `/repositories/${reference.api?.repositoryId}`)
+        return Promise.resolve(
+          Response.json({
+            full_name: reference.api?.fullName,
+            default_branch: reference.api?.defaultBranch,
+          }),
+        )
       if (path !== '/graphql' || !reference.api) return fallback(request)
       const api = reference.api
       return request
@@ -154,6 +163,26 @@ export async function continueRoutesFixture(
       },
     )
   }
+  const repositoryWebhook = (delivery: string) => {
+    const body = JSON.stringify({
+      action: 'edited',
+      changes: { default_branch: { from: 'main' } },
+      repository: { id: api.repositoryId },
+      installation: { id: 1 },
+    })
+    return fixture.runtime.dispatchFetch(
+      `${OUTER_MACHINE_ORIGIN}${MACHINE_PATHS.githubWebhook}`,
+      {
+        method: 'POST',
+        body,
+        headers: {
+          'X-GitHub-Event': 'repository',
+          'X-GitHub-Delivery': delivery,
+          'X-Hub-Signature-256': `sha256=${createHmac('sha256', secret).update(body).digest('hex')}`,
+        },
+      },
+    )
+  }
   return {
     ...fixture,
     api,
@@ -163,6 +192,7 @@ export async function continueRoutesFixture(
     drive,
     credential,
     webhook,
+    repositoryWebhook,
     activeJob: async () => {
       const value = (await state()).get(CONTINUE_JOB_KEY)
       return value == null ? null : record(value)

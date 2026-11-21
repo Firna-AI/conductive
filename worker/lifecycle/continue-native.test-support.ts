@@ -150,6 +150,7 @@ export async function continueNativeFixture(trackIgnored = false) {
         `GIT_CEILING_DIRECTORIES=${shellQuote(home)} `,
       )
       .replaceAll('/tmp/conductive-continue', join(root, 'continuations'))
+      .replaceAll('/tmp/conductive-base-change', join(root, 'base-changes'))
       .replaceAll('cd /tmp', `cd ${shellQuote(root)}`)
       .replaceAll('/usr/local/bin/conductive-git-credential', helper)
       .replaceAll(

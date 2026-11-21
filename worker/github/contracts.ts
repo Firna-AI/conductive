@@ -37,6 +37,12 @@ export interface GitHubBranchDependencies {
 }
 
 export interface GitHubRefresh {
+  repositoryDefault?: {
+    fullName: string
+    defaultBranch: string
+    installationId: number
+    deliveryId?: string
+  }
   deliveryId?: string
   userId?: string
   pushBranch?: string

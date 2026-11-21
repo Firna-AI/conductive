@@ -191,6 +191,7 @@ A run for a merged pull request uses that pull request's base branch.
 After **Continue**, the base is the branch that the pull request merged into, if it still exists.
 Otherwise, the base is the repository's default branch.
 After a repository change, the base is the latest default branch of the new repository.
+A base that follows the default also follows a later rename of that default branch.
 If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
 The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.

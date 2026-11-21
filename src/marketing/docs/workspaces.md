@@ -398,6 +398,9 @@ Use **Restart**, as [Restart the software](/docs/workspaces#restart-the-software
 The computer starts first if it is stopped.
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
+The base follows a later rename of that default branch.
+Conductive fetches the new default before the cloud computer targets it.
+A stopped computer completes this move when it resumes.
 Your GitHub account needs read access to fetch it.
 The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
 The change copies the `.context/` folder into the folder of the new repository.

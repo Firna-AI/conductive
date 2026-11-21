@@ -65,6 +65,9 @@ When a repository gets a new name or default branch on GitHub, Conductive saves 
 After that build, the repository's folder uses its new name, such as `~/code/<new-name>`.
 Update each install or startup script that names the old folder.
 Existing workspaces keep their old folders.
+Workspaces that target the default branch fetch its new name and then target it.
+A stopped computer completes this move when it resumes.
+Workspaces that target another branch keep that target.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
 

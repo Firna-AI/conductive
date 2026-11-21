@@ -196,6 +196,7 @@ Code on the computer can also obtain the GitHub credential available to that wor
 This includes the workspace owner's GitHub credential outside a running agent turn.
 Continue and a repository change also bring the member's GitHub token into the cloud computer during their branch fetch.
 Conductive also fetches a new base when GitHub deletes a workspace's base branch.
+A workspace that follows the default also gets this fetch when GitHub changes that default branch.
 When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
 This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
 Code or members with terminal access can read these GitHub tokens while their fetches run.

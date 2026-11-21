@@ -43,6 +43,10 @@ says.
   repository the base branch of the workspace, as
   [The base and the new branch](repository-change.md#the-base-and-the-new-branch)
   says.
+- A repository change stores that default base as null, as a create and
+  Continue do (decision 312). The base then follows a later rename.
+  Keeping its name was rejected, because a rename would look like a
+  deleted base and give the wrong cause in the pull request bar.
 - A change of the base of an open pull request on GitHub does not change
   the base branch of the workspace. A base branch that follows the pull
   request on GitHub was left out for now (decisions 301 and 304).
@@ -91,6 +95,24 @@ says.
   - No move. A normal stack then ends with a bar that cannot read its
     state, and Create PR targets a branch that does not exist.
   - A bar state that turns off Create PR. The app then gives no way back.
+
+## A new default branch on GitHub
+
+- When a repository webhook saves a new default branch, each live
+  workspace of that repository with a null stored base gets a base move
+  (decision 310). Its stored base stays null, because it already follows
+  the saved default.
+- A workspace with a stored base keeps its base and its cloud target.
+- The move uses [the saved move and retry](#the-move-in-the-cloud-computer).
+  A running cloud computer fetches the new default branch, then targets
+  it. A stopped computer runs the same move when it resumes.
+- Reason: the app and cloud computer must agree on the target. An old
+  copy can show merged work in Changes and target a branch that is gone.
+- These ways were rejected (decision 310):
+  - No move. Members would need Continue or a new workspace after each
+    rename.
+  - A fetch at each start. A running computer waits for its next start,
+    and each start needs a token.
 
 ## The move in the cloud computer
 

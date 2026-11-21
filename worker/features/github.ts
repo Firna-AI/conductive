@@ -20,6 +20,7 @@ import type { WorkspaceAlarms } from './alarms'
 import type { ReceiverStorage } from '../members/receiver-storage'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import type { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
+import { saveRepositoryDefaultChange } from '../lifecycle/repository-default-change'
 
 interface ScheduledRead {
   at: number
@@ -55,6 +56,17 @@ export class WorkspaceGitHub {
   }
 
   async refresh(workspace: GitHubWorkspace, signal: GitHubRefresh) {
+    if (signal.repositoryDefault) {
+      this.stateOf(workspace)
+      await saveRepositoryDefaultChange(
+        this.env.DB,
+        this.storage,
+        workspace,
+        signal.repositoryDefault,
+        this.dependencies.now(),
+      )
+      return null
+    }
     const userId = signal.userId
     return refreshWorkspace(
       this.env.DB,

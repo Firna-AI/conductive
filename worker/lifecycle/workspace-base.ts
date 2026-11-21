@@ -8,7 +8,13 @@ import {
   baseChangeWorkspace,
   baseChangeComputerReady,
 } from './base-change-access'
-import { BASE_CHANGE_JOB_KEY, type BaseChangeJob } from './base-change-job'
+import {
+  BASE_CHANGE_JOB_KEY,
+  sameBaseChangeJob,
+  type BaseChangeJob,
+} from './base-change-job'
+import { currentRepositoryDefaultJob } from './repository-default-job'
+import { closeRepositoryDefaultWrites } from './repository-default-data'
 import {
   baseChangeFetchCommand,
   baseChangeInstallCommand,
@@ -19,6 +25,7 @@ import { workspaceRepositoryLocations } from './repository-location-data'
 
 interface FetchScope {
   id: string
+  revision: string | undefined
   ownerUserId: string
   sandboxId: string
   providerAccount: string
@@ -59,13 +66,21 @@ export class WorkspaceBaseChanges {
   }
 
   private async advanceOwned(force: boolean): Promise<void> {
-    const job = await this.storage.get<BaseChangeJob | null>(
-      BASE_CHANGE_JOB_KEY,
-    )
+    let job = await this.storage.get<BaseChangeJob | null>(BASE_CHANGE_JOB_KEY)
     if (!job || (!force && job.at > this.dependencies.now())) return
     try {
+      const resolved = await currentRepositoryDefaultJob(
+        this.env.DB,
+        this.storage,
+        job,
+      )
+      if (!resolved) return await this.finish(job)
+      job = resolved
       const current = await baseChangeWorkspace(this.env.DB, job)
-      if (!current) return await this.finish(job)
+      if (!current)
+        return job.repositoryBeforeSave
+          ? await this.retry(job)
+          : await this.finish(job)
       const moved = await moveWorkspaceBase(
         this.env.DB,
         current.binding,
@@ -75,11 +90,14 @@ export class WorkspaceBaseChanges {
       if (await pendingWorkspaceChange(this.storage))
         return await this.retry(job)
       const row = (await baseChangeWorkspace(this.env.DB, job))?.row
-      if (!row) return await this.finish(job)
+      if (!row)
+        return job.repositoryBeforeSave
+          ? await this.retry(job)
+          : await this.finish(job)
       if (!baseChangeComputerReady(row) || !row.sandboxId)
         return await this.retry(job)
       const source = {
-        stage: `/tmp/conductive-base-change/${encodeURIComponent(job.id)}/source.git`,
+        stage: `/tmp/conductive-base-change/${encodeURIComponent(job.id)}/${encodeURIComponent(job.revision ?? 'legacy')}/source.git`,
         baseBranch: job.change.to,
         directory: repositoryLocation(
           await workspaceRepositoryLocations(this.env.DB, row.id),
@@ -94,6 +112,7 @@ export class WorkspaceBaseChanges {
       )
       const scope: FetchScope = {
         id: job.id,
+        revision: job.revision,
         ownerUserId: row.ownerUserId,
         sandboxId: row.sandboxId,
         providerAccount: row.providerAccount,
@@ -121,6 +140,15 @@ export class WorkspaceBaseChanges {
         baseChangeInstallCommand(source),
       )
       if (result.exitCode !== 0 || result.timedOut) return await this.retry(job)
+      if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
+      if (job.repositoryDeliveries?.length) {
+        await closeRepositoryDefaultWrites(
+          this.env.DB,
+          job.repositoryDeliveries,
+          this.dependencies.now(),
+        )
+        return await this.retry(job)
+      }
       await this.finish(job)
     } catch {
       // Provider output and credentials never enter the saved job or its logs.
@@ -137,7 +165,8 @@ export class WorkspaceBaseChanges {
     const pending = await this.storage.get<BaseChangeJob | null>(
       BASE_CHANGE_JOB_KEY,
     )
-    if (pending?.id !== job.id) return false
+    if (!sameBaseChangeJob(pending, job) || scope.revision !== job.revision)
+      return false
     const current = await baseChangeWorkspace(this.env.DB, pending)
     return Boolean(
       current &&
@@ -166,7 +195,7 @@ export class WorkspaceBaseChanges {
       const pending = await transaction.get<BaseChangeJob | null>(
         BASE_CHANGE_JOB_KEY,
       )
-      if (pending?.id !== job.id) return
+      if (!sameBaseChangeJob(pending, job)) return
       const at = this.dependencies.now() + delay
       await transaction.put(BASE_CHANGE_JOB_KEY, {
         ...job,
@@ -183,12 +212,12 @@ export class WorkspaceBaseChanges {
       const pending = await transaction.get<BaseChangeJob | null>(
         BASE_CHANGE_JOB_KEY,
       )
-      if (pending?.id !== job.id) return
+      if (!sameBaseChangeJob(pending, job)) return
       const snapshot = await transaction.get<GitHubSnapshot>('github:state')
       if (
         snapshot?.banner.branch === job.binding.branch &&
         snapshot.baseChange?.from === job.change.from &&
-        snapshot.baseChange.to === job.change.to
+        (snapshot.baseChange.to === job.change.to || job.repositoryBeforeSave)
       ) {
         const rest = { ...snapshot }
         delete rest.baseChange
