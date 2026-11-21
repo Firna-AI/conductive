@@ -4,7 +4,8 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import { type AgentChoice, type AgentKey } from '../../fixtures/agents'
 import { noop } from '../../noop'
-import { Menu, type MenuPlacement } from '../common/Menu'
+import type { MenuPlacement } from '../common/Menu'
+import { menu } from '../../entries/components/common/Menu.mockup'
 import { useShortcutHint } from '../common/ShortcutTip'
 import { useControlSizes } from '../common/touch'
 import { pickerButtonStyle } from './pickerButton'
@@ -60,7 +61,7 @@ export function ModelPicker(props: {
       />
       {props.open
         ? (props.menu ?? (
-            <Menu
+            <menu.Component
               entries={pickerMenu(
                 choice,
                 props.sessionAgent,
@@ -68,6 +69,7 @@ export function ModelPicker(props: {
                 props.fastKey ? fastHint : undefined,
               )}
               label="Model and effort"
+              moklyInstance="model-menu"
               placement={props.placement ?? 'above-start'}
             />
           ))

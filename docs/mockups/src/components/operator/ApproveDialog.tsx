@@ -1,9 +1,12 @@
 import type { Viewport } from '@mokly/mokly'
-import { Check } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { approveQuestion, approveTitle, type ApproveTarget } from './accessCopy'
+import { instanceKey } from '../../instanceKey'
 
 /**
  * The operator confirms an approval. The question names the person and
@@ -19,25 +22,34 @@ export function ApproveDialog(props: {
   done: string
 }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={props.cancel}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={props.done}>
-            <ActionButton icon={Check} tone="primary">
+            <actionButton.Component
+              icon="check"
+              moklyInstance="dialog-approve"
+              tone="primary"
+            >
               Approve
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="approve-dialog"
       title={approveTitle(props.person.login)}
       viewport={props.viewport}
     >
       {approveQuestion(props.person).map((text) => (
-        <DialogText key={text}>{text}</DialogText>
+        <dialogText.Component key={text} moklyInstance={instanceKey(text)}>
+          {text}
+        </dialogText.Component>
       ))}
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

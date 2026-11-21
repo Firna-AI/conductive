@@ -2,16 +2,11 @@ import type { MarkdownBlock } from '../../fixtures/fileContents'
 import { classes } from '../common/classes'
 import headingStyles from '../common/MarkdownHeadings.module.css'
 import prose from '../common/MarkdownProse.module.css'
-import { MarkdownTable } from '../common/MarkdownTable'
+import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
 import { taskText } from '../common/markdownTasks'
 import { TaskBox } from '../common/TaskBox'
 import { PreviewText } from './PreviewText'
 import styles from './MarkdownView.module.css'
-
-/** A cell of a table, with its inline code, its marks, and its breaks. */
-function fileCell(text: string) {
-  return <PreviewText text={text} />
-}
 
 /**
  * An item of a list. A task item shows its fixed check box in the place of
@@ -27,6 +22,12 @@ function listItem(item: string) {
   )
 }
 
+/**
+ * One block of a Markdown file. The blocks of a file have no key that stays
+ * when they move, so their text stays plain: the name of a Mokly instance
+ * must stay the same when the blocks move. A file shows one table, also in
+ * its quotes, which keeps the default name of the registered table.
+ */
 function Block(props: { block: MarkdownBlock }) {
   const { block } = props
   switch (block.kind) {
@@ -58,11 +59,10 @@ function Block(props: { block: MarkdownBlock }) {
       return <pre className={styles.block}>{block.text}</pre>
     case 'table':
       return (
-        <MarkdownTable
+        <markdownTable.Component
           align={block.align}
           className={styles.table}
           head={block.head}
-          renderCell={fileCell}
           rows={block.rows}
         />
       )

@@ -217,10 +217,15 @@
   list-style-type: none;
 }
 
+/*
+ * The hung number takes its smallest width, so it keeps the normal breaks
+ * of its text and stays on one line, such as "12.".
+ */
 .message[open] .number {
   position: absolute;
   right: 100%;
   padding-right: 0.35em;
+  overflow-wrap: normal;
 }
 
 /* A list under the text of its item, as close as the next item. */

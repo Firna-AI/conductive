@@ -101,7 +101,13 @@ function readBanner(value: unknown): GitHubBanner | null {
     return null
   const branch = {
     branch: value.branch,
+    ...(typeof value.displayBranch === 'string'
+      ? { displayBranch: value.displayBranch }
+      : {}),
     baseBranch: value.baseBranch,
+    ...(typeof value.displayBaseBranch === 'string'
+      ? { displayBaseBranch: value.displayBaseBranch }
+      : {}),
     updatedAt: value.updatedAt,
   }
   const state = value.state

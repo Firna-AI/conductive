@@ -58,7 +58,9 @@ export type BannerState =
 
 export type GitHubBanner = {
   branch: string
+  displayBranch?: string
   baseBranch: string
+  displayBaseBranch?: string
   updatedAt: Timestamp
 } & (
   | {
