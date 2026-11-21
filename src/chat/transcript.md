@@ -14,6 +14,15 @@ the parts of the chat that draw the transcript.
 - Each session keeps its own event log. A session that opens later loads its
   full stored history, whose numbers can be older than the stream's cursor,
   so a history never goes through the stream's duplicate check.
+- The transcript fold turns the events and records of a session into its
+  transcript. It never changes a published transcript, one of its items, or
+  its map of first times. That map gives the time of the first event of each
+  item. So `sameData` never hides a change, and `transcriptLookups` can keep
+  the indexes of each published transcript.
+- The fold finds each turn, message, and item through an index, so its work
+  grows about linearly with the length of the session. A new step of the
+  fold uses an index, not a scan of the items. `batch-work.test.ts` counts
+  this work.
 - Browser readers preserve the required tool-detail and turn-file omission counts.
   These new counts are non-negative safe integers. Missing counts make an event unreadable.
 - Tool transcript items keep `tool.omittedDetailBytes`.
@@ -95,7 +104,13 @@ the parts of the chat that draw the transcript.
 
 ## Key code
 
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [`transcript.ts`](../shared/transcript/transcript.ts): the items and the
+  other parts of a transcript. `foldEvent` folds one event as a batch of
+  one.
+- [`transcript-batch.ts`](../shared/transcript/transcript-batch.ts):
+  `TranscriptBatch`, the private working copy of one fold. It applies each
+  event and record of a batch. Its `finish` publishes the transcript and its
+  map of first times.
 - [`duration.ts`](../shared/transcript/duration.ts),
   [`tool-words.ts`](../shared/transcript/tool-words.ts), and
   [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
@@ -107,9 +122,27 @@ the parts of the chat that draw the transcript.
   events from stored Worker envelopes or parsed browser envelopes.
 - [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
   in event order and its newest record. The record owner keeps the logs private.
+  While the entries arrive in order, each `merge` or `offer` folds its new
+  entries as one `TranscriptBatch`. An entry before the end of the log makes
+  the next read of `transcript` or `times` fold the whole log again, as one
+  batch.
+- [`fold-items.ts`](../shared/transcript/fold-items.ts),
+  [`fold-turns.ts`](../shared/transcript/fold-turns.ts), and
+  [`item-order.ts`](../shared/transcript/item-order.ts): the indexes of a
+  batch. `FoldItems` finds each item by its ID and by its turn, and
+  `FoldItems.place` puts an item of a turn at its place, also a late one.
+  `FoldTurns` gives the order of the turns and the turn of each message.
+  `ItemOrder` keeps the order of the items.
+- [`transcript-lookups.ts`](../shared/transcript/transcript-lookups.ts):
+  `transcriptLookups`, the indexes of one published transcript: its turns
+  and their order, the turn of each message, its items by ID, and the first
+  message of each turn.
 - [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
+  `retryItemId`, the one failed item that offers Try again. `hasEnded` and
+  `turnOf` read them through `transcriptLookups`.
+- [`item-placement.ts`](../shared/transcript/item-placement.ts): `TurnItem`,
+  the kinds of item of one turn, and `isEnd`, which finds the row where a
+  turn ended.
 - [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
 - [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
 - [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a

@@ -1,46 +1,14 @@
 import type { Session } from '../generated/Session'
-import type { AgentChatEvent } from '../generated/AgentChatEvent'
-
-import { endTurn, isRunning } from './known-turns'
-import { foldLate } from './late-events'
-import type { Transcript } from './transcript'
+import type { TranscriptBatch } from './transcript-batch'
 import { endLostTurn } from './turn-events'
 
-/**
- * Ends a turn that the workspace ended without an end event that the chat
- * took: a call that still runs shows as stopped, its Stop request clears,
- * and the turn no longer runs. Another running turn stays.
- */
-export function endShownTurn(
-  transcript: Transcript,
-  turnId: string,
-): Transcript {
-  return {
-    ...endLostTurn(transcript, turnId),
-    turns: endTurn(transcript.turns, turnId),
-  }
+/** Ends a known turn after a record or refusal says that its work ended. */
+export function endShownTurn(fold: TranscriptBatch, turnId: string): void {
+  endLostTurn(fold, turnId)
+  fold.turns.end(turnId)
 }
 
-/**
- * Applies an agent event that the workspace marked as late: its turn had
- * ended. The event adds no turn and changes no newer running turn. When the
- * chat still shows its turn as running, the mark ends that turn first.
- */
-export function foldMarkedLate(
-  transcript: Transcript,
-  event: AgentChatEvent,
-): Transcript {
-  const ended = isRunning(transcript, event.turnId)
-    ? endShownTurn(transcript, event.turnId)
-    : transcript
-  return foldLate(ended, event)
-}
-
-/**
- * The turn that a session record names as started, with its stored start
- * time. The active turn of an accepted message has no start time until
- * dispatch, so the record names no started turn while the message waits.
- */
+/** The started active turn, with the time stored in its session record. */
 export function startedTurn(
   session: Pick<Session, 'activeTurnId' | 'activeTurnStartedAt'>,
 ): { turnId: string; startedAt: number } | null {
@@ -49,61 +17,39 @@ export function startedTurn(
   return { turnId: activeTurnId, startedAt: activeTurnStartedAt }
 }
 
-/**
- * Applies a session record at its place in the event order. The record
- * names the active turn of the session at that place:
- *
- * - A turn that has not ended, and that the record no longer names, has
- *   ended in the workspace, whatever end event the chat got. It ends with
- *   its calls and its Stop request.
- * - A turn that the record names, and that the workspace started, runs from
- *   its stored start time, also before the chat gets an event of it. A
- *   turn that has ended in the chat stays ended.
- * - Its retry message replaces the one before, so the newest record names it.
- */
+/** Applies a session record at its place among the events. */
 export function foldRecord(
-  transcript: Transcript,
+  fold: TranscriptBatch,
   session: Pick<
     Session,
     'activeTurnId' | 'activeTurnStartedAt' | 'retryMessageId'
   >,
-): Transcript {
-  const { activeTurnId, retryMessageId } = session
-  let next = transcript
-  for (const known of transcript.turns) {
-    if (!known.ended && known.id !== activeTurnId) {
-      next = endShownTurn(next, known.id)
+): boolean {
+  let changed = false
+  for (const id of fold.turns.active) {
+    if (id !== session.activeTurnId) {
+      endShownTurn(fold, id)
+      changed = true
     }
   }
   const started = startedTurn(session)
   if (started !== null) {
-    next = startFromRecord(next, started.turnId, started.startedAt)
-  }
-  return next.retryMessageId === retryMessageId
-    ? next
-    : { ...next, retryMessageId }
-}
-
-/** The running turn that a record names, with the start time that it stores. */
-function startFromRecord(
-  transcript: Transcript,
-  turnId: string,
-  startedAt: number,
-): Transcript {
-  const known = transcript.turns.find((turn) => turn.id === turnId)
-  if (!known) {
-    return {
-      ...transcript,
-      turns: [
-        ...transcript.turns,
-        { id: turnId, ended: false, messageIds: [] },
-      ],
-      turn: { turnId, startedAt, choice: null, thinking: false },
+    const known = fold.turns.get(started.turnId)
+    if (!known) {
+      changed = true
+      fold.turns.add(started.turnId)
+      fold.items.noteTurn(started.turnId)
+      fold.turn = { ...started, choice: null, thinking: false }
+    } else if (
+      !known.ended &&
+      fold.turn?.turnId === started.turnId &&
+      fold.turn.startedAt !== started.startedAt
+    ) {
+      changed = true
+      fold.turn = { ...fold.turn, startedAt: started.startedAt }
     }
   }
-  const { turn } = transcript
-  if (known.ended || turn?.turnId !== turnId || turn.startedAt === startedAt) {
-    return transcript
-  }
-  return { ...transcript, turn: { ...turn, startedAt } }
+  changed ||= fold.retryMessageId !== session.retryMessageId
+  fold.retryMessageId = session.retryMessageId
+  return changed
 }
