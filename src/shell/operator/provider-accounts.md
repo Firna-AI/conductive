@@ -51,6 +51,10 @@ requirements.
 - While a switch waits or builds, Stop switch takes the place of Switch
   account, and it needs no read of the accounts. After a failed switch
   build, Switch account takes the primary colour.
+- Switch account and its question require `switchAvailable: true` in the
+  org detail. A false or absent value hides them. The Provider account box
+  keeps its other fields and Stop switch. The activation variable and its
+  release sequence live in the [operator API guide](../../../worker/operator/README.md#activation-and-rollback).
 - The question of a new switch takes the wait from `switchWaitReason` and
   `runningJob`, the wait of a new switch build now. The box takes the wait
   of a switch that waits from its record. A build or a refresh that runs

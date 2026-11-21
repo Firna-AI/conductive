@@ -1,4 +1,5 @@
 import { activeOrgIdPredicate } from '../data/org-access'
+import { endedSwitchRepairStatements } from './provider-switch-repair-data'
 
 export function waitingImageBuild(db: D1Database, orgId: string) {
   return db
@@ -21,11 +22,14 @@ export async function promoteWaitingImageBuild(
     AND queued.state = 'running' AND queued.waiting_for_switch_id IS NOT NULL
     AND ${activeOrgIdPredicate('queued.org_id')}
     AND EXISTS (SELECT 1 FROM users u WHERE u.id = queued.started_by_user_id AND u.suspended_at IS NULL)
+    AND NOT EXISTS (SELECT 1 FROM org_provider_switches s
+      WHERE s.org_id = queued.org_id AND s.state = 'building')
     AND NOT EXISTS (SELECT 1 FROM image_builds executing WHERE executing.org_id = queued.org_id
       AND executing.state = 'running' AND executing.waiting_for_switch_id IS NULL))`
   const currentImage = `SELECT i.image_name FROM org_images i JOIN orgs o ON o.id = i.org_id
     WHERE i.org_id = image_build_jobs_org.org_id AND i.provider_account = o.provider_account`
   const result = await db.batch([
+    ...endedSwitchRepairStatements(db, orgId, now),
     db
       .prepare(
         `UPDATE image_build_jobs SET previous_image_name = (${currentImage}),
@@ -45,5 +49,5 @@ export async function promoteWaitingImageBuild(
       )
       .bind(now, candidate.id, candidate.id),
   ])
-  return result[1].meta.changes === 1 ? candidate.id : null
+  return result.at(-1)?.meta.changes === 1 ? candidate.id : null
 }

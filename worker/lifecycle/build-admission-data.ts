@@ -8,6 +8,7 @@ import type { RepositoryLocation } from './repository-locations'
 import type { ImageSoftwareArtifact } from './image-software'
 import { serializeSavedScript, type SavedScript } from './saved-script'
 import { writeBuildEnd } from './build-end-data'
+import { endedSwitchRepairStatements } from './provider-switch-repair-data'
 import {
   switchAdmission,
   switchAdmissionStatements,
@@ -57,7 +58,12 @@ export async function insertBuild(
   },
 ): Promise<boolean> {
   const admission = switchAdmission(input)
+  const repair =
+    !input.operatorSwitchId && input.expectedOrgAccount !== undefined
+      ? endedSwitchRepairStatements(db, input.orgId, input.now)
+      : []
   const result = await db.batch([
+    ...repair,
     db
       .prepare(
         `INSERT INTO image_builds (id, org_id, kind, state, settings_revision,
@@ -121,7 +127,7 @@ export async function insertBuild(
     ...switchAdmissionStatements(db, input),
   ])
   await requireActiveOrg(db, input.orgId)
-  return result[0].meta.changes === 1
+  return result[repair.length].meta.changes === 1
 }
 
 export async function publishBuild(

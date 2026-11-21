@@ -27,6 +27,7 @@ gives the create, read, resume, and activity routes of a workspace to
   Other provider kinds get no disk retention restart.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
+- Re-arm the image coordinator for each eligible open provider switch on every Cron run.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of

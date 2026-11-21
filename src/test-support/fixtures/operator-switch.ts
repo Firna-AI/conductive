@@ -69,6 +69,7 @@ function sampleSwitchDetail(
   const workspaces = running + stopped + failed + archived
   const job = runningBuild(org, now)
   return {
+    switchAvailable: true,
     providerSwitch: null,
     lastProviderSwitch: null,
     runningJob: job,

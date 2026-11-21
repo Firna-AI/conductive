@@ -52,6 +52,7 @@ export interface OperatorOrgSwitchResponse {
 }
 
 export interface OperatorOrgSwitchDetail {
+  switchAvailable?: boolean
   providerSwitch: OperatorProviderSwitch | null
   lastProviderSwitch: OperatorProviderSwitch | null
   runningJob: OperatorSwitchJob | null

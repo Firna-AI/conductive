@@ -12,16 +12,21 @@ export interface SwitchBuildFailure {
   wait?: OperatorSwitchWaitReason
 }
 
+export const switchFailureMessages = {
+  'time-limit': new JobTimeLimit('build').message,
+  provider: new ProviderRetryExhausted().message,
+} as const
+
 export function switchBuildFailureCause(error: unknown): OperatorSwitchFailure {
   if (
     error instanceof JobTimeLimit ||
-    error === new JobTimeLimit('build').message
+    error === switchFailureMessages['time-limit']
   )
     return 'time-limit'
   if (
     error instanceof ProviderRetryExhausted ||
     error instanceof ProviderError ||
-    error === new ProviderRetryExhausted().message
+    error === switchFailureMessages.provider
   )
     return 'provider'
   return 'script'

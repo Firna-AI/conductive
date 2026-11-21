@@ -179,6 +179,9 @@ with the search of its invite code.
 [Provider accounts and Switch account](provider-accounts.md) gives the
 Providers tab, the account choice of Create org, and the Provider account
 box of the page of an org with Switch account and Stop switch.
+The page offers Switch account only when its org detail gives
+`switchAvailable: true`. A false or absent value keeps the account details
+and Stop switch, with no new-switch action or question.
 
 ## Parts shared with the mockups
 

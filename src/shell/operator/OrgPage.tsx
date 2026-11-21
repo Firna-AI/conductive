@@ -67,7 +67,12 @@ function SwitchQuestions(props: {
       />
     )
   }
-  if (question !== 'switch' || accounts.state !== 'ready') return null
+  if (
+    question !== 'switch' ||
+    org.switchAvailable !== true ||
+    accounts.state !== 'ready'
+  )
+    return null
   const ids = accounts.value.accounts.map((account) => account.id)
   const targets = switchTargets(ids, org.providerAccount)
   if (targets.length === 0) return null

@@ -36,11 +36,12 @@ export function withSwitches(
   switches: DevSwitches,
 ): OperatorOrgDetail {
   const org = switches.orgs.get(detail.id)
-  if (!org) return detail
+  if (!org) return { ...detail, switchAvailable: true }
   const { current, last } = org
   const building = current?.state === 'building'
   return {
     ...detail,
+    switchAvailable: true,
     providerAccount: last?.toAccount ?? detail.providerAccount,
     providerSwitch:
       current?.waitReason === 'job'

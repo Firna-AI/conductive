@@ -36,9 +36,8 @@ export function switchAdmission(input: SwitchBuildAdmission) {
     }
   if (input.waitingForSwitchId)
     return {
-      sql: `AND EXISTS (SELECT 1 FROM image_builds executing WHERE executing.org_id = ?
-      AND executing.operator_switch_id = ? AND executing.state = 'running'
-      AND executing.waiting_for_switch_id IS NULL)
+      sql: `AND EXISTS (SELECT 1 FROM org_provider_switches s WHERE s.org_id = ?
+      AND s.id = ? AND s.state = 'building')
       AND NOT EXISTS (SELECT 1 FROM image_builds queued WHERE queued.org_id = ?
         AND queued.state = 'running' AND queued.waiting_for_switch_id IS NOT NULL)`,
       values: [input.orgId, input.waitingForSwitchId, input.orgId],
@@ -46,8 +45,10 @@ export function switchAdmission(input: SwitchBuildAdmission) {
   return input.expectedOrgAccount === undefined
     ? { sql: '', values: [] }
     : {
-        sql: 'AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND provider_account = ?)',
-        values: [input.orgId, input.expectedOrgAccount],
+        sql: `AND EXISTS (SELECT 1 FROM orgs WHERE id = ? AND provider_account = ?)
+          AND NOT EXISTS (SELECT 1 FROM org_provider_switches s
+            WHERE s.org_id = ? AND s.state = 'building')`,
+        values: [input.orgId, input.expectedOrgAccount, input.orgId],
       }
 }
 

@@ -193,6 +193,8 @@ build times, a failure cause, and the account-change time. The detail
 adds the newest visible switch, last completed switch, running job, wait
 reason, and workspace counts by account. These fields are optional on
 `OperatorOrgDetail` for existing readers and older replies.
+The optional `switchAvailable` boolean permits new switch actions only
+when true. Existing switch reads and Stop do not depend on it.
 The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`

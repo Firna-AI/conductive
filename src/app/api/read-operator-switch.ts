@@ -107,6 +107,9 @@ export function readOrgSwitchDetail(
   org: JsonObject,
 ): Partial<OperatorOrgSwitchDetail> {
   const detail: Partial<OperatorOrgSwitchDetail> = {}
+  if (org.switchAvailable !== undefined) {
+    detail.switchAvailable = flag(org, 'switchAvailable')
+  }
   if (org.providerSwitch !== undefined) {
     detail.providerSwitch = maybeNested(
       org,

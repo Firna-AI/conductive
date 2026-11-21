@@ -429,6 +429,25 @@ already in force.
   call of the orchestrator during Milestone 4, after the blocker of the
   backend agent.
 
+### Calls of the review
+
+These are agent calls of 20 and 21 November 2026, made in the review. The
+user can change each one.
+
+- The switch ships in two releases. This change ships all switch code
+  with the Worker variable `PROVIDER_SWITCH` set to `"off"`, so no
+  operator can start a switch. A second pull request sets it to `"on"`,
+  at least one hour after this change is live. Reason: review findings
+  1, 3, and 4 showed that an older Worker can meet switch work during a
+  deploy, and only the two-release rule of `migrations/README.md` closes
+  that class. A repair in the new code also stays, for a rollback.
+- A member build keeps its wait while a switch build ended and the switch
+  is not yet repaired. Review finding 3.
+- The Cron repair wakes the coordinator of every open switch. Review
+  finding 4.
+- A stale wake can still fail its own switch build. Review finding 2,
+  deferred to `plans/follow-ups/switch-stale-wake-fails-build.md`.
+
 ### Calls of the operator screen
 
 These are agent calls of 20 November 2026, made in Milestone 5. The user

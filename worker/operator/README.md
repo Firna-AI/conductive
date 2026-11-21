@@ -32,7 +32,10 @@ configured accounts, org counts, and atomic change records.
 [`operator-switch.ts`](../../src/shared/operator-switch.ts) builds
 `/api/operator/orgs/<orgId>/provider-switch` with the org ID encoded.
 The route uses the app gate and the same operator check as suspension.
-Other signed-in users get 403 `operator_required`.
+POST exists only when the Worker variable `PROVIDER_SWITCH` is `"on"`.
+Otherwise it returns the ordinary unknown-route 404 and creates nothing.
+DELETE and all switch reads and execution stay active with the variable off.
+Other signed-in users get 403 `operator_required` on available routes.
 An unknown org gets 404 `org_not_found`.
 
 POST accepts `OperatorOrgSwitchRequest`: `providerAccount` names another
@@ -57,7 +60,10 @@ gives input capture, cleanup, failure causes, and atomic publication.
 
 The org detail always adds `OperatorOrgSwitchDetail` fields. The shared
 type makes them optional so existing app readers and older replies still
-work. `providerSwitch` gives the newest waiting, building, or failed switch.
+work. `switchAvailable` is true only when `PROVIDER_SWITCH` is `"on"`.
+The page hides Switch account and its question when it is false or absent.
+The account details and Stop switch stay available.
+`providerSwitch` gives the newest waiting, building, or failed switch.
 A newer stopped or completed switch clears it. `lastProviderSwitch` gives
 the last completed switch, with its separate account-change time.
 `runningJob` gives the current build or refresh and its starter.
@@ -69,6 +75,20 @@ The reply includes no build log, script, repository content, or credential.
 
 The [Switch account protocol](../../docs/protocol/switch-account.md) holds
 the build and account-change requirements.
+
+### Activation and rollback
+
+Production ships switch execution with `PROVIDER_SWITCH` set to `"off"`
+in `wrangler.jsonc`. Activation is a separate pull request that changes it
+to `"on"`. Merge that pull request only after this compatibility release
+has been live for at least one hour. Its previous Worker then understands
+switch builds, waiting member builds, and repair.
+
+After activation, do not roll back past this compatibility release while
+a switch is open or a member build waits for one. Stop each open switch
+first. Confirm that no member build still waits before crossing that
+release. [When a deploy fails](../../docs/automatic-deploys.md#when-a-deploy-fails)
+gives the deployment recovery rules.
 
 ## Stop time
 

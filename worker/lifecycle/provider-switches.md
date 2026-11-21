@@ -6,6 +6,21 @@ The [Switch account protocol](../../docs/protocol/switch-account.md) holds
 the requirements. The [operator API](../operator/README.md#provider-account-switches)
 owns the request, its access check, and its retained record.
 
+## Activation and rollback
+
+The compatibility release ships all switch execution with `PROVIDER_SWITCH`
+set to `"off"` in `wrangler.jsonc`. Only operator POST admission uses this
+variable. Waiting member builds, execution, repair, Stop, and all reads
+stay active when it is off.
+
+Activation is a separate pull request that changes `PROVIDER_SWITCH` to
+`"on"`. Merge it only after the compatibility release has been live for
+at least one hour. After activation, a rollback must not cross before
+that release while a switch is open or a member build waits for one.
+Stop each open switch first. Confirm that no member build still waits
+before crossing that release. [When a deploy fails](../../docs/automatic-deploys.md#when-a-deploy-fails)
+gives the recovery steps.
+
 ## Admission and inputs
 
 `progressProviderSwitch` reads the open switch and the executing job.
@@ -46,7 +61,14 @@ The waiting row initially keeps the old org account and allocates no
 computer. `waiting_for_switch_id` keeps it outside the executing-build
 index and readers. Operator running-build counts exclude it too.
 
-`promoteWaitingImageBuild` checks that no job executes. In one D1 batch,
+Admission and promotion include ended-switch repair in the same D1 batch
+as their guarded account selection for member execution. Their SQL
+also prevents execution while the org has a `building` switch whose
+account remains unresolved. A race before the batch therefore retains
+the member wait. A concurrent switch result cannot pin the old account
+and then change the org account separately.
+
+`promoteWaitingImageBuild` checks that no job executes. In that D1 batch,
 it pins the org's current account and image, updates the job's previous
 image account, clears the wait, and records `execution_started_at`.
 Competing promotions cannot both take the execution slot. A build after
@@ -99,10 +121,15 @@ no added build. It retains every other cleanup phase and resource owner.
 An account-write failure rolls back these changes too. Every write checks
 the stored switch state, so a Stop committed before repair prevents
 completion. A blocked publication leaves the account unchanged.
+Deletion, org suspension, or starter suspension moves the switch to its
+existing Restore, Lift, or admin wait. Another account change fails the
+switch with the stored build's cause mapping. No ended attempt stays
+`building` merely because its publication guard failed.
 
 A failed build or a success that the target image no longer names fails
-the switch. `switchBuildFailureCause` also serves the live failure writer.
-It recognizes retained time-limit and provider-retry messages. A generic
+the switch when no suspension or deletion wait applies. Repair shares the
+retained time-limit and provider-retry messages with `switchBuildFailureCause`
+in the live failure writer. A generic
 older error has no retained provider class and uses the existing `script`
 fallback. Repair preserves the stored build-completion time. It records
 the actual repair time as the account-change time.
@@ -139,8 +166,15 @@ repository-change checks read only the org's current account. A failed
 build on another account cannot block those checks.
 
 `wakeProviderSwitch` arms the image coordinator before admission. A failed
-wake keeps the switch and advances the D1 repair signal. The coordinator
-or the existing repair scan can retry it.
+wake keeps the switch and advances the D1 repair signal when an image row
+exists. On every Cron run, repair also reads waiting and building switches
+directly from `org_provider_switches`. It uses the existing active-org and
+active-admin eligibility and the shared limit of 50 orgs. It does not need
+a good image or an overdue refresh deadline.
+
+Cron only schedules the image coordinator. It does not progress switches.
+The next coordinator alarm resolves the result or resumes the wait. This
+also restores a wake after an older idle scheduler saved a daily deadline.
 
 ## Key code
 
@@ -150,5 +184,6 @@ or the existing repair scan can retry it.
 - [`provider-switch-control.ts`](provider-switch-control.ts): wakes, stop, suspension, and advance fences.
 - [`provider-switch-end.ts`](provider-switch-end.ts): guarded switch failure and publication statements.
 - [`provider-switch-repair.ts`](provider-switch-repair.ts): guarded completion or failure of builds ended by older coordinators.
+- [`provider-switch-repair-data.ts`](provider-switch-repair-data.ts): shared repair statements inside progression, member admission, and promotion batches.
 - [`waiting-image-data.ts`](waiting-image-data.ts): queued member selection and atomic execution admission.
 - [`build-switch-admission.ts`](build-switch-admission.ts): admission predicates, switch claim, and first waiting log.

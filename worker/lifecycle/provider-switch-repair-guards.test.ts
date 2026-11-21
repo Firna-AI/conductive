@@ -45,6 +45,9 @@ it.each([
     value: TEST_TIME + 1500,
     target: 'org',
     account: 'boat',
+    state: 'waiting',
+    waitReason: 'suspended',
+    failure: null,
   },
   {
     scenario: 'org deletion',
@@ -52,6 +55,9 @@ it.each([
     value: TEST_TIME + 1500,
     target: 'org',
     account: 'boat',
+    state: 'waiting',
+    waitReason: 'deleted',
+    failure: null,
   },
   {
     scenario: 'another account change',
@@ -59,6 +65,9 @@ it.each([
     value: SECONDARY_IMAGE_ACCOUNT,
     target: 'org',
     account: SECONDARY_IMAGE_ACCOUNT,
+    state: 'failed',
+    waitReason: null,
+    failure: 'script',
   },
   {
     scenario: 'starter suspension',
@@ -66,20 +75,27 @@ it.each([
     value: TEST_TIME + 1500,
     target: 'user',
     account: 'boat',
+    state: 'waiting',
+    waitReason: 'admin',
+    failure: null,
   },
 ] as const)(
-  'does not complete an old publication after $scenario wins',
-  async ({ sql, value, target, account }) => {
+  'ends the unresolved publication with $state after $scenario wins',
+  async ({ sql, value, target, account, state, waitReason, failure }) => {
     const { images, org, user, db, record } = await publishedFixture()
     await db
       .prepare(sql)
       .bind(value, target === 'org' ? org.id : user.id)
       .run()
-    expect(await progressProviderSwitch(images, org.id)).toBe(true)
+    expect(await progressProviderSwitch(images, org.id)).toBe(
+      state === 'waiting',
+    )
     expect(await record.read()).toMatchObject({
-      state: 'building',
+      state,
+      waitReason,
+      buildCompletedAt: TEST_TIME + 1000,
       accountChangedAt: null,
-      failure: null,
+      failure,
     })
     expect(await readOrgProviderAccount(db, org.id)).toBe(account)
   },

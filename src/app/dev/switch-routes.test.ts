@@ -54,6 +54,7 @@ describe('the switch routes of the dev fake', () => {
       },
       repeat: { switch: { state: 'building', requestedAt: now } },
       page: {
+        switchAvailable: true,
         providerSwitch: { state: 'building' },
         running: { builds: 1 },
       },
@@ -78,9 +79,13 @@ describe('the switch routes of the dev fake', () => {
     const failed = await send('DELETE', operatorOrgSwitchPath('org_blu3h4rb'))
     expect({ states, failed: failed.status }).toMatchObject({
       states: [
-        { providerSwitch: { state: 'building' } },
-        { providerSwitch: { state: 'failed', failure: 'provider' } },
+        { switchAvailable: true, providerSwitch: { state: 'building' } },
         {
+          switchAvailable: true,
+          providerSwitch: { state: 'failed', failure: 'provider' },
+        },
+        {
+          switchAvailable: true,
           providerSwitch: {
             state: 'waiting',
             waitReason: 'job',
@@ -88,6 +93,7 @@ describe('the switch routes of the dev fake', () => {
           },
         },
         {
+          switchAvailable: true,
           providerAccount: 'e2b',
           lastProviderSwitch: { state: 'completed', fromAccount: 'boat' },
         },

@@ -23,6 +23,7 @@ import {
   repositoryLocations,
 } from './repository-locations'
 import { waitingImageBuild } from './waiting-image-data'
+import { readOpenProviderSwitch } from './provider-switch-data'
 import { startImageBuild, type ImageRuntime } from './image-builds'
 import type { ImageBuild } from '../../src/shared/org-settings'
 import type { ImageSoftwareArtifact } from './image-software'
@@ -43,7 +44,10 @@ export async function admitImageBuild(
   const { env, dependencies } = runtime
   const providerAccount = await readOrgProviderAccount(env.DB, input.orgId)
   const software = readImageSoftware(input.software)
-  const waitingSwitchId = executing?.operatorSwitchId ?? undefined
+  const providerSwitch = await readOpenProviderSwitch(env.DB, input.orgId)
+  const waitingSwitchId =
+    executing?.operatorSwitchId ??
+    (providerSwitch?.state === 'building' ? providerSwitch.id : undefined)
   const settings = await readImageSettings(env.DB, input.orgId)
   const image = await readOrgImage(env.DB, input.orgId, providerAccount)
   if (input.kind === 'refresh' && !image?.imageName)

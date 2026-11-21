@@ -116,6 +116,7 @@ it('reads org state buckets, builds, named and unnamed members, suspension, and 
   expect(active).toEqual({
     id: 'org/with%id',
     providerAccount: 'boat',
+    switchAvailable: true,
     providerSwitch: null,
     lastProviderSwitch: null,
     workspacesByAccount: [{ id: 'boat', workspaces: 13 }],

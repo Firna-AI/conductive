@@ -61,6 +61,7 @@ export async function operatorSwitchRoute(
     /^\/api\/operator\/orgs\/([^/]+)\/provider-switch$/,
   )
   if (!match || !['POST', 'DELETE'].includes(request.method)) return null
+  if (request.method === 'POST' && env.PROVIDER_SWITCH !== 'on') return null
   if (!isOperator(env, context.user.githubId))
     throw new HttpError(
       403,

@@ -7,7 +7,7 @@ import { testServices } from '../../app/test-kit'
 import { operatorOrgPath } from '../../shared/operator'
 import { operatorProvidersPath } from '../../shared/operator-providers'
 import type { OperatorProviderSwitch } from '../../shared/operator-switch'
-import { byRole } from '../../test-support/dom-queries'
+import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { operatorFixtures } from '../../test-support/fixtures/operator'
@@ -149,6 +149,17 @@ describe('the Provider account box of the page of an org', () => {
       }),
     })
     expect(box()).toBe('Provider account Account boat')
+  })
+
+  test('an unavailable or missing activation keeps the account box and offers no switch or question', async () => {
+    for (const switchAvailable of [false, undefined]) {
+      const { view, box } = await openOrgPage(QUIET_ORG, {
+        change: (org) => ({ ...org, switchAvailable }),
+      })
+      expect(box()).toBe('Provider account Account boat')
+      expect(queryByRole('button', 'Switch account', view)).toBeNull()
+      expect(queryByRole('dialog', 'Switch Kestrel Labs to e2b?')).toBeNull()
+    }
   })
 
   test('accounts that did not load show their failure with Try again in the box, and Try again reads them again', async () => {

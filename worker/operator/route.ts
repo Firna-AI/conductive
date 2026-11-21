@@ -83,6 +83,7 @@ export async function handleOperatorRequest(
       directory[1] === 'orgs' ? 'orgs' : 'users',
       directory[2],
       dependencies.now(),
+      env.PROVIDER_SWITCH === 'on',
     )
   if (!match) return null
   const runtime = workspaceRuntime(env, dependencies)

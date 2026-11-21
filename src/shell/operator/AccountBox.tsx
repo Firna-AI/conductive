@@ -143,10 +143,9 @@ function offerOf(
   item: OrgSwitch | undefined,
   accounts: Loadable<OperatorProvidersResponse>,
 ): Offer {
-  // An older reply without the switch fields comes from a Worker with no
-  // switch, so the box offers none.
   if (org.providerSwitch === undefined) return { kind: 'none' }
   if (switchRuns(item)) return { kind: 'stop' }
+  if (org.switchAvailable !== true) return { kind: 'none' }
   if (accounts.state === 'loading') return { kind: 'none' }
   if (accounts.state === 'failed') {
     return { kind: 'failed', error: accounts.error }
