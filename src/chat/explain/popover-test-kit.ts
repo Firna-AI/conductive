@@ -2,16 +2,38 @@ import type { Session } from '../../shared/generated/Session'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import type { WorkspaceEvent } from '../../shared/events'
 import type { SendMessageResponse } from '../../shared/messages'
+import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
 import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
+import { press, waitFor } from '../../test-support/mount'
 import { anchorOf, explanation, recordEvent } from './explain-test-kit'
 
 // The explanations that the DOM tests of the popover open: their records
-// and their chats in the history of the fake.
+// and their chats in the history of the fake, and the press on a mark that
+// opens a popover.
 
 /** The answer of each explanation of the tests. */
 export const explanationAnswer =
   'When the places proxy finds no address, the fields stay empty and editable.'
+
+/** When the first turn of each explanation of the tests starts. */
+export const explanationStart = FAKE_TIME + 61_000
+
+/**
+ * Opens the popover of an explanation from the button at the end of its
+ * mark, whose label names the state of the explanation, such as "Ready".
+ */
+export async function openFromMark(
+  title: string,
+  state: string,
+): Promise<HTMLElement> {
+  const mark = await waitFor(
+    () => queryByRole('button', `${title}, ${state}`),
+    'the mark of the explanation',
+  )
+  await press(mark)
+  return byRole('dialog', title)
+}
 
 /**
  * An explanation of a quote of the recorded answer, with its written
@@ -25,7 +47,7 @@ export function explained(
 ): { record: Session; prompt: UserMessage; events: WorkspaceEvent[] } {
   const ask = workspaceFixtures().message
   const turn = { sessionId: id, turnId: `turn-${id}` }
-  const startedAt = FAKE_TIME + 61_000
+  const startedAt = explanationStart
   const prompt: UserMessage = {
     ...ask,
     id: `prompt-${id}`,

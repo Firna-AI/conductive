@@ -13,6 +13,7 @@ import { workspaceFixtures } from '../../test-support/fixtures/workspaces'
 import { holdAnimationFrames, mount } from '../../test-support/mount'
 import { storeEvents } from '../secrets/secret-test-kit'
 import type { SubscribeToWorkspace } from '../stream/workspace-stream'
+import type { Clock } from '../ui/clock'
 import { WorkspaceChat } from '../WorkspaceChat'
 
 // The helpers of the DOM tests of Explain: the chat on the fake API with
@@ -71,13 +72,14 @@ export const recordEvent = (session: Session): WorkspaceEvent => ({
  * The chat of the recorded conversation on a computer or a phone, with the
  * shortcut layer whose offers a test reads. `stored` goes into the history
  * of the fake after its recorded events, such as the records of
- * explanations.
+ * explanations. `clock` gives the time of the chat.
  */
 export async function mountChat(
   options: FakeApiOptions & {
     stored?: readonly WorkspaceEvent[]
     viewport?: 'desktop' | 'mobile'
     readOnly?: boolean
+    clock?: Clock
     setup?: (server: FakeApiServer) => void
   } = {},
 ) {
@@ -106,6 +108,7 @@ export async function mountChat(
     element(
       <WorkspaceChat
         client={createApiClient(server.fetch)}
+        clock={options.clock}
         orgId={FAKE_IDS.org}
         readOnly={options.readOnly}
         subscribe={subscribe}

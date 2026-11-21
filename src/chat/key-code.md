@@ -257,6 +257,11 @@ is relative to `src/chat/`, the folder of this guide.
   `browserCopy` is the clipboard, clock, and delay of the browser, for a
   chat whose host gives no `copy`. The controller's `copyTranscript` calls
   it with the chat API of the controller.
+- `ui/clock.ts`: `Clock`, `useNow`, and `ChatClock`, the clock that
+  `ChatBody` gives from its `clock`. Each part that shows a live time, such
+  as the row of a running turn and the start steps, reads `ChatClock` and
+  keeps its own tick while it shows, in a tab and in a popover alike.
+  `ChatBody` ticks only for the session history.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,

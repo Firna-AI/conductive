@@ -48,12 +48,11 @@ function problemOf(state: WorkspaceState | undefined): SandboxProblem | null {
 export function sandboxParts(props: {
   snapshot: ChatSnapshot
   controller: ChatController
-  now: number
   host?: ChatHost
   readOnly?: boolean
 }): ChatHost {
   if (props.host) return props.host
-  const { snapshot, controller, now } = props
+  const { snapshot, controller } = props
   const { workspace } = snapshot
   const problem = problemOf(workspace?.state)
   const readOnly = props.readOnly ?? false
@@ -61,7 +60,7 @@ export function sandboxParts(props: {
   return {
     starting:
       workspace?.state === 'starting' && !readOnly ? (
-        <StartingCard now={now} start={snapshot.start} />
+        <StartingCard start={snapshot.start} />
       ) : null,
     sandboxBar:
       problem && workspace && (problem === 'archived' || !readOnly) ? (

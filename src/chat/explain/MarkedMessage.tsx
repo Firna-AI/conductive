@@ -10,6 +10,7 @@ import { AnchorBox, MarkButton, WholeMarks } from './MarkParts'
 import { uiAttribute } from './mark-layout'
 import { messageAttributes } from './selection'
 import {
+  markRegions,
   marksAt,
   overlapPoint,
   useMarkHighlights,
@@ -30,6 +31,11 @@ export interface MarkedMessageProps {
   bubble?: boolean
   /** The message shows its text, such as an open message line. */
   shown?: boolean
+  /**
+   * A press on the text opens or closes the message, as on a message line.
+   * So a mark that covers the whole message opens only from its state.
+   */
+  folds?: boolean
   children: ReactNode
 }
 
@@ -42,23 +48,23 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
   const shown = props.shown ?? true
   const marks = shown ? (view.marks.get(props.messageId) ?? none) : none
   const layout = useMarks(root, marks, styles.slot)
-  const hover = useMarkHover(layout.placed)
+  const regions = markRegions(layout, props.folds ?? false)
+  const hover = useMarkHover(regions)
   useMarkHighlights(layout, hover.hovered, view.open)
   const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target instanceof Element ? event.target : null
-    if (layout.placed.length === 0 || !target || target.closest(OWN_PRESS))
-      return
+    if (regions.length === 0 || !target || target.closest(OWN_PRESS)) return
     if (document.getSelection()?.isCollapsed === false) return
-    const hits = marksAt(layout.placed, event.clientX, event.clientY)
+    const hits = marksAt(regions, event.clientX, event.clientY)
     if (hits.length === 0) return
     event.preventDefault()
     event.stopPropagation()
     if (hits.length === 1) {
-      view.openPopover(hits[0].mark.id)
+      view.openPopover(hits[0].id)
       return
     }
     view.openMenu(
-      hits.map(({ mark }) => mark.id),
+      hits.map((mark) => mark.id),
       overlapPoint(layout.overlaps, event.clientX, event.clientY),
     )
   }
@@ -69,7 +75,7 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
   const whole = layout.whole.map(newest)
   const placedOpen = layout.placed.find(({ mark }) => mark.id === view.open)
   const wholeOpen = whole.some((mark) => mark.id === view.open)
-  const hovered = layout.placed
+  const hovered = regions
     .filter(({ mark }) => hover.hovered.includes(mark.id))
     .map(({ mark }) => newest(mark))
   const titles = (hovered.length > 0 ? hovered : whole)
@@ -130,8 +136,10 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
  * selection in it. A mark is a highlight of its quote with the state of its
  * explanation at its end, and a press on it opens its popover, or the menu
  * of the marks that overlap there. A mark whose text no longer matches
- * covers the whole message. Outside that chat, such as in a popover, the
- * text shows as it is.
+ * covers the whole message, and a press on any of its text opens it, except
+ * in a message that folds. The press and the pointer find the marks in the
+ * same regions, as `markRegions` says. Outside that chat, such as in a
+ * popover, the text shows as it is.
  */
 export function MarkedMessage(props: MarkedMessageProps) {
   const view = useContext(ExplainContext)

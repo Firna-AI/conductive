@@ -170,6 +170,7 @@ export function parentPage(state: WorkspaceState): string | undefined {
 export function popoverPageOf(state: WorkspaceState): string {
   if (explainReadOnly(state)) return explainPaths.readOnlyPopover
   if (state.sandbox === 'starting') return explainPaths.starting
+  if (state.sandbox === 'stopped') return explainPaths.computerStopped
   switch (askedSession(state)) {
     case 'working':
       return explainPaths.working

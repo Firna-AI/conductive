@@ -48,6 +48,12 @@ says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
 
+After Explain accepts its written prompt, `routeChat` calls
+[`startAcceptedMessage`](../lifecycle/accepted-message-start.ts) outside
+the workspace queue. The reply keeps its acceptance fields and adds the
+same `resume` status as a tool message. A failed resume check keeps HTTP 201
+and the saved prompt. The shared operation applies the normal open checks.
+
 The [secret request feature](../secrets/README.md#browser-answers-and-events)
 adds browser list, answer, and temporary-value removal routes.
 `fetch-workspace-features.ts` composes their handling. `secret-notice.ts`

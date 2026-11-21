@@ -68,6 +68,14 @@ for the screens.
   where marks overlap opens their menu. A press on a link or a button in
   the text stays with it, and so does a press that ends a selection. A
   press on a mark in an open message line keeps the line open.
+- A mark that covers the whole message takes a press on any text of the
+  message, and the pointer shows over the whole message. With another mark
+  under the press, the menu opens. In an open message line, a press on the
+  text still opens or closes the line, as on a line without marks, and only
+  the state of such a mark opens it.
+- The press and the pointer find the marks in the same regions,
+  `markRegions`: the text of each mark that the message shows, and the
+  whole message for each mark that covers it, except in a message line.
 - The state of a mark comes from the record of its explanation and the
   requests that wait: Needs input while a request waits, a spinner while a
   turn runs or waits for the cloud computer, the alert while the newest
@@ -84,6 +92,14 @@ for the screens.
   session, which its tab shows too. A follow-up of a closed explanation
   reopens it first, with no change of the shown tab. A follow-up that the
   Worker puts in a linked session shows that session in the popover.
+- While the cloud computer does not run, the bar of `sandboxParts` takes
+  the place of the follow-up field, as it takes the place of the composer
+  of a tab: the bar of the host in the app, or the chat's own bar with
+  Resume. The notices of the field go with it. After a failed first start,
+  the field stays under the bar. A read-only workspace shows neither.
+- The time of a running turn in the popover moves on by itself, as in a
+  tab, also while the parent session is idle: the row of the turn reads
+  the clock of the chat, `ChatClock`, and keeps its own tick.
 
 ## Tests
 
@@ -94,14 +110,20 @@ for the screens.
   Explain, an answer that the agent still writes, and a read-only
   workspace.
 - `ExplainMarks.dom.test.tsx` draws the marks of each state with the test
-  highlights of `readHighlights`, a mark whose text no longer matches, the
-  menu of overlapping marks, and a mark in an open message line.
+  highlights of `readHighlights`, a mark whose text no longer matches and
+  the press on its text, the menu of overlapping marks, and a mark in an
+  open message line. A press on the text of an open line that a mark
+  covers whole closes the line and opens no popover.
 - `ExplainPopover.dom.test.tsx` opens the popover from a mark without the
   written prompt, gives the focus back on Escape, steers and stops a turn,
   reopens a closed explanation for a follow-up and for Expand, shows a
   read-only popover, and follows a linked session.
+- `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
+  place of the follow-up field, and moves the time of a running
+  explanation on with a fake clock while its parent session is idle.
 - `explain-test-kit.tsx` and `popover-test-kit.ts` hold the chat, the
-  explanations, the selection, and the highlights of the tests.
+  explanations, the selection, the highlights, and the press on a mark
+  that opens a popover.
 
 ### Key code
 
@@ -115,6 +137,8 @@ for the screens.
   marks, the buttons of the states with the mockups' `MarkGlyph`, the
   whole-message mark, and the box of the open mark. `mark-layout.ts` and
   `useMarks.ts` lay the marks out, and `highlights.ts` draws their fill.
+  `useMarks.ts` also gives `markRegions` and `marksAt`, where the press and
+  the pointer find the marks.
 - `ExplainButton.tsx`: Explain by the selection and above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,

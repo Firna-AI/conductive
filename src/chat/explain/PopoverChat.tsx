@@ -41,7 +41,6 @@ export interface PopoverChatProps {
   explanation: boolean
   readOnly: boolean
   mobile: boolean
-  now: number
   host?: ChatHost
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
@@ -67,9 +66,12 @@ function promptOf(state: SessionState): string | null {
  * turn with Try again, the line of a stopped turn, and the steps of the
  * start while the cloud computer starts. It leaves out the written prompt.
  * Its foot holds the notices of the session, the requests that wait for a
- * member, and the follow-up field. A closed explanation names how it opens
- * again over the field. A read-only workspace shows the chat to read, with
- * no field.
+ * member, and the follow-up field. While the cloud computer does not run,
+ * the bar of a tab, such as the bar with Resume, takes the place of the
+ * field, as it takes the place of the composer. After a failed first start,
+ * the field stays under it. A closed explanation names how it opens again
+ * over the field. A read-only workspace shows the chat to read, with no
+ * field.
  */
 export function PopoverChat(props: PopoverChatProps) {
   const { snapshot, controller, sessionId, readOnly } = props
@@ -84,7 +86,10 @@ export function PopoverChat(props: PopoverChatProps) {
     () => state.pending.map((message) => message.id),
     [state.pending],
   )
-  const { starting } = sandboxParts(props)
+  const { starting, sandboxBar, keepsComposer } = sandboxParts(props)
+  // The bar of a sandbox that does not run takes the place of the field, as
+  // in a tab. A read-only workspace shows no field, so no bar either.
+  const down = readOnly || (sandboxBar !== null && !keepsComposer)
   const parts = sessionParts({
     snapshot,
     controller,
@@ -130,14 +135,14 @@ export function PopoverChat(props: PopoverChatProps) {
       {notice ? (
         <ActionNotice notice={notice} onDismiss={controller.dismissNotice} />
       ) : null}
-      {!readOnly && session && block ? (
+      {!down && session && block ? (
         <BlockNotice
           block={block}
           model={modelLabel(snapshot.models, session.choice)}
           onConnectAgent={props.onConnectAgent}
         />
       ) : null}
-      {!readOnly && session && !block && login?.kind === 'linked' ? (
+      {!down && session && !block && login?.kind === 'linked' ? (
         <LinkedSessionNotice
           agent={session.choice.agent}
           owner={login.owner}
@@ -145,8 +150,9 @@ export function PopoverChat(props: PopoverChatProps) {
         />
       ) : null}
       {parts.waiting}
-      {closed && !readOnly ? <ReopenNotice /> : null}
-      {readOnly ? null : (
+      {readOnly ? null : sandboxBar}
+      {closed && !down ? <ReopenNotice /> : null}
+      {down ? null : (
         <FollowUpField
           blocked={block !== null}
           draft={state.draft}
@@ -173,7 +179,6 @@ export function PopoverChat(props: PopoverChatProps) {
       <TranscriptView
         hide={prompt}
         inserts={parts.inserts}
-        now={props.now}
         onOpenDiff={props.onOpenDiff}
         onRetry={(messageId) => void controller.retry(sessionId, messageId)}
         pending={state.pending}

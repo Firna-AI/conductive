@@ -177,7 +177,9 @@ function holdsTable(block: TextBlock): boolean {
  * its words, so it holds no link that the keyboard can reach while nobody
  * sees it. A press on a link in the line opens the link, as on a chip, and
  * the line stays open or closed. The open line shows the marks of the
- * explanations of the message, and Explain by a selection in its text.
+ * explanations of the message, and Explain by a selection in its text. A
+ * press on the text of a mark that covers the whole message still opens or
+ * closes the line, and the state of the mark opens its explanation.
  */
 export function MessageLine(props: {
   text: string
@@ -197,6 +199,7 @@ export function MessageLine(props: {
     <MarkedMessage
       align="middle"
       done={props.done ?? false}
+      folds
       messageId={props.messageId ?? ''}
       shown={open && props.messageId !== undefined}
     >

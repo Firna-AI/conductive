@@ -16,7 +16,6 @@ import {
   ownChange,
   undoMarks,
   type MarkLayout,
-  type PlacedMark,
 } from './mark-layout'
 
 /** What places a mark: its explanation and its anchor, not its state. */
@@ -85,15 +84,53 @@ function contains(rect: DOMRect, x: number, y: number): boolean {
   return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
 }
 
-/** The marks whose text lies under a point of the window. */
+/**
+ * Where a press opens a mark, as the pointer over it shows: the text of a
+ * mark that its message shows, or the whole message for a mark whose text
+ * no longer matches.
+ */
+export type MarkRegion =
+  | { kind: 'text'; mark: Explanation; range: Range }
+  | { kind: 'message'; mark: Explanation }
+
+/**
+ * The regions of the marks of a message, which its press and its pointer
+ * share: the text of each mark that it shows, and the whole message for
+ * each mark that covers it. A press on the text of a message that folds,
+ * such as a message line, opens or closes it. So there a mark that covers
+ * the whole message has no region, and only its state opens it.
+ */
+export function markRegions(layout: MarkLayout, folds: boolean): MarkRegion[] {
+  const text = layout.placed.map(({ mark, range }): MarkRegion => ({
+    kind: 'text',
+    mark,
+    range,
+  }))
+  if (folds) return text
+  const whole = layout.whole.map((mark): MarkRegion => ({
+    kind: 'message',
+    mark,
+  }))
+  return [...text, ...whole]
+}
+
+/**
+ * The marks under a point of the window in their message: each mark whose
+ * text lies there, and each mark that covers the whole message. The press
+ * and the pointer that ask come from the message, so the point lies on it.
+ */
 export function marksAt(
-  placed: readonly PlacedMark[],
+  regions: readonly MarkRegion[],
   x: number,
   y: number,
-): PlacedMark[] {
-  return placed.filter(({ range }) =>
-    [...range.getClientRects()].some((rect) => contains(rect, x, y)),
-  )
+): Explanation[] {
+  return regions
+    .filter(
+      (region) =>
+        region.kind === 'message' ||
+        [...region.range.getClientRects()].some((rect) => contains(rect, x, y)),
+    )
+    .map(({ mark }) => mark)
 }
 
 /**
@@ -115,10 +152,12 @@ export function overlapPoint(
 }
 
 /**
- * The marks under the pointer, which the fill deepens and whose titles the
- * tooltip of the message shows. A press opens their popover or their menu.
+ * The marks under the pointer, from the same regions as a press: the fill
+ * of their text deepens, the pointer shows that a press opens them, and the
+ * tooltip of the message shows their titles. A press opens their popover or
+ * their menu.
  */
-export function useMarkHover(placed: readonly PlacedMark[]) {
+export function useMarkHover(regions: readonly MarkRegion[]) {
   const [hovered, setHovered] = useState<readonly string[]>([])
   const update = (ids: readonly string[]) =>
     setHovered((current) =>
@@ -131,9 +170,7 @@ export function useMarkHover(placed: readonly PlacedMark[]) {
     hovered,
     onPointerMove: (event: PointerEvent<HTMLElement>) =>
       update(
-        marksAt(placed, event.clientX, event.clientY).map(
-          (item) => item.mark.id,
-        ),
+        marksAt(regions, event.clientX, event.clientY).map((mark) => mark.id),
       ),
     onPointerLeave: () => update([]),
   }

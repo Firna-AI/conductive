@@ -17,7 +17,12 @@ import {
   waitFor,
 } from '../../test-support/mount'
 import { mountChat } from './explain-test-kit'
-import { explained, explanationAnswer, followUpReply } from './popover-test-kit'
+import {
+  explained,
+  explanationAnswer,
+  followUpReply,
+  openFromMark,
+} from './popover-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -35,16 +40,6 @@ function writes(server: FakeApiServer): string[] {
     .map((request) => new URL(request.url).pathname)
 }
 
-/** Opens the popover from the button at the end of the mark. */
-async function openFromMark(state: string): Promise<HTMLElement> {
-  const mark = await waitFor(
-    () => queryByRole('button', `${title}, ${state}`),
-    'the mark of the explanation',
-  )
-  await press(mark)
-  return byRole('dialog', title)
-}
-
 /** Types a follow-up in the popover and sends it. */
 async function sendFollowUp(popover: HTMLElement, text: string) {
   await typeText(byRole('textbox', 'Follow-up', popover), text)
@@ -58,7 +53,7 @@ describe('the popover of an explanation', () => {
       'Manual entry still works',
     )
     await mountChat({ stored: events })
-    const popover = await openFromMark('Ready')
+    const popover = await openFromMark(title, 'Ready')
     await waitFor(
       () => queryByText(explanationAnswer, popover),
       'the answer of the explanation',
@@ -100,7 +95,7 @@ describe('the popover of an explanation', () => {
         })
       },
     })
-    const popover = await openFromMark('Working')
+    const popover = await openFromMark(title, 'Working')
     await sendFollowUp(popover, 'How many saved addresses have no postcode?')
     await waitFor(
       () => queryByText('How many saved addresses have no postcode?', popover),
@@ -150,7 +145,7 @@ describe('the popover of an explanation', () => {
         )
       },
     })
-    const popover = await openFromMark('Ready')
+    const popover = await openFromMark(title, 'Ready')
     const notice = queryByText('The tab is closed', popover)
     await sendFollowUp(popover, 'And on a phone?')
     await waitFor(
@@ -193,7 +188,7 @@ describe('the popover of an explanation', () => {
             Response.json({ session: reopened, eventNumber: next(fake) }),
         ),
     })
-    const popover = await openFromMark('Ready')
+    const popover = await openFromMark(title, 'Ready')
     await press(byRole('button', 'Expand', popover))
     const tabs = byLabel('Sessions and files')
     await waitFor(
@@ -214,7 +209,7 @@ describe('the popover of an explanation', () => {
       running: true,
     })
     await mountChat({ stored: events, readOnly: true })
-    const popover = await openFromMark('Ready')
+    const popover = await openFromMark(title, 'Ready')
     await waitFor(
       () => queryByText(explanationAnswer, popover),
       'the answer to read',
@@ -250,7 +245,7 @@ describe('the popover of an explanation', () => {
             }),
         ),
     })
-    const popover = await openFromMark('Ready')
+    const popover = await openFromMark(title, 'Ready')
     await sendFollowUp(popover, 'And on a phone?')
     const back = await waitFor(
       () => queryByRole('button', title, popover),

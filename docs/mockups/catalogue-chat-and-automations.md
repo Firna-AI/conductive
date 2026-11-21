@@ -80,7 +80,11 @@ pages:
     follow-up of Cal that runs. Its `waiting` variant has the request for a
     secret above the follow-up field.
   - `app/chat/explain/popover/failed` has a failed first turn with Try
-    again. Its `stopped` variant has a turn that Cal stopped.
+    again. Its `stopped` variant has a turn that Cal stopped. Its
+    `computer-stopped` variant has the popover of an answered explanation
+    while the cloud computer is stopped: the bar of a stopped tab, with
+    Resume, takes the place of the follow-up field, as it takes the place
+    of the composer.
   - `app/chat/explain/popover/long` has a long answer, which scrolls inside
     the popover at its highest height, and in the sheet of a phone at half
     height. Its `full` variant has the sheet of a phone at full height.

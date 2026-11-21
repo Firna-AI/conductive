@@ -31,5 +31,14 @@ export const explainFailed = defineScreen({
         'Cal pressed Stop while the agent read the form. The popover shows the stopped read and the line "You stopped the agent". The mark shows an ended turn, and a follow-up starts a new turn.',
       props: { explainSession: 'stopped' },
     },
+    {
+      slug: 'computer-stopped',
+      title: 'While the cloud computer is stopped',
+      description:
+        'The cloud computer of the workspace stopped after the answer. Cal pressed the mark, and the popover shows the answer to read. The bar of a stopped tab, "Sandbox stopped" with Resume, takes the place of the follow-up field, as it takes the place of the composer under the parent chat. Resume starts the cloud computer, and the field shows again while it starts. The mark shows an ended turn. On a phone the sheet shows the same bar at its foot.',
+      rationale:
+        'The popover behaves as a tab. A message from a tab does not start a stopped cloud computer, so the bar with Resume takes the place of the composer, and of the follow-up field too. Only a press on Explain starts the cloud computer with its message.',
+      props: { sandbox: 'stopped', explainSession: 'answered' },
+    },
   ],
 })

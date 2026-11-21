@@ -168,6 +168,7 @@ A confirmed missing archived disk uses that batch too.
 
 ### Key Code
 
+- [accepted-message-start.ts](accepted-message-start.ts): applies the open resume policy after acceptance for tool messages, late secret notices, and Explain.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.

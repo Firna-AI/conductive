@@ -8,6 +8,7 @@ import {
   queryAllByRole,
   queryByLabel,
   queryByRole,
+  queryByText,
 } from '../../test-support/dom-queries'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import { asks, request } from '../../test-support/fixtures/secret-requests'
@@ -135,8 +136,9 @@ describe('the marks of explanations', () => {
     })
   })
 
-  it('covers the whole message with a mark whose text no longer matches', async () => {
+  it('covers the whole message with a mark whose text no longer matches, and a press on its text opens the popover', async () => {
     const highlights = readHighlights()
+    const title = 'Explain "The postcode lookup still runs"'
     const stale = explanation(
       'explain-stale',
       anchorOf('The postcode lookup still runs', {
@@ -146,17 +148,19 @@ describe('the marks of explanations', () => {
     )
     await mountChat({ stored: [recordEvent(stale)] })
     await waitFor(
-      () => queryByLabel('Explain "The postcode lookup still runs", Ready'),
+      () => queryByLabel(`${title}, Ready`),
       'the mark of the whole message',
     )
-    const message = textNodeWith(document.body, answer.text).parentElement
-    expect({
-      title: message?.closest('[title]')?.getAttribute('title'),
+    const message = byText(answer.text, byLabel('Chat'))
+    const shown = {
+      title: message.closest('[title]')?.getAttribute('title'),
       highlights: highlights('mark'),
-    }).toEqual({
-      title: 'Explain "The postcode lookup still runs"',
-      highlights: [],
-    })
+    }
+    await press(message)
+    expect({
+      ...shown,
+      popover: queryByRole('dialog', title) !== null,
+    }).toEqual({ title, highlights: [], popover: true })
   })
 
   it('opens a menu of the explanations of overlapping marks in the order that they started', async () => {
@@ -229,5 +233,35 @@ describe('the marks of explanations', () => {
     await press(byText('I will read the form first.'))
     await waitFor(() => queryByLabel(label), 'the mark in the open line')
     expect(closed).toBeNull()
+  })
+
+  it('closes an open message line that a mark covers whole on a press on its text, and opens no popover', async () => {
+    const title = 'Explain "check the tests"'
+    const plan = explanation('explain-plan', {
+      parentSessionId: FAKE_IDS.session,
+      messageId: 'plan-2',
+      quote: 'check the tests',
+      before: 'I will ',
+      after: ' first.',
+    })
+    await mountChat({ stored: [...secondTurn(), recordEvent(plan)] })
+    await press(
+      await waitFor(
+        () => queryByText('1 tool call, 1 message'),
+        'the folded work of the second turn',
+      ),
+    )
+    const line = byText('I will read the form first.')
+    await press(line)
+    await waitFor(
+      () => queryByLabel(`${title}, Ready`),
+      'the mark that covers the open line',
+    )
+    await press(line)
+    expect({
+      open: line.closest('details')?.open,
+      mark: queryByLabel(`${title}, Ready`),
+      popover: queryByRole('dialog', title),
+    }).toEqual({ open: false, mark: null, popover: null })
   })
 })

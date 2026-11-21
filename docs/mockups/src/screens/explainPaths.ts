@@ -12,6 +12,7 @@ export const explainPaths = {
   waiting: 'app/chat/explain/popover/run/waiting',
   failed: 'app/chat/explain/popover/failed',
   stopped: 'app/chat/explain/popover/failed/stopped',
+  computerStopped: 'app/chat/explain/popover/failed/computer-stopped',
   long: 'app/chat/explain/popover/long',
   longFull: 'app/chat/explain/popover/long/full',
   marks: 'app/chat/explain/marks',

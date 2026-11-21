@@ -420,4 +420,7 @@ panel by the mark a popover, because "preview" names port previews.
   of the session, so while a turn runs it steers that turn. The box has no
   model picker and no attach button, and Expand gives the whole composer
   of the tab. A closed explanation shows the notice "The tab is closed"
-  over the box. A read-only workspace shows no box.
+  over the box. While the cloud computer does not run, the bar of a tab,
+  `SandboxBar`, takes the place of the box and of that notice, as it takes
+  the place of the composer: Resume while the cloud computer is stopped.
+  A read-only workspace shows no box and no bar.

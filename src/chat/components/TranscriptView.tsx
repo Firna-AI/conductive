@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useContext, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { PendingMessage } from '../state/chat-snapshot'
@@ -9,6 +9,7 @@ import type {
   RunningTurn,
   Transcript,
 } from '../../shared/transcript/transcript'
+import { ChatClock, useNow } from '../ui/clock'
 import { ToolGroup } from './ToolGroup'
 import { ItemView, UserBubble } from './TranscriptItem'
 import { turnCopy, type ChatReaders } from '../../shared/transcript/turn-words'
@@ -34,15 +35,21 @@ function Row(props: { id: string; children: ReactNode }) {
   )
 }
 
-/** The running turn: thinking until the agent writes, and the time since it started. */
-function WorkingRow(props: { turn: RunningTurn; now: number }) {
+/**
+ * The running turn: thinking until the agent writes, and the time since it
+ * started. The row keeps its own tick from the clock of the chat while it
+ * shows, so the time moves on in each chat that shows the turn, such as the
+ * popover of an explanation over an idle session.
+ */
+function WorkingRow(props: { turn: RunningTurn }) {
   const theme = useSharedUiTheme()
+  const now = useNow(useContext(ChatClock), true)
   return (
     <div className={styles.working}>
       <Spinner color={theme.colors.primary} size={12} />
       {props.turn.thinking ? turnCopy.thinking : turnCopy.working}
       <span className={styles.elapsed}>
-        {formatDuration(props.now - props.turn.startedAt)}
+        {formatDuration(now - props.turn.startedAt)}
       </span>
     </div>
   )
@@ -60,7 +67,6 @@ export function TranscriptView(props: {
   inserts?: readonly TranscriptInsert<ReactNode>[]
   readers: ChatReaders
   pending: readonly PendingMessage[]
-  now: number
   readOnly: boolean
   retrying: boolean
   onRetry: (messageId: string) => void
@@ -135,7 +141,7 @@ export function TranscriptView(props: {
         ))}
       {transcript.turn ? (
         <Row id="working">
-          <WorkingRow now={props.now} turn={transcript.turn} />
+          <WorkingRow turn={transcript.turn} />
         </Row>
       ) : null}
       {props.children}

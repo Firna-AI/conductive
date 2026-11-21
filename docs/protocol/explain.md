@@ -135,8 +135,12 @@ in the design of the chat gives the look of each part.
   of [fast mode](fast-mode.md), as a session that `create_session` starts
   does not.
 - The written prompt is a normal message, so it follows the rules of
-  [Messages](messages-and-attachments.md#messages). It starts the cloud
-  computer when the workspace does not run, as each message does.
+  [Messages](messages-and-attachments.md#messages). It also starts the cloud
+  computer when the workspace does not run, in the same cases and with the
+  same checks as an open, as
+  [Stop and resume](stop-and-resume.md) says. Reason: the press asks for
+  an answer at once. A message of the composer does not start it, because
+  a stopped tab shows the bar with Resume in its place.
 - The agent of an explanation has the tools of each session. So it can
   change files that the parent session also works on, although the written
   prompt asks it to change none.
@@ -161,8 +165,13 @@ in the design of the chat gives the look of each part.
   characters of text on each side. The app cuts a longer quote at its end,
   and the text on each side away from the quote. Reason: a long selection
   still starts an explanation, and a session record stays small.
-- The replies of the [agent tools](session-calls.md) that give a session
-  record also give its anchor.
+- The replies of `create_session` and `send_message` of the
+  [agent tools](session-calls.md) give the whole session record, so they
+  also give its anchor. The replies that list, get, and manage sessions
+  give the facts that [Session calls](session-calls.md) lists, without the
+  anchor. Reason: list entries stay short, and an agent finds the parent
+  link, the message ID, and the quote in the written prompt with
+  `read_session`.
 
 ## The mark
 
@@ -179,6 +188,10 @@ in the design of the chat gives the look of each part.
 - When that text no longer matches, the mark covers the whole message.
   Reason: a message can show in another way after a change of the app, and
   a mark never goes away.
+- A press on the text of a whole-message mark opens its explanation. In a
+  message line that folds, a press on the text still opens or closes the
+  line, as [The work of a turn](chat-and-events.md#the-work-of-a-turn)
+  says, and the state at the end of the mark opens the explanation.
 - A mark stays inside one message. Tool lines and notices have no marks.
 - A mark inside a folded part of a turn shows when the fold opens.
 - The end of a mark shows the state of its explanation:
@@ -239,6 +252,10 @@ in the design of the chat gives the look of each part.
   steers that turn, as each message of a session does.
 - The field has no model picker and no attach button. Reason: Expand gives
   the whole composer of the tab.
+- While the cloud computer does not run, the bar that takes the place of the
+  composer in a tab, such as the bar with Resume, takes the place of the
+  follow-up field. Reason: the popover and the tab of the explanation then
+  behave the same, and a follow-up never waits with no start.
 
 ### Expand and Close
 

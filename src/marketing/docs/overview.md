@@ -82,7 +82,7 @@ An inactive cloud computer can stop.
 Its files and sessions stay.
 Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
-If it stops while the workspace is open, select **Resume**, or open a file or a change.
+If it stops while the workspace is open, select **Resume**, open a file or a change, or select **Explain** on chat text.
 
 Archive stops the computer and keeps its files for 14 days.
 The chat stays read-only in **Archived**, with no tools.

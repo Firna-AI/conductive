@@ -123,7 +123,9 @@ mount the chat.
   archived or shown read-only by the app, it changes the view in the
   browser only, and sends no write.
 - `host` takes the start steps and the sandbox bar that the app draws, as
-  `ChatHost` in `components/SessionChat.tsx` says. The chat places them.
+  `ChatHost` in `components/session-parts.tsx` says. The chat places them.
+  The bar takes the place of the composer of a tab, and of the follow-up
+  field of the popover of an explanation.
   `keepsComposer` keeps the composer under the bar, as after a failed first
   start. Without a host, the chat draws both from its own record of the
   workspace, with the message that the workspace saved for a failed start.
@@ -152,6 +154,11 @@ mount the chat.
   the text of a copy that the clipboard refused for one minute, as
   `copyTranscript` in `transcript-copy.ts` says. Without it, the chat uses
   `browserCopy`: the clipboard of the browser, `Date.now`, and its timers.
+- `clock` gives the time of the durations and the relative times, such as
+  `AppServices.now` in the app. Each live time, such as the time of a
+  running turn, moves on each second while it shows, in each chat that
+  shows it, such as the popover of an explanation. Without it, the chat
+  reads `Date.now`.
 - The chat shows the result of a copy in a toast of `@firna/ui`: through
   the `ToastProvider` of the host, such as the one of the app's
   `ThemeRoot`, else through its own, at the bottom right of the window.

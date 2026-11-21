@@ -13,6 +13,7 @@ import {
 } from '../components/explain/explainCopy'
 import { ExplainPopover } from '../components/explain/ExplainPopover'
 import { FollowUpField } from '../components/explain/FollowUpField'
+import { replacesComposer } from '../components/workspace/sandboxNoticeState'
 import {
   explanationChats,
   promptId,
@@ -29,6 +30,7 @@ import {
 import { explainPaths } from './explainPaths'
 import { viewerOf } from './sessionStarter'
 import { startingLogFor } from './workspaceParts'
+import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 
 const { count } = explanations
@@ -38,9 +40,12 @@ const { count } = explanations
  * written prompt, which still starts the first turn, so the work of that
  * turn folds. While the sandbox starts, the prompt waits in the queue, and
  * the steps of the start show in its place. The follow-up field has Stop
- * while a turn runs. A closed explanation shows its chat, and the notice
- * over the field says that a follow-up reopens it, as Expand does. A
- * read-only workspace shows the chat to read, with no field.
+ * while a turn runs. While the sandbox does not run, the bar of a tab, such
+ * as the bar with Resume, takes the place of the field, as it takes the
+ * place of the composer. A closed explanation shows its chat, and the
+ * notice over the field says that a follow-up reopens it, as Expand does.
+ * That notice goes with the field. A read-only workspace shows the chat to
+ * read, with no field and no bar.
  */
 function popoverChat(
   state: WorkspaceState,
@@ -49,8 +54,10 @@ function popoverChat(
 ): ReactNode {
   const session = askedSession(state)
   const starting = state.sandbox === 'starting'
+  const problem = readOnly ? undefined : sandboxNotice(state)
+  const down = problem !== undefined && replacesComposer(problem)
   const reopens =
-    session === 'closed' && !readOnly ? (
+    session === 'closed' && !readOnly && !down ? (
       <Notice body={reopenBody} icon={RotateCcw} title={reopenTitle} />
     ) : undefined
   const field = readOnly ? null : (
@@ -63,6 +70,7 @@ function popoverChat(
       hide={promptId}
       items={starting ? [queuedPrompt] : explanationChats[session]}
       notice={reopens}
+      problem={problem}
       starting={startingLogFor(state)}
       viewer={viewerOf(state)}
       viewport={viewport}

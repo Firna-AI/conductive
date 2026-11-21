@@ -40,7 +40,6 @@ export interface SessionChatProps {
   snapshot: ChatSnapshot
   controller: ChatController
   mobile: boolean
-  now: number
   onOpenDiff?: (path: string) => void
   onConnectAgent?: (agent: Agent) => void
   host?: ChatHost
@@ -80,7 +79,7 @@ function useDraftFiles(controller: ChatController, draftId: string) {
  * on a phone.
  */
 export function SessionChat(props: SessionChatProps) {
-  const { snapshot, controller, now } = props
+  const { snapshot, controller } = props
   const { workspace } = snapshot
   const id = snapshot.activeSessionId
   const session = tabSessions(snapshot).find((item) => item.id === id) ?? null
@@ -230,7 +229,6 @@ export function SessionChat(props: SessionChatProps) {
         <ExplainContext.Provider value={explain.view}>
           <TranscriptView
             inserts={parts.inserts}
-            now={now}
             onOpenDiff={props.onOpenDiff}
             onRetry={(messageId) => id && void controller.retry(id, messageId)}
             pending={state.pending}
@@ -249,7 +247,6 @@ export function SessionChat(props: SessionChatProps) {
           controller,
           readOnly,
           mobile: props.mobile,
-          now,
           host: props.host,
           onOpenDiff: props.onOpenDiff,
           onConnectAgent: props.onConnectAgent,
