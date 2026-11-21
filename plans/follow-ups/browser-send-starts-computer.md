@@ -1,10 +1,10 @@
 # Browser sends do not share one start rule
 
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Fix after merge.
 - **Added:** 2026-11-21, from review finding 1 of `calummoore/highlight-and-prompt-mvmd`, and its problem outside the scope.
 - **Location:** `worker/chat/router.ts` (the `SENT_MESSAGE` list of browser sends), `worker/chat/explain-session.ts`, `src/chat/components/transcript-inputs.ts`, and `docs/protocol/stop-and-resume.md`.
-- **Reason:** The wider fix adds a start of the cloud computer for Try again in a stopped tab, which the rules in force on `main` do not list.
+- **Reason:** The user chose B on 2026-11-21 and asked to keep it as follow-up work, outside the Explain branch.
 
 - **Terms:**
   - **Cloud computer:** the sandbox of a workspace. It stops after 30 minutes without activity.
@@ -25,4 +25,5 @@
 - **Wider fix:** B. One place applies the start rule to every browser send.
 - **Previous examples:** Explain first missed the start, in review finding 1 of `calummoore/highlight-and-prompt-mvmd`.
 - **Recommendation:** B. A press that asks the agent for work should start the computer, as Explain does.
-- **Action:** ask the user, because B adds a start for Try again that the start rule in force does not list.
+- **Decision:** The user chose B on 2026-11-21. The branch that applies it adds Try again to the start list of `docs/protocol/stop-and-resume.md` and checks the guides and the legal pages for sentences that restate the start rule.
+- **Action:** fix after merge, apply B.
