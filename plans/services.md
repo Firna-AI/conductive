@@ -225,6 +225,19 @@ These are the UI implementor's calls of 20 November 2026, checked by the orchest
 - Draw no menu or Stop question without the control right. Keep the read-only header state as plain text. Reason: the mockups must follow the same access rule at both surfaces.
 - Use the shared header Restart copy to name ordinary agent commands separately from services and terminal commands. Keep its confirmation title. Reason: the existing software restart preserves service units.
 
+### App implementation preparation calls
+
+These are the orchestrator's calls of 21 November 2026. They apply the existing service contract and the app's current read and failure patterns.
+
+- Share pure service word builders between the app and the mockups when their words match. Use primitive arguments or generated types directly. Keep the rendered mockups unchanged. Reason: shared copy has one owner without converting runtime data to a mockup model.
+- Show no success toast for Unchanged or Computer stopped. Refresh actual state for Unchanged. Use the existing stopped-computer view after stop. Use the approved failed-log view and explicit reload for stale, missing, or unavailable log reads. Reason: these are existing outcomes and presentations.
+- Show the existing read-failure notice and Try again after a first failed catalogue read. Keep ordinary servers and Other port usable. A later failed refresh keeps the last complete catalogue from the current running period, without a new notice. Deduplicate ports against the rows actually shown. Reset the list when that period ends. Reason: the existing tool failure requirement and app-wide read rule settle these cases.
+- Add Milestone 5b for the first-read failure mockup gap before app implementation. Draw one new child page with phone and desktop variants. Reuse the registered failure notice. Add no identical retained-list screen. Reason: the refresh-failure presentation already matches the existing list, while the first-read failure needs a visual spec.
+- Reuse the existing active-wait scheduling value, app delay, visibility, and focus seams while a surface watches the catalogue. Stop periodic reads when no surface uses them. Reason: a service without a port still needs current state, and catalogue reads add no activity.
+- Use the existing failure toast for a Worker refusal. Use Unconfirmed for a lost, invalid, or mismatched control reply, then refresh actual state. Never resend a control. Keep pending state and callbacks bound to the original boot, service, and generation. Keep submitted controls alive across view close. Reason: this follows the approved lost-reply and observed-generation contract.
+
+Preparation evidence: `.context/services/ui-root-calls.md` and `.context/services/mockup-gap-preparation.md`.
+
 ### Guidance scheduling call
 
 On 21 November 2026, the orchestrator made Milestone 7 depend on the checked native command in Milestone 4. It can run while the Worker milestone finishes. Reason: its service guidance uses only the approved lifecycle and the proven local calls. It needs no private Worker transport or app API. This changes scheduling only. The command, guidance, and note still ship in one sandbox software release.
@@ -363,11 +376,25 @@ The non-UI implementor connects the checked native manager to the checked Worker
 - [ ] Extend the existing Rust/TypeScript budget-parity test with the approved app log line and byte bounds from the Worker module.
 - [ ] Update actual runner entry-point docs. Use the docs implementor to update the architecture boundary when both components exist.
 
+## Milestone 5b: Catalogue read failure mockup
+
+Tags: mockup
+
+Depends on: 5a
+
+The UI implementor fills the first catalogue-read failure gap found during app preparation. It uses the existing app read-failure pattern before Milestone 6 implements it.
+
+- [ ] Draw the first failed catalogue read with the shared failure notice, its message, and Try again. Keep ordinary servers and Other port usable.
+- [ ] Add one linked child page with phone and desktop variants. Keep unsupported, empty, and failed-read states distinct. Preserve the existing service screens and page screen counts.
+- [ ] Update the direct mockup catalogue and design documentation. Check each changed Markdown link.
+- [ ] Run the mockup checks. Open the changed light and dark views in the browser and save PNG screenshots under `.context/services/`.
+- [ ] Check the design and update the plan for each actual problem before starting the app implementation.
+
 ## Milestone 6: App service controls
 
 Tags: ui
 
-Depends on: 1 and 5a
+Depends on: 1, 5a, and 5b
 
 The UI implementor builds the approved mockups against real runner data.
 
