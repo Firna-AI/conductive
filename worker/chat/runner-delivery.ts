@@ -9,15 +9,15 @@ import {
 } from './ordered-dispatch'
 import { gatewayRunnerCommand } from './runner-gateway-command'
 import type { ChatStore } from './store'
+import type { ActiveRunner, ChatDependencies } from './types'
 import type {
-  ActiveRunner,
-  ChatDependencies,
   PendingCommand,
   PreparedCommand,
   ResolvedCommand,
-} from './types'
+} from './command-types'
 import { AttachmentPreparation } from './attachment-delivery'
 import { RunnerCommandPreparation } from './runner-command-preparation'
+import { queueCapabilityNotices } from './capability-notices'
 
 export class RunnerDelivery {
   private readonly preparations: AttachmentPreparation
@@ -56,6 +56,13 @@ export class RunnerDelivery {
     detach: () => void,
   ): Promise<void> {
     if (!active.ready) return
+    if (active.capabilityNotices === true)
+      await this.store.change(
+        active.workspace.id,
+        (view) =>
+          queueCapabilityNotices(view, active, this.dependencies.randomId),
+        this.publish,
+      )
     while (await this.flushPending(active, isCurrent, detach)) {
       if (!isCurrent()) return
     }
@@ -115,7 +122,7 @@ export class RunnerDelivery {
       if (state !== 'send') return state
     }
     await this.store.reportTurnEnds()
-    const outbound: ResolvedCommand =
+    let outbound: ResolvedCommand =
       checked.type === 'turn' || checked.type === 'message'
         ? {
             ...checked,
@@ -157,6 +164,20 @@ export class RunnerDelivery {
           publish,
         )
       return 'skip'
+    }
+    if (outbound.type === 'turn') {
+      try {
+        outbound = await this.commands.prepareCapabilities(active, outbound)
+      } catch (error) {
+        await this.dependencies.turnDispatchFailed(
+          active.workspace.id,
+          outbound.turnId,
+          publish,
+        )
+        if (!(error instanceof RunnerAccessDenied)) throw error
+        detach()
+        return 'skip'
+      }
     }
     const beganTurn = await this.dispatch.begin(
       active.workspace.id,

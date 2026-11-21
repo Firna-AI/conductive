@@ -4,10 +4,7 @@ import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import type { Attachment } from '../../src/shared/generated/Attachment'
 import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachment'
-import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
 import type { RunnerCapabilities } from '../../src/shared/generated/RunnerCapabilities'
-import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
-import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
@@ -30,9 +27,9 @@ import type { FilteredRunnerOutput } from './runner-output'
 import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
-import type { AgentLogin } from './login-kind'
 import type { RepositoryMoveState } from './runner-repository-move'
 import type { RunnerRepositoryRecord } from './branch-data'
+import type { AgentLogin } from './login-kind'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -71,6 +68,7 @@ export interface StoredTurn {
   error?: { code: string; message: string }
   /** Retained dispatch evidence. Older records may have no evidence. */
   started?: boolean
+  runnerStarted?: boolean
   startedAt?: number
   /** Fast was requested but absent from the runner's started choice. */
   olderRunner?: true
@@ -97,33 +95,6 @@ export interface StoredAttachment {
   relativePath: string
 }
 
-export type PreparedMessageCommand = (
-  | Omit<Extract<RunnerCommand, { type: 'turn' }>, 'attachments' | 'credential'>
-  | Omit<Extract<RunnerCommand, { type: 'message' }>, 'attachments'>
-) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
-
-export type PreparedCommand =
-  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
-
-/** Credentials enter only the live command, after this record is read. */
-export type PendingCommand =
-  | {
-      type: 'turn' | 'message'
-      commandId: string
-      sessionId: string
-      turnId: string
-      messageId: string
-      attachments: readonly StoredAttachment[]
-    }
-  | RunnerInterrupt
-  | RunnerChangeModel
-
-type ResolveCommand<Command> = Command extends PreparedMessageCommand
-  ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
-  : Command
-
-export type ResolvedCommand = ResolveCommand<PreparedCommand>
-
 export interface RunnerPeer {
   send(message: WorkspaceToRunner): void
   close(): void
@@ -142,6 +113,7 @@ export interface ActiveRunner {
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean
+  capabilityNotices?: boolean
   ready: boolean
 }
 

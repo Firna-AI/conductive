@@ -14,6 +14,13 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  capability_notes_failed: 'Capability notes could not be kept.',
+  capability_notes_unavailable:
+    'The workspace object is unavailable. The capability route uses the direct save path.',
+  capability_mac_access_cleanup_failed:
+    'Mac access changed, but its pending requests could not be closed.',
+  capability_notes_limited:
+    'A session reached 50 waiting capability notes. Its oldest notes were dropped.',
   provider_accounts_invalid:
     'Some sandbox provider accounts are not configured correctly.',
   provider_assignment_weights_recovered:

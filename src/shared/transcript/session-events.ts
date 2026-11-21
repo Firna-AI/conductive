@@ -52,6 +52,7 @@ export function asSessionEvent(
     case 'turn.completed':
     case 'turn.failed':
     case 'workspace.continued':
+    case 'capabilities.changed':
     case 'workspace.repository-changed':
       return event
     default:

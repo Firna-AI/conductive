@@ -27,8 +27,17 @@ import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 import { retryAutomationReport } from './chat/automation-run'
+import {
+  writeWorkspaceCapabilities,
+  type WorkspaceCapabilitiesWrite,
+} from './secrets/workspace-capabilities-write'
 
 export class Workspace extends AgentSessionWorkspace {
+  changeCapabilities(input: WorkspaceCapabilitiesWrite) {
+    return featureResult(() =>
+      writeWorkspaceCapabilities(this.chat, this.env, input),
+    )
+  }
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver

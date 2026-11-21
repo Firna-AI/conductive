@@ -12,9 +12,16 @@ import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
 import { foldTurn, markSent, replaceAt } from './turn-events'
 import { foldMarkedLate, foldRecord } from './turn-records'
+import type { CapabilityChangeNote } from '../capability-change'
 
 /** One part of a chat transcript, in the order that the chat shows it. */
 export type TranscriptItem =
+  | {
+      kind: 'capabilities-changed'
+      id: string
+      member: MessageSender
+      changes: CapabilityChangeNote['changes']
+    }
   | { kind: 'user'; id: string; message: UserMessage }
   | { kind: 'agent'; id: string; turnId: string; text: string }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }
@@ -171,6 +178,13 @@ export function foldEvent(
   late = false,
 ): Transcript {
   switch (event.type) {
+    case 'capabilities.changed':
+      return withNote(transcript, {
+        kind: 'capabilities-changed',
+        id: `capabilities-changed:${event.noteId}`,
+        member: event.member,
+        changes: event.changes,
+      })
     case 'workspace.continued':
       return foldContinued(transcript, event)
     case 'workspace.repository-changed':

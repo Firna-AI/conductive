@@ -62,3 +62,17 @@ it('refuses a saved repository folder that is not text', async () => {
     'The saved runner connection is invalid.',
   )
 })
+
+it('keeps the capability notice announcement across a wake and defaults older records to no support', async () => {
+  const storage = memory()
+  const store = new RunnerConnectionStore(storage)
+  const capable = await store.replace({
+    ...connection,
+    capabilityNotices: true,
+  })
+  expect(await store.current()).toMatchObject({ capabilityNotices: true })
+  await store.save({ ...capable, capabilityNotices: false }, capable.generation)
+  expect(await store.current()).not.toHaveProperty('capabilityNotices')
+  await store.replace(connection)
+  expect(await store.current()).not.toHaveProperty('capabilityNotices')
+})

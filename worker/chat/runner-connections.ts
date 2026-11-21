@@ -131,6 +131,7 @@ export class RunnerConnections {
       loginKinds: record.loginKinds,
       repositoryFolder: record.repositoryFolder,
       fileServer: record.fileServer,
+      capabilityNotices: record.capabilityNotices,
       ready: record.ready,
       peer: new AuthenticatedRunner(
         source,
@@ -238,6 +239,7 @@ export class RunnerConnections {
     record.loginKinds = active.loginKinds
     record.repositoryFolder = active.repositoryFolder
     record.fileServer = active.fileServer
+    record.capabilityNotices = active.capabilityNotices
     record.ready = active.ready
     if (this.retained) await this.saved?.save(record, record.generation)
   }

@@ -98,6 +98,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         choice: choice(input.choice),
         startedAt: number(input.startedAt),
         messageIds: strings(input.messageIds),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     case 'turn.thinking':
       return { ...context, type: input.type }
@@ -115,6 +118,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         messageId: identifier(input.messageId),
         text: string(input.text),
         userMessageIds: strings(input.userMessageIds),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     case 'tool.updated':
       return { ...context, type: input.type, tool: tool(input.tool) }
@@ -141,6 +147,9 @@ export function parseAgentEvent(value: unknown): AgentChatEvent {
         ...(input.filesUnavailable === true ? { filesUnavailable: true } : {}),
         omittedFileCount: counter(input.omittedFileCount),
         userMessageIds: strings(input.userMessageIds),
+        ...(input.noticeIds === undefined
+          ? {}
+          : { noticeIds: strings(input.noticeIds) }),
       }
     }
     case 'turn.failed': {

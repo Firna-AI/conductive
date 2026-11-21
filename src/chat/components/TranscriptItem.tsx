@@ -123,6 +123,8 @@ export function ItemView(props: {
       )
     case 'lost':
       return <LostEventLine marker={item.marker} />
+    case 'capabilities-changed':
+      return null
     case 'continued':
       return (
         <ContinuedLine

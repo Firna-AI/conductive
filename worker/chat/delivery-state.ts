@@ -1,7 +1,8 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { markSent } from './messages'
 import type { ChatStore } from './store'
-import type { ResolvedCommand, ChatDependencies, PendingCommand } from './types'
+import type { ChatDependencies } from './types'
+import type { ResolvedCommand, PendingCommand } from './command-types'
 
 /** A login check precedes this commit. The transport send follows it. */
 export class DeliveryState {

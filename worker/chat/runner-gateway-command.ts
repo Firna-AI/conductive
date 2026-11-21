@@ -6,7 +6,7 @@ import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/ch
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import type { AgentLogin } from './login-kind'
 import { parseCodexTokens, parseCodexIdentity } from '../codex-auth/tokens'
-import type { ResolvedCommand } from './types'
+import type { ResolvedCommand } from './command-types'
 
 export function compatibilityFailure(login: AgentLogin): string {
   if (login.agent === 'codex' && login.kind === 'token')

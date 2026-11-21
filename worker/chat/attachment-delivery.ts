@@ -11,12 +11,8 @@ import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import { hash } from '../security/crypto'
 import type { ChatStore } from './store'
 import { TurnCompletion } from './turn-completion'
-import type {
-  ActiveRunner,
-  ChatDependencies,
-  PendingCommand,
-  PreparedMessageCommand,
-} from './types'
+import type { ActiveRunner, ChatDependencies } from './types'
+import type { PendingCommand, PreparedMessageCommand } from './command-types'
 
 type MessageCommand = PreparedMessageCommand
 interface Preparation {

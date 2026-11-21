@@ -331,23 +331,23 @@ Depends on: 3
 
 Depends on: 4, 5
 
-- [ ] Add the shared words function in `src/shared/`, with its tests.
+- [x] Add the shared words function in `src/shared/`, with its tests.
       Build it on the words of
       `docs/mockups/src/components/chat/capabilityChangeCopy.ts`, as the
       app reads `secretRunCopy.ts`, so that the chat, the agent, and the
       mockups keep one text.
-- [ ] Add the `capabilities.changed` note to the shared chat event types
+- [x] Add the `capabilities.changed` note to the shared chat event types
       and the transcript, beside `workspace.continued`.
-- [ ] Make the writes in `worker/secrets/capabilities-writes.ts` and the
+- [x] Make the writes in `worker/secrets/capabilities-writes.ts` and the
       Remove of a value report what they changed. Compute the difference
       of the facts of each session.
-- [ ] Keep the waiting lines of each session in the chat Durable Object.
+- [x] Keep the waiting lines of each session in the chat Durable Object.
       Send them as a `notice` to a running turn, or before the next turn
       command. Put each line that the runner did not take back in order.
-- [ ] Gate the `notice` command on the hello flag.
-- [ ] Return the saved capabilities and log a warning when the Durable
+- [x] Gate the `notice` command on the hello flag.
+- [x] Return the saved capabilities and log a warning when the Durable
       Object call fails.
-- [ ] Add Worker tests: a running turn, an idle session and its next turn,
+- [x] Add Worker tests: a running turn, an idle session and its next turn,
       a session that has not started, an edit with no change, a removal
       that another grant covers, several sessions, a closed session, an
       older runner, a value for this workspace from an answer, and a

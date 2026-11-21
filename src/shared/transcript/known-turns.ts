@@ -112,6 +112,7 @@ export function turnOf(
     case 'lost':
       return item.marker.turnId
     case 'continued':
+    case 'capabilities-changed':
     case 'repository-changed':
       return null
     default:

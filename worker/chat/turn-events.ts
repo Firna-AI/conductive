@@ -95,6 +95,28 @@ export async function prepareAgentEvent(
       olderRunner = true
   }
   return async () => {
+    if ('noticeIds' in event && event.noticeIds) {
+      await transaction.capabilityNotes.acknowledge(
+        session.id,
+        turn.id,
+        event.noticeIds,
+      )
+      for (const command of await transaction.pending()) {
+        if (
+          command.type === 'notice' &&
+          command.sessionId === session.id &&
+          command.turnId === turn.id
+        ) {
+          const waiting = await transaction.capabilityNotes.waiting(session.id)
+          if (
+            !command.notices.some((notice) =>
+              waiting.some((note) => note.id === notice.id),
+            )
+          )
+            await transaction.removeCommand(command.commandId)
+        }
+      }
+    }
     if (target.ended) {
       if (
         turn.state === 'failed' &&
@@ -114,6 +136,7 @@ export async function prepareAgentEvent(
     }
     if (olderRunner) turn.olderRunner = true
     turn.started = true
+    turn.runnerStarted = true
     if (event.type === 'turn.started') turn.startedAt = event.startedAt
     if (event.type === 'turn.started' && turn.state !== 'stopping')
       turn.state = 'running'
