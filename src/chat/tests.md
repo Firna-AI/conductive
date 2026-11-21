@@ -180,6 +180,21 @@ tab during the close, the tab shows again with the notice
 user chose during the close stays selected. With the Preview tab, the
 failed close also keeps the session of the chat. In both cases, the notice
 goes to the chat, with no session.
+`state/replay-navigation.test.ts` sends pages of the stored history of the
+stream. Pages that close the shown session and then open it again keep the
+saved order and the shown tab. A later save and a new start keep them too.
+A dropped connection keeps the tabs until the next final page. An empty
+final page then closes the tab of a session that stays closed. A close and
+a reopen of the user apply at once. A failed close puts its tab back, keeps
+the tab that the user chose, and shows its notice.
+`state/replay-history.test.ts` checks history loads, a model change, and a
+read-only chat during a replay. While the history of a selected session
+loads beside the pages, its newer title and model show at once, and Send
+sends that model. A failed earlier page of the first history load lets the
+later session list set the tabs. The new session of a model change shows
+from its first page, and its draft moves once. A read-only chat keeps its
+local tabs and writes nothing. `state/replay-test-kit.ts` gives both files
+a chat with two open sessions, their saved view, and the pages.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
