@@ -104,7 +104,9 @@ the folder of this page.
   card keeps the Tab order of its controls.
 - [dialog-scroll-keyboard.spec.ts](../../desktop/tests/dialog-scroll-keyboard.spec.ts):
   the check that the keyboard reaches the whole Change repository work
-  list at the 480 px minimum height of the Mac window. Run
+  list at the 480 px minimum height of the Mac window. A second test
+  checks that the question of a pending member removal keeps the focus on
+  Cancel after repeated Escape. Run
   `npm --prefix desktop run test:electron -- tests/dialog-scroll-keyboard.spec.ts`.
   The suite runs only Electron, so check a change in Safari by hand.
 - `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the

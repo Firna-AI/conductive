@@ -1,6 +1,5 @@
 import {
   useContext,
-  useEffect,
   useId,
   useRef,
   type KeyboardEvent,
@@ -86,16 +85,6 @@ function DesktopDialog(
     props.onCancel,
     props.busy,
   )
-  // Chromium and Safari give the first focus of `showModal()` to the first
-  // element that can take it, also one that only the code focuses, such as
-  // the body. Keep the first focus on the first control: Cancel, or the
-  // first field of a form. A control with `data-autofocus` has it already.
-  useEffect(() => {
-    const dialog = ref.current
-    if (dialog && document.activeElement === body.current) {
-      controlsOf(dialog)[0]?.focus()
-    }
-  }, [])
   // The browser leaves the body out of Tab, as the code alone focuses it.
   // So while it scrolls text, the question moves each Tab itself.
   const tabThroughBody = (event: KeyboardEvent<HTMLDialogElement>) => {
@@ -117,8 +106,13 @@ function DesktopDialog(
           {props.title}
         </h2>
         <DialogClose value={dismiss}>
+          {/*
+           * Only the code focuses the body, so `useModalDialog` keeps the
+           * first focus of the browser off it.
+           */}
           <div
             className={`${styles.body} ${card.body} ${ui.focusable}`}
+            data-skip-first-focus
             ref={body}
             tabIndex={-1}
           >
