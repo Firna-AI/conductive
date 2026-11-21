@@ -220,6 +220,20 @@ Design calls from the docs, by Claude on 2026-11-20:
   already gives such names to other agents. A name rule for such values
   was left out, because it is a new validation, and only the user adds one.
 
+Design calls from the app, by Claude on 2026-11-21:
+
+- A note with a change of an unknown kind is skipped as a whole, and its
+  event number still moves the cursor. Reason: a part of a note would
+  misstate what the agent got.
+- The reader accepts what the type allows, also an empty list of names.
+  Reason: a stricter check is a new validation, and the Worker never sends
+  an empty list.
+- "You" comes from the same rule as the notes of Continue and of a
+  repository change. Reason: the app keeps one rule for "You".
+- The dev fake seeds the notes with the address option `?capabilities=`,
+  in the pattern of `?secrets=`. It does not compute notes on each write.
+  Reason: a copy of the Worker's difference in the fake could drift.
+
 Contract owners:
 
 - [Capabilities: what agents learn](../docs/protocol/capabilities-agents.md),
@@ -359,11 +373,11 @@ Tags: ui
 
 Depends on: 1, 6
 
-- [ ] Read the `capabilities.changed` note in `src/chat/api/` and keep it in
+- [x] Read the `capabilities.changed` note in `src/chat/api/` and keep it in
       the chat state.
-- [ ] Show it with the mockup component in the chat of its session, at its
+- [x] Show it with the mockup component in the chat of its session, at its
       time. Show it in the session copy and in `read_session` too.
-- [ ] Add app tests, and check the note in a browser against the mockup.
+- [x] Add app tests, and check the note in a browser against the mockup.
       Save a screenshot under `.context/capability-prompts/`.
 
 ## Milestone 8: Verification, commit, review, and pull request

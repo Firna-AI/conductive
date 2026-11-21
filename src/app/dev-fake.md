@@ -226,6 +226,16 @@ option overrides this default, including queued chats that show no spinner.
   waits or is late gives the workspace the state `input`, so the header
   says Needs input. The last answer gives back the state from before
   (`followOpenRequests` of `dev/secret-store.ts`).
+- `?capabilities=<state>` puts the notes of changes of the capabilities
+  into the session of `checkout-autocomplete`, from
+  `dev/capability-note-seed.ts`, as the pages of `app/capabilities/changed`
+  of the mockups draw them. `changed` has the pre-approval of VERCEL_TOKEN
+  by Priya, `mac` has Mac access turned on, `removed` has two notes of two
+  members, and `several` has one note with three changes. The notes follow
+  the recorded chat: in its running turn with `conversation=running`, and
+  after its end otherwise. With `role=member`, the reader is Priya, so her
+  notes say "You". The notes change no capability of the workspace, so the
+  Capabilities control keeps its seeded state.
 
 The development fake keeps each org's workspace number counter.
 A create gets the next number and a web link on the fake API origin.

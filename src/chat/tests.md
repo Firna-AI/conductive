@@ -22,6 +22,10 @@ a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/CapabilityChangeNote.test.tsx` checks the note of a change of
+the capabilities in the same way. It also checks that the stream reader
+skips a note that it cannot read, such as one with a change of an unknown
+kind, and keeps its event number.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that

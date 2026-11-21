@@ -283,6 +283,9 @@ is relative to `src/chat/`, the folder of this guide.
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-capability-change.ts` reads the note of a change of the
+  capabilities. A change of an unknown kind makes the whole note
+  unreadable, so the chat skips it.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the

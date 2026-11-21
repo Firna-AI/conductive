@@ -22,6 +22,7 @@ import { attachmentFileRoutes } from './attachment-files'
 import { attachmentMessageFetch } from './attachment-message-routes'
 import { createBackend, guardScope } from './backend'
 import { buildRoutes } from './build-routes'
+import { seedCapabilityNotes } from './capability-note-seed'
 import { createRoutes } from './create-routes'
 import { feedbackRoutes } from './feedback-routes'
 import { APP_VERSION } from '../version'
@@ -67,6 +68,7 @@ export function createFakeServices(search: string): AppServices {
   const newId = () => crypto.randomUUID()
   const backend = createBackend(state, server.events, now, newId)
   seedSecretRequests(backend, server.events, options.secrets)
+  seedCapabilityNotes(server.events, options.capabilities)
   const signedOut: Route[] = options.signedOut
     ? [
         {

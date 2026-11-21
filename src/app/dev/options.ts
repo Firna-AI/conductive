@@ -6,6 +6,10 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { WORKSPACE_STATES } from '../api/read-workspaces'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import {
+  CAPABILITY_SCENARIOS,
+  type CapabilityScenario,
+} from './capability-note-seed'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
@@ -196,6 +200,8 @@ export interface DevOptions {
   providerSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
+  /** The notes of capability changes in `checkout-autocomplete`, or null. */
+  capabilities: CapabilityScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -253,6 +259,7 @@ export function readDevOptions(search: string): DevOptions {
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
+    capabilities: pick(params, 'capabilities', CAPABILITY_SCENARIOS) ?? null,
   }
 }
 

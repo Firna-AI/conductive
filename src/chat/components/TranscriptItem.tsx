@@ -1,5 +1,6 @@
 import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/generated/UserMessage'
+import { CapabilityChangeLine } from '../../../docs/mockups/src/components/chat/CapabilityChangeLine'
 import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
 import { RepositoryChangedLine } from '../../../docs/mockups/src/components/chat/RepositoryChangedLine'
 import {
@@ -124,7 +125,12 @@ export function ItemView(props: {
     case 'lost':
       return <LostEventLine marker={item.marker} />
     case 'capabilities-changed':
-      return null
+      return (
+        <CapabilityChangeLine
+          changes={item.changes}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
     case 'continued':
       return (
         <ContinuedLine

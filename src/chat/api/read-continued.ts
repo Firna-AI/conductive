@@ -2,7 +2,8 @@ import type { ChatEvent } from '../../shared/chat-events'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { record, text } from './json'
 
-function readMember(value: unknown): MessageSender {
+/** The member whom a note of the app names, as the note keeps it. */
+export function readMember(value: unknown): MessageSender {
   const member = record(value, 'member')
   return {
     id: text(member.id),
