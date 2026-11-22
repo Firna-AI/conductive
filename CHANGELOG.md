@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.33.0](https://github.com/Firna-AI/conductive/compare/v0.32.0...v0.33.0) (2026-11-22)
+
+
+### Features
+
+* **skills:** share org skills with repository trust ([#426](https://github.com/Firna-AI/conductive/issues/426)) ([d3c1c5f](https://github.com/Firna-AI/conductive/commit/d3c1c5f178fe9b246ab53eab51a4b5d0f13e8c48))
+
 ## [0.32.0](https://github.com/Firna-AI/conductive/compare/v0.31.0...v0.32.0) (2026-11-22)
 
 
