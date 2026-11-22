@@ -3,7 +3,8 @@
 This guide belongs to [Web app: data and composition](README.md). It gives
 the rules of the agent logins of the account in the web app: the ChatGPT
 sign-in, the logins that can run turns, the default login of each org and
-agent, and the reads of the logins.
+agent, and the reads of the account. These reads also keep the other
+fields of the account current.
 [The default login](../../docs/protocol/org-logins.md#the-default-login)
 states the requirements. [Account and agent screens](account-screens.md)
 says what the screens show.
@@ -35,19 +36,19 @@ says what the screens show.
   then decides alone. `inOrgs` keeps the default logins of the orgs that
   the org list shows, so a leave or a delete shows at once.
 - After the app opens, `AccountLoginReads` in `account-login-reads.ts` is
-  the one owner of the reads of the logins and the default logins of the
-  account. The start of the app reads the account in `openApp` of
-  `app-model.ts`. Each later read goes through the owner: an open of the
-  agent list, a return to the visible page, the timer, a change of a
-  login, an org that joins the orgs of the person, a newer login state
-  that a view reports, and a notice of a missing login that shows. The
-  next rules give each of them. The Worker gives the own logins only in
-  `GET /api/account`, so each read is a read of the whole account. A read
-  takes only the logins and the default logins of that answer, in the
-  order that `AgentLogins` keeps, as a rule below says. A failed read
-  keeps what shows. A read across a new app start or a sign-out changes
-  nothing. Such a start or a sign-out also forgets the login states and
-  the notices that the views reported before it.
+  the one owner of the reads of the account. The start of the app reads
+  the account in `openApp` of `app-model.ts`. Each later read goes through
+  the owner: an open of the agent list, a return to the visible page, the
+  timer, a change of a login, an org that joins the orgs of the person, a
+  newer login state that a view reports, and a notice of a missing login
+  that shows. The next rules give each of them. The Worker gives the own
+  logins only in `GET /api/account`, so each read is a read of the whole
+  account. A read shows the logins and the default logins of that answer
+  in the order that the rules below give. It also shows the other fields
+  of that answer, as a rule below says. A failed read keeps what shows. A
+  read across a new app start or a sign-out changes nothing. Such a start
+  or a sign-out also forgets the login states and the notices that the
+  views reported before it.
 - Each open of the agent list, on the account and in Get started, reads
   the logins again through `AccountModel.refreshLogins`. So a login that
   the Worker stopped after the app opened shows Signed out. An open shares
@@ -58,6 +59,23 @@ says what the screens show.
   of the person in that org, as the protocol says, but the account does
   not take them. So a reply that holds a part never hides a newer reply
   of the whole account, also when it comes first.
+- `AccountPreferences` in `account-preferences.ts` keeps the other fields
+  of the account: the user, the operator role, the default model, the New
+  workspace view, the shortcut changes, and the page of the GitHub App.
+  Each read of the owner, also a read after a change, shows these fields
+  of its answer in the order of its GET. So an open tab follows a change
+  from another tab, another browser, or the Mac app at its next read, as
+  [The preference](../../docs/protocol/create-a-workspace.md#the-preference)
+  and [Storage](../../docs/protocol/keyboard-shortcuts.md#storage) say.
+- A save of Model and effort, of the New workspace view, or of the
+  shortcuts changes the account only with its answer, and only in its own
+  field. A read whose GET went out before that answer keeps that field. A
+  later read shows the value of the server. A failed save keeps what
+  shows. These saves go out one at a time, each after the answer of the
+  one before, so a save that does not answer holds the later ones. The
+  refusal of an operator request marks the person as not an operator at
+  once. A read whose GET went out before the refusal keeps that mark, as
+  [Access](../shell/operator/README.md#access) says.
 - `AccountLoginRequests` in `account-login-requests.ts` runs the login
   requests of each agent one at a time, in the order of the calls. These
   requests are a save, a share change, a Refresh of an own endpoint, and a
@@ -83,14 +101,21 @@ says what the screens show.
   it starts, before it waits for its turn. A read after a change uses the
   mark of its caller, in the turn of that change. So after each change the
   account reads the logins of its agent again, as the next rules say, and
-  a read that ran meanwhile takes back nothing.
+  a read that ran meanwhile takes back nothing. Apart from these marks,
+  `AccountLoginFacts` in `account-login-facts.ts` numbers each GET of the
+  account when it goes out. A reply shows the login and the default logins
+  of an agent only when no reply of a later GET showed that agent first.
 - After a save, a remove, a share change, or a connected sign-in of an own
   login, the account reads the logins of its agent again, so that the
   screens show the default logins that the server names after the change.
   An account that names no default login needs no such read, except the
   read of the model list after the save of an own endpoint. These reads,
   and the read after Refresh of an own endpoint, use the caller's mark to
-  preserve later login changes.
+  preserve later login changes. Each read after a change of a login, also
+  of an org login, runs in the turn of that change, and its GET goes out
+  after the write of that change answers. It does not go through the
+  `Refresher` of the owner, because a whole read waits for the turn of
+  each agent, and so for the turn of its own caller.
 - After each save, switch change, remove, and Refresh of an org login in
   this tab, `OrgModel` reports the change through
   `AccountModel.orgLoginChanged`. The account counts it as a change of its
@@ -120,17 +145,21 @@ says what the screens show.
 - A view reports through `AccountModel.observeLogin` each login state that
   it learns outside the account. Such a state can be newer than the
   account. The workspace chat reports, through `ChatSources`, whether the
-  login of each session record can serve. When a state contradicts the
-  account, the owner reads the whole account once. An example is a record
-  that says that a login cannot serve, while the account still names that
-  login as usable or as the default login of that org and agent. A read
-  that started before that report does not count for it, and it shows no
-  login and no default login of that agent. A report that a login of the
-  person or of the org cannot serve makes an earlier read old too, also
-  without a contradiction. No report makes a pending local write old, so
-  that write still shows its reply. A repeat of the same state of the same
-  record reads nothing more, also while the reply still contradicts it. No
-  report writes the logins or the default logins. So when a record shows a
+  login of each session record can serve. `AccountLoginFacts` gives each
+  state that the account accepts a place in the order of the GETs. A reply
+  shows the login and the default logins of an agent only when no state of
+  that agent from after its GET contradicts the reply. A state that agrees
+  with the reply drops nothing, also a state that says that a login cannot
+  serve. When a state contradicts the account, or a reply whose GET went
+  out before that state, the owner reads the whole account once. An
+  example is a record that says that a login cannot serve, while the
+  account still names that login as usable or as the default login of
+  that org and agent. A contradiction starts no read while another open
+  read of that agent has not sent its GET yet, or sent it after that
+  state. No report makes a pending local write old, so that write still
+  shows its reply. A repeat of the same state of the same record reads
+  nothing more, also while the reply still contradicts it. No report
+  writes the logins or the default logins. So when a record shows a
   refused renewal, each view of the tab stops counting the failed login as
   usable after one read. A member whom the org login serves then gets no
   Connect notice.
@@ -187,3 +216,28 @@ says what the screens show.
 - `dev/org-login-routes.ts`: the read of the org logins of the dev fake
   names the default logins of the person in that org, from
   `dev/default-logins.ts`, as the Worker does.
+- `account-login-reads.ts`: `AccountLoginReads`, the owner of the reads.
+  Its private `fetch` sends each `GET /api/account` of the owner, also
+  each read after a change through `readAgent`, and takes the order of
+  that GET when it goes out. Its whole reads wait for the requests of both
+  agents in `AccountLoginRequests` of `account-login-requests.ts`. A
+  `Refresher` of `refresh.ts` starts them, with the `visible` store of the
+  page and `readOnWatch: false`, because the start of the app read the
+  account already. A repair read and an org join ask that `Refresher` for
+  a fresh whole read through `reread`.
+- `account-login-facts.ts`: `AccountLoginFacts`, the order of the GETs and
+  of the login states that the account accepts. It keeps the accepted
+  state of each record, the last GET that showed each agent, and the count
+  of complete replies at each state, for
+  `AccountModel.loginObservationCurrent`. `accept` says whether a reply
+  shows an agent, is old, or needs a repair read.
+- `account-preferences.ts`: `AccountPreferences`, the `Resource` of the
+  other fields of the account. Each ready start makes it again from the
+  account of that start. It sets its value on `AccountModel.account`, so
+  the screens read one account. `setDefaultChoice`, `setNewWorkspaceView`,
+  and `saveShortcuts` change nothing at once, and commit only the field of
+  their answer. A save that waits from an earlier start sends nothing.
+  `refuseOperator` marks the person as not an operator at once.
+- `agent-logins.ts`: `AgentLogins`, the logins in the account and the
+  marks of their local changes. `mark` gives a read the changes before it,
+  and the owner adds the order check of `AccountLoginFacts` to it.

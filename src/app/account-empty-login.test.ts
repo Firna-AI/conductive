@@ -9,6 +9,38 @@ import {
 } from './login-status.test-support'
 import { flushMicrotasks } from './test-kit'
 
+test('mixed empty-session facts keep a held complete repair reply without a later save', async () => {
+  const { app, server, held, chat, kept, session, view, reads } =
+    await startedLoginOwner()
+  server.json('GET', sessionsPath(acme.id, session.workspaceId), {
+    eventNumber: server.events.history().throughEventNumber,
+    sessions: [
+      { ...session, login: null, defaultLogin: null, loginAvailable: false },
+      {
+        ...session,
+        id: 'available-empty-session',
+        login: null,
+        defaultLogin: null,
+      },
+    ],
+    history: [],
+  })
+  serveLoginStatus(server, 'failed', 'org')
+  held.holdAnswer('GET', ACCOUNT_PATHS.account)
+  await chat.start()
+  await flushMicrotasks()
+  expect(view()).toEqual({ kind: 'missing', linked: false })
+  expect(reads()).toBe(2)
+  held.release('GET', ACCOUNT_PATHS.account)
+  await app.account.refreshLogins()
+  expect(view()).toEqual({
+    kind: 'session',
+    login: { owner: 'org', name: 'Acme' },
+  })
+  expect(reads()).toBe(2)
+  kept.clear()
+})
+
 test('an empty session excludes cached own and org defaults until a newer complete account reply confirms the org default', async () => {
   for (const cached of ['own', 'org'] as const) {
     const { app, server, held, chat, kept, session, view, reads } =
