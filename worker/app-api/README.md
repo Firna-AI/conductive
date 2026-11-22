@@ -16,7 +16,7 @@ Each handler returns `null` for a path that it does not own. The
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
 | `branchesRoute` in [`branches.ts`](branches.ts) | `GET /api/orgs/:orgId/repositories/:repositoryId/branches` reads live branches with the member's fresh GitHub user token |
-| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices and moves; section writes; workspace names and moves |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; `GET /api/orgs/:orgId/settings/skills`; repository choices and moves; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
@@ -248,6 +248,22 @@ View writes cannot change this branch.
   warning through `warnWorker`. The account and Get started still load. The
   installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
+- Settings reads and saves return `skillsRepository` and
+  `trustedSkillsRepository`. Admins save them through
+  `PATCH /api/orgs/:orgId/settings`. A GitHub link becomes `owner/name`.
+  Empty text removes it. Other text stays as typed.
+  `savedSkillsRepositorySettings` resolves the pair on every retry.
+  A grant must match the resulting valid source without letter case.
+  A replacement without a matching grant clears trust. Unrelated saves
+  keep the pair. The SQL compare-and-swap checks both names and the current
+  active-admin guard. A trust change starts no image build.
+  [Repository trust](../../docs/protocol/org-skills-trust.md#save) states
+  the save contract.
+- `GET /api/orgs/:orgId/settings/skills` reads the saved repository for any
+  org member. Call it when the Skills section loads and after Save.
+  It returns `SkillsRepositoryLookupResponse` from the shared settings types.
+  It stores no list. GitHub failures leave settings reads and saves available.
+  An expired GitHub sign-in keeps the existing sign-in error.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
 - The list and the lifecycle replies give each reader one state.
@@ -414,6 +430,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
+  [`feature-settings-data.ts`](feature-settings-data.ts) reads and saves
+  scripts, the skills source and trust, and encrypted env values.
   [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
@@ -457,6 +475,9 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [published image data](../lifecycle/published-image-data.ts), and
   starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
+- [`feature-skills.ts`](feature-skills.ts) checks membership and the saved
+  name. [`skills-github.ts`](skills-github.ts) reads only the repository
+  record and recursive default-branch tree, with the viewer's fresh user token.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),
   [`feedback-mail.ts`](feedback-mail.ts), and

@@ -2,6 +2,7 @@
 import type { AgentChoice } from './AgentChoice.js'
 import type { CommitAuthor } from './CommitAuthor.js'
 import type { HelperCredential } from './HelperCredential.js'
+import type { OrgSkills } from './OrgSkills.js'
 import type { ReadonlyVec } from './ReadonlyVec.js'
 import type { RunnerBranches } from './RunnerBranches.js'
 import type { WorkspaceToolContext } from './WorkspaceToolContext.js'
@@ -18,6 +19,10 @@ export type HelperOptions = {
    * Private agent home.
    */
   home: string
+  /**
+   * Org source and trust policy, absent when no valid source is configured.
+   */
+  orgSkills?: OrgSkills | null
   /**
    * Conductive session identity.
    */

@@ -100,6 +100,7 @@ export function seedState(options: DevOptions): DevState {
     stopAfterMs: options.stopAfterMs,
     operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
+    skillsSaveFails: options.skillsSaveFails,
     providers: seedProviders(options),
     switches: seedSwitches(options),
     waitlist: {

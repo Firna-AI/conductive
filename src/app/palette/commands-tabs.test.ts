@@ -113,6 +113,7 @@ describe('the Actions and Settings tabs of the palette', () => {
       browser: shown(tab({})),
       mac: shown(tab({ mac: true }))[1],
       search: shown(tab({}, 'env')),
+      skills: shown(tab({}, 'skills')),
       macSearch: shown(tab({ mac: true }, 'always allow')),
       favoritesSearch: shown(
         paletteResults(query({ text: 'favorites' }), source()),
@@ -152,6 +153,7 @@ describe('the Actions and Settings tabs of the palette', () => {
         ],
       ],
       search: [['Acme settings', ['Cloud computer · Acme settings']]],
+      skills: [['Acme settings', ['Cloud computer · Acme settings']]],
       macSearch: [['Account', ['This Mac · Account']]],
       favoritesSearch: [['Settings', ['Favourites · Account']]],
       generalOpens: routes.settings(acme.id, 'general'),

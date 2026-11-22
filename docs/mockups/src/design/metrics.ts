@@ -57,9 +57,11 @@ export const metrics = {
   /**
    * The height of a screen: the visible part of the window. On a phone,
    * `100vh` is the height with the browser bars hidden, so the page would
-   * scroll behind the app while they show. `100dvh` follows the bars. A
-   * picture of a screen on the marketing site sets it to the height of its
-   * frame.
+   * scroll behind the app while they show. `100dvh` follows the bars. An
+   * on-screen keyboard does not change `100dvh` on iOS, so while one shows
+   * the app sets the height of the visible part, as `keyboard-viewport.ts`
+   * says. A picture of a screen on the marketing site sets it to the height
+   * of its frame.
    */
   screenHeight: '100dvh',
 } as const

@@ -7,6 +7,7 @@ import {
   orgAgentsKeys,
   orgAgentsProperties,
 } from './orgAgentsState'
+import { skillsDefaults, skillsKeys, skillsProperties } from './settingsSkills'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -19,6 +20,7 @@ export const orgSettingsSchema = {
     'repositoryView',
     'repositoryOrder',
     'envForm',
+    ...skillsKeys,
     'secrets',
     'dialog',
     'viewer',
@@ -92,6 +94,7 @@ export const orgSettingsSchema = {
      * DATABASE_URL.
      */
     envForm: { enum: ['none', 'add', 'change'] },
+    ...skillsProperties,
     /**
      * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
      * admin just revealed, the Add secret form, that form after it refused
@@ -160,6 +163,7 @@ export const acmeSettings: OrgSettingsState = {
   repositoryView: 'list',
   repositoryOrder: 'list',
   envForm: 'none',
+  ...skillsDefaults,
   secrets: 'list',
   dialog: 'none',
   viewer: 'admin',

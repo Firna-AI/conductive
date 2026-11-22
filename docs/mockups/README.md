@@ -225,6 +225,20 @@ both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
 
+The Skills section of the Cloud computer tab names the public GitHub
+repository whose skills the agents of every workspace use. An admin edits
+it in a field, and a member sees it as text. Under it, the section lists
+the skills that a lookup on GitHub finds, or it shows a notice in place of
+the list. `src/components/settings/SkillsSection.tsx` draws the section,
+and `SkillList.tsx` beside it draws the list. `skillsCopy.ts` beside them
+holds the words and the result of the lookup, so that the app can share
+them. Under the field, an admin sets the switch "Trust this skills
+repository", which starts off for each repository, and a member sees the
+saved choice as text. The choice exists only while the field names a
+repository as owner/name. `SkillsTrust.tsx` draws the switch and the
+read-only choice, and `skillsTrustCopy.ts` holds their words and the
+address of the guide. [The catalogue](catalogue.md) gives its pages.
+
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent
 runs after a member allows it. The agent gets its name and its variable

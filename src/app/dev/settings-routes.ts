@@ -9,6 +9,7 @@ import {
   type RepositoryOrderResponse,
   type Repository,
 } from '../../shared/org-settings'
+import { savedSkillsRepositorySettings } from '../../shared/skills-repository-settings'
 import {
   choice,
   count,
@@ -80,9 +81,10 @@ function envChanges(object: JsonObject, key: string) {
 }
 
 /**
- * The scripts and the env vars. Only the names and the marks of env vars
- * stay, so no reply holds a value. A changed install script asks for a
- * build.
+ * The scripts, the env vars, and the skills repository. Only the names and
+ * the marks of env vars stay, so no reply holds a value. A changed install
+ * script asks for a build. With `skillsSave=fail`, the first save that
+ * names the skills repository or its trust fails and changes nothing.
  */
 function updateSettings(
   backend: DevBackend,
@@ -92,7 +94,19 @@ function updateSettings(
   const fields = record(body)
   const installScript = optional(fields, 'installScript', text)
   const startupScript = optional(fields, 'startupScript', text)
+  const skillsRepository = optional(fields, 'skillsRepository', text)
+  const trustedSkillsRepository = optional(
+    fields,
+    'trustedSkillsRepository',
+    text,
+  )
   const changes = optional(fields, 'envVars', envChanges) ?? []
+  const namesSkills =
+    skillsRepository !== undefined || trustedSkillsRepository !== undefined
+  if (namesSkills && backend.state.skillsSaveFails) {
+    backend.state.skillsSaveFails = false
+    throw new Error('The save failed.')
+  }
   const current = org.settings
   const changedInstall =
     installScript !== undefined && installScript !== current.installScript
@@ -100,6 +114,10 @@ function updateSettings(
     ...current,
     installScript: installScript ?? current.installScript,
     startupScript: startupScript ?? current.startupScript,
+    ...savedSkillsRepositorySettings(current, {
+      skillsRepository,
+      trustedSkillsRepository,
+    }),
     envVars: changes.reduce(applyEnvChange, current.envVars),
     updatedAt: backend.now(),
   }
