@@ -1,9 +1,6 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import {
-  type WorkspaceEvent,
-  type WorkspaceEventEnvelope,
-} from './workspace-events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
@@ -279,8 +276,9 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
-    return this.browsers.subscribe(access, after, peer, socket)
+    return this.browsers.subscribe(access, after, peer, socket, registered)
   }
 
   operation(workspaceId: string): ChatOperation {

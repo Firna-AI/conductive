@@ -39,7 +39,7 @@ which serves these routes. The path helpers live in
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
 | `GET` history | `chatHistoryPath` | Reads the stored events of one session in newest-first pages, with `before` and `through` |
-| `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
+| `GET` events socket | `workspaceEventsPath` | Answers the upgrade, then sends the stored history and each new event. A long history goes over several connections, as [History and event order](history.md) says |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
 The outer Worker forwards each route of this table to the object of its
