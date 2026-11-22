@@ -21,6 +21,7 @@ import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import { plainData } from '../defined'
 import { loginOwnerOf } from './sessionStarter'
+import { explainNotice } from './explainMarks'
 import type { WorkspaceState } from './workspaceState'
 
 /**
@@ -108,9 +109,12 @@ function folderNotice() {
  * an admin removed the org login. The starter whose own login is not
  * available sees the notice that asks to connect. A viewer whose default
  * login is the org login sees no such notice (decision 4 of the org logins
- * plan).
+ * plan). While text of the chat is selected, a phone shows Explain there
+ * instead, as `explainNotice` says.
  */
 export function composerNotice(state: WorkspaceState, workspace: Workspace) {
+  const explain = explainNotice(state)
+  if (explain) return explain
   if (state.composer === 'too-large' && state.tab !== 'new-session') {
     return tooLargeNotice()
   }

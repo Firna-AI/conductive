@@ -59,6 +59,8 @@ Skill metadata has no private path. Only helper scan results and explicit
 Codex input carry the absolute path of a skill file.
 `SessionLogin` names a personal owner or org without a credential.
 `Session.login` is optional for older clients and stored records.
+`Session.anchor` is optional. It names the parent session and message, and keeps the selected rendered text with its surrounding text.
+Sessions without an anchor omit the field.
 `Session.defaultLogin` names the starter's current default owner before the first accepted message.
 It is optional and absent when no login serves the starter or `Session.login` is fixed.
 `DefaultAgentLogin` carries the server's default owner and model availability for an org and agent.

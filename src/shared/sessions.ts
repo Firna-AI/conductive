@@ -1,8 +1,9 @@
 import type { Session } from './generated/Session'
 import type { TranscriptDetail } from './generated/TranscriptDetail'
 import type { AgentChoice } from './generated/AgentChoice'
+import type { SessionAnchor } from './generated/SessionAnchor'
 
-import type { MessageDraft } from './messages'
+import type { MessageDraft, SendMessageResponse } from './messages'
 import { workspacePath } from './workspaces'
 
 export function sessionsPath(orgId: string, workspaceId: string): string {
@@ -15,6 +16,23 @@ export function sessionPath(
 ): string {
   return `${sessionsPath(orgId, workspaceId)}/${encodeURIComponent(sessionId)}`
 }
+
+export function explainSessionPath(
+  orgId: string,
+  workspaceId: string,
+  parentSessionId: string,
+): string {
+  return `${sessionPath(orgId, workspaceId, parentSessionId)}/explain`
+}
+
+export interface ExplainSessionRequest extends Omit<
+  SessionAnchor,
+  'parentSessionId'
+> {
+  choice?: AgentChoice
+}
+
+export type ExplainSessionResponse = SendMessageResponse
 
 export interface SessionTranscriptResponse {
   markdown: string

@@ -14,8 +14,10 @@ import {
   linkableSessions,
   type LinkableSession,
 } from '../fixtures/sessionLinks'
+import { workspaceSessions } from '../fixtures/sessions'
 import { checkoutAutocomplete, savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { parentPage } from './explainModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -102,13 +104,27 @@ export function changedWorkspaces(
   return later ? [{ workspace: savedCarts, status: 'working' }] : []
 }
 
-function chatSession(session: LinkableSession): ChatSession {
+/**
+ * The screen that shows an open session that a link names. The written
+ * prompt in the tab of an explanation links to its parent, the first
+ * session, whose page then shows the parent chat with its marks, as
+ * `parentPage` says.
+ */
+function sessionPage(state: WorkspaceState, key: string): string | undefined {
+  const parent = key === workspaceSessions[0].key && state.tab === 'explanation'
+  return parent ? parentPage(state) : sessionPages[key]
+}
+
+function chatSession(
+  state: WorkspaceState,
+  session: LinkableSession,
+): ChatSession {
   const { id, title, closed } = session
   return {
     id,
     title,
     closed,
-    to: closed ? undefined : sessionPages[session.key],
+    to: closed ? undefined : sessionPage(state, session.key),
   }
 }
 
@@ -133,6 +149,9 @@ export function chatWorkspacesOf(
     )
     return sessions.length === 0
       ? row
-      : { ...row, sessions: sessions.map(chatSession) }
+      : {
+          ...row,
+          sessions: sessions.map((session) => chatSession(state, session)),
+        }
   })
 }
