@@ -108,6 +108,18 @@ tools.
   because no event announces a preview that opens meanwhile, so the next
   connection reads it again before a Preview tab opens a preview. An open
   or a close that ends after its page left still reaches the store.
+- The tab keeps one services store for each shown workspace, which the
+  Preview tool of a phone and the list of the desktop read.
+  `KeptConnections` connects it while the sandbox runs. A connection is
+  one running period: its end forgets the list, so a later start never
+  shows the list of an earlier one. While Preview shows, the list reads
+  again after `activeWait` and at each return to the page. On a phone,
+  Preview shows while it is the shown tool. On desktop, it shows while it
+  is the shown tool and the right column shows, as `useRightShown` of
+  `layout/panels.tsx` says. A hidden column stops the reads, and a column
+  that shows again reads the list at once. A Stop or a Restart that ends
+  after its page left still reaches the store. Its result can still show
+  a toast, as [the previews](../../previews/README.md#services) say.
 
 ## Preview tabs
 

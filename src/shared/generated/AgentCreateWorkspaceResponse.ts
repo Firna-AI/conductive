@@ -18,6 +18,10 @@ export type AgentCreateWorkspaceResponse = {
    */
   sessionLink: string
   /**
+   * The saved initial turn, absent from replies of earlier Workers.
+   */
+  turnId?: string
+  /**
    * Notice about the section chosen for the workspace.
    */
   notice?: string

@@ -8,6 +8,7 @@ import { scheduleWorkspaceAlarm } from './alarms'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
 import { number, record, sendMessage, string } from '../chat/inputs'
 import { readJsonObject } from '../http/json-body'
+import type { ReadySessionWatch } from '../chat/session-watch-records'
 
 const app = createApp({ now: () => DEVICE_TEST_NOW })
 
@@ -15,6 +16,53 @@ export class Workspace extends NativeAlarmWorkspace {
   private readonly instance = crypto.randomUUID()
   private suspensions = 0
   private readonly observers = new Map<number, () => void>()
+  private watchReply:
+    | {
+        id: string
+        entered: Promise<void>
+        enter(): void
+        released: Promise<void>
+        release(): void
+      }
+    | undefined
+
+  holdSessionWatchReply(id: string): void {
+    let enter!: () => void
+    let release!: () => void
+    const entered = new Promise<void>((resolve) => {
+      enter = resolve
+    })
+    const released = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    this.watchReply = {
+      id,
+      entered,
+      enter,
+      released,
+      release,
+    }
+  }
+
+  waitForSessionWatchReply(): Promise<void> {
+    if (!this.watchReply) throw new Error('No watch reply is held.')
+    return this.watchReply.entered
+  }
+
+  releaseSessionWatchReply(): void {
+    this.watchReply?.release()
+  }
+
+  async acceptSessionWatch(watch: ReadySessionWatch) {
+    const outcome = await super.acceptSessionWatch(watch)
+    const held = this.watchReply
+    if (held?.id === watch.id) {
+      held.enter()
+      await held.released
+      this.watchReply = undefined
+    }
+    return outcome
+  }
 
   async suspendMemberLifecycle(
     ownership: ReceiverOwnership,
@@ -108,6 +156,13 @@ export class Workspace extends NativeAlarmWorkspace {
 
   async inspectFeatureState() {
     return [...(await this.ctx.storage.list()).entries()]
+  }
+
+  async sessionWatchReceipt(watchId: string) {
+    const id = await this.chat.store.workspaceId()
+    return id
+      ? this.chat.readWorkspace(id, (view) => view.watches.receipt(watchId))
+      : undefined
   }
 
   waitForActivity(): Promise<void> {

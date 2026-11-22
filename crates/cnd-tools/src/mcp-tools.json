@@ -656,6 +656,36 @@
     }
   },
   {
+    "name": "watch_session",
+    "description": "Wake the calling session once when one watched turn finishes, fails, or stops. Needs an active calling turn. Acts for the member whose message started that turn. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. Use the actual session and exact turnId returned by send_message, create_session, or create_workspace when available. Without turnId, watches current queued, running, or stopping work, or returns idle. An ended exact turn returns finished, failed, or stopped without a watch or wake. Repeated calls for the same calling session, member, target turn, and valid Stop period return the same watchId. Only the exact active calling turn is refused with invalid_input. Set the watch, then end your reply when only watched work remains. After a wake, use read_session for the result. An idle or ended reply means read the session at once. A turn end does not mean the whole delegated task is complete. Explicit Stop of the calling session drops older pending wakes. Automatic idle computer stops keep watches. Delivery uses the usual current member and session login checks. A new wake turn acts for the member who set the watch. A wake that joins a running turn keeps that turn's sender.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The target workspace ID from a returned reply or session link. Defaults to the calling workspace."
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The actual receiving session ID from send_message, create_session, create_workspace, list_sessions, or a session link."
+        },
+        "turnId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The exact turnId returned with the work. Omission selects the target session's current active turn. Older workspace-create replies can omit it."
+        }
+      },
+      "required": ["sessionId"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
     "name": "get_message",
     "description": "Get one message's text, sender, state, turn, and time. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {

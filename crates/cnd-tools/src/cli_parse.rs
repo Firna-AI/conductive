@@ -5,6 +5,7 @@ use serde_json::{Map, Value};
 use crate::call::Name;
 use crate::cli_secrets;
 use crate::error::{Error, InputError, Result};
+use crate::services;
 
 pub(crate) struct Arguments {
     pub(crate) name: Name,
@@ -19,6 +20,9 @@ pub(crate) fn help(args: &[String]) -> bool {
     }
     if args[0] == "secrets" {
         return cli_secrets::help(args);
+    }
+    if args[0] == "services" {
+        return services::cli::help(args);
     }
     if args.first().is_none_or(|value| value != "sessions") {
         return args.iter().any(|value| value == "--help");
@@ -58,6 +62,7 @@ fn name(group: &str, verb: &str) -> Result<Name> {
         ("sessions", "rename") => Name::RenameSession,
         ("sessions", "close") => Name::CloseSession,
         ("sessions", "stop") => Name::StopSession,
+        ("sessions", "watch") => Name::WatchSession,
         ("messages", "get") => Name::GetMessage,
         ("previews", "list") => Name::ListPreviews,
         ("previews", "open") => Name::OpenPreview,
@@ -91,6 +96,7 @@ fn options(name: Name) -> Vec<&'static str> {
             "workspace session message message-file agent model effort fast request-id"
         }
         Name::GetSession | Name::StopSession => "workspace session",
+        Name::WatchSession => "workspace session turn-id",
         Name::RenameSession => "workspace session title",
         Name::CloseSession => "workspace session stop-running-turn",
         Name::GetMessage => "workspace session message-id",

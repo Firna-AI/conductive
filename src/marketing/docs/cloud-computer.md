@@ -147,6 +147,11 @@ The changed script applies when a workspace next starts or resumes.
 It does not rerun just because you saved it while a computer was running.
 Archive and Restore do not run this script.
 
+Use a [service](/docs/terminal-and-previews#run-a-server-as-a-service) for a server that you need after an agent replies.
+Services keep running through software updates and **Restart** in the workspace header.
+A computer stop discards their saved commands, settings, and logs.
+Services do not restore themselves after **Resume**.
+
 ## Set environment variables
 
 1. Find **Environment variables** under **Cloud computer**.
@@ -163,6 +168,10 @@ Values and marks apply at the next start of each workspace's computer.
 Every workspace receives the org's environment values, except values with a name that Conductive sets itself.
 Agents and members with terminal access can read the values that the computer receives.
 
+Services use the org values installed at this computer start, plus values supplied for the service.
+They do not inherit the agent's credentials, turn context, or secrets added to an approved command.
+They still share the computer's files and available credentials, as [Understand services](/docs/security#understand-services) says.
+
 In an agent turn, Conductive sets `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_COMMITTER_NAME`, and `GIT_COMMITTER_EMAIL` for the agent's commands.
 These values name the person whose message started the turn.
 They take priority over every Git setting.
@@ -176,7 +185,9 @@ An older workspace gets the turn sender as commit author when an automatic softw
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
+The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+It also hides them in server and service details and service logs in **Preview**.
+The same rule covers skill names and descriptions in the message box.
 It does not hide values in file content, pictures in agent replies, diffs, or Terminal.
 
 ## Add secrets for agents
@@ -256,8 +267,9 @@ Terminal and preview software update when Conductive [restarts its software](/do
 
 To apply the newest release now, select the state in the workspace header, then **Restart**.
 Restart first downloads the newest release, for up to 60 seconds, as [Restart the software](/docs/workspaces#restart-the-software) says.
-Unlike the idle update, Restart stops running turns and programs that agents started.
-The shells and commands in your terminals keep running during Restart.
+Restart stops running turns and their ordinary agent commands.
+Services keep running during Restart.
+The shells and commands in your terminals keep running too.
 
 A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.
@@ -266,6 +278,7 @@ If a new release fails to start, the previous release starts again.
 An older cloud computer without the update program gets it at its next start.
 
 An automatic software update gives an existing workspace the server list in **Preview**.
+It also adds services to software that does not yet support them.
 The workspace tools update with Conductive's own software.
 They manage workspaces, sessions, sections, and private previews across the org.
 The tools also read chats and messages there, and run commands with secrets.

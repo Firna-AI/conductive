@@ -12,8 +12,8 @@ import type { DeviceOperationResult } from './devices/internal'
 import {
   createWorkspaceIntegration,
   type WorkspaceCompositionEnv,
-  type WorkspaceChatResolvers,
 } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
 import { DeviceRuntime } from './devices/runtime'
 import { activeStoredTurn } from './devices/access'
 import { credentialSender } from './lifecycle/credential-sender'

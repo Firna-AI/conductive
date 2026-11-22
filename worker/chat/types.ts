@@ -9,6 +9,7 @@ import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
+import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
@@ -79,6 +80,7 @@ export interface StoredTurn {
   /** The dispatched own endpoint model, without login metadata or secrets. */
   endpointModel?: string
   loginFailure?: string
+  endReason?: TurnEndReason
 }
 
 export interface ModelSessionCreation {
@@ -101,19 +103,6 @@ export type PreparedMessageCommand = (
 
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
-
-/** Credentials enter only the live command, after this record is read. */
-export type PendingCommand =
-  | {
-      type: 'turn' | 'message'
-      commandId: string
-      sessionId: string
-      turnId: string
-      messageId: string
-      attachments: readonly StoredAttachment[]
-    }
-  | RunnerInterrupt
-  | RunnerChangeModel
 
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
@@ -213,6 +202,10 @@ export interface ChatDependencies {
   runnerWork?: import('./runner-work-watch').RunnerWorkStorage
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
+  sessionWatchAlarm?: (
+    at: number | null,
+    keepEarlier?: boolean,
+  ) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   requiresFreshRunnerReady?(): Promise<boolean>

@@ -32,7 +32,11 @@ export interface WorkspacePlatform {
   admitFirstMessage?(
     input: Parameters<WorkspaceLifecycleEndpoint['initializeLifecycle']>[0],
   ): Promise<void>
-  stopped?(workspaceId: string, keepQueued?: boolean): Promise<void>
+  stopped?(
+    workspaceId: string,
+    keepQueued?: boolean,
+    restartFailed?: boolean,
+  ): Promise<void>
   stopping?(workspaceId: string): Promise<void>
   deviceWaiting?(workspaceId: string): Promise<boolean>
   readChatRecovery?(workspaceId: string): Promise<WorkspaceChatRecovery>

@@ -81,6 +81,13 @@ real name, with the values of that read. It leaves out a label that equals
 its real name, as [Labels](../../worker/lifecycle/continue.md#labels) in
 the Continue guide says.
 
+`session.watch-notice` is the wake of a watch in one calling session, of
+the generated type `SessionWatchNotice`. It belongs to `ChatEvent` in the
+same way, and only the Worker writes it. Its `messageId` names the hidden
+message that carries the wake to the agent. The chat finds the turn of
+the line through that message, as
+[Transcript rules](../chat/transcript.md) says.
+
 ## The browser stream
 
 `events.ts` defines the browser stream. Its event numbers span all sessions

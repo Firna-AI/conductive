@@ -23,3 +23,6 @@ export const continuedKey = (branch: string) => `continued:${branch}`
 /** The note of a repository change: one for each new branch in a session. */
 export const repositoryChangedKey = (repositoryId: string, branch: string) =>
   `repository-changed:${repositoryId}:${branch}`
+
+/** The line that wakes a session: one for each watch, which fires once. */
+export const wakeKey = (watchId: string) => `wake:${watchId}`

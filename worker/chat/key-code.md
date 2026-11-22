@@ -119,7 +119,7 @@ first.
   of a session, and its frontier. `prepareSessionHistory` in
   `history-session-preparation.ts` builds it, and yields between batches.
 - `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
-- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and [prompt watch delivery](key-code-session-watches.md) at each committed end. It also recovers automation outcomes after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. An accepted connection has the
@@ -128,6 +128,8 @@ first.
   dispatch checks, `hello.processStartId` for its warnings, and
   `hello.repositoryFolder` for the folder check. Its `welcome` accepts
   `hello.completeToolDetails` when the `hello` offers it.
+- [runner-hello.ts](runner-hello.ts): `acceptRunnerHello` keeps the saved-ready check, optional service negotiation, welcome, and ready callbacks in their hello order.
+- [../services/runtime.ts](../services/runtime.ts): `WorkspaceServices` receives private service parts before numbered receipt work, and owns the service-aware disconnect and stop hooks.
 - `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
   with the record folder from `branch-data.ts`. It sends one
   `repository.move` to each capable connection in the stored folder of
@@ -147,7 +149,9 @@ first.
 - `runner-connection-state.ts`: `RunnerConnectionState`, the whole value
   of a runner connection that native storage saves and a wake restores.
   `ActiveRunner` in `types.ts` holds it as `state`, beside the
-  memory-only `peer`.
+  memory-only `peer`. Optional `services` and `serviceBinding` fields retain
+  service negotiation and its exact sandbox identity. Older saved records
+  omit them.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. Each answer record keeps the shown ends of its
@@ -222,6 +226,7 @@ first.
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
   publishes a null list.
+  A string `serviceId` survives parsing and filtering as an optional port field.
 - `skill-reports.ts`: the skills-report parser, the description cut to 300
   characters after the final filter, the check of the cut, and the browser
   form `SkillsUpdated`. The parser leaves out a name that no skill text can
@@ -291,6 +296,7 @@ first.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
   `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.
+- [`pending-command.ts`](pending-command.ts): `PendingCommand`, the internal stored runner command union.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
   `StoredTurn.stopRequest` is optional, because older records lack it. A

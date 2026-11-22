@@ -79,6 +79,9 @@ On the app hostname, the Worker serves these API routes:
 - `DELETE /api/operator/users/<githubId>/suspension`, the operator's lift of a user suspension.
 - `DELETE /api/operator/orgs/<orgId>/suspension`, the operator's lift of an org suspension.
 - The chat routes of a workspace: its sessions and their actions, the chat history, and the events socket.
+- `GET /api/orgs/<orgId>/workspaces/<workspaceId>/services`, the current service catalogue.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/services/control`, a generation-bound service Stop or Restart.
+- `POST /api/orgs/<orgId>/workspaces/<workspaceId>/services/logs`, one filtered service log excerpt.
 
 On the app hostname, the Worker also serves `/github/install` and `/github/setup`, before the request gate, with no session.
 [`github-setup.ts`](github-setup.ts) holds both.
@@ -101,7 +104,9 @@ workspace metadata, Archive, and Restore, image builds and logs, account GitHub 
 and pending invitations with explicit acceptance.
 The [feature shell](app-api/feature-shell.ts) implements the shared shell writes.
 The [workspace features](features/workspace.ts) dispatch files, terminal,
-previews, and desktop inside the real workspace object.
+previews, desktop, and services inside the real workspace object.
+The [services area](services/README.md) owns private runner reports and the
+service feature routes. Service traffic uses no chat event number or activity call.
 The [GitHub composition](features/github.ts) stores banner updates in the common chat stream.
 The [automations area](automations/README.md) stores saved prompts and their triggers.
 It validates schedules and resolves author-filter logins at save.
@@ -221,6 +226,8 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 
 ### Key Code
 
+- [services/runtime.ts](services/runtime.ts): `WorkspaceServices` owns the service state of one workspace, apart from numbered chat events and commands.
+- [services/handler.ts](services/handler.ts): `createServicesHandler` serves catalogue, control, and log requests through the workspace feature router.
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [machine-grants.ts](machine-grants.ts) dispatches the private image-source credential and attachment download routes on the machine host.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.

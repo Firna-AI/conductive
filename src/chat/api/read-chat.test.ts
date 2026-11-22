@@ -1,5 +1,6 @@
 import { expect, it } from 'vitest'
 import type { RunnerEventRefused } from '../../shared/chat-events'
+import type { SessionWatchNotice } from '../../shared/generated/SessionWatchNotice'
 import {
   senderSnapshot,
   workspaceFixtures,
@@ -35,6 +36,22 @@ const marker: RunnerEventRefused = {
   runnerEventNumber: 7,
   runnerEventType: 'tool.updated',
   reason: 'too_large',
+}
+
+const notice: SessionWatchNotice = {
+  type: 'session.watch-notice',
+  watchId: 'watch-1',
+  messageId: 'session-watch:watch-1',
+  sessionId: 'session-1',
+  turnId: 'turn-2',
+  watchedWorkspaceId: 'workspace-2',
+  watchedSession: {
+    id: 'debounce',
+    link: 'https://app.example/orgs/acme/workspaces/workspace-2/sessions/debounce',
+  },
+  watchedTurnId: 'debounce-turn',
+  state: 'finished',
+  reason: null,
 }
 
 function envelope(event: unknown) {
@@ -115,6 +132,25 @@ it('keeps a known optional end reason and reads older or unknown reasons without
   expect(readEnvelope(envelope(ended)).event).toEqual(ended)
   for (const endReason of [undefined, 'future_reason', null, false]) {
     expect(readEnvelope(envelope({ ...event, endReason })).event).toEqual(event)
+  }
+})
+
+it('reads the wake of a watch, and keeps it without an end reason that this app does not know', () => {
+  const ended: SessionWatchNotice = {
+    ...notice,
+    state: 'stopped',
+    reason: 'background_work_limit',
+  }
+  expect(readEnvelope(envelope(notice))).toEqual({
+    ...envelope(notice),
+    late: false,
+  })
+  expect(readEnvelope(envelope(ended)).event).toEqual(ended)
+  for (const reason of ['future_reason', undefined, false]) {
+    expect(readEnvelope(envelope({ ...ended, reason })).event).toEqual({
+      ...ended,
+      reason: null,
+    })
   }
 })
 
@@ -226,6 +262,9 @@ it('keeps events with missing or invalid new fields unreadable', () => {
     { ...marker, reason: 'other' },
     { ...marker, sessionId: undefined },
     { ...marker, turnId: undefined },
+    { ...notice, state: 'cancelled' },
+    { ...notice, messageId: undefined },
+    { ...notice, watchedSession: { id: 'debounce' } },
   ]
   for (const event of unreadable) {
     expect(readEnvelope(envelope(event)).event).toBeNull()

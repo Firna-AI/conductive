@@ -24,6 +24,9 @@ This page lists each protocol doc and what it covers.
       turn that cannot run fast.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
+  - [The scroll of the chat](../protocol/chat-scroll.md): the row that
+    stays in view, the scroll after a send, and the place that each tab
+    keeps.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
@@ -48,6 +51,10 @@ This page lists each protocol doc and what it covers.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
       Worker for runner connections and for turn ends with no Stop request,
       and the process-start ID of the runner.
+    - [Services](../protocol/services.md): the named programs outside every
+      turn, with [Service calls](../protocol/service-calls.md),
+      [Services in the app](../protocol/services-in-the-app.md), and
+      [Service reports](../protocol/service-reports.md).
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
@@ -129,10 +136,17 @@ This page lists each protocol doc and what it covers.
     create, list, get, rename, move, and archive workspaces.
     - [Repository, section, and model lists](../protocol/create-call-lists.md):
       the lists that a create call takes.
+    - [Workspace management](../protocol/workspace-management.md): the
+      calls that rename, move, and archive one workspace.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
       that get, rename, close, and stop a session, and get a message.
+    - [Session watches](../protocol/session-watches.md): the call that
+      watches one turn of a session, and the wake that tells the calling
+      session of its end.
+    - [The `Sent by:` line](../protocol/sent-by-line.md): the line that ends
+      the text of each tool message.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.

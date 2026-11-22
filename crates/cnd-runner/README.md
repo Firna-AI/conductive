@@ -155,6 +155,17 @@ capture and skips waiting scans. A canceled capture saves no report or
 receipt. Restore polling reopens the live repository path once. Port scans
 run on an independent two-second timer.
 
+[Services](../../docs/protocol/services.md) run outside every turn.
+The executable composes one [native manager](../cnd-services/README.md)
+for local calls. Its independent units own execution and logs as `user`.
+The service scanner adds cgroup ownership to this crate's existing port rows.
+Service lookup failures or a busy native manager preserve ordinary port reports.
+The executable also supplies `ServiceEffects` for the independent Worker path.
+Only a hello and welcome that both enable services carry its private parts.
+Each accepted connection gets a persisted higher snapshot revision, including empty catalogues.
+Connection-scoped service jobs never enter ordinary busy, turn, or idle-update accounting.
+Disconnect, relocation, and updates cancel those jobs without stopping service units.
+
 ## Quick Start
 
 Run the connection and state tests from the repository root:
@@ -243,8 +254,9 @@ and connection drops. It does not run the Worker.
 
 ### Key Code
 
+- [Native services](../cnd-services/README.md#key-code): manager, socket, reconciliation, cgroup ownership, and rotating output.
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
-- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts, nesting guidance, and a Services section to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
@@ -252,6 +264,11 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [connection.rs](src/runtime/connection.rs): drives ordinary socket steps while keeping private service jobs outside update and move waits.
+- [ports.rs](src/services/ports.rs): `ServiceEffects` defines the native operations supplied by the composition root.
+- [tasks.rs](src/services/tasks.rs): observes actual service state and dispatches controls and complete log reads independently.
+- [sender.rs](src/services/sender.rs): sends typed documents in byte-aware parts on their captured connection generation.
+- [services.rs](src/link/services.rs): rejects stale or unnegotiated private replies without numbered storage.
 - [startup_log.rs](src/startup_log.rs): `ProcessStartupLog` records the four startup measurements once per process.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.
@@ -286,6 +303,7 @@ and connection drops. It does not run the Worker.
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Services](../../docs/protocol/services.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Parent changes](../../docs/protocol/parent-changes.md)

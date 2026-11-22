@@ -8,6 +8,8 @@ the dev wiring in `dev/`, and what its fake routes do.
 Without `?conversation=`, a working workspace has a running recorded chat.
 Other recorded workspaces have a finished chat. An explicit conversation
 option overrides this default, including queued chats that show no spinner.
+`dev/options.ts` lists the values. The `wake-` values give the wakes of a
+watch, as the mockups draw them at `app/chat/wakes`.
 
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for

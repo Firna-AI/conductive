@@ -41,27 +41,74 @@ export function Dialog(props: {
   wide?: boolean
   initial?: RefObject<Focusable | null>
 }) {
-  const viewport = useViewport()
   const { busy, close } = props
   // The one dismissal of the question: Cancel, Escape, and a press
   // outside, on desktop and on a phone.
   const dismiss = () => {
     if (!busy) close()
   }
-  const actions = (
-    <>
-      <ActionButton disabled={busy} onPress={dismiss}>
-        Cancel
-      </ActionButton>
-      {props.action}
-    </>
+  return (
+    <DialogFrame
+      actions={
+        <>
+          <ActionButton disabled={busy} onPress={dismiss}>
+            Cancel
+          </ActionButton>
+          {props.action}
+        </>
+      }
+      close={dismiss}
+      initial={props.initial}
+      title={props.title}
+      wide={props.wide}
+    >
+      {props.children}
+    </DialogFrame>
   )
+}
+
+/**
+ * A dialog that shows content, such as a log, with its own actions, such as
+ * Reload and Close, and no Cancel. Escape and a press outside close it.
+ * Desktop shows a dialog over the dimmed app, and a phone shows a sheet, as
+ * for `Dialog`.
+ */
+export function ViewDialog(props: {
+  title: string
+  close: () => void
+  children: ReactNode
+  /** The actions at the end, such as Reload, then Close. */
+  actions: ReactNode
+  wide?: boolean
+}) {
+  return (
+    <DialogFrame
+      actions={props.actions}
+      close={props.close}
+      title={props.title}
+      wide={props.wide}
+    >
+      {props.children}
+    </DialogFrame>
+  )
+}
+
+/** The dialog of desktop, or the sheet of a phone, with its actions last. */
+function DialogFrame(props: {
+  title: string
+  close: () => void
+  children: ReactNode
+  actions: ReactNode
+  wide?: boolean
+  initial?: RefObject<Focusable | null>
+}) {
+  const viewport = useViewport()
   if (viewport === 'phone') {
     return (
-      <Sheet close={dismiss} initial={props.initial} title={props.title}>
+      <Sheet close={props.close} initial={props.initial} title={props.title}>
         <div className={styles.sheetBody}>
           {props.children}
-          <div className={styles.sheetActions}>{actions}</div>
+          <div className={styles.sheetActions}>{props.actions}</div>
         </div>
       </Sheet>
     )
@@ -71,8 +118,8 @@ export function Dialog(props: {
       <div className={styles.layer}>
         <div aria-hidden className={styles.scrim} />
         <DialogBox
-          actions={actions}
-          close={dismiss}
+          actions={props.actions}
+          close={props.close}
           initial={props.initial}
           title={props.title}
           wide={props.wide}

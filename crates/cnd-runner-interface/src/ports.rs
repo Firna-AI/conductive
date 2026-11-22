@@ -29,6 +29,10 @@ pub struct ListeningPort {
     pub name: Option<String>,
     /// folder.
     pub folder: Option<String>,
+    /// Owning service identity, absent for old runners and unowned listeners.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub service_id: Option<String>,
 }
 
 /// Shared port report max ports.

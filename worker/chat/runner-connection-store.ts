@@ -2,6 +2,7 @@ import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
 import { warningProcessStartId } from '../warning-values'
+import { readBinding } from '../services/binding'
 import type { ChatData, ChatStorage } from './types'
 import type { RunnerConnectionState } from './runner-connection-state'
 import type { RepositoryMoveState } from './runner-repository-move'
@@ -88,6 +89,10 @@ function readConnection(value: unknown): RunnerConnectionState {
     processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
+    ...(value.services === true ? { services: true } : {}),
+    ...(value.serviceBinding === undefined
+      ? {}
+      : { serviceBinding: readBinding(value.serviceBinding) }),
     // A diagnostic value cannot prevent the restore of the connection.
     ...(typeof value.watchUntil === 'number' &&
     Number.isFinite(value.watchUntil)

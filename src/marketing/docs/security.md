@@ -31,6 +31,10 @@ A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
 A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
 
+A watch can wake the session that set it when a chosen turn ends.
+When a wake starts a new turn, that turn acts for the sender of the turn that set the watch.
+A wake that joins a running turn keeps that turn's sender.
+
 | Action | Account or person it uses |
 | --- | --- |
 | Agent model use | The session's personal or org login, including a chosen endpoint |
@@ -84,6 +88,9 @@ Agents powered by Claude and Codex work on the workspace's cloud computer.
 They can read files, change code, run commands, and use credentials available there.
 Sessions in that workspace share its files and branch.
 
+Agents can start, list, stop, restart, and read logs of services on their own cloud computer.
+These service commands cannot control another workspace.
+
 An agent can create another workspace in the org during its work.
 That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
@@ -114,6 +121,7 @@ The tools can:
 - Archive workspaces that the sender owns, or any workspace when the sender is an org admin.
 - Create, rename, stop, and close sessions.
 - Send messages to sessions.
+- Watch one turn of a session and wake the session that set the watch when it ends.
 - Create and delete sections.
 - Open and close private previews.
 - Run a command with a secret that the session may use, or ask members to allow it.
@@ -122,6 +130,8 @@ An agent can archive the workspace where it runs, which ends its turn.
 Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
+
+A wake follows current membership and session login rules.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
@@ -244,9 +254,11 @@ An `author` or `committer` setting in the repository or in the global Git settin
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output, start logs, program names and folders in **Preview**, and skill names and descriptions in the message box.
+The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+It also hides them in server and service details and service logs in **Preview**.
+The same rule covers skill names and descriptions in the message box.
 It starts on for a new variable.
-Conductive hides these values in program names and folders before shortening them for display.
+Conductive hides these values before shortening program names, folders, and service details for display.
 Values and marks changed in settings apply at the computer's next start.
 Earlier chat and logs keep their text.
 
@@ -255,6 +267,28 @@ File content, pictures in agent replies, diff content, downloaded files, and Ter
 Some displayed path labels hide values, but the browser still receives real file paths.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
+
+## Understand services
+
+A service is a named program that runs outside an agent turn.
+It uses the org environment values installed at this computer start, plus values supplied for that service.
+It does not inherit the agent's credentials, turn context, or secrets added to an approved command.
+Services run as the same computer user as the other programs.
+Their code can still read available files and credentials, including those of later turns.
+Use only service commands and code that you trust.
+
+The service list shows filtered names, program labels, folders, state details, ports, and start context.
+The saved full command and environment values stay on the cloud computer.
+Conductive filters a service's log before each app read.
+Changed or encoded secret values can still appear.
+Every member who can read the workspace can read its service list and logs.
+Stop and Restart follow the access rule of **Restart** in the workspace header.
+
+A service can link to its originating session, or show **Local command**.
+This context does not prove which person started it and gives no control rights.
+
+- [Run and manage services](/docs/terminal-and-previews#run-a-server-as-a-service)
+- [Understand Restart access](/docs/workspaces#restart-the-software)
 
 ## Understand secrets
 
@@ -350,6 +384,8 @@ Keep the app open and retry if a permission change takes effect but cannot save.
 
 A normal computer stop keeps its files and sessions.
 The chat stays readable while the computer is stopped.
+The stop ends all services and discards their saved commands, settings, and logs.
+Services do not restart themselves after a resume.
 
 Archive stops the computer and keeps it and its files for 14 days.
 Its chat stays read-only, with no file lists or tools.

@@ -50,11 +50,14 @@ export function createWorkspaceLifecycle(
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)
         const projected = await projection.changed(publish)
-        if (state.state === 'stopped' || state.state === 'error')
+        if (state.state === 'stopped' || state.state === 'error') {
+          const restartFailed = isFailedRestart(state)
           await ctx.stopped?.(
             state.workspaceId,
-            state.automaticRestartAt !== undefined && isFailedRestart(state),
+            state.automaticRestartAt !== undefined && restartFailed,
+            restartFailed,
           )
+        }
         return projected
       },
       stop: async () => {

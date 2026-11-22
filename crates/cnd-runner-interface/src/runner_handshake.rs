@@ -9,6 +9,7 @@ use crate::runner_commands::RunnerCommand;
 use crate::runner_credentials::RunnerLoginKind;
 use crate::runner_files::RunnerFileResponse;
 use crate::runner_repository::RunnerRepositoryMoveRefused;
+use crate::services::transport::{RunnerServiceCommand, RunnerServiceMessage};
 use crate::wire::ReadonlyVec;
 
 /// RunnerToWorkspace wire alternatives.
@@ -23,6 +24,8 @@ pub enum RunnerToWorkspace {
     RunnerFileResponse(RunnerFileResponse),
     /// RunnerRepositoryMoveRefused.
     RunnerRepositoryMoveRefused(RunnerRepositoryMoveRefused),
+    /// Optional private services traffic. Never retained in the numbered outbox.
+    RunnerServiceMessage(RunnerServiceMessage),
 }
 
 /// The bearer token authenticates the outbound socket on the machine hostname.
@@ -63,6 +66,10 @@ pub enum RunnerHello {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         file_server: Option<bool>,
+        /// Offer independent service traffic. Absent means no service support.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        services: Option<bool>,
     },
 }
 
@@ -97,6 +104,8 @@ pub enum WorkspaceToRunner {
     RunnerResend(RunnerResend),
     /// RunnerCommand.
     RunnerCommand(Box<RunnerCommand>),
+    /// Optional services controls, outside the stored chat command union.
+    RunnerServiceCommand(RunnerServiceCommand),
 }
 
 /// On welcome, discard confirmed outbox entries and resend every later entry.
@@ -125,6 +134,10 @@ pub enum RunnerWelcome {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
         complete_tool_details: Option<bool>,
+        /// Accept independent services only when hello also offered them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        services: Option<bool>,
     },
 }
 

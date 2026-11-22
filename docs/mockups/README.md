@@ -58,8 +58,9 @@ of [the operator section](design-operator.md), of
 [the pull request bar](design-bar.md), and of
 [New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
 [secrets and Capabilities](design-secrets.md),
-[the links in text](design-links.md), and
-[the Markdown of replies](design-markdown.md).
+[the links in text](design-links.md),
+[the Markdown of replies](design-markdown.md), and
+[the end of a turn](design-turn-ends.md).
 
 ## The catalogue
 
@@ -142,7 +143,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar and of `src/branchPaths.ts` for a start from another branch |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
@@ -169,6 +170,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/layoutState.ts` holds the layout of the
   desktop columns: a drag of a handle, the right column, and the sidebar.
+  `src/screens/serviceState.ts` holds the services of the Preview tool and
+  what lies open over them, which `src/screens/workspaceServices.tsx`
+  draws. The pages of the services start from `servicesWorkspace` in
+  `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

@@ -34,6 +34,7 @@ import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceFileTab'
 import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
+import { serviceOverlay } from './workspaceServices'
 import type { WorkspaceState } from './workspaceState'
 import { historyFor } from './workspaceTabs'
 
@@ -170,6 +171,7 @@ export function workspaceOverlay(
     case 'none':
       return (
         capabilitiesSheet(state, viewport) ??
+        serviceOverlay(state, viewport) ??
         (mobile ? rowMenuSheet(state, viewport) : null)
       )
     case 'restarting':
