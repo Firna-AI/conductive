@@ -1,3 +1,4 @@
+import { useContext } from 'react'
 import { Loader } from '@firna/ui/loader'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { LucideIcon } from 'lucide-react'
@@ -15,17 +16,17 @@ import { formatDuration } from '../../shared/transcript/duration'
 import { problemOf as noticeProblemOf } from '../../shell/workspace/notice-copy'
 import { formatDay } from '../state/format'
 import { ActionButton } from '../ui/actions'
+import { ChatClock, useNow } from '../ui/clock'
 
 /**
  * The start of a sandbox at the end of the chat: a quiet card with a moving
- * mark, each step so far, and the time since the start began.
+ * mark, each step so far, and the time since the start began. The card
+ * keeps its own tick from the clock of the chat while it shows that time.
  */
-export function StartingCard(props: {
-  start: WorkspaceStart | null
-  now: number
-}) {
+export function StartingCard(props: { start: WorkspaceStart | null }) {
   const theme = useSharedUiTheme()
   const { start } = props
+  const now = useNow(useContext(ChatClock), start !== null)
   const title =
     start?.kind === 'resume' ? 'Resuming the sandbox' : 'Starting the sandbox'
   return (
@@ -52,7 +53,7 @@ export function StartingCard(props: {
         </ol>
         {start ? (
           <span className={styles.elapsed}>
-            {formatDuration(props.now - start.startedAt)}
+            {formatDuration(now - start.startedAt)}
           </span>
         ) : null}
       </div>
@@ -211,7 +212,7 @@ function problemOf(
  * gives, as `archivedProblem` says. A failed start shows the message that
  * the workspace saved for it first. The bar takes the place of the
  * composer, except after a failed first start, whose composer stays under
- * it.
+ * it. The bar reads the time from the clock of the chat.
  */
 export function SandboxBar(props: {
   problem: SandboxProblem
@@ -221,8 +222,6 @@ export function SandboxBar(props: {
    * the end of its 14 days. A record of an older Worker has none.
    */
   archivedComputer?: ArchivedComputer
-  /** The time now on the clock of the chat. */
-  now: number
   /** The message that the workspace saved for a failed start, or null. */
   message: string | null
   /** The failed first start of a new workspace, which has no files yet. */
@@ -230,10 +229,11 @@ export function SandboxBar(props: {
   busy: boolean
   onResume: () => void
 }) {
+  const now = useNow(useContext(ChatClock), false)
   const problem = problemOf(
     props.problem,
     props.archivedAt,
-    props.now,
+    now,
     props.archivedComputer,
   )
   const failed = props.problem === 'error'

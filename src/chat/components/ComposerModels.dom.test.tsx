@@ -17,7 +17,7 @@ import {
 } from '../../app/default-logins.test-support'
 import { loginPrivate, withSessions } from '../state/linked-kit'
 import { newSessionRecord } from '../state/test-kit'
-import { now, renderChat } from './render-kit'
+import { renderChat, TestClock } from './render-kit'
 import { SessionChat } from './SessionChat'
 import { first, mountChat, second } from './tab-drag-test-kit'
 
@@ -133,13 +133,14 @@ describe('the models of the composer of a session', () => {
     })
     await rendered.chat.controller.select('started')
     const { container } = await mount(
-      <SessionChat
-        controller={rendered.chat.controller}
-        mobile={false}
-        now={now}
-        onConnectAgent={() => {}}
-        snapshot={rendered.chat.controller.getSnapshot()}
-      />,
+      <TestClock>
+        <SessionChat
+          controller={rendered.chat.controller}
+          mobile={false}
+          onConnectAgent={() => {}}
+          snapshot={rendered.chat.controller.getSnapshot()}
+        />
+      </TestClock>,
     )
     const label = Array.from(container.querySelectorAll('span'), (span) =>
       span.textContent?.trim(),

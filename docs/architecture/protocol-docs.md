@@ -223,6 +223,10 @@ This page lists each protocol doc and what it covers.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions, and
     the title that a small model gives a new workspace.
+  - [Explain](../protocol/explain.md): Explain on a selection of chat
+    text, its key, the written prompt, the explanation and its anchor, the
+    marks in the parent chat, the popover, a closed explanation, and
+    read-only workspaces.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

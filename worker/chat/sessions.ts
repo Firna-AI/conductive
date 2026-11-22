@@ -1,5 +1,6 @@
 import type { SessionLogin } from '../../src/shared/generated/SessionLogin'
 import type { Session } from '../../src/shared/generated/Session'
+import type { SessionAnchor } from '../../src/shared/generated/SessionAnchor'
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
@@ -18,6 +19,7 @@ export async function createSession(
   dependencies: ChatDependencies,
   sourceSessionId: string | null = null,
   login?: SessionLogin,
+  anchor?: SessionAnchor,
 ): Promise<Session> {
   choice = dependencies.normalizeChoice(choice)
   const metadata = await SessionLogins.initial(
@@ -45,6 +47,7 @@ export async function createSession(
     },
     sourceSessionId,
     ...(login ? { login } : {}),
+    ...(anchor ? { anchor } : {}),
     ...metadata,
   }
   await transaction.saveSession(session)

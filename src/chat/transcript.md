@@ -58,6 +58,7 @@ the parts of the chat that draw the transcript.
 - `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
   The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
 - Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- An agent item keeps `complete` once its `assistant.completed` event came, so Explain reads only finished text. `agentMessageId` gives the message ID that its key holds.
 - While a turn runs, only the run that holds the newest tool call of the turn shows its calls, as
   [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn) says.
   It stays open between two calls, after a message or an insert that follows it, and while a message waits for the turn.

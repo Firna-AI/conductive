@@ -1,4 +1,10 @@
-import { CircleAlert, MessageSquarePlus, Plug, X } from 'lucide-react'
+import {
+  CircleAlert,
+  MessageSquarePlus,
+  Plug,
+  RotateCcw,
+  X,
+} from 'lucide-react'
 import { useEffect } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
 import {
@@ -7,6 +13,10 @@ import {
   type LinkedReason,
 } from '../../../docs/mockups/src/components/chat/linkedCopy'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import {
+  reopenBody,
+  reopenTitle,
+} from '../../../docs/mockups/src/components/explain/explainCopy'
 import type { SendBlock } from '../state/blockers'
 import type { ChatNotice } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'
@@ -86,4 +96,12 @@ export function ActionNotice(props: {
       tone="danger"
     />
   )
+}
+
+/**
+ * The notice over the follow-up field of an explanation whose tab is
+ * closed: a follow-up or Expand reopens it.
+ */
+export function ReopenNotice() {
+  return <Notice body={reopenBody} icon={RotateCcw} title={reopenTitle} />
 }

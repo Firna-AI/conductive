@@ -1,4 +1,3 @@
-import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
 import { serveMaskedHead } from '../../test-support/fake-branch-names'
 import {
@@ -6,8 +5,7 @@ import {
   MASKED_MOVED,
 } from '../../test-support/fixtures/masked-paths'
 import { chatFor, newSessionRecord } from '../state/test-kit'
-import { now } from './render-kit'
-import { SessionChat } from './SessionChat'
+import { sessionMarkup } from './render-kit'
 import type { GitHubBranch } from './SessionStatus'
 
 it('names the workspace branch of its own record by its real name while the host gives the GitHub state of another branch, or of that branch without a label', async () => {
@@ -26,21 +24,14 @@ it('names the workspace branch of its own record by its real name while the host
   await chat.controller.select('fresh')
   /** The text under the title of the empty state of the new session. */
   const newSessionText = (github: GitHubBranch) => {
-    const markup = renderToStaticMarkup(
-      <SessionChat
-        controller={chat.controller}
-        host={{
-          starting: null,
-          sandboxBar: null,
-          keepsComposer: false,
-          github,
-        }}
-        mobile={false}
-        now={now}
-        onConnectAgent={() => {}}
-        snapshot={chat.controller.getSnapshot()}
-      />,
-    )
+    const markup = sessionMarkup(chat.controller, {
+      host: {
+        starting: null,
+        sandboxBar: null,
+        keepsComposer: false,
+        github,
+      },
+    })
     return /<h2[^>]*>New session<\/h2><p[^>]*>([^<]*)<\/p>/.exec(markup)?.[1]
   }
 

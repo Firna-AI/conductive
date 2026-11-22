@@ -79,7 +79,8 @@ check unknown input before the app or Worker uses it.
 - [commands.ts](commands.ts): `shortcutCommands` supplies command groups,
   scopes, labels, and search words. Existing palette commands share their text.
   Commands with workspace scope include Copy link, pull request actions,
-  and transcript copies. Agent actions and transcript copies use the shared
+  and transcript copies. Explain the selection has the selection scope: it
+  runs only while Explain shows. Agent actions and transcript copies use the shared
   control labels.
 - [defaults.ts](defaults.ts): `defaultShortcutKeys` supplies both keyboards.
   `commandInHost` keeps Mac window commands in the Mac app.

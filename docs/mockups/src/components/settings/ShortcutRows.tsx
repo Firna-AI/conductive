@@ -6,6 +6,7 @@ import {
 } from '../../entries/components/common/actions.mockup'
 import type { Shortcut } from '../common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
+import { Linked } from '../common/ScreenLink'
 import {
   cancelButton,
   conflictActions,
@@ -15,11 +16,7 @@ import {
   rowLayout,
   rowMessage,
 } from '../../entries/components/settings/ShortcutParts.mockup'
-import {
-  Linked,
-  type HeldShortcut,
-  type RefusedShortcut,
-} from './ShortcutParts'
+import { type HeldShortcut, type RefusedShortcut } from './ShortcutParts'
 import { keyOf, recordingKeys, resetKeys } from './shortcutRowKeys'
 import { instanceKey, shortcutKey } from '../../instanceKey'
 import { defined } from '../../defined'

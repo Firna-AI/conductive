@@ -11,6 +11,7 @@ import type { ChatEvent, RunnerEventRefused } from '../../shared/chat-events'
 import type { MessageDraft } from '../../shared/messages'
 
 import { readTurnSpeed } from '../../shared/chat-events'
+import { readAnchor } from './read-anchor'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued, readRepositoryChanged } from './read-continued'
@@ -23,6 +24,7 @@ import {
   oneOf,
   optional,
   record,
+  safeCount,
   text,
   UnreadableResponse,
 } from './json'
@@ -71,14 +73,6 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'workspace.title': true,
   unknown: true,
 })
-
-/** The new count fields require whole, non-negative, safe integer values. */
-function safeCount(value: unknown): number {
-  const result = count(value)
-  if (!Number.isSafeInteger(result) || result < 0)
-    throw new UnreadableResponse('count')
-  return result
-}
 
 export function readChoice(value: unknown): AgentChoice {
   const source = record(value, 'choice')
@@ -156,6 +150,7 @@ export function readSession(value: unknown): Session {
   const source = record(value, 'session')
   const login = optional(nullable(readSessionLogin))(source.login)
   const defaultLogin = optional(nullable(readSessionLogin))(source.defaultLogin)
+  const anchor = readAnchor(source.anchor)
   return {
     id: text(source.id),
     workspaceId: text(source.workspaceId),
@@ -169,6 +164,7 @@ export function readSession(value: unknown): Session {
     startedBy: nullable(readSender)(source.startedBy),
     ...(login === undefined ? {} : { login }),
     ...(defaultLogin === undefined ? {} : { defaultLogin }),
+    ...(anchor === null ? {} : { anchor }),
     sourceSessionId: nullable(text)(source.sourceSessionId),
     loginAvailable: flag(source.loginAvailable),
     loginShared: flag(source.loginShared),
