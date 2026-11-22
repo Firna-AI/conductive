@@ -1,15 +1,13 @@
 //! Restart-time activation and fallback with mocked disk and process ports.
 
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
 
 use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::error::Error;
 use super::ports::{ProcessesMock, State, StoreMock, UpdateEngine};
 
-use super::test_support::{ClientMock, complete_parts, engine, locked, parts};
+use super::test_support::{complete_parts, engine, locked, parts};
 
 #[tokio::test]
 async fn applies_the_newest_complete_version_without_downloading()
@@ -27,74 +25,32 @@ async fn applies_the_newest_complete_version_without_downloading()
     Ok(())
 }
 
-/// The previous release 0.0.2 lacks its Node part until an unpack restores it.
-fn previous_without_node(restored: &Arc<AtomicBool>) -> impl Clause {
-    let present = restored.clone();
+/// Each version records the test parts. Version 0.0.4 has a system part that is not on the disk.
+fn releases_with_a_damaged_newest() -> impl Clause {
     (
         StoreMock::apply_lock
             .some_call(matching!())
             .returns(Ok(locked())),
         StoreMock::state.some_call(matching!()).returns(Ok(State {
-            current: Some("0.0.5".into()),
-            previous: Some("0.0.2".into()),
-            pending: Some("0.0.5".into()),
+            current: Some("0.0.2".into()),
+            ..State::default()
         })),
         StoreMock::parts
-            .each_call(matching!("0.0.2"))
-            .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+            .each_call(matching!(_))
+            .answers(&|_, version| {
+                let mut list = parts().map_err(|_| Error::InvalidRelease)?;
+                if version == "0.0.4" {
+                    list.parts[2].sha256 = "c".repeat(64);
+                }
+                Ok(list)
+            }),
         StoreMock::has_part
             .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, part| {
-                Ok(part.name != "node" || present.load(Ordering::SeqCst))
-            })),
+            .answers(&|_, part| Ok(part.sha256 != "c".repeat(64))),
+        StoreMock::restore_links
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
     )
-}
-
-#[tokio::test]
-async fn pending_start_repairs_and_restores_previous_and_rejects_failed_release()
--> Result<(), Box<dyn std::error::Error>> {
-    let restored = Arc::new(AtomicBool::new(false));
-    let unpacked = restored.clone();
-    let engine = engine(Unimock::new((
-        previous_without_node(&restored),
-        StoreMock::unpack.next_call(matching!((part, _) if part.name == "node")).answers_arc(Arc::new(move |_, _, _| {
-            unpacked.store(true, Ordering::SeqCst);
-            Ok(())
-        })),
-        StoreMock::reject.some_call(matching!("0.0.5")).returns(Ok(())),
-        StoreMock::transition.next_call(matching!((state) if state.current.as_deref() == Some("0.0.2") && state.pending.is_some())).returns(Ok(())),
-        StoreMock::version_path.some_call(matching!("0.0.2")).returns(PathBuf::from("/root/versions/0.0.2")),
-        StoreMock::transition.next_call(matching!((state) if state.current.as_deref() == Some("0.0.2") && state.pending.is_none())).returns(Ok(())),
-    )), Unimock::new(ClientMock::download.next_call(matching!((asset) if asset.binary == "node" && asset.version == "0.0.2")).returns(Ok(b"node".to_vec()))), Unimock::new(()),
-    Unimock::new(ProcessesMock::install_system.next_call(matching!((path) if *path == std::path::Path::new("/root/versions/0.0.2"))).returns(Ok(()))));
-    engine.apply().await?;
-    assert!(
-        restored.load(Ordering::SeqCst),
-        "the fallback did not repair the previous release"
-    );
-    Ok(())
-}
-
-#[tokio::test]
-async fn fallback_waits_while_the_previous_release_lacks_a_part()
--> Result<(), Box<dyn std::error::Error>> {
-    let restored = Arc::new(AtomicBool::new(false));
-    let engine = engine(
-        Unimock::new(previous_without_node(&restored)),
-        Unimock::new(ClientMock::download.next_call(matching!(_)).returns(Err(
-            cli_updater::Error::ReleaseServerStatus {
-                url: "https://releases.test/node.tar.gz".into(),
-                status: 503,
-            },
-        ))),
-        Unimock::new(()),
-        Unimock::new(()),
-    );
-    assert!(matches!(
-        engine.apply().await,
-        Err(Error::PreviousIncomplete { version }) if version == "0.0.2"
-    ));
-    Ok(())
 }
 
 #[tokio::test]
@@ -102,29 +58,10 @@ async fn a_start_skips_a_newer_release_that_lacks_a_part() -> Result<(), Box<dyn
 {
     let engine = engine(
         Unimock::new((
-            StoreMock::apply_lock
-                .some_call(matching!())
-                .returns(Ok(locked())),
-            StoreMock::state.some_call(matching!()).returns(Ok(State {
-                current: Some("0.0.2".into()),
-                ..State::default()
-            })),
+            releases_with_a_damaged_newest(),
             StoreMock::versions
                 .some_call(matching!())
-                .returns(Ok(vec!["0.0.2".into(), "0.0.3".into()])),
-            StoreMock::parts
-                .each_call(matching!("0.0.2"))
-                .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
-            StoreMock::parts
-                .each_call(matching!("0.0.3"))
-                .answers(&|_, _| {
-                    let mut staged = parts().map_err(|_| Error::InvalidRelease)?;
-                    staged.parts[2].sha256 = "c".repeat(64);
-                    Ok(staged)
-                }),
-            StoreMock::has_part
-                .each_call(matching!(_))
-                .answers(&|_, part| Ok(part.sha256 != "c".repeat(64))),
+                .returns(Ok(vec!["0.0.2".into(), "0.0.4".into()])),
         )),
         Unimock::new(()),
         Unimock::new(()),
@@ -135,19 +72,32 @@ async fn a_start_skips_a_newer_release_that_lacks_a_part() -> Result<(), Box<dyn
 }
 
 #[tokio::test]
-async fn failed_fallback_installer_keeps_the_updater_of_the_failed_release()
+async fn a_damaged_newest_release_does_not_block_a_ready_newer_release()
 -> Result<(), Box<dyn std::error::Error>> {
-    let engine = engine(Unimock::new((
-        complete_parts(),
-        StoreMock::apply_lock.some_call(matching!()).returns(Ok(locked())),
-        StoreMock::state.some_call(matching!()).returns(Ok(State { current: Some("0.0.5".into()), previous: Some("0.0.2".into()), pending: Some("0.0.5".into()) })),
-        StoreMock::reject.some_call(matching!("0.0.5")).returns(Ok(())),
-        StoreMock::transition.next_call(matching!((state) if state.current.as_deref() == Some("0.0.2") && state.pending.as_deref() == Some("0.0.5"))).returns(Ok(())),
-        StoreMock::version_path.some_call(matching!("0.0.2")).returns(PathBuf::from("/root/versions/0.0.2")),
-        StoreMock::transition.next_call(matching!((state) if state.current.as_deref() == Some("0.0.5") && state.previous.as_deref() == Some("0.0.2") && state.pending.as_deref() == Some("0.0.5"))).returns(Ok(())),
-    )), Unimock::new(()), Unimock::new(()),
-    Unimock::new(ProcessesMock::install_system.next_call(matching!(_)).returns(Err(Error::StartFailed))));
-    assert!(matches!(engine.apply().await, Err(Error::StartFailed)));
+    for listed in [["0.0.4", "0.0.3"], ["0.0.3", "0.0.4"]] {
+        let engine = engine(
+            Unimock::new((
+                releases_with_a_damaged_newest(),
+                StoreMock::versions
+                    .some_call(matching!())
+                    .returns(Ok(listed.map(String::from).to_vec())),
+                StoreMock::transition
+                    .next_call(matching!((state) if state.current.as_deref() == Some("0.0.3") && state.pending.as_deref() == Some("0.0.3")))
+                    .returns(Ok(())),
+                StoreMock::version_path
+                    .some_call(matching!("0.0.3"))
+                    .returns(PathBuf::from("/root/versions/0.0.3")),
+            )),
+            Unimock::new(()),
+            Unimock::new(()),
+            Unimock::new(
+                ProcessesMock::install_system
+                    .next_call(matching!(_))
+                    .returns(Ok(())),
+            ),
+        );
+        engine.apply().await?;
+    }
     Ok(())
 }
 

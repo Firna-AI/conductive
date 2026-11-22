@@ -79,11 +79,16 @@ A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 
 `update check` uses `cli-updater` to read and compare the newest release.
-It downloads into a private version folder. It checks the program digest
-through `cli-updater` and checks every part digest before extraction.
-It reuses present parts with the same digest. A failed check logs a
-warning and returns failure. The independent background unit cannot block a start.
-It leaves no complete version on failure. A concurrent background check returns a busy error.
+It downloads a new release into a version folder that has no complete
+marker until the end. It checks the program digest through `cli-updater`
+and checks every part digest before extraction. It reuses present parts
+with the same digest. When the newest release is already complete and its
+`parts.json` can be read, the check never replaces its folder. It
+downloads only the missing parts and restores the part links, so a
+failure keeps that version. Only a complete folder whose `parts.json`
+cannot be read is staged again. A failed check logs a warning and returns
+failure. The independent background unit cannot block a start.
+A failed download of a new release leaves no complete version. A concurrent background check returns a busy error.
 An installation check with `--bootstrap` waits for the download lock.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 
@@ -96,6 +101,7 @@ starts is present. In a fallback, that version is the previous release. A part
 is present when its folder has the complete marker and the entry files of
 its role, such as `bin/node` or `runner-start.sh`. When a part is missing,
 apply downloads that part again with the digest check of `update check`.
+Then it points each part link of that version at its shared folder again.
 The repair takes no download lock. Each unpack, by a check or by apply,
 writes into a private folder. `part-publish.lock` covers only the last
 presence check and the rename, so a part that is present stays, and a
@@ -104,16 +110,19 @@ gets an equal share of what is left of 60 seconds. A failed download, or
 a download that uses up its share, logs a warning with the part name.
 The next part still gets its attempt, and apply goes on. The next apply
 tries again. When no part is missing, apply uses no network. A fallback
-switches only when the previous release is ready after the repair.
-Otherwise apply fails and changes nothing, so `current` keeps the updater
-that repairs. When the installer of a fallback fails, apply sets `current`
+switches only when each part that the previous release lists is present
+after the repair. Otherwise apply fails. It keeps `current`, `previous`,
+and the pending marker, so `current` keeps the updater that repairs, and
+the next start tries the fallback again. Parts that it restored stay. A
+previous release without a readable `parts.json` gives no part to wait
+for, so the fallback switches to it. When the installer of a fallback fails, apply sets `current`
 back to the failed release and keeps its pending marker, so the next
 start runs the same updater again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
-A later apply with that marker restores the previous version and its system files. A persistent rejection
+A later apply with that marker restores the previous version and its system files, once the previous release has each of its parts. A persistent rejection
 record prevents that version from downloading or applying again after collection.
-Collection runs after confirmation and retains current, previous, and the release that the next apply selects.
+Collection runs after confirmation and retains current, previous, and the newest complete version, also when that version still lacks a part.
 It reads that set under the download lock. It waits for no download.
 Collection defers when a check holds the download lock.
 

@@ -64,6 +64,7 @@ async fn apply_restores_lost_part_files_while_the_download_lock_is_held()
             .ok_or("missing system part")?
             .join("runner-start.sh"),
     )?;
+    fs::remove_file(disk.version_path("0.0.3").join("sdk-helper"))?;
     let engine = Engine {
         store: disk.clone(),
         client: Arc::new(server.client.clone()),
@@ -88,6 +89,15 @@ async fn apply_restores_lost_part_files_while_the_download_lock_is_held()
         "apply downloaded a part that was on disk"
     );
     assert_eq!(disk.state()?.current.as_deref(), Some("0.0.3"));
+    assert_eq!(
+        fs::read(active.join("sdk-helper/sdk-helper.mjs"))?,
+        b"helper bytes",
+        "apply did not restore the lost part link"
+    );
+    assert!(
+        disk.prepare("0.0.3").is_err() && disk.versions()?.contains(&"0.0.3".to_owned()),
+        "a complete version with a parts list was replaced"
+    );
     server.finish()?;
     Ok(())
 }

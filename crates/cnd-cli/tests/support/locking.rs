@@ -51,6 +51,9 @@ impl Store for ObservedStore {
     fn unpack(&self, part: &Part, bytes: &[u8]) -> Result<()> {
         self.disk.unpack(part, bytes)
     }
+    fn restore_links(&self, version: &str) -> Result<()> {
+        self.disk.restore_links(version)
+    }
     fn complete(&self, version: &str, parts: &PartsList) -> Result<()> {
         self.disk.complete(version, parts)
     }

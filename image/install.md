@@ -176,11 +176,13 @@ it keeps a part that is present. Collection removes a private folder
 that an interrupted unpack leaves.
 
 Apply and the idle install select a newer version only when it is
-ready: each part in its `parts.json` is present. A check stages a
-complete version that is not ready again, and reuses its present parts.
-Collection keeps that version. A fallback switches only to a ready
-previous version. Otherwise apply fails and leaves `current` and
-`pending` as they are.
+ready: each part in its `parts.json` is present. For a complete version
+that is not ready, a check downloads only the missing parts and restores
+the part links. It never replaces that folder, and `prepare` refuses to.
+Collection keeps that version. Apply restores the part links of the
+version that it starts. A fallback switches only when the previous
+version has each part that it lists. Otherwise apply fails and leaves
+`current`, `previous`, and `pending` as they are.
 
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
@@ -225,11 +227,11 @@ confirmation unit. The Rust runner confirms the release only after its first
 valid Worker `welcome`. Confirmation changes nothing unless the executable's
 version matches current and pending. It reads the saved Node state file without conversion.
 The next apply restores `previous` when a new release still has its pending
-marker. That fallback runs the previous system installer, which restores its
+marker and `previous` has each part that it lists. That fallback runs the previous system installer, which restores its
 units and starts the previous Rust runner on the next service attempt.
 The first published Rust release uses this pre-start layout too, so its
 fallback never pulls in a second activation unit. Collection after confirmation
-retains current, previous, and the release that the next apply selects.
+retains current, previous, and the newest complete version.
 It reads the retained set under the download lock and removes other
 version payloads and unused parts. Rejection records survive collection,
 so a failed version cannot download or apply again.

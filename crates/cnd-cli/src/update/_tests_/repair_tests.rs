@@ -35,6 +35,9 @@ fn current_release_without(missing: &'static [&'static str]) -> impl Clause {
             .answers_arc(Arc::new(move |_, part| {
                 Ok(!missing.contains(&part.name.as_str()))
             })),
+        StoreMock::restore_links
+            .some_call(matching!("0.0.5"))
+            .returns(Ok(())),
     )
 }
 

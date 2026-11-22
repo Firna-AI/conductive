@@ -109,7 +109,8 @@ arguments compatible across releases.
 
 The Rust runner calls `update started` only after its first valid Worker
 `welcome`. A process start alone leaves the pending marker in place.
-The next apply restores the previous release when confirmation did not occur.
+The next apply restores the previous release when confirmation did not occur, once that release has each part that it lists, as
+[Updates](../docs/protocol/sandbox-software.md#updates) says.
 
 ## The private Node runtime
 

@@ -49,11 +49,13 @@ A new runner confirms its release only after its first valid `welcome`.
 Its startup hook calls the resolved executable's `update started` through
 noninteractive sudo. A process start alone clears no pending marker.
 A later apply restores the previous executable and system files when a
-new release remains unconfirmed. That previous release can still run Node.
+new release remains unconfirmed and the previous release has each of its
+parts, as [Updates](../../docs/protocol/sandbox-software.md#updates) says.
+That previous release can still run Node.
 
 The service restarts after failure, with a two-second delay.
 So after an idle install, a new release that exits at its start restarts the service.
-That restart stops each process of the service group, and its pre-start apply restores the previous release.
+That restart stops each process of the service group, and its pre-start apply restores the previous release once it has each of its parts.
 SIGTERM closes helper processes and ends running turns before the connection closes.
 `KillMode=control-group` keeps its child processes in the service group.
 `OOMPolicy=continue` keeps the service running when the kernel ends one of

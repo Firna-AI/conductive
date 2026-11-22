@@ -129,6 +129,10 @@ impl Store for DiskStore {
         self.unpack_part(part, bytes)
     }
 
+    fn restore_links(&self, version: &str) -> Result<()> {
+        self.restore_version_links(version)
+    }
+
     fn complete(&self, version: &str, parts: &PartsList) -> Result<()> {
         self.finish_version(version, parts)
     }

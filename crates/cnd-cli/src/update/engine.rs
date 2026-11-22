@@ -8,7 +8,7 @@ use cnd_release::version::release_version;
 
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::{Processes, State, Store, UpdateEngine};
-use super::presence::release_ready;
+use super::presence::{fallback_waits, release_ready};
 
 /// Dependencies of the sandbox updater. The composition root supplies each port.
 pub struct Engine {
@@ -112,8 +112,8 @@ impl UpdateEngine for Engine {
         let state = self.store.state()?;
         if state.pending.is_some() {
             if let Some(previous) = &state.previous {
-                self.restore_parts(previous).await;
-                if !release_ready(self.store.as_ref(), previous) {
+                self.restore_release(previous).await;
+                if fallback_waits(self.store.as_ref(), previous) {
                     // `current` keeps the updater that repairs. The previous
                     // release can hold an older updater that repairs no part.
                     let error = Error::PreviousIncomplete {
@@ -127,7 +127,7 @@ impl UpdateEngine for Engine {
         }
         let newest = self.next_version(state.current.as_deref(), true)?;
         if let Some(version) = &newest {
-            self.restore_parts(version).await;
+            self.restore_release(version).await;
         }
         if newest == state.current {
             return Ok(());

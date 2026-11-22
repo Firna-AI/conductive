@@ -129,7 +129,9 @@ step of a build.
   while a message waits, as
   [Automatic restart](restart-the-software.md#automatic-restart) says.
 - The sandbox keeps the previous release. When the software of a new
-  release fails to start, the next start runs the previous release again.
+  release fails to start, the next start runs the previous release again,
+  once each part of it is on the disk, as the fallback exception above
+  says.
 - A new runner confirms its release when it first connects to the Worker.
   A new release without that confirmation at the next start counts as a
   failed start. The program never installs that release again.
@@ -182,7 +184,8 @@ step of a build.
   again until its next start. Reason: the same failure then does not
   disconnect the runner every 2 minutes.
 - A new release that exits at its start is a failed start. The runner
-  service then starts again within seconds, on the previous release. That
+  service then starts again within seconds, on the previous release once
+  each part of it is on the disk. That
   restart stops each ordinary process that an agent started. Each service
   keeps running.
 - A runner that cannot install at idle gets each update at a later start.

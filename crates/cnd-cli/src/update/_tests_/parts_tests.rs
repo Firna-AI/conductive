@@ -40,7 +40,7 @@ fn staging_store() -> impl Clause {
     )
 }
 
-/// A new release, and a staged release that lost a part, both stage again.
+/// A new release, and a complete staged release whose parts list is lost, both stage again.
 #[tokio::test]
 async fn changed_parts_download_in_isolation_and_complete_last()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -54,7 +54,7 @@ async fn changed_parts_download_in_isolation_and_complete_last()
                     .returns(Ok(vec!["0.0.3".to_owned()])),
                 StoreMock::parts
                     .some_call(matching!("0.0.3"))
-                    .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+                    .answers(&|_, _| Err(Error::InvalidRelease)),
             ))
         } else {
             Unimock::new((
@@ -72,6 +72,82 @@ async fn changed_parts_download_in_isolation_and_complete_last()
         Unimock::new(ProcessesMock::inspect.some_call(matching!(_, "0.0.3")).returns(Ok(list.clone()))));
         engine.check("0.0.2").await?;
     }
+    Ok(())
+}
+
+/// The store of a check that finds 0.0.3 complete but without its SDK helper part.
+fn staged_without_helper() -> impl Clause {
+    (
+        StoreMock::lock.some_call(matching!()).returns(Ok(locked())),
+        StoreMock::rejected
+            .some_call(matching!(_))
+            .returns(Ok(false)),
+        StoreMock::state.some_call(matching!()).returns(Ok(State {
+            current: Some("0.0.2".into()),
+            ..State::default()
+        })),
+        StoreMock::versions
+            .some_call(matching!())
+            .returns(Ok(vec!["0.0.3".to_owned()])),
+        StoreMock::parts
+            .each_call(matching!("0.0.3"))
+            .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+        StoreMock::has_part
+            .each_call(matching!(_))
+            .answers(&|_, part| Ok(part.name != "sdk-helper")),
+    )
+}
+
+#[tokio::test]
+async fn a_staged_release_that_lost_a_part_is_repaired_in_place()
+-> Result<(), Box<dyn std::error::Error>> {
+    let engine = engine(
+        Unimock::new((
+            staged_without_helper(),
+            StoreMock::unpack
+                .next_call(matching!((part, _) if part.name == "sdk-helper"))
+                .returns(Ok(())),
+            StoreMock::restore_links
+                .next_call(matching!("0.0.3"))
+                .returns(Ok(())),
+        )),
+        Unimock::new((
+            ClientMock::latest
+                .some_call(matching!(_, _))
+                .returns(Ok(release("0.0.3"))),
+            ClientMock::download
+                .next_call(
+                    matching!((asset) if asset.binary == "sdk-helper" && asset.version == "0.0.3"),
+                )
+                .returns(Ok(b"sdk-helper".to_vec())),
+        )),
+        Unimock::new(()),
+        Unimock::new(()),
+    );
+    engine.check("0.0.2").await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_failed_in_place_repair_keeps_the_staged_release()
+-> Result<(), Box<dyn std::error::Error>> {
+    let engine = engine(
+        Unimock::new(staged_without_helper()),
+        Unimock::new((
+            ClientMock::latest
+                .some_call(matching!(_, _))
+                .returns(Ok(release("0.0.3"))),
+            ClientMock::download.next_call(matching!(_)).returns(Err(
+                cli_updater::Error::ReleaseServerStatus {
+                    url: "https://releases.test/sdk-helper.tar.gz".into(),
+                    status: 503,
+                },
+            )),
+        )),
+        Unimock::new(()),
+        Unimock::new(()),
+    );
+    assert!(engine.check("0.0.2").await.is_err());
     Ok(())
 }
 

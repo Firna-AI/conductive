@@ -34,10 +34,7 @@ impl Engine {
         if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err(Error::MissingDigest);
         }
-        if self.store.rejected(&release.version)?
-            || self.store.versions()?.contains(&release.version)
-                && release_ready(self.store.as_ref(), &release.version)
-        {
+        if self.store.rejected(&release.version)? {
             return Ok(());
         }
         let state = self.store.state()?;
@@ -46,6 +43,16 @@ impl Engine {
                 <= release_version(&current).internal()?
         {
             return Ok(());
+        }
+        if self.store.versions()?.contains(&release.version)
+            && self.store.parts(&release.version).is_ok()
+        {
+            // A start can select this folder, so only its missing parts
+            // and links are restored. A failure keeps its marker and list.
+            if release_ready(self.store.as_ref(), &release.version) {
+                return Ok(());
+            }
+            return self.repair_staged(&release.version).await;
         }
         let archive = self.client.download(&release).await.internal()?;
         self.store.prepare(&release.version)?;

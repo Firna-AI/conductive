@@ -19,6 +19,9 @@ mod apply_tests;
 #[path = "_tests_/check_tests.rs"]
 mod check_tests;
 #[cfg(test)]
+#[path = "_tests_/fallback_tests.rs"]
+mod fallback_tests;
+#[cfg(test)]
 #[path = "_tests_/parts_tests.rs"]
 mod parts_tests;
 #[cfg(test)]

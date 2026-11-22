@@ -17,6 +17,10 @@ pub const NODE_PART: &str = "node";
 impl DiskStore {
     pub(super) fn prepare_version(&self, version: &str) -> Result<()> {
         let folder = self.version_path(version);
+        if folder.join("complete").try_exists().internal()? && self.version_parts(version).is_ok() {
+            // A start can select this folder. Only its missing parts and links are restored.
+            return Err(Error::InvalidRelease);
+        }
         if folder.try_exists().internal()? {
             fs::remove_dir_all(&folder).internal()?;
         }
@@ -89,6 +93,24 @@ impl DiskStore {
             fs::remove_dir_all(&target).internal()?;
         }
         fs::rename(temporary, target).internal()
+    }
+
+    /// Point each part link of `version` at its shared folder, with a rename.
+    pub(super) fn restore_version_links(&self, version: &str) -> Result<()> {
+        let folder = self.version_path(version);
+        for part in self.version_parts(version)?.parts {
+            let link = folder.join(&part.name);
+            let target = self.part_path(&part.sha256);
+            if fs::read_link(&link).is_ok_and(|current| current == target) {
+                continue;
+            }
+            let temporary = folder.join(format!("{}.next", part.name));
+            self.remove(&temporary)?;
+            std::os::unix::fs::symlink(&target, &temporary).internal()?;
+            fs::rename(&temporary, &link).internal()?;
+            tracing::info!(version, part = %part.name, "restored a release part link");
+        }
+        Ok(())
     }
 
     pub(super) fn finish_version(&self, version: &str, parts: &PartsList) -> Result<()> {

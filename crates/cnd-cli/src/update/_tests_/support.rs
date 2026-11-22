@@ -49,6 +49,9 @@ pub(super) fn complete_parts() -> impl Clause {
         StoreMock::has_part
             .each_call(matching!(_))
             .answers(&|_, _| Ok(true)),
+        StoreMock::restore_links
+            .each_call(matching!(_))
+            .answers(&|_, _| Ok(())),
     )
 }
 

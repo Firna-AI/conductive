@@ -6,6 +6,7 @@ use cnd_release::parts::Part;
 use tokio::time::{Instant, timeout};
 
 use super::engine::Engine;
+use super::error::Result;
 
 /// The longest time that one start spends on part downloads.
 ///
@@ -50,6 +51,25 @@ impl Engine {
                 }
             }
         }
+    }
+
+    /// Restore the missing parts, then the part links, of the release that starts.
+    pub(super) async fn restore_release(&self, version: &str) {
+        self.restore_parts(version).await;
+        if let Err(error) = self.store.restore_links(version) {
+            tracing::warn!(%error, version, "release part links could not be restored");
+        }
+    }
+
+    /// Download each missing part of a complete staged release, with no time
+    /// limit of a start, and restore its links. Its other files stay.
+    pub(super) async fn repair_staged(&self, version: &str) -> Result<()> {
+        for part in &self.store.parts(version)?.parts {
+            if !self.store.has_part(part)? {
+                self.download_part(version, part).await?;
+            }
+        }
+        self.store.restore_links(version)
     }
 
     fn part_missing(&self, version: &str, part: &Part) -> bool {

@@ -40,6 +40,7 @@ pub trait Store: Send + Sync {
     /// Return the path of a version folder.
     fn version_path(&self, version: &str) -> PathBuf;
     /// Prepare an incomplete folder with an executable seed for cli-updater.
+    /// Refuse to replace a complete folder whose parts list can be read.
     fn prepare(&self, version: &str) -> Result<()>;
     /// Read the parts list that a complete version folder records.
     fn parts(&self, version: &str) -> Result<PartsList>;
@@ -47,6 +48,8 @@ pub trait Store: Send + Sync {
     fn has_part(&self, part: &Part) -> Result<bool>;
     /// Unpack a checked part into the content-addressed store, unless it is present there.
     fn unpack(&self, part: &Part, bytes: &[u8]) -> Result<()>;
+    /// Point each part link of a complete version at its shared part folder again.
+    fn restore_links(&self, version: &str) -> Result<()>;
     /// Link all parts and write the complete marker last.
     fn complete(&self, version: &str, parts: &PartsList) -> Result<()>;
     /// Atomically replace one version link or marker. Pending is written first.

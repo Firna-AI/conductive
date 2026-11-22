@@ -1,6 +1,6 @@
 //! When an unpacked part counts as present, and when a release is ready to start.
 
-use cnd_release::parts::Part;
+use cnd_release::parts::{Part, PartsList};
 
 use super::disk::DiskStore;
 use super::error::{ErrorResultExt, Result};
@@ -43,18 +43,35 @@ impl DiskStore {
 /// which downloads its missing parts while the runner works. A read error
 /// logs a warning and counts as not ready.
 pub fn release_ready(store: &dyn Store, version: &str) -> bool {
-    let parts = match store.parts(version) {
-        Ok(parts) => parts,
+    match store.parts(version) {
+        Ok(parts) => !lacks_part(store, version, &parts),
         Err(error) => {
             tracing::warn!(%error, version, "release parts could not be read");
-            return false;
+            false
         }
-    };
-    parts.parts.iter().all(|part| match store.has_part(part) {
-        Ok(present) => present,
+    }
+}
+
+/// Whether a fallback to `version` must wait, because a listed part is missing.
+///
+/// A release whose parts list cannot be read gives no part to wait for, so
+/// the fallback switches to it, as before the repair existed.
+pub fn fallback_waits(store: &dyn Store, version: &str) -> bool {
+    match store.parts(version) {
+        Ok(parts) => lacks_part(store, version, &parts),
+        Err(error) => {
+            tracing::warn!(%error, version, "the previous release has no readable parts list");
+            false
+        }
+    }
+}
+
+fn lacks_part(store: &dyn Store, version: &str, parts: &PartsList) -> bool {
+    parts.parts.iter().any(|part| match store.has_part(part) {
+        Ok(present) => !present,
         Err(error) => {
             tracing::warn!(%error, version, part = %part.name, "a release part could not be checked");
-            false
+            true
         }
     })
 }
