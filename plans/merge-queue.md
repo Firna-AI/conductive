@@ -1,0 +1,697 @@
+# Merge queue
+
+Status: Active. On branch `calummoore/merge-queue-k2ep`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+
+Today each workspace merges its own pull request with Merge in the pull
+request bar. Many workspaces of one repository work at the same time. When
+one pull request merges, the others get conflicts. An agent fixes them, then
+another pull request merges first, and the cycle repeats. Cal asked on 20
+November 2026 for a merge queue: a member adds a ready pull request to the
+queue, each queued pull request builds on the ones ahead, members can
+re-order the queue, and the sidebar shows the queue as its own group while
+it has rows. The brainstorm notes are in `.context/merge-queue/brief.md`.
+
+This change builds one queue for each repository and target branch. The
+queue is one GitHub stack. Each queued pull request targets the branch of
+the pull request ahead of it, so its agent fixes the conflicts with the work
+ahead once, while it waits. The Worker merges the highest pull request whose
+layers are all green, and GitHub lands it with every layer below it. The
+queue acts as the member who queued each pull request. A stack that a member
+made stays together in the queue.
+
+The change does not cover GitHub's own merge queue, a queue for pull
+requests from forks, or agent tools that add to the queue. See the design
+calls.
+
+Contract owners:
+
+- A new protocol doc, `docs/protocol/merge-queue.md`.
+- [GitHub banner](../docs/protocol/github-banner.md).
+- [Base branches](../docs/protocol/base-branches.md).
+- [GitHub tokens](../docs/protocol/github-tokens.md).
+- [Sections](../docs/protocol/sections.md).
+- [Protocol docs](../docs/architecture/protocol-docs.md), which lists each
+  protocol doc.
+- The Terms page in `src/marketing/terms.ts`, the Privacy page in
+  `src/marketing/privacy.ts` with its data uses in
+  `src/marketing/privacy-uses.ts`, and the public guides in
+  `src/marketing/docs/`, mostly `pull-requests.md` and `workspaces.md`.
+- The READMEs of `worker/github/`, `worker/app-api/`, `worker/chat/`,
+  `worker/lifecycle/`, `src/github/`, `src/shell/`, and `migrations/`.
+
+## Terms
+
+- **Queue:** the ordered list of queued workspaces of one repository and one
+  target branch, such as `main`. Every member of the org sees the same queue.
+- **Entry:** one queued workspace in a queue, with its open pull request,
+  its place, and the member who queued it.
+- **Queuer:** the member who added an entry to the queue.
+- **GitHub stack:** GitHub's own stacked pull requests, generally available
+  since 6 October 2026 on every github.com plan. The bottom pull request
+  targets the trunk. Each pull request above targets the branch of the one
+  below. A merge of one pull request also merges every pull request below
+  it, in one step.
+- **Trunk:** the target branch of a queue, at the bottom of its GitHub
+  stack.
+- **Layer:** one pull request of the GitHub stack.
+- **Restack:** a move of a layer onto a new branch below it, with
+  `git rebase --onto`, and a push of the result.
+- **Fix turn:** an agent turn that the queue sends as a message of the
+  queuer, with a fixed prompt, such as a restack or Fix checks.
+- **Member stack:** pull requests that a member stacked without the queue,
+  with a start from another branch (decisions 298 and 301).
+
+## Decisions
+
+The numbers 313 to 319 were the next free numbers on 22 November 2026, on
+`main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
+22 November 2026, with the options and the letters that Cal saw in the
+brainstorm. Decisions 316 to 319 are open.
+
+An options check ran over the decisions and the design calls on 22 November
+2026. It added option D to decision 316 and changed its recommendation from
+B to D. It found decisions 317 to 319, corrected the design calls, and added
+costs and assumptions to decisions 313 to 315. Its report is in
+`.context/merge-queue/options-check.md`.
+
+### Decision 313: how the merge queue works
+
+Chosen by Cal on 22 November 2026: F. A Conductive queue that is one GitHub
+stack. Waiting pull requests fix their conflicts in parallel, and one merge
+can land many of them. A red pull request blocks every pull request above
+it, and a re-order rebuilds the stack. The base of a queued workspace
+follows GitHub.
+
+- Root question: how does Conductive merge many ready pull requests in an
+  order that members control, so that each pull request fixes its conflicts
+  with the work ahead of it only once?
+- Shared assumptions: one queue lands work into one target branch of one
+  repository (task message). Each entry is a workspace with an open pull
+  request (architecture doc). GitHub keeps the final say, and nothing
+  bypasses its rules (`github-banner.md`, under "Merge").
+- A cost that the options check found after the choice: GitHub merges a
+  stack only with a linear history. A merge into the trunk from outside
+  the queue, or a push to a lower layer, breaks it. Each layer above then
+  needs a restack, one after another, before the next merge. So the queue
+  works best when every merge of the repository goes through it.
+- This changes two requirements in force, for queued workspaces only. The
+  bar's doc says that stacked pull requests are not part of the bar. Base
+  branches says that a base change on GitHub does not change the base of a
+  workspace (decisions 301 and 304). Cal saw both in the text of option F.
+- Rejected:
+  - D, a "merge captain" agent with no product change. It is fragile, keeps
+    a cloud computer running, and has no sidebar group.
+  - C, GitHub's merge queue with Conductive as a client. It allows only
+    "jump to the front", drops a pull request on a conflict, and needs a
+    merge queue rule and a `merge_group` CI trigger in each repository.
+  - A, a Conductive queue with no stacking. A head that needs a fix holds
+    the queue for the fix and a CI run.
+  - B, a queue that the agents restack with no GitHub stack. GitHub then
+    runs no checks on the combined work ahead, and each merge needs one
+    call for each pull request. B needs no restack of its bottom pull
+    request after a merge from outside the queue.
+  - E, A first and F later. Cal chose stacks in the first release.
+- Left out in the brainstorm: a merge with no order, because two pull
+  requests that change one file still loop. A combined branch that closes
+  the original pull requests, because Continue and the merge records then
+  break. Mergify, Aviator, and Graphite, because each needs a second GitHub
+  App in each org and drops a pull request on a conflict. Restacks by the
+  app with no agent, because decision 220 rejected code changes by the app.
+  Decision 319 brings back GitHub's own server rebase.
+
+### Decision 314: who acts when nobody clicks
+
+Chosen by Cal on 22 November 2026: A. The queue acts as the queuer of each
+entry. It merges with the queuer's stored GitHub token, as automations use
+the owner's token, and it sends each fix turn as a message of the queuer.
+
+- Root question: whose authority does the queue use to merge and to start
+  fix turns after a member queues a pull request?
+- This changes decision 228 for queued merges: a queued merge carries the
+  head that the queue last read and checked, not a head that a member saw.
+  It also changes the sentence of the Privacy page that says a merge uses
+  the token of the member who clicks.
+- Assumptions that the options check named, and how the design keeps them:
+  - The queuer stays a member of the org with write access. Each step
+    checks this, and a queuer who lost it makes the entry leave.
+  - The stored token stays usable. A failed refresh makes the entry "Needs
+    attention".
+  - A fix turn uses the agent login of its session, as every message does,
+    not a quota of the queuer.
+  - One merge lands the layers of several queuers with the token of the
+    queuer of its highest layer. Each of those queuers approved a merge.
+- Rejected:
+  - B, fix turns as the queuer but a click on "Merge next" for each merge.
+    The queue then stops each time nobody is there.
+  - C, nothing runs without a click. A queue that only shows an order does
+    not stop the loop.
+- Left out: a Conductive bot account, because work on GitHub always runs as
+  a member (decision 50). The workspace owner, as for a moved base
+  (decision 307), because the owner did not ask for the merge.
+
+### Decision 315: stacks that members make themselves
+
+Chosen by Cal on 22 November 2026: A. A member stack moves through the
+queue as one unit. Its upper pull request always stays directly above its
+lower pull request.
+
+- Root question: how does the queue keep a stack that a member made in the
+  right order?
+- The design reads a member stack from GitHub: the GitHub base of each pull
+  request and the `stack` object of a stack that a member made on the
+  GitHub website. Reason: the base of a workspace does not follow a base
+  change on GitHub outside the queue (decisions 301 and 304).
+- Rejected:
+  - B, the upper pull request goes anywhere but waits until the lower one
+    merges. The queue can then hold a layer that cannot merge.
+  - C, a stacked pull request cannot join until its lower one merged. This
+    adds a refusal.
+
+### Decision 316: what Merge does on a queued workspace
+
+Open. It blocks the bar part of Milestones 1 and 9.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `worker/github/merge.ts:60`, `docs/protocol/github-banner.md`, under "Merge".
+- **Background:** Merge in the bar does a direct merge of the workspace's
+  pull request. In a GitHub stack, a merge of one layer also merges every
+  layer below it. While the queue rebuilds its stack, a queued pull request
+  targets the branch of another entry.
+- **Problem:** No rule says what Merge does on a queued workspace. A direct
+  merge can land layers that the bar does not show, or land the work into
+  another entry's branch.
+- **Impact if no action:** A member who clicks Merge on the third entry
+  also merges the first and the second. During a rebuild, the click merges
+  the work into the wrong branch.
+- **Root question:** What does Merge do for a queued pull request, so that
+  one click never lands more, or into another branch, than the bar shows?
+- **Options:**
+  - **A.** No Merge on a queued workspace. The bar offers Remove from queue,
+    and Merge comes back after the removal. This adds a gate. Effort: Small.
+  - **B.** Merge stays, with the label "Merge with 2 below". It does a direct
+    merge, as GitHub does. It races the queue's own merge, and during a
+    rebuild it merges into another entry's branch. Effort: Small.
+  - **C.** "Merge now" moves the entry to the bottom of the queue, which
+    restacks it onto the trunk, and the queue merges it next. Effort:
+    Medium.
+  - **D.** B's label, shown only while the layer and each layer below it
+    are in the GitHub stack and ready to merge. The click asks the queue to
+    merge up to that layer as its next step, with the token of the member
+    who clicks. Effort: Medium.
+- **Left out:** A merge of the layer alone, because GitHub refuses a merge
+  of a layer without the layers below it. A question before the merge,
+  because decision 228 rejected it.
+- **Wider fix:** D. Each merge of a queued layer then goes through the
+  queue.
+- **Previous examples:** GitHub's own merge box shows a count badge of the
+  layers that a merge brings with it.
+- **Recommendation:** D, in place of B, the first recommendation. It lands
+  only what the label names, always into the trunk, and it never races
+  the queue.
+- **Action:** ask the user, because each option adds bar behaviour that no
+  requirement covers.
+
+### Decision 317: where a member adds a pull request to the queue
+
+Open. It blocks the action part of Milestones 1, 8, and 9.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/github-banner.md:125`, `docs/protocol/command-palette-actions.md:116`.
+- **Background:** The bar shows one main action for each state (decision
+  220), such as Merge or Fix checks. Merge latest got a palette row only,
+  because "a second control there needs its own design" (merge latest
+  decision 2 A).
+- **Problem:** Add to merge queue fits every state of an open pull request,
+  so it cannot replace one main action.
+- **Impact if no action:** The queue has no control to add an entry.
+- **Root question:** Where does a member say that a pull request is ready
+  for the queue?
+- **Options:**
+  - **A.** A second control in the bar, beside the main action, while the
+    pull request is open. It changes decision 220. Effort: Small.
+  - **B.** A menu on the bar's main action, with Add to merge queue as its
+    second row. Effort: Small.
+  - **C.** Add to merge queue in the menu of the workspace row, in the
+    workspace header menu, and as a palette command. Effort: Small.
+  - **D.** C, and a drag of a workspace row into the Merge queue group,
+    which shows as a drop target during each drag. Effort: Medium.
+- **Left out:** A chat command to the agent. The agent tools do not act on
+  the queue in this change.
+- **Wider fix:** None. This is one choice of controls.
+- **Previous examples:** Merge latest decision 2 A put a second action in
+  the palette only.
+- **Recommendation:** D. The row menu and the palette keep the bar's rule,
+  and a drag into the group matches a drag between sections.
+- **Action:** ask the user, because A and B change decision 220, and C and
+  D add controls that no requirement covers.
+
+### Decision 318: a queued sub-workspace in the list
+
+Open. It blocks the grouping part of Milestones 1 and 8.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/sub-workspaces.md:168`, `src/app/sections.ts:47`.
+- **Background:** Each live sub-workspace shows nested under the row of its
+  parent (sub-workspace decision 1 C). The plan moves each queued workspace
+  from its section into the Merge queue group.
+- **Problem:** A queued sub-workspace would leave its parent's tree. No rule
+  says where the sub-workspaces of a queued parent show.
+- **Impact if no action:** The list breaks decision 1 C, or a queued
+  workspace shows in two places.
+- **Root question:** Where does the list show a queued workspace that is
+  part of a tree?
+- **Options:**
+  - **A.** The group shows every queued workspace as a flat row. Its tree
+    stays in the section, and the queued row there gets a mark with its
+    place, such as "Queue 2". So a queued workspace shows twice. Effort:
+    Small.
+  - **B.** A queued workspace moves to the group alone. A queued
+    sub-workspace leaves its parent's tree, and the sub-workspaces of a
+    queued parent stay nested under it in the group. It changes decision
+    1 C for queued workspaces. Effort: Small.
+  - **C.** Every queued workspace stays in its section, with the mark of A.
+    The group shows only for a queued workspace whose tree is not queued.
+    Effort: Small.
+- **Left out:** No group, with only marks in the sections, because Cal asked
+  for a group of its own.
+- **Wider fix:** None. This is one layout rule.
+- **Previous examples:** The Archived group moves each archived workspace
+  out of its section.
+- **Recommendation:** A. The queue shows in its real order in one place,
+  and each tree stays whole.
+- **Action:** ask the user, because A shows a workspace twice and B
+  changes sub-workspace decision 1 C.
+
+### Decision 319: who rebases a layer that has no conflict
+
+Open. It blocks Milestone 6.
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Review.
+- **Category:** Docs or spec.
+- **Location:** `docs/protocol/github-banner.md:172`.
+- **Background:** A layer must hold the newest head of the layer below it.
+  GitHub's GraphQL route `updatePullRequestBranch` with `REBASE` rebases
+  one branch on GitHub's servers. Decision 220 rejected code changes by the
+  app.
+- **Problem:** Most restacks have no conflict. A fix turn for each one costs
+  an agent turn, a running cloud computer, and minutes.
+- **Impact if no action:** Each re-order and each push to a lower layer
+  starts one agent turn for each layer above, one after another.
+- **Root question:** How does a layer move onto the newest head below it
+  when the move has no conflict?
+- **Options:**
+  - **A.** A fix turn for every restack. Effort: Small.
+  - **B.** GitHub's server rebase first, and a fix turn only on a conflict.
+    It changes decision 220. Milestone 3 must first show that it keeps only
+    the layer's own commits after a squash merge below. Effort: Medium.
+- **Left out:** A rebase that the Worker runs itself in the cloud computer
+  with no agent. It changes decision 220 like B, and B needs no cloud
+  computer.
+- **Wider fix:** None.
+- **Previous examples:** GitHub's own "Rebase stack" button runs a server
+  rebase.
+- **Recommendation:** B, when the Milestone 3 check passes. Otherwise A.
+- **Action:** ask the user, because B changes decision 220.
+
+## Design
+
+These are design calls of the agent, made on 22 November 2026, unless a
+line names a decision. The options check corrected them on the same day.
+
+### The queue
+
+- One queue for each repository and trunk. The trunk is the GitHub base of
+  the bottom pull request of the first unit that joins, which is the
+  default branch for most workspaces. Reason: one GitHub stack has one
+  trunk, and the stored base of a workspace does not follow GitHub outside
+  the queue.
+- Every member of the org sees each queue. A member with write access or
+  more to the repository can add, remove, and re-order entries. Reason:
+  Merge already needs that access (decision 221), and every member sees one
+  order, as for sections.
+- Any workspace with an open pull request from the same repository can
+  join, also with failed checks or a conflict. The queue fixes those.
+  Reason: Cal asked that anything with a pull request is eligible.
+- Add on a draft first marks it ready for review as the member who adds,
+  as Ready for review does. Reason: GitHub does not merge a draft.
+- A pull request from a fork cannot join. Reason: a GitHub stack needs
+  every branch in one repository.
+- One leave step serves every cause. The causes are a merge, a close, a
+  change to draft, an archive, a repository or branch change, Continue,
+  Remove from queue, a base change on GitHub that the queue did not make, a
+  queuer who left the org or lost write access, and a suspended org.
+- The leave step sets the GitHub base of the pull request back to the
+  trunk, so that no entry keeps another entry's branch as its base. It then
+  moves the units above it onto the unit below it.
+- A member stack joins as one unit (decision 315). Add on its upper
+  workspace adds each lower pull request that is not queued yet, in stack
+  order. A drag moves the unit. Remove from queue on a lower entry also
+  removes the entries above it in the unit, and the question says so.
+
+### The GitHub stack
+
+- The queue keeps one GitHub stack for each queue, through the REST stacks
+  API: create, add, and unstack. Unstack removes every open layer. So each
+  leave and each re-order ends with a new stack and a new stack number,
+  which the queue saves.
+- The queue keeps one rule after each read of GitHub: from the lowest layer
+  that does not hold the newest head of the layer below it, it restacks
+  each layer upward. Every cause uses this rule: a join, a re-order, a
+  leave, a fix push on a lower layer, and a merge into the trunk from
+  outside the queue.
+- The bottom layer must hold the newest trunk head when the stack forms.
+- A new entry joins at the top. It first restacks onto the branch of the
+  layer below it. Then the Worker sets its GitHub base, and then it adds the
+  pull request to the stack. Reason: a base that already holds the head of
+  the layer would show that layer's commits as removed, so the code that
+  changes a base never sets a base that holds the head.
+- A restack with a fix turn uses plain Git, `git rebase --onto origin/<new
+  base> <old base commit>`, and `git push --force-with-lease`. The prompt
+  names both commits. Reason: the cloud computers have no `gh stack`
+  extension, and `--onto` keeps only the layer's own commits, also after a
+  squash merge below it. Decision 319 holds a server rebase first.
+- GitHub needs a linear history. While a workspace is queued, the bar's
+  Resolve conflicts, Merge latest, and the restack prompts ask for a
+  rebase, not a merge.
+
+### The base follows GitHub
+
+- A queued workspace stores the branch of the layer below it as its base.
+  The bottom entry stores its trunk. Decision 304 moves a lost base to the
+  default branch. For a queued workspace, it moves to the trunk instead.
+- Each base change runs the saved base move of the workspace, with its
+  fetch (decisions 307 and 308). The fetch uses the workspace owner's
+  token, as for a moved base.
+- When GitHub changes the base of a queued pull request, such as after a
+  merge below it, the `pull_request` `edited` webhook moves the stored base
+  to the new GitHub base (decision 313). The move gives the same result when
+  the same change arrives twice, also for the queue's own base changes. A
+  base change that the queue did not make is a leave. Workspaces outside
+  the queue keep decisions 301 and 304.
+- After a merge, GitHub rebases each remaining layer, so each workspace
+  branch on GitHub gets new commits. The Worker then runs a guarded sync in
+  each such cloud computer, when no session runs a turn and the repository
+  folder has no changes. It fetches the branch. When the local branch
+  equals the old GitHub head, it moves the local branch to the new head.
+  Otherwise it sends a restack fix turn. Reason: an old local branch would
+  make the agent's next push fail or undo GitHub's rebase.
+
+### The merge
+
+- The Worker merges the highest layer whose bar state is "ready to merge",
+  when each layer below it is "ready to merge" too. Reason: the bar state
+  already reads the checks, the conflicts, the reviews, and the block of
+  GitHub's rules, such as unresolved threads.
+- While the layer directly above the highest ready layer runs its checks,
+  the queue waits for it, up to 15 minutes. Reason: each merge makes GitHub
+  rebase every layer above and run their checks again, so a merge at once
+  would often land only the bottom layer.
+- It merges with the async merge route, `merge_action: direct_merge` and
+  `bypass_rules: false`, and the head of the layer that it last read. It
+  uses the stored token of the queuer of the highest layer (decision 314),
+  and that queuer's merge method, as Merge does.
+- A stack merge can stop partway. After each merge, the queue reads each
+  layer again before its next step.
+- Each merged layer gets a merge record, as a merge from the bar does.
+  Continue then works in each merged workspace.
+
+### Failures
+
+- A red layer, a conflict, or requested changes gets one fix turn, with the
+  prompt of the bar's action: Fix checks, the rebase prompt, or Address
+  review. Reason: one try fixes most failures, and each turn uses the agent
+  login of the session.
+- When the layer is still not mergeable after that turn and its checks, the
+  entry becomes "Needs attention". It leaves the GitHub stack, and the
+  units above it move onto the unit below it. The entry stays in the
+  sidebar group, below the stack, until a member acts.
+- A member's Add to merge queue on a "Needs attention" entry joins it again
+  at the top.
+- When the queuer's stored token fails, when the session has no agent
+  login, or when GitHub refuses the merge, the entry becomes "Needs
+  attention" with that reason.
+- A fix turn goes to the newest open session of the workspace. The queue
+  waits until no session of the workspace runs a turn, up to 30 minutes,
+  then marks the entry "Needs attention". Reason: a message during a turn
+  joins that turn and pushes as the sender of that turn. A background wait
+  can last up to 30 days.
+- A stopped cloud computer resumes for a fix turn, as a message from an
+  agent tool does.
+
+### Re-order
+
+- A drag in the sidebar group changes the order. Unstack cannot start at a
+  place in the stack, so a re-order unstacks the whole stack. No merge runs
+  until the new stack exists.
+- Each changed entry restacks first, from the bottom up, one after the
+  other. The Worker then sets its GitHub base, and adds the layers back.
+- A re-order cannot move an entry below a layer that is merging.
+
+### Storage and coordination
+
+- A new D1 table holds the queues, and a second one holds the entries, with
+  the place, the queuer, the state, and the time of each step. The
+  migration adds tables only, so the previous Worker keeps working.
+- One Durable Object for each queue runs every step in order, with an
+  alarm, as the image coordinator does on a named object of the `Workspace`
+  class. Reason: two steps of one queue must never run at the same time.
+- The member routes go through the queue object too.
+- Webhooks, the end of a fix turn, an archive, Continue, and a repository
+  change wake the queue object. The object collects its wakes through its
+  alarm, and it reads GitHub once for each alarm. Reason: check webhooks
+  come often, and GitHub's hourly limit of the App is shared.
+
+### The app
+
+- A "Merge queue" group shows at the top of the sidebar list only when a
+  queue has entries. It holds one block for each queue, headed by the
+  repository and the trunk. Each row shows its place, the state of its
+  step, and the state of its checks. Decision 318 holds where a queued
+  workspace of a tree shows.
+- A member with write access drags a row to re-order, as in a section. A
+  phone lifts a row with a long press.
+- Decision 317 holds where a member adds an entry. The bar of a queued
+  workspace names its place and the pull request below it, and gets Remove
+  from queue. Decision 316 holds Merge there.
+- Each new action is also a command, as each action of the app is
+  (decision 199).
+- The list read carries the entry of each queued workspace, through a new
+  field of the Rust `Workspace` type and its generated TypeScript. The bar
+  read carries the queue state of its workspace.
+
+### Not in this change
+
+- GitHub's own merge queue. At Add, the Worker reads the rules of the
+  trunk. When the trunk requires a GitHub merge queue, the entry joins as
+  "Needs attention" with that reason. Reason: the queue would otherwise
+  run every restack and then fail at the merge.
+- Agent tools that add to the queue. A follow-up item records them.
+
+## Milestone 1: Mockups
+
+Tags: mockup
+
+Depends on: none
+
+Draw the sidebar group and the bar states, on a computer and on a phone.
+
+- [ ] Draw the sidebar "Merge queue" group in a new entry
+      `app/merge-queue`: one queue, two queues, each step state, a "Needs
+      attention" row, a member stack as one unit, a drag, and the empty list
+      with no group.
+- [ ] Draw the bar states in `app/banner/merge-queue`: a queued bottom
+      entry, a queued upper entry with its place, a restack in progress,
+      "Needs attention", and Remove from queue with its question.
+- [ ] Draw Add to merge queue after decision 317, Merge on a queued
+      workspace after decision 316, and a queued workspace of a tree after
+      decision 318.
+- [ ] Draw the phone layout of the group and of the queued bar.
+- [ ] Add the fixed prompts of the restack and of the rebase variant of
+      Resolve conflicts to `barCopy.ts`.
+- [ ] Update `catalogue.md`, `catalogue-bar.md`,
+      `catalogue-workspace-list.md`, and `design-bar.md`.
+- [ ] Run `npm run mockups:check`. Smoke-test the new pages in a browser
+      and save screenshots under `.context/merge-queue/`.
+- [ ] Update the design and the TODOs of this plan for each problem that the
+      mockups show.
+
+## Milestone 2: Documentation and protocol
+
+Depends on: 1
+
+State the requirements and the decisions of the queue.
+
+- [ ] Write `docs/protocol/merge-queue.md` with the rules of the queue, the
+      GitHub stack, the merge, the failures, the re-order, and the group.
+      Add it to `docs/architecture/protocol-docs.md`.
+- [ ] Update `docs/protocol/github-banner.md`: the bar actions of the
+      queue, decision 316, and the Merge section that says stacks are not
+      part of the bar.
+- [ ] Update `docs/protocol/base-branches.md`: the base of a queued
+      workspace follows the queue and GitHub (decision 313).
+- [ ] Update `docs/protocol/github-tokens.md`: the queue merges and sends
+      fix turns as the queuer (decision 314). The fetches of its base moves
+      use the owner's token (decision 307).
+- [ ] Update `docs/protocol/sections.md`: the Merge queue group.
+- [ ] Read the Terms page and the Privacy page in full. Update each
+      sentence that restates a changed fact, such as the token of a merge.
+      Set the effective date of the Terms when its text changes.
+- [ ] Read each public guide in full. Update each sentence that restates a
+      changed fact, mostly in `pull-requests.md` and `workspaces.md`. Add a
+      merge queue section to `pull-requests.md`.
+- [ ] Check each relative link of each changed Markdown file.
+
+## Milestone 3: GitHub stack client
+
+Depends on: 2
+
+A client for the GitHub routes that the queue uses, with fakes for the
+tests.
+
+- [ ] Add a client for the stacks routes: list, get, create, add, and
+      unstack, with the API version `2026-03-10`, the shared timeout, and
+      the shared body budget.
+- [ ] Add a client call that changes the base of a pull request.
+- [ ] Reuse the async merge client for a layer merge.
+- [ ] Parse the `stack` object of `pull_request` webhook payloads.
+- [ ] Add the stacks routes and the base change to the fake GitHub server
+      of the tests.
+- [ ] Check these against a scratch repository of Cal's org, record the
+      results under `.context/merge-queue/`, and update this plan:
+  - [ ] A merge of an upper layer merges the layers below.
+  - [ ] A stack merge that stops partway, and the state of each layer.
+  - [ ] Which layers GitHub rebases after a merge, and which webhooks it
+        sends.
+  - [ ] A base that holds the head of the layer.
+  - [ ] The server rebase of one layer with `updatePullRequestBranch`,
+        after a squash merge below it (decision 319).
+  - [ ] Which GitHub App permission the stacks routes need.
+- [ ] Unit tests for each route, each refusal, and each parse.
+
+## Milestone 4: Queue storage and routes
+
+Depends on: 3
+
+The tables, the coordinator object, and the member routes.
+
+- [ ] Add a migration range to `migrations/README.md`, and a migration
+      with the queue and entry tables.
+- [ ] Add the queue Durable Object name and its alarm on the `Workspace`
+      class, as the image coordinator does.
+- [ ] Add the routes: add, remove, and re-order, through the queue object,
+      with the access check of write access, the org, the suspension, and
+      the archive rules.
+- [ ] Add one leave step for every cause that the design names, and wake
+      the queue object from an archive, Continue, and a repository change.
+- [ ] Add the member stack unit rule (decision 315).
+- [ ] Add the queue entries to the list read and the queue state to the bar
+      read.
+- [ ] Tests for each route, each refusal, and each isolation rule: a member
+      reaches only the queues of the org's repositories.
+
+## Milestone 5: Fix turns as the queuer
+
+Depends on: 4
+
+A Worker path that sends a fixed prompt as a message of the queuer, with no
+browser.
+
+- [ ] Add a Durable Object entry point that sends a queue message as the
+      queuer, to the newest open session, without the agent tool footer.
+- [ ] Wait while any session of the workspace runs a turn, up to 30
+      minutes. Resume a stopped cloud computer.
+- [ ] Check at each step that the queuer is still a member with write
+      access, in an org that is not suspended.
+- [ ] Report the end of each queue turn to the queue object, with a saved
+      retry, as the automation run report does.
+- [ ] Tests for the send, the wait, the resume, and the report.
+
+## Milestone 6: Join, base moves, and sync
+
+Depends on: 5, and decision 319
+
+- [ ] Join: change the pull request base, send the restack turn, and add
+      the layer to the GitHub stack after its push.
+- [ ] Move the stored base with the saved base move and its fetch for each
+      queue base change.
+- [ ] Follow a base change on GitHub for queued workspaces, from the
+      `pull_request` `edited` webhook.
+- [ ] Run the guarded sync after GitHub rewrites a workspace branch.
+- [ ] Tests for each step, a failed step, a retry, and a webhook that
+      arrives twice.
+
+## Milestone 7: Merge, leaves, failures, and re-order
+
+Depends on: 6
+
+- [ ] Merge the highest ready layer as its queuer, with the wait for the
+      layer above it, and save the merge records.
+- [ ] Keep the restack rule after each read: from the lowest layer that
+      does not hold the head below it, upward.
+- [ ] Run the leave step for each cause, with the base reset to the trunk.
+- [ ] One fix turn for a red layer, a conflict, or requested changes. Then
+      "Needs attention".
+- [ ] "Needs attention" for a failed queuer token and for a GitHub refusal.
+- [ ] Re-order with unstack, base changes, restacks from the bottom up, and
+      the add back.
+- [ ] Tests for each path, also with two steps that arrive at once.
+
+## Milestone 8: The sidebar group
+
+Tags: ui
+
+Depends on: 1, 4, and decisions 317 and 318
+
+- [ ] Build the Merge queue group from the mockup, with its blocks, rows,
+      and states.
+- [ ] Place queued workspaces of a tree as decision 318 says.
+- [ ] Add the controls of decision 317 that live in the list, the menus,
+      and the palette, each with its command.
+- [ ] Re-order by drag and by long press, with the same rollback on failure
+      as a section move.
+- [ ] Tests for the grouping, the drag, and the rollback.
+
+## Milestone 9: The bar
+
+Tags: ui
+
+Depends on: 1, 4, and decisions 316 and 317
+
+- [ ] Add the queued states and Remove from queue from the mockup, and
+      the bar control of decision 317, if any.
+- [ ] Apply decision 316 to Merge on a queued workspace.
+- [ ] Use the rebase prompts while a workspace is queued.
+- [ ] Tests for each state and each action.
+
+## Milestone 10: Verification, commit, review, and pull request
+
+Depends on: every other milestone
+
+- [ ] Smoke-test the queue with the local Worker and the fake GitHub
+      server: join three workspaces, re-order, fail one, and merge.
+- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
+- [ ] Commit with Conventional Commits and push the branch.
+- [ ] Review the complete local diff against `origin/main` with the
+      `implementation-review` skill after the push. Report the findings,
+      then apply the fix rule: fix the `fix now` findings, record
+      follow-up items under `plans/follow-ups/` for the rest, re-review
+      once, and report.
+- [ ] Add a follow-up item for agent tools that add to the queue.
+- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+      plan".
+- [ ] Open the pull request. Its description gives the decisions and the
+      design calls of this plan with their dates, a permalink to this plan,
+      and the follow-up items that the change adds.
+
+## Post-merge follow-up (non-blocking)
+
+- [ ] Queue three real pull requests of this repository in production.
+      Check that each restacks once, that one merge lands the green layers,
+      and that the next layer syncs after GitHub rebases it.
