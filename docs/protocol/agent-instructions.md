@@ -56,7 +56,8 @@ of agents as pictures in their answers, as
 - The agent instructions hold these facts:
   - The agent works in a workspace of Conductive. A workspace has its own
     cloud computer and one branch at a time. It can hold one task after
-    another.
+    another. In a workspace on an own computer, the instructions name
+    that own computer in place of the cloud computer.
   - The folder of the workspace's repository, and the folder of each other
     repository in the cloud computer, as
     [Repository folders](repository-folders.md) says.

@@ -3,13 +3,17 @@
 This doc holds the requirements and the decisions in force for Restart in
 the workspace header, which restarts the app's own software in a running
 sandbox. It also covers the automatic restart, which the Worker starts by
-itself for an agent runner that stays away. It belongs to
+itself for an agent runner that stays away, and the restart of the
+migration job of the host connection. It belongs to
 [Life of a workspace](workspace-life.md#restart-the-software). The terms
 are those of the [architecture doc](../architecture.md#terms). A decision
 number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A terminal
 tabs decision number names a decision of the change that adds terminal
-tabs to the Terminal tool, as [Terminal](terminal.md) says.
+tabs to the Terminal tool, as [Terminal](terminal.md) says. An own
+computer decision number names a decision of the change that adds own
+computers and the host connection, as [Host connection](host-connection.md)
+says.
 
 ## Restart
 
@@ -85,6 +89,18 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
   409 and the error code `workspace_not_running`. The app shows the
   refusal in a toast.
 
+## The restart of the migration job
+
+- When the host connection deploys, the
+  [migration job](host-connection-migration.md#running-machines) runs the
+  steps of Restart once on each running sandbox (own computer decision
+  8 A). It downloads the release of the Worker in place of the newest
+  release.
+- That restart needs no member. Each running turn ends, and so does each
+  process that an agent started under the runner. The shells of the
+  terminals and the services keep running, as after Restart.
+- A workspace whose Restart failed counts as running for the job.
+
 ## Automatic restart
 
 - The Worker restarts the software of a running sandbox by itself when its
@@ -94,7 +110,7 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
   closes until it is ready again. That time is one away period.
 - The Worker starts an automatic restart only when all of these hold:
   - A message waits for the runner in a session of the workspace.
-  - The provider shows the sandbox as running.
+  - The provider, or the own computer, shows the sandbox as running.
   - The runner has been away for at least 3 minutes.
   - The oldest waiting message has waited for at least 1 minute.
   - No Restart, start, Continue, or repository change runs.

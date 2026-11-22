@@ -61,7 +61,7 @@ as [Tokens and secrets](tokens-and-secrets.md) says.
 ## The Agents tab
 
 - The Agents tab of the org settings holds the org logins. It follows the
-  Cloud computer tab.
+  Own computers tab, which follows the Cloud computer tab.
 - Only an admin connects, replaces, or removes an org login, and changes
   its switch "Use for every member" (org login decision 1 B). Reason: an
   org login reaches the sessions of every member, as the env vars reach

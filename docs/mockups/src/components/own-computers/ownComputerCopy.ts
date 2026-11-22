@@ -19,7 +19,7 @@ export const ownComputerWords = {
   /** The line under the list, with the link to the Cloud computer tab. */
   setupNote: {
     before:
-      'Each own computer builds the repositories, the scripts, and the env vars of the ',
+      'Each own computer uses the repositories, the scripts, and the env vars of the ',
     link: 'Cloud computer',
     after: ' tab.',
   },

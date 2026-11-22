@@ -159,4 +159,5 @@ merge.
 - A cloud computer that the provider stopped can still show for up to
   about the stop time, until the app finds the stop.
 - A cloud computer that runs while that record says stopped does not
-  show. An example is the restart near day 14 of a stop.
+  show. Examples are the restart near day 14 of a stop, and a brief start
+  of the [migration job](host-connection-migration.md#brief-starts).

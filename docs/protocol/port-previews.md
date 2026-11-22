@@ -149,6 +149,9 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   to its repository (decision 218).
   [Port previews](terminal-previews-and-desktop.md#port-previews)
   states the `Host` and the `Origin` that the server gets.
+- Each preview request reaches the relay over the host connection of the
+  sandbox, as [Streams](host-connection.md#streams) says. So previews work
+  in the same way on a cloud computer and on an own computer.
 - A workspace whose cloud computer has no running relay refuses previews.
   The user starts a new workspace after an admin runs Build computer.
 - The sandbox keeps port 7682 for the relay. A preview of port 7682 shows

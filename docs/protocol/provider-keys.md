@@ -45,9 +45,8 @@ as that doc says.
   already runs in the default cluster. Regions gives the steps before a
   real org runs on the account.
 - Every E2B sandbox has private traffic. A request to any of its ports
-  needs the traffic token of that sandbox, as
-  [Port previews](terminal-previews-and-desktop.md#port-previews) says.
-- The Worker keeps the traffic token of each E2B sandbox encrypted in its
-  own storage. The token never goes into a log. Reason: E2B gives the
-  token when it creates or resumes the sandbox, and a later read of the
-  token resumes a stopped sandbox.
+  through E2B needs the traffic token of that sandbox.
+- The Worker sends no request to a port through E2B. It reaches the ports
+  of each sandbox only over the host connection, as
+  [Streams](host-connection.md#streams) says. So the Worker keeps no
+  traffic token.

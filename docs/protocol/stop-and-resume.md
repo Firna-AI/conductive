@@ -124,18 +124,29 @@ says. A services decision number names a decision of the change that adds
   account.
 - A sandbox on E2B gets no such restart. Reason: E2B keeps the disk of a
   stopped sandbox with no time limit.
+- A workspace on an own computer gets no such restart either, as
+  [Starts and stops](own-computers-workspaces.md#starts-and-stops) says.
+- As each start does, the restart runs the
+  [bootstrap](host-connection.md#the-bootstrap) when the sandbox does not
+  open its host connection in time.
 - An archived workspace gets this restart only when Boat's 14 days end
   before the app deletes its sandbox, as
   [Archive](workspace-life.md#archive) says. So a sandbox that Archive
   stopped gets none.
 - The restart of an archived sandbox gets none of the secrets of its
   workspace and its org, and it runs no startup script. It only resumes the
-  sandbox and stops it again.
+  sandbox and stops it again. It gets only a new
+  [machine token](host-connection.md#the-machine-token).
 - Reason: Archive revokes the workspace token, and an archived workspace
   has no tools.
 - After a [Restore](workspace-life.md#restore), a workspace on Boat gets
   this restart again, near day 14 of its last stop. When that time has
   passed, the restart runs at once.
+- When the host connection deploys, the
+  [migration job](host-connection-migration.md#brief-starts) starts each
+  stopped sandbox briefly, once. It is the one other start that no user
+  asked for. On Boat, the next restart near day 14 then counts from the
+  stop of that brief start.
 - An automatic Archive near day 14 was rejected, because the delete 14 days
   after an Archive loses unpushed work. A copy of the disk in the app's own
   storage was rejected, because the app would then hold a copy of each

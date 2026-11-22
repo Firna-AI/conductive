@@ -1,11 +1,12 @@
 # Architecture
 
 Conductive is a coding tool at `conductive.build`. Each workspace has its
-own cloud computer, a sandbox on Boat or E2B, and one branch at a time. It
-can hold one task after another. Agents powered by Claude and Codex work
-only in the sandbox. The user follows them in the browser or in the Mac
-app, which shows the web app. Automations also start agents without a
-person, each run in a new workspace. This doc describes the components, their
+own sandbox and one branch at a time: a cloud computer on Boat or E2B, or
+a container on an own computer of its org. It can hold one task after
+another. Agents powered by Claude and Codex work only in the sandbox. The
+user follows them in the browser or in the Mac app, which shows the web
+app. Automations also start agents without a person, each run in a new
+workspace. This doc describes the components, their
 responsibilities, and the boundaries between them. The
 [protocol docs](architecture/protocol-docs.md) hold the requirements of
 each feature.
@@ -84,10 +85,14 @@ each feature.
 - **Default login:** the agent login that a new session of a member takes,
   as [The default login](protocol/org-logins.md#the-default-login) says.
 - **Provider account:** an account of the app with a sandbox provider:
-  `boat` with Boat, or `e2b` with E2B. Each org runs in one provider
-  account at a time, the account of the org. Each workspace keeps the
-  account that it started on. The Worker holds the credentials of each
-  account, and reaches it through its own client.
+  `boat` with Boat, or `e2b` with E2B. Each org runs its cloud computer in
+  one provider account at a time, the account of the org. Each workspace
+  keeps the account that it started on. The Worker holds the credentials
+  of each account, and reaches it through its own client. An own computer
+  uses no provider account.
+- **Own computer:** a Linux server that an admin adds to an org. Each
+  workspace and each build of the org on it runs in its own container.
+  The org provides the server, and the app does not pay for it.
 - **Boat key** and **E2B key:** the one key of the app's account with Boat
   or with E2B. Each key reaches every sandbox and every org image of the
   orgs on its account. Each is a Worker secret.
@@ -98,16 +103,44 @@ each feature.
   members do not see that build. New workspaces of the org start on the
   new account when that build succeeds, as
   [Switch account](protocol/switch-account.md) says.
-- **Sandbox:** the cloud computer of one workspace, on Boat or on E2B. The
-  product calls it a cloud computer or a sandbox.
+- **Sandbox:** the machine of one workspace: a cloud computer, or a
+  container on an own computer. The product calls it a cloud computer or a
+  sandbox, and it names an own computer by its name.
+- **Cloud computer:** a sandbox on Boat or on E2B. A rule of the docs
+  about the cloud computer of a workspace also holds for a workspace on an
+  own computer, unless the rule names own computers apart.
+- **Machine:** a sandbox, or the machine of a build, a refresh, or a
+  software image build. Each machine runs the host program.
+- **Host program:** the program `conductive` in host mode, a system
+  service of each machine. It opens the host connection.
+- **Host connection:** the one outbound connection of each machine to its
+  machine object in the Worker. The commands, the file reads, the
+  terminal, and the previews of the machine go over it, as
+  [Host connection](protocol/host-connection.md) says.
+- **Machine token:** the secret of one machine that opens its host
+  connection. Each machine gets a new one at each start.
+- **Bootstrap:** the one fixed provider command that installs the release
+  of the Worker and starts the host program, on a machine that does not
+  open its host connection in time.
+- **Migration job:** the job that installs the host program on each
+  machine when the host connection deploys, with a brief start of each
+  stopped machine. A later change of the host protocol runs it again.
+- **Computer connection:** the one outbound connection of each own
+  computer to its computer object in the Worker, for fixed container
+  operations. The program `conductive` opens it in computer mode, with the
+  computer token of that own computer.
 - **Org image:** the saved snapshot that every new sandbox of an org starts
   from. It holds a prepared copy of each repository that the org chose
-  when the build of the image began.
+  when the build of the image began. Each own computer of the org has its
+  own org image.
+- **Container base image:** the signed image that each deploy publishes,
+  from which each own computer builds its first org image.
 - **Build:** a run of the install script on a copy of the org image. A
   build also installs the newest release of the sandbox software. An org
   without an org image builds on a copy of the software image of its
   account, or else on the base image of that account. A build replaces the
-  org image only when it succeeds.
+  org image only when it succeeds. A build of the org runs on the cloud
+  computer and on each own computer.
 - **Software image:** the saved snapshot of the base image with the app's
   own software, and no org data. Each deploy run builds the one of its
   version in the `boat` account. A build of an org on that account without
@@ -117,8 +150,8 @@ each feature.
   script.
 - **Sandbox software:** the app's own software in each sandbox. It is the
   program `conductive` and the parts that the program installs. Each deploy
-  from `main` publishes a release of it. Each sandbox updates it by itself,
-  as [Sandbox software](protocol/sandbox-software.md) says.
+  from `main` publishes a signed release of it. Each sandbox updates it by
+  itself, as [Sandbox software](protocol/sandbox-software.md) says.
 - **Agent runner:** the part of the sandbox software that runs the agents.
   It runs them through the agent SDKs, and it reports the files, the
   changes, and the listening ports of its workspace. Its file server
@@ -139,8 +172,9 @@ each feature.
 - **Preview hostname:** a random hostname on the preview domain. It shows
   one port of one sandbox.
 - **Start:** each create or resume of a sandbox, also the sandbox of a
-  build, a refresh, or a software image build. Each provider account of
-  the app limits the starts of its orgs.
+  build, a refresh, or a software image build, and a brief start of the
+  migration job. Each provider account of the app limits the starts of its
+  orgs. A start on an own computer counts toward no provider account.
 - **Plan:** what an org pays for each month, with the cloud hours that it
   includes: Free, Plus, Pro, or Ultra. [Pricing](protocol/pricing.md)
   states the plans. Billing has not started, so no org has a plan yet.
@@ -164,10 +198,11 @@ each feature.
 
 The [components page](architecture/components.md) describes each
 component and its responsibilities. It covers the apps, the Worker and
-its storage, the sandbox providers, the sandbox software, and the external
-services. The [sandbox software page](architecture/sandbox-software.md)
-describes the two programs in each sandbox, their releases, and their
-updates.
+its storage, the sandbox software, and the external services. The
+[machines page](architecture/machines.md) describes the sandbox
+providers, the own computers, and the Durable Objects of the machines.
+The [sandbox software page](architecture/sandbox-software.md) describes
+the programs in each sandbox, their releases, and their updates.
 
 ## Hostnames
 
@@ -175,7 +210,7 @@ updates.
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `conductive.build`        | The marketing site, with the public docs and the pricing, Terms, and Privacy pages                                                         |
 | `app.conductive.build`    | The web app, the API, the chat sockets, and the terminal                                                                                   |
-| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, and the attachment downloads |
+| `api.conductive.build`    | The GitHub webhooks, the agent tools, the runner, the credential helper, the model gateway, the software image route of the deploy run, the attachment downloads, the host connection of each machine, and the computer connection of each own computer |
 | `*.conductive.page`       | One random hostname for each open port preview and for the files preview of each workspace, one level deep                                 |
 | `runner.conductive.build` | The public files of each [release](protocol/sandbox-software.md#releases) of the sandbox software, from an R2 bucket                       |
 
@@ -187,9 +222,10 @@ the app (decision 6).
 ## Flows
 
 The [flows page](architecture/flows.md) describes how the components work
-together for a new org, a switch of its account, a new workspace, chat, a
-run with secrets, the terminal, previews, the desktop, GitHub events, a
-merge, Continue, automation runs, and stops.
+together for a new org, a switch of its account, an own computer, a new
+workspace, chat, a run with secrets, the terminal, previews, the desktop,
+GitHub events, a merge, Continue, automation runs, stops, and the
+migration job.
 
 ## Where data lives
 
@@ -199,7 +235,8 @@ where each kind of data lives.
 ## Trust boundaries
 
 The [trust boundaries](architecture/data-and-trust.md#trust-boundaries)
-separate the orgs, the provider keys, the model gateway, and the sandboxes.
+separate the orgs, the provider keys, the model gateway, the sandboxes,
+and the own computers.
 
 ## Decision numbers
 

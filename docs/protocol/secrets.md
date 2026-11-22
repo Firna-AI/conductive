@@ -260,3 +260,7 @@ that stored value, as
 - Risk: a file that holds a value stays on the disk of the cloud computer,
   as a file with an env var value does. Archive keeps that disk for 14
   days, as [Archive](workspace-life.md#archive) says.
+- Risk: on an own computer, each person with root access to the server can
+  read a value while its command runs, and each file that holds it, as
+  [Risks](own-computers.md#risks) says. Such a file stays on the server
+  after a [removal of the computer](own-computers-workspaces.md#removal-of-a-computer).

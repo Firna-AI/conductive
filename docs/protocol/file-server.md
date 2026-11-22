@@ -17,6 +17,9 @@ names a dated record, as
   reads the files of the new folder.
 - The file server listens only on `127.0.0.1:7683`. It takes no
   connection from another address.
+- No stream of the host connection reaches port 7683. The file server gets
+  each request of a files preview through the preview relay, as
+  [Streams](host-connection.md#streams) says.
 - The sandbox keeps port 7683 for the file server.
   [Listening ports](listening-ports.md) leaves it out of the ports report,
   as it leaves out each other port of the app's own services. When another
@@ -27,7 +30,7 @@ names a dated record, as
 - The file server answers HTTP 403 to each request whose `Host` is neither
   `localhost:7683` nor `127.0.0.1:7683`, as the preview relay does for a
   foreign `Host`. Reason: a check of `Host` stops
-  DNS rebinding from a browser in the cloud computer, as dev servers do.
+  DNS rebinding from a browser in the sandbox, as dev servers do.
 - The file server answers only a request with the files mark. Each other
   request gets 403. Reason: a member or an agent can open a port preview
   of any port, also of port 7683.

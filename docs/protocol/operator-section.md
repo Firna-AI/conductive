@@ -4,7 +4,9 @@ This doc holds the requirements and the decisions in force for the operator
 section. In this part of the web app, an operator sees the whole app and
 acts on one org or one user (decision 142). The operator also runs the
 waitlist there (decision 160), sets the weights of new orgs
-(e2b decision 222), and sets the stop time of idle cloud computers. [Operator section: the Overview](operator-overview.md)
+(e2b decision 222), and sets the stop time of idle cloud computers. The
+operator also paces and controls the migration job of the host connection
+(own computer decision 7 D). [Operator section: the Overview](operator-overview.md)
 states the Overview tab, with its counts and its long runs.
 [Waitlist tabs](operator-waitlist-tabs.md) holds the Waitlist tab, Approve,
 the Invite codes tab, and the pause.
@@ -18,7 +20,9 @@ and their controls in the section. The terms are those of the
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
 says. An e2b decision number names a decision of the change that adds E2B as
 the second [sandbox provider](workspaces-and-sandboxes.md#the-provider), as
-that doc says.
+that doc says. An own computer decision number names a decision of the
+change that adds own computers and the host connection, as
+[Host connection](host-connection.md) says.
 
 ## Access
 
@@ -49,9 +53,13 @@ that doc says.
   the waitlist switch (decisions 160 and 230), the weights of new orgs
   (e2b decision 222), and the stop time. It makes and disables invite
   codes, disables referral codes, turns the pause on and off, turns the
-  waitlist off and on, and saves the weights and the stop time. It changes
-  no other setting (decision 143). Cal added the stop time on 20 November
-  2026.
+  waitlist off and on, and saves the weights and the stop time. Cal added
+  the stop time on 20 November 2026.
+- The section also sets the pace of the migration job for each provider
+  account, and it pauses, continues, and limits that job (own computer
+  decision 7 D), as
+  [Pace and control](host-connection-migration.md#pace-and-control) says.
+  It changes no other setting (decision 143).
 - The section cannot change who is an operator. Reason: a stolen session
   of an operator then cannot add an operator.
 
@@ -63,8 +71,9 @@ that doc says.
   of the whole app have a home. A box on the Providers tab, a box on the
   Overview, and a dialog from the header of the section were rejected.
 - The section shows only counts, names, IDs, dates, roles, states, codes,
-  weights, and the stop time. It shows no chat, file, env value, or agent login. Reason:
-  the section then holds the least personal data.
+  weights, the stop time, and the pace of the migration job. It shows no
+  chat, file, env value, or agent login. Reason: the section then holds
+  the least personal data.
 - The only email address that the section shows is the primary verified
   email of a user, on the page of that user. The lists of the Users tab
   and of the Waitlist tab show no email address. Reason: the user asked on
@@ -114,6 +123,14 @@ that doc says.
   gives its workspaces by state and its cloud computers that run now, as
   the Overview counts them. It lists the members, each with their name on
   GitHub and their role (decisions 147 and 149, and e2b decision 221).
+- While the org has own computers, its page also has an Own computers box,
+  after the Provider account box. The box gives the number of its own
+  computers, the count of each state, and the workspaces of the org that
+  run on them now. A computer that never connected counts as Never
+  connected.
+- The box names no own computer and shows nothing of its work. An org
+  without own computers shows no box. Reason: the operator then sees the
+  number and the state of the own computers of each org, and no content.
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
   ID, the join day, and the last active time. It gives the number of
   workspaces that the user owns, and how many of them run now. It lists

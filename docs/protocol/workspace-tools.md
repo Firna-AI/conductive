@@ -79,9 +79,9 @@ decision of the change that reads Markdown with one parser, as
   loads, because a picture at a web address makes the browser of each
   reader call a server that the file chose.
 - The header of a file tab can copy and download the file.
-- Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
-  Reason: Boat's file read stops at 5 MiB, so a file read that falls back
-  to it cannot read more.
+- Reading a file has a size limit of 5 MiB, or 5,242,880 bytes. The limit
+  holds for the read of the runner and for the fallback read over the host
+  connection. Reason: both reads then show the same files.
 - A PNG, JPEG, GIF, or WebP file up to the read limit shows as a picture
   (decision 265 B). This holds for each image of the workspace, also one
   that All files or the chip of a sent message opens.
@@ -177,11 +177,12 @@ decision of the change that reads Markdown with one parser, as
 - A browser file event and a browser file response contain complete reports.
   They never expose a runner part as a full tree or changes list.
 - The runner reads one file or one diff on request. When the runner is not
-  connected, a file read falls back to the file read of the provider.
+  connected, a file read falls back to a file read over the host
+  connection, as [Operations](host-connection.md#operations) says.
 - The Durable Object keeps the last tree and the last changes, so both tabs
   still show them while the sandbox sleeps and while it starts again.
-- Reason: Boat's API can run `git` and read files only while the sandbox
-  runs, one request at a time, and with no live updates.
+- Reason: a command or a file read in the sandbox works only while the
+  sandbox runs, and it gives no live updates.
 - While the sandbox does not run, a file or diff tab reads nothing. While
   the sandbox is stopped or starts, or after its later start failed, a tab
   keeps the file that it already shows, as the lists keep their copy.

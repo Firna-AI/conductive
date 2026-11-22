@@ -44,6 +44,8 @@ whoever owns or started it (decision 129).
 - A stopped workspace of the org on Boat gets no restart near day 14 of
   its stop, also after an owner change (decision 125). So Boat can delete
   its disk, with any unpushed work of the members.
+- No workspace of the org gets a brief start of the migration job of the
+  host connection, as [Skips](host-connection-migration.md#skips) says.
 - A signed-in member who is not suspended gets each refusal with HTTP 403
   and the code `org_suspended`. It says that the org is suspended, and it
   gives the address for abuse reports.

@@ -28,6 +28,11 @@ says. A switch decision number names a decision of the change that adds
   [The switch build](switch-account.md#the-switch-build) says.
 - One image for each repository was rejected, because each image costs
   its own saved snapshot and starts.
+- Each own computer of the org also has its own org image. The rules of
+  this doc hold for each such image on its own, and a build of the org
+  runs on each computer, as
+  [The org image of each own computer](own-computers.md#the-org-image-of-each-own-computer)
+  says.
 - The Repositories tab of the org settings chooses the repositories
   (decision 10). A change of the repositories takes effect at the next
   build, not at a refresh, as [Repository changes](#repository-changes)
@@ -38,8 +43,8 @@ says. A switch decision number names a decision of the change that adds
 - The Cloud computer tab lists the operating system and software that the
   base image includes before the install script runs.
 - The base image holds the same operating system and software on each
-  provider. Reason: the Cloud computer tab lists one base image for every
-  org.
+  provider, and so does the container base image of own computers.
+  Reason: the Cloud computer tab lists one base image for every org.
 - "Build computer" starts a build. A build runs the install script on a
   copy of the image, with every chosen repository cloned (decision 12).
 - A Build computer or a Try again during a switch build waits until that

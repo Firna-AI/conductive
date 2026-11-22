@@ -21,7 +21,10 @@ and the separate preview domain.
 | Automations and their runs | D1 |
 | The org and the provider account of each sandbox and each saved snapshot     | D1                                       |
 | The provider account of each org with each switch, and the weights of new orgs with each change | D1 |
-| Env var values, agent logins, and the traffic token of each E2B sandbox | The Worker's storage, encrypted |
+| The own computers of each org, the digest of each computer token, and the computer of each workspace, org image, and automation | D1 |
+| The host protocol version of each machine | D1 |
+| The digest of each machine token | The Worker's storage |
+| Env var values and agent logins | The Worker's storage, encrypted |
 | The values of the secrets | The Worker's storage, encrypted |
 | The names and descriptions of the secrets, their grants, and their reveals | D1 |
 | The secret requests that wait, and the temporary values | The workspace Durable Object, with each value encrypted |
@@ -32,9 +35,9 @@ and the separate preview domain.
 | Files attached to chat messages | The attachment storage, an R2 bucket, until the sandbox has them. Then the home folder of the sandbox |
 | The records of attached files | D1 |
 | The [merge record](../protocol/account-stats.md#the-merge-record) of each merged pull request of a workspace branch | D1 |
-| The repository, the files, and the agent sessions                            | The home folder of the sandbox           |
-| The prepared repositories and the installed software | The org image, in the provider account of the org. After a switch, also an older org image in the old account, until the org is deleted |
-| The releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
+| The repository, the files, and the agent sessions                            | The home folder of the sandbox. On an own computer, the container on the server |
+| The prepared repositories and the installed software | The org image, in the provider account of the org. After a switch, also an older org image in the old account, until the org is deleted. Each own computer also keeps its own org image on its server |
+| The signed releases of the [sandbox software](sandbox-software.md) | An R2 bucket, public at `runner.conductive.build` |
 | Panel sizes                                                                  | The browser, or the Mac app              |
 | The address of the last workspace page of each org                           | The browser, or the Mac app              |
 
@@ -51,20 +54,32 @@ and the separate preview domain.
   says.
 - No provider key goes to the browser, into a sandbox, into a log, or into
   a saved snapshot.
-- The port credential of a sandbox, such as its E2B traffic token, stays
-  on the server. The proxies add it, and the browser never gets it.
+- The host connection is the boundary between the Worker and each
+  machine. It carries only fixed operations, and its machine token opens
+  only that connection, as [Host connection](../protocol/host-connection.md)
+  says.
+- The Worker reaches the ports of each machine only over its host
+  connection. It needs no port credential of a provider, and the browser
+  never gets one.
 - Sandbox code is untrusted. Agents write and run it, and previews show it
   only on the preview domain.
 - A sandbox never reads the attachment storage. It gets each attached file
   from a route of the Worker, with a one-use token for that file, as
   [Hostnames and gates](../protocol/access-and-security.md#hostnames-and-gates)
   says.
-- Each writer of the R2 bucket of the sandbox software releases is as
-  trusted as the Worker deploy, because each sandbox installs the newest
-  release from it. Today only the deploy token writes it, as
-  [Releases](../protocol/sandbox-software.md#releases) says.
+- Each release of the sandbox software has a signature, and the program
+  checks it before it installs a release. So a writer of the R2 bucket
+  without the signing key reaches no sandbox and no own computer, as
+  [Releases](../protocol/sandbox-software.md#releases) says. Only the
+  deploy token writes the bucket.
 - A sandbox gets none of the secrets of the app's provider accounts. At a
-  start, it gets only the secrets of its workspace and its org.
+  start, it gets only its machine token and the secrets of its workspace
+  and its org.
+- An own computer is a server of its org, outside the app. Each person
+  with root access to it can read each container there, with its secrets,
+  as [Risks](../protocol/own-computers.md#risks) says. One own computer
+  serves one org, so that access stays in that org. The Worker checks the
+  org of the computer before each call to it.
 - The value of a [secret](../protocol/secrets.md) of the Secrets tab
   reaches a sandbox only for one run of the agent tools that a grant
   allows. Each process in the sandbox can read the value while its command

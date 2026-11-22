@@ -12,7 +12,10 @@ says.
 
 - The dialog holds the parts of the page: the repository picker, the
   branch control, the message and its files, the model picker, and the
-  Capabilities icon.
+  Capabilities icon. While the org has an own computer, the header also
+  holds the computer choice after the branch control, as
+  [The computer choice](own-computers-workspaces.md#the-computer-choice)
+  says.
 - The header of the dialog holds the repository picker, with the branch
   control directly right of it, as on the page (decision 309). The target
   choice stands in the dropdown of the branch control, not on a line under
@@ -35,8 +38,8 @@ says.
 - The button of the dialog is Create. The button of the page is Send,
   because the page looks like the chat that it becomes.
 - The dialog shows the notices of the page: the first build, a waiting
-  repository, a missing agent login, a failed create with Try again, and an
-  org without chosen repositories.
+  repository, a missing agent login, a failed create with Try again, an
+  org without chosen repositories, and an offline own computer.
 - In an org without chosen repositories, the dialog and the page tell a
   member who is not an admin that an admin chooses them. An admin gets
   Choose repositories. Reason: only an admin can choose them.

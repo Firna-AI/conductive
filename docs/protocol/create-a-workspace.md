@@ -14,7 +14,9 @@ rest of the life of a workspace. The terms are those of the
 decision number names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A secrets
 decision number names a decision of the change that adds
-[secrets](secrets.md), as that doc says. A branch-name decision number
+[secrets](secrets.md), as that doc says. An own computer decision number
+names a decision of the change that adds own computers, as
+[Host connection](host-connection.md) says. A branch-name decision number
 names a decision of the change that names a branch after its workspace.
 The pull request of that change keeps its record.
 
@@ -29,6 +31,11 @@ branch that is not the default branch.
 
 - The New workspace page is an empty chat with a repository picker and a
   branch control. The first message creates the workspace.
+- While the org has an own computer, the page also has a computer choice
+  after the branch control, with the cloud computer as the default (own
+  computer decision 3 A).
+  [The computer choice](own-computers-workspaces.md#the-computer-choice)
+  states its menu and its notice.
 - New workspace opens as this page or as a dialog over the current screen.
   A preference of the user chooses which. Reason: the user asked for both
   ways.
@@ -131,9 +138,9 @@ branch that is not the default branch.
 
 ## The branch and the name
 
-- A new workspace starts from the newest good org image. It then creates
-  its branch in the folder of its repository, from the newest commit of
-  its start branch on GitHub.
+- A new workspace starts from the newest good org image of its computer.
+  It then creates its branch in the folder of its repository, from the
+  newest commit of its start branch on GitHub.
 - The start branch is the default branch of the repository, unless the
   create names another branch, as
   [Start from a branch](start-from-a-branch.md) says.
@@ -224,6 +231,8 @@ branch that is not the default branch.
 - Try again starts a new sandbox for the same workspace and branch, with a
   new workspace token (decision 130). The sandbox starts from the newest
   good org image, with the current startup script and env vars.
+- On an own computer, Try again starts the new container on the same
+  computer, from the newest good org image of that computer.
 - When that sandbox is ready, the agent gets the queued messages, as
   [Messages](messages-and-attachments.md#messages) says.
 - An automation run keeps its failed workspace and its cause, as

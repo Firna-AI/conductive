@@ -149,7 +149,8 @@ parent changes, as [Parent changes](parent-changes.md) says.
 ## The section of a new sub-workspace
 
 - A new sub-workspace joins the section of its parent (sub-workspace
-  decision 4 F).
+  decision 4 F). It runs on the computer of the calling workspace, as
+  [Workspaces on own computers](own-computers-workspaces.md) says.
 - A create call can also name a section. With a parent, that section has
   no effect.
 - When the call names a section other than the section of the parent, the

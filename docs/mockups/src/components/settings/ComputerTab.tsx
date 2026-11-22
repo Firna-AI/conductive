@@ -121,7 +121,7 @@ export function ComputerTab(props: {
     <>
       <tabIntro.Component moklyInstance="intro" title="Cloud computer">
         {props.ownComputers
-          ? `The shared cloud computer of ${props.org}. Each workspace on it starts from it, with every repository of the org. Own computers build the same repositories, scripts, and env vars.`
+          ? `The shared cloud computer of ${props.org}. Each workspace on it starts from it, with every repository of the org. Own computers use the same repositories, scripts, and env vars.`
           : `The shared cloud computer of ${props.org}. Every workspace starts from it, with every repository of the org.`}
         {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
       </tabIntro.Component>

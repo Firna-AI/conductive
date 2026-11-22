@@ -16,7 +16,9 @@ update itself. An idle update decision number, such as idle update
 decision 2, names a decision of the change that installs a new release
 while the workspace is idle. A build time decision number, such as build
 time decision 1, names a decision of the change that shortens the software
-step of a build.
+step of a build. An own computer decision number names a decision of the
+change that adds own computers and the host connection, as
+[Host connection](host-connection.md) says.
 
 ## Releases
 
@@ -43,18 +45,28 @@ step of a build.
 - The newest release never goes back to an older version. A deploy of an
   older commit does not change it.
 - The other files of a release never change after the deploy writes them.
-- Each sandbox trusts each writer of the bucket `conductive-runner` as it
-  trusts the Worker deploy, because a release from the bucket becomes the
-  software of each sandbox at its next start (sandbox software decision
-  10). Today the only writer is the deploy token, which can also deploy
-  the Worker. So a writer of the bucket gets no access that the deploy did
-  not already give.
-- Reason: a write to the bucket then adds no new attacker. A signature of
-  each release, with a key that the deploy holds and a public key in the
-  program, was not chosen for now. It becomes the better guard if any key
-  other than the deploy token can write to the bucket.
+- Each release has an Ed25519 signature over its manifest (own computer
+  decision 4 B). The signing key is a secret of the deploy. The public key
+  is a constant in the program.
+- A program with that public key checks the signature before it uses a
+  download. It refuses each release with no signature or with a wrong one.
+- Reason: own computers install each release on the servers of the orgs,
+  and a leak of the deploy token must not reach those servers.
+- The rule before it was rejected (own computer decision 4). In that rule,
+  a release had no signature, and only the deploy token wrote the bucket.
+  Updates by hand on each server were left out, because the product needs
+  automatic updates.
+- Only the deploy token writes the bucket `conductive-runner`.
+- An older program reads the same release files and ignores the
+  signature. So it keeps updating.
 - A digest that the Worker gives to each sandbox was rejected, because it
-  needs a Worker route, as the rejected Worker routes above do.
+  needs a Worker route, as the rejected Worker routes above do. The
+  [bootstrap](host-connection.md#the-bootstrap) is the one case in which
+  the Worker gives a digest, in its fixed command.
+- Each deploy also publishes a signed container base image for the builds
+  of own computers, as
+  [The org image of each own computer](own-computers.md#the-org-image-of-each-own-computer)
+  says.
 
 ## Updates
 
@@ -77,6 +89,9 @@ step of a build.
   a download of a newer release. Only Restart in the workspace header and
   the automatic restart wait for one, with a limit of 60 seconds, as
   [Restart the software](restart-the-software.md) says.
+- The [bootstrap](host-connection.md#the-bootstrap) is the one exception
+  at a start. A start of a machine without the current host program waits
+  for the download of the release of the Worker.
 - An update downloads only the parts that changed since the release that
   the sandbox runs.
 - The program installs only a release with a higher version than the
@@ -115,15 +130,22 @@ step of a build.
   The Worker also restarts it by itself for a runner that stays away
   while a message waits, as
   [Automatic restart](restart-the-software.md#automatic-restart) says.
+  The [migration job](host-connection-migration.md#running-machines)
+  restarts it once on each running machine, when the host connection
+  deploys.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
 - A new runner confirms its release when it first connects to the Worker.
   A new release without that confirmation at the next start counts as a
   failed start. The program never installs that release again.
-- A sandbox without the program gets the program at its next start. That
-  start changes nothing else. The program then updates the rest of the
-  software by these rules.
-- Reason: such a sandbox has no other way to get its first updater.
+- A release that the bootstrap or the migration job installed, and that no
+  runner started yet, is not such a failed start. The next start of the
+  runner starts it.
+- A machine without the current host program gets the
+  [bootstrap](host-connection.md#the-bootstrap) at its next start. The
+  program then updates the rest of the software by these rules.
+- Reason: such a machine has no other way to get its updater and its host
+  connection.
 - A sandbox can run an older runner until an update applies. So the Worker
   serves each runner protocol version that a live sandbox can hold, as
   [The agent runner](agent-runner.md#the-agent-runner) says.
@@ -161,6 +183,7 @@ step of a build.
 - The install restarts neither the preview relay nor the terminal service.
   They run the new release from their next start, such as at the next
   start of the sandbox.
+- Each install of a release starts the host program when it does not run.
 - After a failed install that changed nothing, the runner logs a warning.
   It then connects again on its own release. It does not install at idle
   again until its next start. Reason: the same failure then does not
@@ -204,8 +227,10 @@ step of a build.
 ## Installs in a build
 
 - Each build of an org image installs the newest release. A software image
-  build does the same. Reason: each build and each sandbox then install the
-  software in the same way.
+  build does the same, and so does each build on an own computer. Reason:
+  each build and each sandbox then install the software in the same way.
+- A build machine without the current host program first gets the
+  [bootstrap](host-connection.md#the-bootstrap), as each machine does.
 - Each refresh of an org image also installs the newest release, through
   the same software step (sandbox software decision 15). It still runs no
   install script. Reason: each refreshed image then holds current

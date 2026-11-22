@@ -22,7 +22,8 @@ decision number, such as automation capabilities decision 1, names the
 dated record of one decision of the change that adds
 [Capabilities](capabilities.md) to automations. Its plan keeps these
 records while the change is open. Its pull request keeps them after the
-merge.
+merge. An own computer decision number names a decision of the change that
+adds own computers, as [Host connection](host-connection.md) says.
 
 ## An automation
 
@@ -30,8 +31,13 @@ merge.
   the org, and a section. It also has a model with its effort and its
   [fast mode](fast-mode.md), an Active switch, one time zone, its
   triggers, and its [chosen secrets](#chosen-secrets).
+- An automation also has a computer: the cloud computer, or an own
+  computer of the org (own computer decision 3 A).
+  [Automations](own-computers-workspaces.md#automations) on own computers
+  states the choice.
 - Each trigger starts a run. Each run creates a new workspace, with its own
-  cloud computer and branch (decision 501 A).
+  sandbox and branch (decision 501 A). That workspace runs on the computer
+  of the automation.
 - One workspace for each automation, with a new session for each run, was
   rejected. Its runs would share one branch and one set of files. A pull
   request run would then switch branches under the earlier work.
@@ -47,14 +53,16 @@ merge.
   An automation without a prompt was rejected, also as a draft that stays off.
 - A new automation starts active, with no chosen secret. It gets the first
   repository in the org's [repository order](orgs-and-members.md#repository-order),
-  the General section, and the default model of its owner, with its effort
-  and its fast mode.
+  the General section, the cloud computer, and the default model of its
+  owner, with its effort and its fast mode.
 - An automation can have no trigger. Then only Run now starts it.
 - Deleting a section moves its automations to General, as it moves its
   workspaces.
 - When the repository of an automation stops being a chosen repository of the
   org, the automation turns off, and its page says why. Reason: no run of it
   can succeed, and a turn-off names the cause before any run fails.
+- An automation also turns off in the same way when an admin removes its
+  own computer. Its runs never move to the cloud computer by themselves.
 - A deleted automation keeps its run workspaces, because they are normal
   workspaces (decision 504 A).
 
@@ -72,6 +80,8 @@ merge.
 - The automation page shows the name, the Active switch, the repository, the
   section of the run workspaces, and "By" with the owner. Then it shows the
   triggers, the prompt with the model picker, and the Runs list.
+- While the org has an own computer, the page also shows the computer of
+  the runs after the section.
 - A line under the prompt names the agent login and the GitHub access that
   the runs use. The login is the default login of the owner, such as the
   org login. The line names that login for every reader, including a

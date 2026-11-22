@@ -15,7 +15,9 @@ names a decision of the change that adds the org logins, as
 names a decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
 says. A switch decision number names a decision of the change that adds
-[Switch account](switch-account.md), as that doc says.
+[Switch account](switch-account.md), as that doc says. An own computer
+decision number names a decision of the change that adds own computers,
+as [Host connection](host-connection.md) says.
 
 ## Orgs
 
@@ -24,7 +26,9 @@ says. A switch decision number names a decision of the change that adds
 - An org also owns the org logins that its admins connect, at most one for
   each agent, as [Org logins](org-logins.md) says (org login decision
   1 B).
-- An org also has members and [automations](automations.md).
+- An org also has members and [automations](automations.md). It can also
+  have [own computers](own-computers.md): Linux servers that its admins
+  add.
 - All orgs share the app's GitHub App. The personal logins of a user serve
   all of that user's orgs (decision 21). An org login serves only the
   members of its own org.
@@ -32,10 +36,10 @@ says. A switch decision number names a decision of the change that adds
   (decision 80, and e2b decision 222). It shares the plan limits of that
   account with the other orgs on it, as
   [The provider](workspaces-and-sandboxes.md#the-provider) says. No org
-  has a provider key.
+  has a provider key. The own computers of an org use no provider account.
 - An operator can switch an org to another account. New workspaces of the
-  org start on that account when the build there succeeds. Existing
-  workspaces stay on their own account, as
+  org on the cloud computer start on that account when the build there
+  succeeds. Existing workspaces stay on their own account, as
   [Switch account](switch-account.md) says (switch decision 1 B).
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
@@ -160,6 +164,8 @@ says. A switch decision number names a decision of the change that adds
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin adds an own computer, sets its limit, and removes it (own
+  computer decision 2 A). Other members see the own computers read-only.
 - Only an admin changes the org's name, initials, and colour. Other
   members see them read-only.
 - Only an admin connects, replaces, or removes an org login, and changes

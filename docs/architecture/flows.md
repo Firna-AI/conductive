@@ -29,6 +29,22 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 [Switch account](../protocol/switch-account.md) states the rules.
 
+## Add an own computer
+
+1. An admin presses Add computer on the Own computers tab and gives a
+   name. The Worker records the computer and makes a one-time code.
+2. The admin runs the install command with that code on the server. The
+   install sets up the program `conductive` in computer mode. It opens the
+   computer connection to the computer object of that computer.
+3. The Worker gives the computer its computer token, and the code stops
+   working. The computer reports its vCPUs, its memory, and its system,
+   and its limit takes its default.
+4. The first build of the computer starts from the container base image,
+   in a container on the server. Workspaces can start on the computer
+   when that build succeeds.
+
+[Own computers](../protocol/own-computers.md) states the rules.
+
 ## Create a workspace
 
 1. The branch control of New workspace asks the Worker for the branches of
@@ -39,13 +55,18 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    that is not the default branch, with the GitHub token of the user.
 3. The Worker records the workspace, and its Durable Object keeps the
    message.
-4. With the key of the account of the org, the Worker asks its provider
-   for a sandbox from the newest good org image of the org. The sandbox
-   gets the workspace token and the org's env vars, but no agent login.
-5. The Durable Object runs the fetch of the create in the sandbox. It
-   fetches the start branch and the base branch, and creates the workspace
-   branch from the start branch. It pushes each start step to the open
-   tabs.
+4. On the cloud computer, the Worker asks the provider of the account of
+   the org for a sandbox from the newest good org image of the org. On an
+   own computer, it asks the computer object of that computer for a
+   container from the newest good org image there. The sandbox gets the
+   workspace token, a machine token, and the org's env vars, but no agent
+   login.
+5. The host program of the sandbox opens the host connection to its
+   machine object. The Durable Object of the workspace runs the fetch of
+   the create over it. It fetches the start branch and the base branch,
+   and creates the workspace branch from the start branch. It pushes each
+   start step to the open tabs. When the host connection does not come in
+   time, the Worker first runs the bootstrap.
 6. The agent runner starts and connects to the Durable Object. The Durable
    Object sends it the waiting message.
 
@@ -98,12 +119,12 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 ## Terminal, previews, and desktop
 
 - The terminal socket goes from the browser to the Worker on
-  `app.conductive.build`. The Worker connects it to the private terminal
-  port.
+  `app.conductive.build`. The Worker connects it to the terminal port of
+  the sandbox, through a stream of the host connection.
 - A preview frame loads its preview hostname. The Worker proxies the
-  request to the private preview relay of the sandbox, with the port
-  credential of its provider. The relay forwards it to the previewed
-  server with its local address as `Host`.
+  request through a stream of the host connection to the preview relay of
+  the sandbox. The relay forwards it to the previewed server with its
+  local address as `Host`.
 - The frame of an HTML file tab loads the files preview of its workspace
   in the same way. The relay forwards each of its requests to the file
   server of the agent runner, which reads the files of the repository.
@@ -187,9 +208,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
    or Run now request. It checks the owner, the org, the default login of
    the owner, and the GitHub access of the owner. A failed check creates
    no workspace.
-3. The Worker creates a workspace as the owner, with the run text as its
-   first message. The workspace starts as in
-   [Create a workspace](#create-a-workspace).
+3. The Worker creates a workspace as the owner, on the computer of the
+   automation, with the run text as its first message. The workspace starts
+   as in [Create a workspace](#create-a-workspace).
 4. The Durable Object of the workspace reports how the first turn ended,
    so that a failed first turn shows as a failed run.
 
@@ -211,3 +232,24 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
   storage keep its data, as
   [Removed workspaces](../protocol/workspace-life.md#removed-workspaces)
   says.
+- On an own computer, the computer object deletes the container of an
+  archived workspace after the 14 days: at once when the computer is
+  connected, or at its next connection.
+
+## The migration job
+
+1. The deploy that adds the host connection publishes the release of the
+   Worker. The deploy run then starts the migration job.
+2. The job counts the machines of each provider account, and shows the
+   counts to an operator.
+3. On each running machine, the job downloads the release of the Worker
+   and restarts the runner, as Restart does.
+4. The job starts each stopped machine briefly, with only a new machine
+   token. It stops the machine again when the host program connects.
+5. The job refreshes each org image once, on the current account of its
+   org.
+6. The bootstrap covers each machine that the job skips, at its next
+   start.
+
+[The migration job](../protocol/host-connection-migration.md) states the
+rules.

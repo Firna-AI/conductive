@@ -18,7 +18,9 @@ Capabilities to automations, as [Automations](automations.md) says.
 
 - Each run creates a new workspace (decision 501 A). The workspace gets the
   repository, the section, the model, the effort, and the
-  [fast mode](fast-mode.md) of the automation.
+  [fast mode](fast-mode.md) of the automation. It runs on the computer of
+  the automation, as [Automations](own-computers-workspaces.md#automations)
+  on own computers says.
 - A run workspace is a normal workspace (decision 504 A). It shows in the
   workspace list of its section, and it stays until someone archives it.
 - Every member can open a run workspace and send messages there, as in

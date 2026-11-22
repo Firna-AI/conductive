@@ -79,15 +79,15 @@ in the cloud computer at `app/attachments/missing`.
 - A turn cannot start when a file of its message cannot reach the cloud
   computer. That turn fails and names the cause. Its Try again transfers
   again each file that the cloud computer did not get.
-- When the provider of the cloud computer gives no answer to a step of a
-  transfer or of a check, the Worker runs that transfer or check once more
-  (transfer-retry decision 2). No answer is a request that times out or
-  gets no connection, or an answer with a server error. A new transfer
-  uses a new one-use token.
-- Reason: a slow provider can answer a few seconds too late, and one more
-  try then delivers the file with no Try again. A turn that fails at once
-  was not chosen. More tries were not chosen, because each try can wait
-  for the time limit of the provider requests.
+- When the cloud computer gives no answer to a step of a transfer or of a
+  check, the Worker runs that transfer or check once more (transfer-retry
+  decision 2). No answer is a request over the host connection that times
+  out or finds no connection, or an answer with an error of the machine. A
+  new transfer uses a new one-use token.
+- Reason: a slow cloud computer can answer a few seconds too late, and one
+  more try then delivers the file with no Try again. A turn that fails at
+  once was not chosen. More tries were not chosen, because each try can
+  wait for the time limit of the requests.
 - After two such tries, the turn fails with the cause "The cloud computer
   did not answer, so the attached files did not arrive. Try again."
   (transfer-retry decision 2). Each other failure of a transfer or a check

@@ -30,7 +30,10 @@ says.
   [switch build](#the-switch-build).
 - The account of the org changes when the switch build succeeds (switch
   decision 1 B). The same step makes its image the org image. Until then,
-  new workspaces of the org start on the old account.
+  new workspaces of the org on the cloud computer start on the old
+  account.
+- A switch changes no own computer of the org, and no workspace or org
+  image on one.
 - A failed switch build leaves the org on its old account, with its last
   good image. The operator can then switch again.
 - Reason: members never lose a new workspace to the switch, and a failed
@@ -117,8 +120,9 @@ says.
 
 ## The switch build
 
-- The switch build is the one build of the org that runs outside the
-  account of the org. It runs on the new account of the switch.
+- The switch build is the one build of the cloud computer of the org that
+  runs outside the account of the org. It runs on the new account of the
+  switch.
 - It uses the inputs of the newest good image of the org: the install
   script, the repositories, and the folder of each repository. It takes no
   saved change that no build ran yet. Reason: members do not see the
@@ -126,10 +130,10 @@ says.
 - So the notices of the install script and of the repositories show the
   same state after the switch as before it.
 - It starts as a build of an org without an org image does, as
-  [The software image](sandbox-software.md#the-software-image) says. So it
+  [The software image](software-image.md#the-software-image) says. So it
   starts from the ready software image of the new account, or else from
-  its base image. It is the one later build that does not start from the
-  last org image.
+  its base image. It is the one later build of the cloud computer that
+  does not start from the last org image.
 - It never starts from an older image of the org on the new account.
   Reason: such an image got no refresh after the org left that account.
 - It gets no added build, also when a repository waits. A waiting
@@ -191,9 +195,12 @@ says.
 ## The page of the org
 
 - The page of an org in the operator section has a Provider account box,
-  between its details and its workspaces. The box gives the account of the
-  org by its ID (e2b decision 221). Reason: the switch, its state, and its
-  action then sit beside the account that they change.
+  after its details. The box gives the account of the org by its ID (e2b
+  decision 221). Reason: the switch, its state, and its action then sit
+  beside the account that they change.
+- While the org has own computers, the Own computers box follows the
+  Provider account box, as
+  [Orgs and Users](operator-section.md#orgs-and-users) says.
 - While a switch waits or builds, and after its switch build failed, the
   box also gives that switch:
   - Switch to: the new account, with the time and the operator of the
@@ -224,8 +231,9 @@ says.
   at that time.
 - While the org has workspaces on more than one account, the box gives the
   number of workspaces on each account. The numbers include removed
-  workspaces, so they add up to the workspaces by state. Reason: Orgs by
-  account counts a deleted org in the same way.
+  workspaces. With the workspaces on own computers, they add up to the
+  workspaces by state. Reason: Orgs by account counts a deleted org in the
+  same way.
 - When no other account is configured, the box shows no Switch account.
   A line says that no other account is configured. Reason: the New orgs box
   of the Providers tab does the same with one account.

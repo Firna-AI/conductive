@@ -33,6 +33,9 @@ terminals at `app/tools` and its child pages.
 - Each terminal is its own shell in the sandbox. The terminals belong to
   the workspace, so every member sees the same terminals on each device
   (terminal tabs decision 1 B).
+- Each terminal reaches its shell over the host connection of the sandbox,
+  as [Streams](host-connection.md#streams) says. So the terminals work in
+  the same way on a cloud computer and on an own computer.
 - Reason: a member can run two commands at once, such as a dev server and
   a test run, with no tmux keys. The members share the chat sessions in
   the same way.

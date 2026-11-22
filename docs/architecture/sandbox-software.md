@@ -11,7 +11,9 @@ says. A sandbox software decision number, such as sandbox software
 decision 3, names a decision of the change that makes the sandbox software
 update itself. An idle update decision number, such as idle update
 decision 1, names a decision of the change that installs a new release
-while the workspace is idle.
+while the workspace is idle. An own computer decision number names a
+decision of the change that adds own computers and the host connection,
+as [Host connection](../protocol/host-connection.md) says.
 
 ## Programs
 
@@ -19,9 +21,17 @@ The sandbox software includes these programs:
 
 - `conductive`, one Rust program. Its subcommands run the agent runner,
   the preview relay, the agent tools, the git credential helper, the
-  updater, and the helper of each service. The runner runs as an always-on
-  service. The relay listens on a private port. The runner also holds the
-  file server, which listens only on a loopback port.
+  updater, the helper of each service, and the host program. The runner
+  runs as an always-on service. The relay listens on a local port. The
+  runner also holds the file server, which listens only on a loopback
+  port.
+- The host program is the host mode of the same program. It runs as a
+  system service on each machine, and opens the host connection of that
+  machine (own computer decision 1 D). The Worker reaches the terminal and
+  the relay only through its streams.
+- On an own computer, the same program also runs in computer mode,
+  outside the containers. It opens the computer connection, and it runs
+  the containers with Podman.
 - The SDK helper, a Node program. It runs the Claude Agent SDK and the
   Codex SDK for the runner, because these SDKs exist only in TypeScript
   and Python. The runner starts it as a child process. The two programs
@@ -50,7 +60,7 @@ The program also installs the other parts of the software:
 
 - the SDK helper, with its private Node, its packages, and the agent
   programs
-- the units of the runner and the preview relay
+- the units of the runner, the preview relay, and the host program
 - the scripts, bridge, and units of the terminal service, on a private port
 - the wrapper of the GitHub CLI, and the Git setting of the credential
   helper
@@ -70,13 +80,16 @@ says.
    and packages each other part (sandbox software decision 6).
 2. The deploy writes the release files to the R2 bucket
    `conductive-runner`, which serves them at `runner.conductive.build`
-   (sandbox software decision 4). It writes the JSON file of the newest
-   release last.
+   (sandbox software decision 4). It signs the manifest of the release
+   with the signing key of the deploy (own computer decision 4 B). It
+   writes the JSON file of the newest release last. It also publishes the
+   signed container base image for own computers.
 3. In each sandbox, the updater reads that JSON file when the runner
    starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
 4. The updater downloads a newer release in the background, with only the
-   parts that changed. It never changes the release that runs.
+   parts that changed. It checks the signature before it uses a download.
+   It never changes the release that runs.
 5. The runner decides when its own release changes, because only the
    runner knows whether a turn runs. When its workspace is idle, the
    runner closes its connection, runs the updater as root to install the
@@ -92,11 +105,17 @@ says.
    release through the same program. When the image already holds the
    program, the build uses its updater, which downloads only the parts
    that changed.
+8. Each install starts the host program when it does not run. A machine
+   without the current host program gets the bootstrap at its start: one
+   fixed provider command that installs the release of the Worker and
+   starts the host program, as
+   [The bootstrap](../protocol/host-connection.md#the-bootstrap) says.
 
 ## Message types
 
 Rust owns the messages between the runner, the SDK helper, the agent
-tools, and the Worker (sandbox software decision 8). The TypeScript code
+tools, the host program, the computer mode, and the Worker (sandbox
+software decision 8). The TypeScript code
 of the Worker and the apps uses the types that `ts-rs` generates from the
 Rust types. Reason: one source then defines each message for both
 languages. Hand-written Rust copies, TypeScript or runtime schemas as the
@@ -110,7 +129,9 @@ the base image and a release of this software, and no org data. A build of
 an org on `boat` without an org image starts from it. That build then
 installs only the parts that a newer release changed. A first build of an
 org on another account, such as `e2b`, starts from the base image of that
-account, and installs this software.
+account, and installs this software. A first build on an own computer
+starts from the container base image, which holds the base of the E2B
+template and a release of this software.
 
 ## Agents and ports
 
@@ -163,8 +184,9 @@ sandbox.
 
 ## Previews and commits
 
-The preview relay forwards each preview request to a local port of the
-sandbox. The previewed server then gets its local address as `Host`
+Each preview request reaches the preview relay through a stream of the
+host connection. The relay forwards it to a local port of the sandbox.
+The previewed server then gets its local address as `Host`
 (decision 218).
 [Terminal, previews, and desktop](../protocol/terminal-previews-and-desktop.md#port-previews)
 states the rules of the relay.

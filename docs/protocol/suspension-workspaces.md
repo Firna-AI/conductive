@@ -34,6 +34,9 @@ and workspace owners. The terms come from the
   near day 14 of its stop (decision 125). So Boat can delete its disk,
   with any unpushed work of the members. An admin can assign the
   workspace to another member, as the refusal above says.
+- A workspace whose owner or org is suspended gets no brief start of the
+  migration job of the host connection. Its first start after the lift
+  runs the bootstrap, as [Skips](host-connection-migration.md#skips) says.
 - A suspended user can create no workspace and start no build.
 - The automations of a suspended user start no runs, as
   [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
@@ -51,7 +54,8 @@ is suspended.
 
 - No member can open a new preview, launch a preview, open or close a
   terminal, or get a desktop address. The Worker refuses each before any
-  call to the provider, with the same reply as the refusal of a resume.
+  call to the provider or over the host connection, with the same reply
+  as the refusal of a resume.
 - Each request to a preview of the workspace gets the answer of an unknown
   preview, and the data of an open preview stops.
 - An open terminal socket closes within 30 seconds.

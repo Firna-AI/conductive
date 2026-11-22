@@ -42,7 +42,9 @@ says.
   [operator section](operator-section.md#what-the-section-shows), an
   operator also reads counts, names, IDs, dates, roles, states, and codes
   across every org (decisions 142, 144, 147, and 160). An operator also
-  reads the provider account of each org (e2b decision 221).
+  reads the provider account of each org (e2b decision 221), and the
+  number and the states of its own computers, as
+  [Orgs and Users](operator-section.md#orgs-and-users) says.
 - The operator section shows no chat, file, env value, agent login, or
   email address. Its org search takes the ID of a cloud computer or a
   preview address only to find its org.
@@ -71,17 +73,27 @@ says.
   use, with HTTP 404 and the error code `attachment_not_found`. A deleted
   file gets the same refusal.
 - Before each sandbox call, the Worker checks in its records that the
-  sandbox belongs to a workspace or a build of that org.
+  sandbox belongs to a workspace or a build of that org. This holds for
+  each operation of the host connection and of the computer connection.
+- An own computer serves one org. Before each call to it, the Worker checks
+  that the computer belongs to the org of the workspace or the build.
 - The Worker calls only a fixed list of routes of each provider. It has
   no general pass-through to a provider.
+- The host connection and the computer connection also carry only fixed
+  operations, with no general pass-through, as
+  [Operations](host-connection.md#operations) and
+  [The computer connection](own-computers.md#the-computer-connection)
+  say.
 - The Worker gives the token of an attachment download only to the sandbox
   that the workspace of the file names. The token gives only that one
   file, as [Hostnames and gates](access-and-security.md#hostnames-and-gates)
   says.
-- Lifecycle, saved snapshot, file metadata, and error replies from a
-  provider can contain at most 1 MiB, or 1,048,576 bytes (decision 84).
-- A successful command reply from a provider can contain at most 18 MiB,
-  or 18,874,368 bytes. The limit includes the whole body of the reply.
+- Lifecycle, saved snapshot, file metadata, and error replies can contain
+  at most 1 MiB, or 1,048,576 bytes (decision 84).
+- A successful command reply can contain at most 18 MiB, or 18,874,368
+  bytes. The limit includes the whole body of the reply.
+- These limits hold for the replies of a provider, of the computer
+  connection, and of the host connection.
 - A reply above these budgets gets HTTP 502, even when the provider
   permits it. For a command reply, the error says "The command output is
   too large."
@@ -102,14 +114,20 @@ requirements.
 
 - A sandbox gets none of the secrets of the app's provider accounts. On
   Boat, every sandbox starts with Boat's `noEnv` setting for that reason.
-- At a start, a sandbox gets only two secrets: its workspace token and the
-  env vars of its org.
+- At a start, a sandbox gets only three secrets: its workspace token, its
+  [machine token](host-connection.md#the-machine-token), and the env vars
+  of its org.
 - The sandbox gets them at create and at each resume. A changed secret
   applies at the next start.
-- The restart of an archived sandbox near day 14 gets neither of them, as
-  [Stop and resume](workspace-life.md#stop-and-resume) says.
-- No saved snapshot holds these secrets. Builds and refreshes get none of
-  them.
+- The restart of an archived sandbox near day 14 gets only its machine
+  token, as [Stop and resume](workspace-life.md#stop-and-resume) says. A
+  brief start of the
+  [migration job](host-connection-migration.md#brief-starts) gets only its
+  machine token too.
+- No saved snapshot holds these secrets. Builds and refreshes get only a
+  machine token.
+- On an own computer, root on the server can read each of these secrets,
+  as [Risks](own-computers.md#risks) says.
 - A saved snapshot on E2B keeps only the disk of its sandbox, never its
   memory. Reason: the memory of a build can hold a secret, such as the
   token of a repository copy.

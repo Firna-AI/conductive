@@ -37,6 +37,8 @@ the [model gateway](model-gateway.md), as that doc says.
 - Reason: a new cloud computer from a rebuilt org image starts with the
   newest runner at once. Existing computers follow the
   [sandbox software update rules](sandbox-software.md#updates).
+- The [bootstrap](host-connection.md#the-bootstrap) of the host connection
+  never brings back a runner below version 2.
 - The refusal of a runner above version 2 changes no turn and no start.
   Reason: only a later release of the app accepts such a runner, so the
   cause above does not help.

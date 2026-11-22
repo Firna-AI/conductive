@@ -11,6 +11,20 @@ protocol docs.
   - [Switch account](../protocol/switch-account.md): the switch of an org
     to another provider account by an operator, its switch build, what
     members see of it, and its box on the page of the org.
+- [Own computers](../protocol/own-computers.md): the Linux servers that an
+  admin adds to an org, the Own computers tab, the install, the computer
+  connection, the org image of each computer, the limit, and the risks.
+  - [Workspaces on own computers](../protocol/own-computers-workspaces.md):
+    the computer of each workspace, the computer choice of New workspace,
+    sub-workspaces, the agent tools, and automations, the starts and the
+    stop, Archive, and the removal of a computer.
+- [Host connection](../protocol/host-connection.md): the one connection of
+  each machine for commands, file reads, the terminal, and the previews,
+  with the host mode, the machine token, the operations, the streams, the
+  version, and the bootstrap.
+  - [The migration job](../protocol/host-connection-migration.md): the job
+    that brings each machine onto the host connection when the change
+    deploys, its brief starts, its skips, and its pace.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
   app's own software, the updates of each sandbox, and the install in a
   build.

@@ -30,6 +30,10 @@ says.
   image of the current version. It copies the repositories, installs the
   newest release, then runs the install script. A later build and a
   refresh start from the last org image.
+- A build on an own computer starts from the container base image, or from
+  the last org image of that computer, as
+  [The org image of each own computer](own-computers.md#the-org-image-of-each-own-computer)
+  says.
 - Reason: the first build of a new org then installs only the parts that a
   newer release changed.
 - In place of the software image, a skip of the parts that each org image

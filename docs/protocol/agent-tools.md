@@ -87,7 +87,9 @@ says. A Mac access decision names a decision of the change that makes
   They offer only their own calls.
 - The app sets no limit of its own on the workspaces that agents create
   (decision 8). The plan limits of the provider account of the org apply,
-  as [The provider](workspaces-and-sandboxes.md#the-provider) says.
+  as [The provider](workspaces-and-sandboxes.md#the-provider) says. A
+  workspace on an own computer counts toward the
+  [limit](own-computers.md#the-limit) of that computer.
   [No limit](session-calls.md#no-limit) states the same for sessions.
 - A workspace that an agent creates starts with no approval step in the
   app.
@@ -250,6 +252,11 @@ a choice of that person covers the command, as
   with Chrome, as on Boat.
 - An E2B org image has the tools only when it comes from a template build
   that has them. Until then, its agents keep the workspace tools only.
+- On an own computer, the agents get the same computer tools as on E2B.
+  Reason: the container base image starts from the base of the E2B
+  template, as
+  [The org image of each own computer](own-computers.md#the-org-image-of-each-own-computer)
+  says.
 - The agent runner gives the computer tools to the agents when the
   sandbox has them.
 - The agents use the computer tools for browser work on the desktop of the

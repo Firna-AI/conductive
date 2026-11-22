@@ -89,6 +89,10 @@ month, in US dollars.
   day 14 of a stop.
 - Reason: the org pays for all its compute, and one rule is the easiest
   for an org to check.
+- An [own computer](own-computers.md) uses no cloud hours. The pool counts
+  no minute of its workspaces, its builds, or its refreshes. This is a
+  design call of 22 November 2026. The billing change decides the rest of
+  the price of own computers.
 - A cloud computer stops after a set time without activity, unless an
   agent turn runs, as [Stop and resume](workspace-life.md#stop-and-resume)
   states. A stopped cloud computer uses no hours.
@@ -228,6 +232,8 @@ The designs of those changes answer these questions:
 - How the bill follows a member who joins or leaves in the middle of a
   month, as closed decision 40 asked.
 - The start limits for each member, as closed decision 34 asked.
+- What a plan charges for own computers, and whether a workspace on an own
+  computer counts toward the 3 workspaces of Free.
 - The registration of Firna for the EU OSS scheme.
 - A larger Boat plan, when paying orgs need more starts or more machines
   at once. Paid plans have no limit at once. So the shared capacity of the

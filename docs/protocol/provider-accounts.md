@@ -16,9 +16,12 @@ as that doc says.
 ## The account of an org
 
 - Each org runs on one provider account at a time, the account of the org
-  (e2b decision 222). Its new workspaces, its builds, and its refreshes use
-  that account. The one exception is the
-  [switch build](switch-account.md#the-switch-build).
+  (e2b decision 222). Its new workspaces on the cloud computer, and the
+  builds and the refreshes of its cloud computer, use that account. The
+  one exception is the [switch build](switch-account.md#the-switch-build).
+- The own computers of an org use no provider account. Their workspaces,
+  their builds, and their refreshes run on each own computer, as
+  [Own computers](own-computers.md) says.
 - An org from before the second provider runs on `boat`.
 - An org gets its first account when it is created, before its first
   build starts.
@@ -43,9 +46,14 @@ as that doc says.
 
 ## The account of a workspace
 
-- A new workspace starts on the account of its org at its create
-  (switch decision 1 B). This holds for each new workspace: from the app,
-  as a sub-workspace, from an agent tool, and for an automation run.
+- A new workspace on the cloud computer starts on the account of its org
+  at its create (switch decision 1 B). This holds for each new workspace:
+  from the app, as a sub-workspace, from an agent tool, and for an
+  automation run.
+- A new workspace on an own computer starts on that computer, and on no
+  account, as
+  [The computer of a workspace](own-computers-workspaces.md#the-computer-of-a-workspace)
+  says.
 - A workspace keeps its account for each action on its sandbox. These
   actions include a resume, the restart near day 14 of a stop, Continue, a
   repository change, Archive, and Restore. No sandbox moves to another
@@ -62,6 +70,8 @@ as that doc says.
 
 - A region is the place where the machines of a provider account run.
   Each account runs its sandboxes and its org images in one region.
+- An own computer runs where its org keeps the server. The rules of this
+  section hold only for the provider accounts of the app.
 - An account can be in any region. The EU is not a requirement for a
   provider or for an account.
 - A rule that keeps every sandbox in the EU was rejected. Reason: no

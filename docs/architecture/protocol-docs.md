@@ -6,8 +6,9 @@ that meet them, and gives the terms and the meaning of a decision number.
 This page lists each protocol doc and what it covers.
 
 - [Workspaces and sandboxes](../protocol/workspaces-and-sandboxes.md): the
-  providers, the account of each org, the org image, the life of a
-  workspace, and the disk flushes of a sandbox.
+  providers, the account of each org, the own computers of an org, the
+  host connection of each machine, the org image, the life of a workspace,
+  and the disk flushes of a sandbox.
   [Workspace protocol docs](protocol-docs-workspaces.md) lists the docs
   that belong to it.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what

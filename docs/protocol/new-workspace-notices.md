@@ -17,6 +17,11 @@ says.
   [first build](org-image.md#the-first-build), New workspace
   shows a notice over the composer. Send and Create then stay off
   (decision 150 of PR #92).
+- This notice holds for the cloud computer. An own computer without a good
+  image is off in the computer choice, and the notice of an offline own
+  computer keeps Send on, as
+  [The computer choice](own-computers-workspaces.md#the-computer-choice)
+  says.
 - The notice shows the state of the newest build of the org:
   - While a build runs, it says that the cloud computer is being prepared,
     with the time since the build began.

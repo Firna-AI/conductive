@@ -104,8 +104,18 @@ These docs belong to this doc:
   GitHub webhooks, the agent tools, the agent runner, the git credential
   helper, the [model gateway](model-gateway.md), the software image route
   of the deploy run, and the attachment downloads of the cloud computers.
-  Its gate checks a webhook signature or a workspace token in place of the
-  sign-in.
+  It also serves the [host connection](host-connection.md) of each machine
+  and the [computer connection](own-computers.md#the-computer-connection)
+  of each own computer. Its gate checks a webhook signature or a workspace
+  token in place of the sign-in.
+- The gate also accepts a machine token, but only on `/v1/host`, the
+  route of the host connection.
+- The gate also accepts a computer token, but only on `/v1/computer`, the
+  route of the computer connection. That route also accepts the one-time
+  code of a computer that never connected, once.
+- Reason: each of these credentials then reaches only its own connection.
+  The Worker keeps only a digest of each machine token and each computer
+  token.
 - The gate also accepts a one-use build grant, but only on
   `/v1/internal/image-source/credential`, the route that gives the Git
   command of a build its read token (decision 90).

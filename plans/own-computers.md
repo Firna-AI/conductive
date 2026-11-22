@@ -408,7 +408,11 @@ These are agent calls, made on 22 November 2026.
   user service of a dedicated user, with rootless Podman. It opens one
   computer connection to `/v1/computer`, to a computer object for each
   own computer. That connection carries only fixed container operations:
-  create, get, start, stop, delete, and save an image.
+  create, get, start, stop, delete, save an image, and run the bootstrap.
+  The bootstrap operation checks the signature of the Worker's release,
+  installs it in the container, and starts the host program. Agent call,
+  23 November 2026: decision 7 D needs it for a container with an older
+  host program, and it adds no pass-through.
 - Each container runs the same sandbox software as a cloud computer,
   including the host program in host mode. So the host connection is the
   same for both kinds.
@@ -544,25 +548,25 @@ The docs state the requirements and the decisions in force for the work
 below. The legal pages and the guides change in the same milestone, as
 `CLAUDE.md` says.
 
-- [ ] Add `docs/protocol/host-connection.md`: the host mode, the machine
+- [x] Add `docs/protocol/host-connection.md`: the host mode, the machine
       token, the operations, the streams, the version, the bootstrap, and
       the migration job of own computer decision 7.
-- [ ] Add `docs/protocol/own-computers.md`: who adds a computer, the
+- [x] Add `docs/protocol/own-computers.md`: who adds a computer, the
       install, the computer token, containers, the org image of each
       computer, the limit, offline starts, stop, Archive, removal, and the
       computer choice of New workspace, sub-workspaces, agent tools, and
       automations.
-- [ ] Update `docs/protocol/workspaces-and-sandboxes.md`: decision 80 now
+- [x] Update `docs/protocol/workspaces-and-sandboxes.md`: decision 80 now
       has the own computer exception, and decision 4 holds for each
       container.
-- [ ] Update `docs/protocol/provider-accounts.md`, `isolation.md`,
+- [x] Update `docs/protocol/provider-accounts.md`, `isolation.md`,
       `access-and-security.md`, `sandbox-software.md` with the signatures
       and the base container image, `org-image.md`, `create-a-workspace.md`,
       `workspace-life.md`, `stop-and-resume.md`, `terminal.md`,
       `port-previews.md`, `terminal-previews-and-desktop.md`,
       `file-server.md`, `automations.md`, `sub-workspaces.md`,
       `operator-section.md`, and `pricing.md`.
-- [ ] Update `docs/architecture.md` and `docs/architecture/components.md`,
+- [x] Update `docs/architecture.md` and `docs/architecture/components.md`,
       `data-and-trust.md`, `flows.md`, `sandbox-software.md`,
       `protocol-docs.md`, and `protocol-docs-workspaces.md`.
 - [ ] Read the Terms in `src/marketing/terms.ts`, `terms-work.ts`, and
@@ -645,6 +649,26 @@ Depends on: 6
 - [ ] Move the org image builds, the refreshes, the software image build,
       and the image sources to the channel.
 
+## Milestone 8a: Mockups of the migration job and removed computers
+
+Tags: mockup
+
+Depends on: 2
+
+The docs of Milestone 2 found two screens with no mockup.
+
+- [ ] Add the migration job to the Providers tab of the operator section:
+      the count by account and state, the expected starts and days, the
+      pace settings, the progress, the failures, Pause, Continue, and the
+      limit to one org.
+- [ ] Show the bar of a removed workspace on a removed own computer. It
+      says that the files stay on that server, and gives no delete date.
+      Agent call, 23 November 2026: the Remove question already says that
+      the app deletes no file on the server.
+- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [ ] Update the design and the TODOs of this plan for each problem that
+      the mockups show.
+
 ## Milestone 9: Old computers, and removal of the provider path
 
 Depends on: 7, 8
@@ -703,9 +727,10 @@ The second options check gave most of these TODOs. Its report is in
       and computers at once, with a low default. Back off at each
       `rate_limited` or capacity reply. Do the running computers first.
 - [ ] Before the first start, count the computers of each account by state
-      and kind. Show the count, the expected starts, and the expected days
-      to an operator. An operator can pause and continue the job, and can
-      limit it to one org. Show its progress and its failures.
+      and kind. Give an operator route with the count, the expected starts,
+      the expected days, the progress, and the failures. Add the routes that
+      pause and continue the job, and that limit it to one org. Milestone 9b
+      builds the screens.
 - [ ] Refresh each org image once on the current account of its org, as
       the daily timer does. Skip an image that is already new. Report each
       org with no active admin. Do not refresh an image on an old account.
@@ -733,6 +758,15 @@ The second options check gave most of these TODOs. Its report is in
       2 start again.
 - [ ] Update the sandbox README and the lifecycle README.
 
+## Milestone 9b: Migration job screens
+
+Tags: ui
+
+Depends on: 8a, 9
+
+- [ ] Build the migration job box of the Providers tab, as Milestone 8a
+      draws it.
+
 ## Milestone 10: Own computer records and the computer connection
 
 Depends on: 4
@@ -757,7 +791,7 @@ Depends on: 3, 10
       rootless Podman check, the systemd user service, and the health
       report.
 - [ ] Publish the signed container base image with each deploy.
-- [ ] Add the container operations.
+- [ ] Add the container operations, with the bootstrap operation.
 - [ ] Report the vCPUs, the memory, and the system of the computer at each
       connection, for the Own computers tab.
 
@@ -784,13 +818,17 @@ Depends on: 1, 12
 - [ ] Build the computer choice of New workspace and of the automation
       form.
 - [ ] Build the workspace states and the operator counts.
+- [ ] Build the bar of a removed workspace on a removed own computer, as
+      Milestone 8a draws it.
 
 ## Milestone 14: Agent tools and guides
 
 Depends on: 12
 
-- [ ] Add the computer choice to the workspace tools, and update
-      `docs/protocol/workspace-calls.md`.
+- [ ] State in `docs/protocol/workspace-calls.md` and
+      `docs/protocol/create-call-lists.md` that a create from a workspace
+      tool takes the computer of the calling workspace, as own computer
+      decision 3 A says. The create call gets no computer parameter.
 
 ## Milestone 15: Tests on real computers
 

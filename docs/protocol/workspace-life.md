@@ -57,6 +57,8 @@ keeps them after the merge.
   (decision 128).
 - A start of a workspace's sandbox has a time limit of 20 minutes. This
   holds at create, at resume, and at the restart near day 14 of a stop.
+  A brief start of the [migration job](host-connection-migration.md#brief-starts)
+  lasts at most 30 minutes.
 - Each time limit covers the whole build, refresh, or start, from the
   moment that it began. Progress and provider retries do not reset it.
 - Reason: a time limit on the whole build or start ends it when it makes

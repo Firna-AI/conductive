@@ -10,13 +10,26 @@ decision number names a dated record, as
 number, such as e2b decision 222, names the dated record of one decision of
 the change that adds E2B as the second sandbox provider. Its plan keeps
 these records while the change is open. Its pull request keeps them after
-the merge.
+the merge. An own computer decision number names a decision of the change
+that adds own computers and the host connection, as
+[Host connection](host-connection.md) says.
 
 These docs belong to this doc:
 
 - [Provider accounts](provider-accounts.md): the account of each org and
   its switch, the account of each workspace, the weights, and the regions
   of the accounts.
+- [Own computers](own-computers.md): the Linux servers that an admin adds
+  to an org, their install, their connection, their org images, their
+  limit, and their risks.
+  - [Workspaces on own computers](own-computers-workspaces.md): the
+    computer choice, the starts and the stop, Archive, and the removal of
+    a computer.
+- [Host connection](host-connection.md): the one connection of each
+  machine for commands, file reads, the terminal, and the previews, its
+  token, its version, and the bootstrap.
+  - [The migration job](host-connection-migration.md): the job that brings
+    each machine onto the host connection when the change deploys.
 - [Org image](org-image.md): its builds, refreshes, and first build.
 - [Sandbox software](sandbox-software.md): the releases of the app's own
   software, the updates of each sandbox, and the install in a build.
@@ -46,11 +59,19 @@ These docs belong to this doc:
 
 ## The provider
 
-- Two providers run the sandboxes: Boat and E2B (decision 2, and e2b decision 222).
-- Every sandbox and every org image of every org runs in a provider
+- Two providers run the cloud computers: Boat and E2B (decision 2, and e2b
+  decision 222).
+- Every cloud computer and every org image of every org runs in a provider
   account of the app (decision 80). The app pays for all use. Its account
   with Boat has the ID `boat`, and its account with E2B has the ID `e2b`.
+- An own computer is the one exception (own computer decision 1 D). An
+  admin of an org adds the server, and the sandboxes and the org image of
+  that org on it run there. The app does not pay for the server.
+  [Own computers](own-computers.md) holds its rules.
 - No user needs a provider account or a provider key.
+- The Worker reaches each machine over its host connection. It uses the
+  provider only for the life of the machine, as
+  [Host connection](host-connection.md) says (own computer decision 1 D).
 - A Boat key for each org was rejected. Users then needed their own Boat
   account, and the app had to name Boat to them.
 - The orgs of one provider account share the plan limits of that account,
@@ -70,11 +91,16 @@ These docs belong to this doc:
 - Each workspace has its own sandbox with its own clone of its repository
   (decision 4). One worktree for each workspace in a shared sandbox was
   rejected, because each workspace gets its own sandbox.
+- Decision 4 holds on an own computer too: each workspace there has its
+  own container, as [Own computers](own-computers.md#own-computers) says.
 - A workspace works in one repository at a time. A
   [repository change](repository-change.md) moves it to another repository
   that its sandbox holds.
-- Every sandbox has one machine size for now, on each provider: Boat's
-  default size, with 4 vCPU and 8 GB.
+- Every cloud computer has one machine size for now, on each provider:
+  Boat's default size, with 4 vCPU and 8 GB.
+- The containers of an own computer share its server. The
+  [limit](own-computers.md#the-limit) of that computer sets how many of
+  them run at once.
 - [Provider accounts](provider-accounts.md) gives the account of each org
   and of each workspace, and the regions of the accounts.
   [Switch account](switch-account.md) gives the switch of an org to
