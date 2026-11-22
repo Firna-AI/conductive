@@ -66,7 +66,7 @@ Replaced ways:
   `worker/chat/attachment-download-process.ts`, and
   `worker/terminal/close.ts`, `service.ts`, `service-files.ts`,
   `support.ts`. Moved in Milestones 6 and 8. Deleted in Milestone 9, except
-  the one bootstrap command if own computer decision 7 chooses B or C.
+  the one bootstrap command that own computer decision 7 D keeps.
 - Provider file reads (`fileInfo`, `readFile`) → file reads over the host
   connection. Consumers: `worker/files/boat.ts`, the fallback read of
   `worker/files/handlers.ts`. Moved in Milestone 7. Deleted in Milestone 9.
@@ -81,7 +81,8 @@ Replaced ways:
 
 ## Decisions
 
-Cal answered own computer decisions 1 to 6 on 22 November 2026, in the
+Cal answered own computer decisions 1 to 7 on 22 November 2026. Own
+computer decision 8 is open, in the
 brainstorm of this branch.
 
 ### Own computer decision 1: Where the agents of an own computer run
@@ -174,9 +175,10 @@ brainstorm of this branch.
 
 ### Own computer decision 7: Computers that do not have the host program
 
-Open. It waits for Cal's answer. The options check of 22 November 2026
-added option C and changed the recommendation from B to C. Its report is
-in `.context/own-computers/options-check-decision-7.md`.
+The options check of 22 November 2026 added option C and changed the
+recommendation from B to C. Its report is in
+`.context/own-computers/options-check-decision-7.md`. Cal then proposed a
+migration of the computers of the transition, which became option D.
 
 - **Severity:** High. **Likelihood:** Common. **Effort:** Large.
 - **Source:** Design.
@@ -186,9 +188,11 @@ in `.context/own-computers/options-check-decision-7.md`.
   - A stopped cloud computer can resume weeks later with its old sandbox
     software, as [Updates](../docs/protocol/sandbox-software.md#updates)
     says. E2B keeps a stopped disk with no limit.
-  - A start applies only a release that the computer downloaded before
-    its stop. The runner unit runs `conductive update apply` before it
-    starts (`image/release/conductive-runner.service:10`).
+  - A start applies a release that the computer downloaded before its stop,
+    or during the start. The runner unit runs `conductive update apply`
+    before it starts, and only when `/run/conductive/workspace-ready`
+    exists (`image/release/conductive-runner.service:10`). The update check
+    runs 30 seconds after boot (`image/conductive-update-check.timer:5`).
   - The E2B template has no program `conductive`
     (`image/e2b/Dockerfile:1-9`, `image/e2b/install-base.sh:1-36`). Each
     first build on `e2b` and each Boat software image build start from a
@@ -260,6 +264,36 @@ in `.context/own-computers/options-check-decision-7.md`.
       operation, and more tests. A running computer holds two releases
       until its next install.
     Effort: Large.
+  - **D.** A migration job at the deploy, with the bootstrap of B as the
+    safety net.
+    - The job installs the host program on each running computer. Own
+      computer decision 8 says how, because Restart ends each running turn
+      (`docs/protocol/restart-the-software.md:26-29`).
+    - It starts each stopped computer briefly, installs, and stops it
+      again. The restart near day 14 is the model on Boat
+      (`docs/protocol/stop-and-resume.md:103-111`). On E2B, the brief start
+      is a new kind of start. The job does the same for each archived
+      computer in its 14-day Restore window. That is new behaviour.
+    - It runs no startup script and no agent, and the computer gets no
+      secrets, as for the day-14 restart of an archived computer. It gets
+      only a new machine token, so that the host program can connect.
+    - It builds each org image once, so that new workspaces start with the
+      host program.
+    - It paces its starts by operator settings for each provider account:
+      starts per hour and computers at once. The app knows no limit of
+      either account (`plans/follow-ups/launch-capacity-boat-limits.md:23`).
+    - The bootstrap of B covers what the job does not reach: a workspace
+      that a member opens before the job reaches it, a computer of a
+      suspended owner or org after the lift, a failed step of the job, and
+      each build from a base image.
+    - The Worker records the host protocol version of each machine. A
+      machine that connects with an older host version gets the bootstrap.
+      A later host protocol change runs the same job again.
+    - Cost: one start and some minutes for each stopped or archived
+      workspace, also for a workspace that nobody opens again. The number of
+      workspaces in production is not known here, so the length of the job
+      is not known until it counts them.
+    Effort: Large.
 - **Left out:**
   - Refuse to start an old computer: it breaks the rule that older runners
     must keep working (`CLAUDE.md`, Status).
@@ -269,25 +303,81 @@ in `.context/own-computers/options-check-decision-7.md`.
   - Ship the host program in a release before the switch: it breaks own
     computer decision 6, and it does not reach computers that stopped
     before that release.
-  - Start each stopped computer once in the background to install the
-    program: the app avoids a start that no user asked for
-    (`docs/protocol/stop-and-resume.md:67-68`). It still needs the command
-    of B.
   - Keep provider commands only for the start steps, and wait for an idle
     install: the terminal, previews, and files fail until that install,
     and a busy runner can delay it for hours.
-- **Wider fix:** C. It still holds when the detail changes shape: an older
-  host version, a running computer, or an own computer.
+- **Wider fix:** D. It ends the transition when the job completes, and the
+  same job serves each later host protocol change.
 - **Previous examples:** The startup bootstrap installs a missing program
   through a fixed provider command
   (`worker/lifecycle/software-bootstrap.ts:54-84`). Restart in the
   workspace header does the same for a running computer
-  (`worker/lifecycle/software-restart.ts:36-49`).
-- **Recommendation:** C. It keeps the one narrow command of B and also
-  reaches running computers and older host versions, so the Worker serves
-  one host protocol version. The first recommendation was B.
-- **Action:** ask the user, because the `plans` skill makes a kept path for
-  deployed computers a user decision.
+  (`worker/lifecycle/software-restart.ts:36-49`). The restart near day 14
+  starts each stopped Boat computer briefly in the background.
+- **Recommendation:** D. It ends the transition when the job completes, it finds
+  failures before members open their workspaces, and it needs less special
+  logic than C. The first recommendation was B, then C.
+- **Choice:** D, on 22 November 2026.
+- **Reason:** Cal proposed the migration for the part of the problem that
+  comes only from the transition. The bootstrap stays for the lasting
+  part: builds from a base image and later host protocol changes.
+- **Note:** The first text of this decision left out a start in the
+  background, because the app avoids a start that no user asked for. That
+  rule stays for Resume and Restore (`docs/protocol/stop-and-resume.md:67-68`,
+  `docs/protocol/workspace-life.md:193-196`). The day-14 restart is already
+  a start in the background for disk retention. Cal's choice of D makes
+  the job a second exception, and Milestone 9 records it in the protocol
+  docs.
+- **Options check of D:** a second check on 22 November 2026 found that D
+  as first written ended every running turn, left an install pending that
+  the next start rolls back, and installed the old release before the
+  deploy publishes the new one. Milestone 9 holds the fixes. The running
+  computers are own computer decision 8.
+
+### Own computer decision 8: The install on a computer that runs at the deploy
+
+Open. It waits for Cal's answer.
+
+- **Severity:** High. **Likelihood:** Common. **Effort:** Medium.
+- **Source:** Design.
+- **Category:** Product bug.
+- **Location:** `worker/lifecycle/software-restart.ts:36-49`
+- **Background:**
+  - Restart in the workspace header downloads the newest release and
+    restarts the runner. That ends each running turn and each process that
+    an agent started, such as a dev server
+    (`docs/protocol/restart-the-software.md:26-29`).
+  - An idle computer installs a new release by itself, after 2 minutes
+    with no turn (`docs/protocol/sandbox-software.md:140-147`). With the
+    Milestone 4 change, the installer then starts the host service.
+  - A computer with a running turn waits for that install. Two releases
+    must not mix in the tool calls of one turn
+    (`docs/protocol/sandbox-software.md:90-91`).
+- **Problem:** Until a busy computer installs, it has no host connection.
+  Its terminal, previews, and files then fail.
+- **Impact if no action:** Either the deploy ends the running turns of
+  every busy workspace, or those workspaces lose their tools until their
+  turns end.
+- **Root question:** How does a computer that is busy at the deploy get the
+  host program without losing its running work?
+- **Options:**
+  - **A.** Restart the runner, as Restart does. Each running turn ends.
+    Effort: Small.
+  - **B.** Wait for the idle install. A busy computer has no terminal,
+    previews, or files until its turns end, up to hours. Effort: Small.
+  - **C.** Use the idle install first. For a computer that stays busy,
+    install the new release beside the running one and start only the host
+    program. No turn ends, and every tool works. The old relay checks the
+    Host header (`crates/cnd-relay/src/headers.rs:14-46`), so the host
+    program sends the header that it accepts. Effort: Medium.
+- **Left out:** Delay the deploy until no turn runs: turns of automations
+  and background work can run at any time.
+- **Wider fix:** C.
+- **Previous examples:** The idle update of
+  [Sandbox software](../docs/architecture/sandbox-software.md#releases-and-updates).
+- **Recommendation:** C. No turn ends, and the tools keep working.
+- **Action:** ask the user, because the choice decides whether the deploy
+  ends the running work of members.
 
 ## Design calls
 
@@ -394,8 +484,8 @@ below. The legal pages and the guides change in the same milestone, as
 `CLAUDE.md` says.
 
 - [ ] Add `docs/protocol/host-connection.md`: the host mode, the machine
-      token, the operations, the streams, the version, and own computer
-      decision 7.
+      token, the operations, the streams, the version, the bootstrap, and
+      the migration job of own computer decision 7.
 - [ ] Add `docs/protocol/own-computers.md`: who adds a computer, the
       install, the computer token, containers, the org image of each
       computer, the limit, offline starts, stop, Archive, removal, and the
@@ -496,16 +586,85 @@ Depends on: 6
 
 ## Milestone 9: Old computers, and removal of the provider path
 
-Depends on: 7, 8, and own computer decision 7
+Depends on: 7, 8, and own computer decision 8
 
-- [ ] Apply the chosen option of own computer decision 7.
+Own computer decision 7 D: a migration job brings each computer of the
+transition onto the host connection, and the bootstrap covers the rest.
+The second options check gave most of these TODOs. Its report is in
+`.context/own-computers/options-check-decision-7-d.md`.
+
+- [ ] Give the Worker the version and the digest of its own release at
+      the deploy. The release files upload before the Worker
+      (`.github/workflows/deploy.yml:181`), but the latest release file is
+      published after it (`deploy.yml:298`, `:329`). Pin the bootstrap and
+      the job to that release. The deploy run starts the job after the
+      publish.
+- [ ] Add the bootstrap: one fixed provider command that installs the
+      pinned release and starts the host program. The Worker checks the
+      signature of the release before it gives its digest to the command.
+      Run it at each kind of start when the host connection does not come
+      in time: create, resume, the day-14 restart, also after a lift, a
+      build, a refresh, and the software image build. Run it also for a
+      machine that connects with an older host version.
+- [ ] Keep each install across a stop. Today an install that no runner
+      confirms rolls back at the next runner start, and its version is then
+      rejected (`crates/cnd-cli/src/update/engine.rs:40-70`). The new
+      updater marks a release that no runner started yet, and its next
+      apply starts that release. Test a brief-start install, then a resume.
+- [ ] Record the host protocol version of each machine at each connection.
+      Keep the previous Worker working on the new column.
+- [ ] Add the migration job. Run each step in the workspace object: a
+      stopped computer as a disk maintenance step that a resume ends first,
+      and an archived computer as a phase of the archive maintenance. Check
+      the owner and the org before each step. Resume with a provider stop
+      after 1,800 seconds.
+- [ ] At a brief start, give only a new machine token, and no workspace
+      token, env var, or secret. The install is done when the host program
+      connects with the current host version. Revoke the token at the stop.
+- [ ] Choose the computers of the job by state. A stopped workspace and an
+      error-state workspace whose stop is confirmed get the brief start. A
+      failed Restart counts as running. Skip and report: a workspace that is
+      creating or starting, a workspace with no sandbox, a sandbox under
+      cleanup, a workspace of a deleted org, an account that is not
+      configured, a provider error or a missing disk, and an archived
+      workspace whose Restore ends within a day. Pace each workspace by its
+      own account.
+- [ ] Install on running computers as own computer decision 8 says.
+- [ ] After a confirmed brief stop, record the stop time
+      (`worker/lifecycle/confirmed-stop.ts:20-34`). A day-14 restart that
+      falls due during the job does the install.
+- [ ] Pace the job by operator settings for each account: starts per hour
+      and computers at once, with a low default. Back off at each
+      `rate_limited` or capacity reply. Do the running computers first.
+- [ ] Before the first start, count the computers of each account by state
+      and kind. Show the count, the expected starts, and the expected days
+      to an operator. An operator can pause and continue the job, and can
+      limit it to one org. Show its progress and its failures.
+- [ ] Refresh each org image once on the current account of its org, as
+      the daily timer does. Skip an image that is already new. Report each
+      org with no active admin. Do not refresh an image on an old account.
+- [ ] At the first step after the deploy, run the bootstrap for work that
+      held a provider command at the deploy. Then read the journal of that
+      command under `/tmp/conductive-lifecycle` over the host connection
+      (`worker/lifecycle/command-intents.ts:13-33`).
+- [ ] Keep the env write of an E2B resume through envd
+      (`worker/sandbox/e2b/client.ts:71-75`) when the provider commands go.
+- [ ] Add a rerun of the job for a later host protocol change.
+- [ ] Test a running, a stopped, an archived, a suspended, and an
+      error-state computer, a failed step, and an open, an Archive, and a
+      Restore while the job runs.
 - [ ] Delete each provider command, file read, and port method, and each
-      converter, that the chosen option does not keep.
-- [ ] Update the rules in force that the chosen option changes, in
-      `docs/protocol/sandbox-software.md` and
-      `docs/protocol/version-pins.md`.
+      converter, except what decision 7 D keeps: the bootstrap command, the
+      E2B env write, and the desktop route (`worker/sandbox/boat.ts:96-100`).
 - [ ] Delete the port credentials, the E2B port traffic token, and the
       relay's ingress identity check.
+- [ ] Update the rules in force that the bootstrap and the job change, in
+      `docs/protocol/sandbox-software.md`, `version-pins.md`,
+      `stop-and-resume.md`, `isolation.md`, `workspace-life.md`,
+      `suspension-workspaces.md`, and `restart-the-software.md`. Update the
+      guide `src/marketing/docs/workspaces.md` when it changes. Read both
+      legal pages again. The bootstrap must not let a runner below protocol
+      2 start again.
 - [ ] Update the sandbox README and the lifecycle README.
 
 ## Milestone 10: Own computer records and the computer connection
@@ -573,6 +732,12 @@ Depends on: 9, 13, 14
       create from an org image of before the change, a refresh of such an
       image, a Boat software image build, a day-14 restart, and a computer
       that runs when the change deploys.
+- [ ] Make old workspaces with the code of `main`, then run this branch on
+      the same D1. Limit the job to one test org. Test a running turn during
+      the job, an open during the job, an error-state workspace, a workspace
+      on an old account after a switch, work in flight at the deploy, and
+      the window before the publish. Measure one brief start on Boat and on
+      E2B.
 
 ## Milestone 16: Verification, commit, review, and pull request
 
