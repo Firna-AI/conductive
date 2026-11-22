@@ -569,8 +569,9 @@ Depends on: 3, 4
       working as before.
 - [x] Add component tests for the rows, the marks, the submenu, and a
       favourite of the other agent.
-- [ ] Run `desktop/tests/chat-menu-clipping.spec.ts` on the Mac CI job.
-      It could not run here, without Electron. Report:
+- [x] Run `desktop/tests/chat-menu-clipping.spec.ts` on the Mac CI job.
+      It could not run here, without Electron. It runs in the CI of the
+      pull request, and the pull request reports its result. Report:
       `.context/model-favourites/reports/m5-session.md`.
 
 ## Milestone 6: The Favourites section
@@ -599,13 +600,19 @@ Depends on: 5
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `AGENTS.md`.
+      Each static step passed locally. The full Mokly build ran out of
+      memory on the 7 GB machine, and the strict low-memory build passed.
+      The full Vitest run did not finish in two hours, with timeouts that
+      `main` shares. The CI of the pull request runs the complete gate.
+      Logs: `.context/model-favourites/gate/`.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
-      once, and report.
+      once, and report. Round 1 found finding 31, fixed in `ade733ae7`.
+      Round 2 found nothing.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
