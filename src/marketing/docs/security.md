@@ -31,6 +31,10 @@ A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
 A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
 
+A watch can wake the session that set it when a chosen turn ends.
+When a wake starts a new turn, that turn acts for the sender of the turn that set the watch.
+A wake that joins a running turn keeps that turn's sender.
+
 | Action | Account or person it uses |
 | --- | --- |
 | Agent model use | The session's personal or org login, including a chosen endpoint |
@@ -41,6 +45,7 @@ A turn that a late answer to a secret request starts keeps the sender of the tur
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Continue's repository fetch | The GitHub account of the member who selects Continue |
 | A repository change's fetch | The GitHub account of the member who changes the repository |
+| Base branch fetch when no member starts the move | The workspace owner's GitHub account |
 | Commit in an agent turn | The turn sender, as author and committer |
 | Commit outside a turn, including Terminal and scripts | The workspace owner by default, as author and committer |
 | A request to run a Mac command | The turn sender's connected Mac |
@@ -116,6 +121,7 @@ The tools can:
 - Archive workspaces that the sender owns, or any workspace when the sender is an org admin.
 - Create, rename, stop, and close sessions.
 - Send messages to sessions.
+- Watch one turn of a session and wake the session that set the watch when it ends.
 - Create and delete sections.
 - Open and close private previews.
 - Run a command with a secret that the session may use, or ask members to allow it.
@@ -124,6 +130,8 @@ An agent can archive the workspace where it runs, which ends its turn.
 Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
+
+A wake follows current membership and session login rules.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
@@ -196,8 +204,12 @@ Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue and a repository change also bring the member's GitHub token into the cloud computer while they fetch the latest default branch.
-Code or members with terminal access can read that token during the fetch.
+Continue and a repository change also bring the member's GitHub token into the cloud computer during their branch fetch.
+Conductive also fetches a new base when GitHub deletes a workspace's base branch.
+A workspace that follows the default also gets this fetch when GitHub changes that default branch.
+When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
+This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
+Code or members with terminal access can read these GitHub tokens while their fetches run.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.

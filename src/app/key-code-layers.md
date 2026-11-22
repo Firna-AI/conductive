@@ -73,7 +73,10 @@ the folder of this page.
   `useDismiss`, the layer of sheets and dialogs, and `useModalLayer`, which
   every sheet and dialog uses. Escape closes only the newest layer. Its
   optional `returnFocus` names a trigger that a render can replace, such as
-  the row of a phone menu sheet.
+  the row of a phone menu sheet. The option `focusOutside` of `useDismiss`
+  also closes a layer when an element outside it takes the focus. The
+  branch dropdown of New workspace turns it on, so Tab reaches its Try
+  again and its Target part.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.
@@ -122,9 +125,14 @@ the folder of this page.
   checks a tall dialog at the 480 px minimum height of the Mac window. Run
   `npm --prefix desktop run test:electron -- tests/new-workspace-height.spec.ts`.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
-  and the dialog share: the repository, the notices, the readiness, and
-  the send. `parts.tsx`: their repository menu. `waiting.tsx`: the notice
-  of a repository that waits for its build.
+  and the dialog share: the repository, the branch and its target, the
+  notices, the readiness, and the send. `parts.tsx`: their repository
+  menu. `BranchPicker.tsx`, `BranchMenu.tsx`, and `BranchList.tsx`: the
+  branch control, its dropdown with the Target part, and the list of its
+  Start from part, as [Start from a branch](start-branch.md) says.
+  `create-failure.tsx`: the notice of a failed create. `dialog-parts.tsx`:
+  the header and Create of the dialog. `waiting.tsx`: the notice of a
+  repository that waits for its build.
   The model of each form is the `owner` of its chip field. The shared chip
   field supplies their focus handle. `CaretAtEndPlugin`
   restores the saved caret position when keyboard focus enters. Without a

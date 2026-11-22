@@ -24,6 +24,9 @@ This page lists each protocol doc and what it covers.
       turn that cannot run fast.
     - [Dropped answers](../protocol/dropped-answers.md): the continue
       message of a Claude turn after its model answer drops.
+  - [The scroll of the chat](../protocol/chat-scroll.md): the row that
+    stays in view, the scroll after a send, and the place that each tab
+    keeps.
   - [File mentions](../protocol/file-mentions.md): the list of `@` in the
     composer, the chips of files and folders, Add to chat, the sent chips
     of attached files, and the removal of each chip of the composer.
@@ -119,6 +122,9 @@ This page lists each protocol doc and what it covers.
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [GitHub banner: checks and layouts](../protocol/github-banner-layouts.md):
+    the Checks tab, and where the bar and its parts show on desktop and on
+    a phone.
   - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
     a new name or default branch of a repository, the saved values, and the
     build that the change starts.
@@ -130,10 +136,17 @@ This page lists each protocol doc and what it covers.
     create, list, get, rename, move, and archive workspaces.
     - [Repository, section, and model lists](../protocol/create-call-lists.md):
       the lists that a create call takes.
+    - [Workspace management](../protocol/workspace-management.md): the
+      calls that rename, move, and archive one workspace.
   - [Session calls](../protocol/session-calls.md): the calls that start,
     list, message, and read the sessions of the org.
     - [Session management](../protocol/session-management.md): the calls
       that get, rename, close, and stop a session, and get a message.
+    - [Session watches](../protocol/session-watches.md): the call that
+      watches one turn of a session, and the wake that tells the calling
+      session of its end.
+    - [The `Sent by:` line](../protocol/sent-by-line.md): the line that ends
+      the text of each tool message.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.
@@ -226,8 +239,9 @@ This page lists each protocol doc and what it covers.
     its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member, and the GitHub tokens that an
-  image job uses to copy the repositories.
+  GitHub actions of the Worker as a member.
+  - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
+    the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the skills of a message.
   - [Session instructions](../protocol/session-instructions.md): the same
@@ -251,6 +265,5 @@ This page lists each protocol doc and what it covers.
 - [Automations](../protocol/automations.md): automations, their chosen
   secrets, and their schedules, with the linked pages
   [Automation runs](../protocol/automation-runs.md),
-  [Pull request runs](../protocol/pull-request-runs.md),
-  [Base branches](../protocol/base-branches.md), and
+  [Pull request runs](../protocol/pull-request-runs.md), and
   [Automation risks](../protocol/automation-risks.md).

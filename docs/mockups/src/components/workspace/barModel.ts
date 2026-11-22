@@ -83,6 +83,11 @@ export type BarFacts = {
   archivable: boolean
   /** The Archive of the workspace runs, so its button shows busy. */
   archiving: boolean
+  /**
+   * GitHub no longer has the stored base of the workspace, so the Worker
+   * moved the base to the default branch (decision 304).
+   */
+  baseMoved?: boolean
 }
 
 /** The fix of a state that the agent can act on, without local work. */
@@ -186,6 +191,15 @@ function refusalMessage(facts: BarFacts): BarMessageKind | undefined {
 }
 
 /**
+ * A base that moved to the default branch shows its line under the bar
+ * until a pull request opens. A pull request names its own base on GitHub.
+ */
+function baseMessage(facts: BarFacts): BarMessageKind | undefined {
+  const pullRequest = facts.banner !== 'none' && facts.banner !== 'no-commits'
+  return facts.baseMoved && !pullRequest ? 'base-moved' : undefined
+}
+
+/**
  * After the merge, every member sees Continue, and the owner and the admins
  * also see Archive. Continue waits while a turn runs. Archive runs at once.
  */
@@ -212,6 +226,6 @@ export function barModel(facts: BarFacts): BarModel {
   return {
     ...bar,
     actions: main ? [main] : [],
-    message: refusalMessage(facts),
+    message: refusalMessage(facts) ?? baseMessage(facts),
   }
 }

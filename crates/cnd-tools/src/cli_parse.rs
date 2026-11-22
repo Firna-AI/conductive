@@ -62,6 +62,7 @@ fn name(group: &str, verb: &str) -> Result<Name> {
         ("sessions", "rename") => Name::RenameSession,
         ("sessions", "close") => Name::CloseSession,
         ("sessions", "stop") => Name::StopSession,
+        ("sessions", "watch") => Name::WatchSession,
         ("messages", "get") => Name::GetMessage,
         ("previews", "list") => Name::ListPreviews,
         ("previews", "open") => Name::OpenPreview,
@@ -78,7 +79,7 @@ fn options(name: Name) -> Vec<&'static str> {
     let options = match name {
         Name::ListSecrets | Name::RunWithSecrets => "",
         Name::CreateWorkspace => {
-            "repository message message-file agent model effort fast section parent name first-session-title request-id"
+            "repository message message-file agent model effort fast section parent name first-session-title request-id start-branch base-branch"
         }
         Name::ListWorkspaces => {
             "owner parent state repository query updated-since archived removed limit offset"
@@ -95,6 +96,7 @@ fn options(name: Name) -> Vec<&'static str> {
             "workspace session message message-file agent model effort fast request-id"
         }
         Name::GetSession | Name::StopSession => "workspace session",
+        Name::WatchSession => "workspace session turn-id",
         Name::RenameSession => "workspace session title",
         Name::CloseSession => "workspace session stop-running-turn",
         Name::GetMessage => "workspace session message-id",

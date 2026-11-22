@@ -145,13 +145,29 @@ The cause waits in that session's message box, also if you return before the fai
 
 ## Delegate work to another session
 
-Ask an agent to create or list sessions, send a message, or read a transcript.
+Ask an agent to create or list sessions, send a message, watch a turn, or read a transcript.
 It can also inspect one session or message.
 Its workspace tools reach every workspace of the same org.
 Agents can also rename, stop, and close sessions there.
 Closing a running session through the tools can stop its turn.
 Use a separate workspace when the delegated task needs separate files and a branch.
 The agent usually makes that workspace a [sub-workspace of the current one](/docs/workspaces#let-an-agent-manage-workspaces).
+
+A watch tells the session that set it once when the watched turn finishes, fails, or stops.
+The agent can name an exact turn ID, or watch the session's current active turn.
+If the session is idle or the exact turn already ended, the call sets no watch.
+The agent then reads that session at once.
+
+When only the watched work remains, the agent ends its reply.
+Its turn can end, and its computer can stop while the watch waits.
+A wake appears as an app line with a link to the watched session.
+The agent reads that session after the wake, then chooses its next step.
+The line reports one turn's end.
+The delegated task can still have work left.
+
+**Stop** in the session that set a watch drops its earlier pending wakes.
+Wakes already in the chat history stay there.
+An automatic idle stop of the cloud computer keeps the watches.
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.
@@ -381,6 +397,10 @@ Mac command requests go to that same person's connected Mac.
 The session can use another member's personal login or the org login.
 The agent can identify the member who sent each message.
 Another member's message during a turn does not change its GitHub account, commit author, or receiving Mac.
+
+When a watch wake starts a new turn, its GitHub operations and Mac requests follow the person whose turn set the watch.
+Its commits name that person.
+A wake that joins a running turn keeps that turn's GitHub account, commit author, and receiving Mac.
 
 An agent tool creates a session or sends a message as the sender of its calling turn.
 That sender must still belong to the org.

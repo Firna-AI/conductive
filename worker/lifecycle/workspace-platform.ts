@@ -5,6 +5,7 @@ import type {
   WorkspaceLifecycleEndpoint,
 } from './workspace-runtime'
 import type { WorkspaceStorage } from './platform-storage'
+import type { WorkspaceBaseChanges } from './workspace-base'
 import type { StartJobRecords } from './start-job-records'
 
 export interface WorkspaceEventPublication {
@@ -21,6 +22,7 @@ interface WorkspaceChatRecovery {
 
 export interface WorkspacePlatform {
   storage: WorkspaceStorage
+  baseChanges?: Pick<WorkspaceBaseChanges, 'resume' | 'credentialSender'>
   startRecords?: StartJobRecords
   assertStartActive?(turn: QueueTurn): Promise<void>
   hasOutsideTurns?(): boolean

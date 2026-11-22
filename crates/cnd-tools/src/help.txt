@@ -7,6 +7,7 @@ conductive workspaces get [--workspace ID]
 conductive workspaces create --repository ID --message TEXT
   [--agent claude|codex --model NAME] [--effort LEVEL] [--fast true|false] [--section ID] [--name TEXT]
   [--parent ID] [--first-session-title TEXT] [--request-id ID]
+  [--start-branch BRANCH] [--base-branch BRANCH]
 conductive workspaces rename --name TEXT [--workspace ID]
 conductive workspaces move [--section ID] [--parent ID | --top-level] [--workspace ID]
 conductive workspaces archive [--workspace ID]
@@ -51,7 +52,11 @@ Previews require sign-in. Open returns a private preview link.
 Close of an already closed preview succeeds with closed: false.
 
 Create uses the calling workspace's org and owner.
-Omitted workspace model and effort use the owner's defaults and the default section.
+Omitted workspace model and effort use the owner's defaults. An omitted section uses the default section.
+--start-branch creates the workspace branch from that branch.
+--base-branch sets the pull request target and Changes comparison branch.
+If both branches are omitted, both use the repository default branch.
+If only one branch is given, both use that branch.
 For workspace create, --parent ID nests the new workspace under that parent.
 Nest work that belongs to the calling workspace's task: a part of a large task that can run in parallel,
 follow-up work that the task starts, work in another repository for the same task,
@@ -95,6 +100,28 @@ Use next.line and next.offset as the next read's start-line and start-offset.
 Use names and returned links in normal answers. A session link holds workspace and session IDs.
 A workspace link in a message names that workspace. Workspace and session links in an answer show as chips.
 A Sent by: line names the sending session. Do not reply only to confirm it.
+
+Session watches
+
+conductive sessions watch --session ID [--workspace ID] [--turn-id ID]
+
+Watch wakes the calling session once when one turn finishes, fails, or stops.
+Use the reply's actual session and exact turnId after sending or creating work, when available.
+Older workspace-create replies can omit turnId.
+Without --turn-id, watch selects current queued, running, or stopping work, or returns idle.
+The reply gives the target workspace and linked session, with one state:
+- watching, with watchId and turnId.
+- idle.
+- finished, failed, or stopped, with turnId.
+An idle or ended reply sets no watch and sends no wake. Read the session at once.
+Repeated calls for the same calling session, member, exact target, and valid Stop period give one watch.
+Only a watch of the exact active calling turn is refused with invalid_input.
+Set the watch, then end your reply when only the watched work remains.
+After a wake, use sessions read or read_session for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop of the calling session drops older pending wakes. Automatic idle computer stops keep watches.
+Watch follows the common tool rights and current member and session login checks.
+A new wake turn acts for the member who set the watch. A joined wake keeps the running turn's sender.
 
 Secrets list gives each org secret's name, environmentVariable, description, and availability, never its value.
 Read each value through its environmentVariable, also when the secret name has spaces.

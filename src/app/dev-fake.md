@@ -8,6 +8,8 @@ the dev wiring in `dev/`, and what its fake routes do.
 Without `?conversation=`, a working workspace has a running recorded chat.
 Other recorded workspaces have a finished chat. An explicit conversation
 option overrides this default, including queued chats that show no spinner.
+`dev/options.ts` lists the values. The `wake-` values give the wakes of a
+watch, as the mockups draw them at `app/chat/wakes`.
 
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
@@ -40,6 +42,16 @@ option overrides this default, including queued chats that show no spinner.
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- The branch list of New workspace gives the branches of the mockups for
+  acme/storefront, newest commit first, and only the default branch for
+  each other repository. `?branches=loading` never answers,
+  `?branches=failed` fails as a read of GitHub does, and
+  `?branches=no-access` says that the GitHub account cannot read the
+  repository. With `?branchCheck=missing` or `?branchCheck=no-access`, a
+  create that names a branch other than the default branch gets the
+  refusal of a missing branch or of a GitHub account without access, as
+  [Start from a branch](start-branch.md) says. The fake stores no branch of
+  a create.
 - Acme also holds Postcode lookup for the shipping and billing forms,
   `postcode-lookup`, which a member archived 3 weeks before the clock of
   the fake starts. Its 14 days ended, so the workspace list and the

@@ -2,6 +2,7 @@
   "order": [
     "turns",
     "agent-stops",
+    "wakes",
     "work",
     "tables",
     "lists",

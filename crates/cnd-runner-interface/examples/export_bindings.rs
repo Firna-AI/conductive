@@ -119,6 +119,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
     tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
     tools::session_types::DefaultAgentLogin::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionRequest::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionResponse::export_all(&cfg)?;
+    tools::session_watches::SessionWatchNotice::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;

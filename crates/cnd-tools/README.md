@@ -7,7 +7,7 @@ Use `cnd-runner-interface` for the shared wire types.
 ## Responsibilities
 
 Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
-requests. Validate replies. Serve 26 Worker calls and five local service calls through CLI and MCP.
+requests. Validate replies. Serve 27 Worker calls and five local service calls through CLI and MCP.
 Run commands with approved secrets under their variable names, and filter their output.
 
 ## What This Crate Does
@@ -74,6 +74,36 @@ The shared JSON decoder replaces lone UTF-16 surrogate escapes with U+FFFD
 in Worker replies and MCP tool text. Valid surrogate pairs remain unchanged.
 Every MCP reply preserves its request ID exactly, including error replies.
 
+Workspace create accepts `--start-branch` and `--base-branch` in the CLI,
+or `startBranch` and `baseBranch` in MCP. The first supplies the starting
+commit. The second sets the pull request target and Changes comparison.
+With neither field, both use the repository default branch.
+With one field, both use that branch. The adapters preserve each branch
+string, including blank strings. The Worker validates branch names after
+creation replay, so a retry keeps the first create's branches.
+
+### Session watches
+
+`sessions watch` and `watch_session` ask the Worker for one wake of the
+calling session when one turn of a session ends. They take the session, an
+optional workspace, and an optional turn ID. The reply comes at once, with
+`watching`, `idle`, or the end of a turn that already ended.
+[Session watches](../../docs/protocol/session-watches.md) states the rules.
+Use the reply's actual session and exact `turnId` after sending or creating work, when available.
+The typed reply keeps the workspace, linked session, and flattened state.
+Repeats for the same valid watch return the same `watchId`.
+An idle or ended reply sets no watch, so read the session at once.
+
+```sh
+cargo run -p cnd-cli -- sessions watch --session session-id --workspace workspace-id --turn-id turn-id
+```
+
+Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop drops older pending wakes of the calling session.
+Automatic idle computer stops keep watches.
+
 ## Quick Start
 
 Run from the repository root:
@@ -115,6 +145,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [mcp-services.json](src/mcp-services.json) holds only local service descriptors and schemas.
 - [input](src/input/mod.rs) validates untrusted fields without changing text.
 - [request.rs](src/request.rs) maps typed calls to fixed HTTP routes.
+- [watches.rs](src/input/watches.rs) parses optional exact-turn selection for session watches.
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.
 - [mcp-tools.json](src/mcp-tools.json) holds the MCP descriptors and input schemas.
 - [ports.rs](src/ports.rs) defines replaceable runtime and transport effects.
@@ -129,6 +160,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [Architecture](../../docs/architecture.md)
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Service calls](../../docs/protocol/service-calls.md)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Workspace commands](../../tools/README.md)

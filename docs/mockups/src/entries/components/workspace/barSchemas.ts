@@ -35,6 +35,7 @@ export const barMessageKinds = [
   'ready-refused',
   'continue-waits',
   'continue-failed',
+  'base-moved',
 ] as const satisfies readonly BarMessageKind[]
 
 /** A button of the bar as JSON, as `BarAction`. */

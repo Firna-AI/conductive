@@ -1,6 +1,7 @@
 import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { ChatTransaction } from './store'
 import type { StoredTurn } from './types'
+import { invalidateSessionWatches } from './session-watch-stop'
 
 export async function firstStopRequester(
   transaction: ChatTransaction,
@@ -29,7 +30,9 @@ export async function recordStopRequest(
   transaction: ChatTransaction,
   turn: StoredTurn,
   requester: TurnStopRequester,
+  nonce: string,
 ): Promise<void> {
+  await invalidateSessionWatches(transaction, turn.sessionId, nonce)
   turn.stopRequest ??=
     (await firstStopRequester(transaction, turn)) ?? requester
   await transaction.saveTurn(turn)

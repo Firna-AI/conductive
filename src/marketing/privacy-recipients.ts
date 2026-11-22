@@ -147,12 +147,19 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
-        They can create, rename, stop, and close sessions, and send
-        messages. They can create and delete sections, and open and close
-        private previews. The actions use that turn's sender, who must
+        They can create, rename, stop, and close sessions, send messages,
+        and watch one turn of a session. They can create and delete
+        sections, and open and close private previews.
+        The actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
         the session of that turn may use, with no question.`,
+      text`A watch tells the session that set it once when the watched turn
+        finishes, fails, or stops. Its wake can start a new turn after the
+        turn that set the watch ended. That new turn acts for the member
+        whose turn set the watch, with that member's GitHub token and Mac.
+        A wake that joins a running turn keeps that turn's sender.
+        Current membership and session login rules apply at delivery.`,
       text`Only a workspace owner or org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. Previews that agents open need sign-in and workspace access.

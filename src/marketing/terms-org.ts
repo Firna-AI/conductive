@@ -33,12 +33,20 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a running turn in the calling workspace, the tools can
         also create, rename, move, and archive workspaces across the org.
-        They can create, rename, stop, and close sessions, and send
-        messages. They can create and delete sections, and open and close
-        private previews. These actions use that turn's sender, who must
+        They can create, rename, stop, and close sessions, send messages,
+        and watch one turn of a session. They can create and delete
+        sections, and open and close private previews.
+        These actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
         the session of that turn may use, and ask members for the others.`,
+      text`A watch tells the session that set it once when the watched turn
+        finishes, fails, or stops. Its wake can start a new turn after the
+        turn that set the watch ended. That new turn acts for the member
+        whose turn set the watch, with that member's GitHub token and Mac.
+        A wake that joins a running turn keeps that turn's sender.
+        Current membership and session login rules apply at delivery.
+        An automatic idle stop keeps the watch.`,
       text`Only the workspace owner or an org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. The actions ask no separate approval. Previews that agents
@@ -170,12 +178,15 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         Such text can also steer the agent to read and change work across
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
-      text`A tool message or an accepted late answer to a secret request
-        can start a stopped workspace's cloud computer.
+      text`A tool message, an accepted late answer to a secret request,
+        or an accepted watch wake can start a stopped workspace's cloud
+        computer.
         The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.
-        Use Stop in each affected session to end its turn.`,
+        Use Stop in each affected session to end its turn.
+        Stop also drops earlier watch wakes that the session has not
+        accepted yet.`,
       text`Admins manage the members, repositories, scripts, env vars, and
         agent logins of the org.`,
       text`Every member can add secrets, and replace or delete the secrets

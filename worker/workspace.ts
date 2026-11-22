@@ -1,8 +1,6 @@
 import { readChatWorkspaceResponse } from './chat/workspace-response'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from './chat/workspace-integration'
+import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
 import { AgentSessionWorkspace } from './tools/workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'
@@ -79,6 +77,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
       matches,
       this.integration.alarms,
+      this.integration.baseChanges,
     )
     this.members = new WorkspaceMembersReceiver(
       context.storage,
@@ -119,6 +118,7 @@ export class Workspace extends AgentSessionWorkspace {
         this.alarmLifecycle(dispatch && (() => restart(dispatch))),
       automationReport: () =>
         retryAutomationReport(env.DB, this.chat.store, now),
+      sessionWatches: () => this.sessionWatches.alarm(),
     })
   }
 

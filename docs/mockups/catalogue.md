@@ -24,10 +24,10 @@ how a screen is built, and links to the other pages.
 | `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, Invite codes, Providers, and Settings tabs, the page of an org and of a user with Suspend, Lift, and Approve, the switch of the provider account of an org, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
-| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a start from another branch, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation with the Capabilities of its runs, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, a build that waits for another update and a build that it stopped, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
-| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
+| `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, wakes from watched turns, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and one that a workspace with Mac access off refused |
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
 | `app/sessions`      | A new session, the history, closing one while it works, and a linked session  |
@@ -55,7 +55,8 @@ A folder page shows at most five screens, saved states included. A folder
 with child folders shows only its canonical screen, as `marketing`, `marketing/docs`, `app`,
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
-`app/new-workspace/dialog`, `app/org-settings`,
+`app/new-workspace/dialog`, `app/new-workspace/start-branch`,
+`app/new-workspace/start-branch/missing`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -150,6 +151,10 @@ variants, as [org logins](catalogue-org-logins.md) gives.
 [Org logins](catalogue-org-logins.md) gives `app/org-settings/agents` and
 its child pages, and the states of the account, Get started, the composer,
 New workspace, the chat, and automations that name the org login.
+
+[New workspace](catalogue-new-workspace.md) gives
+`app/new-workspace/start-branch`, a start from a branch that is not the
+default branch, and its child pages.
 
 `app/orgs/reorder` draws the order of the orgs that each person keeps,
 from decisions 515 C, 516 A, and 517 B of 11 November 2026. Its canonical

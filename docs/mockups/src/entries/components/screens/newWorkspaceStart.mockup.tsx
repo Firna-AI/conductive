@@ -71,7 +71,7 @@ export const newWorkspaceStart = defineComponent({
   slug: 'start',
   title: 'Start',
   description:
-    'The start of the empty chat of the New workspace page, with the repository of the new workspace as a compact picker. The note names the build that the workspace starts from. An org without chosen repositories asks an admin to choose them first, and tells a member that an admin chooses them. While the repository of the form waits for its build, the notice over the composer says when it is ready, so the note gives way. Its own page shows the start in Acme.',
+    'The start of the empty chat of the New workspace page, with the repository of the new workspace as a compact picker, and the branch control directly right of it when the page supplies one. The note names the build that the workspace starts from. An org without chosen repositories asks an admin to choose them first, and tells a member that an admin chooses them. While the repository of the form waits for its build, the notice over the composer says when it is ready, so the note gives way. Its own page shows the start in Acme.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -86,10 +86,12 @@ export const newWorkspaceStart = defineComponent({
       menu: menuSchema.properties.entries,
     },
   } as const,
+  slots: ['branch'],
   props: { page: acmePage, chosen: true, admin: true },
   render: (props) => (
     <Start
       admin={props.admin}
+      branch={props.branch}
       chosen={props.chosen}
       menu={props.menu}
       page={props.page}

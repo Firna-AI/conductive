@@ -23,5 +23,5 @@ export async function creationFetchLabel(
   const trigger = row?.triggerJson ? readRunTrigger(row.triggerJson) : null
   if (trigger?.kind === 'pull-request' && trigger.event !== 'merged')
     return `Fetching pull request #${trigger.number} of ${repository}`
-  return `Fetching ${job.baseBranch} of ${repository}`
+  return `Fetching ${job.startBranch ?? job.baseBranch ?? job.defaultBranch} of ${repository}`
 }

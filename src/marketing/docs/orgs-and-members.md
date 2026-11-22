@@ -199,7 +199,7 @@ The workspace counts in **Members** leave out removed workspaces.
 
 - [Restore an archived workspace](/docs/workspaces#restore-an-archived-workspace)
 
-Continue uses the GitHub account of the member who selects it to fetch the latest default branch.
+Continue uses the GitHub account of the member who selects it for its branch fetch.
 That account needs read access to the repository.
 A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
 Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.

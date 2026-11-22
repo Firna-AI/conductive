@@ -45,7 +45,7 @@ A message from another member or a deferred model change keeps the
 active turn's context. Each new turn starts fresh tool processes.
 Closing the SDK or App Server also stops its workspace MCP child.
 
-The tools give 26 Worker calls across the org. They manage workspaces,
+The tools give 27 Worker calls across the org. They manage workspaces,
 sessions, and messages, create and delete sections, and open, list, and
 close private port previews. They also list repositories, sections, and
 models, and ask to run Mac commands.

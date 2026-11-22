@@ -53,8 +53,9 @@ each feature.
   under. The docs also call it the parent. A workspace has at most one
   parent workspace.
 - **Continue:** the action after a merge that moves a workspace to a new
-  branch from the latest default branch. The workspace keeps its sandbox
-  and its sessions.
+  branch. The new branch starts from the branch that the pull request
+  merged into, or from the default branch when GitHub no longer has that
+  branch. The workspace keeps its sandbox and its sessions.
 - **Repository change:** the action that moves a workspace to a new branch
   of another repository of its org, in the folder of that repository in
   its sandbox. The workspace keeps its sandbox and its sessions.
@@ -66,7 +67,9 @@ each feature.
   the login of its session, which can belong to another member or to the
   org. A turn that a late answer to a secret request starts has the sender
   of the turn that asked, as
-  [Late answers](protocol/secret-requests.md#late-answers) says.
+  [Late answers](protocol/secret-requests.md#late-answers) says. A turn
+  that the wake of a watch starts has the sender of the turn that set the
+  watch, as [Delivery](protocol/session-watches.md#delivery) says.
 - **Starter:** the member who started a session. The starter of a session
   never changes.
 - **Agent login:** the key, the token, the sign-in, or the own endpoint
@@ -153,6 +156,9 @@ each feature.
   org.
 - **Base branch:** the branch that the work of a workspace targets. Changes
   compares with it, and "Create PR" opens into it.
+- **Start branch:** the branch whose newest commit a new workspace branch
+  starts from. It is the default branch of the repository, unless the
+  create names another branch.
 
 ## Components
 

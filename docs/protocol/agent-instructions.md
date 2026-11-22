@@ -37,8 +37,9 @@ of agents as pictures in their answers, as
   merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says. For a workspace that a member creates, it is the default branch of
-  the repository.
+  says. For a workspace that a member creates, it is the target that New
+  workspace gives, as
+  [The target choice](start-from-a-branch.md#the-target-choice) says.
 - **Repository folder:** the folder of the workspace's repository in the
   sandbox, as [Repository folders](repository-folders.md) says. A
   repository change moves the workspace to the folder of another
@@ -117,6 +118,9 @@ of agents as pictures in their answers, as
     `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
+  - The workspace tools also watch one turn of a session of the org. The
+    instructions give the guidance of
+    [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance).
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as
@@ -155,7 +159,7 @@ of agents as pictures in their answers, as
   tool, for the reason of the desktop guidance.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
-  [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
+  [The same text for the life of a session](session-instructions.md#the-same-text-for-the-life-of-a-session)
   says.
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave

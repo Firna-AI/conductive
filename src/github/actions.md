@@ -29,9 +29,9 @@ The views draw only `BarControls`.
 ## The rules
 
 `barViewOf` in [barView.ts](barView.ts) gives the actions, the link, the
-message, and the note of a GitHub state. It applies `barModel` of the
-mockups, so the app and the mockups share one rule. It adds what the app
-knows:
+message, the note, and the branches of a GitHub state. It applies
+`barModel` of the mockups, so the app and the mockups share one rule. It
+adds what the app knows:
 
 - The member's access comes from the capability route. Until the first
   answer, the bar offers no agent action and no Merge. A failed read
@@ -62,6 +62,20 @@ knows:
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.
+- A base that GitHub deleted moved to the default branch, which the
+  banner names as its base, and `baseMoved` names the deleted branch. The
+  line shows its label `displayBaseMoved`, which hides each secret value,
+  as the branch and the base show their labels. The reader keeps both,
+  and `barModel` gives its line under the bar until a pull request opens,
+  as [The banner states](../../docs/protocol/github-banner.md#banner-states)
+  say. The line is a status with an info mark, not a refusal. On a phone it
+  tops the Checks tab, as each message of the bar does.
+- While the branch has no pull request, `branches` names the branch and
+  its base, in each such state, also without an action and in a suspended
+  org. The top of the phone Checks tab shows them under the message and
+  above the actions, as
+  [The branch and its base on a phone](../../docs/protocol/github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
+  says. With a pull request, `branches` is null.
 - An archived workspace and a suspended org show only the links.
 - After the merge, every member sees Continue. Archive needs the Archive
   of the screen, which archives at once and asks no question. Continue
@@ -187,15 +201,20 @@ says.
 - `barRuns.ts`: the waits of a pending job and of the stream, and the
   outcomes of a refused merge, Ready for review, or Continue.
 - `barView.ts`: `barViewOf`, `localWorkOf`, and `BarControls`.
+- `barMessage.ts`: `messageOf`, the message under the bar.
 - `barPrompts.ts`: `promptOf` and the checks that block the merge.
 - `continueActions.ts`: the Continue client and its reply reader.
 - `useBarControls.ts`: `useBarActions` and `useBarControls`.
 - `BarButtons.tsx`: the buttons, the line under the bar, and
-  `ChecksActions`, the top of the phone Checks tab.
+  `ChecksActions`, the top of the phone Checks tab, with the branch and its
+  base of `ChecksBranches`. `ChecksActions.test.tsx` checks that top.
 - `barKeys.ts`: `barCommands`, the commands that the keys of the bar run,
   and `buttonKey`, the key that the tooltip of a button names.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.
 - `barReady.test.ts`: the rules and the run of Ready for review.
+- `barMovedLabels.test.ts`: the labels of a deleted base, of the branch,
+  and of its base, in the filter, the reader, the line under the bar, and
+  the top of the phone Checks tab.
 - `continueActions.test.ts`: the reader keeps the labels of a question,
   and reads a question without usable labels as before.

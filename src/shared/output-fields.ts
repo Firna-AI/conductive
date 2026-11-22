@@ -8,6 +8,7 @@ import type { RunnerFileEvent } from './generated/RunnerFileEvent'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentSkill } from './generated/AgentSkill'
 import type { GitHubBanner } from './github'
+import { movedBaseLabel } from './moved-base-label'
 import type { ChatEvent } from './chat-events'
 import type {
   ChangeRepositoryResponse,
@@ -50,7 +51,7 @@ export function filterGitHubBanner<T extends GitHubBanner>(
   banner: T,
   text: FilterText,
 ): T {
-  return branchLabel(baseLabel(banner, text), text)
+  return movedBaseLabel(branchLabel(baseLabel(banner, text), text), text)
 }
 
 export function filterContinued(

@@ -124,6 +124,11 @@ export type NewWorkspaceDialogProps = {
    * one off with its note, as on the New workspace page.
    */
   repositoryMenu?: readonly MenuEntryData[]
+  /**
+   * The branch control directly right of the repository picker, with its
+   * dropdown drawn open below it, as on the New workspace page.
+   */
+  branch?: ReactNode
   /** The org and the section that the new workspace joins. */
   place: string
   /** The section that the new workspace joins, such as General. */
@@ -176,14 +181,16 @@ export type NewWorkspaceDialogProps = {
 
 /**
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
- * for a computer. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right, as a picker of the
- * section. The message fills
- * the middle, with a chip for each of its files at its place, and a pasted
- * link to a workspace of the org shows as a chip, as in the composer. The
- * attach button, the Capabilities icon, and the model picker sit at the
- * bottom left, with the label of the org login after the model picker when
- * the first message runs on it. Create sits at the bottom right. The attach
+ * for a computer. The repository picker and the branch control directly
+ * right of it sit at the top left, and the org and the section of the new
+ * workspace at the top right, as a picker of the section. The target of a
+ * picked branch lives in the dropdown of the branch control, so no line
+ * follows the header (decision 309). The message fills the middle, with a
+ * chip for each of its files at its place, and a pasted link to a
+ * workspace of the org shows as a chip, as in the composer. The attach
+ * button, the Capabilities icon, and the model picker sit at the bottom
+ * left, with the label of the org login after the model picker when the
+ * first message runs on it. Create sits at the bottom right. The attach
  * button puts each picked file at the caret. The whole card takes a drop
  * of files, and its full border shows the drop state while they hover over
  * it. A phone always opens the page instead. The files show the chips of
@@ -213,6 +220,7 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
               name={props.repository}
             />
           ) : null}
+          {props.branch}
           <SectionPicker
             menu={props.sectionMenu}
             place={props.place}

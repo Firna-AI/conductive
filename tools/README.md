@@ -1,8 +1,8 @@
 # Workspace CLI and MCP server
 
-The Rust program `conductive` provides 26 Worker tools and five local service tools as CLI commands
-and as a stdio MCP server. It manages workspaces, sessions, messages,
-sections, and private port previews. It lists repositories and models.
+The Rust program `conductive` provides 27 Worker tools and five local service
+tools as CLI commands and as a stdio MCP server. It manages workspaces,
+sessions, messages, sections, and private port previews. It lists repositories and models.
 It can ask to run a command on the active turn sender's connected Mac.
 It lists org secrets and runs a command with approved values in its environment.
 [Workspace tool calls](calls.md) gives each call with its options and replies.
@@ -100,7 +100,7 @@ Every read needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes the 26 calls of [the call table](calls.md#the-calls).
+The stdio server exposes the 27 Worker calls of [the call table](calls.md#the-calls).
 Their fields take the values of the CLI options.
 Their optional `workspaceId` defaults to the caller.
 The ID fields name the calls or links that supply their values.
@@ -124,6 +124,22 @@ It must pass that turn's environment to the process.
 It must stop the process when the turn ends.
 A process with an old turn ID cannot serve another turn or a concurrent session.
 The Worker rejects stale turn context.
+
+## Session watches
+
+```sh
+conductive sessions watch --workspace workspace-id --session session-id --turn-id turn-id
+```
+
+`sessions watch` and `watch_session` ask for one wake when one turn finishes, fails, or stops.
+Use the actual session and exact `turnId` returned with the work, when available.
+The call returns at once. Set the watch, then end the reply when only that watched work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply sets no watch, so read it at once.
+A turn end does not mean the whole delegated task is complete.
+Explicit Stop drops older pending wakes of the calling session.
+Automatic idle computer stops keep watches.
+[Session watches](calls.md#session-watches) gives the options and typed replies.
 
 ## Secrets
 

@@ -19,6 +19,10 @@ folders that this doc uses. The terms are those of the
   through the same install of the GitHub App. The user chose this on
   17 November 2026.
 - So every member of an org sees the same name, the name on GitHub.
+- A new default branch also moves the cloud target of each live workspace
+  whose base follows that default, as
+  [A new default branch on GitHub](base-branches.md#a-new-default-branch-on-github)
+  says. A workspace with a stored base keeps its target.
 - Reason: the repository list adds the names of the repositories that a
   member's own GitHub token reaches. Without the webhook, a member with
   such a token saw the new name, and every other member saw the old name.
