@@ -62,19 +62,16 @@ export type OwnComputer = {
  * its first build runs or failed; it runs as many workspaces as its limit;
  * or it is connected with room.
  */
-const computerStates = [
-  'waiting',
-  'expired',
-  'offline',
-  'building',
-  'build-failed',
-  'full',
-  'connected',
-] as const
+export type ComputerState =
+  | 'waiting'
+  | 'expired'
+  | 'offline'
+  | 'building'
+  | 'build-failed'
+  | 'full'
+  | 'connected'
 
-export type ComputerState = (typeof computerStates)[number]
-
-/** The state of a computer, as `computerStates` orders them. */
+/** The state of a computer, in the order of `ComputerState`. */
 export function computerState(computer: OwnComputer): ComputerState {
   const { connection, builds } = computer
   if (connection.kind !== 'connected') return connection.kind
