@@ -70,6 +70,17 @@ function opensSession(agent: Agent, sessionAgent: Agent | undefined): boolean {
 }
 
 /**
+ * The models of each agent as a group, Claude first, in the order of the
+ * model list, as All models lists them. An agent with no model has no
+ * group.
+ */
+export function agentGroups(models: readonly AgentModel[]): AgentModel[][] {
+  return agentOrder
+    .map((agent) => models.filter((model) => model.agent === agent))
+    .filter((group) => group.length > 0)
+}
+
+/**
  * The models of each agent as a group, with no brand name, and the current
  * model marked. A pick keeps the effort when the model offers it, else it
  * takes the nearest lower one, and it keeps fast mode only for a model with
@@ -80,25 +91,22 @@ function modelChoices(
   choice: AgentChoice,
   sessionAgent: Agent | undefined,
 ): ModelRow[] {
-  return agentOrder
-    .map((agent) => models.filter((model) => model.agent === agent))
-    .filter((group) => group.length > 0)
-    .flatMap((group, index) => [
-      ...(index > 0 ? [divider] : []),
-      ...group.map((model): ModelRow => ({
-        kind: 'choice',
-        key: `${model.agent}:${model.model}`,
-        label: model.label,
-        checked: model.agent === choice.agent && model.model === choice.model,
-        opensSession: opensSession(model.agent, sessionAgent),
-        choice: {
-          agent: model.agent,
-          model: model.model,
-          effort: effortFor(model, choice.effort),
-          fast: fastFor(model, choice.fast),
-        },
-      })),
-    ])
+  return agentGroups(models).flatMap((group, index) => [
+    ...(index > 0 ? [divider] : []),
+    ...group.map((model): ModelRow => ({
+      kind: 'choice',
+      key: `${model.agent}:${model.model}`,
+      label: model.label,
+      checked: model.agent === choice.agent && model.model === choice.model,
+      opensSession: opensSession(model.agent, sessionAgent),
+      choice: {
+        agent: model.agent,
+        model: model.model,
+        effort: effortFor(model, choice.effort),
+        fast: fastFor(model, choice.fast),
+      },
+    })),
+  ])
 }
 
 /**
@@ -176,27 +184,25 @@ function effortRows(
  * each agent. Then come a line, the efforts of the current model, and the
  * Fast switch of a model with fast mode. In a session with messages, a pick
  * of a favourite or of a model of the other agent opens a new session. With
- * no favourite to show, the models of each agent take the place of the
- * favourites, and the menu has no All models.
+ * no favourite to show, the menu starts with All models (model favourites
+ * decision 6), so it keeps the same short shape however many models the app
+ * offers.
  */
 export function modelMenuRows(
   models: readonly AgentModel[],
   choice: AgentChoice,
   options: ModelMenuOptions,
 ): ModelMenuRow[] {
-  const all = modelChoices(models, choice, options.sessionAgent)
   const favourites = favouriteChoices(models, choice, options)
-  const top: ModelMenuRow[] =
-    favourites.length === 0
-      ? all
-      : [
-          ...favourites,
-          divider,
-          { kind: 'all-models', label: 'All models', rows: all },
-        ]
   return [
-    ...top,
-    ...(top.length > 0 ? [divider] : []),
+    ...favourites,
+    ...(favourites.length > 0 ? [divider] : []),
+    {
+      kind: 'all-models',
+      label: 'All models',
+      rows: modelChoices(models, choice, options.sessionAgent),
+    },
+    divider,
     ...effortRows(models, choice),
   ]
 }

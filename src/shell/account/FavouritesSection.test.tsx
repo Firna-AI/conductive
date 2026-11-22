@@ -53,7 +53,7 @@ function openMenu() {
 }
 
 describe('the Favourites section of Preferences', () => {
-  test('lists the five favourites in the order of the menu, each with its picker and ×, shows Add a favourite off with the line of the limit, and the picker of a row lists every model and no favourite', async () => {
+  test('lists the five favourites in the order of the menu, each with its picker and ×, shows Add a favourite off with the line of the limit, and the menu of the picker of a row shows no favourite and starts with All models', async () => {
     const server = new FakeApiServer()
     const { view } = await mountFavourites(server)
     const removes = rowElements(view).map((row) =>
@@ -85,11 +85,7 @@ describe('the Favourites section of Preferences', () => {
       limit: 1,
       menu: {
         items: [
-          'Opus 5.5',
-          'Sonnet 5.5',
-          'Fable 5.1',
-          'GPT-6.1 Sol',
-          'GPT-6 Astra',
+          'All models',
           'Low',
           'Medium',
           'High',
@@ -98,12 +94,12 @@ describe('the Favourites section of Preferences', () => {
           'Ultra',
           'Fast',
         ],
-        marked: ['Opus 5.5', 'Max'],
+        marked: ['Max'],
       },
     })
   })
 
-  test('× removes a favourite and saves the list without it at once, and with four favourites the line of the limit goes and Add a favourite stays off', async () => {
+  test('× removes a favourite and saves the list without it at once, and with four favourites the line of the limit goes and Add a favourite turns on', async () => {
     const server = new FakeApiServer()
     echoSaves(server)
     const { view } = await mountFavourites(server)
@@ -123,7 +119,7 @@ describe('the Favourites section of Preferences', () => {
       ],
       sent: [{ favourites: [opusHigh, opusMax, solHigh, astraMedium] }],
       limit: 0,
-      addOff: true,
+      addOff: false,
     })
   })
 
@@ -161,6 +157,7 @@ describe('the Favourites section of Preferences', () => {
     const { view } = await mountFavourites(server, account)
     const hidden = favouriteRows(view)
     click(pickerAt(view, 1))
+    click(byRole('menuitem', 'All models'))
     click(byRole('menuitemradio', 'Fable 5.1'))
     await settle()
     const fableMedium: AgentChoice = { ...sonnetMedium, model: 'Fable 5.1' }

@@ -34,7 +34,7 @@ import {
 import { readShortcuts } from './read-shortcuts'
 
 export const AGENTS = ['claude', 'codex'] as const satisfies readonly Agent[]
-export const EFFORTS = [
+const EFFORTS = [
   'none',
   'low',
   'medium',

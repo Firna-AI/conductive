@@ -3,14 +3,13 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type KeyboardEvent,
   type ReactNode,
   type RefObject,
 } from 'react'
-import { placeChoices } from '../../shell/ui/menu-place'
-import { useEscapeLayer } from '../../shell/ui/Overlay'
-import ui from '../../shell/ui/ui.module.css'
-import type { MenuEntry, MenuSubmenu } from './Menu'
-import { firstItem, type SubmenuControl } from './menu-rows'
+import { placeChoices } from './menu-place'
+import { useEscapeLayer } from './Overlay'
+import ui from './ui.module.css'
 
 /** The open submenu of a menu, and how it opened. */
 interface OpenSubmenu {
@@ -22,9 +21,13 @@ interface OpenSubmenu {
 
 /** The submenu of a menu, as `useSubmenu` gives it. */
 export interface Submenu {
-  /** The item whose submenu shows, if any. */
-  entry: MenuSubmenu | null
-  control: SubmenuControl
+  /** The key of the item whose submenu shows, if any. */
+  open: string | null
+  /**
+   * Shows the submenu of an item. With `focus`, as after a key or a press,
+   * the focus goes into it. A hover leaves the focus in the menu.
+   */
+  show: (key: string, focus: boolean) => void
   /**
    * Hides the submenu. With `back`, its item takes the focus when the menu
    * shows it again.
@@ -35,54 +38,60 @@ export interface Submenu {
 }
 
 /**
- * The open submenu of a menu of `entries`. `list` holds the rows of the
- * menu, and `rows` the rows of the submenu: a layer beside the menu, or the
- * menu itself when the submenu takes its place. A submenu that opens after
- * a key or a press takes the focus once: its checked row, else its first.
- * Escape hides the submenu before the menu, and its item takes the focus
- * back when the focus was in it.
+ * The item of a menu that takes the focus: the checked one that is on, else
+ * the first one that is on.
+ */
+export function choiceToFocus(layer: HTMLElement): HTMLElement | null {
+  return (
+    layer.querySelector<HTMLElement>(
+      '[role^="menuitem"][aria-checked="true"]:not(:disabled)',
+    ) ?? layer.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
+  )
+}
+
+/**
+ * The open submenu of a menu whose items with a submenu have `keys`, such
+ * as All models of the model menu. `list` holds the rows of the menu, and
+ * `rows` the rows of the submenu: a layer beside the menu, or the menu
+ * itself when the submenu takes its place. A submenu that opens after a key
+ * or a press takes the focus once: its checked row, else its first. Escape
+ * hides the submenu before the menu, and its item takes the focus back when
+ * the focus was in it. An item that leaves the menu takes its submenu with
+ * it.
  */
 export function useSubmenu(
-  entries: readonly MenuEntry[],
+  keys: readonly string[],
   list: RefObject<HTMLElement | null>,
   rows: RefObject<HTMLElement | null>,
 ): Submenu {
-  const [open, setOpen] = useState<OpenSubmenu | null>(null)
+  const [state, setState] = useState<OpenSubmenu | null>(null)
   const focused = useRef<OpenSubmenu | null>(null)
   const back = useRef<string | null>(null)
-  const entry =
-    entries.find(
-      (item): item is MenuSubmenu =>
-        item.kind === 'submenu' && item.key === open?.key,
-    ) ?? null
-  // An item that leaves the menu takes its submenu with it.
-  if (open !== null && entry === null) setOpen(null)
+  const open = state !== null && keys.includes(state.key) ? state : null
+  if (state !== null && open === null) setState(null)
   const hasFocus = () => rows.current?.contains(document.activeElement) ?? false
   const hide = (refocus: boolean) => {
     if (open === null) return
     back.current = refocus ? open.key : null
-    setOpen(null)
+    setState(null)
   }
-  useEscapeLayer(entry !== null, () => hide(hasFocus()))
+  useEscapeLayer(open !== null, () => hide(hasFocus()))
   useLayoutEffect(() => {
     const node = rows.current
     if (!open?.focus || focused.current === open || !node) return
     focused.current = open
-    if (!node.contains(document.activeElement)) firstItem(node)?.focus()
+    if (!node.contains(document.activeElement)) choiceToFocus(node)?.focus()
   })
   useLayoutEffect(() => {
     const key = back.current
-    if (key === null || open !== null) return
+    if (key === null || state !== null) return
     back.current = null
     const items = list.current?.querySelectorAll<HTMLElement>('[data-submenu]')
     ;[...(items ?? [])].find((item) => item.dataset.submenu === key)?.focus()
   })
   return {
-    entry,
-    control: {
-      open: entry?.key ?? null,
-      show: (key, focus) => setOpen({ key, focus }),
-    },
+    open: open?.key ?? null,
+    show: (key, focus) => setState({ key, focus }),
     hide,
     hasFocus,
   }
@@ -129,11 +138,13 @@ function placeBeside(menu: HTMLElement, layer: HTMLElement): void {
  * the menu when it fits there, else on its left, and it moves up to stay in
  * the window. It follows the menu when the page or the menu scrolls, and
  * when the window resizes. Inside a menu in the top layer, it shows there
- * too.
+ * too. `onKeyDown` takes the keys of its rows, such as the left arrow,
+ * which hides it.
  */
 export function SubmenuLayer(props: {
   menu: RefObject<HTMLElement | null>
   layer: RefObject<HTMLDivElement | null>
+  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
   children: ReactNode
 }) {
   const { menu, layer } = props
@@ -154,7 +165,7 @@ export function SubmenuLayer(props: {
     }
   }, [menu, layer])
   return (
-    <div className={ui.pointLayer} ref={layer}>
+    <div className={ui.pointLayer} onKeyDown={props.onKeyDown} ref={layer}>
       {props.children}
     </div>
   )

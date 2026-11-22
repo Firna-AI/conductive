@@ -13,11 +13,11 @@ import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
 import { useTouch } from '../../../docs/mockups/src/components/common/touch'
 import type { ShortcutHint } from '../../shell/shortcuts/shortcut-hints'
 import { PopoverSurface } from '../../shell/ui/PopoverSurface'
+import { SubmenuLayer, useSubmenu } from '../../shell/ui/submenu'
 import ui from '../../shell/ui/ui.module.css'
 import { useFocusInside } from './dismiss'
 import local from './menu.module.css'
 import { firstItem, itemAt, MenuRows, moveFocus } from './menu-rows'
-import { SubmenuLayer, useSubmenu } from './submenu'
 
 export type MenuItem = {
   kind: 'item'
@@ -159,8 +159,18 @@ export function Menu(
   const { placement } = props
   const point = typeof placement === 'string' ? null : placement
   const inPlace = phone || placement === 'sheet'
-  const submenu = useSubmenu(props.entries, ref, inPlace ? ref : layer)
-  const open = submenu.entry
+  const submenu = useSubmenu(
+    props.entries.flatMap((entry) =>
+      entry.kind === 'submenu' ? [entry.key] : [],
+    ),
+    ref,
+    inPlace ? ref : layer,
+  )
+  const open =
+    props.entries.find(
+      (entry): entry is MenuSubmenu =>
+        entry.kind === 'submenu' && entry.key === submenu.open,
+    ) ?? null
   const x = point?.x
   const y = point?.y
   useFocusInside(ref, firstItem)
@@ -189,7 +199,7 @@ export function Menu(
     const key = active instanceof HTMLElement ? active.dataset.submenu : null
     if (event.key === 'ArrowRight' && key) {
       event.preventDefault()
-      submenu.control.show(key, true)
+      submenu.show(key, true)
     } else if (event.key === 'ArrowLeft' && open && inPlace) {
       event.preventDefault()
       submenu.hide(true)
@@ -208,7 +218,7 @@ export function Menu(
     if (!item) return
     const key = item.dataset.submenu
     if (key) {
-      if (submenu.control.open !== key) submenu.control.show(key, false)
+      if (submenu.open !== key) submenu.show(key, false)
     } else if (open) {
       if (submenu.hasFocus()) item.focus({ preventScroll: true })
       submenu.hide(false)
@@ -241,7 +251,7 @@ export function Menu(
       ref={ref}
       role="menu"
     >
-      <MenuRows entries={rows} submenu={submenu.control} />
+      <MenuRows entries={rows} submenu={submenu} />
     </div>
   )
   const beside =

@@ -242,6 +242,7 @@ function DialogCard(props: {
               <ModelPicker
                 change={(choice) => model.setChoice(choice)}
                 choice={form.choice}
+                favourites={form.favourites}
                 models={form.models}
               />
             ) : null}

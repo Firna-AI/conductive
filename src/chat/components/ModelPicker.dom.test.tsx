@@ -25,12 +25,11 @@ describe('the model picker of a session with messages', () => {
       />,
     )
     await press(byRole('button', 'Model and effort: Opus 5.5, High'))
-    expect(spokenChoices()).toEqual([
+    await press(byRole('menuitem', 'All models'))
+    expect(spokenChoices('All models')).toEqual([
       'Opus 5.5',
       'Sonnet 5.5',
       'GPT-6.1 Sol New session',
-      'Low',
-      'High',
     ])
   })
 })
@@ -70,9 +69,11 @@ describe('the Fast switch of the model picker of a session', () => {
       <Session sent={sent} start={{ ...opus, fast: true }} />,
     )
     await press(triggerOf(view))
+    await press(byRole('menuitem', 'All models'))
     await press(byRole('menuitemradio', 'GPT-6.1 Sol'))
     const sol = triggerWords(view).name
     await press(triggerOf(view))
+    await press(byRole('menuitem', 'All models'))
     await press(byRole('menuitemradio', 'Sonnet 5.5'))
     const sonnet = triggerWords(view).name
     await press(triggerOf(view))
@@ -88,7 +89,8 @@ describe('the Fast switch of the model picker of a session', () => {
       ],
       sol: 'Model and effort: GPT-6.1 Sol, High, Fast',
       sonnet: 'Model and effort: Sonnet 5.5, High',
-      roles: ['menuitemradio'],
+      // All models, then the efforts, with no Fast row.
+      roles: ['menuitem', 'menuitemradio'],
     })
   })
 })

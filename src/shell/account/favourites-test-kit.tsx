@@ -12,6 +12,8 @@ import { fakeUser } from '../../test-support/fixtures/core'
 import { holdAnimationFrames } from '../../test-support/mount'
 import { mountScreen } from '../test-mount'
 import { startedApp } from '../test-render'
+import { OverlayHost } from '../ui/Overlay'
+import type { Viewport } from '../ui/viewport'
 import { AccountScreen } from './AccountScreen'
 
 // The favourites of the account of the fake API, which are the starting
@@ -48,12 +50,14 @@ export const favouritesPath = ACCOUNT_PATHS.favourites
 export const notSaved = "The change wasn't saved. Try again."
 
 /**
- * The Preferences tab of the account of the fake API, mounted, with
- * `account` in place of the account of the fake API when it is given.
+ * The Preferences tab of the account of the fake API, mounted in the layout
+ * of `viewport`, with `account` in place of the account of the fake API
+ * when it is given.
  */
 export async function mountFavourites(
   server: FakeApiServer,
   account?: AccountResponse,
+  viewport: Viewport = 'desktop',
 ) {
   holdAnimationFrames()
   if (account) server.json('GET', ACCOUNT_PATHS.account, account)
@@ -61,7 +65,10 @@ export async function mountFavourites(
   const app = await startedApp(server, { fetch: held.fetch })
   const view = mountScreen(
     app,
-    <AccountScreen connect={null} tab="preferences" user={fakeUser} />,
+    <OverlayHost>
+      <AccountScreen connect={null} tab="preferences" user={fakeUser} />
+    </OverlayHost>,
+    { viewport },
   )
   return { view, held }
 }

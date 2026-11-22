@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, RefCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { GripVertical, X } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
@@ -75,12 +75,19 @@ export function LiftedFavourite(props: { drag: ListDrag<MovableFavourite> }) {
 }
 
 /**
+ * The favourites of the menu of the picker of a row: none, because the row
+ * sets one favourite. The menu then starts with All models (model
+ * favourites decision 6).
+ */
+const noFavourites: readonly AgentChoice[] = []
+
+/**
  * The row of a favourite: the handle, the picker of the favourite, and ×.
  * A drag of the row moves it, and Alt with Up or Down moves it while the
  * focus is in the row. The picker and × keep their own presses, so a press
  * on them starts no drag. The picker offers the models of the person, and
- * keeps the model of the favourite. Its menu lists every model at its top,
- * with no favourites, because the row sets one favourite.
+ * keeps the model of the favourite. Its menu shows no favourites, so it
+ * starts with All models. `pickerRef` takes the element of the picker.
  *
  * `hidden` says why the model menu leaves out the favourite. The picker then
  * shows at half strength, the line under it says why, and the handle, the
@@ -96,6 +103,7 @@ export function FavouriteItem(props: {
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void
   pick: (choice: AgentChoice) => void
   remove: () => void
+  pickerRef: RefCallback<unknown>
 }) {
   const { item, drag, hidden } = props
   const models = useOfferedModels(item.choice)
@@ -118,8 +126,10 @@ export function FavouriteItem(props: {
             className={classes(styles.picker, hidden !== null && styles.off)}
           >
             <ModelPicker
+              buttonRef={props.pickerRef}
               change={props.pick}
               choice={item.choice}
+              favourites={noFavourites}
               models={models}
               placement="below-start"
             />

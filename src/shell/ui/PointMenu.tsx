@@ -12,6 +12,7 @@ import type { MenuEntry } from './Menu'
 import { MenuList } from './MenuList'
 import { placeChoices, placeMenu, type MenuAnchor } from './menu-place'
 import { useEscapeLayer } from './Overlay'
+import { choiceToFocus } from './submenu'
 import ui from './ui.module.css'
 
 /** The open choices of an item of a menu at a point. */
@@ -22,15 +23,6 @@ export interface PointChoices {
   focus: boolean
   /** The choices in their own menu box. */
   content: ReactNode
-}
-
-/** The item that takes the focus in a list of choices: the checked one, else the first. */
-function choiceToFocus(layer: HTMLElement): HTMLElement | null {
-  return (
-    layer.querySelector<HTMLElement>(
-      '[role^="menuitem"][aria-checked="true"]:not(:disabled)',
-    ) ?? layer.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
-  )
 }
 
 /**

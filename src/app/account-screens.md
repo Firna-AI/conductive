@@ -17,14 +17,24 @@ agent login forms, and model lists in the web app.
   account in the order of the model menu. Each row has a handle, the shell
   `ModelPicker`, and ×.
   The picker offers the models of the person and keeps the model of the
-  favourite. It shows no favourites, so its menu lists every model at its
-  top. A drag moves a row, as Alt with Up or Down does while the focus is
+  favourite. It shows no favourites, so its menu starts with All models. A
+  drag moves a row, as Alt with Up or Down does while the focus is
   in the row, through `useListOrder` of `../shell/ui/`, as the repository
   order does. A favourite that the model list no longer holds, or that the
   list of an own endpoint does not name, shows greyed with the line of
-  `hiddenLine` in `../shell/account/favourite-rows.ts`. Add a favourite is
-  off, because the app does not add a favourite yet.
-- Each move, removal, and pick saves the whole list at once through
+  `hiddenLine` in `../shell/account/favourite-rows.ts`. With no favourite,
+  a muted line takes the place of the list.
+- `AddFavourite.tsx` opens the list of each model that the pickers of the
+  person offer, in the groups of All models: below the button on a
+  computer, and in a sheet on a phone. A pick adds the favourite that
+  `addedFavourite` in `favourite-rows.ts` gives, at the end of the list,
+  and the picker of the new row then takes the focus. It takes the effort
+  of the default of new workspaces, or the nearest lower one, and else the
+  nearest free effort, lower efforts first, as
+  [The Favourites section](../../docs/protocol/model-favourites.md#the-favourites-section)
+  says. A pick with no free effort saves nothing, and a muted line under
+  the list says so until the next change. Add a favourite is off at five.
+- Each move, removal, pick, and add saves the whole list at once through
   `AccountModel.setFavourites`. The account state queues no save, so the
   section sends one save at a time. While a save runs, the section shows
   the list that it sent and takes no other change, and its controls stay

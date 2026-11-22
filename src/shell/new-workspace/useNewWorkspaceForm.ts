@@ -56,6 +56,8 @@ export interface NewWorkspaceForm {
    * of the form kept.
    */
   models: readonly AgentModel[]
+  /** The favourites of the account, which the model menu lists first. */
+  favourites: readonly AgentChoice[]
   /** The notice of a failed create, with Try again, or `null`. */
   failure: ReactNode
   /**
@@ -150,6 +152,7 @@ export function useNewWorkspaceForm(
     choice,
     login,
     models: offered,
+    favourites: account?.favourites ?? [],
     failure: createFailure(create, defaults !== null, send),
     buildNotice,
     notice,

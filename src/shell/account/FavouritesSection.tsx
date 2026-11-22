@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { CircleAlert, Plus } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { CircleAlert } from 'lucide-react'
+import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
+import type { Effort } from '../../shared/generated/Effort'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import styles from '../../../docs/mockups/src/components/settings/FavouritesSection.module.css'
 import order from '../../../docs/mockups/src/components/settings/RepositoryOrderList.module.css'
@@ -11,10 +13,12 @@ import {
 import { useStore } from '../../app/store'
 import { MODEL_FAVOURITES_LIMIT } from '../../shared/account'
 import { useApp, useOfferedModels } from '../context'
-import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { useListOrder } from '../ui/useListOrder'
+import { AddFavourite } from './AddFavourite'
 import {
+  addedFavourite,
+  addedRows,
   favouriteName,
   favouriteWords,
   hiddenLine,
@@ -33,8 +37,13 @@ import {
 /** The error of a change whose save failed. The list keeps its saved value. */
 const changeNotSaved = "The change wasn't saved. Try again."
 
-/** The press of Add a favourite, which stays off, so it adds nothing. */
-const addFavourite = () => undefined
+/** The line in place of the list while the account has no favourite. */
+const emptyLine = 'Add a favourite to show it first in the model menu.'
+
+/** Why a pick of `model` in Add a favourite added nothing. */
+function noFreeEffortLine(model: string): string {
+  return `${model} is already a favourite at every effort.`
+}
 
 /** The rows of the saved favourites, and the saved list that they show. */
 type KeptRows = FavouriteRows & { saved: readonly AgentChoice[] }
@@ -49,25 +58,41 @@ export function FavouritesSection() {
   const app = useApp()
   const account = useStore(app.account.account)
   if (!account) return null
-  return <Favourites saved={account.favourites} />
+  return (
+    <Favourites
+      defaultEffort={account.defaultChoice.effort}
+      saved={account.favourites}
+    />
+  )
 }
 
 /**
  * The favourites of the account. A drag moves a row, as Alt with Up or
- * Down does while the focus is in the row, × removes a favourite, and a
- * pick in the picker of a row changes it. Each change saves the whole list
- * at once. The account state queues no save, so the section sends one save
- * at a time: while a save runs, the section shows the list that it sent,
- * and it takes no other change. The controls stay on, so a row that moved
- * by keys keeps the focus. After the reply, the section shows the saved
- * list. A failed save keeps the saved list and shows its error under the
- * list until the next change, which saves again.
+ * Down does while the focus is in the row, × removes a favourite, a pick in
+ * the picker of a row changes it, and a pick in Add a favourite adds one at
+ * the end, as `addedFavourite` says, with the effort of `defaultEffort`, the
+ * default of new workspaces. The picker of the new row then takes the
+ * focus. Each change saves the whole list at once. The account state queues
+ * no save, so the section sends one save at a time: while a save runs, the
+ * section shows the list that it sent, and it takes no other change. The
+ * controls stay on, so a row that moved by keys keeps the focus. After the
+ * reply, the section shows the saved list. A failed save keeps the saved
+ * list and shows its error under the list until the next change, which
+ * saves again.
  *
- * A favourite that the model menu leaves out shows greyed, with the line
- * that says why, as `hiddenLine` says. Add a favourite is off, and while the
- * list holds five, a line says that the menu shows five at most.
+ * A pick in Add a favourite that adds nothing, because each effort of its
+ * model is already a favourite, saves nothing. A muted line under the list
+ * then says so until the next pick or change, and a screen reader reads it
+ * out. A favourite that the model menu leaves out shows greyed, with the
+ * line that says why, as `hiddenLine` says. With no favourite, a muted line
+ * takes the place of the list (model favourites decision 6). Add a
+ * favourite is off while the list holds five, and a line then says that
+ * the menu shows five at most.
  */
-function Favourites(props: { saved: readonly AgentChoice[] }) {
+function Favourites(props: {
+  saved: readonly AgentChoice[]
+  defaultEffort: Effort
+}) {
   const app = useApp()
   const models = useStore(app.models)
   const listed = useOfferedModels(undefined)
@@ -76,6 +101,11 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
     ...keptRows(props.saved, [], 0),
   }))
   const [sent, setSent] = useState<readonly FavouriteRow[]>([])
+  // The label of the model of a pick that added nothing, until the next change.
+  const [taken, setTaken] = useState<string | null>(null)
+  const pickers = useRef(new Map<string, HTMLElement>())
+  // The row of a new favourite, whose picker takes the focus once it shows.
+  const focusNext = useRef<string | null>(null)
   const save = useAction((list: readonly AgentChoice[]) =>
     app.account.setFavourites(list),
   )
@@ -85,10 +115,33 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
   if (kept.saved !== props.saved) {
     setKept({ saved: props.saved, ...keptRows(props.saved, shown, kept.next) })
   }
+  // A passive effect runs after the list of Add a favourite closed and gave
+  // the focus back, also after a phone sheet made the page active again.
+  useEffect(() => {
+    const id = focusNext.current
+    const picker = id === null ? undefined : pickers.current.get(id)
+    if (!picker) return
+    focusNext.current = null
+    picker.focus()
+  })
   const change = (rows: readonly FavouriteRow[]) => {
     if (save.pending) return
+    setTaken(null)
     setSent(rows)
     save.run(rows.map((row) => row.choice))
+  }
+  const add = (model: AgentModel) => {
+    const choices = shown.map((row) => row.choice)
+    const choice = addedFavourite(model, choices, props.defaultEffort)
+    if (choice === null) {
+      setTaken(model.label)
+      return
+    }
+    if (save.pending) return
+    const added = addedRows(shown, choice, kept.next)
+    setKept((current) => ({ ...current, next: added.next }))
+    focusNext.current = added.rows.at(-1)?.id ?? null
+    change(added.rows)
   }
   const items = shown.map((row): MovableFavourite => {
     const words = favouriteWords(models, row.choice)
@@ -101,17 +154,7 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
   const full = shown.length >= MODEL_FAVOURITES_LIMIT
   return (
     <Section
-      actions={
-        <ActionButton
-          // Off at five, as the protocol says, and below five until model
-          // favourites decision 4 says what Add a favourite adds.
-          disabled
-          icon={Plus}
-          onPress={addFavourite}
-        >
-          Add a favourite
-        </ActionButton>
-      }
+      actions={<AddFavourite full={full} models={listed} pick={add} />}
       description="The model menu lists your favourites first, in this order."
       title="Favourites"
     >
@@ -139,6 +182,11 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
                     ),
                   )
                 }
+                pickerRef={(element) => {
+                  if (element instanceof HTMLElement) {
+                    pickers.current.set(item.id, element)
+                  } else pickers.current.delete(item.id)
+                }}
                 place={place}
                 remove={() => change(shown.filter((row) => row.id !== item.id))}
               />
@@ -150,13 +198,20 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
             {status}
           </span>
         </div>
-      ) : null}
+      ) : (
+        <SectionText muted>{emptyLine}</SectionText>
+      )}
       {save.error ? (
         <span className={styles.error} role="alert">
           <CircleAlert aria-hidden className={styles.icon} size={13} />
           <span>{changeNotSaved}</span>
         </span>
       ) : null}
+      {taken === null ? null : (
+        <SectionText muted status>
+          {noFreeEffortLine(taken)}
+        </SectionText>
+      )}
       {full ? (
         <SectionText muted>
           The menu shows {MODEL_FAVOURITES_LIMIT} favourites at most. Remove one

@@ -46,7 +46,7 @@ export function ModelPicker(props: {
   models: readonly AgentModel[]
   /**
    * The favourites of the account, in the order of the menu. Without
-   * them, the menu lists every model at its top.
+   * them, the menu starts with All models.
    */
   favourites?: readonly AgentChoice[]
   sessionAgent?: Agent

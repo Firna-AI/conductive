@@ -1,12 +1,15 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { fastFor } from '../../chat/state/format'
+import type { Effort } from '../../shared/generated/Effort'
+import { effortFor, fastFor } from '../../chat/state/format'
 import {
   effortLabels,
   findModel,
   modelLabel,
   sameChoice,
 } from '../../shared/agents'
+
+const effortOrder = Object.keys(effortLabels)
 
 /**
  * A favourite as a row of the Favourites section. Its ID names the row for
@@ -25,6 +28,11 @@ export interface FavouriteRows {
   next: number
 }
 
+/** The ID of the new row with the number `number`. */
+function rowId(number: number): string {
+  return `favourite-${number}`
+}
+
 /**
  * The rows of `list`. Each favourite takes the ID of the first row of
  * `shown` with the same choice that no other favourite took, such as the
@@ -39,11 +47,59 @@ export function keptRows(
   let number = next
   const rows = list.map((choice): FavouriteRow => {
     const at = free.findIndex((row) => sameChoice(row.choice, choice))
-    if (at < 0) return { id: `favourite-${number++}`, choice }
+    if (at < 0) return { id: rowId(number++), choice }
     const [row] = free.splice(at, 1)
     return { id: row.id, choice }
   })
   return { rows, next: number }
+}
+
+/** The rows with a row for `choice` at their end, with a new ID from `next`. */
+export function addedRows(
+  rows: readonly FavouriteRow[],
+  choice: AgentChoice,
+  next: number,
+): FavouriteRows {
+  return { rows: [...rows, { id: rowId(next), choice }], next: next + 1 }
+}
+
+/**
+ * The favourite that a pick of `model` in the list of Add a favourite adds
+ * to `favourites`, as model favourites decision 4 D says, or null when each
+ * effort of the model is already a favourite. Its fast mode is off. Its
+ * effort is `effort`, the effort of the default of new workspaces, or else
+ * the nearest lower effort of the model, or its lowest one. When that
+ * effort is not free, it takes the free efforts below it, nearest first,
+ * then the free efforts above it, nearest first. An effort is free when no
+ * favourite is the model at that effort with fast mode off, as its picker
+ * shows it, because the pick adds no exact copy.
+ */
+export function addedFavourite(
+  model: AgentModel,
+  favourites: readonly AgentChoice[],
+  effort: Effort,
+): AgentChoice | null {
+  const taken = (wanted: Effort) =>
+    favourites.some(
+      (favourite) =>
+        favourite.agent === model.agent &&
+        favourite.model === model.model &&
+        favourite.effort === wanted &&
+        !fastFor(model, favourite.fast),
+    )
+  const efforts = [...model.efforts].sort(
+    (left, right) => effortOrder.indexOf(left) - effortOrder.indexOf(right),
+  )
+  const first = effortFor(model, effort)
+  const at = efforts.indexOf(first)
+  const tries = [
+    first,
+    ...efforts.slice(0, Math.max(at, 0)).reverse(),
+    ...efforts.slice(at + 1),
+  ]
+  const free = tries.find((item) => !taken(item))
+  if (free === undefined) return null
+  return { agent: model.agent, model: model.model, effort: free, fast: false }
 }
 
 /** The rows after a move of the row `id` to the place `to`. */

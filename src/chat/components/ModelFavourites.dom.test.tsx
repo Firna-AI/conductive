@@ -130,7 +130,7 @@ describe('the favourites of the model menu of a session', () => {
     })
   })
 
-  it('lists every model at its top and no All models when it has no favourite to show', async () => {
+  it('starts with All models, then the efforts and Fast, when it has no favourite to show', async () => {
     const shown = async (list: readonly AgentChoice[]) => {
       const view = await mount(
         <Session favourites={list} sent={[]} start={opus} />,
@@ -140,17 +140,10 @@ describe('the favourites of the model menu of a session', () => {
       await view.unmount()
       return names
     }
-    const today = [
-      'Opus 5.5',
-      'Sonnet 5.5',
-      'GPT-6.1 Sol',
-      'Low',
-      'High',
-      'Fast',
-    ]
+    const short = ['All models', 'Low', 'High', 'Fast']
     expect({
       none: await shown([]),
       allHidden: await shown([fableLow]),
-    }).toEqual({ none: today, allHidden: today })
+    }).toEqual({ none: short, allHidden: short })
   })
 })

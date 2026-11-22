@@ -382,6 +382,25 @@ otherwise.
 - The description of the Favourites section reads "The model menu lists
   your favourites first, in this order.", so it reads correctly also with
   no favourite. Made on 22 November 2026.
+- One submenu module, `src/shell/ui/submenu.tsx`, serves the chat menu and
+  the shell menu, so the two pickers cannot drift. One picker component
+  for both was not built, because decision 5 B did not choose option E.
+  Made on 22 November 2026.
+- `MenuButton` takes `besideOnPhone`, which only the model pickers set.
+  Restart and each other `MenuButton` stay a sheet on a phone, as
+  decision 5 B says. Made on 22 November 2026.
+- The `favourites` prop of the shell picker is required, so each shell
+  picker passes the favourites of the account, or none for a Favourites
+  row. Made on 22 November 2026.
+- While a save runs, All models is off, as each other row of that menu
+  is, and an add is refused with no message. Back always works. Made on
+  22 November 2026.
+- The focus moves to the picker of a new row after the Add list or its
+  phone sheet closes, because the sheet keeps the page inert until then.
+  Made on 22 November 2026.
+- The Add list offers the models of the person outside an org, the same
+  models that decide which favourites show greyed. Made on 22 November
+  2026.
 
 ## Milestone 1: Mockups
 
@@ -527,9 +546,9 @@ Depends on: 3, 4
       `src/chat/ui/Menu.tsx`, with the keys of the submenu of
       `src/shell/ui/MenuList.tsx`. On a phone, show the list in place of
       the menu, with Back.
-- [ ] Change the menu with no favourite to All models, the efforts, and
+- [x] Change the menu with no favourite to All models, the efforts, and
       Fast, in `src/chat/components/model-rows.ts`, as decision 6 says.
-- [ ] Give the shell picker of `src/shell/ui/ModelPicker.tsx` the All
+- [x] Give the shell picker of `src/shell/ui/ModelPicker.tsx` the All
       models submenu too. `MenuButton` passes no `submenus` to `MenuList`
       today. Open its phone form as the answer of decision 5 says.
 - [x] Hide the favourites whose model the own endpoint or the model list
@@ -554,15 +573,15 @@ Depends on: 5
       Its action waits for decision 4.
 - [x] Show a favourite that the menu leaves out greyed, with its line.
 - [x] Show the error of a failed save under the section.
-- [ ] Add Add a favourite, as the answer of decision 4 says.
+- [x] Add Add a favourite, as the answer of decision 4 says.
 - [x] Add the Favourites row to the Account group of the command palette,
       before New workspaces, with the search word "favorites". Update
       `docs/protocol/command-palette-actions.md`.
 - [x] Add component tests for the move, the removal, the limit, a hidden
       row, a failed save, and one save at a time. Report:
       `.context/model-favourites/reports/m6-section.md`.
-- [ ] Add component tests for the add, with decision 4.
-- [ ] Draw and build the empty section, as the answer of decision 6 says.
+- [x] Add component tests for the add, with decision 4.
+- [x] Draw and build the empty section, as the answer of decision 6 says.
 
 ## Milestone 7: Verification, commit, review, and pull request
 
