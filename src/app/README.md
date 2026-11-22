@@ -62,6 +62,15 @@ hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
 A drag of text or of a link keeps the action of the browser.
 
+`App` also mounts `useKeyboardViewport` of `keyboard-viewport.ts`. Safari
+on iOS keeps the page at its full height under an on-screen keyboard, and
+scrolls the page up to show the focused field. While the keyboard shows,
+the hook sets `--ui-screen-height` to the height of the visible part and
+keeps the page at its top. So the header stays in view, and the app ends
+at the keyboard. A pinch zoom keeps the behaviour of the browser. On
+Android, the viewport tag of `index.html` asks Chrome to resize the page
+for the keyboard, with `interactive-widget=resizes-content`.
+
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
 until its last day. The real chat fills the
