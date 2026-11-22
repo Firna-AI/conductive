@@ -42,6 +42,8 @@ export interface ToolWorkspaceCreation {
   orgId: string
   owner: MessageSender
   repositoryId: string
+  startBranch?: string
+  baseBranch?: string
   sectionId?: string
   parentId?: string
   choice: AgentChoice

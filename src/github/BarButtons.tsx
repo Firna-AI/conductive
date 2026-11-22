@@ -1,10 +1,14 @@
 import {
   Archive,
+  ArrowRight,
   CircleAlert,
   Clock,
+  GitBranch,
   GitBranchPlus,
   GitMerge,
   GitPullRequestArrow,
+  Info,
+  type LucideIcon,
 } from 'lucide-react'
 import styles from '../../docs/mockups/src/components/workspace/BarActions.module.css'
 import {
@@ -18,7 +22,7 @@ import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
 import { buttonKey, type CommandKeyOf } from './barKeys'
-import type { BarControls, BarMessage } from './barView'
+import type { BarBranches, BarControls, BarMessage } from './barView'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
@@ -147,10 +151,18 @@ export function BarButtons(props: {
   )
 }
 
+/** The mark of each tone of a message under the bar. */
+const messageIcons: Readonly<Record<BarMessage['tone'], LucideIcon>> = {
+  status: Clock,
+  info: Info,
+  danger: CircleAlert,
+}
+
 /**
  * A message under the bar, such as a refusal of GitHub. It tints its whole
  * line, and its edges stay neutral. Another refusal of GitHub leads to the
- * pull request on GitHub, where GitHub names the reason.
+ * pull request on GitHub, where GitHub names the reason. A wait and a base
+ * that moved to the default branch are a status, not a refusal.
  */
 export function BarMessageLine(props: {
   message: BarMessage
@@ -158,12 +170,12 @@ export function BarMessageLine(props: {
   keyOf?: CommandKeyOf
 }) {
   const { message } = props
-  const waits = message.tone === 'status'
-  const Icon = waits ? Clock : CircleAlert
+  const danger = message.tone === 'danger'
+  const Icon = messageIcons[message.tone]
   return (
     <div
-      className={classes(styles.message, !waits && styles.danger)}
-      role={waits ? 'status' : 'alert'}
+      className={classes(styles.message, danger && styles.danger)}
+      role={danger ? 'alert' : 'status'}
     >
       <Icon aria-hidden className={styles.icon} size={14} />
       <span className={styles.text}>{message.text}</span>
@@ -180,20 +192,47 @@ export function BarMessageLine(props: {
 }
 
 /**
- * The actions of the bar at the top of the Checks tab of a phone, with the
- * message of the bar and its link to GitHub. The row above opens this tab,
- * because a button cannot sit inside the link of the row.
+ * The branch and its base at the top of the Checks tab of a phone, where
+ * Create PR stands (decision 306). They take the parts of the desktop bar:
+ * the branch icon, the branch, an arrow, and the base. The names wrap, and
+ * the base keeps its arrow on a line of its own, so each name shows in
+ * full: a phone has no tooltip.
+ */
+function ChecksBranches(props: { branches: BarBranches }) {
+  const { branch, base } = props.branches
+  return (
+    <div className={styles.branches}>
+      <GitBranch aria-hidden className={styles.branchIcon} size={13} />
+      <span className={styles.names}>
+        <span className={styles.branch}>{branch}</span>
+        <span className={styles.base}>
+          <ArrowRight aria-hidden className={styles.branchIcon} size={12} />
+          <span className={styles.baseName}>{base}</span>
+        </span>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The top of the Checks tab of a phone: the message of the bar, then its
+ * actions and its link to GitHub. While the branch has no pull request, the
+ * branch and its base stand above the actions, also when the bar has none.
+ * The row above opens this tab, because a button cannot sit inside the link
+ * of the row.
  */
 export function ChecksActions(props: { controls: BarControls | null }) {
   const { controls } = props
   if (!controls) return null
   const { view } = controls
-  if (!view.message && view.actions.length === 0 && !view.link) return null
+  const buttons = view.actions.length > 0 || view.link !== null
+  if (!view.message && !buttons && !view.branches) return null
   return (
     <div aria-label="Pull request actions" className={styles.top} role="group">
       {view.message ? <BarMessageLine message={view.message} touch /> : null}
-      {view.actions.length > 0 || view.link ? (
+      {buttons || view.branches ? (
         <div className={styles.buttons}>
+          {view.branches ? <ChecksBranches branches={view.branches} /> : null}
           <BarButtons controls={controls} touch />
         </div>
       ) : null}

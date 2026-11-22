@@ -74,7 +74,7 @@ fn options(name: Name) -> Vec<&'static str> {
     let options = match name {
         Name::ListSecrets | Name::RunWithSecrets => "",
         Name::CreateWorkspace => {
-            "repository message message-file agent model effort fast section parent name first-session-title request-id"
+            "repository message message-file agent model effort fast section parent name first-session-title request-id start-branch base-branch"
         }
         Name::ListWorkspaces => {
             "owner parent state repository query updated-since archived removed limit offset"

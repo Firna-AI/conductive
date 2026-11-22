@@ -77,12 +77,19 @@ export async function checkRepositoryValues(
   change: RepositoryChange,
   value: unknown,
   dependencies: RepositoryChangeDependencies | undefined,
+  now: () => number = Date.now,
 ): Promise<void> {
   if (!dependencies) return
   const payload = payloadValues(value)
   try {
     if (!(await savedValuesDiffer(db, change, payload))) return
-    await syncRepositoryValues(db, change, () => dependencies.read(change))
+    await syncRepositoryValues(
+      db,
+      change,
+      () => dependencies.read(change),
+      dependencies.prepareDefaultBranchChange,
+      now,
+    )
     await dependencies.changed(change)
   } catch {
     warnWorker({ kind: 'repository_values_check_failed' })

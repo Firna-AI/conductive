@@ -67,6 +67,13 @@ it('changes the repository as another member, keeps the workspace, and publishes
     branch: expect.stringMatching(/^[^/]+\/kept-name-v2-[a-z0-9]{4}$/),
     github: null,
   })
+  expect(
+    await f.env.DB.prepare(
+      'SELECT base_branch AS base FROM workspaces WHERE id = ?',
+    )
+      .bind(WORKSPACE_ID)
+      .first(),
+  ).toEqual({ base: null })
   expect(await readWorkspace(f.env.DB, f.org.id, WORKSPACE_ID)).toMatchObject({
     repositoryId: 'billing',
     branch: result.workspace.branch,
@@ -81,7 +88,7 @@ it('changes the repository as another member, keeps the workspace, and publishes
       repositoryId: 77,
       fullName: 'example/billing',
       branch: result.workspace.branch,
-      baseBranch: 'trunk',
+      baseBranch: null,
     },
   ])
   for (const session of [open, closed])

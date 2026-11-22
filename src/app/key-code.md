@@ -104,9 +104,9 @@ Each path is relative to `src/app/`, the folder of this page.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   automations, computer settings, and org logins of one org, with `watch`.
-  `org-waits.ts` gives the wait of each part, such as `workspacesWait`.
-  `OrgModel.startBuild` sends Build computer and Try again for each screen
-  that offers them.
+  `org-resources.ts` gives the read of each part, and `org-waits.ts` its
+  wait, such as `workspacesWait`. `OrgModel.startBuild` sends Build
+  computer and Try again for each screen that offers them.
 - `org-refresh.ts`: the readers of the parts of `OrgModel`, in
   [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with

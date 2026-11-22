@@ -142,6 +142,14 @@ mod cli_tests;
 mod mac_adapter_tests;
 
 #[cfg(test)]
+#[path = "_tests_/branch_adapter_support.rs"]
+mod branch_adapter_support;
+
+#[cfg(test)]
+#[path = "_tests_/branch_adapter_tests.rs"]
+mod branch_adapter_tests;
+
+#[cfg(test)]
 #[path = "_tests_/secrets/mod.rs"]
 mod secrets_tests;
 

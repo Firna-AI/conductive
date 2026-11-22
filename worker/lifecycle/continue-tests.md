@@ -31,6 +31,9 @@ results.
   case checks its exact text, also the GitHub access hint of a failed fetch.
 - [`continue-access.test.ts`](continue-access.test.ts): the admission
   checks, and a member removed while Continue waits for the chat queue.
+- [`continue-base.test.ts`](continue-base.test.ts): the live merged base,
+  a deleted base, a default base stored as null, a failed branch read, and
+  recovery of a job saved without a separate default branch.
 - [`continue-concurrency.test.ts`](continue-concurrency.test.ts): the hold
   of dispatch and of a second Continue, a move after a member removal, and a
   saved resume.

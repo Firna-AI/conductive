@@ -37,8 +37,9 @@ of agents as pictures in their answers, as
   merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says. For a workspace that a member creates, it is the default branch of
-  the repository.
+  says. For a workspace that a member creates, it is the target that New
+  workspace gives, as
+  [The target choice](start-from-a-branch.md#the-target-choice) says.
 - **Repository folder:** the folder of the workspace's repository in the
   sandbox, as [Repository folders](repository-folders.md) says. A
   repository change moves the workspace to the folder of another

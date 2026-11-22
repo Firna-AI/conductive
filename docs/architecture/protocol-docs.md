@@ -115,6 +115,9 @@ This page lists each protocol doc and what it covers.
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
     values for workspace list marks and their order.
+  - [GitHub banner: checks and layouts](../protocol/github-banner-layouts.md):
+    the Checks tab, and where the bar and its parts show on desktop and on
+    a phone.
   - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
     a new name or default branch of a repository, the saved values, and the
     build that the change starts.
@@ -222,8 +225,9 @@ This page lists each protocol doc and what it covers.
     its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
   scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member, and the GitHub tokens that an
-  image job uses to copy the repositories.
+  GitHub actions of the Worker as a member.
+  - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
+    the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the skills of a message.
   - [Session instructions](../protocol/session-instructions.md): the same
@@ -247,6 +251,5 @@ This page lists each protocol doc and what it covers.
 - [Automations](../protocol/automations.md): automations, their chosen
   secrets, and their schedules, with the linked pages
   [Automation runs](../protocol/automation-runs.md),
-  [Pull request runs](../protocol/pull-request-runs.md),
-  [Base branches](../protocol/base-branches.md), and
+  [Pull request runs](../protocol/pull-request-runs.md), and
   [Automation risks](../protocol/automation-risks.md).

@@ -78,6 +78,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
       matches,
       this.integration.alarms,
+      this.integration.baseChanges,
     )
     this.members = new WorkspaceMembersReceiver(
       context.storage,

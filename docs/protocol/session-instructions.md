@@ -30,10 +30,12 @@ says.
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
 - The workspace branch and the target branch can change, by Continue, by
-  a repository change, or by a new default branch. The instructions keep
-  the branches of the start of the session, and
-  [the branch line](message-lines.md#the-branch-line) names the current
-  branches.
+  a repository change, or by a new default branch. The target branch also
+  changes when GitHub deletes it, as
+  [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
+  says. The instructions keep the branches of the start of the session,
+  and [the branch line](message-lines.md#the-branch-line) names the
+  current branches.
 - The repository folder can change by a repository change. The
   instructions keep the folder of the start of the session, and
   [the repository line](message-lines.md#the-repository-line) names the
