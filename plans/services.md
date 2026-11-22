@@ -503,16 +503,18 @@ The orchestrator owns the combined gate, implementation review, and pull request
 - [x] Smoke-test the CLI, MCP, app controls, logs, and preview links. Check a service with no port. Save evidence under `.context/services/`.
 - [x] Run `npm run format:check` and `npm run lint` before the long gate.
 - [x] Install gate dependencies with Node 24: `npm --prefix desktop ci` and `npm ci --prefix runner`, after the root dependencies.
-- [ ] Run `npm run check` on the combined final tree.
+- [x] Run `npm run check` on the combined final tree.
 - [x] Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, and `cargo test --workspace`.
 - [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Prepare the target and musl tools if needed.
 - [x] Regenerate shared types and confirm that the committed output has no drift.
-- [ ] Run the deletion audit. Commit with Conventional Commits and push this branch.
+- [x] Run the deletion audit. Commit with Conventional Commits and push this branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Apply the fix rule, record follow-up items, and re-review once.
 - [ ] Resolve each finding that needs Cal before the final pull request. Record outside-scope problems without fixing them here.
 - [ ] Merge current `main` into this branch when required by the delegation and finish rules. Resolve only services conflicts. Rerun checks for the combined tree.
 - [ ] Delete this plan when all other milestone TODOs are ticked and the review rounds are done. Preserve its dated decisions in the pull request description.
 - [ ] Open the pull request into `main`. Keep it unmerged. Watch the final commit until `Complete gate` and `Rust gate` are green.
+
+Final combined verification evidence: `.context/services/final-gate-result.json`, `.context/services/final-combined-check.log`, and `.context/services/final-service-view-comparison.json`. Later preserving main merges are recorded in `.context/services/pre-review-main-merge-audit.txt`, `.context/services/resume-final-main-merge-audit.txt`, `.context/services/post-gate-main-preservation.json`, and `.context/services/post-gate-check-results.json`. Final pull request CI checks the exact final head.
 
 Export visibility evidence: `.context/services/pre-worker-export-search.txt`, `.context/services/pre-worker-exports-fixed.log`, and `.context/services/pre-worker-export-typecheck.log`.
 
