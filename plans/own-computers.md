@@ -81,9 +81,8 @@ Replaced ways:
 
 ## Decisions
 
-Cal answered own computer decisions 1 to 7 on 22 November 2026. Own
-computer decision 8 is open, in the
-brainstorm of this branch.
+Cal answered own computer decisions 1 to 7 on 22 November 2026, in the
+brainstorm of this branch. Own computer decision 8 is open.
 
 ### Own computer decision 1: Where the agents of an own computer run
 
