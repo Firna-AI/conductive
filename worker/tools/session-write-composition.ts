@@ -2,14 +2,12 @@ import type { AgentSessionResume } from '../../src/shared/generated/AgentSession
 import type { AgentSessionWriteResponse } from '../../src/shared/generated/AgentSessionWriteResponse'
 
 import { sessionLink } from '../../src/shared/session-link'
-import { resumesAtOpen } from '../../src/app/first-start'
 import { HttpError } from '../http'
 import type { AppDependencies, AppEnv } from '../env'
 import { workspaceBinding } from '../app-api/workspace-state'
 import { requireFeatureResult } from '../features/result'
+import { startAcceptedMessage } from '../lifecycle/accepted-message-start'
 import { workspaceRuntime } from '../lifecycle/runtime'
-import { workspaceResponse } from '../lifecycle/workspace-response'
-import { resumeWorkspace } from '../lifecycle/workspace-resume'
 import type { ToolSessionWrite } from './services'
 import { toolSessionWorkspace } from './session-access'
 
@@ -34,36 +32,15 @@ export async function writeSessionFromTool(
         input.workspaceId,
         env.APP_ORIGIN,
       )
-      const runtime = workspaceRuntime(env, dependencies)
-      const detail = await workspaceResponse(
-        runtime,
+      const started = await startAcceptedMessage(
+        workspaceRuntime(env, dependencies),
         input.orgId,
         input.workspaceId,
+        input.senderUserId,
       )
-      if (resumesAtOpen(detail)) {
-        const resuming = await resumeWorkspace(
-          runtime,
-          input.orgId,
-          input.workspaceId,
-          input.senderUserId,
-        )
-        workspace = { ...workspace, state: resuming.workspace.state }
-        resume =
-          resuming.workspace.state === 'stopped' ||
-          resuming.workspace.state === 'error'
-            ? resuming.error
-              ? {
-                  state: 'failed',
-                  error: {
-                    code: resuming.error.code,
-                    message: resuming.error.message,
-                  },
-                }
-              : { state: 'waiting', error: null }
-            : { state: 'queued', error: null }
-      } else if (detail.workspace.state === 'error') {
-        resume = { state: 'waiting', error: null }
-      }
+      if (started.state !== null)
+        workspace = { ...workspace, state: started.state }
+      resume = started.resume
     } catch (error) {
       if (!(error instanceof HttpError)) throw error
       resume = {

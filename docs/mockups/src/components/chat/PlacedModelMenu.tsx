@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import { favourites } from '../../fixtures/favourites'
+import { menu } from '../../entries/components/common/Menu.mockup'
 import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
 import { useShortcutHint } from '../common/ShortcutTip'
 import { favouritesMenu } from './pickers'
 import styles from './PlacedModelMenu.module.css'
@@ -25,13 +25,14 @@ export function PlacedModelMenu(props: {
   const fastHint = useShortcutHint('fast-mode')
   return (
     <div className={classes(styles.placed, styles[props.placement])}>
-      <Menu
+      <menu.Component
         entries={favouritesMenu(props.choice, {
           favourites,
           sessionAgent: props.sessionAgent,
           fastKey: props.fastKey ? fastHint : undefined,
         })}
         label="Model and effort"
+        moklyInstance="model-menu"
         placement="point"
       />
     </div>

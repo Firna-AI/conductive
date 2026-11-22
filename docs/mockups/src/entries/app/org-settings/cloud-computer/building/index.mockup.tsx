@@ -1,9 +1,9 @@
 import { defineScreen } from '@mokly/mokly'
+import { OrgSettingsScreen } from '../../../../../screens/OrgSettingsScreen'
 import {
   acmeSettings,
-  OrgSettingsScreen,
   orgSettingsSchema,
-} from '../../../../../screens/OrgSettingsScreen'
+} from '../../../../../screens/orgSettingsState'
 
 export const building = defineScreen({
   title: 'Building',
@@ -18,4 +18,15 @@ export const building = defineScreen({
   render: (props, context) => (
     <OrgSettingsScreen state={props} viewport={context.viewport} />
   ),
+  variants: [
+    {
+      slug: 'waiting',
+      title: 'Build that waits',
+      description:
+        'Cal chose Build computer while another update of the cloud computer runs, one that the tab does not list. His build waits for that update to finish, then runs. The card shows it as a build that runs, with its time from Build computer, and the first line of its log says "Waiting for another update of the cloud computer to finish". The steps of the build follow in the log when the wait ends. Workspaces keep starting from the last good build, and the note names the 60-minute limit, as for every build.',
+      rationale:
+        'The user chose switch decision 2 D on 20 November 2026: members do not see the switch build of an operator, and a Build computer or Try again of an admin waits until that build ends. The tab shows the wait with the states that it knows, a build that runs, so that older copies of the Mac app show it too. The log already names each step as it starts, so the wait is its first step. The words name no provider and no switch.',
+      props: { build: 'waiting' },
+    },
+  ],
 })

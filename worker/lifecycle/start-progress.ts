@@ -24,6 +24,7 @@ export async function advanceStartSteps(
   row: WorkspaceRow,
   job: WorkspaceStartJob,
   call: StartCall,
+  preserveBase = false,
 ): Promise<boolean> {
   if (job.phase === 'records') throw new WorkspaceStartError(null)
   if (startTimeLimitReached(job, dependencies.now()))
@@ -31,11 +32,13 @@ export async function advanceStartSteps(
   if (job.phase === 'terminal-password') {
     await call(() => prepareStartTerminal(env, dependencies, job))
     await endpoint.lifecycleStep('startup', stepLabel('startup'), 'completed')
-    await nextStartCommand(storage, job, 'runner')
+    await nextStartCommand(storage, job, 'runner', dependencies.now())
     return true
   }
   const label =
-    job.phase === 'fetch' && job.baseBranch
+    job.phase === 'fetch' &&
+    (job.baseBranch ||
+      (job.startBranch ?? job.defaultBranch) !== job.defaultBranch)
       ? await call(() => creationFetchLabel(env.DB, job))
       : stepLabel(job.phase)
   if (
@@ -48,7 +51,8 @@ export async function advanceStartSteps(
       job,
       label,
       call,
-      dependencies.fetch,
+      dependencies,
+      preserveBase,
     ))
   )
     return false
@@ -57,6 +61,7 @@ export async function advanceStartSteps(
       storage,
       job,
       job.phase === 'startup' ? 'terminal' : 'terminal-password',
+      dependencies.now(),
     )
     return false
   }
@@ -66,6 +71,7 @@ export async function advanceStartSteps(
       storage,
       job,
       job.phase === 'fetch' ? 'branch' : 'startup',
+      dependencies.now(),
     )
     return false
   }

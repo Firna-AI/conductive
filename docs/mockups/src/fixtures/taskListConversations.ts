@@ -4,8 +4,8 @@
  * fixed check boxes (item 14 B of the Markdown plan).
  */
 
+import { bullets, code, item, p, task, under } from './agentText'
 import type { ChatItem } from './conversations'
-import { bullets } from './listConversations'
 import { pullRequest } from './pullRequests'
 
 /** The two changes of the review of Priya, as the tasks of the agent. */
@@ -29,8 +29,8 @@ const taskListTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'tasks',
     blocks: [
-      'Two changes to make:',
-      bullets(`[ ] ${waitTask}`, `[ ] ${fieldsTask}`),
+      p('Two changes to make:'),
+      bullets(task(false, waitTask), task(false, fieldsTask)),
     ],
   },
   {
@@ -44,7 +44,7 @@ const taskListTurn: readonly ChatItem[] = [
   {
     kind: 'agent',
     id: 'first-done',
-    blocks: [bullets(`[x] ${waitTask}`, `[ ] ${fieldsTask}`)],
+    blocks: [bullets(task(true, waitTask), task(false, fieldsTask))],
   },
   {
     kind: 'tool',
@@ -58,11 +58,11 @@ const taskListTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'both-done',
     blocks: [
-      'Both changes pass the tests:',
+      p('Both changes pass the tests:'),
       bullets(
-        `[x] ${waitTask}`,
-        `[x] ${fieldsTask}`,
-        `[ ] Push them to #${pullRequest.number}`,
+        task(true, waitTask),
+        task(true, fieldsTask),
+        task(false, `Push them to #${pullRequest.number}`),
       ),
     ],
   },
@@ -71,22 +71,21 @@ const taskListTurn: readonly ChatItem[] = [
     kind: 'agent',
     id: 'pushed',
     blocks: [
-      `I pushed both changes to #${pullRequest.number}:`,
-      {
-        kind: 'list',
-        numbered: false,
-        items: [
-          {
-            text: '[x] Each lookup waits 250 ms after the last key press, in `useAddressAutocomplete`.',
-          },
-          { text: '[x] On a phone, the fields move down under the list.' },
-          {
-            text: '[ ] Priya approves the changes.',
-            list: bullets('She asked to see the phone test first.'),
-          },
-        ],
-      },
-      'Only her approval is left.',
+      p(`I pushed both changes to #${pullRequest.number}:`),
+      bullets(
+        task(
+          true,
+          'Each lookup waits 250 ms after the last key press, in ',
+          code('useAddressAutocomplete'),
+          '.',
+        ),
+        task(true, 'On a phone, the fields move down under the list.'),
+        under(
+          task(false, 'Priya approves the changes.'),
+          bullets(item('She asked to see the phone test first.')),
+        ),
+      ),
+      p('Only her approval is left.'),
     ],
   },
   { kind: 'turn-end', id: 'turn-end', duration: '2m 36s', files: [] },

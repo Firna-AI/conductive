@@ -9,9 +9,10 @@ export async function allocateImageBuild(
   provider: SandboxProvider,
   job: BuildJob,
   mayHaveAllocated: boolean,
+  now: () => number,
 ): Promise<void> {
   await recoverImageBuildAllocation(db, provider, job, mayHaveAllocated)
-  await completeBuildPhase(db, job.buildId, 'sources')
+  await completeBuildPhase(db, job.buildId, 'sources', now())
 }
 
 export async function recoverImageBuildForCleanup(

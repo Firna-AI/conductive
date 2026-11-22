@@ -113,6 +113,14 @@
   text-decoration: underline;
 }
 
+/* The search field above a long list of secrets, and the list. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
 /* The secrets of the org, each with its checkbox. */
 .checks {
   display: flex;
@@ -128,16 +136,6 @@
   font-weight: 500;
   line-height: 1.45;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* The mark of a secret for all agents, at the end of its row. */
-.tag {
-  flex-shrink: 0;
-  margin: 1px 0 0 auto;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-xs);
-  font-weight: 500;
   white-space: nowrap;
 }
 

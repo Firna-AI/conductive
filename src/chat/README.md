@@ -4,8 +4,9 @@ The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
-sandbox, the Mac commands of each turn, and the bar that takes the
-composer's place while the sandbox does not run. After a failed first start
+sandbox, the Mac commands of each turn, Explain with the marks and the
+popover of each explanation, and the bar that takes the composer's place
+while the sandbox does not run. After a failed first start
 of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
@@ -77,8 +78,8 @@ through the existing file client. With it, the Markdown image of a PNG,
 JPEG, GIF, or WebP file of an answer shows as a picture, and without it
 as its link, as
 [Pictures in answers](../../docs/protocol/file-mentions-answers.md#pictures-in-answers)
-says. [Pictures in answers](text-links.md#pictures-in-answers) gives the
-rules of the code that draws them.
+says. [Pictures in answers](answer-pictures.md) gives the rules of the
+code that draws them.
 
 ## Rules for this code
 
@@ -109,9 +110,10 @@ rules of the code that draws them.
   [Agent text](agent-text.md) gives the rules of the code that formats
   them: the chat adapter on the shared Markdown parser, and the heading,
   list, and table parts that the chat shares with the file preview and the
-  mockups. Its linked guides [Message lines](message-lines.md) and
-  [Text links](text-links.md) give the message lines of the work of a
-  turn, and the links, the chips, and the pictures.
+  mockups. Its linked guides [Message lines](message-lines.md),
+  [Text links](text-links.md), and
+  [Pictures in answers](answer-pictures.md) give the message lines of the
+  work of a turn, the links and the chips, and the pictures.
 - The links of chat text open through the link opener of the app shell, in
   `../shell/ui/text-links.tsx`. The workspace screen gives it the pages of
   the app and the port previews of the workspace, as
@@ -136,6 +138,9 @@ rules of the code that draws them.
   their answers, and the settings of the Mac.
 - [The secret requests](secrets/README.md) hold the rules of the requests
   for secrets, their answers, the runs, and the line of a late answer.
+- [Explain](explain/README.md) holds the rules of Explain by a selection,
+  its key, the marks of explanations, their menu, and the popover with its
+  follow-up field.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
 - The parts reuse the mockup CSS modules and the mockup parts that are pure,
@@ -160,7 +165,7 @@ shows the chat, in the whole app, with the limits that
 
 ## Tests
 
-Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/attachment-mentions src/app/draft-marks.test.ts src/app/draft-files.test.ts`.
+Run `npm run test -- src/chat src/shared/transcript src/shared/mention-text src/shared/skill-text src/shared/attachment-mentions src/app/draft-marks.test.ts src/app/draft-files.test.ts src/shell/workspace/workspace-skills.test.ts`.
 The tests drive the controller and the stream
 on `FakeApiServer` and the recorded events, and render the chat with
 `react-dom/server`. `state/test-kit.ts` holds their helpers.
@@ -173,7 +178,7 @@ chat in the whole app.
 [Chat tests](tests.md) says what each test file checks.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
-check in the Mac app.
+check in the Mac app. Explain has its own [tests](explain/README.md#tests).
 
 The placement of the model menu needs a real browser. The Electron check
 [`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)

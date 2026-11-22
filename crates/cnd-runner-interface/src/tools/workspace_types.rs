@@ -1,6 +1,7 @@
 //! Workspace records returned by the workspace tools.
 
-use serde::{Deserialize, Serialize};
+use serde::de::IgnoredAny;
+use serde::{Deserialize, Deserializer, Serialize};
 use ts_rs::TS;
 
 use crate::agents::AgentChoice;
@@ -65,6 +66,49 @@ pub enum GitHubSummary {
     Blocked,
 }
 
+/// Recorded evidence about an archived workspace's cloud computer.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "kebab-case")]
+pub enum ArchivedComputerState {
+    /// An identified computer or an unresolved create request can still exist.
+    MayExist,
+    /// All possible computers are resolved and a known computer has a confirmed delete.
+    Deleted,
+    /// No recorded evidence establishes the computer's outcome.
+    Unknown,
+}
+
+/// Computer evidence and the original Restore cutoff, independent of Restore availability.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct ArchivedComputer {
+    /// The certainty of the computer's outcome.
+    pub state: ArchivedComputerState,
+    /// The original Archive time plus the Restore window, also without a kept computer.
+    pub restore_until: Timestamp,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum CompatibleArchivedComputer {
+    Known(ArchivedComputer),
+    Unknown(IgnoredAny),
+}
+
+fn deserialize_archived_computer<'de, D>(
+    deserializer: D,
+) -> Result<Option<ArchivedComputer>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(
+        match CompatibleArchivedComputer::deserialize(deserializer)? {
+            CompatibleArchivedComputer::Known(computer) => Some(computer),
+            CompatibleArchivedComputer::Unknown(_) => None,
+        },
+    )
+}
+
 /// The complete workspace record returned by creation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -103,4 +147,12 @@ pub struct Workspace {
     pub archived_at: Option<Timestamp>,
     /// restore until.
     pub restore_until: Option<Timestamp>,
+    /// Optional computer evidence for an archived workspace with a known Archive date.
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_archived_computer"
+    )]
+    #[ts(optional)]
+    pub archived_computer: Option<ArchivedComputer>,
 }

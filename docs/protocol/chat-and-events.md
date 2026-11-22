@@ -118,6 +118,10 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A wake of a watch shows as one line of the app at its place. It gives
+  the end of the watched turn and the session chip of the watched session,
+  as [The wake line](session-watches.md#the-wake-line) says. It shows no
+  message of a member.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -125,35 +129,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
 
 ### The scroll of the chat
 
-- At the bottom, the chat keeps the newest message in view.
-- While the user reads higher up, the row that they read keeps its place.
-  A message of another member, the output of an agent, and a fold that
-  closes do not move it.
-- A message that the user sends from the chat goes to the bottom of the
-  chat, also while the user reads higher up. This applies to the composer
-  and to the fixed prompts of the pull request bar, such as Create PR.
-- A message that the same member sends from another tab or device does
-  not move this chat.
-- Reason: the user who sends a message wants to see it and its answer. A
-  scroll for each message of the workspace was rejected, because it takes
-  the place of a reader who reads an earlier part of the chat.
-- Each session tab keeps the reader's place while another tab, another
-  workspace, or another page of the app shows. When the tab shows again, the
-  row that the user read is at the same place. A chat that was at the bottom
-  shows the bottom again, with the output that came in the meantime. When
-  the read row is gone, the chat shows the bottom.
-- The places stay while the browser tab keeps the workspace. A reload
-  forgets them, and each chat then opens at the bottom.
-- Reason: the user who looks at another tab comes back to read on. A saved
-  scroll offset was rejected, because output that comes in the meantime
-  moves the read row. A place that stays after a reload was rejected,
-  because it needs browser storage that each sign-out must clear. The user
-  chose both on 13 November 2026.
-- A session tab that closes forgets its place, also when another member
-  closes its session. When the session opens again, such as from the
-  session history, it shows the bottom.
-- Reason: a reopened tab is a new tab to the user. The user chose this on
-  13 November 2026.
+[The scroll of the chat](chat-scroll.md) states the row that stays in
+view, the scroll after a send, and the place that each tab keeps.
 
 ### The work of a turn
 
@@ -185,6 +162,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   [Late requests](secret-requests.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
+- A wake line stays in view too, and it never folds. It starts a new part
+  of its turn, as such a message does.
 - The answer of a part is its last agent message, with the agent messages
   directly before it. A part with no agent message has no fold.
 - The answer and the work after it stay in view, such as the tool calls
@@ -231,6 +210,13 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one read, also in a long session. Live events after the full history
   were rejected, because a long session then showed nothing new until its
   whole history had loaded.
+- A connection opens before its stored history comes. One connection
+  sends at most about 8 MB of stored history. Then the workspace closes
+  it, and the tab connects again after the last part that it got.
+- Reason: the stored history of a connection waits in the memory of the
+  workspace until the tab reads it, and that memory has a fixed limit. A
+  replay of the whole history on one connection was rejected, because a
+  long history then stopped the workspace.
 - The chat shows each event of a session once and in event order, also
   when earlier history arrives after newer events.
 - While the earlier history loads, the chat says so above the messages

@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { routes } from '../../app/router'
 import {
   secretsPath,
   workspaceCapabilitiesPath,
@@ -58,67 +59,78 @@ function checked(control: HTMLElement, name: string): boolean {
 }
 
 describe('the Capabilities control of a workspace', () => {
-  test('a member who is not an admin sees the approvals of the sessions, and changes a pre-approval, an approval, and Mac access', async () => {
+  test('a member who is not an admin sees the approvals of this session, and changes a pre-approval and an approval', async () => {
     const server = capabilitiesServer(new FakeApiServer({ role: 'member' }))
     const tab = await openTab(server)
     click(byRole('button', 'Capabilities', tab.view))
     await settle()
     const control = byRole('dialog', 'Capabilities', tab.view)
+    // VERCEL_TOKEN is allowed in another session, so it does not show here.
+    const replicaRow = 'PROD_DATABASE_URL | Allowed by Cal, 1 hour ago'
     expect({
       approvals: approvals(control),
       figma: checked(control, 'FIGMA_TOKEN'),
       replica: checked(control, 'PROD_DATABASE_URL'),
-    }).toEqual({
-      approvals: [
-        'PROD_DATABASE_URL | Address autocomplete · by Cal, 1 hour ago',
-        'VERCEL_TOKEN | Debounce the address lookups to 250 ms · by you, yesterday',
-      ],
-      figma: true,
-      replica: false,
-    })
+    }).toEqual({ approvals: [replicaRow], figma: true, replica: false })
     const from = server.requests.length
     const preapproved = ['figma-token', 'prod-database-url']
     answerWith(server, { ...grants, preapprovedSecretIds: preapproved })
     click(byLabel('PROD_DATABASE_URL', control))
     await settle()
-    const [kept] = grants.sessionApprovals
-    const left = { ...grants, preapprovedSecretIds: preapproved }
-    answerWith(server, { ...left, sessionApprovals: kept ? [kept] : [] })
-    click(
-      byRole(
-        'button',
-        'Remove VERCEL_TOKEN from Debounce the address lookups to 250 ms',
-        control,
-      ),
-    )
+    // The pre-approval covers the approval of the session, which hides.
+    const covered = approvals(control)
+    answerWith(server, grants)
+    click(byLabel('PROD_DATABASE_URL', control))
     await settle()
-    answerWith(server, {
-      ...left,
-      sessionApprovals: kept ? [kept] : [],
-      macAccess: false,
-    })
-    click(byRole('switch', 'Mac access', control))
+    const uncovered = approvals(control)
+    const [, other] = grants.sessionApprovals
+    const left = { ...grants, sessionApprovals: other ? [other] : [] }
+    answerWith(server, left)
+    click(
+      byRole('button', 'Remove PROD_DATABASE_URL from this session', control),
+    )
     await settle()
     expect({
       sent: await bodiesOf(server, 'PATCH', path, from),
-      replica: checked(control, 'PROD_DATABASE_URL'),
+      covered,
+      uncovered,
       approvals: approvals(control),
-      mac: byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
     }).toEqual({
       sent: [
         { preapprovedSecretIds: preapproved },
+        { preapprovedSecretIds: ['figma-token'] },
         {
           removeSessionApprovals: [
-            { secretId: 'vercel-token', sessionId: 'debounce' },
+            { secretId: 'prod-database-url', sessionId: 'autocomplete' },
           ],
         },
-        { macAccess: false },
       ],
-      replica: true,
-      approvals: [
-        'PROD_DATABASE_URL | Address autocomplete · by Cal, 1 hour ago',
-      ],
-      mac: 'false',
+      covered: [],
+      uncovered: [replicaRow],
+      approvals: [],
+    })
+  })
+
+  test('another session shows its own approvals, and no approval of a secret for all agents', async () => {
+    const server = capabilitiesServer(new FakeApiServer())
+    const [, vercel] = grants.sessionApprovals
+    const sentry = secrets.find((secret) => secret.allAgents)
+    const covered = vercel && sentry ? [{ ...vercel, secretId: sentry.id }] : []
+    server.json('GET', path, {
+      capabilities: {
+        ...grants,
+        sessionApprovals: [...grants.sessionApprovals, ...covered],
+      },
+    })
+    const tab = await openTab(server, {
+      at: routes.session(org, id, 'debounce'),
+    })
+    click(byRole('button', 'Capabilities', tab.view))
+    await settle()
+    const control = byRole('dialog', 'Capabilities', tab.view)
+    expect({ covered: covered.length, approvals: approvals(control) }).toEqual({
+      covered: 1,
+      approvals: ['VERCEL_TOKEN | Allowed by Priya Raman, yesterday'],
     })
   })
 
@@ -133,14 +145,11 @@ describe('the Capabilities control of a workspace', () => {
     const before = reads()
     click(byRole('button', 'Capabilities', tab.view))
     const control = byRole('dialog', 'Capabilities', tab.view)
-    const shown = {
-      figma: checked(control, 'FIGMA_TOKEN'),
-      mac: byRole('switch', 'Mac access', control).getAttribute('aria-checked'),
-    }
+    const shown = checked(control, 'FIGMA_TOKEN')
     await settle()
     expect({ before, shown, after: reads() }).toEqual({
       before: 1,
-      shown: { figma: true, mac: 'true' },
+      shown: true,
       after: 2,
     })
   })
@@ -187,7 +196,7 @@ describe('the Capabilities control of a workspace', () => {
       saved: 'saved secrets',
       savedSecrets: secrets,
       capabilities: grants,
-      approvalGroups: ['Allowed in sessions'],
+      approvalGroups: ['This session'],
     },
     {
       saved: 'no saved secrets',

@@ -1,10 +1,10 @@
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { defaultChoice, fastChoice } from '../../fixtures/agents'
 import { noop } from '../../noop'
-import { ModelPicker } from '../chat/ModelPicker'
-import { PlacedModelAnchor } from '../chat/PlacedModelMenu'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
+import { placedModelAnchor } from '../../entries/components/chat/PlacedModelMenu.mockup'
 import { useControlSizes } from '../common/touch'
-import { Section } from './Section'
+import { section } from '../../entries/components/settings/Section.mockup'
 import styles from './AccountSections.module.css'
 
 /**
@@ -60,18 +60,25 @@ export function DefaultsSection(props: {
   fastMenu?: boolean
 }) {
   const picker = (
-    <ModelPicker
+    <modelPicker.Component
       choice={props.fastMenu ? fastChoice : defaultChoice}
       menu={false}
-      open={props.fastMenu}
+      moklyInstance="default-model"
+      open={props.fastMenu === true}
     />
   )
   return (
-    <Section description="How you start new workspaces." title="New workspaces">
+    <section.Component
+      description="How you start new workspaces."
+      moklyInstance="new-workspaces"
+      title="New workspaces"
+    >
       <div className={styles.defaults}>
         <span className={styles.defaultsLabel}>Model and effort</span>
         {props.fastMenu ? (
-          <PlacedModelAnchor>{picker}</PlacedModelAnchor>
+          <placedModelAnchor.Component moklyInstance="default-model-anchor">
+            {picker}
+          </placedModelAnchor.Component>
         ) : (
           picker
         )}
@@ -83,6 +90,6 @@ export function DefaultsSection(props: {
           />
         </div>
       </div>
-    </Section>
+    </section.Component>
   )
 }

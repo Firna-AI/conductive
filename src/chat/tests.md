@@ -13,15 +13,18 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. After the second try sends, the next send of the same
 prompt gets a new client ID. While one prompt waits, another prompt sends
 nothing, also in another session, and a send from the composer still goes.
-`components/ContinuedNote.test.tsx` folds the note of
-Continue once at its place, also after a repeat and in a new tab, in the
-history of a closed session, and draws "You" or the name of the member.
+`components/ContinuedNote.test.tsx` folds the note of Continue once at its
+place, also after a repeat, in a new tab, and in a closed session. It draws
+"You" or the member, and each branch by its label, also in a copy.
 `state/repository-folder.test.ts` checks that a record of another
 repository reads the view again for the folder of the new repository, that
 a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/NewSessionText.test.tsx` checks that the New session text names
+the branch of the chat's record by its real name when the host gives the
+GitHub state of another branch, or of that branch without a label.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
@@ -191,6 +194,45 @@ tab during the close, the tab shows again with the notice
 user chose during the close stays selected. With the Preview tab, the
 failed close also keeps the session of the chat. In both cases, the notice
 goes to the chat, with no session.
+`state/replay-navigation.test.ts` sends pages of the stored history of the
+stream. Pages that close the shown session and then open it again keep the
+saved order and the shown tab. A later save and a new start keep them too.
+A dropped connection keeps the tabs until the next final page. An empty
+final page then closes the tab of a session that stays closed. A close and
+a reopen of the user apply at once. A failed close puts its tab back, keeps
+the tab that the user chose, and shows its notice.
+`state/replay-history.test.ts` checks history loads, a model change, and a
+read-only chat during a replay. While the history of a selected session
+loads beside the pages, its newer title and model show at once, and Send
+sends that model. A failed earlier page of the first history load lets the
+later session list set the tabs. The new session of a model change shows
+from its first page, and its draft moves once. A read-only chat keeps its
+local tabs and writes nothing.
+`state/replay-completion.test.ts` checks the end of a replay after a
+failed history load, and the hold of the first load. A selected session
+whose newest page holds its close, and whose earlier page fails, closes
+its tab when the load ends. The other session shows, and the closed list
+holds the session. A page of the stream and live copies of the same events
+then keep the tabs, and each message shows once and in order. While the
+stored history of the stream still loads, a failed load, a successful Try
+again, and a page with the same close keep the tabs. The empty final page
+then closes the tab, and each message shows once and in order. When the
+history of the first load ends before the second read of the session
+list, the saved tabs stay, and that list sets them. When that read fails,
+the hold still ends: the session whose newest record is closed leaves the
+row, and the next tab shows.
+`state/replay-read-only.test.ts` checks the open and the closed lists of a
+read-only chat with local tabs. In each case, a replay closes a session,
+reopens one, or brings a new one, with the Archive or a suspension. The
+reader also closes, reopens, or chooses a tab. The local tabs, the shown
+session, and the view stay, and nothing writes. The lists follow the
+newest records, so a closed session leaves the open list. The session
+history lists a new or a reopened session that has no tab. A suspended
+chat with local tabs updates the lists at each page. After a dropped
+connection and a local choice, the empty final page settles them. After a
+Restore, the stored open sessions show as tabs in the saved view.
+`state/replay-test-kit.ts` gives the replay tests a chat with two open
+sessions, their saved view, and pages of session records and messages.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -251,6 +293,17 @@ opens the list of `@`, moves its highlight, picks with Enter and Tab,
 closes it with Esc and a space, starts each query at the top, continues
 a restored query, shows its one-line states, also with the real store of
 the files, and checks that Enter then sends nothing.
+`components/chip-field/SkillList.dom.test.tsx` opens the list of `/`,
+orders and filters its rows, picks with Enter and Tab, closes it with Esc
+and a space, sends with Enter when no skill matches and while the loading
+or the unavailable line shows, shows the line of an agent without skills
+for `/` alone, shows the skills of the agent of a newly chosen model, and
+offers a manual-only Claude skill only when `/` starts the text.
+`components/chip-field/SkillChips.dom.test.tsx` restores skill chips of
+either agent from a draft, keeps a skill text with more after it as text,
+removes a chip with its × and with Backspace, copies and pastes a chip,
+follows skill lists that load later, and keeps a chip after a change of
+the model.
 `components/chip-field/FileChips.dom.test.tsx` restores file chips from a
 draft, opens a file and a folder, removes a chip with its ×, also as the
 first change, pastes a mention, and follows the tree.
@@ -293,13 +346,19 @@ happy-dom cannot do.
 `components/chip-field/mention-field-test-kit.tsx` mounts the field with the
 files of a chat: a fake with two plain states, no tree and a tree of
 entries, or the real store of the Files screens over the fake API for the
-states that the cloud computer marks. The attached kit takes its tree from
+states that the cloud computer marks. It also gives the skill lists of
+`mentions/skills-test-kit.ts` and an agent that a test can change. The attached kit takes its tree from
 the same fake. The DOM tests focus, type, paste, clear, and read the field
 through `src/test-support/message-field.ts`. Its `messageText` reads each
 field as a field without attached files, so the tests of attached files
 read the draft that the owner keeps.
 `../shared/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
+`mentions/skill-rows.test.ts` orders and limits the rows of the list of
+`/`. `links/SkillLink.dom.test.tsx` shows a skill chip in a sent message
+for a skill of either agent, keeps other skill texts and code as text,
+copies the skill text of a chip, and keeps each skill text as text
+without a list.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside

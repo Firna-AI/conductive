@@ -1,6 +1,7 @@
 import type { OrgRole } from './api'
 import type { WorkspaceState } from './generated/WorkspaceState'
 import type { OperatorUserAccess } from './operator-waitlist'
+import type { OperatorOrgSwitchDetail } from './operator-switch'
 
 export function operatorOverviewPath(): string {
   return '/api/operator/overview'
@@ -143,7 +144,7 @@ export interface OperatorOrgMember {
   suspended: boolean
 }
 
-export interface OperatorOrgDetail {
+export interface OperatorOrgDetail extends Partial<OperatorOrgSwitchDetail> {
   id: string
   providerAccount: string
   name: string

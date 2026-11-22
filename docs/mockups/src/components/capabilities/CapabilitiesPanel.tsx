@@ -5,14 +5,15 @@ import styles from './Capabilities.module.css'
 
 /**
  * One part of the Capabilities control: its title, a control at the end
- * of its title, such as a switch or a link, a hint, and its content.
- * Secrets and Mac access are the parts for now. Later features, such as
- * MCP servers, add their own parts to the list.
+ * of its title, such as a switch or a link, an optional hint, and its
+ * content.
+ * Secrets and, in the Mac app, Mac access are the parts for now. Later
+ * features, such as MCP servers, add their own parts to the list.
  */
 export type CapabilityPart = {
   key: string
   title: string
-  hint: string
+  hint?: string
   control?: ReactNode
   content?: ReactNode
 }
@@ -41,7 +42,7 @@ export function CapabilitiesPanel(props: {
             <h3 className={styles.partTitle}>{part.title}</h3>
             {part.control}
           </div>
-          <p className={styles.hint}>{part.hint}</p>
+          {part.hint ? <p className={styles.hint}>{part.hint}</p> : null}
           {part.content}
         </section>
       ))}

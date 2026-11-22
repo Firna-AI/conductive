@@ -3,9 +3,9 @@
 This doc holds the requirements and the decisions in force for the agent
 runner, our program in each sandbox. It covers the connection of the
 runner, its events and their limits, its turns, what an out-of-memory kill
-ends, the background work of Claude turns, its report of the listening
-ports, the repair of lost workspace updates, and the warnings of the
-Worker about the runner. It belongs to
+ends, the background work of Claude turns, its reports of the listening
+ports and of the skills, the repair of lost workspace updates, and the
+warnings of the Worker about the runner. It belongs to
 [Chat and events](chat-and-events.md), which covers the agents, the
 sessions, what the chat shows, and the events. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -16,7 +16,8 @@ decision number, such as background work decision 1, names a decision of
 the change that keeps a turn open for background work. An out-of-memory
 decision number, such as out-of-memory decision 1, names a decision of the
 change that keeps the runner and the terminal shells running after an
-out-of-memory kill.
+out-of-memory kill. [Services](services.md) gives the named programs that
+run outside every turn, in units of their own.
 
 ## The agent runner
 
@@ -194,6 +195,8 @@ out-of-memory kill.
   process (out-of-memory decision 1). An example is a large build.
 - The runner, the other processes of the agents, and each running turn
   keep running. The agent sees its command fail.
+- A process of a [service](services.md#out-of-memory) is the one
+  exception. Such a kill stops the whole service, which then shows Failed.
 - Reason: one command that uses too much memory must not end each running
   turn of the workspace and its background work.
 - A stop and a restart of the whole runner at such a kill was rejected.
@@ -225,6 +228,12 @@ the wait of a turn, and its end at the limit.
 
 The [listening-port requirements](listening-ports.md) give the scanner,
 its labels, its limits, and its full reports.
+
+## Skills report
+
+[The skills report](skill-mentions.md#the-skills-report) gives the skill
+folders of each agent, the limits of the report, the filter of
+credentials, and when the runner sends the report.
 
 ## Lost workspace updates
 

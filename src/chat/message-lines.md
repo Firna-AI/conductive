@@ -9,7 +9,9 @@ requirements, and the mockups draw them at `app/chat/work`,
 
 - `MessageLine` in `components/MessageLine.tsx` reads the text of the
   message with `agentBlocks`, once for each text, as `AgentText` does.
-  `LineBlocks` in `components/LineBlocks.tsx` draws its blocks in the line.
+  `LineBlocks` draws its blocks in the line. The app and the mockups share
+  `LineBlocks`, in `docs/mockups/src/components/chat/LineBlocks.tsx`, with
+  the drawing of each view, as [Drawing](agent-text.md#drawing) says.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, quote, rule, or table. So `LineBlocks` draws each block
   as a span, which CSS shows as a block while the line is open. A table
@@ -19,7 +21,7 @@ requirements, and the mockups draw them at `app/chat/work`,
   summary hold a heading. So the closed line stays one line. The button
   role of a summary also hides a heading from the heading list of a screen
   reader. [Heading parts](agent-text.md#heading-parts) gives the look of
-  the span.
+  the span. It also says when a heading draws nothing.
 - A quote is a span with the `quote` classes of the mockups'
   `MessageLine.module.css` and `MarkdownProse.module.css`, around the spans
   of its blocks. A rule is an empty span with their `rule` classes. The
@@ -29,12 +31,13 @@ requirements, and the mockups draw them at `app/chat/work`,
   as a middle dot. Open, it shows both as blocks.
 - `AnswerText` with `line` draws a space before each line break. The CSS
   of the closed line hides each `br`, so the space keeps the words apart.
-- `LineBlocks` gets the `LineState` of the line: whether it is open, and,
-  while it is open, the pictures of its message. So the closed line shows
-  the image of a picture file as its link, and the open line shows its
-  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
-  says. A heading and a table cell keep the link. The hidden copy of the
-  line gets the state of a closed line.
+- `LineBlocks` gets the `LineState` of the line: whether it is open, and
+  the drawing of its message. It allows pictures only in a paragraph or a
+  list item of an open line. So the closed line shows the image of a
+  picture file as its link, and the open line shows its picture, as
+  [Pictures in answers](answer-pictures.md) says. A heading
+  and a table cell keep the link. The hidden copy of the line gets the
+  state of a closed line.
 - A task item draws its fixed check box before the words of its first
   paragraph, which stay in the line of the box, as the mockups draw it. The
   item has the `task` class of `MessageLine.module.css`: closed, the box
@@ -50,28 +53,34 @@ requirements, and the mockups draw them at `app/chat/work`,
   draws through `AgentBlocks`, so it has the button.
 - An open line keeps the blocks before the first table in its summary.
   When a list or a quote holds that table, at any depth, the summary keeps
-  the blocks before that list or quote. The table or the block that holds
-  it, and the blocks after it, draw under the summary through
-  `AgentBlocks`, only while the line is open, so a closed line lays out no
-  hidden table. Under the line, a quote and a rule are elements, and
-  `MessageLine.module.css` sets their space.
+  the blocks before that list or quote. `holdsTable` of the shared
+  `LineBlocks.tsx` finds that block, for the app and for the mockups. The
+  table or the block that holds it, and the blocks after it, draw under
+  the summary through `AgentBlocks`, only while the line is open, so a
+  closed line lays out no hidden table. Under the line, a quote and a rule
+  are elements, and `MessageLine.module.css` sets their space.
 - A line that starts with a table, or with a block that holds one, keeps
   its closed text in a visually hidden span. So the open line keeps a name
   for a screen reader. So does a line whose blocks before the table show
   no readable text, as `blockShowsText` of `markdown/readable-text.ts`
-  reads them. An empty fenced code block shows no text. `agentBlocks`
-  leaves out a block that draws nothing, such as an empty heading.
-  Readable text before the table, such as the number of a numbered list
-  item or the name of a task box, names the open line, which then adds no
-  hidden copy. `MessageLine` reads this once for each text, with its
-  blocks.
+  reads them. An empty heading and an empty fenced code block show no
+  text. Readable text before the table, such as the number of a numbered
+  list item or the name of a task box, names the open line, which then
+  adds no hidden copy.
+- `blockShowsText` reads each paragraph and heading with
+  `answerShowsWords`, the final check that
+  [Heading parts](agent-text.md#heading-parts) gives. `MessageLine` gives
+  it the reading of `useAnswerReading` of `markdown/answer-reading.ts`,
+  which follows the tree while the line is open with a table. So `![](x)`
+  or `## ![](x)` alone before the table adds the hidden copy, while `x`
+  names no file of the tree and no web address. When the tree gains a file
+  at `x`, the image shows the name of that file. That name names the open
+  line, and the hidden copy goes. The blocks need no new parse for such a
+  change, because they depend on the text alone.
 - A mark without its pair is text, as
   [Formatting](../../docs/protocol/chat-markdown.md#formatting) says. So a
   paragraph of only `**` before the table names the line `**`. A code
-  block of `**` names it too. An image counts as text, because what it
-  shows depends on the tree and the links of the screen, when it draws.
-  So an image with no alt text that opens nothing, such as `![](x)`, can
-  still leave the open line with no name.
+  block of `**` names it too.
 - That hidden copy shows no chips, and `PlainLinks` of
   `src/shell/ui/text-links.tsx` draws each link in it as its words. A
   `MentionsProvider` without files removes file chips. So the keyboard

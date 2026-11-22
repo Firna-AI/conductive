@@ -4,12 +4,8 @@ import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
-import type {
-  ChatData,
-  ModelSessionCreation,
-  PendingCommand,
-  StoredTurn,
-} from './types'
+import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
+import type { PendingCommand } from './pending-command'
 import type { ToolSessionRequest } from './tool-session-requests'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
@@ -26,6 +22,56 @@ export class ChatRecords {
     this.data = data
   }
 
+  async cursor(streamId: string): Promise<number> {
+    return (await this.data.get<number>(chatKey('cursor', streamId))) ?? 0
+  }
+  async streamReady(streamId: string): Promise<boolean> {
+    return (await this.data.get<boolean>(chatKey('ready', streamId))) ?? false
+  }
+  saveStreamReady(streamId: string): Promise<void> {
+    return this.data.put(chatKey('ready', streamId), true)
+  }
+  saveCursor(streamId: string, through: number): Promise<void> {
+    return this.data.put(chatKey('cursor', streamId), through)
+  }
+  async command(commandId: string): Promise<PendingCommand | undefined> {
+    return (
+      await this.data.get<{ command: PendingCommand }>(
+        chatKey('command', commandId),
+      )
+    )?.command
+  }
+  async commandDelivered(
+    commandId: string,
+    connectionId: string,
+  ): Promise<boolean> {
+    return (
+      (
+        await this.data.get<{ deliveredTo?: string }>(
+          chatKey('command', commandId),
+        )
+      )?.deliveredTo === connectionId
+    )
+  }
+  async saveCommandDelivery(
+    commandId: string,
+    connectionId: string,
+  ): Promise<void> {
+    const record = await this.data.get<{
+      command: PendingCommand
+      order: number
+      deliveredTo?: string
+    }>(chatKey('command', commandId))
+    if (record)
+      await this.data.put(chatKey('command', commandId), {
+        ...record,
+        deliveredTo: connectionId,
+      })
+  }
+  async removeCommand(commandId: string): Promise<void> {
+    await this.data.delete(chatKey('command', commandId))
+  }
+
   async pending(): Promise<PendingCommand[]> {
     const records = [
       ...(
@@ -37,6 +83,17 @@ export class ChatRecords {
     return records
       .sort((left, right) => left.order - right.order)
       .map((entry) => entry.command)
+  }
+
+  async oldestWaitingMessageAt(): Promise<number | undefined> {
+    let oldest: number | undefined
+    for (const command of await this.pending()) {
+      if (command.type !== 'turn' && command.type !== 'message') continue
+      const message = await this.message(command.messageId)
+      if (message?.state === 'queued')
+        oldest = Math.min(oldest ?? Infinity, message.createdAt)
+    }
+    return oldest
   }
 
   firstSession(): Promise<FirstSession | undefined> {

@@ -1,10 +1,4 @@
-export const MAC_ACCESS_OFF = {
-  code: 'mac_access_off',
-  message: 'Mac access is off in the Capabilities of this workspace.',
-} as const
-
 export function commandAccessError(reason: string) {
-  if (reason === MAC_ACCESS_OFF.code) return MAC_ACCESS_OFF
   return {
     code: reason,
     message:
@@ -15,7 +9,7 @@ export function commandAccessError(reason: string) {
 }
 
 export function commandFailureState(reason: string) {
-  return reason === 'turn_ended' || reason === MAC_ACCESS_OFF.code
+  return reason === 'turn_ended'
     ? ('failed' as const)
     : ('unavailable' as const)
 }

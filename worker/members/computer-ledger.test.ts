@@ -35,6 +35,16 @@ it('stops and purges ledger-only computers and keeps deletion history until its 
     )
       .bind(sandboxId, org.id, deletedAt)
       .run()
+  await harness.env.DB.batch([
+    harness.env.DB.prepare(
+      `INSERT INTO job_steps (job_id, step, job_kind, org_id, started_at)
+      VALUES ('job-one', 'phase:machine', 'resume', ?, ?)`,
+    ).bind(org.id, TEST_TIME),
+    harness.env.DB.prepare(
+      `INSERT INTO job_runs (job_id, run_number, job_kind, org_id, phase, began_at, ended_at)
+      VALUES ('job-one', 1, 'resume', ?, 'machine', ?, ?)`,
+    ).bind(org.id, TEST_TIME, TEST_TIME),
+  ])
   expect(
     (
       await client.request(
@@ -79,4 +89,8 @@ it('stops and purges ledger-only computers and keeps deletion history until its 
     await cleanupDeletedOrgs(harness.env, client.dependencies, client.hooks),
   ).toEqual({ purged: [org.id], pending: [] })
   expect(await computerRecords(harness.env.DB)).toEqual([])
+  const remaining = await harness.env.DB.prepare(
+    'SELECT (SELECT COUNT(*) FROM job_steps) + (SELECT COUNT(*) FROM job_runs) AS n',
+  ).first<{ n: number }>()
+  expect(remaining?.n).toBe(0)
 })

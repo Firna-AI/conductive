@@ -318,8 +318,11 @@ otherwise.
   checks each entry as `PUT /api/account/default-model` does, and does
   not check the model or the effort against the model list.
 - `docs/protocol/create-a-workspace.md` passed the 250-line limit of the
-  `documentation` skill, so its "Page or dialog" and "The dialog" parts
-  moved, unchanged, to `docs/protocol/new-workspace-dialog.md`. The new
+  `documentation` skill. `main` split it on its own into
+  `create-a-workspace-preference.md` and `create-a-workspace-dialog.md`,
+  so the merge of 22 November 2026 kept those pages, dropped the
+  duplicate `new-workspace-dialog.md` of this branch, and put the
+  Favourites line into `create-a-workspace-preference.md`. The new
   `model-favourites.md` is a top-level protocol doc, because
   `messages-and-attachments.md` has no room for another child link.
 - The command palette gets a Favourites row in its Account group, before

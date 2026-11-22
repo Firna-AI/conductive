@@ -1,5 +1,5 @@
 import { effortLabels } from '../../../../../src/shared/agents'
-import { CircleAlert, GripVertical, Plus, X } from 'lucide-react'
+import { CircleAlert, GripVertical } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import {
   favouriteLimit,
@@ -9,14 +9,21 @@ import {
   takenModel,
   type FavouriteSectionState,
 } from '../../fixtures/favourites'
-import { ModelPicker } from '../chat/ModelPicker'
+import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import { sheet } from '../../entries/components/common/Sheet.mockup'
+import {
+  section,
+  sectionText,
+} from '../../entries/components/settings/Section.mockup'
+import { instanceKey } from '../../instanceKey'
 import { addFavouriteEntries } from '../chat/pickers'
-import { ActionButton, IconButton } from '../common/actions'
 import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
-import { Sheet } from '../common/Sheet'
 import { useTouch } from '../common/touch'
-import { Section, SectionText } from './Section'
 import styles from './FavouritesSection.module.css'
 
 /** The error of a change whose save failed. The list keeps its saved value. */
@@ -41,6 +48,11 @@ function noFreeEffortLine(model: string): string {
   return `${model} is already a favourite at every effort.`
 }
 
+/** The words of a favourite: its model, its effort, and Fast if on. */
+function favouriteName(favourite: AgentChoice): string {
+  return `${favourite.model} ${effortLabels[favourite.effort]}${favourite.fast ? ' Fast' : ''}`
+}
+
 /**
  * The list of Add a favourite in a sheet, as a phone opens it. The list is
  * a menu of the section, not a model picker, so it stays a sheet on a
@@ -49,13 +61,14 @@ function noFreeEffortLine(model: string): string {
  */
 export function AddFavouriteSheet(props: { hiddenModels?: readonly string[] }) {
   return (
-    <Sheet title={addLabel}>
-      <Menu
+    <sheet.Component moklyInstance="add-favourite-sheet" title={addLabel}>
+      <menu.Component
         entries={addFavouriteEntries(pickedModel, props.hiddenModels)}
         label={addLabel}
+        moklyInstance="add-favourite-list"
         placement="sheet"
       />
-    </Sheet>
+    </sheet.Component>
   )
 }
 
@@ -63,7 +76,9 @@ export function AddFavouriteSheet(props: { hiddenModels?: readonly string[] }) {
  * The row of one favourite: the handle, the picker of the favourite, and ×,
  * which is named after the favourite. The picker shows the menu with no
  * favourites, because the row sets one favourite. A favourite on a model of
- * `hidden` shows its picker greyed, with the line that says why.
+ * `hidden` shows its picker greyed, with the line that says why. The parts
+ * of the row take their names from the favourite, which the list holds
+ * once.
  */
 function FavouriteRow(props: {
   favourite: AgentChoice
@@ -71,24 +86,27 @@ function FavouriteRow(props: {
 }) {
   const { favourite } = props
   const off = props.hidden.includes(favourite.model)
+  const name = favouriteName(favourite)
   return (
     <li className={styles.row}>
       <GripVertical aria-hidden className={styles.handle} size={14} />
       <div className={styles.choice}>
         <span className={classes(styles.picker, off && styles.off)}>
-          <ModelPicker
+          <modelPicker.Component
             choice={favourite}
             favourites={noFavourites}
             hiddenModels={props.hidden}
+            moklyInstance={`favourite-${instanceKey(name)}`}
           />
         </span>
         {off ? (
           <span className={styles.why}>{hiddenLine(favourite.model)}</span>
         ) : null}
       </div>
-      <IconButton
-        icon={X}
-        label={`Remove ${favourite.model} ${effortLabels[favourite.effort]}${favourite.fast ? ' Fast' : ''}`}
+      <iconButton.Component
+        icon="x"
+        label={`Remove ${name}`}
+        moklyInstance={`remove-${instanceKey(name)}`}
         quiet
       />
     </li>
@@ -131,26 +149,36 @@ export function FavouritesSection(props: {
   const full = list.length >= favouriteLimit
   const open = state === 'add-open'
   return (
-    <Section
+    <section.Component
       actions={
         <span className={styles.add}>
-          <ActionButton disabled={full} expanded={open} icon={Plus} menu>
+          <actionButton.Component
+            disabled={full}
+            expanded={open}
+            icon="plus"
+            menu
+            moklyInstance="add-favourite"
+          >
             {addLabel}
-          </ActionButton>
+          </actionButton.Component>
           {open && !phone ? (
-            <Menu
+            <menu.Component
               entries={addFavouriteEntries(pickedModel, hidden)}
               label={addLabel}
+              moklyInstance="add-favourite-list"
               placement="below-start"
             />
           ) : null}
         </span>
       }
       description="The model menu lists your favourites first, in this order."
+      moklyInstance="favourites"
       title="Favourites"
     >
       {list.length === 0 ? (
-        <SectionText muted>{emptyLine}</SectionText>
+        <sectionText.Component moklyInstance="empty-line" muted>
+          {emptyLine}
+        </sectionText.Component>
       ) : (
         <ol className={styles.list}>
           {list.map((favourite, index) => (
@@ -165,16 +193,16 @@ export function FavouritesSection(props: {
         </span>
       ) : null}
       {state === 'no-free-effort' ? (
-        <SectionText muted status>
+        <sectionText.Component moklyInstance="no-free-effort" muted status>
           {noFreeEffortLine(takenModel)}
-        </SectionText>
+        </sectionText.Component>
       ) : null}
       {full ? (
-        <SectionText muted>
+        <sectionText.Component moklyInstance="favourite-limit" muted>
           The menu shows {favouriteLimit} favourites at most. Remove one to add
           another.
-        </SectionText>
+        </sectionText.Component>
       ) : null}
-    </Section>
+    </section.Component>
   )
 }

@@ -164,9 +164,9 @@ function WeightsSection(props: {
  * The Providers tab of the operator: the weights that give each new org
  * its provider account, as one slider between `boat` and `e2b`, or a field
  * for each of three or more accounts, and the number of orgs on each
- * account. Operator screens name each account by
- * its ID. An org keeps its account for its whole life, so a change of the
- * weights moves no org.
+ * account. Operator screens name each account by its ID. A change of the
+ * weights moves no org. An operator switches an org to another account on
+ * the page of the org.
  */
 export function OperatorProvidersScreen(props: {
   state: OperatorProvidersState

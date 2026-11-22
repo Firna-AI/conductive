@@ -1,5 +1,5 @@
 import { nameLabel } from '../../../../src/shared/name-label'
-import type { MenuEntry } from '../components/common/Menu'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { historyEntries } from '../components/workspace/WorkspaceTabs'
 import {
@@ -16,6 +16,7 @@ import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
+import { explainTabs } from './explainModel'
 import { htmlTab } from './workspaceFileTab'
 import type { WorkspaceState } from './workspaceState'
 import { codeTabKey, moreTabs, withCodeMoved } from './workspaceTabRow'
@@ -61,7 +62,7 @@ export function noMessages(state: WorkspaceState): boolean {
 }
 
 /** The history of the workspace, with a note while a new workspace has none. */
-export function historyFor(state: WorkspaceState): readonly MenuEntry[] {
+export function historyFor(state: WorkspaceState): readonly MenuEntryData[] {
   return isNew(state)
     ? [{ kind: 'note', text: 'Sessions that you close show here.' }]
     : historyEntries
@@ -147,7 +148,8 @@ function previewTabs(state: WorkspaceState): WorkspaceTab[] {
  * messages, the second session can show, and each session tab leads to its
  * chat of that time. The file or the diff that the state opens can be the
  * temporary tab, as `withTemporaryTab` draws it. The Preview tabs show
- * after the code file.
+ * after the code file. The tabs of the open explanations come last, as
+ * `explainTabs` says.
  */
 export function tabsFor(
   state: WorkspaceState,
@@ -272,8 +274,6 @@ export function tabsFor(
     ...tab,
     running: tab === active && (running || background),
   }))
-  return withTemporaryTab(
-    state,
-    state.tabRow === 'moved' ? withCodeMoved(states) : states,
-  )
+  const row = state.tabRow === 'moved' ? withCodeMoved(states) : states
+  return withTemporaryTab(state, [...row, ...explainTabs(state)])
 }

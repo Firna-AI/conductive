@@ -1,13 +1,11 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useRef, useState, type RefObject } from 'react'
-import { Button } from '@firna/ui/button'
-import { ArrowUp, Paperclip } from 'lucide-react'
+import { Paperclip } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 
 import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
 import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
 import { MentionAnchor } from '../../../docs/mockups/src/components/chat/MentionList'
 import {
@@ -24,7 +22,7 @@ import type { FieldHandle } from './chip-field/focus-plugins'
 import local from './chat.module.css'
 import { useDropAreaHandlers } from './chat-drop-area'
 import { useComposerDrop } from './composer-drop'
-import { StopButton } from './ComposerButtons'
+import { SendButton, StopButton } from './ComposerButtons'
 import { ComposerStart } from './ComposerMenu'
 import type { ComposerTool } from './ComposerTools'
 import {
@@ -138,13 +136,14 @@ function useComposerKeys(props: {
  * adds a line, so Enter never adds a line to a message that it sends. A
  * pasted workspace link shows as a chip, and the draft keeps the plain link.
  * In a chat with the files of its workspace, `@` opens the list of the files
- * and folders just above the box, and a pick shows as a file chip. A focus
+ * and folders just above the box, and a pick shows as a file chip. There,
+ * `/` opens the list of the skills of the agent of the chosen model, and a
+ * pick shows as a skill chip. A focus
  * request, such as from a click on the workspace in the sidebar, puts the
  * caret in the field when it shows. The chip of Add to chat goes into the
  * field when it shows, before the focus of a request of the same render.
  */
 export function Composer(props: ComposerProps) {
-  const control = useControlSizes()
   const picker = useRef<HTMLInputElement>(null)
   const field = useRef<FieldHandle>(null)
   const [mentionHost, setMentionHost] = useState<HTMLDivElement | null>(null)
@@ -184,6 +183,7 @@ export function Composer(props: ComposerProps) {
             {...boxDrops}
           >
             <ChipTextField
+              agent={props.choice.agent}
               caretAtEnd
               files={props.files}
               handle={field}
@@ -238,16 +238,10 @@ export function Composer(props: ComposerProps) {
               {props.running ? (
                 <StopButton onStop={props.onStop} stopping={props.stopping} />
               ) : null}
-              <Button
-                accessibilityLabel="Send"
-                boxSize={control.height}
-                busy={props.sending}
-                disabled={off}
-                icon={ArrowUp}
-                onPress={props.onSend}
-                shape="square"
-                size="sm"
-                tone={off ? 'secondary' : 'primary'}
+              <SendButton
+                off={off}
+                onSend={props.onSend}
+                sending={props.sending}
               />
             </div>
           </div>

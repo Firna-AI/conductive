@@ -44,7 +44,8 @@ export async function updateWorkspaceCapabilities(
     statements.push(
       db
         .prepare(
-          `UPDATE workspaces SET mac_access = ? WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}`,
+          `UPDATE workspaces SET mac_access = ?
+           WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}`,
         )
         .bind(Number(change.macAccess), orgId, workspaceId, orgId, userId),
     )

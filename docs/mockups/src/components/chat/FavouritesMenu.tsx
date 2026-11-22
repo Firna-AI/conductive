@@ -1,9 +1,10 @@
 import type { CSSProperties } from 'react'
-import { ChevronLeft } from 'lucide-react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { classes } from '../common/classes'
 import type { Shortcut } from '../common/KeyChips'
-import { Menu, type MenuEntry, type MenuPlacement } from '../common/Menu'
+import type { MenuPlacement } from '../common/Menu'
 import { useTouch } from '../common/touch'
 import {
   divider,
@@ -41,11 +42,16 @@ export function FavouritesMenu(props: {
     props.hiddenModels,
   )
   if (submenu && phone) {
-    const back: MenuEntry = { kind: 'item', label: 'Back', icon: ChevronLeft }
+    const back: MenuEntryData = {
+      kind: 'item',
+      label: 'Back',
+      icon: 'chevron-left',
+    }
     return (
-      <Menu
+      <menu.Component
         entries={[back, divider, ...models]}
         label="All models"
+        moklyInstance="all-models"
         placement={props.placement}
       />
     )
@@ -59,9 +65,10 @@ export function FavouritesMenu(props: {
   })
   if (!submenu) {
     return (
-      <Menu
+      <menu.Component
         entries={entries}
         label="Model and effort"
+        moklyInstance="model-menu"
         placement={props.placement}
       />
     )
@@ -76,9 +83,19 @@ export function FavouritesMenu(props: {
         } as CSSProperties
       }
     >
-      <Menu entries={entries} label="Model and effort" placement="point" />
+      <menu.Component
+        entries={entries}
+        label="Model and effort"
+        moklyInstance="model-menu"
+        placement="point"
+      />
       <div className={styles.submenu}>
-        <Menu entries={models} label="All models" placement="point" />
+        <menu.Component
+          entries={models}
+          label="All models"
+          moklyInstance="all-models"
+          placement="point"
+        />
       </div>
     </div>
   )

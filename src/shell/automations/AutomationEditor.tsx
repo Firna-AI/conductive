@@ -34,7 +34,7 @@ import { AutomationFrame } from './AutomationFrame'
 import { AutomationNote } from './AutomationNote'
 import { RunNowButton } from './RunNow'
 import { RunsPanel, type RunsSource } from './RunsPanel'
-import { useChosenSecretNames } from './RunSecrets'
+import { useChosenSecretNames, type NamedSecret } from './RunSecrets'
 import { TriggerEditor } from './TriggerList'
 import { useAutomationSave } from './useAutomationSave'
 
@@ -45,10 +45,24 @@ import { useAutomationSave } from './useAutomationSave'
  */
 const followEachField = eachField(draftFields)
 
-/** A saved automation with its runs, or the draft of a new one, which the first save creates. */
+/**
+ * A saved automation with its runs and the names of its chosen secrets, as
+ * its answer gives them, or null when that answer names none. Or the draft
+ * of a new one, which the first save creates.
+ */
 type Source =
-  | { automation: Automation; initial?: undefined; runs: RunsSource }
-  | { automation: null; initial: AutomationDraft; runs: null }
+  | {
+      automation: Automation
+      chosenSecrets: readonly NamedSecret[] | null
+      initial?: undefined
+      runs: RunsSource
+    }
+  | {
+      automation: null
+      chosenSecrets?: undefined
+      initial: AutomationDraft
+      runs: null
+    }
 
 /**
  * The automation page of its owner: the fields, the triggers, and the prompt,
@@ -98,7 +112,12 @@ export function AutomationEditor(
   }
   const ready = draftReady(draft) && (!automation || !sameDraft(draft, saved))
   const chosen = draft.capabilities.preapprovedSecretIds
-  const secretNames = useChosenSecretNames(org.id, chosen)
+  const secretNames = useChosenSecretNames(
+    org.id,
+    chosen,
+    automation,
+    props.chosenSecrets ?? null,
+  )
   const capabilities = automationCapabilities(org, {
     ids: chosen,
     choose: (secretId, on) => change(withChosenSecret(draft, secretId, on)),

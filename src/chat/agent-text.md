@@ -11,8 +11,8 @@ requirements. Two linked guides hold the rest of the code:
 - [Message lines](message-lines.md) gives the code of a message line in
   the work of a turn.
 - [Text links](text-links.md) gives the web links, the workspace chips,
-  and the file chips of sent messages and answers, and the pictures of
-  answers.
+  and the file chips of sent messages and answers. Its linked guide
+  [Pictures in answers](answer-pictures.md) gives the pictures of answers.
 
 ## The chat adapter
 
@@ -93,6 +93,24 @@ React.
   its blocks in the same way, so a render for another change, such as a
   line that opens, reads no text again. `AgentBlocks` draws the blocks in
   order, and the open body of `MessageLine` shares it.
+- The app and the mockups share one renderer of the blocks, as they share
+  `MarkdownTable`. `AgentBlocks` and `LineBlocks` live in
+  `docs/mockups/src/components/chat/`, typed with `TextBlock`. The mockup
+  fixtures write the same blocks and inline trees with the builders of
+  `docs/mockups/src/fixtures/agentText.ts`. No builder reads Markdown, so
+  the fixtures copy no bug of the chat adapter.
+- Each view gives the blocks an `AgentDrawing`, from `agentDrawing.ts`
+  beside them. Its `text` draws an inline tree at its `TextPlace`: in a
+  message line or not, and with pictures or not. Its `code` draws a code
+  block of an answer. Its `ShowsWords` draws a heading only while the
+  text of the heading shows words where it draws.
+- `answerDrawing` in `components/answer-drawing.tsx` gives the drawing of
+  the app for one message: `AnswerText`, `CodeBlock`, and `useShowsWords`,
+  with the pictures of that message. The mockups give `fixtureDrawing`,
+  which draws with their own parts. `AgentText` and `MessageLine` keep one
+  drawing for each message ID, with `useMemo`. A block compares its
+  drawing too, and `samePlainData` counts a function only as the same
+  value. So a new drawing at each render would draw each block again.
 - `ItemRow` of `components/transcript-rows.tsx` gives `live` to the answer
   that the agent writes now, through `ItemView` of
   `components/TranscriptItem.tsx`. `TranscriptRows` of
@@ -119,20 +137,19 @@ React.
   the marks, `br` for a line break, and the chips and links of
   `answerParts`. With `line`, as in a message line, a space comes before
   each `br`. With `pictures`, the image of a picture file shows as its
-  picture, as [Pictures in answers](text-links.md#pictures-in-answers)
-  says.
+  picture, as [Pictures in answers](answer-pictures.md) says.
 - A numbered list counts up from the number of its first item, as
-  Markdown numbers it. `AgentText` gives that number to the `start` of the
-  `ol`. A message line writes each number from it. As in CommonMark, a
+  Markdown numbers it. `AgentBlocks` gives that number to the `start` of
+  the `ol`. A message line writes each number from it. As in CommonMark, a
   number has one to nine digits, so a longer number starts no list.
-- `AgentBlocks` draws each code block through `CodeBlock`. Inside a
-  `CodeCopyProvider`, `CodeBlock` adds a Copy code button beside the
-  `<pre>`, so the text of the `<pre>` stays the code alone. `ChatBody` in
-  `WorkspaceChat` gives the provider around the chat of the open session.
-  Its copy uses the `copy` services of the chat and shows a toast with the
-  result. Outside a provider, a code block has no button. The size of the
-  button comes from the control sizes, so the block keeps room for the
-  40 px button on a phone.
+- In the app, `AgentBlocks` draws each code block through `CodeBlock`, the
+  `code` of `answerDrawing`. Inside a `CodeCopyProvider`, `CodeBlock` adds
+  a Copy code button beside the `<pre>`, so the text of the `<pre>` stays
+  the code alone. `ChatBody` in `WorkspaceChat` gives the provider around
+  the chat of the open session. Its copy uses the `copy` services of the
+  chat and shows a toast with the result. Outside a provider, a code block
+  has no button. The size of the button comes from the control sizes, so
+  the block keeps room for the 40 px button on a phone.
 - `AgentText`, `AnswerText`, and `MessageLine` draw React text and
   elements only, so no HTML of a message reaches the page. The parser
   reads HTML as text, apart from a line-break tag.
@@ -167,7 +184,7 @@ CommonMark. Both views read their lists through the shared parser of
 - Both views read task boxes with `readTaskBox` of
   `src/markdown/task-boxes.ts`, and draw their list items with
   `MarkdownItem` of `src/markdown/MarkdownItem.tsx`. A message line draws
-  its task boxes in `components/LineBlocks.tsx`, as
+  its task boxes in the shared `LineBlocks`, as
   [Message lines](message-lines.md) says.
 
 ## Heading parts
@@ -181,29 +198,48 @@ has. These parts read and draw the headings:
   keeps the level of each heading, and leaves out a heading with no text,
   such as `## ` while the agent writes. The heading still ends the
   paragraph above it.
-- `heading` of `markdown/agent-paragraphs.ts` also leaves out a heading
-  that shows no words, as `showsWords` of `markdown/readable-text.ts`
-  says. The same module decides the hidden name of a message line, as
-  [Message lines](message-lines.md) says. A heading shows no words when
-  no text or code node holds a character other than white space, and no
-  link or image stands in it. So
-  `` ## ` ` `` draws nothing, as `main` pull request #555 made the old
-  reader do. A link or an image counts as words, because what it shows
-  depends on the tree and the links of the screen, when it draws. A mark
-  without its pair is text, so `## **` shows `**`, as
+- In an early check, `heading` of `markdown/agent-paragraphs.ts` also
+  leaves out a heading that cannot show words, from its text alone, as
+  `showsWords` of `markdown/readable-text.ts` says. Such a heading holds no
+  link and no image, and no text or code node in it holds a character
+  other than white space. So `` ## ` ` `` draws nothing. A mark without its
+  pair is text, so `## **` shows `**`, as
   [Formatting](../../docs/protocol/chat-markdown.md#formatting) says. The
-  check needs no tree and no workspace list, so the blocks depend only on
-  the text.
+  early check needs no tree and no workspace list, so the blocks depend
+  only on the text.
+- A heading with a link or an image stays a block, because the tree and
+  the links of the screen decide what it shows. It still ends the
+  paragraph above it, also when it draws nothing. When the heading draws,
+  the final check, `answerShowsWords` of `markdown/answer-parts.ts`,
+  decides whether its parts show words. Parts show words when they hold a
+  chip, or text or code with a character other than white space, also
+  inside a mark or a link.
+- In the app, `AgentBlocks` and `LineBlocks` call the final check through
+  the `ShowsWords` of `answerDrawing`. It calls `useShowsWords` of
+  `markdown/answer-reading.ts`, with the workspaces, the tree, and the
+  links of the screen that `AnswerText` reads. The hidden name of a
+  message line uses the same final check, as
+  [Message lines](message-lines.md) says.
+- A heading shows no picture, so the image of a picture file shows as its
+  link there, as [Pictures in answers](answer-pictures.md) says. With no
+  alt text, an image of a file of the tree shows the name of the file.
+  With no alt text, an image at a web address shows that address, and any
+  other image shows nothing. So `## ![](x)` draws nothing
+  while `x` names no file of the tree and no web address, also while the
+  chat has no tree. When the tree gains a file at `x`, the heading shows
+  the name of that file, until the file goes.
 - The file preview reads its headings through the same parser, in
   `preview-blocks.ts` of `src/files/markdown/`.
-- `AgentText` draws a heading as `h1` to `h6`, at its level, with its text
-  through `AnswerText`.
+- `AgentBlocks` draws a heading as `h1` to `h6`, at its level, with its
+  text through `AnswerText`. It draws nothing for a heading whose parts
+  show no words, so a screen reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
   mockups' `ToolGroup.module.css`. That class gives the heading weight,
   closed and open. Open, the span shows on its own line. Under an open
   line, a heading after the first table draws through `AgentBlocks` as a
   heading element. The `.messageBody` rules of `ToolGroup.module.css` give
-  it the look of a heading of the open line.
+  it the look of a heading of the open line. `LineBlocks` draws nothing
+  for a heading whose parts show no words, also no space.
 - `MarkdownHeadings.module.css`, in `docs/mockups/src/components/common/`,
   gives the headings of an answer and of the file preview one look, under
   its `headings` class. It sets the size of each level, the weight, the
@@ -213,9 +249,10 @@ has. These parts read and draw the headings:
 - Each view sets the space around its headings. The mockups'
   `ChatItemView.module.css` sets it for an answer, also for a heading in a
   list item or a quote. `src/files/markdown/MarkdownView.module.css` sets
-  it for the file preview. `components/chat.module.css` sets it for a
-  heading of a message line after a code block, and for a heading in a
-  list item under an open line.
+  it for the file preview. The mockups' `ToolGroup.module.css` sets it for
+  a heading of a message line after a paragraph, a list, or a heading.
+  `LineBlocks.module.css` beside it sets it after a code block, and for a
+  heading in a list item under an open line.
 
 ## Table parts
 

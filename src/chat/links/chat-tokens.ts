@@ -6,15 +6,19 @@ import {
   lineLabelEnds,
   type LabelEndReader,
 } from '../../markdown/markdown-labels'
-import { bareAddressAt } from '../../markdown/web-links'
+import { bareAddressAt, webAddressStartAt } from '../../markdown/web-links'
 import { mentionAt, type Mention } from '../../shared/mention-text'
+import type { AgentSkill } from '../../shared/generated/AgentSkill'
+import { skillTextAt } from '../../shared/skill-text'
 
-/** A Markdown link: its label, and the text around its address as typed. */
+/** A Markdown link, with its label and address as typed. */
 export interface MarkdownLink {
   /** The text between the brackets. */
   label: string
   /** The text before the address, such as `[docs](` or `[docs]( <`. */
   before: string
+  /** The address as typed, with its backslash escapes. */
+  address: string
   /** The text after the address, such as `)`, `>)`, or ` "Docs")`. */
   after: string
   /** A `!` stands before it, so it is the Markdown of an image. */
@@ -35,6 +39,10 @@ export type Token =
   | { kind: 'code'; text: string }
   | LinkToken
   | { kind: 'mention'; mention: Mention }
+  | { kind: 'skill'; source: string; skill: AgentSkill }
+
+/** Finds the skill of either agent that the name of a skill text names. */
+export type SkillLookup = (name: string) => AgentSkill | undefined
 
 /** What a reading of chat text looks for, besides code. */
 interface Reading {
@@ -45,6 +53,8 @@ interface Reading {
    * other mention reads as plain text.
    */
   mentions: (mention: Mention) => boolean
+  /** Finds the skill of a skill text, as in a message of a member. */
+  skills?: SkillLookup
 }
 
 /**
@@ -71,6 +81,7 @@ function markdownLinkAt(
     markdown: {
       label: text.slice(at + 1, end),
       before: text.slice(at, target.start),
+      address: text.slice(target.start, target.end),
       after: text.slice(target.end, target.next),
       image: text[at - 1] === '!',
     },
@@ -115,11 +126,18 @@ export function tokens(text: string, reading: Reading): Token[] {
       index += add({ kind: 'mention', mention }, mention.source.length)
       continue
     }
+    const skillText = reading.skills ? skillTextAt(text, index) : null
+    const skill = skillText ? reading.skills?.(skillText.name) : undefined
+    if (skillText && skill) {
+      const { source } = skillText
+      index += add({ kind: 'skill', source, skill }, source.length)
+      continue
+    }
     const link = !reading.links
       ? null
       : text[index] === '['
         ? markdownLinkAt(text, index, targetAt, labelEndAt)
-        : text.startsWith('http', index)
+        : webAddressStartAt(text, index) !== null
           ? bareAddressTokenAt(text, index)
           : null
     if (link) {

@@ -3,27 +3,27 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-16, from branch `calummoore/milan-mq6q`, review round 1.
-- **Location:** `docs/protocol/operator-section.md` (section "Orgs and Users"), `worker/routines/run-route.ts:36`, `migrations/202611161200_user_last_active.sql`, `src/marketing/privacy-uses.ts`
+- **Location:** `docs/protocol/operator-section.md` (section "Orgs and Users"), `worker/automations/run-route.ts:36`, `migrations/202611161200_user_last_active.sql`, `src/marketing/privacy-uses.ts`
 - **Reason:** The user's choice of what counts as activity can be read both ways for a press of Run now, so the user must choose.
 
 - **Terms:**
   - **Last active time:** the nullable column `users.last_active_at`, which the operator sees in the Last active column of the Users tab and on the page of a user.
-  - **Run now:** the button on the page of a routine that starts one run at once. Only the routine owner can press it. Each run creates a new workspace.
+  - **Run now:** the button on the page of an automation that starts one run at once. Only the automation owner can press it. Each run creates a new workspace.
 - **Background:**
   - On 14 November 2026 the user chose that the last active time is the last real action of the person, "like creating a workspace or sending a message".
-  - The protocol doc counts a new workspace and a chat message that the person sends or sends again from the app. It says that an action that an agent tool or a routine takes for the person does not count, "because the person did not act".
+  - The protocol doc counts a new workspace and a chat message that the person sends or sends again from the app. It says that an action that an agent tool or an automation takes for the person does not count, "because the person did not act".
   - The Worker records the time in `routeChat` (`worker/chat/router.ts`) and in `chatLifecycleRoute` (`worker/app-api/lifecycle.ts`), through `recordUserActivity` in `worker/data/user-activity.ts`. That function takes the signed-in person and the sign-in session ID.
-  - The Run now route in `worker/routines/run-route.ts` is a signed-in browser route. It does not record the time. It answers 201 also when the run then fails its checks.
-  - The backfill of the migration leaves out every routine workspace, also those of Run now.
+  - The Run now route in `worker/automations/run-route.ts` is a signed-in browser route. It does not record the time. It answers 201 also when the run then fails its checks.
+  - The backfill of the migration leaves out every automation workspace, also those of Run now.
 - **Problem:** A press of Run now is the person's own action, and it creates a new workspace. The rule can be read both ways, and the code does not count it.
 - **Impact if no action:** An owner who starts work mainly with Run now shows an old time or Unknown, so the operator can take an active account for a dormant one.
 - **Root question:** Does the owner's press of Run now show that the account still does work?
 - **Options:**
-  - **A.** Keep the code. Add to the protocol doc that Run now does not count, because the routine creates the workspace. Effort: Small.
-  - **B.** Count Run now. Call `recordUserActivity` in `routineRunsRoute` after the Worker accepts the run, with the execution context from `worker/routes.ts`. In the migration backfill, keep the routine runs whose `trigger_json` has kind `run-now`, by `routine_runs.owner_user_id` and `routine_runs.created_at`, if the migration has not merged yet. Add a test, a protocol line, and the words "or started a routine with Run now" to the Privacy bullet. Effort: Small.
+  - **A.** Keep the code. Add to the protocol doc that Run now does not count, because the automation creates the workspace. Effort: Small.
+  - **B.** Count Run now. Call `recordUserActivity` in `automationRunsRoute` after the Worker accepts the run, with the execution context from `worker/routes.ts`. In the migration backfill, keep the automation runs whose `trigger_json` has kind `run-now`, by `automation_runs.owner_user_id` and `automation_runs.created_at`, if the migration has not merged yet. Add a test, a protocol line, and the words "or started an automation with Run now" to the Privacy bullet. Effort: Small.
   - **C.** Do B, and write the rule as one principle in place of a list: "An action of the person in the app that starts agent work counts. A start from a schedule, a pull request event, or an agent tool does not count." Say whether a press whose run then fails its checks counts. Effort: Small.
   - **D.** Count each action that starts a new task: Run now and Continue. The plan of the change lists Continue as not counting, and a Continue is usually followed by a counted message. Effort: Small.
-  - **E.** Compute the Run now part at read time: the operator readers take the later of `users.last_active_at` and the newest Run now run of the user. It needs an index on `routine_runs(owner_user_id)`. Effort: Medium.
+  - **E.** Compute the Run now part at read time: the operator readers take the later of `users.last_active_at` and the newest Run now run of the user. It needs an index on `automation_runs(owner_user_id)`. Effort: Medium.
 - **Left out:** Count every press that starts agent work, such as Continue and Try again, without the principle: it reopens the user's choice for Continue, and D covers the useful part.
 - **Wider fix:** C. Its principle decides each later action that starts agent work.
 - **Previous examples:** None found.

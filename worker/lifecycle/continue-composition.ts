@@ -14,7 +14,10 @@ export function createWorkspaceContinue(input: {
     ReturnType<typeof createWorkspaceIntegration>,
     'storage' | 'chat' | 'controller' | 'alarms'
   >
-  github: Pick<WorkspaceGitHub, 'refresh' | 'defaultBranch' | 'scheduleFresh'>
+  github: Pick<
+    WorkspaceGitHub,
+    'refresh' | 'memberDefaultBranch' | 'scheduleFresh'
+  >
   matches(workspaceId: string): boolean
   run: ContinueOptions['run']
 }): WorkspaceContinue {
@@ -33,7 +36,7 @@ export function createWorkspaceContinue(input: {
     schedule: (at) => integration.alarms.set('continue', at),
     refresh: (workspace, signal) => github.refresh(workspace, signal),
     defaultBranch: (workspace, userId) =>
-      github.defaultBranch(workspace, userId),
+      github.memberDefaultBranch(workspace, userId),
     scheduleRefresh: (workspace) => github.scheduleFresh(workspace),
     resume: async (orgId, id, userId) => {
       await resumeWorkspace(

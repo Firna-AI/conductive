@@ -23,11 +23,24 @@ it('sends files requests to port 7683 with its own files mark and local origin',
   expect(opened.status).toBe(201)
   const browser = await filesPreviewBrowser(setup, opened)
   harness.requests.length = 0
+  harness.setResponse(() =>
+    relayResponse('preview content', {
+      headers: {
+        ETag: '"current-file"',
+        'Last-Modified': 'Thu, 01 Jan 1970 00:16:40 GMT',
+        'Cache-Control': 'no-cache',
+        'X-Private': 'server-secret',
+      },
+    }),
+  )
   const response = await setup.handler.proxy(
     browser.request(`${browser.previewUrl}/reports/page.html?raw=1`, {
       headers: {
         [PREVIEW_FILES_MARK_HEADER]: 'browser-value',
         Origin: browser.previewUrl,
+        'If-None-Match': '"cached-file"',
+        'If-Modified-Since': 'Thu, 01 Jan 1970 00:16:40 GMT',
+        'X-Private': 'browser-secret',
       },
     }),
   )
@@ -35,6 +48,12 @@ it('sends files requests to port 7683 with its own files mark and local origin',
   expect(await response.text()).toBe('preview content')
   expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff')
   expect(response.headers.get(PREVIEW_FILES_MARK_HEADER)).toBeNull()
+  expect(response.headers.get('ETag')).toBe('"current-file"')
+  expect(response.headers.get('Last-Modified')).toBe(
+    'Thu, 01 Jan 1970 00:16:40 GMT',
+  )
+  expect(response.headers.get('Cache-Control')).toBe('private, no-cache')
+  expect(response.headers.get('X-Private')).toBeNull()
   expect(harness.requests.map((request) => request.url)).toEqual([
     'https://sandbox-7682.on.boat.dev/reports/page.html?raw=1',
   ])
@@ -43,6 +62,38 @@ it('sends files requests to port 7683 with its own files mark and local origin',
   expect(upstream.headers.get(PREVIEW_FILES_MARK_HEADER)).toBe('1')
   expect(upstream.headers.get('Origin')).toBe('http://localhost:7683')
   expect(upstream.headers.get('Cookie')).toBe('_port_auth=server-port-token')
+  expect(upstream.headers.get('If-None-Match')).toBe('"cached-file"')
+  expect(upstream.headers.get('If-Modified-Since')).toBe(
+    'Thu, 01 Jan 1970 00:16:40 GMT',
+  )
+  expect(upstream.headers.get('X-Private')).toBeNull()
+
+  harness.requests.length = 0
+  harness.setResponse(() =>
+    relayResponse(null, {
+      status: 304,
+      headers: {
+        'Last-Modified': 'Thu, 01 Jan 1970 00:16:40 GMT',
+        'Cache-Control': 'no-cache',
+      },
+    }),
+  )
+  const legacy = await setup.handler.proxy(
+    browser.request(undefined, {
+      headers: { 'If-Modified-Since': 'Thu, 01 Jan 1970 00:16:40 GMT' },
+    }),
+  )
+  expect(legacy.status).toBe(304)
+  expect(legacy.headers.get('ETag')).toBeNull()
+  expect(legacy.headers.get('Last-Modified')).toBe(
+    'Thu, 01 Jan 1970 00:16:40 GMT',
+  )
+  expect(legacy.headers.get('Cache-Control')).toBe('private, no-cache')
+  expect(await legacy.text()).toBe('')
+  expect(harness.requests[0].headers.get('If-None-Match')).toBeNull()
+  expect(harness.requests[0].headers.get('If-Modified-Since')).toBe(
+    'Thu, 01 Jan 1970 00:16:40 GMT',
+  )
 })
 
 it('never sends the browser files mark through a port preview of the file server', async () => {

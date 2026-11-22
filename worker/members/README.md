@@ -101,7 +101,12 @@ Between the stages, the suspension closes the current tabs and the runner.
 A tab whose grant read ended before the suspension can still register after that close. It stays open until its kept `browser` deadline runs its next access check, which closes it when its access is gone.
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
 The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
-Restore starts no sandbox. The normal resume route requeues that create when the workspace opens.
+Restore starts no workspace sandbox. The normal resume route requeues
+that create when the workspace opens. After activation, Restore also wakes
+a waiting provider switch through
+[`wakeProviderSwitch`](../lifecycle/provider-switch-control.ts). Its switch
+build can then start. The guarded deletion batch records a running switch
+as waiting for Restore.
 The checkpoint keeps its sender, first message, and allocation identity.
 The requeued create gets a fresh 20-minute start limit from that open. It keeps its original creation date.
 A create without a sandbox also keeps its image pin. A missing pin keeps the workspace, its accepted chat, and its error, with durable sandbox cleanup.

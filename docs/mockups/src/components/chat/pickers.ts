@@ -1,5 +1,6 @@
-import { ExternalLink } from 'lucide-react'
 import { effortLabels } from '../../../../../src/shared/agents'
+import { defined } from '../../defined'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import {
   agentKeys,
   agents,
@@ -10,9 +11,18 @@ import {
 } from '../../fixtures/agents'
 import { sameChoice } from '../../fixtures/favourites'
 import type { Shortcut } from '../common/KeyChips'
-import type { MenuEntry } from '../common/Menu'
 
-export const divider: MenuEntry = { kind: 'divider' }
+export const divider: MenuEntryData = { kind: 'divider' }
+
+/**
+ * The external link icon of a model that opens a new session, which a
+ * screen reader says as "New session".
+ */
+function newSession(opens: boolean) {
+  return opens
+    ? ({ trailingIcon: 'external-link', trailingLabel: 'New session' } as const)
+    : {}
+}
 
 /**
  * The models of each agent as a group under a line, with no brand name,
@@ -21,9 +31,9 @@ export const divider: MenuEntry = { kind: 'divider' }
  */
 function modelGroups(
   hiddenModels: readonly string[],
-  row: (agent: AgentKey, model: string) => MenuEntry,
-): MenuEntry[] {
-  return agentKeys.flatMap((key, index): MenuEntry[] => {
+  row: (agent: AgentKey, model: string) => MenuEntryData,
+): MenuEntryData[] {
+  return agentKeys.flatMap((key, index): MenuEntryData[] => {
     const shown = agents[key].models.filter(
       (model) => !hiddenModels.includes(model.name),
     )
@@ -46,17 +56,13 @@ export function modelEntries(
   sessionAgent?: AgentKey,
   /** The labels of the models that the menu leaves out. */
   hiddenModels: readonly string[] = [],
-): MenuEntry[] {
-  return modelGroups(hiddenModels, (key, model): MenuEntry => {
-    const opensSession = sessionAgent !== undefined && key !== sessionAgent
-    return {
-      kind: 'item',
-      label: model,
-      trailingIcon: opensSession ? ExternalLink : undefined,
-      trailingLabel: opensSession ? 'New session' : undefined,
-      checked: key === choice.agent && model === choice.model,
-    }
-  })
+): MenuEntryData[] {
+  return modelGroups(hiddenModels, (key, model): MenuEntryData => ({
+    kind: 'item',
+    label: model,
+    ...newSession(sessionAgent !== undefined && key !== sessionAgent),
+    checked: key === choice.agent && model === choice.model,
+  }))
 }
 
 /**
@@ -69,7 +75,7 @@ export function addFavouriteEntries(
   pointed: string,
   /** The labels of the models that the pickers of the member leave out. */
   hiddenModels: readonly string[] = [],
-): MenuEntry[] {
+): MenuEntryData[] {
   return modelGroups(hiddenModels, (_agent, model) => ({
     kind: 'item',
     label: model,
@@ -83,22 +89,25 @@ export function addFavouriteEntries(
  * `fastKey` is the key of Fast mode, which the Fast row shows before its
  * switch where the key runs (fast mode decision 258).
  */
-function effortEntries(choice: AgentChoice, fastKey?: Shortcut): MenuEntry[] {
-  const fast: MenuEntry[] = offersFast(choice)
+function effortEntries(
+  choice: AgentChoice,
+  fastKey?: Shortcut,
+): MenuEntryData[] {
+  const fast: MenuEntryData[] = offersFast(choice)
     ? [
         divider,
         {
           kind: 'switch',
           label: 'Fast',
           on: choice.fast === true,
-          shortcut: fastKey,
+          ...defined({ shortcut: fastKey }),
         },
       ]
     : []
   return [
     divider,
     { kind: 'label', label: 'Effort' },
-    ...effortsFor(choice).map((effort): MenuEntry => ({
+    ...effortsFor(choice).map((effort): MenuEntryData => ({
       kind: 'item',
       label: effortLabels[effort],
       checked: effort === choice.effort,
@@ -153,21 +162,18 @@ function favouriteWords(choice: AgentChoice): string {
 export function favouritesMenu(
   choice: AgentChoice,
   options: FavouritesMenuOptions,
-): MenuEntry[] {
+): MenuEntryData[] {
   const rows = shownFavourites(options.favourites, options.hiddenModels).map(
-    (favourite): MenuEntry => {
-      const opensSession =
+    (favourite): MenuEntryData => ({
+      kind: 'item',
+      label: favourite.model,
+      muted: favouriteWords(favourite),
+      ...newSession(
         options.sessionAgent !== undefined &&
-        favourite.agent !== options.sessionAgent
-      return {
-        kind: 'item',
-        label: favourite.model,
-        muted: favouriteWords(favourite),
-        trailingIcon: opensSession ? ExternalLink : undefined,
-        trailingLabel: opensSession ? 'New session' : undefined,
-        checked: sameChoice(favourite, choice),
-      }
-    },
+          favourite.agent !== options.sessionAgent,
+      ),
+      checked: sameChoice(favourite, choice),
+    }),
   )
   return [
     ...rows,

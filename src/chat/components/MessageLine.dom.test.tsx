@@ -11,6 +11,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { MessageLine } from './MessageLine'
 
 /** The text of a node, with each run of white space as one space. */
@@ -41,6 +42,7 @@ it('shows each heading of a closed message line as text of the line in the headi
         '### Then',
         'Run the checkout tests.',
         '## ',
+        '## ![](x)',
       ].join('\n')}
     />,
   )
@@ -65,6 +67,9 @@ it('keeps the closed text as the name of an open line only when the blocks befor
   const leads = {
     empty: ['## ', '## ` `'],
     emptyCode: ['```', '```'],
+    // An image with no alt text that opens nothing shows no words.
+    image: ['![](x)'],
+    imageHeading: ['## ![](x)'],
     headings: ['## ', '## **', '### `', '**', '---'],
     boldMarks: ['**'],
     // A blank line ends each list, because a table line right under an
@@ -82,6 +87,8 @@ it('keeps the closed text as the name of an open line only when the blocks befor
   expect(names).toEqual({
     empty: 'Workers · Time · 4 · 3m 10s',
     emptyCode: 'Workers · Time · 4 · 3m 10s',
+    image: 'Workers · Time · 4 · 3m 10s',
+    imageHeading: 'Workers · Time · 4 · 3m 10s',
     // A mark without its pair is text, so these leads name the line.
     headings: '** ` **',
     boldMarks: '**',
@@ -103,6 +110,7 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
   const { files } = await chatFiles([entry])
   const mentions: ChatMentions = {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
@@ -112,6 +120,8 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
     heading: ['## '],
     boldMarks: ['**'],
     emptyCode: ['```', '```'],
+    image: ['![](x)'],
+    imageHeading: ['## ![](x)'],
   }
   const copies: Record<string, unknown> = {}
   for (const [lead, lines] of Object.entries(leads)) {
@@ -135,5 +145,11 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
   // A mark without its pair shows as typed, so it names the line, which
   // then needs no hidden copy.
   const named = { hidden: undefined, hiddenText: '', shown: 1 }
-  expect(copies).toEqual({ heading: copy, boldMarks: named, emptyCode: copy })
+  expect(copies).toEqual({
+    heading: copy,
+    boldMarks: named,
+    emptyCode: copy,
+    image: copy,
+    imageHeading: copy,
+  })
 })

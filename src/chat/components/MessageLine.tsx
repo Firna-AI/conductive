@@ -1,18 +1,25 @@
 import { useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
+import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
+import {
+  holdsTable,
+  LineBlocks,
+  type LineState,
+} from '../../../docs/mockups/src/components/chat/LineBlocks'
+import blockStyles from '../../../docs/mockups/src/components/chat/LineBlocks.module.css'
 import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
 import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
 import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+import { MarkedMessage } from '../explain/MarkedMessage'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
-import { agentBlocks, type TextBlock } from '../markdown/agent-blocks'
+import { agentBlocks } from '../markdown/agent-blocks'
+import { useAnswerReading } from '../markdown/answer-reading'
 import { blockShowsText } from '../markdown/readable-text'
 import { MentionsProvider } from '../mentions/MentionsContext'
-import { AgentBlocks } from './AgentText'
-import local from './chat.module.css'
-import { closedLine, LineBlocks, type LineState } from './LineBlocks'
+import { answerDrawing } from './answer-drawing'
 import { useFold } from './useFold'
 
 /**
@@ -22,30 +29,23 @@ import { useFold } from './useFold'
 const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
 
 /**
- * Whether a block is a table, or a list or a quote that holds one at any
- * depth. A quote that holds the first table of a message counts as that
- * table, as `chat-message-lines.md` says.
- */
-function holdsTable(block: TextBlock): boolean {
-  if (block.kind === 'table') return true
-  if (block.kind === 'quote') return block.blocks.some(holdsTable)
-  if (block.kind !== 'ul' && block.kind !== 'ol') return false
-  return block.items.some((item) => item.blocks.some(holdsTable))
-}
-
-/**
  * A message of the agent in an open work fold: an icon and the first words
  * of the message on one line, cut with an ellipsis. A click grows the line
  * to the full text, with the paragraphs, headings, lists, quotes, rules,
  * and code of the message, and the line keeps its place. Another click cuts
  * it again. Closed, the line shows each line break as a space.
  *
- * A `<summary>` holds no table. So the open line keeps the blocks before
- * the first table, or before the list or the quote that holds it. That
+ * The line draws its blocks with the `LineBlocks` of the mockups, and the
+ * blocks under it with their `AgentBlocks`. A `<summary>` holds no
+ * table. So the open line keeps the blocks before the first table, or
+ * before the list or the quote that holds it, as `holdsTable` says. That
  * block and the blocks after it open under the line. When the line shows no
  * readable text for the blocks that it keeps, as `blockShowsText` reads
- * them, it keeps its closed text as its name for a screen reader. So does a
- * line that starts with a table. That hidden copy shows no chips, and draws
+ * them with the tree and the links of the screen, it keeps its closed text
+ * as its name for a screen reader. So does a line that starts with a
+ * table. The check follows the tree while the line is open, so a change of
+ * the tree that gives an image the name of its file names the line with
+ * it, and the hidden copy goes. That hidden copy shows no chips, and draws
  * each link as its words, so it holds no link that the keyboard can reach
  * while nobody sees it. A press on a link in the line opens the link, as on
  * a chip, and the line stays open or closed.
@@ -55,57 +55,80 @@ function holdsTable(block: TextBlock): boolean {
  * the message with the ID `id`, the ID of its item in the transcript. A
  * press on the picture opens the file, and the line stays open. The line
  * parses the text again only when the text changes, not when it opens.
+ *
+ * The open line shows the marks of the explanations of the message, and
+ * Explain by a selection in its text. A press on the text of a mark that
+ * covers the whole message still opens or closes the line, and the state
+ * of the mark opens its explanation.
  */
-export function MessageLine(props: { id: string; text: string }) {
+export function MessageLine(props: {
+  id: string
+  text: string
+  /** The ID of the message, whose open text shows Explain and its marks. */
+  messageId?: string
+  /** The agent finished the message, so a selection in it shows Explain. */
+  done?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
   const { id, text } = props
   const blocks = useMemo(() => agentBlocks(text), [text])
-  const pictures = useMemo(() => ({ message: id }), [id])
+  const drawing = useMemo(() => answerDrawing(id), [id])
   const firstTable = blocks.findIndex(holdsTable)
-  // Whether the blocks that the open line keeps show no readable text, so
-  // the line needs its hidden name. It depends on the text alone, so it
-  // runs again only when the text changes.
-  const unnamed = useMemo(
-    () => firstTable >= 0 && !blocks.slice(0, firstTable).some(blockShowsText),
-    [blocks, firstTable],
-  )
   const split = open && firstTable >= 0
   const lead = split ? blocks.slice(0, firstTable) : blocks
   const body = split ? blocks.slice(firstTable) : []
-  const state: LineState = open ? { open, pictures } : closedLine
+  // Whether the blocks that the open line keeps show no readable text, so
+  // the line needs its hidden name. Their words depend on the tree and the
+  // links of the screen, as for the blocks that the line draws. So the
+  // check reads them as the line draws them, and runs again at each change
+  // of the tree while the line is open with a table.
+  const reading = useAnswerReading(split)
+  const unnamed = split && !lead.some((block) => blockShowsText(block, reading))
+  const state: LineState = { open, drawing }
   return (
-    <details
-      className={classes(
-        styles.message,
-        local.message,
-        line.message,
-        prose.prose,
-      )}
-      {...fold.details}
+    <MarkedMessage
+      align="middle"
+      done={props.done ?? false}
+      folds
+      messageId={props.messageId ?? ''}
+      shown={open && props.messageId !== undefined}
     >
-      <summary className={styles.messageLine} {...fold.line}>
-        <MessageSquareText aria-hidden className={styles.icon} size={13} />
-        <span className={styles.messageText}>
-          <LineBlocks blocks={lead} state={state} />
-          {split && unnamed ? (
-            <span className={a11y.hidden}>
-              <LinksProvider value={plainLinks}>
-                <PlainLinks>
-                  <MentionsProvider value={null}>
-                    <LineBlocks blocks={body} state={closedLine} />
-                  </MentionsProvider>
-                </PlainLinks>
-              </LinksProvider>
-            </span>
-          ) : null}
-        </span>
-      </summary>
-      {split ? (
-        <div className={classes(styles.messageBody, local.messageBody)}>
-          <AgentBlocks blocks={body} pictures={state.pictures} />
-        </div>
-      ) : null}
-    </details>
+      <details
+        className={classes(
+          styles.message,
+          blockStyles.message,
+          line.message,
+          prose.prose,
+        )}
+        {...fold.details}
+      >
+        <summary className={styles.messageLine} {...fold.line}>
+          <MessageSquareText aria-hidden className={styles.icon} size={13} />
+          <span className={styles.messageText}>
+            <LineBlocks blocks={lead} state={state} />
+            {unnamed ? (
+              <span className={a11y.hidden} data-explain-skip>
+                <LinksProvider value={plainLinks}>
+                  <PlainLinks>
+                    <MentionsProvider value={null}>
+                      <LineBlocks
+                        blocks={body}
+                        state={{ open: false, drawing }}
+                      />
+                    </MentionsProvider>
+                  </PlainLinks>
+                </LinksProvider>
+              </span>
+            ) : null}
+          </span>
+        </summary>
+        {split ? (
+          <div className={classes(styles.messageBody, blockStyles.messageBody)}>
+            <AgentBlocks blocks={body} drawing={drawing} />
+          </div>
+        ) : null}
+      </details>
+    </MarkedMessage>
   )
 }

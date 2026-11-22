@@ -25,26 +25,29 @@ export function WorkRow(props: {
  * that is not committed, and the commits that no remote branch holds, on
  * every local branch. The question of a repository change adds rows for
  * the work on GitHub, as `children`, and names each list with `label`. The
- * app and the mockups share it.
+ * app and the mockups share it. `displayFiles` gives the name that each row
+ * shows, in the order of `files`, such as a label that hides a secret
+ * value. A file without one shows its path, which also keys its row.
  */
 export function LocalWorkList(props: {
   files: readonly string[]
+  displayFiles?: readonly string[]
   commits: number
   label?: string
   children?: ReactNode
 }) {
-  const { files, commits } = props
+  const { files, displayFiles, commits } = props
   return (
     <ul
       aria-label={props.label ?? 'Work that is not pushed'}
       className={styles.list}
     >
-      {files.map((file) => (
+      {files.map((file, index) => (
         <WorkRow
           detail={continueQuestion.notCommitted}
           icon={FileDiff}
           key={file}
-          name={file}
+          name={displayFiles?.[index] ?? file}
         />
       ))}
       {commits > 0 ? (

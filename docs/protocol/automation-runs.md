@@ -77,14 +77,19 @@ Capabilities to automations, as [Automations](automations.md) says.
   run goes on without it. Reason: the run can still do the work that needs
   no such secret. A deleted secret ends each of its grants anyway, as
   [Storage](secrets.md#storage) says.
-- The Mac access of a run workspace is off, as
-  [Mac access](capabilities.md#mac-access) says (secrets decision 18 A).
-  An automation has no choice of Mac access (automation capabilities
-  decision 2 A).
+- A run workspace starts with no grant on any Mac. An automation has no
+  choice of Mac access (automation capabilities decision 2 A), as
+  [The control of an automation](capabilities.md#the-control-of-an-automation)
+  says.
+- The agents of a run can still ask for a command on the Mac of the
+  sender of their turn, from the first turn of the run, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says. The
+  owner sends the first turn. [Risks](mac-access.md#risks) states the
+  risk.
 - A workspace that the agent of a run creates with the workspace tools
   gets no capability. It starts with no pre-approval, as
-  [Grants](secrets.md#grants) says, and with Mac access off. Reason: the
-  owner chose the secrets for the run workspaces only.
+  [Grants](secrets.md#grants) says, and with no grant on any Mac. Reason:
+  the owner chose the secrets for the run workspaces only.
 - A request of a run for each other secret waits for a member, as each
   request does (secrets decision 5 C).
   [Turns that no person started](secrets.md#turns-that-no-person-started)

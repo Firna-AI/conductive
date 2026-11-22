@@ -3,7 +3,7 @@ import { limitBlockDepth } from './block-depth'
 import { joinEmptyItemLists } from './empty-item-lists'
 import { limitInlineDepth } from './inline-depth'
 import { sparseTable } from './table-rule'
-import { bareAddressAt } from './web-links'
+import { bareAddressAt, webAddressStartAt } from './web-links'
 
 /** Per-parse rules that the adapters add to the shared reader. */
 export interface MarkdownOptions {
@@ -76,16 +76,20 @@ markdownParser.inline.ruler.before('text', 'break_tag', (state, silent) => {
 
 markdownParser.inline.ruler.after('text', 'bare_address', (state, silent) => {
   if (
+    silent ||
     state.env.chat !== true ||
     state.linkLevel > 0 ||
     !state.src.startsWith('://', state.pos)
   )
     return false
-  const scheme = state.pending.endsWith('https')
-    ? 5
-    : state.pending.endsWith('http')
-      ? 4
-      : 0
+  const scheme =
+    state.pending.length >= 5 &&
+    webAddressStartAt(state.src, state.pos - 5) !== null
+      ? 5
+      : state.pending.length >= 4 &&
+          webAddressStartAt(state.src, state.pos - 4) !== null
+        ? 4
+        : 0
   if (scheme === 0) return false
   const address = bareAddressAt(state.src, state.pos - scheme)
   if (
@@ -94,7 +98,7 @@ markdownParser.inline.ruler.after('text', 'bare_address', (state, silent) => {
     state.pos - scheme + address.length > state.posMax
   )
     return false
-  if (!silent) state.pending += address.slice(scheme)
+  state.pending += address.slice(scheme)
   state.pos += address.length - scheme
   return true
 })

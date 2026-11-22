@@ -17,6 +17,7 @@ import type { ComputerIdentity } from './computer-ledger'
 import type { QueueTurn } from '../chat/queue-turn'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  prepareWorkspaceBase(): Promise<boolean>
   archiveLifecycle(workspaceId: string): Promise<void>
   reserveArchive(workspaceId: string): Promise<void>
   restoreWorkspace(
@@ -68,8 +69,11 @@ export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
     event: RunnerLifecycleEvent,
     publish?: LifecyclePublisher,
   ): Promise<void>
-  runnerLifecycleDisconnected(publish?: LifecyclePublisher): Promise<void>
+  runnerLifecycleDisconnected(
+    publish?: LifecyclePublisher,
+    at?: number,
+  ): Promise<void>
   runnerProtocolUnsupported(reason: string): Promise<void>
   scheduleImage(state: ImageCoordinatorState): Promise<void>
-  alarm(turn?: QueueTurn): Promise<void>
+  alarm(turn?: QueueTurn, restart?: () => Promise<void>): Promise<void>
 }

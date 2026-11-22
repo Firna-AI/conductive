@@ -1,14 +1,16 @@
 import type { Viewport } from '@mokly/mokly'
-import { ModelPicker } from '../components/chat/ModelPicker'
+import { modelPicker } from '../entries/components/chat/ModelPicker.mockup'
 import {
-  PlacedModelAnchor,
-  PlacedModelMenu,
-} from '../components/chat/PlacedModelMenu'
+  placedModelAnchor,
+  placedModelMenu,
+} from '../entries/components/chat/PlacedModelMenu.mockup'
 import { classes } from '../components/common/classes'
 import { Menu } from '../components/common/Menu'
+import { plainEntry } from '../entries/components/common/menuEntries'
 import { HistoryAnchor } from '../components/workspace/WorkspaceTabs'
 import { checkoutAutocomplete } from '../fixtures/workspaces'
-import { MacAppScreen, type MacAppState } from './MacAppScreen'
+import { MacAppScreen } from './MacAppScreen'
+import type { MacAppState } from './macAppState'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { historyFor } from './workspaceTabs'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -62,18 +64,24 @@ function ModelMenuScreen(props: { viewport: Viewport }) {
   return (
     <WorkspaceScreen
       overlay={
-        <PlacedModelMenu
+        <placedModelMenu.Component
           choice={choice}
           fastKey
+          moklyInstance="model-menu"
           placement="above"
           sessionAgent={choice.agent}
         />
       }
       picker={
-        <PlacedModelAnchor>
+        <placedModelAnchor.Component moklyInstance="model-anchor">
           {/* The screen draws the menu above the page, so none in place. */}
-          <ModelPicker choice={choice} menu={false} open />
-        </PlacedModelAnchor>
+          <modelPicker.Component
+            choice={choice}
+            menu={false}
+            moklyInstance="model-picker"
+            open
+          />
+        </placedModelAnchor.Component>
       }
       state={modelState}
       viewport={props.viewport}
@@ -94,7 +102,7 @@ function HistoryMenuScreen(props: { viewport: Viewport }) {
           phone ? undefined : (
             <div className={classes(styles.above, styles.history)}>
               <Menu
-                entries={historyFor(historyState)}
+                entries={historyFor(historyState).map(plainEntry)}
                 label="Session history"
                 placement="point"
                 wide

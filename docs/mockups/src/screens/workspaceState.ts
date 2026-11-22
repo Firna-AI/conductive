@@ -36,6 +36,16 @@ import {
   rowMenuStateKeys,
   rowMenuStateProperties,
 } from './rowMenuState'
+import {
+  explainStateDefaults,
+  explainStateKeys,
+  explainStateProperties,
+} from './explainState'
+import {
+  serviceStateDefaults,
+  serviceStateKeys,
+  serviceStateProperties,
+} from './serviceState'
 
 /**
  * The state of the workspace screen. Each catalogue entry of the screen is a
@@ -57,6 +67,7 @@ export const workspaceStateSchema = {
     'tool',
     'terminals',
     'ports',
+    ...serviceStateKeys,
     'focus',
     'tab',
     'tabRow',
@@ -74,6 +85,7 @@ export const workspaceStateSchema = {
     ...feedbackStateKeys,
     ...rowMenuStateKeys,
     ...barStateKeys,
+    ...explainStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -136,6 +148,7 @@ export const workspaceStateSchema = {
      * a notice.
      */
     ports: { enum: previewStates },
+    ...serviceStateProperties,
     /** What a phone shows: the chat, the files, or the tool. */
     focus: { enum: ['chat', 'files', 'tool'] },
     /** The tab of the centre column, as `tabStates` says. */
@@ -211,6 +224,7 @@ export const workspaceStateSchema = {
     ...feedbackStateProperties,
     ...rowMenuStateProperties,
     ...barStateProperties,
+    ...explainStateProperties,
   },
 } as const
 
@@ -230,6 +244,7 @@ export const readyWorkspace: WorkspaceState = {
   tool: 'terminal',
   terminals: 'one',
   ports: 'open',
+  ...serviceStateDefaults,
   focus: 'chat',
   tab: 'session',
   tabRow: 'opened',
@@ -247,6 +262,7 @@ export const readyWorkspace: WorkspaceState = {
   ...feedbackStateDefaults,
   ...rowMenuStateDefaults,
   ...barStateDefaults,
+  ...explainStateDefaults,
 }
 
 /**

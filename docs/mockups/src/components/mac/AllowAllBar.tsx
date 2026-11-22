@@ -1,9 +1,7 @@
 import {
   CircleAlert,
   CircleCheck,
-  Square,
   Timer,
-  TimerReset,
   TriangleAlert,
   type LucideIcon,
 } from 'lucide-react'
@@ -12,11 +10,12 @@ import {
   extendedLeft,
   failedMessage,
   notSavedMessage,
+  stoppedResult,
   untilStop,
 } from '../../fixtures/mac'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { useMacApp, type MacChange } from './MacApp'
@@ -47,8 +46,8 @@ const results: Partial<Record<MacChange, BarResult>> = {
   stopped: {
     icon: CircleCheck,
     tone: styles.done,
-    title: 'Stopped',
-    detail: 'Each command from this workspace asks first.',
+    title: stoppedResult.title,
+    detail: stoppedResult.message,
     running: false,
   },
   'stop-not-saved': {
@@ -118,12 +117,18 @@ export function AllowAllBar(props: { untilStop?: boolean }) {
             <>
               <span className={styles.left}>{left} left</span>
               <ScreenLink asChild to={paths.macExtend}>
-                <ActionButton icon={TimerReset} tone="outline">
+                <actionButton.Component
+                  icon="timer-reset"
+                  moklyInstance="extend"
+                  tone="outline"
+                >
                   Extend
-                </ActionButton>
+                </actionButton.Component>
               </ScreenLink>
               <ScreenLink asChild to={paths.macAllowUntilStop}>
-                <ActionButton>Keep until I stop</ActionButton>
+                <actionButton.Component moklyInstance="keep-until-stop">
+                  Keep until I stop
+                </actionButton.Component>
               </ScreenLink>
             </>
           ) : (
@@ -132,19 +137,24 @@ export function AllowAllBar(props: { untilStop?: boolean }) {
             </span>
           )}
           <ScreenLink asChild to={paths.macStop}>
-            <ActionButton icon={Square} tone="outline">
+            <actionButton.Component
+              icon="square"
+              moklyInstance="stop-allowing"
+              tone="outline"
+            >
               Stop
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       ) : null}
       {change === 'stop-not-saved' ? (
         <ScreenLink asChild to={paths.macStop}>
-          <ActionButton
+          <actionButton.Component
             accessibilityLabel={`Try again to stop ${checkoutAutocomplete.name}`}
+            moklyInstance="retry-stop"
           >
             Try again
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       ) : null}
     </div>

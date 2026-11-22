@@ -6,19 +6,35 @@ what each covers. [Protocol docs](protocol-docs.md) lists the other
 protocol docs.
 
 - [Provider accounts](../protocol/provider-accounts.md): the account of
-  each org, its weights, and the regions of the accounts.
+  each org and of each workspace, the weights, and the regions of the
+  accounts.
+  - [Switch account](../protocol/switch-account.md): the switch of an org
+    to another provider account by an operator, its switch build, what
+    members see of it, and its box on the page of the org.
 - [Sandbox software](../protocol/sandbox-software.md): the releases of the
-  app's own software, the updates of each sandbox, the install in a
-  build, and the software image.
+  app's own software, the updates of each sandbox, and the install in a
+  build.
+  - [Software image](../protocol/software-image.md): the software image
+    that a first build starts from, its build at each deploy, and the
+    images that the app keeps.
 - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, its Capabilities icon, the create, the branch, and
   a failed first start.
+  - [Create a workspace: the preference](../protocol/create-a-workspace-preference.md):
+    the tabs of the Account page, and the choice of how New workspace
+    opens, with its save and its default.
+  - [Create a workspace: the dialog](../protocol/create-a-workspace-dialog.md):
+    the parts of the dialog, its section, its notices, its close, and its
+    draft.
+  - [Start from a branch](../protocol/start-from-a-branch.md): the branch
+    control of New workspace, its dropdown, the target choice, and the
+    branch check of a create with its refusals.
   - [New workspace notices](../protocol/new-workspace-notices.md): the
     notice before the first good build, and the notice of a waiting
     repository.
-  - [The New workspace dialog](../protocol/new-workspace-dialog.md): when
-    New workspace opens the page or the dialog, and the parts, the draft,
-    the close, and the create of the dialog.
+- [Base branches](../protocol/base-branches.md): the base branch of each
+  workspace, a base branch that GitHub deleted, and the branch of a pull
+  request run.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.
@@ -31,8 +47,9 @@ protocol docs.
     idle sandbox, the resume, the starts from the agent tools, and the
     restart near day 14 of a stop.
   - [Restart the software](../protocol/restart-the-software.md): Restart
-    in the workspace header, what it restarts, and the download of the
-    newest release before it.
+    in the workspace header, what it restarts, the download of the newest
+    release before it, and the automatic restart of an agent runner that
+    stays away while a message waits.
 - [Continue](../protocol/continue.md): the next task of a workspace after a
   merge, on a new branch with the same sandbox and sessions.
 - [Repository change](../protocol/repository-change.md): the move of a

@@ -56,6 +56,7 @@ export class WorkspaceStream {
   private readonly target: WorkspaceTarget
   private readonly subscribe: SubscribeToWorkspace
   private readonly deliver: (envelopes: readonly StreamEnvelope[]) => void
+  private readonly replaying?: (active: boolean) => void
   private readonly timers: StreamTimers
   private readonly pending = new Map<number, StreamEnvelope>()
   private cursor = 0
@@ -73,11 +74,13 @@ export class WorkspaceStream {
     target: WorkspaceTarget
     subscribe: SubscribeToWorkspace
     deliver: (envelopes: readonly StreamEnvelope[]) => void
+    replaying?: (active: boolean) => void
     timers?: StreamTimers
   }) {
     this.target = options.target
     this.subscribe = options.subscribe
     this.deliver = options.deliver
+    this.replaying = options.replaying
     this.timers = options.timers ?? browserTimers
   }
 
@@ -149,12 +152,15 @@ export class WorkspaceStream {
     if (!message) return
     const ready: StreamEnvelope[] = []
     if (message.type === 'history') {
+      this.replaying?.(true)
       this.failures = 0
       this.page(message.history, ready)
     } else {
       this.accept(message.envelope, ready)
     }
     if (ready.length > 0) this.deliver(ready)
+    if (message.type === 'history' && this.replay === null)
+      this.replaying?.(false)
     // A live event waits for the final page, and opens nothing before it.
     if (this.replay !== null) return
     if (this.pending.size === 0) this.recoveringFrom = null

@@ -8,6 +8,7 @@ import {
   operatorOverviewPath,
   operatorUserPath,
 } from '../../shared/operator'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import {
   accessibleName,
   byRole,
@@ -96,6 +97,7 @@ describe('the Long runs of the operator Overview', () => {
     expect(await operatorRequests(server)).toEqual([
       `GET ${operatorOverviewPath()}`,
       `GET ${operatorOrgPath(SAMPLE_IDS.deletedOrg)}`,
+      `GET ${operatorProvidersPath()}`,
     ])
   })
 

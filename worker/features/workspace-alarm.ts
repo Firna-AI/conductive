@@ -11,6 +11,7 @@ import { WorkspaceAlarmTasks } from './alarm-tasks'
 import type { WorkspaceGitHub } from './github'
 import type { WorkspaceFeatures } from './workspace'
 import type { WorkspaceJobs } from '../lifecycle/workspace-jobs'
+import type { DispatchAutomaticRestart } from '../lifecycle/automatic-restart'
 import { pendingContinue } from '../lifecycle/continue-types'
 import {
   pendingRepositoryChange,
@@ -35,8 +36,9 @@ interface WorkspaceAlarmInput {
   github: WorkspaceGitHub
   features: WorkspaceFeatures
   jobs: Pick<WorkspaceJobs, 'continuation' | 'repositoryChange'>
-  lifecycle: () => Promise<void>
+  lifecycle: (dispatchRestart?: DispatchAutomaticRestart) => Promise<void>
   automationReport: () => Promise<void>
+  sessionWatches: () => Promise<void>
 }
 
 export class WorkspaceAlarmRunner {
@@ -113,7 +115,12 @@ export class WorkspaceAlarmRunner {
           lifecycleAllowed: async () =>
             !(await pendingWorkspaceChange(storage)) ||
             Boolean(await storage.get('lifecycle:start-job')),
-          lifecycle,
+          lifecycle: () =>
+            lifecycle(
+              this.tasks.has('restart')
+                ? undefined
+                : (work) => this.tasks.start('restart', work),
+            ),
           github: () => github.alarm(),
           previews: () =>
             expireWorkspacePreviews(storage, alarms, features.previews),
@@ -123,6 +130,7 @@ export class WorkspaceAlarmRunner {
             if (id) await features.publishRevocations(id)
           },
           automationReport: this.input.automationReport,
+          sessionWatches: this.input.sessionWatches,
         },
         { securityHandled: true, fallbackLifecycle: security.size === 0 },
       )

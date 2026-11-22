@@ -3,6 +3,7 @@ import type {
   NewestChatHistoryResponse,
   WorkspaceEventEnvelope,
 } from './workspace-events'
+import { jsonBytes } from '../../src/shared/event-limits'
 import { HistoryCompaction } from './history-compaction'
 import { readNewestHistory } from './history-newest-pages'
 import { historySessionOf, SessionHistoryIndex } from './history-session-index'
@@ -20,6 +21,7 @@ const PAGE_SIZE = 32
 const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
 const NEWEST_TREE = chatKey('history-index', 'tree')
+const NEWEST_SKILLS = chatKey('history-index', 'skills')
 
 /** The limits that end a newest-first page of the history. */
 export interface PageLimits {
@@ -43,6 +45,17 @@ const BROWSER_PAGE_LIMITS: PageLimits = {
 /** The session whose events the page shows. */
 export interface SessionPage {
   sessionId: string
+}
+
+/** What a forward read shows and spends. */
+export interface ReadScope {
+  /** The session whose events the page shows. Without it, every event shows. */
+  sessionId?: string
+  /**
+   * The UTF-8 JSON bytes that the reads may still show. Each read lowers it,
+   * and ends its page after the shown event that uses it up.
+   */
+  budget?: { bytes: number }
 }
 
 /** The index keeps replacement identities without retaining event payloads. */
@@ -72,15 +85,22 @@ export class HistoryPages {
     envelope: WorkspaceEventEnvelope,
   ): Promise<void> {
     const event = envelope.event
-    if (event.type === 'files.snapshot') {
-      const previous = await this.data.get<number>(NEWEST_TREE)
-      if (previous !== undefined && previous < envelope.eventNumber)
-        await deleteHistoryEvent(this.data, chatEventKey(previous))
-      await this.data.put(NEWEST_TREE, envelope.eventNumber)
-    }
+    if (event.type === 'files.snapshot')
+      await this.replace(NEWEST_TREE, envelope.eventNumber)
+    // Only the latest skills event holds the lists of the workspace.
+    if (event.type === 'skills.updated')
+      await this.replace(NEWEST_SKILLS, envelope.eventNumber)
     await this.compaction.index(envelope)
     await this.data.put(INDEX_THROUGH, envelope.eventNumber)
     await this.data.put(POSITION_THROUGH, envelope.eventNumber)
+  }
+
+  /** Deletes the older event that a newer full event replaces. */
+  private async replace(newest: string, eventNumber: number): Promise<void> {
+    const previous = await this.data.get<number>(newest)
+    if (previous !== undefined && previous < eventNumber)
+      await deleteHistoryEvent(this.data, chatEventKey(previous))
+    await this.data.put(newest, eventNumber)
   }
 
   async prepare(through: number): Promise<void> {
@@ -171,19 +191,25 @@ export class HistoryPages {
    * Reads one storage list after `after`, through `through`. The events
    * socket, workspace summary, Continue, and transcript copy use this read.
    * A session filter reads the session index instead of the workspace list.
+   * A budget ends a page of the workspace list after the shown event that
+   * uses it up. The replay of a tab, which spends a budget, has no filter.
    */
   async read(
     after: number,
     through: number,
-    session?: SessionPage,
+    scope: ReadScope = {},
     prepareIndex = true,
   ): Promise<ChatHistoryResponse> {
+    const { sessionId } = scope
     // A legacy stop lookup inside an event transaction cannot yield for a build.
-    if (session && (prepareIndex || (await this.sessionIndexReady(through)))) {
+    if (
+      sessionId !== undefined &&
+      (prepareIndex || (await this.sessionIndexReady(through)))
+    ) {
       await this.prepareSessionIndex(through)
       return readSessionHistory(
         this.data,
-        session.sessionId,
+        sessionId,
         after,
         through,
         (stored) => this.shown(stored, through),
@@ -194,14 +220,20 @@ export class HistoryPages {
     const records = await this.list(after, through)
     let last = after
     let more = records.length === PAGE_SIZE
-    for (const stored of records) {
+    for (const [index, stored] of records.entries()) {
       if (stored.eventNumber > through) {
         more = false
         break
       }
       last = stored.eventNumber
-      const envelope = await this.shown(stored, through, session?.sessionId)
-      if (envelope) events.push(envelope)
+      const envelope = await this.shown(stored, through, sessionId)
+      if (!envelope) continue
+      events.push(envelope)
+      if (!scope.budget) continue
+      scope.budget.bytes -= jsonBytes(envelope)
+      if (scope.budget.bytes > 0) continue
+      more ||= index < records.length - 1
+      break
     }
     if (!more || last >= through) return { events, throughEventNumber: through }
     return {

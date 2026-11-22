@@ -1,5 +1,6 @@
 import { defineScreen } from '@mokly/mokly'
-import { MacAppScreen, macAppSchema } from '../../../screens/MacAppScreen'
+import { MacAppScreen } from '../../../screens/MacAppScreen'
+import { macAppSchema } from '../../../screens/macAppState'
 
 export const macWindow = defineScreen({
   title: 'Window',

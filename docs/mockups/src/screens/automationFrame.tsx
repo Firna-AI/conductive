@@ -1,15 +1,19 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
 import {
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { memberViewer, people } from '../fixtures/members'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { viewerOf, type AutomationState } from './automationState'
+import { defined, plainData } from '../defined'
 
 /**
  * The app around an automation page: the rail and the sidebar of Acme on
@@ -26,32 +30,35 @@ export function AutomationFrame(props: {
   const { state } = props
   if (props.viewport === 'mobile') {
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {props.children}
         {props.overlay}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   const suspended = state.org === 'suspended'
   return (
-    <AppFrame
-      overlay={props.overlay}
+    <appFrame.Component
+      {...defined({ overlay: props.overlay })}
       rail={{
         ...acmeRail,
-        suspended: suspended ? suspendedOrg : undefined,
-        person: state.viewer === 'member' ? people[memberViewer] : undefined,
+        ...(suspended ? { suspended: suspendedOrg } : {}),
+        ...(state.viewer === 'member' ? { person: people[memberViewer] } : {}),
       }}
       sidebar={
-        <Sidebar
+        <sidebar.Component
           current="automations"
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={suspended ? suspendedSections() : workspaceSections()}
+          sections={plainData(
+            suspended ? suspendedSections() : workspaceSections(),
+          )}
           suspended={suspended}
           viewer={{ person: viewerOf(state), role: state.viewer }}
         />
       }
     >
       {props.children}
-    </AppFrame>
+    </appFrame.Component>
   )
 }
