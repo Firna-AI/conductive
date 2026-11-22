@@ -205,7 +205,7 @@ If you accepted an org invitation, your org is already open.
 6. Select **Create** in the dialog, or **Send** on the page.
 
 A favourite sets the model, effort, and **Fast** together.
-With no favourites to show, the menu lists models directly.
+With no favourites to show, choose a model in **All models**.
 
 - [Set your model favourites](/docs/sessions-and-chat#set-your-favourites)
 

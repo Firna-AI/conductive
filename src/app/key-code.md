@@ -152,7 +152,7 @@ Each path is relative to `src/app/`, the folder of this page.
   the value of its reply, and a failed save keeps the saved value and fails
   with its error. `setFavourites` saves the whole list of the favourites,
   and the account then holds the list that the Worker kept, as
-  [The account routes](../../docs/protocol/model-favourites.md#the-account-routes)
+  [The account routes](../../docs/protocol/model-favourites-account.md#the-account-routes)
   says. `saveShortcuts` saves one batch of changes for one
   keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started

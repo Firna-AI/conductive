@@ -190,7 +190,7 @@ Each row names those choices, such as **Opus 5.5 Max Fast**.
 
 On a phone, **All models** replaces the menu.
 Select **Back** to return.
-With no favourites to show, the menu lists the models directly.
+With no favourites to show, the menu starts with **All models**.
 A favourite gets a mark only while all three settings match your current choice.
 Changing the effort or **Fast** does not change your saved favourite.
 
@@ -241,13 +241,13 @@ You add, order, and remove favourites only in the **Favourites** section of **Pr
 
 1. Open **Account**.
 2. Open **Preferences**.
-3. In **Favourites**, add, move, or remove a favourite.
+3. In **Favourites**, select **Add a favourite** and choose a model, or move or remove a favourite.
 
 Use a row's model menu to change its model, effort, and **Fast** setting.
 Drag its handle to move it.
 Select **×** to remove it.
 The model menu follows this order.
-If you remove all favourites, the list stays empty and the menu shows models directly.
+If you remove all favourites, the list stays empty, and you choose models in **All models**.
 
 A favourite with an unavailable model appears greyed in **Favourites**, with a reason.
 The same applies when your personal endpoint's model list omits it.

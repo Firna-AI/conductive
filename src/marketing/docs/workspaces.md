@@ -34,7 +34,7 @@ If you joined an org, its admin manages the repositories and shared setup.
 7. Select **Send** on the page, or **Create** in the dialog.
 
 A favourite sets the model, effort, and **Fast** together.
-With no favourites to show, the menu lists models directly.
+With no favourites to show, choose a model in **All models**.
 
 - [Choose models and set favourites](/docs/sessions-and-chat#choose-a-model)
 

@@ -58,7 +58,7 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
-- [Model favourites](../../docs/protocol/model-favourites.md#the-account-routes)
+- [Model favourites](../../docs/protocol/model-favourites-account.md#the-account-routes)
   gives the account favourites contract. `accountFavourites` and
   `saveAccountFavourites` in [`account-data.ts`](account-data.ts) read and
   save its JSON list. `configuredStartingFavourites` in [`models.ts`](models.ts)

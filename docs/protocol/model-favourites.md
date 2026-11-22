@@ -3,8 +3,10 @@
 This doc holds the requirements and the decisions in force for model
 favourites: the full choices that the model menu lists first. It covers
 the rows and the marks of the menu, All models, the hidden favourites, the
-Favourites section of Preferences, the starting favourites, and the
-account routes. [Fast mode](fast-mode.md) covers the Fast row of the menu.
+Favourites section of Preferences.
+[Model favourites: the account](model-favourites-account.md) gives the
+starting favourites and the account routes. [Fast mode](fast-mode.md)
+covers the Fast row of the menu.
 The terms are those of the [architecture doc](../architecture.md#terms),
 those of [Fast mode](fast-mode.md#terms), and those below.
 
@@ -108,6 +110,13 @@ change that adds the org logins, as
   its list takes the place of the menu, with Back at its top. Back shows
   the menu again.
 - Reason: the phone layout has no room for a submenu beside the menu.
+- In the phone layout, each model picker opens its menu beside the picker,
+  also the pickers of New workspace, of the default of new workspaces, of
+  an automation, and of the Favourites rows (model favourites decision
+  5 B). Each other shell menu, such as Restart, opens as a sheet. Reason:
+  each model picker then opens in one way. A sheet for these pickers was
+  rejected, because the session picker would still open its menu beside
+  it.
 - A pick in All models changes the model, and with it the agent. It keeps
   the effort when the new model offers it. Otherwise it takes the nearest
   lower effort of the model, or its lowest effort when it has no lower one.
@@ -116,10 +125,12 @@ change that adds the org logins, as
 
 ### A menu with no favourites
 
-- When the menu has no favourite to show, it lists every model that the
-  picker offers at its top, in one group for each agent. The efforts and
-  the Fast row follow. The menu has no All models row.
-- Reason: no submenu then repeats the rows of the menu.
+- When the menu has no favourite to show, it starts with the All models
+  row. The efforts and the Fast row follow, as in each other menu.
+- Reason: the user chose this on 22 November 2026 (model favourites
+  decision 6), because more models will come, and a flat list of every
+  model does not scale. A list of every model at the top of the menu was
+  rejected for that reason.
 - This menu shows after the member removes each favourite. It also shows
   when the menu hides each favourite.
 
@@ -168,8 +179,22 @@ change that adds the org logins, as
 - The picker of a row opens the
   [menu with no favourites](#a-menu-with-no-favourites), because the row
   sets one favourite.
+- Add a favourite opens the list of every model that the picker offers,
+  in one group for each agent (model favourites decision 4 D). A pick adds
+  that model at the end of the list, with fast mode off. Its effort is the
+  effort of the default of new workspaces, or else the nearest lower
+  effort of the model, or its lowest one.
+- When that choice is already a favourite, the pick takes the nearest
+  effort of the model that no favourite holds, lower efforts first. When
+  none is free, the pick adds nothing, and a line under the list says that
+  each effort of the model is already a favourite.
+- Reason: one pick always adds a favourite, and the row picker then
+  changes its effort and fast mode. A row with the default choice, and a
+  panel with its own Add, were rejected (model favourites decision 4).
 - Add a favourite is off while the list holds five. A line then says that
   the menu shows five favourites at most.
+- With no favourite, the section shows the line "Add a favourite to show it
+  first in the model menu." in place of the list.
 - A move, a removal, and a pick in the picker of a row each save the list
   at once.
 - When a save fails, the section keeps the saved list. An error under the
@@ -177,73 +202,3 @@ change that adds the org logins, as
   or pick saves the list again.
 - Reason: the section then never shows favourites that the account does
   not hold, as the New workspaces section does.
-
-## The starting favourites
-
-- An account that never saved favourites gets the starting favourites
-  (model favourites decision 1 A). Reason: the menu is then useful before
-  the member sets any favourite.
-- No favourites until the member adds one, and the default of new
-  workspaces as the only favourite, were rejected (model favourites
-  decision 1).
-- The deployment setting `CONDUCTIVE_STARTING_FAVOURITES` gives the
-  starting favourites (model favourites decision 3 A). Every account that
-  never saved favourites gets the same list.
-  [Starting favourites](../deployment/models.md#starting-favourites) gives
-  the setting.
-- These ways were rejected (model favourites decision 3):
-  - Choices that the Worker derives from the model list. The production
-    list would give at most one Codex choice. A new model at its top would
-    change the favourites of each such account.
-  - A list in the code of the Worker. The Worker has no built-in model
-    list, and each change would need a code change.
-  - A field on each model of the model list. Each new version of a model
-    would need the field moved by hand.
-  - The saved default of the member first, then the setting. The user chose
-    one list for each account that never saved favourites.
-- The account stores no favourites until the member saves a change. Until
-  then, each read gives the starting favourites of the current setting. So
-  a change of the setting reaches each such account.
-- A copy of the starting favourites at sign-up was rejected, because it
-  keeps old models in old accounts.
-- An account from before model favourites also gets the starting
-  favourites, because model favourites decision 1 A rejected a start with
-  no favourites. A start with no favourites only for such accounts was
-  rejected, because it splits the members into two menus.
-- After the member removes each favourite, the account keeps an empty
-  list. The starting favourites then do not come back.
-- When the setting gives no entry that the Worker can use, the starting
-  favourites hold only the app default, as
-  [Starting favourites](../deployment/models.md#starting-favourites) says.
-  The setting never fails a request.
-
-## The account routes
-
-- `GET /api/account` gives `favourites`: the saved favourites of the person
-  signed in, in the order of the menu, or else the starting favourites.
-  Each has the fields of a choice: `agent`, `model`, `effort`, and `fast`.
-  An older app ignores the field.
-- `PUT /api/account/favourites` saves the whole list of the person signed
-  in. Its JSON body holds the list in `favourites`, in the order of the
-  menu. An empty list is valid.
-- The route checks each entry as `PUT /api/account/default-model` checks a
-  choice. An entry needs the agent `claude` or `codex`, a model ID, and an
-  effort of [Models](../deployment/models.md#models). Fast mode is on only
-  when `fast` is `true`.
-- A body with another shape gets HTTP 400 with the error code
-  `invalid_input`, and the route saves nothing. A body that is not a JSON
-  object gets HTTP 400 with `invalid_json`, as on each route of the app.
-- An entry with fast mode on needs the model list. Without a valid model
-  list, the route answers HTTP 503 with the error code
-  `models_unavailable`, as
-  [Model inputs](../deployment/models.md#configuration-failures) says.
-- The route turns fast mode off for a model without fast mode, as
-  [The models with fast mode](fast-mode.md#the-models-with-fast-mode)
-  says. It then keeps only the first of entries with the same agent, model,
-  effort, and fast mode, and then the first five entries. So the route adds
-  no rejection that the saved default does not have.
-- The route does not check the model or the effort of an entry against
-  the model list, as for the saved default. The menu hides a favourite
-  whose model the model list does not hold.
-- The reply gives the list that the route saved, in `favourites`.
-- Each route reads or saves only the favourites of the person signed in.

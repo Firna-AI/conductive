@@ -56,7 +56,7 @@ The shape of the two values, with placeholders in place of real values:
 
 `CONDUCTIVE_STARTING_FAVOURITES` gives the starting favourites: the
 favourites of each account that never saved favourites, as
-[The starting favourites](../protocol/model-favourites.md#the-starting-favourites)
+[The starting favourites](../protocol/model-favourites-account.md#the-starting-favourites)
 says. The `vars` of [`wrangler.jsonc`](../../wrangler.jsonc) hold it, as
 JSON encoded in a string, like the two settings above. A `.dev.vars` value
 replaces it for local development.

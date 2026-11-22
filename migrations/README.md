@@ -541,5 +541,5 @@ chosen row a position again.
 `user_preferences.model_favourites`. It holds the saved JSON list of
 one account. Existing rows keep null. The migration changes no existing
 column, default, or constraint, so the previous Worker keeps working.
-[Model favourites](../docs/protocol/model-favourites.md#the-starting-favourites)
+[Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
 gives the rules for an account without a saved list.
