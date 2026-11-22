@@ -6,6 +6,7 @@ import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
 import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
 import { browserHosts } from '../fixtures/shortcutHosts'
+import { favouriteSectionStates } from '../fixtures/favourites'
 
 export const accountSchema = {
   type: 'object',
@@ -29,6 +30,7 @@ export const accountSchema = {
     'shortcuts',
     'host',
     'modelMenu',
+    'favourites',
     'deletedOrgs',
     'stats',
   ],
@@ -154,6 +156,16 @@ export const accountSchema = {
      */
     modelMenu: { enum: ['closed', 'open-fast'] },
     /**
+     * The Favourites section of Preferences: the five favourites of Cal, so
+     * Add a favourite is off; the list of Add a favourite open over four
+     * favourites, from model favourites decision 4 D; the list after a pick
+     * of Opus 5.5, with Opus 5.5 Medium at its end; a pick of Fable 5.1
+     * that added nothing, because the four favourites hold Fable 5.1 at each
+     * of its efforts; or no favourite, after Cal removed each one, from
+     * decision 6.
+     */
+    favourites: { enum: favouriteSectionStates },
+    /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
      * Labs after the operator suspended it, or a Restore that failed.
@@ -198,6 +210,7 @@ export const accountGeneral: AccountState = {
   shortcuts: 'default',
   host: 'chrome-mac',
   modelMenu: 'closed',
+  favourites: 'saved',
   deletedOrgs: 'none',
   stats: 'ready',
 }

@@ -53,7 +53,8 @@ Contract owners:
   deployment setting, `CONDUCTIVE_STARTING_FAVOURITES`. The item below
   keeps the options and the record.
 - Model favourites decisions 4 and 5, 22 November 2026: the user chose
-  D and B. The items below keep the options and the record.
+  D and B. Model favourites decision 6, 22 November 2026: the menu with no
+  favourite shows All models, the efforts, and Fast. The items below keep the options and the record.
 - Model favourites decision 2, 20 November 2026: the user chose A. A
   member adds a favourite only in Preferences. Option B, an "Add to
   favourites" row in the menu, was not chosen, because the user asked for
@@ -210,6 +211,7 @@ Contract owners:
 - **Previous examples:** The repository order shows "Select Edit to add a repository." for an empty list, in `src/shell/settings/RepositoryOrder.tsx`.
 - **Recommendation:** B. The line says what the menu does with no favourite, as the repository order does for its empty list.
 - **Action:** ask the user, because each option sets a screen state that no requirement or mockup covers.
+- **Decision:** 22 November 2026: the user chose that the menu with no favourite shows only All models, the efforts, and Fast, because more models will come and a flat list does not scale. The empty section shows one muted line, 'Add a favourite to show it first in the model menu.', as the orchestrator's design call.
 
 ## Design calls
 
@@ -255,13 +257,17 @@ otherwise.
   member's own endpoint does not list, stays saved. The menu leaves it
   out, as the pickers hide such models today. Preferences shows it
   greyed, with a line that says why, so the member can remove it.
-- With no favourite to show, the menu lists every model at its top, as it
-  does today, and has no All models row.
+- With no favourite to show, the menu shows All models, then the efforts
+  and Fast, as a menu with favourites does. This also holds when the menu
+  hides each favourite, and in the pickers of the Favourites rows. The
+  user chose it on 22 November 2026, in the answer to decision 6, because
+  more models will come, and a flat list of every model does not scale.
+  It replaces the call of 20 November 2026, which listed every model at
+  the top of the menu with no All models row.
 - Each model picker of the app shows the favourites menu: a session, New
   workspace, the default of new workspaces, and an automation. The
-  pickers of the Favourites rows show the menu with no favourites, which
-  lists every model at its top, because a row sets one favourite. Made on
-  16 November 2026.
+  pickers of the Favourites rows show the menu with no favourites, because
+  a row sets one favourite. Made on 16 November 2026.
 - The menu marks a favourite only when it matches the current choice
   exactly, with its fast mode. Made on 16 November 2026.
 - A favourite of the other agent in a session with messages opens a new
@@ -346,6 +352,36 @@ otherwise.
   Fast row shows after a scroll. The efforts stay rows, as the user chose
   on 16 November 2026. The marketing picture of the picker shows four
   favourites, so that its menu fits the picture.
+- Add a favourite opens its list below the button on a computer, and in a
+  sheet on a phone, as Add trigger of an automation does. Decision 5 B
+  moves only the model pickers to a menu beside the picker, and this list
+  is a menu of the section, not a model picker. A menu beside the button
+  on a phone was rejected for that reason. Made on 22 November 2026.
+- The list of Add a favourite holds the two groups of All models, with no
+  mark, no efforts, and no Fast row, because it has no current choice. The
+  picker of the new row then changes the effort and Fast. Made on
+  22 November 2026.
+- A pick that adds nothing leaves a line under the list, such as "Fable
+  5.1 is already a favourite at every effort.", until the next pick or
+  change. The line has the muted colour of the other lines of the
+  section, not the rose colour and the icon of an error, because nothing
+  failed. The list does not save. A screen reader reads the line out.
+  Made on 22 November 2026.
+- After a pick that adds a favourite, the keyboard focus moves to the
+  picker of the new row. So the member can change its effort at once, and
+  the focus does not stay on Add a favourite, which the fifth favourite
+  turns off. Made on 22 November 2026.
+- Add a favourite reads "lower efforts first" of decision 4 D as: try the
+  free efforts below the first choice, nearest first, then the free
+  efforts above it, nearest first. A rule that takes the nearest free
+  effort in either direction was rejected, because it can add a higher,
+  dearer effort while a lower one is free. Made on 22 November 2026.
+- An effort counts as free when no favourite is that model at that effort
+  with Fast off, because the add makes a choice with Fast off, and the
+  rule exists to prevent exact copies. Made on 22 November 2026.
+- The description of the Favourites section reads "The model menu lists
+  your favourites first, in this order.", so it reads correctly also with
+  no favourite. Made on 22 November 2026.
 
 ## Milestone 1: Mockups
 
@@ -446,17 +482,32 @@ Tags: mockup
 
 Depends on: 1
 
-Milestones 2 and 3 found three gaps in the mockups of Milestone 1.
+Milestones 2 and 3 found three gaps in the mockups of Milestone 1. The
+answer to decision 6 changes the menu with no favourite, and adds the
+empty Favourites section.
 
-- [ ] Draw Add a favourite as the answer of decision 4 says, in a child
+- [x] Draw Add a favourite as the answer of decision 4 says, in a child
       page of `app/model-favourites/preferences` with a list of four.
-- [ ] Draw the phone form of the model menu of New workspace, the
+      `add` has the open list, its `added` variant the list after a pick,
+      and its `no-free-effort` variant a pick that adds nothing. The saved
+      states `hidden` and `not-saved` of `preferences` moved to child
+      pages with the same paths, so `preferences` shows only its canonical
+      screen.
+- [x] Draw the phone form of the model menu of New workspace, the
       Preferences default, and an automation, as the answer of decision 5
-      says, with All models.
+      says, with All models. Their phone views already drew a menu beside
+      the picker. `app/new-workspace/all-models` adds All models in a
+      shell picker.
 - [x] Add the Favourites row to the Settings tab of the palette mockup,
       before New workspaces.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Draw the menu with no favourite and the empty Favourites section,
+      as the answer of decision 6 says. `app/model-favourites/no-favourites`
+      starts with All models, and its `all-models` variant opens the
+      submenu. `app/model-favourites/preferences/empty` shows the muted
+      line in place of the list, with Add a favourite on.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+      Screenshots: `.context/model-favourites/m4-shots/`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 5: The model menu
@@ -476,6 +527,8 @@ Depends on: 3, 4
       `src/chat/ui/Menu.tsx`, with the keys of the submenu of
       `src/shell/ui/MenuList.tsx`. On a phone, show the list in place of
       the menu, with Back.
+- [ ] Change the menu with no favourite to All models, the efforts, and
+      Fast, in `src/chat/components/model-rows.ts`, as decision 6 says.
 - [ ] Give the shell picker of `src/shell/ui/ModelPicker.tsx` the All
       models submenu too. `MenuButton` passes no `submenus` to `MenuList`
       today. Open its phone form as the answer of decision 5 says.

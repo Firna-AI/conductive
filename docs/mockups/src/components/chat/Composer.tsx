@@ -59,7 +59,7 @@ export type ComposerState = {
   picker?: boolean
   /**
    * The favourites of the model menu, by default those of the viewer. With
-   * none, the menu lists every model at its top.
+   * none, the menu starts with All models.
    */
   favourites?: readonly AgentChoice[]
   /** The submenu of All models of the open model menu is open. */

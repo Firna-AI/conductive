@@ -11,7 +11,10 @@ import {
   SignInSection,
 } from '../components/settings/AccountSections'
 import { DeletedOrgsSection } from '../components/settings/DeletedOrgsSection'
-import { FavouritesSection } from '../components/settings/FavouritesSection'
+import {
+  AddFavouriteSheet,
+  FavouritesSection,
+} from '../components/settings/FavouritesSection'
 import { InviteCodeSection } from '../components/settings/InviteCodeSection'
 import { DefaultsSection } from '../components/settings/PreferencesSections'
 import { StatsTab } from './accountStats'
@@ -74,6 +77,7 @@ function TabContent(props: {
       return (
         <>
           <FavouritesSection
+            favourites={state.favourites}
             hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
             saveFailed={state.save === 'favourites-failed'}
           />
@@ -160,11 +164,19 @@ export function AccountScreen(props: {
       <PlacedModelMenu choice={fastChoice} placement="below" />
     ) : null
   if (mobile) {
+    // A phone opens the list of Add a favourite in a sheet.
+    const addSheet =
+      state.tab === 'preferences' && state.favourites === 'add-open' ? (
+        <AddFavouriteSheet
+          hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
+        />
+      ) : null
     return (
       <MobileFrame>
         {page}
         {dialog}
         {modelMenu}
+        {addSheet}
       </MobileFrame>
     )
   }

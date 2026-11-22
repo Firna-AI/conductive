@@ -15,9 +15,31 @@ import type { MenuEntry } from '../common/Menu'
 export const divider: MenuEntry = { kind: 'divider' }
 
 /**
+ * The models of each agent as a group under a line, with no brand name,
+ * each as the row that `row` gives. The groups leave out each model of
+ * `hiddenModels`.
+ */
+function modelGroups(
+  hiddenModels: readonly string[],
+  row: (agent: AgentKey, model: string) => MenuEntry,
+): MenuEntry[] {
+  return agentKeys.flatMap((key, index): MenuEntry[] => {
+    const shown = agents[key].models.filter(
+      (model) => !hiddenModels.includes(model.name),
+    )
+    return [
+      ...(index > 0 ? [divider] : []),
+      ...shown.map((model) => row(key, model.name)),
+    ]
+  })
+}
+
+/**
  * The models of each agent as a group, with no brand name, and the current
- * model marked. In a session with messages, each model of the other agent
- * opens a new session, which the external link icon marks.
+ * model marked: the rows of the submenu of All models. In a session with
+ * messages, each model of the other agent opens a new session, and the
+ * draft moves there (decision 51). The external link icon marks each of
+ * those models, and a screen reader says "New session" for it.
  */
 export function modelEntries(
   choice: AgentChoice,
@@ -25,22 +47,34 @@ export function modelEntries(
   /** The labels of the models that the menu leaves out. */
   hiddenModels: readonly string[] = [],
 ): MenuEntry[] {
-  return agentKeys.flatMap((key, index): MenuEntry[] => {
+  return modelGroups(hiddenModels, (key, model): MenuEntry => {
     const opensSession = sessionAgent !== undefined && key !== sessionAgent
-    const shown = agents[key].models.filter(
-      (model) => !hiddenModels.includes(model.name),
-    )
-    return [
-      ...(index > 0 ? [divider] : []),
-      ...shown.map((model): MenuEntry => ({
-        kind: 'item',
-        label: model.name,
-        trailingIcon: opensSession ? ExternalLink : undefined,
-        trailingLabel: opensSession ? 'New session' : undefined,
-        checked: key === choice.agent && model.name === choice.model,
-      })),
-    ]
+    return {
+      kind: 'item',
+      label: model,
+      trailingIcon: opensSession ? ExternalLink : undefined,
+      trailingLabel: opensSession ? 'New session' : undefined,
+      checked: key === choice.agent && model === choice.model,
+    }
   })
+}
+
+/**
+ * The list of Add a favourite in the Favourites section: every model in
+ * the groups of All models, as model favourites decision 4 D says. The list
+ * has no current choice, so it marks no model, and it has no efforts and
+ * no Fast row. `pointed` is the model under the pointer.
+ */
+export function addFavouriteEntries(
+  pointed: string,
+  /** The labels of the models that the pickers of the member leave out. */
+  hiddenModels: readonly string[] = [],
+): MenuEntry[] {
+  return modelGroups(hiddenModels, (_agent, model) => ({
+    kind: 'item',
+    label: model,
+    highlighted: model === pointed,
+  }))
 }
 
 /**
@@ -73,34 +107,11 @@ function effortEntries(choice: AgentChoice, fastKey?: Shortcut): MenuEntry[] {
   ]
 }
 
-/**
- * The model menu with no favourite to show: the models of each agent as a
- * group, with no brand name, then the effort levels of the chosen model,
- * then the Fast switch of a model that offers fast mode. The menu marks the
- * current model and the current effort. In a session with messages,
- * each model of the other agent opens a new session, and the draft moves
- * there (decision 51). The external link icon marks each of those models,
- * and a screen reader says "New session" for it. A model of the session's
- * own agent stays in it.
- */
-function pickerMenu(
-  choice: AgentChoice,
-  sessionAgent?: AgentKey,
-  /** The labels of the models that the menu leaves out. */
-  hiddenModels: readonly string[] = [],
-  fastKey?: Shortcut,
-): MenuEntry[] {
-  return [
-    ...modelEntries(choice, sessionAgent, hiddenModels),
-    ...effortEntries(choice, fastKey),
-  ]
-}
-
 /** What the model menu with favourites shows besides the current choice. */
 type FavouritesMenuOptions = {
   /** The favourites of the member, in the order of the menu. */
   favourites: readonly AgentChoice[]
-  /** The agent of a session with messages, as `pickerMenu` says. */
+  /** The agent of a session with messages, as `modelEntries` says. */
   sessionAgent?: AgentKey
   /** The labels of the models that the menu leaves out. */
   hiddenModels?: readonly string[]
@@ -135,24 +146,16 @@ function favouriteWords(choice: AgentChoice): string {
  * is the current choice exactly. A favourite of the other agent opens a new
  * session, as a model of that agent does. A line follows, then All models,
  * whose submenu holds the rows of `modelEntries`, then the efforts of the
- * current model and the Fast switch. With no favourite to show, the menu is
- * `pickerMenu`: every model at its top, and no All models row.
+ * current model and the Fast switch. With no favourite to show, the menu
+ * starts with All models (model favourites decision 6), so it stays short
+ * however many models the app offers.
  */
 export function favouritesMenu(
   choice: AgentChoice,
   options: FavouritesMenuOptions,
 ): MenuEntry[] {
-  const shown = shownFavourites(options.favourites, options.hiddenModels)
-  if (shown.length === 0) {
-    return pickerMenu(
-      choice,
-      options.sessionAgent,
-      options.hiddenModels,
-      options.fastKey,
-    )
-  }
-  return [
-    ...shown.map((favourite): MenuEntry => {
+  const rows = shownFavourites(options.favourites, options.hiddenModels).map(
+    (favourite): MenuEntry => {
       const opensSession =
         options.sessionAgent !== undefined &&
         favourite.agent !== options.sessionAgent
@@ -164,8 +167,11 @@ export function favouritesMenu(
         trailingLabel: opensSession ? 'New session' : undefined,
         checked: sameChoice(favourite, choice),
       }
-    }),
-    divider,
+    },
+  )
+  return [
+    ...rows,
+    ...(rows.length > 0 ? [divider] : []),
     {
       kind: 'item',
       label: 'All models',

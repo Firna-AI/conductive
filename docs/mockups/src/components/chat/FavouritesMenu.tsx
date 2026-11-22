@@ -20,8 +20,8 @@ export type PickerPlacement = Exclude<MenuPlacement, 'sheet'>
  * The model menu of a picker, drawn open beside it, with the rows of
  * `favouritesMenu`. `allModels` opens the submenu of every model: beside
  * the menu on a computer, level with its row, and in place of the menu on
- * a phone, with Back at its top. A menu with no favourite to show has no
- * All models row, so it never draws the submenu.
+ * a phone, with Back at its top. A menu with no favourite to show starts
+ * with All models, so its submenu starts level with the top of the menu.
  */
 export function FavouritesMenu(props: {
   choice: AgentChoice
@@ -34,7 +34,7 @@ export function FavouritesMenu(props: {
 }) {
   const phone = useTouch()
   const rows = shownFavourites(props.favourites, props.hiddenModels).length
-  const submenu = props.allModels === true && rows > 0
+  const submenu = props.allModels === true
   const models = modelEntries(
     props.choice,
     props.sessionAgent,
@@ -69,7 +69,12 @@ export function FavouritesMenu(props: {
   return (
     <div
       className={classes(styles.pair, styles[props.placement])}
-      style={{ '--favourite-rows': rows } as CSSProperties}
+      style={
+        {
+          '--favourite-rows': rows,
+          '--favourite-line': rows > 0 ? '7px' : '0px',
+        } as CSSProperties
+      }
     >
       <Menu entries={entries} label="Model and effort" placement="point" />
       <div className={styles.submenu}>

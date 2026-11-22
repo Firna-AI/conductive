@@ -34,10 +34,12 @@
 /*
  * A view runs no script, so the submenu starts level with the row of All
  * models: below the favourites and their line. Each favourite takes its row
- * and the gap of 1 px after it, and the line takes 7 px with its gap.
+ * and the gap of 1 px after it, and the line takes 7 px with its gap. A
+ * menu with no favourite has no line, so its submenu starts at its top.
  */
 .submenu {
   margin-top: calc(
-    (var(--ui-row-height) + 1px) * var(--favourite-rows, 5) + 7px
+    (var(--ui-row-height) + 1px) * var(--favourite-rows, 5) +
+      var(--favourite-line, 7px)
   );
 }

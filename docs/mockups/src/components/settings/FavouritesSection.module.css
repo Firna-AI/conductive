@@ -55,6 +55,12 @@
   line-height: 1.45;
 }
 
+/* Add a favourite, with its list of models open below it on a computer. */
+.add {
+  display: flex;
+  position: relative;
+}
+
 /* A change that the app did not save: its error, until the next change. */
 .error {
   display: flex;

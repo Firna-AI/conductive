@@ -112,7 +112,7 @@ function Favourites(props: { saved: readonly AgentChoice[] }) {
           Add a favourite
         </ActionButton>
       }
-      description="The model menu lists these first, in this order."
+      description="The model menu lists your favourites first, in this order."
       title="Favourites"
     >
       {items.length > 0 ? (

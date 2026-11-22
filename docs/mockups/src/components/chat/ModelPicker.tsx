@@ -19,8 +19,8 @@ import styles from './ModelPicker.module.css'
  * as `FavouritesMenu` says.
  *
  * `favourites` holds the favourites of the menu, by default those of the
- * viewer. With none, the menu lists every model at its top, as the picker
- * of a Favourites row does, because the row sets one favourite.
+ * viewer. With none, the menu starts with All models, as the picker of a
+ * Favourites row does, because the row sets one favourite.
  * `allModels` opens the submenu of every model. `sessionAgent` is the
  * agent of a session with messages, whose other agent's models and
  * favourites open a new session. `hiddenModels` holds the models that its
