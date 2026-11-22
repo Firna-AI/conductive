@@ -53,6 +53,7 @@ export interface ContinueJob {
   request: ContinueWorkspaceRequest
   branch: string
   baseBranch: string
+  defaultBranch: string
   directory: string
   phase: (typeof CONTINUE_PHASES)[number]
   processId: number | null
@@ -89,8 +90,9 @@ export async function readContinueJob(
   key = CONTINUE_JOB_KEY,
 ): Promise<ContinueJob | null | undefined> {
   const job = await storage.get<
-    | (Omit<ContinueJob, 'providerAccount' | 'stopCause'> & {
+    | (Omit<ContinueJob, 'providerAccount' | 'defaultBranch' | 'stopCause'> & {
         providerAccount?: string
+        defaultBranch?: string
         stopCause?: unknown
       })
     | null
@@ -99,6 +101,7 @@ export async function readContinueJob(
     ? {
         ...job,
         providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
+        defaultBranch: job.defaultBranch ?? job.baseBranch,
         stopCause: readContinueStopCause(job.stopCause),
       }
     : job

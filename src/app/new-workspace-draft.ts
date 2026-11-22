@@ -1,10 +1,15 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
-import type { OrgSecret, WorkspaceCapabilities } from '../shared/secrets'
+import {
+  NEW_WORKSPACE_CAPABILITIES,
+  type OrgSecret,
+  type WorkspaceCapabilities,
+} from '../shared/secrets'
 import type { ApiError } from './api/client'
 import { filesWait, type DraftFile } from './draft-files'
 import { markedFiles } from './draft-file-state'
 import { withoutMarks } from './draft-marks'
+import { branchIn, type DraftBranch } from './new-workspace-branch'
 import { waitsForBuild } from './repository-changes'
 
 /** The first message of a workspace that does not exist yet. */
@@ -14,9 +19,16 @@ export interface Draft {
    * The repository of the draft, or `null` while the form shows the first
    * ready repository. A pick of the user stays after a send. Without a
    * pick, the draft keeps the repository that the form showed at its first
-   * text or file, while the org chooses it, until the send.
+   * text or file, or at a pick of its branch, while the org chooses it,
+   * until the send.
    */
   repository: { id: string; picked: boolean } | null
+  /**
+   * The branch that the member picked in the repository of the draft, with
+   * the target that the member chose, or `null` for the default branch. A
+   * change of repository and a send end it.
+   */
+  branch: DraftBranch | null
   choice: AgentChoice | null
   /**
    * The section that the user picked, or `null` for the section of the
@@ -44,8 +56,39 @@ export interface Draft {
 export type CreateState =
   | { state: 'idle' }
   | { state: 'sending' }
-  /** The create request failed. Try again sends the same message ID. */
-  | { state: 'failed'; error: ApiError }
+  /**
+   * The create request failed. Try again sends the same message ID. The
+   * repository and the start branch are those of the request, so that a
+   * refusal of the branch check names them also after a change of the form.
+   * A start from the default branch has no `startBranch`.
+   */
+  | {
+      state: 'failed'
+      error: ApiError
+      repositoryId: string
+      startBranch: string | null
+    }
+
+/**
+ * A new draft with the message ID `messageId`. It keeps the choice and a
+ * picked repository of `keep`. Its capabilities start again from the
+ * defaults, because the closed icon of the control shows no state.
+ */
+export function emptyDraft(messageId: string, keep?: Draft): Draft {
+  return {
+    text: '',
+    repository: keep?.repository?.picked ? keep.repository : null,
+    branch: null,
+    choice: keep?.choice ?? null,
+    sectionId: null,
+    capabilities: NEW_WORKSPACE_CAPABILITIES,
+    files: [],
+    detached: [],
+    refused: [],
+    refusedFolders: [],
+    messageId,
+  }
+}
 
 /**
  * Whether the draft can go: it has text, and each of its files is ready,
@@ -89,6 +132,7 @@ function knowsWaits(
  * with text or a file takes it when it has no repository yet. A kept
  * repository that the org no longer chose gives way to it, so the draft
  * follows the form, as a draft without a repository does. A pick stays.
+ * A branch stays only with its repository.
  */
 export function withShownRepository(
   draft: Draft,
@@ -102,8 +146,26 @@ export function withShownRepository(
   if (kept && chosen.some((item) => item.id === kept.id)) return draft
   const written = draft.text.trim() !== '' || draft.files.length > 0
   const shown = written ? firstReadyRepository(chosen, builds) : undefined
-  if (!shown) return kept ? { ...draft, repository: null } : draft
-  return { ...draft, repository: { id: shown.id, picked: false } }
+  if (!shown && !kept) return draft
+  const repository = shown ? { id: shown.id, picked: false } : null
+  return {
+    ...draft,
+    repository,
+    branch: branchIn(draft.branch, repository?.id),
+  }
+}
+
+/**
+ * The repository of a draft once the member acts on the branch of the
+ * repository that the form shows: the draft keeps it, unless it has it.
+ */
+export function keptRepository(
+  draft: Draft,
+  repositoryId: string,
+): Draft['repository'] {
+  return draft.repository?.id === repositoryId
+    ? draft.repository
+    : { id: repositoryId, picked: false }
 }
 
 /**

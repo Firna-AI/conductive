@@ -176,6 +176,11 @@ This can include repositories outside the Conductive org.
 A repository change fetches with the GitHub account of the member who changes the repository.
 All workspace terminals still use the workspace owner's account.
 
+If GitHub deletes the workspace's base branch, Conductive moves its base to the default branch.
+A workspace that follows the default also gets this move when GitHub changes that default branch.
+A move that no member starts fetches with the workspace owner's GitHub account.
+This includes moves from GitHub events, automatic retries, and resumes of stopped cloud computers.
+
 - [Use pull request actions](/docs/pull-requests)
 
 ## Preview a running app

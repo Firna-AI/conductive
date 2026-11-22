@@ -7,6 +7,7 @@ export type AlarmSource =
   | 'secrets'
   | 'previews'
   | 'github'
+  | 'baseChange'
   | 'continue'
   | 'repository-change'
   | 'automation-report'

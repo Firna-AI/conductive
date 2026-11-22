@@ -93,6 +93,7 @@ export async function reserveContinue(
     request,
     branch,
     baseBranch: binding.defaultBranch,
+    defaultBranch: binding.defaultBranch,
     directory: repositoryLocation(
       await workspaceRepositoryLocations(options.env.DB, workspaceId),
       row.repositoryId,

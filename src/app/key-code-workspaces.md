@@ -96,6 +96,9 @@ rules of Archive and Restore.
   names that it refuses, as
   [Refused files and folders](../chat/draft-files.md#refused-files-and-folders)
   says.
+- `new-workspace-request.ts`: `createRequest`, the create request of a
+  draft, with its start branch and base branch, its Capabilities choices,
+  and its first message.
 - `new-workspace-marks.test.ts` checks the IDs at once, the words outside
   the chips, and the mentions in the order of the chips. It also checks
   undo of a ready file, stopped and queued uploads, a Remove while the

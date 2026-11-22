@@ -3,9 +3,9 @@ import { paragraph, type LegalDocument } from './legal-text'
 
 /**
  * The section of the terms on your work: the chat history, the attached
- * files, the model requests, Archive, Continue, the repository change, and
- * the rights in your content. The facts come from the architecture and the
- * protocol docs.
+ * files, the model requests, Archive, Continue, the repository change, the
+ * move of a deleted base branch, and the rights in your content. The facts
+ * come from the architecture and the protocol docs.
  */
 export const termsWorkSection: LegalDocument['sections'][number] = {
   title: 'Your work',
@@ -35,14 +35,28 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
     paragraph`${productName} keeps the removed workspace's chat history
       until the org is deleted. Removing the workspace from the list
       does not delete this data.`,
-    paragraph`Continue starts a new branch from the latest default branch
-      of the repository. It keeps the cloud computer and its sessions.
+    paragraph`Continue starts a new branch from the latest commit of the
+      branch that the pull request merged into. If that branch no longer
+      exists, it uses the repository's default branch. It keeps the
+      cloud computer and its sessions.
       Changed files move to the new branch. Commits that are not pushed
       stay on their local branches.`,
     paragraph`A repository change moves a workspace to a new branch of
       another repository of the org. It keeps the cloud computer and
       its sessions. The old branch, its pull request, and the files in
-      the folder of the old repository stay.`,
+      the folder of the old repository stay. Its base follows the new
+      repository's default branch, also after a later rename.`,
+    paragraph`When GitHub deletes a workspace's base branch,
+      ${productName} fetches the repository's default branch into its
+      cloud computer. A workspace whose base follows the default also
+      gets this fetch when GitHub changes that default branch.
+      The cloud computer uses the new base only after
+      that fetch succeeds. When no member starts the move, the fetch
+      uses the workspace owner's GitHub token. This includes moves from
+      GitHub events, automatic retries, and resumes of stopped cloud
+      computers. The token enters the cloud computer during the fetch.
+      Programs and members with terminal access can read it while the
+      fetch runs.`,
     paragraph`The agent actions in the pull request bar and Merge latest
       in the command palette send messages as the member who uses them.
       The chat history keeps these messages and a

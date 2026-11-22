@@ -81,7 +81,7 @@ export async function runWorkspaceAlarms(
         await held.finish(now())
       }
     }
-    if (due.has('github')) await tasks.github()
+    if (due.has('github') || due.has('baseChange')) await tasks.github()
     if (due.has('previews')) await tasks.previews()
     if (due.has('automation-report') && tasks.automationReport)
       await retryAutomationReport(alarms, startedAt, tasks.automationReport)

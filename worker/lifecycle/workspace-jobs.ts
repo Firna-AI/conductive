@@ -36,7 +36,11 @@ export class WorkspaceJobs {
     integration: Integration
     github: Pick<
       WorkspaceGitHub,
-      'refresh' | 'defaultBranch' | 'scheduleFresh' | 'branchWork'
+      | 'refresh'
+      | 'defaultBranch'
+      | 'memberDefaultBranch'
+      | 'scheduleFresh'
+      | 'branchWork'
     >
     matches(workspaceId: string): boolean
     run: RepositoryChangeOptions['run']

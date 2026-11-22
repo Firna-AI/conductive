@@ -153,11 +153,21 @@ export async function defaultBranchFixture(
       remoteGit,
       command,
       createRemoteCommit,
-      execute: (script = command()) =>
-        run('/bin/sh', ['-c', script], directory, {
+      execute: (script = command()) => {
+        const unmapped = script
+          .replaceAll(root, '<fixture>')
+          .replaceAll(shellQuote(root).slice(1, -1), '<fixture>')
+        if (
+          /\bsudo\b|systemctl|\/(?:opt|run|home\/user|tmp)(?:\/|\b)|\/usr\/local\/bin\/conductive|https:\/\/github\.com\//.test(
+            unmapped,
+          )
+        )
+          throw new Error('The native command keeps a production operation')
+        return run('/bin/sh', ['-c', script], directory, {
           ...environment,
           LOCAL_CREDENTIAL_ORIGIN: origin,
-        }),
+        })
+      },
       write: (name: string, text: string) =>
         writeFile(join(directory, name), text),
       config: () => readFile(join(directory, '.git/config'), 'utf8'),

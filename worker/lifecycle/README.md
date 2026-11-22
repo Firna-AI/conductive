@@ -31,8 +31,9 @@ gives the create, read, resume, and activity routes of a workspace to
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
-  the current turn, or of the member who pressed Continue or changed the
-  repository, during the fetch of that job.
+  the current turn, of the member who pressed Continue or changed the
+  repository during the fetch of that job, or of the workspace owner
+  during a saved base-move fetch.
 - Continue a workspace on a new branch after its merge, with the same
   sandbox and sessions.
 - Change the repository of a workspace to another repository that its
@@ -51,14 +52,30 @@ gives the create, read, resume, and activity routes of a workspace to
 `handleLifecycleRequest` serves, the options of its caller, and the rules
 of a create.
 
-The internal `createWorkspace` call can pass a base branch and a start commit separately from the browser request.
+The browser create accepts optional `startBranch` and `baseBranch` fields.
+[`create-branches.ts`](create-branches.ts) applies their defaults before creation.
+It checks each named non-default branch with the sender's fresh GitHub user token.
+The shared check in [`branch-check.ts`](../github/branch-check.ts) distinguishes a missing branch from missing repository access.
+It keeps the create's published-image repository policy when the current selection changes.
+A failed GitHub read or expired sign-in leaves the start to decide.
+Creation replays run before this check and keep the original branch choices.
+The internal `createWorkspace` call can pass a pull request base and start commit separately from those fields.
 The create reads the account of the org, and that account selects the published org image independently of those branch fields.
-The creation claim keeps them in its saved plan.
-The fetch updates `refs/remotes/origin/<base branch>`.
-The branch phase uses the event commit when it exists, or the fetched head otherwise.
+The creation claim keeps both branches and the start commit in its saved plan.
+It applies omitted defaults against the same publication that supplies the leased image.
+Named fields keep their values if publication changes before admission.
+A base equal to the repository default stays null in storage.
+The fetch updates remote-tracking refs for both the start and base branches.
+The branch phase uses the event commit when it exists, or the start branch's explicit remote ref otherwise.
 It sets the branch's `gh-merge-base` Git setting to the workspace base.
 Create, resume, and disk retention pass that base through `CONDUCTIVE_DEFAULT_BRANCH`.
 A null stored base uses the repository default branch.
+Each startup command tries to set `gh-merge-base` and `origin/HEAD` from the current stored base before the startup script and runner run.
+The metadata command does not depend on the current HEAD, and a failed update does not block startup.
+It leaves both settings unchanged when the new base has no remote-tracking reference.
+An unfinished base move uses [the saved move job](#moved-bases) before startup.
+That startup skips its ordinary metadata command, so it cannot apply an unfinished move before the fetch.
+Try again keeps the saved start and base branches with its new allocation.
 
 The browser create takes optional workspace capabilities.
 `request-parser.ts` reads the pre-approved secret IDs and Mac access.
@@ -103,6 +120,12 @@ gives its routes, the labels of their replies, and their errors.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
 
+### Moved bases
+
+[Moved bases](moved-bases.md) gives the job that moves the base of a
+workspace in its cloud computer, after GitHub deletes the base or renames
+the default branch, with its retry, its owner fetch, and its tests.
+
 ### Repository change
 
 [Repository change](repository-change.md) gives the routes and errors, the
@@ -110,6 +133,10 @@ admission and the reservation that it shares with Continue, its phases,
 the move command with the context copy, the publication, the masked
 labels, and the recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns
 both jobs for the workspace object.
+
+[`repository-change-progress.ts`](repository-change-progress.ts) keeps the new target's default base null in its binding.
+[`storeChangedRepository`](repository-change-data.ts) stores a base equal to that default as null and checks the effective base after publication.
+Saved jobs with the earlier named default still publish through the same path.
 
 ### Builds and refreshes
 

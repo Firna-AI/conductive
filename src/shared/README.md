@@ -22,6 +22,8 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 it from a banner: the state of the bar, or null without a pull request and
 for a closed pull request.
 `checksSummary` gives the checks of a pull request as one value, for the bar.
+`GitHubBanner.baseMoved` optionally names the deleted base that the repository default replaced, and `displayBaseMoved` is its masked label.
+The Worker keeps it until a pull request opens, for the status message of the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
 The browser readers and the sandbox tools use it, so an older reply still reads.
@@ -68,6 +70,10 @@ Other errors keep the code and message only.
 `EmptyRequest` means an empty JSON object, including DELETE requests.
 `repositoryPath` names one repository of an org. PUT adds it and DELETE
 removes it. Each request sends `EmptyRequest` and returns the current list.
+`branches.ts` owns `repositoryBranchesPath` and `RepositoryBranchesResponse`.
+The live branch reply holds only branches that GitHub lists, newest commit first.
+Commit dates use Unix milliseconds, or null when GitHub gives no date.
+The browser adds its default row from the saved repository record and filters the list for search.
 `Repository.imageReady` and `Repository.ready` in `org-settings.ts` say
 whether the org has an image, and whether that image holds the repository,
 as the [App API rules](../../worker/app-api/README.md#rules) say. The

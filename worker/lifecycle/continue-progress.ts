@@ -12,6 +12,7 @@ import { authorizeContinue } from './continue-data'
 import { continueFailed } from './continue-failure'
 import type { ContinueJob, ContinueOptions } from './continue-types'
 import { publishContinue } from './continue-publication'
+import { continueBase } from './continue-base'
 import { workspaceAutoStopSeconds } from './idle-stop'
 import {
   CONTINUE_EXIT_CODES,
@@ -57,7 +58,8 @@ export async function advanceContinue(
         'workspace_not_merged',
         'Merge the pull request before you continue.',
       )
-    job.baseBranch = await options.defaultBranch(job.binding, job.member.id)
+    job.defaultBranch = await options.defaultBranch(job.binding, job.member.id)
+    job.baseBranch = await continueBase(options, job, snapshot)
     job.phase =
       row.state === 'stopped' ||
       row.state === 'error' ||

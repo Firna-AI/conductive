@@ -24,6 +24,8 @@ sets it to true. Older runners omit it. The protocol version stays 2.
 The workspace tools provide workspace, session, message, repository, section,
 model, preview, Mac command, and secret requests and replies. Their replies preserve
 accepted message and turn pairs, resume errors, and transcript positions.
+Workspace creation carries optional `startBranch` and `baseBranch` strings.
+The Worker resolves their defaults and validates them after creation replay.
 Workspace records and list entries give a required nullable parent ID.
 Workspace details give the parent entry, stored depth, and direct children.
 `Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`

@@ -8,6 +8,12 @@ import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import {
+  DEV_BRANCH_CHECKS,
+  DEV_BRANCH_LISTS,
+  type DevBranchCheck,
+  type DevBranchList,
+} from './branch-routes'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
@@ -162,6 +168,12 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
+ * - `branches=loading|failed|no-access`: the branch list of New workspace
+ *   never answers, fails as a read of GitHub does, or says that the GitHub
+ *   account cannot read the repository.
+ * - `branchCheck=missing|no-access`: a create that names a branch other
+ *   than the default branch gets the refusal of a branch that is no longer
+ *   on GitHub, or of a GitHub account that cannot read the repository.
  * - `providers=one|three|fail`: the configured provider accounts of the
  *   Providers tab and of the account choice of Create org: `boat` only,
  *   `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that
@@ -211,6 +223,10 @@ export interface DevOptions {
   paused: boolean
   waitlistOff: boolean
   inviteCode: DevInviteCode
+  /** How the branch list answers. */
+  branches: DevBranchList
+  /** How the branch check of a create answers a named branch. */
+  branchCheck: DevBranchCheck
   providers: DevProviderPreset
   providerSaveFails: boolean
   switches: boolean
@@ -273,6 +289,8 @@ export function readDevOptions(search: string): DevOptions {
     paused: params.get('paused') === '1',
     waitlistOff: params.get('waitlist') === 'off',
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
+    branches: pick(params, 'branches', DEV_BRANCH_LISTS) ?? 'list',
+    branchCheck: pick(params, 'branchCheck', DEV_BRANCH_CHECKS) ?? 'found',
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
     switches: params.get('switches') === '1',

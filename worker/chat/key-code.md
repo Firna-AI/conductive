@@ -21,6 +21,8 @@ first.
 - `workspace-integration.ts`: `createWorkspaceIntegration`, which joins
   chat, the lifecycle, and the Mac devices in the workspace object. It
   sets the hooks, and gives the Mac devices the shared state writer.
+  `fenced-dependencies.ts` gives its fetch, which needs an active receiver
+  before and after each request.
 - `workspace-operations.ts`: `WorkspaceOperations`, the queue-owned work of
   the lifecycle: the first message, the stop, the summary, and the
   lifecycle events. Its stop transaction clears the port report with

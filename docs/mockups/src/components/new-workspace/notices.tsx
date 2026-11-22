@@ -1,8 +1,12 @@
+import type { ReactNode } from 'react'
 import { defined } from '../../defined'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
+
+/** The title of a create that failed, or that the server refused. */
+const notCreated = "The workspace wasn't created"
 
 /**
  * A create that failed, over the composer of the New workspace page or in
@@ -23,7 +27,29 @@ export function CreateFailedNotice(props: { ready?: boolean }) {
       body="The app can't reach the server. Your message is kept."
       icon="circle-alert"
       moklyInstance="create-failed"
-      title="The workspace wasn't created"
+      title={notCreated}
+      tone="danger"
+    />
+  )
+}
+
+/**
+ * A create that the server refused, in the place of a failed create, such
+ * as for a picked branch that is no longer on GitHub (decision 303). `body`
+ * names the cause and says that the message stays. `action` is the one
+ * recovery of the refusal.
+ */
+export function CreateRefusedNotice(props: {
+  body: string
+  action: ReactNode
+}) {
+  return (
+    <notice.Component
+      action={props.action}
+      body={props.body}
+      icon="circle-alert"
+      moklyInstance="create-refused"
+      title={notCreated}
       tone="danger"
     />
   )

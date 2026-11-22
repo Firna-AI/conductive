@@ -27,6 +27,7 @@ import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 import type { StartCall } from './start-guard'
+import { missingStartBranchFailure } from './start-branch-failure'
 import { workspaceAutoStopSeconds } from './idle-stop'
 
 export async function advanceStartCommand(
@@ -39,6 +40,7 @@ export async function advanceStartCommand(
   label: string,
   call: StartCall,
   dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
+  preserveBase = false,
 ): Promise<boolean> {
   const sandboxId = row.sandboxId
   if (!sandboxId) throw new WorkspaceStartError(null)
@@ -117,6 +119,7 @@ export async function advanceStartCommand(
                 job.phase === 'startup'
                   ? await ownerCommitAuthor(env.DB, row.ownerUserId)
                   : null,
+                preserveBase,
                 bootstrap,
               ),
         ),
@@ -137,6 +140,14 @@ export async function advanceStartCommand(
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
+    if (
+      job.phase === 'fetch' &&
+      status.state === 'exited' &&
+      !status.timedOut
+    ) {
+      const missing = missingStartBranchFailure(job, status.exitCode)
+      if (missing) throw missing
+    }
     if (job.phase === 'terminal')
       warnWorker({
         kind: 'terminal_start_failed',

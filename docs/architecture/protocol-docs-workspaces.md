@@ -20,9 +20,21 @@ protocol docs.
 - [Create a workspace](../protocol/create-a-workspace.md): New workspace as a
   page or as a dialog, its Capabilities icon, the create, the branch, and
   a failed first start.
+  - [Create a workspace: the preference](../protocol/create-a-workspace-preference.md):
+    the tabs of the Account page, and the choice of how New workspace
+    opens, with its save and its default.
+  - [Create a workspace: the dialog](../protocol/create-a-workspace-dialog.md):
+    the parts of the dialog, its section, its notices, its close, and its
+    draft.
+  - [Start from a branch](../protocol/start-from-a-branch.md): the branch
+    control of New workspace, its dropdown, the target choice, and the
+    branch check of a create with its refusals.
   - [New workspace notices](../protocol/new-workspace-notices.md): the
     notice before the first good build, and the notice of a waiting
     repository.
+- [Base branches](../protocol/base-branches.md): the base branch of each
+  workspace, a base branch that GitHub deleted, and the branch of a pull
+  request run.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.

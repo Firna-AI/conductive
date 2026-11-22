@@ -1,36 +1,25 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { GitHubCapabilities } from '../shared/github'
-import { membersPath, type MembersResponse } from '../shared/members'
+import type { MembersResponse } from '../shared/members'
 import {
   orgSettingsPaths,
   type BuildsResponse,
   type ImageBuild,
-  type OrgSettings,
   type Repository,
 } from '../shared/org-settings'
-import { automationsPath } from '../shared/automations'
-import { sectionsPath, type Section } from '../shared/sections'
-import { workspacesPath } from '../shared/workspaces'
-import { items, record } from './api/parse'
-import { readSection } from './api/read-core'
-import { readAutomations, type ListedAutomation } from './api/read-automations'
-import { readWorkspaces } from './api/read-workspaces'
-import {
-  readBuildResponse,
-  readBuilds,
-  readMembers,
-  readRepositories,
-  readSettings,
-} from './api/read-settings'
+import type { Section } from '../shared/sections'
+import type { ListedAutomation } from './api/read-automations'
+import { readBuildResponse } from './api/read-settings'
 import { listWithArchives } from './archive-overlay'
+import { BranchLists } from './branch-lists'
 import { LiveGitHubStates, listWithLiveGitHub } from './live-github'
 import { Creations } from './creations'
-import { workspaceUpdated, type ListData } from './list-changes'
+import { workspaceUpdated } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
 import { OrgAgentLogins, type OrgLoginChanged } from './org-agent-logins'
 import { orgRefreshers } from './org-refresh'
+import { orgResources, type OrgResources } from './org-resources'
 import type { Refreshing } from './refresh'
-import { Resource } from './resource'
 import { SecretsModel } from './secrets-model'
 import type { AppServices } from './services'
 import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
@@ -59,18 +48,7 @@ export class OrgModel {
   readonly orgId: string
   readonly services: AppServices
   readonly suspension: OrgSuspension
-  readonly resources: {
-    readonly list: Resource<ListData>
-    readonly repositories: Resource<readonly Repository[]>
-    readonly builds: Resource<BuildsResponse>
-    readonly members: Resource<MembersResponse>
-    readonly automations: Resource<readonly ListedAutomation[]>
-    /**
-     * The settings of the cloud computer. Every opening of the Cloud
-     * computer tab shares them, so a save from a closed tab still shows.
-     */
-    readonly settings: Resource<OrgSettings>
-  }
+  readonly resources: OrgResources
   readonly sections: Readable<Loadable<readonly Section[]>>
   /**
    * The workspaces as screens show them: each Archive that runs shows as
@@ -98,6 +76,8 @@ export class OrgModel {
   readonly liveGitHub = new LiveGitHubStates()
   /** The GitHub access of the signed-in member, by repository ID. */
   private readonly githubAccess = new Map<string, GitHubCapabilities>()
+  /** The branches of each repository that the member reads in a picker. */
+  readonly branches: BranchLists
   readonly workspaceActions: WorkspaceActions
   private readonly parts: Readonly<Record<OrgPart, Refreshing>>
   private readonly drafts = new Map<string, NewWorkspaceModel>()
@@ -117,32 +97,8 @@ export class OrgModel {
     const api = noteOrgRefusals(services.api, () => suspension.note())
     this.services = { ...services, api }
     this.orgId = orgId
-    this.resources = {
-      list: new Resource<ListData>(async () => {
-        const [sections, workspaces] = await Promise.all([
-          api.get(sectionsPath(orgId), (body) =>
-            items(record(body), 'sections', readSection),
-          ),
-          api.get(workspacesPath(orgId), readWorkspaces),
-        ])
-        return { sections, workspaces }
-      }),
-      repositories: new Resource<readonly Repository[]>(() =>
-        api.get(orgSettingsPaths.repositories(orgId), readRepositories),
-      ),
-      builds: new Resource<BuildsResponse>(() =>
-        api.get(orgSettingsPaths.builds(orgId), readBuilds),
-      ),
-      members: new Resource<MembersResponse>(() =>
-        api.get(membersPath(orgId), readMembers),
-      ),
-      automations: new Resource<readonly ListedAutomation[]>(() =>
-        api.get(automationsPath(orgId), readAutomations),
-      ),
-      settings: new Resource<OrgSettings>(() =>
-        api.get(orgSettingsPaths.settings(orgId), readSettings),
-      ),
-    }
+    this.branches = new BranchLists(api, orgId)
+    this.resources = orgResources(api, orgId)
     const { list, repositories, builds, members, automations } = this.resources
     this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
@@ -257,9 +213,13 @@ export class OrgModel {
     )
   }
 
-  /** Forgets the GitHub access of the person who signed out. */
+  /**
+   * Forgets what GitHub showed the person who signed out: the access and
+   * the branch lists.
+   */
   forgetGitHubAccess(): void {
     this.githubAccess.clear()
+    this.branches.forget()
   }
 
   /**
