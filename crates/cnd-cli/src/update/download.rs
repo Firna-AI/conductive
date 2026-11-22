@@ -9,6 +9,7 @@ use cnd_release::version::{BINARY, TARGET, release_version};
 use super::engine::Engine;
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::UpdateLock;
+use super::presence::release_ready;
 
 impl Engine {
     pub(super) async fn download(&self, running: &str, _lock: Box<dyn UpdateLock>) -> Result<()> {
@@ -33,8 +34,9 @@ impl Engine {
         if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
             return Err(Error::MissingDigest);
         }
-        if self.store.versions()?.contains(&release.version)
-            || self.store.rejected(&release.version)?
+        if self.store.rejected(&release.version)?
+            || self.store.versions()?.contains(&release.version)
+                && release_ready(self.store.as_ref(), &release.version)
         {
             return Ok(());
         }

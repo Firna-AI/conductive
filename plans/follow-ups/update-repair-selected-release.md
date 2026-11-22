@@ -4,7 +4,7 @@
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/sandbox-start-issue-secrets-q3is`, review round 1, the wider fix of finding 5.
 - **Location:** `apply`, `rollback`, and `restore_parts` in `crates/cnd-cli/src/update/engine.rs` and `crates/cnd-cli/src/update/repair.rs`.
-- **Reason:** the branch adds a regression test for the fallback case, and the refactor waits for the decision in `plans/follow-ups/update-staged-release-missing-part.md`, which can change the selection.
+- **Reason:** the branch adds regression tests for each branch of `apply`, so the refactor only removes a way to get the choice wrong.
 
 - **Source:** Review. **Category:** Code structure.
 - **Terms:**
@@ -24,6 +24,6 @@
 - **Left out:** A test for each branch alone, because it adds tests and leaves the two separate choices.
 - **Wider fix:** C, because the type ties each start to its repair.
 - **Previous examples:** None found.
-- **Related:** `plans/follow-ups/update-staged-release-missing-part.md`, work that waits for its answer: its options B and D choose again after a failed repair.
-- **Recommendation:** C. It holds for every answer to the staged-release decision.
-- **Action:** fix after merge, apply C, because it waits for the staged-release decision.
+- **Related:** None. Cal's decision of 22 November 2026 settled the selection: apply starts a newer release only when each of its parts is present, and a fallback switches only to a previous release with each part present. Option C fits that rule: `restore_parts` can return whether the release it checked is ready.
+- **Recommendation:** C. It ties each start, and each fallback, to the release that the repair checked.
+- **Action:** fix after merge, apply C, because the tests already guard each branch.

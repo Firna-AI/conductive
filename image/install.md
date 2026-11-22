@@ -175,6 +175,13 @@ into the private folder `parts/<sha256>.partial-<process ID>`. It holds
 it keeps a part that is present. Collection removes a private folder
 that an interrupted unpack leaves.
 
+Apply and the idle install select a newer version only when it is
+ready: each part in its `parts.json` is present. A check stages a
+complete version that is not ready again, and reuses its present parts.
+Collection keeps that version. A fallback switches only to a ready
+previous version. Otherwise apply fails and leaves `current` and
+`pending` as they are.
+
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the
 system Git credential helper, and links the `gh` wrapper. It also links

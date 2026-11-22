@@ -257,6 +257,7 @@ A start never waits for a download of a newer release.
 If a software part of the release that starts is missing, the start downloads that part again first.
 If that download fails, the start goes on, and the next start tries again.
 A downloaded release applies at the software's next start or when the workspace has been idle for 2 minutes.
+If a downloaded release lost a part, Conductive downloads that part again in the background before the release applies.
 The workspace is idle when no agent turn runs in any session and no message waits.
 
 The update never interrupts a running turn.
@@ -275,6 +276,7 @@ A failed check or download leaves the current release in use.
 Conductive checks each downloaded file against its expected digest and refuses a broken release.
 The previous release stays available.
 If a new release fails to start, the previous release starts again.
+If a software part of the previous release is missing and cannot download, that start fails, and the next start tries again.
 An older cloud computer without the update program gets it at its next start.
 
 An automatic software update gives an existing workspace the server list in **Preview**.

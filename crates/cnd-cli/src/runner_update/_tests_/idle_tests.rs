@@ -4,6 +4,7 @@
 
 use std::sync::Arc;
 
+use cnd_release::parts::PartsList;
 use cnd_runner::update::{ReleaseReadiness, ReleaseStatus};
 use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
@@ -11,6 +12,7 @@ use unimock::{MockFn, Unimock, matching};
 use crate::runner_update::idle::IdleUpdates;
 use crate::runner_update::ports::{RunnerSwap, RunnerSwapMock};
 use crate::runner_update::releases::RunnerReleases;
+use crate::update::error::Error;
 use crate::update::ports::{State, StoreMock};
 
 #[tokio::test]
@@ -25,6 +27,9 @@ async fn a_non_exec_swap_disables_readiness_for_the_next_runner() {
         StoreMock::versions
             .some_call(matching!())
             .answers(&|_| Ok(vec!["0.0.10".into()])),
+        StoreMock::parts
+            .some_call(matching!("0.0.10"))
+            .answers(&|_, _| PartsList::new(Vec::new()).map_err(|_| Error::InvalidRelease)),
         RunnerSwapMock::swap.some_call(matching!(_)).returns(Ok(())),
     ));
     let updates = Arc::new(IdleUpdates::new(

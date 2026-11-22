@@ -86,7 +86,9 @@ says.
    the release (sandbox software decision 5). The preview relay and the
    terminal run a new release from their next start.
 6. Before the runner starts a release, the updater downloads again each
-   part of that release that is missing from the disk, as
+   part of that release that is missing from the disk. A newer release
+   that lost a part does not apply. The background check downloads its
+   parts again first, as
    [Updates](../protocol/sandbox-software.md#updates) says.
 7. Each build of an org image or of the software image installs the newest
    release through the same program. When the image already holds the

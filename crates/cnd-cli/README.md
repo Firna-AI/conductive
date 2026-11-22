@@ -87,9 +87,12 @@ It leaves no complete version on failure. A concurrent background check returns 
 An installation check with `--bootstrap` waits for the download lock.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 
-`update apply` switches to the newest complete version and installs its
-system files. First it checks that each part of the version that starts
-is present. In a fallback, that version is the previous release. A part
+`update apply` switches to the newest ready version and installs its
+system files. A newer version is ready when each part in its `parts.json`
+is present. A newer version that is not ready stays staged, and the next
+`update check` downloads its missing parts again. The idle install uses
+the same rule. First apply checks that each part of the version that
+starts is present. In a fallback, that version is the previous release. A part
 is present when its folder has the complete marker and the entry files of
 its role, such as `bin/node` or `runner-start.sh`. When a part is missing,
 apply downloads that part again with the digest check of `update check`.
@@ -100,10 +103,12 @@ background check delays a repair only for one rename. Each missing part
 gets an equal share of what is left of 60 seconds. A failed download, or
 a download that uses up its share, logs a warning with the part name.
 The next part still gets its attempt, and apply goes on. The next apply
-tries again. When no part is missing, apply uses no network. When the
-installer of a fallback fails, apply sets `current` back to the failed
-release and keeps its pending marker, so the next start runs the same
-updater again. It leaves a pending marker until
+tries again. When no part is missing, apply uses no network. A fallback
+switches only when the previous release is ready after the repair.
+Otherwise apply fails and changes nothing, so `current` keeps the updater
+that repairs. When the installer of a fallback fails, apply sets `current`
+back to the failed release and keeps its pending marker, so the next
+start runs the same updater again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
 A later apply with that marker restores the previous version and its system files. A persistent rejection
@@ -183,7 +188,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/engine.rs](src/update/engine.rs) owns download, activation, and fallback policy.
 - [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
-- [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
+- [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present and when a release is ready.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.

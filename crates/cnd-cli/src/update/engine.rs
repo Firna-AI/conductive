@@ -8,6 +8,7 @@ use cnd_release::version::release_version;
 
 use super::error::{Error, ErrorResultExt, Result};
 use super::ports::{Processes, State, Store, UpdateEngine};
+use super::presence::release_ready;
 
 /// Dependencies of the sandbox updater. The composition root supplies each port.
 pub struct Engine {
@@ -22,15 +23,20 @@ pub struct Engine {
 }
 
 impl Engine {
-    fn next_version(&self, current: Option<&str>) -> Result<Option<String>> {
+    /// The newest release after `current`, or `current` itself.
+    ///
+    /// With `ready_only`, a newer release counts only when each of its parts
+    /// is present, so that a start never waits for a download of it.
+    fn next_version(&self, current: Option<&str>, ready_only: bool) -> Result<Option<String>> {
         let mut newest = current.map(str::to_owned);
         for version in self.store.versions()? {
-            if match &newest {
-                Some(current) => {
-                    release_version(&version).internal()? > release_version(current).internal()?
+            let newer = match &newest {
+                Some(newest) => {
+                    release_version(&version).internal()? > release_version(newest).internal()?
                 }
                 None => true,
-            } {
+            };
+            if newer && (!ready_only || release_ready(self.store.as_ref(), &version)) {
                 newest = Some(version);
             }
         }
@@ -107,10 +113,19 @@ impl UpdateEngine for Engine {
         if state.pending.is_some() {
             if let Some(previous) = &state.previous {
                 self.restore_parts(previous).await;
+                if !release_ready(self.store.as_ref(), previous) {
+                    // `current` keeps the updater that repairs. The previous
+                    // release can hold an older updater that repairs no part.
+                    let error = Error::PreviousIncomplete {
+                        version: previous.clone(),
+                    };
+                    tracing::warn!(%error, "the fallback waits for the next start");
+                    return Err(error);
+                }
             }
             return self.rollback(state);
         }
-        let newest = self.next_version(state.current.as_deref())?;
+        let newest = self.next_version(state.current.as_deref(), true)?;
         if let Some(version) = &newest {
             self.restore_parts(version).await;
         }
@@ -147,7 +162,7 @@ impl UpdateEngine for Engine {
             return Ok(());
         };
         let state = self.store.state()?;
-        let next = self.next_version(state.current.as_deref())?;
+        let next = self.next_version(state.current.as_deref(), false)?;
         let keep: Vec<_> = [state.current, state.previous, next]
             .into_iter()
             .flatten()

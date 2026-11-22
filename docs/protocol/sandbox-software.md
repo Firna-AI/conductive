@@ -90,14 +90,27 @@ step of a build.
 - A download never changes the files of the release that runs. Reason: a
   tool call and the running runner then never mix two releases.
 - The next start of the agent runner applies the newest complete download,
-  before the runner starts its work.
+  before the runner starts its work. A download is complete only when each
+  of its parts is on the disk.
+- A downloaded release that lost a part is not complete, so a start does
+  not apply it. The background check downloads its missing parts again,
+  while the runner works, and the next start or install at idle applies
+  it (Cal's decision of 22 November 2026). Reason: a start then never waits
+  for a download of a newer release, and a short download failure never
+  makes the release a failed start.
 - Before the agent runner starts, the program checks that each part of
-  the release that starts is on the disk. It downloads each missing part
-  again, with the digest check of an update. Only such a start waits for
-  a download.
+  the release that starts is on the disk: the current release, or the
+  previous release in a fallback. It downloads each missing part again,
+  with the digest check of an update. Only such a start waits for a
+  download.
 - When that download fails, the program logs a warning, and the start goes
   on. The next start tries again. Reason: the start then fails no more
   often than with no check.
+- A fallback is the one exception. When a part of the previous release is
+  still missing after the download, the start fails, and the fallback
+  waits for the next start (Cal's decision of 22 November 2026). Reason:
+  the previous release can hold an older program that repairs no part. So
+  the sandbox switches to it only when it can run.
 - Reason: the runner cannot start without its parts, and a sandbox
   provider can lose files of a saved disk. A repair by hand was rejected,
   because a lost part then blocks the workspace until an operator acts. A
@@ -149,6 +162,9 @@ step of a build.
   Reason: the next message most likely comes just after a turn ends.
 - It installs only when its own release is confirmed, and never a release
   that failed to start. Reason: an install then never goes back or loops.
+- It installs only a complete download, with each part on the disk.
+  Reason: the runner is then away only for the switch, and never for a
+  download.
 - The runner swaps to the new release in place. It closes its connection
   and ends its work as at a shutdown. It then installs the release and
   runs the new release in the same process.

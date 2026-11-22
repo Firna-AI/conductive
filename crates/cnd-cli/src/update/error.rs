@@ -27,6 +27,14 @@ pub enum Error {
     /// There is no previous release to restore.
     #[error("[cnd-cli/update] failed first start has no previous release")]
     NoPrevious,
+    /// A fallback waits, because the previous release still lacks a part.
+    #[error(
+        "[cnd-cli/update] previous release {version} lacks a part; the fallback waits for the next start"
+    )]
+    PreviousIncomplete {
+        /// Version of the previous release.
+        version: String,
+    },
     /// An unexpected dependency failure.
     #[error("[cnd-cli/update] internal: {0:?}")]
     Internal(#[from] InternalError),

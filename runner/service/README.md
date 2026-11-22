@@ -30,6 +30,7 @@ A start never waits for the download of a newer release.
 A start downloads only a missing part of the release that it starts, as the
 [cnd-cli README](../../crates/cnd-cli/README.md) says.
 The next start applies a complete newer release before the runner works.
+A newer release counts as complete only with each of its parts on the disk.
 
 While it runs, the runner also installs a complete newer release when its
 workspace is idle, as
