@@ -2,6 +2,7 @@
 
 use std::ffi::OsString;
 use std::fmt;
+use std::path::PathBuf;
 
 use clap::{Args, Subcommand};
 
@@ -12,6 +13,12 @@ use crate::update_command::UpdateArgs;
 pub(crate) enum Command {
     /// Run agent sessions through the private SDK helper.
     Runner,
+    /// Execute a private service record after the system manager changes user.
+    #[command(hide = true)]
+    ServiceExec {
+        /// Private runtime launch record.
+        record: PathBuf,
+    },
     /// Relay port previews on the private socket.
     Relay,
     /// Serve workspace tools over MCP.
@@ -38,12 +45,15 @@ pub(crate) enum Command {
     Mac(PendingArgs),
     /// List secrets or run a command with approved secrets.
     Secrets(PendingArgs),
+    /// Manage services on this cloud computer.
+    Services(PendingArgs),
 }
 
 impl fmt::Display for Command {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let name = match self {
             Self::Runner => "runner",
+            Self::ServiceExec { .. } => "service-exec",
             Self::Relay => "relay",
             Self::Mcp(_) => "mcp",
             Self::GitCredential(_) => "git-credential",
@@ -57,6 +67,7 @@ impl fmt::Display for Command {
             Self::Previews(_) => "previews",
             Self::Mac(_) => "mac",
             Self::Secrets(_) => "secrets",
+            Self::Services(_) => "services",
         };
         formatter.write_str(name)
     }

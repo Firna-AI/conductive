@@ -84,6 +84,13 @@ puts the workspace record and the list of a test on `MASKED_HEAD`.
 history, as for a new workspace whose runner has not reported its lists.
 Override the tree and changes routes too, such as with a 503 reply.
 
+The services list of the default workspace answers `unsupported`, as older
+software does, so each Preview tool shows as before. A test serves a list
+of `fixtures/services.ts`, the services of the mockups at
+`app/tools/services` as the Worker sends them, at the fake time.
+`serveFakeServices` of `fake-services.ts` serves them for the development
+page, with Stop and Restart that change the list.
+
 `subWorkspaces: true` adds the sub-workspaces of the mockup page
 `app/sub-workspaces` to the list of Acme: two trees in Checkout, under
 Apple Pay button and under Checkout address autocomplete, down to depth 3.
@@ -295,6 +302,8 @@ Replies, timers, and `waitFor` go on.
 - `recorded-wakes.ts` supplies the recorded chats of the wakes of a watch, as the mockups draw them at `app/chat/wakes`, and `wakeNotice`, which tests use for a wake at a chosen turn.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
+- `fake-services.ts` serves the services of the development page: a list in one of its states, Stop and Restart that answer as the Worker does, and the logs.
+- `fixtures/services.ts` maps the services of the mockups to the generated rows, with their logs.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
   shared contracts, with a made-up value of each, and the grants of

@@ -6,6 +6,7 @@ import { repositories, type RepositoryKey } from '../fixtures/repositories'
 import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { serviceControls } from './serviceState'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -67,12 +68,15 @@ function branchOf(state: WorkspaceState, workspace: Workspace): string {
 
 /**
  * The menus of the header that the state opens: the owner, the header
- * state, and the repository, or the change of the repository that runs.
+ * state, and the repository, or the change of the repository that runs. A
+ * viewer whose service rows offer no Stop and no Restart cannot restart
+ * the software either, so the header state is plain text.
  */
 export function headerMenusOf(state: WorkspaceState): {
   ownerOpen: boolean
   stateOpen: boolean
   repositoryControl?: 'open' | 'changing'
+  canRestart?: false
 } {
   return {
     ownerOpen: state.overlay === 'reassign',
@@ -83,6 +87,7 @@ export function headerMenusOf(state: WorkspaceState): {
         : state.overlay === 'repository'
           ? 'open'
           : undefined,
+    ...(serviceControls(state) ? {} : { canRestart: false }),
   }
 }
 

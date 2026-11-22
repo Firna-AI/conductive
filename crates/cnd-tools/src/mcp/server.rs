@@ -9,6 +9,8 @@ use crate::client::Dispatch;
 use crate::error::{ErrorResultExt, Result};
 use crate::input;
 use crate::ports::{Runtime, Streams};
+use crate::reply::Reply;
+use crate::services::tools::ServiceTools;
 
 use super::protocol::{self, Action, Phase, Response};
 
@@ -20,11 +22,20 @@ pub(crate) trait Mcp: Send + Sync {
 
 pub(crate) struct Server {
     client: Arc<dyn Dispatch>,
+    services: Option<Arc<dyn ServiceTools>>,
 }
 
 impl Server {
     pub(crate) fn new(client: Arc<dyn Dispatch>) -> Self {
-        Self { client }
+        Self {
+            client,
+            services: None,
+        }
+    }
+
+    pub(crate) fn with_services(mut self, services: Option<Arc<dyn ServiceTools>>) -> Self {
+        self.services = services;
+        self
     }
 }
 
@@ -70,6 +81,21 @@ impl Mcp for Server {
                                 true
                             }
                         }
+                    });
+                }
+                Action::Services { id, name, fields } => {
+                    let services = self.services.clone();
+                    let request_id = runtime.request_id();
+                    let streams = streams.clone();
+                    pending.spawn(async move {
+                        let response = match services {
+                            Some(services) => match services.mcp(name, fields, &request_id).await {
+                                Ok(reply) => Response::tool(id, Reply::Services(reply)),
+                                Err(error) => Response::tool_error(id, error.message()),
+                            },
+                            None => Response::tool_error(id, "The service manager is not available. Try again after the software updates.".into()),
+                        };
+                        emit(&*streams, response).await.is_err()
                     });
                 }
             }

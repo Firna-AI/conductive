@@ -118,8 +118,8 @@ names a decision of the change that added this action.
   Nothing stops (repository change decision 5 A). Reason: Restart installs
   the newest software, and a refusal stops no program without a warning.
 - These ways were rejected (repository change decision 5):
-  - A Restart that the change runs first. Each program that an agent
-    started, such as a dev server, stops with no warning.
+  - A Restart that the change runs first. Each ordinary program that an
+    agent started, such as a dev server, stops with no warning.
   - A menu that is off for such a workspace. The member does not learn
     why.
 - A refused change keeps the workspace as it is. The member sees the

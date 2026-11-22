@@ -4,6 +4,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 use cnd_runner_interface::json::decoder;
+use cnd_runner_interface::services::local::ServiceLocalResponse;
 use cnd_runner_interface::tools::device::{DeviceCommandResponse, DeviceCommandState};
 use cnd_runner_interface::tools::previews::{
     AgentClosePreviewResponse, AgentListPreviewsResponse, AgentOpenPreviewResponse,
@@ -29,10 +30,12 @@ use crate::call::Name;
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::reply_validation::{cap_output, normalize_paths, valid};
 use crate::secrets::response;
+use crate::services::tools;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub(crate) enum Reply {
+    Services(ServiceLocalResponse),
     ListSecrets(ListSecretsResult),
     RunWithSecrets(RunWithSecretsResult),
     RunMacCommand(DeviceCommandResponse),
@@ -65,6 +68,7 @@ pub(crate) enum Reply {
 impl Reply {
     pub(crate) fn failed(&self) -> bool {
         match self {
+            Self::Services(reply) => tools::failed(reply),
             Self::RunWithSecrets(value) => value.exit_code() != 0,
             Self::RunMacCommand(value) => {
                 value.request.state != DeviceCommandState::Completed

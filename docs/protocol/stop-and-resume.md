@@ -6,7 +6,8 @@ near day 14 of a stop. It belongs to
 [Life of a workspace](workspace-life.md). The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
 dated record, as [Decision numbers](../architecture.md#decision-numbers)
-says.
+says. A services decision number names a decision of the change that adds
+[services](services.md).
 
 ## The stop
 
@@ -39,8 +40,12 @@ says.
   either, such as the live reload of a dev server.
 - Reason: a forgotten tab must not keep a sandbox running, and a stop must
   not cut off real work.
+- A [service](services.md) is not activity either (services decision 1 B).
+  Its processes, its output, its reports, and the reads of its log never
+  keep a sandbox running, as [Activity](services.md#activity) says.
 - A stop ends every process in the sandbox. Its files and its agent
-  sessions stay.
+  sessions stay. The stop also ends each service, with its definition and
+  its log.
 
 ## The resume
 
@@ -100,6 +105,7 @@ says.
   says.
 - While the sandbox is stopped, the chat history shows, and the stopped
   state takes the place of the composer.
+- A resume starts no service, as [Lifetime](services.md#lifetime) says.
 - A start that fails shows the error state with Try again. The chat history
   stays.
 

@@ -10,6 +10,8 @@ import {
   type PreviewsAction,
   type PreviewsState,
 } from './previewsState'
+import { useServicesState, type PreviewServices } from './services/servicesPart'
+import { ownedPorts } from './services/servicesState'
 
 export interface PreviewPanelProps {
   state: PreviewsState
@@ -25,6 +27,8 @@ export interface PreviewPanelProps {
   onShow: (port: number) => void
   /** The time now, for the age of the notice of a failed repair. */
   now?: () => number
+  /** The services of the workspace, above the servers. */
+  services?: PreviewServices
 }
 
 /**
@@ -38,6 +42,7 @@ export interface PreviewPanelProps {
  */
 export function PreviewPanel(props: PreviewPanelProps) {
   const { state, dispatch } = props
+  const servicesState = useServicesState(props.services)
   let content
   if (state.load?.state === 'loading') {
     content = <ToolWaiting label="Loading previews" />
@@ -62,9 +67,21 @@ export function PreviewPanel(props: PreviewPanelProps) {
         <PreviewOpenForm
           current={props.current}
           error={state.openError}
-          list={panelPortList(state, visible, props.tabPorts)}
+          list={panelPortList(
+            state,
+            visible,
+            props.tabPorts,
+            ownedPorts(servicesState),
+          )}
           onOpen={props.onShow}
           opening={state.opening}
+          services={
+            props.services?.section(servicesState, {
+              current: props.current,
+              opening: state.opening,
+              onOpen: props.onShow,
+            }) ?? null
+          }
         />
         {state.portsFailedAt === null ? null : (
           <PortsNotice at={state.portsFailedAt} now={props.now ?? Date.now} />

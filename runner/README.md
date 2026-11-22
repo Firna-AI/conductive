@@ -113,6 +113,18 @@ The separate Rust gate checks the Rust runner and static program build.
 The [service guide](service/README.md) describes how each build of the org
 image installs the runner as a systemd service, and how that service starts.
 
+## Services of a workspace
+
+[Services](../docs/protocol/services.md) are named programs that run
+outside every turn, in system units of their own.
+The [native services library](../crates/cnd-services/README.md) provides the
+manager, private socket, process reconciliation, cgroup ownership, and logs.
+The [local tool guide](../tools/services.md) gives CLI and MCP calls.
+The runner also negotiates a separate private Worker transport for reports,
+controls, and complete log reads. It captures each request's connection generation.
+Each accepted connection publishes a full snapshot with a higher saved revision.
+Its private jobs hold no turn and never delay an idle update or repository move.
+
 ## Configuration
 
 [Runner configuration](configuration.md) gives the service variables,

@@ -1,7 +1,8 @@
 # Workspace tool calls
 
 This page belongs to the [workspace CLI and MCP server](README.md). It
-gives the 27 calls of both tools, their options, and their replies.
+gives the 27 Worker calls, their options, and their replies.
+The five [local service calls](services.md) use the same CLI and MCP server.
 [Agent tools](../docs/protocol/agent-tools.md#workspace-tools) and the
 pages that it links state the requirements.
 

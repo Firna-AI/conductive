@@ -1,13 +1,15 @@
 # Workspace CLI and MCP server
 
-The Rust program `conductive` provides 27 workspace tools as CLI commands
-and as a stdio MCP server. It manages workspaces, sessions, messages,
-sections, and private port previews. It lists repositories and models.
+The Rust program `conductive` provides 27 Worker tools and five local service
+tools as CLI commands and as a stdio MCP server. It manages workspaces,
+sessions, messages, sections, and private port previews. It lists repositories and models.
 It can ask to run a command on the active turn sender's connected Mac.
 It lists org secrets and runs a command with approved values in its environment.
 [Workspace tool calls](calls.md) gives each call with its options and replies.
 
-Both adapters use the fixed machine routes under `/v1/tools/`.
+The Worker calls use fixed machine routes under `/v1/tools/`.
+The [local service calls](services.md) use the runner's private Unix socket.
+They need no workspace token or active turn.
 The [Worker handler](../worker/tools/README.md) verifies the workspace token
 and the calling turn. Rust owns the shared runner request and reply types in
 [cnd-runner-interface](../crates/cnd-runner-interface/README.md).
@@ -98,7 +100,7 @@ Every read needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes the 27 calls of [the call table](calls.md#the-calls).
+The stdio server exposes the 27 Worker calls of [the call table](calls.md#the-calls).
 Their fields take the values of the CLI options.
 Their optional `workspaceId` defaults to the caller.
 The ID fields name the calls or links that supply their values.

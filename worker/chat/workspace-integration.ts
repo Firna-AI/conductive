@@ -55,7 +55,7 @@ export function createWorkspaceIntegration(
   )
   const baseChanges = new WorkspaceBaseChanges(env, dependencies, storage)
   const sockets = new WorkspaceSockets(context)
-  const stoppedHooks: ((id: string) => Promise<void>)[] = []
+  const stoppedHooks: ((id: string, failed?: boolean) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
     dependencies.randomToken,
@@ -245,9 +245,9 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id, keepQueued) => {
-        for (const hook of stoppedHooks) await hook(id)
-        await chat.stopWorkspace(id, keepQueued)
+      stopped: async (id, keepQueued, restartFailed) => {
+        for (const hook of stoppedHooks) await hook(id, restartFailed)
+        await chat.stopWorkspace(id, keepQueued, restartFailed)
         context.waitUntil(reconcileStopped())
       },
     },
@@ -266,6 +266,6 @@ export function createWorkspaceIntegration(
     startRecords,
     withGeneration: generations.withGeneration,
     reconcileStopped,
-    onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
+    onStopped: (hook: (typeof stoppedHooks)[number]) => stoppedHooks.push(hook),
   }
 }

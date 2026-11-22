@@ -62,6 +62,12 @@ the `AppModel` of the tab, for the signed-in user.
   of that connection forgets the files preview, so a return opens it
   again, as [The tabs of HTML files](html-tabs.md) says. A sign-out forgets
   the store.
+- The tab also keeps the store of the services of each workspace that it
+  showed, which the Preview tool reads. `KeptConnections` connects it while
+  the cloud computer runs. The end of that connection forgets the list, so
+  a return reads it again and never shows the list of an earlier run. A
+  Stop or a Restart keeps running in the store after its page left. Its
+  result can still show a toast. A sign-out forgets the store.
 - Nothing goes to browser storage. So a reload or a new tab starts empty,
   and reads the stored history again.
 - The memory has no size limit. It keeps each workspace that the tab

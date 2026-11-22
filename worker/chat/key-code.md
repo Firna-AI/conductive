@@ -128,6 +128,8 @@ first.
   dispatch checks, `hello.processStartId` for its warnings, and
   `hello.repositoryFolder` for the folder check. Its `welcome` accepts
   `hello.completeToolDetails` when the `hello` offers it.
+- [runner-hello.ts](runner-hello.ts): `acceptRunnerHello` keeps the saved-ready check, optional service negotiation, welcome, and ready callbacks in their hello order.
+- [../services/runtime.ts](../services/runtime.ts): `WorkspaceServices` receives private service parts before numbered receipt work, and owns the service-aware disconnect and stop hooks.
 - `runner-repository-move.ts`: `RepositoryMoves` compares the runner folder
   with the record folder from `branch-data.ts`. It sends one
   `repository.move` to each capable connection in the stored folder of
@@ -147,7 +149,9 @@ first.
 - `runner-connection-state.ts`: `RunnerConnectionState`, the whole value
   of a runner connection that native storage saves and a wake restores.
   `ActiveRunner` in `types.ts` holds it as `state`, beside the
-  memory-only `peer`.
+  memory-only `peer`. Optional `services` and `serviceBinding` fields retain
+  service negotiation and its exact sandbox identity. Older saved records
+  omit them.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. Each answer record keeps the shown ends of its
@@ -222,6 +226,7 @@ first.
   displayed-label checks. Private labels stay complete for the output filter.
   Runner reports require a sorted unique array. Only a workspace stop
   publishes a null list.
+  A string `serviceId` survives parsing and filtering as an optional port field.
 - `skill-reports.ts`: the skills-report parser, the description cut to 300
   characters after the final filter, the check of the cut, and the browser
   form `SkillsUpdated`. The parser leaves out a name that no skill text can

@@ -51,6 +51,10 @@ This page lists each protocol doc and what it covers.
     - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
       Worker for runner connections and for turn ends with no Stop request,
       and the process-start ID of the runner.
+    - [Services](../protocol/services.md): the named programs outside every
+      turn, with [Service calls](../protocol/service-calls.md),
+      [Services in the app](../protocol/services-in-the-app.md), and
+      [Service reports](../protocol/service-reports.md).
   - [Session transcripts](../protocol/session-transcripts.md): copying a
     session as concise or full Markdown, and the text of a copy.
     - [Transcript routes](../protocol/transcript-routes.md): the route of
