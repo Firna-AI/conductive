@@ -129,6 +129,13 @@ describe('Settings', () => {
     question?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
     await settle()
     const pressed = settingsDialog() !== null
+    // A busy question opens again a task after the browser closes it. An
+    // Escape in that moment goes to the question, not to Settings.
+    question?.removeAttribute('open')
+    press(document.body, 'Escape')
+    await settle()
+    const inGap = settingsDialog() !== null
+    question?.setAttribute('open', '')
     // A browser sends the key, then asks the native dialog to close.
     if (question instanceof HTMLDialogElement) {
       press(question, 'Escape')
@@ -138,6 +145,7 @@ describe('Settings', () => {
     expect({
       question: question !== null,
       pressed,
+      inGap,
       afterEscape: {
         question: queryByRole('dialog', 'Delete Acme?') !== null,
         settings: settingsDialog() !== null,
@@ -145,6 +153,7 @@ describe('Settings', () => {
     }).toEqual({
       question: true,
       pressed: true,
+      inGap: true,
       afterEscape: { question: false, settings: true },
     })
   })
