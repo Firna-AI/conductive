@@ -38,8 +38,12 @@ The Durable Object runs the gates itself.
   needs no running sandbox. So the tabs of a stopped or archived workspace
   stay open.
 - The Durable Object reads the first grant of a new tab before the
-  history read. It checks the grant again before it sends the history. A
-  tab without a valid grant gets no history and `404 workspace_not_found`.
+  history read. It checks the grant again before it answers the socket
+  upgrade. A tab without a valid grant gets no history and
+  `404 workspace_not_found`.
+- The Durable Object checks the grant again before each history page,
+  without a D1 read. A tab whose grant expires during its replay closes
+  and gets no further page.
 - Each event send checks the grant first, without a D1 read. A tab with
   an expired grant closes and gets no event.
 - Every 15 seconds, one D1 query refreshes the grants of all open tabs.

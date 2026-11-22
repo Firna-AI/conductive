@@ -152,10 +152,20 @@ this guide.
   not go out, as [Agent actions](../../github/actions.md#agent-actions)
   says.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
-  kept files, of the kept previews, and of the kept files preview for the
-  whole screen.
+  kept files, of the kept previews, of the kept services, and of the kept
+  files preview for the whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
   workspace, its snapshot, and its connection while the sandbox runs.
+- `previews/services/kept-services.tsx`: the kept services store of the
+  open workspace, its connection while the sandbox runs, and
+  `usePreviewServices`, the services that the Preview tool shows, which
+  read again on a timer while Preview shows: on a phone as the shown tool,
+  and on desktop also only while the right column shows.
+  `previews/services/ServiceSection.tsx` draws the Services part with its
+  rows, the Stop question, and the log, as
+  [Services in the app](../../../docs/protocol/services-in-the-app.md)
+  says. `restart-access.ts`: `mayRestartSoftware`, the rule of Restart in
+  the header, which Stop and Restart of a service share.
 - `previews/kept-files-preview.ts`: the kept files preview store of the
   open workspace, its snapshot, and its connection, with the end of the
   files preview at its expiry and at a stop of the cloud computer.

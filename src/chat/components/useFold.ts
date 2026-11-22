@@ -21,6 +21,17 @@ export interface Fold {
 }
 
 /**
+ * The click ends a selection of text in the line, such as a drag over the
+ * text of an open message line, so the fold keeps its state.
+ */
+function selectsText(line: HTMLElement): boolean {
+  const selection = document.getSelection()
+  if (!selection || selection.isCollapsed || selection.rangeCount === 0)
+    return false
+  return selection.getRangeAt(0).intersectsNode(line)
+}
+
+/**
  * Opens or closes a fold when the user clicks its line, and keeps the line
  * in place. The click gives the line to the keeper of the chat as the row to
  * keep, also at the bottom of the chat. After the render, the keeper moves
@@ -33,6 +44,8 @@ export interface Fold {
  * click bubbles, and the state alone opens or closes the fold. A click on a
  * link in the line, such as a workspace chip in a message, stays with the
  * link, so a click with a modifier key opens a new tab as on any link.
+ * A click that ends a selection of text in the line keeps the fold as it
+ * is, so the text of an open message line can be selected.
  */
 export function useFold(open: boolean, setOpen: (open: boolean) => void): Fold {
   const keeper = useContext(ChatKeeper)
@@ -61,6 +74,7 @@ export function useFold(open: boolean, setOpen: (open: boolean) => void): Fold {
             : null
         if (link && event.currentTarget.contains(link)) return
         event.preventDefault()
+        if (selectsText(event.currentTarget)) return
         if (line.current) keeper.keep(line.current)
         clicked.current = true
         setOpen(!open)

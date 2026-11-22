@@ -7,7 +7,8 @@ use ts_rs::{Config, TS};
 use cnd_runner_interface::{
     agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
     preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
-    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, skills, tools, workspaces,
+    runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services, skills, tools,
+    workspaces,
 };
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -49,6 +50,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     messages::UserMessage::export_all(&cfg)?;
     ports::ListeningPort::export_all(&cfg)?;
     ports::RunnerPortsUpdated::export_all(&cfg)?;
+    services::app::ServiceCatalogue::export_all(&cfg)?;
+    services::app::ServiceLogResponse::export_all(&cfg)?;
+    services::control::ServiceControlResult::export_all(&cfg)?;
+    services::local::ServiceLocalRequest::export_all(&cfg)?;
+    services::local::ServiceLocalResponse::export_all(&cfg)?;
+    services::process::ServiceIdentity::export_all(&cfg)?;
+    services::process::ServiceSummary::export_all(&cfg)?;
+    services::reports::ServiceReport::export_all(&cfg)?;
+    services::transport::RunnerServiceMessage::export_all(&cfg)?;
+    services::transport::RunnerServiceCommand::export_all(&cfg)?;
     skills::AgentSkill::export_all(&cfg)?;
     skills::RunnerSkillsUpdated::export_all(&cfg)?;
     skills::SkillLists::export_all(&cfg)?;
@@ -108,6 +119,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::resources::AgentCreateSectionResponse::export_all(&cfg)?;
     tools::resources::AgentDeleteSectionResponse::export_all(&cfg)?;
     tools::session_types::DefaultAgentLogin::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionRequest::export_all(&cfg)?;
+    tools::session_watches::AgentWatchSessionResponse::export_all(&cfg)?;
+    tools::session_watches::SessionWatchNotice::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;

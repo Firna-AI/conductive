@@ -87,7 +87,8 @@ function manyOnMac(history: readonly ChatItem[]): readonly ChatItem[] {
  * The chats of a command on the Mac of the sender (decision 62), after the
  * finished turn of `history`: it waits for approval, for the checkout test
  * or for the whole suite, it was denied, it ran, or the Mac is not there.
- * Or the workspace refused it, because Mac access is off.
+ * Or the workspace refused it, because Mac access was off, as an older
+ * chat keeps it from before Mac access decision 7.
  */
 export function macConversations(history: readonly ChatItem[]) {
   return {

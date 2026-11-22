@@ -1,4 +1,5 @@
 import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
+import type { ServiceBinding } from '../services/binding'
 import type { RepositoryMoveState } from './runner-repository-move'
 import type { RunnerWorkspaceRecord } from './types'
 
@@ -16,6 +17,8 @@ export interface RunnerConnectionState {
   /** The move of this connection. A new connection starts without one. */
   repositoryMove?: RepositoryMoveState
   fileServer?: boolean
+  services?: boolean
+  serviceBinding?: ServiceBinding
   /** The end of the watch window of runner work, from the hello. */
   watchUntil?: number
   ready: boolean

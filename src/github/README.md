@@ -4,8 +4,8 @@ These parts show the GitHub state of a workspace branch: the pull request bar
 of the right column, the compact pull request row of a phone, and the Checks
 tab. The bar shows the main action of each state beside its links to
 GitHub: a fixed prompt for the agent, Merge, Ready for review, or Continue
-and Archive. On a
-phone, the actions top the Checks tab. [GitHub banner](../../docs/protocol/github-banner.md)
+and Archive. On a phone, the actions top the Checks tab, under the branch
+and its base while the branch has no pull request. [GitHub banner](../../docs/protocol/github-banner.md)
 states the requirements, and the mockups under `app/banner` draw them.
 [The actions of the bar](actions.md) gives their state and their rules.
 
@@ -82,6 +82,12 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   `onOpenChecks` lets the app's router open the tab in place. A branch
   without a pull request opens the tab too, when the bar has an action, so
   Create PR stays one tap away.
+- `ChecksActions` tops the Checks tab of a phone: the message of the bar,
+  then its actions and its link to GitHub. While the branch has no pull
+  request, the branch and its base stand above the actions, also when the
+  bar has none, as
+  [The branch and its base on a phone](../../docs/protocol/github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
+  says. The names wrap, so each name shows in full.
 - A failed load shows one Try again on each screen: in the bar on desktop,
   and in the row on a phone. The Checks tab names the error without its own
   button, so keep the bar or the row on the screen with the Checks tab.
@@ -219,7 +225,9 @@ mounts it, and the production build leaves it out.
   shows the actions in the whole screen.
 - `sample` changes the fake data to other valid data: `every-check` gives
   one check in each of the nine states, `no-checks` a pull request without
-  checks, and `long-base` a long target branch. `fake`, the default, keeps the data of the fake API.
+  checks, and `long-base` a long target branch. `base-moved` gives a base
+  that GitHub deleted, whose line shows under the bar of `none` and
+  `no-commits`. `fake`, the default, keeps the data of the fake API.
   The live events of a sample carry the same data as its replies.
 - Send gives a live `github.updated` event. With `github=error`, "Let GitHub
   answer" makes the next Try again succeed.
@@ -256,7 +264,8 @@ mounts it, and the production build leaves it out.
 - `githubClient.ts` and `githubParse.ts`: read the API replies of the
   banner, the checks, and the stored state, and check them against the
   contract, with the head commit of the pull request. They keep the
-  optional labels `displayBranch` and `displayBaseBranch` of the banner.
+  optional labels `displayBranch`, `displayBaseBranch`, and
+  `displayBaseMoved` of the banner.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.

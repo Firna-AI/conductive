@@ -84,6 +84,13 @@ puts the workspace record and the list of a test on `MASKED_HEAD`.
 history, as for a new workspace whose runner has not reported its lists.
 Override the tree and changes routes too, such as with a 503 reply.
 
+The services list of the default workspace answers `unsupported`, as older
+software does, so each Preview tool shows as before. A test serves a list
+of `fixtures/services.ts`, the services of the mockups at
+`app/tools/services` as the Worker sends them, at the fake time.
+`serveFakeServices` of `fake-services.ts` serves them for the development
+page, with Stop and Restart that change the list.
+
 `subWorkspaces: true` adds the sub-workspaces of the mockup page
 `app/sub-workspaces` to the list of Acme: two trees in Checkout, under
 Apple Pay button and under Checkout address autocomplete, down to depth 3.
@@ -103,7 +110,8 @@ runner without a file server, `failed` for the 502 `sandbox_unavailable`
 of a cloud computer that did not answer, or `not-ready` for the 409
 `sandbox_not_ready` of a cloud computer that does not run.
 
-Writes return recorded replies, except org moves and terminal list writes.
+Writes return recorded replies, except org moves, terminal list writes, and Mac permission starts.
+A Mac permission start keeps its grant for later settings reads.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
 The app's stateful dev routes supply their own org list.
@@ -292,8 +300,11 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+- `recorded-wakes.ts` supplies the recorded chats of the wakes of a watch, as the mockups draw them at `app/chat/wakes`, and `wakeNotice`, which tests use for a wake at a chosen turn.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
+- `fake-services.ts` serves the services of the development page: a list in one of its states, Stop and Restart that answer as the Worker does, and the logs.
+- `fixtures/services.ts` maps the services of the mockups to the generated rows, with their logs.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
   shared contracts, with a made-up value of each, and the grants of

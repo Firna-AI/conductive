@@ -5,7 +5,7 @@ import {
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
-import { HistoryPages, type SessionPage } from './history-pages'
+import { HistoryPages, type ReadScope } from './history-pages'
 import { prepareSessionHistory } from './history-session-preparation'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
@@ -21,12 +21,14 @@ import {
   chatKey as key,
   chatEventKey as eventKey,
 } from './storage-keys'
-import type { ChatData, ChatStorage, PendingCommand, StoredTurn } from './types'
+import type { ChatData, ChatStorage, StoredTurn } from './types'
+import type { PendingCommand } from './pending-command'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
 import { SecretRequestRecords } from '../secrets/request-records'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
+import { SessionWatchRecords } from './session-watch-records'
 import {
   WorkspaceEventLabelPreparation,
   WorkspaceEventLabels,
@@ -45,6 +47,7 @@ export class ChatTransaction extends ChatRecords {
   readonly terminals: TerminalList
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
+  readonly watches: SessionWatchRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
   private readonly labels: WorkspaceEventLabelPreparation | undefined
@@ -65,6 +68,7 @@ export class ChatTransaction extends ChatRecords {
     this.prepareSession = prepareSession
     this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
+    this.watches = new SessionWatchRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
     this.github = {
@@ -126,11 +130,11 @@ export class ChatTransaction extends ChatRecords {
       order: ++this.commandThrough,
     })
   }
-  history(after: number, through = this.through, session?: SessionPage) {
+  history(after: number, through = this.through, scope?: ReadScope) {
     return this.pages.read(
       after,
       Math.min(through, this.through),
-      session,
+      scope,
       this.prepareSession !== undefined,
     )
   }

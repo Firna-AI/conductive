@@ -35,6 +35,14 @@ export function baseBranchLabel(banner: GitHubBanner): string {
   return banner.displayBaseBranch ?? banner.baseBranch
 }
 
+/**
+ * The name that a screen shows for the base that GitHub deleted, as
+ * `branchLabel` says, or undefined while no base moved.
+ */
+export function baseMovedLabel(banner: GitHubBanner): string | undefined {
+  return banner.displayBaseMoved ?? banner.baseMoved
+}
+
 /** A state tints the whole bar. Its edges stay neutral. */
 type BannerTone = 'neutral' | 'success' | 'warning' | 'danger' | 'merged'
 

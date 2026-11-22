@@ -76,6 +76,7 @@ export function createdWorkspace(value: unknown): AgentCreateWorkspaceResponse {
     workspace: workspace(fields.workspace),
     sessionId: text(fields.sessionId),
     sessionLink: text(fields.sessionLink),
+    ...(fields.turnId !== undefined && { turnId: text(fields.turnId) }),
     ...(fields.notice !== undefined && { notice: text(fields.notice) }),
   }
 }

@@ -24,7 +24,8 @@ sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
-`previews`, `mac`, and `secrets`. The workspace commands and `mcp` run the 26 calls in
+`previews`, `mac`, `secrets`, and `services`. The workspace commands and
+`mcp` run 27 Worker calls and five local service calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
 `secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
@@ -43,6 +44,10 @@ The credential helper keeps the caller's turn ID even when the file has another 
 resolve Node and the helper beside the running release executable. Local
 builds use `node` and `dist/sdk-helper/sdk-helper.mjs` in the working folder.
 SIGTERM and SIGINT end live turns, save pending events, and close the connection.
+They end no service unit. One native service manager and its private socket
+stay shared across runner rounds. A new runner reconciles saved runtime
+records with actual units. The hidden `service-exec` entry owns each unit's
+child and rotating output writer as `user`.
 The installed service runs this Rust runner. Its first valid welcome confirms
 the release through the pinned executable. It keeps the Node-format state file.
 
@@ -119,6 +124,17 @@ program already has the newest version. An existing active release still
 prevents a downgrade. See [the install guide](../../image/install.md#release-installation)
 for the image-build sequence and the folder layout.
 
+### Session watches
+
+`conductive sessions watch --session ID [--workspace ID] [--turn-id ID]`
+and MCP `watch_session` ask for one wake when one turn finishes, fails, or stops.
+Use the actual session and exact `turnId` returned with the work, when available.
+The call returns at once. Set the watch, then end the reply when only that work remains.
+After a wake, use `read_session` for the result.
+An idle or ended reply means read it at once.
+A turn end does not mean the whole delegated task is complete.
+[Session watches](../../tools/calls.md#session-watches) gives targeting, replies, and Stop behavior.
+
 ## Quick Start
 
 Run these commands from the repository root:
@@ -131,6 +147,15 @@ cargo run -p cnd-cli -- update parts
 ```
 
 The last command prints the embedded parts without a network request.
+
+To create a workspace from a branch and target another branch:
+
+```sh
+cargo run -p cnd-cli -- workspaces create --repository repo-id --message 'Build the next change.' \
+  --start-branch feature/review --base-branch main
+```
+
+[Workspace tool calls](../../tools/calls.md#workspaces) gives the branch defaults and replay rules.
 
 ## Development
 
@@ -163,6 +188,9 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
+- [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
+- [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.
 - [runner_start.rs](src/runner_start.rs) owns `RunnerStart`, which makes the process-start ID and gives it to each `SavedRunnerLink`.
 - [runner_update/idle.rs](src/runner_update/idle.rs) shares one idle update attempt across fresh runner instances and disables readiness afterward.
 - [runner_update/releases.rs](src/runner_update/releases.rs) checks complete releases and running-release confirmation through `DiskStore`.

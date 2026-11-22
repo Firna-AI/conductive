@@ -1,8 +1,13 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, type ReactNode, type RefObject } from 'react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
 import { newSessionLogin } from '../../app/default-logins'
+import {
+  formBranch,
+  type BranchTarget,
+  type FormBranch,
+} from '../../app/new-workspace-branch'
 import {
   draftReady,
   firstReadyRepository,
@@ -22,12 +27,11 @@ import { useStore, valueOf } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'
+import { useThisMac } from '../mac/this-mac'
 import { useGo } from '../ui/AppLink'
-import {
-  createFailure,
-  useBlockingNotice,
-  useFirstBuildNotice,
-} from './notices'
+import type { Focusable } from '../ui/Overlay'
+import { createFailure } from './create-failure'
+import { useBlockingNotice, useFirstBuildNotice } from './notices'
 import { waitingNotice } from './waiting'
 
 /** A New workspace form, as the page and the dialog show it. */
@@ -43,6 +47,15 @@ export interface NewWorkspaceForm {
   repository: Repository | undefined
   /** The chosen repositories that wait for a build, which the menu shows off. */
   waiting: WaitingRepositories
+  /**
+   * The branch of the form in its repository, with the target of a picked
+   * branch, or `undefined` while the form shows no repository.
+   */
+  branch: FormBranch | undefined
+  /** Picks a branch of the repository of the form. */
+  pickBranch: (name: string) => void
+  /** Chooses the target of the picked branch. */
+  chooseTarget: (target: BranchTarget) => void
   choice: AgentChoice | undefined
   /**
    * The login of the first message when it is not the own login of the
@@ -57,7 +70,11 @@ export interface NewWorkspaceForm {
    * of the form kept.
    */
   models: readonly AgentModel[]
-  /** The notice of a failed create, with Try again, or `null`. */
+  /**
+   * The notice of a failed create, or `null`. It offers Try again, or Start
+   * from and the default branch for a picked branch that GitHub no longer
+   * has.
+   */
   failure: ReactNode
   /**
    * The notice of a build that the form waits for, or `null`: the first
@@ -74,22 +91,28 @@ export interface NewWorkspaceForm {
 
 /**
  * The state of a New workspace form, which the page and the dialog share,
- * so that they cannot drift: the repository, the model, the notices, one
- * readiness for every way to send, and the send. The readiness reads the
- * text and the files of the draft, the agent login, the org image, the
- * repository, the model, and the suspension of the org. Whether a
- * repository waits for a build comes from the repositories reply, as
- * `waitsForBuild` says. The form picks the first ready repository. A draft
- * keeps its own, also while it waits for a build: the pick of the user, or
- * the repository that the form showed at its first text or file, as
- * `NewWorkspaceModel` says. When the server accepts the create, the app
+ * so that they cannot drift: the repository, the branch and its target, the
+ * model, the notices, one readiness for every way to send, and the send.
+ * The readiness reads the text and the files of the draft, the agent login,
+ * the org image, the repository, the model, and the suspension of the org.
+ * Whether a repository waits for a build comes from the repositories reply,
+ * as `waitsForBuild` says. The form picks the first ready repository. A
+ * draft keeps its own, also while it waits for a build: the pick of the
+ * user, or the repository that the form showed at its first text or file,
+ * as `NewWorkspaceModel` says. When the server accepts the create, the app
  * opens the new workspace, also when the form closed while the create ran.
- * `open` goes to another page from a notice, such as Connect.
+ * If the Mac access switch was on, the Mac app then starts the grant
+ * for the new workspace on this Mac. A failed start shows a notice in
+ * that workspace, as `useStartFailedNotice` says.
+ * `open` goes to another page from a notice, such as Connect. `message` is
+ * the message field, which takes the focus after Start from and the default
+ * branch, so that Enter sends.
  */
 export function useNewWorkspaceForm(
   org: OrgSummary,
   model: NewWorkspaceModel,
   open: (to: string) => void,
+  message: RefObject<Focusable | null>,
 ): NewWorkspaceForm {
   const app = useApp()
   const go = useGo()
@@ -101,6 +124,7 @@ export function useNewWorkspaceForm(
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const access = useOrgAccess(org)
+  const mac = useThisMac()
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   // When the repositories reply shows a good image, builds that show none
   // are older, and the notice of the first build gives way.
@@ -116,6 +140,7 @@ export function useNewWorkspaceForm(
   const repositoryId =
     draft.repository?.id ?? firstReadyRepository(repositories ?? [], builds)?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
+  const branch = repository ? formBranch(draft.branch, repository) : undefined
   const choice = draft.choice ?? account?.defaultChoice
   const offered = useOfferedModels(choice, org.id)
   const notice = useBlockingNotice(org.id, choice, models, open)
@@ -152,20 +177,45 @@ export function useNewWorkspaceForm(
       : null
   const send = () => {
     if (!defaults) return
-    void model.send(defaults, (created) =>
-      go(routes.workspace(org.id, created.workspace.id)),
-    )
+    // The draft empties after the create, so the switch is read at the send.
+    const starts = model.draft.get().allowThisMac ? mac : null
+    void model.send(defaults, (created) => {
+      go(routes.workspace(org.id, created.workspace.id))
+      void starts?.start(created.workspace.id, 'create')
+    })
   }
+  // The action goes with its notice, so the message takes the focus.
+  const startFrom = repository
+    ? {
+        branch: repository.defaultBranch,
+        start: () => {
+          model.startFromDefaultBranch(repository)
+          message.current?.focus()
+        },
+      }
+    : null
   return {
     draft,
     create,
     repositories,
     repository,
     waiting,
+    branch,
+    pickBranch: (name) => {
+      if (repository) model.setBranch(repository, name)
+    },
+    chooseTarget: (target) => {
+      if (repository) model.setTarget(repository, target)
+    },
     choice,
     login,
     models: offered,
-    failure: createFailure(create, defaults !== null, send),
+    failure: createFailure(create, {
+      ready: defaults !== null,
+      retry: send,
+      repositoryName: (id) => loaded?.find((item) => item.id === id)?.fullName,
+      startFrom,
+    }),
     buildNotice,
     notice,
     ready: defaults !== null,

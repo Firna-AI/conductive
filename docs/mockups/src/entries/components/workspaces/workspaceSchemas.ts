@@ -106,6 +106,8 @@ export const workspaceSchema = {
     updated: { type: 'string' },
     owner: { enum: personKeys },
     baseBranch: { type: 'string' },
+    /** The stored base that GitHub deleted, which the default replaced. */
+    movedBase: { type: 'string' },
   },
 } as const
 

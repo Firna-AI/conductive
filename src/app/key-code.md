@@ -104,9 +104,9 @@ Each path is relative to `src/app/`, the folder of this page.
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   automations, computer settings, and org logins of one org, with `watch`.
-  `org-waits.ts` gives the wait of each part, such as `workspacesWait`.
-  `OrgModel.startBuild` sends Build computer and Try again for each screen
-  that offers them.
+  `org-resources.ts` gives the read of each part, and `org-waits.ts` its
+  wait, such as `workspacesWait`. `OrgModel.startBuild` sends Build
+  computer and Try again for each screen that offers them.
 - `org-refresh.ts`: the readers of the parts of `OrgModel`, in
   [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `org-agent-logins.ts`: `OrgAgentLogins`, the org logins of one org with
@@ -120,12 +120,12 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-secrets.ts` reads them and the capabilities of a workspace,
   and keeps no value from a reply of the list.
 - `capabilities-model.ts`: `WorkspaceCapabilitiesModel`, the pre-approved
-  secrets, the approvals of the sessions, the values for the workspace, and
-  Mac access of one workspace, with their changes. It reads the values from
-  the list of the secret requests, and removes one with its route.
-- `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
-  workspace, and the pure rules of a draft that `new-workspace-model.ts`
-  applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
+  secrets, the approvals of the sessions, and the values for the workspace
+  of one workspace, with their changes. It reads the values from the list
+  of the secret requests, and removes one with its route.
+- `new-workspace-draft.ts`: `Draft`, with the pre-approved secrets of New
+  workspace and the switch of Mac access, `allowThisMac`, and the pure
+  rules of a draft that `new-workspace-model.ts` applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
   [`../shared/secrets.ts`](../shared/secrets.ts).
 - `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
   Secrets tab, beside the other rights of an org.

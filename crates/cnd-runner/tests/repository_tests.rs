@@ -11,6 +11,7 @@ mod repository {
     mod paths_tests;
     mod scan_reads_tests;
     mod snapshot_tests;
+    mod stacked_base_tests;
     mod stat_tests;
     mod support;
     mod watch_tests;

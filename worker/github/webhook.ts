@@ -150,6 +150,7 @@ export async function handleGitHubWebhook(
         repository,
         value,
         dependencies.repositoryChange,
+        dependencies.now,
       )
     const route = webhookRoute(event, value)
     if (route === null || (await isProcessed(env.DB, deliveryId)))

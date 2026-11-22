@@ -3,7 +3,8 @@ import { Info } from 'lucide-react'
 import { classes } from '../common/classes'
 import check from '../common/CheckOption.module.css'
 import { aboutSecret, secretsPartWords } from './capabilitiesCopy'
-import styles from './Capabilities.module.css'
+import shared from './Capabilities.module.css'
+import styles from './SecretOption.module.css'
 
 /** The parts of a secret that its row in the Capabilities control shows. */
 type ListedSecret = {
@@ -52,7 +53,7 @@ export function SecretOption(props: {
             onChange={(event) => props.change(event.currentTarget.checked)}
             type="checkbox"
           />
-          <span className={styles.secretName}>{secret.name}</span>
+          <span className={shared.secretName}>{secret.name}</span>
         </label>
         {described ? (
           <button

@@ -10,6 +10,9 @@ use crate::command::Command;
 /// A failure to execute a Conductive command.
 #[derive(Debug, Error, internal_error::ErrorContract)]
 pub(crate) enum Error {
+    /// The unit helper preserved an unsuccessful child result in runtime storage.
+    #[error("[cnd-cli/services] the service command ended unsuccessfully")]
+    ServiceExit,
     /// The selected command has no implementation yet.
     #[error("[cnd-cli/command] {command} is not available yet")]
     NotAvailable {

@@ -4,6 +4,7 @@ import type { ToolCall } from '../generated/ToolCall'
 import type { ChangedFile } from '../generated/ChangedFile'
 import type { MessageSender } from '../generated/MessageSender'
 import type { UserMessage } from '../generated/UserMessage'
+import type { SessionWatchNotice } from '../generated/SessionWatchNotice'
 import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
 import type { KnownTurn } from './known-turns'
@@ -17,7 +18,10 @@ export type TranscriptItem =
       id: string
       turnId: string
       text: string
-      /** Set when `assistant.completed` gave the whole text of the message. */
+      /**
+       * Set when `assistant.completed` gave the whole text of the message.
+       * A message that the agent still writes has no mark.
+       */
       complete?: true
     }
   | { kind: 'tool'; id: string; turnId: string; tool: ToolCall }
@@ -77,6 +81,17 @@ export type TranscriptItem =
       repository: { id: string; fullName: string }
       branch: string
       displayBranch?: string
+    }
+  | {
+      /**
+       * The line of the app that wakes the session when a turn that it
+       * watched ends, at its place in the chat. Its hidden message carries
+       * the wake to the agent, so the line belongs to the turn that takes
+       * that message, as a message does. It is no message of a member.
+       */
+      kind: 'wake'
+      id: string
+      notice: SessionWatchNotice
     }
 
 interface RunningTurn {

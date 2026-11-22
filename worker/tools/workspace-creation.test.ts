@@ -92,6 +92,12 @@ it('keeps one titled admission for overlapping creates and a lost reply after re
   )
   expect(messages).toHaveLength(1)
   const originalMessage = messages[0]
+  const initialTurnId = await active.env.DB.prepare(
+    'SELECT first_turn_id FROM workspace_runtime WHERE workspace_id = ?',
+  )
+    .bind(id)
+    .first<string>('first_turn_id')
+  expect(accepted.turnId).toBe(initialTurnId)
   const renamed = await active.post(agentWorkspacePaths.rename(id), {
     name: 'Renamed workspace',
   })
@@ -123,6 +129,7 @@ it('keeps one titled admission for overlapping creates and a lost reply after re
   const replayed = record(await repeated.json())
   expect(replayed).toMatchObject({
     sessionId,
+    turnId: initialTurnId,
     sessionLink: accepted.sessionLink,
     workspace: {
       id,

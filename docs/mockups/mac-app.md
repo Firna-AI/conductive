@@ -74,14 +74,28 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   cause beside the time left, Extend, and Stop. It has no Try again,
   because Extend stays in the bar. An Extend result shows only while the
   15 minutes run. `mac-app/extend` draws both.
+- The Capabilities control of the Mac app ends with the Mac access part:
+  one switch with no hint, from Mac access decision 7 of 21 November 2026.
+  Each member sees the switch of their own Mac. On starts a grant until
+  Stop of the workspace on this Mac, and off stops it, as Stop does. The
+  result of the Stop shows under the switch. While the 15 minutes run, the
+  switch stays off, and the bar gives the time left. While the page cannot
+  read the settings of this Mac, the switch is off and disabled. A start is
+  done or failed. A start that failed shows Not started and its cause under
+  the switch, from `ChangeOutcome`, and the switch stays, so it needs no Try
+  again. New workspace starts the grant after the create, so a start that
+  failed there shows as a notice in the new workspace, with Try again.
+  `mac-app/capabilities` and `mac-app/new-workspace` draw them, and
+  [secrets and Capabilities](catalogue-secrets.md) lists their child pages
+  and variants. A browser shows no Mac access part.
 - The web app shows a waiting request without the choices, because only
   the Mac app can allow a command on the Mac. Once answered, the command
   shows as a card at its place in the chat: denied, done with its output,
-  or Mac not available. A workspace with Mac access off refuses a request
-  at once, and its card says Mac access off, as
-  `app/mac-commands/mac-access-off` shows. When its turn ends, the card folds with the work
-  of the turn at its place, from decision 151, as
-  `app/chat/work/mac-command` shows.
+  or Mac not available. Agents can always ask (Mac access decision 7). A
+  request that a workspace refused before, while its Mac access was off,
+  keeps its card with Mac access off, as `app/mac-commands/mac-access-off`
+  shows. When its turn ends, the card folds with the work of the turn at
+  its place, from decision 151, as `app/chat/work/mac-command` shows.
 - The Mac app gives the page every key, so its Keyboard shortcuts tab,
   from decision 190, dims no key. `mac-app/shortcuts` draws the tab with
   its child pages `search`, `recording`, and `changes`. A search field at

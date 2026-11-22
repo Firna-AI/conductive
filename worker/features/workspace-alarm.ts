@@ -38,6 +38,7 @@ interface WorkspaceAlarmInput {
   jobs: Pick<WorkspaceJobs, 'continuation' | 'repositoryChange'>
   lifecycle: (dispatchRestart?: DispatchAutomaticRestart) => Promise<void>
   automationReport: () => Promise<void>
+  sessionWatches: () => Promise<void>
 }
 
 export class WorkspaceAlarmRunner {
@@ -129,6 +130,7 @@ export class WorkspaceAlarmRunner {
             if (id) await features.publishRevocations(id)
           },
           automationReport: this.input.automationReport,
+          sessionWatches: this.input.sessionWatches,
         },
         { securityHandled: true, fallbackLifecycle: security.size === 0 },
       )

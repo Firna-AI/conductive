@@ -102,6 +102,9 @@ it('labels new and replayed Continue notes while jobs and Git commands keep real
     'refs/heads/target/fixture-secret-replay-secret',
     'latest-default',
   )
+  // Continue builds on the branch that the pull request merged into
+  // (decision 300), here the default branch.
+  f.api.pulls[2].baseRefName = f.api.defaultBranch
   const session = await f.createSession()
   const tab = await f.tab()
   const pending = await f.start()

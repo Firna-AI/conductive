@@ -11,10 +11,13 @@ import type { ChatStore } from './store'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import { storeRunnerReceipt } from './runner-receipt'
 import { RepairDelivery } from './repair-delivery'
-import { prepareRunnerHello } from './runner-handshake'
+import { acceptRunnerHello } from './runner-hello'
+import { WorkspaceServices } from '../services/runtime'
+import type { AppEnv } from '../env'
 import { RepositoryMoves } from './runner-repository-move'
 import type {
   ChatDependencies,
+  ChatStorage,
   ChatCallbackPublisher,
   ActiveRunner,
   RunnerPeer,
@@ -23,6 +26,7 @@ import type {
 
 export class RunnerChannel {
   readonly connections: RunnerConnections
+  readonly services: WorkspaceServices
   private readonly delivery: RunnerDelivery
   private readonly repairs: RepairDelivery
   private readonly moves: RepositoryMoves
@@ -37,14 +41,34 @@ export class RunnerChannel {
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
     bind: (id: string) => void,
-    native?: NativeBrowserConnections,
+    options: {
+      native?: NativeBrowserConnections
+      env: AppEnv
+      storage: ChatStorage
+    },
   ) {
+    const { native, env, storage } = options
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
+    this.services = new WorkspaceServices(
+      storage,
+      env,
+      store,
+      () => this.connections.current,
+      dependencies.randomId,
+    )
     this.connections = new RunnerConnections(
       store,
-      dependencies,
+      {
+        ...dependencies,
+        runnerDetached: (id) => {
+          dependencies.runnerDetached(id)
+          dependencies.waitUntil(
+            store.run(() => this.services.disconnected(id)),
+          )
+        },
+      },
       publish,
       bind,
       (peer, value) => this.receive(peer, value),
@@ -73,6 +97,11 @@ export class RunnerChannel {
     return this.connections.open(workspace, peer, socket)
   }
 
+  async stop(workspaceId: string): Promise<void> {
+    await this.services.stopped(workspaceId)
+    this.close()
+  }
+
   disconnect(peer: RunnerPeer): void {
     this.connections.disconnect(peer)
   }
@@ -96,50 +125,24 @@ export class RunnerChannel {
     value: unknown,
     progress: RunnerProgress,
   ): Promise<void> {
+    if (await this.services.receive(active, value)) return
     const message = parseRunnerTransport(value)
     progress.stage = message.type === 'hello' ? 'hello' : 'event'
     progress.mark = await this.watch.begin(active, message, progress.size)
     if (message.type === 'hello') {
-      const welcome = await prepareRunnerHello(
-        active,
-        message,
-        this.store,
-        this.dependencies,
-        this.publish,
+      if (
+        !(await acceptRunnerHello(active, message, {
+          store: this.store,
+          dependencies: this.dependencies,
+          publish: this.publish,
+          connections: this.connections,
+          repairs: this.repairs,
+          moves: this.moves,
+          services: this.services,
+          publisher: (id) => this.publisher(id),
+        }))
       )
-      if (!welcome) return
-      active.state.streamId = message.streamId
-      active.state.processStartId = message.processStartId
-      active.state.protocolVersion = welcome.protocolVersion
-      active.state.loginKinds = message.loginKinds
-      active.state.repositoryFolder = message.repositoryFolder
-      active.state.fileServer = message.fileServer
-      active.state.ready =
-        welcome.savedReady &&
-        !(await this.dependencies.requiresFreshRunnerReady?.())
-      await this.connections.persist(active)
-      this.connections.reportConnected(active)
-      if (active.state.ready) this.connections.attachFiles(active)
-      await active.peer.send({
-        type: 'welcome',
-        protocolVersion: welcome.protocolVersion,
-        streamId: message.streamId,
-        confirmedThrough: welcome.cursor,
-        ...(message.completeToolDetails === true
-          ? { completeToolDetails: true }
-          : {}),
-      })
-      await this.repairs.flush(active)
-      await this.moves.check(active)
-      await this.dependencies.runnerHello(
-        active.state.workspace.id,
-        this.publisher(active.state.workspace.id),
-      )
-      if (active.state.ready)
-        await this.dependencies.runnerReady(
-          active.state.workspace.id,
-          this.publisher(active.state.workspace.id),
-        )
+        return
       void this.store
         .run(() => this.watch.flush(active, () => this.flush()))
         .catch(() => {

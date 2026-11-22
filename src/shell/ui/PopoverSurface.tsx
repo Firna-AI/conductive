@@ -33,6 +33,11 @@ interface Box {
 export interface Setup {
   align: MenuAlign
   side: MenuSide
+  /**
+   * The surface stays on its side also when it does not fit there, limited
+   * to the room of that side, so a list in it scrolls.
+   */
+  keepSide?: boolean
   options?: Omit<DropdownPlacementOptions, 'align'>
 }
 
@@ -56,12 +61,14 @@ export function surfacePlacement(
     width: box.width,
     height: box.height,
   }
+  // A surface that keeps its side needs no room to open there. The room of
+  // that side then limits its height.
   const at = dropdownPlacement(
     anchor,
     room,
     options,
     wanted.width,
-    wanted.height,
+    setup.keepSide ? 0 : wanted.height,
   )
   if (!above) return at
   return {
@@ -110,11 +117,13 @@ function place(surface: HTMLElement, anchor: HTMLElement, setup: Setup) {
  * `className` gives the style of the surface. It must replace the browser's
  * popover style, and show the surface only while `:popover-open`.
  * `options` go to the placement of `@firna/ui`, such as a `maxHeight`.
+ * `keepSide` keeps the surface on its side, as `Setup` says.
  */
 export function PopoverSurface(props: {
   anchor: RefObject<HTMLElement | null>
   align: MenuAlign
   side?: MenuSide
+  keepSide?: boolean
   options?: Omit<DropdownPlacementOptions, 'align'>
   className: string
   children: ReactNode
@@ -126,6 +135,7 @@ export function PopoverSurface(props: {
     setup.current = {
       align: props.align,
       side: props.side ?? 'below',
+      keepSide: props.keepSide,
       options: props.options,
     }
   })

@@ -95,7 +95,8 @@ function branchName(branch: string, github: GitHubBranch | null): string {
   return github?.branch === branch ? (github.displayBranch ?? branch) : branch
 }
 
-function Waiting(props: { text: string }) {
+/** A chat with nothing to show yet, with what it waits for. */
+export function Waiting(props: { text: string }) {
   const theme = useSharedUiTheme()
   return (
     <div className={waitStyles.waiting}>
