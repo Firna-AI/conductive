@@ -52,6 +52,8 @@ Contract owners:
 - Model favourites decision 3, 20 November 2026: the user chose A, a new
   deployment setting, `CONDUCTIVE_STARTING_FAVOURITES`. The item below
   keeps the options and the record.
+- Model favourites decisions 4 and 5, 22 November 2026: the user chose
+  D and B. The items below keep the options and the record.
 - Model favourites decision 2, 20 November 2026: the user chose A. A
   member adds a favourite only in Preferences. Option B, an "Add to
   favourites" row in the menu, was not chosen, because the user asked for
@@ -160,6 +162,7 @@ Contract owners:
 - **Previous examples:** Add trigger of an automation opens a menu, and a pick there adds a row, as B and D do.
 - **Recommendation:** D. It keeps the one pick of B and never ends a pick with nothing. The first recommendation was B, which the options check of 20 November 2026 changed, because B adds nothing when the member picks a model that the list already holds at the starting effort, such as Opus 5.5 High.
 - **Action:** ask the user, because this behaviour has no requirement, and the options trade a control against a copy that the save drops.
+- **Decision:** 22 November 2026: the user chose D. Add a favourite opens the list of every model. A pick adds that model at the effort of the default of new workspaces, or its nearest lower effort, with Fast off. When that choice is already a favourite, the pick takes the nearest effort of that model that no favourite holds, lower efforts first. When none is free, the pick adds nothing, and a line says so. The wider fix E was not chosen, so a pick in the picker of a row that copies another favourite still drops that row at the save.
 
 ### 5. Shell pickers on a phone: sheet or menu
 
@@ -186,6 +189,7 @@ Contract owners:
 - **Previous examples:** The Restart menu, a `MenuButton`, opens as a sheet on a phone, because the user asked for it on 16 November 2026. The session picker opens its menu beside the picker on a phone, as `app/chat/menu-placement` shows.
 - **Recommendation:** B, for the model pickers only. Each picker then opens the menu as the session picker and every mockup already do. The first recommendation was A, which the options check of 20 November 2026 changed, because A keeps two ways to open one menu on a phone.
 - **Action:** ask the user, because the answer decides which side of a mismatch between the mockups and the app is right.
+- **Decision:** 22 November 2026: the user chose B. The shell model pickers open a menu beside the picker on a phone, as the session picker and the mockups do. The Restart menu and the other shell menus stay a sheet. The wider fix E was not chosen.
 
 ### 6. What the empty Favourites section shows
 
@@ -440,7 +444,7 @@ Depends on: 2
 
 Tags: mockup
 
-Depends on: 1, and the answers of decisions 4 and 5
+Depends on: 1
 
 Milestones 2 and 3 found three gaps in the mockups of Milestone 1.
 
