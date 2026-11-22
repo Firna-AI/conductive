@@ -8,3 +8,5 @@ mod checks_tests;
 mod lifecycle_tests;
 #[path = "update/repair_tests.rs"]
 mod repair_tests;
+#[path = "update/signature_tests.rs"]
+mod signature_tests;

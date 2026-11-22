@@ -3,18 +3,18 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use cli_updater::{DynBinaryInstaller, DynReleaseClient};
+use cli_updater::DynBinaryInstaller;
 use cnd_release::version::release_version;
 
 use super::error::{Error, ErrorResultExt, Result};
-use super::ports::{Processes, State, Store, UpdateEngine};
+use super::ports::{Processes, ReleaseSource, State, Store, UpdateEngine};
 
 /// Dependencies of the sandbox updater. The composition root supplies each port.
 pub struct Engine {
     /// Files and locking under the install root.
     pub store: Arc<dyn Store>,
     /// Release metadata and archive downloads.
-    pub client: DynReleaseClient,
+    pub client: Arc<dyn ReleaseSource>,
     /// Program extraction and digest verification supplied by cli-updater.
     pub installer: DynBinaryInstaller,
     /// Executable checks and system installation.

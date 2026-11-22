@@ -3,4 +3,5 @@
 pub mod error;
 pub mod files;
 pub mod parts;
+pub mod signature;
 pub mod version;

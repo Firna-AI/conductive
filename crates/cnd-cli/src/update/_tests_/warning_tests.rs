@@ -8,11 +8,11 @@ use std::sync::{
 
 use tracing::{Event, Level};
 use tracing_subscriber::{Layer, Registry, layer::Context, prelude::*};
-use unimock::{MockFn, Unimock, matching};
+use unimock::Unimock;
 
 use super::error::Error;
 use super::ports::UpdateEngine;
-use super::test_support::{ClientMock, engine, lock_only};
+use super::test_support::{engine, latest_json, lock_only};
 
 thread_local! {
     static CAPTURE: RefCell<Option<Arc<AtomicUsize>>> = const { RefCell::new(None) };
@@ -53,12 +53,10 @@ async fn failed_release_read_logs_a_warning_and_keeps_the_release() {
     let _capture = Capture;
     let engine = engine(
         lock_only(),
-        Unimock::new(ClientMock::latest.some_call(matching!(_, _)).returns(Err(
-            cli_updater::Error::ReleaseServerStatus {
-                url: "https://releases.test".into(),
-                status: 503,
-            },
-        ))),
+        Unimock::new(latest_json(Err(cli_updater::Error::ReleaseServerStatus {
+            url: "https://releases.test".into(),
+            status: 503,
+        }))),
         Unimock::new(()),
         Unimock::new(()),
     );

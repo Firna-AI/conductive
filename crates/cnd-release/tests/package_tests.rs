@@ -1,4 +1,4 @@
-//! Disk integration with the metadata reader and the updater archive installer.
+//! Disk integration with signed manifests and the older updater archive installer.
 
 #![expect(
     clippy::unwrap_used,
@@ -6,15 +6,17 @@
 )]
 
 use std::fs;
+use std::process::Command;
 
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{BinaryInstaller, TarGzBinaryInstaller};
 use cnd_release::files::{DiskReleaseFiles, ReleaseFiles};
 use cnd_release::parts::{Part, PartsList};
+use cnd_release::signature::{ReleaseSigner, manifest_signature_key, verify_manifest};
 use cnd_release::version::{BASE_URL, BINARY, LATEST_KEY, TARGET};
 
 #[test]
-fn written_release_is_reproducible_and_installable_with_its_required_digest() {
+fn signed_release_is_reproducible_and_readable_by_the_older_updater() {
     let directory = tempfile::tempdir().unwrap();
     let program = directory.path().join("input");
     fs::write(&program, b"dummy executable\n").unwrap();
@@ -34,9 +36,23 @@ fn written_release_is_reproducible_and_installable_with_its_required_digest() {
     let first = directory.path().join("first");
     let second = directory.path().join("second");
     let files: &dyn ReleaseFiles = &DiskReleaseFiles;
-    files.package("0.0.42", &program, &parts, &first).unwrap();
-    files.package("0.0.42", &program, &parts, &second).unwrap();
+    let signer = ReleaseSigner::from_pem(include_str!("fixtures/rfc8032-test-key.pem")).unwrap();
+    files
+        .package("0.0.42", &program, &parts, &first, &signer)
+        .unwrap();
+    files
+        .package("0.0.42", &program, &parts, &second, &signer)
+        .unwrap();
     let metadata_bytes = fs::read(first.join(LATEST_KEY)).unwrap();
+    let signature_key = manifest_signature_key(&metadata_bytes);
+    let signature = fs::read(first.join(&signature_key)).unwrap();
+    assert_eq!(signature.len(), 64);
+    assert!(verify_manifest(
+        &signer.public_key(),
+        &metadata_bytes,
+        &signature
+    ));
+    assert_eq!(signature, fs::read(second.join(signature_key)).unwrap());
     let metadata: ReleaseAssetInfo = serde_json::from_slice(&metadata_bytes).unwrap();
     assert_eq!(metadata.binary, BINARY);
     assert_eq!(metadata.version, "0.0.42");
@@ -81,4 +97,31 @@ fn written_release_is_reproducible_and_installable_with_its_required_digest() {
         )
         .unwrap();
     assert_eq!(fs::read(installed).unwrap(), b"dummy executable\n");
+}
+
+#[test]
+fn package_reports_a_missing_deploy_key_before_writing_release_files() {
+    let directory = tempfile::tempdir().unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_cnd-release"))
+        .current_dir(directory.path())
+        .env_remove("CONDUCTIVE_RELEASE_SIGNING_KEY")
+        .args([
+            "package",
+            "--version",
+            "0.0.42",
+            "--program",
+            "conductive",
+            "--parts",
+            "parts.json",
+            "--output",
+            "output",
+        ])
+        .output()
+        .unwrap();
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(
+        String::from_utf8(output.stderr).unwrap(),
+        "[cnd-release] set CONDUCTIVE_RELEASE_SIGNING_KEY to the Ed25519 private key in PKCS#8 PEM format\n"
+    );
+    assert!(!directory.path().join("output").exists());
 }

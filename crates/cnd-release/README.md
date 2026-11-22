@@ -8,7 +8,7 @@ write that format.
 ## Responsibilities
 
 - Validate versioned parts files, HTTPS URLs, and required SHA-256 digests.
-- Write reproducible program archives, parts files, and updater metadata.
+- Write reproducible program archives, parts files, and signed updater metadata.
 - Compare commit-count versions before a deploy replaces the newest version.
 
 ## What This Crate Does
@@ -41,12 +41,20 @@ The updater reads the parts embedded in the checked new executable.
 The `parts` command writes an input file for the program build. Repeat
 `--part NAME URL SHA256` for each part. The `package` command writes the
 release files. Build its program with the same version and parts file.
+Set `CONDUCTIVE_RELEASE_SIGNING_KEY` to the Ed25519 private key in PKCS#8
+PEM format. The key must match `RELEASE_PUBLIC_KEY` in `signature.rs`.
+The packager signs the exact bytes of the newest-version JSON. It writes
+the 64-byte signature to
+`releases/download/conductive/signatures/<manifest-sha256>.sig`.
+The deploy publishes the signature before the newest-version JSON.
 The `newer` command prints `true` or `false`. Invalid metadata fails the
 command. These commands upload nothing.
 
 ## Quick Start
 
-Run from the repository root. Supply the real SDK helper, Node, and system URLs and digests:
+Run from the repository root with the SDK helper, Node, and system URLs
+and digests. Set `CONDUCTIVE_RELEASE_KEY_FILE` to the path of the PEM file
+that holds the key for this build.
 
 ```sh
 cargo run -p cnd-release -- parts \
@@ -57,7 +65,9 @@ cargo run -p cnd-release -- parts \
 CONDUCTIVE_RELEASE_VERSION=0.0.42 \
 CONDUCTIVE_PARTS_FILE="$PWD/.context/release-input/parts.json" \
   cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
-cargo run -p cnd-release -- package --version 0.0.42 \
+cargo build -p cnd-release
+CONDUCTIVE_RELEASE_SIGNING_KEY="$(cat "$CONDUCTIVE_RELEASE_KEY_FILE")" \
+  target/debug/cnd-release package --version 0.0.42 \
   --program target/x86_64-unknown-linux-musl/release/conductive \
   --parts .context/release-input/parts.json --output .context/release-artifact
 ```
@@ -70,13 +80,15 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 ```
 
-The disk integration test reads the written metadata as `ReleaseAssetInfo`
-and installs its archive through `cli-updater` with the required digest.
+The disk integration test checks the signature. It also reads the same
+manifest as `ReleaseAssetInfo` and installs its archive through
+`cli-updater` with the required digest.
 
 ### Key Code
 
 - [parts.rs](src/parts.rs) defines and validates the shared parts format.
 - [files.rs](src/files.rs) defines `ReleaseFiles` and the deterministic writer.
+- [signature.rs](src/signature.rs) owns signing, verification, and the release public key.
 - [version.rs](src/version.rs) owns the release identity and version ordering.
 - [main.rs](src/main.rs) defines the packaging command interface.
 - [package_tests.rs](tests/package_tests.rs) checks the written release through the updater installer.

@@ -78,9 +78,12 @@ start reads the start variables again.
 A shutdown received during activation prevents execution of the new release.
 Development builds disable idle swaps.
 
-`update check` uses `cli-updater` to read and compare the newest release.
-It downloads into a private version folder. It checks the program digest
-through `cli-updater` and checks every part digest before extraction.
+`update check` uses the `cli-updater` HTTP client to read the release
+manifest. It compares versions and checks the manifest's detached Ed25519
+signature with the built-in release public key before it fetches a new
+program archive. A missing or invalid signature leaves the running release
+in use. It downloads into a private version folder. It checks the program
+digest through `cli-updater` and checks every part digest before extraction.
 It reuses present parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
 It leaves no complete version on failure. A concurrent background check returns a busy error.
@@ -181,10 +184,11 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [error.rs](src/error.rs) defines typed command errors and the internal error fallback.
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
-- [update/engine.rs](src/update/engine.rs) owns download, activation, and fallback policy.
+- [update/download.rs](src/update/download.rs) verifies the release manifest and downloads its program and parts.
+- [update/engine.rs](src/update/engine.rs) owns activation and fallback policy.
 - [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
 - [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
-- [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
+- [update/ports.rs](src/update/ports.rs) defines disk, process, release source, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.

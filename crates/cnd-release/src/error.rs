@@ -38,6 +38,22 @@ pub enum Error {
     /// The current metadata must name this program and target.
     #[error("[cnd-release] metadata does not name the Conductive Linux musl release")]
     InvalidMetadata,
+    /// The publishing command requires the deploy secret.
+    #[error(
+        "[cnd-release] set CONDUCTIVE_RELEASE_SIGNING_KEY to the Ed25519 private key in PKCS#8 PEM format"
+    )]
+    MissingSigningKey,
+    /// The deploy secret is not an Ed25519 private key.
+    #[error(
+        "[cnd-release] CONDUCTIVE_RELEASE_SIGNING_KEY is not an Ed25519 private key in PKCS#8 PEM format"
+    )]
+    InvalidSigningKey,
+    /// The release public key still needs its production value.
+    #[error("[cnd-release] replace the RELEASE_PUBLIC_KEY placeholder before publishing a release")]
+    MissingPublicKey,
+    /// The deploy secret and the key in the program must belong to the same pair.
+    #[error("[cnd-release] CONDUCTIVE_RELEASE_SIGNING_KEY does not match RELEASE_PUBLIC_KEY")]
+    SigningKeyMismatch,
     /// An unexpected filesystem, archive, or serialization failure.
     #[error("[cnd-release] internal: {0:?}")]
     Internal(#[from] InternalError),

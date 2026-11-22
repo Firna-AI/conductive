@@ -7,7 +7,7 @@ use unimock::{MockFn, Unimock, matching};
 use super::error::Error;
 use super::ports::{ProcessesMock, State, StoreMock, UpdateEngine};
 
-use super::test_support::{ClientMock, InstallerMock, engine, locked, parts, release};
+use super::test_support::{ClientMock, InstallerMock, engine, locked, parts, signed_latest};
 
 #[tokio::test]
 async fn changed_parts_download_in_isolation_and_complete_last()
@@ -25,8 +25,8 @@ async fn changed_parts_download_in_isolation_and_complete_last()
         StoreMock::unpack.next_call(matching!((part, bytes) if part.name == "sdk-helper" && *bytes == b"sdk-helper")).returns(Ok(())),
         StoreMock::complete.next_call(matching!(("0.0.3", parts) if parts.parts.len() == 3)).returns(Ok(())),
     )), Unimock::new((
-        ClientMock::latest.some_call(matching!(_, _)).returns(Ok(release("0.0.3"))),
-        ClientMock::download.some_call(matching!((asset) if asset.binary == "conductive")).returns(Ok(vec![1])),
+        signed_latest("0.0.3")?,
+        ClientMock::download.some_call(matching!((asset) if asset.asset_name == "program.tar.gz")).returns(Ok(vec![1])),
         ClientMock::download.some_call(matching!((asset) if asset.binary == "sdk-helper")).returns(Ok(b"sdk-helper".to_vec())),
     )), Unimock::new(InstallerMock::install.some_call(matching!((_, _, path, _, _) if *path == std::path::Path::new("/root/versions/0.0.3/conductive"))).returns(Ok(()))),
     Unimock::new(ProcessesMock::inspect.some_call(matching!(_, "0.0.3")).returns(Ok(list.clone()))));
@@ -69,11 +69,9 @@ async fn failed_start_check_or_wrong_part_digest_never_marks_complete()
             ))
         };
         let client_base = (
-            ClientMock::latest
-                .some_call(matching!(_, _))
-                .returns(Ok(release("0.0.3"))),
+            signed_latest("0.0.3")?,
             ClientMock::download
-                .some_call(matching!((asset) if asset.binary == "conductive"))
+                .some_call(matching!((asset) if asset.asset_name == "program.tar.gz"))
                 .returns(Ok(vec![1])),
         );
         let client = if fail_start {

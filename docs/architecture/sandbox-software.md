@@ -81,15 +81,20 @@ says.
 2. The deploy writes the release files to the R2 bucket
    `conductive-runner`, which serves them at `runner.conductive.build`
    (sandbox software decision 4). It signs the manifest of the release
-   with the signing key of the deploy (own computer decision 4 B). It
-   writes the JSON file of the newest release last. It also publishes the
+   with the Ed25519 signing key of the deploy (own computer decision 4 B).
+   It uploads the signature as an immutable file before it publishes the
+   newest-version JSON. The signature covers the exact bytes of that JSON.
+   Older updaters can still use the JSON. The deploy also publishes the
    signed container base image for own computers.
 3. In each sandbox, the updater reads that JSON file when the runner
    starts and every 10 minutes. It uses the `cli-updater` crate of
    `futex-ai/cli-release` (sandbox software decision 1).
-4. The updater downloads a newer release in the background, with only the
-   parts that changed. It checks the signature before it uses a download.
-   It never changes the release that runs.
+4. For a new download, the updater uses the SHA-256 digest of the JSON to
+   find its signature on the release server. It checks the signature with
+   the public key in `conductive` before it fetches the program archive.
+   It checks the archive digest before it extracts the program. The
+   program supplies the digests of the parts that the updater downloads.
+   A failed check or download leaves the running release in use.
 5. The runner decides when its own release changes, because only the
    runner knows whether a turn runs. When its workspace is idle, the
    runner closes its connection, runs the updater as root to install the

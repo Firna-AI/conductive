@@ -11,6 +11,8 @@ use async_trait::async_trait;
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{HttpReleaseClient, ReleaseClient};
 use cnd_cli::update::http::release_client;
+use cnd_cli::update::ports::ReleaseSource;
+use cnd_release::signature::ReleaseSigner;
 use flate2::{Compression, GzBuilder};
 use tar::{Builder, Header};
 
@@ -18,6 +20,12 @@ pub(crate) mod download;
 pub(crate) mod locking;
 
 type TestResult<T = ()> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+
+pub(super) fn test_signer() -> cnd_release::error::Result<ReleaseSigner> {
+    ReleaseSigner::from_pem(include_str!(
+        "../../../cnd-release/tests/fixtures/rfc8032-test-key.pem"
+    ))
+}
 
 pub(super) fn archive(files: &[(&str, &[u8])]) -> std::io::Result<Vec<u8>> {
     let mut archive = Builder::new(
@@ -45,6 +53,7 @@ pub(super) struct Server {
 
 impl Server {
     pub(super) fn start(responses: HashMap<String, Vec<u8>>) -> TestResult<Self> {
+        let public_key = test_signer()?.public_key();
         let listener = TcpListener::bind("127.0.0.1:0")?;
         let address = listener.local_addr()?;
         let base = format!("http://{address}");
@@ -73,10 +82,13 @@ impl Server {
                     .lock()
                     .map_err(|_| "request lock poisoned")?
                     .push(path.to_owned());
-                let bytes = responses.get(path).ok_or("unexpected request")?;
+                let (status, bytes) = match responses.get(path) {
+                    Some(bytes) => ("200 OK", bytes.as_slice()),
+                    None => ("404 Not Found", [].as_slice()),
+                };
                 write!(
                     stream,
-                    "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n",
+                    "HTTP/1.1 {status}\r\nContent-Length: {}\r\nContent-Type: application/json\r\nConnection: close\r\n\r\n",
                     bytes.len()
                 )?;
                 stream.write_all(bytes)?;
@@ -87,6 +99,7 @@ impl Server {
             client: LocalClient {
                 inner: release_client(&base)?,
                 base,
+                public_key,
             },
             requests,
             thread,
@@ -106,18 +119,20 @@ impl Server {
 pub(super) struct LocalClient {
     inner: HttpReleaseClient,
     base: String,
+    public_key: [u8; 32],
 }
 
 #[async_trait]
-impl ReleaseClient for LocalClient {
-    async fn latest(&self, binary: &str, target: &str) -> cli_updater::Result<ReleaseAssetInfo> {
-        self.inner.latest(binary, target).await
-    }
+impl ReleaseSource for LocalClient {
     async fn download(&self, release: &ReleaseAssetInfo) -> cli_updater::Result<Vec<u8>> {
         let mut local = release.clone();
         local.download_url = local
             .download_url
             .replace("https://releases.test", &self.base);
-        self.inner.download(&local).await
+        ReleaseClient::download(&self.inner, &local).await
+    }
+
+    fn verification_key(&self) -> &[u8; 32] {
+        &self.public_key
     }
 }

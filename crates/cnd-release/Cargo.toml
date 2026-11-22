@@ -11,6 +11,7 @@ publish = false
 [dependencies]
 clap = { version = "4.6.7", features = ["derive"] }
 cli-release-interface = { workspace = true }
+ed25519-dalek = { version = "3.0.0", default-features = false, features = ["pem", "zeroize"] }
 flate2 = "1.1.11"
 internal-error = { workspace = true }
 semver = "1.0.28"

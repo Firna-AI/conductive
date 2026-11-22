@@ -12,6 +12,12 @@ pub enum Error {
     /// Releases and parts require a valid digest.
     #[error("[cnd-cli/update] missing or invalid digest")]
     MissingDigest,
+    /// The release server has no signature for this manifest.
+    #[error("[cnd-cli/update] release manifest signature is missing")]
+    MissingSignature,
+    /// The manifest does not verify with the embedded signing key.
+    #[error("[cnd-cli/update] release manifest signature is invalid")]
+    InvalidSignature,
     /// A downloaded part does not match its digest.
     #[error("[cnd-cli/update] digest mismatch for {name}")]
     DigestMismatch {

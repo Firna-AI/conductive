@@ -123,7 +123,12 @@ executable when the image has no program or its check fails:
 ```
 
 The check command logs a warning and returns failure after a failed
-download. The installation check waits for a running background check.
+download. Before it fetches a new program archive, the updater checks the
+Ed25519 signature of the newest-version JSON with its built-in public key.
+It fetches the signature from the release server. A missing or invalid
+signature leaves the running release in use. The updater checks the
+program archive and each part against their SHA-256 digests before use.
+The installation check waits for a running background check.
 Background checks still return a busy error when the download lock is held.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 A build must stop when any command fails. A build must verify that `current/conductive` and

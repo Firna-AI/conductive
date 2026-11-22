@@ -7,18 +7,16 @@ use unimock::{MockFn, Unimock, matching};
 use super::error::Error;
 use super::ports::{State, StoreMock, UpdateEngine};
 
-use super::test_support::{ClientMock, InstallerMock, engine, locked, release};
+use super::test_support::{
+    ClientMock, InstallerMock, engine, latest_json, locked, release, signed_latest,
+};
 
 #[tokio::test]
 async fn downloads_only_a_newer_release() -> Result<(), Box<dyn std::error::Error>> {
     for version in ["0.0.1", "0.0.2"] {
         let engine = engine(
             super::test_support::lock_only(),
-            Unimock::new(
-                ClientMock::latest
-                    .some_call(matching!(_, _))
-                    .returns(Ok(release(version))),
-            ),
+            Unimock::new(latest_json(Ok(serde_json::to_vec(&release(version))?))),
             Unimock::new(()),
             Unimock::new(()),
         );
@@ -33,11 +31,7 @@ async fn refuses_metadata_without_a_digest() -> Result<(), Box<dyn std::error::E
     latest.sha256 = None;
     let engine = engine(
         super::test_support::lock_only(),
-        Unimock::new(
-            ClientMock::latest
-                .some_call(matching!(_, _))
-                .returns(Ok(latest)),
-        ),
+        Unimock::new(latest_json(Ok(serde_json::to_vec(&latest)?))),
         Unimock::new(()),
         Unimock::new(()),
     );
@@ -76,15 +70,13 @@ async fn failed_download_leaves_the_store_unchanged() -> Result<(), Box<dyn std:
                 .returns(Ok(State::default())),
         )),
         Unimock::new((
-            ClientMock::latest
-                .some_call(matching!(_, _))
-                .returns(Ok(release("0.0.3"))),
-            ClientMock::download.some_call(matching!(_)).returns(Err(
-                cli_updater::Error::ReleaseServerStatus {
+            signed_latest("0.0.3")?,
+            ClientMock::download
+                .some_call(matching!((asset) if asset.asset_name == "program.tar.gz"))
+                .returns(Err(cli_updater::Error::ReleaseServerStatus {
                     url: "https://releases.test".into(),
                     status: 503,
-                },
-            )),
+                })),
         )),
         Unimock::new(()),
         Unimock::new(()),
@@ -107,8 +99,8 @@ async fn wrong_program_digest_never_completes_a_version() -> Result<(), Box<dyn 
         StoreMock::prepare.some_call(matching!("0.0.3")).returns(Ok(())),
         StoreMock::version_path.some_call(matching!("0.0.3")).returns(PathBuf::from("/root/versions/0.0.3")),
     )), Unimock::new((
-        ClientMock::latest.some_call(matching!(_, _)).returns(Ok(release("0.0.3"))),
-        ClientMock::download.some_call(matching!(_)).returns(Ok(vec![1])),
+        signed_latest("0.0.3")?,
+        ClientMock::download.some_call(matching!((asset) if asset.asset_name == "program.tar.gz")).returns(Ok(vec![1])),
     )), Unimock::new(InstallerMock::install.some_call(matching!((_, "conductive", path, Some(_), _) if *path == std::path::Path::new("/root/versions/0.0.3/conductive")))
         .returns(Err(cli_updater::Error::ChecksumMismatch { asset_name: "program.tar.gz".into() }))), Unimock::new(()));
     assert!(matches!(

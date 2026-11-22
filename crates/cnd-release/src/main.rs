@@ -1,12 +1,14 @@
 //! Command entry point for local release file creation.
 
+use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use cnd_release::error::Result;
+use cnd_release::error::{Error, Result};
 use cnd_release::files::{DiskReleaseFiles, ReleaseFiles};
 use cnd_release::parts::{Part, PartsList};
+use cnd_release::signature::ReleaseSigner;
 use cnd_release::version::is_newer;
 
 #[derive(Parser)]
@@ -26,7 +28,7 @@ enum Command {
         #[arg(long)]
         output: PathBuf,
     },
-    /// Package a program built with the supplied parts and release version.
+    /// Package a program and sign its release with CONDUCTIVE_RELEASE_SIGNING_KEY.
     Package {
         #[arg(long)]
         version: String,
@@ -67,8 +69,13 @@ fn execute(command: Command, files: &dyn ReleaseFiles) -> Result<()> {
             parts,
             output,
         } => {
+            let key = match env::var("CONDUCTIVE_RELEASE_SIGNING_KEY") {
+                Ok(key) if !key.trim().is_empty() => key,
+                _ => return Err(Error::MissingSigningKey),
+            };
+            let signer = ReleaseSigner::for_publish(&key)?;
             let parts = files.read_parts(&parts)?;
-            let metadata = files.package(&version, &program, &parts, &output)?;
+            let metadata = files.package(&version, &program, &parts, &output, &signer)?;
             println!("{}", metadata.download_url);
         }
         Command::Newer { candidate, current } => {

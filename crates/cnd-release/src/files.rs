@@ -10,6 +10,7 @@ use tar::{Builder, Header};
 
 use crate::error::{ErrorResultExt, Result};
 use crate::parts::PartsList;
+use crate::signature::{ReleaseSigner, manifest_signature_key};
 use crate::version::{BASE_URL, BINARY, LATEST_KEY, TARGET, release_version};
 
 /// Filesystem operations used by the release command and build script.
@@ -20,13 +21,14 @@ pub trait ReleaseFiles {
     fn write_parts(&self, path: &Path, parts: &PartsList) -> Result<()>;
     /// Read metadata for the newest-version comparison.
     fn read_metadata(&self, path: &Path) -> Result<ReleaseAssetInfo>;
-    /// Write immutable archive and parts files, then the local newest-version JSON.
+    /// Write immutable archive, parts and signature files, then the local newest-version JSON.
     fn package(
         &self,
         version: &str,
         program: &Path,
         parts: &PartsList,
         output: &Path,
+        signer: &ReleaseSigner,
     ) -> Result<ReleaseAssetInfo>;
 }
 
@@ -55,6 +57,7 @@ impl ReleaseFiles for DiskReleaseFiles {
         program: &Path,
         parts: &PartsList,
         output: &Path,
+        signer: &ReleaseSigner,
     ) -> Result<ReleaseAssetInfo> {
         release_version(version)?;
         parts.validate()?;
@@ -71,6 +74,8 @@ impl ReleaseFiles for DiskReleaseFiles {
             download_url: format!("{BASE_URL}/{key}"),
             sha256: Some(digest),
         };
+        let manifest = serde_json::to_vec_pretty(&metadata).internal()?;
+        let signature = signer.sign(&manifest)?;
         write_file(&output.join(&key), &archive)?;
         let parts_bytes = serde_json::to_vec_pretty(parts).internal()?;
         let parts_key = format!(
@@ -78,10 +83,8 @@ impl ReleaseFiles for DiskReleaseFiles {
             sha256(&parts_bytes)
         );
         write_file(&output.join(parts_key), &parts_bytes)?;
-        write_file(
-            &output.join(LATEST_KEY),
-            &serde_json::to_vec_pretty(&metadata).internal()?,
-        )?;
+        write_file(&output.join(manifest_signature_key(&manifest)), &signature)?;
+        write_file(&output.join(LATEST_KEY), &manifest)?;
         Ok(metadata)
     }
 }

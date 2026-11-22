@@ -5,19 +5,25 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cli_release_interface::ReleaseAssetInfo;
-use cli_updater::{BinaryInstaller, DynReleaseClient, ReleaseClient};
+use cli_updater::BinaryInstaller;
 use cnd_release::files::sha256;
 use cnd_release::parts::{Part, PartsList};
+use cnd_release::signature::ReleaseSigner;
+use cnd_release::version::LATEST_KEY;
 use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::engine::Engine;
 use super::error::Error;
-use super::ports::{StoreMock, UpdateLock};
+use super::ports::{ReleaseSource, StoreMock, UpdateLock};
+
+const TEST_PUBLIC_KEY: [u8; 32] = [
+    0xd7, 0x5a, 0x98, 0x01, 0x82, 0xb1, 0x0a, 0xb7, 0xd5, 0x4b, 0xfe, 0xd3, 0xc9, 0x64, 0x07, 0x3a,
+    0x0e, 0xe1, 0x72, 0xf3, 0xda, 0xa6, 0x23, 0x25, 0xaf, 0x02, 0x1a, 0x68, 0xf7, 0x07, 0x51, 0x1a,
+];
 
 #[unimock::unimock(api = ClientMock)]
 #[async_trait]
 pub(super) trait Client {
-    async fn latest(&self, binary: &str, target: &str) -> cli_updater::Result<ReleaseAssetInfo>;
     async fn download(&self, release: &ReleaseAssetInfo) -> cli_updater::Result<Vec<u8>>;
 }
 
@@ -63,6 +69,26 @@ pub(super) fn release(version: &str) -> ReleaseAssetInfo {
     }
 }
 
+pub(super) fn latest_json(reply: cli_updater::Result<Vec<u8>>) -> impl Clause {
+    ClientMock::download
+        .some_call(matching!((asset) if asset.download_url == LATEST_KEY))
+        .returns(reply)
+}
+
+pub(super) fn signed_latest(version: &str) -> Result<impl Clause, Box<dyn std::error::Error>> {
+    let manifest = serde_json::to_vec(&release(version))?;
+    let signer = ReleaseSigner::from_pem(include_str!(
+        "../../../../cnd-release/tests/fixtures/rfc8032-test-key.pem"
+    ))?;
+    let signature = signer.sign(&manifest)?.to_vec();
+    Ok((
+        latest_json(Ok(manifest)),
+        ClientMock::download
+            .some_call(matching!((asset) if asset.download_url.ends_with(".sig")))
+            .returns(Ok(signature)),
+    ))
+}
+
 pub(super) fn parts() -> cnd_release::error::Result<PartsList> {
     PartsList::new(
         ["sdk-helper", "node", "system"]
@@ -91,7 +117,7 @@ pub(super) fn engine(
 }
 
 /// An engine with a hand-written release client, such as one that stalls.
-pub(super) fn engine_with_client(store: Unimock, client: DynReleaseClient) -> Engine {
+pub(super) fn engine_with_client(store: Unimock, client: Arc<dyn ReleaseSource>) -> Engine {
     Engine {
         store: Arc::new(store),
         client,
@@ -106,12 +132,13 @@ pub(super) fn lock_only() -> Unimock {
 
 struct Network(Unimock);
 #[async_trait]
-impl ReleaseClient for Network {
-    async fn latest(&self, binary: &str, target: &str) -> cli_updater::Result<ReleaseAssetInfo> {
-        Client::latest(&self.0, binary, target).await
-    }
+impl ReleaseSource for Network {
     async fn download(&self, release: &ReleaseAssetInfo) -> cli_updater::Result<Vec<u8>> {
         Client::download(&self.0, release).await
+    }
+
+    fn verification_key(&self) -> &[u8; 32] {
+        &TEST_PUBLIC_KEY
     }
 }
 struct Archive(Unimock);

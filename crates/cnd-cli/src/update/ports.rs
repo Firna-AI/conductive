@@ -3,6 +3,7 @@
 use std::path::{Path, PathBuf};
 
 use async_trait::async_trait;
+use cli_release_interface::ReleaseAssetInfo;
 use cnd_release::parts::{Part, PartsList};
 use serde::{Deserialize, Serialize};
 
@@ -64,6 +65,15 @@ pub trait Processes: Send + Sync {
     fn inspect(&self, executable: &Path, version: &str) -> Result<PartsList>;
     /// Install the active version's root-owned system files without starting units.
     fn install_system(&self, folder: &Path) -> Result<()>;
+}
+
+/// Release files and the key trusted by the updater.
+#[async_trait]
+pub trait ReleaseSource: Send + Sync {
+    /// Fetch raw bytes by absolute URL or a path relative to the release server.
+    async fn download(&self, asset: &ReleaseAssetInfo) -> cli_updater::Result<Vec<u8>>;
+    /// Give the public key configured in this updater.
+    fn verification_key(&self) -> &[u8; 32];
 }
 
 /// User-visible operations of the sandbox updater.

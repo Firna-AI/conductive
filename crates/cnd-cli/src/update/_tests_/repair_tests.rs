@@ -5,12 +5,12 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use cli_release_interface::ReleaseAssetInfo;
-use cli_updater::ReleaseClient;
+use cnd_release::signature::RELEASE_PUBLIC_KEY;
 use tokio::time::Instant;
 use unimock::{Clause, MockFn, Unimock, matching};
 
 use super::error::Error;
-use super::ports::{State, StoreMock, UpdateEngine};
+use super::ports::{ReleaseSource, State, StoreMock, UpdateEngine};
 use super::test_support::{ClientMock, engine, engine_with_client, locked, parts};
 use super::warned_parts::WarnedParts;
 
@@ -97,16 +97,17 @@ struct Replies {
 }
 
 #[async_trait]
-impl ReleaseClient for Replies {
-    async fn latest(&self, _: &str, _: &str) -> cli_updater::Result<ReleaseAssetInfo> {
-        std::future::pending().await
-    }
+impl ReleaseSource for Replies {
     async fn download(&self, asset: &ReleaseAssetInfo) -> cli_updater::Result<Vec<u8>> {
         if self.stalled.contains(&asset.binary.as_str()) {
             std::future::pending::<()>().await;
         }
         tokio::time::sleep(self.delay).await;
         Ok(asset.binary.as_bytes().to_vec())
+    }
+
+    fn verification_key(&self) -> &[u8; 32] {
+        &RELEASE_PUBLIC_KEY
     }
 }
 

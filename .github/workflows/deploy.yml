@@ -65,6 +65,7 @@ jobs:
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           TOKEN_SET: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          SIGNING_KEY_SET: ${{ secrets.CONDUCTIVE_RELEASE_SIGNING_KEY != '' }}
         run: |
           set -euo pipefail
           if [[ -z "$CLOUDFLARE_ACCOUNT_ID" && "$TOKEN_SET" != true ]]; then
@@ -79,6 +80,11 @@ jobs:
           fi
           if [[ "$TOKEN_SET" != true ]]; then
             echo '::error::Environment production is missing secret CLOUDFLARE_API_TOKEN.'
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          if [[ "$SIGNING_KEY_SET" != true ]]; then
+            echo '::error::Environment production is missing secret CONDUCTIVE_RELEASE_SIGNING_KEY.'
             echo 'deploy=false' >> "$GITHUB_OUTPUT"
             exit 1
           fi
@@ -143,7 +149,7 @@ jobs:
           set -euo pipefail
           npm run build
 
-      - name: Package Conductive release
+      - name: Build Conductive release
         id: release
         run: |
           set -euo pipefail
@@ -173,10 +179,17 @@ jobs:
             --output "$input/parts.json"
           CONDUCTIVE_RELEASE_VERSION="$version" CONDUCTIVE_PARTS_FILE="$input/parts.json" \
             cargo build --locked --release --target x86_64-unknown-linux-musl -p cnd-cli
-          cargo run --locked -p cnd-release -- package --version "$version" \
-            --program target/x86_64-unknown-linux-musl/release/conductive \
-            --parts "$input/parts.json" --output .context/release-artifact
           echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Sign and package Conductive release
+        env:
+          CONDUCTIVE_RELEASE_SIGNING_KEY: ${{ secrets.CONDUCTIVE_RELEASE_SIGNING_KEY }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          target/debug/cnd-release package --version "$RELEASE_VERSION" \
+            --program target/x86_64-unknown-linux-musl/release/conductive \
+            --parts .context/release-input/parts.json --output .context/release-artifact
 
       - name: Upload Conductive release files
         env:
@@ -222,14 +235,25 @@ jobs:
           while IFS= read -r -d '' file; do
             key=${file#"$output/"}
             content_type=application/gzip
-            if [[ "$file" == *.json ]]; then content_type=application/json; fi
+            case "$file" in
+              *.json) content_type=application/json ;;
+              *.sig) content_type=application/octet-stream ;;
+            esac
             if ! aws s3api head-object --bucket "$RUNNER_BUCKET" --key "$key" \
               --endpoint-url "$endpoint" > /dev/null 2>&1; then
               aws s3 cp "$file" "s3://$RUNNER_BUCKET/$key" --endpoint-url "$endpoint" \
                 --content-type "$content_type" --cache-control 'public, max-age=31536000, immutable' \
                 --only-show-errors
             fi
-            check_size "$file" "${RUNNER_BASE_URL}${key}"
+            url="${RUNNER_BASE_URL}${key}"
+            if [[ "$file" == *.sig ]]; then
+              if ! curl -fsS --retry 3 "$url" | cmp -s "$file" -; then
+                echo "::error::Public release signature does not match the local file at $url."
+                exit 1
+              fi
+            else
+              check_size "$file" "$url"
+            fi
           done < <(find "$output/releases/download" -type f -print0)
 
       # Use the source config so migrations do not follow the build redirect.

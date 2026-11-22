@@ -12,8 +12,10 @@ use cnd_cli::update::ports::{State, Store, UpdateEngine};
 use cnd_cli::update::process::SystemProcesses;
 use cnd_release::files::sha256;
 use cnd_release::parts::{Part, PartsList};
+use cnd_release::signature::manifest_signature_key;
+use cnd_release::version::LATEST_KEY;
 
-use crate::support::{Server, archive};
+use crate::support::{Server, archive, test_signer};
 
 #[tokio::test]
 async fn check_then_apply_preserves_running_files_and_supports_fallback()
@@ -64,10 +66,13 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
         download_url: "https://releases.test/program".into(),
         sha256: Some(sha256(&program)),
     };
+    let manifest = serde_json::to_vec_pretty(&metadata)?;
+    let signature_path = format!("/{}", manifest_signature_key(&manifest));
     responses.insert(
-        "/releases/latest/conductive/x86_64-unknown-linux-musl".into(),
-        serde_json::to_vec(&metadata)?,
+        signature_path.clone(),
+        test_signer()?.sign(&manifest)?.to_vec(),
     );
+    responses.insert(format!("/{LATEST_KEY}"), manifest);
     responses.insert("/program".into(), program);
     let server = Server::start(responses)?;
     let disk = Arc::new(DiskStore::new(root.path().to_path_buf()));
@@ -84,6 +89,21 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
         "the shipped release failed to stage: {check:?}"
     );
     assert_eq!(disk.versions()?, vec!["0.0.3"]);
+    assert_eq!(
+        *server
+            .requests
+            .lock()
+            .map_err(|_| "request lock poisoned")?,
+        [
+            format!("/{LATEST_KEY}"),
+            signature_path,
+            "/program".into(),
+            "/sdk-helper".into(),
+            "/node".into(),
+            "/system".into()
+        ],
+        "the program archive must follow the manifest and its signature"
+    );
     assert_eq!(disk.state()?, State::default());
     assert!(!root.path().join("installed").exists());
     assert_eq!(
@@ -166,7 +186,7 @@ async fn check_then_apply_preserves_running_files_and_supports_fallback()
             .lock()
             .map_err(|_| "request lock poisoned")?
             .len(),
-        6,
+        7,
         "a rejected release downloaded again"
     );
     assert!(!disk.versions()?.contains(&"0.0.3".to_owned()));

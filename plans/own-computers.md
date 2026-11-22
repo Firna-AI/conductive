@@ -585,13 +585,12 @@ Depends on: 2
 
 Each release has a signature, and the program checks it before it installs.
 
-- [ ] Add the signature to the deploy run that publishes a release.
-- [ ] Check the signature in the updater before each download is used. The
-      updater uses the `cli-updater` crate of `futex-ai/cli-release`, so a
-      sub-workspace in that repository adds the check. Branch: to be set.
-- [ ] Keep older programs working: they read the same release files and
+- [x] Add the signature to the deploy run that publishes a release.
+- [x] Check the signature in the updater before it downloads the program.
+      Use the exact bytes of the newest-version JSON.
+- [x] Keep older programs working: they read the same release files and
       ignore the signature.
-- [ ] Test a good, an unsigned, and a wrongly signed release.
+- [x] Test a good, an unsigned, and a wrongly signed release.
 
 ## Milestone 4: Host connection
 
@@ -853,6 +852,13 @@ Depends on: 9, 13, 14
 ## Milestone 16: Verification, commit, review, and pull request
 
 Depends on: every other milestone
+
+- [ ] Before the merge, Cal makes the release signing key pair, sets the
+      `CONDUCTIVE_RELEASE_SIGNING_KEY` secret of the `production`
+      environment, and the public key replaces the placeholder
+      `RELEASE_PUBLIC_KEY` in `crates/cnd-release/src/signature.rs`.
+      `crates/cnd-release/README.md` gives the commands. Until then, the
+      deploy refuses to publish a release.
 
 - [ ] Run the targeted tests, the Rust checks, and the complete gate named
       in `CLAUDE.md`.
