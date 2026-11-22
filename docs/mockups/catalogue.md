@@ -26,7 +26,7 @@ how a screen is built, and links to the other pages.
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, and Continue |
 | `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a start from another branch, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation with the Capabilities of its runs, its triggers, its runs, and a run workspace |
-| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, a build that waits for another update and a build that it stopped, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
+| `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, a build that waits for another update and a build that it stopped, the skills repository with its trust switch, list, and notices, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, wakes from watched turns, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, Explain on chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
 | `app/mac-commands`  | A command that an agent runs on the Mac of the sender, in the chat, and an older one that a workspace with Mac access off refused |
 | `app/secret-requests` | A request for secrets above the composer, two secrets, a mixed request, a temporary request with its sheet on a phone, the results in the chat, and a request that outlived its tool call or ended with no answer |
@@ -57,7 +57,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/new-workspace/start-branch`,
 `app/new-workspace/start-branch/missing`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
@@ -67,6 +67,7 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/archive/restore-ended`, and both declare `movedFrom`. The states of `app/shell`,
 `app/account`, `app/sign-in/waitlist`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
+`app/org-settings/cloud-computer/skills`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
 `app/composer`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
@@ -107,7 +108,8 @@ the contents, so its view of each variant is the guide.
 
 [The first build and waiting repositories](catalogue-org-builds.md) gives
 the pages that draw the first build of a new org in three places, and the
-repositories that wait for a build.
+repositories that wait for a build. It also shows
+[the skills repository](catalogue-org-builds.md#the-skills-repository).
 
 [The account](catalogue-account.md) gives `app/account` and its child
 pages, the own endpoint form, and the pickers that hide the models that an

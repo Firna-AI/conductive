@@ -57,6 +57,7 @@ import {
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
 import type { OrgSettingsState } from './orgSettingsState'
+import { acmeSkillsComputer } from './settingsSkills'
 
 /** The org whose settings show, and what its tabs hold. */
 export type SettingsOrg = {
@@ -130,9 +131,8 @@ function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
 }
 
 /**
- * Firna, which Cal created in Get started. Its scripts are empty and it
- * has no env vars and no secrets, as for every new org, until someone adds
- * them.
+ * Firna, which Cal created in Get started. Its scripts are empty, and it
+ * has no env vars, no skills repository, and no secrets.
  */
 function firna(build: BuildState): SettingsOrg {
   return {
@@ -194,16 +194,29 @@ function acmeAfter(change: RepositoryChange): SettingsOrg {
 }
 
 /**
+ * Acme in a state of its skills repository, with what the lookup of the
+ * saved repository found, as `settingsSkills.ts` gives them.
+ */
+function acmeWithSkills(state: OrgSettingsState): SettingsOrg {
+  const settings = acmeAfter(state.repositoryChange)
+  return {
+    ...settings,
+    computer: { ...settings.computer, ...acmeSkillsComputer(state) },
+  }
+}
+
+/**
  * The org of the settings: Acme in use, Acme suspended, or Firna. Acme
- * shows the saved change of its repositories of the state.
+ * shows the saved change of its repositories and its skills repository
+ * of the state.
  */
 export function settingsOrg(state: OrgSettingsState): SettingsOrg {
   switch (state.org) {
     case 'active':
-      return acmeAfter(state.repositoryChange)
+      return acmeWithSkills(state)
     case 'suspended':
       return {
-        ...acmeAfter(state.repositoryChange),
+        ...acmeWithSkills(state),
         list: paths.suspendedOrg,
         sections: suspendedSections(),
         links: suspendedSettingsLinks,

@@ -245,8 +245,9 @@ This page lists each protocol doc and what it covers.
     message shows as one line in the work of a turn, closed and open, with
     its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  scope of a cloud computer, the author of each commit in a sandbox, the copy
+  and lookup of the skills repository, and the GitHub actions of the
+  Worker as a member.
   - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
     the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each

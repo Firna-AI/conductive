@@ -129,7 +129,7 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
   {
     tab: 'cloud-computer',
     label: 'Cloud computer',
-    words: ['install', 'startup script', 'env', 'build', 'sandbox'],
+    words: ['install', 'startup script', 'env', 'build', 'sandbox', 'skills'],
   },
   {
     tab: 'agents',

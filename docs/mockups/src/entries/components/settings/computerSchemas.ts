@@ -26,6 +26,7 @@ import {
   waitingBuildLog,
 } from '../../../fixtures/terminal'
 import { terminalLineSchema } from '../tools/terminalSchemas'
+import { skillsLookupSchema } from './skillsSchemas'
 
 /** The states of the cloud computer, as `BuildState` lists them. */
 const buildStates = [
@@ -123,6 +124,9 @@ export const orgComputerSchema = {
     changedInstallScript: { type: 'string' },
     startupScript: { type: 'string' },
     envVars: { type: 'array', items: envVarSchema },
+    /** The GitHub repository of skills, as owner/name, when the org has one. */
+    skillsRepository: { type: 'string' },
+    skillsLookup: skillsLookupSchema,
   },
 } as const
 
