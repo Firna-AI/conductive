@@ -38,6 +38,12 @@ keeps the dated record, as
   The chat shows the failed turn with the reset time, in the time zone of
   the sandbox. When the time zone of the sandbox has no name, the chat
   says "sandbox time" in place of the name.
+- Each other Codex usage limit failure with a reset time also shows that
+  time, such as a ChatGPT plan limit that OpenAI sends with `resets_at`
+  (long wait decision 2, 22 November 2026). Reason: the user gets the
+  same useful time.
+- A time only for the long wait error was rejected. It needs a hidden mark
+  in a field that Codex reads for promotions.
 - A runner older than this rule shows the usage limit cause with no reset
   time. Its turn also ends. The sandbox installs the newer runner when the
   workspace is idle, as
