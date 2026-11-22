@@ -295,6 +295,13 @@ card and the call above on the late line in a full region.
 - The top card is the first in the order of the region: the waiting
   requests first, then the late requests, each oldest first. An answer
   shows the next card. My call of 20 November 2026.
+- The cards that this view cannot answer go after the cards that it can
+  answer. Each part keeps the order above. So the top card is one that the
+  member can answer, whenever such a card exists. A browser, and the Mac
+  app on another Mac, cannot answer a Mac command, so there the command
+  goes last, as `app/secret-requests/several/mac-command` shows. The Mac
+  app on the Mac that got the command answers it, so its stack keeps the
+  order. Cal's decision 4 B of 22 November 2026.
 - A newer open request of the same session hides an older one when the
   two ask for the same set of secrets. Only the newest shows. Its Allow
   then covers each hidden request, under the rule of covered requests that
@@ -346,6 +353,11 @@ card and the call above on the late line in a full region.
   top, unless that card leaves. The place shows the new count. Reason: the
   card must not change while the member reads it or presses Allow. The UI
   agent's call of 20 November 2026.
+- When this view cannot answer the card on top, a new request that it can
+  answer becomes the card on top. Reason: decision 4 B puts such a card
+  first, and no Allow moves under the pointer, because the card that it
+  replaces shows no choices in this view. The UI agent's call of 22
+  November 2026.
 - After an answer, the focus moves to the new card on top, so a screen
   reader reads it and the next Tab reaches its first action. With no card
   left, the focus moves to the composer. Reason: the focus does not jump
@@ -392,6 +404,7 @@ Depends on: 1
 
 The region draws its requests as a stack, as "The stack of requests"
 says. Decision 3 sets the words of Deny on a card that hides requests.
+Decision 4 puts the cards that a view cannot answer last.
 
 - [x] Draw the stack in `app/secret-requests/several` and its
       `waiting-and-late` variant: one card on top, the edges of the cards
@@ -404,7 +417,7 @@ says. Decision 3 sets the words of Deny on a card that hides requests.
 - [x] Update `docs/mockups/catalogue-secrets.md` and the design docs of the
       mockups.
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 Evidence: `.context/needs-input-at-the-composer/mockups-stack/` holds the
@@ -431,9 +444,9 @@ session tab.
 - [ ] Update `plans/follow-ups/mockup-tab-row-clips-shown-tab.md`: `full`
       is now a child page of `app/tabs`, with the same path, not a variant.
 - [ ] State the stack, the merge of requests for the same secrets, and
-      the outcome of decision 3 in `docs/protocol/secret-requests.md` and
-      `docs/protocol/agent-tools.md`. Replace the sentence that the member
-      scrolls through all waiting requests.
+      the outcomes of decisions 3 and 4 in `docs/protocol/secret-requests.md`
+      and `docs/protocol/agent-tools.md`. Replace the sentence that the
+      member scrolls through all waiting requests.
 - [ ] Correct `docs/protocol/desktop-commands.md`: a click on the row opens
       the workspace, and the marked tab shows the request.
 - [ ] Check `docs/protocol/chat-and-events.md` "The work of a turn" and the
@@ -456,14 +469,19 @@ Depends on: 3
 - [ ] Order the region in `src/chat/components/WaitingRequests.tsx`: the
       waiting requests first, then the late requests, each oldest first. A
       card that hides requests takes the place of the oldest request that
-      it holds.
+      it holds. Then put the cards that this view cannot answer after the
+      cards that it can answer, as decision 4 says. A Mac command card
+      takes an answer only where it shows its choices: `canAnswer` of
+      `src/chat/device/device-snapshot.ts` holds, and the workspace is not
+      read-only, as `src/chat/device/PendingCommands.tsx` decides.
 - [ ] Draw the region as the stack of the mockups, with "1 of 3",
       Previous, and Next, and the keyboard. Use
       `docs/mockups/src/components/chat/RequestStack.module.css`, the words
       of `requestStackCopy.ts`, and the `stacked` class of each card.
-- [ ] Keep the card on top when a request joins or leaves the stack, and
-      move the focus after Previous, Next, and an answer, as "The stack of
-      requests" says.
+- [ ] Keep the card on top when a request joins or leaves the stack,
+      except when this view cannot answer that card, and move the focus
+      after Previous, Next, and an answer, as "The stack of requests"
+      says.
 - [ ] Hide each older request behind a newer one of the same session for
       the same set of secrets, with `askedTimes` of `secretRunCopy.ts`.
       Give Deny the outcome of decision 3.
@@ -473,7 +491,8 @@ Depends on: 3
 - [ ] Update the tests in `src/chat/secrets/secret-requests.test.tsx` and
       `src/chat/secrets/answer-request.test.tsx`: a late request shows above
       the composer, and its answer moves it to its place. Add tests of the
-      stack, of the merge, and of Deny.
+      stack, of its order in a browser and in the Mac app, of the merge,
+      and of Deny.
 - [ ] Update `src/chat/secrets/README.md` and `src/chat/README.md`.
 - [ ] Check the flow in a browser on a computer and on a phone width. Save
       the screenshots under `.context/needs-input-at-the-composer/`.

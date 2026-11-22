@@ -35,7 +35,7 @@ export const macRequests = defineScreen({
       description:
         'Nobody answered PROD_DATABASE_URL in time, so its request turned late. Then Cal asked for the checkout test in Safari. The command on this Mac is on top of the stack, with Deny and Allow, because its call waits. "1 of 2" and the edge of the late request say that one more request waits behind it.',
       rationale:
-        'The browser draws the same stack, where the command shows its state only, as app/secret-requests/several/mac-command shows.',
+        'Cal chose option B of decision 4 of the needs-input change on 22 November 2026: the cards that this view cannot answer go after the cards that it can answer. The Mac app on this Mac answers the command and the request for the secret, so the stack keeps its order. A browser cannot answer the command, so it puts the late request on top and the command second, as app/secret-requests/several/mac-command shows.',
       props: { command: 'with-secret' },
     },
   ],

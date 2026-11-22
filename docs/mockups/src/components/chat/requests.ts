@@ -85,13 +85,32 @@ function sameSecrets(a: ChatItem, b: ChatItem): boolean {
 }
 
 /**
- * The cards of the stack, in the order of the region. A card that hides
- * older requests takes the place of the oldest request that it holds, so a
- * new ask of the agent does not move a card that already waits. A request
+ * Whether this view can answer an open request. Any member who sees the
+ * session answers a request for secrets, in a browser or in the Mac app.
+ * Only the Mac app on the Mac that got a command answers that command, so
+ * a browser shows the state of the command only. The mockups draw the Mac
+ * app on the Mac of the sender, which gets each command of the chat, so
+ * `macApp` says whether the view is that Mac app.
+ */
+export function answersHere(item: ChatItem, macApp: boolean): boolean {
+  return macApp || !isPendingCommand(item)
+}
+
+/**
+ * The cards of the stack: first the cards that this view can answer, then
+ * the cards that it cannot answer, such as a command on a Mac in a
+ * browser. Each part keeps the order of the region, so the card on top is
+ * one that the member can answer, whenever such a card exists. `answers`
+ * says whether this view can answer a request. A card that hides older
+ * requests takes the place of the oldest request that it holds, so a new
+ * ask of the agent does not move a card that already waits. A request
  * whose call waits keeps its card among those whose calls wait. A chat
  * shows one session, so each request of `items` is of that session.
  */
-export function stackEntries(items: readonly ChatItem[]): StackEntry[] {
+export function stackEntries(
+  items: readonly ChatItem[],
+  answers: (item: ChatItem) => boolean,
+): StackEntry[] {
   const entries: StackEntry[] = []
   for (const item of pendingRequests(items)) {
     const at = entries.findIndex((entry) => sameSecrets(entry.item, item))
@@ -106,7 +125,10 @@ export function stackEntries(items: readonly ChatItem[]): StackEntry[] {
         ? { item, hidden: [...hidden, shown] }
         : { item: shown, hidden: [...hidden, item] }
   }
-  return entries
+  return [
+    ...entries.filter((entry) => answers(entry.item)),
+    ...entries.filter((entry) => !answers(entry.item)),
+  ]
 }
 
 /**

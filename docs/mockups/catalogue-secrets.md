@@ -64,11 +64,12 @@ of its session. Its child pages:
     variant has the three requests at their places after one Deny. Its
     `allowed` variant has them after one Allow, with one line of the app
     and one new turn.
-  - `mac-command` has a command on the Mac on top of a late request for a
-    secret, in a browser, where the command shows its state only. Its
-    `next` variant has the late request on top, with its choices. The
-    `with-secret` variant of `mac-app/requests` has the same stack in the
-    Mac app.
+  - `mac-command` has a late request for a secret on top of a command on
+    the Mac, in a browser, which cannot answer the command. So the late
+    request comes first, though the call of the command waits. Its `next`
+    variant has the command on top, with its state only. The
+    `with-secret` variant of `mac-app/requests` has the same requests in
+    the Mac app, which answers both, so the command is on top there.
 - `temporary` has a request for MAPBOX_TOKEN, which Acme does not have,
   with no value yet. A phone shows Deny and Give a value. Its child pages:
   - `value` has a typed value and 15 minutes, and on a phone the sheet

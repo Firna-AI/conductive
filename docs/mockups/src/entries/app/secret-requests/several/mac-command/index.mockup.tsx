@@ -8,9 +8,9 @@ import {
 export const macCommandStack = defineScreen({
   title: 'A Mac command and a secret request',
   description:
-    'Nobody answered PROD_DATABASE_URL in time, so its request turned late when its turn ended. Then Cal asked for the checkout test in Safari, and the agent asked to run it on his Mac. Both requests wait in the stack above the composer. The command on the Mac is on top, because its call waits: the command, the Mac, the time limit, and its state, with no choices, because only the Mac app can allow a command on the Mac. "1 of 2" with Previous and Next sits above it, and the edge of the late request shows behind it. Next shows the late request, with its choices.',
+    'Nobody answered PROD_DATABASE_URL in time, so its request turned late when its turn ended. Then Cal asked for the checkout test in Safari, and the agent asked to run it on his Mac. Both requests wait in the stack above the composer. A browser cannot answer a command on a Mac, so the late request is on top, though the call of the command waits: PROD_DATABASE_URL, its description, the reason, the command, Deny, Allow for this session, and its late line. "1 of 2" with Previous and Next sits above it, and the edge of the command shows behind it. Next shows the command on the Mac, with its state only.',
   rationale:
-    'A design call of 20 November 2026: commands on a Mac take their place in the stack, in the same order as the requests for secrets, but they never hide another request, because each Allow runs one exact command. The Mac app draws the same stack with Deny and Allow on the command, as the with-secret state of mac-app/requests shows.',
+    "Cal chose option B of decision 4 of the needs-input change on 22 November 2026: the cards that this view cannot answer go after the cards that it can answer, and each part keeps the order of the stack. So the card on top is one that the member can answer, whenever such a card exists. Only the Mac app on the Mac that got a command can answer it, so a browser puts the command last. The Mac app on Cal's Mac answers both, so it keeps the order of the stack, with the command first, as the with-secret state of mac-app/requests shows. A design call of 20 November 2026: commands on a Mac take their place in the stack, but they never hide another request, because each Allow runs one exact command.",
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, conversation: 'mac-waiting-secret' },
@@ -20,9 +20,9 @@ export const macCommandStack = defineScreen({
   variants: [
     {
       slug: 'next',
-      title: 'The late request behind it',
+      title: 'The Mac command behind it',
       description:
-        'After Next, the late request for PROD_DATABASE_URL is on top, with Deny, Allow for this session, and its late line. The place says "2 of 2", Next is off, and the edge of the command on the Mac shows behind it.',
+        'After Next, the command on Cal\'s MacBook Pro is on top: the command, the Mac, the time limit, Details, and its state, Waiting for approval, with no choices. The place says "2 of 2", Next is off, and the edge of the late request shows behind it.',
       props: { shownRequest: 2 },
     },
   ],

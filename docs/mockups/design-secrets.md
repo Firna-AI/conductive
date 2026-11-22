@@ -138,6 +138,15 @@ one.
   on top is the first in that order, and an answer shows the next card.
   The edges of at most two other cards show above it, narrower the
   further back they are.
+- The cards that the view cannot answer go after the cards that it can
+  answer, and each part keeps the order of the stack, from needs-input
+  decision 4 B. So the card on top is one that the member can answer,
+  whenever such a card exists. Only the Mac app on the Mac that got a
+  command answers it, so a browser puts the command after the requests
+  for secrets, as `app/secret-requests/several/mac-command` shows. The
+  Mac app on that Mac answers both, so its stack keeps the order, as the
+  `with-secret` variant of `mac-app/requests` shows. `answersHere` in
+  `components/chat/requests.ts` is the test of the view.
 - With more than one card, the place of the card on top, such as
   "1 of 3", then Previous and Next sit above the stack, at its end.
   Previous is off on the first card, and Next on the last. The keyboard
@@ -157,9 +166,8 @@ one.
   Allow covers each of them, and its Deny ends each of them, from
   needs-input decision 3 B. The card is one place in the stack, whatever
   it hides.
-- A Mac command takes its place in the stack, in the same order, but it
-  never hides another request, as
-  `app/secret-requests/several/mac-command` shows.
+- A Mac command takes its place in the stack, but it never hides another
+  request.
 - After an answer, or when it ends, a late request leaves the stack at once
   and takes its place in its turn. There it never folds with the work
   of its turn. It shows the answer at the end of its names, and its line

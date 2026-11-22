@@ -13,7 +13,12 @@ import { ChatPictures, type PictureRead } from './chatPictures'
 import { Composer, type ComposerState } from './Composer'
 import { groupItems } from './groupItems'
 import { RequestStack } from './RequestStack'
-import { isPendingRequest, shownPlace, stackEntries } from './requests'
+import {
+  answersHere,
+  isPendingRequest,
+  shownPlace,
+  stackEntries,
+} from './requests'
 import { ToolGroup } from './ToolGroup'
 import { WorkFold, type FoldState } from './WorkFold'
 import styles from './ChatPane.module.css'
@@ -33,8 +38,9 @@ export type StackView = { place?: number; pages?: readonly string[] }
  * late requests for secrets that wait for a member leave the transcript.
  * They stay in view just above the composer, as a stack that shows one card
  * at a time: the requests whose calls wait first, then the late requests.
- * Once answered, or ended with no answer, a command or a run shows at its
- * place in the transcript.
+ * The commands that this view cannot answer, as in a browser, go after the
+ * requests that it can answer. Once answered, or ended with no answer, a
+ * command or a run shows at its place in the transcript.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -69,7 +75,8 @@ export function ChatPane(props: {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
   const composer = !props.problem || !replacesComposer(props.problem)
-  const entries = stackEntries(props.items)
+  const macApp = mac !== undefined
+  const entries = stackEntries(props.items, (item) => answersHere(item, macApp))
   const transcript = props.items.filter((item) => !isPendingRequest(item))
   const fold = props.fold ?? 'closed'
   return (
