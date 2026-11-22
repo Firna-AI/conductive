@@ -11,7 +11,8 @@ queue, each queued pull request builds on the ones ahead, members can
 re-order the queue, and the sidebar shows the queue as its own group while
 it has rows. The brainstorm notes are in `.context/merge-queue/brief.md`.
 
-This change builds one queue for each repository and target branch. The
+This change builds one queue for each repository, into its default branch
+(decision 320). The
 queue is one GitHub stack. Each queued pull request targets the branch of
 the pull request ahead of it, so its agent fixes the conflicts with the work
 ahead once, while it waits. The Worker merges the highest pull request whose
@@ -41,8 +42,9 @@ Contract owners:
 
 ## Terms
 
-- **Queue:** the ordered list of queued workspaces of one repository and one
-  target branch, such as `main`. Every member of the org sees the same queue.
+- **Queue:** the ordered list of queued workspaces of one repository, which
+  merge into its default branch, such as `main`. Every member of the org
+  sees the same queue.
 - **Entry:** one queued workspace in a queue, with its open pull request,
   its place, and the member who queued it.
 - **Queuer:** the member who added an entry to the queue.
@@ -52,7 +54,7 @@ Contract owners:
   below. A merge of one pull request also merges every pull request below
   it, in one step.
 - **Trunk:** the target branch of a queue, at the bottom of its GitHub
-  stack.
+  stack. It is always the default branch of the repository (decision 320).
 - **Layer:** one pull request of the GitHub stack.
 - **Restack:** a move of a layer onto a new branch below it, with
   `git rebase --onto`, and a push of the result.
@@ -63,10 +65,16 @@ Contract owners:
 
 ## Decisions
 
-The numbers 313 to 319 were the next free numbers on 22 November 2026, on
+The numbers 313 to 320 were the next free numbers on 22 November 2026, on
 `main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
 22 November 2026, with the options and the letters that Cal saw in the
-brainstorm. Decisions 316 to 319 are open.
+brainstorm. Decisions 316, 317, 319, and 320 hold Cal's later answers of
+the same day. Decision 318 is open.
+
+A second options check ran on the same day over the changed decision 318,
+decision 320, and the new design calls. It added option D to decision 318
+and changed its recommendation from A to D, and it corrected the trunk
+calls. Its report is in `.context/merge-queue/options-check-2.md`.
 
 An options check ran over the decisions and the design calls on 22 November
 2026. It added option D to decision 316 and changed its recommendation from
@@ -169,7 +177,11 @@ lower pull request.
 
 ### Decision 316: what Merge does on a queued workspace
 
-Open. It blocks the bar part of Milestones 1 and 9.
+Chosen by Cal on 22 November 2026: D. Merge shows on a queued workspace
+only while the layer and each layer below it are in the GitHub stack and
+ready. Its label counts the layers below, and the click asks the queue to
+merge up to that layer as its next step, with the token of the member who
+clicks. The record below keeps the options that Cal saw.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Design.
@@ -215,7 +227,19 @@ Open. It blocks the bar part of Milestones 1 and 9.
 
 ### Decision 317: where a member adds a pull request to the queue
 
-Open. It blocks the action part of Milestones 1, 8, and 9.
+Chosen by Cal on 22 November 2026: D, and a control in the pull request
+bar too. Cal's words: "D + i think it should also be possible from the
+github status bar". This changes decision 220 for this one action.
+
+- Design call of the agent, 22 November 2026: the bar control is an
+  outline button in the form of Archive after a merge, beside the main
+  action or alone. It shows to members with write access, on each state of
+  an open pull request that is not queued, and on a "Needs attention"
+  entry. Reason: Checks running and Blocked have no main action to hold a
+  menu, and in the states of Fix checks and Resolve conflicts a menu would
+  hide Add to merge queue under an action of another kind. The mockups
+  show it before the build.
+- The record below keeps the options that Cal saw.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Review.
@@ -253,6 +277,15 @@ Open. It blocks the action part of Milestones 1, 8, and 9.
 
 Open. It blocks the grouping part of Milestones 1 and 8.
 
+Cal answered on 22 November 2026: "it only applies to branches targetting
+main". Decision 320 records that answer as the scope of the queue. It does
+not settle this decision. A sub-workspace is a row nested under the row of
+the workspace that created it. Its nesting does not depend on its target,
+and most sub-workspaces target `main`. So a queued sub-workspace that
+targets `main` still needs a place in the list. A sub-workspace that
+stacks on its parent's branch joins together with its parent, as one unit
+(decision 315).
+
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Review.
 - **Category:** Docs or spec.
@@ -264,8 +297,8 @@ Open. It blocks the grouping part of Milestones 1 and 8.
   says where the sub-workspaces of a queued parent show.
 - **Impact if no action:** The list breaks decision 1 C, or a queued
   workspace shows in two places.
-- **Root question:** Where does the list show a queued workspace that is
-  part of a tree?
+- **Root question:** How does the list show the queue order and each tree
+  when one workspace is in both?
 - **Options:**
   - **A.** The group shows every queued workspace as a flat row. Its tree
     stays in the section, and the queued row there gets a mark with its
@@ -278,19 +311,32 @@ Open. It blocks the grouping part of Milestones 1 and 8.
   - **C.** Every queued workspace stays in its section, with the mark of A.
     The group shows only for a queued workspace whose tree is not queued.
     Effort: Small.
+  - **D.** A queued workspace leaves its section, as an archived one does,
+    and shows as a flat row in the group. Its live sub-workspaces show
+    under the nearest workspace above them that is not queued, as for an
+    archived parent (sub-workspace decision 5 C). It changes sub-workspace
+    decision 1 C for queued workspaces, and the shared placement rule in
+    `src/shared/workspace-tree.ts`. Effort: Medium.
 - **Left out:** No group, with only marks in the sections, because Cal asked
   for a group of its own.
-- **Wider fix:** None. This is one layout rule.
+- **Wider fix:** D. One placement rule then serves the Archived group and
+  the Merge queue group.
 - **Previous examples:** The Archived group moves each archived workspace
-  out of its section.
-- **Recommendation:** A. The queue shows in its real order in one place,
-  and each tree stays whole.
-- **Action:** ask the user, because A shows a workspace twice and B
-  changes sub-workspace decision 1 C.
+  out of its section. Sub-workspace decision 5 rejected a row that shows
+  twice, in its section and in the Archived group.
+- **Recommendation:** D, in place of A, the first recommendation. It
+  follows the Archived group, and sub-workspace decision 5 already
+  rejected a row that shows twice.
+- **Action:** ask the user, because A shows a workspace twice, and B and D
+  change sub-workspace decision 1 C.
 
 ### Decision 319: who rebases a layer that has no conflict
 
-Open. It blocks Milestone 6.
+Chosen by Cal on 22 November 2026: B. The queue first asks GitHub for a
+server rebase of the layer, and sends a fix turn only on a conflict. If the
+Milestone 3 check shows that the server rebase does not keep only the
+layer's own commits after a squash merge below it, the plan asks Cal again
+before Milestone 6. The record below keeps the options that Cal saw.
 
 - **Severity:** Medium. **Effort:** Medium.
 - **Source:** Review.
@@ -320,6 +366,22 @@ Open. It blocks Milestone 6.
 - **Recommendation:** B, when the Milestone 3 check passes. Otherwise A.
 - **Action:** ask the user, because B changes decision 220.
 
+### Decision 320: the branch that a queue merges into
+
+Chosen by Cal on 22 November 2026, in the answer to decision 318: "it only
+applies to branches targetting main".
+
+- The agent's reading, recorded on 22 November 2026: "main" means the
+  default branch of the repository, so the queue merges only into the
+  default branch. The bottom pull request of each unit must target it. The upper layers of
+  a member stack target the branch below them, and they still join with
+  their unit (decision 315). A pull request whose unit targets another
+  branch, such as `develop`, cannot join.
+- Reason: the queue lands work in `main`, where the conflicts come from.
+- Rejected: a queue for each target branch, which the first plan draft
+  held. It adds a block for each branch and a rule for the trunk of each
+  queue.
+
 ## Design
 
 These are design calls of the agent, made on 22 November 2026, unless a
@@ -327,11 +389,27 @@ line names a decision. The options check corrected them on the same day.
 
 ### The queue
 
-- One queue for each repository and trunk. The trunk is the GitHub base of
-  the bottom pull request of the first unit that joins, which is the
-  default branch for most workspaces. Reason: one GitHub stack has one
-  trunk, and the stored base of a workspace does not follow GitHub outside
-  the queue.
+- One queue for each repository of an org. Its trunk is the default
+  branch (decision 320). The queue stores the trunk's name, and the leave
+  step resets bases to that stored name.
+- One rule holds at Add and at each read: a unit stays while its bottom
+  pull request targets the default branch on GitHub. Reason: the stored
+  base of a workspace does not follow GitHub outside the queue.
+- Add to merge queue shows only for a pull request whose unit targets the
+  default branch. Reason: a control that is sure to fail helps nobody, as
+  for Merge. So the list read carries the GitHub base of each open pull
+  request beside its bar state.
+- A rename of the default branch keeps every entry. GitHub moves the base
+  of each open pull request to the new name, and that move is not a leave.
+  The queue stores the new name. Reason: decision 310 rejected a rename
+  that makes members act again.
+- A switch of the default branch to another branch makes every unit leave,
+  before any restack. Reason: the stack's trunk is then not the default
+  branch, and no member chose the new one.
+- Two orgs can save the same repository. A unit whose repository already
+  has a queue with entries in another org joins as "Needs attention", with
+  that reason. Reason: two queues would break each other's GitHub stack,
+  and one org must not see another org's queue.
 - Every member of the org sees each queue. A member with write access or
   more to the repository can add, remove, and re-order entries. Reason:
   Merge already needs that access (decision 221), and every member sees one
@@ -384,8 +462,8 @@ line names a decision. The options check corrected them on the same day.
 ### The base follows GitHub
 
 - A queued workspace stores the branch of the layer below it as its base.
-  The bottom entry stores its trunk. Decision 304 moves a lost base to the
-  default branch. For a queued workspace, it moves to the trunk instead.
+  The bottom entry stores a null base, which means the default branch, as
+  a create and Continue store it (decision 312).
 - Each base change runs the saved base move of the workspace, with its
   fetch (decisions 307 and 308). The fetch uses the workspace owner's
   token, as for a moved base.
@@ -417,6 +495,10 @@ line names a decision. The options check corrected them on the same day.
   `bypass_rules: false`, and the head of the layer that it last read. It
   uses the stored token of the queuer of the highest layer (decision 314),
   and that queuer's merge method, as Merge does.
+- A layer whose cloud computer holds local work that is not pushed is not
+  ready, as the bar puts Commit and push before Merge. After 30 minutes,
+  the entry becomes "Needs attention" with that reason. Reason: a merge
+  must not leave that work behind (decision 228).
 - A stack merge can stop partway. After each merge, the queue reads each
   layer again before its next step.
 - Each merged layer gets a merge record, as a merge from the bar does.
@@ -472,14 +554,16 @@ line names a decision. The options check corrected them on the same day.
 
 - A "Merge queue" group shows at the top of the sidebar list only when a
   queue has entries. It holds one block for each queue, headed by the
-  repository and the trunk. Each row shows its place, the state of its
+  repository. Each row shows its place, the state of its
   step, and the state of its checks. Decision 318 holds where a queued
   workspace of a tree shows.
 - A member with write access drags a row to re-order, as in a section. A
   phone lifts a row with a long press.
-- Decision 317 holds where a member adds an entry. The bar of a queued
-  workspace names its place and the pull request below it, and gets Remove
-  from queue. Decision 316 holds Merge there.
+- A member adds an entry from the bar, the row menu, the header menu, the
+  palette, or a drag of a row into the group, which shows as a drop target
+  during each drag (decision 317). The bar of a queued workspace names its
+  place and the pull request below it, and gets Remove from queue. Merge
+  there goes through the queue (decision 316).
 - Each new action is also a command, as each action of the app is
   (decision 199).
 - The list read carries the entry of each queued workspace, through a new
@@ -509,9 +593,11 @@ Draw the sidebar group and the bar states, on a computer and on a phone.
 - [ ] Draw the bar states in `app/banner/merge-queue`: a queued bottom
       entry, a queued upper entry with its place, a restack in progress,
       "Needs attention", and Remove from queue with its question.
-- [ ] Draw Add to merge queue after decision 317, Merge on a queued
-      workspace after decision 316, and a queued workspace of a tree after
-      decision 318.
+- [ ] Draw Add to merge queue in the bar, the row menu, and the header
+      menu, and the drag into the group with its drop target (decision 317).
+- [ ] Draw Merge on a queued workspace, with the count of the layers below
+      it (decision 316).
+- [ ] Draw a queued workspace of a tree after decision 318.
 - [ ] Draw the phone layout of the group and of the queued bar.
 - [ ] Add the fixed prompts of the restack and of the rebase variant of
       Resolve conflicts to `barCopy.ts`.
@@ -573,6 +659,7 @@ tests.
   - [ ] The server rebase of one layer with `updatePullRequestBranch`,
         after a squash merge below it (decision 319).
   - [ ] Which GitHub App permission the stacks routes need.
+  - [ ] That a stack and its bases survive a rename of the default branch.
 - [ ] Unit tests for each route, each refusal, and each parse.
 
 ## Milestone 4: Queue storage and routes
@@ -615,7 +702,7 @@ browser.
 
 ## Milestone 6: Join, base moves, and sync
 
-Depends on: 5, and decision 319
+Depends on: 5
 
 - [ ] Join: change the pull request base, send the restack turn, and add
       the layer to the GitHub stack after its push.
@@ -647,13 +734,14 @@ Depends on: 6
 
 Tags: ui
 
-Depends on: 1, 4, and decisions 317 and 318
+Depends on: 1, 4, and decision 318
 
 - [ ] Build the Merge queue group from the mockup, with its blocks, rows,
       and states.
 - [ ] Place queued workspaces of a tree as decision 318 says.
-- [ ] Add the controls of decision 317 that live in the list, the menus,
-      and the palette, each with its command.
+- [ ] Add Add to merge queue to the row menu, the header menu, and the
+      palette, each with its command, and the drag into the group
+      (decision 317).
 - [ ] Re-order by drag and by long press, with the same rollback on failure
       as a section move.
 - [ ] Tests for the grouping, the drag, and the rollback.
@@ -662,11 +750,12 @@ Depends on: 1, 4, and decisions 317 and 318
 
 Tags: ui
 
-Depends on: 1, 4, and decisions 316 and 317
+Depends on: 1, 4
 
 - [ ] Add the queued states and Remove from queue from the mockup, and
-      the bar control of decision 317, if any.
-- [ ] Apply decision 316 to Merge on a queued workspace.
+      the second button Add to merge queue (decision 317).
+- [ ] Show Merge on a queued workspace with the count of the layers below
+      it, and send the click to the queue (decision 316).
 - [ ] Use the rebase prompts while a workspace is queued.
 - [ ] Tests for each state and each action.
 
