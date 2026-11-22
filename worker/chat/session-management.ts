@@ -3,6 +3,7 @@ import type { Session } from '../../src/shared/generated/Session'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { ChatTransaction } from './store'
 import { stopTurn } from './sessions'
+import { invalidateSessionWatches } from './session-watch-stop'
 
 export async function renameSession(
   transaction: ChatTransaction,
@@ -21,8 +22,10 @@ export async function stopManagedSession(
   commandId: string,
   requester: TurnStopRequester,
 ) {
-  if (session.activeTurnId === null)
+  if (session.activeTurnId === null) {
+    await invalidateSessionWatches(transaction, session.id, commandId)
     return { turnId: null, state: 'idle' as const }
+  }
   return stopTurn(
     transaction,
     session,

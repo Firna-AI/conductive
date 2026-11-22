@@ -1,8 +1,13 @@
-import { userKey } from './item-keys'
 import { isEnd, type TurnItem } from './item-placement'
 import { ItemOrder, type ItemNode } from './item-order'
 import type { FoldTurns } from './fold-turns'
 import type { TranscriptItem } from './transcript'
+
+function messageIdOf(item: TranscriptItem): string | null {
+  if (item.kind === 'user') return item.message.id
+  if (item.kind === 'wake') return item.notice.messageId
+  return null
+}
 
 /** Item identities, turn membership, and placement for one private batch. */
 export class FoldItems {
@@ -10,6 +15,7 @@ export class FoldItems {
   readonly order = new ItemOrder()
   readonly added: ItemNode[] = []
   private readonly ids = new Map<string, ItemNode>()
+  private readonly messages = new Map<string, ItemNode>()
   private readonly groups = new Map<string, Set<ItemNode>>()
   private readonly first = new Map<string, ItemNode>()
   private readonly ends = new Map<string, Set<ItemNode>>()
@@ -29,6 +35,8 @@ export class FoldItems {
     switch (item.kind) {
       case 'user':
         return this.turns.owner(item.message.id)
+      case 'wake':
+        return this.turns.owner(item.notice.messageId)
       case 'lost':
         return item.marker.turnId
       case 'continued':
@@ -78,6 +86,12 @@ export class FoldItems {
 
   private replace(node: ItemNode, item: TranscriptItem): void {
     const owner = this.owner(item)
+    const messageId = messageIdOf(item)
+    const previousMessageId = messageIdOf(node.item)
+    if (messageId !== previousMessageId) {
+      if (previousMessageId !== null) this.messages.delete(previousMessageId)
+      if (messageId !== null) this.messages.set(messageId, node)
+    }
     if (owner !== node.owner) this.forget(node)
     else if (owner !== null) {
       this.ends.get(owner)?.delete(node)
@@ -88,7 +102,7 @@ export class FoldItems {
     this.order.update(
       node,
       owner === null ? -1 : this.turns.rank(owner),
-      item.kind === 'user' && owner === null,
+      messageId !== null && owner === null,
     )
     this.remember(node)
   }
@@ -97,13 +111,15 @@ export class FoldItems {
     const current = this.ids.get(item.id)
     if (current) return this.replace(current, item)
     const owner = this.owner(item)
+    const messageId = messageIdOf(item)
     const node = this.order.create(
       item,
       owner === null ? -1 : this.turns.rank(owner),
-      item.kind === 'user' && owner === null,
+      messageId !== null && owner === null,
     )
     node.owner = owner
     this.ids.set(item.id, node)
+    if (messageId !== null) this.messages.set(messageId, node)
     this.order.insert(node, before ? this.order.index(before) : undefined)
     this.remember(node)
     this.added.push(node)
@@ -116,13 +132,13 @@ export class FoldItems {
   }
 
   take(messageId: string): void {
-    const node = this.ids.get(userKey(messageId))
+    const node = this.messages.get(messageId)
     if (node) this.replace(node, node.item)
   }
 
   markSent(ids: readonly string[]): void {
     for (const id of ids) {
-      const node = this.ids.get(userKey(id))
+      const node = this.messages.get(id)
       if (node?.item.kind !== 'user') continue
       this.replace(node, {
         ...node.item,
@@ -173,8 +189,8 @@ export class FoldItems {
     const from = this.order.index(node)
     let last = -1
     for (const answer of answers) {
-      const user = this.ids.get(userKey(answer))
-      if (user) last = Math.max(last, this.order.index(user))
+      const message = this.messages.get(answer)
+      if (message) last = Math.max(last, this.order.index(message))
     }
     if (last <= from) return
     this.forget(node)

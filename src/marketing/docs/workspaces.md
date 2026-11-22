@@ -294,8 +294,14 @@ This happens when you allow the secret or supply a value after the agent stopped
 The agent receives a message in the session that asked.
 The start follows the same checks as opening the workspace.
 
+An accepted watch wake can also start the computer.
+It returns to the session that set the watch.
+The start follows the same checks as opening the workspace.
+
 **Stop** in chat interrupts an agent turn.
 It is separate from the computer's automatic stop.
+It also drops that session's earlier pending watch wakes.
+An automatic idle stop keeps those watches.
 
 ## Restart the software
 

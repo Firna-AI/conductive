@@ -31,6 +31,10 @@ A turn is one period of work by its agent.
 Its sender is the person whose message started that turn.
 A turn that a late answer to a secret request starts keeps the sender of the turn that asked.
 
+A watch can wake the session that set it when a chosen turn ends.
+When a wake starts a new turn, that turn acts for the sender of the turn that set the watch.
+A wake that joins a running turn keeps that turn's sender.
+
 | Action | Account or person it uses |
 | --- | --- |
 | Agent model use | The session's personal or org login, including a chosen endpoint |
@@ -114,6 +118,7 @@ The tools can:
 - Archive workspaces that the sender owns, or any workspace when the sender is an org admin.
 - Create, rename, stop, and close sessions.
 - Send messages to sessions.
+- Watch one turn of a session and wake the session that set the watch when it ends.
 - Create and delete sections.
 - Open and close private previews.
 - Run a command with a secret that the session may use, or ask members to allow it.
@@ -122,6 +127,8 @@ An agent can archive the workspace where it runs, which ends its turn.
 Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
+
+A wake follows current membership and session login rules.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.

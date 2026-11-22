@@ -3,7 +3,12 @@ import type { Session } from '../generated/Session'
 import type { ChatEvent } from '../chat-events'
 import { FoldItems } from './fold-items'
 import { FoldTurns } from './fold-turns'
-import { continuedKey, repositoryChangedKey, userKey } from './item-keys'
+import {
+  continuedKey,
+  repositoryChangedKey,
+  userKey,
+  wakeKey,
+} from './item-keys'
 import type { TurnItem } from './item-placement'
 import { foldLate } from './late-events'
 import { foldRefused } from './refused-events'
@@ -74,6 +79,14 @@ export class TranscriptBatch {
 
   private apply(event: ChatEvent, occurredAt: number, late: boolean): void {
     switch (event.type) {
+      case 'session.watch-notice':
+        this.changed = true
+        this.items.put({
+          kind: 'wake',
+          id: wakeKey(event.watchId),
+          notice: event,
+        })
+        return
       case 'workspace.continued': {
         this.changed = true
         const { displayBranch, displayBaseBranch } = event

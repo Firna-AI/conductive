@@ -10,12 +10,8 @@ import {
   type RepositoryMoves,
 } from './runner-repository-move'
 import type { ChatStore } from './store'
-import type {
-  ActiveRunner,
-  ChatDependencies,
-  PendingCommand,
-  PreparedCommand,
-} from './types'
+import type { ActiveRunner, ChatDependencies, PreparedCommand } from './types'
+import type { PendingCommand } from './pending-command'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 
 export class RunnerCommandPreparation {

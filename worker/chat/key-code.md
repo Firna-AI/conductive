@@ -119,7 +119,7 @@ first.
   of a session, and its frontier. `prepareSessionHistory` in
   `history-session-preparation.ts` builds it, and yields between batches.
 - `automation-run.ts`: reports an automation's stored first-turn result after a chat transaction commits.
-- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and automation outcome recovery after each change.
+- `workspace-store.ts`: creates the chat store with lifecycle turn-end reports and [prompt watch delivery](key-code-session-watches.md) at each committed end. It also recovers automation outcomes after each change.
 - `runner-channel.ts`, `runner-receipt.ts`, and `runner-refusal.ts`: the
   runner connection, the stream cursors, the file commands, and the receipt
   or refusal marker of each runner event. An accepted connection has the
@@ -291,6 +291,7 @@ first.
 - `session-login.ts` and `session-storage.ts`: the two login paths of
   `SessionLogins`, credential-aware default resolution, and older session defaults.
 - `session-record.ts`: `sessionFor`, the read of one session record.
+- [`pending-command.ts`](pending-command.ts): `PendingCommand`, the internal stored runner command union.
 - `types.ts`: `ChatDependencies`, `ChatCallbackPublisher`, `ChatStorage`,
   `PreparedCommand`, `ResolvedCommand`, and the peer types.
   `StoredTurn.stopRequest` is optional, because older records lack it. A

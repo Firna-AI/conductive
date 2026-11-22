@@ -292,6 +292,7 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+- `recorded-wakes.ts` supplies the recorded chats of the wakes of a watch, as the mockups draw them at `app/chat/wakes`, and `wakeNotice`, which tests use for a wake at a chosen turn.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.

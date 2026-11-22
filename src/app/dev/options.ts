@@ -28,6 +28,11 @@ const CONVERSATIONS = [
   'first-turn',
   'sent-by',
   'stopped-from',
+  'wake-finished',
+  'wake-failed',
+  'wake-stopped',
+  'wake-other-workspace',
+  'wake-during-turn',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */
@@ -163,12 +168,7 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  * - `inviteCode=used-up|disabled`: every invite of the code of the user is
  *   used, or an operator turned the code off. The operator section shows
  *   the same code.
- * - `branches=loading|failed|no-access`: the branch list of New workspace
- *   never answers, fails as a read of GitHub does, or says that the GitHub
- *   account cannot read the repository.
- * - `branchCheck=missing|no-access`: a create that names a branch other
- *   than the default branch gets the refusal of a branch that is no longer
- *   on GitHub, or of a GitHub account that cannot read the repository.
+ * - See `../dev-fake.md` for the branch preview options.
  * - `providers=one|three|fail`: the configured provider accounts of the
  *   Providers tab and of the account choice of Create org: `boat` only,
  *   `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that

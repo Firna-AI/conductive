@@ -58,8 +58,9 @@ of [the operator section](design-operator.md), of
 [the pull request bar](design-bar.md), and of
 [New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
 [secrets and Capabilities](design-secrets.md),
-[the links in text](design-links.md), and
-[the Markdown of replies](design-markdown.md).
+[the links in text](design-links.md),
+[the Markdown of replies](design-markdown.md), and
+[the end of a turn](design-turn-ends.md).
 
 ## The catalogue
 

@@ -5,12 +5,14 @@ layouts, the design tokens, and the shared parts. This page gives attached
 files with their drops. Its linked page
 [Workspace, session, file, and skill chips](design-chips.md) gives these
 chips in a line of text, with the lists of `@` and `/`.
-[Links in text](design-links.md) gives the other links of the chat. This
-page also gives the picture of an image file, the work fold of a turn, and
-the line of a stopped turn. It also gives the data that the chat does not
-have, the files that the cloud computer could not read, the end of a turn
-at the time limit of background work, and the end of a fast turn that ran
-at standard speed. [The Markdown of replies](design-markdown.md) gives the
+[Links in text](design-links.md) gives the other links of the chat.
+This page also gives the picture of an image file, the work fold of a
+turn, and the data that the chat does not have.
+[The end of a turn](design-turn-ends.md) gives the files that the cloud
+computer could not read, the line of a stopped turn, the end of a turn at
+the time limit of background work, the end of a fast turn that ran at
+standard speed, and the line that wakes a session when a turn that it
+watched ends. [The Markdown of replies](design-markdown.md) gives the
 tables, the headings, the quotes, the rules, the marks, and the line
 breaks of a reply and of a file preview.
 
@@ -143,61 +145,6 @@ breaks of a reply and of a file preview.
   because it was too large". It never shows the lost data, and a phone wraps
   it into balanced lines. A lost line among the work of an ended turn folds
   with that work.
-- Files that the cloud computer could not read never show as an empty list.
-  A finished turn still ends with its duration, then "Changed files
-  unavailable" in muted text in place of its files. A stopped turn ends its
-  line with the same words. All files keeps the list that it saved before,
-  under the notice "The latest list of all files is unavailable", which has
-  no time. With no saved list, All files says "The list of all files is
-  unavailable" in place of the tree. `lostCopy.ts` holds these words too.
-- `StopLine` in `src/components/chat/` draws the line of a stopped turn:
-  the stop icon, who stopped the turn, then each note of the turn after a
-  dot, such as "Changed files unavailable". `stopCopy.ts` beside it holds
-  the words, for the chat and for the copy of a transcript.
-  - A Stop of a member shows "You stopped the agent" to that member and
-    "Priya stopped the agent" to the others. A stop with no Stop, such as
-    when the cloud computer stops, shows "The agent stopped".
-  - A stop by the agent of a session with a workspace tool, also through a
-    close of the session, names no member, from decision 279. The line
-    says "Stopped from", then the session chip of that session, as
-    `app/chat/agent-stops` shows. A press on the chip opens the session,
-    as in a message. The copy of a transcript gives the session link in
-    place of the chip.
-  - The line is centred and muted, as `LostLine` is. A narrow chat wraps
-    it into balanced lines, and the chip moves to the next line whole. It
-    takes no fixtures, so the app can use it too.
-- A turn that waits for the background work of its agent shows as any
-  running turn, as `app/chat/background-limit/waiting` shows. When the
-  time limit stops that work, the turn still ends as finished, with its
-  duration and its files. One line above that row names the cause:
-  "Background work stopped at the time limit".
-  - `EndReasonLine` in `src/components/chat/` draws the line, centred and
-    muted as the other event lines, with a timer icon. `endReasonCopy.ts`
-    beside it holds the words of each end reason. The line takes no
-    fixtures, so the app can use it too.
-  - `TurnEnd` puts the line 8 px above the row, closer than two items of
-    the chat, so the two read as one end. The row keeps its own marks,
-    such as "Changed files unavailable".
-  - The words name what stopped, not the number of the limit, because the
-    member cannot change it.
-- A fast turn that ran at standard speed still ends as finished, with its
-  duration and its files, from fast mode decision 257. A note beside the
-  duration names the speed and the cause, such as "Standard speed · Fast
-  limit reached", and the files go under the note.
-  - `StandardSpeedNote` in `src/components/chat/` draws the note: muted
-    text with a gauge icon. One line has the height of a chip. A narrow
-    chat wraps the note, and the icon stays on its first line. It takes no
-    fixtures, so the app can use it too.
-  - `speedCopy.ts` beside it holds the words of each cause: "Fast limit
-    reached" for the fast limit of Claude, and "Older cloud computer
-    software" for a cloud computer whose software ignores fast mode.
-  - The words name no time until a limit resets, because the note stays in
-    the chat after the reset.
-  - A stopped turn ends its line with the same words after a dot, before
-    the notes of its files, such as "You stopped the agent · Standard speed
-    · Fast limit reached".
-  - A fast turn that ran at fast speed, and a turn without fast mode, show
-    no note.
 
 ## Workspace, session, file, and skill chips
 

@@ -50,6 +50,7 @@ export async function runWorkspaceAlarms(
     devices(): Promise<void>
     publishRevocations(): Promise<void>
     automationReport?(): Promise<void>
+    sessionWatches?(): Promise<void>
   },
   options: { securityHandled?: boolean; fallbackLifecycle?: boolean } = {},
 ): Promise<void> {
@@ -84,6 +85,8 @@ export async function runWorkspaceAlarms(
     if (due.has('previews')) await tasks.previews()
     if (due.has('automation-report') && tasks.automationReport)
       await retryAutomationReport(alarms, startedAt, tasks.automationReport)
+    if (due.has('session-watches') && tasks.sessionWatches)
+      await alarms.run('session-watches', startedAt, tasks.sessionWatches)
     if (!options.securityHandled)
       await alarms.run('devices', startedAt, tasks.devices)
     await tasks.publishRevocations()

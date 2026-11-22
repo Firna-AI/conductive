@@ -162,7 +162,7 @@ pub enum InputError {
     #[error("Use workspaces list, get, create, rename, move, or archive.")]
     WorkspaceCommand,
     /// Choose one of the session commands.
-    #[error("Use sessions list, get, read, create, send, rename, close, or stop.")]
+    #[error("Use sessions list, get, read, create, send, rename, close, stop, or watch.")]
     SessionCommand,
     /// Supply a Mac command, folder, and reason.
     #[error("Use mac run with a command, folder, and reason.")]

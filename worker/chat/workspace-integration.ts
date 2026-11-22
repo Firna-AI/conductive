@@ -22,12 +22,11 @@ import { WorkspaceChat } from './backend'
 import { fencedDependencies } from './fenced-dependencies'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
-import type { ChatDependencies } from './types'
+import type { WorkspaceChatResolvers } from './workspace-resolvers'
 import { WorkspaceSockets } from '../native-sockets'
 import {
   callbackPublisher,
   observeWorkspaceCallbacks,
-  type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
 import { QueueGenerations } from './queue-generation'
 import { unsupportedRunnerReason } from './runner-unsupported'
@@ -37,25 +36,6 @@ import { projectInputState } from '../secrets/workspace-runtime'
 import { StartJobRecords } from '../lifecycle/start-job-records'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
-export type WorkspaceChatResolvers = Partial<
-  Pick<
-    ChatDependencies,
-    | 'resolveAttachments'
-    | 'prepareAttachments'
-    | 'scheduleRunnerCheck'
-    | 'scheduleBrowserCheck'
-    | 'randomId'
-    | 'runTitleModel'
-    | 'readConnectionAccess'
-    | 'readRunnerAccess'
-    | 'browserOpened'
-    | 'browserClosed'
-  >
-> & {
-  callbackObservers?: WorkspaceCallbackObservers
-  socketAutoResponseAt?: (socket: WebSocket) => number | null
-}
-
 export function createWorkspaceIntegration(
   context: DurableObjectState,
   env: WorkspaceCompositionEnv,
@@ -94,6 +74,8 @@ export function createWorkspaceIntegration(
       runnerAlarm: (at) => alarms.set('runner', at),
       runnerWork: nativeRunnerWorkStorage(context.storage),
       automationReportAlarm: (at) => alarms.set('automation-report', at, true),
+      sessionWatchAlarm: (at, earlier) =>
+        alarms.set('session-watches', at, earlier),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -271,6 +253,7 @@ export function createWorkspaceIntegration(
     },
   )
   return {
+    now,
     storage,
     chat,
     devices,

@@ -45,7 +45,7 @@ export function retryItemId(transcript: Transcript): string | null {
   return chosen?.id ?? null
 }
 
-/** The turn of an item: of its message, of its marker, or its own turn. */
+/** A wake line belongs to the turn that took its hidden message. */
 export function turnOf(
   transcript: Transcript,
   item: TranscriptItem,
@@ -53,6 +53,10 @@ export function turnOf(
   switch (item.kind) {
     case 'user':
       return transcriptLookups(transcript).owners.get(item.message.id) ?? null
+    case 'wake':
+      return (
+        transcriptLookups(transcript).owners.get(item.notice.messageId) ?? null
+      )
     case 'lost':
       return item.marker.turnId
     case 'continued':

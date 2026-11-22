@@ -20,6 +20,10 @@ import {
 import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
 import { repositoryChangedNote } from '../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
 import {
+  wakeText,
+  wakeWords,
+} from '../../../docs/mockups/src/components/chat/wakeCopy'
+import {
   commandCopy,
   commandRan,
   limitLabel,
@@ -173,6 +177,18 @@ export function itemMarkdown(
       const branch = inlineCode(item.displayBranch ?? item.branch)
       return note(
         `${words.before}${inlineCode(item.repository.fullName)}${words.between}${branch}`,
+      )
+    }
+    case 'wake': {
+      // The words of the line of the chat, with the link that the agent got
+      // in place of the chip. The angle brackets keep the link whole.
+      const { notice } = item
+      const words = wakeWords(notice.state, notice.reason ?? undefined)
+      return note(
+        wakeText(
+          { ...words, notes: words.notes.map(plainText) },
+          `<${notice.watchedSession.link}>`,
+        ),
       )
     }
   }

@@ -19,6 +19,7 @@ use cnd_runner_interface::tools::session_actions::{
 use cnd_runner_interface::tools::session_reads::{
     AgentListSessionsResponse, AgentReadSessionResponse,
 };
+use cnd_runner_interface::tools::session_watches::AgentWatchSessionResponse;
 use cnd_runner_interface::tools::sessions::{AgentCreateSessionResponse, AgentSendMessageResponse};
 use cnd_runner_interface::tools::workspaces::{
     AgentCreateWorkspaceResponse, AgentListWorkspacesResponse, AgentWorkspaceResponse,
@@ -52,6 +53,7 @@ pub(crate) enum Reply {
     RenameSession(AgentSessionResponse),
     CloseSession(AgentSessionResponse),
     StopSession(AgentStopSessionResponse),
+    WatchSession(AgentWatchSessionResponse),
     GetMessage(AgentGetMessageResponse),
     CreateSection(AgentCreateSectionResponse),
     DeleteSection(AgentDeleteSectionResponse),
@@ -156,6 +158,9 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
             }
             Name::StopSession => {
                 serde_json::from_value::<AgentStopSessionResponse>(value).map(Reply::StopSession)
+            }
+            Name::WatchSession => {
+                serde_json::from_value::<AgentWatchSessionResponse>(value).map(Reply::WatchSession)
             }
             Name::GetMessage => {
                 serde_json::from_value::<AgentGetMessageResponse>(value).map(Reply::GetMessage)

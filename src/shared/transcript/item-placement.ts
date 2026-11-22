@@ -4,7 +4,7 @@ import type { TranscriptItem } from './transcript'
 /** An item of one turn: its text, a tool call, or a row where it ended. */
 export type TurnItem = Exclude<
   TranscriptItem,
-  { kind: 'user' | 'lost' | 'continued' | 'repository-changed' }
+  { kind: 'user' | 'lost' | 'continued' | 'repository-changed' | 'wake' }
 >
 
 /** The item shows where a turn ended: its end, its failure, or its refused end. */

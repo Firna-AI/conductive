@@ -110,6 +110,8 @@ Workspace and session creates run fast only with explicit `fast: true`, for a ma
 A session send without `fast` keeps the session's fast mode.
 [Fast mode](../../docs/protocol/fast-mode.md#agent-tools) gives the rules.
 Rename, close, and stop use the same stored turn and queue checks, without admission or resume, as [Queued management](sessions.md#queued-management) says.
+[Session watches](../../docs/protocol/session-watches.md) states one more session write, the watch of one turn.
+The handler accepts its separate `POST /v1/tools/workspaces/<workspaceId>/sessions/<sessionId>/watch` route.
 
 `ToolSessionWrite` carries the trusted caller and typed request to the object's `writeAgentSession` RPC.
 Chat commits a request fingerprint and its acceptance in the same transaction as the session and message.
@@ -259,6 +261,7 @@ The real-object route tests live in [worker/features](../features/).
 - [agent-workspaces.ts](../../src/shared/agent-workspaces.ts) holds the workspace path builders.
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [session-routes.ts](session-routes.ts) parses the machine session routes and read query options, and sends management to `manageSession`.
+- [session-watch-route.ts](session-watch-route.ts) captures the stored calling turn and its Stop nonce before it calls the target watch RPC.
 - [session-page.ts](session-page.ts) reads the session list `limit` and `offset`.
 - [session-summary.ts](session-summary.ts) builds one session entry and its state.
 - [session-read-workspace.ts](session-read-workspace.ts) holds the trusted session list, get, message, and transcript read RPCs.
@@ -266,8 +269,9 @@ The real-object route tests live in [worker/features](../features/).
 - [session-input.ts](session-input.ts) narrows session create and send inputs while preserving message text.
 - [session-write-composition.ts](session-write-composition.ts) preserves admission while applying the normal open/resume policy.
 - [message-text.ts](message-text.ts) builds the canonical sending-session footer and selects title input.
-- [workspace.ts](workspace.ts) exposes the trusted calling-turn, session write, and session management RPCs, with their queued access check.
+- [workspace.ts](workspace.ts) exposes trusted calling-turn, session write, management, and watch RPCs with queued access checks.
 - [session-access.ts](session-access.ts) reads a target workspace inside the calling org, including archives.
+- [calling-turn.ts](calling-turn.ts) holds `requireCallingToolTurn`, which reads the stored calling turn of a write and checks the current membership of its sender.
 - [section-routes.ts](section-routes.ts) and [preview-routes.ts](preview-routes.ts) match the section and preview routes and read their inputs.
 - [section-composition.ts](section-composition.ts) calls the app's `featureSectionWrite` as the sender and shapes its reply.
 - [agent-sections.ts](../../src/shared/agent-sections.ts) and [agent-previews.ts](../../src/shared/agent-previews.ts) hold the section and preview paths.

@@ -163,7 +163,7 @@ async fn separates_protocol_errors_from_tool_errors_and_ignores_notifications() 
     let tools = by_id(json!("discovery"))?["result"]["tools"]
         .as_array()
         .ok_or(Error::Input(InputError::Object))?;
-    assert_eq!(tools.len(), 26);
+    assert_eq!(tools.len(), 27);
     for name in ["create_workspace", "create_session", "send_message"] {
         let tool = tools
             .iter()

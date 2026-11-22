@@ -67,7 +67,9 @@ each feature.
   the login of its session, which can belong to another member or to the
   org. A turn that a late answer to a secret request starts has the sender
   of the turn that asked, as
-  [Late answers](protocol/secret-requests.md#late-answers) says.
+  [Late answers](protocol/secret-requests.md#late-answers) says. A turn
+  that the wake of a watch starts has the sender of the turn that set the
+  watch, as [Delivery](protocol/session-watches.md#delivery) says.
 - **Starter:** the member who started a session. The starter of a session
   never changes.
 - **Agent login:** the key, the token, the sign-in, or the own endpoint
