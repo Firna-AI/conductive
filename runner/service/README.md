@@ -55,7 +55,7 @@ That previous release can still run Node.
 
 The service restarts after failure, with a two-second delay.
 So after an idle install, a new release that exits at its start restarts the service.
-That restart stops each process of the service group, and its pre-start apply restores the previous release once it has each of its parts.
+That restart stops each process of the service group, and its pre-start apply restores the previous release once it can use each part that it lists.
 SIGTERM closes helper processes and ends running turns before the connection closes.
 `KillMode=control-group` keeps its child processes in the service group.
 `OOMPolicy=continue` keeps the service running when the kernel ends one of

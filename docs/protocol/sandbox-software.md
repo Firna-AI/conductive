@@ -97,7 +97,8 @@ step of a build.
   while the runner works, and the next start or install at idle applies
   it (Cal's decision of 22 November 2026). Reason: a start then never waits
   for a download of a newer release, and a short download failure never
-  makes the release a failed start.
+  makes the release a failed start. A start also switches to a newer
+  release only when that release can use each part that it lists.
 - Before the agent runner starts, the program checks that each part of
   the release that starts is on the disk: the current release, or the
   previous release in a fallback. It downloads each missing part again,
@@ -106,9 +107,9 @@ step of a build.
 - When that download fails, the program logs a warning, and the start goes
   on. The next start tries again. Reason: the start then fails no more
   often than with no check.
-- A fallback is the one exception. When a part of the previous release is
-  still missing after the download, the start fails, and the fallback
-  waits for the next start (Cal's decision of 22 November 2026). Reason:
+- A fallback is the one exception. When the previous release still cannot
+  use a part that it lists after the repair, the start fails, and the
+  fallback waits for the next start (Cal's decision of 22 November 2026). Reason:
   the previous release can hold an older program that repairs no part. So
   the sandbox switches to it only when it can run.
 - Reason: the runner cannot start without its parts, and a sandbox
@@ -130,7 +131,7 @@ step of a build.
   [Automatic restart](restart-the-software.md#automatic-restart) says.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again,
-  once each part of it is on the disk, as the fallback exception above
+  once it can use each part that it lists, as the fallback exception above
   says.
 - A new runner confirms its release when it first connects to the Worker.
   A new release without that confirmation at the next start counts as a
@@ -185,7 +186,7 @@ step of a build.
   disconnect the runner every 2 minutes.
 - A new release that exits at its start is a failed start. The runner
   service then starts again within seconds, on the previous release once
-  each part of it is on the disk. That
+  it can use each part that it lists. That
   restart stops each ordinary process that an agent started. Each service
   keeps running.
 - A runner that cannot install at idle gets each update at a later start.

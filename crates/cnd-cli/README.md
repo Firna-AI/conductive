@@ -109,10 +109,13 @@ background check delays a repair only for one rename. Each missing part
 gets an equal share of what is left of 60 seconds. A failed download, or
 a download that uses up its share, logs a warning with the part name.
 The next part still gets its attempt, and apply goes on. The next apply
-tries again. When no part is missing, apply uses no network. A fallback
-switches only when each part that the previous release lists is present
-after the repair. Otherwise apply fails. It keeps `current`, `previous`,
-and the pending marker, so `current` keeps the updater that repairs, and
+tries again. When no part is missing, apply uses no network. A link
+restore removes an entry that blocks a link, such as an empty folder, and
+tries every link. A switch to a newer version, and a fallback, go ahead
+only when that version reaches each part that it lists through its own
+links, with the marker and the entry files. A newer version that cannot
+stays staged, and the current version starts. A fallback that cannot
+fails. It keeps `current`, `previous`, and the pending marker, so `current` keeps the updater that repairs, and
 the next start tries the fallback again. Parts that it restored stay. A
 previous release without a readable `parts.json` gives no part to wait
 for, so the fallback switches to it. When the installer of a fallback fails, apply sets `current`
@@ -120,7 +123,7 @@ back to the failed release and keeps its pending marker, so the next
 start runs the same updater again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
-A later apply with that marker restores the previous version and its system files, once the previous release has each of its parts. A persistent rejection
+A later apply with that marker restores the previous version and its system files, once the previous release can use each part that it lists. A persistent rejection
 record prevents that version from downloading or applying again after collection.
 Collection runs after confirmation and retains current, previous, and the newest complete version, also when that version still lacks a part.
 It reads that set under the download lock. It waits for no download.

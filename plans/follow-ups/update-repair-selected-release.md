@@ -24,6 +24,6 @@
 - **Left out:** A test for each branch alone, because it adds tests and leaves the two separate choices.
 - **Wider fix:** C, because the type ties each start to its repair.
 - **Previous examples:** None found.
-- **Related:** None. Cal's decision of 22 November 2026 settled the selection: apply starts a newer release only when each of its parts is present, and a fallback switches only to a previous release with each part present. Option C fits that rule: `restore_parts` can return whether the release it checked is ready.
+- **Related:** None. Cal's decision of 22 November 2026 settled the selection: apply starts a newer release only when each of its parts is present and reachable through its own links, and a fallback switches only to a previous release that reaches each listed part, or whose parts list cannot be read. Option C fits that rule: `restore_parts` can return whether the release it checked is ready.
 - **Recommendation:** C. It ties each start, and each fallback, to the release that the repair checked.
 - **Action:** fix after merge, apply C, because the tests already guard each branch.

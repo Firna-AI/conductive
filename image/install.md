@@ -177,11 +177,14 @@ that an interrupted unpack leaves.
 
 Apply and the idle install select a newer version only when it is
 ready: each part in its `parts.json` is present. For a complete version
-that is not ready, a check downloads only the missing parts and restores
-the part links. It never replaces that folder, and `prepare` refuses to.
-Collection keeps that version. Apply restores the part links of the
-version that it starts. A fallback switches only when the previous
-version has each part that it lists. Otherwise apply fails and leaves
+with a readable `parts.json` that is not ready, a check downloads only the
+missing parts and restores the part links. It never replaces that folder,
+and `prepare` refuses to. A check stages again only a complete version
+whose `parts.json` cannot be read, or a version without its `complete`
+marker. Collection keeps a complete version. Apply restores the part
+links of the version that it starts. A switch to a newer version, and a
+fallback, go ahead only when that version reaches each part that it
+lists through its own links. Otherwise apply fails and leaves
 `current`, `previous`, and `pending` as they are.
 
 Apply calls `current/system/install-system.sh`. That script installs all
@@ -227,7 +230,7 @@ confirmation unit. The Rust runner confirms the release only after its first
 valid Worker `welcome`. Confirmation changes nothing unless the executable's
 version matches current and pending. It reads the saved Node state file without conversion.
 The next apply restores `previous` when a new release still has its pending
-marker and `previous` has each part that it lists. That fallback runs the previous system installer, which restores its
+marker and `previous` can use each part that it lists. That fallback runs the previous system installer, which restores its
 units and starts the previous Rust runner on the next service attempt.
 The first published Rust release uses this pre-start layout too, so its
 fallback never pulls in a second activation unit. Collection after confirmation

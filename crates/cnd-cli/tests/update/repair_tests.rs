@@ -7,6 +7,7 @@ use std::sync::Arc;
 use cli_updater::TarGzBinaryInstaller;
 use cnd_cli::update::disk::DiskStore;
 use cnd_cli::update::engine::Engine;
+use cnd_cli::update::error::Error;
 use cnd_cli::update::ports::{State, Store, UpdateEngine};
 use cnd_cli::update::process::SystemProcesses;
 use cnd_release::files::sha256;
@@ -65,6 +66,7 @@ async fn apply_restores_lost_part_files_while_the_download_lock_is_held()
             .join("runner-start.sh"),
     )?;
     fs::remove_file(disk.version_path("0.0.3").join("sdk-helper"))?;
+    fs::create_dir(disk.version_path("0.0.3").join("sdk-helper"))?;
     let engine = Engine {
         store: disk.clone(),
         client: Arc::new(server.client.clone()),
@@ -94,10 +96,6 @@ async fn apply_restores_lost_part_files_while_the_download_lock_is_held()
         b"helper bytes",
         "apply did not restore the lost part link"
     );
-    assert!(
-        disk.prepare("0.0.3").is_err() && disk.versions()?.contains(&"0.0.3".to_owned()),
-        "a complete version with a parts list was replaced"
-    );
     server.finish()?;
     Ok(())
 }
@@ -123,6 +121,40 @@ fn unpack_keeps_a_part_that_is_present() -> Result<(), Box<dyn std::error::Error
         fs::read_dir(root.path().join("parts"))?.count(),
         1,
         "an unpack left a private folder"
+    );
+    Ok(())
+}
+
+#[test]
+fn prepare_replaces_only_a_folder_that_no_start_can_use()
+-> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let root = tempfile::tempdir()?;
+    let disk = DiskStore::new(root.path().to_path_buf());
+    let parts = PartsList::new(vec![Part {
+        name: "sdk-helper".into(),
+        url: "https://releases.test/sdk-helper".into(),
+        sha256: "a".repeat(64),
+    }])?;
+    for version in ["0.0.1", "0.0.2", "0.0.3"] {
+        disk.prepare(version)?;
+        disk.complete(version, &parts)?;
+    }
+    assert!(matches!(disk.prepare("0.0.1"), Err(Error::InvalidRelease)));
+    assert!(
+        disk.versions()?.contains(&"0.0.1".to_owned()),
+        "a start can no longer select 0.0.1"
+    );
+    fs::remove_file(disk.version_path("0.0.2").join("parts.json"))?;
+    disk.prepare("0.0.2")?;
+    assert!(
+        !disk.versions()?.contains(&"0.0.2".to_owned()),
+        "a folder without a parts list stayed"
+    );
+    fs::remove_file(disk.version_path("0.0.3").join("complete"))?;
+    disk.prepare("0.0.3")?;
+    assert!(
+        !disk.version_path("0.0.3").join("parts.json").exists(),
+        "a folder without a complete marker stayed"
     );
     Ok(())
 }

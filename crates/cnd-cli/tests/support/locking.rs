@@ -45,6 +45,9 @@ impl Store for ObservedStore {
     fn parts(&self, version: &str) -> Result<PartsList> {
         self.disk.parts(version)
     }
+    fn part_reachable(&self, version: &str, part: &Part) -> Result<bool> {
+        self.disk.part_reachable(version, part)
+    }
     fn has_part(&self, part: &Part) -> Result<bool> {
         self.disk.has_part(part)
     }

@@ -1,5 +1,7 @@
 //! When an unpacked part counts as present, and when a release is ready to start.
 
+use std::path::Path;
+
 use cnd_release::parts::{Part, PartsList};
 
 use super::disk::DiskStore;
@@ -26,7 +28,14 @@ pub fn entry_files(role: &str) -> &'static [&'static str] {
 
 impl DiskStore {
     pub(super) fn part_present(&self, part: &Part) -> Result<bool> {
-        let folder = self.part_path(&part.sha256);
+        Self::files_present(&self.part_path(&part.sha256), part)
+    }
+
+    pub(super) fn reachable_from(&self, version: &str, part: &Part) -> Result<bool> {
+        Self::files_present(&self.version_path(version).join(&part.name), part)
+    }
+
+    fn files_present(folder: &Path, part: &Part) -> Result<bool> {
         for file in ["complete"].iter().chain(entry_files(&part.name)) {
             if !folder.join(file).try_exists().internal()? {
                 return Ok(false);
@@ -52,18 +61,27 @@ pub fn release_ready(store: &dyn Store, version: &str) -> bool {
     }
 }
 
-/// Whether a fallback to `version` must wait, because a listed part is missing.
+/// Whether a switch to `version` must wait, because it cannot use a listed part.
 ///
-/// A release whose parts list cannot be read gives no part to wait for, so
-/// the fallback switches to it, as before the repair existed.
-pub fn fallback_waits(store: &dyn Store, version: &str) -> bool {
-    match store.parts(version) {
-        Ok(parts) => lacks_part(store, version, &parts),
+/// Each listed part must be reachable through the release's own link, as
+/// the runner, its units, and its installer reach it. A release whose parts
+/// list cannot be read gives no part to wait for, so a fallback switches
+/// to it, as before the repair existed.
+pub fn switch_waits(store: &dyn Store, version: &str) -> bool {
+    let parts = match store.parts(version) {
+        Ok(parts) => parts,
         Err(error) => {
-            tracing::warn!(%error, version, "the previous release has no readable parts list");
-            false
+            tracing::warn!(%error, version, "the release has no readable parts list");
+            return false;
         }
-    }
+    };
+    parts.parts.iter().any(|part| match store.part_reachable(version, part) {
+        Ok(reachable) => !reachable,
+        Err(error) => {
+            tracing::warn!(%error, version, part = %part.name, "a release part could not be checked");
+            true
+        }
+    })
 }
 
 fn lacks_part(store: &dyn Store, version: &str, parts: &PartsList) -> bool {

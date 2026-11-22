@@ -44,6 +44,8 @@ pub trait Store: Send + Sync {
     fn prepare(&self, version: &str) -> Result<()>;
     /// Read the parts list that a complete version folder records.
     fn parts(&self, version: &str) -> Result<PartsList>;
+    /// Check whether a version reaches a part through its own link: the marker and entry files.
+    fn part_reachable(&self, version: &str, part: &Part) -> Result<bool>;
     /// Check whether a part is present: its marker and the entry files of its role.
     fn has_part(&self, part: &Part) -> Result<bool>;
     /// Unpack a checked part into the content-addressed store, unless it is present there.

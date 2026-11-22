@@ -1,7 +1,7 @@
 //! Private version preparation and checked archive extraction.
 
 use std::fs;
-use std::path::{Component, PathBuf};
+use std::path::{Component, Path, PathBuf};
 
 use cnd_release::parts::{Part, PartsList};
 use flate2::read::GzDecoder;
@@ -96,21 +96,39 @@ impl DiskStore {
     }
 
     /// Point each part link of `version` at its shared folder, with a rename.
+    ///
+    /// An entry at a link path that is not a link, such as an empty folder,
+    /// blocks the rename, so it goes first. Each link gets its attempt, and
+    /// the first failure returns at the end.
     pub(super) fn restore_version_links(&self, version: &str) -> Result<()> {
         let folder = self.version_path(version);
+        let mut first_error = None;
         for part in self.version_parts(version)?.parts {
             let link = folder.join(&part.name);
             let target = self.part_path(&part.sha256);
             if fs::read_link(&link).is_ok_and(|current| current == target) {
                 continue;
             }
-            let temporary = folder.join(format!("{}.next", part.name));
-            self.remove(&temporary)?;
-            std::os::unix::fs::symlink(&target, &temporary).internal()?;
-            fs::rename(&temporary, &link).internal()?;
-            tracing::info!(version, part = %part.name, "restored a release part link");
+            match self.replace_link(&link, &target, &folder.join(format!("{}.next", part.name))) {
+                Ok(()) => {
+                    tracing::info!(version, part = %part.name, "restored a release part link")
+                }
+                Err(error) => {
+                    tracing::warn!(%error, version, part = %part.name, "a release part link could not be restored");
+                    first_error.get_or_insert(error);
+                }
+            }
         }
-        Ok(())
+        first_error.map_or(Ok(()), Err)
+    }
+
+    fn replace_link(&self, link: &Path, target: &Path, temporary: &Path) -> Result<()> {
+        if fs::symlink_metadata(link).is_ok_and(|entry| entry.is_dir()) {
+            fs::remove_dir_all(link).internal()?;
+        }
+        self.remove(temporary)?;
+        std::os::unix::fs::symlink(target, temporary).internal()?;
+        fs::rename(temporary, link).internal()
     }
 
     pub(super) fn finish_version(&self, version: &str, parts: &PartsList) -> Result<()> {

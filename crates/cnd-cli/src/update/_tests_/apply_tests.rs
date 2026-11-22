@@ -7,13 +7,14 @@ use unimock::{Clause, MockFn, Unimock, matching};
 use super::error::Error;
 use super::ports::{ProcessesMock, State, StoreMock, UpdateEngine};
 
-use super::test_support::{complete_parts, engine, locked, parts};
+use super::test_support::{complete_parts, engine, locked, parts, reachable_parts};
 
 #[tokio::test]
 async fn applies_the_newest_complete_version_without_downloading()
 -> Result<(), Box<dyn std::error::Error>> {
     let engine = engine(Unimock::new((
         complete_parts(),
+        reachable_parts(),
         StoreMock::apply_lock.some_call(matching!()).returns(Ok(locked())),
         StoreMock::state.some_call(matching!()).returns(Ok(State { current: Some("0.0.2".into()), ..State::default() })),
         StoreMock::versions.some_call(matching!()).returns(Ok(vec!["0.0.3".into(), "0.0.10".into(), "0.0.9".into()])),
@@ -78,6 +79,7 @@ async fn a_damaged_newest_release_does_not_block_a_ready_newer_release()
         let engine = engine(
             Unimock::new((
                 releases_with_a_damaged_newest(),
+                reachable_parts(),
                 StoreMock::versions
                     .some_call(matching!())
                     .returns(Ok(listed.map(String::from).to_vec())),
@@ -151,6 +153,42 @@ async fn apply_ignores_complete_versions_older_than_current()
                 "0.0.5".into(),
                 "0.0.4".into(),
             ])),
+        )),
+        Unimock::new(()),
+        Unimock::new(()),
+        Unimock::new(()),
+    );
+    engine.apply().await?;
+    Ok(())
+}
+
+#[tokio::test]
+async fn a_newer_release_that_cannot_reach_a_part_waits() -> Result<(), Box<dyn std::error::Error>>
+{
+    let engine = engine(
+        Unimock::new((
+            StoreMock::apply_lock
+                .some_call(matching!())
+                .returns(Ok(locked())),
+            StoreMock::state.some_call(matching!()).returns(Ok(State {
+                current: Some("0.0.2".into()),
+                ..State::default()
+            })),
+            StoreMock::versions
+                .some_call(matching!())
+                .returns(Ok(vec!["0.0.3".into()])),
+            StoreMock::parts
+                .each_call(matching!("0.0.3"))
+                .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+            StoreMock::has_part
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(true)),
+            StoreMock::restore_links
+                .some_call(matching!("0.0.3"))
+                .returns(Err(Error::InvalidRelease)),
+            StoreMock::part_reachable
+                .each_call(matching!("0.0.3", _))
+                .answers(&|_, _, part| Ok(part.name != "system")),
         )),
         Unimock::new(()),
         Unimock::new(()),

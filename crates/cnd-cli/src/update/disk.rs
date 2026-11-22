@@ -121,6 +121,10 @@ impl Store for DiskStore {
         self.version_parts(version)
     }
 
+    fn part_reachable(&self, version: &str, part: &Part) -> Result<bool> {
+        self.reachable_from(version, part)
+    }
+
     fn has_part(&self, part: &Part) -> Result<bool> {
         self.part_present(part)
     }

@@ -147,7 +147,10 @@ async fn a_failed_in_place_repair_keeps_the_staged_release()
         Unimock::new(()),
         Unimock::new(()),
     );
-    assert!(engine.check("0.0.2").await.is_err());
+    assert!(matches!(
+        engine.check("0.0.2").await,
+        Err(Error::Internal(_))
+    ));
     Ok(())
 }
 

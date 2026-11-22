@@ -9,11 +9,12 @@ use unimock::{Clause, MockFn, Unimock, matching};
 use super::error::Error;
 use super::ports::{ProcessesMock, State, StoreMock, UpdateEngine};
 
-use super::test_support::{ClientMock, complete_parts, engine, locked, parts};
+use super::test_support::{ClientMock, complete_parts, engine, locked, parts, reachable_parts};
 
 /// The previous release 0.0.2 lacks its Node part until an unpack restores it.
 fn previous_without_node(restored: &Arc<AtomicBool>) -> impl Clause {
     let present = restored.clone();
+    let reachable = restored.clone();
     (
         StoreMock::apply_lock
             .some_call(matching!())
@@ -34,6 +35,11 @@ fn previous_without_node(restored: &Arc<AtomicBool>) -> impl Clause {
         StoreMock::restore_links
             .some_call(matching!("0.0.2"))
             .returns(Ok(())),
+        StoreMock::part_reachable
+            .each_call(matching!("0.0.2", _))
+            .answers_arc(Arc::new(move |_, _, part| {
+                Ok(part.name != "node" || reachable.load(Ordering::SeqCst))
+            })),
     )
 }
 
@@ -133,6 +139,7 @@ async fn failed_fallback_installer_keeps_the_updater_of_the_failed_release()
 -> Result<(), Box<dyn std::error::Error>> {
     let engine = engine(Unimock::new((
         complete_parts(),
+        reachable_parts(),
         StoreMock::apply_lock.some_call(matching!()).returns(Ok(locked())),
         StoreMock::state.some_call(matching!()).returns(Ok(State { current: Some("0.0.5".into()), previous: Some("0.0.2".into()), pending: Some("0.0.5".into()) })),
         StoreMock::reject.some_call(matching!("0.0.5")).returns(Ok(())),
@@ -142,5 +149,42 @@ async fn failed_fallback_installer_keeps_the_updater_of_the_failed_release()
     )), Unimock::new(()), Unimock::new(()),
     Unimock::new(ProcessesMock::install_system.next_call(matching!(_)).returns(Err(Error::StartFailed))));
     assert!(matches!(engine.apply().await, Err(Error::StartFailed)));
+    Ok(())
+}
+
+#[tokio::test]
+async fn fallback_waits_while_the_previous_release_cannot_reach_a_part()
+-> Result<(), Box<dyn std::error::Error>> {
+    let engine = engine(
+        Unimock::new((
+            StoreMock::apply_lock
+                .some_call(matching!())
+                .returns(Ok(locked())),
+            StoreMock::state.some_call(matching!()).returns(Ok(State {
+                current: Some("0.0.5".into()),
+                previous: Some("0.0.2".into()),
+                pending: Some("0.0.5".into()),
+            })),
+            StoreMock::parts
+                .each_call(matching!("0.0.2"))
+                .answers(&|_, _| parts().map_err(|_| Error::InvalidRelease)),
+            StoreMock::has_part
+                .each_call(matching!(_))
+                .answers(&|_, _| Ok(true)),
+            StoreMock::restore_links
+                .some_call(matching!("0.0.2"))
+                .returns(Err(Error::InvalidRelease)),
+            StoreMock::part_reachable
+                .each_call(matching!("0.0.2", _))
+                .answers(&|_, _, part| Ok(part.name != "node")),
+        )),
+        Unimock::new(()),
+        Unimock::new(()),
+        Unimock::new(()),
+    );
+    assert!(matches!(
+        engine.apply().await,
+        Err(Error::PreviousIncomplete { version }) if version == "0.0.2"
+    ));
     Ok(())
 }

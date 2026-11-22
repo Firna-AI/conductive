@@ -137,3 +137,10 @@ impl BinaryInstaller for Archive {
         )
     }
 }
+
+/// Each version reaches each part through its own link.
+pub(super) fn reachable_parts() -> impl Clause {
+    StoreMock::part_reachable
+        .each_call(matching!(_, _))
+        .answers(&|_, _, _| Ok(true))
+}
