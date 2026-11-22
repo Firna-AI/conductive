@@ -27,6 +27,8 @@ export interface ChatHost {
   keepsComposer: boolean
   /** The tools of the composer, as `ComposerTool` says. */
   tools?: readonly ComposerTool[]
+  /** A notice over the composer in a workspace that allows writes. */
+  notice?: ReactNode
   /**
    * The GitHub branch with its display label. New session text uses the
    * label when the GitHub branch matches the workspace branch.

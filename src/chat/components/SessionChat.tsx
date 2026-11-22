@@ -167,6 +167,7 @@ export function SessionChat(props: SessionChatProps) {
       {snapshot.devices.load === 'failed' ? (
         <DeviceLoadNotice onRetry={() => void controller.loadDevices()} />
       ) : null}
+      {readOnly ? null : props.host?.notice}
       {parts.waiting}
       {sandboxBar}
       {phoneExplain}

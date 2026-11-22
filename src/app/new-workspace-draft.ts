@@ -12,6 +12,13 @@ import { withoutMarks } from './draft-marks'
 import { branchIn, type DraftBranch } from './new-workspace-branch'
 import { waitsForBuild } from './repository-changes'
 
+/**
+ * The choices of the Capabilities control that a create sends: only the
+ * pre-approved secrets, because the stored Mac access gates nothing (Mac
+ * access decision 7).
+ */
+type SentCapabilities = Pick<WorkspaceCapabilities, 'preapprovedSecretIds'>
+
 /** The first message of a workspace that does not exist yet. */
 export interface Draft {
   text: string
@@ -36,11 +43,18 @@ export interface Draft {
    */
   sectionId: string | null
   /**
-   * The choices of the Capabilities control: the secrets that the new
-   * workspace pre-approves, and its Mac access. A send ends them, so each
+   * The choices of the Capabilities control that the create sends: the
+   * secrets that the new workspace pre-approves. A send ends them, so each
    * new workspace starts from `NEW_WORKSPACE_CAPABILITIES`.
    */
-  capabilities: WorkspaceCapabilities
+  capabilities: SentCapabilities
+  /**
+   * The switch of Mac access, which only the Mac app shows. The create does
+   * not send it: after the create, the page of the Mac app starts the grant
+   * until Stop of the new workspace on this Mac, only while it is on. A
+   * send ends it with the other choices.
+   */
+  allowThisMac: boolean
   /** The files, each with its upload. Only ready ones go with the message. */
   files: readonly DraftFile[]
   /** Files without chips, kept for undo until this draft ends. */
@@ -81,7 +95,10 @@ export function emptyDraft(messageId: string, keep?: Draft): Draft {
     branch: null,
     choice: keep?.choice ?? null,
     sectionId: null,
-    capabilities: NEW_WORKSPACE_CAPABILITIES,
+    capabilities: {
+      preapprovedSecretIds: NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
+    },
+    allowThisMac: false,
     files: [],
     detached: [],
     refused: [],
@@ -174,15 +191,13 @@ export function keptRepository(
  * such as one that a member deleted. Before any read, the draft has none.
  */
 export function sentCapabilities(
-  capabilities: WorkspaceCapabilities,
+  capabilities: SentCapabilities,
   secrets: readonly OrgSecret[] | undefined,
-): WorkspaceCapabilities {
-  const { preapprovedSecretIds, macAccess } = capabilities
+): SentCapabilities {
   if (!secrets) return capabilities
   return {
-    preapprovedSecretIds: preapprovedSecretIds.filter((id) =>
+    preapprovedSecretIds: capabilities.preapprovedSecretIds.filter((id) =>
       secrets.some((secret) => secret.id === id),
     ),
-    macAccess,
   }
 }

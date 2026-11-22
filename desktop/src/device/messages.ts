@@ -7,7 +7,7 @@ import {
 } from '../../../src/shared/device.ts'
 import type {
   DeviceApprovalAction,
-  DeviceSettingsAction,
+  DeviceSettingsOperation,
   WorkerToDevice,
 } from '../../../src/shared/device.ts'
 
@@ -32,7 +32,7 @@ function approval(value: unknown): value is DeviceApprovalAction {
     value === 'allow-workspace-until-stop'
   )
 }
-function operation(value: unknown): value is DeviceSettingsAction {
+function operation(value: unknown): value is DeviceSettingsOperation {
   return (
     record(value) &&
     (value.action === 'read' ||
@@ -41,7 +41,10 @@ function operation(value: unknown): value is DeviceSettingsAction {
       ((value.action === 'stop-workspace' ||
         value.action === 'extend-workspace' ||
         value.action === 'keep-workspace') &&
-        text(value.workspaceId)))
+        text(value.workspaceId)) ||
+      (value.action === 'start-workspace-until-stop' &&
+        text(value.workspaceId) &&
+        nullableText(value.workspaceName)))
   )
 }
 function request(value: unknown): value is DeviceCommandRecord {

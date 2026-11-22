@@ -1,4 +1,5 @@
 import type {
+  DeviceSettings,
   DeviceSettingsOutcome,
   DeviceToWorker,
   WorkerToDevice,
@@ -15,38 +16,60 @@ interface SettingsDependencies {
 export function applyDeviceSettings(
   message: Extract<WorkerToDevice, { type: 'settings.operation' }>,
   dependencies: SettingsDependencies,
-): void {
+): DeviceSettingsOutcome {
+  const failed: DeviceSettingsOutcome = {
+    status: 'failed',
+    message: 'The Mac could not change this permission. Try again.',
+  }
+  const reply = (
+    settings: DeviceSettings,
+    outcome: DeviceSettingsOutcome,
+  ): Extract<DeviceToWorker, { type: 'settings.result' }> => ({
+    type: 'settings.result',
+    operationId: message.operationId,
+    settings,
+    outcome,
+  })
+  const tooLarge = (): DeviceSettingsOutcome => {
+    dependencies.send({
+      type: 'settings.failed',
+      operationId: message.operationId,
+      code: 'settings_result_too_large',
+    })
+    return failed
+  }
   let outcome: DeviceSettingsOutcome = { status: 'done' }
   try {
     const operation = message.operation
+    if (
+      operation.action === 'start-workspace-until-stop' ||
+      operation.action === 'keep-workspace' ||
+      operation.action === 'extend-workspace'
+    ) {
+      const prepared = dependencies.permissions.prepareWorkspace(operation)
+      let result = reply(prepared.settings, prepared.outcome)
+      if (deviceFrame(result) === undefined) return tooLarge()
+      if (operation.action === 'extend-workspace') {
+        // Extend must save before it can report done. A failed save keeps
+        // the old grant and timer, and its reply carries those settings.
+        outcome = prepared.commit()
+        result = reply(dependencies.permissions.settings(), outcome)
+        if (deviceFrame(result) === undefined) return tooLarge()
+      }
+      if (!dependencies.send(result)) return failed
+      return operation.action === 'extend-workspace'
+        ? outcome
+        : prepared.commit()
+    }
     if (operation.action === 'remove-command')
       outcome = dependencies.permissions.removeCommand(operation.command)
     if (operation.action === 'stop-workspace')
       outcome = dependencies.permissions.stopWorkspace(operation.workspaceId)
-    if (operation.action === 'extend-workspace')
-      outcome = dependencies.permissions.extendWorkspace(operation.workspaceId)
-    if (operation.action === 'keep-workspace')
-      outcome = dependencies.permissions.keepWorkspace(operation.workspaceId)
   } catch {
     dependencies.warn()
-    outcome = {
-      status: 'failed',
-      message: 'The Mac could not change this permission. Try again.',
-    }
+    outcome = failed
   }
-  const result: DeviceToWorker = {
-    type: 'settings.result',
-    operationId: message.operationId,
-    settings: dependencies.permissions.settings(),
-    outcome,
-  }
-  dependencies.send(
-    deviceFrame(result) === undefined
-      ? {
-          type: 'settings.failed',
-          operationId: message.operationId,
-          code: 'settings_result_too_large',
-        }
-      : result,
-  )
+  const result = reply(dependencies.permissions.settings(), outcome)
+  if (deviceFrame(result) === undefined) return tooLarge()
+  return dependencies.send(result) ? outcome : failed
 }

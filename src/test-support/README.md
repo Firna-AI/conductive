@@ -110,7 +110,8 @@ runner without a file server, `failed` for the 502 `sandbox_unavailable`
 of a cloud computer that did not answer, or `not-ready` for the 409
 `sandbox_not_ready` of a cloud computer that does not run.
 
-Writes return recorded replies, except org moves and terminal list writes.
+Writes return recorded replies, except org moves, terminal list writes, and Mac permission starts.
+A Mac permission start keeps its grant for later settings reads.
 `fake-org-order-routes.ts` serves `PUT /api/org-order` and saves its order for later org list reads.
 It validates the shared move request and returns 204, or the Worker's validation and visibility errors.
 The app's stateful dev routes supply their own org list.

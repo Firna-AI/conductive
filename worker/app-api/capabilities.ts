@@ -3,7 +3,6 @@ import {
   type WorkspaceCapabilitiesResponse,
 } from '../../src/shared/secrets'
 import type { AppDependencies, AppEnv } from '../env'
-import { deviceCall } from '../devices/internal'
 import { requireActiveOrg } from '../data/user-access'
 import { requireOrgMember } from '../members/permissions'
 import {
@@ -44,10 +43,6 @@ export async function capabilitiesRoute(
     })
     await requireOrgMember(env.DB, orgId, userId)
     await requireActiveOrg(env.DB, orgId)
-    if (change.macAccess === false)
-      await deviceCall(env, workspaceId, {
-        type: 'workspace.mac-access-changed',
-      })
   }
   return Response.json({
     capabilities: await readWorkspaceCapabilities(env.DB, orgId, workspaceId),

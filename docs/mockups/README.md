@@ -158,12 +158,16 @@ a dropped folder that the browser cannot read. The app shares these words.
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. The automation
   screen declares its states in `src/screens/automationState.ts` in the same
-  way. The tab and composer states of the workspace screen live in
+  way, and the Mac app screen in `src/screens/macAppState.ts`. The pages of
+  the Mac app take the composer of a workspace and the Capabilities control
+  of New workspace from the states of those two screens. The tab and
+  composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
   image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  skills, attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, the chip of Add to chat, and the
+  Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
   with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files

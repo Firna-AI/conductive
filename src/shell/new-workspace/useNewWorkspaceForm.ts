@@ -27,6 +27,7 @@ import { useStore, valueOf } from '../../app/store'
 import type { Repository } from '../../shared/org-settings'
 import type { OrgSummary } from '../../shared/orgs'
 import { useApp, useOfferedModels, useOrgAccess, useOrgModel } from '../context'
+import { useThisMac } from '../mac/this-mac'
 import { useGo } from '../ui/AppLink'
 import type { Focusable } from '../ui/Overlay'
 import { createFailure } from './create-failure'
@@ -100,6 +101,9 @@ export interface NewWorkspaceForm {
  * user, or the repository that the form showed at its first text or file,
  * as `NewWorkspaceModel` says. When the server accepts the create, the app
  * opens the new workspace, also when the form closed while the create ran.
+ * If the Mac access switch was on, the Mac app then starts the grant
+ * for the new workspace on this Mac. A failed start shows a notice in
+ * that workspace, as `useStartFailedNotice` says.
  * `open` goes to another page from a notice, such as Connect. `message` is
  * the message field, which takes the focus after Start from and the default
  * branch, so that Enter sends.
@@ -120,6 +124,7 @@ export function useNewWorkspaceForm(
   const draft = useStore(model.draft)
   const create = useStore(model.create)
   const access = useOrgAccess(org)
+  const mac = useThisMac()
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
   // When the repositories reply shows a good image, builds that show none
   // are older, and the notice of the first build gives way.
@@ -172,9 +177,12 @@ export function useNewWorkspaceForm(
       : null
   const send = () => {
     if (!defaults) return
-    void model.send(defaults, (created) =>
-      go(routes.workspace(org.id, created.workspace.id)),
-    )
+    // The draft empties after the create, so the switch is read at the send.
+    const starts = model.draft.get().allowThisMac ? mac : null
+    void model.send(defaults, (created) => {
+      go(routes.workspace(org.id, created.workspace.id))
+      void starts?.start(created.workspace.id, 'create')
+    })
   }
   // The action goes with its notice, so the message takes the focus.
   const startFrom = repository

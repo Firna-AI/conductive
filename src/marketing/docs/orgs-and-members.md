@@ -181,7 +181,8 @@ An org has two roles: **Admin** and **Member**.
 | Add a secret | Yes | Yes |
 | Replace or delete a secret | Any secret | Their own secrets |
 | Reveal a secret's value or mark it for all agents | Yes | No |
-| Change a workspace's **Capabilities** | Any workspace | Any workspace |
+| Change the secrets in a workspace's **Capabilities** | Any workspace | Any workspace |
+| Turn **Mac access** on or off in the Mac app | For their own Mac | For their own Mac |
 | Reassign a workspace | Yes | No |
 | Archive a workspace | Any workspace | Their own workspaces |
 | Restore a workspace within its 14 days | Any workspace | Any workspace |
