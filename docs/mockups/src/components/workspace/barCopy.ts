@@ -155,6 +155,24 @@ export type PromptFacts = {
   failedChecks: readonly string[]
   /** The GitHub logins of the reviewers who requested changes. */
   reviewers: readonly string[]
+  /**
+   * The workspace is in the merge queue, whose GitHub stack needs a linear
+   * history. So Resolve conflicts asks for a rebase onto `base`, the branch
+   * of the pull request below it, in place of a merge.
+   */
+  rebase?: true
+}
+
+/** The facts that the restack prompt of the merge queue names. */
+export type RestackFacts = {
+  /** The number of the pull request that moves. */
+  number: number
+  /** The new base: the branch of the layer below, or the default branch. */
+  base: string
+  /** The head of `base` that the queue read, which the branch moves onto. */
+  baseHead: string
+  /** The old base commit, where the own commits of the branch start. */
+  oldBase: string
 }
 
 /** A list in running text: "a", "a and b", or "a, b, and c". */
@@ -176,6 +194,28 @@ const commitAndPush =
   'Commit the changes that are not committed, with a clear message, and push this branch.'
 
 /**
+ * Resolve conflicts of a workspace in the merge queue: a rebase onto the
+ * branch below, so that the history stays linear, and a push that replaces
+ * only the branch that the agent read.
+ */
+function rebaseConflicts(facts: PromptFacts): string {
+  const base = `origin/${facts.base}`
+  return `Pull request #${facts.number} has conflicts with \`${facts.base}\`, and the merge queue needs a linear history. Fetch \`${base}\` and rebase this branch onto it. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`${base}\` into this branch.`
+}
+
+/**
+ * The fixed prompt of a restack: the fix turn that the merge queue sends,
+ * as a message of the queuer, when a layer must move onto the newest head
+ * of the branch below it and GitHub could not move it. It names the new
+ * head and the old base commit, so that `--onto` moves only the own
+ * commits of the branch, also after a squash merge below it.
+ */
+export function restackPrompt(facts: RestackFacts): string {
+  const base = `origin/${facts.base}`
+  return `Pull request #${facts.number} is in the merge queue, and it must build on the newest \`${facts.base}\`. Run \`git fetch origin\` and check that \`${base}\` is at \`${facts.baseHead}\`. Then run \`git rebase --onto ${base} ${facts.oldBase}\`: \`${facts.oldBase}\` is the old base, so only the commits of this branch move. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge another branch into this one, and don't merge the pull request. If \`${base}\` is at another commit, stop and say so.`
+}
+
+/**
  * The fixed prompt of each agent action. A prompt that needs the GitHub CLI
  * says what to do when `gh` is missing or fails, as in a workspace from an
  * older org image. No prompt asks for a reply on GitHub, because a reply
@@ -193,6 +233,7 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
     case 'fix-checks':
       return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
     case 'resolve-conflicts':
+      if (facts.rebase) return rebaseConflicts(facts)
       return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
     case 'address-review':
       return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`

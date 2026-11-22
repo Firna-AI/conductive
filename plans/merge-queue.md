@@ -431,9 +431,13 @@ line names a decision. The options check corrected them on the same day.
   change to draft, an archive, a repository or branch change, Continue,
   Remove from queue, a base change on GitHub that the queue did not make, a
   queuer who left the org or lost write access, and a suspended org.
-- The leave step sets the GitHub base of the pull request back to the
-  trunk, so that no entry keeps another entry's branch as its base. It then
-  moves the units above it onto the unit below it.
+- The leave step sets the GitHub base of the lowest pull request of the
+  leaving unit back to the trunk, so that no entry keeps another entry's
+  branch as its base. Each upper pull request of a member stack keeps the
+  branch below it in its unit. The step then moves the units above it onto
+  the unit below it. Reason: a removal must not break the stack that the
+  member made (decision 315). Agent's call of 22 November 2026, after the
+  mockups.
 - A member stack joins as one unit (decision 315). Add on its upper
   workspace adds each lower pull request that is not queued yet, in stack
   order. A drag moves the unit. Remove from queue on a lower entry also
@@ -576,6 +580,67 @@ line names a decision. The options check corrected them on the same day.
 - The list read carries the entry of each queued workspace, through a new
   field of the Rust `Workspace` type and its generated TypeScript. The bar
   read carries the queue state of its workspace.
+- A click on "Merge with 2 ahead" merges with the merge method of the
+  member who clicks, as Merge outside the queue does (`worker/github/merges.md`).
+  Its tooltip names the method. The queue runs the click as its next step,
+  without the wait for the layer above. Agent's call of 22 November 2026,
+  after the mockups.
+- During each drag of a row, the group shows as a drop target. For a row
+  that cannot join, such as a pull request into another branch or a member
+  without write access, the target names the reason and takes no drop.
+  Reason: decision 317 shows the target during each drag, and a drop must
+  not fail with no reason. Agent's call of 22 November 2026, after the
+  mockups.
+- Design calls of the agent, 22 November 2026, that the mockups of
+  Milestone 1 forced. `app/merge-queue` and `app/banner/merge-queue` draw
+  them.
+  - The bar of a queued workspace keeps the GitHub state of its pull
+    request and its one main action. A line under the bar, in the form of
+    a message of the bar, names the place and the pull request below, such
+    as "Place 3 of 3 in the merge queue. It builds on #479.". It says what
+    a running step does, such as "Rebasing onto #479", and it ends with
+    Remove from queue. Reason: the bar keeps the one main action of
+    decision 220, and the place and the step need words.
+  - An entry that needs attention tints that line amber and names its
+    reason. The bar keeps its fix, such as Fix checks, and adds Add to
+    merge queue. A merge that GitHub refused adds Open on GitHub to the
+    line. Reason: a member acts from the bar, as on any other state.
+  - Remove from queue asks first. The question says that the pull request
+    loses its place and targets the default branch again. On the lower
+    entry of a member stack, it names the entries above it, which leave
+    too. A layer that merges offers no Remove from queue. Reason: a member
+    cannot get a place back, and a merge cannot stop for a removal.
+  - The words of the line and the rows say "place" and "builds on", not
+    "above" and "below". Reason: the group lists place 1, the bottom
+    layer, first, so the words of the stack read against the list. For
+    the same reason, the label of Merge counts the layers "ahead", such as
+    "Merge with 2 ahead", in place of "Merge with 2 below" in the option
+    text of decision 316. Decision 316 chose the merge through the queue,
+    and this call changes only its words.
+  - Merge of the bottom layer keeps the label of its merge method, such
+    as Squash and merge. Reason: no layer lands with it.
+  - Beside a main action in a bar narrower than 540 px, Add to merge queue
+    shows only its icon, with its name as a tooltip, as a link to GitHub
+    keeps only its mark. Reason: in the right column of 440 px, both
+    labels leave one letter of the state.
+  - A row of the group has two lines: its place, its list mark, and its
+    name, then its step or its reason. The entries that need attention
+    stand below the stack under the label "Needs attention", with the
+    alert icon in place of a place. A member stack keeps its rows in one
+    outline, a box with a neutral border on every side. The blocks follow
+    the order of the repositories of the org. The group collapses as a
+    section does, with the count of its entries, and has no menu.
+  - A drag of an entry moves its unit only inside its block. A row of a
+    section over the group gives the block of its repository the outline
+    of a drop target, and the line falls after its last layer, because a
+    new entry joins at the top. During a drag while no queue has entries,
+    the group shows as a zone with a dashed outline.
+  - The menu of a row that can join adds Add to merge queue after the
+    line, before Archive. The menu of a queued row has Remove from queue
+    and no Move to section, because the row shows in no section.
+  - On a phone, the compact row of the bar names the place, such as
+    "Queue 3 of 3", or "Needs attention". The line stands at the top of
+    the Checks tab, and its actions wrap under its words.
 
 ### Not in this change
 
@@ -593,28 +658,41 @@ Depends on: none
 
 Draw the sidebar group and the bar states, on a computer and on a phone.
 
-- [ ] Draw the sidebar "Merge queue" group in a new entry
+- [x] Draw the sidebar "Merge queue" group in a new entry
       `app/merge-queue`: one queue, two queues, each step state, a "Needs
       attention" row, a member stack as one unit, a drag, and the empty list
       with no group.
-- [ ] Draw the bar states in `app/banner/merge-queue`: a queued bottom
+- [x] Draw the bar states in `app/banner/merge-queue`: a queued bottom
       entry, a queued upper entry with its place, a restack in progress,
       "Needs attention", and Remove from queue with its question.
-- [ ] Draw Add to merge queue in the bar, the row menu, and the header
+- [x] Draw Add to merge queue in the bar, the row menu, and the header
       menu, and the drag into the group with its drop target (decision 317).
-- [ ] Draw Merge on a queued workspace, with the count of the layers below
+- [x] Draw Merge on a queued workspace, with the count of the layers below
       it (decision 316).
-- [ ] Draw a queued parent and a queued sub-workspace, with the
+- [x] Draw a queued parent and a queued sub-workspace, with the
       sub-workspaces that move up a level (decision 318).
-- [ ] Draw the phone layout of the group and of the queued bar.
-- [ ] Add the fixed prompts of the restack and of the rebase variant of
+- [x] Draw the phone layout of the group and of the queued bar.
+- [x] Add the fixed prompts of the restack and of the rebase variant of
       Resolve conflicts to `barCopy.ts`.
-- [ ] Update `catalogue.md`, `catalogue-bar.md`,
+- [x] Update `catalogue.md`, `catalogue-bar.md`,
       `catalogue-workspace-list.md`, and `design-bar.md`.
-- [ ] Run `npm run mockups:check`. Smoke-test the new pages in a browser
+- [x] Run `npm run mockups:check`. Smoke-test the new pages in a browser
       and save screenshots under `.context/merge-queue/`.
-- [ ] Update the design and the TODOs of this plan for each problem that the
+- [x] Update the design and the TODOs of this plan for each problem that the
       mockups show.
+
+## Milestone 1b: Mockup of a drop that cannot join
+
+Tags: mockup
+
+Depends on: 1
+
+The design call on the drop target came after Milestone 1. Milestone 8
+needs its picture.
+
+- [ ] Draw the drop target of the group during a drag of a row that cannot
+      join, with its reason, on a computer and on a phone.
+- [ ] Run `npm run mockups:check` and smoke-test the page.
 
 ## Milestone 2: Documentation and protocol
 
@@ -634,6 +712,8 @@ State the requirements and the decisions of the queue.
       fix turns as the queuer (decision 314). The fetches of its base moves
       use the owner's token (decision 307).
 - [ ] Update `docs/protocol/sections.md`: the Merge queue group.
+- [ ] State that a click on Merge of a queued workspace merges as the next
+      step of the queue, with the clicker's merge method.
 - [ ] Update `docs/protocol/sub-workspaces.md`: a queued workspace leaves
       its tree, and its sub-workspaces move up a level (decision 318).
 - [ ] Read the Terms page and the Privacy page in full. Update each
@@ -688,6 +768,8 @@ The tables, the coordinator object, and the member routes.
 - [ ] Add one leave step for every cause that the design names, and wake
       the queue object from an archive, Continue, and a repository change.
 - [ ] Add the member stack unit rule (decision 315).
+- [ ] Carry the viewer's write access to each repository in the list read,
+      for the row menu and the drag.
 - [ ] Add the queue entries to the list read and the queue state to the bar
       read.
 - [ ] Tests for each route, each refusal, and each isolation rule: a member
@@ -744,10 +826,13 @@ Depends on: 6
 
 Tags: ui
 
-Depends on: 1, 4
+Depends on: 1, 1b, 4
 
 - [ ] Build the Merge queue group from the mockup, with its blocks, rows,
       and states.
+- [ ] Add Remove from queue to the row menu and the header menu, with its
+      command.
+- [ ] Show the reason on the drop target for a row that cannot join.
 - [ ] Leave queued workspaces out of their sections, and move their
       sub-workspaces up with the placement rule of archived parents in
       `src/shared/workspace-tree.ts` (decision 318).
@@ -768,7 +853,12 @@ Depends on: 1, 4
       the second button Add to merge queue (decision 317).
 - [ ] Show Merge on a queued workspace with the count of the layers below
       it, and send the click to the queue (decision 316).
-- [ ] Use the rebase prompts while a workspace is queued.
+- [ ] Use the rebase prompts while a workspace is queued, also the words
+      of Merge latest in `mergeLatestCopy.ts`.
+- [ ] Add commands for Add to merge queue and Remove from queue, in the
+      palette and in Keyboard shortcuts.
+- [ ] Recapture the marketing pictures that show the bar of an open pull
+      request, with `npm run marketing:pictures`.
 - [ ] Tests for each state and each action.
 
 ## Milestone 10: Verification, commit, review, and pull request

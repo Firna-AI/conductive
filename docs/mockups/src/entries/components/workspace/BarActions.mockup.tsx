@@ -2,8 +2,8 @@ import { defineComponent } from '@mokly/mokly'
 import {
   BarButtons,
   BarMessage,
-  ChecksActions,
 } from '../../../components/workspace/BarActions'
+import { ChecksActions } from '../../../components/workspace/ChecksActions'
 import { checkoutAutocomplete } from '../../../fixtures/workspaces'
 import { workspaceSchema } from '../workspaces/workspaceSchemas'
 import { barMessageKinds, barModelSchema } from './barSchemas'
@@ -156,6 +156,29 @@ export const checksActions = defineComponent({
       title: 'Merge refused',
       description: 'The refusal of GitHub above the buttons.',
       props: { bar: { ...readyBar, message: 'merge-refused' } },
+    },
+    {
+      slug: 'queued',
+      title: 'Queued',
+      description:
+        'Place 3 of 3 of the merge queue, ready with the layers below it: the line of the queue above Merge with 2 ahead.',
+      props: {
+        bar: {
+          ...readyBar,
+          actions: [{ kind: 'merge', method: 'squash', busy: false, below: 2 }],
+          queue: {
+            add: false,
+            line: {
+              kind: 'entry',
+              place: 3,
+              size: 3,
+              below: 479,
+              step: 'ready',
+              remove: true,
+            },
+          },
+        },
+      },
     },
   ],
 })

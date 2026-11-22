@@ -5,6 +5,10 @@ import type {
   MergeMethod,
 } from '../../../components/workspace/barCopy'
 import type { PrStatus } from '../../../components/workspace/prStatus'
+import {
+  attentionReasons,
+  queueSteps,
+} from '../../../components/workspace/queueModel'
 import { bannerStates } from '../../../fixtures/pullRequests'
 import { iconKeyOf, iconKeys, type IconKey } from '../common/icons'
 
@@ -55,6 +59,8 @@ const barActionSchema = {
         kind: { const: 'merge' },
         method: { enum: mergeMethods },
         busy: { type: 'boolean' },
+        /** The layers of the merge queue that land with it. */
+        below: { type: 'integer', minimum: 0 },
       },
     },
     {
@@ -92,6 +98,38 @@ const barActionSchema = {
   ],
 } as const
 
+/** The line of a queued workspace under the bar, as `QueueLine`. */
+export const queueLineSchema = {
+  anyOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['kind', 'place', 'size', 'below', 'step', 'remove'],
+      properties: {
+        kind: { const: 'entry' },
+        place: { type: 'integer', minimum: 1 },
+        size: { type: 'integer', minimum: 1 },
+        /** The pull request below it, or null for the bottom layer. */
+        below: { anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }] },
+        step: { enum: queueSteps },
+        waitsFor: { type: 'integer', minimum: 1 },
+        stackedAbove: { type: 'integer', minimum: 1 },
+        remove: { type: 'boolean' },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['kind', 'reason', 'remove'],
+      properties: {
+        kind: { const: 'attention' },
+        reason: { enum: attentionReasons },
+        remove: { type: 'boolean' },
+      },
+    },
+  ],
+} as const
+
 /** What the bar and the top of the Checks tab show, as `BarModel`. */
 export const barModelSchema = {
   type: 'object',
@@ -105,6 +143,13 @@ export const barModelSchema = {
     message: { enum: barMessageKinds },
     /** The sandbox has local work, so Continue asks first. */
     localWork: { type: 'boolean' },
+    /** The merge queue: Add to merge queue, and the line of an entry. */
+    queue: {
+      type: 'object',
+      additionalProperties: false,
+      required: ['add'],
+      properties: { add: { type: 'boolean' }, line: queueLineSchema },
+    },
   },
 } as const
 

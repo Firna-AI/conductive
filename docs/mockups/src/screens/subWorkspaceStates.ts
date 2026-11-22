@@ -107,7 +107,7 @@ function rowOf(workspace: Workspace): WorkspaceRow {
  * The rows of Acme when the app opens, then each sub-workspace in the
  * section of its record, before the trees place them.
  */
-function flatSections(): SidebarSection[] {
+export function flatSections(): SidebarSection[] {
   const added = subWorkspaceList.map(rowOf)
   return workspaceSections().map((item) => ({
     ...item,

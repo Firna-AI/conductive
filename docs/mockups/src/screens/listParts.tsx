@@ -12,6 +12,7 @@ import {
   suspendedOrgNotice,
   suspendedOrgPanel,
 } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
+import type { ListQueue } from '../components/workspaces/queueList'
 import type { RowFocus } from '../components/workspaces/rowControls'
 import type { MenuStyle } from '../components/workspaces/SectionList'
 import { sectionList } from '../entries/components/workspaces/SectionList.mockup'
@@ -86,27 +87,29 @@ export function ListHeader(props: {
  * the sections.
  * `newWorkspaceTo` is the New workspace page of the org, such as that
  * of a new org. `focus` names the row whose menu, field, or hover the view
- * draws.
+ * draws. The props of `ListQueue` add the Merge queue group.
  */
-export function HomeList(props: {
-  org: Org
-  sections: readonly SidebarSection[]
-  viewer: Membership
-  menu?: ListMenu
-  menuStyle: MenuStyle
-  drag?: ListDrag
-  suspended?: boolean
-  newWorkspaceTo?: string
-  /** Show ⌘K, the key of the palette, beside Search. */
-  keys?: boolean
-  /** The workspace list of the org did not load. */
-  failed?: boolean
-  focus?: RowFocus
-  /** The archived workspaces, in the Archived group at the end. */
-  archived?: readonly WorkspaceRow[]
-  /** The Archived group shows collapsed, with its count. */
-  archivedCollapsed?: boolean
-}) {
+export function HomeList(
+  props: {
+    org: Org
+    sections: readonly SidebarSection[]
+    viewer: Membership
+    menu?: ListMenu
+    menuStyle: MenuStyle
+    drag?: ListDrag
+    suspended?: boolean
+    newWorkspaceTo?: string
+    /** Show ⌘K, the key of the palette, beside Search. */
+    keys?: boolean
+    /** The workspace list of the org did not load. */
+    failed?: boolean
+    focus?: RowFocus
+    /** The archived workspaces, in the Archived group at the end. */
+    archived?: readonly WorkspaceRow[]
+    /** The Archived group shows collapsed, with its count. */
+    archivedCollapsed?: boolean
+  } & ListQueue,
+) {
   const suspended = props.suspended ?? false
   return (
     <>
@@ -153,6 +156,9 @@ export function HomeList(props: {
               drag: props.drag,
               focus: props.focus,
               menu: props.menu,
+              queue: props.queue,
+              queueDrag: props.queueDrag,
+              queueable: props.queueable,
             })}
           />
         )}

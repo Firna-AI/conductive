@@ -1,0 +1,73 @@
+import type { PromptFacts, RestackFacts } from '../components/workspace/barCopy'
+import { promptFacts } from './barActions'
+import { pullRequest } from './pullRequests'
+import { subWorkspaceList } from './subWorkspaces'
+import { savedCarts, workspaceList, type Workspace } from './workspaces'
+
+/**
+ * The merge queues of Acme: the pull requests of the workspaces that they
+ * hold, and the facts that the fix turns of the queue name. Only the pages
+ * of the merge queue draw a queue. The other pages keep the list of Acme
+ * without one.
+ */
+
+/** The pull request of each workspace that a queue holds, by its key. */
+const queuedPullRequests: Readonly<Record<string, number>> = {
+  'next-16': 476,
+  'apple-pay': 479,
+  'checkout-autocomplete': pullRequest.number,
+  'fix-cart-flake': 486,
+  'places-client': 488,
+  'saved-carts': 490,
+  'webhook-retries': 318,
+  'retry-queue': 321,
+}
+
+/** The number of the pull request of a queued workspace. */
+export function pullRequestOf(key: string): number {
+  const number = queuedPullRequests[key]
+  if (number === undefined) throw new Error(`No pull request for ${key}`)
+  return number
+}
+
+/**
+ * The workspaces that a queue can hold: those of the list of Acme, the
+ * sub-workspaces, and Saved carts, which a member stacked on the branch of
+ * Checkout address autocomplete (decision 301).
+ */
+const queueable: readonly Workspace[] = [
+  ...workspaceList,
+  ...subWorkspaceList,
+  savedCarts,
+]
+
+/** The workspace of a key that a queue holds. */
+export function queuedWorkspace(key: string): Workspace {
+  const workspace = queueable.find((item) => item.key === key)
+  if (!workspace) throw new Error(`No workspace ${key}`)
+  return workspace
+}
+
+/** The branch of Apple Pay button, #479, the layer below #482. */
+const applePayBranch = queuedWorkspace('apple-pay').branch
+
+/**
+ * The restack of #482 onto the newest head of #479, after a fix turn of
+ * #479 pushed new commits and the rebase of GitHub hit a conflict.
+ */
+export const restackFacts: RestackFacts = {
+  number: pullRequest.number,
+  base: applePayBranch,
+  baseHead: '4c1e9a2',
+  oldBase: '9b07d3f',
+}
+
+/**
+ * The facts of #482 while it is queued on #479: Resolve conflicts asks
+ * for a rebase onto the branch of #479.
+ */
+export const queuedPromptFacts: PromptFacts = {
+  ...promptFacts,
+  base: applePayBranch,
+  rebase: true,
+}

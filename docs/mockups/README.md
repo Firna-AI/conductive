@@ -94,8 +94,9 @@ of the org settings, the Capabilities pages, the child pages of
 `app/secret-requests`, and the flow `user-flows/secret-request`.
 The [account](catalogue-account.md) page gives the child pages of
 `app/account`. The
-[workspace menu and sub-workspaces](catalogue-workspace-list.md) page gives
-the child pages of `app/workspace-menu` and `app/sub-workspaces`. The
+[workspace menu, sub-workspaces, and the merge queue](catalogue-workspace-list.md)
+page gives the child pages of `app/workspace-menu`, `app/sub-workspaces`,
+and `app/merge-queue`. The
 [first build and waiting repositories](catalogue-org-builds.md) page gives
 the first build of a new org and the repositories that wait for a build.
 
@@ -143,7 +144,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/queuePaths.ts` for the merge queue |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
@@ -173,7 +174,10 @@ a dropped folder that the browser cannot read. The app shares these words.
   `src/screens/serviceState.ts` holds the services of the Preview tool and
   what lies open over them, which `src/screens/workspaceServices.tsx`
   draws. The pages of the services start from `servicesWorkspace` in
-  `src/screens/servicesWorkspace.ts`.
+  `src/screens/servicesWorkspace.ts`. `src/screens/queueBarStates.ts`
+  holds the merge queue of the open workspace, and
+  `src/screens/queueStates.tsx` the merge queues of the list, from the
+  queues of `src/screens/queueSpecs.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from

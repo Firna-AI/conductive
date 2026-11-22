@@ -6,7 +6,7 @@ import type { ButtonStateStyleArgs } from '@firna/ui/button'
  * shows. Firna has no outline tone, so the button takes the secondary tone
  * for its border and label, and this fill replaces the secondary fill.
  */
-function outlineFill(state: ButtonStateStyleArgs) {
+export function outlineFill(state: ButtonStateStyleArgs) {
   if (state.disabled || state.busy) return 'transparent'
   if (state.pressed) return 'color-mix(in srgb, var(--ui-ink) 12%, transparent)'
   if (state.hovered) return 'color-mix(in srgb, var(--ui-ink) 7%, transparent)'

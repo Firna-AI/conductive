@@ -30,6 +30,7 @@ import { paths } from '../paths'
 import { valueSheet } from './requestSheets'
 import { expandedPage } from './workspaceExpanded'
 import { headerMenuOf } from './workspaceHeaderMenu'
+import { RemoveQueueDialog } from './queueOverlays'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceFileTab'
 import { repositoryOverlay } from './workspaceRepositoryOverlay'
@@ -263,5 +264,13 @@ export function workspaceOverlay(
       return null
     case 'expanded-page':
       return mobile ? null : expandedPage(state)
+    case 'remove-from-queue':
+      return (
+        <RemoveQueueDialog
+          state={state.queue}
+          viewport={viewport}
+          workspace={workspace}
+        />
+      )
   }
 }

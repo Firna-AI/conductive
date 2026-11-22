@@ -52,6 +52,8 @@ screen draw them. The child pages:
   the note of Continue in the session. Its variants have the changed files
   that moved to the new branch, and the note of a Continue by another
   member.
+- `app/banner/merge-queue` has the bar of a queued workspace, as the next
+  part of this page gives.
 
 On each page, the row of the workspace in the list shows the GitHub state
 of the bar, in the tone of the bar: grey while checks run and for a draft,
@@ -62,6 +64,46 @@ merge, show the dim mark.
 
 The flow `user-flows/merge-and-continue` goes from Ready to merge through
 the merge and Continue to the next task.
+
+## The merge queue
+
+`app/banner/merge-queue` draws the bar of the merge queue of the plan
+`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026.
+Its canonical screen has Checkout address autocomplete just after Add to
+merge queue: place 3 of 3 of the queue of acme/storefront, while its
+checks run. A line under the bar names the place and the pull request
+below it, "Place 3 of 3 in the merge queue. It builds on #479.", and ends
+with Remove from queue. The sidebar shows the row in the Merge queue
+group. On a phone the compact row says Queue 3 of 3, and the line stands
+at the top of the Checks tab. The `queue` state of the workspace screen,
+from `src/screens/queueBarStates.ts`, draws the pages. Its child pages:
+
+- `app/banner/merge-queue/add` has Add to merge queue, the outline button
+  after Squash and merge (decision 317). Beside a main action in a column
+  narrower than 540 px, it shows only its icon. Its variants have the
+  button after Fix checks, alone while the checks run, and in the
+  workspace menu of the header.
+- `app/banner/merge-queue/queued` has the bottom layer, place 1, which
+  builds on main. Its `restack` variant has the restack fix turn that the
+  queue sends as a message of the queuer, with a spinner in the line. Its
+  `rebase` variant has the fix turn of a conflict, whose prompt asks for a
+  rebase onto the branch below, not a merge.
+- `app/banner/merge-queue/merge` has Merge with 2 ahead, while each layer
+  is in the stack and ready (decision 316 D). Its variants have the merge
+  that runs, a Merge that waits for a lower layer, and the Merge of the
+  bottom layer, which keeps its own label.
+- `app/banner/merge-queue/attention` has an entry that needs attention:
+  an amber line with the reason, Fix checks, and Add to merge queue, which
+  joins it again at the top. Its `merge-refused` variant has a merge that
+  GitHub refused, with Open on GitHub.
+- `app/banner/merge-queue/remove` has the question before Remove from
+  queue. Its `stack` variant has the question on the lower entry of a
+  member stack, which names the entry above it, because it leaves too.
+
+The other pages of the bar draw no part of the queue, so their pictures
+stay as they are. [The workspace menu, sub-workspaces, and the merge
+queue](catalogue-workspace-list.md) gives the pages of the Merge queue
+group.
 
 `app/new-workspace/start-branch/stacked` has the bar of a workspace that
 stacks on a branch, which names that base. Its `create-pr` variant has the

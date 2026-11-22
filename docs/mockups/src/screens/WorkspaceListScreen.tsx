@@ -27,6 +27,7 @@ import {
   newOrgs,
 } from './listStates'
 import { orderRail, orgOrderStates } from './orgOrderStates'
+import { mergeQueueStates } from './queueStates'
 import { subWorkspaceStates } from './subWorkspaceStates'
 import { workspaceMenuStates } from './workspaceMenuStates'
 import { MobileList } from './workspaceListMobile'
@@ -93,6 +94,11 @@ export const workspaceListSchema = {
      * `subWorkspaceStates` says. Without it, every row is top-level.
      */
     subWorkspaces: { enum: subWorkspaceStates },
+    /**
+     * The merge queues of Acme in the Merge queue group, as
+     * `mergeQueueStates` says. Without it, the list has no group.
+     */
+    mergeQueue: { enum: mergeQueueStates },
   },
 } as const
 
@@ -188,6 +194,9 @@ export function WorkspaceListScreen(props: {
     menu: listMenu(menu),
     focus: view?.focus ?? group?.focus,
     org: orgs.acme,
+    queue: view?.queue,
+    queueDrag: view?.queueDrag,
+    queueable: view?.queueable,
     sections: view?.sections ?? sectionsOf(list),
     viewer: view?.viewer ?? listViewer,
   })

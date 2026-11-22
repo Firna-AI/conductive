@@ -7,9 +7,12 @@ import { classes } from '../common/classes'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import { instanceKey } from '../../instanceKey'
 import { archivedGroup } from '../../entries/components/workspaces/ArchivedGroup.mockup'
+import { mergeQueueGroup } from '../../entries/components/workspaces/MergeQueueGroup.mockup'
 import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
+import { queueEntries } from './queue'
+import { groupDropOf, queueActionsOf, type ListQueue } from './queueList'
 import { RowDrop } from './RowDrop'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
 import type { RowControls } from './RowMenu'
@@ -113,21 +116,25 @@ function drawnOf(
  * drops the menus of the sections and of the rows, for a suspended org.
  * `viewer` is the person who looks at the list, whose role decides Archive
  * and the menu of each row. `focus` names the row whose menu, field, or
- * hover the view draws.
+ * hover the view draws. The props of `ListQueue` add the Merge queue group
+ * at the top, as `queueList.ts` says.
  */
-export function SectionList(props: {
-  sections: readonly SidebarSection[]
-  variant: Variant
-  menu?: ListMenu
-  menuStyle?: MenuStyle
-  drag?: ListDrag
-  archived?: readonly WorkspaceRow[]
-  archivedCollapsed?: boolean
-  readOnly?: boolean
-  viewer: Membership
-  focus?: RowFocus
-}) {
+export function SectionList(
+  props: {
+    sections: readonly SidebarSection[]
+    variant: Variant
+    menu?: ListMenu
+    menuStyle?: MenuStyle
+    drag?: ListDrag
+    archived?: readonly WorkspaceRow[]
+    archivedCollapsed?: boolean
+    readOnly?: boolean
+    viewer: Membership
+    focus?: RowFocus
+  } & ListQueue,
+) {
   const { viewer } = props
+  const groupDrop = groupDropOf(props)
   const drag = props.drag?.kind === 'workspace' ? props.drag : undefined
   const sectionDrag = props.drag?.kind === 'section' ? props.drag : undefined
   /** The dragged tree: its top-level row, then the rows under it. */
@@ -138,6 +145,8 @@ export function SectionList(props: {
     : []
   const dragged = tree.at(0)
   const moving = new Set(tree.map((row) => row.workspace.key))
+  // A row of a section on its way into the group stays faint in its place.
+  if (groupDrop?.kind === 'add') moving.add(groupDrop.row.workspace.key)
   const liftedSection = props.sections.find(
     (item) => item.section.key === sectionDrag?.section,
   )
@@ -152,11 +161,27 @@ export function SectionList(props: {
     sections: props.sections.map((item) => item.section.key),
     readOnly: props.readOnly ?? false,
     sheet: props.menuStyle === 'sheet',
+    ...defined({ queue: queueActionsOf(props) }),
   }
   const controlsOf = (row: WorkspaceRow) =>
     rowControls(row, props.focus, context)
+  const { queue } = props
   return (
     <div className={styles.sections}>
+      {queue && (queue.blocks.length > 0 || groupDrop) ? (
+        <mergeQueueGroup.Component
+          moklyInstance="merge-queue"
+          queue={queue}
+          variant={props.variant}
+          {...defined({
+            drawn: drawnOf(
+              queueEntries(queue).map((entry) => entry.row),
+              controlsOf,
+            ),
+            drop: groupDrop,
+          })}
+        />
+      ) : null}
       {props.sections.map((item, position) => {
         const { section } = item
         const target = drag?.section === section.key ? drag : undefined

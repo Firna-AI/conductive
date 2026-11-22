@@ -1,9 +1,9 @@
-# The catalogue: the workspace menu and sub-workspaces
+# The catalogue: the workspace menu, sub-workspaces, and the merge queue
 
 This page belongs to [the catalogue](catalogue.md), which lists each path
 of the catalogue, the rules of its folder pages, and the entries that
-moved. This page gives `app/workspace-menu` and `app/sub-workspaces`,
-with their child pages.
+moved. This page gives `app/workspace-menu`, `app/sub-workspaces`, and
+`app/merge-queue`, with their child pages.
 
 `app/workspace-menu` shows the menu of Apple Pay button, a row of the list
 of Acme, at the pointer of a right click: Move to section, Reassign to,
@@ -62,3 +62,49 @@ no collapse control. `subWorkspaces` of the list states, from
   member on the same row, with Rename and Copy link. Its `top-level`
   variant has the menu of the top-level row of the deepest tree, with Move
   to section and its sections, which move the whole tree.
+
+`app/merge-queue` draws the Merge queue group of the plan
+`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026.
+Its canonical screen has the list of Acme with the group at the top,
+above the sections. The group shows while a queue has entries, with one
+block for each queue, headed by its repository. A block lists the layers
+of its stack from place 1, the bottom layer, which merges first. Each row
+shows its place, its list mark in the colour of its checks, its name, and
+its step under the name. An entry that needs attention stands below the
+stack, under its label, with the alert icon in place of its place and its
+reason under its name. A queued workspace shows only in the group
+(decision 318 D). `mergeQueue` of the list states, from
+`src/screens/queueStates.tsx`, draws the pages, and
+`src/screens/queueSpecs.ts` holds the queues of each state. Its child
+pages:
+
+- `app/merge-queue/steps` has the merge of the two bottom layers, while
+  place 3 waits for its checks and place 4 gets its one fix turn. Its
+  `merged` variant has the list after that merge: the merged workspaces
+  back in their sections with the mark of a merge, and the other layers
+  from place 1 again. Its `empty` variant has the list after the last
+  merge, with no group.
+- `app/merge-queue/two-queues` has two blocks, acme/storefront and
+  acme/billing-service, in the order of the repositories of the org. Its
+  `collapsed` variant has the group collapsed, with the count of its
+  entries.
+- `app/merge-queue/stack` has a member stack as one unit (decision 315 A):
+  Saved carts on Checkout address autocomplete, at places 2 and 3, in one
+  outline. Its `drag` variant has the drag of the unit to place 1, with +1
+  on the lifted row.
+- `app/merge-queue/drag` has the drag of an entry to another place of its
+  block. Its `add` variant has a row of a section over the group, whose
+  block takes the outline of a drop target, with the line after its last
+  layer (decision 317 D). Its `zone` variant has the drop zone that the
+  group shows during a drag between sections, while no queue has entries.
+  Its `add-empty` variant has a row over that zone.
+- `app/merge-queue/sub-workspaces` has a queued parent and a queued
+  sub-workspace, whose sub-workspaces that are not queued move up a level,
+  as for an archived parent. Its `left` variant has the trees after the
+  parent left the queue.
+- `app/merge-queue/menu` has the menu of a row with Add to merge queue
+  after the line, before Archive. Its `queued` variant has the menu of a
+  queued row, with Remove from queue and no Move to section.
+
+The other pages of the list draw no queue. The pages of the bar of a
+queued workspace are in [the pull request bar](catalogue-bar.md).

@@ -3,8 +3,8 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the pull
 request bar: its one main action in each state, the line under the bar,
-the branches and the actions on top of the Checks tab of a phone, and
-Continue.
+the branches and the actions on top of the Checks tab of a phone,
+Continue, and the merge queue.
 
 - The pull request bar shows one main action in each state, beside its
   links to GitHub, from decisions 220 to 228. `barModel.ts` in
@@ -72,3 +72,54 @@ Continue.
     `src/components/chat/` draws the note of Continue in each session,
     centred and muted, as the first line of a linked session. It takes no
     fixtures.
+
+## The merge queue
+
+The plan `plans/merge-queue.md` adds a merge queue for each repository,
+which lands its pull requests into the default branch as one GitHub
+stack (decisions 313 and 320). The bar shows the queue in two parts.
+`queueModel.ts` in `src/components/workspace/` holds the rule, and
+`queueCopy.ts` beside it holds the words. Both import no fixture, so the
+app can use them too. `barModel` reads the queue from the optional fact
+`queue`, so a bar without it shows no part of the queue.
+
+- Add to merge queue is an outline button after the main action, or alone
+  when the state has none, such as Checks running and Blocked. It takes
+  the form of Archive after a merge, from the design call of decision 317.
+  It shows on each state of an open pull request that is not queued, and
+  on an entry that needs attention, which it joins again at the top. It
+  needs write access, and a pull request whose unit targets the default
+  branch. `QueueAddButton` in `QueueBarParts.tsx` draws it. Beside a
+  main action in a bar narrower than 540 px, it shows only its icon in
+  the outline tone, with its name as a tooltip and for screen readers, as
+  a link to GitHub keeps only its mark. So the words of the state stay in
+  the right column of 440 px.
+- A queued workspace gets a line under the bar, after a message of the
+  bar. `QueueLineView` in `QueueBarParts.tsx` draws it with the parts of
+  that message. It names the place and the pull request below, such as
+  "Place 3 of 3 in the merge queue. It builds on #479.", and what the step
+  does, such as "Rebasing onto #479", with a spinner while a step runs. It
+  ends with Remove from queue, in the outline tone, for a member with write
+  access. Remove from queue asks first, and on the lower entry of a member
+  stack the question names the entries above it, which leave too. The
+  words say "builds on" and the place, not "above" or "below", because
+  the Merge queue group lists place 1, the bottom layer, first.
+- An entry that needs attention tints its whole line amber, with the alert
+  icon and its reason. A merge that GitHub refused ends the line with Open
+  on GitHub, before Remove from queue.
+- Merge on a queued workspace goes through the queue (decision 316 D). It
+  shows only while the layer and each layer below it are in the stack and
+  ready, and its label counts the layers ahead of it in the queue, such
+  as "Merge with 2 ahead". "Ahead" reads with the list, where place 1
+  shows first. The bottom layer keeps the label of its merge method, because
+  no layer lands with it. `queuedMerge` in `queueModel.ts` gives the rule.
+- While a workspace is queued, Resolve conflicts asks for a rebase onto
+  the branch below, with `git push --force-with-lease`, because a GitHub
+  stack needs a linear history. The fact `rebase` of the prompt facts in
+  `barCopy.ts` chooses it. `restackPrompt` beside it gives the fix turn
+  that moves a layer onto the newest head below it, with
+  `git rebase --onto`, and names the new head and the old base commit.
+- On a phone the compact row names the place, such as Queue 3 of 3, or
+  Needs attention in amber. The line stands at the top of the Checks tab,
+  above the buttons.
+

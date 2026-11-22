@@ -1,6 +1,11 @@
-import { agentPrompt, type AgentAction } from '../components/workspace/barCopy'
+import {
+  agentPrompt,
+  restackPrompt,
+  type AgentAction,
+} from '../components/workspace/barCopy'
 import { continuedBranch, promptFacts } from './barActions'
 import type { ChatItem } from './conversations'
+import { queuedPromptFacts, restackFacts } from './mergeQueue'
 import type { PersonKey } from './members'
 import { repositories } from './repositories'
 import { movedBranch, movedRepository } from './repositoryMove'
@@ -38,6 +43,8 @@ export const barConversationKeys = [
   'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
+  'sent-restack',
+  'sent-rebase-conflicts',
   'after-merge-running',
   'continued',
   'continued-by-member',
@@ -54,16 +61,24 @@ export const barRunningConversations: readonly BarConversationKey[] = [
   'sent-push',
   'sent-resolve-conflicts',
   'sent-address-review',
+  'sent-restack',
+  'sent-rebase-conflicts',
   'after-merge-running',
 ]
 
 /**
  * The message that an agent action sends, as a message of the member who
- * clicked, and the turn that it starts.
+ * clicked, and the turn that it starts. `text` takes the place of the
+ * prompt of the action, such as a fix turn of the merge queue, which goes
+ * as a message of the queuer.
  */
-function sent(action: AgentAction): readonly ChatItem[] {
+function sent(action: AgentAction, text?: string): readonly ChatItem[] {
   return [
-    { kind: 'user', id: 'action', text: agentPrompt(action, promptFacts) },
+    {
+      kind: 'user',
+      id: 'action',
+      text: text ?? agentPrompt(action, promptFacts),
+    },
     { kind: 'working', id: 'working', elapsed: '6s' },
   ]
 }
@@ -81,7 +96,8 @@ function continued(by: PersonKey): ContinuedItem {
 /**
  * Each agent action after the turn that pushed the branch: Create pull
  * request after the turn that a stop cut off, and the others after the
- * turn that opened #482. Then a turn that runs after the merge, the
+ * turn that opened #482, also the restack and the rebase of conflicts that
+ * the merge queue sends. Then a turn that runs after the merge, the
  * note of Continue, from Cal and from Priya, and the note of a repository
  * change.
  */
@@ -102,6 +118,18 @@ export function barConversations(turns: {
     'sent-push': [...history, ...sent('push')],
     'sent-resolve-conflicts': [...history, ...sent('resolve-conflicts')],
     'sent-address-review': [...history, ...sent('address-review')],
+    // The fix turns of the merge queue, as messages of Cal, who queued #482.
+    'sent-restack': [
+      ...history,
+      ...sent('resolve-conflicts', restackPrompt(restackFacts)),
+    ],
+    'sent-rebase-conflicts': [
+      ...history,
+      ...sent(
+        'resolve-conflicts',
+        agentPrompt('resolve-conflicts', queuedPromptFacts),
+      ),
+    ],
     'after-merge-running': [
       ...history,
       {

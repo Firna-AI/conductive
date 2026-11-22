@@ -150,6 +150,28 @@ sessions as tabs above the chat, and four tabs at the bottom.
   selected. `RowMenu.module.css` styles the field, and
   `PointMenu.module.css` in `src/components/common/` styles the menu at
   the pointer.
+- The Merge queue group stands at the top of the list, above the
+  sections, while a queue has entries, as `app/merge-queue` shows. It is
+  the app's own group, as Archived is: it has no menu, and it collapses
+  with the count of its entries. It holds one block for each queue,
+  headed by its repository, in the order of the repositories of the org.
+  A block lists the layers of its stack from place 1, which merges first,
+  then the entries that need attention under their label. A row is two
+  lines: its place, its list mark, and its name, then its step in the
+  muted colour, such as "Rebasing onto #479". An entry that needs
+  attention shows the alert icon in place of its place. A member stack
+  keeps its rows in one outline, a box with a neutral border on every
+  side. A drag of an entry lifts its unit, and the line falls only
+  between two units of its block. A row of a section over the group gives
+  the block of its repository the outline and the soft fill of a drop
+  target. During a drag while no queue has entries, the group shows as a
+  zone with a dashed outline. `MergeQueueGroup.tsx`, `QueueBlock.tsx`, and
+  `QueueRow.tsx` in `src/components/workspaces/` draw it, with
+  `MergeQueue.module.css`. A queued workspace leaves its section, and
+  `withTrees` places its sub-workspaces with the rule of an archived
+  parent (decision 318 D). The menu of a row whose pull request can join
+  adds Add to merge queue after the line, before Archive, and the menu of
+  a queued row has Remove from queue and no Move to section.
 - `OrgRail` in `src/components/layout/` draws the order of the orgs that
   each person keeps, from decisions 515 to 517, as `app/orgs/reorder`
   shows. A drag of a tile looks like the drag of a tab and of a workspace

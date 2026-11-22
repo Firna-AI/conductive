@@ -3,6 +3,7 @@ import { SectionList } from '../../../components/workspaces/SectionList'
 import { sectionDrag } from '../../../fixtures/sections'
 import { workspaceDrag } from '../../../fixtures/workspaces'
 import { acmeSections, adminViewer } from './listPages'
+import { mergeQueueSchema, queueDragSchema } from './queueSchemas'
 import { listDragSchema, listMenuSchema, rowFocusSchema } from './rowSchemas'
 import {
   membershipSchema,
@@ -23,6 +24,12 @@ export const sectionListProperties = {
   viewer: membershipSchema,
   /** The row whose menu, field, or hover the view draws. */
   focus: rowFocusSchema,
+  /** The Merge queue group at the top of the list. */
+  queue: mergeQueueSchema,
+  /** A drag that the Merge queue group draws. */
+  queueDrag: queueDragSchema,
+  /** The rows whose menus offer Add to merge queue. */
+  queueable: { type: 'array', items: { type: 'string' } },
 } as const
 
 /**
@@ -58,6 +65,9 @@ export const sectionList = defineComponent({
       focus={props.focus}
       menu={props.menu}
       menuStyle={props.menuStyle}
+      queue={props.queue}
+      queueDrag={props.queueDrag}
+      queueable={props.queueable}
       readOnly={props.readOnly}
       sections={props.sections}
       variant={props.variant}

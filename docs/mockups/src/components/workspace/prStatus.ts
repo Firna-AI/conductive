@@ -44,9 +44,11 @@ export function hasPullRequest(
 /**
  * The state of a pull request, as its bar and its row show it. A state
  * that blocks the merge until someone acts on GitHub takes the warning
- * tone, and failed checks the danger tone.
+ * tone, and failed checks the danger tone. `base` names the branch of a
+ * conflict, such as the branch below a queued workspace. Without it, the
+ * default branch.
  */
-export function prStatus(state: PullRequestState): PrStatus {
+export function prStatus(state: PullRequestState, base?: string): PrStatus {
   const checks = checksByState[state]
   const failed = checks.filter((check) => check.state === 'failed').length
   const done = checks.filter((check) => check.state !== 'running').length
@@ -88,7 +90,7 @@ export function prStatus(state: PullRequestState): PrStatus {
         ...still,
         icon: GitMergeConflict,
         text: 'Merge conflict',
-        detail: `with ${mergedInto.branch}`,
+        detail: `with ${base ?? mergedInto.branch}`,
         tone: 'warning',
       }
     case 'changes-requested':

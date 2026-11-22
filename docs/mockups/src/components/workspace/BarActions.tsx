@@ -1,9 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
-import { ArrowRight, CircleAlert, Clock, GitBranch, Info } from 'lucide-react'
+import { CircleAlert, Clock, Info } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
+import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
+import { queuePaths } from '../../queuePaths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
@@ -14,16 +15,15 @@ import {
   agentActionLabels,
   barLabels,
   barMessageText,
-  mergeLabels,
+  type AgentAction,
   type BarMessageKind,
 } from './barCopy'
 import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
-import {
-  barGitHubLink,
-  githubLink,
-} from '../../entries/components/workspace/barParts.mockup'
-import { barTint, hasPullRequest } from './prStatus'
+import { queuedMergeLabel } from './queueCopy'
+import { QueueAddButton } from './QueueBarParts'
+import { githubLink } from '../../entries/components/workspace/barParts.mockup'
+import { barTint } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from './BarActions.module.css'
 
@@ -36,12 +36,15 @@ import styles from './BarActions.module.css'
  * because the link of the mockups needs the button as its own child. On
  * desktop, the tooltip of a button that takes a click names the key of its
  * command, such as "Create PR (⇧⌘P)". Each button without a tint takes the
- * outline tone, so the colour of the bar shows through it.
+ * outline tone, so the colour of the bar shows through it. On a queued
+ * workspace, Resolve conflicts asks for a rebase, and Merge goes through
+ * the queue with the layers below it.
  */
 function BarButton(props: {
   action: BarAction
   localWork: boolean
   tint: ButtonTint | undefined
+  queued: boolean
 }) {
   const { action, tint } = props
   // Only a tint fills the main action. A bar without one shows the outline.
@@ -55,7 +58,7 @@ function BarButton(props: {
           moklyInstance="agent-tip"
         >
           <TintedTheme tint={tint}>
-            <ScreenLink asChild to={barPaths.sent[action.action]}>
+            <ScreenLink asChild to={sentPath(action.action, props.queued)}>
               <actionButton.Component
                 icon={iconKeyOf(agentIcons[action.action])}
                 moklyInstance={`agent-${action.action}`}
@@ -67,28 +70,32 @@ function BarButton(props: {
           </TintedTheme>
         </shortcutTip.Component>
       )
-    case 'merge':
+    case 'merge': {
+      const label = queuedMergeLabel(action.method, action.below)
+      const to =
+        action.below === undefined ? barPaths.merging : queuePaths.merging
       return (
         <shortcutTip.Component
           command="merge-pull-request"
-          label={mergeLabels[action.method]}
+          label={label}
           moklyInstance="merge-tip"
           off={action.busy}
         >
           <TintedTheme tint={tint}>
-            <ScreenLink asChild to={barPaths.merging}>
+            <ScreenLink asChild to={to}>
               <actionButton.Component
                 busy={action.busy}
                 icon="git-merge"
                 moklyInstance="merge-pull-request"
                 tone={tone}
               >
-                {action.busy ? barLabels.merging : mergeLabels[action.method]}
+                {action.busy ? barLabels.merging : label}
               </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
         </shortcutTip.Component>
       )
+    }
     case 'ready':
       return (
         <shortcutTip.Component
@@ -188,17 +195,38 @@ function BarButton(props: {
   }
 }
 
-/** The buttons of the bar, in order: the main action first. */
+/**
+ * The screen of the message that an agent action sends. On a queued
+ * workspace, Resolve conflicts sends the rebase variant of its prompt.
+ */
+function sentPath(action: AgentAction, queued: boolean): string {
+  if (queued && action === 'resolve-conflicts') return queuePaths.rebase
+  return barPaths.sent[action]
+}
+
+/**
+ * The buttons of the bar, in order: the main action first, then Add to
+ * merge queue when the pull request can join the queue.
+ */
 export function BarButtons(props: { bar: BarModel }) {
-  const tint = barTint(props.bar.banner)
-  return props.bar.actions.map((action) => (
-    <BarButton
-      action={action}
-      key={action.kind}
-      localWork={props.bar.localWork}
-      tint={tint}
-    />
-  ))
+  const { bar } = props
+  const tint = barTint(bar.banner)
+  return (
+    <>
+      {bar.actions.map((action) => (
+        <BarButton
+          action={action}
+          key={action.kind}
+          localWork={bar.localWork}
+          queued={bar.queue?.line !== undefined}
+          tint={tint}
+        />
+      ))}
+      {bar.queue?.add ? (
+        <QueueAddButton beside={bar.actions.length > 0} />
+      ) : null}
+    </>
+  )
 }
 
 /** The icon of each status under the bar. A refusal shows `CircleAlert`. */
@@ -240,56 +268,6 @@ export function BarMessage(props: {
           href={pullRequest.url}
           label={barLabels.openOnGitHub}
         />
-      ) : null}
-    </div>
-  )
-}
-
-/**
- * The branch and its base at the top of the Checks tab of a phone, where
- * Create PR stands (decision 306). They take the parts of the desktop bar.
- * The names wrap, and the base keeps its arrow on a line of its own, so
- * each name shows in full: a phone has no tooltip.
- */
-function ChecksBranches(props: { workspace: Workspace }) {
-  const { workspace } = props
-  return (
-    <div className={styles.branches}>
-      <GitBranch className={styles.branchIcon} size={13} />
-      <span className={styles.names}>
-        <span className={styles.branch}>{workspace.branch}</span>
-        <span className={styles.base}>
-          <ArrowRight className={styles.branchIcon} size={12} />
-          <span className={styles.baseName}>{baseBranchOf(workspace)}</span>
-        </span>
-      </span>
-    </div>
-  )
-}
-
-/**
- * The top of the Checks tab of a phone: the message of the bar, then its
- * actions and its link to GitHub. While the branch has no pull request, the
- * branch and its base stand above the actions, also when the bar has none.
- * The row above opens this tab, because a button cannot sit inside the link
- * of the row.
- */
-export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
-  const { bar } = props
-  const branches = !hasPullRequest(bar.banner)
-  const buttons = bar.actions.length > 0 || bar.link !== undefined
-  if (!bar.message && !buttons && !branches) return null
-  return (
-    <div aria-label="Pull request actions" className={styles.top} role="group">
-      {bar.message ? (
-        <BarMessage kind={bar.message} workspace={props.workspace} />
-      ) : null}
-      {buttons || branches ? (
-        <div className={styles.buttons}>
-          {branches ? <ChecksBranches workspace={props.workspace} /> : null}
-          <BarButtons bar={bar} />
-          {bar.link ? <barGitHubLink.Component /> : null}
-        </div>
       ) : null}
     </div>
   )

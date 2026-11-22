@@ -91,6 +91,9 @@ export function MobileList(props: {
           menu: listMenu(menu),
           newWorkspaceTo: fresh?.newWorkspaceTo,
           org: fresh ? fresh.org : orgs.acme,
+          queue: view?.queue,
+          queueDrag: view?.queueDrag,
+          queueable: view?.queueable,
           sections,
           viewer: view?.viewer ?? listViewer,
         })}
