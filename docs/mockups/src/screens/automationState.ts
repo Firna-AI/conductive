@@ -27,6 +27,8 @@ export const automationStateSchema = {
     'login',
     'modelMenu',
     'capabilities',
+    'computer',
+    'computerMenu',
   ],
   properties: {
     /** A new automation, a draft of one, or a saved automation of Acme. */
@@ -87,6 +89,15 @@ export const automationStateSchema = {
      * phone (automation capabilities decision 1 A).
      */
     capabilities: { enum: ['closed', 'open'] },
+    /**
+     * The computer of the run workspaces (own computer decision 3 A):
+     * `none` for an org without own computers, which shows no choice, the
+     * cloud computer, the own computer build-01, or old-runner, an own
+     * computer that an admin removed, so the automation turned off.
+     */
+    computer: { enum: ['none', 'cloud', 'own', 'removed'] },
+    /** The menu of the computer choice, which only the owner opens. */
+    computerMenu: { enum: ['closed', 'open'] },
   },
 } as const
 
@@ -105,6 +116,8 @@ export const ownerAutomation: AutomationState = {
   login: 'own',
   modelMenu: 'closed',
   capabilities: 'closed',
+  computer: 'none',
+  computerMenu: 'closed',
 }
 
 /**
@@ -121,12 +134,15 @@ export function viewerOf(state: AutomationState): PersonKey {
 
 /**
  * The automation of a state. A new automation belongs to the person who
- * creates it, so its owner is the person signed in.
+ * creates it, so its owner is the person signed in. An automation whose
+ * own computer an admin removed turned off.
  */
 export function automationOf(state: AutomationState): Automation {
   const automation = automations[state.automation]
-  if (automation.saved) return automation
-  return { ...automation, owner: people[viewerOf(state)] }
+  const owned = automation.saved
+    ? automation
+    : { ...automation, owner: people[viewerOf(state)] }
+  return state.computer === 'removed' ? { ...owned, active: false } : owned
 }
 
 export function accessOf(

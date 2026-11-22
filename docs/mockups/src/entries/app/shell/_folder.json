@@ -1,1 +1,1 @@
-{ "order": ["starting", "stopped", "error", "refused"] }
+{ "order": ["starting", "stopped", "error", "refused", "own-computer"] }

@@ -64,6 +64,19 @@ export const buildSchema = {
   },
 } as const
 
+/** A build that failed, as `FailedBuild`, with the message that the app saved. */
+const failedBuildSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['when', 'result', 'duration', 'error'],
+  properties: {
+    when: { type: 'string' },
+    result: { const: 'failed' },
+    duration: { type: 'string' },
+    error: { type: 'string' },
+  },
+} as const
+
 /** The lines of the log of a build. */
 const logSchema = { type: 'array', items: terminalLineSchema } as const
 
@@ -86,6 +99,11 @@ const orgBuildsProperties = {
       ended: logSchema,
     },
   },
+  /**
+   * The build of a failed state, when it is not a build of the cloud
+   * computer, such as a build of an own computer.
+   */
+  failed: failedBuildSchema,
 } as const
 
 /** The builds of an org as JSON, as `OrgBuilds`. */

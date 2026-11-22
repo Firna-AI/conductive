@@ -34,6 +34,13 @@ import {
   branchSheet,
 } from './newWorkspaceBranches'
 import { branchSendTo } from './newWorkspaceBranchScreens'
+import {
+  computerControl,
+  computerNote,
+  computerNotice,
+  computerSendTo,
+  computerSheet,
+} from './newWorkspaceComputers'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { newWorkspaceStart } from '../entries/components/screens/newWorkspaceStart.mockup'
 import { defined, plainData } from '../defined'
@@ -90,14 +97,21 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
   if (refused) {
     notices.unshift(branchRefusal(state.result, page.repository.name, 'page'))
   }
+  const computerWait = computerNotice(state)
+  if (computerWait) notices.push(computerWait)
   const menuOpen = state.repositoryMenu === 'open'
   // A first message with files leads to the screen of its queued files.
   // The file screens draw the Saved carts task of Acme, so the attach button
   // of Firna and of a linked task leads nowhere.
   // A picked branch that the form targets leads to the stacked workspace.
-  const created =
+  // An own computer leads to its own start, also after a picked branch.
+  const cloudSend =
     branchSendTo(state) ??
     (state.files === 'ready' ? paths.attachmentsQueued : paths.creating)
+  const created =
+    state.computer === 'none' || state.computer === 'cloud'
+      ? cloudSend
+      : computerSendTo(state)
   const fastMenu = state.modelMenu === 'open-fast'
   const box = composerData({
     attachments: draft.files,
@@ -159,10 +173,16 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
             moklyInstance="start"
             page={plainData(page)}
             {...defined({
+              computer: computerControl({
+                state,
+                surface: 'page',
+                mobile: props.viewport === 'mobile',
+              }),
               menu:
                 menuOpen && props.viewport === 'desktop'
                   ? repositoryMenu(page, state.waitingBuild)
                   : undefined,
+              note: computerNote(state, page.org.name),
             })}
           />
         ),
@@ -229,7 +249,7 @@ export function NewWorkspaceScreen(props: {
     return (
       <mobileFrame.Component>
         {page}
-        {sheet ?? branchMenu}
+        {sheet ?? branchMenu ?? computerSheet(state)}
         {state.org === 'suspended'
           ? null
           : newWorkspaceCapabilitiesSheet(state)}

@@ -11,6 +11,7 @@ import {
   SwitchDialog,
 } from '../components/operator/SwitchDialogs'
 import {
+  hexwaveComputers,
   orgPages,
   suspendedDeletedOrg,
   type OrgPage,
@@ -32,7 +33,7 @@ import {
 export const operatorOrgSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['status', 'switch', 'build', 'accounts', 'dialog'],
+  required: ['status', 'switch', 'build', 'accounts', 'computers', 'dialog'],
   properties: {
     /**
      * The org: in use, suspended by an operator, deleted by an admin, or
@@ -51,6 +52,11 @@ export const operatorOrgSchema = {
     /** The configured accounts: boat and e2b, or also e2b-us. */
     accounts: { enum: ['two', 'three'] },
     /**
+     * The own computers of the org: none, or three, whose number and states
+     * the page shows without their names or their content.
+     */
+    computers: { enum: ['none', 'some'] },
+    /**
      * The question over the page: before a suspension, a lift, a switch of
      * the account, or Stop switch.
      */
@@ -66,6 +72,7 @@ export const hexwavePage: OperatorOrgState = {
   switch: 'none',
   build: 'none',
   accounts: 'two',
+  computers: 'none',
   dialog: 'none',
 }
 
@@ -118,13 +125,16 @@ function OrgAction(props: { org: OrgPage; flow: Flow }) {
   )
 }
 
-/** The org of the page, in the state of its switch. */
+/** The org of the page, in the state of its switch and its own computers. */
 function orgOf(state: OperatorOrgState): OrgPage {
   const page =
     state.status === 'deleted-suspended'
       ? suspendedDeletedOrg
       : orgPages[state.status]
-  return withSwitch(page, state.switch, state.build === 'running')
+  const org = withSwitch(page, state.switch, state.build === 'running')
+  return state.computers === 'some'
+    ? { ...org, ownComputers: hexwaveComputers }
+    : org
 }
 
 /** The question over the page, or none. */

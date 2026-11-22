@@ -71,7 +71,7 @@ export const newWorkspaceStart = defineComponent({
   slug: 'start',
   title: 'Start',
   description:
-    'The start of the empty chat of the New workspace page, with the repository of the new workspace as a compact picker, and the branch control directly right of it when the page supplies one. The note names the build that the workspace starts from. An org without chosen repositories asks an admin to choose them first, and tells a member that an admin chooses them. While the repository of the form waits for its build, the notice over the composer says when it is ready, so the note gives way. Its own page shows the start in Acme.',
+    'The start of the empty chat of the New workspace page, with the repository of the new workspace as a compact picker, and the branch control directly right of it when the page supplies one. An org with own computers adds the computer choice after the branch control. The note names the build that the workspace starts from, on the cloud computer or on the own computer of the form. An org without chosen repositories asks an admin to choose them first, and tells a member that an admin chooses them. While the repository of the form waits for its build, the notice over the composer says when it is ready, so the note gives way. Its own page shows the start in Acme.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -84,16 +84,20 @@ export const newWorkspaceStart = defineComponent({
       admin: { type: 'boolean' },
       /** The open repository menu, on a computer. */
       menu: menuSchema.properties.entries,
+      /** The note of an own computer, in place of the note of the cloud. */
+      note: { type: 'string' },
     },
   } as const,
-  slots: ['branch'],
+  slots: ['branch', 'computer'],
   props: { page: acmePage, chosen: true, admin: true },
   render: (props) => (
     <Start
       admin={props.admin}
       branch={props.branch}
       chosen={props.chosen}
+      computer={props.computer}
       menu={props.menu}
+      note={props.note}
       page={props.page}
     />
   ),

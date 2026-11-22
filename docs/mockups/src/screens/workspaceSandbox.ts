@@ -19,6 +19,7 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus, OpenableWorkspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { computerRefusal, computerStartError } from './workspaceComputer'
 import { explainActivity } from './explainModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -155,12 +156,12 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
         reason:
           state.org === 'suspended'
             ? orgSuspendedReason
-            : ownerSuspendedRefusal,
+            : (computerRefusal(state) ?? ownerSuspendedRefusal),
       }
     case 'error':
       return {
         problem: 'error',
-        message: startErrors[state.startError],
+        message: computerStartError(state) ?? startErrors[state.startError],
         firstStart: beforeFirstStart(state),
       }
     case 'stopped':

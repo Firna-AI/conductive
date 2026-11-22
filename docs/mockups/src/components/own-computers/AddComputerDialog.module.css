@@ -1,0 +1,43 @@
+/* The install command, in the mono type, with Copy at its end. */
+.command {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-raised);
+}
+
+.commandText {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 0;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+/* A short word of the command, which a line of the box never splits. */
+.word {
+  white-space: nowrap;
+}
+
+/* A muted line, such as what the code and the server need. */
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+/* The wait for the first connection. */
+.waiting {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+}

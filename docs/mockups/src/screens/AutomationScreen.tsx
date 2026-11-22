@@ -14,6 +14,10 @@ import {
   automationCapabilityControl,
   automationCapabilitySheet,
 } from './automationCapabilities'
+import {
+  automationComputer,
+  automationComputerSheet,
+} from './automationComputer'
 import { AutomationFrame } from './automationFrame'
 import { AutomationNotShown } from './automationNotShown'
 import {
@@ -108,6 +112,7 @@ export function AutomationScreen(props: {
           ? automationCapabilityControl(state, automation, viewport)
           : undefined
       }
+      computer={automationComputer(state, viewport)}
       suspended={suspended}
       viewer={viewerOf(state)}
       viewport={viewport}
@@ -137,6 +142,7 @@ export function AutomationScreen(props: {
           <>
             <PhoneSheet edits={edits} menu={menu} />
             {owner ? automationCapabilitySheet(state, automation) : null}
+            {owner ? automationComputerSheet(state) : null}
             {dialog}
           </>
         ) : (

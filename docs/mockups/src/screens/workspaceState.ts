@@ -16,6 +16,11 @@ import { archiveStateProperties } from './archiveState'
 import { barStateDefaults, barStateKeys, barStateProperties } from './barState'
 import { tabStates, temporaryTabStates } from './chatStates'
 import {
+  computerStateDefaults,
+  computerStateKeys,
+  computerStateProperties,
+} from './computerState'
+import {
   composerStateDefaults,
   composerStateKeys,
   composerStateProperties,
@@ -58,6 +63,7 @@ export const workspaceStateSchema = {
     'workspace',
     'name',
     'sandbox',
+    ...computerStateKeys,
     'startError',
     'conversation',
     'fold',
@@ -105,6 +111,7 @@ export const workspaceStateSchema = {
     sandbox: {
       enum: ['ready', 'starting', 'stopped', 'error', 'refused', 'archived'],
     },
+    ...computerStateProperties,
     /**
      * The message that the app saved for a start that failed, which the
      * error state shows: a failure, or the 20-minute limit of a start.
@@ -235,6 +242,7 @@ export const readyWorkspace: WorkspaceState = {
   workspace: 'checkout-autocomplete',
   name: 'title',
   sandbox: 'ready',
+  ...computerStateDefaults,
   startError: 'failed',
   conversation: 'history',
   fold: 'closed',

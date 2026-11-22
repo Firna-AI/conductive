@@ -5,8 +5,9 @@ layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the long runs, the Waitlist tab, the codes, and the
 approval email of the operator section. It also gives Suspend, Lift, and
 Approve, the daily chart, the notice of a pause, the waitlist switch, the
-Providers tab, the account of each org, the switch of that account, and
-the account choice of an operator on Create org.
+Providers tab, the account of each org, the switch of that account, the
+own computers of an org, and the account choice of an operator on Create
+org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
   Invite codes, Providers, and Settings, from `OperatorPage` in
@@ -155,6 +156,13 @@ the account choice of an operator on Create org.
   the page of the org.
   Create org in the rail and in the org switcher of an operator opens this
   form. Nobody else sees the choice.
+- The Own computers box sits between Provider account and Workspaces on
+  the page of an org that has own computers, from `OwnComputerCounts` in
+  `src/components/operator/`. It gives the number of own computers of the
+  org, the count of each state with its glyph, and how many workspaces run
+  on them now, in the rows of the workspaces by state. A state with no
+  computer stays quiet. The box names no computer and shows nothing of its
+  work, and an org without own computers shows no box.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
   choice live in `providerCopy.ts`. It imports no fixture, so the app uses

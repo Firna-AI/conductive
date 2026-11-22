@@ -14,7 +14,7 @@ import { workspaceLabel } from '../workspaces/label'
 import rowMenu from '../workspaces/RowMenu.module.css'
 import { copyLinkButton } from '../../entries/components/workspace/CopyLinkButton.mockup'
 import type { CopyResult } from './CopyLinkButton'
-import { HeaderState } from './HeaderState'
+import { HeaderState, type OwnComputerLabel } from './HeaderState'
 import { NameMenuButton } from './NameMenuButton'
 import { ownerPicker } from '../../entries/components/workspace/OwnerPicker.mockup'
 import { RepositoryPicker } from './RepositoryPicker'
@@ -72,6 +72,8 @@ export function WorkspaceHeader(props: {
   menu?: readonly MenuEntryData[]
   /** Rename of the workspace menu put the field in place of the name. */
   renaming?: boolean
+  /** The own computer of the workspace, which the menu of the state names. */
+  computer?: OwnComputerLabel
 }) {
   const { workspace, name } = props
   const corner = useCornerControls()
@@ -151,6 +153,7 @@ export function WorkspaceHeader(props: {
         {owner}
         <HeaderState
           canRestart={props.canRestart}
+          computer={props.computer}
           open={props.stateOpen}
           phone
           status={props.status}
@@ -168,6 +171,7 @@ export function WorkspaceHeader(props: {
         {owner}
         <HeaderState
           canRestart={props.canRestart}
+          computer={props.computer}
           open={props.stateOpen}
           status={props.status}
         />

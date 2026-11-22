@@ -23,6 +23,7 @@ import { openPort } from '../fixtures/previews'
 import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
+import { computerStartLog } from './workspaceComputer'
 import { panelState } from './workspaceSandbox'
 import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
@@ -37,8 +38,9 @@ export function startingLogFor(state: WorkspaceState): StartingLog | undefined {
   if (state.sandbox !== 'starting') return undefined
   const run = runStartingLog(state)
   if (run) return run
-  if (!isNew(state)) return resumingLog
-  return state.name === 'untitled' ? firstSecondLog : creatingLog
+  if (!isNew(state)) return computerStartLog(state, resumingLog, true)
+  const log = state.name === 'untitled' ? firstSecondLog : creatingLog
+  return computerStartLog(state, log, false)
 }
 
 /**

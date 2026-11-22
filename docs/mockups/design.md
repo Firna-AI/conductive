@@ -249,6 +249,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [New workspace](design-new-workspace.md) gives the branch control of the
   page and of the dialog, its dropdown with the parts Start from and
   Target, and the refusals of the branch check.
+- [Own computers](design-own-computers.md) gives the Own computers tab of
+  the org settings, the page of one own computer, Add computer, the
+  computer choice of New workspace and of the automation form, an own
+  computer in a workspace, and the own computers on the operator page.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -356,8 +360,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   a wide desktop list. `SuspendedOrgAbove` puts the box above the page of
   a deleted org, at the width of a settings page. A suspended org shows no
   action that it refuses.
-- Copy says cloud computer or sandbox. No screen names Boat, also not the
-  marketing site or Get started.
+- Copy says cloud computer, own computer, or sandbox. No screen names Boat,
+  also not the marketing site or Get started.
 - A build of the cloud computer runs for at most 60 minutes, and a start of
   a sandbox for at most 20 minutes. A build that runs names its limit under
   its log. The start card does not name the limit of a start. A failed
@@ -441,8 +445,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the Waitlist tab, the codes, and the approval email. It also gives
   Suspend, Lift, and Approve, the daily chart, the notice of a pause, and
   the waitlist switch.
-- On a phone the org settings put their six tabs in three columns, on two
-  lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
+- On a phone the org settings put their seven tabs in three columns, on
+  three lines, so every tab shows. The session tabs all shrink, and the current one keeps the start
   of its title beside its close button. When the session tabs still do not
   fit, their row scrolls sideways. A phone tab stays 40 px high to touch,
   but its fill is 32 px high, with 4 px of the row above and below it.

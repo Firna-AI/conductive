@@ -11,13 +11,36 @@ import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.moc
 import styles from './HeaderState.module.css'
 import { restartableStates, restartCopy } from './restartCopy'
 
-/** The menu of the header state: Restart, and a note on what it does. */
-export function restartMenu(highlighted = false): MenuEntry[] {
-  return [
+/**
+ * The own computer of a workspace in its header: its name, which names the
+ * menu of the state, and the line that says where the workspace runs.
+ */
+export type OwnComputerLabel = { name: string; line: string }
+
+/**
+ * The menu of the header state: Restart, and a note on what it does. On
+ * an own computer, a line that names the computer comes first.
+ */
+export function restartMenu(
+  highlighted = false,
+  computer?: OwnComputerLabel,
+): MenuEntry[] {
+  const restart: MenuEntry[] = [
     { kind: 'item', label: restartCopy.item, icon: RotateCw, highlighted },
     { kind: 'divider' },
     { kind: 'note', text: restartCopy.note },
   ]
+  if (computer === undefined) return restart
+  return [
+    { kind: 'note', text: computer.line },
+    { kind: 'divider' },
+    ...restart,
+  ]
+}
+
+/** The name of the menu: the own computer, or else the cloud computer. */
+export function stateMenuLabel(computer?: OwnComputerLabel): string {
+  return computer?.name ?? restartCopy.menuLabel
 }
 
 /**
@@ -25,13 +48,14 @@ export function restartMenu(highlighted = false): MenuEntry[] {
  * cloud computer runs, the state is a button that opens the menu with
  * Restart. `open` draws the menu below it, and a phone shows the menu as a
  * sheet instead. The other states, and a read-only workspace, show the
- * state as plain text.
+ * state as plain text. `computer` names the own computer of the workspace.
  */
 export function HeaderState(props: {
   status: ActivityStatus
   canRestart: boolean
   open?: boolean
   phone?: boolean
+  computer?: OwnComputerLabel
 }) {
   const control = useControlSizes()
   const { label } = activityPresentation[props.status]
@@ -46,7 +70,7 @@ export function HeaderState(props: {
   }
   const button = (
     <Button
-      accessibilityLabel={`${label}. ${restartCopy.menuLabel} menu`}
+      accessibilityLabel={`${label}. ${stateMenuLabel(props.computer)} menu`}
       content={
         <span className={styles.state} style={{ fontSize: control.labelSize }}>
           {state}
@@ -72,8 +96,8 @@ export function HeaderState(props: {
       )}
       {props.open && !props.phone ? (
         <Menu
-          entries={restartMenu(true)}
-          label={restartCopy.menuLabel}
+          entries={restartMenu(true, props.computer)}
+          label={stateMenuLabel(props.computer)}
           placement="below-end"
         />
       ) : null}

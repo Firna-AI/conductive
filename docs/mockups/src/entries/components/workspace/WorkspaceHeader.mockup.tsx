@@ -57,6 +57,13 @@ export const workspaceHeader = defineComponent({
       menu: menuSchema.properties.entries,
       /** Rename put the field in place of the name. */
       renaming: { type: 'boolean' },
+      /** The own computer of the workspace, which the menu of the state names. */
+      computer: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['name', 'line'],
+        properties: { name: { type: 'string' }, line: { type: 'string' } },
+      },
     },
   } as const,
   props: {
@@ -71,6 +78,7 @@ export const workspaceHeader = defineComponent({
       back={props.back}
       canReassign={props.canReassign}
       canRestart={props.canRestart}
+      computer={props.computer}
       copy={props.copy}
       menu={props.menu}
       name={props.name}

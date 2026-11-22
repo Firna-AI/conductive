@@ -4,6 +4,7 @@
  * of a switch of the provider account in `operatorSwitch.ts`.
  */
 import type { AccountWorkspaces } from '../components/operator/AccountSection'
+import type { OrgComputerCounts } from '../components/operator/OwnComputerCounts'
 import type { LastSwitch, OrgSwitch } from '../components/operator/switchCopy'
 import type { StateCounts } from './operator'
 import type {
@@ -38,6 +39,8 @@ export type OrgPage = {
   lastSwitch?: LastSwitch
   /** The workspaces on each account, which show on more than one. */
   byAccount?: readonly AccountWorkspaces[]
+  /** The own computers of the org in each state, when it has some. */
+  ownComputers?: OrgComputerCounts
 }
 
 const hexwaveMembers: readonly OrgMember[] = [
@@ -95,4 +98,20 @@ export const orgPages: Readonly<Record<TargetStatus, OrgPage>> = {
 export const suspendedDeletedOrg: OrgPage = {
   ...orgPages.deleted,
   suspension: { since: '8 Nov at 14:35', by: account.login, stopping: 0 },
+}
+
+/**
+ * The own computers of Hexwave: one with room, one full, and one offline.
+ * Two of the three workspaces of Hexwave that run now run on them.
+ */
+export const hexwaveComputers: OrgComputerCounts = {
+  states: {
+    connected: 1,
+    full: 1,
+    offline: 1,
+    building: 0,
+    'build-failed': 0,
+    waiting: 0,
+  },
+  running: 2,
 }

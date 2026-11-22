@@ -19,6 +19,7 @@ const settingsTabKeys = [
   'general',
   'repositories',
   'computer',
+  'own-computers',
   'agents',
   'secrets',
   'members',
@@ -32,7 +33,7 @@ export const settingsTabs = defineComponent({
   slug: 'settings-tabs',
   title: 'Settings tabs',
   description:
-    'The parts of the org settings as tabs that link to each part: General, Repositories, Cloud computer, Agents, Secrets, and Members. Every person of the org sees the same tabs. On a phone, the tabs wrap to two lines. Its own page shows General.',
+    'The parts of the org settings as tabs that link to each part: General, Repositories, Cloud computer, Own computers, Agents, Secrets, and Members. Every person of the org sees the same tabs. On a phone, the tabs fill three columns on three lines. Its own page shows General.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -40,7 +41,7 @@ export const settingsTabs = defineComponent({
     required: ['tab'],
     properties: {
       tab: { enum: settingsTabKeys },
-      /** The tabs wrap to two lines, for a phone. */
+      /** The tabs fill three columns, for a phone. */
       wrap: { type: 'boolean' },
       /** The page of each tab, when it is not the page of Acme. */
       links: {
@@ -51,6 +52,7 @@ export const settingsTabs = defineComponent({
           general: pageSchema,
           repositories: pageSchema,
           computer: pageSchema,
+          'own-computers': pageSchema,
           agents: pageSchema,
           secrets: pageSchema,
           members: pageSchema,
@@ -66,7 +68,7 @@ export const settingsTabs = defineComponent({
     {
       slug: 'wrap',
       title: 'On a phone',
-      description: 'The tabs on two lines, with Members shown.',
+      description: 'The tabs in three columns, with Members shown.',
       props: { tab: 'members', wrap: true },
     },
     {

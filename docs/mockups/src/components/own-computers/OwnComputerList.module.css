@@ -1,0 +1,102 @@
+/* The list of the own computers. Its rows follow its own width. */
+.list {
+  container: computers / inline-size;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+/*
+ * A computer: its name and the line under it, then its state, and its
+ * workspaces or the action of a computer that never connected. The
+ * columns have one width in every row, so the states stay in line.
+ */
+.row {
+  display: grid;
+  grid-template-areas: 'text state usage';
+  grid-template-columns: minmax(0, 1fr) 156px 140px;
+  align-items: center;
+  column-gap: 12px;
+  min-height: var(--ui-touch-min);
+  padding: 8px 12px;
+  box-sizing: border-box;
+}
+
+.row + .row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.text {
+  display: flex;
+  grid-area: text;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.name,
+.nameLink {
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nameLink {
+  text-decoration: none;
+}
+
+.nameLink:hover {
+  color: var(--ui-link);
+  text-decoration: underline;
+}
+
+/* The size and the builds of the computer. */
+.meta {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-xs);
+  line-height: 1.45;
+}
+
+/* A later build that failed, while the computer still runs its good build. */
+.failed {
+  color: var(--ui-danger);
+}
+
+.state {
+  display: flex;
+  grid-area: state;
+  min-width: 0;
+}
+
+/* The workspaces, or the action of a computer that never connected. */
+.usage {
+  display: flex;
+  grid-area: usage;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * A narrow list, as on a phone: the name and the line under it, then the
+ * state and the workspaces or the action on a second line.
+ */
+@container computers (max-width: 520px) {
+  .row {
+    grid-template-areas:
+      'text text'
+      'state usage';
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 4px;
+  }
+
+  .usage {
+    justify-self: end;
+  }
+}

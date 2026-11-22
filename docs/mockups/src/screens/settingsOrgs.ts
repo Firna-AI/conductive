@@ -55,7 +55,7 @@ import {
   waitingBuildLog,
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
-import { paths } from '../paths'
+import { computerPaths, paths } from '../paths'
 import type { OrgSettingsState } from './orgSettingsState'
 
 /** The org whose settings show, and what its tabs hold. */
@@ -162,6 +162,7 @@ function firna(build: BuildState): SettingsOrg {
     links: {
       ...settingsLinks,
       computer: paths.firstBuildComputer,
+      'own-computers': computerPaths.settings.empty,
       secrets: paths.secretsEmpty,
     },
   }

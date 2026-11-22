@@ -1,4 +1,5 @@
 import { barModel, type BarModel } from '../components/workspace/barModel'
+import type { OwnComputerLabel } from '../components/workspace/HeaderState'
 import { defined } from '../defined'
 import { continuedBranch, viewerMergeMethod } from '../fixtures/barActions'
 import { pickedBranch } from '../fixtures/branches'
@@ -7,6 +8,7 @@ import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
 import { serviceControls } from './serviceState'
+import { headerComputer } from './workspaceComputer'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -70,17 +72,20 @@ function branchOf(state: WorkspaceState, workspace: Workspace): string {
  * The menus of the header that the state opens: the owner, the header
  * state, and the repository, or the change of the repository that runs. A
  * viewer whose service rows offer no Stop and no Restart cannot restart
- * the software either, so the header state is plain text.
+ * the software either, so the header state is plain text. The menu of the
+ * header state names the own computer of a workspace that runs on one.
  */
 export function headerMenusOf(state: WorkspaceState): {
   ownerOpen: boolean
   stateOpen: boolean
   repositoryControl?: 'open' | 'changing'
   canRestart?: false
+  computer?: OwnComputerLabel
 } {
   return {
     ownerOpen: state.overlay === 'reassign',
     stateOpen: state.overlay === 'restart',
+    computer: headerComputer(state),
     repositoryControl:
       state.repositoryMove === 'changing'
         ? 'changing'

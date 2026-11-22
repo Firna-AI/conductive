@@ -129,6 +129,11 @@ export type NewWorkspaceDialogProps = {
    * dropdown drawn open below it, as on the New workspace page.
    */
   branch?: ReactNode
+  /**
+   * The computer choice after the branch control, for an org with own
+   * computers, with its menu drawn open below it.
+   */
+  computer?: ReactNode
   /** The org and the section that the new workspace joins. */
   place: string
   /** The section that the new workspace joins, such as General. */
@@ -221,6 +226,7 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
             />
           ) : null}
           {props.branch}
+          {props.computer}
           <SectionPicker
             menu={props.sectionMenu}
             place={props.place}

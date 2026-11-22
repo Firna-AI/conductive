@@ -114,6 +114,15 @@ export const newWorkspaceFormProperties = {
   capabilities: {
     enum: ['closed', 'open', 'mac-access-on', 'menu', 'search', 'info'],
   },
+  /**
+   * The computer of the new workspace (own computer decision 3 A): `none`
+   * for an org without own computers, which shows no choice, the cloud
+   * computer, which is the default, or an own computer of Acme: build-01
+   * with room, lab-server, which is offline, or build-02, which is full.
+   */
+  computer: { enum: ['none', 'cloud', 'own', 'offline', 'full'] },
+  /** The menu of the computer choice, closed or drawn open. */
+  computerMenu: { enum: ['closed', 'open'] },
 } as const
 
 type FormProperty = keyof typeof newWorkspaceFormProperties

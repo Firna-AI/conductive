@@ -1,0 +1,17 @@
+/* The state of the computer, and when an offline computer was last seen. */
+.state {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.seen {
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}
+
+/* The field of the limit, which holds a small number. */
+.limit {
+  max-width: 320px;
+}

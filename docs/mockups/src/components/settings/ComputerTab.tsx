@@ -98,6 +98,8 @@ function buildsOf(computer: OrgComputer): OrgBuilds {
  * is not an admin (decision 57), and for everyone in a suspended org.
  * `envForm` opens a form of the env vars. `repositoryNotice` shows the
  * repository changes that the computer does not hold yet, under the intro.
+ * `ownComputers` marks an org with own computers, which build the same
+ * repositories, scripts, and env vars, so the intro says so.
  */
 export function ComputerTab(props: {
   org: string
@@ -109,6 +111,7 @@ export function ComputerTab(props: {
   envForm?: EnvVarForm
   /** The repository notice, while a repository change waits for a build. */
   repositoryNotice?: ReactNode
+  ownComputers?: boolean
 }) {
   const { computer } = props
   const changed = props.script === 'changed'
@@ -117,8 +120,9 @@ export function ComputerTab(props: {
   return (
     <>
       <tabIntro.Component moklyInstance="intro" title="Cloud computer">
-        The shared cloud computer of {props.org}. Every workspace starts from
-        it, with every repository of the org.
+        {props.ownComputers
+          ? `The shared cloud computer of ${props.org}. Each workspace on it starts from it, with every repository of the org. Own computers build the same repositories, scripts, and env vars.`
+          : `The shared cloud computer of ${props.org}. Every workspace starts from it, with every repository of the org.`}
         {props.readOnly === 'member' ? ' Only an admin can change it.' : null}
       </tabIntro.Component>
       {props.repositoryNotice}

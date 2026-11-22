@@ -33,6 +33,11 @@ plan limits.
   the secrets that they added, from secrets decision 3. Only an admin
   switches the mark for all agents and reveals a value, as
   `app/org-settings/secrets/member` shows.
+- Only an admin adds an own computer, sets its limit, and removes it, from
+  own computer decision 2 A. A member sees the Own computers tab and the
+  page of each computer read-only, without Add computer, the limit, Build
+  computer, or Remove computer, as `app/org-settings/own-computers/member`
+  shows. Every member chooses an own computer in New workspace.
 - Each session runs on its login: the agent login of the member who
   started it, or the org login of its org, from decision 1 B of the org
   logins plan, which the user chose on 16 November 2026. A session takes

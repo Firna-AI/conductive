@@ -1,7 +1,8 @@
 # Mockups
 
 The mockups are the visual spec of the app, in the browser and in a Mac app.
-Each workspace is a cloud sandbox with its own branch. It has a chat with
+Each workspace is a sandbox with its own branch, on the cloud computer or on
+an own computer of its org. It has a chat with
 coding agents, files, a terminal, port previews, and a pull request bar.
 The mockups also draw the marketing site, which shows the app to visitors.
 [Mokly](https://www.npmjs.com/package/@mokly/mokly) renders every screen at
@@ -55,8 +56,9 @@ desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
 of [the operator section](design-operator.md), of
-[the pull request bar](design-bar.md), and of
-[New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
+[the pull request bar](design-bar.md), of
+[New workspace](design-new-workspace.md), and of
+[own computers](design-own-computers.md). They also give [the marks](design-marks.md),
 [secrets and Capabilities](design-secrets.md),
 [the links in text](design-links.md),
 [the Markdown of replies](design-markdown.md), and
@@ -98,6 +100,11 @@ The [account](catalogue-account.md) page gives the child pages of
 the child pages of `app/workspace-menu` and `app/sub-workspaces`. The
 [first build and waiting repositories](catalogue-org-builds.md) page gives
 the first build of a new org and the repositories that wait for a build.
+The [own computers](catalogue-own-computers.md) page gives the Own
+computers tab of the org settings with its child pages, the computer
+choice of New workspace and of the automation form, a workspace on an own
+computer, the own computers on the operator page of an org, and their
+flows.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -143,7 +150,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/computerPaths.ts` for own computers |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
@@ -179,7 +186,9 @@ a dropped folder that the browser cannot read. The app shares these words.
   desktop columns: a drag of a handle, the right column, and the sidebar.
   `src/screens/serviceState.ts` holds the services of the Preview tool and
   what lies open over them, which `src/screens/workspaceServices.tsx`
-  draws. The pages of the services start from `servicesWorkspace` in
+  draws. `src/screens/computerState.ts` holds the computer of the
+  workspace: the cloud computer, or an own computer, which
+  `src/screens/workspaceComputer.ts` names in the start and in the header. The pages of the services start from `servicesWorkspace` in
   `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.

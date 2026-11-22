@@ -1,0 +1,11 @@
+/* The computer picker, which its open menu hangs from. */
+.anchor {
+  display: flex;
+  position: relative;
+  min-width: 0;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}

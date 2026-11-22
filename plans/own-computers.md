@@ -449,6 +449,65 @@ These are agent calls, made on 22 November 2026.
 - The operator section shows the number and the state of the own computers
   of each org, and no content.
 
+These are agent calls, made on 23 November 2026, for problems that the
+mockups of Milestone 1 showed.
+
+- The settings tab is named Own computers, and it follows Cloud computer.
+  Reason: users see the name "own computer", and a tab named Computers
+  beside Cloud computer reads as a list of every computer.
+- The computer choice of New workspace and of the automation form shows
+  only while the org has an own computer. It follows the branch control,
+  and Section in the automation form. Reason: a choice of one computer adds
+  nothing, and most orgs have none.
+- The menu of the choice keeps an own computer without a good build in its
+  place, off, with the note of when it is ready. An offline own computer
+  stays on, and a notice over the composer says that the workspace starts
+  when the computer connects. Reason: a computer without an image cannot
+  start a workspace, as a repository that waits for its build cannot, and
+  a start on an offline computer waits for it.
+- Each own computer reports its vCPUs, its memory, and its system at each
+  connection. The default limit is one workspace for each 4 vCPU and 8 GB,
+  and at least one. A lower limit stops no running workspace, and it
+  applies to the next starts. Reason: the default needs the size of the
+  server, and a change of a setting must not end running work.
+- Each own computer has a page in the org settings: its facts, its builds
+  in the build card of the Cloud computer tab, its limit, and Remove
+  computer. Reason: each computer builds its own image, so an admin needs
+  its log, its saved message, and Try again.
+- A build of the org, from Build computer, a saved repository change, or
+  the daily refresh, runs on the cloud computer and on each own computer,
+  at once or at its next connection. Build computer and Try again on the
+  page of an own computer build that computer alone. The Cloud computer tab
+  says that own computers build its repositories, scripts, and env vars.
+  Reason: one setup of the org reaches every computer, so a repository that
+  an admin adds reaches each computer before a workspace there uses it.
+- Add computer asks only for a name. The install command holds a one-time
+  code that works once, within 1 hour. Close keeps the code, and the list
+  shows the computer as Waiting to connect with Show command, or with New
+  code after the code expired. The dialog says that people with root access
+  to the server can read the work, the env vars, and the allowed secrets of
+  each workspace on it. Reason: the install can take minutes on the server,
+  a short life limits a stolen command, and own computer decision 2 names
+  that access as the risk.
+- Remove computer asks first. It stops each running workspace of the org on
+  the computer, then revokes the token of the computer. Its workspaces show
+  a refused start that names the computer. Reason: no workspace keeps
+  running where the app cannot reach it, and a refused start keeps the
+  chat.
+- An automation whose own computer an admin removed turns off, with a
+  notice, as after the removal of its repository. Its runs never move to
+  the cloud computer by themselves. Reason: a move would run the work in
+  another place than its owner chose.
+- In a workspace on an own computer, each text that names the cloud
+  computer of the workspace names the own computer: the first step of a
+  start, the saved message of a failed start, and the menu of the header
+  state, whose first line says where the workspace runs. Reason: a member
+  needs to know where the work runs when a start waits or fails.
+- The operator page of an org shows an Own computers box only when the org
+  has own computers: their number, the count of each state, and the
+  workspaces that run on them, without names. Reason: the design call above
+  allows the number and the state, and no content.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -457,24 +516,24 @@ Depends on: none
 
 Every screen that own computers add or change.
 
-- [ ] Add the Computers tab of the org settings: the list of own computers
+- [x] Add the Computers tab of the org settings: the list of own computers
       with name, state, workspaces that run, and the limit. Show the admin
       view and the read-only member view.
-- [ ] Add the Add computer flow: the name, the one-line install command
+- [x] Add the Add computer flow: the name, the one-line install command
       with its one-time code, the wait for the first connection, and an
       expired code.
-- [ ] Add the computer states: connected, offline, image build, image build
+- [x] Add the computer states: connected, offline, image build, image build
       failed, full, and Remove with its confirmation.
-- [ ] Add the computer choice to New workspace, as a page and as a dialog,
+- [x] Add the computer choice to New workspace, as a page and as a dialog,
       with the cloud computer as the default. Show an offline and a full
       own computer.
-- [ ] Add the computer choice to the automation form.
-- [ ] Show an own computer in the workspace: the start failure on an
+- [x] Add the computer choice to the automation form.
+- [x] Show an own computer in the workspace: the start failure on an
       offline computer with Try again, and the name of the computer where
       the cloud computer shows today.
-- [ ] Add the own computers of an org to the operator org page.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+- [x] Add the own computers of an org to the operator org page.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
 
 ## Milestone 2: Documentation and protocol
@@ -683,6 +742,9 @@ Depends on: 4
       automation. Keep the previous Worker working on the new schema.
 - [ ] Add the admin routes: add with a one-time code, list, set the limit,
       and remove.
+- [ ] Add the admin routes that the mockups show: a new code for a
+      computer that waits, the removal of a computer that never connected,
+      and a build of one computer.
 - [ ] Add the `/v1/computer` route and the computer object.
 - [ ] Test the org check, a stolen code, a removed computer, and a member
       who is not an admin.
@@ -696,6 +758,8 @@ Depends on: 3, 10
       report.
 - [ ] Publish the signed container base image with each deploy.
 - [ ] Add the container operations.
+- [ ] Report the vCPUs, the memory, and the system of the computer at each
+      connection, for the Own computers tab.
 
 ## Milestone 12: Workspaces on own computers
 
@@ -707,6 +771,8 @@ Depends on: 9, 11
 - [ ] Pass the computer choice through New workspace, sub-workspaces, the
       agent tools, and automations.
 - [ ] Add the counts of the operator section.
+- [ ] Let a repository that waits follow the build of the chosen computer
+      in New workspace.
 
 ## Milestone 13: Own computer screens
 

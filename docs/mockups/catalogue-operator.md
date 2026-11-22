@@ -50,9 +50,11 @@ shows stopped. Its child pages:
   the Files tab of a phone, whose panel shows the words of the org.
 - `app/orgs/suspended/new-workspace` has the New workspace page, which an
   old tab can still open. The refused bar takes the place of the composer.
-- `app/orgs/suspended/settings` has the six tabs, read-only also for an
+- `app/orgs/suspended/settings` has the seven tabs, read-only also for an
   admin. Its child page `app/orgs/suspended/settings/agents` has the
-  Agents tab of the org logins.
+  Agents tab of the org logins, and its child page
+  `app/orgs/suspended/settings/own-computers` has the own computers of the
+  org, which run no workspace, without Add computer.
 - `app/orgs/suspended/automations` has the automations of the org under its
   notice, without New automation, because a suspension takes away no read.
   Its child page `app/orgs/suspended/automations/automation` has an automation
@@ -101,6 +103,9 @@ pages:
   operator created on `e2b`.
 - `app/operator/org` has the page of an org, with its Provider account box
   and Switch account, the names of its members, and Suspend org. Its child
+  page `own-computers` has Hexwave with three own computers, whose number
+  and states show in their own box, as
+  [own computers](catalogue-own-computers.md) gives. Its other child
   pages have the switch of the account, which the next paragraph gives,
   the question before the suspension, the suspended org with Lift, the
   question before the lift, from decision 145, and a deleted org. The child

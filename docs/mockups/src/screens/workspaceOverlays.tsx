@@ -33,6 +33,7 @@ import { expandedPage } from './workspaceExpanded'
 import { headerMenuOf } from './workspaceHeaderMenu'
 import { capabilitiesSheet } from './workspaceCapabilities'
 import { openFile } from './workspaceFileTab'
+import { headerComputer } from './workspaceComputer'
 import { repositoryOverlay } from './workspaceRepositoryOverlay'
 import { rowMenuOf } from './workspaceRowMenu'
 import { serviceOverlay } from './workspaceServices'
@@ -180,7 +181,9 @@ export function workspaceOverlay(
     case 'restarting':
       return null
     case 'restart':
-      return mobile ? <RestartSheet name={workspace.name} /> : null
+      return mobile ? (
+        <RestartSheet computer={headerComputer(state)} name={workspace.name} />
+      ) : null
     case 'restart-confirm':
       return <RestartDialog viewport={viewport} />
     case 'restart-update-failed':

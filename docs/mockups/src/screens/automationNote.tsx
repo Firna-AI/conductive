@@ -6,6 +6,7 @@ import {
   repositoryOf,
   type Automation,
 } from '../fixtures/automations'
+import { computerChoiceWords } from '../components/own-computers/computerChoiceCopy'
 import type { AutomationAccess } from './automationState'
 
 /** Why the person signed in reads the automation without fields. */
@@ -91,23 +92,60 @@ function RepositoryRemovedNotice(props: {
 }
 
 /**
+ * Why an automation turned off when an admin removed the own computer of
+ * its runs. Its runs do not move to another computer by themselves, so the
+ * owner chooses one and turns it on. Another person reads who can.
+ */
+function ComputerRemovedNotice(props: {
+  automation: Automation
+  computer: string
+  ownerViews: boolean
+}) {
+  const words = computerChoiceWords
+  const removed = words.removedBody(props.computer, orgs.acme.name)
+  const next = props.ownerViews
+    ? words.removedOwner
+    : words.removedMember(props.automation.owner.name)
+  return (
+    <notice.Component
+      body={`${removed} ${next}`}
+      icon="power-off"
+      moklyInstance="computer-removed"
+      title={words.removedTitle}
+      tone="danger"
+    />
+  )
+}
+
+/**
  * The note above the automation: the reason why it turned off after failed
- * runs or after its repository was removed, the reason why the person
- * signed in reads it without fields, or, for its owner, the notice of a
- * automation that moved from a member who left (decision 508 E). A suspended
- * org has no note, because the page shows the notice of the org, and
- * nobody can act.
+ * runs, after its own computer was removed, or after its repository was
+ * removed, the reason why the person signed in reads it without fields,
+ * or, for its owner, the notice of a automation that moved from a member
+ * who left (decision 508 E). A suspended org has no note, because the page
+ * shows the notice of the org, and nobody can act. `computerRemoved` names
+ * the own computer of the runs that an admin removed.
  */
 export function AutomationNote(props: {
   automation: Automation
   access: AutomationAccess
   suspended: boolean
+  computerRemoved?: string
 }) {
   const { automation } = props
   const ownerViews = props.access === 'owner'
   if (props.suspended) return null
   if (offAfterFailedRuns(automation)) {
     return <FailedRunsNotice ownerViews={ownerViews} automation={automation} />
+  }
+  if (!automation.active && props.computerRemoved !== undefined) {
+    return (
+      <ComputerRemovedNotice
+        automation={automation}
+        computer={props.computerRemoved}
+        ownerViews={ownerViews}
+      />
+    )
   }
   if (!automation.active && automation.repositoryRemoved !== undefined) {
     return (

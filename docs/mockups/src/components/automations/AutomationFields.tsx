@@ -9,6 +9,7 @@ import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import type { IconKey } from '../../entries/components/common/icons'
 import { useControlSizes } from '../common/touch'
+import { computerChoiceWords } from '../own-computers/computerChoiceCopy'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import form from './form.module.css'
@@ -69,11 +70,15 @@ function Creator(props: { automation: Automation }) {
 /**
  * The name, the Active switch, the repository, and the section of the run
  * workspaces, which the owner changes, and "By" with the owner. An empty
- * name saves as "Untitled automation".
+ * name saves as "Untitled automation". An org with own computers adds the
+ * computer of the run workspaces after the section (own computer decision
+ * 3 A), and the hint names it too.
  */
 export function AutomationFields(props: {
   automation: Automation
   viewport: Viewport
+  /** The computer choice, with its menu open below it on a computer. */
+  computer?: ReactNode
 }) {
   const { automation } = props
   const { field } = useControlSizes()
@@ -120,11 +125,17 @@ export function AutomationFields(props: {
             value={sections[automation.section].name}
           />
         </Field>
+        {props.computer ? (
+          <Field label={computerChoiceWords.control}>
+            <span className={styles.picker}>{props.computer}</span>
+          </Field>
+        ) : null}
         <Creator automation={automation} />
       </div>
       <p className={form.hint}>
-        Each run opens a new workspace on a new branch of this repository, in
-        this section.
+        {props.computer
+          ? computerChoiceWords.automationHint
+          : 'Each run opens a new workspace on a new branch of this repository, in this section.'}
       </p>
     </div>
   )
@@ -132,11 +143,13 @@ export function AutomationFields(props: {
 
 /**
  * The same facts as another member reads them. Only the owner changes a
- * automation (decision 502).
+ * automation (decision 502). `computer` names the computer of the run
+ * workspaces, in an org with own computers.
  */
 export function AutomationFacts(props: {
   automation: Automation
   schedules: boolean
+  computer?: string
 }) {
   const { automation } = props
   return (
@@ -146,6 +159,9 @@ export function AutomationFacts(props: {
         { term: 'State', value: automation.active ? 'Active' : 'Off' },
         { term: 'Repository', value: repositoryOf(automation) },
         { term: 'Section', value: sections[automation.section].name },
+        ...(props.computer
+          ? [{ term: computerChoiceWords.control, value: props.computer }]
+          : []),
         { term: 'By', value: automation.owner.name },
         ...(props.schedules
           ? [{ term: 'Time zone', value: automation.timeZone }]

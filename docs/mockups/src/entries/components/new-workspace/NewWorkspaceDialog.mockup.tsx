@@ -54,14 +54,14 @@ const repositoryMenu: readonly MenuEntryData[] = Object.values(
 
 /**
  * The New workspace dialog, drawn open, registered with Mokly. The page
- * supplies its notices, the open Capabilities control, and the branch
- * control right of the repository picker in slots.
+ * supplies its notices, the open Capabilities control, the branch control
+ * right of the repository picker, and the computer choice in slots.
  */
 export const newWorkspaceDialog = defineComponent({
   slug: 'new-workspace-dialog',
   title: 'New workspace dialog',
   description:
-    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker and the branch control right of it at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
+    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker, the branch control right of it, and the computer choice of an org with own computers at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -100,7 +100,7 @@ export const newWorkspaceDialog = defineComponent({
       capabilities: capabilitiesSchema,
     },
   } as const,
-  slots: ['notices', 'capabilitiesPanel', 'branch'],
+  slots: ['notices', 'capabilitiesPanel', 'branch', 'computer'],
   props: {
     repository: repositories.storefront.name,
     place: `${orgs.acme.name} · ${sections.general.name}`,
@@ -115,6 +115,7 @@ export const newWorkspaceDialog = defineComponent({
     <NewWorkspaceDialog
       attachments={props.attachments}
       branch={props.branch}
+      computer={props.computer}
       capabilities={withPanel(props.capabilities, props.capabilitiesPanel)}
       caret={props.caret}
       choice={props.choice}

@@ -36,6 +36,8 @@ export const computerTab = defineComponent({
       readOnly: readOnlyCauseSchema,
       /** The open form of the env vars. */
       envForm: { enum: ['none', 'add', 'change'] },
+      /** The org has own computers, which build the same setup. */
+      ownComputers: { type: 'boolean' },
     },
   } as const,
   slots: ['repositoryNotice'],
@@ -51,6 +53,7 @@ export const computerTab = defineComponent({
       computer={props.computer}
       envForm={props.envForm}
       org={props.org}
+      ownComputers={props.ownComputers}
       readOnly={props.readOnly}
       repositoryNotice={props.repositoryNotice}
       script={props.script}

@@ -28,6 +28,7 @@ import {
 import { addedRepository } from '../fixtures/repositories'
 import { olderSecret, type OrgSecret } from '../fixtures/secrets'
 import { orgAgentsFor } from './orgAgentsState'
+import { OwnComputersBody } from './ownComputersTab'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
@@ -185,9 +186,12 @@ export function TabBody(props: {
             readOnly,
             repositoryNotice:
               settingsRepositoryNotice(state, settings) ?? undefined,
+            ownComputers: state.ownComputers === 'none' ? undefined : true,
           })}
         />
       )
+    case 'own-computers':
+      return <OwnComputersBody state={state} />
     case 'agents':
       return <OrgAgentsTab {...orgAgentsFor(state, org.name, readOnly)} />
     case 'secrets':

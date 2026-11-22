@@ -1,5 +1,6 @@
 import {
   Bot,
+  Cloud,
   FolderGit2,
   Keyboard,
   KeyRound,
@@ -11,7 +12,7 @@ import {
   Users,
 } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
-import { paths } from '../../paths'
+import { computerPaths, paths } from '../../paths'
 import { icon, type Command } from './paletteCommands'
 
 /** The tabs of the settings of Acme. */
@@ -31,9 +32,15 @@ export const orgSettings: readonly Command[] = [
   },
   {
     label: 'Cloud computer',
-    lead: icon(Server),
+    lead: icon(Cloud),
     words: ['install', 'startup script', 'env', 'build', 'sandbox'],
     to: paths.cloudComputer,
+  },
+  {
+    label: 'Own computers',
+    lead: icon(Server),
+    words: ['linux', 'server', 'self-hosted', 'container', 'install command'],
+    to: computerPaths.settings.list,
   },
   {
     label: 'Agents',

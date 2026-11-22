@@ -19,6 +19,7 @@ import { type Org, orgList } from '../fixtures/orgs'
 import { settingsViewer } from './orgSettingsTabs'
 import { tabBody } from '../entries/components/screens/orgSettingsTabs.mockup'
 import type { OrgSettingsState } from './orgSettingsState'
+import { computerDialogs, computerHeader } from './ownComputersTab'
 import { settingsOrg } from './settingsOrgs'
 import { defined, plainData } from '../defined'
 
@@ -77,6 +78,7 @@ export function OrgSettingsScreen(props: {
     'delete-secret': suspended ? null : (
       <DeleteSecretDialog viewport={viewport} />
     ),
+    ...computerDialogs(state, viewport),
   }
   const repositoryMenu =
     mobile &&
@@ -88,11 +90,14 @@ export function OrgSettingsScreen(props: {
       <RepositoryMenuSheet repositories={settings.repositories} />
     ) : null
   const dialog = dialogs[state.dialog] ?? repositoryMenu
+  // The page of an own computer names it, with the way back to the list.
+  const header = computerHeader(state)
+  const listBack = { label: 'Workspaces', to: settings.list }
   const page = (
     <pagePart.Component
-      subtitle="Org settings"
+      subtitle={header?.subtitle ?? 'Org settings'}
       {...defined({
-        back: mobile ? { label: 'Workspaces', to: settings.list } : undefined,
+        back: header?.back ?? (mobile ? listBack : undefined),
       })}
       tabs={
         <settingsTabs.Component
@@ -102,7 +107,7 @@ export function OrgSettingsScreen(props: {
           wrap={mobile}
         />
       }
-      title={org.name}
+      title={header?.title ?? org.name}
       viewport={viewport}
     >
       {suspended ? (

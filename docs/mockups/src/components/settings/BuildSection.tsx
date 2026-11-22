@@ -53,6 +53,12 @@ export type OrgBuilds = {
   lastGood?: Build
   history: readonly Build[]
   logs: BuildLogs
+  /**
+   * The build that failed in a failed state, with its saved message, when
+   * it is not a build of the cloud computer, such as a build of an own
+   * computer.
+   */
+  failed?: FailedBuild
 }
 
 /** The build that failed in a state, with its saved message, or none. */
@@ -70,6 +76,15 @@ export function failedBuildOf(state: BuildState): FailedBuild | undefined {
     case 'none':
       return undefined
   }
+}
+
+/** The build that failed in a state: the one of the builds, if they hold one. */
+function failedOf(
+  state: BuildState,
+  builds: OrgBuilds,
+): FailedBuild | undefined {
+  const failed = failedBuildOf(state)
+  return failed && (builds.failed ?? failed)
 }
 
 function Log(props: { lines: readonly TerminalLine[]; live: boolean }) {
@@ -143,7 +158,7 @@ function Head(props: { state: BuildState; builds: OrgBuilds }) {
       />
     )
   }
-  const build = failedBuildOf(props.state) ?? props.builds.lastGood
+  const build = failedOf(props.state, props.builds) ?? props.builds.lastGood
   if (props.state === 'none' || build === undefined) {
     return <span className={styles.label}>No build yet</span>
   }
@@ -198,7 +213,7 @@ function Body(props: { state: BuildState; builds: OrgBuilds }) {
       </div>
     )
   }
-  const failed = failedBuildOf(state)
+  const failed = failedOf(state, builds)
   if (!failed) return null
   const log: LogState =
     state === 'time-limit' || state === 'ended' ? state : 'failed'

@@ -32,6 +32,7 @@ import {
   waits,
 } from './newWorkspaceParts'
 import { branchControl, branchRefusal } from './newWorkspaceBranches'
+import { computerControl, computerNotice } from './newWorkspaceComputers'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -51,6 +52,8 @@ export const newWorkspaceDialogSchema = {
     'sectionMenu',
     'waitingBuild',
     'capabilities',
+    'computer',
+    'computerMenu',
     'result',
     'org',
     'firstBuild',
@@ -95,6 +98,8 @@ export const emptyDialog: NewWorkspaceDialogState = {
   sectionMenu: 'closed',
   waitingBuild: 'building',
   capabilities: 'closed',
+  computer: 'none',
+  computerMenu: 'closed',
   result: 'form',
   org: 'active',
   firstBuild: 'succeeded',
@@ -180,6 +185,8 @@ export function NewWorkspaceDialogScreen(props: {
   if (refused) {
     notices.unshift(branchRefusal(state.result, page.repository.name, 'dialog'))
   }
+  const computerWait = computerNotice(state)
+  if (computerWait) notices.push(computerWait)
   if (!chosen) {
     notices.push(
       <chooseRepositoriesNotice.Component
@@ -220,6 +227,9 @@ export function NewWorkspaceDialogScreen(props: {
             })
           : undefined,
         caret: ownDraft ? undefined : draft.caret,
+        computer: chosen
+          ? computerControl({ state, surface: 'dialog', mobile: false })
+          : undefined,
         login: formLoginLabel(state),
         notices: notices.length > 0 ? notices : undefined,
         repository: chosen ? page.repository.name : undefined,

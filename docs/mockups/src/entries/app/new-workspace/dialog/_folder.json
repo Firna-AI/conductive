@@ -8,6 +8,7 @@
     "org-login",
     "not-created",
     "no-repositories",
-    "workspace-link"
+    "workspace-link",
+    "own-computer"
   ]
 }

@@ -68,6 +68,9 @@ of the New workspace dialog.
   dropdown, and of the refusals. It imports no fixture, and neither do the
   parts, so the app can share them. No word says "fork", because on GitHub
   a fork is a copy of the repository.
+- In an org with own computers, the computer choice follows the branch
+  control, on the page and in the dialog, as
+  [own computers](design-own-computers.md) gives.
 - [The pull request bar](design-bar.md) gives the line under the bar after
   GitHub deleted the stored base of a workspace. It also gives the branch
   and its base at the top of the Checks tab of a phone, which name a

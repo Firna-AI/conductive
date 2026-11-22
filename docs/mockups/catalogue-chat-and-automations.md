@@ -247,7 +247,9 @@ New workspace opens. Its child pages:
   The `chosen-again` and `chosen-again-member` variants have the automation
   after an admin chose the repository again: it stays off until Cal turns
   it on, and the notice names no repository, because the page cannot tell
-  that repository from another one that Cal saved.
+  that repository from another one that Cal saved. `own-computer` has the
+  computer of the runs in an org with own computers, as
+  [own computers](catalogue-own-computers.md) gives.
 - `app/automations/triggers` has the open Add trigger menu. Its child page
   `app/automations/triggers/schedules` has the Hourly, Daily, and Weekly
   editors with the time zone, and a custom cron that the form refuses.

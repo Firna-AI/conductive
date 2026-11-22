@@ -1,6 +1,7 @@
 import type { SchemaProps } from '@mokly/mokly'
 import { ORG_COLORS } from '../design/orgColors'
 import { repositoryOrderStates } from '../components/settings/RepositoryOrderList'
+import { computerListViews, ownComputerKeys } from '../fixtures/ownComputers'
 import { repositoryChanges } from '../fixtures/repositories'
 import {
   orgAgentsDefaults,
@@ -20,6 +21,8 @@ export const orgSettingsSchema = {
     'repositoryOrder',
     'envForm',
     'secrets',
+    'ownComputers',
+    'computer',
     'dialog',
     'viewer',
     'org',
@@ -32,15 +35,17 @@ export const orgSettingsSchema = {
         'general',
         'repositories',
         'computer',
+        'own-computers',
         'agents',
         'secrets',
         'members',
       ],
     },
     /**
-     * The builds of the cloud computer, which its tab shows. `time-limit` is
-     * a build that the app stopped at its 60-minute limit. `none` is an org
-     * with no build yet, such as a new org whose first build did not start.
+     * The builds of the cloud computer, which its tab shows, or of the own
+     * computer whose page shows. `time-limit` is a build that the app
+     * stopped at its 60-minute limit. `none` is an org with no build yet,
+     * such as a new org whose first build did not start.
      * `waiting` is a build of an admin that waits for another update of the
      * cloud computer, which members do not see, and that the tab shows as a
      * build that runs. `ended` is a build that an operator ended for such an
@@ -110,9 +115,26 @@ export const orgSettingsSchema = {
       ],
     },
     /**
+     * The own computers of Acme (own computer decision 2 A): none yet, the
+     * four of the list, the first three before Cal added build-03, or those
+     * three with build-03 after Add computer, which waits for its first
+     * connection or whose one-time code expired. Acme has none in every
+     * other state of the settings.
+     */
+    ownComputers: { enum: computerListViews },
+    /**
+     * The page of one own computer, which a row of the Own computers tab
+     * opens, or none, so that the tab shows the list. Its build card shows
+     * the builds of the computer in the state of `build`.
+     */
+    computer: { enum: ['none', ...ownComputerKeys] },
+    /**
      * A dialog over the page: Delete org, the removal of a member, the
-     * leave of a suspended org, that leave while it runs, or the question
-     * before Delete of a secret.
+     * leave of a suspended org, that leave while it runs, the question
+     * before Delete of a secret, a step of Add computer, or the question
+     * before Remove computer. The steps of Add computer are the name, the
+     * install command while the app waits for the first connection, the
+     * first connection, and a one-time code that expired.
      */
     dialog: {
       enum: [
@@ -122,6 +144,11 @@ export const orgSettingsSchema = {
         'leave-org',
         'leaving-org',
         'delete-secret',
+        'add-computer',
+        'computer-command',
+        'computer-connected',
+        'computer-expired',
+        'remove-computer',
       ],
     },
     /**
@@ -161,6 +188,8 @@ export const acmeSettings: OrgSettingsState = {
   repositoryOrder: 'list',
   envForm: 'none',
   secrets: 'list',
+  ownComputers: 'none',
+  computer: 'none',
   dialog: 'none',
   viewer: 'admin',
   org: 'active',

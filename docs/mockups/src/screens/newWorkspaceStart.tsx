@@ -46,11 +46,14 @@ function RepositoryPicker(props: {
 /**
  * The start of an empty chat, with the repository of the new workspace and
  * the branch control directly right of it. The target of a picked branch
- * lives in the dropdown of the branch control (decision 309). The note
- * names the build that the workspace starts from. Before the first good
- * build there is none, and the notice over the composer says why. While
- * the repository of the form waits for its build, the notice over the
- * composer says when it is ready, so the note gives way.
+ * lives in the dropdown of the branch control (decision 309). An org with
+ * own computers adds the computer choice after the branch control (own
+ * computer decision 3 A). The note names the build that the workspace
+ * starts from: the cloud computer of the org, or the own computer of the
+ * form, which `note` names. Before the first good build there is none,
+ * and the notice over the composer says why. While the repository of the
+ * form waits for its build, the notice over the composer says when it is
+ * ready, so the note gives way.
  */
 export function Start(props: {
   page: PageOrg
@@ -60,6 +63,10 @@ export function Start(props: {
   menu?: readonly MenuEntryData[]
   /** The branch control, with its dropdown open below it on a computer. */
   branch?: ReactNode
+  /** The computer choice, with its menu open below it on a computer. */
+  computer?: ReactNode
+  /** The note of an own computer, in place of the note of the cloud. */
+  note?: string
 }) {
   const { page } = props
   const ready = formWait(page) === undefined
@@ -81,13 +88,15 @@ export function Start(props: {
             repository={page.repository.name}
           />
           {props.branch}
+          {props.computer}
         </div>
       ) : props.admin ? (
         <chooseRepositoriesButton.Component />
       ) : null}
       {props.chosen && ready && page.built ? (
         <p className={styles.note}>
-          Starts from the cloud computer of {page.org.name}, built {page.built}.
+          {props.note ??
+            `Starts from the cloud computer of ${page.org.name}, built ${page.built}.`}
         </p>
       ) : null}
     </div>

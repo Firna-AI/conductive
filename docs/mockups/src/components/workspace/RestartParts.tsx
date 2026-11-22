@@ -7,16 +7,26 @@ import { Menu } from '../common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { Sheet } from '../common/Sheet'
 import { ToastLayer } from '../common/ToastLayer'
-import { restartMenu } from './HeaderState'
+import {
+  restartMenu,
+  stateMenuLabel,
+  type OwnComputerLabel,
+} from './HeaderState'
 import { restartCopy } from './restartCopy'
 
-/** The menu of the header state on a phone, as a sheet. */
-export function RestartSheet(props: { name: string }) {
+/**
+ * The menu of the header state on a phone, as a sheet. `computer` names
+ * the own computer of the workspace.
+ */
+export function RestartSheet(props: {
+  name: string
+  computer?: OwnComputerLabel
+}) {
   return (
     <Sheet title={props.name}>
       <Menu
-        entries={restartMenu()}
-        label={restartCopy.menuLabel}
+        entries={restartMenu(false, props.computer)}
+        label={stateMenuLabel(props.computer)}
         placement="sheet"
       />
     </Sheet>

@@ -25,6 +25,7 @@ import { orgWithLogin } from '../fixtures/orgLogins'
 import type { TriggerEdit } from '../fixtures/automationTriggers'
 import type { Automation } from '../fixtures/automations'
 import { paths } from '../paths'
+import type { AutomationComputer } from './automationComputer'
 import { AutomationNote } from './automationNote'
 import type { AutomationAccess, AutomationState } from './automationState'
 import styles from './AutomationScreen.module.css'
@@ -89,6 +90,8 @@ export function AutomationForm(props: {
   modelMenu: boolean
   /** The Capabilities icon of the owner, and its control when it is open. */
   capabilities?: CapabilitiesControl
+  /** The computer of the runs, in an org with own computers. */
+  computer?: AutomationComputer
   viewport: Viewport
 }) {
   const { automation, access } = props
@@ -105,12 +108,21 @@ export function AutomationForm(props: {
       <AutomationNote
         access={access}
         automation={automation}
+        computerRemoved={props.computer?.removed}
         suspended={props.suspended}
       />
       {readOnly ? (
-        <AutomationFacts automation={automation} schedules={schedules} />
+        <AutomationFacts
+          automation={automation}
+          computer={props.computer?.name}
+          schedules={schedules}
+        />
       ) : (
-        <AutomationFields automation={automation} viewport={props.viewport} />
+        <AutomationFields
+          automation={automation}
+          computer={props.computer?.picker}
+          viewport={props.viewport}
+        />
       )}
       <TriggerList
         edits={props.edits}

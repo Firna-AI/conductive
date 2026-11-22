@@ -178,6 +178,8 @@ link, and the bars of the cloud computer.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.
+  - On an own computer, a failed start and a refused start name the
+    computer, as [own computers](design-own-computers.md) gives.
   - For a suspended org, the words name the org and the abuse address, as
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.

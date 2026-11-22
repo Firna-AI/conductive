@@ -5,6 +5,7 @@ import { notice } from '../../entries/components/common/Notice.mockup'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { AccountSection } from './AccountSection'
+import { OwnComputerCounts } from './OwnComputerCounts'
 import { TargetState } from './directory'
 import {
   deletedOrgBody,
@@ -100,9 +101,10 @@ function MemberRow(props: { member: OrgMember }) {
 
 /**
  * The page of an org for the operator: its state, its details, its
- * provider account by its ID with the switch of the account, its
- * workspaces in each state, and its members with their names and roles.
- * Each member opens the page of that user.
+ * provider account by its ID with the switch of the account, its own
+ * computers in each state when it has some, its workspaces in each state,
+ * and its members with their names and roles. Each member opens the page
+ * of that user.
  */
 export function OrgDetails(props: {
   org: OrgPage
@@ -132,6 +134,9 @@ export function OrgDetails(props: {
         to={props.accountTo}
         workspaces={org.byAccount}
       />
+      {org.ownComputers ? (
+        <OwnComputerCounts counts={org.ownComputers} />
+      ) : null}
       <WorkspaceStates
         builds={{ count: org.builds, page: 'org' }}
         counts={org.states}
