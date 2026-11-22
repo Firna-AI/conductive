@@ -5,7 +5,7 @@ import {
   DEVICE_OUTPUT_LIMIT_BYTES,
   DEVICE_REPLACED_CLOSE_CODE,
   DEVICE_REPLACED_CLOSE_REASON,
-  type DeviceSettingsAction,
+  type DeviceSettingsOperation,
 } from '../../src/shared/device'
 import {
   deviceObject,
@@ -227,7 +227,10 @@ export class DeviceBroker {
       )
     return connection
   }
-  relaySettings(connection: DeviceConnection, operation: DeviceSettingsAction) {
+  relaySettings(
+    connection: DeviceConnection,
+    operation: DeviceSettingsOperation,
+  ) {
     return relayDeviceSettings(this.settings, connection, operation)
   }
   receive(connection: DeviceConnection, value: unknown): Promise<void> {

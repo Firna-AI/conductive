@@ -40,9 +40,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs each org's cloud computers in
-        an account that ${productName} owns. The org keeps that account
-        for its life. Your code, your files, and your agent sessions
+      text`A cloud computer provider runs each workspace's cloud computer in
+        an account that ${productName} owns. The operator can switch an org
+        to another account for new workspaces after a successful build of
+        its cloud computer setup there. Existing workspaces keep their
+        accounts. Your code, your files, and your agent sessions
         are in those computers. ${productName} sends their provider
         requests to start, stop, and use them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
@@ -60,6 +62,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
         files, code, and command results of turns on the session's login.
         This includes the messages of other members who use that login.
+        With Explain, the first message of a new session holds the text that
+        a member selects in a chat, with the text around it. That text can
+        come from a message of another member or from a session on another
+        login.
         Each Mac command request and its result also go to the agent and
         to that provider or endpoint. They also get each listed secret's
         name, description, and environment variable name. They get the
@@ -89,8 +95,9 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login cannot be used. The app refuses the message when no usable
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
-        their chats, and each Mac command request and result. They also see
-        the automations of the org, with their prompts, chosen secret names, and
+        their chats, and each Mac command request and result. They can read
+        the service lists and logs with workspace read access. They also
+        see the automations of the org, with their prompts, chosen secret names, and
         their runs. Only the automation's owner changes its chosen secrets.
         They see each secret request and result, without a value. They see the name
         and the description of each secret, who added it, and who last
@@ -109,7 +116,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         ${productName}, that credential can use the session's personal or
         org login. It works while the turn runs, also from
         outside the cloud computer. A program that keeps running, such as a
-        dev server or a program that the startup script starts, can also
+        service or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
         sessions that other members start. Agent settings in the repository
         can make the agent send its model requests, with their content and
@@ -144,12 +151,19 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
-        They can create, rename, stop, and close sessions, and send
-        messages. They can create and delete sections, and open and close
-        private previews. The actions use that turn's sender, who must
+        They can create, rename, stop, and close sessions, send messages,
+        and watch one turn of a session. They can create and delete
+        sections, and open and close private previews.
+        The actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
         the session of that turn may use, with no question.`,
+      text`A watch tells the session that set it once when the watched turn
+        finishes, fails, or stops. Its wake can start a new turn after the
+        turn that set the watch ended. That new turn acts for the member
+        whose turn set the watch, with that member's GitHub token and Mac.
+        A wake that joins a running turn keeps that turn's sender.
+        Current membership and session login rules apply at delivery.`,
       text`Only a workspace owner or org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. Previews that agents open need sign-in and workspace access.

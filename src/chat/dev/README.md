@@ -44,7 +44,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end), `wake-finished`, `wake-failed`, `wake-stopped`, `wake-other-workspace`, `wake-during-turn` (the wakes of a watch, as the mockups draw them at `app/chat/wakes`) |
 | `workspace` | `existing`, `new` (Untitled until its title comes, and it starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |
@@ -71,7 +71,8 @@ fail its start, write the title of a workspace with no name, drop the
 connection, resend the last event, send two parts out of order, and connect
 the Mac again under a new pairing, whose next read the page then makes. Writes of the page change the fake's state:
 new sessions, rename, close, reopen, messages, steer, Stop, Try again, model
-changes, uploads, Resume, and the view. As in the Worker, Try again sends the
+changes, uploads, Resume, the view, and Explain, whose new session takes the
+anchor of the selection and a prompt that the page writes. As in the Worker, Try again sends the
 message that the session record names again, as a new message. It refuses
 each other message with 409. Each accepted message sets that record's
 `retryMessageId` to null. Send and Try again in a session whose starter's

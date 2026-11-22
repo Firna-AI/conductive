@@ -35,9 +35,9 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/useTabDrag.ts`: the drag of the tab row: the drop place, the
   move, and the status. `components/TabDragParts.tsx`: the drop line and
   the lifted tab.
-- `components/useTabMenu.ts` and `components/TabMenu.tsx`: the tab menu,
-  the long press that opens the menu of a read-only row, and its drawing
-  at a point or in a sheet. `components/tab-menu-items.ts`: the groups of
+- `components/useTabMenu.ts`: the tab menu, and the long press that opens
+  the menu of a read-only row. `ui/PointMenu.tsx` draws it at a point or in
+  a sheet, as it draws the menu of overlapping marks. `components/tab-menu-items.ts`: the groups of
   its items, with Copy path of the host, the mark of each item that
   changes the workspace, and the items of a read-only row.
   `components/useTabMoves.ts`: the moves of the row and Keep open, the
@@ -53,12 +53,16 @@ is relative to `src/chat/`, the folder of this guide.
   tab in the row, and the scroll that brings tabs into view.
   `components/tab-nodes.ts`: the elements of the tabs, which the drag, the
   scroll, and the menu share.
-- `components/SessionChat.tsx`: the chat of the open session, and
-  `ChatHost`, the start steps, the sandbox bar, and the tools of the
-  composer that the app can give. `components/transcript-inputs.ts`:
-  `useTranscriptInputs`, the Mac commands and the secret requests of the
-  open session, and the inserts, the readers, and Try again that its
-  transcript gets. Each keeps its value while its data stays the same.
+- `components/SessionChat.tsx`: the chat of the open session.
+  `components/session-parts.tsx`: `ChatHost`, the start steps, the sandbox
+  bar, the tools of the composer, and the GitHub branch that the app can
+  give. It also provides
+  `useSessionParts`, the lines, the cards, and the requests that wait of
+  one session, which its tab and the popover of an explanation share.
+  `components/transcript-inputs.ts`: `useTranscriptInputs`, the Mac
+  commands and the secret requests of that session, and the inserts, the
+  readers, and Try again that its transcript gets. Each keeps its value
+  while its data stays the same.
 - `components/Composer.tsx`: the message box and its controls, with the
   steering prompt that [Messages](../../docs/protocol/messages-and-attachments.md#messages)
   states. It gives its field the `files` of the draft, and it holds the
@@ -161,6 +165,14 @@ is relative to `src/chat/`, the folder of this guide.
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
   establishes the current records before the shown session starts its history.
+  `replaySessionRecords` starts one replay of stored pages, for a history
+  load or for the stored history of the stream.
+- `state/session-replay.ts`: `SessionReplay`, the merges and the end of one
+  replay. The end places the tabs, as
+  [Record order](loads-and-sends.md#record-order) says. It also keeps, for
+  each session, the record that places its tab, apart from its newest
+  record. A pending close applies over that record, and a failed close goes
+  back to it.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
@@ -169,9 +181,11 @@ is relative to `src/chat/`, the folder of this guide.
   session. It also gives the login label in the composer, and the models
   that the picker of the composer offers. `state/blockers.ts` gives the
   Connect notice when no login serves the message.
-- `state/linked-replies.ts`: the message and the focus of a reply that names
-  a linked session. It selects the linked session only through the same
-  check as a model move, also when no draft moves.
+- `state/linked-replies.ts`: the message of a reply that names a linked
+  session, and the view that sent, which follows that session with the
+  draft: the shown tab, or the popover of an explanation. The shown tab
+  selects the linked session only through the same check as a model move,
+  also when no draft moves.
 - `components/SourceLine.tsx`: the line that links a linked session to its
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
@@ -218,12 +232,22 @@ is relative to `src/chat/`, the folder of this guide.
   `browserCopy` is the clipboard, clock, and delay of the browser, for a
   chat whose host gives no `copy`. The controller's `copyTranscript` calls
   it with the chat API of the controller.
+- `ui/clock.ts`: `Clock`, `useNow`, and `ChatClock`, the clock that
+  `ChatBody` gives from its `clock`. Each part that shows a live time, such
+  as the row of a running turn and the start steps, reads `ChatClock` and
+  keeps its own tick while it shows, in a tab and in a popover alike. The
+  sandbox bar of an archived workspace reads it with no tick, for the day
+  when the workspace leaves the list. `ChatBody` ticks only for the session
+  history.
 - `api/client.ts` and `api/read-*.ts`: the chat routes, through the shared
   route builders and the app's `ApiClient`, and the readers of their
   responses. `api/read-chat.ts` copies a known `endReason` of a turn end,
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-continued.ts` reads the note of Continue and the note of a
+  repository change with their real branches and their optional labels,
+  with the same `label` reader.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the
@@ -237,6 +261,8 @@ is relative to `src/chat/`, the folder of this guide.
   their key code.
 - `secrets/`: the secret requests, their answers, the runs, and the line of
   a late answer. Their [README](secrets/README.md) names their key code.
+- `explain/`: Explain, the marks of explanations, and the popover. Its
+  [README](explain/README.md) names its key code.
 - `components/WaitingRequests.tsx`: the region just above the composer of
   the Mac commands and the secret requests that wait, the oldest first.
 - `dev/`: the development page, its fake writes, its scripted agent, its

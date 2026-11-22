@@ -137,4 +137,13 @@ export const workspaceCommandDefaults = [
     words: ['markdown', 'clipboard', 'chat', 'expanded'],
     defaults: { mac: [], other: [] },
   },
+  {
+    id: 'explain-selection',
+    previous: 'copy-full-transcript',
+    group: 'Chat',
+    scope: 'selection',
+    label: 'Explain the selection',
+    words: ['ask', 'quote', 'question'],
+    defaults: { mac: ['Alt+Meta+E'], other: ['Alt+Shift+E'] },
+  },
 ] as const

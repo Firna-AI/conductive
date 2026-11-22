@@ -14,7 +14,7 @@ export function LoadFailure(
   props: {
     title: string
     retry: () => Promise<void>
-  } & ({ error: ApiError } | { body: string }),
+  } & ({ error: Pick<ApiError, 'message'> } | { body: string }),
 ) {
   const retry = useAction(props.retry)
   return (

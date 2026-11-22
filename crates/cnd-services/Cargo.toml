@@ -1,0 +1,28 @@
+[package]
+name = "cnd-services"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description = "Local runtime services for Conductive cloud computers"
+publish = false
+
+[dependencies]
+cnd-runner-interface = { workspace = true }
+cnd-runner = { workspace = true }
+internal-error = { workspace = true }
+async-trait = "0.1.92"
+thiserror = "2.0.21"
+serde_json = "1.0.154"
+tracing = "0.1.44"
+serde = { version = "1.0.229", features = ["derive"] }
+tokio = { version = "1.54.1", features = ["fs", "net", "io-util", "sync", "time", "rt", "process", "signal", "macros"] }
+uuid = { version = "1.29.3", features = ["v4"] }
+rustix = { version = "1.1.6", features = ["fs", "process"] }
+unimock = "0.6.8"
+
+[lints]
+workspace = true
+
+[dev-dependencies]

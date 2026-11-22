@@ -1,11 +1,24 @@
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import type { FakeApiOptions, FakeApiServer } from '../../test-support/fake-api'
 import { FAKE_TIME } from '../../test-support/fixtures/core'
+import type { ChatController } from '../state/controller'
 import { chatFor } from '../state/test-kit'
-import { SessionChat } from './SessionChat'
+import { ChatClock, type Clock } from '../ui/clock'
+import { SessionChat, type SessionChatProps } from './SessionChat'
 
 /** The clock of the render tests: 2m 41s after the recorded turn began. */
-export const now = FAKE_TIME + 161_000
+const testClock: Clock = { now: () => FAKE_TIME + 161_000 }
+
+/**
+ * Gives the parts of the chat under it the clock of the render tests, as
+ * `ChatBody` gives its own clock.
+ */
+export function TestClock(props: { children: ReactNode }) {
+  return (
+    <ChatClock.Provider value={testClock}>{props.children}</ChatClock.Provider>
+  )
+}
 
 /** The text of rendered markup, with each tag as a space. */
 export function textOf(html: string): string {
@@ -15,6 +28,27 @@ export function textOf(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, '&')
     .replace(/\s+/g, ' ')
+}
+
+/**
+ * The markup of the chat of the open session of a controller, on a computer,
+ * at the time of the render tests. `props` adds the props of the chat, such
+ * as `readOnly`.
+ */
+export function sessionMarkup(
+  controller: ChatController,
+  props: Partial<SessionChatProps> = {},
+): string {
+  return renderToStaticMarkup(
+    <TestClock>
+      <SessionChat
+        controller={controller}
+        mobile={false}
+        snapshot={controller.getSnapshot()}
+        {...props}
+      />
+    </TestClock>,
+  )
 }
 
 /**
@@ -32,14 +66,6 @@ export async function renderChat(
   options.setup?.(chat.server)
   await chat.controller.start()
   const markup = () =>
-    renderToStaticMarkup(
-      <SessionChat
-        controller={chat.controller}
-        mobile={false}
-        now={now}
-        onConnectAgent={() => {}}
-        snapshot={chat.controller.getSnapshot()}
-      />,
-    )
+    sessionMarkup(chat.controller, { onConnectAgent: () => {} })
   return { chat, markup, text: () => textOf(markup()) }
 }

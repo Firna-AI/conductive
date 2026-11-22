@@ -1,4 +1,6 @@
 import type { OrgRole } from '../../shared/api'
+import { ARCHIVED_COMPUTER_STATES } from '../../shared/archived-computer-read'
+import type { ArchivedComputerState } from '../../shared/generated/ArchivedComputerState'
 import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import { WORKSPACE_STATES } from '../../shared/workspace-read'
@@ -6,6 +8,12 @@ import type { FakeApiOptions } from '../../test-support/fake-api'
 import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
+import {
+  DEV_BRANCH_CHECKS,
+  DEV_BRANCH_LISTS,
+  type DevBranchCheck,
+  type DevBranchList,
+} from './branch-routes'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
@@ -20,6 +28,11 @@ const CONVERSATIONS = [
   'first-turn',
   'sent-by',
   'stopped-from',
+  'wake-finished',
+  'wake-failed',
+  'wake-stopped',
+  'wake-other-workspace',
+  'wake-during-turn',
 ] as const satisfies readonly RecordedChatScenario[]
 
 /** The run lists of Review pull requests that the mockups also draw. */
@@ -81,107 +94,12 @@ const PROVIDER_PRESETS = ['two', 'one', 'three', 'fail'] as const
 
 type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
 
-/**
- * The preview state of the dev fake, from the query string of the page,
- * such as `/?role=member&workspace=stopped`. An unknown value is ignored,
- * so its default applies.
- *
- * - `role=admin|member`: the role of the user in the recorded orgs.
- * - `workspace=<state>`: the state of `checkout-autocomplete`.
- * - `conversation=<scenario>`: its recorded chat, such as `running`.
- * - `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
- *   shows the GitHub state of that bar.
- * - `paths=masked`: two files whose real paths hold a fake secret value,
- *   with their labels, in the file lists and at the end of each turn.
- * - `subWorkspaces=1`: Acme also has the sub-workspaces of the mockups,
- *   nested under Apple Pay button and Checkout address autocomplete, down
- *   to depth 3, so the list shows two trees in Checkout.
- * - `firstRun=github-app|org|agent-login`: Get started is not done from
- *   that step on. With `github-app` or `org`, the user has no org until
- *   Create org runs. In each first run, no agent login is connected.
- * - `login=none`: no agent login is connected.
- * - `login=endpoint`: both agents have a shared own endpoint login.
- * - `modelList=unlisted|none`: with `login=endpoint`, the last model list of
- *   the Claude login does not name the last Claude model of the app, or
- *   names no Claude model of the app. The list was read 4 minutes before
- *   the fake starts. Refresh and a save read a list that names every model.
- * - `modelList=v1-only|read-failed`: with `login=endpoint`, use the fake
- *   host that lists only under /v1, or the host that never lists models.
- *   With `read-failed`, the Claude login keeps a list from a day before
- *   that does not name the last Claude model of the app.
- * - `orgLogin=endpoint|unlisted|every-member`: Acme has an org login of
- *   Claude on its gateway, whose last model list names every Claude model
- *   of the app, or lacks the last one. With `every-member`, its switch
- *   "Use for every member" is on. The account names the default login of
- *   each org and agent, as the Worker does.
- * - `sessionLogin=org|removed`: each open session of
- *   `checkout-autocomplete` runs on the org login of Acme, as after a
- *   first message on it. With `removed`, an admin removed that login
- *   later, so the records say that it is not available.
- * - `sessionLogin=empty`: `checkout-autocomplete` also has an empty
- *   session that Cal started. Its record names the default login of Cal,
- *   which its first message takes, as the Worker resolves it, such as the
- *   org login with `orgLogin=every-member`.
- * - `deleted=1`: Acme is deleted, as its admins see it.
- * - `suspended=1`: the operator suspended Acme. Each write of Acme gets
- *   `org_suspended`, except a leave, as the Worker does.
- * - `operator=1`: the user is an operator. The rail and the org switcher
- *   show Operator, and the operator section shows the sample orgs and
- *   users of the mockups. Without it, each operator request gets
- *   `operator_required`, as the Worker does.
- * - `signedOut=1`: the Worker refuses the session, so the sign-in shows.
- * - `stop=<seconds>`: an open workspace stops that many seconds after it
- *   opens, as a sandbox does that stops while its workspace is open.
- * - `upload=wait|fail`: no part of an upload gets an answer, so each file
- *   keeps uploading, or the first part of the page fails at each of its
- *   sends, so its chip fails once, after the waits of its retries of about
- *   7 seconds, and Try again works.
- * - `shareSave=fail`: each change of the share setting of an agent login,
- *   and of the switch "Use for every member" of an org login, fails, so
- *   the page shows that the change was not saved.
- * - `runs=failed|skipped`: the Runs list of Review pull requests holds a
- *   failed run of each cause, or the skipped runs of accounts outside Acme.
- * - `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
- *   of a run, of Review pull requests for #482 or of an hourly run of
- *   Triage new errors. So its header shows the line of the run.
- * - `waiting=1`: the user is Sam Okafor, who waits for app access, with a
- *   verified email, so the app shows the waitlist. `waiting=no-email`: the
- *   same account without a verified email. Sam starts as a new account, as
- *   `firstRun=github-app` does, unless `firstRun` says otherwise. With
- *   `operator=1`, nobody waits, as an operator gets app access.
- * - `invited=1`: with `waiting`, an invitation of Acme waits for Sam.
- *   Accept makes Sam a member of Acme, with app access.
- * - `paused=1`: sign-ups are paused. A use of a code and the Accept of a
- *   person who waits get `signups_paused`, and nothing is used up. The
- *   operator section shows the same pause, by the operator of the samples.
- * - `waitlist=off`: the operator of the samples turned the waitlist off.
- *   Unless sign-ups are paused, a person who waits gets app access at the
- *   next request, with no use of a code, so Get started opens. The operator
- *   section shows the switch off, and Zed K as a person who came back and
- *   got in by open sign-up. The Account page names open sign-up.
- * - `inviteCode=used-up|disabled`: every invite of the code of the user is
- *   used, or an operator turned the code off. The operator section shows
- *   the same code.
- * - `skills=<state>`: the skills repository of Acme. Without it, Acme saved
- *   acme/agent-skills, whose lookup lists its skills, and the lookup finds
- *   no other repository. `none`: no repository is saved. `not-found`: the
- *   saved acme/agent-skils is not found. `private`, `without-skills`,
- *   `incomplete`, and `lookup-failed`: the lookup of each saved repository
- *   answers so. `expired`: the GitHub sign-in of the user expired.
- * - `skillsTrust=trusted`: Acme trusts its saved skills repository. Without
- *   it, the repository starts untrusted, as each repository does.
- * - `skillsSave=fail`: the first save of the page that names the skills
- *   repository or its trust fails, so the next one saves.
- * - `providers=one|three|fail`: the configured provider accounts of the
- *   Providers tab and of the account choice of Create org: `boat` only,
- *   `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that
- *   fails. Without it, the accounts are `boat` and `e2b`.
- * - `providerSave=fail`: each save of the weights of new orgs fails, so
- *   the Providers tab shows that the weights were not saved.
- */
+/** The preview state of the dev fake. See ../dev-fake.md for query options. */
 export interface DevOptions {
   /** The options of the recorded server. */
   server: FakeApiOptions
+  /** The state of the cloud computer of each archived workspace, or null. */
+  archivedComputer: ArchivedComputerState | null
   /** The first step of Get started that is not done, or `null`. */
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
@@ -221,8 +139,14 @@ export interface DevOptions {
   skills: DevSkills | null
   /** Acme trusts its saved skills repository. */
   skillsTrusted: boolean
+  /** How the branch list answers. */
+  branches: DevBranchList
+  /** How the branch check of a create answers a named branch. */
+  branchCheck: DevBranchCheck
   providers: DevProviderPreset
   providerSaveFails: boolean
+  switches: boolean
+  switchSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
 }
@@ -257,6 +181,8 @@ export function readDevOptions(search: string): DevOptions {
       paths: pick(params, 'paths', PATHS),
       subWorkspaces: params.get('subWorkspaces') === '1',
     },
+    archivedComputer:
+      pick(params, 'archivedComputer', ARCHIVED_COMPUTER_STATES) ?? null,
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
     noAgentLogin: params.get('login') === 'none',
@@ -282,8 +208,12 @@ export function readDevOptions(search: string): DevOptions {
     inviteCode: pick(params, 'inviteCode', INVITE_CODES) ?? 'left',
     skills: pick(params, 'skills', SKILLS) ?? null,
     skillsTrusted: params.get('skillsTrust') === 'trusted',
+    branches: pick(params, 'branches', DEV_BRANCH_LISTS) ?? 'list',
+    branchCheck: pick(params, 'branchCheck', DEV_BRANCH_CHECKS) ?? 'found',
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
+    switches: params.get('switches') === '1',
+    switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }

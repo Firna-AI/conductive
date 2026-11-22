@@ -17,7 +17,10 @@ const orgEligible = `o.deleted_at IS NULL AND ${activeOrgPredicate('o')}
     AND ${activeAdminMemberPredicate('m')})`
 
 export async function overdueLifecycleRepairs(db: D1Database, cutoff: number) {
-  const [workspaces, orgs] = await db.batch<{ id: string }>([
+  const [workspaces, orgs] = await db.batch<{
+    id: string
+    switchPending?: number
+  }>([
     db
       .prepare(
         `SELECT w.id FROM workspaces w WHERE ${workspaceEligible}
@@ -27,10 +30,17 @@ export async function overdueLifecycleRepairs(db: D1Database, cutoff: number) {
       .bind(cutoff, REPAIR_LIMIT + 1),
     db
       .prepare(
-        `SELECT o.id FROM org_images i JOIN orgs o ON o.id = i.org_id
+        `SELECT s.org_id AS id, 1 AS switchPending, s.requested_at AS repairAt
+         FROM org_provider_switches s JOIN orgs o ON o.id = s.org_id
+         WHERE s.state IN ('waiting', 'building') AND ${orgEligible}
+         UNION ALL
+         SELECT o.id, 0 AS switchPending, i.next_image_refresh_at AS repairAt
+         FROM org_images i JOIN orgs o ON o.id = i.org_id
          WHERE i.provider_account = o.provider_account AND i.image_name IS NOT NULL AND ${orgEligible}
          AND i.next_image_refresh_at <= ?
-         ORDER BY i.next_image_refresh_at, o.id LIMIT ?`,
+         AND NOT EXISTS (SELECT 1 FROM org_provider_switches s
+           WHERE s.org_id = o.id AND s.state IN ('waiting', 'building'))
+         ORDER BY repairAt, id LIMIT ?`,
       )
       .bind(cutoff, REPAIR_LIMIT + 1),
   ])

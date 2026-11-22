@@ -19,6 +19,7 @@ import {
   type JsonObject,
 } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { imageRepositories } from './build-changes'
 import { startBuild } from './build-routes'
 import {
   ID,
@@ -140,9 +141,21 @@ function inRepositoryOrder(
   ]
 }
 
+/**
+ * The repositories of the org in the order of the Worker, also after an
+ * add or a removal. As in the Worker, each says whether the org has a good
+ * image, and whether that image holds it, also a repository that the org
+ * no longer chose.
+ */
 function repositoriesReply(org: OrgState): Response {
+  const held = new Set(imageRepositories(org).map(({ id }) => id))
+  const imageReady = org.currentImageBuildId !== null
   return json({
-    repositories: inRepositoryOrder(org.repositories),
+    repositories: inRepositoryOrder(org.repositories).map((repository) => ({
+      ...repository,
+      ready: held.has(repository.id),
+      imageReady,
+    })),
   } satisfies RepositoriesResponse)
 }
 

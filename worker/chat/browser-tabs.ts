@@ -254,7 +254,8 @@ export class BrowserTabs {
     }
   }
 
-  private close(peer: BrowserPeer): void {
+  /** Removes a registered tab and closes its peer, once. */
+  close(peer: BrowserPeer): void {
     if (!this.peers.has(peer)) return
     this.remove(peer)
     try {

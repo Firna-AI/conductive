@@ -134,8 +134,9 @@ plan limits.
   Manage access, as `app/orgs/new/no-access` shows.
 - Create org of an operator also offers the provider account of the org,
   from e2b decision 222: By weights, the default, or an account by its ID,
-  as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The org keeps its account for its whole
-  life. Nobody else sees the choice, so no other screen names a provider.
+  as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. An operator can switch the account
+  later, on the page of the org, as `app/operator/org/switch` shows.
+  Nobody else sees the choice, so no other screen names a provider.
 - Delete org asks for the org name. The deleted org leaves the rail. Until
   the date when everything is deleted, the General tab of the Account page
   lists it for its admins with Restore, as `app/account/deleted-orgs`

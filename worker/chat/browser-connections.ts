@@ -9,6 +9,7 @@ import { subscribeBrowser } from './browser-subscription'
 import type { ChatOperation } from './operation'
 import type { ChatStore } from './store'
 import type { BrowserPeer, ChatDependencies } from './types'
+import type { WorkspaceEventLabels } from './workspace-event-labels'
 import { presentWorkspaceMessage } from './workspace-events'
 import { browserRegistration } from './browser-registration'
 
@@ -44,47 +45,59 @@ export class BrowserConnections extends BrowserTabs {
     })
   }
 
-  subscribe(
+  async subscribe(
     access: BrowserAccess,
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
-    const presented = this.present(peer, access.presentation)
-    let persist:
-      ((registration: BrowserRegistration | null) => Promise<void>) | undefined
-    if (socket) {
-      const native = this.native
-      if (!native) throw new Error('The native browser transport is missing.')
-      const id = crypto.randomUUID()
-      native.sockets.accept(socket, {
-        version: 1,
-        role: 'browser',
-        id,
-        generation: 1,
-        presentation: {
-          origin: access.presentation.origin,
-          number: access.presentation.number,
-        },
+    return this.store.run(async () => {
+      const labels = await this.store.eventLabels(access.workspace.id).prepare()
+      const presented = this.present(peer, access.presentation, labels)
+      let persist:
+        | ((registration: BrowserRegistration | null) => Promise<void>)
+        | undefined
+      if (socket) {
+        const native = this.native
+        if (!native) throw new Error('The native browser transport is missing.')
+        const id = crypto.randomUUID()
+        native.sockets.accept(socket, {
+          version: 1,
+          role: 'browser',
+          id,
+          generation: 1,
+          presentation: {
+            origin: access.presentation.origin,
+            number: access.presentation.number,
+          },
+        })
+        this.connections.set(socket, presented)
+        persist = this.stateWriter(id)
+      }
+      return subscribeBrowser({
+        store: this.store,
+        browsers: this,
+        operation: this.operation(access.workspace.id),
+        access,
+        after,
+        peer: presented,
+        persist,
+        registered,
       })
-      this.connections.set(socket, presented)
-      persist = this.stateWriter(id)
-    }
-    return subscribeBrowser({
-      store: this.store,
-      browsers: this,
-      operation: this.operation(access.workspace.id),
-      access,
-      after,
-      peer: presented,
-      persist,
     })
   }
 
-  private present(peer: BrowserPeer, presentation: WorkspaceLinkContext) {
+  private present(
+    peer: BrowserPeer,
+    presentation: WorkspaceLinkContext,
+    labels: WorkspaceEventLabels,
+  ) {
     return {
       send: (message: Parameters<typeof presentWorkspaceMessage>[0]) =>
-        peer.send(presentWorkspaceMessage(message, presentation)),
+        peer.send(
+          presentWorkspaceMessage(labels.message(message), presentation),
+        ),
       close: () => peer.close(),
     }
   }
@@ -122,12 +135,16 @@ export class BrowserConnections extends BrowserTabs {
   ): Promise<boolean> {
     const saved = await this.registration(state)
     if (!saved) return false
+    const labels = await this.store
+      .eventLabels(saved.presentation.workspaceId)
+      .prepare()
     const peer = this.present(
       {
         send: (message) => socket.send(JSON.stringify(message)),
         close: () => socket.close(1000, 'Connection closed.'),
       },
       saved.presentation,
+      labels,
     )
     this.connections.set(socket, peer)
     await this.restore(peer, saved.registration, this.stateWriter(state.id))

@@ -14,6 +14,7 @@ import {
 import {
   buildHistory,
   changedInstallScript,
+  endedBuild,
   envVars,
   failedBuild,
   firnaInstallScript,
@@ -44,11 +45,14 @@ import {
 import {
   acmeBuildLog,
   buildLog,
+  endedBuildLog,
+  endedFirstBuildLog,
   failedBuildLog,
   failedFirstBuildLog,
   firstBuildLog,
   timedOutBuildLog,
   timedOutFirstBuildLog,
+  waitingBuildLog,
 } from '../fixtures/terminal'
 import { type Workspace, workspaceList } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -87,8 +91,10 @@ const acme: SettingsOrg = {
     history: buildHistory,
     logs: {
       building: buildLog,
+      waiting: waitingBuildLog,
       failed: failedBuildLog,
       'time-limit': timedOutBuildLog,
+      ended: endedBuildLog,
     },
     installScript,
     changedInstallScript,
@@ -115,7 +121,10 @@ function firnaBuilds(build: BuildState): Omit<OrgBuilds, 'logs'> {
       return { history: [failedBuild] }
     case 'time-limit':
       return { history: [timedOutBuild] }
+    case 'ended':
+      return { history: [endedBuild] }
     case 'building':
+    case 'waiting':
     case 'none':
       return { history: [] }
   }
@@ -136,8 +145,10 @@ function firna(build: BuildState): SettingsOrg {
       ...firnaBuilds(build),
       logs: {
         building: firstBuildLog,
+        waiting: waitingBuildLog,
         failed: failedFirstBuildLog,
         'time-limit': timedOutFirstBuildLog,
+        ended: endedFirstBuildLog,
       },
       installScript: '',
       changedInstallScript: firnaInstallScript,

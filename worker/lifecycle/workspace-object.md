@@ -54,7 +54,9 @@ refresh. A transient Boat error keeps the job step for the next alarm,
 within the [retry window](image-builds.md#provider-retries), except a source
 command start. For a workspace object, it:
 
-- runs the queued start of a create or a resume, one phase at a time
+- runs the queued start of a create or a resume. One run can advance the
+  start by more than one phase, as
+  [The start loop](start-loop.md) says
 - finishes Archive initialization and uncertain allocation recovery before normal start work,
   also after the Restore window, until the workspace row holds the recovered ID
 - stops and retains archived sandboxes, bridges an old disk without secrets, and deletes at the archive deadline.
@@ -72,6 +74,8 @@ command start. For a workspace object, it:
 - applies the state in each deadline reply, even when the saved runner
   flag says connected
 - reads the sandbox state from Boat while the runner is not connected
+- checks for an [automatic restart](#automatic-restart) after it completes
+  the regular lifecycle step of a running workspace with a runner that is away
 - watches the restore after each create and resume until Boat reports its
   end, or until a stop, an error, an archive, or a new start, as
   [Creates and resumes](#creates-and-resumes) says
@@ -128,6 +132,38 @@ event to `WorkspaceChat`, through `commitWorkspaceEvent` or the `publish`
 argument of a chat hook. Chat stores and numbers the only workspace event
 history, with chat and lifecycle events.
 
+### Automatic restart
+
+`runnerDisconnectedAt` in the lifecycle state holds the time when the
+runner connection closed. For an older state with no time, the alarm
+starts the count when it first sees the runner away. `automaticRestartAt`
+records the attempt until the runner is ready again. The same state write
+sets `softwareRestartAt` for the shared restart deadline and shows Starting.
+
+The lifecycle alarm finishes its reconciliation and stop checks first.
+It reads the oldest queued message from the pending chat commands. When
+the two times are due, it confirms that the provider still shows a
+running sandbox and checks access to the captured sandbox and account.
+[Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart)
+gives the requirements.
+
+The alarm runner tracks the restart commands in a separate task.
+`QueueTurn.outside` releases the chat queue during each command. The
+regular alarm can apply the restart deadline while a command waits.
+Before the restart command, the alarm checks receiver and workspace access
+outside the chat queue. Readiness during these checks cancels the restart
+and keeps the running turns active.
+
+Back in the queue, the alarm checks that the attempt is current and its
+deadline is still open. It saves `automaticRestartSubmitted` and ends the
+running turns. Chat keeps their undelivered messages for the next ready
+runner. The alarm then submits the command outside the queue.
+
+After the submission record, a hello on the saved stream resumes replay
+and keeps Starting.
+A new `runner.ready` before the deadline ends Starting and releases the
+waiting messages.
+
 ## Creates and resumes
 
 The [browser routes](README.md#browser-routes) queue the start of each
@@ -152,11 +188,16 @@ create and resume. The workspace object runs that start:
 - The write that ends the `records` phase stores the admission in the start
   job. The end of the create moves it to the completed creation record. A
   repeat with other content still gets the admitted first message.
+- The creation plan keeps the start branch beside the base branch and
+  optional pull request start commit. Older plans use the base, then the
+  default branch when the start branch is absent. A replay uses this plan
+  before any new branch check.
 - Resume restarts only a stopped or failed workspace. A resumed
   sandbox gets fresh env vars and runs the startup script again, but it
   fetches no code. A start older than the last stop cannot restart it.
 - After a failed first start, Resume instead queues a replacement create.
-  It keeps the workspace, branch, repository, creation date, and first-message IDs.
+  It keeps the workspace, workspace branch, start branch, base branch,
+  repository, creation date, and first-message IDs.
   It uses the current image and settings, with a fresh token and allocation key.
   It keeps the original preparation sender and the current retry requester separate.
   Previous cleanup finishes before new allocation, including after a restart.
@@ -168,7 +209,8 @@ create and resume. The workspace object runs that start:
   Its running steps become failed before the workspace error event is published.
   If no step is running or failed, the controller records the failed start itself.
   A later sandbox error after successful creation adds no such step.
-- Each start gives the sandbox the default branch of its repository. It
+- Each start gives the sandbox its base branch, with the repository default
+  as the fallback for a null base. It
   gives no setting for the computer tools, because Boat writes the entry
   of the `computer` server into the sandbox, as
   [What it does](../../runner/README.md#what-it-does) says.
@@ -219,6 +261,9 @@ create and resume. The workspace object runs that start:
   differs from the first, the call throws `StartSuperseded`. The advance
   then ends with no further write, as after a lost reply. The lifecycle
   run sets the start due time one second later.
+- One lifecycle run can advance the start through more than one phase,
+  and it polls a running command or a sandbox that is not ready every
+  250 milliseconds. [The start loop](start-loop.md) gives the rules.
 - The storage reads and writes of a start stay in its queue task. So do
   its calls to the controller and to `DurableLifecycle`, with each
   lifecycle state write. The token write, the admission, the runner

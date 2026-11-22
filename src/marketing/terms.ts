@@ -32,7 +32,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 20 November 2026.`,
+  accepted it. Effective date: 22 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -62,10 +62,13 @@ export const termsDocument: LegalDocument = {
             file tree on GitHub. The lookup uses that member's GitHub
             sign-in. The cloud computer copies and updates the public
             repository without a GitHub token.`,
-          text`${productName} runs each org's cloud computers in one of its
-            own accounts with a cloud computer provider. The org keeps
-            that account for its life. You need no account or key of your
-            own for them.`,
+          text`${productName} runs each workspace's cloud computer in one of
+            its own accounts with a cloud computer provider. The operator
+            can switch an org to another account by building its cloud
+            computer setup again there. New workspaces use the new account
+            when that build succeeds, and the old account until then.
+            Existing workspaces keep their accounts. You need no account or
+            key of your own for them.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org
@@ -140,15 +143,39 @@ export const termsDocument: LegalDocument = {
       title: 'Commands on your Mac',
       blocks: [
         paragraph`In the Mac app, an agent can ask to run a command on
-          your Mac. The command runs only after you allow it.`,
-        paragraph`Each workspace has a Mac access switch, which starts off.
-          Any member of the org can turn it on or off again. While it is
-          off, the agents of that workspace cannot ask for a command.`,
+          your Mac. The Mac app asks first unless you already allowed the
+          command or all commands from that workspace.`,
+        paragraph`Agents can ask in every workspace, from its first turn.
+          This includes a new workspace, an automation run, and a workspace
+          that an agent creates. When the Mac app asks, you can deny the
+          request.`,
+        paragraph`In the Mac app, Capabilities has a Mac access switch for
+          your own Mac. When you turn it on, the Mac app allows every
+          command from that workspace on your Mac until you stop. Turning
+          it off stops this permission. Other members' Macs still ask,
+          unless their users already allowed the commands.`,
+        paragraph`If this permission cannot start, the switch stays off and
+          the Mac app shows the cause. In New workspace in the Mac app, the
+          permission starts when you create the workspace with the switch
+          on.`,
+        paragraph`A browser shows no Mac access switch, and it cannot start
+          this permission. An older Mac app shows an earlier Mac access
+          switch that every member shares. That switch no longer stops
+          agents from asking.`,
+        paragraph`Use Stop in This Mac or in the workspace bar, or turn the
+          switch off, to end a workspace's permission on that Mac at once.`,
         paragraph`You decide which commands run. You can allow a command
           once. You can always allow the exact same command text on that
           Mac. You can allow every command of one workspace on that Mac
           for 15 minutes, or until you stop it. Permission until you stop
           it also ends when the Mac app quits or signs out.`,
+        paragraph`While workspace permission runs, each command from that
+          workspace runs on your Mac without asking. This includes a command
+          that text read by the agent steers it to request.`,
+        paragraph`An automation run acts for its owner, also while nobody
+          watches. Text that steers its agent can make it ask for a command
+          on the owner's Mac. A command that the owner always allowed then
+          runs without asking.`,
         paragraph`An allowed command runs with your own permissions on the
           Mac, in the folder that the request names. An always-allowed
           command runs in any folder that a later request names.`,

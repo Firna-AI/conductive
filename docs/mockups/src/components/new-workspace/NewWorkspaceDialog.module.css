@@ -1,7 +1,9 @@
 /*
  * New workspace as a dialog: a wide, compact card with the full hairline
  * outline of every card of the app. It lies in the layer and over the scrim
- * of `ConfirmDialog.module.css`.
+ * of `ConfirmDialog.module.css`. The parts of `ModalCard.module.css` keep
+ * it inside that layer: the header and the footer stay, with their menus,
+ * and the message and the notices scroll between them.
  */
 .dialog {
   display: flex;
@@ -29,9 +31,10 @@
 }
 
 /*
- * The repository picker at the start, and the place of the workspace at the
- * end. The texts of the header, the message, and the footer start on one
- * line, and the boxes of the notices and the buttons on another.
+ * The repository picker and the branch control at the start, and the place
+ * of the workspace at the end. The texts of the header, the message, and
+ * the footer start on one line, and the boxes of the notices and the
+ * buttons on another.
  */
 .header {
   display: flex;

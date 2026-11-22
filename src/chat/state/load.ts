@@ -3,7 +3,7 @@ import type { OrderedWorkspaceResponse } from '../../shared/workspaces'
 import { refreshDevices } from '../device/device-actions'
 import { messageOf, type ChatContext } from './context'
 import { hydrateNewest } from './history'
-import { confirmSessions } from './session-records'
+import { confirmSessions, replaySessionRecords } from './session-records'
 import { confirmWorkspace } from './workspace-records'
 
 const orNull = <T>(request: Promise<T>): Promise<T | null> =>
@@ -89,22 +89,25 @@ export async function loadChat(context: ChatContext): Promise<void> {
     load: { state: 'ready' },
   }))
   const active = store.get().activeSessionId
+  const replay = replaySessionRecords(context)
   let through: number | null = 0
-  if (active) {
-    through = await hydrateNewest(context, active, true)
-    if (!context.live()) return
-  }
   let detail: OrderedWorkspaceResponse
   let sessions: SessionsResponse
   try {
+    if (active) {
+      through = await hydrateNewest(context, active, true)
+      if (!context.live()) return
+    }
     ;[detail, sessions] = await Promise.all([api.workspace(), api.sessions()])
+    if (!context.live()) return
+    confirmWorkspace(context, detail)
+    confirmSessions(context, sessions, (snapshot) => snapshot)
   } catch (error) {
     fail(error)
     return
+  } finally {
+    replay.finish()
   }
-  if (!context.live()) return
-  confirmWorkspace(context, detail)
-  confirmSessions(context, sessions, (snapshot) => snapshot)
   const after = through ?? Math.min(detail.eventNumber, sessions.eventNumber)
   context.stream.start(after)
   await refreshDevices(context)

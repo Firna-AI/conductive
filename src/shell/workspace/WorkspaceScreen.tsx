@@ -146,6 +146,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    computer: workspace.archivedComputer?.state,
     removed,
     opened,
   })

@@ -9,7 +9,9 @@ states the Overview tab, with its counts and its long runs.
 [Waitlist tabs](operator-waitlist-tabs.md) holds the Waitlist tab, Approve,
 the Invite codes tab, and the pause.
 [Operator actions](operator-actions.md) states who is an operator, and what
-a suspension and a lift do. [Waitlist](waitlist.md) states the waitlist and
+a suspension and a lift do. [Switch account](switch-account.md) states the
+switch of an org to another provider account, with its box on the page of
+the org. [Waitlist](waitlist.md) states the waitlist and
 the codes. [Sign-ups](sign-ups.md) states the pause, the waitlist switch,
 and their controls in the section. The terms are those of the
 [architecture doc](../architecture.md#terms). A decision number names a
@@ -105,11 +107,13 @@ that doc says.
 - Each org in the Orgs tab shows its provider account by its ID
   (e2b decision 221).
 - Each org and each user has a page in the section.
-- The page of an org gives its ID, its provider account, its creation
-  day, and the number of its repositories. It also gives its workspaces
-  by state and its cloud computers that run now, as the Overview counts
-  them. It lists the members, each with their name on GitHub and their
-  role (decisions 147 and 149, and e2b decision 221).
+- The page of an org gives its ID, its creation day, and the number of
+  its repositories. Its Provider account box gives its provider account
+  and the switch of that account, as
+  [Switch account on a page](#switch-account-on-a-page) says. It also
+  gives its workspaces by state and its cloud computers that run now, as
+  the Overview counts them. It lists the members, each with their name on
+  GitHub and their role (decisions 147 and 149, and e2b decision 221).
 - The page of a user gives the GitHub login, the name on GitHub, the GitHub
   ID, the join day, and the last active time. It gives the number of
   workspaces that the user owns, and how many of them run now. It lists
@@ -172,6 +176,9 @@ holds these requirements.
 - Its New orgs box shows the weights as one slider between `boat` and
   `e2b`. Each end gives the share of its account, and the two shares add
   up to 100%.
+- The box says that each new org gets an account by chance from the
+  weights. It also says that an operator can switch an org later, on its
+  page.
 - Save weights stays off until the slider moves. It acts at once, with no
   question. Reason: a change applies only to the orgs that are created
   after it, and it moves no org.
@@ -228,6 +235,10 @@ holds these requirements.
 - The question before a lift says what comes back. It also says that a
   workspace on the `boat` account that stopped 14 days ago or more may
   have lost its files.
+- While a switch of the org waits for Lift, the question before a lift
+  also says that Lift starts the switch build.
+  [When the switch build starts](switch-account.md#when-the-switch-build-starts)
+  states that rule.
 - On the page of the operator's own account, the question before a
   suspension warns that the operator is then signed out. It also warns
   that another operator must lift the suspension. The page still allows
@@ -238,3 +249,10 @@ holds these requirements.
   cloud computers that are still stopping. The reply of the suspension
   names them, as [Suspend a user](operator-actions.md#suspend-a-user)
   says.
+
+## Switch account on a page
+
+- [The page of the org](switch-account.md#the-page-of-the-org) states the
+  Provider account box of the page of an org: the account, the switch and
+  the state of its build, the last switch, and the workspaces by account.
+  It also states Switch account, Stop switch, and their questions.

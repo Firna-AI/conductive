@@ -4,12 +4,8 @@ import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import { attachmentCopyKey } from './attachment-record'
 import { normalizeSession, type StoredSession } from './session-storage'
 import { CHAT_ROOT, chatKey } from './storage-keys'
-import type {
-  ChatData,
-  ModelSessionCreation,
-  PendingCommand,
-  StoredTurn,
-} from './types'
+import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
+import type { PendingCommand } from './pending-command'
 import type { ToolSessionRequest } from './tool-session-requests'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
@@ -87,6 +83,17 @@ export class ChatRecords {
     return records
       .sort((left, right) => left.order - right.order)
       .map((entry) => entry.command)
+  }
+
+  async oldestWaitingMessageAt(): Promise<number | undefined> {
+    let oldest: number | undefined
+    for (const command of await this.pending()) {
+      if (command.type !== 'turn' && command.type !== 'message') continue
+      const message = await this.message(command.messageId)
+      if (message?.state === 'queued')
+        oldest = Math.min(oldest ?? Infinity, message.createdAt)
+    }
+    return oldest
   }
 
   firstSession(): Promise<FirstSession | undefined> {

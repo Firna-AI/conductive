@@ -16,11 +16,14 @@ import {
 } from '../../../fixtures/computer'
 import {
   buildLog,
+  endedBuildLog,
+  endedFirstBuildLog,
   failedBuildLog,
   failedFirstBuildLog,
   firstBuildLog,
   timedOutBuildLog,
   timedOutFirstBuildLog,
+  waitingBuildLog,
 } from '../../../fixtures/terminal'
 import { terminalLineSchema } from '../tools/terminalSchemas'
 import { skillsLookupSchema } from './skillsSchemas'
@@ -29,8 +32,10 @@ import { skillsLookupSchema } from './skillsSchemas'
 const buildStates = [
   'ready',
   'building',
+  'waiting',
   'failed',
   'time-limit',
+  'ended',
   'none',
 ] as const satisfies readonly BuildState[]
 
@@ -73,11 +78,13 @@ const orgBuildsProperties = {
   logs: {
     type: 'object',
     additionalProperties: false,
-    required: ['building', 'failed', 'time-limit'],
+    required: ['building', 'waiting', 'failed', 'time-limit', 'ended'],
     properties: {
       building: logSchema,
+      waiting: logSchema,
       failed: logSchema,
       'time-limit': logSchema,
+      ended: logSchema,
     },
   },
 } as const
@@ -129,8 +136,10 @@ export const acmeBuilds = {
   history: buildHistory,
   logs: {
     building: buildLog,
+    waiting: waitingBuildLog,
     failed: failedBuildLog,
     'time-limit': timedOutBuildLog,
+    ended: endedBuildLog,
   },
 } satisfies OrgBuilds
 
@@ -139,8 +148,10 @@ export const newOrgBuilds = {
   history: [],
   logs: {
     building: firstBuildLog,
+    waiting: waitingBuildLog,
     failed: failedFirstBuildLog,
     'time-limit': timedOutFirstBuildLog,
+    ended: endedFirstBuildLog,
   },
 } satisfies OrgBuilds
 

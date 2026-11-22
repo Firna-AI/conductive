@@ -1,0 +1,116 @@
+/*
+ * The popover of an explanation on a computer: a small card by its mark. It
+ * lies over the whole app frame, as the layer of a dialog does, and keeps
+ * to the anchor that the open mark names, also while the chat scrolls. It
+ * opens below the mark, from the start of the mark, so it never covers the
+ * marked text. Where the frame has more room above the mark, it opens
+ * above it, and where it would pass the end of the frame, it ends at the
+ * end of the mark. It has a fixed width and a highest height, and its chat
+ * scrolls inside it. In a low frame it takes only the room on its side of
+ * the mark, less its margins. It has the full hairline outline of every
+ * card of the app and the shadow of a menu. It takes the focus as it opens,
+ * as a dialog does, with no ring around the whole card.
+ */
+.panel {
+  display: flex;
+  position: absolute;
+  z-index: 20;
+  flex-direction: column;
+  width: 400px;
+  max-height: min(420px, calc(100% - 12px));
+  margin: 6px 0;
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-surface);
+  box-shadow: 0 16px 40px -12px var(--ui-shadow);
+  box-sizing: border-box;
+  outline: none;
+  position-anchor: --explain-mark;
+  position-area: block-end span-inline-end;
+  position-try-fallbacks:
+    flip-block,
+    flip-inline,
+    flip-block flip-inline;
+  position-try-order: most-height;
+}
+
+/*
+ * The quote that the popover explains, then Expand and the close button. A
+ * hairline sets it apart from the chat under it.
+ */
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 6px 6px 6px 14px;
+  border-bottom: 1px solid var(--ui-border);
+}
+
+/*
+ * The quote keeps to two lines. Its first line stands level with the
+ * buttons beside it, which take the touch size on a phone.
+ */
+.quote {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding-block: calc(
+    (max(var(--ui-control-height), var(--ui-touch-min)) - 1lh) / 2
+  );
+  overflow: hidden;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-md);
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* The chat of the explanation fills the rest, with its field last. */
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/*
+ * On a phone the popover is a sheet that rises from the bottom over half
+ * the screen, so the marked text stays in view above it. It has the round
+ * top corners and the shadow of every sheet, and its handle shows that a
+ * drag takes it to full height.
+ */
+.sheet {
+  display: flex;
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  flex-direction: column;
+  height: 50%;
+  padding-top: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ui-border2);
+  border-bottom: 0;
+  border-radius: var(--ui-radius-xxl) var(--ui-radius-xxl) 0 0;
+  background: var(--ui-surface);
+  box-shadow: 0 -8px 28px var(--ui-shadow);
+  box-sizing: border-box;
+  outline: none;
+}
+
+/*
+ * At full height the sheet stops under the tab row of the workspace, so
+ * the parent tab and the tab of the explanation stay in view above it.
+ */
+.full {
+  top: 132px;
+  height: auto;
+}
+
+.sheet .header {
+  padding: 0 6px 6px 16px;
+}

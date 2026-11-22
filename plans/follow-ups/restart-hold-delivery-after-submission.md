@@ -1,0 +1,43 @@
+# Restart can stop a runner that recovered
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`: review finding 2, with two more problems that the check of that finding found.
+- **Location:** `worker/lifecycle/automatic-restart.ts:105-125` (the final access checks, the submission record, and `chat.stopTurnsForRestart`), `worker/lifecycle/software-restart.ts:138-147` (the manual Restart, with `runSoftwareRestart` at `:141`), `worker/lifecycle/durable-start.ts:70` (`readyLifecycle`), `worker/chat/runner-delivery.ts:58`.
+- **Reason:** A Medium product bug with the likelihood Rare waits for a later branch under the fix rule. The manual Restart has the same race on `origin/main`.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Chat queue:** the serial queue of the workspace object that orders chat commands and changes of the workspace state.
+  - **Provider:** the service that runs the cloud computer and accepts commands for it.
+  - **Restart command:** the provider command that restarts the agent runner, the preview relay, and the terminal service (`RESTART_COMMAND` in `worker/lifecycle/software-restart.ts`).
+  - **Automatic restart:** the restart that the Worker starts by itself when the runner stays away while a message waits (`worker/lifecycle/automatic-restart.ts`, "Automatic restart" in `docs/protocol/restart-the-software.md`).
+  - **Ready event:** the `runner.ready` event that the runner sends on each connection after its initial reports.
+- **Background:**
+  - Restart and the automatic restart first run an update check of up to 60 seconds (`UPDATE_CHECK_COMMAND`), then the restart command.
+  - Both run their provider commands outside the chat queue, so that chat keeps working during a slow restart. The runner can connect, report ready, and receive waiting work in that time.
+  - A ready event runs `readyLifecycle` in `worker/lifecycle/durable-start.ts`. It ends Starting and clears the restart. The Worker then sends the waiting messages, because it sends to each ready connection (`worker/chat/runner-delivery.ts:58`).
+  - Before the restart command, the automatic restart checks the receiver fence and workspace access outside the chat queue. It then takes the queue and checks that the attempt is still current and inside its time limit.
+  - Before that final check, a review probe held the access check and applied a ready event. The restart command ran with `runnerConnected: true`. Readiness during the access checks now cancels the restart and keeps the running turns active.
+  - Still in the queue, it records the submission in `automaticRestartSubmitted` and ends the running turns in chat with `chat.stopTurnsForRestart`. It then sends the restart command outside the queue.
+  - After the submission record, a hello with a saved ready flag no longer ends Starting, as `plans/follow-ups/runner-readiness-per-process.md` says. A fresh ready event still does, also from a runner process that connected before the command.
+  - The manual Restart, `restartWorkspaceSoftware` in `worker/lifecycle/software-restart.ts`, shows Starting, runs the update check, then the restart command. It has no check between the two commands.
+- **Problem:**
+  - A fresh ready event after the submission record ends the automatic restart and releases waiting work. The restart command can then stop that work.
+  - The manual Restart has the first race on `origin/main`. A runner that connects again during its update check gets work, and then the restart command stops it.
+- **Impact if no action:** The restart stops a turn that the recovered runner just received. The member sees one stopped turn and can send the message again. The next runner ends that turn as stopped, and the message stays in the chat.
+- **Root question:** How does the Worker give no work to a runner process that a restart in progress will stop?
+- **Options:**
+  - **A.** Apply the automatic restart's final checks to manual Restart. Check access outside the queue. In the queue, check the current attempt and its deadline again before submission. Add a regression test with a held access check. The automatic restart already follows this order, with a regression test for recovery before it records submission and ends turns. The gap after submission requires a delivery hold. Effort: Small.
+  - **B.** Use the automatic restart's submission record to resolve readiness and admission in the same queue step. A ready event before that record cancels the restart and keeps the turns active. After the record, hold every runner command until a process that connected after the restart command sends a ready event. Apply the same rule to manual Restart. Keep `restarts when a waiting message shares a running turn and delivers it in a new turn` passing in `worker/lifecycle/automatic-restart.test.ts`. Effort: Medium.
+  - **C.** Give each restart one owner that checks at the final provider submission whether the attempt is current, also for the setup of each provider. Effort: Large.
+  - **D.** Lock new runner connections in the sandbox while the restart command runs, so that no runner connects until the restart ends. It needs a new lock in the sandbox and a change of the restart command. Effort: Large.
+  - **E.** Let the restart own delivery until its command returns. The Worker then sends no runner command from the start of the restart to the end of its command. Starting then lasts until the command returns, also when the runner is ready earlier. So E changes the rule of `docs/protocol/restart-the-software.md` that Starting lasts until the runner is ready. Effort: Medium.
+- **Left out:** Holding the chat queue until the provider returns, because it blocks chat during a slow restart.
+- **Wider fix:** C. Every restart command then uses the same submission rule.
+- **Previous examples:** Commit `a82236777` moved the workspace start calls outside the chat queue, and added checks for a start that a later one replaced (`worker/lifecycle/start-guard.ts`).
+- **Related:**
+  - `plans/follow-ups/runner-readiness-per-process.md`: the same code and a shared wider fix. Its rule for a ready event before and after the submission is the release rule of B here. Test the two fixes together.
+  - `plans/follow-ups/worker-stopped-ends-mark-files-unavailable.md`: the same code, the stopped ends that `stopTurnsForRestart` writes.
+- **Recommendation:** B, in place of the review's A. It also covers the time after the provider accepted the command, and the manual Restart. C best protects provider calls that have their own setup.
+- **Action:** fix after merge, apply B, because a Medium product bug with the likelihood Rare gets fix after merge.

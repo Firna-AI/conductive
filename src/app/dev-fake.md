@@ -8,6 +8,8 @@ the dev wiring in `dev/`, and what its fake routes do.
 Without `?conversation=`, a working workspace has a running recorded chat.
 Other recorded workspaces have a finished chat. An explicit conversation
 option overrides this default, including queued chats that show no spinner.
+`dev/options.ts` lists the values. The `wake-` values give the wakes of a
+watch, as the mockups draw them at `app/chat/wakes`.
 
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
@@ -34,7 +36,9 @@ option overrides this default, including queued chats that show no spinner.
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices in the repository order of
   the Worker. An add goes to the end of the order, and a move of a chosen
-  repository starts no build. Its custom initials
+  repository starts no build. Each repository of its replies gives
+  `imageReady` and `ready` from its current image build and the inputs of
+  that build, as the Worker does. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
@@ -54,12 +58,45 @@ option overrides this default, including queued chats that show no spinner.
   the skills repository or its trust, and that save changes nothing. The
   next save works, so Save repository can show a failed save and its
   retry.
+- The branch list of New workspace gives the branches of the mockups for
+  acme/storefront, newest commit first, and only the default branch for
+  each other repository. `?branches=loading` never answers,
+  `?branches=failed` fails as a read of GitHub does, and
+  `?branches=no-access` says that the GitHub account cannot read the
+  repository. With `?branchCheck=missing` or `?branchCheck=no-access`, a
+  create that names a branch other than the default branch gets the
+  refusal of a missing branch or of a GitHub account without access, as
+  [Start from a branch](start-branch.md) says. The fake stores no branch of
+  a create.
 - Acme also holds Postcode lookup for the shipping and billing forms,
   `postcode-lookup`, which a member archived 3 weeks before the clock of
   the fake starts. Its 14 days ended, so the workspace list and the
   palette leave it out. The list route still sends it, as the Worker does,
   so its link and its chip still open its read-only chat, at
   `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?archivedComputer=may-exist|deleted|unknown` gives each archived
+  workspace of Acme that state of its cloud computer, with the end of its
+  14 days, as the Worker sends it. These are `checkout-autocomplete` with
+  `?workspace=archived`, and the removed `postcode-lookup`. Neither names a
+  kept cloud computer, so `may-exist` shows an unresolved create request,
+  with no Restore. A value that is not one of the three counts as no
+  option.
+- Without the option, these records have no `archivedComputer`. That is
+  the preview of the compatibility path for a record of an older Worker.
+  The notice then reads only the legacy `restoreUntil`, as before the
+  field. These records offer no Restore, so the notice says that the cloud
+  computer is deleted. `unknown` shows the same words. The URLs of a check:
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=may-exist`
+    promises only the chat history before the end of the 14 days.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=may-exist`
+    says after that end that the cloud computer is being deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=deleted`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=deleted`
+    say before and after that end that the cloud computer is deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup` preview
+    the older Worker. The URLs above with `archivedComputer=unknown` in
+    place of the state show the same words.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and
@@ -137,7 +174,10 @@ option overrides this default, including queued chats that show no spinner.
   `boat` only, a third account, or a failed read, and `?providerSave=fail`
   fails each save of the weights. An org that Create org makes joins the
   operator section with its account: the choice of an operator, or a draw
-  from the weights.
+  from the weights. Switch account and Stop switch change the switch of an
+  org, as [the operator section](../shell/operator/README.md#development)
+  says. `?switches=1` gives sample orgs each state of a switch, and
+  `?switchSave=fail` fails each switch and stop.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
@@ -294,3 +334,102 @@ the automations that the person owns in them, and the automation runs of the
 person that were not skipped, by the rules of the Worker. Its reply keeps
 the removed workspaces in `archived` and counts them again in `removed`,
 as the Worker does. So Cal's tab shows Postcode lookup in its Removed row.
+
+## Dev preview query options
+
+The preview state of the dev fake, from the query string of the page,
+such as `/?role=member&workspace=stopped`. An unknown value is ignored,
+so its default applies.
+
+- `role=admin|member`: the role of the user in the recorded orgs.
+- `workspace=<state>`: the state of `checkout-autocomplete`.
+- `archivedComputer=may-exist|deleted|unknown`: each archived workspace of
+  Acme has that state of its cloud computer, with the end of its 14 days,
+  as the Worker sends it. These are `checkout-autocomplete` with
+  `workspace=archived`, and the removed `postcode-lookup`. Neither names a
+  kept cloud computer, so `may-exist` shows an unresolved create request.
+  Without the option, their records have none, as from an older Worker.
+- `conversation=<scenario>`: its recorded chat, such as `running`.
+- `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
+  shows the GitHub state of that bar.
+- `paths=masked`: two files whose real paths hold a fake secret value,
+  with their labels, in the file lists and at the end of each turn.
+- `subWorkspaces=1`: Acme also has the sub-workspaces of the mockups,
+  nested under Apple Pay button and Checkout address autocomplete, down
+  to depth 3, so the list shows two trees in Checkout.
+- `firstRun=github-app|org|agent-login`: Get started is not done from
+  that step on. With `github-app` or `org`, the user has no org until
+  Create org runs. In each first run, no agent login is connected.
+- `login=none`: no agent login is connected.
+- `login=endpoint`: both agents have a shared own endpoint login.
+- `modelList=unlisted|none`: with `login=endpoint`, the last model list of
+  the Claude login does not name the last Claude model of the app, or
+  names no Claude model of the app. The list was read 4 minutes before
+  the fake starts. Refresh and a save read a list that names every model.
+- `modelList=v1-only|read-failed`: with `login=endpoint`, use the fake
+  host that lists only under /v1, or the host that never lists models.
+  With `read-failed`, the Claude login keeps a list from a day before
+  that does not name the last Claude model of the app.
+- `orgLogin=endpoint|unlisted|every-member`: Acme has an org login of
+  Claude on its gateway, whose last model list names every Claude model
+  of the app, or lacks the last one. With `every-member`, its switch
+  "Use for every member" is on. The account names the default login of
+  each org and agent, as the Worker does.
+- `sessionLogin=org|removed`: each open session of
+  `checkout-autocomplete` runs on the org login of Acme, as after a
+  first message on it. With `removed`, an admin removed that login
+  later, so the records say that it is not available.
+- `sessionLogin=empty`: `checkout-autocomplete` also has an empty
+  session that Cal started. Its record names the default login of Cal,
+  which its first message takes, as the Worker resolves it, such as the
+  org login with `orgLogin=every-member`.
+- `deleted=1`: Acme is deleted, as its admins see it.
+- `suspended=1`: the operator suspended Acme. Each write of Acme gets
+  `org_suspended`, except a leave, as the Worker does.
+- `operator=1`: the user is an operator. The rail and the org switcher
+  show Operator, and the operator section shows the sample orgs and
+  users of the mockups. Without it, each operator request gets
+  `operator_required`, as the Worker does.
+- `signedOut=1`: the Worker refuses the session, so the sign-in shows.
+- `stop=<seconds>`: an open workspace stops that many seconds after it
+  opens, as a sandbox does that stops while its workspace is open.
+- `upload=wait|fail`: no part of an upload gets an answer, so each file
+  keeps uploading, or the first part of the page fails at each of its
+  sends, so its chip fails once, after the waits of its retries of about
+  7 seconds, and Try again works.
+- `shareSave=fail`: each change of the share setting of an agent login,
+  and of the switch "Use for every member" of an org login, fails, so
+  the page shows that the change was not saved.
+- `runs=failed|skipped`: the Runs list of Review pull requests holds a
+  failed run of each cause, or the skipped runs of accounts outside Acme.
+- `run=pull-request|schedule`: `checkout-autocomplete` is the workspace
+  of a run, of Review pull requests for #482 or of an hourly run of
+  Triage new errors. So its header shows the line of the run.
+- `waiting=1`: the user is Sam Okafor, who waits for app access, with a
+  verified email, so the app shows the waitlist. `waiting=no-email`: the
+  same account without a verified email. Sam starts as a new account, as
+  `firstRun=github-app` does, unless `firstRun` says otherwise. With
+  `operator=1`, nobody waits, as an operator gets app access.
+- `invited=1`: with `waiting`, an invitation of Acme waits for Sam.
+  Accept makes Sam a member of Acme, with app access.
+- `paused=1`: sign-ups are paused. A use of a code and the Accept of a
+  person who waits get `signups_paused`, and nothing is used up. The
+  operator section shows the same pause, by the operator of the samples.
+- `waitlist=off`: the operator of the samples turned the waitlist off.
+  Unless sign-ups are paused, a person who waits gets app access at the
+  next request, with no use of a code, so Get started opens. The operator
+  section shows the switch off, and Zed K as a person who came back and
+  got in by open sign-up. The Account page names open sign-up.
+- `inviteCode=used-up|disabled`: every invite of the code of the user is
+  used, or an operator turned the code off. The operator section shows
+  the same code.
+- `providers=one|three|fail`: the configured provider accounts of the
+  Providers tab and of the account choice of Create org: `boat` only,
+  `boat`, `e2b`, and `e2b-us`, or `boat` and `e2b` with a read that
+  fails. Without it, the accounts are `boat` and `e2b`.
+- `providerSave=fail`: each save of the weights of new orgs fails, so
+  the Providers tab shows that the weights were not saved.
+- `switches=1`: sample orgs of the operator section show each state of a
+  switch of the provider account, as `switch-seed.ts` lists them.
+- `switchSave=fail`: each Switch account and Stop switch fails, so the
+  question shows its error.

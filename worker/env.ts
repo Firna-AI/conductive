@@ -29,6 +29,7 @@ export interface AppEnv {
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
   SANDBOX_PROVIDER_ACCOUNTS?: string
+  PROVIDER_SWITCH?: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   FEEDBACK_EMAIL?: string

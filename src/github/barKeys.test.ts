@@ -12,6 +12,7 @@ function viewWith(action: BarAction): BarView {
     link: null,
     message: null,
     note: null,
+    branches: null,
     tint: null,
   }
 }

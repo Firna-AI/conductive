@@ -73,6 +73,9 @@ says.
   turn of the session, as Stop does.
 - A session without a running turn gives a reply that says so, and no
   error. Reason: the agent may not know whether the turn already ended.
+- A stop also drops each wake that the session has not accepted yet, of a
+  watch that the session set before the stop. This holds also when the
+  session has no running turn, as [Stop](session-watches.md#stop) says.
 - The reply comes at once. A turn that runs ends when its agent stops. So
   a list soon after the reply can still show the session as running.
 - The chat names the sending session in the line of the stopped turn, as

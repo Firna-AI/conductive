@@ -78,6 +78,14 @@ export function productionAgentTools(
         ),
       callingTurn: (id, turnId) =>
         workspaceBinding(env).getByName(id).callingToolTurn(id, turnId),
+      callingWatchTurn: (id, turnId) =>
+        workspaceBinding(env).getByName(id).callingWatchTurn(id, turnId),
+      watchSession: async (input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(input.workspaceId)
+            .watchAgentSession(input),
+        ),
       ownerDefaultChoice: async () => configuredDefaultChoice(env),
       createWorkspace: (input) =>
         createWorkspaceFromTool(env, dependencies, input),

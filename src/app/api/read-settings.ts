@@ -37,6 +37,12 @@ function readRepository(value: unknown): Repository {
     defaultBranch: text(repository, 'defaultBranch'),
     installationId: count(repository, 'installationId'),
     selected: flag(repository, 'selected'),
+    ...(repository.ready === undefined
+      ? {}
+      : { ready: flag(repository, 'ready') }),
+    ...(repository.imageReady === undefined
+      ? {}
+      : { imageReady: flag(repository, 'imageReady') }),
   }
 }
 

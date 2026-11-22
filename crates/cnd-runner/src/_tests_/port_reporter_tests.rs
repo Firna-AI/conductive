@@ -18,6 +18,7 @@ fn server(port: u64) -> ListeningPort {
         port,
         name: Some("vite dev".into()),
         folder: None,
+        service_id: None,
     }
 }
 

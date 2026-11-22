@@ -13,3 +13,7 @@ The operator Overview includes sample long runs from `fixtures/operator.ts`
 under `src/test-support/`. Their start and activity times stay fixed across
 refreshes. Org and owner status marks follow Suspend and Lift.
 The Orgs search finds each sample cloud computer ID.
+
+The fake org detail sets `switchAvailable: true`. Switch account stays
+available locally while production admission is off. `?operator=1&switches=1`
+shows the full sample switch flow.

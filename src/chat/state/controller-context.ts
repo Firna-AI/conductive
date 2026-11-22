@@ -17,6 +17,8 @@ import { applyEnvelopes } from './apply-events'
 import { isArchived, reloadView } from './archive-view'
 import type { ChatContext } from './context'
 import { viewWriter } from './saved-view'
+import { replaySessionRecords } from './session-records'
+import type { SessionReplay } from './session-replay'
 import type { ChatSources } from './sources'
 
 export interface ChatContextOptions {
@@ -65,6 +67,7 @@ export function createChatContext(
   const api = createChatApi(options.client, target)
   let drafts = 0
   let files = 0
+  let replay: SessionReplay | null = null
   const context: ChatContext = {
     target,
     api,
@@ -105,10 +108,19 @@ export function createChatContext(
       target,
       subscribe,
       timers,
+      replaying: (active) => {
+        if (!live()) return
+        if (active) replay ??= replaySessionRecords(context)
+        else {
+          const complete = replay
+          replay = null
+          complete?.finish()
+        }
+      },
       deliver: (envelopes) => {
         if (!live()) return
         const archived = isArchived(store.get())
-        applyEnvelopes(context, envelopes)
+        applyEnvelopes(context, envelopes, replay)
         if (archived && !isArchived(store.get())) void reloadView(context)
         if (changesWorkspace(envelopes)) void refreshDevices(context)
       },

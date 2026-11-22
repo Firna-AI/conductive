@@ -1,11 +1,11 @@
 import { warnWorker } from '../warnings'
 import { WarningId, WarningStreamId } from '../warning-values'
-import type { ActiveRunner } from './types'
+import type { RunnerConnectionState } from './runner-connection-state'
 
 export type RunnerDiagnosticIdentity = Pick<
-  ActiveRunner,
-  'id' | 'workspace' | 'streamId' | 'processStartId'
-> & { protocolVersion: number | null }
+  RunnerConnectionState,
+  'id' | 'workspace' | 'streamId' | 'processStartId' | 'protocolVersion'
+>
 
 export function runnerWarningFields(
   workspaceId: string,

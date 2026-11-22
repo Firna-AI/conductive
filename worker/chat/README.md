@@ -30,6 +30,7 @@ which serves these routes. The path helpers live in
 | --- | --- | --- |
 | `GET` sessions | `sessionsPath` | Lists the open sessions and the session history |
 | `POST` sessions | `sessionsPath` | Creates a session. The requester becomes its starter |
+| `POST` explain | `explainSessionPath` | Starts an open session with a selection anchor and a first message that the Worker writes. It uses the requester's choice or default, login, and normal message admission |
 | `PATCH` session | `sessionPath` | Renames a session |
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the session login cannot serve the sender, a linked session takes the sender's default login, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
@@ -38,7 +39,7 @@ which serves these routes. The path helpers live in
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
 | `GET` history | `chatHistoryPath` | Reads the stored events of one session in newest-first pages, with `before` and `through` |
-| `GET` events socket | `workspaceEventsPath` | Sends the stored history, then each new event |
+| `GET` events socket | `workspaceEventsPath` | Answers the upgrade, then sends the stored history and each new event. A long history goes over several connections, as [History and event order](history.md) says |
 | `GET` runner socket | `MACHINE_PATHS.runner` | Connects the agent runner on the machine hostname |
 
 The outer Worker forwards each route of this table to the object of its
@@ -46,6 +47,12 @@ workspace, as [the integration README](integration/README.md#the-outer-worker)
 says. `routeChat` in [`router.ts`](router.ts) forwards the browser routes.
 `routeRunner` forwards the runner socket of the machine hostname, by its
 bearer token.
+
+After Explain accepts its written prompt, `routeChat` calls
+[`startAcceptedMessage`](../lifecycle/accepted-message-start.ts) outside
+the workspace queue. The reply keeps its acceptance fields and adds the
+same `resume` status as a tool message. A failed resume check keeps HTTP 201
+and the saved prompt. The shared operation applies the normal open checks.
 
 The [secret request feature](../secrets/README.md#browser-answers-and-events)
 adds browser list, answer, and temporary-value removal routes.
@@ -168,6 +175,9 @@ Try again replaces the failed first computer without accepting the stored messag
 `send` takes a parsed message and its actual sender, so browser and trusted tool callers share one admission path.
 Its optional acceptance callback saves a tool request in the message transaction.
 `tool-session-write.ts` owns tool request replay and atomic creation with an optional first message.
+`explain-session.ts` checks the selected message and saves the anchored session with its first message in one transaction.
+It reads member messages from their stored records and finished agent answers from paged session history.
+`explain-prompt.ts` builds the prompt with the canonical parent session link.
 `ChatRecords` stores each `ToolSessionRequest` beside its accepted session and message.
 The workspace title request removes only the canonical final tool footer from its stored first-message input.
 
@@ -236,6 +246,24 @@ passes the output filter first. That filter leaves out each skill whose
 name held a secret value. Then `skill-reports.ts` cuts each description.
 `skill-state.ts` stores the result, and it publishes `skills: null` when the
 list is unavailable. [Chat backend key code](key-code.md) gives both files.
+
+## Services
+
+[Service reports](../../docs/protocol/service-reports.md) states the
+service messages of a runner connection. `RunnerChannel.services` delegates
+them to the [services area](../services/README.md) before the numbered reader
+and work mark. `runner-hello.ts` negotiates support and requests a fresh report.
+Saved connections retain the optional support flag and the connection's
+sandbox binding across a wake. Old connections without support stay readable.
+
+Service snapshots and control receipts use `services:v1:` records. They use
+no chat commands, cursors, repair records, browser socket kinds, or activity
+calls. Raw log assemblies live only in memory. Computer Stop clears service
+state through `RunnerChannel.stop` and `WorkspaceServices.stoppedHook`.
+Software Restart, including its failure path, keeps the service catalogue.
+Its runner disconnect ends an outstanding control as unconfirmed.
+The catalogue, controls, and log reads use the
+[workspace feature routes](../features/README.md).
 
 ## Tests
 
@@ -330,16 +358,19 @@ session and no turn, also when its payload names them.
 A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
 names that public type. The reader takes its session and turn only from an
 object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
-from the saved assembly of its stream, as [Chat backend key code](key-code.md)
-says. An event of an unknown type keeps its root IDs. Each check uses a
-session and a turn only when `verifiedTurn` finds that turn in that session.
+from the saved assembly of its stream, as
+[Key code: tool details](key-code-tool-details.md) says. An event of an
+unknown type keeps its root IDs. Each check uses a session and a turn only
+when `verifiedTurn` finds that turn in that session.
 
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Agent runner: Services](../../docs/protocol/services.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

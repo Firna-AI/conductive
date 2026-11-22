@@ -4,13 +4,15 @@ import {
   previewStates,
 } from '../../../components/tools/PortPreview'
 import { openPort } from '../../../fixtures/previews'
+import { serverSchema } from './PortForm.mockup'
 
 /**
  * The Preview tool of the tools panel, registered with Mokly. Its pages
  * show open previews, the servers after +, the detected servers, no
  * server, and the list after a failed repair. A phone draws the preview in
  * a frame of the tool, so a screen passes `frame`, and a page of the part
- * follows its own view.
+ * follows its own view. A screen supplies the services of the report in
+ * the `services` slot, and the servers beside them as `servers`.
  */
 export const previewTool = defineComponent({
   slug: 'preview-tool',
@@ -31,12 +33,23 @@ export const previewTool = defineComponent({
       frame: { type: 'boolean' },
       /** The port of the Preview tab that shows on desktop, or null. */
       shownPort: { type: ['integer', 'null'] },
+      /**
+       * The servers beside the `services` slot: each server that no service
+       * holds. Without it, the list shows its servers as with no services.
+       */
+      servers: { type: 'array', items: serverSchema },
     },
   } as const,
+  slots: ['services'],
   props: { state: 'open', shownPort: openPort },
   render: (props, context) => (
     <PreviewTool
       frame={props.frame ?? context.viewport === 'mobile'}
+      services={
+        props.services === undefined
+          ? undefined
+          : { section: props.services, servers: props.servers }
+      }
       shownPort={props.shownPort ?? null}
       state={props.state}
     />

@@ -5,21 +5,32 @@ import { repositoryQuestion } from './repositoryMoveCopy'
 
 /** The work that the question of a repository change lists. */
 export interface RepositoryChangeWorkLists {
-  /** The local work in the old folder, as Continue counts it. */
-  left: { files: readonly string[]; commits: number }
+  /**
+   * The local work in the old folder, as Continue counts it. `displayFiles`
+   * gives the name that each changed file shows, as `LocalWorkList` says.
+   */
+  left: {
+    files: readonly string[]
+    displayFiles?: readonly string[]
+    commits: number
+  }
   /** The number of the open pull request of the old branch, or null. */
   pullRequest: number | null
   /** The pushed commits of the old branch that its base does not hold. */
   pushedCommits: number
   /** The changed files of the new folder, which move to the new branch. */
   carriedFiles: readonly string[]
+  /** The name that each file of `carriedFiles` shows, in its order. */
+  displayCarriedFiles?: readonly string[]
 }
 
 /**
  * The text of the question before a repository change: what the change
  * does, the work that stays with the old repository, and the work of the
  * new folder that moves to the new branch. A list without work does not
- * show. It takes no fixtures, so the app can use it too.
+ * show. Each changed file shows by its label, such as one that hides a
+ * secret value, or by its real path without one. It takes no fixtures, so
+ * the app can use it too.
  */
 export function RepositoryChangeText(props: {
   /** The name of the old repository. */
@@ -43,6 +54,7 @@ export function RepositoryChangeText(props: {
           <DialogText>{repositoryQuestion.left(from)}</DialogText>
           <LocalWorkList
             commits={left.commits}
+            displayFiles={left.displayFiles}
             files={left.files}
             label={repositoryQuestion.left(from)}
           >
@@ -68,6 +80,7 @@ export function RepositoryChangeText(props: {
           <DialogText>{repositoryQuestion.carried(to)}</DialogText>
           <LocalWorkList
             commits={0}
+            displayFiles={work.displayCarriedFiles}
             files={work.carriedFiles}
             label={repositoryQuestion.carried(to)}
           />

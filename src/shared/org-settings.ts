@@ -54,6 +54,10 @@ export interface Repository {
   defaultBranch: string
   installationId: number
   selected: boolean
+  /** The current org image holds this repository. Older replies omit it. */
+  ready?: boolean
+  /** The current account has a published org image. Older replies omit it. */
+  imageReady?: boolean
 }
 
 /**

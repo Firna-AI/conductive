@@ -24,6 +24,7 @@ import { paths } from '../paths'
 import { rowMenuOf } from './workspaceRowMenu'
 import { freshPromptFor, runStartingLog } from './workspaceRun'
 import { panelState } from './workspaceSandbox'
+import { previewServicesOf } from './workspaceServices'
 import { backFrom, openFile } from './workspaceFileTab'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
@@ -208,15 +209,23 @@ export function ToolContent(props: {
   switch (state.tool) {
     case 'terminal':
       return <TerminalContent state={state} viewport={props.viewport} />
-    case 'preview':
+    case 'preview': {
+      // The services section is React content, so it goes in a slot, and
+      // the servers beside it go as data.
+      const services = previewServicesOf(state, props.viewport)
       return (
         <previewTool.Component
           frame={mobile}
           moklyInstance="preview-tool"
           shownPort={state.tab === 'preview' ? openPort : null}
           state={state.ports}
+          {...defined({
+            services: services?.section,
+            servers: services?.servers && plainData(services.servers),
+          })}
         />
       )
+    }
     case 'desktop':
       return <desktopView.Component moklyInstance="desktop-view" />
   }

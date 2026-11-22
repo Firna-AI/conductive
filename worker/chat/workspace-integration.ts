@@ -3,6 +3,8 @@ import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { WorkspaceFiles } from '../files/workspace'
 import { durableFilesStorage } from '../files/storage'
 import { WorkspaceAlarms, nativeAlarmStorage } from '../features/alarms'
+import { WorkspaceBaseChanges } from '../lifecycle/workspace-base'
+import { baseChangeChatStorage } from '../lifecycle/base-change-storage'
 import { nativeWorkspaceStorage } from '../lifecycle/platform-storage'
 import {
   assertReceiverActive,
@@ -12,21 +14,19 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
+import { requiresFreshRunnerReady } from '../lifecycle/durable-restart'
 import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
-import {
-  lifecycleDependencies,
-  type LifecycleEnvironment,
-} from '../lifecycle/runtime'
+import type { LifecycleEnvironment } from '../lifecycle/runtime'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
 import { WorkspaceChat } from './backend'
+import { fencedDependencies } from './fenced-dependencies'
 import { firstMessageIdentity } from './first-message'
 import { projectWorkspaceTitle } from './workspace-title'
-import type { ChatDependencies } from './types'
+import type { WorkspaceChatResolvers } from './workspace-resolvers'
 import { WorkspaceSockets } from '../native-sockets'
 import {
   callbackPublisher,
   observeWorkspaceCallbacks,
-  type WorkspaceCallbackObservers,
 } from './workspace-callbacks'
 import { QueueGenerations } from './queue-generation'
 import { unsupportedRunnerReason } from './runner-unsupported'
@@ -36,25 +36,6 @@ import { projectInputState } from '../secrets/workspace-runtime'
 import { StartJobRecords } from '../lifecycle/start-job-records'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
-export type WorkspaceChatResolvers = Partial<
-  Pick<
-    ChatDependencies,
-    | 'resolveAttachments'
-    | 'prepareAttachments'
-    | 'scheduleRunnerCheck'
-    | 'scheduleBrowserCheck'
-    | 'randomId'
-    | 'runTitleModel'
-    | 'readConnectionAccess'
-    | 'readRunnerAccess'
-    | 'browserOpened'
-    | 'browserClosed'
-  >
-> & {
-  callbackObservers?: WorkspaceCallbackObservers
-  socketAutoResponseAt?: (socket: WebSocket) => number | null
-}
-
 export function createWorkspaceIntegration(
   context: DurableObjectState,
   env: WorkspaceCompositionEnv,
@@ -67,28 +48,14 @@ export function createWorkspaceIntegration(
     async () =>
       (await storage.get<ReceiverFence>(LIFECYCLE_FENCE_KEY))?.generation ?? 0,
   )
-  const original = lifecycleDependencies()
-  const dependencies = {
-    ...original,
-    now,
-    fetch: async (request: Request) => {
-      await assertReceiverActive(storage, generations.current())
-      const response = await original.fetch(request)
-      // An allocated resource must retain its returned ID before a suspension drains the phase.
-      if (!(
-        request.method === 'POST' &&
-        new URL(request.url).pathname === '/api/v1/sandboxes'
-      ))
-        await assertReceiverActive(storage, generations.current())
-      return response
-    },
-  }
+  const dependencies = fencedDependencies(storage, generations.current, now)
   const alarms = new WorkspaceAlarms(
     nativeAlarmStorage(storage),
     nativeAlarmStorage(context.storage),
   )
+  const baseChanges = new WorkspaceBaseChanges(env, dependencies, storage)
   const sockets = new WorkspaceSockets(context)
-  const stoppedHooks: ((id: string) => Promise<void>)[] = []
+  const stoppedHooks: ((id: string, failed?: boolean) => Promise<void>)[] = []
   const files = new WorkspaceFiles(
     durableFilesStorage(storage),
     dependencies.randomToken,
@@ -96,7 +63,7 @@ export function createWorkspaceIntegration(
   const matches = (name: string) =>
     env.WORKSPACES.idFromName(name).equals(context.id)
   const chat: WorkspaceChat = new WorkspaceChat(
-    storage,
+    baseChangeChatStorage(storage),
     env,
     {
       ...resolvers,
@@ -107,6 +74,8 @@ export function createWorkspaceIntegration(
       runnerAlarm: (at) => alarms.set('runner', at),
       runnerWork: nativeRunnerWorkStorage(context.storage),
       automationReportAlarm: (at) => alarms.set('automation-report', at, true),
+      sessionWatchAlarm: (at, earlier) =>
+        alarms.set('session-watches', at, earlier),
       runnerAttached: (_workspaceId, connectionId, send) => {
         files.runner.attach(connectionId, (command) => {
           context.waitUntil(
@@ -122,6 +91,8 @@ export function createWorkspaceIntegration(
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
+      requiresFreshRunnerReady: async () =>
+        requiresFreshRunnerReady(await controller.readLifecycle()),
       runnerUnsupported: async () =>
         controller.runnerProtocolUnsupported(unsupportedRunnerReason),
       ...observeWorkspaceCallbacks(
@@ -136,9 +107,7 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(
-                Promise.all([devices.reconcile(), secrets.reconcile()]),
-              )
+              context.waitUntil(reconcileStopped())
             }
           },
           receiveFileResult: async (value, connectionId) => {
@@ -153,8 +122,11 @@ export function createWorkspaceIntegration(
               callbackPublisher(publish),
             )
           },
-          runnerDisconnected: async (_id, publish) =>
-            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+          runnerDisconnected: async (_id, publish, at) =>
+            controller.runnerLifecycleDisconnected(
+              callbackPublisher(publish),
+              at,
+            ),
           turnDispatching: async (_id, turn, publish) => {
             if (await pendingWorkspaceChange(storage)) return false
             const state = await controller.readLifecycle()
@@ -221,11 +193,15 @@ export function createWorkspaceIntegration(
     }),
   )
   const startRecords = new StartJobRecords(env, platform.storage, now)
+  const reconcileStopped = async () => {
+    await Promise.all([devices.reconcile(), secrets.reconcile()])
+  }
   const controller: WorkspaceController = createWorkspaceController(
     startRecords.env,
     dependencies,
     {
       ...platform,
+      baseChanges,
       startRecords,
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
@@ -247,10 +223,7 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () =>
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        ),
+      chatRecovered: () => context.waitUntil(reconcileStopped()),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -272,16 +245,15 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id) => {
-        for (const hook of stoppedHooks) await hook(id)
-        await chat.stopWorkspace(id)
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        )
+      stopped: async (id, keepQueued, restartFailed) => {
+        for (const hook of stoppedHooks) await hook(id, restartFailed)
+        await chat.stopWorkspace(id, keepQueued, restartFailed)
+        context.waitUntil(reconcileStopped())
       },
     },
   )
   return {
+    now,
     storage,
     chat,
     devices,
@@ -289,12 +261,11 @@ export function createWorkspaceIntegration(
     controller,
     files,
     alarms,
+    baseChanges,
     sockets,
     startRecords,
     withGeneration: generations.withGeneration,
-    reconcileStopped: async () => {
-      await Promise.all([devices.reconcile(), secrets.reconcile()])
-    },
-    onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
+    reconcileStopped,
+    onStopped: (hook: (typeof stoppedHooks)[number]) => stoppedHooks.push(hook),
   }
 }
