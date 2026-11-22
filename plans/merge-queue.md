@@ -634,6 +634,8 @@ State the requirements and the decisions of the queue.
       fix turns as the queuer (decision 314). The fetches of its base moves
       use the owner's token (decision 307).
 - [ ] Update `docs/protocol/sections.md`: the Merge queue group.
+- [ ] Update `docs/protocol/sub-workspaces.md`: a queued workspace leaves
+      its tree, and its sub-workspaces move up a level (decision 318).
 - [ ] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact, such as the token of a merge.
       Set the effective date of the Terms when its text changes.
@@ -749,7 +751,6 @@ Depends on: 1, 4
 - [ ] Leave queued workspaces out of their sections, and move their
       sub-workspaces up with the placement rule of archived parents in
       `src/shared/workspace-tree.ts` (decision 318).
-- [ ] Update `docs/protocol/sub-workspaces.md` for queued workspaces.
 - [ ] Add Add to merge queue to the row menu, the header menu, and the
       palette, each with its command, and the drag into the group
       (decision 317).
