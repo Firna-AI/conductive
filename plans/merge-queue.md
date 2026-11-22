@@ -68,8 +68,8 @@ Contract owners:
 The numbers 313 to 320 were the next free numbers on 22 November 2026, on
 `main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
 22 November 2026, with the options and the letters that Cal saw in the
-brainstorm. Decisions 316, 317, 319, and 320 hold Cal's later answers of
-the same day. Decision 318 is open.
+brainstorm. Decisions 316 to 320 hold Cal's later answers of the same
+day. No decision is open.
 
 A second options check ran on the same day over the changed decision 318,
 decision 320, and the new design calls. It added option D to decision 318
@@ -275,9 +275,15 @@ github status bar". This changes decision 220 for this one action.
 
 ### Decision 318: a queued sub-workspace in the list
 
-Open. It blocks the grouping part of Milestones 1 and 8.
+Chosen by Cal on 22 November 2026: D. A queued workspace leaves its
+section and shows once, as a flat row in the group, in queue order. Its
+live sub-workspaces that are not queued show under the nearest workspace
+above them that is not queued, as for an archived parent (sub-workspace
+decision 5 C). They go back under it when it leaves the queue. This changes
+sub-workspace decision 1 C for queued workspaces. Cal chose after a drawing
+of the four options, in `.context/merge-queue/318/options.png`.
 
-Cal answered on 22 November 2026: "it only applies to branches targetting
+Cal's first answer on 22 November 2026: "it only applies to branches targetting
 main". Decision 320 records that answer as the scope of the queue. It does
 not settle this decision. A sub-workspace is a row nested under the row of
 the workspace that created it. Its nesting does not depend on its target,
@@ -555,8 +561,9 @@ line names a decision. The options check corrected them on the same day.
 - A "Merge queue" group shows at the top of the sidebar list only when a
   queue has entries. It holds one block for each queue, headed by the
   repository. Each row shows its place, the state of its
-  step, and the state of its checks. Decision 318 holds where a queued
-  workspace of a tree shows.
+  step, and the state of its checks. A queued workspace shows only there,
+  and its sub-workspaces that are not queued move up a level, as for an
+  archived parent (decision 318).
 - A member with write access drags a row to re-order, as in a section. A
   phone lifts a row with a long press.
 - A member adds an entry from the bar, the row menu, the header menu, the
@@ -597,7 +604,8 @@ Draw the sidebar group and the bar states, on a computer and on a phone.
       menu, and the drag into the group with its drop target (decision 317).
 - [ ] Draw Merge on a queued workspace, with the count of the layers below
       it (decision 316).
-- [ ] Draw a queued workspace of a tree after decision 318.
+- [ ] Draw a queued parent and a queued sub-workspace, with the
+      sub-workspaces that move up a level (decision 318).
 - [ ] Draw the phone layout of the group and of the queued bar.
 - [ ] Add the fixed prompts of the restack and of the rebase variant of
       Resolve conflicts to `barCopy.ts`.
@@ -734,11 +742,14 @@ Depends on: 6
 
 Tags: ui
 
-Depends on: 1, 4, and decision 318
+Depends on: 1, 4
 
 - [ ] Build the Merge queue group from the mockup, with its blocks, rows,
       and states.
-- [ ] Place queued workspaces of a tree as decision 318 says.
+- [ ] Leave queued workspaces out of their sections, and move their
+      sub-workspaces up with the placement rule of archived parents in
+      `src/shared/workspace-tree.ts` (decision 318).
+- [ ] Update `docs/protocol/sub-workspaces.md` for queued workspaces.
 - [ ] Add Add to merge queue to the row menu, the header menu, and the
       palette, each with its command, and the drag into the group
       (decision 317).
