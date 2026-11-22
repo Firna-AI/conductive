@@ -97,13 +97,16 @@ The list needs access from both your GitHub account and the app.
 Admins can later change the selection and its order in **Settings**, under **Repositories**.
 A build applies that changed selection to new workspaces.
 Selecting **Done** after you add repositories starts a build automatically.
+An admin can also add an own computer in **Settings**, under **Own computers**.
+Every member can see those computers and choose one for new workspaces.
 
 - [Manage the shared cloud computer setup](/docs/cloud-computer)
+- [Set up own computers for your org](/docs/own-computers)
 
 ## Connect an org agent login
 
 An admin can connect one API key or own endpoint for each agent on the org's **Agents** tab.
-Open **Settings**, then **Agents**, after **Cloud computer**.
+Open **Settings**, then **Agents**.
 Other members can read the login's kind, an endpoint's host, and the **Use for every member** setting.
 They cannot change the login or see its saved key or full endpoint address.
 
@@ -189,8 +192,8 @@ An org has two roles: **Admin** and **Member**.
 
 Use a person's role control in **Members** to change their role.
 An org can have several admins.
-Every member of an active org can restore another member's archived workspace within 14 days of Archive while its computer is kept.
-Restore ends after 14 days, even while Conductive retries deleting the computer.
+Every member of an active org can restore another member's archived workspace within 14 days while its cloud computer or container is kept.
+Restore ends after 14 days, even while deletion is still in progress.
 Archived chats stay read-only until Restore.
 After 14 days, the workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
@@ -276,9 +279,9 @@ Their read-only chat still opens by direct link or chat link.
 Deleting the org does not extend a workspace's 14 days of Restore.
 Other stopped workspaces start their computers when you open them.
 
-After the org's restore window, deletion removes its remaining data and computers.
+After the org's restore window, Conductive deletes the cloud computers and the org data in its own storage.
 This includes its org agent logins.
-An archived workspace's computer can be deleted earlier when its own Restore window ends.
+An archived workspace's cloud computer can be deleted earlier when its own Restore window ends.
 
 Keep important work in GitHub before you delete an org.
 

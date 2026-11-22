@@ -17,11 +17,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         access. Your login and display name also tell the agents who sent
         each message. Your ${productName} user ID goes with them, so that
         agents can find your workspaces.`,
-      text`Commit authors: by default, each commit in a cloud computer names
+      text`Commit authors: by default, each commit in a workspace names
         the person whose GitHub token Git uses as author and committer. In a
         workspace with older cloud computer software, agent commits name the
         workspace owner by default. A Git setting, a variable, or an option
-        in the cloud computer can name another author, and the commit then
+        in the workspace can name another author, and the commit then
         carries that author. The default name is their GitHub display name,
         or their login when the display name is missing or unusable. ${productName} uses their GitHub user ID and
         login to make their GitHub no-reply address,
@@ -49,13 +49,12 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         latest default branch of the new repository with the token of the
         member who changes the repository. When GitHub deletes a
         workspace's base branch, ${productName} fetches the default branch
-        into its cloud computer. A workspace whose base follows the default
+        into the workspace. A workspace whose base follows the default
         also gets this fetch when GitHub changes that default branch.
-        The cloud computer uses the new base only
+        The workspace uses the new base only
         after that fetch succeeds. When no member starts the move, the fetch
         uses the workspace owner's GitHub token. This includes moves from
-        GitHub events, automatic retries, and resumes of stopped cloud
-        computers.`,
+        GitHub events, automatic retries, and resumes of stopped workspaces.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -93,8 +92,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} records the time and the operator who suspended
         it. An operator can lift the suspension, and ${productName}
         records each lift in the same way. It keeps every record. A
-        suspension keeps your cloud computers stopped until an operator
-        lifts it.`,
+        suspension stops the workspaces you own and blocks their starts
+        while you own them and the suspension lasts.`,
       text`Your session: a cookie of the app keeps you signed in. A
         second cookie protects the GitHub sign-in while it runs. A third
         cookie keeps the screen that you left for GitHub, for up to 1 hour.`,
@@ -102,6 +101,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repositories, workspaces, automations, scripts, and settings that you and your
         team make. Each invite includes the invited email address. They
         run the service.`,
+      text`Own computers: your org can add Linux servers to run workspace
+        containers. ${productName} records each server's name, system,
+        capacity, connection state, workspace limit, and build history.
+        It records which workspaces and automations use the server. It uses
+        these details to connect the server and start workspaces there.`,
       text`Automations: the prompt, the triggers, the chosen org secrets, and
         the author filters of each automation, with the GitHub accounts
         that a filter names. Each run keeps its owner, its agent, its trigger,
@@ -122,10 +126,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         Other members use a personal login in those sessions only when its
         owner allows it. Each member can send messages on a session's org
         login. ${productName} keeps agent
-        logins outside cloud computers. Each turn gets only a temporary
+        logins outside workspaces. Each turn gets only a temporary
         credential for model requests through ${productName} while that
         turn runs. ${productName} renews your saved ChatGPT sign-in itself.
-        An own endpoint's address and key never reach a cloud computer.
+        ${productName} keeps an own endpoint's address and key outside
+        workspaces.
         ${productName} starts turns only with supported agent software.`,
       text`Secrets: the Secrets settings of an org keep the name, the
         description, and the value of each secret. They also keep the member
@@ -168,16 +173,16 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         repository, and the new branch. It keeps
         the last file list and the last summary of changes of each
         workspace. With the chat history, it keeps each list of the
-        servers that run in the cloud computer of a workspace: the port,
+        servers that run in a workspace: the port,
         a short program name, and the folder of each server. It also keeps
         the latest list of the skills of each workspace, with the name and
         the description of each skill. The files
         that you attach to a message stay in the storage of
         ${productName} at Cloudflare until the agent starts work on the
-        message. The cloud computer of the workspace then downloads them.
-        When the cloud computer has a file and its first start succeeded,
-        ${productName} deletes its own copy. The file stays in the cloud
-        computer. Removing the workspace from the list keeps its chat
+        message. The workspace then downloads them.
+        When the workspace has a file and its first start succeeded,
+        ${productName} deletes its own copy. The file stays in the
+        workspace. Removing the workspace from the list keeps its chat
         history until the org is deleted.`,
       text`Services: a service is a named program outside an agent turn.
         ${productName} keeps its filtered name, short program label, folder,
@@ -186,7 +191,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         This context does not prove which person started it. The list
         and control results let members follow and manage services.
         The saved full command, environment values, and raw logs stay in
-        runtime storage on the cloud computer. ${productName} reads and
+        runtime storage in the workspace. ${productName} reads and
         filters recent output when a member opens or reloads its log.
         It sends that excerpt to the member to show the log.`,
       text`Operational logs: ${productName} records when the program that
@@ -206,7 +211,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         program. The team uses these logs to investigate connection problems,
         program restarts, and interrupted agent work. These logs hold no tokens,
         secret values, message text, file contents, or connection close reasons.
-        ${productName} also records when each step of a cloud computer
+        ${productName} also records when each step of a computer
         build and of a workspace start begins and ends, with the IDs of the
         org, the workspace, and the build or the start, and the time of its calls to
         other services. The team uses these records to make builds and
@@ -225,8 +230,8 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         names, the reason, the command that the agent said it would run, the
         member who answered, and what let the command run. They never hold a
         value or the output of the command.`,
-      text`Your code: your repositories and files live in the cloud
-        computers that ${productName} runs for your org. ${productName}
+      text`Your code: your repositories and files live in the workspace's
+        cloud computer or in its container on an own computer. ${productName}
         reads a file or a diff when you open it, and a picture that an
         agent answer shows, to show it to you. The
         agents send their model requests through ${productName} to

@@ -24,14 +24,14 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 21 November 2026.`,
+  it uses it, and who gets it. Effective date: 23 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
       blocks: [
         paragraph`${legalOperator.name} is the data controller for the
-          personal data described in this notice. It decides how
-          ${productName} uses that data.`,
+          personal data that ${productName} uses as described in this
+          notice. It decides how ${productName} uses that data.`,
         paragraph`${legalOperator.name} is registered in
           ${legalOperator.registration}. Company number:
           ${legalOperator.companyNumber}.`,
@@ -66,11 +66,15 @@ export const privacyDocument: LegalDocument = {
             Addendum to restricted UK transfers.`,
           text`The cloud computer providers are companies registered in the
             United States. ${productName} uses their European Union regions
-            for cloud computers and saved snapshots. These locations include
-            Germany, Finland, and France. UK adequacy regulations
+            for cloud computers and saved snapshots in its provider
+            accounts. These locations include Germany, Finland, and France.
+            UK adequacy regulations
             approve transfers to countries in the European Economic Area.
             Other provider operations can involve processing outside that
             area.`,
+          text`Data stored on an own computer stays where your org keeps
+            that server. ${productName} still handles chat history and
+            model requests from those workspaces as described above.`,
           text`For a Claude subscription, ChatGPT plan, or provider API key, Anthropic or OpenAI processes agent requests under
             the agreement for the connected account that the session uses.
             Their published privacy and data processing terms describe
@@ -87,17 +91,27 @@ export const privacyDocument: LegalDocument = {
     {
       title: `How long ${productName} keeps data`,
       blocks: [
-        paragraph`When an admin deletes an org, ${productName} deletes the data
-          of the org after 7 days, unless an admin restores it.`,
+        paragraph`When an admin deletes an org, ${productName} deletes its
+          cloud computers and the org data in its own storage after 7 days,
+          unless an admin restores the org.`,
         paragraph`When the owner or an admin archives a workspace,
-          ${productName} stops its cloud computer and keeps it for 14 days.
-          Its disk keeps your code, your files, your agent sessions, and each
-          secret value that a script or an agent wrote there. ${productName}
-          then deletes the cloud computer, unless a member restores the
-          workspace before then. At the end of the 14 days, the workspace
+          ${productName} stops it and keeps its cloud computer or container
+          for 14 days. It holds your code, your files, your agent sessions,
+          and each secret value that a script or an agent wrote there.
+          ${productName} then deletes the cloud computer or container unless
+          a member restores the workspace before then. If an own computer
+          is offline, ${productName} deletes the container when the server
+          next connects. At the end of the 14 days, the workspace
           leaves the Archived group and the command palette.`,
+        paragraph`When an admin removes an own computer, ${productName}
+          stops its running workspaces and revokes its computer token.
+          Files and images on the server stay there. The workspaces keep
+          their chat history.`,
+        paragraph`A connection update can start a stopped or archived
+          cloud computer briefly to install software. These brief starts
+          receive no workspace tokens, environment values, or secrets.`,
         paragraph`Service definitions and raw logs use memory in the running
-          cloud computer. Retained logs hold at most 10 MiB in total per
+          workspace. Retained logs hold at most 10 MiB in total per
           service. A computer stop discards these definitions, logs, and
           the current service list. They do not enter saved disks and do
           not restore themselves after a resume. A program can still write
@@ -105,9 +119,9 @@ export const privacyDocument: LegalDocument = {
         paragraph`Removing a workspace from the list keeps its chat history
           until the org is deleted. A direct link or a chat link still opens
           its read-only chat.`,
-        paragraph`${productName} keeps each attached file until the cloud
-          computer of its workspace has it and its first start succeeds.
-          It then deletes its own copy. The file stays in the cloud computer.
+        paragraph`${productName} keeps each attached file until its workspace
+          has it and its first start succeeds. It then deletes its own copy.
+          The file stays in the workspace.
           The message keeps the file's name, type, size, and path.
           ${productName} deletes an unsent file 7 days after you upload it.
           A large text that you paste into a message becomes such a file,
@@ -119,7 +133,7 @@ export const privacyDocument: LegalDocument = {
           using ${productName}. Workspace chat history, Mac command records,
           secret request records, and merge records stay while their org
           exists, including
-          while a cloud computer is stopped or a workspace is removed. When
+          while a workspace is stopped or removed. When
           ${productName} passes on model requests and their answers, it keeps
           no copy of them. ${productName} deletes each record of the steps of
           a build or a start after 90 days.`,
@@ -162,8 +176,8 @@ export const privacyDocument: LegalDocument = {
             secret in the Secrets settings, and each personal or org agent
             login encrypted. An own endpoint login includes its address and
             key. Only its host, with any non-default port, stays in plain text.`,
-          text`It does not send the keys of its cloud computer providers to
-            your browser or into a cloud computer.`,
+          text`Only the ${productName} service uses the keys of its cloud
+            computer providers.`,
           text`The settings never return a stored env var value or agent login
             to your browser. For an own endpoint login, your browser gets
             only its host and any non-default port, without the full address
@@ -188,7 +202,7 @@ export const privacyDocument: LegalDocument = {
             and in the names and descriptions of the skills that it lists. It does not
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows. A change of the mark applies at the next start
-            of a cloud computer.`,
+            of the workspace.`,
           text`${productName} keeps the real path of each file, because it
             needs that path to open the file. It also keeps the real name of
             the default branch of each repository, and of the base branch of
@@ -200,13 +214,13 @@ export const privacyDocument: LegalDocument = {
             of an env var that is not secret. The lists of servers, services,
             and skills can show it too. Each member who reads them then sees
             that value. The agents and each member with a terminal can read every
-            env var value in the cloud computers. Secret values can also stay
-            on the disk of a cloud computer, for example in its agent sessions
-            and its agent output.`,
+            env var value in the workspace. Secret values can also stay in
+            workspace files, for example in its agent sessions and its
+            agent output.`,
           text`While a command runs with a secret from the Secrets settings,
-            its value is in the cloud computer. Programs there, and each
+            its value is in the workspace. Programs there, and each
             member with a terminal, can read it then. The command can also
-            write it to a file on the disk of the cloud computer.`,
+            write it to a file in the workspace.`,
           text`A service uses the org environment values installed at this
             computer start, plus values supplied for that service. It does
             not inherit the agent's credentials, turn context, or secrets

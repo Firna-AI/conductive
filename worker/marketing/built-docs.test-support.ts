@@ -21,6 +21,7 @@ const guideIds = [
   'terminal-and-previews',
   'pull-requests',
   'cloud-computer',
+  'own-computers',
   'orgs-and-members',
   'mac-app',
   'security',

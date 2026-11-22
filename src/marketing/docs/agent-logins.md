@@ -38,7 +38,7 @@ The account of that key or endpoint pays for model use, including automation run
 To connect an org login as an admin:
 
 1. Open the org's **Settings**.
-2. Open **Agents**, after **Cloud computer**.
+2. Open **Agents**.
 3. Find Claude or Codex.
 4. Select **Connect**.
 5. Choose **API key** or **Own endpoint**.
@@ -299,7 +299,7 @@ If a share-setting change fails, the switch returns to its saved value.
 ## Understand access to credentials
 
 Conductive stores agent logins encrypted.
-It keeps these logins outside cloud computers.
+It keeps these logins outside workspaces.
 
 Model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session's personal or org login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
@@ -310,9 +310,9 @@ They can use it only through Conductive on the session's login while the turn ru
 A copied token also works from outside the computer during that turn.
 A copied token cannot start a new model request after the turn ends.
 A program that keeps running can read tokens of later turns, including turns in other members' sessions.
-Your ChatGPT sign-in never enters a cloud computer.
+Conductive keeps your ChatGPT sign-in outside workspaces.
 
-An own endpoint's address and key never reach a cloud computer.
+Conductive keeps an own endpoint's address and key outside workspaces.
 Each turn needs supported agent software.
 If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
 After it succeeds, create a new workspace.

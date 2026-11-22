@@ -9,7 +9,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
   title: 'Who gets your data',
   blocks: [
     list(
-      text`Cloudflare runs ${productName} and stores its data.
+      text`Cloudflare runs ${productName} and stores data for the service,
+        including chat history.
         If a workspace has no name, Cloudflare's AI model service can
         write a short name from the text of its first message.
         For that request, ${productName} removes each path mention of an
@@ -21,7 +22,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         instead.`,
       text`GitHub signs you in, and gives ${productName} access to your
         repositories through its GitHub App. By default, each commit made in
-        a cloud computer carries its author's GitHub display name or login
+        a workspace carries its author's GitHub display name or login
         and GitHub no-reply address. That address contains the author's GitHub
         user ID and login. GitHub and each reader of the repository see
         that name and address. Each workspace branch name starts with the
@@ -40,24 +41,36 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
       text`The email provider of the operator hosts the team inbox and
         receives your feedback message, screenshots, context, and reply
         address. The team reads them there.`,
-      text`A cloud computer provider runs each workspace's cloud computer in
+      text`A cloud computer provider runs cloud computers in
         an account that ${productName} owns. The operator can switch an org
-        to another account for new workspaces after a successful build of
-        its cloud computer setup there. Existing workspaces keep their
-        accounts. Your code, your files, and your agent sessions
-        are in those computers. ${productName} sends their provider
-        requests to start, stop, and use them.`,
+        to another account for new workspaces on cloud computers after a
+        successful build of its cloud computer setup there. Existing
+        workspaces on cloud computers keep their accounts. For workspaces
+        on those computers, your code, files, and agent sessions are there.
+        ${productName} asks the provider to start and stop those computers.
+        A workspace's cloud computer or container connects to ${productName}.
+        ${productName} uses this connection for commands, file reads,
+        Terminal, and previews.`,
+      text`Your org hosts the files and agent sessions of workspaces on
+        its own computers. A person with root access to the server can
+        read workspace files, environment variables, workspace tokens, and
+        machine tokens. During turns, that person can also read turn
+        tokens, GitHub tokens, and allowed secret values. People keep this
+        access while they have root access, including after they leave the
+        org in ${productName}.`,
+      text`The operator view for own computers shows only their counts by
+        org and state, and how many workspaces run on them.`,
       text`For a ChatGPT sign-in, OpenAI sends the account owner's email,
           account ID, and ChatGPT workspace name through ${productName} to
-          the cloud computer. Codex uses them to run on that workspace.
+          the workspace. Codex uses them to run on that ChatGPT workspace.
           Programs and members with terminal access there can read them.
           ${productName} stores the sign-in encrypted and renews it alone.
-          The real ChatGPT sign-in tokens stay outside every cloud computer.
+          The real ChatGPT sign-in tokens stay outside Conductive workspaces.
           Codex reads a temporary turn credential from a file for its
           session. The file also holds public account claims and a
           placeholder refresh token. It is removed when the turn ends.
           ChatGPT workspace
-          rules can run hooks and MCP commands in the org's cloud computer.
+          rules can run hooks and MCP commands in the Conductive workspace.
           Those commands can reach its files and available credentials.`,
       text`Anthropic, OpenAI, or the chosen endpoint gets the messages,
         files, code, and command results of turns on the session's login.
@@ -103,7 +116,7 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         and the description of each secret, who added it, and who last
         revealed its current value. In an active org, an admin can reveal
         the value of each secret, also of a secret that you added.
-        A member with a terminal in a cloud computer can read
+        A member with a terminal in a workspace can read
         the GitHub token of a turn that runs there. They can also read the
         value of a secret while a command runs with it there. During Continue
         or a repository change, they can also read the GitHub token of the
@@ -111,11 +124,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub CLI uses the workspace owner's account. Each member with
         a terminal can get that owner's GitHub token without a running
         turn.`,
-      text`A member with a terminal or a program in a cloud computer can
+      text`A member with a terminal or a program in a workspace can
         read the temporary credential of a turn that runs there. Through
         ${productName}, that credential can use the session's personal or
         org login. It works while the turn runs, also from
-        outside the cloud computer. A program that keeps running, such as a
+        outside the workspace. A program that keeps running, such as a
         service or a program that the startup script starts, can also
         get the credentials of later turns. This includes the turns of
         sessions that other members start. Agent settings in the repository
@@ -149,6 +162,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,
+      text`Each cloud computer or workspace container connects to
+        ${productName} with a machine token. Programs in the workspace can
+        read it. A copied machine token stops working when the computer or
+        container gets a new one at its next start.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
         They can create, rename, stop, and close sessions, send messages,

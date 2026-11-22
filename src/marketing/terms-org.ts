@@ -4,7 +4,7 @@ import { list, text, type LegalDocument } from './legal-text'
 /**
  * The section of the terms on working in an org: the members, the logins of
  * the sessions, the GitHub tokens, and what a member or a program can read
- * in a cloud computer. The facts come from the architecture and the
+ * in a workspace. The facts come from the architecture and the
  * protocol docs.
  */
 export const termsOrgSection: LegalDocument['sections'][number] = {
@@ -33,6 +33,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         and the org remains active.`,
       text`During a running turn in the calling workspace, the tools can
         also create, rename, move, and archive workspaces across the org.
+        A workspace that an agent creates uses the calling workspace's
+        computer choice.
         They can create, rename, stop, and close sessions, send messages,
         and watch one turn of a session. They can create and delete
         sections, and open and close private previews.
@@ -91,13 +93,13 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         ${productName} stores and renews that sign-in. OpenAI sends hosted
         apps to its sign-in waitlist and can block this use. OpenAI's terms
         forbid making your account available to anyone else. The real
-        ChatGPT sign-in never enters a cloud computer. If the agent software
+        ChatGPT sign-in stays outside workspaces. If the agent software
         cannot use that sign-in, ${productName} refuses the turn. Ask an
         admin to run Build computer. After it succeeds, create a new
         workspace. You can also connect an OpenAI API key.`,
-      text`While a turn runs, its GitHub token is in the cloud computer of
-        the workspace. A member with a terminal in that cloud computer can
-        read it. During Continue or a repository change, the fetch uses the
+      text`While a turn runs, its GitHub token is in the workspace.
+        A member with a terminal in that workspace can read it. During
+        Continue or a repository change, the fetch uses the
         GitHub token of the member who starts it. A member with a terminal
         can also read that token while the fetch runs. A member with a terminal can also get the
         workspace owner's GitHub token without a running turn.`,
@@ -111,8 +113,8 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         a new turn tells the agent. That turn acts for the member whose
         message started the turn that asked, with that member's GitHub
         token and Mac.`,
-      text`While a command runs with a secret, its value is in the cloud
-        computer. A member with a terminal or a program there can read it
+      text`While a command runs with a secret, its value is in the
+        workspace. A member with a terminal or a program there can read it
         then, also a member to whom the settings never show the value. A
         program that can use the workspace token during a turn can also get
         the value of each secret that the session of that turn may use.`,
@@ -125,10 +127,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         including those of later turns.`,
       text`Each turn gets a temporary credential for model requests in
         place of the agent login. A member with a terminal or a program in
-        the workspace's cloud computer can read it while that turn runs.
+        the workspace can read it while that turn runs.
         Through ${productName}, that credential can use the login of the
         session, including an org login. It works while the turn runs,
-        also from outside the cloud computer. A program that keeps running,
+        also from outside the workspace. A program that keeps running,
         such as a dev server or a program that the startup script starts,
         can also get the credentials of later turns. This includes the
         turns of sessions that other members start. Agent settings in the
@@ -146,8 +148,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         Work in an org only with people whom you trust with your logins.`,
       text`An automation runs an agent without a person, on a schedule or when
         a pull request opens, gets new commits, or merges. Each run starts
-        a new workspace as the member who owns the automation. Its agent login
-        follows the same rule as a new session of that member. Its GitHub
+        a new workspace as the member who owns the automation. The owner
+        chooses the computer for its runs. Its agent login follows the
+        same rule as a new session of that member. Its GitHub
         token belongs to that member, so its pushes and pull requests show
         as that member.`,
       text`Only the owner of an automation changes it or turns it on. An admin
@@ -180,8 +183,7 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
       text`A tool message, an accepted late answer to a secret request,
-        or an accepted watch wake can start a stopped workspace's cloud
-        computer.
+        or an accepted watch wake can start a stopped workspace.
         The start follows the same checks as opening the workspace. ${productName}
         sets no limit on how many sessions or messages agents create.
         Repeated replies can spend agent logins and keep computers running.
@@ -190,6 +192,31 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         accepted yet.`,
       text`Admins manage the members, repositories, scripts, env vars, and
         agent logins of the org.`,
+      text`Each own computer serves the whole org. Only an admin can add an
+        own computer, set its workspace limit, or remove it. Your org
+        provides and pays for its own computers. Work on them uses no
+        cloud hours. Your org is responsible for its own computers and for
+        the code that agents run there. That code runs on your org's
+        server and network. Your org carries the risk to its server,
+        network, and data.`,
+      text`By adding an own computer, your org lets ${productName} install,
+        run, and update its software on that server. The server must run
+        Linux on x86_64, with systemd and Podman. The software checks each
+        release's signature before installing it. It checks each container
+        base image's signature before using it.`,
+      text`A person with root access to an own computer can read each
+        workspace's files, environment variables, workspace tokens, and
+        machine tokens. During turns, that person can also read turn
+        tokens, GitHub tokens, and allowed secret values. People keep this
+        access while they have root access, including after they leave the
+        org in ${productName}.`,
+      text`Each cloud computer or workspace container connects to
+        ${productName} with a machine token. Programs in the workspace can
+        read it. A copied machine token stops working when the computer or
+        container gets a new one at its next start.`,
+      text`Removing an own computer stops its running workspaces and
+        revokes its computer token. Its workspaces keep their chats and
+        cannot start again. Files and images on the server stay there.`,
       text`Every member can add secrets, and replace or delete the secrets
         that they added. In an active org, admins can replace and delete each secret, mark a
         secret for all agents, and reveal one value at a time. Every member

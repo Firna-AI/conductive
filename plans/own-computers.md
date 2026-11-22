@@ -569,15 +569,15 @@ below. The legal pages and the guides change in the same milestone, as
 - [x] Update `docs/architecture.md` and `docs/architecture/components.md`,
       `data-and-trust.md`, `flows.md`, `sandbox-software.md`,
       `protocol-docs.md`, and `protocol-docs-workspaces.md`.
-- [ ] Read the Terms in `src/marketing/terms.ts`, `terms-work.ts`, and
+- [x] Read the Terms in `src/marketing/terms.ts`, `terms-work.ts`, and
       `terms-org.ts`, and the Privacy page in `src/marketing/privacy.ts`
       and `privacy-recipients.ts`, in full. Update each sentence that
       restates a changed fact. Set the effective date of the Terms.
 - [ ] Get Cal's approval of the new Terms and Privacy text before the
       merge.
-- [ ] Read each guide in `src/marketing/docs/` in full. Update each
+- [x] Read each guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact. Add a guide for own computers.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: Release signatures
 

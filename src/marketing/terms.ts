@@ -31,7 +31,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 21 November 2026.`,
+  accepted it. Effective date: 23 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,
@@ -49,9 +49,11 @@ export const termsDocument: LegalDocument = {
       title: 'The service',
       blocks: [
         paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. Each workspace has its own cloud computer, where agents
-          powered by Claude and Codex work. A workspace can hold one task
-          after another, with one branch at a time.`,
+          Mac app. A workspace runs on a cloud computer or in a container
+          on an own computer. An own computer is a Linux server that your
+          org adds to ${productName}. Agents powered by Claude and Codex
+          work in the workspace. A workspace can hold one task after
+          another, with one branch at a time.`,
         paragraph`${productName} is free until billing starts. Nobody pays
           until they choose a plan.`,
       ],
@@ -66,13 +68,14 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
-          text`${productName} runs each workspace's cloud computer in one of
-            its own accounts with a cloud computer provider. The operator
-            can switch an org to another account by building its cloud
-            computer setup again there. New workspaces use the new account
-            when that build succeeds, and the old account until then.
-            Existing workspaces keep their accounts. You need no account or
-            key of your own for them.`,
+          text`${productName} runs cloud computers in its own accounts with
+            cloud computer providers. The operator can switch an org to
+            another account by building its cloud
+            computer setup again there. New workspaces on cloud computers
+            use the new account when that build succeeds, and the old
+            account until then. Existing workspaces on cloud computers keep
+            their accounts. You need no provider account or key to use a
+            cloud computer.`,
           text`Each session keeps one agent login: its starter's personal
             login or the org login. Your usable personal login comes first
             for a new session. If you have none, the session uses the org
@@ -89,7 +92,7 @@ export const termsDocument: LegalDocument = {
             For an own endpoint login, the account of the endpoint pays
             under its terms. You are responsible for the endpoint that you
             connect and for following its terms.`,
-          text`${productName} keeps agent logins outside cloud computers.
+          text`${productName} keeps agent logins outside workspaces.
             Each turn gets a temporary credential for model requests.
             The agents send their model requests and receive their answers
             through ${productName} on Cloudflare. These requests
@@ -97,9 +100,9 @@ export const termsDocument: LegalDocument = {
             ${productName} adds the login and sends each request to
             Anthropic, OpenAI, or the chosen endpoint. An own endpoint gets
             the messages, files, and command results of each turn on its
-            login, whoever sent the message. Its address and key never reach
-            a cloud computer. ${productName} starts turns only with
-            supported agent software. Agent settings in the repository can
+            login, whoever sent the message. ${productName} keeps the
+            endpoint's address and key outside workspaces. It starts turns
+            only with supported agent software. Agent settings in the repository can
             send the model requests of the agents to another
             address instead.`,
           text`Keep your keys and logins safe. Connect only accounts that you
@@ -115,8 +118,9 @@ export const termsDocument: LegalDocument = {
         paragraph`Use ${productName} only for lawful purposes that you have
           the right to carry out, and that harm no other person or system.
           Also follow the applicable terms of GitHub, Anthropic, OpenAI,
-          and any endpoint that you connect. Do not use
-          ${productName} or its cloud computers to:`,
+          and any endpoint that you connect. Do not use ${productName}
+          to do any of the following, including in a workspace on an own
+          computer:`,
         list(
           text`break a law, a sanction, or an export control, or the rights
             of other people, such as their privacy or their intellectual
@@ -138,7 +142,7 @@ export const termsDocument: LegalDocument = {
             the cloud computers as computing capacity`,
           text`break the rules of the providers that run ${productName}`,
         ),
-        paragraph`You are responsible for what your cloud computers make
+        paragraph`You are responsible for what your workspaces make
           public, such as a port preview. Public content must be lawful, and
           it must not be abusive.`,
       ],
@@ -201,10 +205,9 @@ export const termsDocument: LegalDocument = {
           risk. When the risk is urgent, the operator can suspend without
           notice.`,
         paragraph`A suspension of an account ends its sign-in. It stops the
-          cloud computers of the workspaces that the account owns, closes
-          their previews, and blocks new starts. Its automations start no
-          runs.`,
-        paragraph`A suspension of an org stops each cloud computer of the org,
+          workspaces that the account owns, closes their previews, and
+          blocks new starts. Its automations start no runs.`,
+        paragraph`A suspension of an org stops each workspace of the org,
           closes its previews and terminals, and blocks each start, build,
           and automation run. Its members keep their accounts and their other
           orgs. They can still open the org and read its chat history.
@@ -250,9 +253,14 @@ export const termsDocument: LegalDocument = {
     {
       title: 'Availability and liability',
       blocks: [
-        paragraph`The service is provided as available. Cloud computers,
+        paragraph`The service is provided as available. Workspaces,
           connections, and agent sessions can stop or fail. Keep your own
           backups and push important work to your repository.`,
+        paragraph`When ${productName} updates how cloud computers connect,
+          it restarts the agent software on running cloud computers. This
+          ends their running turns. It can also start stopped or archived
+          cloud computers briefly to install the update. These brief
+          starts receive no workspace tokens, environment values, or secrets.`,
         paragraph`Agent output can be wrong or incomplete. Review and test
           it before you rely on it. Nothing in these terms excludes a
           warranty, right, or liability that applicable law does not allow

@@ -50,7 +50,7 @@ export function sizeText(resources: ComputerResources): string {
 }
 
 /** The builds of a computer in a few words, such as "Built 3 hours ago". */
-export function buildText(builds: ComputerBuilds): string {
+function buildText(builds: ComputerBuilds): string {
   if (builds.now?.kind === 'building') return `Building · ${builds.now.elapsed}`
   if (builds.now?.kind === 'failed') return `Build failed ${builds.now.when}`
   return builds.built === undefined ? 'No build yet' : `Built ${builds.built}`

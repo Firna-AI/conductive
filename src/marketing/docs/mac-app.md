@@ -34,7 +34,7 @@ Run the installed copy so it can update itself.
 A copy that runs from the mounted DMG cannot install an update in place.
 
 The Mac app shows Conductive in its own window.
-Agents continue to run on cloud computers.
+Agents run in the workspace on a cloud computer or on an own computer of your org.
 
 ## Sign in and open your work
 
@@ -50,7 +50,7 @@ If setup asks you to install the GitHub App, finish that step in the browser.
 Return to the Mac app after the installation or owner approval.
 Its setup state updates when its window becomes active.
 
-Open your org and workspace to continue the same cloud work.
+Open your org and workspace to continue your work.
 The next time that the Mac app starts, it opens the last workspace that you opened.
 Back and Forward move between pages in the window.
 Links to other websites open in your default browser.

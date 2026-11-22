@@ -10,7 +10,7 @@
  * connected waits while the one-time code of its install command works,
  * and its code expires after 1 hour.
  */
-export type ComputerConnection =
+type ComputerConnection =
   | { kind: 'connected' }
   | { kind: 'offline'; lastSeen: string }
   | { kind: 'waiting'; codeLeft: string }
@@ -62,7 +62,7 @@ export type OwnComputer = {
  * its first build runs or failed; it runs as many workspaces as its limit;
  * or it is connected with room.
  */
-export const computerStates = [
+const computerStates = [
   'waiting',
   'expired',
   'offline',

@@ -35,13 +35,13 @@ After a repository change, the workspace targets the latest default branch of th
 Your draft and its attached files stay unchanged.
 Conductive then shows the pull request's state for that branch.
 
-If GitHub deletes the workspace's base branch, Conductive fetches the default branch into the cloud computer.
-The cloud computer uses the new base only after that fetch succeeds.
+If GitHub deletes the workspace's base branch, Conductive fetches the default branch into the workspace.
+The workspace uses the new base only after that fetch succeeds.
 The bar explains that change until a pull request opens.
 
 A workspace that targets the default branch also follows a later rename of that default branch.
 This includes a workspace after a repository change.
-Conductive fetches the new default before the cloud computer targets it.
+Conductive fetches the new default before the workspace targets it.
 A stopped computer completes this move when it resumes.
 A workspace that targets another branch keeps that target.
 
@@ -209,8 +209,8 @@ Continue waits while an agent turn runs in any session of the workspace.
 ## Archive after a merge
 
 After a merge, the workspace owner and org admins can select **Archive** in the bar.
-Archive stops its cloud computer at once, without checking the work or asking a question.
-It keeps the computer and its files for 14 days.
+Archive stops the workspace without checking the work or asking a question.
+It keeps the workspace's cloud computer or container and its files for 14 days.
 The workspace stays in **Archived** for those 14 days.
 Its chat is read-only, with no file lists or tools.
 
@@ -223,7 +223,8 @@ The archived bar and the command palette also offer Restore during that window.
 On a computer, point to its row in **Archived** to find **Restore**.
 
 Restore ends after 14 days.
-Conductive then deletes the computer and its files.
+Conductive then deletes the cloud computer or workspace container and the files it holds.
+If an own computer is offline, Conductive deletes the container when the server next connects.
 The workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
 Conductive keeps its chat history until the org is deleted.

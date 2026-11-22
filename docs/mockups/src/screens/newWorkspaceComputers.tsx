@@ -24,7 +24,7 @@ type Form = NewWorkspaceFormState
 type Surface = 'page' | 'dialog'
 
 /** The own computer of the form, or none for the cloud computer. */
-export function formComputer(state: Form): OwnComputer | undefined {
+function formComputer(state: Form): OwnComputer | undefined {
   switch (state.computer) {
     case 'none':
     case 'cloud':

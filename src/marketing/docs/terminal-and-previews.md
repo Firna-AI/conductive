@@ -1,6 +1,6 @@
 ---
 title: Terminal and previews
-description: Run commands and named services on a workspace's cloud computer, then open a running web app by its port.
+description: Run commands and named services in a workspace, then open a running web app by its port.
 group: Work
 order: 40
 ---
@@ -8,14 +8,14 @@ order: 40
 ## Before you use the tools
 
 Open a workspace in an org you belong to.
-Its cloud computer must start before the tools can connect.
+The workspace must start before the tools can connect.
 Select **Resume** if the computer is stopped.
 
 For an archived workspace, use **Restore** first if it is available.
 Restore leaves the computer stopped.
 Resume it before opening **Terminal** or **Preview**.
 
-Commands in **Terminal** run on that cloud computer.
+Commands in **Terminal** run in that workspace.
 A preview shows a web server that runs there too.
 
 ## Open Terminal
@@ -63,7 +63,7 @@ It keeps the shells and their commands running.
 An [automatic restart of the software](/docs/workspaces#restart-the-software) does the same.
 It also stops running agent turns without asking first.
 If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
-Stopping the cloud computer ends every terminal's shell and running commands.
+Stopping the workspace ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
 Start any needed server again in its terminal.
 After a repository change, a server that already runs keeps the old folder, so start it again in the new folder.
@@ -97,7 +97,8 @@ On a computer, you can also use the command palette while the right column shows
 2. Search for `terminal`.
 3. Select **New terminal**.
 
-The palette offers this action only while the right column shows, the cloud computer runs with terminal tabs, and the workspace has fewer than 10 terminals.
+The palette offers this action when the right column shows and the workspace runs with terminal tabs.
+The workspace must have fewer than 10 terminals.
 A phone does not offer it in the palette, so use **+** there.
 **New terminal** has no default keyboard shortcut.
 
@@ -179,7 +180,7 @@ All workspace terminals still use the workspace owner's account.
 If GitHub deletes the workspace's base branch, Conductive moves its base to the default branch.
 A workspace that follows the default also gets this move when GitHub changes that default branch.
 A move that no member starts fetches with the workspace owner's GitHub account.
-This includes moves from GitHub events, automatic retries, and resumes of stopped cloud computers.
+This includes moves from GitHub events, automatic retries, and resumes of stopped workspaces.
 
 - [Use pull request actions](/docs/pull-requests)
 
@@ -204,7 +205,7 @@ You can request a wait of up to 30 seconds for a port that belongs to the servic
 A timeout leaves the service running.
 Starting an exact name that already runs returns that service unchanged.
 For a stopped, ended, or failed service, Start uses the new command and settings that you supply.
-The agent can also list, stop, restart, and read logs of services on this cloud computer.
+The agent can also list, stop, restart, and read logs of services in this workspace.
 
 Services keep running after an agent reply.
 They survive crashes and updates of the agent software.

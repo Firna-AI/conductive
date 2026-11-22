@@ -8,17 +8,20 @@ order: 10
 ## Understand the shared setup
 
 A build prepares your org's setup with its chosen repositories and installed software.
-Each new workspace starts its own cloud computer from that setup.
-Workspaces then have their own files and branches.
+Each new workspace uses the last successful build on its chosen computer.
+Each workspace has its own files and branch.
+The settings on the **Cloud computer** tab also apply to **Own computers**.
 
 Only an org admin can change repositories, scripts, and environment variables.
 Other members can read the settings without changing them.
 If you joined an org, its admin handles this setup for you.
 Add scripts and environment values when your repository needs them.
 
+- [Set up and manage own computers](/docs/own-computers)
+
 ## Follow the first build
 
-Creating an org starts its first build automatically.
+Creating an org starts its first cloud computer build automatically.
 The org must have at least one repository.
 You can connect your agent login while the build runs.
 You can also open the org before the build finishes.
@@ -33,7 +36,7 @@ The org step in **Get started** shows the result:
 | No build yet | Select **Build computer**. |
 
 Only an admin gets the build actions.
-**New workspace** keeps its send button off until the org has a successful build.
+**New workspace** keeps its send button off until the chosen computer has a successful build for the selected repository.
 You can keep a draft there while you wait.
 
 ## Choose repositories
@@ -58,7 +61,7 @@ If a build or refresh is running, one more build usually starts after it succeed
 When the repository notice offers **Try again**, the last build failed, and the repository waits for it.
 Select **Try again** to build it.
 A newly added repository goes at the end of the order.
-A newly added repository becomes usable after a successful build includes it.
+A newly added repository becomes usable on a computer after a successful build there includes it.
 Until then, **New workspace** shows it as unavailable, with a note that says when it will be ready.
 
 When a repository gets a new name or default branch on GitHub, Conductive saves it and starts a build automatically.
@@ -240,30 +243,31 @@ An [automatic software update](#apply-setup-changes) adds support for these name
 
 ## Apply setup changes
 
-A successful build updates the starting setup for new workspaces.
-A failed build keeps the last successful setup.
+A successful build updates the starting setup for new workspaces on that computer.
+A failed build keeps that computer's last successful setup.
 Existing workspaces keep their files.
 
-Selecting **Done** after you add repositories starts a build automatically.
-Each build installs the newest release of Conductive's own cloud computer software.
+Selecting **Build computer** on the **Cloud computer** tab builds the setup for cloud computers and each own computer.
+Selecting **Done** after you add repositories starts these builds automatically.
+An offline own computer builds when it next connects.
+Each build installs the newest release of Conductive's workspace software.
 **Continue** keeps that same computer and the software installed by the org's install script for the workspace's next task.
 A new build does not replace the existing computer.
 
-Conductive's own software updates itself in existing cloud computers.
+Conductive's software updates itself in existing workspaces.
 Fixes need no new workspace or manual install.
-The software checks for a newer release when it starts, including at each cloud computer start, and every 10 minutes while it runs.
-It downloads a newer release in the background.
-A start never waits for a download of a newer release.
+The software checks for a newer release at each workspace start and every 10 minutes while it runs.
+It downloads routine updates in the background.
 If a software part of the release that starts is missing, the start downloads that part again first.
 If that download fails, the start goes on, and the next start tries again.
 A downloaded release applies at the software's next start or when the workspace has been idle for 2 minutes.
 The workspace is idle when no agent turn runs in any session and no message waits.
 
-The update never interrupts a running turn.
+Routine updates leave running turns in place.
 Agents keep their context.
 Programs that agents started, including development servers, keep running.
 Terminals keep running.
-Terminal and preview software update when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at the next cloud computer start.
+Terminal and preview software update when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at the next workspace start.
 
 To apply the newest release now, select the state in the workspace header, then **Restart**.
 Restart first downloads the newest release, for up to 60 seconds, as [Restart the software](/docs/workspaces#restart-the-software) says.
@@ -272,10 +276,19 @@ Services keep running during Restart.
 The shells and commands in your terminals keep running too.
 
 A failed check or download leaves the current release in use.
-Conductive checks each downloaded file against its expected digest and refuses a broken release.
+Conductive verifies the release signature and checks each downloaded file before it installs an update.
 The previous release stays available.
 If a new release fails to start, the previous release starts again.
 An older cloud computer without the update program gets it at its next start.
+
+When Conductive updates how cloud computers connect, it restarts the agent software on running cloud computers.
+This ends their running turns and commands that those turns started.
+Services and terminal shells keep running.
+Conductive can start stopped or archived cloud computers briefly to install this update.
+These brief starts receive no workspace tokens, environment values, or secrets.
+Conductive stops the computer again after it installs the update.
+A workspace that needs new connection software during a start waits for the download.
+If that download fails, the workspace start fails.
 
 An automatic software update gives an existing workspace the server list in **Preview**.
 It also adds services to software that does not yet support them.
@@ -298,7 +311,8 @@ The build action stays unavailable while a build is running.
 
 ## Recover from a failed build
 
-Open **Cloud computer** to read the build log and its error.
+For a cloud computer build, open **Cloud computer** to read the build log and its error.
+For an own computer, open its page under **Own computers**.
 Check the install script and repository access when the error names them.
 Correct the cause before you select **Try again**.
 
@@ -311,10 +325,12 @@ Other members must ask an admin to change the setup or retry a build.
 
 ## Keep repository copies current
 
-Conductive refreshes the prepared repositories after default-branch pushes and with a daily timer.
+Conductive refreshes the prepared repositories on the cloud computer and each own computer.
+Refreshes run after default-branch pushes and with a daily timer.
+An offline own computer refreshes when it next connects.
 Push refreshes run at most once per 30 minutes.
 A refresh fetches repository commits without running the install script.
-A refresh also installs the newest release of Conductive's own cloud computer software.
+A refresh also installs the newest release of Conductive's workspace software.
 
 Use a new build when changed dependencies need the install script again.
 Existing workspaces keep their own files and branch.

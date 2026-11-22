@@ -11,7 +11,7 @@ A session is one agent conversation in a workspace.
 The first message of a new workspace creates its first session.
 Select **+**, named **New session**, to start another conversation.
 
-Sessions in the same workspace share its cloud computer, files, and branch.
+Sessions in the same workspace share its files, branch, and computer.
 Use a separate workspace when a task needs a separate copy of the files.
 
 You can use a personal or org login for the agent you choose.
@@ -52,7 +52,7 @@ You can send a message while the workspace's computer starts.
 The chat shows the steps of that start.
 The workspace keeps accepted messages for the agent.
 
-The org must have a successful build before you create a new workspace.
+The chosen computer must have a successful build before you create a new workspace.
 That first build is separate from the start of an existing workspace's computer.
 
 ## Mention a repository file
@@ -65,7 +65,7 @@ Use a mention for a file or folder already in the workspace.
 
 The entry becomes a chip, a small box with its name, in the message field.
 Your message gives the agent its path, such as `@src/app.ts` or `@src/lib/`.
-Use **Attach files** for a file from your own computer.
+Use **Attach files** to upload a file from your device.
 
 You can also select **Add to chat** from a row's menu in **All files** or **Changes**.
 
@@ -104,22 +104,23 @@ If the browser cannot read the folder, use **Attach files** in the notice to pic
 Each chip keeps its place in the sent message.
 When the message reaches the agent, select its file chip to open the copy.
 The copy opens in the workspace's file view.
-This can start a stopped cloud computer.
+This can start a stopped workspace.
 Restore an archived workspace within 14 days before opening its attached files.
-After removal, the cloud computer and the attached files in it are deleted.
+When Restore ends, Conductive deletes the cloud computer or workspace container that holds those files.
+If an own computer is offline, Conductive deletes the container when the server next connects.
 
 Attached files arrive in `.context/attachments/` in the workspace's repository folder.
-Conductive keeps each attached file until the workspace's cloud computer has it and its first start succeeds.
+Conductive keeps each attached file until its workspace has it and its first start succeeds.
 It then deletes its own copy.
-The file stays in the cloud computer.
+The file stays in the workspace.
 Conductive deletes an unsent file 7 days after you upload it.
 
 Each file keeps the same path when you retry its message.
-A later message or **Try again** uses the file already in the cloud computer.
+A later message or **Try again** uses the file already in the workspace.
 If a file is missing or its size changed, the turn fails and names it.
 Attach that file again in a new message.
 
-With current cloud computer software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
+With current workspace software, workspaces also get a `.context/` folder for agent notes, screenshots, and files for other sessions.
 Git ignores the folder's files unless your repository already tracks them.
 **All files** lists them, so you can open them there.
 **Changes** does not list them.
@@ -167,7 +168,7 @@ The delegated task can still have work left.
 
 **Stop** in the session that set a watch drops its earlier pending wakes.
 Wakes already in the chat history stay there.
-An automatic idle stop of the cloud computer keeps the watches.
+An automatic idle stop keeps the watches.
 
 Messages from agent tools end with a `---` line and **Sent by:** with a link to the sending session.
 This also applies to the first message when an agent creates a workspace or session.
@@ -215,10 +216,10 @@ A turn with **Fast** on can still run at standard speed, for example when the ag
 The turn then continues, and its end shows **Standard speed** with the cause.
 **Fast** stays on, so later turns run fast when the cause ends.
 
-A newly added Codex model can need newer cloud computer software.
-Until the cloud computer updates, an OpenAI API key or an own endpoint can run that model at a lower effort and without **Fast**.
+A newly added Codex model can need newer workspace software.
+Until the software updates, an OpenAI API key or an own endpoint can run that model at a lower effort and without **Fast**.
 The chat shows no note for this.
-The cloud computer updates on its own within minutes of being idle.
+The workspace software updates on its own within minutes of being idle.
 A ChatGPT sign-in is not affected.
 
 The message box offers **Connect** when neither the session's login nor your personal or org login can serve the chosen agent.
@@ -249,11 +250,11 @@ The agent's work after a notification also counts toward that limit.
 A message that joins the turn during a wait starts the count again from that message.
 If the limit passes during a reply, that reply finishes before the turn ends.
 At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
-The cloud computer keeps running while the turn waits.
+The workspace keeps running while the turn waits.
 Ask the agent to stop background work that it does not need, such as a dev server.
 
 For a server that you need after the reply, ask the agent to start a service.
-Services run outside the turn and never keep the cloud computer running.
+Services run outside the turn and do not keep the workspace running.
 Agents stop temporary check servers before replying.
 Builds, tests, and waits for checks that must finish stay in the agent's work.
 
@@ -284,7 +285,7 @@ Code that holds only the path of a file of the workspace also shows as a file ch
 Select a chip to open its file.
 A Markdown link or image to a file of the workspace shows as a link with its label.
 Select the link to open the file.
-While the cloud computer runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
+While the workspace runs, an image of a PNG, JPEG, GIF, or WebP file, such as a screenshot that the agent took, shows as a small picture instead.
 Select the picture to open the file.
 A path can end with a line or a range of lines, such as `@src/app.ts:42` or `src/app.ts:42-50`.
 Its chip opens the file as text, with those lines in view and marked.

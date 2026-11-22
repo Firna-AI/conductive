@@ -1,6 +1,6 @@
 ---
 title: Overview
-description: Understand workspaces, agent conversations, and cloud computers before you start your first task in Conductive.
+description: Understand workspaces, agent conversations, and where your work runs before you start your first task in Conductive.
 group: Start
 order: 10
 ---
@@ -13,22 +13,24 @@ It groups your work into orgs, workspaces, and sessions.
 | Part | What it does |
 | --- | --- |
 | Org | Holds your repositories, workspaces, members, and shared setup. An org can be just you or a team. |
-| Workspace | Has its own cloud computer and one branch at a time. Continue starts its next task after a merge. |
+| Workspace | Has its own files and one branch at a time. Continue starts its next task after a merge. |
 | Session | Holds one agent conversation in a workspace. Each session has its own tab. |
-| Cloud computer | Holds the files and runs the agents, commands, and tools of a workspace. |
+| Cloud computer | A computer that Conductive provides for a workspace. |
+| Own computer | A Linux server that an org admin adds. Each workspace on it runs in its own container. |
 
 Each workspace uses a selected GitHub repository.
 The org's shared setup supplies the starting files and software for each workspace.
 Separate workspaces have their own files and branches.
 You can work on several tasks at the same time.
 
-Conductive provides the cloud computers.
+Conductive starts new workspaces on a cloud computer by default.
+If your org has an own computer, you can choose it in **New workspace**.
 You follow the work in your browser.
 
 ## Work with agents
 
 Describe a task to agents powered by Claude and Codex.
-They can read code, change files, and run commands on the cloud computer.
+They can read code, change files, and run commands in the workspace.
 The message box lets you choose a model and its effort.
 Some models also offer **Fast** for faster output.
 
@@ -65,31 +67,32 @@ The workspace keeps your conversation beside the code and tools.
 - Follow the agent's progress and answers in chat.
 - Open **All files** to read a file.
 - Open **Changes** to inspect edits.
-- Use **Terminal** to run commands on the cloud computer.
+- Use **Terminal** to run commands in the workspace.
 - Use **Preview** to open a running app on one of its ports.
 
 The pull request bar offers actions for the next step.
 It can ask the agent to prepare or fix a pull request.
 It can mark a draft ready for review and merge it with your GitHub account.
 After a merge, **Continue** starts a new branch in the same workspace.
-The cloud computer and sessions stay.
+It keeps the same computer and sessions.
 
 Send another message to guide an agent while it works.
 Select **Stop** to end its current turn.
 A later message continues the conversation.
 
-An inactive cloud computer can stop.
+A workspace can stop when it is inactive.
 Its files and sessions stay.
 Your chat history remains available while it starts or stays stopped.
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, open a file or a change, or select **Explain** on chat text.
 
-Archive stops the computer and keeps its files for 14 days.
+Archive stops the workspace and keeps its files for 14 days.
 The workspace stays in **Archived** for those 14 days, with read-only chat and no tools.
 Use **Restore** during that window to return the workspace to its place in the list.
 Restore leaves the computer stopped.
 
-After 14 days, Conductive deletes the cloud computer and its files.
+After 14 days, Conductive deletes the cloud computer or workspace container and the files it holds.
+If an own computer is offline, Conductive deletes the container when the server next connects.
 The workspace leaves **Archived** and the command palette.
 A direct link or a chat link still opens its read-only chat.
 Conductive keeps its chat history until the org is deleted.
@@ -104,7 +107,7 @@ Every member of an org can see its workspaces and chats.
 In an active org, every member can send messages in workspaces that are not archived.
 An admin manages the members, repositories, scripts, environment variables, and org agent logins.
 
-Members with terminal access can read credentials available on a workspace's cloud computer.
+Members with terminal access can read credentials available in the workspace.
 Work in an org with people you trust with your agent and GitHub logins.
 
 Each workspace has a number, such as `W-12`.
@@ -150,10 +153,11 @@ If you join an existing org, use its repositories and shared setup.
 You can use its org agent login without connecting a personal login.
 
 The first message creates your workspace and its first session.
-Conductive then starts the workspace's own cloud computer.
+Conductive then starts the workspace on the chosen computer.
 The workspace keeps your message until the agent can begin.
 
 - [Get started](/docs/get-started)
 - [Create and manage workspaces](/docs/workspaces)
 - [Configure the shared cloud computer setup](/docs/cloud-computer)
+- [Use your own computers](/docs/own-computers)
 - [Install the Mac app](/docs/mac-app)

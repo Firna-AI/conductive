@@ -9,7 +9,7 @@ order: 40
 
 Every member of an org can see its workspaces and chats.
 Members can use the files and tools of workspaces that are not archived.
-Their terminal access can reach credentials available on a workspace's cloud computer.
+Their terminal access can reach credentials available in a workspace.
 
 Work in an org with people you trust with your code, agent logins, and GitHub access.
 A personal agent login's share setting controls whose messages spend that login.
@@ -22,6 +22,15 @@ A workspace link or invite code does not grant membership of an org.
 An accepted org invitation grants that membership.
 
 - [Manage orgs and members](/docs/orgs-and-members)
+
+## Understand access on an own computer
+
+People with root access to an own computer can read files, environment values, workspace tokens, and machine tokens from all its workspaces.
+During a turn they can also read turn tokens, GitHub tokens, and allowed secret values.
+They keep this access while they have root access, including after they leave the org in Conductive.
+Agent code on that computer runs on your org's server and network.
+
+- [Use your own computers](/docs/own-computers#understand-who-can-access-your-work)
 
 ## Know whose account an action uses
 
@@ -84,14 +93,15 @@ Every org member can also change a workspace's repository, and their GitHub acco
 
 ## Understand what agents can reach
 
-Agents powered by Claude and Codex work on the workspace's cloud computer.
+Agents powered by Claude and Codex work in the workspace.
 They can read files, change code, run commands, and use credentials available there.
 Sessions in that workspace share its files and branch.
 
-Agents can start, list, stop, restart, and read logs of services on their own cloud computer.
+Agents can start, list, stop, restart, and read logs of services in their workspace.
 These service commands cannot control another workspace.
 
 An agent can create another workspace in the org during its work.
+The new workspace uses the same computer choice as the workspace that creates it.
 That action has no separate approval screen.
 Review the work and resulting workspaces as part of the task you give it.
 
@@ -153,7 +163,7 @@ For an own endpoint, Conductive encrypts the address and key and keeps the host 
 The login's page shows the host, including any non-default port.
 Your browser gets neither the saved key nor the full saved address back.
 
-Conductive keeps agent logins outside cloud computers.
+Conductive keeps agent logins outside workspaces.
 Model requests and answers pass through Conductive on Cloudflare.
 Conductive adds the session's personal or org login before sending each request to Anthropic, OpenAI, or the chosen endpoint.
 
@@ -169,7 +179,7 @@ It gives no copy of the stored login.
 A program or member with terminal access can read or copy it.
 
 That token can use the session's personal or org login through Conductive while the turn runs.
-It also works from outside the cloud computer during that turn.
+It also works from outside the workspace during that turn.
 
 After **Stop**, the token can start no new request.
 A request that still runs ends at the first turn check that answers after the turn ends.
@@ -186,14 +196,14 @@ Conductive keeps no copy of a model request or answer as it passes them on.
 It writes no body or header value from those requests or answers to its logs.
 The normal chat history and Mac command records still stay on the service.
 
-An own endpoint's address and key never reach a cloud computer.
+Conductive keeps an own endpoint's address and key outside workspaces.
 Each turn needs supported agent software.
 If Conductive reports unsupported agent software, ask an admin to run **Build computer**.
 After it succeeds, create a new workspace.
 
-Your ChatGPT sign-in stays outside the cloud computer.
+Your ChatGPT sign-in stays outside the workspace.
 Conductive renews that sign-in for you.
-Your ChatGPT email, account ID, and ChatGPT workspace name can reach the cloud computer.
+Your ChatGPT email, account ID, and ChatGPT workspace name can reach the Conductive workspace.
 ChatGPT sign-in needs agent software that supports its temporary credentials.
 If its turn cannot start, follow the [ChatGPT recovery steps](/docs/agent-logins#recover-from-a-login-error).
 
@@ -204,25 +214,29 @@ Removing a login from Account does not revoke a copy held elsewhere.
 
 Code on the computer can also obtain the GitHub credential available to that workspace.
 This includes the workspace owner's GitHub credential outside a running agent turn.
-Continue and a repository change also bring the member's GitHub token into the cloud computer during their branch fetch.
+Continue and a repository change also bring the member's GitHub token into the workspace during their branch fetch.
 Conductive also fetches a new base when GitHub deletes a workspace's base branch.
 A workspace that follows the default also gets this fetch when GitHub changes that default branch.
-When no member starts this move, the fetch brings the workspace owner's GitHub token into the cloud computer.
-This includes GitHub events, automatic retries, and resumes of stopped cloud computers.
+When no member starts this move, the fetch brings the workspace owner's GitHub token into the workspace.
+This includes GitHub events, automatic retries, and resumes of stopped workspaces.
 Code or members with terminal access can read these GitHub tokens while their fetches run.
 
 Removing a member ends their ordinary access to the org.
 It does not guarantee that credentials they copied stop working.
-The computer also uses its workspace token for its connection to Conductive.
+The agent software uses the workspace token for its connection to Conductive.
 Programs and members with terminal access can read or copy it.
 A copy can still expose later turn credentials and GitHub tokens in another member's workspace.
 This remains possible after removal or suspension.
 
+The workspace's cloud computer or container uses a machine token to connect to Conductive.
+Programs in the workspace can read that token.
+A copied machine token stops working when the computer or container gets a new one at its next start.
+
 If you suspect exposure, stop the agent's turn.
 Use the provider's controls to revoke exposed logins or tokens.
-Archive stops its cloud computer and ends that workspace's connection access.
+Archive stops the workspace.
 It also revokes that workspace's token, including copies used to read other chats.
-The cloud computer keeps its disk files for 14 days.
+The workspace's cloud computer or container keeps its files for 14 days.
 Those files can still hold copied credentials during that window.
 Restore leaves the computer stopped.
 Its next resume gives it a new workspace token.
@@ -278,7 +292,7 @@ Their code can still read available files and credentials, including those of la
 Use only service commands and code that you trust.
 
 The service list shows filtered names, program labels, folders, state details, ports, and start context.
-The saved full command and environment values stay on the cloud computer.
+The saved full command and environment values stay in the workspace.
 Conductive filters a service's log before each app read.
 Changed or encoded secret values can still appear.
 Every member who can read the workspace can read its service list and logs.
@@ -314,7 +328,7 @@ A request waits 90 seconds for an answer.
 After that, it stays in the chat, and a later **Allow** tells the agent in a new turn.
 An **Allow** also allows each other open request of the same secrets that its approval covers, so you answer once.
 
-While a command runs with a secret, its value is on the cloud computer.
+While a command runs with a secret, its value is in the workspace.
 Programs and members with terminal access can read it then.
 A command can also write it to a file.
 During a turn, a program on the computer can run its own command with each secret that the session may use.
@@ -406,20 +420,21 @@ The chat stays readable while the computer is stopped.
 The stop ends all services and discards their saved commands, settings, and logs.
 Services do not restart themselves after a resume.
 
-Archive stops the computer and keeps it and its files for 14 days.
+Archive stops the workspace and keeps its files for 14 days.
 Its chat stays read-only, with no file lists or tools.
 Every member of an active org can restore it during that window while its computer is kept.
 Restore returns the workspace stopped.
 
 Restore ends after 14 days.
-Conductive then deletes the computer and its files.
+Conductive then deletes the cloud computer or workspace container and the files it holds.
+If an own computer is offline, Conductive deletes the container when the server next connects.
 The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
 A direct link or a chat link still opens its read-only chat.
 The bar says **Removed on** followed by the removal date.
 Conductive keeps its chat history until the org is deleted.
 
-Deleting an org stops its computers and starts a seven-day restore window.
-After that window, deletion removes its data and computers.
+Deleting an org stops its cloud computers and starts a seven-day restore window.
+After that window, Conductive deletes the cloud computers and the org data in its own storage.
 Keep important work in GitHub if you need it after a Restore window ends.
 
 The Terms and Privacy notice give the service's data and retention information.

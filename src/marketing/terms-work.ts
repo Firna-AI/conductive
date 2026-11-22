@@ -11,29 +11,31 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
   title: 'Your work',
   blocks: [
     paragraph`Your repositories, files, and agent sessions live in the
-      cloud computers that ${productName} runs for your org.
+      workspace's cloud computer or in its container on an own computer.
       ${productName} keeps the chat history of each workspace, so that
-      you can read it while the cloud computer is stopped.`,
+      you can read it while the workspace is stopped.`,
     paragraph`A service is a named program that runs outside an agent turn.
       It keeps running after the agent replies and through crashes,
-      updates, and restarts of the agent software. A cloud computer stop
-      ends all services and discards their saved commands, settings, and
+      updates, and restarts of the agent software. Stopping a workspace
+      ends all its services and discards their saved commands, settings, and
       logs. They do not restore themselves after a resume. Services and
       their previews never keep the computer running.`,
-    paragraph`The cloud computer downloads a new attachment when the
+    paragraph`The workspace downloads a new attachment when the
       agent starts work on its message.
       A large text that you paste becomes an attached file.
-      ${productName} keeps each attached file until the cloud
-      computer of its workspace has it and its first start succeeds.
-      It then deletes its own copy. The file stays in the cloud computer.
+      ${productName} keeps each attached file until its workspace has it
+      and its first start succeeds. It then deletes its own copy.
+      The file stays in the workspace.
       ${productName} deletes an unsent file 7 days after you upload it.`,
-    paragraph`When ${productName} passes on the model requests of a cloud
-      computer, it keeps no copy of a request or of its answer.
+    paragraph`When ${productName} passes on an agent's model requests,
+      it keeps no copy of a request or of its answer.
       It writes no body or header value of them to its logs.`,
-    paragraph`Archive stops a workspace's cloud computer and keeps it
-      for 14 days. Members of an active org can restore it during
-      those 14 days while its computer is kept. When the 14 days end, ${productName} deletes
-      the cloud computer and its files. The workspace leaves the
+    paragraph`Archive stops a workspace and keeps its files for 14 days.
+      Members of an active org can restore it during those 14 days while
+      it has a cloud computer or container. After 14 days, ${productName}
+      deletes the cloud computer or container and the files it holds.
+      If an own computer is offline, ${productName} deletes the container
+      when the server next connects. The workspace leaves the
       Archived group, the command palette, and the workspace counts of
       the org.
       Its read-only chat still opens through a direct link or a chat
@@ -43,24 +45,24 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
       does not delete this data.`,
     paragraph`Continue starts a new branch from the latest commit of the
       branch that the pull request merged into. If that branch no longer
-      exists, it uses the repository's default branch. It keeps the
-      cloud computer and its sessions.
+      exists, it uses the repository's default branch. It keeps the same
+      cloud computer or container and its sessions.
       Changed files move to the new branch. Commits that are not pushed
       stay on their local branches.`,
     paragraph`A repository change moves a workspace to a new branch of
-      another repository of the org. It keeps the cloud computer and
-      its sessions. The old branch, its pull request, and the files in
-      the folder of the old repository stay. Its base follows the new
+      another repository of the org. It keeps the same cloud computer or
+      container and its sessions. The old branch, its pull request, and the
+      files in the folder of the old repository stay. Its base follows the new
       repository's default branch, also after a later rename.`,
     paragraph`When GitHub deletes a workspace's base branch,
-      ${productName} fetches the repository's default branch into its
-      cloud computer. A workspace whose base follows the default also
+      ${productName} fetches the repository's default branch into the
+      workspace. A workspace whose base follows the default also
       gets this fetch when GitHub changes that default branch.
-      The cloud computer uses the new base only after
+      The workspace uses the new base only after
       that fetch succeeds. When no member starts the move, the fetch
       uses the workspace owner's GitHub token. This includes moves from
-      GitHub events, automatic retries, and resumes of stopped cloud
-      computers. The token enters the cloud computer during the fetch.
+      GitHub events, automatic retries, and resumes of stopped workspaces.
+      The token enters the workspace during the fetch.
       Programs and members with terminal access can read it while the
       fetch runs.`,
     paragraph`The agent actions in the pull request bar and Merge latest

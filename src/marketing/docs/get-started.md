@@ -17,7 +17,7 @@ Have these ready:
 If you cannot install the GitHub App, ask a GitHub organization owner to help.
 If you join an existing org, its admin manages repository access.
 Your GitHub permissions still govern repository reads, pushes, merges, and other pull request changes made with your account.
-Conductive runs the agents and repositories on cloud computers.
+Conductive runs each workspace on a cloud computer or an own computer of your org.
 You can use the browser without a local copy of your repository.
 
 ## Sign in
@@ -58,7 +58,7 @@ Once you get access through open sign-up, approval, or a code, **Get started** o
 It guides you through the GitHub App, your first org, and an agent login.
 
 An accepted org invitation opens that org instead.
-Its admin manages its repositories and cloud computer.
+Its admin manages its repositories and computer setup.
 If its org login serves your chosen agent, you need no personal login.
 Otherwise, connect an agent in **Account**.
 Then continue with [Create your first workspace](/docs/get-started#create-your-first-workspace).
@@ -201,15 +201,17 @@ If you accepted an org invitation, your org is already open.
 2. Choose the repository for your task.
 3. Keep the default branch, or choose another starting branch.
 4. If you choose another branch, open the branch control again and choose its target under **Target**.
-5. Choose a model for an agent available to you.
-6. Choose the effort in the same model menu.
-7. Describe your task in the message box.
-8. Select **Create** in the dialog, or **Send** on the page.
+5. If your org has an own computer, choose where the workspace runs. **Cloud computer** is the default.
+6. Choose a model for an agent available to you.
+7. Choose the effort in the same model menu.
+8. Describe your task in the message box.
+9. Select **Create** in the dialog, or **Send** on the page.
 
 The target is the branch where your work will merge.
 The starting branch is the target unless you choose the default branch instead.
 
 - [Choose a starting branch and target](/docs/workspaces#start-from-another-branch)
+- [Choose an own computer](/docs/own-computers#choose-a-computer-for-your-work)
 
 For a first task, you can use this message:
 
@@ -225,13 +227,13 @@ To open the page on a computer too, change **Open New workspace in** under **Pre
 
 The first message creates the workspace, its branch, and its first session.
 The new branch starts from the latest commit of your selected branch.
-Conductive shows the start steps as it starts the workspace's cloud computer.
+Conductive shows the start steps as it starts the workspace on the chosen computer.
 Your accepted message waits until the agent can begin.
 You can send more messages while that computer starts.
 The workspace keeps them for the agent.
 
-This wait happens after the org has a successful build.
-Before that first build succeeds, keep your message in **New workspace** until its send button becomes available.
+The chosen computer needs a successful build before the workspace can start.
+You can keep your draft in **New workspace** while the first build runs.
 
 If the workspace's computer cannot start, read the error.
 Select **Try again** in the same workspace.
@@ -271,14 +273,14 @@ Use your repository's folder name in the script.
 4. Select **Save script**.
 5. Select **Build computer** after any current build finishes.
 
-New workspaces use the changed setup after its build succeeds.
+New workspaces use the changed setup after its build succeeds on their chosen computer.
 A failed build keeps the last successful setup.
 Existing workspaces keep their files.
 
 Use **Startup script** for commands needed when you start or resume a workspace.
 It starts in the workspace's repository folder.
 Use **Environment variables** for values your application needs.
-Changed values apply at the next start of each workspace's cloud computer.
+Changed values apply at each workspace's next start.
 Use **Secrets** for keys that agents should use only with a member's approval.
 
 - [Read the Overview](/docs)

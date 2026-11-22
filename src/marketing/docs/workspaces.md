@@ -1,18 +1,19 @@
 ---
 title: Workspaces
-description: Start a task on its own branch and cloud computer, follow its progress, and keep the work you need.
+description: Start a task on its own branch, choose where it runs, and keep the work you need.
 group: Work
 order: 10
 ---
 
 ## Before you create a workspace
 
-A workspace has its own cloud computer and one branch at a time.
+A workspace runs on a cloud computer or in a container on an own computer of your org.
+Each workspace has its own files and one branch at a time.
 After a merge, **Continue** starts its next task on a new branch.
 Use separate workspaces for tasks that need separate files and branches.
 
 You need access to Conductive and membership of an org.
-The org needs a successful cloud computer build that includes your repository.
+The chosen computer needs a successful build that includes your repository.
 You also need a usable personal or org login for the agent you choose.
 You need no personal login when the org login serves you.
 Your GitHub account needs read access to the repository for the new workspace's start.
@@ -20,7 +21,8 @@ Your GitHub account needs read access to the repository for the new workspace's 
 If you joined an org, its admin manages the repositories and shared setup.
 
 - [Connect an agent login](/docs/agent-logins)
-- [Prepare the org's cloud computer](/docs/cloud-computer)
+- [Prepare the org's computer setup](/docs/cloud-computer)
+- [Use your org's own computers](/docs/own-computers)
 
 ## Create a workspace from a message
 
@@ -30,9 +32,10 @@ If you joined an org, its admin manages the repositories and shared setup.
    **New workspace** starts with the org's default repository.
 4. Keep the default branch, or choose another starting branch.
 5. If you choose another branch, open the branch control again and choose its target under **Target**.
-6. Choose a model and effort.
-7. Describe the task in the message box.
-8. Select **Send** on the page, or **Create** in the dialog.
+6. If your org has an own computer, use the computer choice after the branch control. **Cloud computer** is the default.
+7. Choose a model and effort.
+8. Describe the task in the message box.
+9. Select **Send** on the page, or **Create** in the dialog.
 
 For example:
 
@@ -42,19 +45,20 @@ Explain the fix before changing files.
 ```
 
 Conductive creates the workspace and its first session when it accepts the message.
-It then starts the workspace's cloud computer.
+It then starts the workspace on your chosen computer.
+The workspace keeps that computer for later starts.
 The start steps show its progress.
 Your message waits until the agent can begin.
 
 You can send more messages while that computer starts.
 The workspace keeps its accepted messages after a failed first start.
 
-Before the org's first successful build, the send button stays off.
+Before the chosen computer's first successful build, the send button stays off.
 You can keep a draft in **New workspace** while that build runs.
 
 The repository menu lists the org's repositories in the order that admins set.
 [Order repositories](/docs/cloud-computer#order-repositories) says how.
-A newly added repository shows as unavailable in the repository menu until its build succeeds.
+A newly added repository shows as unavailable until its build succeeds on the chosen computer.
 Its note says when it will be ready.
 The send button stays off while the selected repository waits for its build.
 
@@ -105,12 +109,13 @@ Closing the dialog keeps that draft and its section.
 
 ## Follow the task
 
-The header shows the repository, owner, and state of the agent or cloud computer.
+The header shows the repository, owner, and state of the agent or workspace.
+Open the state menu to see the computer that the workspace uses.
 The workspace can show **Untitled** before it receives an automatic name.
 The name comes from the first message.
 
 The branch name uses a GitHub login, a city, and a short suffix.
-When the workspace receives its name before the cloud computer creates the branch, the city changes to the name.
+When the workspace receives its name before it creates the branch, the city changes to the name.
 After that, the branch name stays the same, also when you rename the workspace.
 To see the checked-out branch, run this command in **Terminal**:
 
@@ -217,6 +222,7 @@ Ask for your workspaces, or give another member's name or GitHub login.
 Workspace and session lists can return a smaller page of results.
 When an agent creates a workspace, it can set the workspace name and its first session's title.
 It can also choose a starting branch and a base branch for the new workspace.
+The new workspace uses the same computer choice as the workspace that creates it.
 With only one branch choice, it uses that branch for both.
 With neither choice, it uses the repository's default branch for both.
 
@@ -240,10 +246,10 @@ Under the new parent, the workspace and its sub-workspaces join the parent's sec
 At the top level, they go to the top of their section, or of a section that the agent names.
 A workspace cannot move under itself or under a workspace nested under it.
 
-Each sub-workspace has its own cloud computer, branch, sessions, and pull request.
+Each sub-workspace has its own cloud computer or container, branch, sessions, and pull request.
 It also has its own Archive and Restore.
 The agent learns its workspace's parent and nesting level when its session starts.
-After a move, a new session gets the new ones only after the cloud computer starts again.
+After a move, a new session gets the new ones only after the workspace starts again.
 A session that started before the move keeps the old ones.
 Ask the agent to look up its workspace for the current ones.
 It can find a workspace's parent and its direct sub-workspaces.
@@ -278,6 +284,9 @@ A normal stop keeps its files, sessions, and chat history.
 Services do not count as activity and never keep the computer running.
 The stop ends every service and discards its saved command, settings, and logs.
 Start needed services again after **Resume**.
+
+On an own computer, a workspace stop keeps the container on the server.
+Its files stay there without a maintenance restart near day 14.
 
 Open a stopped workspace to start its computer again.
 If it stops while the workspace is open, select **Resume**, or open a file or a change.
@@ -327,7 +336,7 @@ An open terminal tab disconnects until the agents are back. Then select **Reconn
 Files, sessions, and chat history stay.
 If the restart fails, the workspace shows an error with **Try again**.
 
-Conductive can restart the software automatically when the cloud computer is running and the agent has been disconnected for at least 3 minutes.
+Conductive can restart the software automatically when the workspace is running and the agent has been disconnected for at least 3 minutes.
 A message must have waited for at least 1 minute.
 The header shows **Starting** until the agent is ready to receive the message.
 The automatic restart stops each running agent turn without asking first.
@@ -343,10 +352,14 @@ Select **Try again** in that same workspace.
 A failed first start keeps the workspace and its accepted messages.
 If the create request itself fails, **New workspace** keeps the draft with **Try again**.
 
-If the org has no successful build, ask an admin to check **Cloud computer** in **Settings**.
+If the chosen computer has no successful build, ask an admin to check its build log in **Settings**.
+On an own computer that is offline, a start waits for the server to connect.
+If the computer stays offline for the 20-minute start limit, the start fails with **Try again**.
 
 For a repository with no branches or tags, Conductive creates an empty first commit at the first start.
 Your GitHub account needs permission to push that commit.
+
+- [Check a start on an own computer](/docs/own-computers#start-stop-and-archive-a-workspace)
 
 ## Continue after a merge
 
@@ -367,7 +380,7 @@ The starting branch becomes the workspace's base branch for its new task.
 The new branch name uses the workspace name, a version such as `v2`, and a new short suffix.
 A workspace without a name uses a city in place of the name.
 
-Continue keeps the same cloud computer, files, running servers and services, sessions, and workspace name.
+Continue keeps the same cloud computer or container, files, running servers and services, sessions, and workspace name.
 It also keeps the software installed by the org's install script.
 Conductive's own software still updates itself.
 Changed files move to the new branch.
@@ -388,7 +401,7 @@ For another failure, follow the reason shown under the bar.
 ## Change the repository
 
 Every org member can move a workspace to another repository of the org.
-The workspace keeps its cloud computer, number, link, name, sessions, and chat.
+The workspace keeps its cloud computer or container, number, link, name, sessions, and chat.
 It gets a new branch in the folder of the new repository.
 
 1. Open the workspace.
@@ -399,7 +412,7 @@ It gets a new branch in the folder of the new repository.
 5. Read the question if it lists work.
 6. Select **Change repository** to keep going, or **Cancel** to keep the current repository.
 
-The menu lists only the org's repositories that the workspace's cloud computer holds.
+The menu lists only the org's repositories that the workspace holds.
 When no other repository can show, the header shows the repository as text, with no menu.
 A repository that the org added after the workspace started does not show.
 Create a new workspace to use it.
@@ -418,7 +431,7 @@ The computer starts first if it is stopped.
 The new branch starts from the latest default branch of the new repository.
 That default branch becomes the workspace's base branch.
 The base follows a later rename of that default branch.
-Conductive fetches the new default before the cloud computer targets it.
+Conductive fetches the new default before the workspace targets it.
 A stopped computer completes this move when it resumes.
 Your GitHub account needs read access to fetch it.
 The new branch name uses the owner's GitHub login, the workspace name, a version such as `v2`, and a new short suffix.
@@ -466,14 +479,14 @@ Open the palette with **⌘K** on Mac or **Ctrl+K** on other computers.
 Archive works while the computer is running, stopped, starting, or has an error.
 Archive does not check for uncommitted files or unpushed commits.
 It asks no confirmation question.
-Archive stops the computer and its agent work at once.
+Archive stops the workspace and its agent work.
 
 Sub-workspaces that are not archived keep working when you archive their parent.
 They take the archived row's place in the list.
 They show under the nearest workspace above them that is not archived.
 If none remains above them, they show at the top level.
 
-Conductive keeps the computer and its files for 14 days after Archive.
+Conductive keeps the workspace's cloud computer or container and its files for 14 days after Archive.
 The workspace stays in **Archived** for those 14 days.
 Its chat is read-only.
 File lists, Terminal, previews, and other workspace tools stay unavailable while it is archived.
@@ -486,7 +499,7 @@ Use that action if you archived the workspace by mistake.
 
 Every member of an active org can restore an archived workspace within 14 days of Archive.
 Restore is unavailable while the org is suspended or deleted.
-Restore is available only while Conductive keeps the workspace's cloud computer.
+Restore is available only while Conductive keeps the workspace's cloud computer or container.
 
 You can use **Restore** from these places:
 
@@ -514,12 +527,13 @@ Opening it later starts the computer as for another stopped workspace.
 Restore keeps the workspace's owner.
 If that owner is suspended, ask an org admin to reassign the workspace before resuming.
 
-Restore ends after 14 days, even while the computer's deletion is still in progress.
-Conductive deletes the cloud computer and the files on it.
+Restore ends after 14 days, even while deletion is still in progress.
+Conductive deletes the cloud computer or workspace container and the files it holds.
+If an own computer is offline, the container and its files stay until the server next connects.
 The workspace leaves **Archived**, the command palette, and the workspace counts of the org.
 A direct link or a chat link still opens its read-only chat.
 The bar says **Removed on** followed by the removal date.
-Its text says that the cloud computer is deleted or is being deleted.
+Its text shows the deletion status of the cloud computer or container.
 
 Conductive keeps the workspace's chat history until the org is deleted.
 Keep work in GitHub if you need it after the Restore window ends.

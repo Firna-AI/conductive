@@ -15,7 +15,7 @@ Opening a file or a change starts the computer again.
 On a computer, the file lists sit beside the chat.
 On a phone, open the workspace's **Files** view.
 
-- **All files** shows the repository as a tree. With current cloud computer software, it also lists the files in `.context/`.
+- **All files** shows the repository as a tree. With current workspace software, it also lists the files in `.context/`.
 - **Changes** lists changes against the workspace's base branch.
 - **Checks** shows the pull request's GitHub checks.
 
@@ -23,7 +23,7 @@ An [automatic software update](/docs/cloud-computer#apply-setup-changes) brings 
 
 Workspaces in a suspended org have no file lists.
 An archived workspace keeps read-only chat, with no file lists or tools.
-Its computer and files can stay available for Restore for 14 days after Archive.
+The workspace can be restored with its files for up to 14 days after Archive.
 Restore the workspace while **Restore** is available.
 Then select **Resume** before you use the file tools.
 
@@ -143,7 +143,7 @@ Select **Send** when it is ready.
 
 **Add to chat** is available only for files and folders that the `@` list can mention.
 The menu leaves it out for deleted files in **Changes**.
-It also leaves it out while a cloud computer status bar replaces the message field, such as while the computer is stopped.
+It also leaves it out while a workspace status bar replaces the message field, such as while the workspace is stopped.
 It also leaves it out until the chat of the workspace loads.
 
 A row whose path label hides a secret value offers neither item.
@@ -192,8 +192,8 @@ After **Continue**, the base is the branch that the pull request merged into, if
 Otherwise, the base is the repository's default branch.
 After a repository change, the base is the latest default branch of the new repository.
 A base that follows the default also follows a later rename of that default branch.
-If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
-The cloud computer uses the new base only after that fetch succeeds.
+If GitHub deletes the base branch, Conductive fetches the default branch into the workspace.
+The workspace uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 
