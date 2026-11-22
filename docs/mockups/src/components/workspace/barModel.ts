@@ -101,9 +101,8 @@ export type BarFacts = {
    */
   baseMoved?: boolean
   /**
-   * The merge queue of the pull request: one that can join, a layer of the
-   * stack, or an entry that needs attention. Without it, the bar shows no
-   * part of the queue.
+   * The merge queue of the pull request: one that can join, or a layer of
+   * the stack. Without it, the bar shows no part of the queue.
    */
   queue?: QueueFacts
 }

@@ -104,7 +104,7 @@ export function PullRequestBar(props: { bar: BarModel; workspace: Workspace }) {
  * The compact pull request row at the top of a workspace on a phone. It
  * opens the Checks tab, whose top holds the actions of the bar. A branch
  * without a pull request and without an action is not a link. A queued
- * workspace names its place, or that it needs attention.
+ * workspace names its place.
  */
 export function PullRequestRow(props: { bar: BarModel }) {
   const { bar } = props
@@ -142,16 +142,7 @@ export function PullRequestRow(props: { bar: BarModel }) {
       <span className={styles.number}>#{pullRequest.number}</span>
       <stateLabel.Component status={prStatusData(status)} />
       <span className={styles.spacer} />
-      {line ? (
-        <span
-          className={classes(
-            styles.queue,
-            line.kind === 'attention' && styles.queueAttention,
-          )}
-        >
-          {queueRowText(line)}
-        </span>
-      ) : null}
+      {line ? <span className={styles.queue}>{queueRowText(line)}</span> : null}
       <ChevronRight className={styles.muted} size={15} />
     </ScreenLink>
   )

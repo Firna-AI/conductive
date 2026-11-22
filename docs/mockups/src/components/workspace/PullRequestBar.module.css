@@ -166,11 +166,6 @@
   white-space: nowrap;
 }
 
-.queueAttention {
-  color: var(--ui-amber-deep);
-  font-weight: 500;
-}
-
 /* Why a branch without commits has no link that creates a pull request. */
 .note {
   flex-shrink: 0;

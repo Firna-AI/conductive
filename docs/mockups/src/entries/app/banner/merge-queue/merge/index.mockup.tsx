@@ -29,7 +29,7 @@ export const bannerMergeQueueMerge = defineScreen({
       slug: 'waits',
       title: 'A lower layer is not ready',
       description:
-        '#482 is ready to merge, but #476, place 1, still runs its checks. So the bar offers no Merge, and the line says that #482 waits for #476.',
+        '#482 is ready to merge, but #476, place 1, still runs its checks. So the bar offers no Merge, and the line says "Place 3 of 3 in the merge queue. The queue waits for #476."',
       rationale:
         'A merge of #482 would land #476 with it, so Merge waits until every layer below is ready (decision 316 D).',
       props: { queue: 'waits' },

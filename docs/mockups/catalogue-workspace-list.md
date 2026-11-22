@@ -65,7 +65,8 @@ no collapse control. `subWorkspaces` of the list states, from
 
 `app/merge-queue` draws the Merge queue group of the plan
 `plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
-with the rows that Cal asked for in his review of the same day. Its
+with the rows that Cal asked for in his review of the same day, and his
+choice of that day that the user handles a failure. Its
 canonical screen has the list of Acme with the group at the top, above the
 sections. The group shows while a queue has entries, with one block for
 each queue. Each row is a normal workspace row: its list mark, its name,
@@ -73,9 +74,11 @@ and its time, with no place number and no step under the name. A block
 lists the layers of its stack from place 1, the bottom layer, which merges
 first, and a thin neutral line joins their list marks. The mark shows the
 GitHub state in its colour and running work with its motion, and the bar
-names the place and the step. An entry that needs attention follows the
-joined rows as a normal row, off the line, with no label: its red mark
-shows its failed checks, and its bar names the reason. Acme has one
+names the place and the step. An entry that cannot merge keeps its place
+on the line, with no label: Fix flaky cart test, place 2, shows its
+failed checks with its red mark, and its bar says what the queue waits
+for. The layer before it can still merge, and the layers after it wait
+for it. Acme has one
 queue, so the group names no repository. A queued workspace shows only in
 the group (decision 318 D). `mergeQueue` of the list states, from
 `src/screens/queueStates.tsx`, draws the pages, and
@@ -83,9 +86,10 @@ the group (decision 318 D). `mergeQueue` of the list states, from
 pages:
 
 - `app/merge-queue/steps` has the merge of the two bottom layers, whose
-  marks stay green, while place 3 waits for its checks and place 4 gets
-  its one fix turn on the line, with a red mark and the light of its
-  working agent. Its `merged` variant has the list after that merge: the
+  marks stay green, while place 3 waits for its checks and place 4 failed
+  its checks. Place 4 gets no fix turn from the queue, so it stays on the
+  line with a still red mark, and the layers before it merge without it.
+  Its `merged` variant has the list after that merge: the
   merged workspaces back in their sections with the mark of a merge, and
   the two other layers on the line from place 1 again. Its `empty` variant
   has the list after the last merge, with no group.
@@ -112,7 +116,9 @@ pages:
   its rows, so the drop does nothing. Its `write-access` variant has the
   reason for a member without write access to the repository. Its `zone`
   variant has the empty zone with the reason of a branch without a pull
-  request.
+  request. `joinRefusalText` in `queueCopy.ts` also gives the words of a
+  default branch that needs GitHub's own merge queue, and of a repository
+  that another org already queues. No page draws those two.
 - `app/merge-queue/sub-workspaces` has a queued parent and a queued
   sub-workspace, whose sub-workspaces that are not queued move up a level,
   as for an archived parent. Its `left` variant has the trees after the

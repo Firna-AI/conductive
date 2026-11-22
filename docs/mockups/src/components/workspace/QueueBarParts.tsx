@@ -1,7 +1,7 @@
 import { Button } from '@firna/ui/button'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, ListOrdered, ListPlus } from 'lucide-react'
+import { ListOrdered, ListPlus } from 'lucide-react'
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { githubLink } from '../../entries/components/workspace/barParts.mockup'
@@ -10,7 +10,6 @@ import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
 import { noop } from '../../noop'
 import { queuePaths } from '../../queuePaths'
-import { classes } from '../common/classes'
 import { outlineFill } from '../common/outlineTone'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
@@ -84,13 +83,14 @@ const runningSteps: ReadonlySet<QueueStep> = new Set([
 
 /**
  * The line of a queued workspace under the bar, and at the top of the
- * Checks tab of a phone: its place and the pull request below it, with
- * what its step does, or why it needs attention. An entry that needs
- * attention tints the whole line amber, and a refused merge leads to the
- * pull request on GitHub. Remove from queue ends the line for a member
- * who may change the queue. It asks first, and a lower entry of a member
- * stack names the entries above it, which leave with it. `github` is the
- * GitHub state of the pull request, which names a fix.
+ * Checks tab of a phone: its place, then what its step does, what the
+ * queue waits for, or the pull request below it. An entry that cannot
+ * merge keeps this line, and the bar keeps its fix, such as Fix checks. A
+ * merge that GitHub refused leads to the pull request on GitHub. Remove
+ * from queue ends the line for a member who may change the queue. It asks
+ * first, and a lower entry of a member stack names the entries above it,
+ * which leave with it. `github` is the GitHub state of the pull request,
+ * which says what the queue waits for.
  */
 export function QueueLineView(props: {
   line: QueueLine
@@ -100,26 +100,17 @@ export function QueueLineView(props: {
   const { line, workspace } = props
   const theme = useSharedUiTheme()
   const trunk = repositories[workspace.repository].defaultBranch
-  const refused = line.kind === 'attention' && line.reason === 'merge-refused'
-  const stacked = line.kind === 'entry' && line.stackedAbove !== undefined
-  let icon = <ListOrdered aria-hidden className={barStyles.icon} size={14} />
-  if (line.kind === 'attention') {
-    icon = <CircleAlert aria-hidden className={styles.alertIcon} size={14} />
-  } else if (runningSteps.has(line.step)) {
-    icon = (
-      <span className={styles.spinner}>
-        <Spinner color={theme.colors.muted} size={12} />
-      </span>
-    )
-  }
+  const refused = line.problem === 'merge-refused'
+  const stacked = line.stackedAbove !== undefined
+  const icon = runningSteps.has(line.step) ? (
+    <span className={styles.spinner}>
+      <Spinner color={theme.colors.muted} size={12} />
+    </span>
+  ) : (
+    <ListOrdered aria-hidden className={barStyles.icon} size={14} />
+  )
   return (
-    <div
-      className={classes(
-        barStyles.message,
-        line.kind === 'attention' && styles.attention,
-      )}
-      role="status"
-    >
+    <div className={barStyles.message} role="status">
       {icon}
       <span className={styles.lineBody}>
         <span className={styles.lineText}>

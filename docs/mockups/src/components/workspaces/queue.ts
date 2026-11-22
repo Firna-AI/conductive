@@ -19,14 +19,13 @@ export type QueueEntry = {
 
 /**
  * The queue of one repository: the layers of its stack, from place 1,
- * which merges first, then the entries that left the stack and wait for a
- * member.
+ * which merges first. An entry that cannot merge keeps its place among
+ * them.
  */
 export type QueueBlock = {
   repository: RepositoryKey
   name: string
   entries: readonly QueueEntry[]
-  attention: readonly QueueEntry[]
 }
 
 /**
@@ -64,9 +63,9 @@ export type GroupDrop =
   | { kind: 'refused'; row: WorkspaceRow; reason: string }
   | { kind: 'zone' }
 
-/** The entries of every block, the layers first. */
+/** The entries of every block, in the order of the blocks. */
 export function queueEntries(queue: MergeQueueList): QueueEntry[] {
-  return queue.blocks.flatMap((block) => [...block.entries, ...block.attention])
+  return queue.blocks.flatMap((block) => block.entries)
 }
 
 /** The count of the entries of the group, which its collapsed header shows. */

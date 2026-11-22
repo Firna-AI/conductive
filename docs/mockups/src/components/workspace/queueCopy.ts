@@ -1,6 +1,6 @@
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import { mergeLabels, type MergeMethod } from './barCopy'
-import type { AttentionReason, QueueLine } from './queueModel'
+import type { MergeProblem, QueueLine } from './queueModel'
 
 /**
  * The words of the merge queue: the group of the list, the reason of a row
@@ -14,7 +14,6 @@ export const queueLabels = {
   group: 'Merge queue',
   add: 'Add to merge queue',
   remove: 'Remove from queue',
-  attention: 'Needs attention',
   drop: 'Drop here to add to the merge queue',
 } as const
 
@@ -34,69 +33,76 @@ function belowName(below: number | null, trunk: string): string {
   return below === null ? trunk : `#${below}`
 }
 
-/** The fix turn of a layer, in the words of the GitHub state that it fixes. */
-function fixingLabel(github: GitHubSummary | null): string {
-  switch (github) {
-    case 'conflict':
-      return 'Resolving conflicts'
-    case 'changes-requested':
-      return 'Addressing review'
-    default:
-      return 'Fixing checks'
-  }
+/** Why the queue could not merge a layer that is ready. */
+const problemText: Readonly<Record<MergeProblem, string>> = {
+  'token-failed':
+    'The GitHub access of the member who added it stopped working.',
+  'merge-refused': 'GitHub refused the merge.',
 }
 
-/** Why an entry needs attention, in the line under its bar. */
-function attentionLine(reason: AttentionReason, trunk: string): string {
-  switch (reason) {
-    case 'checks-still-fail':
-      return 'the checks still fail after one fix.'
-    case 'conflict-remains':
-      return 'the conflict is still there after one fix.'
-    case 'changes-still-requested':
-      return 'a reviewer still requests changes after one fix.'
-    case 'work-not-pushed':
-      return "the cloud computer has work that isn't pushed."
-    case 'turn-runs':
-      return "a turn ran for 30 minutes, so the fix didn't start."
-    case 'token-failed':
-      return 'the GitHub access of the member who added it stopped working.'
-    case 'no-agent-login':
-      return 'no agent login can run the fix.'
-    case 'merge-refused':
-      return 'GitHub refused the merge.'
-    case 'other-org':
-      return 'another org queues this repository.'
-    case 'github-merge-queue':
-      return `${trunk} needs GitHub's own merge queue.`
+/**
+ * What the queue waits for on a layer whose own pull request cannot merge
+ * until a member acts, in the words of its GitHub state: its checks, a
+ * rebase onto the branch below it, its review, or the rules of GitHub.
+ * Nothing for a state that needs no member, such as running checks.
+ */
+function ownWait(
+  github: GitHubSummary | null,
+  below: string,
+): string | undefined {
+  switch (github) {
+    case 'checks-failed':
+      return 'The queue waits for its checks.'
+    case 'conflict':
+      return `The queue waits for a rebase onto ${below}.`
+    case 'changes-requested':
+      return 'The queue waits for its review.'
+    case 'blocked':
+      return 'The queue waits until GitHub allows the merge.'
+    default:
+      return undefined
   }
 }
 
 /**
- * The line under the bar of a queued workspace: its place and the pull
- * request below it, with what its step does, or why it needs attention.
- * `github` is the GitHub state of its pull request, which names a fix.
+ * What the line of a layer that waits or is ready says after its place:
+ * why the queue could not merge it, the lowest layer below it that the
+ * queue waits for, what the queue waits for on its own pull request, or
+ * the pull request that it builds on.
+ */
+function waitText(
+  line: QueueLine,
+  github: GitHubSummary | null,
+  below: string,
+): string {
+  if (line.problem !== undefined) return problemText[line.problem]
+  if (line.waitsFor !== undefined) {
+    return `The queue waits for #${line.waitsFor}.`
+  }
+  return ownWait(github, below) ?? `It builds on ${below}.`
+}
+
+/**
+ * The line under the bar of a queued workspace: its place, then what its
+ * step does, what the queue waits for, or the pull request below it. An
+ * entry that cannot merge keeps its place, and the bar keeps its fix, as
+ * outside the queue. `github` is the GitHub state of its pull request.
  */
 export function queueLineText(
   line: QueueLine,
   context: { trunk: string; github: GitHubSummary | null },
 ): string {
   const { trunk } = context
-  if (line.kind === 'attention') {
-    return `${queueLabels.attention}: ${attentionLine(line.reason, trunk)}`
-  }
   const place = `Place ${line.place} of ${line.size} in the merge queue.`
   const below = belowName(line.below, trunk)
   switch (line.step) {
     case 'waiting':
     case 'ready':
-      return line.waitsFor === undefined
-        ? `${place} It builds on ${below}.`
-        : `${place} It builds on ${below} and waits for #${line.waitsFor}.`
+      return `${place} ${waitText(line, context.github, below)}`
     case 'rebasing':
       return `${place} Rebasing onto ${below}.`
     case 'fixing':
-      return `${place} ${fixingLabel(context.github)}.`
+      return `${place} Resolving conflicts.`
     case 'merging':
       return `${place} Merging into ${trunk}.`
   }
@@ -104,7 +110,6 @@ export function queueLineText(
 
 /** The place of a queued workspace in the compact row of a phone. */
 export function queueRowText(line: QueueLine): string {
-  if (line.kind === 'attention') return queueLabels.attention
   return `Queue ${line.place} of ${line.size}`
 }
 
@@ -151,14 +156,18 @@ export function queueAddStatus(name: string, place: number): string {
 /**
  * Why a workspace cannot join the queue of its repository: its branch has
  * no open pull request, its unit targets another branch than the default
- * branch, its pull request comes from a fork, or the member has no write
- * access to the repository.
+ * branch, its pull request comes from a fork, the member has no write
+ * access to the repository, the default branch needs GitHub's own merge
+ * queue, or another org already has a queue with entries for the
+ * repository.
  */
 export type JoinRefusal =
   | { kind: 'no-pull-request' }
   | { kind: 'other-branch'; base: string; trunk: string }
   | { kind: 'fork' }
   | { kind: 'write-access'; repository: string }
+  | { kind: 'github-merge-queue'; trunk: string }
+  | { kind: 'other-org' }
 
 /**
  * The reason that the group names during a drag of a row that cannot join,
@@ -175,6 +184,10 @@ export function joinRefusalText(refusal: JoinRefusal): string {
       return "Pull requests from forks can't join the queue."
     case 'write-access':
       return `You need write access to ${refusal.repository}.`
+    case 'github-merge-queue':
+      return `${refusal.trunk} needs GitHub's own merge queue.`
+    case 'other-org':
+      return 'Another org has a merge queue for this repository.'
   }
 }
 

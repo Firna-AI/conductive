@@ -40,12 +40,11 @@ export const mergeQueueSchema = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['repository', 'name', 'entries', 'attention'],
+        required: ['repository', 'name', 'entries'],
         properties: {
           repository: { enum: repositoryKeys },
           name: { type: 'string' },
           entries: { type: 'array', items: queueEntrySchema },
-          attention: { type: 'array', items: queueEntrySchema },
         },
       },
     },

@@ -37,40 +37,37 @@ const autocomplete = (step: Step, to: string): LayerSpec => ({
   to,
 })
 
-/** Fix flaky cart test while its one fix turn runs. */
-const cartFix: LayerSpec = {
-  key: 'fix-cart-flake',
-  step: 'fixing',
-  github: 'checks-failed',
-  status: 'working',
+/**
+ * A layer whose checks failed. The queue sends it no fix turn, so its
+ * agent does not work, and it waits in its place for a member.
+ */
+export function failedLayer(key: string): LayerSpec {
+  return { key, step: 'waiting', github: 'checks-failed', status: 'ready' }
 }
 
+/** Fix flaky cart test, whose checks failed. */
+const cartFailed = failedLayer('fix-cart-flake')
+
 /**
- * One queue with a layer in each step: ready, waiting for checks, and
- * rebasing, and an entry that needs attention below the stack.
+ * One queue with a layer in each look: ready, failed checks, waiting for
+ * checks, and rebasing. Fix flaky cart test, place 2, cannot merge, so it
+ * keeps its place on the line, and the two layers above it wait for it.
  */
 export const oneQueue: QueueSpec = [
   {
     repository: 'storefront',
     stack: [
       nextJs('ready'),
+      cartFailed,
       applePay('waiting'),
       autocomplete('rebasing', queuePaths.restack),
-    ],
-    attention: [
-      {
-        key: 'fix-cart-flake',
-        reason: 'checks-still-fail',
-        github: 'checks-failed',
-        status: 'ready',
-      },
     ],
   },
 ]
 
 /**
  * The merge of the two bottom layers, while the layer above them runs its
- * checks and the top layer gets its fix turn.
+ * checks and the top layer waits for a member who fixes its checks.
  */
 export const mergingQueue: QueueSpec = [
   {
@@ -79,7 +76,7 @@ export const mergingQueue: QueueSpec = [
       nextJs('merging'),
       applePay('merging'),
       autocomplete('waiting', queuePaths.bar),
-      cartFix,
+      cartFailed,
     ],
   },
 ]
@@ -88,7 +85,7 @@ export const mergingQueue: QueueSpec = [
 export const mergedQueue: QueueSpec = [
   {
     repository: 'storefront',
-    stack: [autocomplete('waiting', queuePaths.bottom), cartFix],
+    stack: [autocomplete('waiting', queuePaths.bottom), cartFailed],
   },
 ]
 

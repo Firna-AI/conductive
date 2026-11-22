@@ -6,7 +6,7 @@ import type {
 } from '../../../components/workspace/barCopy'
 import type { PrStatus } from '../../../components/workspace/prStatus'
 import {
-  attentionReasons,
+  mergeProblems,
   queueSteps,
 } from '../../../components/workspace/queueModel'
 import { bannerStates } from '../../../fixtures/pullRequests'
@@ -100,34 +100,23 @@ const barActionSchema = {
 
 /** The line of a queued workspace under the bar, as `QueueLine`. */
 export const queueLineSchema = {
-  anyOf: [
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'place', 'size', 'below', 'step', 'remove'],
-      properties: {
-        kind: { const: 'entry' },
-        place: { type: 'integer', minimum: 1 },
-        size: { type: 'integer', minimum: 1 },
-        /** The pull request below it, or null for the bottom layer. */
-        below: { anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }] },
-        step: { enum: queueSteps },
-        waitsFor: { type: 'integer', minimum: 1 },
-        stackedAbove: { type: 'integer', minimum: 1 },
-        remove: { type: 'boolean' },
-      },
-    },
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'reason', 'remove'],
-      properties: {
-        kind: { const: 'attention' },
-        reason: { enum: attentionReasons },
-        remove: { type: 'boolean' },
-      },
-    },
-  ],
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'place', 'size', 'below', 'step', 'remove'],
+  properties: {
+    kind: { const: 'entry' },
+    place: { type: 'integer', minimum: 1 },
+    size: { type: 'integer', minimum: 1 },
+    /** The pull request below it, or null for the bottom layer. */
+    below: { anyOf: [{ type: 'integer', minimum: 1 }, { type: 'null' }] },
+    step: { enum: queueSteps },
+    /** The lowest layer below it that the queue waits for. */
+    waitsFor: { type: 'integer', minimum: 1 },
+    /** Why the queue could not merge it. */
+    problem: { enum: mergeProblems },
+    stackedAbove: { type: 'integer', minimum: 1 },
+    remove: { type: 'boolean' },
+  },
 } as const
 
 /** What the bar and the top of the Checks tab show, as `BarModel`. */

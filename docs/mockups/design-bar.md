@@ -86,10 +86,10 @@ app can use them too. `barModel` reads the queue from the optional fact
 - Add to merge queue is an outline button after the main action, or alone
   when the state has none, such as Checks running and Blocked. It takes
   the form of Archive after a merge, from the design call of decision 317.
-  It shows on each state of an open pull request that is not queued, and
-  on an entry that needs attention, which it joins again at the top. It
+  It shows on each state of an open pull request that is not queued. It
   needs write access, and a pull request whose unit targets the default
-  branch. `QueueAddButton` in `QueueBarParts.tsx` draws it. Beside a
+  branch. A queued workspace shows no Add to merge queue, also when it
+  cannot merge. `QueueAddButton` in `QueueBarParts.tsx` draws it. Beside a
   main action in a bar narrower than 540 px, it shows only its icon in
   the outline tone, with its name as a tooltip and for screen readers, as
   a link to GitHub keeps only its mark. So the words of the state stay in
@@ -104,9 +104,22 @@ app can use them too. `barModel` reads the queue from the optional fact
   stack the question names the entries above it, which leave too. The
   words say "builds on" and the place, not "above" or "below", because
   the Merge queue group lists place 1, the bottom layer, first.
-- An entry that needs attention tints its whole line amber, with the alert
-  icon and its reason. A merge that GitHub refused ends the line with Open
-  on GitHub, before Remove from queue.
+- An entry that cannot merge keeps its place, and the bar keeps its main
+  action, such as Fix checks or Address review, as outside the queue,
+  because Cal chose on 22 November 2026 that the user handles a failure.
+  The queue sends it no fix turn. The line keeps its neutral form, with
+  no tint, and says what the queue waits for in place of the pull request
+  below: "The queue waits for its checks." for failed checks, its review
+  for requested changes, a rebase onto the branch below for a conflict,
+  and GitHub for a block of its rules. A layer above an entry that cannot
+  merge names it, such as "The queue waits for #479.", and so does a ready
+  layer above a layer that is not ready yet. When the stored GitHub token
+  of the queuer fails, or GitHub refuses the merge, the line names that
+  reason. A refusal ends the line with Open on GitHub, before Remove from
+  queue. Merge with the layers ahead stays while each layer is ready,
+  because it merges with the token of the member who clicks.
+  `queueLineText` in `queueCopy.ts` gives the words, and `cannotMerge` in
+  `queueModel.ts` gives the GitHub states that wait for a member.
 - Merge on a queued workspace goes through the queue (decision 316 D). It
   shows only while the layer and each layer below it are in the stack and
   ready, and its label counts the layers ahead of it in the queue, such
@@ -119,7 +132,7 @@ app can use them too. `barModel` reads the queue from the optional fact
   `barCopy.ts` chooses it. `restackPrompt` beside it gives the fix turn
   that moves a layer onto the newest head below it, with
   `git rebase --onto`, and names the new head and the old base commit.
-- On a phone the compact row names the place, such as Queue 3 of 3, or
-  Needs attention in amber. The line stands at the top of the Checks tab,
-  above the buttons.
+- On a phone the compact row names the place, such as Queue 3 of 3, also
+  for an entry that cannot merge. The line stands at the top of the Checks
+  tab, above the buttons.
 

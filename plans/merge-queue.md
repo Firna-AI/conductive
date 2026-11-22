@@ -142,8 +142,8 @@ the owner's token, and it sends each fix turn as a message of the queuer.
 - Assumptions that the options check named, and how the design keeps them:
   - The queuer stays a member of the org with write access. Each step
     checks this, and a queuer who lost it makes the entry leave.
-  - The stored token stays usable. A failed refresh makes the entry "Needs
-    attention".
+  - The stored token stays usable. After a failed refresh, the entry waits,
+    and its bar line names the reason (see "Failures").
   - A fix turn uses the agent login of its session, as every message does,
     not a quota of the queuer.
   - One merge lands the layers of several queuers with the token of the
@@ -452,15 +452,17 @@ line names a decision. The options check corrected them on the same day.
   before any restack. Reason: the stack's trunk is then not the default
   branch, and no member chose the new one.
 - Two orgs can save the same repository. A unit whose repository already
-  has a queue with entries in another org cannot join, and the drop target
-  and the bar name the reason. Reason: two queues would break each other's GitHub stack,
+  has a queue with entries in another org cannot join. Add to merge queue
+  does not show for it, and the drop target names the reason. Reason: two
+  queues would break each other's GitHub stack,
   and one org must not see another org's queue.
 - Every member of the org sees each queue. A member with write access or
   more to the repository can add, remove, and re-order entries. Reason:
   Merge already needs that access (decision 221), and every member sees one
   order, as for sections.
 - Any workspace with an open pull request from the same repository can
-  join, also with failed checks or a conflict. The queue fixes those.
+  join, also with failed checks or a conflict. The entry then waits in its
+  place until a member fixes it, as "Failures" says.
   Reason: Cal asked that anything with a pull request is eligible.
 - Add on a draft first marks it ready for review as the member who adds,
   as Ready for review does. Reason: GitHub does not merge a draft.
@@ -546,7 +548,8 @@ line names a decision. The options check corrected them on the same day.
   and that queuer's merge method, as Merge does.
 - A layer whose cloud computer holds local work that is not pushed is not
   ready, as the bar puts Commit and push before Merge. The queue waits,
-  and the bar says why. Reason: a merge must not leave that work behind
+  and the bar line says "The queue waits for its local work to be
+  pushed.". Reason: a merge must not leave that work behind
   (decision 228).
 - A stack merge can stop partway. After each merge, the queue reads each
   layer again before its next step.
@@ -702,7 +705,8 @@ and then moved the entry out of the stack as "Needs attention".
 
 - GitHub's own merge queue. At Add, the Worker reads the rules of the
   trunk. When the trunk requires a GitHub merge queue, the pull request
-  cannot join, and the drop target and the bar name the reason. Reason: the queue would otherwise
+  cannot join. Add to merge queue does not show for it, and the drop
+  target names the reason. Reason: the queue would otherwise
   run every restack and then fail at the merge.
 - Agent tools that add to the queue. A follow-up item records them.
 
@@ -748,7 +752,7 @@ needs its picture.
 
 - [x] Draw the drop target of the group during a drag of a row that cannot
       join, with its reason, on a computer and on a phone.
-- [ ] Run `npm run mockups:check` and smoke-test the page.
+- [x] Run `npm run mockups:check` and smoke-test the page.
 
 ## Milestone 1c: Mockup review fixes
 
@@ -767,7 +771,7 @@ the design under "The app" now says.
 - [x] Remove the outline of a member stack. Name the repository of a block
       only with queues in two or more repositories.
 - [x] Update the catalogue docs and the notes of each changed page.
-- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
+- [x] Run `npm run mockups:check`, and smoke-test the changed pages.
 
 ## Milestone 1d: Failures handled by the user
 
@@ -778,16 +782,17 @@ Depends on: 1c
 Cal chose on 22 November 2026 that the user handles a failure. Draw the
 group and the bar as "Failures" now says.
 
-- [ ] Keep an entry that cannot merge on the line in its place, with its
+- [x] Keep an entry that cannot merge on the line in its place, with its
       red or amber mark, on every page of `app/merge-queue`. Remove the
       row off the line.
-- [ ] Replace the amber "Needs attention" line of the bar with the line
+- [x] Replace the amber "Needs attention" line of the bar with the line
       that says what the queue waits for, and with the reason of a failed
       token or a refused merge. Keep Fix checks and Remove from queue.
-- [ ] Remove the compact phone row "Needs attention".
+- [x] Remove the compact phone row "Needs attention".
 - [ ] Draw the `restack` and `rebase` pages after decision 321.
-- [ ] Update the catalogue docs and the notes of each changed page.
-- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
+- [ ] Draw the bar line of an entry that waits for its local work.
+- [x] Update the catalogue docs and the notes of each changed page.
+- [x] Run `npm run mockups:check`, and smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
 

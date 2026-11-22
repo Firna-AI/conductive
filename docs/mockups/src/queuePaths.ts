@@ -3,7 +3,7 @@
  * the pull request bar of a workspace that can join or that a queue holds.
  */
 export const queuePaths = {
-  /** One queue with a layer in each step, and an entry that needs attention. */
+  /** One queue with a layer in each look, one of which cannot merge. */
   list: 'app/merge-queue',
   /** A member stack as one unit in the group. */
   stackList: 'app/merge-queue/stack',
@@ -20,8 +20,11 @@ export const queuePaths = {
   /** Merge with the layers below it, through the queue (decision 316). */
   merge: 'app/banner/merge-queue/merge',
   merging: 'app/banner/merge-queue/merge/merging',
-  /** An entry that left the stack and waits for a member. */
-  attention: 'app/banner/merge-queue/attention',
+  /**
+   * An entry that cannot merge, which keeps its place and waits for a
+   * member, and the layers that wait for it.
+   */
+  cannotMerge: 'app/banner/merge-queue/cannot-merge',
   /** The question before Remove from queue. */
   remove: 'app/banner/merge-queue/remove',
   /** The question for the lower entry of a member stack. */

@@ -1,20 +1,8 @@
 /*
  * The line of a queued workspace under the pull request bar takes the
- * parts of a message line. An entry that needs attention tints its whole
- * line amber, and its bottom border stays neutral, as a message does.
+ * parts of a message line, with no tint. A spinner takes the place of its
+ * icon while a step of the queue runs.
  */
-.attention {
-  background: var(--ui-amber-soft);
-  color: var(--ui-ink);
-}
-
-.alertIcon {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: var(--ui-amber-deep);
-}
-
-/* A spinner in the place of the icon while a step of the queue runs. */
 .spinner {
   display: flex;
   flex-shrink: 0;

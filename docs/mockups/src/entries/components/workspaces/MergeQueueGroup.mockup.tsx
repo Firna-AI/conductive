@@ -9,7 +9,7 @@ import {
   mergeQueueSchema,
 } from './queueSchemas'
 
-/** The group of one queue, with a layer in each step. */
+/** The group of one queue, with a layer in each look. */
 const oneGroup = plainData(queueListOf(oneQueue))
 
 /**
@@ -22,7 +22,7 @@ export const mergeQueueGroup = defineComponent({
   slug: 'merge-queue-group',
   title: 'Merge queue group',
   description:
-    "The group of the merge queues at the top of the list. It shows while a queue has entries, with one block for each queue, and while a drag runs, as a drop zone. The group is the app's own, so it has no menu, and it collapses from its header with the count of its entries. Each row is the normal row of a workspace: its list mark, its name, and its time. A block lists its layers from place 1, which merges first, and a thin neutral line joins their list marks, also the rows of a member stack. The entries that need attention follow, off the line. A block names its repository only while two or more queues have entries. Its own page shows one queue in the sidebar of Acme.",
+    "The group of the merge queues at the top of the list. It shows while a queue has entries, with one block for each queue, and while a drag runs, as a drop zone. The group is the app's own, so it has no menu, and it collapses from its header with the count of its entries. Each row is the normal row of a workspace: its list mark, its name, and its time. A block lists its layers from place 1, which merges first, and a thin neutral line joins their list marks, also the rows of a member stack. An entry that cannot merge keeps its place on the line, with the red or amber mark of its GitHub state. A block names its repository only while two or more queues have entries. Its own page shows one queue in the sidebar of Acme.",
   relatedDocs: ['docs/mockups/catalogue-workspace-list.md'],
   propSchema: {
     type: 'object',

@@ -106,16 +106,17 @@ function lineClasses(index: number, count: number, faint: boolean) {
 
 /**
  * The queue of one repository: the normal rows of its stack in their
- * order, from place 1, with a line that joins their list marks, then the
- * entries that need attention, off the line. `named` heads the block with
- * its repository, as the group does when the org has queues in two or more
- * repositories. A drag of an entry lifts its whole unit, which stays faint
- * in its place, and the drop line falls only between two units. A row of
- * a section over the block joins at its end, so the block takes the
- * outline of a drop target and the drop line falls after its last layer.
- * A row that cannot join gets a dashed outline and the reason, and no drop
- * line. `drawn` is the one row whose menu or hover the view draws, and
- * `archivable` the rows that offer Archive on hover.
+ * order, from place 1, with a line that joins their list marks. An entry
+ * that cannot merge keeps its place on the line, with the mark of its
+ * GitHub state. `named` heads the block with its repository, as the group
+ * does when the org has queues in two or more repositories. A drag of an
+ * entry lifts its whole unit, which stays faint in its place, and the drop
+ * line falls only between two units. A row of a section over the block
+ * joins at its end, so the block takes the outline of a drop target and
+ * the drop line falls after its last layer. A row that cannot join gets a
+ * dashed outline and the reason, and no drop line. `drawn` is the one row
+ * whose menu or hover the view draws, and `archivable` the rows that offer
+ * Archive on hover.
  */
 export function QueueBlockView(props: {
   block: QueueBlock
@@ -202,16 +203,6 @@ export function QueueBlockView(props: {
           />
         ) : null}
       </ol>
-      {block.attention.length > 0 ? (
-        <ul
-          aria-label={`${queueLabels.attention}, ${block.name}`}
-          className={styles.rows}
-        >
-          {block.attention.map((entry) => (
-            <li key={keyOf(entry)}>{rowOf(entry, false)}</li>
-          ))}
-        </ul>
-      ) : null}
       {over?.kind === 'refused' ? (
         <RefusedNote reason={over.reason} row={over.row} variant={variant} />
       ) : null}

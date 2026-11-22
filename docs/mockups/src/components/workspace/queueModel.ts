@@ -1,3 +1,5 @@
+import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+
 /**
  * The merge queue as the pull request bar reads it. One queue lands the
  * pull requests of one repository into its default branch, as one GitHub
@@ -7,9 +9,11 @@
  */
 
 /**
- * The step of an entry in the stack: it waits for its checks, it moves
- * onto the newest head of the layer below it, it gets its one fix turn, it
- * is ready to merge, or it merges.
+ * The step of an entry in the stack: it waits, for its checks or for a
+ * member who fixes its pull request, it moves onto the newest head of the
+ * layer below it, a turn of the queue resolves a conflict of that move, it
+ * is ready to merge, or it merges. The open decision 321 says who resolves
+ * the conflict of a move.
  */
 export const queueSteps = [
   'waiting',
@@ -22,27 +26,32 @@ export const queueSteps = [
 export type QueueStep = (typeof queueSteps)[number]
 
 /**
- * Why an entry left the stack and waits for a member: its one fix turn did
- * not fix the checks, the conflict, or the review, the cloud computer kept
- * work that is not pushed for 30 minutes, a turn ran for 30 minutes, the
- * stored GitHub token of its queuer failed, the session has no agent
- * login, GitHub refused the merge, another org queues the repository, or
- * the default branch needs GitHub's own merge queue.
+ * Why the queue could not merge a layer that is ready: the stored GitHub
+ * token of its queuer failed, or GitHub refused the merge. The entry keeps
+ * its place, and the line under its bar names the reason.
  */
-export const attentionReasons = [
-  'checks-still-fail',
-  'conflict-remains',
-  'changes-still-requested',
-  'work-not-pushed',
-  'turn-runs',
-  'token-failed',
-  'no-agent-login',
-  'merge-refused',
-  'other-org',
-  'github-merge-queue',
-] as const
+export const mergeProblems = ['token-failed', 'merge-refused'] as const
 
-export type AttentionReason = (typeof attentionReasons)[number]
+export type MergeProblem = (typeof mergeProblems)[number]
+
+/**
+ * The GitHub states of a pull request that cannot merge until a member
+ * acts: failed checks, a conflict, requested changes, and a block of the
+ * rules of GitHub. Its list mark is red or amber. The queue sends it no fix
+ * turn. The entry keeps its place, the layers below it still merge, and
+ * the layers above it wait for it.
+ */
+const memberStates: ReadonlySet<GitHubSummary> = new Set([
+  'checks-failed',
+  'conflict',
+  'changes-requested',
+  'blocked',
+])
+
+/** A pull request that cannot merge until a member acts. */
+export function cannotMerge(github: GitHubSummary | null): boolean {
+  return github !== null && memberStates.has(github)
+}
 
 /** A layer of the stack. */
 type EntryFacts = {
@@ -55,10 +64,13 @@ type EntryFacts = {
   below: number | null
   step: QueueStep
   /**
-   * The lowest layer below it that is not ready to merge yet, if any. Its
-   * Merge waits for that layer (decision 316).
+   * The lowest layer below it that the queue waits for: one that cannot
+   * merge until a member acts, or, while this layer is ready, one that is
+   * not ready yet. Its Merge waits for that layer (decision 316).
    */
   waitsFor?: number
+  /** Why the queue could not merge it, while it is ready. */
+  problem?: MergeProblem
   /**
    * The layers above it in its member stack, which Remove from queue takes
    * along, because the stack moves as one unit (decision 315).
@@ -66,22 +78,19 @@ type EntryFacts = {
   stackedAbove?: number
 }
 
-/** An entry below the stack, which left it and waits for a member. */
-type AttentionFacts = { kind: 'attention'; reason: AttentionReason }
-
 /**
  * The queue facts of the workspace of a bar. `open` is a pull request that
  * can join, because its unit targets the default branch. `entry` is a
- * layer of the stack, and `attention` an entry that needs a member.
+ * layer of the stack.
  */
-export type QueueFacts = { kind: 'open' } | EntryFacts | AttentionFacts
+export type QueueFacts = { kind: 'open' } | EntryFacts
 
 /**
- * The line under the bar of a queued workspace: its place and the pull
- * request below it, or why it needs attention. `remove`: the viewer may
+ * The line under the bar of a queued workspace: its place, and the pull
+ * request below it or what the queue waits for. `remove`: the viewer may
  * change the queue, so the line offers Remove from queue.
  */
-export type QueueLine = (EntryFacts | AttentionFacts) & { remove: boolean }
+export type QueueLine = EntryFacts & { remove: boolean }
 
 /** What the bar shows of the merge queue. */
 export type BarQueue = {
@@ -92,43 +101,35 @@ export type BarQueue = {
 
 /**
  * What the bar shows of the queue. Add to merge queue shows on an open
- * pull request that can join, and on an entry that needs attention, which
- * Add joins again at the top of the stack (decision 317). Only a member
- * with write access changes the queue, as for Merge (decision 221), and a
- * layer that merges cannot leave.
+ * pull request that can join, which Add puts at the top of the stack
+ * (decision 317). A queued workspace shows its line in its place. Only a
+ * member with write access changes the queue, as for Merge (decision
+ * 221), and a layer that merges cannot leave.
  */
 export function barQueueOf(
   queue: QueueFacts | undefined,
   can: { open: boolean; change: boolean },
 ): BarQueue | undefined {
   if (queue === undefined) return undefined
-  const add = can.open && can.change
-  switch (queue.kind) {
-    case 'open':
-      return add ? { add } : undefined
-    case 'entry': {
-      // A layer that merges cannot leave, so its line offers no Remove.
-      const remove = can.change && queue.step !== 'merging'
-      return { add: false, line: { ...queue, remove } }
-    }
-    case 'attention':
-      return { add, line: { ...queue, remove: can.change } }
+  if (queue.kind === 'open') {
+    return can.open && can.change ? { add: true } : undefined
   }
+  // A layer that merges cannot leave, so its line offers no Remove.
+  const remove = can.change && queue.step !== 'merging'
+  return { add: false, line: { ...queue, remove } }
 }
 
 /**
  * Merge on a queued workspace (decision 316): shown only while the layer
  * and each layer below it are in the stack and ready, and busy while the
  * queue merges them. `below` counts the layers that land with it. Null:
- * no Merge, because the layer or a layer below it is not ready, or the
- * entry left the stack. Undefined: the bar keeps the Merge of a workspace
- * outside the queue.
+ * no Merge, because the layer or a layer below it is not ready. Undefined:
+ * the bar keeps the Merge of a workspace outside the queue.
  */
 export function queuedMerge(
   queue: QueueFacts | undefined,
 ): { below: number; busy: boolean } | null | undefined {
   if (queue === undefined || queue.kind === 'open') return undefined
-  if (queue.kind === 'attention') return null
   const below = queue.place - 1
   if (queue.step === 'merging') return { below, busy: true }
   const whole = queue.step === 'ready' && queue.waitsFor === undefined

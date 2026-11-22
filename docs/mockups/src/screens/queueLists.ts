@@ -1,8 +1,9 @@
 import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
-import type {
-  AttentionReason,
-  QueueFacts,
-  QueueStep,
+import {
+  cannotMerge,
+  type MergeProblem,
+  type QueueFacts,
+  type QueueStep,
 } from '../components/workspace/queueModel'
 import type {
   MergeQueueList,
@@ -29,17 +30,20 @@ type RowSpec = {
   to?: string
 }
 
-/** A layer of the stack in a state, with its step. */
-export type LayerSpec = RowSpec & { step: QueueStep; unit?: QueueUnit }
-
-/** An entry below the stack, with why it needs attention. */
-type AttentionSpec = RowSpec & { reason: AttentionReason }
+/**
+ * A layer of the stack in a state, with its step, and why the queue could
+ * not merge it, if it tried.
+ */
+export type LayerSpec = RowSpec & {
+  step: QueueStep
+  unit?: QueueUnit
+  problem?: MergeProblem
+}
 
 /** The queue of one repository in a state, place 1 first. */
 type BlockSpec = {
   repository: RepositoryKey
   stack: readonly LayerSpec[]
-  attention?: readonly AttentionSpec[]
 }
 
 /** The queues of Acme in a state, in the order of its repositories. */
@@ -63,12 +67,7 @@ export function unitAbove(
 
 /** The keys of the workspaces that the queues of a state hold. */
 export function queuedKeys(spec: QueueSpec): ReadonlySet<string> {
-  return new Set(
-    spec.flatMap((block) => [
-      ...block.stack.map((layer) => layer.key),
-      ...(block.attention ?? []).map((entry) => entry.key),
-    ]),
-  )
+  return new Set(spec.flatMap((block) => block.stack.map((layer) => layer.key)))
 }
 
 /**
@@ -98,8 +97,8 @@ function rowOf(spec: RowSpec, open?: OpenWorkspace): WorkspaceRow {
 
 /**
  * The Merge queue group of a state: a block for each queue, with the rows
- * of its stack, then the rows of the entries that need attention. `open`
- * is the workspace that the main area shows.
+ * of its stack in their places, also the rows that cannot merge. `open` is
+ * the workspace that the main area shows.
  */
 export function queueListOf(
   spec: QueueSpec,
@@ -111,21 +110,36 @@ export function queueListOf(
         row: rowOf(layer, open),
         ...defined({ unit: layer.unit }),
       }))
-      const attention = (block.attention ?? []).map((entry): QueueEntry => ({
-        row: rowOf(entry, open),
-      }))
       const { name } = repositories[block.repository]
-      return { repository: block.repository, name, entries, attention }
+      return { repository: block.repository, name, entries }
     }),
   }
 }
 
 /**
+ * The pull request of the lowest layer below the layer at `index` that
+ * the queue waits for: one that cannot merge until a member acts, or,
+ * while the layer is ready, one that is not ready yet. The layers above an
+ * entry that cannot merge wait for it.
+ */
+function waitsForOf(
+  stack: readonly LayerSpec[],
+  index: number,
+): number | undefined {
+  const ready = stack[index]?.step === 'ready'
+  const waited = stack
+    .slice(0, index)
+    .find(
+      (item) => cannotMerge(item.github) || (ready && item.step !== 'ready'),
+    )
+  return waited ? pullRequestOf(waited.key) : undefined
+}
+
+/**
  * The queue facts of a workspace in a state: a layer of a stack, with its
- * place and the pull request below it, an entry that needs attention, or a
- * pull request that can join. A layer waits for the lowest layer below it
- * that is not ready, and the layers above it in its member stack leave
- * with it.
+ * place, the pull request below it, the layer that it waits for, and why
+ * the queue could not merge it, or a pull request that can join. The
+ * layers above it in its member stack leave with it.
  */
 export function queueFactsOf(spec: QueueSpec, key: string): QueueFacts {
   for (const block of spec) {
@@ -133,9 +147,6 @@ export function queueFactsOf(spec: QueueSpec, key: string): QueueFacts {
     const layer = block.stack[place]
     if (layer) {
       const lower = block.stack[place - 1]
-      const waiting = block.stack
-        .slice(0, place)
-        .find((item) => item.step !== 'ready')
       return {
         kind: 'entry',
         place: place + 1,
@@ -143,16 +154,12 @@ export function queueFactsOf(spec: QueueSpec, key: string): QueueFacts {
         below: lower ? pullRequestOf(lower.key) : null,
         step: layer.step,
         ...defined({
-          waitsFor:
-            layer.step === 'ready' && waiting
-              ? pullRequestOf(waiting.key)
-              : undefined,
+          waitsFor: waitsForOf(block.stack, place),
+          problem: layer.problem,
           stackedAbove: unitAbove(block.stack, place).length || undefined,
         }),
       }
     }
-    const entry = block.attention?.find((item) => item.key === key)
-    if (entry) return { kind: 'attention', reason: entry.reason }
   }
   return { kind: 'open' }
 }

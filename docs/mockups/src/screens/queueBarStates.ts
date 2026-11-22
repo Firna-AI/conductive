@@ -1,4 +1,7 @@
-import type { QueueFacts } from '../components/workspace/queueModel'
+import type {
+  MergeProblem,
+  QueueFacts,
+} from '../components/workspace/queueModel'
 import type { QueueMenuAction } from '../components/workspaces/rowControls'
 import { queuedWorkspace } from '../fixtures/mergeQueue'
 import { queuePaths } from '../queuePaths'
@@ -8,7 +11,7 @@ import {
   type LayerSpec,
   type QueueSpec,
 } from './queueLists'
-import { stackQueue, twoLayers } from './queueSpecs'
+import { failedLayer, stackQueue, twoLayers } from './queueSpecs'
 
 /**
  * The merge queue of the open workspace, Checkout address autocomplete
@@ -16,8 +19,10 @@ import { stackQueue, twoLayers } from './queueSpecs'
  * the queue of acme/storefront that it can join, place 3 of 3, the bottom
  * layer, a restack, its fix turn of a conflict, Merge with the layers below
  * it, that merge, a Merge that waits for a lower layer, Merge of the bottom
- * layer, an entry that needs attention after a fix or after a refused
- * merge, and the lower layer of a member stack.
+ * layer, place 2 of 3 while its own pull request cannot merge, place 3 of
+ * 3 above a layer that cannot merge, a ready layer whose merge failed for
+ * the token of its queuer or for a refusal of GitHub, and the lower layer
+ * of a member stack.
  */
 export const workspaceQueueStates = [
   'none',
@@ -30,8 +35,10 @@ export const workspaceQueueStates = [
   'merging',
   'waits',
   'bottom-merge',
-  'attention',
-  'refused',
+  'cannot-merge',
+  'above',
+  'token-failed',
+  'merge-refused',
   'stack',
 ] as const
 
@@ -61,6 +68,11 @@ function open(step: Step): LayerSpec {
   return { key: 'checkout-autocomplete', step, github: 'ready-to-merge' }
 }
 
+/** The open workspace, ready, when the queue could not merge it. */
+function unmerged(problem: MergeProblem): LayerSpec {
+  return { ...open('ready'), problem }
+}
+
 const nextJs = (step: Step) => layer('next-16', step)
 const applePay = (step: Step) => layer('apple-pay', step)
 
@@ -87,32 +99,23 @@ const specs: Readonly<Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec>> =
       nextJs('waiting'),
       applePay('rebasing'),
     ),
-    attention: [
-      {
-        repository: 'storefront',
-        stack: [nextJs('ready'), applePay('waiting')],
-        attention: [
-          {
-            key: 'checkout-autocomplete',
-            reason: 'checks-still-fail',
-            github: 'checks-failed',
-          },
-        ],
-      },
-    ],
-    refused: [
-      {
-        repository: 'storefront',
-        stack: [nextJs('ready'), applePay('waiting')],
-        attention: [
-          {
-            key: 'checkout-autocomplete',
-            reason: 'merge-refused',
-            github: 'ready-to-merge',
-          },
-        ],
-      },
-    ],
+    // The bar of the open workspace gives its own GitHub state.
+    'cannot-merge': storefront(
+      nextJs('ready'),
+      open('waiting'),
+      applePay('ready'),
+    ),
+    above: storefront(nextJs('ready'), failedLayer('apple-pay'), open('ready')),
+    'token-failed': storefront(
+      nextJs('ready'),
+      applePay('ready'),
+      unmerged('token-failed'),
+    ),
+    'merge-refused': storefront(
+      nextJs('ready'),
+      applePay('ready'),
+      unmerged('merge-refused'),
+    ),
     stack: stackQueue,
   }
 

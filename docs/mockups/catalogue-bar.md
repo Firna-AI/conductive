@@ -68,7 +68,8 @@ the merge and Continue to the next task.
 ## The merge queue
 
 `app/banner/merge-queue` draws the bar of the merge queue of the plan
-`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026.
+`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
+and from Cal's choice of the same day that the user handles a failure.
 Its canonical screen has Checkout address autocomplete just after Add to
 merge queue: place 3 of 3 of the queue of acme/storefront, while its
 checks run. A line under the bar names the place and the pull request
@@ -92,10 +93,17 @@ from `src/screens/queueBarStates.ts`, draws the pages. Its child pages:
   is in the stack and ready (decision 316 D). Its variants have the merge
   that runs, a Merge that waits for a lower layer, and the Merge of the
   bottom layer, which keeps its own label.
-- `app/banner/merge-queue/attention` has an entry that needs attention:
-  an amber line with the reason, Fix checks, and Add to merge queue, which
-  joins it again at the top. Its `merge-refused` variant has a merge that
-  GitHub refused, with Open on GitHub.
+- `app/banner/merge-queue/cannot-merge` has an entry whose checks failed,
+  place 2 of 3. It keeps its place, the bar keeps Fix checks, and the
+  normal line says "The queue waits for its checks.", with Remove from
+  queue and no Add to merge queue. Its `review` variant has requested
+  changes, with Address review and an amber mark in the sidebar. Its
+  `above` variant has a ready layer above an entry whose checks failed,
+  with no Merge and the line "The queue waits for #479.". Its `token`
+  variant has a stored GitHub token of the queuer that stopped working,
+  and its `merge-refused` variant a merge that GitHub refused, with Open on
+  GitHub. Both keep Merge with 2 ahead, which merges with the token of the
+  member who clicks.
 - `app/banner/merge-queue/remove` has the question before Remove from
   queue. Its `stack` variant has the question on the lower entry of a
   member stack, which names the entry above it, because it leaves too.
