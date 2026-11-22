@@ -1,4 +1,4 @@
-import { PanelLeft } from 'lucide-react'
+import { defined } from '../../defined'
 import type { Org } from '../../fixtures/orgs'
 import type { Membership } from '../../fixtures/members'
 import {
@@ -7,8 +7,8 @@ import {
 } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'
-import { LoadFailure } from '../common/LoadFailure'
-import { IconButton } from '../common/actions'
+import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useSidebarToggle } from '../layout/sidebarPlace'
 import type { RowFocus } from './rowControls'
 import type {
@@ -17,13 +17,13 @@ import type {
   SidebarSection,
   WorkspaceRow,
 } from './sections'
-import { SectionList } from './SectionList'
+import { sectionList } from '../../entries/components/workspaces/SectionList.mockup'
 import {
-  NewWorkspaceLink,
-  AutomationsLink,
-  SearchLink,
-  SettingsLink,
-} from './SidebarLinks'
+  newWorkspaceLink,
+  automationsLink,
+  searchLink,
+  settingsLink,
+} from '../../entries/components/workspaces/SidebarLinks.mockup'
 import styles from './Sidebar.module.css'
 
 /**
@@ -67,15 +67,18 @@ export function Sidebar(props: {
     <>
       <div className={styles.top}>
         <h2 className={styles.org}>{props.org.name}</h2>
-        <SettingsLink
-          alert={props.settingsAlert}
+        <settingsLink.Component
           current={props.current === 'settings'}
-          to={suspended ? paths.suspendedSettings : undefined}
+          {...defined({
+            alert: props.settingsAlert,
+            to: suspended ? paths.suspendedSettings : undefined,
+          })}
         />
         {toggle ? (
-          <IconButton
-            icon={PanelLeft}
+          <iconButton.Component
+            icon="panel-left"
             label={toggle === 'show' ? 'Show the sidebar' : 'Hide the sidebar'}
+            moklyInstance="sidebar-toggle"
           />
         ) : null}
       </div>
@@ -88,35 +91,39 @@ export function Sidebar(props: {
       >
         <div className={styles.links}>
           {suspended ? null : (
-            <NewWorkspaceLink
+            <newWorkspaceLink.Component
               current={props.current === 'new-workspace'}
-              to={props.newWorkspaceTo}
               variant="sidebar"
+              {...defined({ to: props.newWorkspaceTo })}
             />
           )}
-          <AutomationsLink
+          <automationsLink.Component
             current={props.current === 'automations'}
-            to={suspended ? paths.suspendedAutomations : undefined}
             variant="sidebar"
+            {...defined({
+              to: suspended ? paths.suspendedAutomations : undefined,
+            })}
           />
-          <SearchLink
-            shortcut={paletteShortcut(props.shortcuts)}
+          <searchLink.Component
             variant="sidebar"
+            {...defined({ shortcut: paletteShortcut(props.shortcuts) })}
           />
         </div>
         {props.failed ? (
-          <LoadFailure title="The workspaces didn't load" />
+          <loadFailure.Component title="The workspaces didn't load" />
         ) : (
-          <SectionList
-            archived={props.archived}
-            archivedCollapsed={props.archivedCollapsed}
-            drag={props.drag}
-            menu={props.menu}
-            focus={props.focus}
+          <sectionList.Component
             readOnly={suspended}
             sections={props.sections}
             variant="sidebar"
             viewer={props.viewer}
+            {...defined({
+              archived: props.archived,
+              archivedCollapsed: props.archivedCollapsed,
+              drag: props.drag,
+              menu: props.menu,
+              focus: props.focus,
+            })}
           />
         )}
       </div>

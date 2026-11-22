@@ -17,6 +17,7 @@ import {
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { mayChangeSettings } from '../../app/permissions'
 import {
+  imageReadyOf,
   waitingRepositoriesOf,
   type WaitingRepositories,
 } from '../../app/repository-changes'
@@ -93,14 +94,15 @@ export interface NewWorkspaceForm {
  * model, the notices, one readiness for every way to send, and the send.
  * The readiness reads the text and the files of the draft, the agent login,
  * the org image, the repository, the model, and the suspension of the org.
- * The form picks the first ready repository. A draft keeps its own, also
- * while it waits for a build: the pick of the user, or the repository that
- * the form showed at its first text or file, as `NewWorkspaceModel` says.
- * When the server accepts the create, the app opens the new workspace, also
- * when the form closed while the create ran. `open` goes to another page
- * from a notice, such as Connect. `message` is the message field, which
- * takes the focus after Start from and the default branch, so that Enter
- * sends.
+ * Whether a repository waits for a build comes from the repositories reply,
+ * as `waitsForBuild` says. The form picks the first ready repository. A
+ * draft keeps its own, also while it waits for a build: the pick of the
+ * user, or the repository that the form showed at its first text or file,
+ * as `NewWorkspaceModel` says. When the server accepts the create, the app
+ * opens the new workspace, also when the form closed while the create ran.
+ * `open` goes to another page from a notice, such as Connect. `message` is
+ * the message field, which takes the focus after Start from and the default
+ * branch, so that Enter sends.
  */
 export function useNewWorkspaceForm(
   org: OrgSummary,
@@ -119,8 +121,17 @@ export function useNewWorkspaceForm(
   const create = useStore(model.create)
   const access = useOrgAccess(org)
   useEffect(() => orgModel.watch('repositories', 'builds', 'list'), [orgModel])
+  // When the repositories reply shows a good image, builds that show none
+  // are older, and the notice of the first build gives way.
+  const imageReady = imageReadyOf(loaded)
+  const firstBuild = useFirstBuildNotice(org, open)
+  const firstBuildNotice = imageReady ? null : firstBuild
   const repositories = loaded?.filter((item) => item.selected)
-  const waiting = waitingRepositoriesOf(builds)
+  const waiting = waitingRepositoriesOf(
+    repositories ?? [],
+    builds,
+    imageReady === false,
+  )
   const repositoryId =
     draft.repository?.id ?? firstReadyRepository(repositories ?? [], builds)?.id
   const repository = repositories?.find((item) => item.id === repositoryId)
@@ -134,10 +145,10 @@ export function useNewWorkspaceForm(
     newSessionLogin(account, org.id, choice.agent) === 'org'
       ? { owner: org.name }
       : undefined
-  // The first build and a waiting repository never show together: the
-  // Worker lists no waiting repository before the first good build.
+  // The first build and a waiting repository never show together: before
+  // the first good build, no repository waits.
   const buildNotice =
-    useFirstBuildNotice(org, open) ??
+    firstBuildNotice ??
     waitingNotice({
       org,
       admin: mayChangeSettings(access),
@@ -146,10 +157,14 @@ export function useNewWorkspaceForm(
       waiting,
       open,
     })
+  // The create refuses a repository that the org image lacks, also while
+  // no notice can say why, such as before the first good build while the
+  // builds load.
   const defaults =
     !access.suspended &&
     notice === null &&
     buildNotice === null &&
+    repository?.ready !== false &&
     repositoryId !== undefined &&
     choice !== undefined &&
     draftReady(draft)

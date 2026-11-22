@@ -16,7 +16,7 @@ export function workspaceBaseCommand(input: {
   )
 }
 
-export function workspaceBaseSettings(input: {
+function workspaceBaseSettings(input: {
   branch: string
   baseBranch: string
 }): string[] {

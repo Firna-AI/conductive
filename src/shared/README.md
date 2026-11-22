@@ -22,7 +22,7 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 it from a banner: the state of the bar, or null without a pull request and
 for a closed pull request.
 `checksSummary` gives the checks of a pull request as one value, for the bar.
-`GitHubBanner.baseMoved` optionally names the deleted base that the repository default replaced.
+`GitHubBanner.baseMoved` optionally names the deleted base that the repository default replaced, and `displayBaseMoved` is its masked label.
 The Worker keeps it until a pull request opens, for the status message of the bar.
 [The GitHub state](../../docs/protocol/github-banner.md#the-github-state) states their order.
 `readGitHubSummary` in `github-read.ts` keeps a known summary and reads an absent or unknown value as null.
@@ -74,6 +74,14 @@ removes it. Each request sends `EmptyRequest` and returns the current list.
 The live branch reply holds only branches that GitHub lists, newest commit first.
 Commit dates use Unix milliseconds, or null when GitHub gives no date.
 The browser adds its default row from the saved repository record and filters the list for search.
+`Repository.imageReady` and `Repository.ready` in `org-settings.ts` say
+whether the org has an image, and whether that image holds the repository,
+as the [App API rules](../../worker/app-api/README.md#rules) say. The
+current Worker always sends both, in the list and in these replies. The
+fields are optional, because a reply from a previous Worker omits them.
+The browser reader then keeps them absent, and New workspace takes the
+waiting repositories from the builds. An older copy of the app ignores the
+fields.
 
 [Runner contracts](runner-contracts.md) gives the handshake, commands, events,
 confirmations, reports, and credentials.
@@ -180,6 +188,13 @@ browser event stream, and the session paths, logins, and replies.
 It uses generated `SessionLogin`, or null when no login serves that owner.
 Every reader gets that value without a secret, endpoint host, or full address.
 It does not change the automation owner's GitHub identity.
+`AutomationResponse.chosenSecrets` gives each chosen secret of the automation as its `id` and `name` from `OrgSecret` in `secrets.ts`.
+It never holds a value.
+It sorts by name, then by ID, as the org secrets list does.
+The current Worker always sends it, as an empty list when no secret is chosen.
+The field is optional, because a reply from a previous Worker omits it.
+The app then takes the names from the org secrets list.
+An older copy of the app ignores the field.
 
 `terms.ts` names the current revision of the Terms, `TERMS_VERSION`.
 `termsRevision(document)` computes it from the text of `termsDocument` in [`terms.ts`](../marketing/terms.ts): `terms-` and a 14-digit hex digest.
@@ -192,6 +207,15 @@ So a new field or a new paragraph break also gives a new revision, and each user
 suspensions. Operator org rows and pages include `providerAccount`.
 `operator-providers.ts` defines the operator-only account list, integer
 weights, org counts, last operator change, and the GET and PUT path.
+`operator-switch.ts` defines the operator's org account switch path,
+request, record, stop reply, and org detail fields. Switch records carry
+the operator and time of each request and stop, wait reasons, job identity,
+build times, a failure cause, and the account-change time. The detail
+adds the newest visible switch, last completed switch, running job, wait
+reason, and workspace counts by account. These fields are optional on
+`OperatorOrgDetail` for existing readers and older replies.
+The optional `switchAvailable` boolean permits new switch actions only
+when true. Existing switch reads and Stop do not depend on it.
 The user records in `operator.ts` include `OperatorUserAccess` from
 `operator-waitlist.ts`. That module also defines waitlist, approval, code,
 pause, and waitlist switch paths and replies. `operatorWaitlistSwitchPath`
@@ -250,6 +274,13 @@ per-target outer alias and no credential.
   JSON readers and its readers of the owner and the agent choice. Each area
   also gives its own error for an unknown state. `WORKSPACE_STATES` lists
   the known workspace states.
+- [The archived computer reader](archived-computer-read.ts) reads the
+  optional `Workspace.archivedComputer`. The workspace record reader and
+  `createdWorkspace` in `worker/tools/workspace-replies.ts` use it.
+  `readArchivedComputer` keeps a known state with a safe, non-negative
+  cutoff time. It drops a missing, malformed, or future value, and it
+  rejects no record for it. The record then keeps the older notice.
+  `ARCHIVED_COMPUTER_STATES` lists the known states.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

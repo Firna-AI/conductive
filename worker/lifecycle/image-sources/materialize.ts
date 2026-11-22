@@ -1,3 +1,4 @@
+import { buildBootedStatement } from '../build-step-data'
 import type { AppDependencies, AppEnv } from '../../env'
 import { HttpError } from '../../http'
 import type { PrepareImageSources } from '../image-builds'
@@ -68,11 +69,13 @@ export function createGitHubImageSourceMaterializer(
           repositories,
           jobs.length > 0,
         )
+        const now = dependencies.now()
         await writeBuildLog(
           env.DB,
           input.buildId,
           'Updating the repositories.\n',
-          dependencies.now(),
+          now,
+          [buildBootedStatement(env.DB, input.buildId, now)],
         )
       }
       if (

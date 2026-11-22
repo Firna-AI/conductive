@@ -92,6 +92,11 @@ It also holds the model list and the app default in `CONDUCTIVE_MODELS`
 and `CONDUCTIVE_DEFAULT_CHOICE`. Edit these values in the repository.
 The next deploy publishes them, as [Models](deployment.md#models) says.
 A value in `.dev.vars` replaces the corresponding production value locally.
+Production keeps `PROVIDER_SWITCH=off` until the separate activation
+release. To test operator Switch account against the local Worker, add
+`PROVIDER_SWITCH=on` to `.dev.vars`. This changes no production value.
+The development fake keeps Switch account available, including the full
+sample flow with `?operator=1&switches=1`.
 When `.dev.vars` sets `MACHINE_ORIGIN` or `MARKETING_ORIGIN` to a local address,
 requests to that address keep that role. The
 [marketing README](../src/marketing/README.md#development) uses this to preview

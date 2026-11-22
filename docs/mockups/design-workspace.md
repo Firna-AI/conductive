@@ -136,12 +136,18 @@ workspace with Copy link, and the bars of the cloud computer.
   action. The notice takes any refusal reason. An archived workspace
   offers Restore until its last day, and the bar gives that day and says
   that the workspace leaves the list then. A bar without Restore gives
-  that day too. After it, the workspace is removed: the bar says "Removed
-  on" and the day, that the workspace left the list, and that the chat is
-  read-only. It says that the cloud computer is being deleted while a
-  failed delete tries again, and that it is deleted only after the
-  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
-  the types of the bar and the panels, which the app imports too.
+  that day too. While an unresolved create request, or a delete that tries
+  again, can still hold a cloud computer that the workspace does not name,
+  the bar promises only the chat history, as `app/archive/pending` shows.
+  After the last day, the workspace is removed: the bar says "Removed on"
+  and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while the
+  workspace names it or such a request can still hold it, and that it is
+  deleted only after the delete. Its panels say Removed.
+  `sandboxNoticeState.ts` beside it owns the types of the bar and the
+  panels, which the app imports too. It also owns the stage of an archived
+  workspace, which keeps what the app knows of the cloud computer apart
+  from Restore.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

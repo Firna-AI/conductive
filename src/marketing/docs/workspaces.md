@@ -315,6 +315,13 @@ An open terminal tab disconnects until the agents are back. Then select **Reconn
 Files, sessions, and chat history stay.
 If the restart fails, the workspace shows an error with **Try again**.
 
+Conductive can restart the software automatically when the cloud computer is running and the agent has been disconnected for at least 3 minutes.
+A message must have waited for at least 1 minute.
+The header shows **Starting** until the agent is ready to receive the message.
+The automatic restart stops each running agent turn without asking first.
+The shells and commands in your terminals keep running.
+An open terminal tab disconnects until the agents are back, as with **Restart**.
+
 ## Recover from a failed start
 
 A computer start has a 20-minute limit.

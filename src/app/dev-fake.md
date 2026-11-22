@@ -34,7 +34,9 @@ option overrides this default, including queued chats that show no spinner.
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices in the repository order of
   the Worker. An add goes to the end of the order, and a move of a chosen
-  repository starts no build. Its custom initials
+  repository starts no build. Each repository of its replies gives
+  `imageReady` and `ready` from its current image build and the inputs of
+  that build, as the Worker does. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
@@ -54,6 +56,29 @@ option overrides this default, including queued chats that show no spinner.
   palette leave it out. The list route still sends it, as the Worker does,
   so its link and its chip still open its read-only chat, at
   `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?archivedComputer=may-exist|deleted|unknown` gives each archived
+  workspace of Acme that state of its cloud computer, with the end of its
+  14 days, as the Worker sends it. These are `checkout-autocomplete` with
+  `?workspace=archived`, and the removed `postcode-lookup`. Neither names a
+  kept cloud computer, so `may-exist` shows an unresolved create request,
+  with no Restore. A value that is not one of the three counts as no
+  option.
+- Without the option, these records have no `archivedComputer`. That is
+  the preview of the compatibility path for a record of an older Worker.
+  The notice then reads only the legacy `restoreUntil`, as before the
+  field. These records offer no Restore, so the notice says that the cloud
+  computer is deleted. `unknown` shows the same words. The URLs of a check:
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=may-exist`
+    promises only the chat history before the end of the 14 days.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=may-exist`
+    says after that end that the cloud computer is being deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=deleted`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=deleted`
+    say before and after that end that the cloud computer is deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup` preview
+    the older Worker. The URLs above with `archivedComputer=unknown` in
+    place of the state show the same words.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and
@@ -131,7 +156,10 @@ option overrides this default, including queued chats that show no spinner.
   `boat` only, a third account, or a failed read, and `?providerSave=fail`
   fails each save of the weights. An org that Create org makes joins the
   operator section with its account: the choice of an operator, or a draw
-  from the weights.
+  from the weights. Switch account and Stop switch change the switch of an
+  org, as [the operator section](../shell/operator/README.md#development)
+  says. `?switches=1` gives sample orgs each state of a switch, and
+  `?switchSave=fail` fails each switch and stop.
 - `?waiting=1` signs in Sam Okafor of the waitlist mockups, who waits for
   app access with a verified email, so the app shows only the
   [waitlist](screens.md#the-waitlist). `?waiting=no-email` gives the same
@@ -190,7 +218,10 @@ option overrides this default, including queued chats that show no spinner.
   Worker does: the default login of the person signed in for an own
   automation. The fake knows no logins of other people, so the runs of
   another owner use the org login while `?orgLogin=every-member` turns its
-  switch on, and else the own login of that owner.
+  switch on, and else the own login of that owner. Each reply of one
+  automation also names its chosen secrets by ID and name, in the order of
+  their names, as the Worker does. A secret that the org no longer has is
+  not in the list, and no reply holds a value.
 - Run now makes the workspace of the run as Create workspace does, in the
   section of the automation, and the run takes the state of that workspace.
   Without the agent login of the automation's model, as with `?login=none`,

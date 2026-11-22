@@ -1,4 +1,6 @@
 import type { OrgRole } from '../../shared/api'
+import { ARCHIVED_COMPUTER_STATES } from '../../shared/archived-computer-read'
+import type { ArchivedComputerState } from '../../shared/generated/ArchivedComputerState'
 import type { BannerState } from '../../shared/github'
 import type { GetStartedStep } from '../../shared/onboarding'
 import { WORKSPACE_STATES } from '../../shared/workspace-read'
@@ -81,6 +83,12 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  *
  * - `role=admin|member`: the role of the user in the recorded orgs.
  * - `workspace=<state>`: the state of `checkout-autocomplete`.
+ * - `archivedComputer=may-exist|deleted|unknown`: each archived workspace of
+ *   Acme has that state of its cloud computer, with the end of its 14 days,
+ *   as the Worker sends it. These are `checkout-autocomplete` with
+ *   `workspace=archived`, and the removed `postcode-lookup`. Neither names a
+ *   kept cloud computer, so `may-exist` shows an unresolved create request.
+ *   Without the option, their records have none, as from an older Worker.
  * - `conversation=<scenario>`: its recorded chat, such as `running`.
  * - `banner=<state>`: its GitHub banner, such as `merged`. Its list mark
  *   shows the GitHub state of that bar.
@@ -167,10 +175,16 @@ type DevProviderPreset = (typeof PROVIDER_PRESETS)[number]
  *   fails. Without it, the accounts are `boat` and `e2b`.
  * - `providerSave=fail`: each save of the weights of new orgs fails, so
  *   the Providers tab shows that the weights were not saved.
+ * - `switches=1`: sample orgs of the operator section show each state of a
+ *   switch of the provider account, as `switch-seed.ts` lists them.
+ * - `switchSave=fail`: each Switch account and Stop switch fails, so the
+ *   question shows its error.
  */
 export interface DevOptions {
   /** The options of the recorded server. */
   server: FakeApiOptions
+  /** The state of the cloud computer of each archived workspace, or null. */
+  archivedComputer: ArchivedComputerState | null
   /** The first step of Get started that is not done, or `null`. */
   firstRun: GetStartedStep | null
   noAgentLogin: boolean
@@ -210,6 +224,8 @@ export interface DevOptions {
   branchCheck: DevBranchCheck
   providers: DevProviderPreset
   providerSaveFails: boolean
+  switches: boolean
+  switchSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
 }
@@ -244,6 +260,8 @@ export function readDevOptions(search: string): DevOptions {
       paths: pick(params, 'paths', PATHS),
       subWorkspaces: params.get('subWorkspaces') === '1',
     },
+    archivedComputer:
+      pick(params, 'archivedComputer', ARCHIVED_COMPUTER_STATES) ?? null,
     // A person who waits has a new account, unless the options say otherwise.
     firstRun: firstRun ?? (waiting === null ? null : 'github-app'),
     noAgentLogin: params.get('login') === 'none',
@@ -270,6 +288,8 @@ export function readDevOptions(search: string): DevOptions {
     branchCheck: pick(params, 'branchCheck', DEV_BRANCH_CHECKS) ?? 'found',
     providers: pick(params, 'providers', PROVIDER_PRESETS) ?? 'two',
     providerSaveFails: params.get('providerSave') === 'fail',
+    switches: params.get('switches') === '1',
+    switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
   }
 }

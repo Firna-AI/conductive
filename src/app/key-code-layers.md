@@ -80,10 +80,50 @@ the folder of this page.
   `../shell/ui/screen-focus.ts`: `requestScreenFocus`, the focus of a new
   screen after a layer closes with a move, which the main area of a
   desktop frame takes through `useScreenFocus`.
+- `../shell/ui/lost-focus.ts`: `useLostFocus`, which gives a lost focus
+  back to an open layer. A render can take away the focused element, such
+  as an item of a menu. The focus then falls to the page. After each
+  render, such a focus goes to the part that `target` gives, which the
+  layer focuses as it opens. Any other focus stays. `focusLost` says
+  whether the focus fell to the page. `PointMenu.tsx`, `useLayerFocus` of
+  `Overlay.tsx`, and `useFocusInside` of `../chat/ui/dismiss.ts` call it.
+  So the menus, sheets, and dialogs of the shell and the chat share it.
+- [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css):
+  the parts of the modal card, the card of a desktop dialog. They keep the
+  card inside its layer. Its `.head` and its `.foot` keep their size, and
+  only its `.body` scrolls when the content is taller.
+  `../shell/ui/Dialog.tsx`, the `ConfirmDialog` of `../chat/ui/overlays.tsx`
+  and of `../members/ui/ConfirmDialog.tsx`, and the New workspace dialog
+  use them. `.topLayer` keeps the question of the members UI, a native
+  dialog element in the top layer of the browser, inside the window.
+- `../shell/ui/tab-stops.ts`: `controlsOf` gives the controls of a layer
+  that Tab reaches. `tabWithScrollingBody` gives the `.body` of a modal
+  card a Tab stop while it scrolls text without a control.
+  `../shell/ui/Dialog.tsx` uses it through `trapTab`, the `ConfirmDialog`
+  of `../chat/ui/overlays.tsx` through `useFocusTrap`, and the
+  `ConfirmDialog` of `../members/ui/ConfirmDialog.tsx` directly. Each body
+  stays out of the native Tab order. Each dialog keeps its first focus,
+  such as Cancel in a question or the chosen field of a form. Any other
+  card keeps the Tab order of its controls. When no body is a stop,
+  `trapTab` and `useFocusTrap` keep Tab inside the controls with
+  `keepTabInside`. From an element outside the controls, such as a body
+  that does not scroll, Tab goes to the first and Shift+Tab to the last.
+- [dialog-scroll-keyboard.spec.ts](../../desktop/tests/dialog-scroll-keyboard.spec.ts):
+  the check that the keyboard reaches the whole Change repository work
+  list at the 480 px minimum height of the Mac window. A second test
+  checks that the question of a pending member removal keeps the focus on
+  Cancel after repeated Escape. Run
+  `npm --prefix desktop run test:electron -- tests/dialog-scroll-keyboard.spec.ts`.
+  The suite runs only Electron, so check a change in Safari by hand.
 - `../shell/new-workspace/NewWorkspaceHost.tsx`: `NewWorkspaceHost`, the
   New workspace dialog of a desktop frame, and `useNewWorkspace`, the one
   way that each place opens New workspace as the dialog or the page.
-  `NewWorkspaceDialog.tsx`: the dialog.
+  `NewWorkspaceDialog.tsx`: the dialog. Only its message and its notices
+  sit in the `.body` of the modal card. Its pickers, the Capabilities
+  control, and Create sit in the `.head` and the `.foot`.
+  [new-workspace-height.spec.ts](../../desktop/tests/new-workspace-height.spec.ts)
+  checks a tall dialog at the 480 px minimum height of the Mac window. Run
+  `npm --prefix desktop run test:electron -- tests/new-workspace-height.spec.ts`.
 - `../shell/new-workspace/useNewWorkspaceForm.ts`: the form that the page
   and the dialog share: the repository, the branch and its target, the
   notices, the readiness, and the send. `parts.tsx`: their repository

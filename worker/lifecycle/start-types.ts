@@ -43,6 +43,8 @@ interface WorkspaceStartData {
   requestedByUserId?: string
   providerRetry?: ProviderRetryState | null
   deadlineAt?: number
+  waitStartedAt?: number
+  autoStopSetAt?: number
 }
 
 /** Admission intent is transient. Saved starts always continue their progress. */

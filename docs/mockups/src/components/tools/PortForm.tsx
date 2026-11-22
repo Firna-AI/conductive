@@ -1,11 +1,10 @@
 import { InputFrame } from '@firna/ui/input'
-import { Globe } from 'lucide-react'
 import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
-import { EmptyState } from '../common/EmptyState'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { portFormCopy, serverDescription } from './previewCopy'
@@ -88,7 +87,9 @@ export function ServerList(props: {
           {portFormCopy.otherPort}
         </span>
         <PortField label={portFormCopy.otherPort} placeholder="8080" />
-        <ActionButton>{portFormCopy.open}</ActionButton>
+        <actionButton.Component moklyInstance="open-other-port">
+          {portFormCopy.open}
+        </actionButton.Component>
       </div>
     </div>
   )
@@ -101,15 +102,18 @@ export function ServerList(props: {
  */
 export function PortMessage(props: { body: string }) {
   return (
-    <EmptyState
+    <emptyState.Component
+      moklyInstance="port-message"
       action={
         <div className={styles.open}>
           <PortField label="Port" placeholder="3000" />
-          <ActionButton tone="primary">{portFormCopy.open}</ActionButton>
+          <actionButton.Component moklyInstance="open-port" tone="primary">
+            {portFormCopy.open}
+          </actionButton.Component>
         </div>
       }
       body={props.body}
-      icon={Globe}
+      icon="globe"
       title={portFormCopy.title}
     />
   )

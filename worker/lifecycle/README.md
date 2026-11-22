@@ -27,6 +27,7 @@ gives the create, read, resume, and activity routes of a workspace to
   Other provider kinds get no disk retention restart.
 - Stop and retain archived sandboxes, and delete them after the Restore window.
 - Repair overdue disk, archive, and image alarms from the 15-minute Cron Trigger.
+- Re-arm the image coordinator for each eligible open provider switch on every Cron run.
 - Repair the running turns, the idle time, and the name of a workspace
   from its committed chat, when a hook or a restart lost an update.
 - Give the git credential helper a fresh GitHub user token of the sender of
@@ -37,8 +38,10 @@ gives the create, read, resume, and activity routes of a workspace to
   sandbox and sessions.
 - Change the repository of a workspace to another repository that its
   sandbox holds, with the same sandbox and sessions.
-- Restart the runner, preview relay, and terminal service of a running workspace, after
-  an update check, as [Restart](routes.md#restart) says.
+- Restart the runner, preview relay, and terminal service of a running workspace after
+  an update check. A member can use [Restart](routes.md#restart). The workspace
+  alarm can also start it for a runner that stays away while a message waits, as
+  [Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
 ## Integration points
@@ -57,7 +60,7 @@ It keeps the create's published-image repository policy when the current selecti
 A failed GitHub read or expired sign-in leaves the start to decide.
 Creation replays run before this check and keep the original branch choices.
 The internal `createWorkspace` call can pass a pull request base and start commit separately from those fields.
-The create reads the fixed org account, and that account selects the published org image independently of those branch fields.
+The create reads the account of the org, and that account selects the published org image independently of those branch fields.
 The creation claim keeps both branches and the start commit in its saved plan.
 It applies omitted defaults against the same publication that supplies the leased image.
 Named fields keep their values if publication changes before admission.
@@ -101,68 +104,35 @@ and how `createApp` routes it.
 Object of each workspace and of each image coordinator. It gives their
 names, the lifecycle steps, the alarm, the start logs, the event socket,
 and the publication of the events. It also gives the creates and resumes.
+[The start loop](start-loop.md) gives how far one run advances a start,
+when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 
 ### Continue
 
 [Continue](continue.md) gives the admission and reservation of Continue,
-its phases, the staged fetch and the branch move, the publication, and the
-recovery. [Continue routes](continue-routes.md) gives its routes and errors.
+its phases, the staged fetch and the branch move, the publication, the
+masked labels, and the recovery. [Continue routes](continue-routes.md)
+gives its routes, the labels of their replies, and their errors.
+[Continue failures](continue-failures.md) gives its failures, recovery, and stop causes.
+[Continue tests](continue-tests.md) gives its tests.
 [The git credential sender](git-credentials.md#continue) gives the grant
 of its fetch.
 
 ### Moved bases
 
-`WorkspaceBaseChanges` in [`workspace-base.ts`](workspace-base.ts) owns deleted-base moves and default-branch changes.
-[`saveBaseChangeJob`](base-change-job.ts) saves one `baseChange:job` with the GitHub snapshot marker and alarm source.
-[`baseChangeChatStorage`](base-change-storage.ts) registers the native alarm in that same transaction.
-The job repairs D1 before it changes the cloud computer.
-It retains the same job ID after a D1 failure, a cloud failure, or object hibernation.
-Its retry delay starts at one second, doubles after each failure, and stops growing at 15 minutes.
-A stopped computer keeps the job until it can run again.
-Each resume attempts the same job before startup, even when its retry time is later.
-A failed attempt leaves the job and does not fail the resume.
-
-[`saveRepositoryDefaultChange`](repository-default-change.ts) saves a default-branch move before the webhook changes the repository row.
-It rechecks the workspace binding, null base, and archive state.
-[`currentRepositoryDefaultJob`](repository-default-job.ts) resolves the target against the authoritative saved repository before each attempt.
-After installation, it closes unfinished metadata-sync receipts and keeps its retry.
-A rejected save prepares again with a fresh receipt before it can change the default.
-Repeated preparation and target resolution retain one job ID and its retry count.
-Each changed revision has its own isolated fetch stage.
-Credential checks, retries, and completion reject an older revision.
-The job checks its revision before installation and again before completion.
-The guarded webhook write remains the owner of the repository values.
-The job uses the same isolated fetch, target installation, and retry path as a deleted-base move.
-The workspace base stays null, and the webhook adds no deleted-branch message to the banner.
-
-[`base-change-commands.ts`](base-change-commands.ts) shares the isolated fetch and reference installation with Continue.
-The fetch uses a bare stage outside the working repository.
-Only that fetch exports the trusted job ID for the credential helper.
-`credentialSender` maps that ID to the current workspace owner only while the fetch request runs.
-It rechecks the org, owner, repository, branch, sandbox ID, and provider account.
-A rebuilt object has no credential scope.
-An owner who cannot read the repository leaves the fetch pending under the same retry.
-
-The install command imports staged objects without a credential.
-It updates `refs/remotes/origin/<base>` before `gh-merge-base` and `origin/HEAD`.
-The missing-ref guard keeps both settings when the reference is absent.
-The install keeps HEAD, the workspace branch, the index, and local files.
-A pending Continue or repository change defers the move, so two operations cannot change the target together.
-No token or provider output enters the saved job, command, logs, or reply.
-[Native Git tests](base-change-native.test.ts) check merge-base comparisons after a merge commit and a refused fetch.
-[Native workspace tests](../features/base-moved.test.ts) check D1 repair, retries, hibernation, and resume.
-[Credential tests](../features/base-moved-credentials.test.ts) check the owner scope and secret handling.
-[Overlap tests](repository-default-race.test.ts) check delivery ordering, unfinished default changes, stale fetches, and interrupted metadata saves.
+[Moved bases](moved-bases.md) gives the job that moves the base of a
+workspace in its cloud computer, after GitHub deletes the base or renames
+the default branch, with its retry, its owner fetch, and its tests.
 
 ### Repository change
 
 [Repository change](repository-change.md) gives the routes and errors, the
 admission and the reservation that it shares with Continue, its phases,
-the move command with the context copy, the publication, and the
-recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns both jobs for the
-workspace object.
+the move command with the context copy, the publication, the masked
+labels, and the recovery. [`workspace-jobs.ts`](workspace-jobs.ts) owns
+both jobs for the workspace object.
 
 [`repository-change-progress.ts`](repository-change-progress.ts) keeps the new target's default base null in its binding.
 [`storeChangedRepository`](repository-change-data.ts) stores a base equal to that default as null and checks the effective base after publication.
@@ -172,6 +142,8 @@ Saved jobs with the earlier named default still publish through the same path.
 
 [Image builds](image-builds.md) describes build sandboxes, the runner version of an image, suspension,
 provider retries, logs, snapshot leases, and refresh timers.
+[Provider switches](provider-switches.md) gives hidden switch builds, member
+build waits, and the atomic publication of a new account.
 The [software image area](../software-image/README.md) builds the shared
 image that a build of an org without an org image starts from.
 
@@ -201,6 +173,20 @@ The release program includes the workspace CLI and MCP server.
 Its system installer links `/usr/local/bin/conductive` to the active program.
 Disk retention starts do not bootstrap or restart the runner.
 [Installation](../../image/install.md) gives the command sequence and release layout.
+
+### Job step records
+
+[`job-steps.ts`](job-steps.ts) holds the D1 statements of the job step
+records that [Step timing](../../docs/protocol/step-timing.md#job-step-records)
+requires: `job_steps` for the steps of builds, refreshes, creates, and
+resumes, and `job_runs` for the runs of a start. Each statement checks its
+org and is safe to repeat. `rememberWorkerVersion` keeps the Worker version
+of the isolate when a workspace object starts, and each row holds it. The
+15-minute cron calls `deleteOldJobRecords`, and `purgeOrgRecords` deletes
+the rows of a purged org.
+
+- Builds and refreshes: [Step records](image-builds.md#step-records).
+- Starts: [Start step records](workspace-object.md#start-step-records).
 
 ## Settings
 
@@ -257,6 +243,7 @@ the persisted resource records and the retained computer ledger.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
+- [automatic-restart.ts](automatic-restart.ts): checks the saved absence, waiting messages, and provider state. It claims the shared restart and sends its commands outside the chat queue.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and
 the guides that give the entry points of each part.

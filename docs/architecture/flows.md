@@ -8,10 +8,26 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A person creates an org with its repositories. An operator can also
    choose its provider account.
-2. The Worker sets the account of the org once: the choice of the
-   operator, or a draw from the weights. The org keeps that account for
-   its whole life.
+2. The Worker sets the first account of the org: the choice of the
+   operator, or a draw from the weights.
 3. The Worker starts the first build of the org image in that account.
+
+## Switch the account of an org
+
+1. An operator presses Switch account on the page of the org in the
+   operator section, and picks another configured account.
+2. The Worker records the switch. It starts the switch build in the new
+   account, with the inputs of the newest good org image. The switch build
+   waits while a job of the org runs, while the org is suspended or
+   deleted, and while it has no active admin.
+3. Members do not see the switch build. Until it succeeds, new workspaces
+   of the org start in the old account.
+4. When the switch build succeeds, the Worker makes its image the org
+   image and changes the account of the org in the same step. New
+   workspaces then start in the new account. Each existing workspace keeps
+   its sandbox in the old account.
+
+[Switch account](../protocol/switch-account.md) states the rules.
 
 ## Create a workspace
 

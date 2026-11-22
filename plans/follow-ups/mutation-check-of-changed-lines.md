@@ -2,7 +2,7 @@
 
 - **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-09, from round 2 finding 6 of the review of branch `calummoore/tab-drag-and-drop`, as the blocked wider fix of that finding.
+- **Added:** 2026-11-09, from round 2 finding 6 of the review of branch `calummoore/tab-drag-and-drop`, as the blocked wider fix of that finding. Extended on 2026-11-20 with finding 10 of review round 2 of branch `calummoore/sandbox-start-issue-secrets-q3is`: the same class in the Rust crates.
 - **Location:** `package.json`, the `check` script. `.github/workflows/ci.yml`, the job that runs it. `src/chat/components/row-scroll.ts`, the tab row scroll behaviour. `src/chat/components/TabRow.dom.test.tsx`, its regression tests.
 - **Reason:** The proposed work adds a gate or a CI step, which the user decides.
 
@@ -21,7 +21,7 @@
   - **C.** Report the score of a mutation run on each pull request, with no limit. The review reads it. It adds a CI step but no gate. Effort: Medium.
 - **Left out:** A coverage limit, because a line that a test runs can still have no assertion that fails when it breaks.
 - **Wider fix:** B, a detection fix for the class.
-- **Previous examples:** `plans/follow-ups/list-failure-test.md`, and both scroll behaviours in `src/chat/components/row-scroll.ts`. `src/chat/components/TabRow.dom.test.tsx` now tests both behaviours directly.
+- **Previous examples:** `plans/follow-ups/list-failure-test.md`, and both scroll behaviours in `src/chat/components/row-scroll.ts`. `src/chat/components/TabRow.dom.test.tsx` now tests both behaviours directly. On 2026-11-20, branch `calummoore/sandbox-start-issue-secrets-q3is` added a stall test for the part repair in `crates/cnd-cli/src/update/_tests_/repair_tests.rs`. Its first form passed when the time share of a part came from the whole 60-second limit, which `cargo-mutants` would show. So the class also reaches the Cargo workspace, and a mutation run there needs a Rust tool such as `cargo-mutants`.
 - **Related:** `plans/follow-ups/raised-constant-weakens-tests.md` has a shared wider fix. Its option C, a mutation run over the code that reads each changed constant, is a form of option B here. A run over the changed lines alone misses that class.
 - **Recommendation:** C. It shows the unprotected lines to the review at a medium cost, without a gate that fails on mutants that change nothing. B best protects the codebase.
 - **Action:** ask the user, because B adds a gate, and C adds a CI step that the user should weigh.

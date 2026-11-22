@@ -10,7 +10,10 @@ failure, which moved from `app/chat/running`, `steer`, `interrupted`, and
 the agent of another session stopped with a workspace tool, from decision
 279. Its line says "Stopped from" and shows the session chip of that
 session, for a session of the same workspace and, in `other-workspace`, of
-another workspace. `app/chat/work` draws the work of ended
+another workspace. In `unknown-source`, the list of the org does not hold
+the workspace of that session. So the line shows the whole session link
+as text. The link breaks to fit the line.
+`app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose
 two parts each fold their own work, a turn whose open work holds a Mac

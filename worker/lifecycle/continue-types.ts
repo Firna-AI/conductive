@@ -13,6 +13,10 @@ import type {
   GitHubWorkspace,
 } from '../github/contracts'
 import { DEFAULT_PROVIDER_ACCOUNT } from '../sandbox/account-identity'
+import {
+  readContinueStopCause,
+  type ContinueStopCause,
+} from './continue-stop-causes'
 
 export const CONTINUE_JOB_KEY = 'lifecycle:continue'
 export const continueJobKey = (id: string) => `continue:job:${id}`
@@ -30,6 +34,15 @@ type StoredReply =
       eventNumber: number
     }
 
+export const CONTINUE_PHASES = [
+  'verify',
+  'resume',
+  'check',
+  'fetch',
+  'move',
+  'publish',
+] as const
+
 export interface ContinueJob {
   id: string
   binding: GitHubWorkspace
@@ -42,7 +55,7 @@ export interface ContinueJob {
   baseBranch: string
   defaultBranch: string
   directory: string
-  phase: 'verify' | 'resume' | 'check' | 'fetch' | 'move' | 'publish'
+  phase: (typeof CONTINUE_PHASES)[number]
   processId: number | null
   commandStarted: boolean
   resumeQueued: boolean
@@ -51,6 +64,7 @@ export interface ContinueJob {
   stderrOffset: number
   publication?: { after: number; through: number }
   failure?: { status: number; code: string; message: string }
+  stopCause?: ContinueStopCause
   cancelled?: true
   outcome?: FeatureResult<StoredReply>
 }
@@ -76,9 +90,10 @@ export async function readContinueJob(
   key = CONTINUE_JOB_KEY,
 ): Promise<ContinueJob | null | undefined> {
   const job = await storage.get<
-    | (Omit<ContinueJob, 'providerAccount' | 'defaultBranch'> & {
+    | (Omit<ContinueJob, 'providerAccount' | 'defaultBranch' | 'stopCause'> & {
         providerAccount?: string
         defaultBranch?: string
+        stopCause?: unknown
       })
     | null
   >(key)
@@ -87,6 +102,7 @@ export async function readContinueJob(
         ...job,
         providerAccount: job.providerAccount ?? DEFAULT_PROVIDER_ACCOUNT,
         defaultBranch: job.defaultBranch ?? job.baseBranch,
+        stopCause: readContinueStopCause(job.stopCause),
       }
     : job
 }

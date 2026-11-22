@@ -3,7 +3,9 @@
 `Workspace.credentialSender` maps the turn ID of a git credential request
 to a sender, in the chat queue. `credentialSender` in
 [`credential-sender.ts`](credential-sender.ts) holds the rules below for a
-create and a chat turn. The [machine route](routes.md#machine-route)
+create and a chat turn. It asks `preparingCredentialSender` in
+[`preparing-credential-sender.ts`](preparing-credential-sender.ts) first,
+for a create that prepares its repository and for a saved base-move fetch. The [machine route](routes.md#machine-route)
 gives the handler, which reads that turn ID from a request header. The
 [Workspace Durable Object](workspace-object.md) guide gives the other
 methods of the object.

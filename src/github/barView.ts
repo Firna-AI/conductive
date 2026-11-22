@@ -12,7 +12,7 @@ import {
   type LocalWorkKind,
 } from '../../docs/mockups/src/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
-import { bannerStatus } from './bannerStatus'
+import { bannerStatus, baseBranchLabel, branchLabel } from './bannerStatus'
 import { messageOf } from './barMessage'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
@@ -235,9 +235,11 @@ export function barViewOf(input: BarInput): BarView {
         : banner.state === 'no-commits'
           ? barLabels.noCommits
           : null,
+    // The top of the phone Checks tab shows the labels, which hide each
+    // secret value.
     branches:
       banner.pullRequest === null
-        ? { branch: banner.branch, base: banner.baseBranch }
+        ? { branch: branchLabel(banner), base: baseBranchLabel(banner) }
         : null,
   }
 }

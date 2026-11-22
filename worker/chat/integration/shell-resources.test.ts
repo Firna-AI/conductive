@@ -84,6 +84,8 @@ it('serves real shell lists and keeps workspace views private to each member', a
         defaultBranch: 'main',
         installationId: 91,
         selected: true,
+        ready: true,
+        imageReady: true,
       },
     ],
   })

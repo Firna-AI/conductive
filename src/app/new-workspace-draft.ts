@@ -10,6 +10,7 @@ import { filesWait, type DraftFile } from './draft-files'
 import { markedFiles } from './draft-file-state'
 import { withoutMarks } from './draft-marks'
 import { branchIn, type DraftBranch } from './new-workspace-branch'
+import { waitsForBuild } from './repository-changes'
 
 /** The first message of a workspace that does not exist yet. */
 export interface Draft {
@@ -103,24 +104,35 @@ export function draftReady(draft: Draft): boolean {
 /**
  * The repository that a New workspace form shows while its draft has none:
  * the first chosen repository that is ready, else the first chosen one. A
- * chosen repository that the builds list as added waits for a build, as
- * `waitingRepositoriesOf` says. While the builds load, none waits.
+ * chosen repository waits for a build as `waitsForBuild` says.
  */
 export function firstReadyRepository(
   chosen: readonly Repository[],
   builds: BuildsResponse | undefined,
 ): Repository | undefined {
-  const added = builds?.changes.addedRepositories ?? []
-  const waits = (item: Repository) => added.some(({ id }) => id === item.id)
-  return chosen.find((item) => !waits(item)) ?? chosen[0]
+  return chosen.find((item) => !waitsForBuild(item, builds)) ?? chosen[0]
 }
 
 /**
- * The draft with the repository that the form shows, once the repositories
- * and the builds have loaded: a draft with text or a file takes it when it
- * has no repository yet. A kept repository that the org no longer chose
- * gives way to it, so the draft follows the form, as a draft without a
- * repository does. A pick stays. A branch stays only with its repository.
+ * Whether the form knows which chosen repositories wait: each one says it,
+ * as in the repositories reply of a newer Worker, or the builds have
+ * loaded, for a reply of an older Worker.
+ */
+function knowsWaits(
+  chosen: readonly Repository[],
+  builds: BuildsResponse | undefined,
+): boolean {
+  if (builds) return true
+  return chosen.length > 0 && chosen.every((item) => item.ready !== undefined)
+}
+
+/**
+ * The draft with the repository that the form shows, once the
+ * repositories have loaded and the form knows which of them wait: a draft
+ * with text or a file takes it when it has no repository yet. A kept
+ * repository that the org no longer chose gives way to it, so the draft
+ * follows the form, as a draft without a repository does. A pick stays.
+ * A branch stays only with its repository.
  */
 export function withShownRepository(
   draft: Draft,
@@ -128,8 +140,9 @@ export function withShownRepository(
   builds: BuildsResponse | undefined,
 ): Draft {
   const kept = draft.repository
-  if (!repositories || !builds || kept?.picked) return draft
+  if (!repositories || kept?.picked) return draft
   const chosen = repositories.filter((item) => item.selected)
+  if (!knowsWaits(chosen, builds)) return draft
   if (kept && chosen.some((item) => item.id === kept.id)) return draft
   const written = draft.text.trim() !== '' || draft.files.length > 0
   const shown = written ? firstReadyRepository(chosen, builds) : undefined

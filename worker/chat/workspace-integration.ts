@@ -14,6 +14,7 @@ import {
 import { receiverStorage } from '../members/receiver-storage'
 import { DeviceRuntime } from '../devices/runtime'
 import { createWorkspaceController } from '../lifecycle/workspace-controller'
+import { requiresFreshRunnerReady } from '../lifecycle/durable-restart'
 import { nativeWorkspacePlatform } from '../lifecycle/workspace-platform'
 import type { LifecycleEnvironment } from '../lifecycle/runtime'
 import type { WorkspaceController } from '../lifecycle/workspace-controller-types'
@@ -33,6 +34,7 @@ import { unsupportedRunnerReason } from './runner-unsupported'
 import { SecretRuntime } from '../secrets/runtime'
 import { nativeRunnerWorkStorage } from './runner-work-watch'
 import { projectInputState } from '../secrets/workspace-runtime'
+import { StartJobRecords } from '../lifecycle/start-job-records'
 
 export type WorkspaceCompositionEnv = LifecycleEnvironment
 export type WorkspaceChatResolvers = Partial<
@@ -107,6 +109,8 @@ export function createWorkspaceIntegration(
       runnerDetached: (connectionId) => files.runner.detach(connectionId),
       runnerHello: async (_id, publish) =>
         controller.recoverLifecycle(callbackPublisher(publish)),
+      requiresFreshRunnerReady: async () =>
+        requiresFreshRunnerReady(await controller.readLifecycle()),
       runnerUnsupported: async () =>
         controller.runnerProtocolUnsupported(unsupportedRunnerReason),
       ...observeWorkspaceCallbacks(
@@ -121,9 +125,7 @@ export function createWorkspaceIntegration(
                 callbackPublisher(publish),
               )
             } finally {
-              context.waitUntil(
-                Promise.all([devices.reconcile(), secrets.reconcile()]),
-              )
+              context.waitUntil(reconcileStopped())
             }
           },
           receiveFileResult: async (value, connectionId) => {
@@ -138,8 +140,11 @@ export function createWorkspaceIntegration(
               callbackPublisher(publish),
             )
           },
-          runnerDisconnected: async (_id, publish) =>
-            controller.runnerLifecycleDisconnected(callbackPublisher(publish)),
+          runnerDisconnected: async (_id, publish, at) =>
+            controller.runnerLifecycleDisconnected(
+              callbackPublisher(publish),
+              at,
+            ),
           turnDispatching: async (_id, turn, publish) => {
             if (await pendingWorkspaceChange(storage)) return false
             const state = await controller.readLifecycle()
@@ -205,12 +210,17 @@ export function createWorkspaceIntegration(
       generation: generations.current,
     }),
   )
+  const startRecords = new StartJobRecords(env, platform.storage, now)
+  const reconcileStopped = async () => {
+    await Promise.all([devices.reconcile(), secrets.reconcile()])
+  }
   const controller: WorkspaceController = createWorkspaceController(
-    env,
+    startRecords.env,
     dependencies,
     {
       ...platform,
       baseChanges,
+      startRecords,
       assertStartActive: (turn) =>
         assertReceiverActive(storage, generations.forTurn(turn)),
       hasOutsideTurns: () => chat.store.hasOutsideTurns,
@@ -231,10 +241,7 @@ export function createWorkspaceIntegration(
             })),
           }
         }),
-      chatRecovered: () =>
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        ),
+      chatRecovered: () => context.waitUntil(reconcileStopped()),
       admitFirstMessage: async (input) => {
         const identity = await firstMessageIdentity(env, input.workspaceId)
         if (
@@ -256,12 +263,10 @@ export function createWorkspaceIntegration(
           sender: identity,
         })
       },
-      stopped: async (id) => {
+      stopped: async (id, keepQueued) => {
         for (const hook of stoppedHooks) await hook(id)
-        await chat.stopWorkspace(id)
-        context.waitUntil(
-          Promise.all([devices.reconcile(), secrets.reconcile()]),
-        )
+        await chat.stopWorkspace(id, keepQueued)
+        context.waitUntil(reconcileStopped())
       },
     },
   )
@@ -275,10 +280,9 @@ export function createWorkspaceIntegration(
     alarms,
     baseChanges,
     sockets,
+    startRecords,
     withGeneration: generations.withGeneration,
-    reconcileStopped: async () => {
-      await Promise.all([devices.reconcile(), secrets.reconcile()])
-    },
+    reconcileStopped,
     onStopped: (hook: (id: string) => Promise<void>) => stoppedHooks.push(hook),
   }
 }

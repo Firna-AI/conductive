@@ -59,12 +59,20 @@ const member = senderSnapshot(options.member ? fakeUsers[1] : fakeUser)
 const barFetch = bar
   ? scenarioFetch(server, bar.scenario, member, now)
   : server.fetch
-// A repository change answers as the Worker does, over each chosen folder.
+// A repository change answers as the Worker does, over each chosen folder,
+// with the branch names of the bar.
 if (options.repository) {
   serveHeld(server, ['storefront', 'billing-service', 'marketing-site'])
 }
 const fetch = options.repository
-  ? repositoryFetch(server, options.repository, member, now, barFetch)
+  ? repositoryFetch(
+      server,
+      options.repository,
+      member,
+      now,
+      barFetch,
+      bar?.scenario.branches,
+    )
   : barFetch
 // A first-start state opens the new workspace of the create flow instead.
 const workspaceId = options.start

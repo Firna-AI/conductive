@@ -32,9 +32,13 @@ function runWorkspaceOperation<T>(
 ): Promise<T> {
   return store.run(async () => {
     await authorize()
+    // Replays publish synchronously, so their labels must be ready before work.
+    const preparation = store.eventLabels(workspaceId)
+    const labels = await preparation.prepare()
     return work({
-      change: (action) => store.change(workspaceId, action, publish),
-      publish: (envelope) => publish([envelope]),
+      change: (action) =>
+        store.change(workspaceId, action, publish, preparation),
+      publish: (envelope) => publish([labels.envelope(envelope)]),
     })
   })
 }

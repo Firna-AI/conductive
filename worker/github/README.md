@@ -276,7 +276,7 @@ Before another read replaces that snapshot, the refresh repairs its D1 move.
 The job also repairs D1, so a failed D1 write has a saved retry.
 The snapshot keeps the marker until the cloud move completes.
 
-The public banner's optional `baseMoved` field names the deleted branch.
+The public banner's optional `baseMoved` field names the deleted branch, and `filterGitHubBanner` adds its masked label `displayBaseMoved`.
 The Worker keeps it across reads and object rebuilds until a pull request opens.
 The app can use it with `barMessageText` and the `baseMoved` fact of the mockup bar model.
 The banner names the default branch and compares commits with it.
@@ -340,6 +340,7 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [Shared summary](../../src/shared/github.ts) gives `checksSummary`, which the bar uses, and `githubSummary`, which the copy uses.
 - [chat-store.ts](chat-store.ts) adapts the state port to `WorkspaceChat`, with an access check inside the queue before each commit or replay.
 - [delivery-receipt.ts](delivery-receipt.ts) defines the receipt and builds the `github.updated` event from a snapshot, for a commit and a replay.
+- [output.ts](output.ts) adds the masked labels `displayBranch`, `displayBaseBranch`, and `displayBaseMoved` to the banner of the fresh and stored replies of `app-handler.ts`, with the secret values of the last start of the sandbox. The chat backend labels each `github.updated` event, as [Branch and path labels](../chat/integration/README.md#branch-and-path-labels) says. Snapshots and receipts keep the real names.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
 - [base-moved.test.ts](base-moved.test.ts) checks a deleted base, its saved banner, and failed reads.

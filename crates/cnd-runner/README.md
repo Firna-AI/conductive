@@ -114,12 +114,15 @@ The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
-Snapshot scans read content identities with at most 16 concurrent reads before
-Git comparisons. Private indexes discard restored stat data. The comparison
-step starts with a refresh from file contents, after the parallel reads in a
-snapshot. Checkpoints, including submodule checkpoints, do not refresh because
-`update-index --info-only` already stores fresh stat data.
-The first scan still completes before `runner.ready`.
+Snapshot scans check up to 16 files at once before Git comparisons.
+They reuse in-memory hashes when device, inode, size, modification time, and
+change time match on the opened file. The change time must be at least two
+seconds before the scan that stored the hash. Completed scans drop missing
+and unreadable files from the cache. Private indexes discard restored stat data.
+Comparisons refresh from file contents after the snapshot reads. Checkpoints,
+including submodule checkpoints, skip the refresh because
+`update-index --info-only` stores fresh stat data.
+A full scan completes before `runner.ready` on each connection.
 
 The CLI starts the repository file server on `127.0.0.1:7683`. A failed
 bind warns and leaves the runner available without that capability.
@@ -144,8 +147,13 @@ list, with folder fallback. Rust filters whole skill sources, applies name,
 count, and byte limits, and saves the report and refresh receipt together.
 The store retains the latest skill metadata without private paths.
 
-Native watches debounce file and skill events by 100 ms. Restore polling reopens the
-live repository path once. Port scans run on an independent two-second timer.
+Native watches debounce file and skill events by 100 ms. One file scan can
+run while one watch refresh waits. Later watch refreshes share that waiting
+scan. Requests with command IDs keep their own scans. At shutdown, the
+watcher stops waiting for refreshes. The file reporter cancels its active
+capture and skips waiting scans. A canceled capture saves no report or
+receipt. Restore polling reopens the live repository path once. Port scans
+run on an independent two-second timer.
 
 ## Quick Start
 
@@ -171,8 +179,9 @@ graceful cleanup. Give `RunnerCore::with_folders` the folders of the
 configuration, and `SavedRunnerLink::with_repository_folder` its folder, to
 accept moves. Without folders, the runtime refuses each move.
 
-Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
-`FileReporter` the loaded file revisions and a shared `ReportFilter`.
+Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries.
+Give `FileReporter` its own repository instance, the loaded file revisions,
+and a shared `ReportFilter`.
 Compose `PortReporter` with a `PortScanner`. Give `ReportCommandHandler`
 these reporters, the loaded store, and the next agent command handler.
 Optionally supply `ReportWatchService` with a `WatchDriver`.

@@ -15,6 +15,7 @@ import type { DevOptions } from './options'
 import { seededOrgLogins } from './org-login-routes'
 import { seedProviders } from './provider-routes'
 import { operatorRecords } from './seed-operator'
+import { seedSwitches } from './switch-seed'
 import { freshOrg, type DevState, type DevWaitlist } from './state'
 
 type CoreFixtures = ReturnType<typeof coreFixtures>
@@ -100,6 +101,7 @@ export function seedState(options: DevOptions): DevState {
     operator: operatorRecords(options, user),
     shareSaveFails: options.shareSaveFails,
     providers: seedProviders(options),
+    switches: seedSwitches(options),
     waitlist: {
       appAccess: !waits,
       approvalEmail:

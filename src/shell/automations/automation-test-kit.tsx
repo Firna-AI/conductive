@@ -49,6 +49,14 @@ export function wordsOf(element: Element): string {
   return words.join(' ')
 }
 
+/** The words of each line under the prompt box, or none before it shows. */
+export function promptLines(view: HTMLElement): string[] {
+  const prompt = queryByRole('region', 'Prompt', view)
+  return Array.from(prompt?.querySelectorAll(':scope > p') ?? [], (line) =>
+    (line.textContent ?? '').replace(/\s+/g, ' ').trim(),
+  )
+}
+
 /** The words of each row of the Runs list, once it shows. */
 export async function runRows(view: HTMLElement): Promise<string[]> {
   const list = await waitFor(

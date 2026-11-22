@@ -68,6 +68,8 @@ export type ChatEvent =
       member: MessageSender
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | {
       /** The note of a repository change in one session. */
@@ -77,6 +79,8 @@ export type ChatEvent =
       repository: { id: string; fullName: string }
       branch: string
       baseBranch: string
+      displayBranch?: string
+      displayBaseBranch?: string
     }
   | RunnerEventRefused
   | { type: 'message.accepted'; message: UserMessage }

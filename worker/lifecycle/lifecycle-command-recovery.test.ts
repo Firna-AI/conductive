@@ -132,7 +132,7 @@ it('recovers a running startup after a lost start reply without repeating its si
       if (job?.phase === 'startup') break
       await start.advance()
     }
-    await start.advance()
+    expect(runs).toHaveLength(1)
     expect(await start.job()).toMatchObject({
       phase: 'startup',
       processId: null,

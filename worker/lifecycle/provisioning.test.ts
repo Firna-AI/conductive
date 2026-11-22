@@ -27,10 +27,11 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     const id = await firstQueue
     const actor = fixture.starts.get(id)
     if (!actor) throw new Error('Missing actor coordinator')
-    await actor.advance()
-    await actor.advance()
-    await actor.advance()
-    await actor.advance()
+    for (let step = 0; step < 8; step++) {
+      const job = await actor.job()
+      if (job?.phase === 'fetch' && job.processId !== null) break
+      await actor.advance()
+    }
     fixture.boat.statusChunkSize = 4
     await actor.advance()
     expect(await actor.job()).toMatchObject({
@@ -105,9 +106,11 @@ it('recovers an accepted create after its caller closes and the actor restarts',
     }
     expect(await endpoint.queueLifecycleStart(resume)).toBe(true)
     expect(await fixture.nextQueued()).toBe(id)
-    await actor.advance()
-    await actor.advance()
-    await actor.advance()
+    for (let step = 0; step < 8; step++) {
+      const job = await actor.job()
+      if (job?.phase === 'startup' && job.processId !== null) break
+      await actor.advance()
+    }
     await stopWorkspaceSandbox(context)
     await endpoint.lifecycleStopped()
     await actor.advance()

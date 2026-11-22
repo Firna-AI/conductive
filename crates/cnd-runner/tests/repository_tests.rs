@@ -5,6 +5,7 @@ mod repository {
     mod checkpoint_tests;
     mod content_tests;
     mod context_tests;
+    mod hash_reuse_tests;
     mod index_states_tests;
     mod limits_tests;
     mod paths_tests;

@@ -68,6 +68,17 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
+Its `MASKED_BASE`, `MASKED_HEAD`, `MASKED_DEFAULT`, and `MASKED_CONTINUED`
+give a target, a workspace, a default, and a new branch with the same fake
+value. Each has the label that the Worker sends beside it. The view tests
+use them. `branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`, and
+`branches=masked-continue` uses all four.
+`MASKED_MOVED` is the new branch of a repository change.
+`MASKED_REPOSITORY_WORK` adds files to both lists of its question, with two
+paths in each list that share one label. `branches=masked-repository` uses
+these two, `MASKED_BASE`, `MASKED_HEAD`, and `MASKED_DEFAULT`, through
+`fake-repository-names.ts`. `serveMaskedHead` of `fake-branch-names.ts`
+puts the workspace record and the list of a test on `MASKED_HEAD`.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.
@@ -140,7 +151,7 @@ start and the poll of Continue. `continuedEvents` gives the events of a
 Continue: the workspace on its new branch, a note in each session, the
 changes report of the new branch, and its GitHub state. `fake-bar-dev.ts`
 gives `scenarioFetch`, which answers as the Worker does with its state, for
-the development pages.
+the development pages. `fake-transcript.ts` builds its transcript copies.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
@@ -173,6 +184,7 @@ The session reply has app access, and `GET /api/waitlist` answers with `accessSt
 The operator samples in `fixtures/operator-samples.ts` have the names and the counts of the operator mockups, with an ID for each org and user, and the people of the other fixtures. Ten of them wait, with the names of the waitlist mockups. Each time counts back from the time of the samples. Hexwave is suspended, Pinecrest is deleted, and Dana Kim is suspended. `SAMPLE_IDS` names them, Sam Okafor and Kenji Watanabe, who wait with and without a verified email, and Zed K, the newest person who waits, as `SAMPLE_IDS.newestWaiting`.
 `fixtures/operator-access-samples.ts` gives the way in of each user who came after the waitlist, the age of each GitHub account, the referral code of each user with app access, and the invite codes of the mockups. `fixtures/operator-access.ts` turns them into the app access of a user, the waitlist, and the codes, with the records that an operator changes: the approvals, the open sign-ups in `openSignups`, the codes, the pause, and the switch in `waitlistSwitch`. `sampleAccessRecords` in `fixtures/operator-access-records.ts` builds those records at a time, with the waitlist on. An open sign-up names its operator on the page of a user. The approval email of Ana Pereira went, and the one of Joe Quinn never went. The suspension of Dana Kim disabled her referral code.
 `fixtures/operator.ts` builds the replies from the samples and their records: the page of an org or a user, its row in a list, and the Overview with the 30 UTC days up to the day of the read and the count of the people who wait. The dev fake changes the records with Suspend, Lift, Approve, New code, Disable, the pause, and the switch. Its waitlist reads the same codes, pause, and switch, and a code that works there counts its use and gives a referral code.
+The operator switch fixtures set `switchAvailable: true`, so switch tests and the dev fake keep the complete flow while production admission is off.
 The Overview also includes long runs with workspace, org, and owner identities and raw Unix millisecond times.
 These samples include deleted and suspended orgs, a suspended owner, and a start without a cloud computer ID.
 `operatorOverview` accepts a fixed sample time separately from the read time, so a dev refresh keeps each start.

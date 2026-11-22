@@ -101,12 +101,16 @@ This page lists each protocol doc and what it covers.
     an attached file in parts, with the gate rules and the body limit of
     its routes.
   - [Step timing](../protocol/step-timing.md): the `Server-Timing` header of
-    the preview replies and of the create reply, and what it may hold.
+    the preview replies and of the create reply, and what it may hold, and
+    the job step records of builds and starts.
 - [Model gateway](../protocol/model-gateway.md): the turn token, and the
   Worker routes that add the agent login to each model request.
   - [Model gateway: requests and answers](../protocol/model-gateway-requests.md):
     the upstream of each login, what passes to it and back, the own
     endpoints, the streams, and the risks.
+  - [Model gateway: long waits](../protocol/model-gateway-long-waits.md):
+    the error that ends a Codex turn when the upstream asks for a long
+    wait.
 - [GitHub banner](../protocol/github-banner.md): the pull request bar, its
   actions, Merge, and its events.
   - [The GitHub state](../protocol/github-summary.md): the four summary
@@ -141,6 +145,9 @@ This page lists each protocol doc and what it covers.
   - [Org rail order](../protocol/org-rail-order.md): the order of the orgs
     in the rail that each person keeps, how the person changes it, what a
     tile opens, and the workspace list of a hidden sidebar.
+  - [Repository order](../protocol/repository-order.md): the order of the
+    chosen repositories of an org, its default repository, and the moves
+    of an admin.
   - [Get started](../protocol/get-started.md): the first run, its steps,
     the agent step, the state of the first build in its org step, and its
     finish.

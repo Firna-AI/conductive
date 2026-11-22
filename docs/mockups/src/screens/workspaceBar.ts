@@ -1,7 +1,8 @@
 import { barModel, type BarModel } from '../components/workspace/barModel'
+import { defined } from '../defined'
 import { continuedBranch, viewerMergeMethod } from '../fixtures/barActions'
 import { pickedBranch } from '../fixtures/branches'
-import type { RepositoryKey } from '../fixtures/repositories'
+import { repositories, type RepositoryKey } from '../fixtures/repositories'
 import { movedBranch, movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
@@ -90,15 +91,19 @@ type WorkspaceBase = Pick<Workspace, 'baseBranch' | 'movedBase'>
 /**
  * The base branch of the workspace: its own, the picked branch that a
  * start stacked it on, or the default branch after GitHub deleted that
- * branch, which `movedBase` then names.
+ * branch, which `movedBase` then names. It holds no undefined field, because
+ * the registered parts of Mokly take the workspace as data.
  */
 function baseOf(state: WorkspaceState, workspace: Workspace): WorkspaceBase {
   switch (state.base) {
     case 'own':
-      return { baseBranch: workspace.baseBranch }
+      return defined({ baseBranch: workspace.baseBranch })
     case 'stacked':
       return { baseBranch: pickedBranch }
     case 'moved':
-      return { baseBranch: undefined, movedBase: pickedBranch }
+      return {
+        baseBranch: repositories[workspace.repository].defaultBranch,
+        movedBase: pickedBranch,
+      }
   }
 }

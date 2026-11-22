@@ -42,17 +42,26 @@ first.
   stores either a Worker title or a runner title.
 - `workspace-summary.ts`: `WorkspaceSummaryProjection`, the summary that
   `readChatWorkspaceSummary` returns.
-- `workspace-stop.ts`: `stopDispatchedTurns`, which ends the dispatched
-  turns as stopped when the lifecycle state becomes stopped or error.
+- `workspace-stop.ts`: `stopDispatchedTurns`, which ends each running or
+  stopping turn as stopped with `TurnCompletion.stopped`.
+  `WorkspaceOperations.stop` runs it when the lifecycle state becomes
+  stopped or error. `WorkspaceOperations.stopTurnsForRestart` runs it
+  in the chat queue after the final access checks and the submission
+  record of an automatic restart. The Worker then sends the restart
+  command outside the queue. With the `keepQueued` ID source, it first
+  moves each message that the runner has not received to a new turn, so
+  that the message waits for the next runner. The restart always passes
+  that source. The stop passes it only after a failed automatic restart.
 - `browser-authorization.ts`: `authorizeChatBrowser`, the browser gate of
   the object. With the body that the gate already read, it runs
   `gateAccess` in place of `gate`, and finds the workspace again.
   `browserRequest` uses this form in the queue for each browser write.
 - `runner-authorization.ts`: `authorizeChatRunner`, the machine origin and
   token checks before the runner connection opens.
-- `browser-subscription.ts`: `subscribeBrowser`, the queue-owned start of
-  a browser tab: the login refresh, the tab registration, the close after
-  a failed start, and the grant check before the history.
+- `browser-subscription.ts`: `subscribeBrowser`, the start of a browser
+  tab in the queue task that `BrowserConnections.subscribe` holds: the
+  login refresh, the tab registration, the close after a failed start, and
+  the grant check before the history.
 - `browser-request.ts`: the queued browser writes and the transcript read
   that yields between history pages.
 - `session-transcript.ts`: the transcript snapshot, metadata reads, and
@@ -79,6 +88,17 @@ first.
   chunks of large file reports and tree deltas. `ChatTransaction.newestHistory`
   serves the browser's session history. `history` keeps the forward read
   for the events socket, workspace summary, Continue, and transcript copy.
+- `workspace-event-labels.ts`, `workspace-labels.ts`, and
+  `workspace-labels-data.ts`: the masked labels of events, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says. `eventLabeler` gives the labels of `github.updated`,
+  `workspace.continued`, and `workspace.repository-changed` events.
+  `WorkspaceEventLabels` labels with the values of one read.
+  `WorkspaceEventLabelPreparation` makes that read at most once. Its
+  `event` and `history` make it only for such an event.
+  `ChatStore.eventLabels` gives one preparation, through
+  `storedWorkspaceEventLabels`, which finds the org of the workspace in D1.
+  `prepareWorkspaceEventLabels` gives one for a route that knows the org.
 - `queue-turn.ts`: `ChatQueue`, the serial queue of `ChatStore.run`, and
   `QueueTurn`, the handle whose `outside(call)` runs one call outside the
   queue. `hasOutsideTurns` tells Archive that a queue task is outside.
@@ -118,12 +138,16 @@ first.
 - `runner-connections.ts` and `runner-connection-store.ts`:
   `RunnerConnections`, the native acceptance, restore, close, and idle
   alarm of the current runner, and the chunked durable record of a
-  physical runner socket. That record keeps the protocol version, the
-  process-start ID, the login kinds, and the repository folder declared
-  in `hello`. A record without login kinds keeps that list absent, as its
-  `hello` did. So after a wake, the runner keeps its login support and its
-  process-start ID with no second `hello` or `welcome`. A restore retires
-  a record of an unsupported version, or with a stream and no version.
+  physical runner socket. `persist` saves the whole `ActiveRunner.state`,
+  and `activate` restores the whole value at a wake, as
+  [The runner](access.md#the-runner) says. The one reader of the store
+  accepts older records. A record without login kinds keeps that list
+  absent, as its `hello` did. A restore retires a record of an
+  unsupported version, or with a stream and no version.
+- `runner-connection-state.ts`: `RunnerConnectionState`, the whole value
+  of a runner connection that native storage saves and a wake restores.
+  `ActiveRunner` in `types.ts` holds it as `state`, beside the
+  memory-only `peer`.
 - `runner-output.ts` and `runner-output-state.ts`: the filter from the
   actual start capture, and its encrypted state. Each runner stream keeps
   its held answer text. Each answer record keeps the shown ends of its
@@ -150,63 +174,17 @@ first.
   and the salt of the answer in its input. The salt and the identities stay
   encrypted, and each write keeps only those of active values. The rollout
   also gives the limit of records in the earlier format.
-- `tool-detail-input.ts`, `tool-detail-filter.ts`, and
-  `tool-detail-records.ts`: the parse of each private `tool.detail.part`,
-  `filterToolDetail`, and the encrypted header of the assembly of each
-  runner stream in `runner-output-state.ts`. The header keeps the turn, the
-  tool with its target masked at receipt, and the cursor. It also keeps the
-  source generation, the record count, the held end, and a random salt of
-  the source. It keeps no value list.
-- `tool-detail-source.ts` and `tool-detail-source-records.ts`:
-  `appendToolDetailSource`, `readToolDetailSource`, and
-  `ToolDetailSourceRecords`. The text of each part before the last, masked
-  with the values that are active at its receipt, goes into the source
-  records of the assembly.
-  The plaintext of each record holds at most 16,384 UTF-16 code units. Its
-  encryption context binds the workspace, the stream, the generation, and
-  the index.
-- `tool-detail-scan.ts`: `scanToolText` and `scanHeld`, the scanner of a
-  private source. The held end is the end that a later part can still
-  complete or extend. Examples are the start of a value and a literal
-  `[redacted]`. Matching memory follows the held end, not the source length.
-- `tool-detail-held.ts`, `tool-detail-match.ts`, and
-  `tool-detail-identity.ts`: the held end after a cleanup. Each erased
-  character belongs to an unknown run. The saved `held` text has
-  `[redacted]` in place of each run, so an older Worker reads a marker
-  there. `heldMatches` keeps the runs and the entries.
-- An entry names a remaining value, or the literal marker, at an offset.
-  `agrees` lets a value cross a run only through its own entry, and checks
-  each known character. A match or a held end can start inside a run. Each
-  part of a run that no match covers shows as one marker.
-- `toolCandidates` gives each value an HMAC identity under the app key. Its
-  input separates the purpose, the workspace, the stream, and the salt of
-  the source. The salt and the entries live only in the encrypted header,
-  so a reader without the app key cannot test a guessed value.
-- At the last part, `filterToolDetail` scans all source records, the held
-  end, the new text, and the target again with the current values. Only
-  then does it cut the longest prefix, count the omitted bytes, and make the
-  one `tool.updated`.
-- `tool-detail-cleanup.ts`: `maskOpenToolDetails`, which
-  `RunnerOutputState.maskTools` runs with two value sets. The expiry,
-  removal, and archive callers read the set before the change, change the
-  temporary records, and read the set after it. One transaction holds these
-  steps and the cleanup.
-- The cleanup rescans each open assembly with the set from before the
-  change. When nothing in the held end can continue into a later part, it
-  finishes the end with that set. Otherwise it erases every whole copy of an
-  ended value in the end. It keeps the entries of the remaining values and
-  the marker whose match crosses a run. It writes a new source generation,
-  and removes the old one in the same transaction. It keeps all other
-  source text.
-- `RunnerOutputState.saveTool` with no header clears the header and every
-  source record of a stream. The last part, a refusal, an interrupted
-  sequence, and a new stream use it. A refusal of a later part first reads
-  its session and turn from `RunnerOutputState.toolContext`.
+- `tool-detail-*.ts` and `RunnerOutputState.saveTool`: the private tool
+  details, as [Key code: tool details](key-code-tool-details.md) says.
 - `authenticated-runner.ts`: `AuthenticatedRunner`, the token check of the
   runner connection before each message. `RunnerConnections.alarm` runs it
   while the connection is idle.
 - [`runner-version-data.ts`](runner-version-data.ts): `readRunnerProtocolVersion`, the workspace pin read before a runner's welcome or commands.
   [`runner-handshake.ts`](runner-handshake.ts): `prepareRunnerHello` checks the `hello`, closes an unsupported version or a runner below that pin, and starts the stream before the `welcome`. That start drops the tool-detail assembly of every other stream.
+  It also returns the saved ready flag of the stream. `RunnerChannel` counts
+  that flag only when the optional `ChatDependencies.requiresFreshRunnerReady`
+  does not return true. So after an automatic restart submits its command,
+  the connection waits for its own `runner.ready`.
 - `runner-event-identity.ts`: `readRunnerEventIdentity` returns the readable
   fields in `RunnerEventIdentity` for refusal, repair, and turn-context checks.
   A private tool-detail part reads as `tool.updated`. Only its first part
@@ -264,7 +242,11 @@ first.
   `continuation.ts`: active and waiting turns, the dispatch rule of each
   command, the retry message of a turn end, safe turn context, late data,
   terminal events, and unanswered messages.
-  `TurnLifecycle.runnerEnded`, `workspaceStopped`, and `fail` handle each source of a turn end.
+  `TurnLifecycle.runnerEnded` handles the end that the runner sends, and
+  `fail` handles an end after a failure in the Worker. `stopDispatchedTurns`
+  handles the end at a workspace stop, a lifecycle error, or an automatic
+  restart. `TurnLifecycle.stop` ends a queued turn at once with
+  `workspaceStopped`.
   `TurnLifecycle.stop` takes an optional requester and records it before it
   changes the turn state. `close` passes its requester to `stop`.
   `fail` ends a queued turn at once. Runner compatibility failures use its
@@ -283,7 +265,10 @@ first.
 - `sockets.ts`: the WebSocket upgrades of tabs and the runner.
 - `browser-connections.ts` and `browser-registration.ts`:
   `BrowserConnections`, the native acceptance, restore, and close of tab
-  sockets, and the read of a saved registration.
+  sockets, and the read of a saved registration. It labels each message
+  that it sends a tab, as
+  [Branch and path labels](integration/README.md#branch-and-path-labels)
+  says.
 - `browser-tabs.ts`: open tabs, their grants, the batch refresh, the
   `browser` alarm deadlines of physical tab sockets, and the grant check
   before each send. By default,

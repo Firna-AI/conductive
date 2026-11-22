@@ -2,7 +2,7 @@ import { lineTargets } from './markdown-destination'
 import { lineLabelEnds } from './markdown-labels'
 
 /** A web address in text, with its source and optional Markdown label. */
-export type WebAddressLink = {
+type WebAddressLink = {
   kind: 'link'
   href: string
   source: string

@@ -1,15 +1,10 @@
 import { publishBuild } from './build-admission-data'
 import type { SandboxProvider } from '../sandbox/provider'
 import { requireActiveOrg, requireActiveUser } from '../data/user-access'
-import {
-  assignBuildSnapshot,
-  readBuildJob,
-  updateBuildJob,
-  type BuildJob,
-} from './build-data'
+import { assignBuildSnapshot, readBuildJob, type BuildJob } from './build-data'
 import { allocateImageBuild } from './image-allocation'
 import { advanceBuildCommand, cleanupBuild } from './build-execution'
-import { completeBuildPhase } from './build-phase-data'
+import { beginBuildAllocation, completeBuildPhase } from './build-phase-data'
 import { SNAPSHOT_DONE_LOG } from './build-command-data'
 import { clearImageCommands } from './command-intents'
 import type { ImageRuntime } from './image-builds'
@@ -33,13 +28,19 @@ export async function advanceBuildStep(
   const recoveringAllocation = job.phase === 'allocating' && !job.sandboxId
   if (!recoveringAllocation) await requireActiveOrg(env.DB, orgId)
   if (job.phase === 'create') {
-    await updateBuildJob(env.DB, buildId, 'allocating')
+    await beginBuildAllocation(env.DB, buildId, dependencies.now())
     job = { ...job, phase: 'allocating' }
   }
   if (job.phase === 'allocating') {
     if (!recoveringAllocation && job.startedByUserId)
       await requireActiveUser(env.DB, job.startedByUserId)
-    await allocateImageBuild(env.DB, provider, job, recoveringAllocation)
+    await allocateImageBuild(
+      env.DB,
+      provider,
+      job,
+      recoveringAllocation,
+      dependencies.now,
+    )
     return false
   }
   if (!job.sandboxId) throw new Error('Missing build sandbox')
@@ -50,7 +51,10 @@ export async function advanceBuildStep(
   if (status !== 'ready') return false
   // A long build receives the same safety deadline as other active work.
   await provider.setAutoStop(job.sandboxId, 1_800)
-  if (dependencies.now() >= job.startedAt + IMAGE_BUILD_TIME_LIMIT_MS)
+  if (
+    dependencies.now() >=
+    (job.executionStartedAt ?? job.startedAt) + IMAGE_BUILD_TIME_LIMIT_MS
+  )
     throw new JobTimeLimit('build')
   if (job.phase === 'snapshot') {
     if (job.snapshotName === null)
@@ -69,10 +73,13 @@ export async function advanceBuildStep(
     )
     if (snapshot.status === 'failed') throw new Error('Image save failed')
     if (snapshot.status === 'ready')
-      await completeBuildPhase(env.DB, buildId, 'publish', {
-        text: SNAPSHOT_DONE_LOG,
-        now: dependencies.now(),
-      })
+      await completeBuildPhase(
+        env.DB,
+        buildId,
+        'publish',
+        dependencies.now(),
+        SNAPSHOT_DONE_LOG,
+      )
     return false
   }
   if (job.phase === 'publish') {
@@ -102,7 +109,7 @@ export async function advanceBuildStep(
       commands: new SourceCommandPort(provider, job.sandboxId),
     })
     if (prepared === false) return false
-    await completeBuildPhase(env.DB, buildId, 'software')
+    await completeBuildPhase(env.DB, buildId, 'software', dependencies.now())
     return false
   }
   await requireActiveOrg(env.DB, orgId)

@@ -33,6 +33,7 @@ export async function createHarness(
     SESSION_SIGNING_KEY: btoa('s'.repeat(32)),
     BOAT_API_KEY: 'boat-first',
     BOAT_ORG_ID: 'app-org',
+    PROVIDER_SWITCH: 'on',
     BOAT_KEY_ENCRYPTION_KEY: btoa('e'.repeat(32)),
   }
   const native = await createNativeRuntime(
@@ -126,6 +127,8 @@ export async function createHarness(
       await native.reset()
       await db.batch(
         [
+          'job_runs',
+          'job_steps',
           'e2b_traffic_tokens',
           'e2b_snapshot_mappings',
           'e2b_create_operations',

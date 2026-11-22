@@ -135,7 +135,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
+| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes. `src/entries/components/` holds the registrations of shared parts |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
@@ -144,6 +144,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar and of `src/branchPaths.ts` for a start from another branch |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
+| `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -177,8 +178,18 @@ a dropped folder that the browser cannot read. The app shares these words.
   `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
+- `ConfirmDialog` and `NewWorkspaceDialog` lay out their cards with the
+  parts of [ModalCard.module.css](src/components/common/ModalCard.module.css).
+  A card taller than the window keeps its head and its foot, and only its
+  body scrolls. The dialogs of the app import the same parts.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
+- A shared part can have a Mokly registration under
+  `src/entries/components/`, so that the Changes view lists an edit to the
+  part under the part, not under each screen. The `components` folder of the catalogue lists each
+  registered part. A screen renders its wrapper, and a file that the app
+  reaches renders the plain part.
+  [Registered parts](registered-parts.md) gives the rules.
 - A switch at the end of a menu row, such as Fast in the model menu, is a
   picture, not a control. `SwitchPicture` in `src/components/common/` draws
   it with the switch styles of `@firna/ui`, and the row owns the

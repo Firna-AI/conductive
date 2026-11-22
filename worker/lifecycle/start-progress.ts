@@ -32,7 +32,7 @@ export async function advanceStartSteps(
   if (job.phase === 'terminal-password') {
     await call(() => prepareStartTerminal(env, dependencies, job))
     await endpoint.lifecycleStep('startup', stepLabel('startup'), 'completed')
-    await nextStartCommand(storage, job, 'runner')
+    await nextStartCommand(storage, job, 'runner', dependencies.now())
     return true
   }
   const label =
@@ -51,7 +51,7 @@ export async function advanceStartSteps(
       job,
       label,
       call,
-      dependencies.fetch,
+      dependencies,
       preserveBase,
     ))
   )
@@ -61,6 +61,7 @@ export async function advanceStartSteps(
       storage,
       job,
       job.phase === 'startup' ? 'terminal' : 'terminal-password',
+      dependencies.now(),
     )
     return false
   }
@@ -70,6 +71,7 @@ export async function advanceStartSteps(
       storage,
       job,
       job.phase === 'fetch' ? 'branch' : 'startup',
+      dependencies.now(),
     )
     return false
   }

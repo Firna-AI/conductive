@@ -17,15 +17,9 @@ import { Creations } from './creations'
 import { workspaceUpdated } from './list-changes'
 import { NewWorkspaceModel } from './new-workspace-model'
 import { OrgAgentLogins, type OrgLoginChanged } from './org-agent-logins'
-import {
-  automationsWait,
-  buildsWait,
-  listWait,
-  onEntry,
-  orgLoginsWait,
-} from './org-waits'
+import { orgRefreshers } from './org-refresh'
 import { orgResources, type OrgResources } from './org-resources'
-import { Refresher, type Refreshing } from './refresh'
+import type { Refreshing } from './refresh'
 import { SecretsModel } from './secrets-model'
 import type { AppServices } from './services'
 import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
@@ -124,18 +118,7 @@ export class OrgModel {
     this.members = members.store
     this.automations = automations.store
     this.agentLogins = new OrgAgentLogins(api, orgId, loginsChanged)
-    this.parts = {
-      list: new Refresher(list, listWait, this.services),
-      repositories: new Refresher(repositories, onEntry, this.services),
-      builds: new Refresher(builds, buildsWait, this.services),
-      members: new Refresher(members, onEntry, this.services),
-      automations: new Refresher(automations, automationsWait, this.services),
-      agentLogins: new Refresher(
-        this.agentLogins.resource,
-        orgLoginsWait,
-        this.services,
-      ),
-    }
+    this.parts = orgRefreshers(this)
   }
 
   /**

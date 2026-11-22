@@ -60,6 +60,8 @@ If that does not work, it shows **Disconnected**, and the terminal keeps its las
 Select **Reconnect** to return to the same shell and running commands.
 **Restart** in the workspace header drops terminal connections until the agents are back.
 It keeps the shells and their commands running.
+An [automatic restart of the software](/docs/workspaces#restart-the-software) does the same.
+It also stops running agent turns without asking first.
 If you end its shell with `exit`, **Reconnect** opens a new shell in the same tab.
 Stopping the cloud computer ends every terminal's shell and running commands.
 The terminal tabs stay after a resume.
@@ -69,7 +71,7 @@ After a repository change, a server that already runs keeps the old folder, so s
 The commands that you typed stay in the shell's command history after a stop.
 After a resume, press the Up arrow or Ctrl-R to find them.
 A command that still runs at the stop, such as a server, is not kept.
-After an automatic software update, an older cloud computer gets the new terminal software at **Restart** or a later computer start.
+After an automatic software update, an older cloud computer gets the new terminal software when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at a later computer start.
 
 ## Use terminal tabs
 
@@ -140,7 +142,7 @@ Another panel can show smaller text, or empty space after the terminal.
 Type in a panel to give the terminal its size.
 
 A workspace with older cloud computer software shows only the visible screen when you drag.
-After an automatic software update, **Restart** or a later cloud computer start brings the newer terminal.
+After an automatic software update, the newer terminal arrives when Conductive [restarts its software](/docs/workspaces#restart-the-software), or at a later cloud computer start.
 [Apply setup changes](/docs/cloud-computer#apply-setup-changes) explains when updates apply.
 
 ## Know which GitHub account a command uses

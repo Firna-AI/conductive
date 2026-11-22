@@ -90,19 +90,24 @@ export async function mountChat(options: {
   })
   const subscribe: SubscribeToWorkspace = (_target, after, listener) =>
     server.events.subscribe(after, (message) => listener.message(message))
-  await mount(
+  const client = createApiClient(server.fetch)
+  const render = (readOnly = options.readOnly) => (
     <WorkspaceChat
-      client={createApiClient(server.fetch)}
+      client={client}
       copy={options.copy}
       orgId={FAKE_IDS.org}
-      readOnly={options.readOnly}
+      readOnly={readOnly}
       renderTab={options.renderTab}
       subscribe={subscribe}
       viewport={options.viewport}
       workspaceId={FAKE_IDS.workspace}
-    />,
+    />
   )
+  const mounted = await mount(render())
   await waitFor(() => queryByText(debounce), 'the session tabs')
+  return {
+    setReadOnly: (readOnly: boolean) => mounted.rerender(render(readOnly)),
+  }
 }
 
 /**
@@ -112,12 +117,13 @@ export async function mountChat(options: {
  * the row takes from a real path shows the secret value. The tab that
  * `temporary` names is the temporary tab: it draws in italics, and Keep open
  * of its tab menu calls `keep` of the navigation, which changes no view.
- * Each label hides a secret value, so no tab has Copy path, as the app
- * gives it.
+ * A label that hides a secret value has no Copy path. A safe path gets
+ * the optional copy action, as the app gives it.
  */
 export function fileTabs(
   navigation: FilesNavigation,
   temporary: TemporaryTab | null = null,
+  copyPath?: (path: string) => void,
 ): RenderTab {
   return (host) => {
     // These rows hold no Preview tab, so each host tab is a file or a diff.
@@ -148,7 +154,8 @@ export function fileTabs(
         ),
       show: () => navigation.navigate(tab),
       keep: isTemporary ? () => navigation.keep(tab) : null,
-      copyPath: null,
+      copyPath:
+        copyPath && label === tab.path ? () => copyPath(tab.path) : null,
     }
   }
 }

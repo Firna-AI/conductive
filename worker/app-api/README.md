@@ -178,8 +178,8 @@ View writes cannot change this branch.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
   The [assignment service](../provider-assignment/README.md) selects and saves
-  the fixed provider account before that build. Only an operator can supply
-  a configured account choice. Other users get a draw from the weights.
+  the provider account of the org before that build. Only an operator can
+  supply a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
@@ -187,7 +187,11 @@ View writes cannot change this branch.
   `build: false`. The app sends that body, so that Done of the
   Repositories tab starts one build for every add of an edit. A request
   without the field, from an older copy of the app, still builds at the
-  add. A repeated save and a removal start no build. A running job takes the request without starting another job.
+  add. A repeated save and a removal start no build. An ordinary running
+  job takes the request without starting another job. During a hidden
+  switch build, the add records a member build that waits.
+  [Provider switches](../lifecycle/provider-switches.md) gives its first
+  log line and its execution deadline.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
 - `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
@@ -198,6 +202,13 @@ View writes cannot change this branch.
   change before it saves. A removal by an admin without a saved GitHub
   connection reads nothing from GitHub. Its reply holds the stored
   repositories only.
+- Each repository of the repository list and of these replies gives
+  `imageReady` and `ready`. `imageReady` says whether the org has a
+  published image: the image that a create checks, on the current
+  provider account of the org. `ready` says whether that image holds the
+  repository, so it is false without an image. It does not follow
+  `selected`, so a removed repository stays ready until an image without
+  it publishes.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
   gives the repository order of an org. The chosen repositories come
   first, by `position`, then a chosen row without a position, then the
@@ -279,8 +290,11 @@ Turning Mac access off also asks the workspace object to settle its waiting
 Mac requests. Running commands continue.
 
 The workspace responses give an org-local number and a canonical web link.
-They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.
+They give `restoreUntil` while the workspace row names its archived cloud computer, including while an expired delete retries.
 Restore refuses an expired window even when the cloud computer remains.
+Each archived workspace with a known Archive date also gets `archivedComputer`: the state of its cloud computer and the original Restore cutoff.
+The list and the lifecycle reads take both from [`archived-computer.ts`](../data/archived-computer.ts), in their own query.
+So a null `restoreUntil` does not mean that the cloud computer is deleted.
 The request's effective app origin reaches each response constructor explicitly.
 Durable Object reads, Archive, and Restore receive that origin through their RPC arguments.
 The machine tools use the configured app origin instead.
@@ -432,7 +446,10 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add without `build: false`.
+  gives each its `imageReady` and `ready` from
+  `currentImageRepositoryReadiness` of the
+  [published image data](../lifecycle/published-image-data.ts), and
+  starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),

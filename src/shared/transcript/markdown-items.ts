@@ -155,20 +155,24 @@ export function itemMarkdown(
         lostText(lostData[item.marker.runnerEventType], item.marker.reason),
       )
     case 'continued': {
-      // The words of the note of the chat, with each branch as code.
+      // The words of the note of the chat, with each branch as code, by its
+      // label, or by its real name without one.
       const words = continuedNote(
         plainText(continuedBy(item.member, readers)),
-        inlineCode(item.baseBranch),
+        inlineCode(item.displayBaseBranch ?? item.baseBranch),
       )
-      return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+      const branch = inlineCode(item.displayBranch ?? item.branch)
+      return note(`${words.before}${branch}${words.after}`)
     }
     case 'repository-changed': {
-      // The words of the note of the chat, with the names as code.
+      // The words of the note of the chat, with the names as code, and the
+      // new branch by its label, or by its real name without one.
       const words = repositoryChangedNote(
         plainText(continuedBy(item.member, readers)),
       )
+      const branch = inlineCode(item.displayBranch ?? item.branch)
       return note(
-        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
+        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${branch}`,
       )
     }
   }

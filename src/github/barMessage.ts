@@ -1,6 +1,7 @@
 import { barMessageText } from '../../docs/mockups/src/components/workspace/barCopy'
 import type { BarModel } from '../../docs/mockups/src/components/workspace/barModel'
 import type { GitHubBanner } from '../shared/github'
+import { baseBranchLabel, baseMovedLabel, branchLabel } from './bannerStatus'
 import type { BarMessage, BarOutcome } from './barView'
 
 /**
@@ -14,7 +15,11 @@ export function messageOf(
   banner: GitHubBanner,
 ): BarMessage | null {
   const url = banner.pullRequest?.url ?? null
-  const branches = { branch: banner.branch, base: banner.baseBranch }
+  // The messages show the labels, which hide each secret value.
+  const branches = {
+    branch: branchLabel(banner),
+    base: baseBranchLabel(banner),
+  }
   const waits: BarMessage = {
     text: barMessageText('continue-waits', branches),
     tone: 'status',
@@ -50,7 +55,7 @@ export function messageOf(
       return {
         text: barMessageText(model.message, {
           ...branches,
-          moved: banner.baseMoved,
+          moved: baseMovedLabel(banner),
         }),
         tone: 'info',
         href: null,

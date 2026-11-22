@@ -103,9 +103,18 @@ function readBanner(value: unknown): GitHubBanner | null {
   // or with a value that is not a name, shows no such line.
   const branch = {
     branch: value.branch,
+    ...(typeof value.displayBranch === 'string'
+      ? { displayBranch: value.displayBranch }
+      : {}),
     baseBranch: value.baseBranch,
+    ...(typeof value.displayBaseBranch === 'string'
+      ? { displayBaseBranch: value.displayBaseBranch }
+      : {}),
     ...(typeof value.baseMoved === 'string'
       ? { baseMoved: value.baseMoved }
+      : {}),
+    ...(typeof value.displayBaseMoved === 'string'
+      ? { displayBaseMoved: value.displayBaseMoved }
       : {}),
     updatedAt: value.updatedAt,
   }

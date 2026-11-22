@@ -18,9 +18,9 @@ explicitly, because a typed caller can still supply extra fields.
 
 - `message` is a fixed text for each kind.
 - `state` is `finished`, `stopped`, or `failed`.
-- `connectionId` is `ActiveRunner.id`, the ID that the workspace gives the
-  runner connection. A turn end takes the connection that is current at
-  its commit, not the connection that got the turn.
+- `connectionId` is `ActiveRunner.state.id`, the ID that the workspace
+  gives the runner connection. A turn end takes the connection that is
+  current at its commit, not the connection that got the turn.
 - `processStartId` is the `hello.processStartId` of the runner connection.
   One runner start keeps it across reconnects, and each new start sends a
   new one, as
@@ -81,10 +81,10 @@ explicitly, because a typed caller can still supply extra fields.
 - [`runner-receive.ts`](runner-receive.ts) parses each runner message,
   writes `runner_message_failed` when it fails, and ends the record in a
   `finally` block. The runner channel updates the stage to `after_commit`.
-- The hello sets `ActiveRunner.watchUntil`. The saved runner connection
-  keeps it, so a wake from hibernation keeps the window to its original
-  end. A saved connection without the value, such as from an older Worker,
-  has no window.
+- The hello sets `ActiveRunner.state.watchUntil`. The saved runner
+  connection keeps it, so a wake from hibernation keeps the window to its
+  original end. A saved connection without the value, such as from an
+  older Worker, has no window.
 - Each record step is best effort and ignores its own failure.
 - [`warning-runner-work.ts`](../warning-runner-work.ts) checks the values
   again when the warning is written.

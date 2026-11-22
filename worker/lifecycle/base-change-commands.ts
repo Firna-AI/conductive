@@ -4,7 +4,7 @@ import {
   isolatedSourceCommand,
   sourceRepositoryUrl,
 } from './image-sources/native-command'
-import { workspaceBaseSettings } from './workspace-base-command'
+import { CONTINUE_EXIT_CODES } from './continue-stop-causes'
 
 export const BASE_CHANGE_GIT =
   '/usr/bin/git -c core.hooksPath=/dev/null -c core.askPass= -c credential.helper= -c http.followRedirects=false -c protocol.ext.allow=never -c submodule.recurse=false'
@@ -51,6 +51,37 @@ function baseReferenceCommands(
   ]
 }
 
+/**
+ * The checkout of the next branch of Continue. A clash with the changed
+ * files and a held index lock exit with their own codes, so the job stores
+ * the cause.
+ */
+function nextBranchCommands(nextBranch: string, base: string): string[] {
+  return [
+    `if conductive_checkout_error=$(${BASE_CHANGE_GIT} checkout --quiet --no-track --no-overwrite-ignore -b ${shellQuote(nextBranch)} ${base} -- 2>&1); then`,
+    '  unset conductive_checkout_error',
+    'else',
+    '  case "$conductive_checkout_error" in',
+    `    "error: Your local changes to the following files would be overwritten by checkout:"*|"error: The following untracked working tree files would be overwritten by checkout:"*) exit ${CONTINUE_EXIT_CODES.checkoutClash} ;;`,
+    `    "fatal: Unable to create '"*"/index.lock': File exists."*) exit ${CONTINUE_EXIT_CODES.indexLock} ;;`,
+    '    *) exit 1 ;;',
+    '  esac',
+    'fi',
+  ]
+}
+
+/**
+ * Points `origin/HEAD` and the comparison of `branch` at its base. A failed
+ * write exits with the code of failed comparison settings.
+ */
+export function baseChangeMetadataCommand(input: {
+  branch: string
+  baseBranch: string
+}): string {
+  const base = shellQuote(`refs/remotes/origin/${input.baseBranch}`)
+  return `${BASE_CHANGE_GIT} symbolic-ref refs/remotes/origin/HEAD ${base} && ${BASE_CHANGE_GIT} config --local ${shellQuote(`branch.${input.branch}.gh-merge-base`)} ${shellQuote(input.baseBranch)} || exit ${CONTINUE_EXIT_CODES.comparisonMetadata}`
+}
+
 export function baseChangeInstallCommand(
   input: BaseChangeSource & {
     directory: string
@@ -70,10 +101,8 @@ export function baseChangeInstallCommand(
       }),
       ...(input.nextBranch === undefined
         ? []
-        : [
-            `${BASE_CHANGE_GIT} checkout --quiet --no-track --no-overwrite-ignore -b ${shellQuote(input.nextBranch)} ${base} --`,
-          ]),
-      ...workspaceBaseSettings({
+        : nextBranchCommands(input.nextBranch, base)),
+      baseChangeMetadataCommand({
         branch: input.nextBranch ?? input.branch,
         baseBranch: input.baseBranch,
       }),

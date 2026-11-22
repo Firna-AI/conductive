@@ -1,17 +1,20 @@
-import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { ChatPane } from '../components/chat/ChatPane'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
-import { AppFrame, MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
+import type { Viewport } from '@mokly/mokly'
+import { chatPane } from '../entries/components/chat/ChatPane.mockup'
+import { menu } from '../entries/components/common/Menu.mockup'
+import { sheet as sheetPart } from '../entries/components/common/Sheet.mockup'
+import {
+  appFrame,
+  mobileFrame,
+} from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
 import { useMacApp } from '../components/mac/MacApp'
 import { formWait } from '../components/new-workspace/waitingRepository'
 import { orgSuspendedReason } from '../components/orgs/suspension'
-import { firstBuildStates } from '../fixtures/computer'
 import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
-import { FirstBuildNotice } from './firstBuildNotice'
+import { composerData } from '../entries/components/chat/capabilitiesSlot'
+import { firstBuildNotice } from '../entries/components/screens/firstBuildNotice.mockup'
 import {
   newWorkspaceCapabilities,
   newWorkspaceCapabilitiesSheet,
@@ -22,78 +25,25 @@ import {
   formNotices,
   hasWords,
   newWorkspaceDraft,
-  newWorkspaceFormProperties,
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
 import {
   branchControl,
   branchRefusal,
-  branchRefusals,
   branchSheet,
 } from './newWorkspaceBranches'
 import { branchSendTo } from './newWorkspaceBranchScreens'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
-import { Start } from './newWorkspaceStart'
+import { newWorkspaceStart } from '../entries/components/screens/newWorkspaceStart.mockup'
+import { defined, plainData } from '../defined'
+import type { NewWorkspaceState } from './newWorkspaceState'
 
-export const newWorkspaceSchema = {
-  type: 'object',
-  additionalProperties: false,
-  required: [
-    'draft',
-    'files',
-    'login',
-    'repositories',
-    'repositoryMenu',
-    'branch',
-    'target',
-    'branchMenu',
-    'waitingBuild',
-    'capabilities',
-    'result',
-    'org',
-    'firstBuild',
-    'viewer',
-    'modelMenu',
-  ],
-  properties: {
-    ...newWorkspaceFormProperties,
-    /**
-     * A form, a failed create request, or a create that the branch check
-     * refused. Each keeps the draft.
-     */
-    result: { enum: ['form', 'error', ...branchRefusals] },
-    /** Acme in use or suspended, or Firna before its first workspace. */
-    org: { enum: ['active', 'suspended', 'new'] },
-    /** Firna needs its first good build before a message can go. */
-    firstBuild: { enum: firstBuildStates },
-    /** Only an admin gets the link to the Cloud computer tab. */
-    viewer: { enum: ['admin', 'member'] },
-    /** The menu of the model picker: closed, or open with fast mode on. */
-    modelMenu: { enum: ['closed', 'open-fast'] },
-  },
-} as const
-
-export type NewWorkspaceState = SchemaProps<typeof newWorkspaceSchema>
-
-/** The chat of a new workspace in an org in use, with the task written. */
-export const newWorkspaceForm: NewWorkspaceState = {
-  draft: 'message',
-  files: 'none',
-  login: 'connected',
-  repositories: 'chosen',
-  repositoryMenu: 'closed',
-  branch: 'default',
-  target: 'picked',
-  branchMenu: 'closed',
-  waitingBuild: 'building',
-  capabilities: 'closed',
-  result: 'form',
-  org: 'active',
-  firstBuild: 'succeeded',
-  viewer: 'admin',
-  modelMenu: 'closed',
-}
+export {
+  newWorkspaceForm,
+  newWorkspaceSchema,
+  type NewWorkspaceState,
+} from './newWorkspaceState'
 
 /**
  * The empty chat and its composer. The files of the first message upload
@@ -123,10 +73,11 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     notices.splice(
       failed ? 1 : 0,
       0,
-      <FirstBuildNotice
+      <firstBuildNotice.Component
         admin={admin}
         build={state.firstBuild}
         key="first-build"
+        moklyInstance="first-build-notice"
       />,
     )
   }
@@ -148,49 +99,55 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     branchSendTo(state) ??
     (state.files === 'ready' ? paths.attachmentsQueued : paths.creating)
   const fastMenu = state.modelMenu === 'open-fast'
+  const box = composerData({
+    attachments: draft.files,
+    capabilities: newWorkspaceCapabilities(
+      state,
+      props.viewport,
+      state.org === 'new'
+        ? paths.newWorkspaceNoSecrets
+        : paths.newWorkspaceCapabilities,
+    ),
+    // The menu of a phone: Firna has no page with it open.
+    menu: {
+      open: state.capabilities === 'menu',
+      to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
+    },
+    attachTo:
+      state.files === 'none' && !failed && !linked && state.org !== 'new'
+        ? paths.newWorkspaceFiles
+        : undefined,
+    blocked: building || waiting || waits(state),
+    caret: text === draft.text ? draft.caret : undefined,
+    choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
+    draft: text,
+    // A phone shows a pick at the caret in place of the drag.
+    drop: state.files === 'drop-over' && props.viewport === 'desktop',
+    picker: fastMenu,
+    placeholder: taskPlaceholder,
+    running: false,
+    sendTo:
+      failed ||
+      refused ||
+      linked ||
+      waiting ||
+      state.org === 'new' ||
+      !hasWords(text)
+        ? undefined
+        : created,
+    sessionLogin: formLoginLabel(state),
+  })
   return (
-    <ChatPane
-      composer={{
-        attachments: draft.files,
-        capabilities: newWorkspaceCapabilities(
-          state,
-          props.viewport,
-          state.org === 'new'
-            ? paths.newWorkspaceNoSecrets
-            : paths.newWorkspaceCapabilities,
-        ),
-        // The menu of a phone: Firna has no page with it open.
-        menu: {
-          open: state.capabilities === 'menu',
-          to: state.org === 'new' ? undefined : paths.newWorkspaceMenu,
-        },
-        attachTo:
-          state.files === 'none' && !failed && !linked && state.org !== 'new'
-            ? paths.newWorkspaceFiles
-            : undefined,
-        blocked: building || waiting || waits(state),
-        caret: text === draft.text ? draft.caret : undefined,
-        choice: fastMenu ? { ...page.choice, fast: true } : page.choice,
-        draft: text,
-        // A phone shows a pick at the caret in place of the drag.
-        drop: state.files === 'drop-over' && props.viewport === 'desktop',
-        picker: fastMenu,
-        placeholder: taskPlaceholder,
-        running: false,
-        sendTo:
-          failed ||
-          refused ||
-          linked ||
-          waiting ||
-          state.org === 'new' ||
-          !hasWords(text)
-            ? undefined
-            : created,
-        sessionLogin: formLoginLabel(state),
-      }}
-      empty={
-        suspended ? undefined : (
-          <Start
+    <chatPane.Component
+      composer={plainData(box.composer)}
+      items={[]}
+      moklyInstance="chat"
+      viewer={admin ? you : memberViewer}
+      viewport={props.viewport}
+      {...defined({
+        capabilitiesPanel: box.capabilitiesPanel,
+        empty: suspended ? undefined : (
+          <newWorkspaceStart.Component
             admin={admin}
             branch={branchControl({
               state,
@@ -199,24 +156,21 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
               mobile: props.viewport === 'mobile',
             })}
             chosen={state.repositories !== 'none'}
-            menu={
-              menuOpen && props.viewport === 'desktop'
-                ? repositoryMenu(page, state.waitingBuild)
-                : undefined
-            }
-            page={page}
+            moklyInstance="start"
+            page={plainData(page)}
+            {...defined({
+              menu:
+                menuOpen && props.viewport === 'desktop'
+                  ? repositoryMenu(page, state.waitingBuild)
+                  : undefined,
+            })}
           />
-        )
-      }
-      items={[]}
-      notice={suspended ? undefined : notices}
-      problem={
-        suspended
+        ),
+        notice: suspended ? undefined : notices,
+        problem: suspended
           ? { problem: 'refused', reason: orgSuspendedReason }
-          : undefined
-      }
-      viewer={admin ? you : memberViewer}
-      viewport={props.viewport}
+          : undefined,
+      })}
     />
   )
 }
@@ -236,28 +190,36 @@ export function NewWorkspaceScreen(props: {
   const mobile = props.viewport === 'mobile'
   const pageOrgData = pageOrg(state)
   const page = (
-    <Page
-      back={mobile ? { label: 'Workspaces', to: pageOrgData.list } : undefined}
+    <pagePart.Component
       fill
+      {...defined({
+        back: mobile
+          ? { label: 'Workspaces', to: pageOrgData.list }
+          : undefined,
+      })}
       subtitle={pageOrgData.org.name}
       title="New workspace"
       viewport={props.viewport}
     >
       <NewChat state={state} viewport={props.viewport} />
-    </Page>
+    </pagePart.Component>
   )
   if (mobile) {
     const sheet =
       state.repositoryMenu === 'open' &&
       state.repositories !== 'none' &&
       state.org !== 'suspended' ? (
-        <Sheet title="Repository">
-          <Menu
+        <sheetPart.Component
+          moklyInstance="repository-sheet"
+          title="Repository"
+        >
+          <menu.Component
             entries={repositoryMenu(pageOrgData, state.waitingBuild)}
             label="Repository"
+            moklyInstance="repository-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheetPart.Component>
       ) : null
     // The branch dropdown of a phone opens as a sheet, as the repository menu.
     const branchMenu =
@@ -265,21 +227,21 @@ export function NewWorkspaceScreen(props: {
         ? branchSheet(state, pageOrgData.repository.name)
         : null
     return (
-      <MobileFrame>
+      <mobileFrame.Component>
         {page}
         {sheet ?? branchMenu}
         {state.org === 'suspended'
           ? null
           : newWorkspaceCapabilitiesSheet(state)}
-      </MobileFrame>
+      </mobileFrame.Component>
     )
   }
   return (
-    <AppFrame
+    <appFrame.Component
       rail={railOf(state)}
       sidebar={sidebarOf(state, mac?.needsInput, props.shortcuts)}
     >
       {page}
-    </AppFrame>
+    </appFrame.Component>
   )
 }

@@ -637,6 +637,21 @@ Design calls from the Milestone 19 overlap repair, made on 21 November 2026:
   Reason: an older fetch must not install after it observes a newer
   revision or remove the newer move.
 
+Design calls from the merge of `origin/main` at `bad6521f1`, made on 22 November 2026:
+
+- The deleted base of `GitHubBanner.baseMoved` gets the masked label
+  `displayBaseMoved`, which the shared `filterGitHubBanner` of `main` adds
+  at each Worker boundary, and the bar and the top of the phone Checks tab
+  show the labels of the branch, its base, and the deleted base. Reason:
+  [Tokens and secrets](../docs/protocol/tokens-and-secrets.md) requires a
+  label that hides each secret value for each branch name on a screen, and
+  `main` labels the branch and its base in this way (#621).
+- The move of Continue and the base move keep one install command, and its
+  checkout and its settings end with the statuses of `main` for a clash, an
+  index lock, and failed comparison settings. Reason: decision 307 shares
+  the install with Continue, and `main` stores the stop cause of each
+  status (#625).
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -1051,7 +1066,8 @@ Depends on: every other milestone
       and the follow-up items that the change adds.
 
 The justifications of the merge of `origin/main` at `5ca03a0c2` are in
-`.context/start-from-branch/merge-2/justifications.md`.
+`.context/start-from-branch/merge-2/justifications.md`, and those of the merge
+at `bad6521f1` in `.context/start-from-branch/merge-3/justifications.md`.
 
 ## Post-merge follow-up (non-blocking)
 

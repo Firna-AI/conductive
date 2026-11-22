@@ -28,6 +28,10 @@ Workspace creation carries optional `startBranch` and `baseBranch` strings.
 The Worker resolves their defaults and validates them after creation replay.
 Workspace records and list entries give a required nullable parent ID.
 Workspace details give the parent entry, stored depth, and direct children.
+`Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`
+of an archived workspace and its original Restore cutoff. Its deserializer
+reads a null, malformed, or future value as absent, so older and newer
+records still decode.
 Create, list, and move requests accept an optional parent ID.
 Move requests can instead name the top level. Their section ID is optional
 when the request gives a target.
@@ -108,7 +112,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Workspace calls](src/tools/workspaces.rs) defines parent-aware requests, list entries, details, and notices.
 - [Secret contracts](src/tools/secrets.rs) defines the legacy Worker list, run input, grants, and non-printable values.
 - [Secret results](src/tools/secret_results.rs) defines printable command output and tool outcomes.
-- [Workspace records](src/tools/workspace_types.rs) defines the app's workspace record with its nullable parent ID.
+- [Workspace records](src/tools/workspace_types.rs) defines the app's workspace record with its nullable parent ID and its optional archived computer.
 - [Wire helpers](src/wire.rs) preserves literal booleans and read-only array views.
 - [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.

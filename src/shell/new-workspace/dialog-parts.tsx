@@ -1,5 +1,6 @@
 import { CornerDownLeft } from 'lucide-react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
+import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
 import styles from '../../../docs/mockups/src/components/new-workspace/NewWorkspaceDialog.module.css'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { defaultSection } from '../../app/sections'
@@ -47,7 +48,7 @@ export function DialogHeader(props: {
   const repository = props.suspended ? undefined : form.repository
   const branch = repository ? form.branch : undefined
   return (
-    <div className={styles.header}>
+    <div className={classes(styles.header, card.head)}>
       {repository ? (
         <RepositoryMenu
           chevron={styles.chevron}

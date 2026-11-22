@@ -64,9 +64,10 @@ adds what the app knows:
   prompt lists them.
 - A base that GitHub deleted moved to the default branch, which the
   banner names as its base, and `baseMoved` names the deleted branch. The
-  reader keeps it, and `barModel` gives its line under the bar until a
-  pull request opens, as
-  [The banner states](../../docs/protocol/github-banner.md#banner-states)
+  line shows its label `displayBaseMoved`, which hides each secret value,
+  as the branch and the base show their labels. The reader keeps both,
+  and `barModel` gives its line under the bar until a pull request opens,
+  as [The banner states](../../docs/protocol/github-banner.md#banner-states)
   say. The line is a status with an info mark, not a refusal. On a phone it
   tops the Checks tab, as each message of the bar does.
 - While the branch has no pull request, `branches` names the branch and
@@ -160,6 +161,13 @@ reply.
 - A reply with local work ends the run with the question, which
   `ContinueDialog` of the workspace screen asks. Cancel sends nothing.
   Continue anyway starts again with the work allowed.
+- The reply reader keeps the optional `displayBaseBranch` of the question
+  and `displayUncommittedFiles` of its local work, and the store keeps them
+  in the question. `ContinueDialog` names the base by its label. A reply
+  can lack that label, such as a reply of an older Worker. The dialog then
+  takes the label of the bar when the bar names the same base, or else the
+  real name. `LocalWorkList` shows each file by its label, or by its real
+  path. The requests keep the real names.
 - A `continued` reply names an event number. Continuing shows until the
   ordered stream reaches it, so the workspace on its new branch and the
   note of each session show. The store of the new branch then follows.
@@ -205,3 +213,8 @@ says.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.
 - `barReady.test.ts`: the rules and the run of Ready for review.
+- `barMovedLabels.test.ts`: the labels of a deleted base, of the branch,
+  and of its base, in the filter, the reader, the line under the bar, and
+  the top of the phone Checks tab.
+- `continueActions.test.ts`: the reader keeps the labels of a question,
+  and reads a question without usable labels as before.

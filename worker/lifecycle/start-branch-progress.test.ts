@@ -34,10 +34,14 @@ it.each([
       phase: 'fetch',
       baseBranch: undefined,
     })
+    // One alarm run chains the steps, so the fetch keeps running here to
+    // show its label while it runs.
+    h.boat.commandRunning = true
     await start.advance()
     expect((await actor.readLifecycle())?.start?.steps).toContainEqual(
       expect.objectContaining({ id: 'fetch', label, state: 'running' }),
     )
+    h.boat.commandRunning = false
     await advanceToRunner(start)
     expect((await actor.readLifecycle())?.start?.steps).toContainEqual(
       expect.objectContaining({ id: 'fetch', label, state: 'completed' }),
