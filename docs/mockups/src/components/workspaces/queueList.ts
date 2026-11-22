@@ -1,3 +1,5 @@
+import type { Membership } from '../../fixtures/members'
+import { mayArchiveWorkspace } from './permissions'
 import {
   queueEntries,
   type GroupDrop,
@@ -22,19 +24,40 @@ export type ListQueue = {
 
 /**
  * The drop that the group draws for the drag of a list: a row of a section
- * over the group, with that row, the move of an entry in its block, or the
- * zone during a drag between sections.
+ * over the group, with that row and the reason when it cannot join, the
+ * move of an entry in its block, or the zone during a drag between
+ * sections.
  */
 export function groupDropOf(
   props: ListQueue & { sections: readonly SidebarSection[] },
 ): GroupDrop | undefined {
   const drag = props.queueDrag
   if (!drag || !props.queue) return undefined
-  if (drag.kind !== 'add') return drag
-  const row = props.sections
+  if (drag.kind === 'reorder' || drag.kind === 'zone') return drag
+  const found = props.sections
     .flatMap((item) => item.rows)
     .find((item) => item.workspace.key === drag.workspace)
-  return row ? { kind: 'add', row: { ...row, selected: false } } : undefined
+  if (!found) return undefined
+  const row = { ...found, selected: false }
+  return drag.kind === 'add'
+    ? { kind: 'add', row }
+    : { kind: 'refused', row, reason: drag.reason }
+}
+
+/**
+ * The entries of the group whose rows offer Archive on hover, as a row of
+ * a section does: for an admin and for the owner, in an org that is not
+ * read-only.
+ */
+export function archivableEntries(
+  queue: MergeQueueList,
+  viewer: Membership,
+  readOnly: boolean,
+): string[] {
+  if (readOnly) return []
+  return queueEntries(queue)
+    .filter((entry) => mayArchiveWorkspace(viewer, entry.row.workspace.owner))
+    .map((entry) => entry.row.workspace.key)
 }
 
 /**

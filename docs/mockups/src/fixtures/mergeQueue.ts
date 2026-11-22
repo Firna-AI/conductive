@@ -48,6 +48,14 @@ export function queuedWorkspace(key: string): Workspace {
   return workspace
 }
 
+/**
+ * The release branch of acme/storefront, which the branch picker lists. On
+ * the page of a row that cannot join, the pull request of Fix flaky cart
+ * test targets it, so the queue, which merges into main, takes no drop of
+ * the row.
+ */
+export const releaseBranch = 'release/2026.11'
+
 /** The branch of Apple Pay button, #479, the layer below #482. */
 const applePayBranch = queuedWorkspace('apple-pay').branch
 

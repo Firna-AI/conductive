@@ -26,7 +26,7 @@ export const mergeQueueMenu = defineScreen({
       slug: 'queued',
       title: 'Menu of a queued row',
       description:
-        'A right click on Apple Pay button in the group opens its menu: Reassign to, Rename, Copy link, a line, then Remove from queue and Archive. A queued workspace shows only in the group, so its menu has no Move to section. Remove from queue asks first, as in the bar.',
+        'A right click on Apple Pay button in the group opens its menu: Reassign to, Rename, Copy link, a line, then Remove from queue and Archive. A queued workspace shows only in the group, so its menu has no Move to section. The row under the pointer keeps the hover of a row of a section, with Archive over its time. Remove from queue asks first, as in the bar.',
       props: { mergeQueue: 'menu-queued' },
     },
   ],

@@ -64,47 +64,63 @@ no collapse control. `subWorkspaces` of the list states, from
   to section and its sections, which move the whole tree.
 
 `app/merge-queue` draws the Merge queue group of the plan
-`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026.
-Its canonical screen has the list of Acme with the group at the top,
-above the sections. The group shows while a queue has entries, with one
-block for each queue, headed by its repository. A block lists the layers
-of its stack from place 1, the bottom layer, which merges first. Each row
-shows its place, its list mark in the colour of its checks, its name, and
-its step under the name. An entry that needs attention stands below the
-stack, under its label, with the alert icon in place of its place and its
-reason under its name. A queued workspace shows only in the group
-(decision 318 D). `mergeQueue` of the list states, from
+`plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
+with the rows that Cal asked for in his review of the same day. Its
+canonical screen has the list of Acme with the group at the top, above the
+sections. The group shows while a queue has entries, with one block for
+each queue. Each row is a normal workspace row: its list mark, its name,
+and its time, with no place number and no step under the name. A block
+lists the layers of its stack from place 1, the bottom layer, which merges
+first, and a thin neutral line joins their list marks. The mark shows the
+GitHub state in its colour and running work with its motion, and the bar
+names the place and the step. An entry that needs attention follows the
+joined rows as a normal row, off the line, with no label: its red mark
+shows its failed checks, and its bar names the reason. Acme has one
+queue, so the group names no repository. A queued workspace shows only in
+the group (decision 318 D). `mergeQueue` of the list states, from
 `src/screens/queueStates.tsx`, draws the pages, and
 `src/screens/queueSpecs.ts` holds the queues of each state. Its child
 pages:
 
-- `app/merge-queue/steps` has the merge of the two bottom layers, while
-  place 3 waits for its checks and place 4 gets its one fix turn. Its
-  `merged` variant has the list after that merge: the merged workspaces
-  back in their sections with the mark of a merge, and the other layers
-  from place 1 again. Its `empty` variant has the list after the last
-  merge, with no group.
+- `app/merge-queue/steps` has the merge of the two bottom layers, whose
+  marks stay green, while place 3 waits for its checks and place 4 gets
+  its one fix turn on the line, with a red mark and the light of its
+  working agent. Its `merged` variant has the list after that merge: the
+  merged workspaces back in their sections with the mark of a merge, and
+  the two other layers on the line from place 1 again. Its `empty` variant
+  has the list after the last merge, with no group.
 - `app/merge-queue/two-queues` has two blocks, acme/storefront and
-  acme/billing-service, in the order of the repositories of the org. Its
-  `collapsed` variant has the group collapsed, with the count of its
+  acme/billing-service, in the order of the repositories of the org. With
+  two queues, each block names its repository, and each has its own line.
+  Its `collapsed` variant has the group collapsed, with the count of its
   entries.
 - `app/merge-queue/stack` has a member stack as one unit (decision 315 A):
-  Saved carts on Checkout address autocomplete, at places 2 and 3, in one
-  outline. Its `drag` variant has the drag of the unit to place 1, with +1
-  on the lifted row.
+  Saved carts on Checkout address autocomplete, at places 2 and 3, with no
+  outline of their own, because the line already joins every entry. Its
+  `drag` variant has the drag of the unit to place 1, with +1 on the lifted
+  row and both rows faint in their place.
 - `app/merge-queue/drag` has the drag of an entry to another place of its
-  block. Its `add` variant has a row of a section over the group, whose
-  block takes the outline of a drop target, with the line after its last
-  layer (decision 317 D). Its `zone` variant has the drop zone that the
-  group shows during a drag between sections, while no queue has entries.
-  Its `add-empty` variant has a row over that zone.
+  block, where the line opens for the drop line. Its `add` variant has a
+  row of a section over the group, whose block takes the outline of a drop
+  target, with the drop line after its last layer (decision 317 D). Its
+  `zone` variant has the drop zone that the group shows during a drag
+  between sections, while no queue has entries. Its `add-empty` variant has
+  a row over that zone.
+- `app/merge-queue/cannot-join` has a row whose pull request targets
+  another branch over the group. The block takes a dashed outline in the
+  neutral colour, with no fill and no drop line, and names the reason after
+  its rows, so the drop does nothing. Its `write-access` variant has the
+  reason for a member without write access to the repository. Its `zone`
+  variant has the empty zone with the reason of a branch without a pull
+  request.
 - `app/merge-queue/sub-workspaces` has a queued parent and a queued
   sub-workspace, whose sub-workspaces that are not queued move up a level,
   as for an archived parent. Its `left` variant has the trees after the
   parent left the queue.
 - `app/merge-queue/menu` has the menu of a row with Add to merge queue
-  after the line, before Archive. Its `queued` variant has the menu of a
-  queued row, with Remove from queue and no Move to section.
+  after the line of the menu, before Archive. Its `queued` variant has the
+  menu of a queued row, with Remove from queue and no Move to section, and
+  the hover of the row with Archive over its time.
 
 The other pages of the list draw no queue. The pages of the bar of a
 queued workspace are in [the pull request bar](catalogue-bar.md).

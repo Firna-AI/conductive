@@ -8,20 +8,19 @@ import type { WorkspaceRow } from './sections'
  */
 export type QueueUnit = 'first' | 'middle' | 'last'
 
-/** One entry of a queue in the Merge queue group. */
+/**
+ * One entry of a queue in the Merge queue group: the normal row of its
+ * workspace, and its part of a member stack.
+ */
 export type QueueEntry = {
   row: WorkspaceRow
-  /** The number of its pull request. */
-  pullRequest: number
-  /** Its step in words, or why it needs attention, under its name. */
-  step: string
   unit?: QueueUnit
 }
 
 /**
- * The queue of one repository, headed by its name: the layers of its
- * stack, from place 1, which merges first, then the entries that left the
- * stack and wait for a member.
+ * The queue of one repository: the layers of its stack, from place 1,
+ * which merges first, then the entries that left the stack and wait for a
+ * member.
  */
 export type QueueBlock = {
   repository: RepositoryKey
@@ -44,12 +43,15 @@ export type MergeQueueList = {
  * that it starts, lifted to another place of its block, before the entry
  * at `index`, which counts the units without the lifted one. `add`: a row
  * of a section over the group, which joins at the end of the block of its
- * repository. `zone`: a drag between two sections, while the group waits
- * as a drop zone, also when no queue has entries.
+ * repository. `refused`: a row of a section that cannot join, over the
+ * group, which names the reason in words and takes no drop. `zone`: a
+ * drag between two sections, while the group waits as a drop zone, also
+ * when no queue has entries.
  */
 export type QueueDrag =
   | { kind: 'reorder'; workspace: string; index: number }
   | { kind: 'add'; workspace: string }
+  | { kind: 'refused'; workspace: string; reason: string }
   | { kind: 'zone' }
 
 /**
@@ -59,6 +61,7 @@ export type QueueDrag =
 export type GroupDrop =
   | { kind: 'reorder'; workspace: string; index: number }
   | { kind: 'add'; row: WorkspaceRow }
+  | { kind: 'refused'; row: WorkspaceRow; reason: string }
   | { kind: 'zone' }
 
 /** The entries of every block, the layers first. */
@@ -73,21 +76,19 @@ export function queueCount(queue: MergeQueueList): number {
 
 /**
  * The entries of a block in groups that move as one: a member stack, or
- * one entry alone. Each entry keeps its place, from 1.
+ * one entry alone, in the order of their places.
  */
-export function queueUnits(
-  entries: readonly QueueEntry[],
-): { place: number; entries: QueueEntry[] }[] {
-  const units: { place: number; entries: QueueEntry[] }[] = []
-  entries.forEach((entry, index) => {
+export function queueUnits(entries: readonly QueueEntry[]): QueueEntry[][] {
+  const units: QueueEntry[][] = []
+  for (const entry of entries) {
     const open = units.at(-1)
     const joins =
       open !== undefined &&
-      open.entries[0]?.unit === 'first' &&
-      open.entries.at(-1)?.unit !== 'last' &&
+      open[0]?.unit === 'first' &&
+      open.at(-1)?.unit !== 'last' &&
       (entry.unit === 'middle' || entry.unit === 'last')
-    if (joins) open.entries.push(entry)
-    else units.push({ place: index + 1, entries: [entry] })
-  })
+    if (joins) open.push(entry)
+    else units.push([entry])
+  }
   return units
 }

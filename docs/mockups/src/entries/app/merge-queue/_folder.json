@@ -1,1 +1,11 @@
-{ "order": ["steps", "two-queues", "stack", "drag", "sub-workspaces", "menu"] }
+{
+  "order": [
+    "steps",
+    "two-queues",
+    "stack",
+    "drag",
+    "cannot-join",
+    "sub-workspaces",
+    "menu"
+  ]
+}

@@ -18,16 +18,13 @@ const repositoryKeys = [
 ] as const satisfies readonly RepositoryKey[]
 
 /** One entry of a queue as JSON, as `QueueEntry`. */
-export const queueEntrySchema = {
+const queueEntrySchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['row', 'pullRequest', 'step'],
+  required: ['row'],
   properties: {
+    /** The normal row of its workspace. */
     row: workspaceRowSchema,
-    /** The number of its pull request. */
-    pullRequest: { type: 'integer', minimum: 1 },
-    /** Its step in words, or why it needs attention. */
-    step: { type: 'string' },
     unit: { enum: queueUnits },
   },
 } as const
@@ -59,19 +56,30 @@ export const mergeQueueSchema = {
 /** A place in a block, counted from 0. */
 const indexSchema = { type: 'integer', minimum: 0 } as const
 
+/** The move of an entry in its block, as both drags give it. */
+const reorderSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'workspace', 'index'],
+  properties: {
+    kind: { const: 'reorder' },
+    workspace: { type: 'string' },
+    index: indexSchema,
+  },
+} as const
+
+/** The drop zone during a drag between sections, as both drags give it. */
+const zoneSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind'],
+  properties: { kind: { const: 'zone' } },
+} as const
+
 /** A drag that the group draws, as `QueueDrag`. */
 export const queueDragSchema = {
   anyOf: [
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'workspace', 'index'],
-      properties: {
-        kind: { const: 'reorder' },
-        workspace: { type: 'string' },
-        index: indexSchema,
-      },
-    },
+    reorderSchema,
     {
       type: 'object',
       additionalProperties: false,
@@ -81,23 +89,40 @@ export const queueDragSchema = {
     {
       type: 'object',
       additionalProperties: false,
-      required: ['kind'],
-      properties: { kind: { const: 'zone' } },
+      required: ['kind', 'workspace', 'reason'],
+      properties: {
+        kind: { const: 'refused' },
+        workspace: { type: 'string' },
+        /** Why the row cannot join, in words. */
+        reason: { type: 'string' },
+      },
     },
+    zoneSchema,
   ],
 } as const
 
 /** The drop that the group draws, as `GroupDrop`. */
 export const groupDropSchema = {
   anyOf: [
-    queueDragSchema.anyOf[0],
+    reorderSchema,
     {
       type: 'object',
       additionalProperties: false,
       required: ['kind', 'row'],
       properties: { kind: { const: 'add' }, row: workspaceRowSchema },
     },
-    queueDragSchema.anyOf[2],
+    {
+      type: 'object',
+      additionalProperties: false,
+      required: ['kind', 'row', 'reason'],
+      properties: {
+        kind: { const: 'refused' },
+        row: workspaceRowSchema,
+        /** Why the row cannot join, in words. */
+        reason: { type: 'string' },
+      },
+    },
+    zoneSchema,
   ],
 } as const
 

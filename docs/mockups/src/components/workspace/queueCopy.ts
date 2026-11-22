@@ -1,12 +1,13 @@
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import { mergeLabels, type MergeMethod } from './barCopy'
-import type { AttentionReason, QueueLine, QueueStep } from './queueModel'
+import type { AttentionReason, QueueLine } from './queueModel'
 
 /**
- * The words of the merge queue: the group of the list and its rows, the
- * controls, the line under the pull request bar, and the question before
- * Remove from queue. This module imports no fixture, so the app can take
- * the words from here too.
+ * The words of the merge queue: the group of the list, the reason of a row
+ * that cannot join, the controls, the line under the pull request bar, and
+ * the question before Remove from queue. The rows of the group are normal
+ * workspace rows, with no words of the queue. This module imports no
+ * fixture, so the app can take the words from here too.
  */
 
 export const queueLabels = {
@@ -29,7 +30,7 @@ export function queuedMergeLabel(method: MergeMethod, below?: number): string {
 }
 
 /** The pull request below a layer, or the default branch below the bottom. */
-export function belowName(below: number | null, trunk: string): string {
+function belowName(below: number | null, trunk: string): string {
   return below === null ? trunk : `#${below}`
 }
 
@@ -42,55 +43,6 @@ function fixingLabel(github: GitHubSummary | null): string {
       return 'Addressing review'
     default:
       return 'Fixing checks'
-  }
-}
-
-/**
- * The step of a layer in its row, under its name. `below` names the pull
- * request below it, or the default branch, as `belowName` gives it.
- */
-export function queueStepLabel(
-  step: QueueStep,
-  below: string,
-  github: GitHubSummary | null,
-): string {
-  switch (step) {
-    case 'waiting':
-      return 'Waiting for checks'
-    case 'rebasing':
-      return `Rebasing onto ${below}`
-    case 'fixing':
-      return fixingLabel(github)
-    case 'ready':
-      return 'Ready to merge'
-    case 'merging':
-      return 'Merging'
-  }
-}
-
-/** Why an entry needs attention, in the row under its name. */
-export function attentionRowLabel(reason: AttentionReason): string {
-  switch (reason) {
-    case 'checks-still-fail':
-      return 'Checks still fail'
-    case 'conflict-remains':
-      return 'Conflict remains'
-    case 'changes-still-requested':
-      return 'Changes still requested'
-    case 'work-not-pushed':
-      return 'Work not pushed'
-    case 'turn-runs':
-      return 'Agent stayed busy'
-    case 'token-failed':
-      return 'GitHub access failed'
-    case 'no-agent-login':
-      return 'No agent login'
-    case 'merge-refused':
-      return 'Merge refused'
-    case 'other-org':
-      return 'Queued in another org'
-    case 'github-merge-queue':
-      return "Needs GitHub's merge queue"
   }
 }
 
@@ -194,4 +146,39 @@ export function queueMoveStatus(name: string, place: number): string {
 /** What a screen reader hears while a row of a section is over the group. */
 export function queueAddStatus(name: string, place: number): string {
   return `Adding ${name} to the merge queue at place ${place}`
+}
+
+/**
+ * Why a workspace cannot join the queue of its repository: its branch has
+ * no open pull request, its unit targets another branch than the default
+ * branch, its pull request comes from a fork, or the member has no write
+ * access to the repository.
+ */
+export type JoinRefusal =
+  | { kind: 'no-pull-request' }
+  | { kind: 'other-branch'; base: string; trunk: string }
+  | { kind: 'fork' }
+  | { kind: 'write-access'; repository: string }
+
+/**
+ * The reason that the group names during a drag of a row that cannot join,
+ * in place of its drop line or of the words of its zone. The group then
+ * takes no drop, so a drop never fails without a reason.
+ */
+export function joinRefusalText(refusal: JoinRefusal): string {
+  switch (refusal.kind) {
+    case 'no-pull-request':
+      return 'Open a pull request to add it to the queue.'
+    case 'other-branch':
+      return `It targets ${refusal.base}. The queue merges into ${refusal.trunk}.`
+    case 'fork':
+      return "Pull requests from forks can't join the queue."
+    case 'write-access':
+      return `You need write access to ${refusal.repository}.`
+  }
+}
+
+/** What a screen reader hears while a row that cannot join is over the group. */
+export function queueRefusedStatus(name: string, reason: string): string {
+  return `${name} can't join the merge queue. ${reason}`
 }

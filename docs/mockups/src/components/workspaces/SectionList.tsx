@@ -12,7 +12,12 @@ import type { DrawnRow } from './ArchivedGroup'
 import { sectionMenu, type SectionPlace } from './menus'
 import { mayArchiveWorkspace } from './permissions'
 import { queueEntries } from './queue'
-import { groupDropOf, queueActionsOf, type ListQueue } from './queueList'
+import {
+  archivableEntries,
+  groupDropOf,
+  queueActionsOf,
+  type ListQueue,
+} from './queueList'
 import { RowDrop } from './RowDrop'
 import { rowControls, type RowContext, type RowFocus } from './rowControls'
 import type { RowControls } from './RowMenu'
@@ -145,8 +150,10 @@ export function SectionList(
     : []
   const dragged = tree.at(0)
   const moving = new Set(tree.map((row) => row.workspace.key))
-  // A row of a section on its way into the group stays faint in its place.
-  if (groupDrop?.kind === 'add') moving.add(groupDrop.row.workspace.key)
+  // A row of a section over the group stays faint in its place.
+  if (groupDrop?.kind === 'add' || groupDrop?.kind === 'refused') {
+    moving.add(groupDrop.row.workspace.key)
+  }
   const liftedSection = props.sections.find(
     (item) => item.section.key === sectionDrag?.section,
   )
@@ -170,6 +177,7 @@ export function SectionList(
     <div className={styles.sections}>
       {queue && (queue.blocks.length > 0 || groupDrop) ? (
         <mergeQueueGroup.Component
+          archivable={archivableEntries(queue, viewer, context.readOnly)}
           moklyInstance="merge-queue"
           queue={queue}
           variant={props.variant}

@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { acmeRail } from '../components/layout/OrgRail'
+import {
+  joinRefusalText,
+  type JoinRefusal,
+} from '../components/workspace/queueCopy'
 import { queueEntries, type QueueDrag } from '../components/workspaces/queue'
 import {
   queueActionsOf,
@@ -18,7 +22,8 @@ import {
 import { withTrees } from '../components/workspaces/trees'
 import { workspaceMenuSheet } from '../entries/components/screens/listSheets.mockup'
 import { viewerMembership } from '../fixtures/members'
-import { queuedWorkspace } from '../fixtures/mergeQueue'
+import { queuedWorkspace, releaseBranch } from '../fixtures/mergeQueue'
+import { repositories } from '../fixtures/repositories'
 import { parentOf } from '../fixtures/subWorkspaces'
 import { workspaceDrag } from '../fixtures/workspaces'
 import {
@@ -47,9 +52,10 @@ import { flatSections, type TreeListView } from './subWorkspaceStates'
  * the last merge with no group, two queues, the group collapsed, a member
  * stack and its drag, the drag of an entry, a row of a section over the
  * group, the drop zone during a drag between sections and with a row over
- * it, a queued parent and a queued sub-workspace, the trees after that
- * parent left the queue, and the menus of a row of a section and of a
- * queued row.
+ * it, a row that cannot join over the group, for another branch and for a
+ * member without write access, and over the zone, a queued parent and a
+ * queued sub-workspace, the trees after that parent left the queue, and
+ * the menus of a row of a section and of a queued row.
  */
 export const mergeQueueStates = [
   'none',
@@ -65,6 +71,9 @@ export const mergeQueueStates = [
   'add',
   'zone',
   'add-empty',
+  'refused-branch',
+  'refused-access',
+  'refused-zone',
   'trees',
   'trees-left',
   'menu',
@@ -84,7 +93,18 @@ type Scenario = {
   queueDrag?: QueueDrag
   drag?: ListDrag
   focus?: RowFocus
+  /** Priya, a member with read access to acme/storefront, looks at the list. */
+  member?: boolean
+  /** The rows whose menus offer Add to merge queue, when not `joinable`. */
+  queueable?: readonly string[]
 }
+
+/** The drag of a row that cannot join, with the reason in its words. */
+function refusedDrag(workspace: string, refusal: JoinRefusal): QueueDrag {
+  return { kind: 'refused', workspace, reason: joinRefusalText(refusal) }
+}
+
+const storefront = repositories.storefront
 
 /** The workspaces of the queue of acme/storefront in most states. */
 const storefrontKeys = [
@@ -127,6 +147,29 @@ const scenarios: Readonly<Record<Exclude<MergeQueueState, 'none'>, Scenario>> =
     'add-empty': {
       spec: [],
       queueDrag: { kind: 'add', workspace: 'apple-pay' },
+    },
+    // The pull request of Fix flaky cart test targets the release branch.
+    'refused-branch': {
+      spec: dragQueue,
+      queueDrag: refusedDrag('fix-cart-flake', {
+        kind: 'other-branch',
+        base: releaseBranch,
+        trunk: storefront.defaultBranch,
+      }),
+      queueable: ['invoice-fonts'],
+    },
+    'refused-access': {
+      spec: dragQueue,
+      queueDrag: refusedDrag('fix-cart-flake', {
+        kind: 'write-access',
+        repository: storefront.name,
+      }),
+      member: true,
+      queueable: [],
+    },
+    'refused-zone': {
+      spec: [],
+      queueDrag: refusedDrag('email-dark-mode', { kind: 'no-pull-request' }),
     },
     trees: { spec: treeQueue, trees: true },
     'trees-left': { spec: treeLeftQueue, trees: true },
@@ -207,8 +250,8 @@ export function queueListView(
   const view = {
     sections: sectionsOf(scenario),
     queue: scenario.collapsed ? { ...queue, collapsed: true } : queue,
-    queueable: joinable,
-    viewer: viewerMembership('admin'),
+    queueable: scenario.queueable ?? joinable,
+    viewer: viewerMembership(scenario.member ? 'member' : 'admin'),
     rail: acmeRail,
     ...(scenario.focus ? { focus: scenario.focus } : {}),
     ...(scenario.queueDrag ? { queueDrag: scenario.queueDrag } : {}),

@@ -22,7 +22,7 @@ export const bannerMergeQueueMerge = defineScreen({
       slug: 'merging',
       title: 'Merging',
       description:
-        'The queue merges the three layers. The button shows a spinner and Merging, the line says "Merging into main", and the three rows of the group say Merging.',
+        'The queue merges the three layers. The button shows a spinner and Merging, and the line says "Merging into main". In the sidebar, the three rows of the group keep the still green mark of a pull request that is ready to merge.',
       props: { queue: 'merging' },
     },
     {

@@ -1,8 +1,11 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import { defined } from '../../defined'
 import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
 import { instanceKey } from '../../instanceKey'
-import { queueAddStatus, queueLabels } from '../workspace/queueCopy'
+import {
+  queueAddStatus,
+  queueLabels,
+  queueRefusedStatus,
+} from '../workspace/queueCopy'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'
 import type { DrawnRow } from './ArchivedGroup'
@@ -17,22 +20,28 @@ type Variant = 'sidebar' | 'page'
 /**
  * The group while a drag runs and no queue has entries: a zone with its
  * words. A row of a section over it, `row`, lifts over the zone, and the
- * zone takes the accent.
+ * zone takes the accent. For a row that cannot join, `reason` takes the
+ * place of the words, and the zone keeps its dashed outline.
  */
-function DropZone(props: { row?: WorkspaceRow; variant: Variant }) {
-  const { row } = props
+function DropZone(props: {
+  row?: WorkspaceRow
+  reason?: string
+  variant: Variant
+}) {
+  const { row, reason } = props
   return (
     <div
       className={classes(
         styles.zone,
-        row && styles.zoneOver,
+        row && reason === undefined && styles.zoneOver,
+        row && styles.zoneHeld,
         props.variant === 'page' && styles.pageZone,
       )}
     >
-      {queueLabels.drop}
+      {reason ?? queueLabels.drop}
       {row ? (
         <>
-          <span aria-hidden className={styles.zoneLift}>
+          <span aria-hidden className={styles.lift}>
             <workspaceRow.Component
               drag="lifted"
               moklyInstance={`${instanceKey(row.workspace.key)}-lifted`}
@@ -41,7 +50,9 @@ function DropZone(props: { row?: WorkspaceRow; variant: Variant }) {
             />
           </span>
           <span className={a11y.hidden} role="status">
-            {queueAddStatus(row.workspace.name, 1)}
+            {reason === undefined
+              ? queueAddStatus(row.workspace.name, 1)
+              : queueRefusedStatus(row.workspace.name, reason)}
           </span>
         </>
       ) : null}
@@ -49,39 +60,49 @@ function DropZone(props: { row?: WorkspaceRow; variant: Variant }) {
   )
 }
 
+/** The row of a section over the zone, and the reason when it cannot join. */
+function zoneProps(drop: GroupDrop | undefined) {
+  if (drop?.kind === 'add') return { row: drop.row }
+  if (drop?.kind === 'refused') return { row: drop.row, reason: drop.reason }
+  return {}
+}
+
 /**
  * The Merge queue group at the top of the list. It shows while a queue has
- * entries, with one block for each queue, headed by its repository, and
- * while a drag runs, as a drop zone, also when no queue has entries
- * (decision 317). The group is the app's own, not a section of the user,
- * so it has no menu. It collapses from its header, which then shows the
- * count of its entries. A queued workspace shows only here, as a flat row
- * (decision 318). `drop` is the drag that the group draws, and `drawn` the
- * one row whose menu or hover the view draws.
+ * entries, with one block for each queue, and while a drag runs, as a drop
+ * zone, also when no queue has entries (decision 317). Each row is the
+ * normal row of a workspace, and a line joins the marks of each stack. The
+ * blocks name their repositories only when two or more queues have
+ * entries. The group is the app's own, not a section of the user, so it
+ * has no menu. It collapses from its header, which then shows the count of
+ * its entries. A queued workspace shows only here, as a flat row (decision
+ * 318). `drop` is the drag that the group draws, `drawn` the one row whose
+ * menu or hover the view draws, and `archivable` the rows that offer
+ * Archive on hover.
  */
 export function MergeQueueGroup(props: {
   queue: MergeQueueList
   variant: Variant
   drop?: GroupDrop
   drawn?: DrawnRow
+  archivable?: readonly string[]
 }) {
   const { queue, variant, drop } = props
   const collapsed = queue.collapsed === true
   const Chevron = collapsed ? ChevronRight : ChevronDown
   const body =
     queue.blocks.length === 0 ? (
-      <DropZone
-        variant={variant}
-        {...defined({ row: drop?.kind === 'add' ? drop.row : undefined })}
-      />
+      <DropZone variant={variant} {...zoneProps(drop)} />
     ) : (
       <div className={styles.blocks}>
         {queue.blocks.map((block) => (
           <QueueBlockView
+            archivable={props.archivable}
             block={block}
             drawn={props.drawn}
             drop={drop}
             key={block.repository}
+            named={queue.blocks.length > 1}
             variant={variant}
           />
         ))}

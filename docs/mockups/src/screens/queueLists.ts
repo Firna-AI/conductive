@@ -1,9 +1,4 @@
 import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
-import {
-  attentionRowLabel,
-  belowName,
-  queueStepLabel,
-} from '../components/workspace/queueCopy'
 import type {
   AttentionReason,
   QueueFacts,
@@ -77,8 +72,9 @@ export function queuedKeys(spec: QueueSpec): ReadonlySet<string> {
 }
 
 /**
- * The row of a queued workspace. The open workspace shows its current
- * status and the GitHub state of its bar, and it is selected.
+ * The row of a queued workspace, as a section shows it. The open workspace
+ * shows its current status and the GitHub state of its bar, and it is
+ * selected. A workspace whose agent works in the state shows activity now.
  */
 function rowOf(spec: RowSpec, open?: OpenWorkspace): WorkspaceRow {
   if (open?.workspace.key === spec.key) {
@@ -86,9 +82,14 @@ function rowOf(spec: RowSpec, open?: OpenWorkspace): WorkspaceRow {
     return { workspace, status, github: workspace.github, selected: true }
   }
   const record = queuedWorkspace(spec.key)
+  const status = spec.status ?? record.status
   return {
-    workspace: { ...record, github: spec.github },
-    status: spec.status ?? record.status,
+    workspace: {
+      ...record,
+      github: spec.github,
+      ...(status === 'working' ? { updated: 'now' } : {}),
+    },
+    status,
     github: spec.github,
     selected: false,
     ...defined({ to: spec.to }),
@@ -96,9 +97,9 @@ function rowOf(spec: RowSpec, open?: OpenWorkspace): WorkspaceRow {
 }
 
 /**
- * The Merge queue group of a state: a block for each queue, with the step
- * of each layer in words, and why each entry below the stack needs
- * attention. `open` is the workspace that the main area shows.
+ * The Merge queue group of a state: a block for each queue, with the rows
+ * of its stack, then the rows of the entries that need attention. `open`
+ * is the workspace that the main area shows.
  */
 export function queueListOf(
   spec: QueueSpec,
@@ -106,22 +107,12 @@ export function queueListOf(
 ): MergeQueueList {
   return {
     blocks: spec.map((block) => {
-      const trunk = repositories[block.repository].defaultBranch
-      const entries = block.stack.map((layer, index): QueueEntry => {
-        const lower = block.stack[index - 1]
-        const below = belowName(lower ? pullRequestOf(lower.key) : null, trunk)
-        const row = rowOf(layer, open)
-        return {
-          row,
-          pullRequest: pullRequestOf(layer.key),
-          step: queueStepLabel(layer.step, below, row.github),
-          ...defined({ unit: layer.unit }),
-        }
-      })
+      const entries = block.stack.map((layer): QueueEntry => ({
+        row: rowOf(layer, open),
+        ...defined({ unit: layer.unit }),
+      }))
       const attention = (block.attention ?? []).map((entry): QueueEntry => ({
         row: rowOf(entry, open),
-        pullRequest: pullRequestOf(entry.key),
-        step: attentionRowLabel(entry.reason),
       }))
       const { name } = repositories[block.repository]
       return { repository: block.repository, name, entries, attention }

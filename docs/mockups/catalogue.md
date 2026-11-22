@@ -18,7 +18,7 @@ how a screen is built, and links to the other pages.
 | `app/sections`      | The menu of a section with its move items, a workspace dragged to another section, and a section dragged to another place |
 | `app/workspace-menu` | The menu of a workspace row from a right click: its section and owner choices, Rename, Copy link, Archive from the list with its toast and Restore, and the menus of each role |
 | `app/sub-workspaces` | Sub-workspaces under their parents: two trees in one section, one down to depth 3, then an archived parent, the drag of a tree, and the menu of a nested row |
-| `app/merge-queue`   | The Merge queue group at the top of the list: one queue with a layer in each step and an entry that needs attention, then a merge, two queues, a member stack, the drags in and into the group, queued sub-workspaces, and the menus of the rows |
+| `app/merge-queue`   | The Merge queue group at the top of the list: one queue of normal rows whose marks a line joins, and an entry that needs attention off the line, then a merge, two queues, a member stack, the drags in and into the group, a row that cannot join, queued sub-workspaces, and the menus of the rows |
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, a send over the limit, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org with the account choice of an operator, the first org, new orgs, deleted, suspended, and the order of the orgs |

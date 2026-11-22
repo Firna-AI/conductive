@@ -623,12 +623,27 @@ line names a decision. The options check corrected them on the same day.
     shows only its icon, with its name as a tooltip, as a link to GitHub
     keeps only its mark. Reason: in the right column of 440 px, both
     labels leave one letter of the state.
-  - A row of the group has two lines: its place, its list mark, and its
-    name, then its step or its reason. The entries that need attention
-    stand below the stack under the label "Needs attention", with the
-    alert icon in place of a place. A member stack keeps its rows in one
-    outline, a box with a neutral border on every side. The blocks follow
-    the order of the repositories of the org. The group collapses as a
+  - Replaced on 22 November 2026, after Cal's review of the mockups: rows
+    with a place number and a step line, a "Needs attention" label, and an
+    outline around a member stack. Cal: "I don't think the labels add
+    anything", and "we could have a vertical line through them to show
+    they are connected".
+  - A row of the group is a normal workspace row: its list mark, its name,
+    and its time, with no place number and no step line. Place 1, the
+    next to merge, shows first. A vertical line joins the list marks of
+    the entries in the GitHub stack. Reason: Cal's review. The list mark
+    already shows the GitHub state in its colour and shows running work
+    with its motion, and the bar names the place and the step.
+  - An entry that needs attention shows after the joined rows, as a normal
+    row off the line, with no label. Its list mark keeps the colour of its
+    GitHub state, such as red for failed checks. Reason: Cal asked for no
+    section of its own. The entry has left the GitHub stack, so the line
+    must not join it. The bar names its reason.
+  - A member stack has no outline of its own, because the line already
+    joins every entry. A drag still moves its rows together.
+  - The block of a queue names its repository only when the org has
+    queues in two or more repositories.
+  - The blocks follow the order of the repositories of the org. The group collapses as a
     section does, with the count of its entries, and has no menu.
   - A drag of an entry moves its unit only inside its block. A row of a
     section over the group gives the block of its repository the outline
@@ -690,9 +705,28 @@ Depends on: 1
 The design call on the drop target came after Milestone 1. Milestone 8
 needs its picture.
 
-- [ ] Draw the drop target of the group during a drag of a row that cannot
+- [x] Draw the drop target of the group during a drag of a row that cannot
       join, with its reason, on a computer and on a phone.
 - [ ] Run `npm run mockups:check` and smoke-test the page.
+
+## Milestone 1c: Mockup review fixes
+
+Tags: mockup
+
+Depends on: 1
+
+Cal reviewed the group on 22 November 2026. Draw the rows of the group as
+the design under "The app" now says.
+
+- [x] Draw each row of the group as a normal workspace row, with no place
+      number and no step line, and a vertical line that joins the entries
+      of the GitHub stack.
+- [x] Draw an entry that needs attention as a row after the joined rows,
+      off the line, with no label.
+- [x] Remove the outline of a member stack. Name the repository of a block
+      only with queues in two or more repositories.
+- [x] Update the catalogue docs and the notes of each changed page.
+- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
 
