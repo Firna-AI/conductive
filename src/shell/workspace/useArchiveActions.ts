@@ -6,11 +6,11 @@ import { mayRestore } from '../../app/permissions'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { formatDay } from '../../app/time'
-import { listEndOf } from '../../app/workspace-removal'
 import type { User } from '../../shared/api'
 import { nameLabel } from '../../shared/name-label'
 
 import { useApp, useOrgModel } from '../context'
+import { archiveEnd } from './archive-ends'
 import { shownWorkspaces } from './tab-memory'
 
 /** Archive and Restore of the workspaces of one org, for its controls. */
@@ -64,7 +64,7 @@ export function useArchiveActions(orgId: string, viewer: User): ArchiveActions {
   }
   /** The day when the archived workspace leaves the list, as a line. */
   const leavesLine = (archived: Workspace) => {
-    const end = listEndOf(archived)
+    const end = archiveEnd(archived)
     if (end === null) return undefined
     return `It leaves the list on ${formatDay(end, services.timeZone)}.`
   }

@@ -4,7 +4,7 @@ import { portFormCopy } from '../../../components/tools/previewCopy'
 import { detectedServers, openPort } from '../../../fixtures/previews'
 
 /** A server that the runner detects, as `ListeningPort`. */
-const serverSchema = {
+export const serverSchema = {
   type: 'object',
   additionalProperties: false,
   required: ['port', 'name', 'folder'],
@@ -18,7 +18,8 @@ const serverSchema = {
 /**
  * The port form with the servers of the sandbox, registered with Mokly.
  * Its pages show the servers that the runner detects, and the row of the
- * Preview tab that shows on desktop.
+ * Preview tab that shows on desktop. A screen supplies the services of the
+ * report in the `services` slot, above the servers.
  */
 export const serverList = defineComponent({
   slug: 'server-list',
@@ -36,9 +37,14 @@ export const serverList = defineComponent({
       current: { type: ['integer', 'null'] },
     },
   } as const,
+  slots: ['services'],
   props: { servers: detectedServers },
   render: (props) => (
-    <ServerList current={props.current} servers={props.servers} />
+    <ServerList
+      current={props.current}
+      servers={props.servers}
+      services={props.services}
+    />
   ),
   variants: [
     {

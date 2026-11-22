@@ -63,7 +63,7 @@ the Help row of the command palette opens.
   By weights, the default, or a configured account by its ID, from the
   operator's providers reply. Only a chosen account goes into the create.
   The create does not wait for that reply. Nobody else sees the choice or
-  sends its read, as [Provider accounts](../shell/operator/README.md#provider-accounts)
+  sends its read, as [Provider accounts](../shell/operator/provider-accounts.md#provider-accounts)
   says.
 - The rail, the org switcher, and General show the saved initials of an
   org. An org without them shows the initials of its name.
@@ -224,8 +224,8 @@ the Help row of the command palette opens.
   runs. An action of the dialog that opens another page, such as Connect
   or Choose repositories, closes the dialog first.
 - The dialog and the page of one org and section share one draft:
-  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message and its
-  files. The menu of General, the default section, opens New workspace
+  `OrgModel.newWorkspace(sectionId)`. So a close keeps the message, its
+  files, and its branch. The menu of General, the default section, opens New workspace
   with no section, as the row does, so General keeps one draft. A create that the server accepts opens the new workspace, also
   when the dialog closed while the create ran. A failed create request
   keeps the dialog open with Try again.
@@ -243,7 +243,9 @@ the Help row of the command palette opens.
   only for such a move, until the focus leaves it. On a phone, no main
   area takes it.
 - The page and the dialog share their form (`useNewWorkspaceForm`): the
-  repository picker, the notices, the send, and one readiness. In an org
+  repository picker, the branch control with its target choice, as
+  [Start from a branch](start-branch.md) says, the notices, the send, and
+  one readiness. In an org
   without chosen repositories, an admin gets Choose repositories, and a
   member who is not an admin reads that an admin chooses them, as the
   empty page of the org says. Both ask only after the repositories load.
@@ -260,22 +262,38 @@ the Help row of the command palette opens.
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
   says, and Send, Create, and Try again stay off. The shared form watches
   the builds and owns the notice. Its words come from
-  `firstBuildCopy.ts` of the mockups. While the builds load or after a
-  failed load, no notice shows, and the Worker refuses a create of an org
-  with no good image.
+  `firstBuildCopy.ts` of the mockups. When the repositories reply shows a
+  good image, through `imageReady` or a ready repository, the builds are
+  older, and the notice gives way. `imageReadyOf` reads every repository
+  of the reply, also one that the org no longer chose. While the builds
+  load or after a failed load, the notice of the first build does not
+  show. Send still stays off for a repository that the reply gives
+  `ready: false`. A reply of a previous
+  Worker has no `ready`. Send can then go, and the Worker refuses a create
+  of an org with no good image.
 - The shared form shows the
-  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories)
-  that `BuildsResponse.changes` lists as added: off in the repository
-  menu, with the note of `menuNotes`, and in the notice over the
-  composer while the repository of the form waits, with the words of
-  `waitingFormText`. The note of the cloud computer under the picker then
-  gives way. The Worker lists no waiting repository before the first good
-  build, so this notice and the notice of the first build never show
-  together. The builds read again while a build runs, so a waiting
-  repository turns on when a build that holds it succeeds. A draft keeps
-  the repository that the form showed at its first text or file
-  (`NewWorkspaceModel`), so a repository that turns on moves no written
-  draft.
+  [waiting repositories](../../docs/protocol/create-a-workspace.md#waiting-repositories):
+  off in the repository menu, with the note of `menuNotes`, and in the
+  notice over the composer while the repository of the form waits, with
+  the words of `waitingFormText`. The note of the cloud computer under the
+  picker then gives way. A chosen repository waits when the repositories
+  reply gives it `ready: false`, also while the builds load, after a
+  failed load, or with older builds (`waitsForBuild`). With `ready: true`,
+  it stays on in each case. Without `ready`, the repositories that
+  `BuildsResponse.changes` lists as added wait. The builds give how a
+  repository waits. Without an answer of the builds, the note and the
+  notice name the next build.
+- Before the first good build, no repository waits, so this notice and the
+  notice of the first build never show together. The form knows that time
+  from `imageReady: false`. Without that field, the builds list no added
+  repository in that time.
+- When the builds show a build that ended or a new image, the repositories
+  read again, as [Data lifecycle](data-lifecycle.md) says. A waiting
+  repository turns on when that answer gives it `ready: true`. Until then,
+  it keeps its notice. Without `ready`, it turns on when the builds no
+  longer list it. A draft keeps the repository that the form showed at its
+  first text or file (`NewWorkspaceModel`), so a repository that turns on
+  moves no written draft.
 - Every composer reads its send key through `useSendKey`: the chat, the
   page and the dialog of New workspace, and the Feedback dialog. On a
   computer, Enter sends and Shift+Enter adds a
@@ -334,8 +352,10 @@ the Help row of the command palette opens.
   sends only the fields that changed, and an empty new value keeps the
   stored value. Delete asks first.
 - A create request that fails keeps the message in the form, with "The
-  workspace wasn't created". Try again sends the same message ID. A failed
-  first start keeps its workspace instead, as
+  workspace wasn't created". Try again sends the same message ID. A
+  refusal of the branch check names its cause and its own action, as
+  [Refusals of the branch check](start-branch.md#refusals-of-the-branch-check)
+  says. A failed first start keeps its workspace instead, as
   [Creation recovery](creation-recovery.md#a-failed-first-start) says.
 
 ## The waitlist

@@ -6,7 +6,8 @@ import { recordStopRequest } from './stop-request'
 import { HttpError } from '../http'
 import { TurnCompletion, type TurnEnd } from './turn-completion'
 import type { ChatTransaction } from './store'
-import type { PendingCommand, StoredTurn } from './types'
+import type { StoredTurn } from './types'
+import type { PendingCommand } from './pending-command'
 
 /** Owns the active turn and its stored chain of waiting turns. */
 export class TurnLifecycle {
@@ -83,6 +84,9 @@ export class TurnLifecycle {
     randomId: () => string,
   ): Promise<void> {
     const failed = !!turn.loginFailure
+    if (failed) delete turn.endReason
+    else if (event?.type === 'turn.completed' && event.endReason)
+      turn.endReason = event.endReason
     if (event && !failed) await this.transaction.emit(event, occurredAt)
     await this.finish(
       turn,
@@ -144,7 +148,8 @@ export class TurnLifecycle {
     if (!turn || turn.sessionId !== this.session.id) {
       throw new HttpError(404, 'turn_not_found', 'The turn is not available.')
     }
-    if (requester) await recordStopRequest(this.transaction, turn, requester)
+    if (requester)
+      await recordStopRequest(this.transaction, turn, requester, commandId)
     if (
       turn.state === 'finished' ||
       turn.state === 'failed' ||

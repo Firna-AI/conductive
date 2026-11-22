@@ -10,6 +10,7 @@ import {
   turnEndReasons,
 } from './chatKeys'
 import { lateAnswerItemSchema, secretRunItemSchema } from './secretItemSchemas'
+import { wakeItemSchema } from './wakeItemSchemas'
 
 /** The kinds of a tool call, as `ToolKind` lists them. */
 const toolKinds = [
@@ -233,6 +234,7 @@ export const chatItemSchema = {
     repositoryChangedItem,
     secretRunItemSchema,
     lateAnswerItemSchema,
+    wakeItemSchema,
   ],
 } as const
 
@@ -252,6 +254,7 @@ export const singleItemSchema = {
     repositoryChangedItem,
     secretRunItemSchema,
     lateAnswerItemSchema,
+    wakeItemSchema,
   ],
 } as const
 

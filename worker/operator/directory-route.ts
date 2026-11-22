@@ -11,6 +11,7 @@ export async function operatorDirectoryRoute(
   kind: 'orgs' | 'users',
   encodedId: string | undefined,
   now: number,
+  switchAvailable = false,
 ): Promise<Response> {
   if (encodedId === undefined)
     return Response.json(
@@ -32,7 +33,11 @@ export async function operatorDirectoryRoute(
   } catch {
     throw missing()
   }
-  if (kind === 'orgs') return Response.json(await readOperatorOrg(db, id, now))
+  if (kind === 'orgs')
+    return Response.json({
+      ...(await readOperatorOrg(db, id, now)),
+      switchAvailable,
+    })
   const githubId = numericGitHubId(id)
   if (githubId === null) throw missing()
   return Response.json(await readOperatorUser(db, githubId))

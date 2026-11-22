@@ -15,7 +15,8 @@ interface BrowserSubscriptionOptions {
   persist?: BrowserPersistence
 }
 
-export function subscribeBrowser({
+/** The caller holds the same queue task as label preparation and registration. */
+export async function subscribeBrowser({
   store,
   browsers,
   operation,
@@ -24,46 +25,44 @@ export function subscribeBrowser({
   peer,
   persist,
 }: BrowserSubscriptionOptions): Promise<() => void> {
-  return store.run(async () => {
-    if (access.workspace.archivedAt === null) await operation.logins.refresh()
-    const tabId = randomToken()
-    const unsubscribe = await browsers
-      .add(
-        peer,
-        {
-          kind: 'workspace',
-          workspaceId: access.workspace.id,
-          orgId: access.workspace.orgId,
-          userId: access.context.user.id,
-          sessionId: access.context.sessionId,
-        },
-        tabId,
-        persist,
-      )
-      .catch((error: unknown) => {
-        try {
-          peer.close()
-        } catch {
-          // The peer has already disconnected.
-        }
-        throw error
-      })
-    try {
-      let through: number | undefined
-      while (true) {
-        const history = await store.read(access.workspace.id, (view) =>
-          view.history(after, through),
-        )
-        browsers.check(peer)
-        peer.send({ type: 'history', history })
-        if (!history.hasMore) break
-        through = history.throughEventNumber
-        after = history.nextAfterEventNumber
+  if (access.workspace.archivedAt === null) await operation.logins.refresh()
+  const tabId = randomToken()
+  const unsubscribe = await browsers
+    .add(
+      peer,
+      {
+        kind: 'workspace',
+        workspaceId: access.workspace.id,
+        orgId: access.workspace.orgId,
+        userId: access.context.user.id,
+        sessionId: access.context.sessionId,
+      },
+      tabId,
+      persist,
+    )
+    .catch((error: unknown) => {
+      try {
+        peer.close()
+      } catch {
+        // The peer has already disconnected.
       }
-      return unsubscribe
-    } catch (error) {
-      unsubscribe()
       throw error
+    })
+  try {
+    let through: number | undefined
+    while (true) {
+      const history = await store.read(access.workspace.id, (view) =>
+        view.history(after, through),
+      )
+      browsers.check(peer)
+      peer.send({ type: 'history', history })
+      if (!history.hasMore) break
+      through = history.throughEventNumber
+      after = history.nextAfterEventNumber
     }
-  })
+    return unsubscribe
+  } catch (error) {
+    unsubscribe()
+    throw error
+  }
 }

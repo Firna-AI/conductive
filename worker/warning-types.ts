@@ -2,6 +2,8 @@ import type { BuildPhase } from './lifecycle/build-data'
 import type { RepairKind } from './lifecycle/repair-data'
 import type { WorkspaceStartJob } from './lifecycle/start-types'
 import type { WorkspaceArchiveState } from './lifecycle/archive-types'
+import type { ContinueJob } from './lifecycle/continue-types'
+import type { ContinueStopCause } from './lifecycle/continue-stop-causes'
 import type {
   ErrorSummary,
   WarningCode,
@@ -14,6 +16,12 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  runner_service_message_invalid:
+    'A private service transfer was discarded. The runner connection stays open.',
+  runner_service_negotiation_unavailable:
+    'Service support could not be negotiated. The runner connection continues without services.',
+  provider_switch_wake_failed:
+    'The provider account switch remains saved for its next image alarm.',
   provider_accounts_invalid:
     'Some sandbox provider accounts are not configured correctly.',
   provider_assignment_weights_recovered:
@@ -59,6 +67,12 @@ export const SIMPLE_WARNINGS = {
     'The retry of approval emails failed. It runs again at the next timer.',
   feedback_send_cleanup_failed:
     'Feedback send record cleanup failed. It runs again at the next timer.',
+  codex_device_cleanup_failed:
+    'Codex device cleanup failed. It runs again at the next timer.',
+  record_cleanup_failed:
+    'Record cleanup failed. It runs again at the next timer.',
+  lifecycle_alarm_repair_failed:
+    'Lifecycle alarm repair failed. It runs again at the next timer.',
   software_image_repair_failed:
     'Software image repair failed. It runs again at the next timer.',
   job_record_cleanup_failed:
@@ -192,6 +206,12 @@ export type WorkerWarning =
       phase: WorkspaceStartJob['phase']
       code: WarningCode
       cancelled: boolean
+    }
+  | {
+      kind: 'workspace_continue_ended'
+      workspaceId: WarningId
+      phase: ContinueJob['phase']
+      stopCause: ContinueStopCause
     }
   | {
       kind: 'workspace_first_message_failed'

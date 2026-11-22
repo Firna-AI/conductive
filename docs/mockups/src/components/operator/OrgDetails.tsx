@@ -4,13 +4,13 @@ import { paths } from '../../paths'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
+import { AccountSection } from './AccountSection'
 import { TargetState } from './directory'
 import {
   deletedOrgBody,
   suspendedOrgBody,
   suspendedTitle,
 } from './operatorCopy'
-import { orgAccountWords } from './providerCopy'
 import { TargetList, TargetRow } from './targets'
 import { WorkspaceStates } from './WorkspaceStates'
 import { instanceKey } from '../../instanceKey'
@@ -99,12 +99,16 @@ function MemberRow(props: { member: OrgMember }) {
 }
 
 /**
- * The page of an org for the operator: its state, its details with its
- * provider account by its ID, its workspaces in each state, and its
- * members with their names and roles. Each member opens the page of that
- * user.
+ * The page of an org for the operator: its state, its details, its
+ * provider account by its ID with the switch of the account, its
+ * workspaces in each state, and its members with their names and roles.
+ * Each member opens the page of that user.
  */
-export function OrgDetails(props: { org: OrgPage }) {
+export function OrgDetails(props: {
+  org: OrgPage
+  /** The question of the action of the account box, for the page that draws it. */
+  accountTo?: string
+}) {
   const { org } = props
   const members = org.members.length
   return (
@@ -115,12 +119,19 @@ export function OrgDetails(props: { org: OrgPage }) {
           moklyInstance="org-details-list"
           rows={[
             { term: 'Org ID', value: org.id, mono: true },
-            { term: orgAccountWords.term, value: org.account, mono: true },
             { term: 'Created', value: org.created },
             { term: 'Repositories', value: String(org.repositories) },
           ]}
         />
       </section.Component>
+      <AccountSection
+        account={org.account}
+        last={org.lastSwitch}
+        org={org.name}
+        switch={org.switch}
+        to={props.accountTo}
+        workspaces={org.byAccount}
+      />
       <WorkspaceStates
         builds={{ count: org.builds, page: 'org' }}
         counts={org.states}

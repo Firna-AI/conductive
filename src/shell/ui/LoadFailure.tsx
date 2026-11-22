@@ -6,11 +6,12 @@ import { useAction } from './useAction'
 
 /**
  * Data that did not load: what failed, the reason from the API, and Try
- * again, which loads it again. The button is busy while the load runs.
+ * again, which loads it again. The button is busy while the load runs. The
+ * reason shows as plain text.
  */
 export function LoadFailure(props: {
   title: string
-  error: ApiError
+  error: Pick<ApiError, 'message'>
   retry: () => Promise<void>
 }) {
   const retry = useAction(props.retry)

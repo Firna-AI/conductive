@@ -52,8 +52,8 @@ export async function browserRequest(
       current.context,
       operation,
       dependencies,
-      env,
       access.presentation,
+      env,
     )
     if (write) await flushRunner()
     return privateResponse(response)

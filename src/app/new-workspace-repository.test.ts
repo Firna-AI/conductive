@@ -96,6 +96,40 @@ describe('the repository of a New workspace draft', () => {
     })
   })
 
+  test('with the readiness of the repositories reply, a written draft keeps the repository that the form showed while the builds fail to load, also when another repository turns ready', async () => {
+    const server = new FakeApiServer()
+    const { repositories } = repositoryFixtures(org).repositories
+    const lacking = (ids: readonly string[]) => ({
+      repositories: repositories.map((item) => ({
+        ...item,
+        ready: !ids.includes(item.id),
+        imageReady: true,
+      })),
+    })
+    const error = { code: 'server_error', message: 'The request failed.' }
+    server.json('GET', orgSettingsPaths.builds(org), { error }, 500)
+    // acme/storefront comes first, and the org image lacks it.
+    server.json(
+      'GET',
+      orgSettingsPaths.repositories(org),
+      lacking(['storefront']),
+    )
+    const model = new OrgModel(testServices(server), org)
+    await model.reload('builds')
+    const draft = model.newWorkspace(null)
+    draft.setText('Fix the flaky cart test.')
+    await model.reload('repositories')
+    const shown = draft.draft.get().repository
+    // The build of acme/storefront succeeds, and the repositories read again.
+    server.json('GET', orgSettingsPaths.repositories(org), lacking([]))
+    await model.reload('repositories')
+    await draft.send(defaults)
+    expect({ shown, sent: await sentRepositories(server) }).toEqual({
+      shown: { id: 'billing-service', picked: false },
+      sent: ['billing-service'],
+    })
+  })
+
   test('a kept repository that the org no longer chose gives way to the first ready one, which the send then uses', async () => {
     const server = new FakeApiServer()
     const model = new OrgModel(testServices(server), org)

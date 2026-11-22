@@ -6,6 +6,7 @@ import type { ChatSnapshot, SessionState } from '../state/chat-snapshot'
 import type { ChatController } from '../state/controller'
 import type { ComposerTool } from './ComposerTools'
 import { SandboxBar, StartingCard, workspaceProblemOf } from './SandboxState'
+import type { GitHubBranch } from './SessionStatus'
 import { useTranscriptInputs } from './transcript-inputs'
 import { WaitingRequests } from './WaitingRequests'
 
@@ -26,6 +27,11 @@ export interface ChatHost {
   keepsComposer: boolean
   /** The tools of the composer, as `ComposerTool` says. */
   tools?: readonly ComposerTool[]
+  /**
+   * The GitHub branch with its display label. New session text uses the
+   * label when the GitHub branch matches the workspace branch.
+   */
+  github?: GitHubBranch | null
 }
 
 /**
@@ -56,6 +62,7 @@ export function sandboxParts(props: {
       problem && workspace && (problem === 'archived' || !readOnly) ? (
         <SandboxBar
           archivedAt={workspace.archivedAt}
+          archivedComputer={workspace.archivedComputer}
           busy={snapshot.resuming}
           firstStart={firstStart}
           message={snapshot.savedError}

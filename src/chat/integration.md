@@ -140,6 +140,11 @@ mount the chat.
   the icon of each tool after the attach button, and a phone holds Attach
   files and the tools in the menu of one + button. Without tools, the bar
   keeps its attach button on a phone too.
+  `host.github` gives the branch of the GitHub state that the app shows,
+  with its optional label. The New session text takes that label only when
+  that GitHub branch equals the workspace branch of the chat's own record.
+  Otherwise it names the real workspace branch. The workspace screen gives
+  the banner of its ready GitHub state.
 - `readOnly` says that the workspace takes no write, such as while its org
   is suspended. The app gives `WorkspaceContext.readOnly`. The chat then
   shows its history, as an archived workspace does, and the host's bar

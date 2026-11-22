@@ -66,6 +66,8 @@ export interface WorkspacesResponse {
 export interface CreateWorkspaceRequest {
   repositoryId: string
   sectionId?: string
+  startBranch?: string
+  baseBranch?: string
   capabilities?: WorkspaceCapabilities
   firstMessage: SendMessageRequest
 }
@@ -75,6 +77,7 @@ export interface CreateWorkspaceResponse extends WorkspaceResponse {
 }
 export interface LocalWork {
   uncommittedFiles: readonly string[]
+  displayUncommittedFiles?: readonly string[]
   unpushedCommits: number
 }
 
@@ -89,6 +92,7 @@ export type ContinueWorkspaceResponse =
       state: 'confirmation-required'
       branch: string
       baseBranch: string
+      displayBaseBranch?: string
       localWork: LocalWork
     }
   | { state: 'continued'; workspace: Workspace; eventNumber: number }
@@ -114,6 +118,7 @@ export interface RepositoryChangeWork {
   pushedCommits: number
   /** The changed files of the new folder, which move to the new branch. */
   carriedFiles: readonly string[]
+  displayCarriedFiles?: readonly string[]
 }
 
 export type ChangeRepositoryResponse =

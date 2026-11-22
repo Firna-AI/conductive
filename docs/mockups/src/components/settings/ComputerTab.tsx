@@ -3,7 +3,7 @@ import { type EnvVar, includedSoftware } from '../../fixtures/computer'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { buildSection } from '../../entries/components/settings/BuildSection.mockup'
-import type { BuildState, OrgBuilds } from './BuildSection'
+import { buildRuns, type BuildState, type OrgBuilds } from './BuildSection'
 import { buildOf } from './BuildHistory'
 import { scriptSection } from '../../entries/components/settings/EnvironmentSections.mockup'
 import { envVarsSection } from '../../entries/components/settings/EnvVarsSection.mockup'
@@ -38,10 +38,9 @@ function changedNotice(props: {
 }): ReactNode {
   const title = 'The install script changed'
   if (props.builds.lastGood === undefined) {
-    const body =
-      props.build === 'building'
-        ? 'One more build runs it when this build succeeds.'
-        : 'It runs at the next build.'
+    const body = buildRuns(props.build)
+      ? 'One more build runs it when this build succeeds.'
+      : 'It runs at the next build.'
     return (
       <notice.Component
         body={body}
@@ -60,7 +59,7 @@ function changedNotice(props: {
       {...defined({
         action: props.readOnly ? undefined : (
           <actionButton.Component
-            disabled={props.build === 'building'}
+            disabled={buildRuns(props.build)}
             icon="hammer"
             moklyInstance="build-computer"
             tone="primary"

@@ -1,8 +1,9 @@
-//! Download and verify a release under the caller's download lock.
+//! Download and verify a release, and download and verify single parts.
 
 use cli_release_interface::ReleaseAssetInfo;
 use cli_updater::{UpdateCheck, Updater};
 use cnd_release::files::sha256;
+use cnd_release::parts::Part;
 use cnd_release::version::{BINARY, TARGET, release_version};
 
 use super::engine::Engine;
@@ -59,25 +60,30 @@ impl Engine {
         let parts = self.processes.inspect(&executable, &release.version)?;
         parts.validate().internal()?;
         for part in &parts.parts {
-            if self.store.has_part(&part.sha256)? {
+            if self.store.has_part(part)? {
                 continue;
             }
-            let asset = ReleaseAssetInfo {
-                binary: part.name.clone(),
-                version: release.version.clone(),
-                target: TARGET.to_owned(),
-                asset_name: part.name.clone(),
-                download_url: part.url.clone(),
-                sha256: Some(part.sha256.clone()),
-            };
-            let bytes = self.client.download(&asset).await.internal()?;
-            if !sha256(&bytes).eq_ignore_ascii_case(&part.sha256) {
-                return Err(Error::DigestMismatch {
-                    name: part.name.clone(),
-                });
-            }
-            self.store.unpack(part, &bytes)?;
+            self.download_part(&release.version, part).await?;
         }
         self.store.complete(&release.version, &parts)
+    }
+
+    /// Download one part, refuse a wrong digest, and unpack it.
+    pub(super) async fn download_part(&self, version: &str, part: &Part) -> Result<()> {
+        let asset = ReleaseAssetInfo {
+            binary: part.name.clone(),
+            version: version.to_owned(),
+            target: TARGET.to_owned(),
+            asset_name: part.name.clone(),
+            download_url: part.url.clone(),
+            sha256: Some(part.sha256.clone()),
+        };
+        let bytes = self.client.download(&asset).await.internal()?;
+        if !sha256(&bytes).eq_ignore_ascii_case(&part.sha256) {
+            return Err(Error::DigestMismatch {
+                name: part.name.clone(),
+            });
+        }
+        self.store.unpack(part, &bytes)
     }
 }

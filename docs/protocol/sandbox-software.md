@@ -2,8 +2,9 @@
 
 This doc holds the requirements and the decisions in force for the
 [sandbox software](../architecture.md#terms), the app's own software in
-each sandbox. It covers the releases, the updates of each sandbox, the
-install in a build, and the software image that a first build starts from.
+each sandbox. It covers the releases, the updates of each sandbox, and the
+install in a build. [Software image](software-image.md) covers the
+software image that a first build starts from.
 It belongs to [Workspaces and sandboxes](workspaces-and-sandboxes.md).
 [Sandbox software](../architecture/sandbox-software.md) in the
 architecture docs describes its parts. The terms are those of the
@@ -15,10 +16,7 @@ update itself. An idle update decision number, such as idle update
 decision 2, names a decision of the change that installs a new release
 while the workspace is idle. A build time decision number, such as build
 time decision 1, names a decision of the change that shortens the software
-step of a build. An e2b decision number names a decision of the change that
-adds E2B as the second
-[sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
-says.
+step of a build.
 
 ## Releases
 
@@ -76,9 +74,9 @@ says.
   The first also needs a new command, and an older runner closes its
   connection at an unknown command.
 - It downloads a newer release in the background. A start never waits for
-  a download. Only Restart in the workspace header waits for one, with a
-  limit of 60 seconds, as
-  [Restart the software](workspace-life.md#restart-the-software) says.
+  a download of a newer release. Only Restart in the workspace header and
+  the automatic restart wait for one, with a limit of 60 seconds, as
+  [Restart the software](restart-the-software.md) says.
 - An update downloads only the parts that changed since the release that
   the sandbox runs.
 - The program installs only a release with a higher version than the
@@ -93,14 +91,30 @@ says.
   tool call and the running runner then never mix two releases.
 - The next start of the agent runner applies the newest complete download,
   before the runner starts its work.
+- Before the agent runner starts, the program checks that each part of
+  the release that starts is on the disk. It downloads each missing part
+  again, with the digest check of an update. Only such a start waits for
+  a download.
+- When that download fails, the program logs a warning, and the start goes
+  on. The next start tries again. Reason: the start then fails no more
+  often than with no check.
+- Reason: the runner cannot start without its parts, and a sandbox
+  provider can lose files of a saved disk. A repair by hand was rejected,
+  because a lost part then blocks the workspace until an operator acts. A
+  check by the Worker at each start was rejected, because it needs
+  changes in the Worker and in the program for the same result.
 - While the sandbox runs, the runner also installs a newer release when
   its workspace is idle, as [Installs at idle](#installs-at-idle) says.
 - The program never restarts the runner service to apply an update.
-  Reason: a restart stops each running turn, and each process that an
-  agent started, such as a dev server. A member can restart the service
-  with Restart in the workspace header, which then applies the newest
-  download, as
+  Reason: a restart stops each running turn, and each ordinary process
+  that an agent started, such as a dev server. A
+  [service](services.md#lifetime) keeps running. A member can restart the
+  service with Restart in the workspace header, which then applies the
+  newest download, as
   [Restart the software](workspace-life.md#restart-the-software) says.
+  The Worker also restarts it by itself for a runner that stays away
+  while a message waits, as
+  [Automatic restart](restart-the-software.md#automatic-restart) says.
 - The sandbox keeps the previous release. When the software of a new
   release fails to start, the next start runs the previous release again.
 - A new runner confirms its release when it first connects to the Worker.
@@ -153,19 +167,27 @@ says.
   disconnect the runner every 2 minutes.
 - A new release that exits at its start is a failed start. The runner
   service then starts again within seconds, on the previous release. That
-  restart stops each process that an agent started.
+  restart stops each ordinary process that an agent started. Each service
+  keeps running.
 - A runner that cannot install at idle gets each update at a later start.
-- No check guards a new release that runs but never connects to the
-  Worker (idle update decision 3). Reason: the app relies on CI and on the
-  software image build of each deploy to find a broken release.
-- Risk: such a release reaches each idle running workspace within minutes
-  of its deploy. No agent of such a workspace can then work until the next
-  start of the sandbox, which runs the previous release again.
-- A rollback when the new release has not connected after some minutes
-  was rejected, as a check by the new release and as a check by the
-  previous release. Reason: the rollback stops that release for good, so
-  an outage of the Worker can keep a good fix away until the next deploy.
-  A broken release can also break its own check.
+- A new release that runs but never connects to the Worker gets the
+  [automatic restart](restart-the-software.md#automatic-restart) when a
+  message waits for the runner (Cal's decision of 20 November 2026). That
+  restart starts the runner again. So the release counts as a failed
+  start, and the previous release runs again, as [Updates](#updates) says.
+- Reason: the agents of such a workspace then work again with no new start
+  of the sandbox.
+- Risk: a broken release reaches each idle running workspace within
+  minutes of its deploy. A message there then waits some minutes for its
+  reply. The restart also ends each process that an agent started.
+- A rollback by the sandbox itself, when the new release has not connected
+  after some minutes, was rejected. This holds for a check by the new
+  release and for a check by the previous release. Reason: the rollback
+  stops that release for good, so an outage of the Worker can keep a good
+  fix away until the next deploy. A broken release can also break its own
+  check.
+- The automatic restart also stops such a release for good. The outage
+  reason does not apply to it, because the Worker itself starts it.
 - A restart only when no process of an agent runs was rejected, because a
   build daemon can then hold the update back for hours. A restart that
   stops only the runner process was rejected, because systemd advises
@@ -216,61 +238,3 @@ says.
   or its update fails, the step downloads the full program and installs
   the release with it. Reason: either way, each build and each refresh end
   with the newest release.
-
-## The software image
-
-- The software image is a saved snapshot of the base image with the app's
-  own software installed. That software is a release of the sandbox
-  software, the terminal packages, and the GitHub CLI.
-- It holds no org data and no secret, because every org uses it.
-- One software image belongs to each version of the app's own software. A
-  change of any install step of that software makes a new version.
-- The software image lives in the `boat` account. An org on another
-  account, such as `e2b`, has none. Its first build starts from the base
-  image of its own account, as for a missing software image below
-  (e2b decision 222). Reason: a saved snapshot starts sandboxes only in its
-  own provider account.
-- A build of an org without an org image starts from the ready software
-  image of the current version. It copies the repositories, installs the
-  newest release, then runs the install script. A later build and a
-  refresh start from the last org image.
-- Reason: the first build of a new org then installs only the parts that a
-  newer release changed.
-- In place of the software image, a skip of the parts that each org image
-  already holds was rejected. It does not make a first build faster. A
-  later build and a refresh still skip the apt part when their org image
-  holds it, as [Installs in a build](#installs-in-a-build) says.
-- Without a ready software image of the current version, such a build
-  starts from the base image. It copies the repositories, installs the
-  app's own software, then runs the install script. A missing software
-  image slows a build and never fails it.
-- Each deploy run asks the Worker to build the software image of the
-  deployed version, and waits for the result. A deploy run whose version
-  has a ready software image waits for nothing.
-- A Worker cron job that builds it by itself, and a build at the first org
-  build after a release, were rejected. Reason: the deploy run then shows
-  the result.
-- The deploy run proves itself with a token of its own, as
-  [Hostnames and gates](access-and-security.md#hostnames-and-gates) says.
-- The deploy run fails unless the software image is ready when its wait
-  ends. The new Worker stays live. Reason: one rule covers a failed build,
-  a wait that ends first, and a refused request. A warning in the summary
-  of the run was rejected, because it hides the failure.
-- One software image build runs at a time. A build of a newer version ends
-  an unfinished build of an older version.
-- A failed build starts again only for a later deploy run. So a re-run of
-  the deploy builds again.
-- A software image build has a time limit of 60 minutes. A build that
-  outlasts the wait of its deploy run goes on until it ends or reaches
-  that limit.
-- The app keeps the ready software image of the current version, whatever
-  the start time of its build. It also keeps each software image that a
-  running build still starts from. It deletes each other ready software
-  image. These rules apply in each account that holds software images.
-- Reason: a first build starts only from the image of the current version.
-  Keeping only the image with the latest build start was rejected, because
-  that image need not be of the current version.
-- After a rollback of the Worker that changes the version, first builds
-  start from the ready software image of the current version, when one
-  exists. Otherwise they start from the base image, as for a missing
-  software image above, until the next deploy run builds one.

@@ -247,6 +247,24 @@ name held a secret value. Then `skill-reports.ts` cuts each description.
 `skill-state.ts` stores the result, and it publishes `skills: null` when the
 list is unavailable. [Chat backend key code](key-code.md) gives both files.
 
+## Services
+
+[Service reports](../../docs/protocol/service-reports.md) states the
+service messages of a runner connection. `RunnerChannel.services` delegates
+them to the [services area](../services/README.md) before the numbered reader
+and work mark. `runner-hello.ts` negotiates support and requests a fresh report.
+Saved connections retain the optional support flag and the connection's
+sandbox binding across a wake. Old connections without support stay readable.
+
+Service snapshots and control receipts use `services:v1:` records. They use
+no chat commands, cursors, repair records, browser socket kinds, or activity
+calls. Raw log assemblies live only in memory. Computer Stop clears service
+state through `RunnerChannel.stop` and `WorkspaceServices.stoppedHook`.
+Software Restart, including its failure path, keeps the service catalogue.
+Its runner disconnect ends an outstanding control as unconfirmed.
+The catalogue, controls, and log reads use the
+[workspace feature routes](../features/README.md).
+
 ## Tests
 
 ```sh
@@ -340,16 +358,19 @@ session and no turn, also when its payload names them.
 A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
 names that public type. The reader takes its session and turn only from an
 object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
-from the saved assembly of its stream, as [Chat backend key code](key-code.md)
-says. An event of an unknown type keeps its root IDs. Each check uses a
-session and a turn only when `verifiedTurn` finds that turn in that session.
+from the saved assembly of its stream, as
+[Key code: tool details](key-code-tool-details.md) says. An event of an
+unknown type keeps its root IDs. Each check uses a session and a turn only
+when `verifiedTurn` finds that turn in that session.
 
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Agent runner: Services](../../docs/protocol/services.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

@@ -9,6 +9,7 @@ import {
   type OrgSuspensionLiftResponse,
   type OrgSuspensionResponse,
 } from '../../shared/operator'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import {
   byRole,
   byText,
@@ -56,7 +57,7 @@ async function openOrg(
 }
 
 describe('the page of an org for the operator', () => {
-  test('shows its details with its account, its workspaces by state with its running builds, and its members with names and roles, which open their pages', async () => {
+  test('shows its details, its provider account in its own box with Switch account, its workspaces by state with its running builds, and its members with names and roles, which open their pages', async () => {
     const { view } = await openOrg(SAMPLE_IDS.activeOrg, (org) => ({
       ...org,
       providerAccount: 'e2b',
@@ -70,7 +71,8 @@ describe('the page of an org for the operator', () => {
     }).toEqual({
       header: 'Orgs Northwind Org Suspend org',
       body: [
-        'Details Org ID org_n0rthw1nd Account e2b Created 30 Sept 2026 Repositories 5',
+        'Details Org ID org_n0rthw1nd Created 30 Sept 2026 Repositories 5',
+        'Provider account Account e2b Switch account',
         'Workspaces Running 4 2% Stopped 130 79% Failed 2 1% Archived 28 17% Removed 0 0% 2 cloud computer builds also run now.',
         'Members 2 members LW @li-wei Li Wei Admin TR @tomas-r Tomás Ruiz Member',
       ],
@@ -95,7 +97,7 @@ describe('the page of an org for the operator', () => {
       suspended: {
         header: pageText(suspended.view).header,
         notice: lines(suspended.view, suspension),
-        members: pageText(suspended.view).body[2],
+        members: pageText(suspended.view).body[3],
       },
       deleted: {
         header: pageText(deleted.view).header,
@@ -155,6 +157,7 @@ describe('the page of an org for the operator', () => {
       notice,
       requests: [
         `GET ${operatorOrgPath(org.id)}`,
+        `GET ${operatorProvidersPath()}`,
         `POST ${orgSuspensionPath(org.id)} {}`,
         `GET ${operatorOrgPath(org.id)}`,
       ],
@@ -181,6 +184,7 @@ describe('the page of an org for the operator', () => {
       error,
       requests: [
         `GET ${operatorOrgPath(org.id)}`,
+        `GET ${operatorProvidersPath()}`,
         `POST ${orgSuspensionPath(org.id)} {}`,
       ],
     })
@@ -209,6 +213,7 @@ describe('the page of an org for the operator', () => {
       header: 'Orgs Hexwave Org Suspend org',
       requests: [
         `GET ${operatorOrgPath(org.id)}`,
+        `GET ${operatorProvidersPath()}`,
         `DELETE ${orgSuspensionPath(org.id)} {}`,
         `GET ${operatorOrgPath(org.id)}`,
       ],

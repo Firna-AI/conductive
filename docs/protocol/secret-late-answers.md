@@ -40,6 +40,8 @@ decision number names a decision of the change that adds
   that sender.
 - When a turn of that session runs at the time of the answer, the line
   joins that turn, as a message does. That turn keeps its sender.
+- The [wake](session-watches.md#delivery) of a watch follows these rules
+  for its turn, its sender, and its login.
 - When the line can start no turn, the app sends nothing. Examples are a
   starter who does not share the login with that sender, a login that is
   gone, and a sender who left the org.

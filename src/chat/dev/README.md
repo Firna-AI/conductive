@@ -44,7 +44,7 @@ The address chooses the state. The first value of each option is the default:
 
 | Option | Values |
 | --- | --- |
-| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end) |
+| `scenario` | `history`, `running`, `steer`, `interrupted`, `failed`, `queued`, `first-turn`, `loss` (left-out output and files, lost events, and a lost turn end), `wake-finished`, `wake-failed`, `wake-stopped`, `wake-other-workspace`, `wake-during-turn` (the wakes of a watch, as the mockups draw them at `app/chat/wakes`) |
 | `workspace` | `existing`, `new` (Untitled until its title comes, and it starts) |
 | `state` | `ready`, `working`, `input` (needs input), `unread`, `starting`, `stopped`, `error`, `archived` |
 | `role` | `admin`, `member` |

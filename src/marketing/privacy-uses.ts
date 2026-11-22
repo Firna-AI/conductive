@@ -37,13 +37,25 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         token for your account. ${productName} stores it encrypted, for
         every account, also while you wait for app access. It uses the
         token to read GitHub for you, and for the git calls of your
-        turns. It reads your repository rights and merge method. A merge
-        and Ready for review of a draft pull request use the token of the
-        member who clicks. Continue fetches the
-        latest default branch with the token of the member who clicks
-        Continue. A repository change fetches the latest default branch of
-        the new repository with the token of the member who changes the
-        repository.`,
+        turns. It reads your repository rights and merge method.
+        It reads the current branch list with your token and stores no copy
+        of that list. It checks named branches other than the default before
+        creating a workspace. This check uses the GitHub token of the member
+        who requests the workspace. A merge and Ready for review of a draft
+        pull request use the token of the member who clicks. Continue
+        fetches the branch that the pull request merged into with the token
+        of the member who clicks Continue. If that branch no longer exists,
+        it fetches the default branch. A repository change fetches the
+        latest default branch of the new repository with the token of the
+        member who changes the repository. When GitHub deletes a
+        workspace's base branch, ${productName} fetches the default branch
+        into its cloud computer. A workspace whose base follows the default
+        also gets this fetch when GitHub changes that default branch.
+        The cloud computer uses the new base only
+        after that fetch succeeds. When no member starts the move, the fetch
+        uses the workspace owner's GitHub token. This includes moves from
+        GitHub events, automatic retries, and resumes of stopped cloud
+        computers.`,
       text`The waitlist: a new account without app access waits while the
         waitlist is on or sign-ups are paused. It sees only the waitlist.
         When the waitlist is off and sign-ups are not paused, open sign-up
@@ -167,6 +179,16 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         ${productName} deletes its own copy. The file stays in the cloud
         computer. Removing the workspace from the list keeps its chat
         history until the org is deleted.`,
+      text`Services: a service is a named program outside an agent turn.
+        ${productName} keeps its filtered name, short program label, folder,
+        state, times, exit result, ports, and originating session when it
+        can match that session. Otherwise, the source shows Local command.
+        This context does not prove which person started it. The list
+        and control results let members follow and manage services.
+        The saved full command, environment values, and raw logs stay in
+        runtime storage on the cloud computer. ${productName} reads and
+        filters recent output when a member opens or reloads its log.
+        It sends that excerpt to the member to show the log.`,
       text`Operational logs: ${productName} records when the program that
         runs workspace agents connects to the service or disconnects.
         It also records turns that end without a Stop request, including

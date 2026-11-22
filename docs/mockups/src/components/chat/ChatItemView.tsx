@@ -36,6 +36,7 @@ import { standardSpeedText } from './speedCopy'
 import type { StopSource } from './StopLine'
 import { stopLine } from '../../entries/components/chat/StopLine.mockup'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
+import { WakeLine } from './WakeLine'
 import { turnEnd } from '../../entries/components/chat/TurnEnd.mockup'
 import { defined } from '../../defined'
 import styles from './ChatItemView.module.css'
@@ -176,6 +177,19 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           names={item.names}
           org={orgs.acme.name}
           who={item.grant.by === viewer ? 'You' : people[item.grant.by].name}
+        />
+      )
+    case 'wake':
+      return (
+        <WakeLine
+          end={item.end}
+          reason={item.reason}
+          session={
+            <linkText.Component
+              href={item.session}
+              moklyInstance="wake-session"
+            />
+          }
         />
       )
     case 'secret-run':

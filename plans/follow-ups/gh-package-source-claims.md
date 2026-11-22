@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from branch `calummoore/follow-up-the-base-image-holds-a-k9or`, during the investigation of the frozen PHP PPA in `plans/follow-ups/php-ppa-deprecation.md`.
-- **Location:** `docs/protocol/sandbox-software.md:198-200`, the apt-install requirement and its reason. `worker/lifecycle/image-packages.ts:11`, the comment of `imagePackagesCommand`.
+- **Location:** `docs/protocol/sandbox-software.md:206-208`, the apt-install requirement and its reason. `worker/lifecycle/image-packages.ts:11`, the comment of `imagePackagesCommand`.
 - **Reason:** The branch that found this changes only follow-up items, and its coordinating agent asked for a later fix.
 
 - **Source:** Review. **Category:** Docs or spec.
@@ -15,7 +15,7 @@
   - Conductive gives each workspace a cloud computer, a sandbox on Boat or E2B. A build prepares the org image that new workspaces start from.
   - The software step of each build installs the app's own software. Its apt part installs `ttyd` and `tmux`, which run the workspace terminal, and `gh`, the GitHub CLI.
   - The release links a wrapper as `/usr/local/bin/gh`, which gives the GitHub CLI a fresh token for each command, as `image/github.md` says.
-  - `docs/protocol/sandbox-software.md:198-200` requires the apt install. It says: "The software step installs the system packages `ttyd`, `tmux`, and the GitHub CLI `gh` with apt. It also masks the ttyd service of the package. Reason: Ubuntu owns these packages."
+  - `docs/protocol/sandbox-software.md:206-208` requires the apt install. It says: "The software step installs the system packages `ttyd`, `tmux`, and the GitHub CLI `gh` with apt. It also masks the ttyd service of the package. Reason: Ubuntu owns these packages."
   - The comment at `worker/lifecycle/image-packages.ts:11` makes the same claim: "Ubuntu owns these packages, so apt installs and upgrades them."
   - The Boat base image enables the GitHub CLI source in `/etc/apt/sources.list.d/github-cli.list`, dated 2026-07-31 17:19:37 UTC. The entry is `deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main`.
   - On 2026-11-20, a read-only `apt-cache policy gh` in a Boat workspace sandbox of this repository showed these facts:
@@ -32,7 +32,7 @@
 - **Impact if no action:** Members see no effect, because the install works. Maintainers and agents can trust the wrong owner of `gh` and its fixes on Boat. That matters, for example, when they choose which apt sources a build reads.
 - **Root question:** How do the protocol doc and the code state the source of each apt package of the software step correctly?
 - **Options:**
-  - **A.** Correct both source claims, in `docs/protocol/sandbox-software.md:200` and in the comment at `worker/lifecycle/image-packages.ts:11`. Say that `ttyd` and `tmux` come from Ubuntu. Say that `gh` comes from the GitHub CLI source on Boat and from Ubuntu on E2B. Keep the requirement that the software step installs the three packages with apt. Effort: Small.
+  - **A.** Correct both source claims, in `docs/protocol/sandbox-software.md:208` and in the comment at `worker/lifecycle/image-packages.ts:11`. Say that `ttyd` and `tmux` come from Ubuntu. Say that `gh` comes from the GitHub CLI source on Boat and from Ubuntu on E2B. Keep the requirement that the software step installs the three packages with apt. Effort: Small.
 - **Left out:**
   - Change nothing. It fails the goal, because the doc and the comment keep a false fact.
   - Drop the reason without a new one. The requirement then loses its reason, and this protocol doc gives a reason for each such requirement.

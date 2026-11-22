@@ -10,6 +10,7 @@ import { DesktopTool } from '../../../desktop/DesktopTool'
 import { PreviewTool } from '../../../previews/PreviewTool'
 import { useKeptPreviews } from '../previews/kept-previews'
 import { PanelPreviews } from '../previews/PanelPreviews'
+import { usePreviewServices } from '../previews/services/kept-services'
 import type { ConnectTerminal } from '../../../terminal/TerminalScreen'
 import {
   workspaceKey,
@@ -17,6 +18,7 @@ import {
 } from '../../../terminal/tool-parts/workspace'
 import type { ShortcutCommandId } from '../../../shared/shortcut-commands'
 import { useOrgServices } from '../../context'
+import { useRightShown } from '../../layout/panels'
 import { useShortcutTerminal } from '../../shortcuts/shortcut-context'
 import { shortcutTip, useShortcutHint } from '../../shortcuts/shortcut-hints'
 import type { WorkspaceContext } from '../features'
@@ -167,6 +169,13 @@ export function ToolsPart(props: {
   const { tool } = navigation
   const terminalShown = useShownOnce(tool === 'terminal')
   const previewShown = useShownOnce(tool === 'preview')
+  // The services read again on a timer only while Preview shows: the page
+  // of a phone, or on desktop the tool in a right column that shows.
+  const rightShown = useRightShown()
+  const previewServices = usePreviewServices(
+    context,
+    tool === 'preview' && (touch || rightShown),
+  )
   // A choice of Terminal on desktop moves the focus to the terminal, also
   // when the terminal connects later. A hidden terminal does not take it.
   const focusRequest = useStore(context.terminalFocus.request)
@@ -195,12 +204,13 @@ export function ToolsPart(props: {
             <PreviewTool
               now={now}
               route={navigation.preview}
+              services={previewServices}
               store={previews}
               touch
               workspace={toolWorkspace}
             />
           ) : (
-            <PanelPreviews context={context} />
+            <PanelPreviews context={context} services={previewServices} />
           )}
         </div>
       ) : null}

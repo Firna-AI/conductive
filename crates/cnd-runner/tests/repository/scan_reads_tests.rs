@@ -10,7 +10,9 @@ use std::time::Duration;
 use async_trait::async_trait;
 use cnd_runner::repository::error::{Error, Result};
 use cnd_runner::repository::git::{Cancellation, ChildGit, GitRequest, GitRunner};
-use cnd_runner::repository::io::{IndexDirectory, LocalRepositoryIo, PathKind, RepositoryIo};
+use cnd_runner::repository::io::{
+    CachedIdentity, IdentityRead, IndexDirectory, LocalRepositoryIo, PathKind, RepositoryIo,
+};
 use cnd_runner::repository::service::{GitRepository, Repository};
 use tokio::sync::{mpsc, oneshot};
 
@@ -47,7 +49,12 @@ impl RepositoryIo for HeldIo {
         LocalRepositoryIo.link(root, path).await
     }
 
-    async fn identity(&self, root: PathBuf, path: String) -> Result<String> {
+    async fn identity(
+        &self,
+        root: PathBuf,
+        path: String,
+        cached: Option<CachedIdentity>,
+    ) -> Result<IdentityRead> {
         let active = self.active.fetch_add(1, Ordering::SeqCst) + 1;
         self.peak.fetch_max(active, Ordering::SeqCst);
         let (release, held) = oneshot::channel();
@@ -60,7 +67,7 @@ impl RepositoryIo for HeldIo {
             })
             .unwrap();
         held.await.unwrap();
-        let result = LocalRepositoryIo.identity(root, path).await;
+        let result = LocalRepositoryIo.identity(root, path, cached).await;
         self.active.fetch_sub(1, Ordering::SeqCst);
         self.completed.fetch_add(1, Ordering::SeqCst);
         finished.send(()).unwrap();

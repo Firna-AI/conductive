@@ -6,6 +6,7 @@ import type { TurnScopes } from './turns'
 import type { WorkspaceEventJournal } from './durable-journal'
 import { readWorkspace } from './workspace-data'
 import { WorkspaceStateProjection } from './workspace-state-projection'
+import { isFailedRestart } from './durable-restart'
 import { hasRetentionAttempt, isConfirmedStopped } from './confirmed-stop'
 import { clearRetention } from './retention-data'
 import {
@@ -49,8 +50,14 @@ export function createWorkspaceLifecycle(
         if (isConfirmedStopped(state) && !hasRetentionAttempt(state))
           await clearRetention(env.DB, state.workspaceId)
         const projected = await projection.changed(publish)
-        if (state.state === 'stopped' || state.state === 'error')
-          await ctx.stopped?.(state.workspaceId)
+        if (state.state === 'stopped' || state.state === 'error') {
+          const restartFailed = isFailedRestart(state)
+          await ctx.stopped?.(
+            state.workspaceId,
+            state.automaticRestartAt !== undefined && restartFailed,
+            restartFailed,
+          )
+        }
         return projected
       },
       stop: async () => {

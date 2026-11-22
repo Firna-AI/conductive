@@ -15,6 +15,7 @@ import { readAnchor } from './read-anchor'
 import { readStopRequester } from './read-stop'
 import { readChangedFile } from './read-changed-file'
 import { readContinued, readRepositoryChanged } from './read-continued'
+import { readWatchNotice } from './read-watch-notice'
 import {
   count,
   flag,
@@ -23,6 +24,7 @@ import {
   oneOf,
   optional,
   record,
+  safeCount,
   text,
   UnreadableResponse,
 } from './json'
@@ -71,14 +73,6 @@ const readRunnerEventType = oneOf<RunnerEventRefused['runnerEventType']>({
   'workspace.title': true,
   unknown: true,
 })
-
-/** The new count fields require whole, non-negative, safe integer values. */
-function safeCount(value: unknown): number {
-  const result = count(value)
-  if (!Number.isSafeInteger(result) || result < 0)
-    throw new UnreadableResponse('count')
-  return result
-}
 
 export function readChoice(value: unknown): AgentChoice {
   const source = record(value, 'choice')
@@ -201,6 +195,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       return readContinued(source)
     case 'workspace.repository-changed':
       return readRepositoryChanged(source)
+    case 'session.watch-notice':
+      return readWatchNotice(source)
     case 'message.accepted':
       return { type: source.type, message: readUserMessage(source.message) }
     case 'message.sent':

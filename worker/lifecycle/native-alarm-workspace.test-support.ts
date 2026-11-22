@@ -1,8 +1,6 @@
 import { Workspace as ProductionWorkspace } from '../workspace'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from '../chat/workspace-integration'
+import type { WorkspaceCompositionEnv } from '../chat/workspace-integration'
+import type { WorkspaceChatResolvers } from '../chat/workspace-resolvers'
 import { DEVICE_TEST_NOW } from '../devices/clock.test-support'
 import type { ConnectionScheduler } from '../security/connection-access'
 import { advanceScheduledAlarms } from './scheduled-alarms.test-support'

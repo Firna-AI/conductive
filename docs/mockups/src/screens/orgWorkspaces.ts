@@ -58,7 +58,8 @@ const sessionPages: Readonly<Record<string, string>> = {
  * goes on, so from Saved carts the list shows Checkout address autocomplete
  * at work: after it sent its message, and after it stopped the turns of its
  * first session and of Saved carts. From Checkout address autocomplete, the
- * list then shows Saved carts ready, and opens it at its stopped turn.
+ * list then shows Saved carts ready, and opens it at its stopped turn. After
+ * the watched turn of Saved carts ended, the list shows it ready too.
  */
 const reachedWorkspaces: Partial<
   Record<ConversationKey, readonly ChangedWorkspace[]>
@@ -69,6 +70,7 @@ const reachedWorkspaces: Partial<
   'stopped-from': [
     { workspace: savedCarts, status: 'ready', to: paths.agentStopOther },
   ],
+  'wake-other-workspace': [{ workspace: savedCarts, status: 'ready' }],
   'stopped-from-other': [
     { workspace: checkoutAutocomplete, status: 'working', to: paths.agentStop },
   ],

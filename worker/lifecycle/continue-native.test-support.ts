@@ -59,7 +59,7 @@ export async function continueNativeFixture(trackIgnored = false) {
                 : null
               : 0,
             stdout,
-            stderr: stderr || error?.message || '',
+            stderr,
             timedOut: false,
           }),
       )
@@ -145,13 +145,29 @@ export async function continueNativeFixture(trackIgnored = false) {
   const map = (command: string) =>
     command
       .replaceAll('HOME=/home/user ', `HOME=${shellQuote(home)} `)
+      .replaceAll(
+        'GIT_CEILING_DIRECTORIES=/home/user ',
+        `GIT_CEILING_DIRECTORIES=${shellQuote(home)} `,
+      )
       .replaceAll('/tmp/conductive-continue', join(root, 'continuations'))
+      .replaceAll('/tmp/conductive-base-change', join(root, 'base-changes'))
+      .replaceAll('cd /tmp', `cd ${shellQuote(root)}`)
       .replaceAll('/usr/local/bin/conductive-git-credential', helper)
       .replaceAll(
         'https://github.com/example/repository.git',
         `${origin}/repository.git`,
       )
-  const execute = (command: string) => run('/bin/sh', ['-c', map(command)])
+  const execute = (command: string) => {
+    const mapped = map(command)
+    const unmapped = mapped.replaceAll(root, '<fixture>')
+    if (
+      /\bsudo\b|systemctl|\/(?:opt|run|home\/user|tmp)(?:\/|\b)|\/usr\/local\/bin\/conductive|https:\/\/github\.com\//.test(
+        unmapped,
+      )
+    )
+      throw new Error('The native command keeps a production operation')
+    return run('/bin/sh', ['-c', mapped])
+  }
   return {
     root,
     home,
@@ -162,6 +178,8 @@ export async function continueNativeFixture(trackIgnored = false) {
     server,
     credentialIds,
     git,
+    seedGit,
+    pushBase: () => seedGit('push', '--quiet', remote, 'main'),
     remoteGit,
     write: (file: string, content: string) =>
       writeFile(join(directory, file), content),

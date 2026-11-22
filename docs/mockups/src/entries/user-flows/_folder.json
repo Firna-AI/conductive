@@ -13,6 +13,7 @@
     "archive-from-list",
     "open-a-removed-workspace",
     "create-org",
+    "switch-org-account",
     "mac-command",
     "secret-request",
     "create-automation",
@@ -25,6 +26,9 @@
     "open-a-file-from-an-answer",
     "explain-chat-text",
     "drop-a-file",
-    "open-a-local-server"
+    "open-a-local-server",
+    "stop-a-service",
+    "restart-a-service",
+    "read-a-failed-service-log"
   ]
 }

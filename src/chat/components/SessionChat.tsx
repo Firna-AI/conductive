@@ -213,6 +213,7 @@ export function SessionChat(props: SessionChatProps) {
           controller,
           starting: starting !== null,
           readOnly,
+          github: props.host?.github,
         })}
         footer={footer}
         ref={setFrame}

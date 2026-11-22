@@ -55,7 +55,8 @@ is relative to `src/chat/`, the folder of this guide.
   scroll, and the menu share.
 - `components/SessionChat.tsx`: the chat of the open session.
   `components/session-parts.tsx`: `ChatHost`, the start steps, the sandbox
-  bar, and the tools of the composer that the app can give, and
+  bar, the tools of the composer, and the GitHub branch that the app can
+  give. It also provides
   `useSessionParts`, the lines, the cards, and the requests that wait of
   one session, which its tab and the popover of an explanation share.
   `components/transcript-inputs.ts`: `useTranscriptInputs`, the Mac
@@ -164,6 +165,14 @@ is relative to `src/chat/`, the folder of this guide.
   and the pending edits of a session. It publishes accepted records from
   replies, complete current lists, and event merges. `confirmSessions`
   establishes the current records before the shown session starts its history.
+  `replaySessionRecords` starts one replay of stored pages, for a history
+  load or for the stored history of the stream.
+- `state/session-replay.ts`: `SessionReplay`, the merges and the end of one
+  replay. The end places the tabs, as
+  [Record order](loads-and-sends.md#record-order) says. It also keeps, for
+  each session, the record that places its tab, apart from its newest
+  record. A pending close applies over that record, and a failed close goes
+  back to it.
 - `state/workspace-records.ts`: the order of the workspace record and its
   start steps and saved error by event number.
 - `state/session-login.ts`: whose login a message uses, from the session
@@ -236,6 +245,9 @@ is relative to `src/chat/`, the folder of this guide.
   and drops an unknown value. It keeps a speed that `readTurnSpeed` reads,
   and drops any other value. `api/read-changed-file.ts` reads the changed
   files of a turn end, with their real paths and display labels.
+  `api/read-continued.ts` reads the note of Continue and the note of a
+  repository change with their real branches and their optional labels,
+  with the same `label` reader.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the

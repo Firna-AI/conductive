@@ -8,6 +8,7 @@ pub mod secrets;
 pub mod session_actions;
 pub mod session_reads;
 pub mod session_types;
+pub mod session_watches;
 pub mod sessions;
 pub mod workspace_types;
 pub mod workspaces;

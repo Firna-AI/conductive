@@ -114,12 +114,15 @@ The repository runs Git child processes with literal paths and cancellation.
 Comparisons preserve the real index and object store. Reads check the opened
 descriptor, reject escaped paths and Git metadata, and preserve binary bytes.
 Diffs use Git representations, including filters, link text, and submodules.
-Snapshot scans read content identities with at most 16 concurrent reads before
-Git comparisons. Private indexes discard restored stat data. The comparison
-step starts with a refresh from file contents, after the parallel reads in a
-snapshot. Checkpoints, including submodule checkpoints, do not refresh because
-`update-index --info-only` already stores fresh stat data.
-The first scan still completes before `runner.ready`.
+Snapshot scans check up to 16 files at once before Git comparisons.
+They reuse in-memory hashes when device, inode, size, modification time, and
+change time match on the opened file. The change time must be at least two
+seconds before the scan that stored the hash. Completed scans drop missing
+and unreadable files from the cache. Private indexes discard restored stat data.
+Comparisons refresh from file contents after the snapshot reads. Checkpoints,
+including submodule checkpoints, skip the refresh because
+`update-index --info-only` stores fresh stat data.
+A full scan completes before `runner.ready` on each connection.
 
 The CLI starts the repository file server on `127.0.0.1:7683`. A failed
 bind warns and leaves the runner available without that capability.
@@ -144,8 +147,24 @@ list, with folder fallback. Rust filters whole skill sources, applies name,
 count, and byte limits, and saves the report and refresh receipt together.
 The store retains the latest skill metadata without private paths.
 
-Native watches debounce file and skill events by 100 ms. Restore polling reopens the
-live repository path once. Port scans run on an independent two-second timer.
+Native watches debounce file and skill events by 100 ms. One file scan can
+run while one watch refresh waits. Later watch refreshes share that waiting
+scan. Requests with command IDs keep their own scans. At shutdown, the
+watcher stops waiting for refreshes. The file reporter cancels its active
+capture and skips waiting scans. A canceled capture saves no report or
+receipt. Restore polling reopens the live repository path once. Port scans
+run on an independent two-second timer.
+
+[Services](../../docs/protocol/services.md) run outside every turn.
+The executable composes one [native manager](../cnd-services/README.md)
+for local calls. Its independent units own execution and logs as `user`.
+The service scanner adds cgroup ownership to this crate's existing port rows.
+Service lookup failures or a busy native manager preserve ordinary port reports.
+The executable also supplies `ServiceEffects` for the independent Worker path.
+Only a hello and welcome that both enable services carry its private parts.
+Each accepted connection gets a persisted higher snapshot revision, including empty catalogues.
+Connection-scoped service jobs never enter ordinary busy, turn, or idle-update accounting.
+Disconnect, relocation, and updates cancel those jobs without stopping service units.
 
 ## Quick Start
 
@@ -171,8 +190,9 @@ graceful cleanup. Give `RunnerCore::with_folders` the folders of the
 configuration, and `SavedRunnerLink::with_repository_folder` its folder, to
 accept moves. Without folders, the runtime refuses each move.
 
-Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries. Give
-`FileReporter` the loaded file revisions and a shared `ReportFilter`.
+Compose `GitRepository` with `GitRunner` and `RepositoryIo` boundaries.
+Give `FileReporter` its own repository instance, the loaded file revisions,
+and a shared `ReportFilter`.
 Compose `PortReporter` with a `PortScanner`. Give `ReportCommandHandler`
 these reporters, the loaded store, and the next agent command handler.
 Optionally supply `ReportWatchService` with a `WatchDriver`.
@@ -234,8 +254,9 @@ and connection drops. It does not run the Worker.
 
 ### Key Code
 
+- [Native services](../cnd-services/README.md#key-code): manager, socket, reconciliation, cgroup ownership, and rotating output.
 - [config.rs](src/config.rs): `Configuration::parse` reads supplied service settings.
-- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts and the cases of when to nest to new session instructions.
+- [instructions.rs](src/engine/instructions.rs): `build` adds validated workspace tree facts, nesting guidance, and a Services section to new session instructions.
 - [store.rs](src/state/store.rs): `EventStore` defines serialized state operations, and `append_batch` saves all parts of one update in one write.
 - [records.rs](src/state/records.rs): `RunnerState` reads the existing JSON format.
 - [disk.rs](src/disk.rs): `AtomicDisk` replaces the private state file atomically.
@@ -243,6 +264,11 @@ and connection drops. It does not run the Worker.
 - [socket.rs](src/socket.rs): `WebSocketConnector` supplies the production TLS socket.
 - [emitter.rs](src/emitter.rs): `SavingEmitter` applies the failed-save retry policy.
 - [runtime.rs](src/runtime.rs): `RunnerCore` recovers turns and owns reconnection and shutdown.
+- [connection.rs](src/runtime/connection.rs): drives ordinary socket steps while keeping private service jobs outside update and move waits.
+- [ports.rs](src/services/ports.rs): `ServiceEffects` defines the native operations supplied by the composition root.
+- [tasks.rs](src/services/tasks.rs): observes actual service state and dispatches controls and complete log reads independently.
+- [sender.rs](src/services/sender.rs): sends typed documents in byte-aware parts on their captured connection generation.
+- [services.rs](src/link/services.rs): rejects stale or unnegotiated private replies without numbered storage.
 - [startup_log.rs](src/startup_log.rs): `ProcessStartupLog` records the four startup measurements once per process.
 - [update.rs](src/update.rs): `ReleaseReadiness` supplies local release conditions for an idle swap.
 - [relocation.rs](src/relocation.rs): `RepositoryFolders` checks a repository move and refuses unknown folders.
@@ -277,6 +303,7 @@ and connection drops. It does not run the Worker.
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Services](../../docs/protocol/services.md)
 - [Agent instructions](../../docs/protocol/agent-instructions.md)
 - [Sub-workspaces](../../docs/protocol/sub-workspaces.md)
 - [Parent changes](../../docs/protocol/parent-changes.md)

@@ -234,6 +234,17 @@ npm run typecheck
   revives no replaced runner. The stored state holds no login after the
   wake. A `message` command then carries no credential, and each `turn`
   command carries a turn token and no login.
+- `runner-move-wake.test.ts` sends a `repository.move` from the hello,
+  from the repository check, or from delivery. Then it wakes the object
+  with the original runner socket. A later repository check and a later
+  message send no second move, no second `welcome`, and no `turn`. The
+  saved state keeps each field, and the file channel keeps its connection
+  ID.
+- Its refused case wakes the object after a `repository.move.refused`
+  reply. The saved move stays refused. So a later message fails its turn
+  once with `workspace_repository_unavailable`, with no second move.
+  `runner-move-wake.test-support.ts` seeds the two repository folders and
+  moves the workspace record to the second repository.
 - `runner-version.test.ts` checks the version refusal of a `hello`. A
   version below `RUNNER_PROTOCOL_VERSION` closes before any command and
   fails each waiting turn once with `runner_protocol_unsupported`, with an
