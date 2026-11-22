@@ -70,6 +70,7 @@ import {
   Rows3,
   SearchX,
   ShieldOff,
+  Shrink,
   Square,
   Ticket,
   TimerReset,
@@ -83,6 +84,8 @@ import {
   Users,
   Wrench,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 
 /**
@@ -162,6 +165,7 @@ export const icons = {
   'rows-3': Rows3,
   'search-x': SearchX,
   'shield-off': ShieldOff,
+  shrink: Shrink,
   square: Square,
   ticket: Ticket,
   'timer-reset': TimerReset,
@@ -175,6 +179,8 @@ export const icons = {
   users: Users,
   wrench: Wrench,
   x: X,
+  'zoom-in': ZoomIn,
+  'zoom-out': ZoomOut,
 } as const satisfies Readonly<Record<string, LucideIcon>>
 
 export type IconKey = keyof typeof icons

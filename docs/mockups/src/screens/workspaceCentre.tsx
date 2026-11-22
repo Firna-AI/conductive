@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { defined } from '../defined'
+import type { FileTabView } from '../components/files/FilesPanel'
 import { filePage } from '../entries/components/files/FilePage.mockup'
 import { paths } from '../paths'
 import { PreviewPage } from '../components/tools/PreviewPage'
@@ -8,6 +9,21 @@ import { openFile } from './workspaceFileTab'
 import { filePlaceholder } from './workspaceParts'
 import { panelState } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
+
+/**
+ * The screen of the open file in its large window, which Expand shows: the
+ * page of an HTML file, or a picture.
+ */
+function expandedScreen(file: FileTabView): string | undefined {
+  switch (file) {
+    case 'image':
+    case 'attachment':
+    case 'screenshot':
+      return paths.imageExpanded
+    default:
+      return paths.htmlExpanded
+  }
+}
 
 /**
  * What the centre of the desktop shows under the tab row: the file or the
@@ -20,7 +36,7 @@ export function centreOf(state: WorkspaceState, chat: ReactNode): ReactNode {
   if (file) {
     return (
       <filePage.Component
-        expandTo={paths.htmlExpanded}
+        expandTo={expandedScreen(file)}
         moklyInstance="file-page"
         view={file}
         {...defined({ placeholder: filePlaceholder(state, true) })}
