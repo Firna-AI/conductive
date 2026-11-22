@@ -223,8 +223,7 @@ Contract owners:
 - **Previous examples:** None found.
 - **Recommendation:** B. The top card is then one that the member can
   answer, whenever such a card exists.
-- **Action:** ask the user, because A and B trade one order for every view
-  against a top card that the member can answer, and no rule settles it.
+- **Outcome:** Cal chose B on 22 November 2026.
 
 ## Design
 
