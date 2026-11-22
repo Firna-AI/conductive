@@ -54,10 +54,13 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
-of [the operator section](design-operator.md), and of
-[the pull request bar](design-bar.md). They also give [the marks](design-marks.md),
-[secrets and Capabilities](design-secrets.md), and
-[the links in text](design-links.md).
+of [the operator section](design-operator.md), of
+[the pull request bar](design-bar.md), and of
+[New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
+[secrets and Capabilities](design-secrets.md),
+[the links in text](design-links.md),
+[the Markdown of replies](design-markdown.md), and
+[the end of a turn](design-turn-ends.md).
 
 ## The catalogue
 
@@ -69,11 +72,12 @@ dialog. Its linked page,
 the pages of the waitlist, the child pages of `app/orgs/suspended`, and the
 operator section. Its linked page
 [the pull request bar](catalogue-bar.md) gives `app/banner` and its child
-pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
+pages. Its linked page [New workspace](catalogue-new-workspace.md) gives
+`app/new-workspace/start-branch` and its child pages. The [chat and automations](catalogue-chat-and-automations.md) page gives
 the child pages and flows of `app/chat` and `app/automations`. The
-[workspace links, file mentions, and tools](catalogue-workspace-tools.md)
+[workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)
 page gives the child pages and flows of `app/workspace-links`,
-`app/file-mentions`, and `app/tools`.
+`app/file-mentions`, `app/skill-mentions`, and `app/tools`.
 The [command palette and feedback](catalogue-palette.md) page gives the child
 pages of `app/command-palette` and `app/feedback`, the Feedback dialog,
 and the flow that sends feedback.
@@ -132,15 +136,16 @@ a dropped folder that the browser cannot read. The app shares these words.
 
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
-| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes |
+| `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes. `src/entries/components/` holds the registrations of shared parts |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
 | `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
 | `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
-| `src/paths.ts`            | The catalogue paths that screens link to, with those of `src/bannerPaths.ts` for the pull request bar |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
+| `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
@@ -158,13 +163,17 @@ a dropped folder that the browser cannot read. The app shares these words.
   image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, and the chip of Add to chat.
   `src/screens/composerState.ts` adds that composer to the workspace state,
   with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/layoutState.ts` holds the layout of the
   desktop columns: a drag of a handle, the right column, and the sidebar.
+  `src/screens/serviceState.ts` holds the services of the Preview tool and
+  what lies open over them, which `src/screens/workspaceServices.tsx`
+  draws. The pages of the services start from `servicesWorkspace` in
+  `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.
 - Screens link to each other with `ScreenLink` from
@@ -174,8 +183,18 @@ a dropped folder that the browser cannot read. The app shares these words.
   `useOutsideHref`.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
+- `ConfirmDialog` and `NewWorkspaceDialog` lay out their cards with the
+  parts of [ModalCard.module.css](src/components/common/ModalCard.module.css).
+  A card taller than the window keeps its head and its foot, and only its
+  body scrolls. The dialogs of the app import the same parts.
 - Controls come from `@firna/ui`. A control without a handler renders as
   disabled, so the screens pass `noop` from `src/noop.ts`.
+- A shared part can have a Mokly registration under
+  `src/entries/components/`, so that the Changes view lists an edit to the
+  part under the part, not under each screen. The `components` folder of the catalogue lists each
+  registered part. A screen renders its wrapper, and a file that the app
+  reaches renders the plain part.
+  [Registered parts](registered-parts.md) gives the rules.
 - A switch at the end of a menu row, such as Fast in the model menu, is a
   picture, not a control. `SwitchPicture` in `src/components/common/` draws
   it with the switch styles of `@firna/ui`, and the row owns the

@@ -10,11 +10,11 @@ export type FixedContext = Pick<
 /**
  * The sender line, then the repository line when the instructions name an
  * earlier repository folder, then the branch line when they name other
- * branches. Agent instructions in docs/protocol/message-lines.md state them.
+ * branches. Each input builder places these lines around its message body.
  */
-export function providerMessage(
+export function senderLines(
   command: ProviderInput,
-  fixed: FixedContext,
+  fixed: FixedContext = {},
 ): string {
   const { message, branches: current, repository } = command
   const branches = fixed.instructionBranches
@@ -33,5 +33,5 @@ export function providerMessage(
       current.targetBranch !== branches?.targetBranch)
       ? `\nCurrent branches: workspace ${JSON.stringify(current.workspaceBranch)}; target ${JSON.stringify(current.targetBranch)}.`
       : ''
-  return `Sender: ${sender} [member ID: ${JSON.stringify(message.sender.id)}]${repositoryLine}${branchLine}\n\n${message.text}`
+  return `Sender: ${sender} [member ID: ${JSON.stringify(message.sender.id)}]${repositoryLine}${branchLine}`
 }

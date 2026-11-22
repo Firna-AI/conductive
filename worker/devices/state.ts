@@ -6,6 +6,7 @@ import { workspaceRestoreUntil } from '../../src/shared/workspaces'
 import type { WorkspaceChat } from '../chat/backend'
 import type { ChatStorage, ChatCallbackPublisher } from '../chat/types'
 import type { AppEnv } from '../env'
+import { archivedComputerFields } from '../data/archived-computer'
 import {
   readDeviceWorkspace,
   enterDeviceInput,
@@ -109,6 +110,7 @@ async function publishFallback(
     updatedAt: row.updatedAt,
     archivedAt: row.archivedAt,
     restoreUntil: workspaceRestoreUntil(row.archivedAt, row.sandboxId),
+    ...archivedComputerFields(row),
   }
   await publish(
     {

@@ -65,7 +65,9 @@ says.
   restores nothing again.
 - Close on a file tab takes it out of the view. When it shows, the next
   file tab shows, else the one before, else the chat. Close on the
-  temporary tab also clears its mark.
+  temporary tab also clears its mark. While the temporary tab shows,
+  Escape closes it in the same way, through `usePageEscape` of the
+  [shortcut layer](../shortcuts/README.md#escape-on-the-page).
 - A file of a finished turn opens its diff tab. A phone shows it in the
   Files tab.
 - The chat gets the kept files of the workspace as `mentions`, for the
@@ -286,8 +288,10 @@ through them while the workspace loads.
   mockup of the question.
 - On a phone, the row sits under the header on every tab. It is one link to
   the Checks tab, whose top holds the actions, the line under the bar, and
-  the links to GitHub. A branch without a pull request opens that tab when
-  the bar has an action or a link.
+  the links to GitHub. While the branch has no pull request, that top also
+  names the branch and its base above the actions, also when the bar has
+  none. A branch without a pull request opens that tab when the bar has an
+  action or a link.
 - An archived workspace keeps the bar on desktop, with its links only. On a
   phone it shows only its chat, so the screen reads no GitHub state there.
 

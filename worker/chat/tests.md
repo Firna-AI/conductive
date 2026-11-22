@@ -117,6 +117,15 @@ npm run typecheck
   across the final name and folder cuts. The real workspace lifecycle test in
   `integration/workspace-lifecycle.test.ts` checks the stop clear with no
   previews, and unchanged activity when a port report arrives.
+- `runner-skills.test.ts` checks that a skills report passes the secret
+  filter before the description cut, that a skill whose name held a secret
+  stays out, and that the history keeps only the latest list for each tab
+  and after a restart. `runner-skills-state.test.ts` checks the unavailable
+  list of a runner that sends no skills report, across reconnects and a
+  restart, and a refused list over the limit with its repair.
+- Each test whose runner sends `runner.ready` with no skills report also
+  stores one `skills.updated` event with `skills: null`. Event numbers in
+  such tests count it.
 - `runner-repairs.test-support.ts` builds a full and an oversized report of
   each kind, and reads the requests and markers of the repair tests.
 - `late-events.test.ts` and `never-started.test.ts` cover replay after a
@@ -231,6 +240,17 @@ npm run typecheck
   revives no replaced runner. The stored state holds no login after the
   wake. A `message` command then carries no credential, and each `turn`
   command carries a turn token and no login.
+- `runner-move-wake.test.ts` sends a `repository.move` from the hello,
+  from the repository check, or from delivery. Then it wakes the object
+  with the original runner socket. A later repository check and a later
+  message send no second move, no second `welcome`, and no `turn`. The
+  saved state keeps each field, and the file channel keeps its connection
+  ID.
+- Its refused case wakes the object after a `repository.move.refused`
+  reply. The saved move stays refused. So a later message fails its turn
+  once with `workspace_repository_unavailable`, with no second move.
+  `runner-move-wake.test-support.ts` seeds the two repository folders and
+  moves the workspace record to the second repository.
 - `runner-version.test.ts` checks the version refusal of a `hello`. A
   version below `RUNNER_PROTOCOL_VERSION` closes before any command and
   fails each waiting turn once with `runner_protocol_unsupported`, with an

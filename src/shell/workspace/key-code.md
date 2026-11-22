@@ -135,6 +135,10 @@ this guide.
   tool that shows later gets them first, in event order. It passes each
   readable list of terminals, and keeps none, because the Terminal tool
   reads the list with its state.
+- `workspace-skills.ts`: `WorkspaceSkills`, the latest skill lists of the
+  workspace from the ordered stream, as a store that the chat reads for
+  the list of `/` and the skill chips. The context gives it as `skills`,
+  and `files/chat-files.tsx` puts it into `ChatMentions`.
 - `github/WorkspaceGitHub.tsx` and `github/github-events.ts`: the one
   GitHub store of the screen, the bar or the row, and the GitHub events of
   the ordered stream. `github/bar-controls.ts` gives the one action state of
@@ -148,10 +152,20 @@ this guide.
   not go out, as [Agent actions](../../github/actions.md#agent-actions)
   says.
 - `kept-connections.tsx`: `KeptConnections`, the one connection of the
-  kept files, of the kept previews, and of the kept files preview for the
-  whole screen.
+  kept files, of the kept previews, of the kept services, and of the kept
+  files preview for the whole screen.
 - `previews/kept-previews.ts`: the kept previews store of the open
   workspace, its snapshot, and its connection while the sandbox runs.
+- `previews/services/kept-services.tsx`: the kept services store of the
+  open workspace, its connection while the sandbox runs, and
+  `usePreviewServices`, the services that the Preview tool shows, which
+  read again on a timer while Preview shows: on a phone as the shown tool,
+  and on desktop also only while the right column shows.
+  `previews/services/ServiceSection.tsx` draws the Services part with its
+  rows, the Stop question, and the log, as
+  [Services in the app](../../../docs/protocol/services-in-the-app.md)
+  says. `restart-access.ts`: `mayRestartSoftware`, the rule of Restart in
+  the header, which Stop and Restart of a service share.
 - `previews/kept-files-preview.ts`: the kept files preview store of the
   open workspace, its snapshot, and its connection, with the end of the
   files preview at its expiry and at a stop of the cloud computer.
@@ -169,14 +183,17 @@ this guide.
   gives `repositoryChoices`, the rows of the menu, and the store of the
   workspace. `repository/repository-change.ts`: `RepositoryChange`, the
   run of one change and its question. `repository/repository-api.ts`:
-  the requests and the reader of their replies.
+  the requests and the reader of their replies, which reuses `readLocalWork`
+  and `fileLabels` of `../../github/continueActions.ts`.
   `repository/RepositoryQuestion.tsx`: the question.
   `repository/RepositoryMenu.test.tsx` and
   `repository/RepositoryQuestion.test.tsx` mount the whole app over the
   fake API: the menu, the progress, the note, the close of a file tab, a
-  phone sheet, the text in read-only states, the question, and the
-  failure toasts. `repository/repository-test-kit.tsx` holds their
-  helpers, and `test-support/fake-repository-change.ts` the replies.
+  phone sheet, the text in read-only states, the question with the labels
+  of its files, and the failure toasts. `repository/repository-api.test.ts`
+  checks the reader of those labels. `repository/repository-test-kit.tsx`
+  holds their helpers, `../../test-support/fake-repository-change.ts` the
+  replies, and `../../test-support/fake-repository-names.ts` their names.
 - `screen-addons.tsx`: `ScreenAddons`, the parts of the screen with no
   place of their own, in each layout: the question of Continue, the
   palette actions, `RestoreShownTab`, `ResumeOnTabOpen`, `LeaveMovedFiles`
@@ -197,6 +214,9 @@ this guide.
   because the kept chat still holds the prompt. The Worker gets one
   message, and its client ID stays the same after the reply. The draft
   keeps its text and its file, and the file uploads once.
+- `github/NewSessionBranch.test.tsx`: mounts the whole app over the fake
+  API. A new session names the workspace branch by the label of its GitHub
+  state, or by its real name when the GitHub read fails.
 - `tools/ToolsWiring.test.tsx` and `github/GitHubWiring.test.tsx`: mount
   the whole app over the fake API. They check the terminal socket across
   tool switches, the saved tool, the tabs and the state of a stopped
@@ -268,9 +288,11 @@ this guide.
   of an archived workspace offers Restore until its last day, and gives
   the day when the workspace leaves the list, also without Restore. After
   that day it has the title "Removed on" and the day, and its panels have
-  the title Removed. `notice-copy.ts` takes the stages of the mockups from
-  the `restore` and `removed` marks of the notice. `notice-copy.test.ts`
-  checks the words of each stage. `useArchiveActions.ts` runs Archive and Restore for
+  the title Removed. `notice-copy.ts` takes each stage from `archiveStage`
+  of the mockups, which reads the `computer`, `restore`, and `removed` marks
+  of the notice. A missing or `unknown` `computer` keeps the reading from
+  Restore alone. `notice-copy.test.ts` checks the words of each stage, also
+  for each computer state. `useArchiveActions.ts` runs Archive and Restore for
   each control, with their toasts. Archive from the row of the open
   workspace, by its shortcut or its menu, acts once, also during the first
   read, as [Archive](../../../docs/protocol/workspace-menu.md#archive)
@@ -284,14 +306,19 @@ this guide.
   Meanwhile `WorkspaceHeader.tsx` shows Starting in place of Stopped, and
   `contentState` gives the tools and the file pages the wait of a start,
   with no Resume. The lists keep their saved copy. A tab that opens then
-  sends no second Resume. `WorkspaceScreen.tsx` sets the `removed` mark of
-  the bar at the end of Restore, from `archivedAt`, also without a kept
-  cloud computer. `useArchiveEnds` in `archive-ends.ts` gives it that mark
-  and the end of Restore, and renders the screen again at each of them.
-  `ArchivedRestore.test.tsx` mounts the whole app
-  for Restore by a member and for its end at the last day, when the
-  workspace also leaves the list. `LinkChips.test.tsx` opens a removed
-  workspace from its chip.
+  sends no second Resume. `WorkspaceScreen.tsx` gives the bar
+  `workspace.archivedComputer?.state` as its `computer` mark. It sets the
+  `removed` mark at the end of the 14 days, also without a kept cloud
+  computer. `archiveEnd` in `archive-ends.ts` gives that end: the cutoff
+  `archivedComputer.restoreUntil`, or else `archivedAt` plus 14 days for a
+  record of an older Worker. The day on the bar and the day of the toast
+  after Archive use it too. `useArchiveEnds` gives the `removed` mark at
+  that end, and the end of Restore at the legacy `restoreUntil`. It renders
+  the screen again at each of them. `ArchivedRestore.test.tsx` mounts the
+  whole app for Restore by a member and for its end at the last day, when
+  the workspace also leaves the list. It also mounts an unresolved cloud
+  computer, which offers no Restore, and its notice at the end of the 14
+  days. `LinkChips.test.tsx` opens a removed workspace from its chip.
 - `dev/`: the development page, with its options in `dev-options.ts` and
   its controls in `DevControls.tsx`.
   `dev/main.tsx` supplies the real window host, keyboard, and key events

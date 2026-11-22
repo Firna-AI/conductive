@@ -1,19 +1,13 @@
-import {
-  Archive,
-  CircleAlert,
-  Clock,
-  GitBranchPlus,
-  GitMerge,
-  GitPullRequestArrow,
-} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { ArrowRight, CircleAlert, Clock, GitBranch, Info } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
-import type { Workspace } from '../../fixtures/workspaces'
+import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { ShortcutTip } from '../common/ShortcutTip'
+import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
 import { TintedTheme, type ButtonTint } from '../common/tint'
 import {
   agentActionCommand,
@@ -25,8 +19,12 @@ import {
 } from './barCopy'
 import { agentIcons } from './barIcons'
 import type { BarAction, BarModel } from './barModel'
-import { BarGitHubLink, GitHubLink } from './barParts'
-import { barTint } from './prStatus'
+import {
+  barGitHubLink,
+  githubLink,
+} from '../../entries/components/workspace/barParts.mockup'
+import { barTint, hasPullRequest } from './prStatus'
+import { iconKeyOf } from '../../entries/components/common/icons'
 import styles from './BarActions.module.css'
 
 /**
@@ -51,70 +49,89 @@ function BarButton(props: {
   switch (action.kind) {
     case 'agent':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command={agentActionCommand(action.action)}
           label={agentActionLabels[action.action]}
+          moklyInstance="agent-tip"
         >
           <TintedTheme tint={tint}>
             <ScreenLink asChild to={barPaths.sent[action.action]}>
-              <ActionButton icon={agentIcons[action.action]} tone={tone}>
+              <actionButton.Component
+                icon={iconKeyOf(agentIcons[action.action])}
+                moklyInstance={`agent-${action.action}`}
+                tone={tone}
+              >
                 {agentActionLabels[action.action]}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'merge':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="merge-pull-request"
           label={mergeLabels[action.method]}
+          moklyInstance="merge-tip"
           off={action.busy}
         >
           <TintedTheme tint={tint}>
             <ScreenLink asChild to={barPaths.merging}>
-              <ActionButton busy={action.busy} icon={GitMerge} tone={tone}>
+              <actionButton.Component
+                busy={action.busy}
+                icon="git-merge"
+                moklyInstance="merge-pull-request"
+                tone={tone}
+              >
                 {action.busy ? barLabels.merging : mergeLabels[action.method]}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'ready':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="mark-ready-for-review"
           label={barLabels.readyForReview}
+          moklyInstance="ready-tip"
           off={action.busy}
         >
           <TintedTheme tint={tint}>
             <ScreenLink asChild to={barPaths.markingReady}>
-              <ActionButton
+              <actionButton.Component
                 busy={action.busy}
-                icon={GitPullRequestArrow}
+                icon="git-pull-request-arrow"
+                moklyInstance="ready-for-review"
                 tone={tone}
               >
                 {action.busy
                   ? barLabels.markingReady
                   : barLabels.readyForReview}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'continue':
       // While a turn runs, Continue is not available.
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="continue-after-merge"
           label={barLabels.continue}
+          moklyInstance="continue-tip"
           off={action.waiting || action.busy}
         >
           <TintedTheme tint={tint}>
             {action.waiting ? (
-              <ActionButton disabled icon={GitBranchPlus} tone={tone}>
+              <actionButton.Component
+                disabled
+                icon="git-branch-plus"
+                moklyInstance="continue-after-merge"
+                tone={tone}
+              >
                 {barLabels.continue}
-              </ActionButton>
+              </actionButton.Component>
             ) : (
               <ScreenLink
                 asChild
@@ -124,37 +141,49 @@ function BarButton(props: {
                     : barPaths.continuing
                 }
               >
-                <ActionButton
+                <actionButton.Component
                   busy={action.busy}
-                  icon={GitBranchPlus}
+                  icon="git-branch-plus"
+                  moklyInstance="continue-after-merge"
                   tone={tone}
                 >
                   {action.busy ? barLabels.continuing : barLabels.continue}
-                </ActionButton>
+                </actionButton.Component>
               </ScreenLink>
             )}
           </TintedTheme>
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
     case 'archive':
       return (
-        <ShortcutTip
+        <shortcutTip.Component
           command="archive-workspace"
           label={barLabels.archive}
+          moklyInstance="archive-tip"
           off={action.busy || action.disabled}
         >
           {action.disabled ? (
-            <ActionButton disabled icon={Archive} tone="outline">
+            <actionButton.Component
+              disabled
+              icon="archive"
+              moklyInstance="archive-workspace"
+              tone="outline"
+            >
               {barLabels.archive}
-            </ActionButton>
+            </actionButton.Component>
           ) : (
             <ScreenLink asChild to={paths.justArchived}>
-              <ActionButton busy={action.busy} icon={Archive} tone="outline">
+              <actionButton.Component
+                busy={action.busy}
+                icon="archive"
+                moklyInstance="archive-workspace"
+                tone="outline"
+              >
                 {barLabels.archive}
-              </ActionButton>
+              </actionButton.Component>
             </ScreenLink>
           )}
-        </ShortcutTip>
+        </shortcutTip.Component>
       )
   }
 }
@@ -172,55 +201,96 @@ export function BarButtons(props: { bar: BarModel }) {
   ))
 }
 
+/** The icon of each status under the bar. A refusal shows `CircleAlert`. */
+const statusIcons: Partial<Record<BarMessageKind, LucideIcon>> = {
+  'continue-waits': Clock,
+  'base-moved': Info,
+}
+
 /**
  * A message under the bar, such as a refusal of GitHub. It tints its whole
  * line, and its edges stay neutral. Another refusal of GitHub leads to the
- * pull request on GitHub, where GitHub names the reason.
+ * pull request on GitHub, where GitHub names the reason. A wait and a base
+ * that moved to the default branch are a status, not a refusal.
  */
 export function BarMessage(props: {
   kind: BarMessageKind
   workspace: Workspace
 }) {
   const { workspace } = props
-  const waits = props.kind === 'continue-waits'
-  const Icon = waits ? Clock : CircleAlert
+  const StatusIcon = statusIcons[props.kind]
+  const status = StatusIcon !== undefined
+  const Icon = StatusIcon ?? CircleAlert
   const branches = {
     branch: workspace.branch,
     base: repositories[workspace.repository].defaultBranch,
+    moved: workspace.movedBase,
   }
   return (
     <div
-      className={classes(styles.message, !waits && styles.danger)}
-      role={waits ? 'status' : 'alert'}
+      className={classes(styles.message, !status && styles.danger)}
+      role={status ? 'status' : 'alert'}
     >
       <Icon aria-hidden className={styles.icon} size={14} />
       <span className={styles.text}>
         {barMessageText(props.kind, branches)}
       </span>
       {props.kind === 'merge-refused' || props.kind === 'ready-refused' ? (
-        <GitHubLink href={pullRequest.url} label={barLabels.openOnGitHub} />
+        <githubLink.Component
+          href={pullRequest.url}
+          label={barLabels.openOnGitHub}
+        />
       ) : null}
     </div>
   )
 }
 
 /**
- * The actions of the bar at the top of the Checks tab of a phone, with the
- * message of the bar and its link to GitHub. The row above opens this tab,
- * because a button cannot sit inside the link of the row.
+ * The branch and its base at the top of the Checks tab of a phone, where
+ * Create PR stands (decision 306). They take the parts of the desktop bar.
+ * The names wrap, and the base keeps its arrow on a line of its own, so
+ * each name shows in full: a phone has no tooltip.
+ */
+function ChecksBranches(props: { workspace: Workspace }) {
+  const { workspace } = props
+  return (
+    <div className={styles.branches}>
+      <GitBranch className={styles.branchIcon} size={13} />
+      <span className={styles.names}>
+        <span className={styles.branch}>{workspace.branch}</span>
+        <span className={styles.base}>
+          <ArrowRight className={styles.branchIcon} size={12} />
+          <span className={styles.baseName}>{baseBranchOf(workspace)}</span>
+        </span>
+      </span>
+    </div>
+  )
+}
+
+/**
+ * The top of the Checks tab of a phone: the message of the bar, then its
+ * actions and its link to GitHub. While the branch has no pull request, the
+ * branch and its base stand above the actions, also when the bar has none.
+ * The row above opens this tab, because a button cannot sit inside the link
+ * of the row.
  */
 export function ChecksActions(props: { bar: BarModel; workspace: Workspace }) {
   const { bar } = props
-  if (!bar.message && bar.actions.length === 0 && !bar.link) return null
+  const branches = !hasPullRequest(bar.banner)
+  const buttons = bar.actions.length > 0 || bar.link !== undefined
+  if (!bar.message && !buttons && !branches) return null
   return (
     <div aria-label="Pull request actions" className={styles.top} role="group">
       {bar.message ? (
         <BarMessage kind={bar.message} workspace={props.workspace} />
       ) : null}
-      <div className={styles.buttons}>
-        <BarButtons bar={bar} />
-        {bar.link ? <BarGitHubLink /> : null}
-      </div>
+      {buttons || branches ? (
+        <div className={styles.buttons}>
+          {branches ? <ChecksBranches workspace={props.workspace} /> : null}
+          <BarButtons bar={bar} />
+          {bar.link ? <barGitHubLink.Component /> : null}
+        </div>
+      ) : null}
     </div>
   )
 }

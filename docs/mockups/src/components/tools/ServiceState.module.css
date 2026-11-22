@@ -1,0 +1,10 @@
+/* The time and the result after the state, after a faint dot. */
+.detail {
+  flex-shrink: 0;
+}
+
+.detail::before {
+  margin-right: 6px;
+  color: var(--ui-faint);
+  content: '·';
+}

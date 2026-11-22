@@ -1,5 +1,7 @@
 import { D1_ERROR_REASONS } from './d1-errors'
 import { mailDiagnosticFields } from './mail-diagnostics'
+import { runnerWorkFields } from './warning-runner-work'
+import { continueEndWarningFields } from './warning-continue'
 import {
   ATTACHMENT_STEPS,
   RUNNER_MESSAGE_STAGES,
@@ -36,6 +38,8 @@ export function warnWorker(warning: WorkerWarning): void {
 
 function warningFields(warning: WorkerWarning) {
   switch (warning.kind) {
+    case 'workspace_continue_ended':
+      return continueEndWarningFields(warning)
     case 'invitation_email_delivery_failed':
     case 'approval_email_delivery_failed':
     case 'feedback_email_delivery_failed':
@@ -59,6 +63,13 @@ function warningFields(warning: WorkerWarning) {
             ? 'The runner of a workspace connected.'
             : 'The runner of a workspace disconnected.',
         ...runnerFields(warning),
+      }
+    case 'runner_work_interrupted':
+      return {
+        kind: warning.kind,
+        message: 'The work of a runner message did not finish.',
+        ...runnerFields(warning),
+        ...runnerWorkFields(warning),
       }
     case 'turn_ended_without_stop_request':
       return {

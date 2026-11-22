@@ -77,8 +77,16 @@ examples.
   that reaches a workspace Durable Object. It does not turn on
   `request_signal_passthrough`. So forwarding a request by itself does not
   pass its incoming signal to a subrequest.
-- Set each secret with `npx wrangler secret put <NAME>`. The command asks
-  for the value. Never put a secret in `wrangler.jsonc` or in Git.
+- Set each single-line secret with `npx wrangler secret put <NAME>`. The
+  command asks for the value. Never put a secret in `wrangler.jsonc` or in
+  Git.
+- Set each multiline secret from a file outside the repository, such as
+  the PEM file from GitHub:
+  `npx wrangler secret put GITHUB_APP_PRIVATE_KEY < ~/github-app-private-key.pem`.
+  Wrangler then keeps the line breaks inside the value. It removes the
+  whitespace at the end of the value.
+  - Do not paste a multiline value at the prompt. The prompt removes the
+    line breaks of a pasted value. It can also keep only the first line.
 - The Worker reads each variable as text. Write a JSON value as one
   string. In the `vars` of `wrangler.jsonc`, a JSON array or object reaches
   the Worker as an object, and the Worker refuses it.
@@ -269,10 +277,13 @@ template installs the Cua Driver and writes the same entry at each boot,
 as [Computer tools](protocol/agent-tools.md#computer-tools) says. An E2B
 org image gets the entry only from a template build that has it.
 
-`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
-gives the default branch of the repository of the workspace, from its
-queued start. A disk retention restart gives the current default branch of
-that repository.
+`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. It names the base
+branch of the workspace, as
+[Base branches](protocol/base-branches.md#the-base-branch-of-a-workspace)
+says. A create, a resume, and a disk retention restart give the base
+branch that the Worker's record of the workspace names. Without one, a
+create or a resume gives the default branch of its queued start, and a
+disk retention restart gives the current default branch.
 
 `CONDUCTIVE_WORKSPACE_BRANCH` needs no deployment input either. A create, a
 resume, and a disk retention restart give the workspace branch that the

@@ -7,7 +7,7 @@ use cnd_runner_interface::runner_handshake::{
 use crate::error::{Error, Result};
 
 use super::connection::SavedRunnerLink;
-use super::ports::LinkUpdate;
+use super::ports::{LinkUpdate, ServiceConnection};
 
 impl SavedRunnerLink {
     pub(super) async fn next_message(&self) -> Result<LinkUpdate> {
@@ -47,6 +47,7 @@ impl SavedRunnerLink {
                 stream_id,
                 confirmed_through,
                 complete_tool_details,
+                services,
                 ..
             }) => {
                 if welcomed || stream_id != stream {
@@ -60,6 +61,7 @@ impl SavedRunnerLink {
                     }
                     active.welcomed = true;
                     active.complete_tool_details = complete_tool_details == Some(true);
+                    active.services = self.services_offered && services == Some(true);
                 }
                 self.resend(confirmed_through + 1).await;
                 Ok(LinkUpdate::Connected)
@@ -84,6 +86,16 @@ impl SavedRunnerLink {
             }
             WorkspaceToRunner::RunnerCommand(command) if welcomed => {
                 Ok(LinkUpdate::Command(command))
+            }
+            WorkspaceToRunner::RunnerServiceCommand(command) if welcomed => {
+                let active = self.connection.lock().await;
+                if active.generation != generation || !active.services {
+                    return Ok(LinkUpdate::Progress);
+                }
+                Ok(LinkUpdate::ServiceCommand {
+                    connection: ServiceConnection { generation },
+                    command,
+                })
             }
             _ => Ok(LinkUpdate::Progress),
         }

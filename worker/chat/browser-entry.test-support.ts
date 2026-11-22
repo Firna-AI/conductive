@@ -48,6 +48,7 @@ export class Workspace extends ProductionWorkspace {
 
   constructor(context: DurableObjectState, env: WorkspaceCompositionEnv) {
     const closeProbe = new NativeCloseProbe(context)
+    const history = holdHistoryLists(context.storage)
     const clock = {
       now: context.storage.kv.get<number>(CLOCK) ?? BROWSER_TEST_NOW,
     }
@@ -94,7 +95,7 @@ export class Workspace extends ProductionWorkspace {
     this.controls = controls
     this.closeProbe = closeProbe
     this.suspension = new BrowserSuspensionProbe(context.storage)
-    this.history = holdHistoryLists(this.integration.storage)
+    this.history = history
     const closeConnections = this.chat.closeConnections.bind(this.chat)
     this.chat.closeConnections = () => this.suspension.close(closeConnections)
     const deviceAlarm = this.devices.alarm.bind(this.devices)

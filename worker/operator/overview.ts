@@ -57,6 +57,7 @@ export async function readOperatorOverview(
          ) CROSS JOIN (
            SELECT COUNT(*) AS builds FROM image_builds b
            JOIN image_build_jobs j ON j.build_id = b.id WHERE j.phase != 'done'
+             AND b.waiting_for_switch_id IS NULL
          )`,
         )
         .bind(weekStart, readAt),

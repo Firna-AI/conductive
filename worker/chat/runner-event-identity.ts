@@ -2,11 +2,21 @@ import type { RunnerEvent } from '../../src/shared/generated/RunnerEvent'
 import type { TurnEventContext } from '../../src/shared/generated/TurnEventContext'
 import { isRecord } from '../http'
 
+type RunnerEventContextSources = {
+  [Type in RunnerEvent['type']]: Extract<
+    RunnerEvent,
+    { type: Type }
+  > extends TurnEventContext
+    ? 'root'
+    : Extract<RunnerEvent, { type: Type }> extends { start?: TurnEventContext }
+      ? 'start'
+      : 'none'
+}
+
 type RunnerEventScopes = {
-  [Type in RunnerEvent['type']]: Extract<RunnerEvent, { type: Type }> extends
-    TurnEventContext | { start?: TurnEventContext }
-    ? 'turn'
-    : 'workspace'
+  [Type in RunnerEvent['type']]: RunnerEventContextSources[Type] extends 'none'
+    ? 'workspace'
+    : 'turn'
 }
 
 const eventScopes = {
@@ -26,7 +36,28 @@ const eventScopes = {
   'files.changed': 'workspace',
   'changes.updated': 'workspace',
   'ports.updated': 'workspace',
+  'skills.updated': 'workspace',
 } satisfies RunnerEventScopes
+
+const eventContextSources = {
+  'turn.started': 'root',
+  'turn.thinking': 'root',
+  'assistant.delta': 'root',
+  'assistant.completed': 'root',
+  'tool.updated': 'root',
+  'tool.detail.part': 'start',
+  'turn.completed': 'root',
+  'turn.failed': 'root',
+  'runner.ready': 'none',
+  'start.updated': 'none',
+  'workspace.title': 'none',
+  'files.snapshot': 'none',
+  'files.unavailable': 'none',
+  'files.changed': 'none',
+  'changes.updated': 'none',
+  'ports.updated': 'none',
+  'skills.updated': 'none',
+} satisfies RunnerEventContextSources
 
 export interface RunnerEventIdentity {
   type: Exclude<RunnerEvent['type'], 'tool.detail.part'> | null
@@ -52,10 +83,14 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
   const knownType = isRunnerEventType(value.type) ? value.type : null
   const type = knownType === 'tool.detail.part' ? 'tool.updated' : knownType
   const scope = knownType === null ? 'unknown' : eventScopes[knownType]
+  const contextSource =
+    knownType === null ? 'root' : eventContextSources[knownType]
   const context =
-    knownType === 'tool.detail.part' && isRecord(value.start)
-      ? value.start
-      : value
+    contextSource === 'root'
+      ? value
+      : contextSource === 'start' && isRecord(value.start)
+        ? value.start
+        : null
   const report =
     type === 'files.snapshot'
       ? value.tree
@@ -82,13 +117,8 @@ export function readRunnerEventIdentity(value: unknown): RunnerEventIdentity {
     type,
     scope,
     sessionId:
-      scope !== 'workspace' && typeof context.sessionId === 'string'
-        ? context.sessionId
-        : null,
-    turnId:
-      scope !== 'workspace' && typeof context.turnId === 'string'
-        ? context.turnId
-        : null,
+      typeof context?.sessionId === 'string' ? context.sessionId : null,
+    turnId: typeof context?.turnId === 'string' ? context.turnId : null,
     revision,
     partNumber,
   }

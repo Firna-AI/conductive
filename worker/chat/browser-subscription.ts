@@ -43,46 +43,45 @@ export function closeTab(peer: WorkspaceEventPeer): void {
 }
 
 /**
- * Registers the tab and replays its history in one task of the chat queue,
+ * The caller holds the queue task from label preparation through replay.
+ * Registers the tab and replays its history in that task of the chat queue,
  * so no event falls between them and no event comes twice. The tab gets each
  * live event after the task. The promise settles when the replay ends, with
  * the removal of the tab. A refusal closes the tab and rejects. A replay that
  * reaches the budget, or fails, removes and closes the tab once, so the tab
  * connects again after its last page. A failed replay also rejects.
  */
-export function subscribeBrowser(
+export async function subscribeBrowser(
   options: BrowserSubscriptionOptions,
 ): Promise<() => void> {
-  const { store, browsers, operation, access, peer, persist } = options
-  return store.run(async () => {
-    if (access.workspace.archivedAt === null) await operation.logins.refresh()
-    const unsubscribe = await browsers
-      .add(
-        peer,
-        {
-          kind: 'workspace',
-          workspaceId: access.workspace.id,
-          orgId: access.workspace.orgId,
-          userId: access.context.user.id,
-          sessionId: access.context.sessionId,
-        },
-        randomToken(),
-        persist,
-      )
-      .catch((error: unknown) => {
-        closeTab(peer)
-        throw error
-      })
-    try {
-      browsers.check(peer)
-      options.registered?.()
-      if (!(await replay(options))) browsers.close(peer)
-      return unsubscribe
-    } catch (error) {
-      browsers.close(peer)
+  const { browsers, operation, access, peer, persist } = options
+  if (access.workspace.archivedAt === null) await operation.logins.refresh()
+  const unsubscribe = await browsers
+    .add(
+      peer,
+      {
+        kind: 'workspace',
+        workspaceId: access.workspace.id,
+        orgId: access.workspace.orgId,
+        userId: access.context.user.id,
+        sessionId: access.context.sessionId,
+      },
+      randomToken(),
+      persist,
+    )
+    .catch((error: unknown) => {
+      closeTab(peer)
       throw error
-    }
-  })
+    })
+  try {
+    browsers.check(peer)
+    options.registered?.()
+    if (!(await replay(options))) browsers.close(peer)
+    return unsubscribe
+  } catch (error) {
+    browsers.close(peer)
+    throw error
+  }
 }
 
 /**

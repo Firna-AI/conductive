@@ -8,6 +8,7 @@ import { sandboxState } from '../workspace/features'
 import { TerminalFocus } from '../workspace/tools/terminal-focus'
 import { ToolEvents } from '../workspace/tools/tool-events'
 import { WorkspaceHeader } from '../workspace/WorkspaceHeader'
+import { WorkspaceSkills } from '../workspace/workspace-skills'
 import { OrgList } from './OrgList'
 
 describe('workspace states', () => {
@@ -68,11 +69,13 @@ describe('workspace states', () => {
             viewport: 'desktop',
             view: [],
             stream: open.stream,
-            // The header reads no saved view, no chat, and no tool events,
-            // so the chat never starts and the tool events follow no stream.
+            // The header reads no saved view, no chat, no tool events, and
+            // no skills, so the chat never starts and neither store follows
+            // a stream.
             savedView: chat,
             chat,
             toolEvents: new ToolEvents().subscribe,
+            skills: new WorkspaceSkills(),
             terminalFocus: new TerminalFocus(),
             archive: null,
             restore: null,

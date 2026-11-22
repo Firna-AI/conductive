@@ -230,19 +230,25 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Archive, over the workspace and over the list. Its second line gives the
   day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
-  state, the line under the bar, the actions on top of the Checks tab of a
-  phone, and the question and the note of Continue.
+  state, the line under the bar, the branches and the actions on top of the
+  Checks tab of a phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
-  of `ConfirmDialog`. The repository picker sits at the top left, and the
-  org and the section of the new workspace, in plain text, at the top
-  right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The attach button, the Capabilities icon,
-  and the model picker sit at the bottom left. The org login label follows
-  the model picker when the first message uses it. Create, with the hint of
-  the Enter key, sits at the bottom right. A phone always opens the page,
-  so the dialog has no phone layout.
+  of `ConfirmDialog`. The repository picker and the branch control
+  directly right of it sit at the top left, and the org and the section of
+  the new workspace, in plain text, at the top right. The target of a
+  picked branch lives in the dropdown of the branch control, so no line
+  follows the header (decision 309). The message and its files fill the
+  middle, and the notices of the New workspace page follow them.
+  The attach button, the Capabilities icon, and the model picker sit at
+  the bottom left. The org login label follows the model picker when the
+  first message uses it. Create, with the hint of the Enter key, sits at
+  the bottom right. A phone always opens the page, so the dialog has no
+  phone layout.
+- [New workspace](design-new-workspace.md) gives the branch control of the
+  page and of the dialog, its dropdown with the parts Start from and
+  Target, and the refusals of the branch check.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -307,8 +313,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The marks](design-marks.md) give the list mark, the mark
   of the header, and the marks of automation runs. They also give the mark of
   an agent.
-- [Workspace, session, and file chips](design-chat.md#workspace-session-and-file-chips)
-  gives the chips, the list of `@`, and chip removal.
+- [Workspace, session, file, and skill chips](design-chat.md#workspace-session-file-and-skill-chips)
+  gives the workspace links, the session links, file mentions, the list of
+  `@`, skill chips, the list of `/`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
 - The parts of automations live in `src/components/automations/`. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
@@ -323,8 +330,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its automation and to its pull request. The pull
-  request bar names the base branch of a workspace: the default branch, or
-  for a pull request run the head branch of its pull request. A long base
+  request bar names the base branch of a workspace: the default branch, the
+  picked branch of a start that stacks on it, or for a pull request run the
+  head branch of its pull request. A long base
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
@@ -357,6 +365,18 @@ sessions as tabs above the chat, and four tabs at the bottom.
   passed its limit names that limit, as
   `app/org-settings/cloud-computer/build-failed/time-limit`,
   `app/shell/error/time-limit`, and `app/new-workspace/time-limit` show.
+- Members do not see the switch build of an operator, from switch decision
+  2 D. A Build computer or Try again of an admin during that build waits
+  until it ends. The Cloud computer tab shows such a build as a build that
+  runs, because the tab and older copies of the Mac app know no state for
+  a wait. Its time counts from Build computer, and the first line of its
+  log says "Waiting for another update of the cloud computer to finish", as
+  `app/org-settings/cloud-computer/building/waiting` shows. A build that an
+  operator ended for a switch, from switch decision 3 D, shows as a failed
+  build with Try again and the saved message "Another update of the cloud
+  computer stopped this build. Try again.", as
+  `app/org-settings/cloud-computer/build-failed/ended` shows. Neither text
+  names the switch or a provider.
 - A new org has no image until its first build succeeds. Until then New
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such
@@ -398,10 +418,13 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - [The workspace](design-workspace.md) gives the messages that wait for
   the sandbox, the tab row with its temporary tab, and the number with Copy
   link. It also gives the bars of the cloud computer.
-- [The chat](design-chat.md) gives the chips of attached files, the
-  Markdown tables and headings of a reply and of a file preview, and the
+- [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
   not have, and the files that the cloud computer could not read.
+- [The Markdown of replies](design-markdown.md) gives the tables, the
+  headings, the quotes, the rules, the marks, the line breaks, and the
+  pictures of a reply and of a file preview, and how a message line in the
+  work of a turn shows them.
 - [Secrets and Capabilities](design-secrets.md) gives the Secrets tab of
   the org settings, the Capabilities icon beside every message box with
   its control, and the requests and results of the secrets in the chat.

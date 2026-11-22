@@ -4,6 +4,7 @@ import { pickChatFiles } from './draft-files.test-support'
 import { attachmentUploadStartPath } from '../../shared/messages'
 import { retryMessagePath, sessionPaths } from '../../shared/sessions'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
+import { wakeNotice } from '../../test-support/recorded-wakes'
 import { record, text } from '../api/json'
 import { chatFor, opensSession, shown } from './test-kit'
 
@@ -90,6 +91,27 @@ describe('ChatController actions', () => {
       'user: Also debounce the lookups to 250 ms.',
       'agent: The form now suggests addresses and waits 250 ms between lookups.',
       'end: 270000',
+    ])
+
+    // The hidden message of a wake that joins the turn is such a message.
+    const woken = chatFor({ conversation: 'running' })
+    await woken.controller.start()
+    const notice = wakeNotice('debounce-watch', 'turn-1', 'finished')
+    const turn = { sessionId: id, turnId: 'turn-1' }
+    woken.emit(notice)
+    woken.emit({ ...turn, type: 'message.sent', messageId: notice.messageId })
+    woken.emit({
+      ...turn,
+      type: 'assistant.completed',
+      messageId: 'answer-1',
+      text: 'The form now suggests addresses, and Debounce passed its tests.',
+      userMessageIds: ['ask', notice.messageId],
+    })
+    expect(shown(woken.controller, id)).toEqual([
+      'user: Add address autocomplete to the checkout form. Keep the manual fields as a fallback.',
+      'tool: src/app/checkout/AddressForm.tsx done',
+      'wake: finished in debounce',
+      'agent: The form now suggests addresses, and Debounce passed its tests.',
     ])
   })
 

@@ -1,4 +1,4 @@
-import type { AppDependencies, AppEnv, HttpFetch } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import type { SandboxProvider } from '../sandbox/provider'
 import {
   startWorkspaceTerminal,
@@ -27,6 +27,8 @@ import { WorkspaceStartError } from './workspace-start'
 import { JobTimeLimit } from './job-time-limit'
 import { startTimeLimitReached } from './start-provider-retry'
 import type { StartCall } from './start-guard'
+import { missingStartBranchFailure } from './start-branch-failure'
+import { workspaceAutoStopSeconds } from './idle-stop'
 
 export async function advanceStartCommand(
   env: AppEnv,
@@ -37,7 +39,8 @@ export async function advanceStartCommand(
   job: WorkspaceStartJob,
   label: string,
   call: StartCall,
-  releaseFetch: HttpFetch,
+  dependencies: Pick<AppDependencies, 'fetch' | 'now'>,
+  preserveBase = false,
 ): Promise<boolean> {
   const sandboxId = row.sandboxId
   if (!sandboxId) throw new WorkspaceStartError(null)
@@ -49,7 +52,15 @@ export async function advanceStartCommand(
   )
     throw new WorkspaceStartError(null)
   const phase = job.phase
-  await call(() => provider.setAutoStop(sandboxId, 1_800))
+  if (
+    job.autoStopSetAt === undefined ||
+    dependencies.now() - job.autoStopSetAt >= 60_000
+  ) {
+    const autoStop = await call(() => workspaceAutoStopSeconds(env.DB))
+    await call(() => provider.setAutoStop(sandboxId, autoStop))
+    job.autoStopSetAt = dependencies.now()
+    await storage.update(job)
+  }
   if (job.processId === null) {
     const secrets = await call(async () => {
       const values = await workspaceEnvironmentSettings(
@@ -68,7 +79,9 @@ export async function advanceStartCommand(
     let bootstrap: StartupBootstrap | undefined
     if (job.phase === 'startup') {
       try {
-        bootstrap = { release: await latestSoftwareRelease(env, releaseFetch) }
+        bootstrap = {
+          release: await latestSoftwareRelease(env, dependencies.fetch),
+        }
       } catch {
         bootstrap = {
           warning:
@@ -106,6 +119,7 @@ export async function advanceStartCommand(
                 job.phase === 'startup'
                   ? await ownerCommitAuthor(env.DB, row.ownerUserId)
                   : null,
+                preserveBase,
                 bootstrap,
               ),
         ),
@@ -126,6 +140,14 @@ export async function advanceStartCommand(
   await storage.retry(job.attempt, 'progress')
   if (status.more || status.running) return false
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
+    if (
+      job.phase === 'fetch' &&
+      status.state === 'exited' &&
+      !status.timedOut
+    ) {
+      const missing = missingStartBranchFailure(job, status.exitCode)
+      if (missing) throw missing
+    }
     if (job.phase === 'terminal')
       warnWorker({
         kind: 'terminal_start_failed',
@@ -142,10 +164,12 @@ export async function nextStartCommand(
   storage: StartJobStorage,
   job: WorkspaceRunningStartJob,
   phase: WorkspaceMachinePhase,
+  now: number,
 ): Promise<void> {
   await storage.update({
     ...job,
     phase,
+    waitStartedAt: now,
     afterReadyPhase:
       job.kind === 'create' && phase === 'terminal'
         ? 'startup'

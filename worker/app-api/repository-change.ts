@@ -5,6 +5,7 @@ import {
 import type { AppEnv } from '../env'
 import { requireFeatureResult } from '../features/result'
 import { HttpError } from '../http'
+import { labelRepositoryChangeResult } from '../lifecycle/repository-change-output'
 import type { RequestContext } from '../security/gate'
 import { workspaceChildId } from './workspace-path'
 import { workspaceBinding } from './workspace-state'
@@ -52,12 +53,16 @@ export async function repositoryChangeRoute(
   const object = workspaceBinding(env).getByName(id)
   if (start) {
     const result = requireFeatureResult(
-      await object.changeWorkspaceRepository(
-        orgId,
-        id,
-        context.user,
-        changeRequest(context.body),
-        env.APP_ORIGIN,
+      await labelRepositoryChangeResult(
+        env,
+        { id, orgId },
+        await object.changeWorkspaceRepository(
+          orgId,
+          id,
+          context.user,
+          changeRequest(context.body),
+          env.APP_ORIGIN,
+        ),
       ),
     )
     return Response.json(result, {
@@ -75,12 +80,16 @@ export async function repositoryChangeRoute(
     )
   }
   const result = requireFeatureResult(
-    await object.readWorkspaceRepositoryChange(
-      orgId,
-      id,
-      context.user.id,
-      changeId,
-      env.APP_ORIGIN,
+    await labelRepositoryChangeResult(
+      env,
+      { id, orgId },
+      await object.readWorkspaceRepositoryChange(
+        orgId,
+        id,
+        context.user.id,
+        changeId,
+        env.APP_ORIGIN,
+      ),
     ),
   )
   return request.method === 'HEAD' ? new Response(null) : Response.json(result)

@@ -3,13 +3,16 @@ import type { Viewport } from '@mokly/mokly'
 import { classes } from './classes'
 import { Sheet } from './Sheet'
 import styles from './ConfirmDialog.module.css'
+import card from './ModalCard.module.css'
 
 /**
  * The dialog of the app, drawn open: a question that the user confirms
  * before an action, or a short form, such as Send feedback. Desktop shows
  * a dialog over the dimmed app, and a phone shows a sheet. The actions come
  * last, with the confirming action at the end. A form with a message box
- * takes the `wide` dialog on desktop.
+ * takes the `wide` dialog on desktop. A dialog taller than the room of the
+ * window keeps its title and its actions, and its content scrolls between
+ * them.
  */
 export function ConfirmDialog(props: {
   title: string
@@ -34,12 +37,14 @@ export function ConfirmDialog(props: {
       <section
         aria-label={props.title}
         aria-modal
-        className={classes(styles.dialog, props.wide && styles.wide)}
+        className={classes(styles.dialog, card.card, props.wide && styles.wide)}
         role="dialog"
       >
-        <h2 className={styles.title}>{props.title}</h2>
-        {props.children}
-        <div className={styles.actions}>{props.actions}</div>
+        <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
+        <div className={classes(styles.body, card.body)}>{props.children}</div>
+        <div className={classes(styles.actions, card.foot)}>
+          {props.actions}
+        </div>
       </section>
     </div>
   )

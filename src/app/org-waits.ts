@@ -13,9 +13,10 @@ import type { RefreshWait } from './refresh'
  * How soon a shown part of an org reads again. These are choices of the
  * app, not product limits: soon while a workspace, an automation run, or a
  * build is active, or while the checks of a pull request run, and slowly
- * otherwise, so that changes from other tabs, people, and GitHub show.
+ * otherwise, so that changes from other tabs, people, and GitHub show. The
+ * services of a shown Preview tool read again after `activeWait` too.
  */
-const activeWait = 5_000
+export const activeWait = 5_000
 const idleWait = 30_000
 const activeStates: ReadonlySet<WorkspaceState> = new Set([
   'working',

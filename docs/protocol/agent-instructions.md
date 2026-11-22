@@ -2,8 +2,11 @@
 
 This doc holds the requirements and the decisions in force for the
 instructions that the app gives each agent session. It covers the facts
-and the guidance in them. [Message lines](message-lines.md) states the
-sender line, the repository line, and the branch line of each message.
+and the guidance in them, and the skills of a message.
+[Message lines](message-lines.md) states the sender line, the repository
+line, and the branch line of each message.
+[Session instructions](session-instructions.md) states how a session keeps
+its instructions and how each agent gets them.
 [Base prompts](base-prompts.md) states the base prompt of Claude
 agents. [Agents and sessions](agents-and-sessions.md#agents) states the
 agents and their sessions. [Agent tools](agent-tools.md) states the tools
@@ -27,15 +30,16 @@ of agents as pictures in their answers, as
   guidance for the tools of the product.
 - **System instructions:** the text that an agent takes before its
   conversation, apart from the messages.
-- **Sender line:** one line at the start of each message to the agent. It
+- **Sender line:** one line at the end of each message to the agent. It
   names the member who sent that message.
 - **Workspace branch:** the branch that the Worker's record of the
   workspace names. The app tracks this branch. Continue changes it after a
   merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says. For a workspace that a member creates, it is the default branch of
-  the repository.
+  says. For a workspace that a member creates, it is the target that New
+  workspace gives, as
+  [The target choice](start-from-a-branch.md#the-target-choice) says.
 - **Repository folder:** the folder of the workspace's repository in the
   sandbox, as [Repository folders](repository-folders.md) says. A
   repository change moves the workspace to the folder of another
@@ -87,6 +91,10 @@ of agents as pictures in their answers, as
     of that service ends each running turn of each session.
   - `sudo journalctl -u conductive-runner.service` shows the cause of a
     stop of that service.
+  - A server that a member needs after the reply runs as a
+    [service](services.md), outside `conductive-runner.service`. The agent
+    ends each temporary check server before its reply, as
+    [Agent guidance](services.md#agent-guidance) says.
   - The workspace tools create, list, get, rename, move, and archive the
     workspaces of the org. In each workspace of the org, they also start,
     list, get, rename, close, and stop sessions, send and get messages,
@@ -110,6 +118,9 @@ of agents as pictures in their answers, as
     `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
+  - The workspace tools also watch one turn of a session of the org. The
+    instructions give the guidance of
+    [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance).
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as
@@ -148,7 +159,7 @@ of agents as pictures in their answers, as
   tool, for the reason of the desktop guidance.
 - An existing session keeps its saved instructions, and gets no later
   change of the instructions, as
-  [The same text for the life of a session](#the-same-text-for-the-life-of-a-session)
+  [The same text for the life of a session](session-instructions.md#the-same-text-for-the-life-of-a-session)
   says.
 - When an older or manual runner start lacks the link or the depth of the
   workspace, the runner warns and continues. Its instructions then leave
@@ -227,41 +238,20 @@ a repository change.
 [The branch line](message-lines.md#the-branch-line) holds the
 requirements of the line that names the current branches.
 
+## Skills of a message
+
+[Skills of a message](skill-input.md) states how each agent gets the
+skills that a member names in a message.
+
 ## The same text for the life of a session
 
-- A session keeps the same agent instructions for its whole life. A Claude
-  session also keeps the same base prompt.
-- This holds across each turn, each stop and resume of the sandbox, and
-  each restart of the agent runner.
-- This holds also when a fact, the wording of the instructions, or the
-  base prompt changes later. An example is a new default branch of the
-  repository at a later resume.
-- A new session gets the instructions with the current facts and wording.
-  The parent and the depth are the exception, as
-  [The parent and the depth](#the-parent-and-the-depth) says.
-- A session that started without agent instructions can get them once, at
-  a later turn. It then keeps that text.
-- Apart from the branches, the repository folder, the parent, and the
-  depth, the instructions hold no fact that changes during the work, such
-  as the date, the Git state, or the pull request state. The agent reads
-  such facts with its tools.
-- Reason: a change of the text rewrites the prompt cache of the
-  conversation. An agent can also keep the first instructions of a session
-  until it summarizes the conversation.
-- The workspace branch and the target branch can change, by Continue, by
-  a repository change, or by a new default branch. The instructions keep
-  the branches of the start of the session, and
-  [the branch line](message-lines.md#the-branch-line) names the current
-  branches.
-- The repository folder can change by a repository change. The
-  instructions keep the folder of the start of the session, and
-  [the repository line](message-lines.md#the-repository-line) names the
-  current folder.
-- A tool that returns facts that change, such as the pull request state,
-  was rejected. It widens what the workspace token allows, and agents still
-  need instructions to call it.
-  [The workspace token](tokens-and-secrets.md#the-workspace-token) states
-  what the token allows.
+[Session instructions](session-instructions.md#the-same-text-for-the-life-of-a-session)
+states how a session keeps its instructions across turns and changes.
+
+## Session instructions
+
+[Session instructions](session-instructions.md) states that a session
+keeps the same agent instructions for its whole life.
 
 ## How each agent gets them
 

@@ -127,8 +127,10 @@ Existing users get empty values in all four columns.
 A build now records that phase before it asks for its build sandbox, and an older job in `create` may have sent that request already.
 So a build whose create reply was lost finds that sandbox again. When the user who started the build is suspended, the build then removes that sandbox.
 
-Chat history, sessions, runner event cursors, start steps, and banner state
-belong to workspace Durable Object storage. They have no D1 tables.
+Chat history, sessions, runner event cursors, the shown start steps, and
+banner state belong to workspace Durable Object storage. They have no D1
+tables. The job step records of `202611201500_job_step_times.sql` copy the
+times of the start steps for measurement.
 Stored secrets use ciphertext columns. The browser reads metadata, except
 when an org admin reveals one secret value through the recorded Reveal action.
 The git credential helper uses the GitHub user token of the turn's sender, as
@@ -270,8 +272,8 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
-`202611101100_org_provider_assignment.sql` adds the fixed provider account
-of each org. Existing rows receive `boat`. New production writes name the
+`202611101100_org_provider_assignment.sql` adds the provider account of
+each org. Existing rows receive `boat`. New production writes name the
 selected account explicitly. The migration also creates the singleton
 assignment weights setting, with `boat` at 100%, and its change events.
 Each setting change can retain its operator and time. Operator references
@@ -332,6 +334,10 @@ Existing runs keep null because their original choice is not known.
 `202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
+
+`202611131528_workspace_start_branch.sql` adds the nullable creation plan
+`start_branch` beside the existing base branch. Old plans fall back to
+their base branch, then their captured default branch.
 
 `202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
 the `endpoint` kind for both agents. The nullable `endpoint_origin` column
@@ -536,3 +542,63 @@ chosen row without a position after the rows with one, and it ignores the
 position of a row that is not chosen. The next add or move gives every
 chosen row a position again.
 [The app API](../worker/app-api/README.md) gives the rules of the order.
+
+`202611201200_pull_request_merges.sql` adds `pull_request_merges`. Each row
+holds one merged pull request of a workspace branch: the GitHub repository
+ID and the number as the key, the org, the workspace, the owner at the time
+of the record, the GitHub merge time, and the record time. Deleting the org
+deletes the rows through the foreign key. The workspace ID has no foreign
+key, so the org purge can delete the workspaces first. One index serves the
+counts of an owner by merge time, and one serves the cascade of an org. The
+migration copies no data, so the table starts empty. It changes no existing
+table, so the previous Worker keeps working.
+[The merge record](../worker/github/README.md#the-merge-record) gives the
+rules of the rows.
+
+`202611201400_idle_stop_settings.sql` adds `idle_stop_settings`, one row
+with the stop time of idle workspace computers in minutes, 30 at first,
+with its last change and operator. `idle_stop_events` keeps each change
+with its operator and time. The previous Worker reads neither table and
+keeps its fixed 30 minutes.
+[Operator stop time](../worker/operator/idle-stop.md) gives the rules.
+
+`202611201500_job_step_times.sql` adds `job_steps` and `job_runs`, the job
+step records of [Step timing](../docs/protocol/step-timing.md#job-step-records).
+`job_steps` holds the begin and the end of each step of each build,
+refresh, create, and resume, with the key `(job_id, step)`. `job_runs`
+holds one row for each run of a start, with the key `(job_id, run_number)`.
+Neither table has a foreign key. Each write checks that its org exists, so
+a record never fails the batch of the phase change that it measures. The
+org purge deletes the rows of the org, and the 15-minute cron deletes rows
+after 90 days. The migration changes no existing table, so the previous
+Worker keeps working. The [lifecycle README](../worker/lifecycle/README.md#job-step-records)
+gives the writers.
+
+`202611201600_org_provider_switches.sql` adds `org_provider_switches`.
+It stores each org's switch request, accounts, operator, time, job stop
+choice, wait, build identity and times, failure cause, account-change time,
+and stop operator and time. A partial unique index allows one waiting or
+building switch per org. Org purge deletes its records. User deletion
+clears the actor references. Build deletion clears the job references.
+The migration also adds three nullable columns to `image_builds`:
+`operator_switch_id` identifies each hidden switch build attempt,
+`waiting_for_switch_id` identifies a member build that waits for a switch,
+and `execution_started_at` can hold when that build actually starts.
+These fields let the build code retain every switch attempt and keep a
+waiting member build's execution time separate from its request time.
+Existing rows and previous Worker inserts get null in all three columns.
+The migration changes no existing value, column rule, or write default.
+The previous Worker therefore keeps working on this schema.
+The [operator backend](../worker/operator/README.md#provider-account-switches)
+owns the new records.
+
+`202611201700_waiting_image_builds.sql` recreates `image_builds_running`
+with `waiting_for_switch_id IS NULL` in its condition. It permits waiting
+member builds beside one executing build. Existing values and columns
+stay unchanged. The previous Worker omits the waiting link, so its
+inserts still get null and retain the same one-running-build rule.
+The previous schema and write shapes therefore keep working. Its old
+`runningBuild` query does not understand waits and can select a waiting
+row. The new reader explicitly excludes those rows. The
+[provider switch guide](../worker/lifecycle/provider-switches.md) gives
+the atomic transition into execution and the separate execution deadline.

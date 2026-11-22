@@ -13,6 +13,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { UserBubble } from '../components/TranscriptItem'
 import { Copying, copyAll } from './mention-copy-test-kit'
 import { LinksProvider } from './LinksContext'
@@ -53,6 +54,7 @@ async function mountText(text: string | string[], workspaceFiles: boolean) {
   const { files } = await chatFiles(entries)
   const value: ChatMentions = {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: (path) => opened.push(path),
     showFolder: (path) => shown.push(path),
     href: (item) => `/files/${item.path}`,

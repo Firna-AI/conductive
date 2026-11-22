@@ -11,9 +11,9 @@ the calls of the workspace tools:
   list, and the calls of one workspace.
 - [Repository, section, and model lists](create-call-lists.md): the lists
   that a create call takes.
-- [Session calls](session-calls.md) and
-  [Session management](session-management.md): the calls of sessions and
-  messages.
+- [Session calls](session-calls.md),
+  [Session management](session-management.md), and
+  [Session watches](session-watches.md): the calls of sessions and messages.
 - [Section and preview calls](section-and-preview-calls.md): the calls of
   the sections and of the port previews.
 - [Secret requests](secret-requests.md): the calls that list the secrets
@@ -34,18 +34,22 @@ says.
 
 - Every sandbox has two workspace tools: an MCP server and a CLI.
 - Both tools give each call. Reason: the two tools stay equal.
-- The tools have 26 calls:
+- The tools have 27 calls of the Worker:
   - 9 workspace calls: create, list, get, rename, move, and archive a
     workspace, and list the repositories, the sections, and the models
     that a create call takes
-  - 9 session calls: list, read, get, start, rename, close, and stop a
-    session, send a message, and get a message
+  - 10 session calls: list, read, get, start, rename, close, stop, and
+    watch a session, send a message, and get a message
   - 5 section and preview calls: create and delete a section, and list,
     open, and close the previews of a workspace
   - 2 secret calls: list the secrets of the org, and run a command with
     secrets, as [Secret requests](secret-requests.md) says
   - 1 call that asks to run a command on a Mac, as
     [Mac commands](#mac-commands) says
+- The tools also have 5 service calls: start, list, stop, and restart a
+  service, and read its log. They act only on the cloud computer of the
+  tools, and they call no Worker route, as
+  [Service calls](service-calls.md) says.
 - The calls cover each command of Conductor's CLI whose feature Conductive
   has (decision 277). Reason: an agent can then manage the work that it
   hands out.
@@ -110,6 +114,8 @@ says.
   other text of the session calls.
   [Run a command with secrets](secret-requests.md#run-a-command-with-secrets)
   states the text of the secret calls.
+  [Agent guidance](services.md#agent-guidance) states the text of the
+  service calls.
 
 ## Create and list calls
 
@@ -219,7 +225,9 @@ turn (decision 62). The Mac app on that Mac asks that person first, as
 - While a request waits, its workspace shows needs input, as
   [Workspace states](workspace-life.md#workspace-states) says
   (decision 68). The workspace keeps needs input while any of its
-  requests waits.
+  requests waits. Starting shows over needs input. When Starting ends and
+  the agent runner is ready, needs input shows again while a request
+  waits, as [Secret requests](secret-requests.md#the-request) says.
 - After its result, the command shows at its place in the chat: denied,
   done with its output, Mac not available, or Mac access off with its
   reason.

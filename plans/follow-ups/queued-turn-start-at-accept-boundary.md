@@ -3,6 +3,7 @@
 - **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-16, from branch `calummoore/quito-0ojg` (pull request #379), the wider fix of review finding 1.
+- **Updated:** 2026-11-20, from read-only watch-call research. The additional resume-recovery gap below has not been reproduced.
 - **Location:** `worker/chat/` (the paths that save a turn or a message command), `worker/tools/session-write-composition.ts`, and the late notice helper of `worker/secrets/`.
 - **Reason:** The fix reaches the shared message accept path outside the agent secrets change, and the direct fix already covers the late answers of secrets.
 
@@ -15,12 +16,15 @@
   - Today each path does this on its own. The session calls of the workspace tools do it in `worker/tools/session-write-composition.ts`.
   - Review finding 1 of the agent secrets change found that the late notice path forgot it. A late answer then queued a turn on a stopped computer, and the agent waited until a member pressed Resume.
   - The direct fix gave the late notice path its own helper, called from the answer and from recovery.
-- **Problem:** A new server path that queues a turn can still forget the start, because each path must call a helper.
+  - `worker/secrets/runtime.ts` saves an accepted late notice before it calls `deliverSecretNotice`. That helper can then fail during the resume in `worker/secrets/notice-delivery.ts`.
+  - Recovery in `worker/secrets/request-reconcile.ts` collects an allowed late answer only while its notice is null. A stored sent notice does not enter that retry path.
+  - The secret scheduler tracks waiting requests and temporary value expiry. It does not keep a pending resume for an accepted notice. A transient resume failure can therefore leave no durable retry intent. This case needs reproduction.
+- **Problem:** A new server path that queues a turn can still forget the start, because each path must call a helper. A path can also lose its resume retry after it commits acceptance.
 - **Impact if no action:** A future path can queue a turn that never runs until a manual Resume, as the late notice did.
 - **Root question:** How does each turn that the server queues reach a ready computer, without each path having to remember it?
 - **Options:**
   - **A.** Keep a helper for each path, and check each new path in review. Effort: Small.
-  - **B.** Make the start the default at the accept boundary. After an operation saves a turn or a message command, and the chat queue releases, one step flushes a connected runner, or else starts the computer in the cases of an open. The browser message path opts out, because the open in the app already starts the computer. The session-tool path reports the result of this step, so its `resume` reply stays the same. Effort: Medium.
+  - **B.** Make the start the default at the accept boundary. After an operation saves a turn or a message command, and the chat queue releases, one step flushes a connected runner, or else starts the computer in the cases of an open. Keep that start intent durable until dispatch, accepted start enqueue, or an intentional policy wait. The browser message path opts out, because the open in the app already starts the computer. The session-tool path reports the result of this step, so its `resume` reply stays the same. Effort: Medium.
 - **Left out:** A computer that starts whenever any queued turn exists, because a turn that cannot dispatch would restart the computer after each idle stop.
 - **Wider fix:** B. It removes the class, because no path can skip the step.
 - **Previous examples:** Review finding 1 of `calummoore/quito-0ojg`, the late notice of a secret request. `plans/follow-ups/runner-liveness-after-provider-stop.md` records another stall of an accepted turn after a stop, with a different cause.

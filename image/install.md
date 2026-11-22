@@ -35,14 +35,29 @@ The Worker installs no separate tool source files or launcher.
 
 The command first runs the apt part. It installs `ttyd` and `tmux` with
 `terminalPackagesCommand()`, then `gh`, with apt. It disables and masks the
-package's own ttyd service. `imagePackagesVersion()` hashes this part alone,
-so a new release does not change it. Each build job and each software image
-row records the version of the part that its command ran. A later build
-reads the version that its source image holds. When that version is
-current, the command first checks the image. When `dpkg-query` finds the
-three packages installed and `systemctl is-enabled ttyd.service` prints
-`masked`, the command skips apt. Otherwise, and for a software image build
-from the base image, it runs the apt part.
+package's own ttyd service.
+
+The `apt-get update` of the apt part adds
+`-o Acquire::AllowReleaseInfoChange::Label=true`, so apt accepts a changed
+`Label` in the release file of a source. The Boat base image holds
+`ondrej/php`, a Launchpad apt source of PHP packages. Its `Label` changed to
+`PPA for PHP (deprecated)`. Without the option, `apt-get update` fails with
+exit code 100 while the cached lists hold the old `Label`. apt still checks
+the signatures. A changed `Origin` or `Codename` still stops the update.
+
+`imagePackagesVersion()` hashes this part alone, so a new release does not
+change it. A change of the part's text, such as an apt option, changes this
+version. It also changes the app software version, which hashes the release
+version and the whole install command. Each build job and each software
+image row records the version of the part that its command ran.
+
+A later build reads the version that its source image holds. When that
+version is current, the command first checks the image. When `dpkg-query`
+finds the three packages installed and `systemctl is-enabled ttyd.service`
+prints `masked`, the command skips apt. Otherwise, and for a software image
+build from the base image, it runs the apt part. So after a change of the
+part, the next build or refresh from each image with an older version runs
+the apt part once.
 
 The release part runs as root with `umask 022`, so services that run as
 `user` can read the release files. When `/opt/conductive/current/conductive`
@@ -126,6 +141,7 @@ previous -> versions/<previous-version>
 pending                         # JSON start journal, absent after confirmation
 update.lock                     # exclusive background-check lock
 update-apply.lock               # exclusive apply/confirmation lock
+part-publish.lock               # lock of the last check and rename of a part
 versions/<version>/conductive
 versions/<version>/parts.json
 versions/<version>/sdk-helper -> /opt/conductive/parts/<sdk-helper-sha256>
@@ -143,8 +159,21 @@ parts/<system-sha256>/*          # scripts, units, wrapper, and udev rule
 The links use absolute targets under the configured root. The Node part
 removes the archive's top folder. The SDK helper archive has its entry
 point at the part root. The complete marker is written last. An interrupted check can
-leave incomplete version folders and `.partial` part folders. Those
-folders never qualify for apply. A later check replaces them.
+leave incomplete version folders and private `.partial-<process ID>`
+part folders. Those folders never qualify for apply. A later check or
+collection replaces them.
+
+Apply reads `parts.json` of the version that it starts. A part is
+present when its folder has the `complete` marker and the entry files of
+its role: `bin/node`, `sdk-helper.mjs`, or `runner-start.sh` and
+`install-system.sh`. Apply downloads each missing part again, with the
+digest check of a check. It takes no download lock. All part downloads
+of one apply share a limit of 60 seconds. A failed download logs a
+warning, and apply goes on. Each unpack, by a check or by apply, writes
+into the private folder `parts/<sha256>.partial-<process ID>`. It holds
+`part-publish.lock` only for the last presence check and the rename, and
+it keeps a part that is present. Collection removes a private folder
+that an interrupted unpack leaves.
 
 Apply calls `current/system/install-system.sh`. That script installs all
 release units into `/etc/systemd/system`, copies the udev rule, sets the

@@ -16,6 +16,7 @@ function reportKind(
     case 'start.updated':
     case 'workspace.title':
     case 'ports.updated':
+    case 'skills.updated':
       return type
     default:
       return null

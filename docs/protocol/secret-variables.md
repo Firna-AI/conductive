@@ -86,6 +86,8 @@ them after the merge.
 - Each of these entries replaces an inherited variable with the same name,
   such as `PATH` or `GITHUB_TOKEN`, in the command only. The environment of
   the tool and of the agent stays as it is.
+- A [service](services.md) that the command starts gets none of these
+  entries, as [The environment](services.md#the-environment) says.
 - Risk: a secret can hide an inherited variable from its command. The list
   gives each variable name before a run, so the agent can see this first.
 

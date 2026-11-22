@@ -4,8 +4,9 @@ This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 messages that wait for the sandbox and the tab row of the centre column,
 with its temporary tab, and the menu of a row of the Files panel. It gives
-the page of an HTML file in its tab. It also gives the number of a
-workspace with Copy link, and the bars of the cloud computer.
+the page of an HTML file in its tab, the terminal tabs, and the services
+of the Preview tool. It also gives the number of a workspace with Copy
+link, and the bars of the cloud computer.
 
 - While a sandbox starts, also for the first time, Send queues each
   message in the workspace, as `app/new-workspace/waiting` shows. A queued
@@ -109,6 +110,32 @@ workspace with Copy link, and the bars of the cloud computer.
   last terminal has no close button. At the limit of 10 the + is off, and a
   line under the row says how to open another. `TerminalTool` beside it
   adds the shown terminal and the Disconnected bar.
+- `ServiceSection` in `src/components/tools/ServiceList.tsx` draws the
+  services of the Preview tool above its servers, as `app/tools/services`
+  shows. The headings Services and Servers take the type of a menu group.
+  Each row has three lines. The first holds the name, the label of the
+  program, and the folder, which shorten with "…", then the quiet scroll
+  icon of Show log and the quiet menu button, which never shrink. The
+  second holds the state as `StatusText`, the time, and the start source.
+  The last holds the ports as small buttons in the type of the port column,
+  and it wraps. The port of the shown Preview tab has the fill of the
+  current server row. A row with an open menu keeps the fill of a hover.
+  - After a first read of the list that failed, `LoadFailure` takes the
+    place of the rows under the heading, in the width of the rows. No port
+    leaves Servers for a service, as
+    `app/tools/services/load-failed` shows.
+  - The menu holds Restart, then Stop in the danger colour. Desktop draws
+    it below its button, and a phone as a sheet, through `ServiceMenuSheet`.
+    `StopServiceDialog` asks before Stop, through `ConfirmDialog`.
+  - `ServiceLogView` in `ServiceLog.tsx` shows the log in a wide
+    `ConfirmDialog`, which is a sheet on a phone: the state, then the
+    output as plain text in the mono type, which wraps and scrolls.
+  - `ServiceResultToast` shows a failed control as the toast of a failed
+    change, an unconfirmed control as a warning toast, and a control for a
+    run that ended as an info toast.
+  - `serviceCopy.ts` beside them holds the words, which take plain values
+    or the types of the report, and the sample shapes of the mockups. It
+    imports no fixture, so the app shares its words.
 - Each workspace has a number in its org, and `workspaceLabel` in
   `src/components/workspaces/label.ts` shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette
@@ -136,12 +163,18 @@ workspace with Copy link, and the bars of the cloud computer.
   action. The notice takes any refusal reason. An archived workspace
   offers Restore until its last day, and the bar gives that day and says
   that the workspace leaves the list then. A bar without Restore gives
-  that day too. After it, the workspace is removed: the bar says "Removed
-  on" and the day, that the workspace left the list, and that the chat is
-  read-only. It says that the cloud computer is being deleted while a
-  failed delete tries again, and that it is deleted only after the
-  delete. Its panels say Removed. `sandboxNoticeState.ts` beside it owns
-  the types of the bar and the panels, which the app imports too.
+  that day too. While an unresolved create request, or a delete that tries
+  again, can still hold a cloud computer that the workspace does not name,
+  the bar promises only the chat history, as `app/archive/pending` shows.
+  After the last day, the workspace is removed: the bar says "Removed on"
+  and the day, that the workspace left the list, and that the chat is
+  read-only. It says that the cloud computer is being deleted while the
+  workspace names it or such a request can still hold it, and that it is
+  deleted only after the delete. Its panels say Removed.
+  `sandboxNoticeState.ts` beside it owns the types of the bar and the
+  panels, which the app imports too. It also owns the stage of an archived
+  workspace, which keeps what the app knows of the cloud computer apart
+  from Restore.
   - For a suspended workspace owner, the history, the tabs, the header, and
     the owner picker stay, as `app/shell/refused` and its `reassign`
     variant show.

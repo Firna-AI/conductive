@@ -5,6 +5,7 @@ import type {
   GitHubRefreshRequest,
   GitHubSnapshot,
   GitHubStatePort,
+  GitHubStateTransaction,
 } from './contracts'
 
 /** Keep one instance per workspace DO. Reads and commits share its queue. */
@@ -22,6 +23,10 @@ export class WorkspaceGitHubState {
     authorize: () => Promise<void>,
     signal: GitHubRefresh = {},
     copy?: (snapshot: GitHubSnapshot) => Promise<void>,
+    prepare?: (
+      transaction: GitHubStateTransaction,
+      snapshot: GitHubSnapshot,
+    ) => Promise<void>,
   ): Promise<GitHubSnapshot | null> {
     const result = this.pending.then(async () => {
       await authorize()
@@ -50,8 +55,11 @@ export class WorkspaceGitHubState {
       if (snapshot === null) return null
       await this.port.run(authorize, (operation) =>
         operation.transaction(async (transaction) => {
+          await prepare?.(transaction, snapshot)
           const stored = await transaction.get<GitHubSnapshot>('github:state')
           if (stored && sameGitHubState(stored, snapshot)) {
+            if (stored.baseChange && !snapshot.baseChange)
+              await transaction.put('github:state', snapshot)
             if (key !== null)
               await transaction.put(key, {
                 snapshot,

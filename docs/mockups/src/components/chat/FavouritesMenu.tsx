@@ -4,6 +4,7 @@ import { effortLabels } from '../../../../../src/shared/agents'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import { favourites, sameChoice } from '../../fixtures/favourites'
 import { Menu, type MenuEntry } from '../common/Menu'
+import { plainEntry } from '../../entries/components/common/menuEntries'
 import type { Shortcut } from '../common/KeyChips'
 import { useShortcutHint } from '../common/ShortcutTip'
 import { effortEntries, modelEntries } from './pickers'
@@ -42,7 +43,7 @@ function favouriteEntries(
     }),
     { kind: 'divider' },
     { kind: 'item', label: 'All models', submenu: allModels },
-    ...effortEntries(choice, fastKey),
+    ...effortEntries(choice, fastKey).map(plainEntry),
   ]
 }
 
@@ -61,7 +62,7 @@ export function FavouritesMenu(props: {
   fastKey?: boolean
 }) {
   const fastHint = useShortcutHint('fast-mode')
-  const models = modelEntries(props.choice, props.sessionAgent)
+  const models = modelEntries(props.choice, props.sessionAgent).map(plainEntry)
   if (props.allModels && props.viewport === 'mobile') {
     const back: MenuEntry = { kind: 'item', label: 'Back', icon: ChevronLeft }
     return (

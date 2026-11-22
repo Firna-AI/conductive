@@ -1,4 +1,5 @@
 import type { User } from '../../src/shared/api'
+import { readOrgProviderAccount } from '../data/org-provider-account'
 import type { CreationKey } from './creation-claims'
 import { recordedCreationJob } from './creation-claims'
 import { leaseStatement } from './creation-plan-statements'
@@ -37,6 +38,7 @@ export async function pinRetryCreation(
   if (!job.creation || job.kind !== 'create' || job.phase === 'records')
     throw new Error('Missing admitted creation retry')
   const creation = job.creation
+  const providerAccount = await readOrgProviderAccount(db, job.orgId)
   await db.batch([
     db
       .prepare(
@@ -51,11 +53,11 @@ export async function pinRetryCreation(
       .bind(
         job.attempt,
         job.orgId,
-        job.providerAccount,
+        providerAccount,
         creation.repositoryId,
         job.workspaceId,
         job.orgId,
-        job.providerAccount,
+        providerAccount,
         creation.repositoryId,
       ),
     db
@@ -69,6 +71,21 @@ export async function pinRetryCreation(
       .prepare('DELETE FROM image_leases WHERE workspace_id = ?')
       .bind(job.workspaceId),
     leaseStatement(db, job.workspaceId),
+    db
+      .prepare(
+        `UPDATE workspaces SET provider_account =
+        (SELECT provider_account FROM workspace_creation_plans WHERE workspace_id = ?)
+      WHERE id = ? AND org_id = ? AND sandbox_id IS NULL
+        AND EXISTS (SELECT 1 FROM workspace_creation_plans
+          WHERE workspace_id = ? AND start_attempt = ?)`,
+      )
+      .bind(
+        job.workspaceId,
+        job.workspaceId,
+        job.orgId,
+        job.workspaceId,
+        job.attempt,
+      ),
     db
       .prepare(
         `UPDATE workspace_runtime SET repository_locations_json =

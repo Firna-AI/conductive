@@ -13,7 +13,7 @@ import type { WorkspaceContext } from '../features'
 
 type MentionsWorkspace = Pick<
   WorkspaceContext,
-  'viewport' | 'sandbox' | 'panel' | 'resumingAtOpen'
+  'viewport' | 'sandbox' | 'panel' | 'resumingAtOpen' | 'skills'
 >
 
 /** Shares the cache while the tab keeps the workspace's files and chat. */
@@ -39,9 +39,10 @@ function chipTarget(entry: FileEntry, lines?: LineRange): FilesTarget {
 }
 
 /**
- * The files that the composer lists after `@`, and the pages of the chips.
- * A file opens as a press in All files opens it. A folder shows All files
- * with the folder open, in the right column on desktop, which then shows.
+ * The files that the composer lists after `@`, the skills that it lists
+ * after `/`, and the pages of the chips. A file opens as a press in All
+ * files opens it. A folder shows All files with the folder open, in the
+ * right column on desktop, which then shows.
  */
 export function useMentions(
   context: MentionsWorkspace,
@@ -50,6 +51,7 @@ export function useMentions(
 ): ChatMentions | undefined {
   const panels = useContext(PanelContext)
   const phone = context.viewport === 'phone'
+  const { skills } = context
   const pictures =
     files &&
     context.sandbox === 'ready' &&
@@ -61,6 +63,7 @@ export function useMentions(
     if (!files) return undefined
     return {
       files,
+      skills,
       pictures,
       openFile: (path, lines) =>
         navigation.navigate(
@@ -74,5 +77,5 @@ export function useMentions(
       },
       href: (entry, lines) => navigation.href(chipTarget(entry, lines), lines),
     }
-  }, [files, navigation, panels, phone, pictures])
+  }, [files, skills, navigation, panels, phone, pictures])
 }

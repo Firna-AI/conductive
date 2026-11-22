@@ -1,3 +1,4 @@
+import type { ArchivedComputerState } from '../../../../src/shared/generated/ArchivedComputerState'
 import { waitsForAnswer } from '../components/chat/requests'
 import type {
   BarNotice,
@@ -61,14 +62,15 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
  * What an archived workspace can get back: Restore until its last day, for
  * every member, except in a suspended org, which refuses it. After that
  * day, Restore ended, also while the delete of the cloud computer tries
- * again. A workspace that is not archived, or that has no kept cloud
- * computer, has none.
+ * again. A workspace that is not archived, or that names no cloud computer,
+ * has none.
  */
 export function archiveRestore(
   state: WorkspaceState,
 ): ArchiveRestore | undefined {
   if (state.sandbox !== 'archived') return undefined
   switch (state.archive) {
+    case 'pending':
     case 'none':
     case 'removed':
       return undefined
@@ -76,6 +78,27 @@ export function archiveRestore(
       return 'ended'
     case 'kept':
       return state.org === 'suspended' ? 'refused' : 'available'
+  }
+}
+
+/**
+ * What the app knows of the cloud computer of an archived workspace. It can
+ * still exist while the workspace names it, while an unresolved create
+ * request can still hold one that the workspace does not name, and while
+ * its delete after the 14 days tries again. The other states come after a
+ * confirmed delete.
+ */
+function archivedComputer(
+  archive: WorkspaceState['archive'],
+): ArchivedComputerState {
+  switch (archive) {
+    case 'kept':
+    case 'pending':
+    case 'removed-deleting':
+      return 'may-exist'
+    case 'none':
+    case 'removed':
+      return 'deleted'
   }
 }
 
@@ -117,7 +140,8 @@ function beforeFirstStart(state: WorkspaceState): boolean {
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it. A failed first start
  * keeps the composer under its bar. An archived workspace says what it can
- * get back, and when it leaves the list or when it left it.
+ * get back, what the app knows of its cloud computer, and when it leaves
+ * the list or when it left it.
  */
 export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
@@ -142,6 +166,7 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
         problem: 'archived',
         restore: archiveRestore(state),
         removed: isRemoved(state.archive),
+        computer: archivedComputer(state.archive),
         days: archiveDays[state.workspace],
       }
     case 'ready':

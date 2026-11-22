@@ -3,7 +3,7 @@
 The agent runner is the program of Conductive in each cloud computer, a
 sandbox on Boat or E2B. It runs the agents powered by Claude and Codex for one
 workspace. It also reports the files and the changes of the workspace
-repository and the listening ports.
+repository, the listening ports, and the skills of each agent.
 
 The runner opens one outbound WebSocket to the workspace Durable Object.
 It speaks runner protocol version 2. It sends numbered events. It gets
@@ -46,7 +46,8 @@ The service runs `/opt/conductive/current/conductive runner`.
 The [Rust runner library](../crates/cnd-runner/README.md) owns the connection,
 saved state, turns, reports, and output filter. Its [SDK helper](sdk-helper/README.md)
 is a separate Node 24 package. The runner starts one helper child for each
-agent start. Private pipes carry JSON lines. Only the helper starts the SDK adapters.
+agent start. A separate helper reads agent skill metadata.
+Private pipes carry JSON lines. Only the helper starts the SDK adapters.
 
 The release has three parts: `node`, `system`, and `sdk-helper`.
 The runner uses the Node and helper beside its running executable.
@@ -73,7 +74,8 @@ the outbox size check.
 ## Report requests
 
 The [report guide](reports.md) gives full report requests, their saved
-receipts, and the listening-port scan and scheduling boundaries.
+receipts, the listening-port scan and scheduling boundaries, and the
+skills report of each agent.
 
 ## Preview relay
 
@@ -110,6 +112,18 @@ The separate Rust gate checks the Rust runner and static program build.
 
 The [service guide](service/README.md) describes how each build of the org
 image installs the runner as a systemd service, and how that service starts.
+
+## Services of a workspace
+
+[Services](../docs/protocol/services.md) are named programs that run
+outside every turn, in system units of their own.
+The [native services library](../crates/cnd-services/README.md) provides the
+manager, private socket, process reconciliation, cgroup ownership, and logs.
+The [local tool guide](../tools/services.md) gives CLI and MCP calls.
+The runner also negotiates a separate private Worker transport for reports,
+controls, and complete log reads. It captures each request's connection generation.
+Each accepted connection publishes a full snapshot with a higher saved revision.
+Its private jobs hold no turn and never delay an idle update or repository move.
 
 ## Configuration
 
@@ -149,6 +163,7 @@ guides that give the entry points of each part.
 - [Agent runner: background work](../docs/protocol/agent-runner.md#background-work)
 - [Agent runner: lost workspace updates](../docs/protocol/lost-workspace-updates.md)
 - [Agent runner: listening ports](../docs/protocol/agent-runner.md#listening-ports)
+- [Skill mentions: the skills report](../docs/protocol/skill-mentions.md#the-skills-report)
 - [Agents and sessions: agents](../docs/protocol/agents-and-sessions.md#agents)
 - [Agent instructions](../docs/protocol/agent-instructions.md)
 - [Access and security: agent logins in a sandbox](../docs/protocol/isolation.md#agent-logins-in-a-sandbox)

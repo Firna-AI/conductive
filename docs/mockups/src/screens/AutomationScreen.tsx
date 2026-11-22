@@ -1,6 +1,6 @@
 import type { Viewport } from '@mokly/mokly'
-import { Page } from '../components/layout/Page'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { page } from '../entries/components/layout/Page.mockup'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { DeleteAutomationDialog } from '../components/automations/DeleteAutomationDialog'
 import { RunsPanel } from '../components/automations/RunsPanel'
 import { offersRunNow } from '../components/automations/triggerCopy'
@@ -30,6 +30,7 @@ import {
   type AutomationState,
 } from './automationState'
 import { AutomationTabs } from './automationTabs'
+import { defined } from '../defined'
 import styles from './AutomationScreen.module.css'
 
 /**
@@ -113,7 +114,10 @@ export function AutomationScreen(props: {
     />
   )
   const notice = suspended ? (
-    <SuspendedOrgNotice org={orgs[suspendedOrg]} />
+    <suspendedOrgNotice.Component
+      moklyInstance="suspended-org-notice"
+      org={{ name: orgs[suspendedOrg].name }}
+    />
   ) : null
   const runs = (
     <RunsPanel
@@ -142,33 +146,36 @@ export function AutomationScreen(props: {
       state={state}
       viewport={viewport}
     >
-      <Page
-        actions={automationActions({
-          automation,
-          access,
-          save: saveStateOf(state, automation),
-          viewport,
-          withForm: !runsTab,
-          runNow: offersRunNow(edits.map((edit) => edit.trigger)),
-          ...links,
-        })}
+      <page.Component
         back={{
           label: 'Automations',
           to: suspended ? paths.suspendedAutomations : paths.automations,
         }}
         fill
         subtitle="Automation"
-        tabs={
-          mobile && automation.saved ? (
-            <AutomationTabs
-              automation={automation}
-              suspended={suspended}
-              tab={state.tab}
-            />
-          ) : undefined
-        }
         title={titleOf(automation)}
         viewport={viewport}
+        {...defined({
+          // A member gets no actions, so the page has no bar of actions.
+          actions:
+            automationActions({
+              automation,
+              access,
+              save: saveStateOf(state, automation),
+              viewport,
+              withForm: !runsTab,
+              runNow: offersRunNow(edits.map((edit) => edit.trigger)),
+              ...links,
+            }) ?? undefined,
+          tabs:
+            mobile && automation.saved ? (
+              <AutomationTabs
+                automation={automation}
+                suspended={suspended}
+                tab={state.tab}
+              />
+            ) : undefined,
+        })}
       >
         {mobile ? (
           <div className={styles.phoneScroll}>
@@ -191,7 +198,7 @@ export function AutomationScreen(props: {
             {runs}
           </div>
         )}
-      </Page>
+      </page.Component>
     </AutomationFrame>
   )
 }

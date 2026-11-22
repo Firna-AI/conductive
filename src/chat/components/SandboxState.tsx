@@ -2,6 +2,7 @@ import { Loader } from '@firna/ui/loader'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { LucideIcon } from 'lucide-react'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
+import type { ArchivedComputer } from '../../shared/generated/ArchivedComputer'
 import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
 import {
@@ -11,6 +12,7 @@ import {
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/workspace/StartingCard.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
+import { problemOf as noticeProblemOf } from '../../shell/workspace/notice-copy'
 import { formatDay } from '../state/format'
 import { ActionButton } from '../ui/actions'
 
@@ -91,12 +93,68 @@ const deletedComputer =
   'Its cloud computer is deleted, and the chat is read-only.'
 
 /**
- * An archived workspace: until its 14 days end, the day of its Archive and
- * the day when it leaves the list. After them, the day of its removal, and
- * that it left the list. The words say "removed" for the workspace,
- * because the app keeps its data. `now` is the clock of the chat.
+ * An archived workspace whose state of the cloud computer the Worker sent:
+ * the words of the bar of the app, without an action, because the chat
+ * offers no Restore. So a cloud computer that can still exist gets the
+ * words of a bar without Restore, which promise only the chat history.
+ * The end of its 14 days is the one that the Worker sends, and the day of
+ * its Archive is 14 days before it when the record has none. `now` is the
+ * clock of the chat.
  */
-function archivedProblem(archivedAt: number | null, now: number): Problem {
+function knownProblem(
+  archivedAt: number | null,
+  now: number,
+  computer: ArchivedComputer,
+): Problem {
+  const end = computer.restoreUntil
+  const words = noticeProblemOf(
+    { problem: 'archived', computer: computer.state, removed: now >= end },
+    {
+      archivedOn: formatDay(archivedAt ?? end - WORKSPACE_RESTORE_MS),
+      removedOn: formatDay(end),
+    },
+  )
+  return {
+    icon: words.icon,
+    title: words.title,
+    body: words.body,
+    tone: words.tone,
+  }
+}
+
+/**
+ * The words of an archived workspace: the words of the bar of the app for
+ * a known state of its cloud computer, as `knownProblem` gives them. An
+ * unknown state, and a record of an older Worker without one, keep the
+ * words of `legacyArchivedProblem`.
+ */
+function archivedProblem(
+  archivedAt: number | null,
+  now: number,
+  computer: ArchivedComputer | undefined,
+): Problem {
+  switch (computer?.state) {
+    case 'may-exist':
+    case 'deleted':
+      return knownProblem(archivedAt, now, computer)
+    case 'unknown':
+    case undefined:
+      return legacyArchivedProblem(archivedAt, now)
+  }
+}
+
+/**
+ * An archived workspace without a known state of its cloud computer: until
+ * its 14 days end, the day of its Archive and the day when it leaves the
+ * list. After them, the day of its removal, and that it left the list. The
+ * words say "removed" for the workspace, because the app keeps its data.
+ * These words stay until `plans/follow-ups/archived-computer-unknown-outcome.md`
+ * settles them. `now` is the clock of the chat.
+ */
+function legacyArchivedProblem(
+  archivedAt: number | null,
+  now: number,
+): Problem {
   const base = { icon: Archive, tone: 'neutral' } as const
   if (archivedAt === null) {
     return { ...base, title: 'Archived', body: deletedComputer }
@@ -121,6 +179,7 @@ function problemOf(
   problem: SandboxProblem,
   archivedAt: number | null,
   now: number,
+  computer: ArchivedComputer | undefined,
 ): Problem {
   switch (problem) {
     case 'stopped':
@@ -140,7 +199,7 @@ function problemOf(
         tone: 'danger',
       }
     case 'archived':
-      return archivedProblem(archivedAt, now)
+      return archivedProblem(archivedAt, now, computer)
   }
 }
 
@@ -148,13 +207,20 @@ function problemOf(
  * The bar under the chat while the sandbox does not run: Resume when it
  * stopped, Try again when it did not start, and the read-only chat of an
  * archived workspace, with the day when it leaves the list, or the day of
- * its removal. A failed start shows the message that the workspace saved
- * for it first. The bar takes the place of the composer, except after a
- * failed first start, whose composer stays under it.
+ * its removal, and the words that a known state of its cloud computer
+ * gives, as `archivedProblem` says. A failed start shows the message that
+ * the workspace saved for it first. The bar takes the place of the
+ * composer, except after a failed first start, whose composer stays under
+ * it.
  */
 export function SandboxBar(props: {
   problem: SandboxProblem
   archivedAt: number | null
+  /**
+   * What the app knows of the cloud computer of an archived workspace, with
+   * the end of its 14 days. A record of an older Worker has none.
+   */
+  archivedComputer?: ArchivedComputer
   /** The time now on the clock of the chat. */
   now: number
   /** The message that the workspace saved for a failed start, or null. */
@@ -164,7 +230,12 @@ export function SandboxBar(props: {
   busy: boolean
   onResume: () => void
 }) {
-  const problem = problemOf(props.problem, props.archivedAt, props.now)
+  const problem = problemOf(
+    props.problem,
+    props.archivedAt,
+    props.now,
+    props.archivedComputer,
+  )
   const failed = props.problem === 'error'
   const kept = failed && props.firstStart ? chatSaved : problem.body
   const body = failed && props.message ? `${props.message} ${kept}` : kept

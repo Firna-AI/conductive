@@ -1,0 +1,33 @@
+# Runner receipt tests can miss discarded events
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, review finding 9.
+- **Location:** `worker/chat/runner-channel.ts:176-211`, `worker/chat/late-events.test.ts:85-102`, `worker/lifecycle/automatic-restart.test.ts:147-189`.
+- **Reason:** The shared assertion applies to receipt tests outside the automatic restart change.
+
+- **Source:** Review. **Category:** Test.
+- **Terms:**
+  - **Worker:** The Conductive server that receives runner events and saves chat history.
+  - **Turn:** One run of an agent in a chat session.
+  - **Recovered end:** A stopped turn result that the runner sends after it starts again.
+  - **Event cursor:** The number of the last runner event that the Worker processed on a stream.
+  - **`filesUnavailable`:** A field that tells chat the runner could not list the files that a turn changed.
+- **Background:**
+  - After an automatic restart, the replacement runner sends a recovered end on the saved event stream. The Worker has already ended the turn in chat and moved its waiting messages to a new turn.
+  - The Worker updates the event cursor and sends `confirm.throughEventNumber` for both accepted and refused events. See `worker/chat/runner-channel.ts` and `worker/chat/runner-receipt.ts`.
+  - The automatic restart test used to check the confirmation and delivery of the next turn. A review probe that discarded the recovered end still passed that test.
+- **Problem:** A confirmation proves that the Worker processed a runner event. A receipt test that checks only the confirmation can pass when the Worker discards the event.
+- **Impact if no action:** A test can pass when chat loses an accepted result. For a recovered end, chat can also lose the “Changed files unavailable” notice.
+- **Root question:** How do receipt tests prove that the Worker saved an accepted runner event in chat history?
+- **Options:**
+  - **A.** Assert the exact list of ends of the original turn in the automatic restart test. Check that the Worker end comes first and its `userMessageIds` leaves out the waiting message. The transcript uses those IDs to mark messages as sent in `src/shared/transcript/turn-events.ts`. Check that the runner end comes second with `late: true` and `filesUnavailable: true`. Use `late: true` to identify the runner's end if the Worker end later also carries `filesUnavailable`. Keep the cursor confirmation and check that a new turn receives the moved message. The test `restarts when a waiting message shares a running turn and delivers it in a new turn` covers this case. Effort: Small.
+  - **B.** Test the automatic stop and recovered end in the chat integration suite. This adds a separate setup for the stop and replay sequence. Effort: Medium.
+  - **C.** Give the runner test fixtures a shared assertion for accepted events. Match the saved event in chat history by its identity and expected payload. Check the confirmed cursor for the event's stream and number. Apply the assertion to receipt tests that verify acceptance. Effort: Medium.
+- **Left out:**
+  - Checking only for a refusal marker misses an event the Worker silently discards.
+  - **D.** Add a check across the receipt tests to detect acceptance tests that rely only on cursor confirmation. This check covers the whole class and needs the user's approval.
+- **Wider fix:** C. One assertion can verify that each expected event reaches saved chat history and the Worker confirms its cursor.
+- **Previous examples:** Commit `9a7e56dea` added coverage for late events. The replay test in `worker/chat/late-events.test.ts` checks saved history and confirmation after reconnect.
+- **Recommendation:** C. It gives receipt tests a shared way to check both outcomes. A covers the automatic restart in the current change.
+- **Action:** fix after merge, apply C, because it reaches receipt tests outside the automatic restart change.

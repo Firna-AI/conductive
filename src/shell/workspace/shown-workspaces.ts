@@ -17,10 +17,12 @@ import {
   createPreviewsStore,
   type PreviewsStore,
 } from '../../previews/previewsStore'
+import { ServicesStore } from '../../previews/services/servicesStore'
 
 import { createWorkspaceFiles } from './files/files-store'
 import { HeaderNotices } from './header-notices'
 import { ToolEvents } from './tools/tool-events'
+import { WorkspaceSkills } from './workspace-skills'
 import { WorkspaceView } from './workspace-view'
 
 /**
@@ -34,6 +36,8 @@ export interface ShownWorkspace {
   readonly chat: ChatController
   /** The events that the tools read, with the revokes that they keep. */
   readonly toolEvents: ToolEvents
+  /** The latest skill lists, for the list of `/` of the chat. */
+  readonly skills: WorkspaceSkills
 }
 
 interface KeptWorkspace extends ShownWorkspace {
@@ -98,6 +102,8 @@ export class ShownWorkspaces {
   private readonly keptPreviews = new Map<string, PreviewsStore>()
   /** The kept files preview of each workspace, made at its first read. */
   private readonly keptFilesPreviews = new Map<string, FilesPreviewStore>()
+  /** The kept services of each workspace, made at their first read. */
+  private readonly keptServices = new Map<string, ServicesStore>()
 
   /**
    * `onShow` runs at the first show of each workspace, after its render. It
@@ -157,6 +163,7 @@ export class ShownWorkspaces {
       model: new WorkspaceModel(org, workspaceId),
       notices: new HeaderNotices(),
       toolEvents: new ToolEvents(),
+      skills: new WorkspaceSkills(),
       chat: new ChatController({
         target: { orgId, workspaceId },
         // The client of the org takes each `org_suspended` refusal of the
@@ -239,6 +246,25 @@ export class ShownWorkspaces {
     return store
   }
 
+  /**
+   * The kept services of a workspace, which the Preview tool reads. The
+   * first call makes the store, which starts nothing. The workspace screen
+   * connects it while the computer runs. It reads through the client of the
+   * org, with the timers of the app.
+   */
+  services(orgId: string, workspaceId: string): ServicesStore {
+    const key = `${orgId}/${workspaceId}`
+    const known = this.keptServices.get(key)
+    if (known) return known
+    const services = this.app.org(orgId).services
+    const store = new ServicesStore(
+      { orgId, workspaceId },
+      { ...services, fetch: services.api.fetch },
+    )
+    this.keptServices.set(key, store)
+    return store
+  }
+
   /** Stops every kept workspace and forgets it, as at a sign-out. */
   clear(): void {
     for (const shown of this.kept.values()) stop(shown)
@@ -247,6 +273,7 @@ export class ShownWorkspaces {
     this.keptFiles.clear()
     this.keptPreviews.clear()
     this.keptFilesPreviews.clear()
+    this.keptServices.clear()
   }
 }
 

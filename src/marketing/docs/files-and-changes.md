@@ -45,6 +45,8 @@ Its title shows in italics.
 The next click on another file replaces it in the same place.
 This applies to **All files**, **Changes**, and file chips in chat.
 If a file already has a tab, a click shows that tab.
+Press **Escape** to close the temporary tab while it shows.
+Escape first closes an open menu or dialog, and it does nothing in the message field.
 
 On a phone, each file opens within **Files**.
 Use its back action to return to **All files**.
@@ -83,6 +85,7 @@ For example, an agent can write a report as a web page in `.context/`.
 
 The page runs on a separate domain from Conductive, as a port preview does.
 Use **Reload** to load the page again.
+Use **Expand** to show the page in a large window over the whole app.
 Use **Open** to show the page in a new browser tab.
 In the Mac app, **Open** uses your default browser.
 
@@ -181,11 +184,16 @@ Use a double-click to keep a temporary tab there.
 The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
-After **Continue**, the workspace's base branch is the repository's latest default branch.
-After a repository change, it is the latest default branch of the new repository.
+After **Continue**, the base is the branch that the pull request merged into, if it still exists.
+Otherwise, the base is the repository's default branch.
+After a repository change, the base is the latest default branch of the new repository.
+A base that follows the default also follows a later rename of that default branch.
+If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
+The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 

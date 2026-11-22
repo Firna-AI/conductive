@@ -16,16 +16,17 @@ export const capabilitiesIntro = {
 
 export const secretsPartWords = {
   title: 'Secrets',
-  hint: 'Agents use a pre-approved secret with no question.',
   /** The hint of the part in the control of an automation. */
   automationHint:
     'Each run workspace starts with the checked secrets pre-approved, so agents use them with no question.',
   manage: 'Manage secrets',
   allAgents: 'All agents',
   add: 'Add a secret',
-  sessions: 'Allowed in sessions',
+  session: 'This session',
   values: 'Values for this workspace',
   remove: 'Remove',
+  /** The label and the placeholder of the search above a long list. */
+  search: 'Search secrets',
 } as const
 
 /** The line of an org without secrets. */
@@ -33,13 +34,22 @@ export function noSecrets(org: string): string {
   return `${org} has no secrets yet.`
 }
 
-/** What a session approval says: its session, who allowed it, and when. */
-export function approvalDetail(
-  session: string,
-  who: string,
-  when: string,
-): string {
-  return `${session} · by ${who}, ${when}`
+/** The name of the info icon that shows the description of a secret. */
+export function aboutSecret(name: string): string {
+  return `About ${name}`
+}
+
+/** The line of a search that no secret matches. */
+export function noSecretMatch(search: string): string {
+  return `No secret matches “${search.trim()}”.`
+}
+
+/**
+ * What an approval of the open session says: who allowed it, and when. The
+ * title of its group names the session.
+ */
+export function approvalDetail(who: string, when: string): string {
+  return `Allowed by ${who}, ${when}`
 }
 
 /** What a value for the workspace says: who gave it, and when. */

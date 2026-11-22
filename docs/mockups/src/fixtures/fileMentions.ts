@@ -1,3 +1,5 @@
+import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
+import { code, p } from './agentText'
 import type { ChatItem } from './conversations'
 
 /**
@@ -93,9 +95,19 @@ const mentionAsk =
  * The answer of the agent. Its mentions and the path `src/lib` in code show
  * as file chips, and the function name stays code.
  */
-const mentionAnswer: readonly string[] = [
-  'I moved the lookup into a new `lookupAddress` function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
-  'The cart can now import `lookupAddress` from `src/lib`. The checkout tests still pass.',
+const mentionAnswer: readonly TextBlock[] = [
+  p(
+    'I moved the lookup into a new ',
+    code('lookupAddress'),
+    ' function in @src/lib/ and kept @src/app/checkout/useAddressAutocomplete.ts as a thin wrapper, so the address form did not change.',
+  ),
+  p(
+    'The cart can now import ',
+    code('lookupAddress'),
+    ' from ',
+    code('src/lib'),
+    '. The checkout tests still pass.',
+  ),
 ]
 
 /**

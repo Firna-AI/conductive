@@ -169,7 +169,7 @@ use no real sleep.
 
 ### Related Docs
 
-- [The software image](../../docs/protocol/sandbox-software.md#the-software-image): requirements for the image, its deploy run, and its retention.
+- [The software image](../../docs/protocol/software-image.md): requirements for the image, its deploy run, and its retention.
 - [Org image](../../docs/protocol/org-image.md): requirements for first builds.
 - [Automatic deploys](../../docs/automatic-deploys.md): the deploy run and its result.
 - [Sandbox software](../../image/README.md): the installed software.

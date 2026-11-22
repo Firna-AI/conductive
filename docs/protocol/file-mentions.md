@@ -17,6 +17,9 @@ names a decision of the change that added file chips to answers. The
 [mockup catalogue](../mockups/catalogue.md) draws these screens at
 `app/file-mentions`, at `app/attachments/sent`, at
 `app/files/menu/added`, and in the flow `user-flows/mention-a-file`.
+[Skill mentions](skill-mentions.md) states the list of `/` and the skill
+chips. That list opens in the place of this list, and it shares the keys
+and the highlight of [The list](#the-list).
 
 ## The list
 
@@ -156,8 +159,8 @@ names a decision of the change that added file chips to answers. The
   writes it.
 - A mention starts at the start of the text, or after a space or a line
   break. Where the chat reads Markdown marks, as in an answer, a mention
-  can also start right after a mark, such as in `**@src/app.ts**` (answer
-  chip decision 5). Today `**` is the only mark that the chat reads.
+  can also start right after a `*`, `_`, or `~~`, such as in
+  `**@src/app.ts**` or `_@src/app.ts_` (answer chip decision 5).
 - Reason: agents often write a file name in bold. A start after any
   character was rejected, because `a@b.com` would then start a mention.
 - A mention of a file can end with a line target, such as
@@ -167,8 +170,9 @@ names a decision of the change that added file chips to answers. The
   `:`, `!`, `?`, or `)`, the chat drops that one character and reads the
   mention again. The character then shows as text after the chip. Reason:
   agents end sentences right after a mention, as in "See @src/app.ts."
-- Where `**` marks bold, as in an answer, a mention ends before the next
-  `**`. So bold around a mention stays bold.
+- Where the chat reads Markdown marks, a mention ends before the next `*`
+  or `~~`, and before a `_` that closes a mark. So bold, emphasis, and
+  strikethrough around a mention keep their look.
 - The draft, the sent message, and the text that the agent gets hold the
   same mention of a file or a folder. For an attached file, Send writes
   the mention at the place of its chip, because the path comes only with
@@ -223,7 +227,7 @@ agents, and their line targets.
 
 - Each chip of the composer shows its icon in a cell at its start
   (decision 215). This holds for each chip of the message field: a file
-  chip, a workspace chip, and the chip of an attached file.
+  chip, a workspace chip, a skill chip, and the chip of an attached file.
 - While a pointer is over the cell, a × takes the place of the icon. A
   press on the × removes the chip. The removal is one step of undo.
 - A keyboard removes a chip with Backspace or Delete, so the cell takes no

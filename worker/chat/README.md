@@ -194,7 +194,8 @@ retry route for `Session.retryMessageId`.
 ## Runner warnings
 
 [Runner warnings](runner-warnings.md) gives the warning kinds and the
-fields for runner connections and for turn ends with no Stop request.
+fields for runner connections, for turn ends with no Stop request, and for
+runner work that did not finish.
 
 ## Automation first turns
 
@@ -224,6 +225,35 @@ Presentation fills both fields while it keeps each saved name, state, time, and 
 An older saved update without a GitHub summary presents null.
 The HTTP history route uses the same presentation.
 No origin is saved in the chat records or the history.
+
+## Skill lists
+
+The chat backend keeps the latest skill lists of the workspace, as
+[The list in the workspace](../../docs/protocol/skill-mentions.md#the-list-in-the-workspace)
+says. The lists are the latest `skills.updated` event of the history, so
+each tab gets them, also while the cloud computer sleeps. A runner report
+passes the output filter first. That filter leaves out each skill whose
+name held a secret value. Then `skill-reports.ts` cuts each description.
+`skill-state.ts` stores the result, and it publishes `skills: null` when the
+list is unavailable. [Chat backend key code](key-code.md) gives both files.
+
+## Services
+
+[Service reports](../../docs/protocol/service-reports.md) states the
+service messages of a runner connection. `RunnerChannel.services` delegates
+them to the [services area](../services/README.md) before the numbered reader
+and work mark. `runner-hello.ts` negotiates support and requests a fresh report.
+Saved connections retain the optional support flag and the connection's
+sandbox binding across a wake. Old connections without support stay readable.
+
+Service snapshots and control receipts use `services:v1:` records. They use
+no chat commands, cursors, repair records, browser socket kinds, or activity
+calls. Raw log assemblies live only in memory. Computer Stop clears service
+state through `RunnerChannel.stop` and `WorkspaceServices.stoppedHook`.
+Software Restart, including its failure path, keeps the service catalogue.
+Its runner disconnect ends an outstanding control as unconfirmed.
+The catalogue, controls, and log reads use the
+[workspace feature routes](../features/README.md).
 
 ## Tests
 
@@ -308,20 +338,29 @@ to gate files preview opens. The
 [file server protocol](../../docs/protocol/file-server.md) gives its rules.
 
 `readRunnerEventIdentity` in `runner-event-identity.ts` reads the identity of
-each runner event for refusal, repair, and turn-context checks. Its one scope
-table, typed from the shared runner types, gives each `RunnerEvent['type']`
-the scope `turn` or `workspace`. A `workspace` event gets no session and no
-turn, also when its payload names them. A `turn` event, or an event of an
-unknown type, keeps them only when `verifiedTurn` finds that turn. The
-`runner-event-identity.ts` entry of [Chat backend key code](key-code.md)
-gives the context and type of a private tool-detail part.
+each runner event for refusal, repair, and turn-context checks. Its policy,
+derived from the shared runner types, gives each known `RunnerEvent['type']`
+the scope `turn` or `workspace`. It also gives the source of the session and
+the turn: the event root, the nested `start`, or none. The reader takes them
+only from that source. A `workspace` event has no source, so it gets no
+session and no turn, also when its payload names them.
+
+A private `tool.detail.part` reads as `tool.updated`, so its refusal marker
+names that public type. The reader takes its session and turn only from an
+object `start`. A later part has no `start`, so `refuseRunnerEvent` reads them
+from the saved assembly of its stream, as
+[Key code: tool details](key-code-tool-details.md) says. An event of an
+unknown type keeps its root IDs. Each check uses a session and a turn only
+when `verifiedTurn` finds that turn in that session.
 
 ## Related docs
 
 - [Chat and events: Messages](../../docs/protocol/messages-and-attachments.md#messages)
 - [Chat and events: Events](../../docs/protocol/chat-and-events.md#events)
+- [Session watches](../../docs/protocol/session-watches.md)
 - [Agent runner: Lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates)
 - [Agent runner: Runner warnings](../../docs/protocol/runner-warnings.md)
+- [Agent runner: Services](../../docs/protocol/services.md)
 - [Chat backend integration](integration/README.md)
 - [Report repairs](report-repairs.md)
 - [GitHub banner backend](../github/README.md)

@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useMenuLayer } from './layers'
+import { focusLost, useLostFocus } from './lost-focus'
 import type { MenuEntry } from './Menu'
 import { MenuList } from './MenuList'
 import { placeChoices, placeMenu, type MenuAnchor } from './menu-place'
@@ -91,7 +92,8 @@ function place(
  * as while a change of the menu runs. `showChoices` can refuse in the same
  * way, and then the choices and the focus stay. The focus goes into the menu
  * as it opens, and back with `back` as it closes, unless the user moved it
- * elsewhere. The menu of the browser stays shut over it.
+ * elsewhere. A render that takes away the item with the focus gives the
+ * focus back to the menu. The menu of the browser stays shut over it.
  */
 export function PointMenu(props: {
   label: string
@@ -149,13 +151,17 @@ export function PointMenu(props: {
     const node = menu.current
     if (node) choiceToFocus(node)?.focus()
     return () => {
-      const active = document.activeElement
-      const lost = active === null || active === document.body
-      if (lost || layer?.contains(active)) latest.current.back()
+      if (focusLost() || layer?.contains(document.activeElement)) {
+        latest.current.back()
+      }
     }
   }, [])
   // Choices that open by a key or a press take the focus.
   useChoiceFocus(choices, open?.focus ?? false)
+  // A render that takes away the item with the focus, or its choices, gives
+  // the focus back to the menu, to the item that it focuses as it opens.
+  // Choices that take the focus got it above.
+  useLostFocus(menu, choiceToFocus)
 
   useEffect(() => {
     const onPointer = (event: PointerEvent) => {

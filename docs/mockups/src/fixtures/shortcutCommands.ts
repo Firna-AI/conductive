@@ -213,6 +213,10 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('repositories-settings', 'Repositories settings', [
         ['⌥', '⌘', 'A'],
       ]),
+      {
+        ...fixed('Close the temporary tab', [['Esc']]),
+        words: ['italic', 'file'],
+      },
       tabMenuKeys,
     ],
   },

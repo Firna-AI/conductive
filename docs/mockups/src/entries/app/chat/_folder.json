@@ -2,10 +2,12 @@
   "order": [
     "turns",
     "agent-stops",
+    "wakes",
     "work",
     "tables",
     "lists",
     "headings",
+    "formatting",
     "links",
     "lost-data",
     "lost-updates",
