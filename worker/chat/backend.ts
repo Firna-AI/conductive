@@ -136,7 +136,7 @@ export class WorkspaceChat {
       env,
       this.dependencies,
       this.publish,
-      () => this.runner.connections.current,
+      () => this.runner.connections.current?.state ?? null,
     )
     this.authorizedWorkspaceOperation = workspaceOperationRunner(
       this.store,
@@ -151,7 +151,6 @@ export class WorkspaceChat {
     )
     this.browsers = new BrowserConnections(
       this.store,
-      env,
       this.dependencies,
       (id) => this.operation(id),
       (id) => this.binding.bind(id),

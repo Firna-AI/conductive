@@ -279,9 +279,18 @@ callbacks and `FakeApiServer`. The other test files run in Node.
   card parts of
   [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css).
   So a desktop question taller than the window keeps its title and its
-  actions, and only its content scrolls.
+  actions, and only its content scrolls. While that content is text
+  without a control, Tab stops on it too, in each browser, through
+  `tabWithScrollingBody` of `../shell/ui/tab-stops.ts`. So a keyboard can
+  scroll it.
   [Shared UI lacks parts](../../plans/follow-ups/firna-ui-missing-parts.md)
   records the gap in `@firna/ui`.
+- `ui/modal.ts`: `useModalDialog` owns the focus of the native `ConfirmDialog`
+  and `Sheet`. After a refused close, the element that had the focus gets it
+  back, also the content, while it is in the dialog. Else the focus follows
+  `data-autofocus` or the browser's pick. It moves to the first control only
+  when the browser picks a part with `data-skip-first-focus`. So the first
+  focus of `ConfirmDialog` is on a control, not on its marked content.
 - `dev/`: the dev page and its fake server.
 
 Related docs: [Orgs and members](../../docs/protocol/orgs-and-members.md),

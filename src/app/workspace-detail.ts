@@ -54,16 +54,18 @@ export function archiveFloor(
 
 /**
  * The detail after an Archive or a Restore reply. It changes only the
- * fields of that action, so a newer name, owner, or section stays. A reply
- * that is not newer than the shown record changes nothing, such as one that
- * a later Resume, Archive, or Restore overtook.
+ * fields of that action, so a newer name, owner, or section stays. Its
+ * fields include the state of the cloud computer, which a reply without it
+ * clears. A reply that is not newer than the shown record changes nothing,
+ * such as one that a later Resume, Archive, or Restore overtook.
  */
 export function lifecycleReplyDetail(
   current: WorkspaceResponse,
   reply: WorkspaceResponse,
 ): WorkspaceResponse {
   if (reply.workspace.updatedAt <= current.workspace.updatedAt) return current
-  const { state, archivedAt, restoreUntil, updatedAt } = reply.workspace
+  const { state, archivedAt, restoreUntil, archivedComputer, updatedAt } =
+    reply.workspace
   return {
     ...current,
     start: reply.start,
@@ -73,6 +75,7 @@ export function lifecycleReplyDetail(
       state,
       archivedAt,
       restoreUntil,
+      archivedComputer,
       updatedAt,
     },
   }

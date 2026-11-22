@@ -11,7 +11,7 @@ const readChange = oneOf<ChangeKind>({
 })
 
 /** A display label, or nothing. A label never makes an event unreadable. */
-function label(value: unknown): string | undefined {
+export function label(value: unknown): string | undefined {
   return typeof value === 'string' && value !== '' ? value : undefined
 }
 

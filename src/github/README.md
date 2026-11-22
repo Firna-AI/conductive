@@ -194,14 +194,25 @@ mounts it, and the production build leaves it out.
   `access` is `write`, `read`, or `unknown`, and `method` is a merge method
   or `none`. `merge` chooses how a merge ends, `work` the local work, `turn`
   a turn that runs, and `continue` how Continue ends. `branches` is
-  `plain`, the default, or `masked`. `masked` gives the target branch a fake
-  secret value and its label, in the stored and fresh replies, the live
-  events, and the question of Continue. So the screens show "[redacted]",
-  and the prompts keep the real name. The workspace branch stays plain,
-  because the screen compares it with the workspace record.
-  `src/test-support/fake-branch-names.ts` holds that rule. `scenarioFetch`
-  of `src/test-support/fake-bar-dev.ts` answers as the Worker does, also on
-  the workspace development page.
+  `plain`, the default, `masked`, `masked-continue`, or
+  `masked-repository`. `masked` gives the target branch a fake secret
+  value and its label, in the stored and fresh
+  replies, the live events, and the question of Continue. So the screens
+  show "[redacted]", and the prompts keep the real name. The workspace
+  branch stays plain, because the screen compares it with the workspace
+  record. The question of `masked` has no label of its own, as from an
+  older Worker, so the dialog takes the label of the bar.
+  `masked-continue` also gives the value and its label to the workspace
+  branch, to a changed file of the question, and to the new branch. It
+  gives them to the default branch that Continue starts from too, which
+  differs from the target. The question, the note, its copy, and the words
+  of a clash then show the labels. `masked-repository` gives the value and
+  its label to the workspace branch and the target, as `masked-continue`
+  does, and keeps the names of Continue plain. Only the workspace
+  development page gives them to the names of a repository change too.
+  `src/test-support/fake-branch-names.ts` holds these rules.
+  `scenarioFetch` of `src/test-support/fake-bar-dev.ts` answers as the
+  Worker does, also on the workspace development page.
 - Under the frames, the page shows the last message of the chat, such as
   the prompt of an action, and the question of Continue with its Cancel and
   Continue anyway. The [workspace development page](../shell/workspace/development-page.md)

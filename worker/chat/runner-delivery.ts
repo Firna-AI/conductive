@@ -18,6 +18,7 @@ import type {
 import type { PendingCommand } from './pending-command'
 import { AttachmentPreparation } from './attachment-delivery'
 import { RunnerCommandPreparation } from './runner-command-preparation'
+import type { RepositoryMoves } from './runner-repository-move'
 
 export class RunnerDelivery {
   private readonly preparations: AttachmentPreparation
@@ -34,8 +35,14 @@ export class RunnerDelivery {
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     resume: () => Promise<void>,
     forRunningTurn: WorkspaceTurnTokens['forRunningTurn'],
+    moves: RepositoryMoves,
   ) {
-    this.commands = new RunnerCommandPreparation(store, dependencies, publish)
+    this.commands = new RunnerCommandPreparation(
+      store,
+      dependencies,
+      publish,
+      moves,
+    )
     this.store = store
     this.dependencies = dependencies
     this.publish = publish
@@ -55,7 +62,7 @@ export class RunnerDelivery {
     isCurrent: () => boolean,
     detach: () => void,
   ): Promise<void> {
-    if (!active.ready) return
+    if (!active.state.ready) return
     while (await this.flushPending(active, isCurrent, detach)) {
       if (!isCurrent()) return
     }
@@ -67,7 +74,7 @@ export class RunnerDelivery {
     detach: () => void,
   ): Promise<boolean> {
     let advanced = false
-    const pending = await this.store.read(active.workspace.id, (view) =>
+    const pending = await this.store.read(active.state.workspace.id, (view) =>
       view.pending(),
     )
     await dispatchInOrder(pending, async (command) => {
@@ -76,7 +83,7 @@ export class RunnerDelivery {
       })
       if (
         state === 'skip' &&
-        !(await this.store.read(active.workspace.id, (view) =>
+        !(await this.store.read(active.state.workspace.id, (view) =>
           view.command(command.commandId),
         ))
       )
@@ -95,8 +102,8 @@ export class RunnerDelivery {
   ): Promise<DispatchState> {
     if (
       !isCurrent() ||
-      (await this.store.read(active.workspace.id, (view) =>
-        view.commandDelivered(command.commandId, active.id),
+      (await this.store.read(active.state.workspace.id, (view) =>
+        view.commandDelivered(command.commandId, active.state.id),
       ))
     )
       return 'skip'
@@ -120,7 +127,7 @@ export class RunnerDelivery {
         ? {
             ...checked,
             attachments: await this.dependencies.resolveAttachmentPaths(
-              active.workspace.id,
+              active.state.workspace.id,
               checked.message.sender.id,
               checked.attachments,
             ),
@@ -131,7 +138,7 @@ export class RunnerDelivery {
       occurredAt?: number,
     ) => {
       await this.store.change(
-        active.workspace.id,
+        active.state.workspace.id,
         (transaction) => transaction.emit(event, occurredAt),
         this.publish,
       )
@@ -139,7 +146,7 @@ export class RunnerDelivery {
     if (
       outbound.type === 'turn' &&
       !(await this.dependencies.turnDispatching(
-        active.workspace.id,
+        active.state.workspace.id,
         {
           turnId: outbound.turnId,
           sessionId: outbound.sessionId,
@@ -152,21 +159,21 @@ export class RunnerDelivery {
     if (!isCurrent()) {
       if (outbound.type === 'turn')
         await this.dependencies.turnDispatchFailed(
-          active.workspace.id,
+          active.state.workspace.id,
           outbound.turnId,
           publish,
         )
       return 'skip'
     }
     const beganTurn = await this.dispatch.begin(
-      active.workspace.id,
+      active.state.workspace.id,
       command,
       outbound,
     )
     try {
       const outgoing = await gatewayRunnerCommand(
         outbound,
-        active.workspace.id,
+        active.state.workspace.id,
         this.forRunningTurn,
       )
       if (!outgoing) {
@@ -176,16 +183,20 @@ export class RunnerDelivery {
       await active.peer.send(outgoing)
     } catch {
       detach()
-      await this.dispatch.unsent(active.workspace.id, command, beganTurn)
+      await this.dispatch.unsent(active.state.workspace.id, command, beganTurn)
       if (beganTurn && 'turnId' in command)
         await this.dependencies.turnDispatchFailed(
-          active.workspace.id,
+          active.state.workspace.id,
           command.turnId,
           publish,
         )
       return 'skip'
     }
-    await this.dispatch.sent(active.workspace.id, command, active.id)
+    await this.dispatch.sent(
+      active.state.workspace.id,
+      command,
+      active.state.id,
+    )
     return 'send'
   }
 }

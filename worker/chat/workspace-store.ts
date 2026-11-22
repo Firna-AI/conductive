@@ -8,6 +8,7 @@ import { reportTurnEnd } from './turn-end-reports'
 import type { ChatDependencies, ChatStorage } from './types'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
+import { storedWorkspaceEventLabels } from './workspace-labels'
 
 export function createWorkspaceChatStore(
   storage: ChatStorage,
@@ -43,6 +44,7 @@ export function createWorkspaceChatStore(
         dependencies.automationReportAlarm,
       ),
     runner,
+    (workspaceId) => storedWorkspaceEventLabels(env, workspaceId),
   )
   return store
 }

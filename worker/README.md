@@ -224,6 +224,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [app.ts](app.ts) exports the Worker HTTP handler.
 - [machine-grants.ts](machine-grants.ts) dispatches the private image-source credential and attachment download routes on the machine host.
 - [application.ts](application.ts) selects each host surface and dispatches the app and machine routes with their own access gates.
+- [application-scheduled.ts](application-scheduled.ts) runs the steps of the `*/15 * * * *` Cron Trigger in order. A failed step writes its own fixed warning, and the later steps still run.
 - [http.ts](http.ts): `privateResponse` adds private response headers. It preserves an explicit referrer policy and defaults to `no-referrer`.
   `previewResponse` adds the same security headers to each reply of the preview host. It keeps the cache rules that the preview code set. A reply without rules gets `no-store`, except a bare 304.
 - [software-image/README.md](software-image/README.md) owns software image builds, the deploy token gate, and Cron cleanup.

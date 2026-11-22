@@ -23,6 +23,11 @@ points of each part.
   [`published-image-data.ts`](published-image-data.ts) reads the published image.
   Its `imageAdmissionError` gives a waiting repository the next-build message.
   The browser create and the agent tools share that message.
+  Its `currentImageRepositoryReadiness` reads, in one query, whether the
+  current provider account of the org has a published image, and the
+  repositories of that image. The
+  [repository replies](../app-api/README.md#rules) take their `imageReady`
+  and `ready` from it.
 - [`image-leases.ts`](image-leases.ts): `leasedCreationImage` reads the reserved image's name and branch.
 - [`start-allocation.ts`](start-allocation.ts): `allocateWorkspace` writes the workspace runner version from the saved allocation's image snapshot.
   It saves the encrypted request in the start job before one outside call makes the create and its D1 writes.
@@ -117,7 +122,8 @@ points of each part.
   secret marks. It treats older plain values as secret. `environmentSecrets`
   selects marked values without a length rule.
 - [`output-secrets.ts`](output-secrets.ts): reads the actual start capture
-  for the workspace event filter and file display labels.
+  for the workspace event filter and the display labels of paths and
+  branches.
 - [`workspace-transport.ts`](workspace-transport.ts): the encrypted log
   transport, and `workspaceLifecycleEndpoint`, which masks each received log.
   It also exposes the trusted `checkTurnToken` RPC through `workspaceRuntime`.

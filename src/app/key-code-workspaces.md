@@ -4,6 +4,8 @@ This page is part of the [web app guide](README.md), beside
 [Key code](key-code.md). It names the entry points of the workspace list,
 with its rows, its menus, Archive, and Restore. It also names the models of
 an open workspace and of New workspace, and the store of a connected view.
+It names the repository changes, their readiness, and the readers of the
+parts of an org too.
 Each path is relative to `src/app/`, the folder of this page.
 [Life of a workspace](../../docs/protocol/workspace-life.md) gives the
 rules of Archive and Restore.
@@ -101,6 +103,20 @@ rules of Archive and Restore.
   text that a create took. `new-workspace-refusals.test.ts` checks folder
   names with no files, an empty pick, a file with no bytes, a sign-out,
   and a failed create.
+- `repository-changes.ts`: the saved repository changes that the org
+  image lacks, from `BuildsResponse.changes`. `repositoryWaitOf` gives
+  their state, `repositoryChangesOf` the changes of the repository
+  notice, and `changeWaits` whether the build history stays closed. For
+  New workspace, `waitsForBuild` says whether a repository waits, from its
+  `ready`, else from the builds. `imageReadyOf` says whether the
+  repositories reply shows a good image, and `waitingRepositoriesOf` gives
+  the waiting repositories. `../shell/settings/RepositoryChangeNotice.tsx`
+  draws the notice of an admin, and `../members/RepositoryNotice.tsx` the
+  notice of a member.
+- `org-refresh.ts`: `orgRefreshers`, the reader of each part of
+  `OrgModel`. The reader of the repositories also reads them again after a
+  build ends or the image changes, as [Data lifecycle](data-lifecycle.md)
+  says.
 - `creations.ts`: `Creations`, the life of the create requests of an org in
   this tab, which a sign-out ends. `first-start.ts`: `failedFirstStart`,
   which tells a failed first start, and `resumesAtOpen`.

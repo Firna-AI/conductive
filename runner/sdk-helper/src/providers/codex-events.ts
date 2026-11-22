@@ -65,7 +65,7 @@ export function codexNotification(
   if (method === 'turn/completed') {
     const turn = object(input.turn)
     const status = oneOf(turn.status, ['completed', 'interrupted', 'failed'])
-    if (status === 'failed') emit(failureCause(turn.error))
+    if (status === 'failed') emit(failureCause(turn.error, true))
     else
       emit({
         type: 'result',
@@ -74,5 +74,5 @@ export function codexNotification(
       })
   }
   if (method === 'error' && input.willRetry !== true)
-    emit(failureCause(input.error))
+    emit(failureCause(input.error, true))
 }

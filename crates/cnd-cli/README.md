@@ -76,14 +76,29 @@ Development builds disable idle swaps.
 `update check` uses `cli-updater` to read and compare the newest release.
 It downloads into a private version folder. It checks the program digest
 through `cli-updater` and checks every part digest before extraction.
-It reuses complete parts with the same digest. A failed check logs a
+It reuses present parts with the same digest. A failed check logs a
 warning and returns failure. The independent background unit cannot block a start.
 It leaves no complete version on failure. A concurrent background check returns a busy error.
 An installation check with `--bootstrap` waits for the download lock.
 Downloads have a one-hour total timeout and a ten-second connect timeout.
 
-`update apply` uses no network. It switches to the newest complete version
-and installs its system files. It leaves a pending marker until
+`update apply` switches to the newest complete version and installs its
+system files. First it checks that each part of the version that starts
+is present. In a fallback, that version is the previous release. A part
+is present when its folder has the complete marker and the entry files of
+its role, such as `bin/node` or `runner-start.sh`. When a part is missing,
+apply downloads that part again with the digest check of `update check`.
+The repair takes no download lock. Each unpack, by a check or by apply,
+writes into a private folder. `part-publish.lock` covers only the last
+presence check and the rename, so a part that is present stays, and a
+background check delays a repair only for one rename. Each missing part
+gets an equal share of what is left of 60 seconds. A failed download, or
+a download that uses up its share, logs a warning with the part name.
+The next part still gets its attempt, and apply goes on. The next apply
+tries again. When no part is missing, apply uses no network. When the
+installer of a fallback fails, apply sets `current` back to the failed
+release and keeps its pending marker, so the next start runs the same
+updater again. It leaves a pending marker until
 `update started` confirms the runner start. Confirmation checks this executable's
 version against current and pending. A different version changes nothing.
 A later apply with that marker restores the previous version and its system files. A persistent rejection
@@ -153,6 +168,8 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [build.rs](build.rs) validates and embeds the release inputs.
 - [release.rs](src/release.rs) reads the embedded version and parts.
 - [update/engine.rs](src/update/engine.rs) owns download, activation, and fallback policy.
+- [update/repair.rs](src/update/repair.rs) downloads the missing parts of the release that apply starts.
+- [update/presence.rs](src/update/presence.rs) says when an unpacked part counts as present.
 - [update/ports.rs](src/update/ports.rs) defines disk, process, and updater boundaries.
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.

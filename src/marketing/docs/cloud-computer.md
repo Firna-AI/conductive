@@ -239,7 +239,9 @@ Conductive's own software updates itself in existing cloud computers.
 Fixes need no new workspace or manual install.
 The software checks for a newer release when it starts, including at each cloud computer start, and every 10 minutes while it runs.
 It downloads a newer release in the background.
-A start never waits for a download.
+A start never waits for a download of a newer release.
+If a software part of the release that starts is missing, the start downloads that part again first.
+If that download fails, the start goes on, and the next start tries again.
 A downloaded release applies at the software's next start or when the workspace has been idle for 2 minutes.
 The workspace is idle when no agent turn runs in any session and no message waits.
 

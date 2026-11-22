@@ -22,6 +22,7 @@ it('copies a wake as one line of the app with the link that the agent got, and n
   const woken = { sessionId, turnId: 'woken' }
   builder.merge(
     [
+      notice,
       {
         ...live,
         type: 'turn.completed',

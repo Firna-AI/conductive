@@ -36,7 +36,9 @@ watch, as the mockups draw them at `app/chat/wakes`.
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices in the repository order of
   the Worker. An add goes to the end of the order, and a move of a chosen
-  repository starts no build. Its custom initials
+  repository starts no build. Each repository of its replies gives
+  `imageReady` and `ready` from its current image build and the inputs of
+  that build, as the Worker does. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
@@ -46,6 +48,29 @@ watch, as the mockups draw them at `app/chat/wakes`.
   palette leave it out. The list route still sends it, as the Worker does,
   so its link and its chip still open its read-only chat, at
   `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?archivedComputer=may-exist|deleted|unknown` gives each archived
+  workspace of Acme that state of its cloud computer, with the end of its
+  14 days, as the Worker sends it. These are `checkout-autocomplete` with
+  `?workspace=archived`, and the removed `postcode-lookup`. Neither names a
+  kept cloud computer, so `may-exist` shows an unresolved create request,
+  with no Restore. A value that is not one of the three counts as no
+  option.
+- Without the option, these records have no `archivedComputer`. That is
+  the preview of the compatibility path for a record of an older Worker.
+  The notice then reads only the legacy `restoreUntil`, as before the
+  field. These records offer no Restore, so the notice says that the cloud
+  computer is deleted. `unknown` shows the same words. The URLs of a check:
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=may-exist`
+    promises only the chat history before the end of the 14 days.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=may-exist`
+    says after that end that the cloud computer is being deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=deleted`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=deleted`
+    say before and after that end that the cloud computer is deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup` preview
+    the older Worker. The URLs above with `archivedComputer=unknown` in
+    place of the state show the same words.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and

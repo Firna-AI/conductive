@@ -14,15 +14,22 @@ import { bodiesOf } from '../workspace/kept-test-kit'
 import {
   buildsOf,
   buildSucceeds,
+  chosen,
+  firstBuildRuns,
   menuRows,
   newWorkspace,
   pickerOf,
   shown,
   withDashboard,
+  withReadiness,
+  type ShownBuilds,
   type Wait,
 } from './waiting-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
+
+/** The chosen repositories of Acme, which the org image holds. */
+const acme = chosen(['storefront', 'billing-service', 'marketing-site'])
 
 describe('the repository menu of New workspace', () => {
   test('shows a waiting repository off in its place, with the note of its build, and the form picks the first ready repository', async () => {
@@ -67,6 +74,74 @@ describe('the repository menu of New workspace', () => {
         ],
       })
     }
+    // The repositories reply of a newer Worker says that the org image
+    // lacks acme/storefront, while the builds still load.
+    const loading = await newWorkspace({
+      builds: 'loading',
+      repositories: withReadiness(acme, ['storefront']),
+    })
+    expect({
+      page: shown(loading.view),
+      rows: menuRows(loading.view),
+    }).toEqual({
+      page: {
+        notices: [],
+        spinner: false,
+        picker: 'Repository: acme/billing-service',
+        send: true,
+        note: false,
+      },
+      rows: [
+        {
+          name: 'acme/storefront',
+          note: notes.waiting,
+          off: true,
+          checked: false,
+        },
+        { name: 'acme/billing-service', note: null, off: false, checked: true },
+        { name: 'acme/marketing-site', note: null, off: false, checked: false },
+      ],
+    })
+  })
+
+  test('before the first good build, no repository is off and Send stays off, with the notice of the first build once the builds load, and no notice while they load or after they fail', async () => {
+    holdAnimationFrames()
+    // The repositories reply says that the org has no image yet.
+    const beforeImage = withReadiness(acme, [], false)
+    const page = async (builds: ShownBuilds) => {
+      const { view } = await newWorkspace({ builds, repositories: beforeImage })
+      return { page: shown(view), rows: menuRows(view) }
+    }
+    const on = { note: null, off: false }
+    const rows = [
+      { name: 'acme/storefront', ...on, checked: true },
+      { name: 'acme/billing-service', ...on, checked: false },
+      { name: 'acme/marketing-site', ...on, checked: false },
+    ]
+    const off = {
+      picker: 'Repository: acme/storefront',
+      send: false,
+      note: false,
+    }
+    const silent = { page: { notices: [], spinner: false, ...off }, rows }
+    expect({
+      running: await page(firstBuildRuns),
+      loading: await page('loading'),
+      failed: await page('failed'),
+    }).toEqual({
+      running: {
+        page: {
+          notices: [
+            "Preparing the cloud computer · 2m&nbsp;14s You can send when it's ready. Cloud computer settings",
+          ],
+          spinner: true,
+          ...off,
+        },
+        rows,
+      },
+      loading: silent,
+      failed: silent,
+    })
   })
 
   test('a waiting repository turns on when the build that holds it succeeds', async () => {

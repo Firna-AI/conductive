@@ -1,6 +1,7 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import { describe, expect, test } from 'vitest'
 
+import { WORKSPACE_RESTORE_MS } from '../shared/workspaces'
 import { FAKE_IDS, FAKE_TIME } from '../test-support/fixtures/core'
 import {
   archivedAt,
@@ -64,18 +65,25 @@ describe('the order of Archive and Restore in the open workspace', () => {
   )
 
   test('the open detail follows a Restore and the newer archived record of the list, and keeps its own other fields', async () => {
-    const { org, workspace } = await stoppedWorkspace()
+    const { server, org, workspace } = await stoppedWorkspace()
     await workspace.open()
+    const end = FAKE_TIME + WORKSPACE_RESTORE_MS
+    const kept = { state: 'may-exist', restoreUntil: end } as const
+    const computer = { ...archivedAt(FAKE_TIME + 1), archivedComputer: kept }
+    server.json('POST', paths.archive, reply(computer))
     await workspace.archive.archive()
     const archived = valueOf(workspace.detail.get())?.workspace
     if (!archived) throw new Error('The workspace did not open.')
+    const row = org.workspace(FAKE_IDS.workspace)?.archivedComputer
     const shown = () => valueOf(workspace.detail.get())?.workspace
     // The list learns that the kept cloud computer is deleted, with a name
     // that the stream of the detail did not bring yet.
+    const gone = { state: 'deleted', restoreUntil: end } as const
     const deleted = {
       ...archived,
       name: 'A name of the list',
       restoreUntil: null,
+      archivedComputer: gone,
       updatedAt: archived.updatedAt + 1,
     }
     org.putWorkspace(deleted)
@@ -83,14 +91,22 @@ describe('the order of Archive and Restore in the open workspace', () => {
     org.putWorkspace({ ...archived, name: 'An older name of the list' })
     const older = shown()
     org.putWorkspace(restoredAt(deleted.updatedAt + 1))
-    expect({ ended, older, restored: shown() }).toEqual({
-      ended: { ...archived, restoreUntil: null, updatedAt: deleted.updatedAt },
-      older: { ...archived, restoreUntil: null, updatedAt: deleted.updatedAt },
+    const after = { restoreUntil: null, archivedComputer: gone }
+    expect({
+      computer: { row, detail: archived.archivedComputer },
+      ended,
+      older,
+      restored: shown(),
+    }).toEqual({
+      computer: { row: kept, detail: kept },
+      ended: { ...archived, ...after, updatedAt: deleted.updatedAt },
+      older: { ...archived, ...after, updatedAt: deleted.updatedAt },
       restored: {
         ...archived,
         state: 'stopped',
         archivedAt: null,
         restoreUntil: null,
+        archivedComputer: undefined,
         updatedAt: deleted.updatedAt + 1,
       },
     })
