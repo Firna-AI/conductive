@@ -1,3 +1,4 @@
+import type { RefCallback } from 'react'
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { Plus } from 'lucide-react'
 import styles from '../../../docs/mockups/src/components/settings/FavouritesSection.module.css'
@@ -34,12 +35,14 @@ function modelEntries(
  * the button on a computer, and in a sheet on a phone, as Add trigger of an
  * automation does, because the list is a menu of the section, not a model
  * picker. A pick closes the list and gives its model to `pick`. The button
- * is off while the list of favourites is `full`.
+ * is off while the list of favourites is `full`. `buttonRef` takes the
+ * element of the button, for the owner that moves the focus to it.
  */
 export function AddFavourite(props: {
   models: readonly AgentModel[]
   full: boolean
   pick: (model: AgentModel) => void
+  buttonRef: RefCallback<unknown>
 }) {
   return (
     <MenuButton
@@ -49,6 +52,7 @@ export function AddFavourite(props: {
       placement="below-start"
       trigger={({ open, toggle }) => (
         <ActionButton
+          buttonRef={props.buttonRef}
           disabled={props.full}
           expanded={open}
           icon={Plus}

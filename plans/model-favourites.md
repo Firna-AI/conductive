@@ -404,6 +404,15 @@ otherwise.
 - The Add list offers the models of the person outside an org, the same
   models that decide which favourites show greyed. Made on 22 November
   2026.
+- When a render takes the keyboard focus from the Favourites list, the
+  section gives it back: to the same control at the same place, else to
+  that control in the last row, else to Add a favourite. Such a render
+  comes after ×, after a reply that drops a copy, and after a failed add.
+  The section moves only a focus that the list lost. So a mount, a read of
+  the account on a return to the page, or a click elsewhere moves nothing.
+  The shared rule `useLostFocus` was rejected, because it also moves a
+  focus that fell to the page from outside the list. This fixes review
+  finding 31. Made on 22 November 2026.
 
 ## Milestone 1: Mockups
 

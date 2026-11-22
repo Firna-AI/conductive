@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { CircleAlert } from 'lucide-react'
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
@@ -16,6 +16,7 @@ import { useApp, useOfferedModels } from '../context'
 import { useAction } from '../ui/useAction'
 import { useListOrder } from '../ui/useListOrder'
 import { AddFavourite } from './AddFavourite'
+import { useFavouriteFocus } from './favourite-focus'
 import {
   addedFavourite,
   addedRows,
@@ -78,7 +79,9 @@ export function FavouritesSection() {
  * controls stay on, so a row that moved by keys keeps the focus. After the
  * reply, the section shows the saved list. A failed save keeps the saved
  * list and shows its error under the list until the next change, which
- * saves again.
+ * saves again. When a render takes the focused control out of the list, as
+ * ×, a reply that drops a copy, or a failed add can, the focus goes back
+ * into the section, as `useFavouriteFocus` says.
  *
  * A pick in Add a favourite that adds nothing, because each effort of its
  * model is already a favourite, saves nothing. A muted line under the list
@@ -103,9 +106,6 @@ function Favourites(props: {
   const [sent, setSent] = useState<readonly FavouriteRow[]>([])
   // The label of the model of a pick that added nothing, until the next change.
   const [taken, setTaken] = useState<string | null>(null)
-  const pickers = useRef(new Map<string, HTMLElement>())
-  // The row of a new favourite, whose picker takes the focus once it shows.
-  const focusNext = useRef<string | null>(null)
   const save = useAction((list: readonly AgentChoice[]) =>
     app.account.setFavourites(list),
   )
@@ -115,15 +115,7 @@ function Favourites(props: {
   if (kept.saved !== props.saved) {
     setKept({ saved: props.saved, ...keptRows(props.saved, shown, kept.next) })
   }
-  // A passive effect runs after the list of Add a favourite closed and gave
-  // the focus back, also after a phone sheet made the page active again.
-  useEffect(() => {
-    const id = focusNext.current
-    const picker = id === null ? undefined : pickers.current.get(id)
-    if (!picker) return
-    focusNext.current = null
-    picker.focus()
-  })
+  const focus = useFavouriteFocus(shown.map((row) => row.id))
   const change = (rows: readonly FavouriteRow[]) => {
     if (save.pending) return
     setTaken(null)
@@ -139,8 +131,9 @@ function Favourites(props: {
     }
     if (save.pending) return
     const added = addedRows(shown, choice, kept.next)
+    const row = added.rows.at(-1)
     setKept((current) => ({ ...current, next: added.next }))
-    focusNext.current = added.rows.at(-1)?.id ?? null
+    if (row) focus.focusAdded(row.id)
     change(added.rows)
   }
   const items = shown.map((row): MovableFavourite => {
@@ -154,7 +147,14 @@ function Favourites(props: {
   const full = shown.length >= MODEL_FAVOURITES_LIMIT
   return (
     <Section
-      actions={<AddFavourite full={full} models={listed} pick={add} />}
+      actions={
+        <AddFavourite
+          buttonRef={focus.addRef}
+          full={full}
+          models={listed}
+          pick={add}
+        />
+      }
       description="The model menu lists your favourites first, in this order."
       title="Favourites"
     >
@@ -164,6 +164,8 @@ function Favourites(props: {
             aria-busy={save.pending || undefined}
             aria-label="Favourites"
             className={styles.list}
+            onBlur={focus.onBlur}
+            onFocus={focus.onFocus}
           >
             {items.map((item, place) => (
               <FavouriteItem
@@ -182,13 +184,10 @@ function Favourites(props: {
                     ),
                   )
                 }
-                pickerRef={(element) => {
-                  if (element instanceof HTMLElement) {
-                    pickers.current.set(item.id, element)
-                  } else pickers.current.delete(item.id)
-                }}
+                pickerRef={focus.controlRef(item.id, 'picker')}
                 place={place}
                 remove={() => change(shown.filter((row) => row.id !== item.id))}
+                removeRef={focus.controlRef(item.id, 'remove')}
               />
             ))}
             {drag.lineAtEnd ? <FavouriteDropLine /> : null}

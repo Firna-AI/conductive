@@ -87,7 +87,8 @@ const noFavourites: readonly AgentChoice[] = []
  * focus is in the row. The picker and × keep their own presses, so a press
  * on them starts no drag. The picker offers the models of the person, and
  * keeps the model of the favourite. Its menu shows no favourites, so it
- * starts with All models. `pickerRef` takes the element of the picker.
+ * starts with All models. `pickerRef` and `removeRef` take the elements of
+ * the picker and of ×, for the owner that moves the focus to them.
  *
  * `hidden` says why the model menu leaves out the favourite. The picker then
  * shows at half strength, the line under it says why, and the handle, the
@@ -104,6 +105,7 @@ export function FavouriteItem(props: {
   pick: (choice: AgentChoice) => void
   remove: () => void
   pickerRef: RefCallback<unknown>
+  removeRef: RefCallback<unknown>
 }) {
   const { item, drag, hidden } = props
   const models = useOfferedModels(item.choice)
@@ -140,6 +142,7 @@ export function FavouriteItem(props: {
         </div>
         <span {...ownPress} className={ui.anchor}>
           <IconButton
+            buttonRef={props.removeRef}
             icon={X}
             label={`Remove ${item.name}`}
             onPress={props.remove}
