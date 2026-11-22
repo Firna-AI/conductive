@@ -59,6 +59,8 @@ Skill metadata has no private path. Only helper scan results and explicit
 Codex input carry the absolute path of a skill file.
 `SessionLogin` names a personal owner or org without a credential.
 `Session.login` is optional for older clients and stored records.
+`Session.anchor` is optional. It names the parent session and message, and keeps the selected rendered text with its surrounding text.
+Sessions without an anchor omit the field.
 `Session.defaultLogin` names the starter's current default owner before the first accepted message.
 It is optional and absent when no login serves the starter or `Session.login` is fixed.
 `DefaultAgentLogin` carries the server's default owner and model availability for an org and agent.
@@ -132,7 +134,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.
-- [Helper options](src/sdk_helper_options.rs) defines private start options and input.
+- [Helper options](src/sdk_helper_options.rs) defines private start options, the optional `OrgSkills` value, and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
 - [Session writes](src/tools/sessions.rs) defines the session create and send requests, the accepted message and turn, the resume states, and the write replies.

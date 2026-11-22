@@ -68,7 +68,8 @@ app.
 - The default keys copy the keys of Conductor, except where
   [The keys](keyboard-shortcuts-keys.md) gives another key and its reason.
 - A command without a key in Conductor starts with no key. The person can
-  give it one.
+  give it one. Explain the selection is an exception, as
+  [The default keys](keyboard-shortcuts-keys.md#the-default-keys) says.
 - New terminal is a command too. It starts with no key, although Conductor
   has one, as [The default keys](keyboard-shortcuts-keys.md#the-default-keys) says.
 - Go to Desktop has no command while the app hides Desktop, as

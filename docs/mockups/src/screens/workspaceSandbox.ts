@@ -19,6 +19,7 @@ import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { ActivityStatus, OpenableWorkspace } from '../fixtures/workspaces'
 import { isRunning } from './composerFor'
+import { explainActivity } from './explainModel'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -35,7 +36,8 @@ const otherSessionWorks: ReadonlySet<ConversationKey> = new Set([
 /**
  * The state of the open workspace, for its header and its row: the state
  * of its sandbox, or, on a ready sandbox, whether its agent waits for the
- * user or works. The agent of any session of the workspace counts.
+ * user or works. The agent of any session of the workspace counts, also
+ * the agent of an explanation.
  */
 export function activityOf(state: WorkspaceState): ActivityStatus {
   // A refused start leaves the sandbox stopped.
@@ -45,8 +47,10 @@ export function activityOf(state: WorkspaceState): ActivityStatus {
   if (state.overlay === 'restarting') return 'starting'
   if (state.overlay === 'restart-update-failed') return 'starting'
   if (conversations[state.conversation].some(waitsForAnswer)) return 'input'
+  const explain = explainActivity(state)
+  if (explain === 'input') return 'input'
   const works = isRunning(state) || otherSessionWorks.has(state.conversation)
-  return works ? 'working' : 'ready'
+  return works || explain === 'working' ? 'working' : 'ready'
 }
 
 /**

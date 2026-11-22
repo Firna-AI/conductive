@@ -29,6 +29,7 @@ import {
   FolderGit2,
   FolderInput,
   FolderPlus,
+  FolderSearch,
   FolderX,
   GitBranchPlus,
   GitCompareArrows,
@@ -48,6 +49,7 @@ import {
   ListOrdered,
   ListPlus,
   ListX,
+  Lock,
   LockOpen,
   LogOut,
   Maximize2,
@@ -73,6 +75,7 @@ import {
   Rows3,
   SearchX,
   ShieldOff,
+  Shrink,
   Square,
   Ticket,
   TimerReset,
@@ -86,6 +89,8 @@ import {
   Users,
   Wrench,
   X,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 
 /**
@@ -124,6 +129,7 @@ export const icons = {
   'folder-git-2': FolderGit2,
   'folder-input': FolderInput,
   'folder-plus': FolderPlus,
+  'folder-search': FolderSearch,
   'folder-x': FolderX,
   'git-branch-plus': GitBranchPlus,
   'git-compare-arrows': GitCompareArrows,
@@ -143,6 +149,7 @@ export const icons = {
   'list-ordered': ListOrdered,
   'list-plus': ListPlus,
   'list-x': ListX,
+  lock: Lock,
   'lock-open': LockOpen,
   'log-out': LogOut,
   'maximize-2': Maximize2,
@@ -168,6 +175,7 @@ export const icons = {
   'rows-3': Rows3,
   'search-x': SearchX,
   'shield-off': ShieldOff,
+  shrink: Shrink,
   square: Square,
   ticket: Ticket,
   'timer-reset': TimerReset,
@@ -181,6 +189,8 @@ export const icons = {
   users: Users,
   wrench: Wrench,
   x: X,
+  'zoom-in': ZoomIn,
+  'zoom-out': ZoomOut,
 } as const satisfies Readonly<Record<string, LucideIcon>>
 
 export type IconKey = keyof typeof icons

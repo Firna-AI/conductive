@@ -248,7 +248,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
-  and Try again.
+  and Try again. When the server answered but a service behind it did not,
+  such as GitHub for the list of skills, its message names that service.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
@@ -454,7 +455,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   link. It also gives the bars of the cloud computer.
 - [The chat](design-chat.md) gives the chips of attached files and the
   fold of the work of a turn. It also gives the data that the chat does
-  not have, and the files that the cloud computer could not read.
+  not have, and the files that the cloud computer could not read. Its
+  [Explain](design-chat.md#explain) section gives the marks in the text
+  of the chat, and the popover of an explanation: a small panel by its
+  mark on a computer, and a sheet on a phone.
 - [The Markdown of replies](design-markdown.md) gives the tables, the
   headings, the quotes, the rules, the marks, the line breaks, and the
   pictures of a reply and of a file preview, and how a message line in the

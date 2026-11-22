@@ -1,27 +1,35 @@
 import type { ReactNode } from 'react'
-import { Switch } from '@firna/ui/switch'
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
 import { noop } from '../../noop'
 import { ScreenLink } from '../common/ScreenLink'
 import { SearchField } from '../common/SearchField'
-import { useControlSizes } from '../common/touch'
 import { whoOf } from '../chat/SecretRun'
+import { useMacApp } from '../mac/MacApp'
 import {
-  macAccessWords,
+  capabilitiesIntro,
   noSecretMatch,
   noSecrets,
   secretsPartWords,
 } from './capabilitiesCopy'
-import type { CapabilityPart } from './CapabilitiesPanel'
+import { CapabilitiesPanel, type CapabilityPart } from './CapabilitiesPanel'
 import { GrantList } from './GrantList'
+import { macAccessPart, type MacAccessView } from './MacAccessPart'
 import { matchingSecrets, needsSecretSearch } from './secretSearch'
 import { SecretOption } from './SecretOption'
 import styles from './Capabilities.module.css'
 
+/** Where the control shows: in the Mac app, or in a browser. */
+type Shell = 'mac-app' | 'browser'
+
 /** What the Capabilities control shows for one workspace or one draft. */
 export type CapabilitiesView = {
+  /**
+   * New workspace, or a workspace that exists. The control of an automation
+   * has its own parts, from `automationCapabilityParts`.
+   */
+  place: Exclude<keyof typeof capabilitiesIntro, 'automation'>
   /** The org, whose secrets the workspace can use. */
   org: string
   secrets: readonly OrgSecret[]
@@ -41,7 +49,8 @@ export type CapabilitiesView = {
   grants?: WorkspaceGrants
   /** The title of the session that the control opens from, if any. */
   session?: string
-  macAccess: boolean
+  /** The switch of Mac access of this Mac, which only the Mac app shows. */
+  macAccess: MacAccessView
   /** The Secrets tab of the org settings. */
   secretsTo: string
   /** The person signed in, who reads "you" for their own grants. */
@@ -158,19 +167,6 @@ function SecretsContent(props: { view: CapabilitiesView }) {
   )
 }
 
-/** The switch of Mac access, which saves at once. */
-function MacAccessSwitch(props: { on: boolean }) {
-  const { field } = useControlSizes()
-  return (
-    <Switch
-      accessibilityLabel={macAccessWords.title}
-      onValueChange={noop}
-      size={field === 'lg' ? 'md' : 'sm'}
-      value={props.on}
-    />
-  )
-}
-
 /**
  * The secrets part, with its content and an optional hint. Manage secrets
  * opens the Secrets tab, while the org has secrets.
@@ -196,18 +192,38 @@ function secretsPart(
 
 /**
  * The parts of the Capabilities control, in their order: the secrets that
- * the workspace pre-approves, with its grants, and Mac access.
+ * the workspace pre-approves, with its grants, and then Mac access, only
+ * in the Mac app.
  */
-export function capabilityParts(view: CapabilitiesView): CapabilityPart[] {
-  return [
-    secretsPart(view, undefined, <SecretsContent view={view} />),
-    {
-      key: 'mac-access',
-      title: macAccessWords.title,
-      hint: macAccessWords.hint,
-      control: <MacAccessSwitch on={view.macAccess} />,
-    },
-  ]
+function capabilityParts(
+  view: CapabilitiesView,
+  shell: Shell,
+): CapabilityPart[] {
+  const secrets = secretsPart(view, undefined, <SecretsContent view={view} />)
+  if (shell === 'browser') return [secrets]
+  return [secrets, macAccessPart(view.macAccess)]
+}
+
+/**
+ * The Capabilities control of New workspace or of a workspace, drawn open.
+ * It chooses its parts by the shell, not by a pairing of this Mac. The Mac
+ * app shows the switch of Mac access of this Mac. A browser shows no Mac
+ * access part, because only the page of the Mac app on that Mac starts a
+ * grant (Mac access decisions 5 A and 7). A sheet on a phone has its own
+ * title.
+ */
+export function OpenCapabilities(props: {
+  view: CapabilitiesView
+  sheet: boolean
+}) {
+  const shell: Shell = useMacApp() === undefined ? 'browser' : 'mac-app'
+  return (
+    <CapabilitiesPanel
+      intro={capabilitiesIntro[props.view.place]}
+      parts={capabilityParts(props.view, shell)}
+      sheet={props.sheet}
+    />
+  )
 }
 
 /**

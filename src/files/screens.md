@@ -49,6 +49,13 @@ screen, its props, and the services that the shell passes to it.
   or refuses the new one. Bytes that the browser cannot draw offer
   Download, as a binary file does. An image file with no bytes shows that
   it is empty.
+- `ZoomablePicture` shows a drawn picture over its zoom bar.
+  `usePictureZoom` reads the wheel, a pinch, a drag, and a double press on
+  the stage, and the pure functions of `picture-zoom.ts` place the
+  picture. A stage without a size places nothing. `PictureInTab` adds
+  Expand on desktop, which opens `ExpandedPicture`, a modal window in the
+  overlay layer of the shell. The window has its own zoom, so the tab
+  keeps its zoom.
 - `FilePage` shows the tab of an HTML file, a name that ends with `.html`
   or `.htm` in any case, as [The page of an HTML file](html-page.md) says.
 - `DiffPage` shows the diff of one changed file.

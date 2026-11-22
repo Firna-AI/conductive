@@ -68,6 +68,22 @@ pub struct DefaultAgentLogin {
     pub org_model_list: Option<DefaultLoginModelList>,
 }
 
+/// The selected text and its location in the parent session.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionAnchor {
+    /// The session that holds the selected message.
+    pub parent_session_id: String,
+    /// The member message or finished agent answer that holds the selection.
+    pub message_id: String,
+    /// The rendered text of the selection.
+    pub quote: String,
+    /// The rendered text before the selection.
+    pub before: String,
+    /// The rendered text after the selection.
+    pub after: String,
+}
+
 /// Session wire fields.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
@@ -98,6 +114,9 @@ pub struct Session {
     /// The starter's current default owner, only before the first accepted message.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub default_login: Option<Box<SessionLogin>>,
+    /// The selection that started an explanation. Absent in older records.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anchor: Option<Box<SessionAnchor>>,
     /// source session id.
     pub source_session_id: Option<String>,
     /// login available.

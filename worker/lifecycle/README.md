@@ -240,9 +240,16 @@ the persisted resource records and the retained computer ledger.
 
 ### Key Code
 
+- [accepted-message-start.ts](accepted-message-start.ts): applies the open resume policy after acceptance for tool messages, late secret notices, and Explain.
 - [software-release.ts](software-release.ts): reads and validates the newest release JSON.
 - [software-bootstrap.ts](software-bootstrap.ts): verifies downloads and serializes first activation with runner restarts.
 - [software-restart.ts](software-restart.ts): checks for updates, restarts the running services, and asks the workspace object to refresh terminal support.
+- [settings-data.ts](settings-data.ts): reads the skills source and its
+  trusted name with the scripts and encrypted org environment.
+- [sandbox-environment.ts](sandbox-environment.ts): supplies both reserved
+  skills variables at create and each resume, including disk retention.
+  Org env values cannot replace either variable. A trusted name is empty
+  unless it is valid and matches the configured source without letter case.
 - [automatic-restart.ts](automatic-restart.ts): checks the saved absence, waiting messages, and provider state. It claims the shared restart and sends its commands outside the chat queue.
 
 [Key code](key-code.md) lists the entry points of the lifecycle code, and

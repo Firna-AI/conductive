@@ -90,7 +90,10 @@ This page lists each protocol doc and what it covers.
       Reveal, the mark for all agents, the grants, and their risks.
       - [Capabilities](../protocol/capabilities.md): the control of New
         workspace, of each workspace, and of an automation, with its
-        secrets part and Mac access.
+        secrets part.
+        - [Mac access](../protocol/mac-access.md): the requests that agents
+          can always send to a Mac, the Mac access switch of the Mac app,
+          the grant that it starts on this Mac, and the risks.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.
@@ -223,6 +226,10 @@ This page lists each protocol doc and what it covers.
   - [Workspace and session names](../protocol/workspace-and-session-names.md):
     the missing and the automatic names of workspaces and sessions, and
     the title that a small model gives a new workspace.
+  - [Explain](../protocol/explain.md): Explain on a selection of chat
+    text, its key, the written prompt, the explanation and its anchor, the
+    marks in the parent chat, the popover, a closed explanation, and
+    read-only workspaces.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent
@@ -238,8 +245,9 @@ This page lists each protocol doc and what it covers.
     message shows as one line in the work of a turn, closed and open, with
     its tables, headings, quotes, rules, and line breaks.
 - [GitHub tokens](../protocol/github-tokens.md): the git and CLI account
-  scope of a cloud computer, the author of each commit in a sandbox, and the
-  GitHub actions of the Worker as a member.
+  scope of a cloud computer, the author of each commit in a sandbox, the copy
+  and lookup of the skills repository, and the GitHub actions of the
+  Worker as a member.
   - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
     the GitHub tokens that an image job uses to copy the repositories.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each

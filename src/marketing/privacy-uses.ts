@@ -152,10 +152,13 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         gets the messages, the files, and the command results of each turn
         on the login, whoever sent the message.`,
       text`Your work: ${productName} keeps your messages, including those
-        sent by pull request bar actions, and the answers of the agents as
-        the chat history of each workspace.
+        sent by pull request bar actions and by Explain, and the answers of
+        the agents as the chat history of each workspace.
         Messages from agent tools end with Sent by: and a link to the
         sending session. The chat history keeps that link.
+        Explain sends a message for you that quotes the text that you
+        select, with the text around it and a link to its session. The new
+        session keeps that quote and its place, so that the chat marks it.
         A stop through agent tools also records the sending session.
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.

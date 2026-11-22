@@ -9,7 +9,10 @@ it('refuses an oversized Always allow save and lets a fresh request use Allow on
   const test = sessionFixture()
   const saved = 'é'.repeat(449_998)
   test.permissions.allowCommand(saved)
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.approval',
     workspaceId: 'workspace-one',
@@ -29,7 +32,10 @@ it('refuses an oversized Always allow save and lets a fresh request use Allow on
   expect(test.run).not.toHaveBeenCalled()
   expect(test.permissions.settings().alwaysAllowedCommands).toEqual([saved])
   const fresh = test.command({ requestId: 'request-two' })
-  test.session.receive({ type: 'command.request', request: fresh })
+  test.session.receive({
+    type: 'command.request',
+    request: fresh,
+  })
   test.session.receive({
     type: 'command.approval',
     workspaceId: fresh.workspaceId,

@@ -11,9 +11,10 @@ import {
 import { outerWorkerBundle } from '../chat/integration/outer-runtime.test-support'
 import type { Workspace } from '../chat/integration/workspace-review-entry.test-support'
 import { CLAUDE } from '../chat/harness.test-support'
-import { record } from '../chat/inputs'
+import { record, string } from '../chat/inputs'
 import { array } from '../chat/agent-events'
 import { chatHistoryPath } from '../../src/shared/events'
+import { explainSessionPath } from '../../src/shared/sessions'
 import { driveWorkspaceStart } from '../chat/integration/workspace-start.test-support'
 import type { WorkspaceStartResult } from '../lifecycle/start-types'
 import {
@@ -62,6 +63,70 @@ async function target(active: AgentWriteFixture) {
   })
   return { actor, sessionId }
 }
+
+it('starts a stopped computer after accepting an explanation prompt and keeps acceptance after a failed check', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  const { actor, sessionId } = await target(active)
+  await actor.beginLifecycleStart('create')
+  await actor.lifecyclePrepared()
+  await actor.lifecycleStopped()
+  const explain = () =>
+    active.request(explainSessionPath(OUTER_ORG, OTHER_WORKSPACE, sessionId), {
+      method: 'POST',
+      headers: { Cookie: active.cookies.memberCookie },
+      body: JSON.stringify({
+        messageId: `message-${OTHER_WORKSPACE}`,
+        quote: 'Original queued work',
+        before: '',
+        after: '',
+      }),
+    })
+  const response = await explain()
+  expect(response.status).toBe(201)
+  const accepted = record(await response.json())
+  expect(await actor.readStartCheckpoint()).toMatchObject({
+    kind: 'resume',
+    requestedByUserId: 'member',
+  })
+  expect(accepted).toMatchObject({
+    session: { anchor: { parentSessionId: sessionId } },
+    message: { state: 'queued', sender: { id: 'member' } },
+    turnId: null,
+    resume: { state: 'queued', error: null },
+  })
+  const history = await active.request(
+    chatHistoryPath(
+      OUTER_ORG,
+      OTHER_WORKSPACE,
+      string(record(accepted.session).id),
+    ),
+  )
+  expect(await history.json()).toMatchObject({
+    events: expect.arrayContaining([
+      expect.objectContaining({
+        event: expect.objectContaining({
+          type: 'message.accepted',
+          message: accepted.message,
+        }),
+      }),
+    ]),
+  })
+  expect(active.boat.resumeIds).toEqual([])
+  await actor.advanceStartAlarm()
+  expect(active.boat.resumeIds).toEqual(['bx_tool_resume'])
+  await actor.lifecycleStopped()
+  await active.env.DB.prepare(
+    'UPDATE workspaces SET sandbox_id = NULL WHERE id = ?',
+  )
+    .bind(OTHER_WORKSPACE)
+    .run()
+  const failed = await explain()
+  expect(failed.status).toBe(201)
+  expect(await failed.json()).toMatchObject({
+    message: { state: 'queued', sender: { id: 'member' } },
+    resume: { state: 'failed', error: { code: 'sandbox_unavailable' } },
+  })
+})
 
 it('queues a stopped computer before replying and retries a failed later start without repeating the message', async () => {
   const active = (fixture = await agentWriteFixture(bundle))

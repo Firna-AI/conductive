@@ -37,6 +37,11 @@ import {
   rowMenuStateProperties,
 } from './rowMenuState'
 import {
+  explainStateDefaults,
+  explainStateKeys,
+  explainStateProperties,
+} from './explainState'
+import {
   serviceStateDefaults,
   serviceStateKeys,
   serviceStateProperties,
@@ -80,6 +85,7 @@ export const workspaceStateSchema = {
     ...feedbackStateKeys,
     ...rowMenuStateKeys,
     ...barStateKeys,
+    ...explainStateKeys,
   ],
   properties: {
     workspace: { enum: openableWorkspaces },
@@ -218,6 +224,7 @@ export const workspaceStateSchema = {
     ...feedbackStateProperties,
     ...rowMenuStateProperties,
     ...barStateProperties,
+    ...explainStateProperties,
   },
 } as const
 
@@ -255,6 +262,7 @@ export const readyWorkspace: WorkspaceState = {
   ...feedbackStateDefaults,
   ...rowMenuStateDefaults,
   ...barStateDefaults,
+  ...explainStateDefaults,
 }
 
 /**

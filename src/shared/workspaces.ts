@@ -68,7 +68,13 @@ export interface CreateWorkspaceRequest {
   sectionId?: string
   startBranch?: string
   baseBranch?: string
-  capabilities?: WorkspaceCapabilities
+  /**
+   * The capabilities of the new workspace. Each field that is not there
+   * takes its value from `NEW_WORKSPACE_CAPABILITIES`. The page sends only
+   * the pre-approved secrets. The Worker still takes `macAccess`, such as
+   * from an older page, and it gates nothing (Mac access decision 7).
+   */
+  capabilities?: Partial<WorkspaceCapabilities>
   firstMessage: SendMessageRequest
 }
 export interface CreateWorkspaceResponse extends WorkspaceResponse {

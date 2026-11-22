@@ -10,6 +10,7 @@ import { writeCodexCredentials } from './codex-credentials'
 import { codexNotification } from './codex-events'
 import { codexStdioServer } from './codex-mcp'
 import { checkCodexGateway, codexSettings } from './codex-settings'
+import { prepareCodexSkills } from './codex-skills'
 import { openCodexThread } from './codex-thread'
 import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
@@ -76,6 +77,7 @@ export function createCodexFactory(
       await lifetime.close()
       throw error
     }
+    const orgSkills = await prepareCodexSkills(options, lifetime)
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
@@ -84,9 +86,11 @@ export function createCodexFactory(
     let closed = false
     let rpc: JsonRpc
     try {
+      options.signal?.throwIfAborted()
       const args = [
         codexBinary(),
         'app-server',
+        ...orgSkills.args,
         ...Object.entries(settings.config).flatMap(([key, value]) => [
           '-c',
           `${key}=${JSON.stringify(value)}`,
@@ -163,6 +167,16 @@ export function createCodexFactory(
               ? options.credential.token
               : options.credential.login.secret,
         })
+      if (orgSkills.extraRoots.length)
+        await rpc
+          .request('skills/extraRoots/set', {
+            extraRoots: orgSkills.extraRoots,
+          })
+          .catch(() => {
+            options.warn(
+              'The org skills could not be loaded. The turn will continue.',
+            )
+          })
       const thread = await openCodexThread(rpc, options, settings.modelProvider)
       threadId = thread
       options.event({ type: 'conversation', id: thread })

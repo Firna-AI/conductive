@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.33.0](https://github.com/Firna-AI/conductive/compare/v0.32.0...v0.33.0) (2026-11-22)
+
+
+### Features
+
+* **skills:** share org skills with repository trust ([#426](https://github.com/Firna-AI/conductive/issues/426)) ([d3c1c5f](https://github.com/Firna-AI/conductive/commit/d3c1c5f178fe9b246ab53eab51a4b5d0f13e8c48))
+
+## [0.32.0](https://github.com/Firna-AI/conductive/compare/v0.31.0...v0.32.0) (2026-11-22)
+
+
+### Features
+
+* **capabilities:** one Mac access switch that allows all commands ([#614](https://github.com/Firna-AI/conductive/issues/614)) ([69d60d0](https://github.com/Firna-AI/conductive/commit/69d60d0d03c147556b0dc849c270a973412a21a2))
+* **chat:** explain selected chat text in a popover ([#619](https://github.com/Firna-AI/conductive/issues/619)) ([3359426](https://github.com/Firna-AI/conductive/commit/335942653330e7f8483f225da08d527711d0826c))
+* **files:** zoom and expand pictures in the file tab ([#647](https://github.com/Firna-AI/conductive/issues/647)) ([a9e43b0](https://github.com/Firna-AI/conductive/commit/a9e43b05fdf4c69927790840a844a0c6c4d6535a))
+* **services:** run servers outside agent turns ([#643](https://github.com/Firna-AI/conductive/issues/643)) ([cc6a38f](https://github.com/Firna-AI/conductive/commit/cc6a38f09919cd2e69c13e767434600fa12ff4d6))
+* **sessions:** wake a session when a watched turn ends ([#627](https://github.com/Firna-AI/conductive/issues/627)) ([1c48caa](https://github.com/Firna-AI/conductive/commit/1c48caabb4d16a43d249ca9136a0e90a87f58451))
+
+
+### Bug Fixes
+
+* **chat:** bound each events replay and answer the socket first ([#477](https://github.com/Firna-AI/conductive/issues/477)) ([6408c95](https://github.com/Firna-AI/conductive/commit/6408c95234d97d5e4a0dd6bcfdd864edac5475b7))
+
 ## [0.31.0](https://github.com/Firna-AI/conductive/compare/v0.30.0...v0.31.0) (2026-11-22)
 
 

@@ -14,7 +14,9 @@ the time limit of background work, the end of a fast turn that ran at
 standard speed, and the line that wakes a session when a turn that it
 watched ends. [The Markdown of replies](design-markdown.md) gives the
 tables, the headings, the quotes, the rules, the marks, and the line
-breaks of a reply and of a file preview.
+breaks of a reply and of a file preview. [Explain](#explain) gives the
+marks of explanations, the Explain button, and the popover of an
+explanation.
 
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on
@@ -151,3 +153,82 @@ breaks of a reply and of a file preview.
 [Workspace, session, file, and skill chips](design-chips.md) gives the
 chips in a line of text. It also gives the code block of an answer, and
 the lists of `@` and `/`.
+
+## Explain
+
+`app/chat/explain` draws the parts of Explain. They live in
+`src/components/explain/` and take no fixtures, so the app can use them
+too. `explainCopy.ts` beside them holds their words. The docs call the
+panel by the mark a popover, because "preview" names port previews.
+
+- `MarkedText` draws a text of a message with the marks of its
+  explanations and the selection of the member. `ChatMarks` gives the chat
+  the marks of each message, and `ChatItemView` draws them in a member
+  message, and in each text of an answer through `markedDrawing`. The text
+  is cut only at the ends of a quote, so a quote holds whole code and
+  whole bold.
+  - A mark has the soft amber fill that also marks the lines of a file
+    tab. Its text keeps its colour, so the mark reads as a highlight and not
+    as a link. A mark that wraps keeps its fill on each line. Under the
+    pointer, and while the popover of its explanation is open, the fill is
+    deeper, in the `warningBorder` colour. The open mark names the anchor
+    `--explain-mark`, which the popover keeps to.
+  - `MarkGlyph` ends each mark with the state of its explanation: the icon
+    of Explain when its turn ended, the spinner of a session tab while it
+    runs, the Needs input mark of the header while it waits for a member,
+    and the alert of a failed turn, in the danger colour, when its turn
+    failed. Each state has its own shape. Screen readers hear the title of
+    the explanation and its state, such as "Needs input", and the pointer
+    over a mark shows the title.
+  - Where two marks overlap, the fill is deeper, and a press opens a short
+    menu of their explanations: below the overlap on a computer, and in a
+    sheet on a phone. Each row shows the state and the title of an
+    explanation.
+  - `WholeMark` draws a mark whose text no longer matches. The whole
+    message takes the fill of a mark, a little wider than its text, with
+    the glyph at its top right. The fill tints the whole box, and no edge
+    has a strip.
+  - The selection takes the colours of a selection of the system. On a
+    phone the screen draws the handles of the phone and its selection menu
+    above the selection.
+- `ExplainButton` draws Explain just above the middle of a selection,
+  raised with the shadow of a menu. So it covers none of the text that the
+  member reads next. Where the chat has no room past the selection, such
+  as in a bubble, it lines up with the end of the selection. On a phone,
+  `PhoneExplainButton` puts it above the composer, in the middle, away from
+  the selection menu and the handles of the phone. A press sends the
+  prompt that the app writes at once, and the popover opens. Explain has
+  no prompt field.
+- `ExplainPopover` draws the popover of an explanation. Its header shows
+  the quote, cut to two lines, then Expand and the close button. The
+  popover shows no written prompt, so the quote names what its chat is
+  about. Under the header a compact `ChatPane` draws the chat of the
+  explanation, as its tab does: the work of each turn, the answers, the
+  follow-up messages, the requests that wait for a member, the notice of a
+  failed turn with Try again, and the line of a stopped turn. Its `hide`
+  leaves out the written prompt, which still starts the first turn, so the
+  work of that turn folds. While the cloud computer starts, the steps of
+  the start show in place of the turn.
+  - On a computer the popover is a panel 400 px wide by its mark, over the
+    app frame. It keeps to the anchor of the open mark through CSS anchor
+    positioning. It opens below the mark, from the start of the mark, and
+    above the mark when the frame has more room there, so it never covers
+    the marked text. Its highest height is 420 px, or the room on its side
+    of the mark less its 6 px margins. Its chat scrolls inside it, and its
+    newest line stays in view. It has the full hairline outline of a card
+    and the shadow of a menu. No dim lies over the app, because the parent
+    chat stays live around it.
+  - On a phone the popover is a sheet at half the height of the screen,
+    with no dim, so the marked text stays in view above it. A drag of its
+    handle takes it to full height, where it stops under the tab row.
+    While a request waits for the member, the sheet opens at full height,
+    so the request card and the chat above it both have room.
+- `FollowUpField` draws the box at the foot of the popover: one line that
+  grows to four, Stop while a turn runs, and Send. A follow-up is a message
+  of the session, so while a turn runs it steers that turn. The box has no
+  model picker and no attach button, and Expand gives the whole composer
+  of the tab. A closed explanation shows the notice "The tab is closed"
+  over the box. While the cloud computer does not run, the bar of a tab,
+  `SandboxBar`, takes the place of the box and of that notice, as it takes
+  the place of the composer: Resume while the cloud computer is stopped.
+  A read-only workspace shows no box and no bar.

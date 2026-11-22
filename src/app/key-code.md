@@ -120,12 +120,12 @@ Each path is relative to `src/app/`, the folder of this page.
   `api/read-secrets.ts` reads them and the capabilities of a workspace,
   and keeps no value from a reply of the list.
 - `capabilities-model.ts`: `WorkspaceCapabilitiesModel`, the pre-approved
-  secrets, the approvals of the sessions, the values for the workspace, and
-  Mac access of one workspace, with their changes. It reads the values from
-  the list of the secret requests, and removes one with its route.
-- `new-workspace-draft.ts`: `Draft`, with the Capabilities choices of New
-  workspace, and the pure rules of a draft that `new-workspace-model.ts`
-  applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
+  secrets, the approvals of the sessions, and the values for the workspace
+  of one workspace, with their changes. It reads the values from the list
+  of the secret requests, and removes one with its route.
+- `new-workspace-draft.ts`: `Draft`, with the pre-approved secrets of New
+  workspace and the switch of Mac access, `allowThisMac`, and the pure
+  rules of a draft that `new-workspace-model.ts` applies. Each draft starts from `NEW_WORKSPACE_CAPABILITIES` in
   [`../shared/secrets.ts`](../shared/secrets.ts).
 - `permissions.ts`: `secretRights` and `mayAddSecret`, the rights of the
   Secrets tab, beside the other rights of an org.
@@ -187,10 +187,30 @@ Each path is relative to `src/app/`, the folder of this page.
   client that reports its refusals, also the replies of its fetch, and the
   rules of what a person may change.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
-  the builds, and the log. `classifyEnvVar` changes only the mark of a
-  variable, and sends no value. `replaceEnvVar` changes only the value,
-  and sends no mark, so the Worker keeps the stored mark. `setEnvVar`
-  sends a value and a mark, for Add variable.
+  the skills repository, the builds, and the log. `classifyEnvVar` changes
+  only the mark of a variable, and sends no value. `replaceEnvVar` changes
+  only the value, and sends no mark, so the Worker keeps the stored mark.
+  `setEnvVar` sends a value and a mark, for Add variable.
+  `saveSkillsRepository` saves the text of the Skills field and its trust
+  choice in one write, with a grant that names that same text, and then
+  looks up the skills again. `loadSkills` is Try again of the lookup.
+- `skills-lookup.ts`: `SkillsLookup`, the reads of the lookup of the
+  skills repository, of which only the newest answer shows, and
+  `shownSkills`, the list or the notice that the Skills section shows for
+  an answer. The tab of an admin and the read-only tab of the members UI
+  share it.
+- `skills-trust.ts`: `SkillsChoice`, the skills repository and its trust
+  choice as one value. `sameSkillsChoice` is the equality of the draft of
+  the Skills section, so a newer saved value never pairs the trust of one
+  repository with the text of another. `savedSkillsChoice` and
+  `savedSkillsTrust` read the saved choice of the settings, and
+  `namesSkillsRepository` says whether the text of the field has a trust
+  choice. The tab of an admin and the read-only tab of the members UI
+  share it.
+- `../shell/settings/SkillsSection.tsx`: the Skills section of an admin,
+  with the field, the trust switch of `SkillsTrust.tsx`, Save repository,
+  and the list or its notices, from the pure parts and the words of the
+  mockups.
 - `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
   `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
   row saves its mark at once, and Add variable starts secret. A new value

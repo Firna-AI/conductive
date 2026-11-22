@@ -1,0 +1,24 @@
+/*
+ * The zoom bar under the stage of a picture: Zoom out, the zoom, Zoom in,
+ * Fit, and Expand, in the middle. A hairline keeps it apart from the stage.
+ */
+.bar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: calc(var(--ui-bar-height) + 6px);
+  padding: 4px 8px;
+  border-top: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+/* The zoom keeps one width, so the buttons do not move as it changes. */
+.zoom {
+  min-width: 44px;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}

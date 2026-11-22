@@ -159,17 +159,24 @@ a dropped folder that the browser cannot read. The app shares these words.
   workspace screen declares its states in `src/screens/workspaceState.ts`, so
   `mockups:serve` offers a control for each part of the state. The automation
   screen declares its states in `src/screens/automationState.ts` in the same
-  way. The tab and composer states of the workspace screen live in
+  way, and the Mac app screen in `src/screens/macAppState.ts`. The pages of
+  the Mac app take the composer of a workspace and the Capabilities control
+  of New workspace from the states of those two screens. The tab and
+  composer states of the workspace screen live in
   `src/screens/chatStates.ts`. `tabStates` covers the session, file,
   image, HTML, and Preview tabs of the centre column. `temporaryTabStates` covers the
   temporary tab, which `src/screens/workspaceTemporaryTab.ts` draws in the
   row. `composerStates` covers the composer, with its links, mentions,
-  skills, attached files, drops, and the chip of Add to chat.
+  skills, attached files, drops, the chip of Add to chat, and the
+  Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
   with the login of the open session and the model of the next message.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
-  after Copy path. `src/screens/layoutState.ts` holds the layout of the
+  after Copy path. `src/screens/explainState.ts` holds the marks of
+  explanations, the state of the explanation of Cal, and what lies open
+  by the text or over the chat, which `src/screens/explainModel.ts`
+  reads. `src/screens/layoutState.ts` holds the layout of the
   desktop columns: a drag of a handle, the right column, and the sidebar.
   `src/screens/serviceState.ts` holds the services of the Preview tool and
   what lies open over them, which `src/screens/workspaceServices.tsx`
@@ -219,6 +226,20 @@ and `envVarCopy.ts` beside it gives the note under the list. The app shares
 both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
+
+The Skills section of the Cloud computer tab names the public GitHub
+repository whose skills the agents of every workspace use. An admin edits
+it in a field, and a member sees it as text. Under it, the section lists
+the skills that a lookup on GitHub finds, or it shows a notice in place of
+the list. `src/components/settings/SkillsSection.tsx` draws the section,
+and `SkillList.tsx` beside it draws the list. `skillsCopy.ts` beside them
+holds the words and the result of the lookup, so that the app can share
+them. Under the field, an admin sets the switch "Trust this skills
+repository", which starts off for each repository, and a member sees the
+saved choice as text. The choice exists only while the field names a
+repository as owner/name. `SkillsTrust.tsx` draws the switch and the
+read-only choice, and `skillsTrustCopy.ts` holds their words and the
+address of the guide. [The catalogue](catalogue.md) gives its pages.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent

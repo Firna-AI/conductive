@@ -50,6 +50,7 @@ export class BrowserConnections extends BrowserTabs {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
     return this.store.run(async () => {
       const labels = await this.store.eventLabels(access.workspace.id).prepare()
@@ -82,6 +83,7 @@ export class BrowserConnections extends BrowserTabs {
         after,
         peer: presented,
         persist,
+        registered,
       })
     })
   }
