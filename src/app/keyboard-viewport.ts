@@ -44,10 +44,11 @@ function zoomed(viewport: Viewport): boolean {
  * keyboard shows. Safari on iOS, and Chrome on Android without
  * `interactive-widget=resizes-content`, keep the page at its full height
  * under the keyboard. They then scroll the page up to show the focused
- * field, so the header of the page goes out of view. While the keyboard shows, the screen height token follows the
- * visual viewport and the page stays at its top, so the app ends at the
- * keyboard. A pinch zoom keeps the browser's own behaviour. The function
- * returns the cleanup.
+ * field, so the header of the page goes out of view. While the keyboard
+ * shows, the screen height token follows the visual viewport and the page
+ * stays at its top, so the app ends at the keyboard. A pinch zoom keeps the
+ * browser's own behaviour: while the page is zoomed, nothing changes. The
+ * function returns the cleanup.
  */
 export function followKeyboard(win: KeyboardWindow): () => void {
   const viewport = win.visualViewport
@@ -55,8 +56,8 @@ export function followKeyboard(win: KeyboardWindow): () => void {
   const root = win.document.documentElement
   let open = false
   const update = () => {
-    const covered =
-      root.clientHeight - viewport.height > keyboardMargin && !zoomed(viewport)
+    if (zoomed(viewport)) return
+    const covered = root.clientHeight - viewport.height > keyboardMargin
     if (covered) {
       root.style.setProperty(screenHeight, `${viewport.height}px`)
     } else if (open) {

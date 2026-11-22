@@ -1,21 +1,17 @@
 import { expect, test } from 'vitest'
 import { followKeyboard, type KeyboardWindow } from './keyboard-viewport'
 
-/** A visual viewport that a test resizes, scrolls, and zooms. */
-class FakeViewport extends EventTarget {
-  height = 800
-  offsetTop = 0
-  scale = 1
-
-  change(next: { height?: number; offsetTop?: number; scale?: number }) {
-    Object.assign(this, next)
-    this.dispatchEvent(new Event('resize'))
-  }
-}
-
-/** A phone window 800 px tall, with the page at its top. */
+/**
+ * A phone window 800 px tall, with the page at its top. Its visual viewport
+ * acts as Safari's does: a change of size sends `resize`, and a move of the
+ * page after it sends `scroll`.
+ */
 function phone() {
-  const viewport = new FakeViewport()
+  const viewport = Object.assign(new EventTarget(), {
+    height: 800,
+    offsetTop: 0,
+    scale: 1,
+  })
   const properties = new Map<string, string>()
   const scrolls: number[] = []
   const win: KeyboardWindow & { scrollY: number } = {
@@ -42,35 +38,54 @@ function phone() {
       },
     },
   }
+  const resize = (next: { height: number; scale?: number }) => {
+    Object.assign(viewport, next)
+    viewport.dispatchEvent(new Event('resize'))
+  }
+  const scroll = (top: number) => {
+    win.scrollY = top
+    viewport.offsetTop = top
+    viewport.dispatchEvent(new Event('scroll'))
+  }
   const height = () => properties.get('--ui-screen-height')
-  return { win, viewport, scrolls, height }
+  return { win, resize, scroll, scrolls, height }
 }
 
 test('the app ends at the keyboard and stays at the top of the page while the keyboard shows', () => {
-  const { win, viewport, scrolls, height } = phone()
+  const { win, resize, scroll, scrolls, height } = phone()
   const stop = followKeyboard(win)
   expect(height()).toBeUndefined()
 
-  // Safari scrolls the page up to show the focused field.
-  win.scrollY = 300
-  viewport.change({ height: 450, offsetTop: 300 })
+  // The keyboard shows, then Safari scrolls the page to the focused field.
+  resize({ height: 450 })
   expect(height()).toBe('450px')
+  scroll(300)
   expect(scrolls).toEqual([0])
 
-  // The keyboard goes, and the page takes the full window again.
-  viewport.change({ height: 800 })
+  // The keyboard goes, and Safari leaves the page scrolled.
+  win.scrollY = 120
+  resize({ height: 800 })
   expect(height()).toBeUndefined()
+  expect(scrolls).toEqual([0, 0])
 
-  viewport.change({ height: 450 })
+  resize({ height: 450 })
   stop()
   expect(height()).toBeUndefined()
 })
 
-test('a pinch zoom keeps the height of the page and its scroll', () => {
-  const { win, viewport, scrolls, height } = phone()
+test('a pinch zoom keeps the height of the app and the scroll of the page', () => {
+  const { win, resize, scroll, scrolls, height } = phone()
   followKeyboard(win)
-  win.scrollY = 120
-  viewport.change({ height: 400, offsetTop: 120, scale: 2 })
+  resize({ height: 400, scale: 2 })
+  scroll(120)
   expect(height()).toBeUndefined()
+  expect(scrolls).toEqual([])
+
+  // A zoom while the keyboard shows keeps the app at the keyboard.
+  scroll(0)
+  resize({ height: 450, scale: 1 })
+  resize({ height: 225, scale: 2 })
+  scroll(200)
+  expect(height()).toBe('450px')
   expect(scrolls).toEqual([])
 })
