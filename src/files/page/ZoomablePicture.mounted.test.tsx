@@ -101,6 +101,63 @@ it('zooms with the wheel and the bar, and fits again with Fit or a double press'
   expect(bar(view.container).zoom).toBe('75%')
 })
 
+function pointer(
+  root: ParentNode,
+  type: string,
+  pointerId: number,
+  x: number,
+  y: number,
+) {
+  act(() => {
+    stage(root).dispatchEvent(
+      new PointerEvent(type, {
+        pointerId,
+        clientX: x,
+        clientY: y,
+        button: 0,
+        pointerType: 'touch',
+        bubbles: true,
+      }),
+    )
+  })
+}
+
+it('moves a zoomed picture with a drag, and zooms about the fingers of a pinch', async () => {
+  const view = await mount()
+  press(view.container, 'button', 'Zoom in')
+  pointer(view.container, 'pointerdown', 1, 0, 0)
+  pointer(view.container, 'pointermove', 1, 40, 0)
+  pointer(view.container, 'pointerup', 1, 40, 0)
+  const style = () => view.container.querySelector('img')?.parentElement?.style
+  expect(style()?.transform).toBe(
+    'translate(calc(-50% + 40px), calc(-50% + 0px))',
+  )
+  // Two fingers 100 px apart spread to 200 px about the same middle.
+  pointer(view.container, 'pointerdown', 1, -50, 0)
+  pointer(view.container, 'pointerdown', 2, 50, 0)
+  pointer(view.container, 'pointermove', 2, 150, 0)
+  pointer(view.container, 'pointermove', 1, -50, 0)
+  // The spot under the old middle, -80 px of the picture at 50% with a
+  // move of 40 px, is under the new middle, 50, at 100%: 50 - 130 = -80.
+  expect(bar(view.container).zoom).toBe('100%')
+  expect(style()?.width).toBe('1600px')
+  expect(style()?.transform).toBe(
+    'translate(calc(-50% + 130px), calc(-50% + 0px))',
+  )
+})
+
+it('keeps the focus in the bar when the focused button turns off', async () => {
+  const view = await mount()
+  press(view.container, 'button', 'Zoom in')
+  const fit = view.container.querySelector<HTMLButtonElement>(
+    'button[aria-label="Fit"]',
+  )
+  act(() => fit?.focus())
+  press(view.container, 'button', 'Fit')
+  expect(fit?.disabled).toBe(true)
+  expect(accessibleName(document.activeElement!)).toBe('Zoom in')
+})
+
 it('shows the picture in a large window at Expand, which Close and Escape close', async () => {
   const view = await mount()
   press(view.container, 'button', 'Zoom in')

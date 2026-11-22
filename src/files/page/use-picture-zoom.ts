@@ -71,8 +71,8 @@ function spread(points: ViewPoint[]): { distance: number; middle: ViewPoint } {
 /**
  * The zoom of a picture of size `picture` in its stage. The wheel and a
  * pinch on a trackpad or a touch screen zoom about the pointer. A drag
- * moves a zoomed picture, and a double press switches between the fit and
- * the own size. A new picture fits again.
+ * moves a zoomed picture, and a double press zooms in, or fits a zoomed
+ * picture again. A new picture fits again.
  */
 export function usePictureZoom(picture: PictureSize): PictureZoomView {
   const [stage, setStage] = useState<HTMLDivElement | null>(null)
@@ -121,15 +121,24 @@ export function usePictureZoom(picture: PictureSize): PictureZoomView {
         zoomBy(zoom, size, room, wheelFactor(event), point),
       )
     }
+    // Safari on iOS also sends the pointers of a pinch, which zoom already.
+    const touching = () => pointers.current.size >= 2
     const onGestureStart = (event: Event) => {
       event.preventDefault()
+      if (touching()) return
       const { picture: size, view: room, zoom: now } = sizes.current
       gestureScale = room ? placeOf(now, size, room).scale : 1
     }
     const onGestureChange = (event: Event) => {
       event.preventDefault()
+      if (touching()) return
       const gesture = event as GestureEvent
-      const point = pointIn(stage, gesture.clientX, gesture.clientY)
+      // A gesture without a place zooms about the middle.
+      const placed =
+        Number.isFinite(gesture.clientX) && Number.isFinite(gesture.clientY)
+      const point = placed
+        ? pointIn(stage, gesture.clientX, gesture.clientY)
+        : undefined
       change((zoom, size, room) =>
         zoomTo(zoom, size, room, gestureScale * gesture.scale, point),
       )
@@ -171,13 +180,15 @@ export function usePictureZoom(picture: PictureSize): PictureZoomView {
     const from = spread(before)
     const to = spread(after)
     if (from.distance === 0) return
+    // The spot between the fingers stays between them: a zoom about the
+    // old middle, then a move to the new middle.
     change((zoom, size, room) => {
       const zoomed = zoomBy(
         zoom,
         size,
         room,
         to.distance / from.distance,
-        to.middle,
+        from.middle,
       )
       return moveBy(zoomed, size, room, {
         x: to.middle.x - from.middle.x,

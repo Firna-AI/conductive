@@ -96,7 +96,9 @@ decision of the change that reads Markdown with one parser, as
   zoom goes from the fit up to eight times the own size of the picture.
 - The wheel and a pinch zoom the picture about the pointer. A drag moves a
   zoomed picture, which always covers the tab on each side where it is
-  larger. A double press switches between the fit and the own size.
+  larger. A double press on a fitted picture zooms it to its own size
+  about the pointer, or to two times its size when it already fits at its
+  own size. A double press on a zoomed picture fits it again.
 - From two times its own size, the pixels of the picture show sharp, so the
   detail of a screenshot stays clear.
 - On desktop, Expand shows the picture in a large window over the whole

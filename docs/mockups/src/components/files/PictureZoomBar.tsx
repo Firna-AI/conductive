@@ -8,14 +8,16 @@ import styles from './PictureZoomBar.module.css'
  * percentage of the own size of the picture, Zoom in, Fit, and Expand.
  * Zoom out and Fit are off while the picture fits, and Zoom in is off at
  * the largest zoom. Expand shows only in the tab on desktop, with
- * `expandTo`, the screen of the picture in its large window. The window
- * has the bar without Expand.
+ * `expand`. It leads to `expandTo`, the screen of the picture in its large
+ * window, when the catalogue has one. The window has the bar without
+ * Expand.
  */
 export function PictureZoomBar(props: {
   scale: number
   fitted: boolean
   /** The picture shows at the largest zoom, eight times its own size. */
   largest?: boolean
+  expand?: boolean
   expandTo?: string
 }) {
   const percent = zoomPercent(props.scale)
@@ -46,7 +48,7 @@ export function PictureZoomBar(props: {
         label={pictureCopy.fit}
         moklyInstance="fit-picture"
       />
-      {props.expandTo ? (
+      {props.expand === true && props.expandTo ? (
         <ScreenLink asChild to={props.expandTo}>
           <iconButton.Component
             icon="maximize-2"
@@ -54,6 +56,13 @@ export function PictureZoomBar(props: {
             moklyInstance="expand-picture"
           />
         </ScreenLink>
+      ) : null}
+      {props.expand === true && !props.expandTo ? (
+        <iconButton.Component
+          icon="maximize-2"
+          label={pictureCopy.expand}
+          moklyInstance="expand-picture"
+        />
       ) : null}
     </div>
   )

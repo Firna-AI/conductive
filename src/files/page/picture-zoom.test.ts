@@ -82,6 +82,13 @@ describe('picture zoom', () => {
     expect(placeOf(two, small, view).scale).toBe(2)
   })
 
+  it('zooms in at a double press when a larger stage fits the zoomed picture', () => {
+    const zoomed = zoomTo(fitZoom, picture, view, 0.5)
+    const larger = { width: 3232, height: 1632 }
+    const again = toggleZoom(zoomed, picture, larger, { x: 0, y: 0 })
+    expect(placeOf(again, picture, larger).scale).toBe(2)
+  })
+
   it('zooms in as the wheel turns away, and a pinch zooms faster for each px', () => {
     const notch = { deltaY: -100, deltaMode: 0, ctrlKey: false }
     expect(wheelFactor(notch)).toBeCloseTo(Math.exp(0.2))

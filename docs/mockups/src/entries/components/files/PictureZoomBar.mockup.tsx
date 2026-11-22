@@ -21,13 +21,21 @@ export const pictureZoomBar = defineComponent({
       scale: { type: 'number', minimum: 0.01 },
       fitted: { type: 'boolean' },
       largest: { type: 'boolean' },
+      /** The bar is in the tab on desktop, so it has Expand. */
+      expand: { type: 'boolean' },
       /** The screen of the picture in its large window, which Expand shows. */
       expandTo: { type: 'string', minLength: 1 },
     },
   } as const,
-  props: { scale: 0.3, fitted: true, expandTo: paths.imageExpanded },
+  props: {
+    scale: 0.3,
+    fitted: true,
+    expand: true,
+    expandTo: paths.imageExpanded,
+  },
   render: (props) => (
     <PictureZoomBar
+      expand={props.expand}
       expandTo={props.expandTo}
       fitted={props.fitted}
       largest={props.largest}

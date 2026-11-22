@@ -1,4 +1,10 @@
-import { useState } from 'react'
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FocusEvent,
+  type RefObject,
+} from 'react'
 import { Maximize2, Shrink, ZoomIn, ZoomOut } from 'lucide-react'
 import {
   ImageView,
@@ -23,10 +29,49 @@ export interface ShownPicture {
 }
 
 /**
+ * Keeps the focus in the zoom bar when the button that has it turns off,
+ * such as Zoom in at the largest zoom, or Fit after its press: the first
+ * button that is on takes it. A browser takes the focus from a disabled
+ * button, and a lost focus in the expanded window goes to Close, where the
+ * next Enter would close the window.
+ */
+function useBarFocus(bar: RefObject<HTMLDivElement | null>) {
+  const held = useRef(false)
+  useLayoutEffect(() => {
+    const node = bar.current
+    if (!node || !held.current) return
+    const active = document.activeElement
+    const lost =
+      active === null ||
+      active === document.body ||
+      (active instanceof HTMLButtonElement &&
+        active.disabled &&
+        node.contains(active))
+    if (!lost) return
+    const next = [...node.querySelectorAll('button')].find(
+      (button) => !button.disabled,
+    )
+    next?.focus()
+  })
+  return {
+    onFocus: () => {
+      held.current = true
+    },
+    onBlur: (event: FocusEvent<HTMLDivElement>) => {
+      const target = event.target
+      const off = target instanceof HTMLButtonElement && target.disabled
+      const to = event.relatedTarget
+      const inside = to instanceof Node && event.currentTarget.contains(to)
+      if (!off && !inside) held.current = false
+    },
+  }
+}
+
+/**
  * A picture over its zoom bar, as the mockups' `ImageView` and
  * `PictureZoomBar` draw them. It fits its stage as it shows. The wheel and a
  * pinch zoom it about the pointer, a drag moves a zoomed picture, and a
- * double press switches between the fit and the own size. With `expand`,
+ * double press zooms in, or fits a zoomed picture again. With `expand`,
  * the bar has Expand.
  */
 export function ZoomablePicture(props: {
@@ -37,10 +82,12 @@ export function ZoomablePicture(props: {
   const zoom = usePictureZoom(size)
   const scale = zoom.place?.scale ?? 1
   const percent = zoomPercent(scale)
+  const barNode = useRef<HTMLDivElement>(null)
+  const focus = useBarFocus(barNode)
   return (
     <ImageView
       bar={
-        <div className={bar.bar}>
+        <div className={bar.bar} ref={barNode} {...focus}>
           <IconButton
             icon={ZoomOut}
             label={pictureCopy.zoomOut}

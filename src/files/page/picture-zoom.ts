@@ -155,9 +155,10 @@ export function toggleZoom(
   view: PictureSize,
   point: ViewPoint,
 ): PictureZoom {
-  if (zoom.kind === 'zoomed') return fitZoom
   const fit = fitScale(picture, view)
-  return zoomTo(zoom, picture, view, fit < 1 ? 1 : 2, point)
+  // A zoom that a larger view fits shows fitted, so it zooms in again.
+  if (placeOf(zoom, picture, view).scale > fit) return fitZoom
+  return zoomTo(fitZoom, picture, view, fit < 1 ? 1 : 2, point)
 }
 
 /** The wheel move in CSS px, from a move in lines or in pages. */

@@ -57,13 +57,15 @@ const fittedScale = 0.38
 /**
  * The picture of an image file, fitted to the tab, with its zoom bar. The
  * tab shows a PNG, JPEG, GIF, or WebP file by its name as a picture, up to
- * the read limit of the file tab. Expand shows on desktop, with
- * `expandTo`, the screen of the picture in its large window.
+ * the read limit of the file tab. Expand shows on desktop, which gives
+ * `expandTo`. It leads there only with `linked`, because the catalogue
+ * draws the large window of checkout-mobile.png only.
  */
 function picture(
   path: string,
   view: CheckoutView,
   expandTo: string | undefined,
+  linked = false,
 ): FileSpec {
   return {
     path,
@@ -72,7 +74,8 @@ function picture(
       <imageView.Component
         bar={
           <pictureZoomBar.Component
-            {...defined({ expandTo })}
+            {...defined({ expandTo: linked ? expandTo : undefined })}
+            expand={expandTo !== undefined}
             fitted
             moklyInstance="picture-zoom-bar"
             scale={fittedScale}
@@ -209,7 +212,7 @@ export function specFor(view: FileTabView, expandTo?: string): FileSpec {
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, 'form', expandTo)
+      return picture(branchPictures.picture, 'form', expandTo, true)
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
