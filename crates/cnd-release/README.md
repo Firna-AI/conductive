@@ -50,6 +50,30 @@ The deploy publishes the signature before the newest-version JSON.
 The `newer` command prints `true` or `false`. Invalid metadata fails the
 command. These commands upload nothing.
 
+## The signing key
+
+Make the key pair once, on a trusted machine. Set the private key as the
+secret of the `production` environment, and print the public key bytes:
+
+```sh
+umask 077
+key_dir=$(mktemp -d)
+openssl genpkey -algorithm Ed25519 -out "$key_dir/release-key.pem"
+gh secret set CONDUCTIVE_RELEASE_SIGNING_KEY \
+  --repo Firna-AI/conductive --env production < "$key_dir/release-key.pem"
+openssl pkey -in "$key_dir/release-key.pem" -pubout -outform DER |
+  python3 -c '
+import sys
+key = sys.stdin.buffer.read()
+assert len(key) == 44 and key[:12].hex() == "302a300506032b6570032100"
+print("[" + ", ".join(f"0x{byte:02x}" for byte in key[-32:]) + "]")
+'
+```
+
+Put the printed array in `RELEASE_PUBLIC_KEY` in `src/signature.rs`. Keep
+the private key file offline, or delete it. The deploy refuses to publish
+while the secret is missing or while the constant is the placeholder.
+
 ## Quick Start
 
 Run from the repository root with the SDK helper, Node, and system URLs
