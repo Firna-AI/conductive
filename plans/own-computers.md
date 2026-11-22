@@ -82,7 +82,8 @@ Replaced ways:
 ## Decisions
 
 Cal answered own computer decisions 1 to 7 on 22 November 2026, in the
-brainstorm of this branch. Own computer decision 8 is open.
+brainstorm of this branch. Cal answered own computer decision 8 on the
+same day, after the options check of decision 7 D.
 
 ### Own computer decision 1: Where the agents of an own computer run
 
@@ -335,8 +336,6 @@ migration of the computers of the transition, which became option D.
 
 ### Own computer decision 8: The install on a computer that runs at the deploy
 
-Open. It waits for Cal's answer.
-
 - **Severity:** High. **Likelihood:** Common. **Effort:** Medium.
 - **Source:** Design.
 - **Category:** Product bug.
@@ -375,8 +374,12 @@ Open. It waits for Cal's answer.
 - **Previous examples:** The idle update of
   [Sandbox software](../docs/architecture/sandbox-software.md#releases-and-updates).
 - **Recommendation:** C. No turn ends, and the tools keep working.
-- **Action:** ask the user, because the choice decides whether the deploy
-  ends the running work of members.
+- **Choice:** A, on 22 November 2026. The recommendation was C.
+- **Reason:** Cal chose the simple path. The migration job restarts the
+  runner of each running computer, as Restart does. Each running turn and
+  each process that an agent started ends, as after any restart of the
+  runner. The terminal shells keep running
+  (`docs/protocol/restart-the-software.md:26-29`).
 
 ## Design calls
 
@@ -585,7 +588,7 @@ Depends on: 6
 
 ## Milestone 9: Old computers, and removal of the provider path
 
-Depends on: 7, 8, and own computer decision 8
+Depends on: 7, 8
 
 Own computer decision 7 D: a migration job brings each computer of the
 transition onto the host connection, and the bootstrap covers the rest.
@@ -628,7 +631,12 @@ The second options check gave most of these TODOs. Its report is in
       configured, a provider error or a missing disk, and an archived
       workspace whose Restore ends within a day. Pace each workspace by its
       own account.
-- [ ] Install on running computers as own computer decision 8 says.
+- [ ] Install on each running computer as own computer decision 8 A says:
+      download the pinned release, then restart the runner, as Restart
+      does (`worker/lifecycle/software-restart.ts:36-49`). Restart today
+      needs a member (`software-restart.ts:125-137`), so the job calls the
+      same steps as a trusted job of the workspace object. Each running
+      turn ends, as after any restart of the runner.
 - [ ] After a confirmed brief stop, record the stop time
       (`worker/lifecycle/confirmed-stop.ts:20-34`). A day-14 restart that
       falls due during the job does the install.
