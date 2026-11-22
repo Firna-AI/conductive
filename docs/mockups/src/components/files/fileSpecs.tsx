@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { defined } from '../../defined'
 import type { LucideIcon } from 'lucide-react'
 import { File, FileCode, FileDiff, FileText } from 'lucide-react'
 import { answerShot } from '../../fixtures/answerFiles'
@@ -24,6 +25,7 @@ import { diffView } from '../../entries/components/files/DiffView.mockup'
 import type { FileTabView } from './FilesPanel'
 import { htmlSpec } from './htmlSpecs'
 import { imageView } from '../../entries/components/files/ImageView.mockup'
+import { pictureZoomBar } from '../../entries/components/files/PictureZoomBar.mockup'
 import { markdownView } from '../../entries/components/files/MarkdownView.mockup'
 
 /** What the page of a file shows: its header and its content. */
@@ -49,16 +51,36 @@ export type FileSpec = {
   pageUrl?: string
 }
 
+/** The scale of a fitted screenshot in the tab of a desktop screen. */
+const fittedScale = 0.38
+
 /**
- * The picture of an image file. The tab shows a PNG, JPEG, GIF, or WebP
- * file by its name as a picture, up to the read limit of the file tab.
+ * The picture of an image file, fitted to the tab, with its zoom bar. The
+ * tab shows a PNG, JPEG, GIF, or WebP file by its name as a picture, up to
+ * the read limit of the file tab. Expand shows on desktop, with
+ * `expandTo`, the screen of the picture in its large window.
  */
-function picture(path: string, view: CheckoutView): FileSpec {
+function picture(
+  path: string,
+  view: CheckoutView,
+  expandTo: string | undefined,
+): FileSpec {
   return {
     path,
     icon: File,
     content: (
-      <imageView.Component moklyInstance="image-view" size={screenshotSize}>
+      <imageView.Component
+        bar={
+          <pictureZoomBar.Component
+            {...defined({ expandTo })}
+            fitted
+            moklyInstance="picture-zoom-bar"
+            scale={fittedScale}
+          />
+        }
+        moklyInstance="image-view"
+        size={screenshotSize}
+      >
         <CheckoutPicture label={splitPath(path).name} view={view} />
       </imageView.Component>
     ),
@@ -97,8 +119,12 @@ function notDrawn(path: string): FileSpec {
  */
 const answerLines: LineRange = { first: 19, last: 22 }
 
-/** The page of each kind of file that the mockups open as a tab. */
-export function specFor(view: FileTabView): FileSpec {
+/**
+ * The page of each kind of file that the mockups open as a tab. `expandTo`
+ * is the screen of the page in its large window, which Expand shows on
+ * desktop.
+ */
+export function specFor(view: FileTabView, expandTo?: string): FileSpec {
   switch (view) {
     case 'code':
       return {
@@ -183,13 +209,13 @@ export function specFor(view: FileTabView): FileSpec {
         closed: true,
       }
     case 'image':
-      return picture(branchPictures.picture, 'form')
+      return picture(branchPictures.picture, 'form', expandTo)
     case 'image-not-drawn':
       return notDrawn(branchPictures.damaged)
     case 'attachment':
-      return picture(screenshotCopy.path, 'covered')
+      return picture(screenshotCopy.path, 'covered', expandTo)
     case 'screenshot':
-      return picture(answerShot, 'fixed')
+      return picture(answerShot, 'fixed', expandTo)
     case 'html':
     case 'html-source':
     case 'html-opening':

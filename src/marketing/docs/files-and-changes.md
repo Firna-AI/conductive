@@ -56,6 +56,10 @@ Markdown offers **Preview** for its rendered content and **Source** for its text
 An HTML file opens as a page, as [Preview an HTML file](#preview-an-html-file) says.
 PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
 A picture keeps its proportions and fits the view.
+To zoom, use the wheel, pinch, or use the zoom bar under the picture.
+Drag a zoomed picture to move it.
+Double-click the picture to switch between the fit and its own size.
+On desktop, select **Expand** to show the picture in a large window.
 SVG files show their source as text.
 
 Other binary files offer **Download** so you can open them with another application.
