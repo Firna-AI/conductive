@@ -508,11 +508,15 @@ The orchestrator owns the combined gate, implementation review, and pull request
 - [x] Run `cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli`. Prepare the target and musl tools if needed.
 - [x] Regenerate shared types and confirm that the committed output has no drift.
 - [x] Run the deletion audit. Commit with Conventional Commits and push this branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Apply the fix rule, record follow-up items, and re-review once.
-- [ ] Resolve each finding that needs Cal before the final pull request. Record outside-scope problems without fixing them here.
-- [ ] Merge current `main` into this branch when required by the delegation and finish rules. Resolve only services conflicts. Rerun checks for the combined tree.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings. Apply the fix rule, record follow-up items, and re-review once.
+- [x] Resolve each finding that needs Cal before the final pull request. Record outside-scope problems without fixing them here.
+- [x] Merge current `main` into this branch when required by the delegation and finish rules. Resolve only services conflicts. Rerun checks for the combined tree.
 - [ ] Delete this plan when all other milestone TODOs are ticked and the review rounds are done. Preserve its dated decisions in the pull request description.
 - [ ] Open the pull request into `main`. Keep it unmerged. Watch the final commit until `Complete gate` and `Rust gate` are green.
+
+The final main-boundary fetch on 22 November 2026 remains `bad6521f1`, already integrated and reviewed. No new merge is required. The pull request and final exact-head CI complete the last administrative task.
+
+Primary implementation review completed on 22 November 2026. No findings and no outside-scope problem. Evidence: `.context/reviews/calummoore/run-dev-servers-as-services-55oo/round-1-review.md` and its canonical `findings.md`. No finding check or fix round is required.
 
 Final combined verification evidence: `.context/services/final-gate-result.json`, `.context/services/final-combined-check.log`, and `.context/services/final-service-view-comparison.json`. Later preserving main merges are recorded in `.context/services/pre-review-main-merge-audit.txt`, `.context/services/resume-final-main-merge-audit.txt`, `.context/services/post-gate-main-preservation.json`, and `.context/services/post-gate-check-results.json`. Final pull request CI checks the exact final head.
 
