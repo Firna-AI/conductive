@@ -13,13 +13,10 @@ export interface SessionChange {
 /** One paged input whose records publish their final tab placement together. */
 export interface SessionReplay {
   merge: (sessionId: string, events: readonly ChatEnvelope[]) => SessionChange
-  finish: (publish?: boolean) => void
+  finish: () => void
 }
 
-const replays = new WeakMap<
-  ChatContext,
-  { active: Set<Set<string>>; ready: Set<string> }
->()
+const replays = new WeakMap<ChatContext, Set<symbol>>()
 const placements = new WeakMap<ChatContext, Map<string, PlacedRecord>>()
 
 /** Records and tab placement advance separately while stored pages load. */
@@ -67,12 +64,13 @@ export function withCurrentFields(
   }
 }
 
-/** Places the current fields according to the last published navigation. */
+/** Places current fields while preserving held or local navigation. */
 export function placeCurrent(
   context: ChatContext,
   snapshot: ChatSnapshot,
   session: Session,
 ): ChatSnapshot {
+  if (snapshot.archiveTabs !== null) return placeSession(snapshot, session)
   const placed = placementOf(context, session)
   return withCurrentFields(
     placed ? placeSession(snapshot, placed) : snapshot,
@@ -84,33 +82,17 @@ export function placeCurrent(
 export function recordReplay(
   context: ChatContext,
   merge: SessionReplay['merge'],
-  place: (
-    snapshot: ChatSnapshot,
-    sessionIds: readonly string[],
-  ) => ChatSnapshot,
+  place: (snapshot: ChatSnapshot) => ChatSnapshot,
 ): SessionReplay {
-  let state = replays.get(context)
-  if (!state) {
-    state = { active: new Set(), ready: new Set() }
-    replays.set(context, state)
-  }
-  const { active, ready } = state
-  const records = new Set<string>()
-  active.add(records)
+  const active = replays.get(context) ?? new Set<symbol>()
+  replays.set(context, active)
+  const replay = Symbol()
+  active.add(replay)
   return {
-    merge: (sessionId, events) => {
-      const change = merge(sessionId, events)
-      if (change.record) records.add(sessionId)
-      return change
-    },
-    finish: (publish = true) => {
-      if (!active.delete(records)) return
-      if (publish) for (const id of records) ready.add(id)
-      if (active.size > 0 || !context.live()) return
-      const ids = [...ready]
-      ready.clear()
-      if (ids.length === 0) return
-      context.store.update((snapshot) => place(snapshot, ids))
+    merge,
+    finish: () => {
+      if (!active.delete(replay) || active.size > 0 || !context.live()) return
+      context.store.update(place)
     },
   }
 }

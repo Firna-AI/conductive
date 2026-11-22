@@ -1,6 +1,7 @@
 import type { Workspace } from './generated/Workspace'
 import type { WorkspaceState } from './generated/WorkspaceState'
 import { readGitHubSummary } from './github-read'
+import { readArchivedComputer } from './archived-computer-read'
 
 type JsonObject = Readonly<Record<string, unknown>>
 
@@ -43,6 +44,7 @@ function readState(
 export function createWorkspaceReader(read: WorkspaceFieldReaders) {
   return (value: unknown): Workspace => {
     const source = read.record(value, 'workspace')
+    const archivedComputer = readArchivedComputer(source.archivedComputer)
     return {
       id: read.text(source, 'id'),
       number: read.count(source, 'number'),
@@ -65,6 +67,7 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       updatedAt: read.count(source, 'updatedAt'),
       archivedAt: read.nullableCount(source, 'archivedAt'),
       restoreUntil: read.nullableCount(source, 'restoreUntil'),
+      ...(archivedComputer !== undefined && { archivedComputer }),
     }
   }
 }

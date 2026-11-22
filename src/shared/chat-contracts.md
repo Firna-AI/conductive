@@ -72,7 +72,21 @@ states the rules of the request and of a failed repair.
 `ChatEvent`, so it reaches the browser stream, but not to `AgentChatEvent`
 or to the runner events. Only the Worker writes it. It names its
 `sessionId`, the `member` who pressed Continue, the new `branch`, and its
-`baseBranch`.
+`baseBranch`. The optional `displayBranch` and `displayBaseBranch` are
+masked labels of these real names. A new note is stored with them, from
+the secret values that the Worker reads just before it writes the note.
+An older note has none. At each read that a browser gets,
+`filterContinued` in `output-fields.ts` masks the stored label, or else the
+real name, with the values of that read. It leaves out a label that equals
+its real name, as [Labels](../../worker/lifecycle/continue.md#labels) in
+the Continue guide says.
+
+`session.watch-notice` is the wake of a watch in one calling session, of
+the generated type `SessionWatchNotice`. It belongs to `ChatEvent` in the
+same way, and only the Worker writes it. Its `messageId` names the hidden
+message that carries the wake to the agent. The chat finds the turn of
+the line through that message, as
+[Transcript rules](../chat/transcript.md) says.
 
 ## The browser stream
 

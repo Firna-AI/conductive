@@ -8,6 +8,8 @@ the dev wiring in `dev/`, and what its fake routes do.
 Without `?conversation=`, a working workspace has a running recorded chat.
 Other recorded workspaces have a finished chat. An explicit conversation
 option overrides this default, including queued chats that show no spinner.
+`dev/options.ts` lists the values. The `wake-` values give the wakes of a
+watch, as the mockups draw them at `app/chat/wakes`.
 
 - The dev wiring in `dev/` keeps an in-memory state, so that an edit in the
   browser shows on the next read. Query options choose a preview state, for
@@ -34,16 +36,51 @@ option overrides this default, including queued chats that show no spinner.
   requires at least one repository and starts a simulated build. Its
   repository catalogue keeps the saved choices in the repository order of
   the Worker. An add goes to the end of the order, and a move of a chosen
-  repository starts no build. Its custom initials
+  repository starts no build. Each repository of its replies gives
+  `imageReady` and `ready` from its current image build and the inputs of
+  that build, as the Worker does. Its custom initials
   and its colour stay through rename, delete, and restore. Settings changes during the
   first good build start one added build. The fake compares settings
   revisions with builds as the Worker does.
+- The branch list of New workspace gives the branches of the mockups for
+  acme/storefront, newest commit first, and only the default branch for
+  each other repository. `?branches=loading` never answers,
+  `?branches=failed` fails as a read of GitHub does, and
+  `?branches=no-access` says that the GitHub account cannot read the
+  repository. With `?branchCheck=missing` or `?branchCheck=no-access`, a
+  create that names a branch other than the default branch gets the
+  refusal of a missing branch or of a GitHub account without access, as
+  [Start from a branch](start-branch.md) says. The fake stores no branch of
+  a create.
 - Acme also holds Postcode lookup for the shipping and billing forms,
   `postcode-lookup`, which a member archived 3 weeks before the clock of
   the fake starts. Its 14 days ended, so the workspace list and the
   palette leave it out. The list route still sends it, as the Worker does,
   so its link and its chip still open its read-only chat, at
   `/orgs/acme/workspaces/postcode-lookup`, with the Removed bar.
+- `?archivedComputer=may-exist|deleted|unknown` gives each archived
+  workspace of Acme that state of its cloud computer, with the end of its
+  14 days, as the Worker sends it. These are `checkout-autocomplete` with
+  `?workspace=archived`, and the removed `postcode-lookup`. Neither names a
+  kept cloud computer, so `may-exist` shows an unresolved create request,
+  with no Restore. A value that is not one of the three counts as no
+  option.
+- Without the option, these records have no `archivedComputer`. That is
+  the preview of the compatibility path for a record of an older Worker.
+  The notice then reads only the legacy `restoreUntil`, as before the
+  field. These records offer no Restore, so the notice says that the cloud
+  computer is deleted. `unknown` shows the same words. The URLs of a check:
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=may-exist`
+    promises only the chat history before the end of the 14 days.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=may-exist`
+    says after that end that the cloud computer is being deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived&archivedComputer=deleted`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup?archivedComputer=deleted`
+    say before and after that end that the cloud computer is deleted.
+  - `http://127.0.0.1:5173/orgs/acme/workspaces/checkout-autocomplete?workspace=archived`
+    and `http://127.0.0.1:5173/orgs/acme/workspaces/postcode-lookup` preview
+    the older Worker. The URLs above with `archivedComputer=unknown` in
+    place of the state show the same words.
 - `?subWorkspaces=1` gives Acme the sub-workspaces of the mockup page
   `app/sub-workspaces`, from `fixtures/sub-workspaces.ts` of
   `src/test-support/`: two trees in Checkout, under Apple Pay button and

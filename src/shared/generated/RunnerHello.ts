@@ -44,4 +44,8 @@ export type RunnerHello = {
    * True while this runner's repository file server listens.
    */
   fileServer?: boolean
+  /**
+   * Offer independent service traffic. Absent means no service support.
+   */
+  services?: boolean
 }

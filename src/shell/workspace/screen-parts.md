@@ -296,8 +296,10 @@ through them while the workspace loads.
   mockup of the question.
 - On a phone, the row sits under the header on every tab. It is one link to
   the Checks tab, whose top holds the actions, the line under the bar, and
-  the links to GitHub. A branch without a pull request opens that tab when
-  the bar has an action or a link.
+  the links to GitHub. While the branch has no pull request, that top also
+  names the branch and its base above the actions, also when the bar has
+  none. A branch without a pull request opens that tab when the bar has an
+  action or a link.
 - An archived workspace keeps the bar on desktop, with its links only. On a
   phone it shows only its chat, so the screen reads no GitHub state there.
 

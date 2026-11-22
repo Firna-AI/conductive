@@ -99,8 +99,8 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  stopWorkspace(workspaceId: string, keepQueued?: boolean): Promise<void> {
-    return this.operations.stop(workspaceId, keepQueued)
+  stopWorkspace(...input: Parameters<WorkspaceOperations['stop']>) {
+    return this.operations.stop(...input)
   }
 
   stopTurnsForRestart(workspaceId: string): Promise<void> {
@@ -136,7 +136,7 @@ export class WorkspaceChat {
       env,
       this.dependencies,
       this.publish,
-      () => this.runner.connections.current,
+      () => this.runner.connections.current?.state ?? null,
     )
     this.authorizedWorkspaceOperation = workspaceOperationRunner(
       this.store,
@@ -151,7 +151,6 @@ export class WorkspaceChat {
     )
     this.browsers = new BrowserConnections(
       this.store,
-      env,
       this.dependencies,
       (id) => this.operation(id),
       (id) => this.binding.bind(id),
@@ -169,7 +168,7 @@ export class WorkspaceChat {
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.binding.bind(id),
-      native,
+      { native, env, storage },
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -178,7 +177,8 @@ export class WorkspaceChat {
       workspaceId: () => this.binding.id,
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
-      closeRunner: () => this.runner.close(),
+      closeRunner: (id) => this.runner.stop(id),
+      closeRunnerAfterRestartFailure: () => this.closeRunner(),
       flushRunner: () => this.runner.flush(),
     })
   }
@@ -283,7 +283,8 @@ export class WorkspaceChat {
     return this.browsers.subscribe(access, after, peer, socket)
   }
 
-  private operation(workspaceId: string): ChatOperation {
+  operation(workspaceId: string): ChatOperation {
+    this.binding.bind(workspaceId)
     return new ChatOperation(
       this.store,
       workspaceId,

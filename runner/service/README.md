@@ -26,7 +26,9 @@ The Rust reader accepts the Node state format.
 
 The runner requests a background update check after each start.
 The check timer also runs after boot and every 10 minutes.
-A start never waits for its download.
+A start never waits for the download of a newer release.
+A start downloads only a missing part of the release that it starts, as the
+[cnd-cli README](../../crates/cnd-cli/README.md) says.
 The next start applies a complete newer release before the runner works.
 
 While it runs, the runner also installs a complete newer release when its
@@ -57,4 +59,13 @@ SIGTERM closes helper processes and ends running turns before the connection clo
 those processes for lack of memory, as
 [Out of memory](../../docs/protocol/agent-runner.md#out-of-memory) says.
 The default policy, `stop`, would stop the service and end every running turn.
+
+The [native manager](../../crates/cnd-services/README.md) runs each
+[service](../../docs/protocol/services.md) in an independent system unit.
+A stop, a restart, or a failed start of the runner ends no service.
+Each service unit uses `User=user`, `Group=user`, `KillMode=control-group`,
+`OOMPolicy=stop`, and `Restart=no`. Its user-side helper owns output pipes
+and rotating logs. Standard output and error go to runtime files, not the journal.
+A memory kill stops that service only, as
+[Out of memory](../../docs/protocol/services.md#out-of-memory) says.
 [Workspace startup](../../image/start.md) gives the build and retention gates.

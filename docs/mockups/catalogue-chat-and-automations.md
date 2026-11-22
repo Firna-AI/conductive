@@ -13,6 +13,14 @@ session, for a session of the same workspace and, in `other-workspace`, of
 another workspace. In `unknown-source`, the list of the org does not hold
 the workspace of that session. So the line shows the whole session link
 as text. The link breaks to fit the line.
+
+`app/chat/wakes` draws the line that wakes a session when a turn that it
+watched ends, from watch decisions 1 C and 6 B. Its canonical screen has
+"A turn finished in" and the session chip of the watched session, then
+the new turn, which reads that session. Its variants have a failed turn,
+a stopped turn, a session of another workspace whose turn finished at the
+time limit of background work, with that end reason after a dot, and a
+wake that joins a turn that runs.
 `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose

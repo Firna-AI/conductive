@@ -74,8 +74,8 @@ step of a build.
   The first also needs a new command, and an older runner closes its
   connection at an unknown command.
 - It downloads a newer release in the background. A start never waits for
-  a download. Only Restart in the workspace header and the automatic
-  restart wait for one, with a limit of 60 seconds, as
+  a download of a newer release. Only Restart in the workspace header and
+  the automatic restart wait for one, with a limit of 60 seconds, as
   [Restart the software](restart-the-software.md) says.
 - An update downloads only the parts that changed since the release that
   the sandbox runs.
@@ -91,13 +91,26 @@ step of a build.
   tool call and the running runner then never mix two releases.
 - The next start of the agent runner applies the newest complete download,
   before the runner starts its work.
+- Before the agent runner starts, the program checks that each part of
+  the release that starts is on the disk. It downloads each missing part
+  again, with the digest check of an update. Only such a start waits for
+  a download.
+- When that download fails, the program logs a warning, and the start goes
+  on. The next start tries again. Reason: the start then fails no more
+  often than with no check.
+- Reason: the runner cannot start without its parts, and a sandbox
+  provider can lose files of a saved disk. A repair by hand was rejected,
+  because a lost part then blocks the workspace until an operator acts. A
+  check by the Worker at each start was rejected, because it needs
+  changes in the Worker and in the program for the same result.
 - While the sandbox runs, the runner also installs a newer release when
   its workspace is idle, as [Installs at idle](#installs-at-idle) says.
 - The program never restarts the runner service to apply an update.
-  Reason: a restart stops each running turn, and each process that an
-  agent started, such as a dev server. A member can restart the service
-  with Restart in the workspace header, which then applies the newest
-  download, as
+  Reason: a restart stops each running turn, and each ordinary process
+  that an agent started, such as a dev server. A
+  [service](services.md#lifetime) keeps running. A member can restart the
+  service with Restart in the workspace header, which then applies the
+  newest download, as
   [Restart the software](workspace-life.md#restart-the-software) says.
   The Worker also restarts it by itself for a runner that stays away
   while a message waits, as
@@ -154,7 +167,8 @@ step of a build.
   disconnect the runner every 2 minutes.
 - A new release that exits at its start is a failed start. The runner
   service then starts again within seconds, on the previous release. That
-  restart stops each process that an agent started.
+  restart stops each ordinary process that an agent started. Each service
+  keeps running.
 - A runner that cannot install at idle gets each update at a later start.
 - A new release that runs but never connects to the Worker gets the
   [automatic restart](restart-the-software.md#automatic-restart) when a

@@ -1,7 +1,9 @@
 # Continue
 
-Continue moves a workspace to a new branch from the latest default branch
-of its repository, after its pull request merged. The workspace keeps its
+Continue moves a workspace to a new branch after its pull request merged.
+It starts from the latest commit of the pull request's current base when
+GitHub still has that branch. Otherwise, it uses the repository default.
+The workspace keeps its
 owner, name, sandbox, installed software, files, and sessions. The old
 branch stays in the sandbox and on GitHub.
 [Continue](../../docs/protocol/continue.md) and
@@ -83,7 +85,10 @@ same.
 
 1. `verify` refreshes the GitHub state as the member, and needs a merged
    pull request, or the job ends with 409 `workspace_not_merged`. It reads
-   the current default branch of the repository.
+   the current default branch separately from the pull request's real base.
+   `continueBase` in [`continue-base.ts`](continue-base.ts) checks that base
+   with the member's fresh GitHub user token. Only a missing branch falls
+   back to the default. A failed GitHub read ends the job before any move.
 2. `resume` starts a stopped computer through the normal resume as the
    member. That resume renews a revoked workspace token and runs the normal
    startup and readiness steps. Continue waits outside the chat queue until
@@ -108,7 +113,7 @@ an earlier branch still shows.
 ## The fetch
 
 `continueFetchCommand` in [`continue-commands.ts`](continue-commands.ts)
-fetches the default branch into a bare staging repository under
+fetches the selected base branch into a bare staging repository under
 `/tmp/conductive-continue/`, never into the working repository.
 
 - It runs through the isolated source command: an empty environment,
@@ -174,8 +179,9 @@ runs after a good move. It never runs Git again.
 - `storeContinuedBranch` writes the new branch to D1 only while the row
   still names the old branch, the same sandbox, and the same provider
   account, in an active org and a workspace that is not archived. The
-  fetched default branch becomes the base branch of the workspace. It also
-  records the fetched default branch on the repository.
+  selected branch becomes the base branch of the workspace. A base equal
+  to the live default is stored as null. It records only the live default
+  branch on the repository.
 - One chat transaction then commits `workspace.updated`, one
   `workspace.continued` note for each stored session, open or closed, the
   saved `continued` reply with the range of its event numbers, and the
@@ -186,6 +192,30 @@ runs after a good move. It never runs Git again.
   retry alarm of [the GitHub backend](../github/README.md#refresh-behavior),
   and only then ends the reservation. So no turn starts before the new
   branch is stored and published.
+
+## Labels
+
+The job and each stored `workspace.continued` note keep the real names.
+Git and each request use them. The Worker adds a masked label beside each
+name that a screen shows, as
+[Secrets that users enter](../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
+requires.
+
+- `publishContinue` writes each new note with its real names only. It
+  replays a saved note through the `publish` of its authorized operation.
+- The chat backend adds `displayBranch` and `displayBaseBranch` with fresh
+  values at the write and at each replay, as
+  [Branch and path labels](../chat/integration/README.md#branch-and-path-labels)
+  says. It labels a note again when a tab, a page of the session history,
+  or a transcript gets it. `filterContinued` of
+  [the output fields](../../src/shared/output-fields.ts) fills the labels,
+  and leaves out a label that equals its real name.
+- So a tab that opened before a new start gets the labels of that start. A
+  note from before these labels gets labels too, also in the transcript
+  copy and the agent reads.
+- The routes label the question. They hide each secret value in the stop
+  message of `workspace_continue_failed`, as
+  [Continue routes](continue-routes.md#labels) says.
 
 ## Failures and recovery
 
@@ -222,7 +252,8 @@ refusal.
   commands, and `continueBranchCommand`, the read of the actual branch,
   which also repairs `origin/HEAD` and the `gh-merge-base` setting on the
   new branch. The move and the read end with the reserved exit statuses,
-  and write no Git text.
+  and write no Git text. The fetch and the move use the shared builders of
+  [`base-change-commands.ts`](base-change-commands.ts), as a base move does.
 - [`continue-stop-causes.ts`](continue-stop-causes.ts): `ContinueStopCause`,
   the closed list of stop causes, and `CONTINUE_EXIT_CODES`, the reserved
   exit statuses. `readContinueStopCause` reads a stored cause.
@@ -230,11 +261,16 @@ refusal.
 - [`continue-data.ts`](continue-data.ts): `authorizeContinue`, the access
   check of each phase, and `storeContinuedBranch`, the guarded D1 branch
   write with its read-back check.
-- [`continue-publication.ts`](continue-publication.ts): `publishContinue`.
+- [`continue-publication.ts`](continue-publication.ts): `publishContinue`,
+  which writes and replays each note with its real names. The chat backend
+  adds the [labels](#labels).
+- [`continue-output.ts`](continue-output.ts): `labelContinueResult`, which
+  labels the question and the stop error of the routes.
 - [`continue-types.ts`](continue-types.ts): the stored job, its keys, and
   `readContinueJob`, which reads an older job without a provider account
-  as the `boat` account. It reads a missing or unrecognized stop cause as
-  `unknown`.
+  as the `boat` account. For a job without a separate default branch, its
+  saved base supplies the default, as that job fetched the default branch.
+  It reads a missing or unrecognized stop cause as `unknown`.
 - [`local-work.ts`](local-work.ts): the local-work command and its reader
   of NUL-separated records.
 - [`workspace-branch.ts`](workspace-branch.ts): the branch name of a
@@ -248,52 +284,5 @@ refusal.
 
 ## Tests
 
-These entries test Continue. The code report gives their commands and
-results.
-
-- [`continue-routes.test.ts`](../features/continue-routes.test.ts) runs
-  Continue through the real routes of the production Worker: the resume,
-  the hold of sends and Archive, the credentials after recovery, and the
-  routing of webhooks to the new branch.
-  [`continue-entry.test-support.ts`](../features/continue-entry.test-support.ts)
-  gives its workspace object the fixed future clock of the fixtures, so the
-  native alarms stay in the future while the test drives each phase.
-  [`continue-routes.test-support.ts`](../features/continue-routes.test-support.ts)
-  builds its production Worker fixture with the fake GitHub repository.
-- [`continue.test.ts`](continue.test.ts): a Continue by another member, the
-  note in every open and closed session, the local-work question, a failed
-  move, a publication that lost its reply, and a move that lost its exit
-  result, also while the read of its branch fails. Each exit status of the
-  failed move saves its stop cause and gives its exact text. The failed
-  read saves the metadata cause until the repair.
-  [`continue.test-support.ts`](continue.test-support.ts) builds its
-  chat fixture with the Continue hold, the fake GitHub repository, and the
-  fake Boat.
-- [`continue-stop-causes.test.ts`](continue-stop-causes.test.ts) uses the
-  same fixture: the causes of a cancel, a provider failure, and a failed
-  start, an uncertain start that never repeats the move, and the read of a
-  missing or unrecognized cause as `unknown`, with its saved error. Each
-  case checks its exact text, also the GitHub access hint of a failed fetch.
-- [`continue-access.test.ts`](continue-access.test.ts): the admission
-  checks, and a member removed while Continue waits for the chat queue.
-- [`continue-concurrency.test.ts`](continue-concurrency.test.ts): the hold
-  of dispatch and of a second Continue, a move after a member removal, and a
-  saved resume.
-- [`continue-credentials.test.ts`](continue-credentials.test.ts): the fetch
-  grant and its end, also when membership ends during the token refresh.
-- [`continue-native.test.ts`](continue-native.test.ts) runs the commands
-  with real Git: the isolated fetch, the kept files and commits, a clash
-  with the new base, and the count of every local branch. It also checks
-  an index lock that stays in place, and a target branch that exists,
-  which is not a clash. Each failed move writes no output.
-  [`continue-native.test-support.ts`](continue-native.test-support.ts)
-  builds its real Git repositories.
-- [`continue-comparisons.test.ts`](continue-comparisons.test.ts) checks the real Git
-  refs, content, and status across fetch, Continue, and a remote default rename.
-  The local default keeps its commit. The new branch has only its `gh-merge-base`
-  setting. Locks on `origin/HEAD` and Git config fail the metadata read until
-  both locks go. The move and each failed read end with status 82 and no
-  output. The next read repairs both without another checkout.
-  Rust repository and report tests check the runner's comparison output.
-- [`branch-context.test.ts`](../chat/branch-context.test.ts): the current
-  branches of each runner command.
+[Continue tests](continue-tests.md) gives the tests of Continue and their
+fixtures.

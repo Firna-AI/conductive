@@ -13,15 +13,18 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. After the second try sends, the next send of the same
 prompt gets a new client ID. While one prompt waits, another prompt sends
 nothing, also in another session, and a send from the composer still goes.
-`components/ContinuedNote.test.tsx` folds the note of
-Continue once at its place, also after a repeat and in a new tab, in the
-history of a closed session, and draws "You" or the name of the member.
+`components/ContinuedNote.test.tsx` folds the note of Continue once at its
+place, also after a repeat, in a new tab, and in a closed session. It draws
+"You" or the member, and each branch by its label, also in a copy.
 `state/repository-folder.test.ts` checks that a record of another
 repository reads the view again for the folder of the new repository, that
 a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/NewSessionText.test.tsx` checks that the New session text names
+the branch of the chat's record by its real name when the host gives the
+GitHub state of another branch, or of that branch without a label.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
@@ -193,8 +196,32 @@ loads beside the pages, its newer title and model show at once, and Send
 sends that model. A failed earlier page of the first history load lets the
 later session list set the tabs. The new session of a model change shows
 from its first page, and its draft moves once. A read-only chat keeps its
-local tabs and writes nothing. `state/replay-test-kit.ts` gives both files
-a chat with two open sessions, their saved view, and the pages.
+local tabs and writes nothing.
+`state/replay-completion.test.ts` checks the end of a replay after a
+failed history load, and the hold of the first load. A selected session
+whose newest page holds its close, and whose earlier page fails, closes
+its tab when the load ends. The other session shows, and the closed list
+holds the session. A page of the stream and live copies of the same events
+then keep the tabs, and each message shows once and in order. While the
+stored history of the stream still loads, a failed load, a successful Try
+again, and a page with the same close keep the tabs. The empty final page
+then closes the tab, and each message shows once and in order. When the
+history of the first load ends before the second read of the session
+list, the saved tabs stay, and that list sets them. When that read fails,
+the hold still ends: the session whose newest record is closed leaves the
+row, and the next tab shows.
+`state/replay-read-only.test.ts` checks the open and the closed lists of a
+read-only chat with local tabs. In each case, a replay closes a session,
+reopens one, or brings a new one, with the Archive or a suspension. The
+reader also closes, reopens, or chooses a tab. The local tabs, the shown
+session, and the view stay, and nothing writes. The lists follow the
+newest records, so a closed session leaves the open list. The session
+history lists a new or a reopened session that has no tab. A suspended
+chat with local tabs updates the lists at each page. After a dropped
+connection and a local choice, the empty final page settles them. After a
+Restore, the stored open sessions show as tabs in the saved view.
+`state/replay-test-kit.ts` gives the replay tests a chat with two open
+sessions, their saved view, and pages of session records and messages.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the

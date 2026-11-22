@@ -76,13 +76,9 @@ function placeShown(
   context: ChatContext,
   snapshot: ChatSnapshot,
   sessionId: string,
-  local = false,
 ): ChatSnapshot {
   const record = shownRecord(context, sessionId)
-  if (record === null) return snapshot
-  return local
-    ? withCurrentFields(snapshot, record)
-    : placeCurrent(context, snapshot, record)
+  return record === null ? snapshot : placeCurrent(context, snapshot, record)
 }
 
 /** Holds replay navigation across pages, including overlapping stored reads. */
@@ -90,17 +86,22 @@ export function replaySessionRecords(context: ChatContext): SessionReplay {
   return recordReplay(
     context,
     (id, events) => mergeSession(context, id, events, true),
-    (snapshot, ids) => {
-      const records = ids.flatMap((id) => logOf(context, id).record ?? [])
+    (snapshot) => {
+      const records = [...(logs.get(context)?.values() ?? [])].flatMap(
+        (log) => log.record ?? [],
+      )
       records.sort((left, right) => left.eventNumber - right.eventNumber)
       return records.reduce((next, record) => {
-        publishPlacement(context, record)
-        return placeShown(
-          context,
-          next,
-          record.session.id,
-          next.archiveTabs !== null,
-        )
+        const published = publishPlacement(context, record)
+        const shown = shownRecord(context, record.session.id)
+        if (shown === null) return next
+        const open = next.sessions.some((item) => item.id === shown.id)
+        const closed = next.history.some((item) => item.id === shown.id)
+        return published ||
+          open !== (shown.closedAt === null) ||
+          closed !== (shown.closedAt !== null)
+          ? placeShown(context, next, shown.id)
+          : next
       }, snapshot)
     },
   )
@@ -224,14 +225,7 @@ export function mergeSession(
       !changed
         ? snapshot
         : withTranscript(
-            record
-              ? placeShown(
-                  context,
-                  snapshot,
-                  sessionId,
-                  replay && snapshot.archiveTabs !== null,
-                )
-              : snapshot,
+            record ? placeShown(context, snapshot, sessionId) : snapshot,
             sessionId,
             log.transcript,
             log.times,

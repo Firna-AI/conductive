@@ -9,14 +9,16 @@ import type { WorkspaceEvent } from '../shared/events'
 import { filePaths } from '../shared/files'
 import { githubPaths, type GitHubMergeMethod } from '../shared/github'
 import { sessionsPath } from '../shared/sessions'
-import { workspacePath, workspacePaths } from '../shared/workspaces'
+import {
+  workspacePath,
+  workspacePaths,
+  workspacesPath,
+} from '../shared/workspaces'
 import type { FakeApiServer } from './fake-api'
 import {
   CONTINUE_ID,
-  CONTINUED_BRANCH,
   continuedEvents,
   continuedReply,
-  continueQuestionReply,
   serveAccess,
   serveContinue,
   serveMerge,
@@ -27,10 +29,17 @@ import {
   type FakeMergeEnd,
   type FakeWork,
 } from './fake-bar'
-import { eventWith, replyWith, type FakeBranches } from './fake-branch-names'
+import {
+  continueNamesWith,
+  eventWith,
+  recordWith,
+  replyWith,
+  serveContinueWith,
+  type FakeBranches,
+} from './fake-branch-names'
 import { serveReady, type FakeReadyEnd } from './fake-ready'
+import { fakeTranscript } from './fake-transcript'
 import { FAKE_IDS, FAKE_ORIGIN } from './fixtures/core'
-import { MASKED_BASE } from './fixtures/masked-paths'
 import { toolFixtures } from './fixtures/tools'
 import { nextEnvelope } from './recorded-repairs'
 
@@ -63,7 +72,7 @@ export const scenarioValues: {
     'move-failed',
     'turn',
   ],
-  branches: ['plain', 'masked'],
+  branches: ['plain', 'masked', 'masked-continue', 'masked-repository'],
 }
 
 function pick<T extends string>(values: readonly T[], value: string | null): T {
@@ -109,9 +118,11 @@ export function bodyOf(init: RequestInit | undefined) {
  * A fetch over the fake server that answers the bar actions of a scenario
  * as the Worker does with its state. A completed merge publishes the merged
  * state, Ready for review publishes Ready to merge, a Continue publishes the workspace on its new branch with a note
- * in each session, and a message shows the text that it sent. Every other
- * request gets the recorded reply. Each GitHub state, in a reply or an
- * event, has the branch names of the scenario. Development only.
+ * in each session, and a message shows the text that it sent. A transcript
+ * copy builds the Markdown of the session from the fake stream, as
+ * `fakeTranscript` says. Every other request gets the recorded reply. Each
+ * GitHub state, in a reply or an event, and each name of a Continue have
+ * the branch names of the scenario. Development only.
  */
 export function scenarioFetch(
   server: FakeApiServer,
@@ -129,13 +140,8 @@ export function scenarioFetch(
   serveReady(server, scenario.ready)
   serveWork(server, scenario.work)
   serveContinue(server, scenario.continue)
-  // The default branch of the repository is the target of the pull request.
-  if (scenario.continue === 'question' && branches === 'masked') {
-    server.json('GET', workspacePaths.continueResult(org, id, CONTINUE_ID), {
-      ...continueQuestionReply,
-      baseBranch: MASKED_BASE.baseBranch,
-    })
-  }
+  serveContinueWith(server, branches, scenario.continue)
+  const names = continueNamesWith(branches)
   let continues = scenario.continue === 'continued'
   const emit = (event: WorkspaceEvent) =>
     server.events.emit(
@@ -179,6 +185,7 @@ export function scenarioFetch(
       [...sessions, ...history],
       member,
       moved,
+      names,
     )
     for (const event of events) {
       showGitHub(event)
@@ -192,7 +199,7 @@ export function scenarioFetch(
     ).throughEventNumber
     const workspace = {
       ...detail.workspace,
-      branch: CONTINUED_BRANCH,
+      branch: names.branch,
       github: null,
     }
     server.json('GET', workspacePath(org, id), {
@@ -229,10 +236,14 @@ export function scenarioFetch(
     )
   }
   return async (input, init) => {
-    const { pathname } = new URL(input, FAKE_ORIGIN)
+    const url = new URL(input, FAKE_ORIGIN)
+    const { pathname } = url
     const method = init?.method ?? 'GET'
     if (method === 'POST' && pathname.endsWith('/messages'))
       return echo(pathname, init)
+    const copy =
+      method === 'GET' ? await fakeTranscript(server, url, now) : null
+    if (copy) return copy
     if (
       method === 'GET' &&
       pathname === githubPaths.mergeResult(org, id, `merge-${id}`)
@@ -259,6 +270,11 @@ export function scenarioFetch(
       pathname === githubPaths.stored(org, id)
     if (method === 'GET' && github) {
       return replyWith(branches, await server.fetch(input, init))
+    }
+    const records =
+      pathname === workspacePath(org, id) || pathname === workspacesPath(org)
+    if (method === 'GET' && records) {
+      return recordWith(branches, pathname, await server.fetch(input, init))
     }
     return server.fetch(input, init)
   }

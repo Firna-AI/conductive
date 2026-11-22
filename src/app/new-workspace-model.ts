@@ -1,27 +1,29 @@
 import type { AgentChoice } from '../shared/generated/AgentChoice'
 import type { FieldFiles } from '../chat/components/chip-field/attached-files'
-import { NEW_WORKSPACE_CAPABILITIES } from '../shared/secrets'
 import {
   workspacesPath,
-  type CreateWorkspaceRequest,
   type CreateWorkspaceResponse,
 } from '../shared/workspaces'
 import { readCreated } from './api/read-workspaces'
 import { withPreapproval } from './capabilities-model'
-import { isMissingFile, readyIds, type IntakeRefusals } from './draft-files'
+import { isMissingFile, type IntakeRefusals } from './draft-files'
+import { failSentDraft, withoutFileMarks } from './draft-file-state'
 import {
-  failSentDraft,
-  markedFiles,
-  messageText,
-  withoutFileMarks,
-} from './draft-file-state'
+  branchIn,
+  withPick,
+  withTarget,
+  type BranchRepository,
+  type BranchTarget,
+} from './new-workspace-branch'
 import {
   draftReady,
-  sentCapabilities,
+  emptyDraft,
+  keptRepository,
   withShownRepository,
   type CreateState,
   type Draft,
 } from './new-workspace-draft'
+import { createRequest } from './new-workspace-request'
 import { DraftUploads } from './new-workspace-files'
 import type { OrgModel } from './org-model'
 import { asApiError, Store, valueOf } from './store'
@@ -36,10 +38,16 @@ type CapabilityChoice = 'capabilities' | 'allowThisMac'
  * the files, and a file that comes while the create runs does not upload.
  *
  * A draft keeps the repository that the form shows when it gets its first
- * text or file, once the repositories and the builds of the org have
- * loaded. So a build that turns an earlier repository ready moves no
- * written draft. A pick of the user wins over it. A kept repository that
- * the org no longer chose gives way to the one that the form shows.
+ * text or file, once the form knows which repositories wait, as
+ * `withShownRepository` says. So a build that turns an earlier repository
+ * ready moves no written draft. A pick of the user wins over it. A kept
+ * repository that the org no longer chose gives way to the one that the
+ * form shows.
+ *
+ * The branch of a draft belongs to its repository: a pick of a branch or a
+ * target keeps the repository that the form shows, and a change of
+ * repository ends the branch. A send ends it too, so the next draft starts
+ * from the default branch.
  *
  * Once the server takes the message, the workspace exists. When its first
  * start fails, the workspace keeps the message in its chat, with the saved
@@ -73,7 +81,7 @@ export class NewWorkspaceModel {
   constructor(org: OrgModel, sectionId: string | null) {
     this.org = org
     this.sectionId = sectionId
-    this.draft = new Store<Draft>(this.emptyDraft())
+    this.draft = new Store<Draft>(this.newDraft())
     this.uploads = new DraftUploads({
       draft: this.draft,
       api: org.services.api,
@@ -83,35 +91,18 @@ export class NewWorkspaceModel {
       delay: org.services.delay,
     })
     this.create = new Store<CreateState>({ state: 'idle' })
-    // A draft that got its text before the repositories and the builds
-    // loaded takes its repository when they load.
+    // A draft that got its text before the form knew which repositories
+    // wait takes its repository when the repositories or the builds load.
     org.repositories.subscribe(() => this.keepShownRepository())
     org.builds.subscribe(() => this.keepShownRepository())
   }
 
-  /**
-   * A new draft. It keeps the choice and a picked repository of `keep`. Its
-   * capabilities start again from the defaults, because the closed icon of
-   * the control shows no state.
-   */
-  private emptyDraft(keep?: Draft): Draft {
-    return {
-      text: '',
-      repository: keep?.repository?.picked ? keep.repository : null,
-      choice: keep?.choice ?? null,
-      sectionId: null,
-      capabilities: {
-        preapprovedSecretIds: NEW_WORKSPACE_CAPABILITIES.preapprovedSecretIds,
-      },
-      allowThisMac: false,
-      files: [],
-      detached: [],
-      refused: [],
-      refusedFolders: [],
-      messageId: this.org.services.newId(),
-    }
+  /** A new draft, which keeps the choice and a picked repository of `keep`. */
+  private newDraft(keep?: Draft): Draft {
+    return emptyDraft(this.org.services.newId(), keep)
   }
 
+  /** The draft takes the repository that the form shows, if it has none. */
   private keepShownRepository(): void {
     const repositories = valueOf(this.org.repositories.get())
     const builds = valueOf(this.org.builds.get())
@@ -125,11 +116,45 @@ export class NewWorkspaceModel {
     this.keepShownRepository()
   }
 
+  /** A pick of a repository. A change of repository ends the branch. */
   setRepository(repositoryId: string): void {
     this.draft.change((draft) => ({
       ...draft,
       repository: { id: repositoryId, picked: true },
+      branch: branchIn(draft.branch, repositoryId),
     }))
+  }
+
+  /**
+   * A pick of the branch `name` in `repository`, the repository that the
+   * form shows. The draft keeps that repository, as at its first text.
+   */
+  setBranch(repository: BranchRepository, name: string): void {
+    this.draft.change((draft) => ({
+      ...draft,
+      repository: keptRepository(draft, repository.id),
+      branch: withPick(draft.branch, repository, name),
+    }))
+  }
+
+  /** The member chooses the target of the picked branch of `repository`. */
+  setTarget(repository: BranchRepository, target: BranchTarget): void {
+    this.draft.change((draft) => ({
+      ...draft,
+      repository: keptRepository(draft, repository.id),
+      branch: withTarget(draft.branch, repository, target),
+    }))
+  }
+
+  /**
+   * Start from and the default branch, the action of a create that the
+   * branch check refused because the picked branch is no longer on GitHub.
+   * The control names the default branch again, the message stays, and the
+   * refusal goes, because its cause no longer applies.
+   */
+  startFromDefaultBranch(repository: BranchRepository): void {
+    this.setBranch(repository, repository.defaultBranch)
+    if (this.create.get().state === 'failed') this.create.set({ state: 'idle' })
   }
 
   setChoice(choice: AgentChoice): void {
@@ -204,24 +229,15 @@ export class NewWorkspaceModel {
     if (!draftReady(draft) || this.create.get().state === 'sending') {
       return null
     }
-    const sectionId = draft.sectionId ?? this.sectionId
-    const request: CreateWorkspaceRequest = {
-      repositoryId: draft.repository?.id ?? defaults.repositoryId,
-      ...(sectionId ? { sectionId } : {}),
-      capabilities: sentCapabilities(
-        draft.capabilities,
-        valueOf(this.org.secrets.list.store.get()),
-      ),
-      firstMessage: {
-        id: draft.messageId,
-        text: messageText(draft.text, draft.files),
-        attachmentIds: readyIds(markedFiles(draft.text, draft.files)),
-        choice: draft.choice ?? defaults.choice,
-      },
-    }
+    const request = createRequest(draft, {
+      ...defaults,
+      sectionId: this.sectionId,
+      repositories: valueOf(this.org.repositories.get()),
+      secrets: valueOf(this.org.secrets.list.store.get()),
+    })
     const life = this.org.creations.lifetime
     const unfollow = life.onEnd(() => {
-      this.draft.set(this.emptyDraft())
+      this.draft.set(this.newDraft())
       this.create.set({ state: 'idle' })
     })
     this.create.set({ state: 'sending' })
@@ -237,7 +253,7 @@ export class NewWorkspaceModel {
       opened?.(created)
       this.uploads.end()
       this.draft.change((current) => ({
-        ...this.emptyDraft(current),
+        ...this.newDraft(current),
         text:
           current.text === draft.text
             ? ''
@@ -263,7 +279,12 @@ export class NewWorkspaceModel {
       // A secret of the draft is gone, so the secrets read again, and Try
       // again sends only the secrets that remain.
       if (failure.code === 'secret_not_found') void this.org.secrets.read()
-      this.create.set({ state: 'failed', error: failure })
+      this.create.set({
+        state: 'failed',
+        error: failure,
+        repositoryId: request.repositoryId,
+        startBranch: request.startBranch ?? null,
+      })
       return null
     } finally {
       unfollow()

@@ -12,6 +12,7 @@ import { githubPaths } from '../../shared/github'
 import { membersPath } from '../../shared/members'
 import { readView } from '../../chat/api/read-view'
 import { previewsPath } from '../../shared/previews'
+import { servicePaths } from '../../shared/services'
 import {
   workspaceViewPath,
   type WorkspaceView,
@@ -99,12 +100,15 @@ export function chatRequests(server: FakeApiServer, from: number): string[] {
  * shows the state that the Worker stored, the bar reads the member's own
  * GitHub access, and the model reads the workspace. The kept previews read
  * their list again, because no event announces a preview that opened while
- * away. The chat and the files read nothing again. The parts read on their
+ * away. The kept services read their list again too, because a return
+ * starts a new running period, which never shows the list of an earlier
+ * one. The chat and the files read nothing again. The parts read on their
  * own, so the order in which they read is not fixed.
  */
 export const returnReads = [
   `GET ${terminalPaths.connection(org, id)}`,
   `GET ${previewsPath(org, id)}`,
+  `GET ${servicePaths.catalogue(org, id)}`,
   `GET ${githubPaths.banner(org, id)}`,
   `GET ${githubPaths.checks(org, id)}`,
   `GET ${githubPaths.stored(org, id)}`,

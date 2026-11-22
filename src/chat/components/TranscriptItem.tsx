@@ -6,6 +6,7 @@ import {
   StopLine,
   type StopSource,
 } from '../../../docs/mockups/src/components/chat/StopLine'
+import { WakeLine } from '../../../docs/mockups/src/components/chat/WakeLine'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import { Notice } from '../../../docs/mockups/src/components/common/Notice'
 import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
@@ -128,20 +129,39 @@ export function ItemView(props: {
     case 'lost':
       return <LostEventLine marker={item.marker} />
     case 'continued':
+      // Each branch shows by its label, or by its real name without one.
       return (
         <ContinuedLine
-          base={item.baseBranch}
-          branch={item.branch}
+          base={item.displayBaseBranch ?? item.baseBranch}
+          branch={item.displayBranch ?? item.branch}
           who={continuedBy(item.member, props.readers)}
         />
       )
     case 'repository-changed':
+      // The new branch shows by its label, or by its real name without one.
       return (
         <RepositoryChangedLine
-          branch={item.branch}
+          branch={item.displayBranch ?? item.branch}
           repository={item.repository.fullName}
           who={continuedBy(item.member, props.readers)}
         />
       )
+    case 'wake': {
+      // The chip of the watched session, as the line of a stop from a
+      // session shows it. The chip names its workspace too.
+      const { notice } = item
+      return (
+        <WakeLine
+          end={notice.state}
+          reason={notice.reason ?? undefined}
+          session={
+            <SessionLinkText
+              sessionId={notice.watchedSession.id}
+              workspaceId={notice.watchedWorkspaceId}
+            />
+          }
+        />
+      )
+    }
   }
 }

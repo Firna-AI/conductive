@@ -5,6 +5,7 @@
     reason = "Missing runtime constants must stop the test."
 )]
 
+use cnd_runner_interface::services::logs;
 use cnd_runner_interface::{chat_events, file_tree, files, ports, runner_handshake, skills};
 
 #[test]
@@ -14,7 +15,18 @@ fn typescript_and_rust_share_protocol_version_and_budgets() {
     let file = include_str!("../../../src/shared/files.ts");
     let port = include_str!("../../../src/shared/ports.ts");
     let skill = include_str!("../../../src/shared/skills.ts");
+    let service = include_str!("../../../src/shared/services.ts");
     let constants = [
+        (
+            service,
+            "SERVICE_APP_LOG_MAX_LINES",
+            logs::SERVICE_APP_LOG_MAX_LINES,
+        ),
+        (
+            service,
+            "SERVICE_APP_LOG_MAX_BYTES",
+            logs::SERVICE_APP_LOG_MAX_BYTES,
+        ),
         (
             skill,
             "SKILL_REPORT_MAX_SKILLS",

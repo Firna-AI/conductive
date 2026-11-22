@@ -7,10 +7,9 @@ import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachme
 import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
 import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
-import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind'
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
-import type { RunnerProtocolVersion } from '../../src/shared/generated/RunnerProtocolVersion'
+import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
 import type { TurnStopRequester } from '../../src/shared/session-stop'
 import type { PendingTurn } from '../lifecycle/workspace-runtime'
 import type { WorkspaceSocketMessage } from '../../src/shared/events'
@@ -30,8 +29,8 @@ import type { ChatTransaction } from './store'
 import type { TurnTokenState } from '../model-gateway/token'
 import type { TitleModelCall } from './title-model'
 import type { AgentLogin } from './login-kind'
-import type { RepositoryMoveState } from './runner-repository-move'
 import type { RunnerRepositoryRecord } from './branch-data'
+import type { RunnerConnectionState } from './runner-connection-state'
 
 export interface ChatData {
   get<T>(key: string): Promise<T | undefined>
@@ -81,6 +80,7 @@ export interface StoredTurn {
   /** The dispatched own endpoint model, without login metadata or secrets. */
   endpointModel?: string
   loginFailure?: string
+  endReason?: TurnEndReason
 }
 
 export interface ModelSessionCreation {
@@ -104,19 +104,6 @@ export type PreparedMessageCommand = (
 export type PreparedCommand =
   PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
 
-/** Credentials enter only the live command, after this record is read. */
-export type PendingCommand =
-  | {
-      type: 'turn' | 'message'
-      commandId: string
-      sessionId: string
-      turnId: string
-      messageId: string
-      attachments: readonly StoredAttachment[]
-    }
-  | RunnerInterrupt
-  | RunnerChangeModel
-
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
   : Command
@@ -129,21 +116,9 @@ export interface RunnerPeer {
 }
 
 export interface ActiveRunner {
-  id: string
+  state: RunnerConnectionState
+  /** Memory only. A wake rebuilds this handle for the retained socket. */
   peer: AuthenticatedRunner
-  workspace: RunnerWorkspaceRecord
-  streamId: string | null
-  processStartId: string | null
-  protocolVersion: RunnerProtocolVersion | null
-  loginKinds?: readonly RunnerLoginKind[]
-  /** The folder of a runner that accepts repository.move. Older runners omit it. */
-  repositoryFolder?: string
-  /** The move of this connection. A new connection starts without one. */
-  repositoryMove?: RepositoryMoveState
-  fileServer?: boolean
-  /** The end of the watch window of runner work, from the hello. */
-  watchUntil?: number
-  ready: boolean
 }
 
 export interface BrowserPeer {
@@ -227,6 +202,10 @@ export interface ChatDependencies {
   runnerWork?: import('./runner-work-watch').RunnerWorkStorage
   /** Stores the due time of the automation report retry, unless an earlier one is due. */
   automationReportAlarm?: (at: number) => Promise<void>
+  sessionWatchAlarm?: (
+    at: number | null,
+    keepEarlier?: boolean,
+  ) => Promise<void>
   readRunnerAccess: (workspaceId: string, tokenHash: string) => Promise<boolean>
   readRunnerProtocolVersion: (workspaceId: string) => Promise<number | null>
   requiresFreshRunnerReady?(): Promise<boolean>

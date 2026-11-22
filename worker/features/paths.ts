@@ -5,7 +5,7 @@ import {
 } from '../../src/shared/terminal'
 
 const featurePath = new RegExp(
-  `^/api/orgs/[^/]+/workspaces/([^/]+)/(?:files/(?:tree|content|download)|changes(?:/diff)?|terminal(?:/socket|/terminals(?:/[^/]+/socket|/(?:${FIRST_TERMINAL_ID}|${TERMINAL_ID_PATTERN}))?)?|previews(?:/[^/]+)?|desktop|github(?:/(?:checks|stored|capabilities|ready|merge(?:/[^/]+)?))?)$`,
+  `^/api/orgs/[^/]+/workspaces/([^/]+)/(?:services(?:/(?:control|logs))?|files/(?:tree|content|download)|changes(?:/diff)?|terminal(?:/socket|/terminals(?:/[^/]+/socket|/(?:${FIRST_TERMINAL_ID}|${TERMINAL_ID_PATTERN}))?)?|previews(?:/[^/]+)?|desktop|github(?:/(?:checks|stored|capabilities|ready|merge(?:/[^/]+)?))?)$`,
 )
 
 export function isFeatureWorkspacePath(path: string): boolean {

@@ -31,9 +31,10 @@
 }
 
 /*
- * The repository picker at the start, and the place of the workspace at the
- * end. The texts of the header, the message, and the footer start on one
- * line, and the boxes of the notices and the buttons on another.
+ * The repository picker and the branch control at the start, and the place
+ * of the workspace at the end. The texts of the header, the message, and
+ * the footer start on one line, and the boxes of the notices and the
+ * buttons on another.
  */
 .header {
   display: flex;

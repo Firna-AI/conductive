@@ -27,6 +27,10 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
 - The shells of the terminals and the commands in them keep running.
   Each process that an agent started under the runner ends. Each running
   turn ends, as after any restart of the runner.
+- Each [service](services.md) keeps running, because it runs outside the
+  unit of the runner. Restart restarts no service. A service has its own
+  Restart in the Preview tool, as
+  [Stop and Restart](services-in-the-app.md#stop-and-restart) says.
 - An open terminal tab disconnects while the workspace shows Starting,
   and it offers Reconnect. Reconnect works again when the runner is ready.
   Previews and the activity of the workspace also pause in that time. Cal
@@ -62,6 +66,11 @@ tabs to the Terminal tool, as [Terminal](terminal.md) says.
   a resume.
 - While an agent works, Restart first asks "Stop the agent and restart?".
   Cancel changes nothing.
+- The note of Restart in the menu says that services keep running. The
+  question says that Restart stops the turn and the commands that agents
+  started, and that services and the commands in the terminals keep
+  running. Reason: the member then knows that a Restart keeps each
+  service.
 - The header and the row show Starting from the press until the runner is
   ready again.
 - When the restart fails, or the runner is not ready 3 minutes after the

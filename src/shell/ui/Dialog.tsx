@@ -5,6 +5,8 @@ import card from '../../../docs/mockups/src/components/common/ModalCard.module.c
 import { ActionButton } from './actions'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { Sheet, trapTab } from './Sheet'
+import { controlsOf } from './tab-stops'
+import ui from './ui.module.css'
 import { useViewport } from './viewport'
 
 /**
@@ -24,7 +26,9 @@ import { useViewport } from './viewport'
  * worked, the caller closes the question.
  *
  * A desktop dialog taller than the room of the frame keeps its title and
- * its actions, and its content scrolls between them.
+ * its actions, and its content scrolls between them. While that content is
+ * text without a control, Tab stops on it too, so the keys of the keyboard
+ * scroll it. It never takes the first focus.
  */
 export function Dialog(props: {
   title: string
@@ -37,27 +41,74 @@ export function Dialog(props: {
   wide?: boolean
   initial?: RefObject<Focusable | null>
 }) {
-  const viewport = useViewport()
   const { busy, close } = props
   // The one dismissal of the question: Cancel, Escape, and a press
   // outside, on desktop and on a phone.
   const dismiss = () => {
     if (!busy) close()
   }
-  const actions = (
-    <>
-      <ActionButton disabled={busy} onPress={dismiss}>
-        Cancel
-      </ActionButton>
-      {props.action}
-    </>
+  return (
+    <DialogFrame
+      actions={
+        <>
+          <ActionButton disabled={busy} onPress={dismiss}>
+            Cancel
+          </ActionButton>
+          {props.action}
+        </>
+      }
+      close={dismiss}
+      initial={props.initial}
+      title={props.title}
+      wide={props.wide}
+    >
+      {props.children}
+    </DialogFrame>
   )
+}
+
+/**
+ * A dialog that shows content, such as a log, with its own actions, such as
+ * Reload and Close, and no Cancel. Escape and a press outside close it.
+ * Desktop shows a dialog over the dimmed app, and a phone shows a sheet, as
+ * for `Dialog`.
+ */
+export function ViewDialog(props: {
+  title: string
+  close: () => void
+  children: ReactNode
+  /** The actions at the end, such as Reload, then Close. */
+  actions: ReactNode
+  wide?: boolean
+}) {
+  return (
+    <DialogFrame
+      actions={props.actions}
+      close={props.close}
+      title={props.title}
+      wide={props.wide}
+    >
+      {props.children}
+    </DialogFrame>
+  )
+}
+
+/** The dialog of desktop, or the sheet of a phone, with its actions last. */
+function DialogFrame(props: {
+  title: string
+  close: () => void
+  children: ReactNode
+  actions: ReactNode
+  wide?: boolean
+  initial?: RefObject<Focusable | null>
+}) {
+  const viewport = useViewport()
   if (viewport === 'phone') {
     return (
-      <Sheet close={dismiss} initial={props.initial} title={props.title}>
+      <Sheet close={props.close} initial={props.initial} title={props.title}>
         <div className={styles.sheetBody}>
           {props.children}
-          <div className={styles.sheetActions}>{actions}</div>
+          <div className={styles.sheetActions}>{props.actions}</div>
         </div>
       </Sheet>
     )
@@ -67,8 +118,8 @@ export function Dialog(props: {
       <div className={styles.layer}>
         <div aria-hidden className={styles.scrim} />
         <DialogBox
-          actions={actions}
-          close={dismiss}
+          actions={props.actions}
+          close={props.close}
           initial={props.initial}
           title={props.title}
           wide={props.wide}
@@ -89,19 +140,30 @@ function DialogBox(props: {
   initial?: RefObject<Focusable | null>
 }) {
   const dialog = useRef<HTMLElement>(null)
+  const body = useRef<HTMLDivElement>(null)
   useModalLayer(dialog, props.close, { initial: props.initial })
   return (
     <section
       aria-label={props.title}
       aria-modal
       className={classes(styles.dialog, card.card, props.wide && styles.wide)}
-      onKeyDownCapture={trapTab}
+      onKeyDownCapture={(event) => trapTab(event, controlsOf, body.current)}
       ref={dialog}
       role="dialog"
       tabIndex={-1}
     >
       <h2 className={classes(styles.title, card.head)}>{props.title}</h2>
-      <div className={classes(styles.body, card.body)}>{props.children}</div>
+      {/*
+       * The browser makes no Tab stop of the body. The trap does, while the
+       * body scrolls text.
+       */}
+      <div
+        className={classes(styles.body, card.body, ui.focusable)}
+        ref={body}
+        tabIndex={-1}
+      >
+        {props.children}
+      </div>
       <div className={classes(styles.actions, card.foot)}>{props.actions}</div>
     </section>
   )

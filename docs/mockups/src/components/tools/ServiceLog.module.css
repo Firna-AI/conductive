@@ -1,0 +1,93 @@
+/*
+ * The state of the service and its program, under the title. It keeps the
+ * gap of the dialog, because a phone sheet clips its body at the top.
+ */
+.state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  white-space: nowrap;
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.label::before {
+  margin-right: 6px;
+  color: var(--ui-faint);
+  content: '·';
+}
+
+/*
+ * The output scrolls inside the dialog, so its actions stay in view. A
+ * long line wraps, because the text is plain and a phone is narrow.
+ */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.output {
+  max-height: 320px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-panel);
+  color: var(--ui-ink2);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-text-xs);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.output:focus-visible {
+  outline: 2px solid var(--ui-primary);
+  outline-offset: 1px;
+}
+
+.omitted,
+.message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.message {
+  min-height: 96px;
+  justify-content: center;
+  border: 1px dashed var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+}
+
+.failed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--ui-danger-border);
+  border-radius: var(--ui-radius-lg);
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+
+.failedTitle {
+  color: var(--ui-rose);
+  font-weight: 500;
+}

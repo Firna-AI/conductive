@@ -68,14 +68,28 @@ The development pages of the Files screens and of the workspace screen use them 
 paths hold a fake secret value, and their records carry the labels of the
 mockups as display paths, in the file lists, the reads of the seed script,
 and the end of each finished turn. `fixtures/masked-paths.ts` holds them.
-Its `MASKED_BASE` and `MASKED_HEAD` give a target branch and a workspace
-branch that hold the same fake value, with the labels that the Worker sends
-beside them in a GitHub state. The GitHub view tests use them, and
-`branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`.
+Its `MASKED_BASE`, `MASKED_HEAD`, `MASKED_DEFAULT`, and `MASKED_CONTINUED`
+give a target, a workspace, a default, and a new branch with the same fake
+value. Each has the label that the Worker sends beside it. The view tests
+use them. `branches=masked` of `fake-bar-dev.ts` uses `MASKED_BASE`, and
+`branches=masked-continue` uses all four.
+`MASKED_MOVED` is the new branch of a repository change.
+`MASKED_REPOSITORY_WORK` adds files to both lists of its question, with two
+paths in each list that share one label. `branches=masked-repository` uses
+these two, `MASKED_BASE`, `MASKED_HEAD`, and `MASKED_DEFAULT`, through
+`fake-repository-names.ts`. `serveMaskedHead` of `fake-branch-names.ts`
+puts the workspace record and the list of a test on `MASKED_HEAD`.
 
 `savedLists: false` leaves the recorded file reports out of the event
 history, as for a new workspace whose runner has not reported its lists.
 Override the tree and changes routes too, such as with a 503 reply.
+
+The services list of the default workspace answers `unsupported`, as older
+software does, so each Preview tool shows as before. A test serves a list
+of `fixtures/services.ts`, the services of the mockups at
+`app/tools/services` as the Worker sends them, at the fake time.
+`serveFakeServices` of `fake-services.ts` serves them for the development
+page, with Stop and Restart that change the list.
 
 `subWorkspaces: true` adds the sub-workspaces of the mockup page
 `app/sub-workspaces` to the list of Acme: two trees in Checkout, under
@@ -145,7 +159,7 @@ start and the poll of Continue. `continuedEvents` gives the events of a
 Continue: the workspace on its new branch, a note in each session, the
 changes report of the new branch, and its GitHub state. `fake-bar-dev.ts`
 gives `scenarioFetch`, which answers as the Worker does with its state, for
-the development pages.
+the development pages. `fake-transcript.ts` builds its transcript copies.
 Repository PUT and DELETE replies change only the named repository in the
 recorded choices. Stateful client tests use the dev routes in `../app/dev/`.
 Set the next reply with `server.json(method, path, body, status)`.
@@ -286,8 +300,11 @@ Replies, timers, and `waitFor` go on.
 - `fake-terminal-list.ts` keeps each workspace's terminal list, support state, shells, and list events.
 - `fake-terminal-socket.ts` adapts a decoded fake shell to the app's browser socket interface and ttyd framing.
 - `recorded-chat.ts` supplies partial text, tools, queued messages, steer, stop, failure, omission counts, and refusal markers.
+- `recorded-wakes.ts` supplies the recorded chats of the wakes of a watch, as the mockups draw them at `app/chat/wakes`, and `wakeNotice`, which tests use for a wake at a chosen turn.
 - `recorded-files.ts` supplies complete browser reports, runner parts, consecutive tree deltas, reads, diffs, and a size error.
 - `recorded-repairs.ts` supplies the first losses, failed repairs, complete reports, and tree deltas of the data without a session, and stores failed repairs in the fake history.
+- `fake-services.ts` serves the services of the development page: a list in one of its states, Stop and Restart that answer as the Worker does, and the logs.
+- `fixtures/services.ts` maps the services of the mockups to the generated rows, with their logs.
 - `fixtures/core.ts` maps account and org samples to the shared contracts.
 - `fixtures/secrets.ts` maps the secrets of Acme in the mockups to the
   shared contracts, with a made-up value of each, and the grants of

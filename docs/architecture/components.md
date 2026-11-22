@@ -79,6 +79,13 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 - It keeps the secrets of each org and their grants. It returns the value
   of a secret only to a run of the agent tools that a grant allows, and to
   an admin who reveals it, as [Secrets](../protocol/secrets.md) says.
+- It gives the app the services of each workspace, their controls, and
+  their logs through app routes, with no new socket message. The workspace
+  Durable Object keeps only the filtered report and the output-free control
+  records of the running sandbox, apart from its chat. It joins a raw log
+  in memory, filters it, and stores none of it. It names the session that
+  started a service from its own records, and that source grants no right,
+  as [Service reports](../protocol/service-reports.md) says.
 
 - Two Cron Triggers run the timed work. One runs every 15 minutes for
   deleted orgs, lifecycle repairs, and pending approval emails. One runs
@@ -192,7 +199,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   when a sandbox is ready. The Worker reads the state of a sandbox from the
   API of its provider when it needs it.
 - A stop ends every process. Each provider keeps the disk and the enabled
-  system services, and starts those services again after each resume.
+  system services, and starts those services again after each resume. The
+  [services](../protocol/services.md) of a workspace run in transient
+  units, not enabled ones, so no resume starts them.
 - E2B runs in its default cluster, in the United States, in an E2B project
   that holds only the app's work. Each E2B sandbox has private traffic.
 - On E2B, the template gives the agents the same computer tools as on
@@ -201,8 +210,8 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
 ## Sandbox software
 
 The [sandbox software page](sandbox-software.md) describes the app's own
-software in each sandbox: its two programs, its releases and updates, and
-the software image.
+software in each sandbox: its programs, its releases and updates, the
+services that it runs, and the software image.
 
 ## External services
 

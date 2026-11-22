@@ -250,6 +250,7 @@ export async function automaticRestartFixture(
         request: { expectedBranch: binding.branch },
         branch: 'octocat/next',
         baseBranch: 'main',
+        defaultBranch: 'main',
         directory: '/home/user/code/repository',
         phase: 'resume',
         resumeQueued: true,

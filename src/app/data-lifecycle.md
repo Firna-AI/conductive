@@ -13,8 +13,14 @@ of the data that the screens read and write.
   of an automation waits, starts, works, or needs input, or while a build
   runs. Otherwise it is slow, so that changes from other tabs, other
   people, and GitHub show. Repositories and the members read at entry and
-  at focus only. The waits are choices of the app, not product
+  at focus, with no timer. The waits are choices of the app, not product
   limits. `org-waits.ts` holds them.
+- While a screen shows the repositories, they also read again when an
+  answer of the builds shows a build that ended or a new current image.
+  Without an earlier answer of the builds, each ended build and each
+  current image count as new. That read starts after the repositories read
+  that runs, if any. Until its answer, each repository keeps its readiness.
+  It starts no read of the builds. `org-refresh.ts` holds it.
 - A row that the list already has takes its GitHub state only from list
   reads while its branch stays the same. Each other record keeps that row's GitHub state: a read, a
   Resume reply, or a `workspace.updated` event. So the open row shows a

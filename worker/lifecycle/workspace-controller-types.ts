@@ -17,6 +17,7 @@ import type { ComputerIdentity } from './computer-ledger'
 import type { QueueTurn } from '../chat/queue-turn'
 
 export interface WorkspaceController extends WorkspaceLifecycleEndpoint {
+  prepareWorkspaceBase(): Promise<boolean>
   archiveLifecycle(workspaceId: string): Promise<void>
   reserveArchive(workspaceId: string): Promise<void>
   restoreWorkspace(

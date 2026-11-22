@@ -10,12 +10,15 @@ use cnd_runner_interface::tools::secret_results::RunWithSecretsResult;
 use crate::call::{Call, Name};
 use crate::cli_parse;
 use crate::client::{Client, Configuration, Dispatch};
-use crate::error::{ErrorResultExt, Result};
+use crate::environment::Environment;
+use crate::error::{Error, ErrorResultExt, Result};
 use crate::input;
+use crate::lazy_client::EnvironmentClient;
 use crate::mcp::{Mcp, Server};
 use crate::ports::{Http, Runtime, Streams};
 use crate::process::{CommandInput, Process};
 use crate::reply::Reply;
+use crate::services::tools::{ServiceTools, failed};
 
 /// Complete tool help, available without credentials.
 pub const HELP: &str = include_str!("help.txt");
@@ -39,6 +42,7 @@ pub struct ToolProgram {
     client: Arc<dyn Dispatch>,
     runtime: Arc<dyn Runtime>,
     streams: Arc<dyn Streams>,
+    services: Option<Arc<dyn ServiceTools>>,
 }
 
 impl ToolProgram {
@@ -59,10 +63,46 @@ impl ToolProgram {
             )),
             runtime,
             streams,
+            services: None,
         }
     }
 
+    /// Resolve remote credentials only at a remote call, so local MCP needs none.
+    pub fn with_environment(
+        environment: Arc<dyn Environment>,
+        http: Arc<dyn Http>,
+        runtime: Arc<dyn Runtime>,
+        streams: Arc<dyn Streams>,
+        process: Arc<dyn Process>,
+    ) -> Self {
+        Self {
+            client: Arc::new(EnvironmentClient {
+                environment,
+                http,
+                runtime: runtime.clone(),
+                process,
+            }),
+            runtime,
+            streams,
+            services: None,
+        }
+    }
+
+    /// Add local services without changing the authenticated remote client.
+    pub fn with_services(mut self, services: Arc<dyn ServiceTools>) -> Self {
+        self.services = Some(services);
+        self
+    }
+
     async fn command(&self, args: &[String]) -> Result<u8> {
+        if args.first().is_some_and(|group| group == "services") {
+            let services = self.services.as_ref().ok_or(Error::Services)?;
+            let reply = services.cli(args, &self.runtime.request_id()).await?;
+            self.streams
+                .stdout(&format!("{}\n", serde_json::to_string(&reply).internal()?))
+                .await?;
+            return Ok(u8::from(failed(&reply)));
+        }
         let mut args = cli_parse::parse(args)?;
         if let Some(path) = args.message_path {
             let text = self.runtime.message(&path).await?;
@@ -126,7 +166,8 @@ impl Program for ToolProgram {
         }
     }
     async fn mcp(&self) -> Result<u8> {
-        let server: Box<dyn Mcp> = Box::new(Server::new(Arc::clone(&self.client)));
+        let server: Box<dyn Mcp> =
+            Box::new(Server::new(Arc::clone(&self.client)).with_services(self.services.clone()));
         server
             .serve(Arc::clone(&self.runtime), Arc::clone(&self.streams))
             .await
@@ -142,9 +183,21 @@ mod cli_tests;
 mod mac_adapter_tests;
 
 #[cfg(test)]
+#[path = "_tests_/branch_adapter_support.rs"]
+mod branch_adapter_support;
+
+#[cfg(test)]
+#[path = "_tests_/branch_adapter_tests.rs"]
+mod branch_adapter_tests;
+
+#[cfg(test)]
 #[path = "_tests_/secrets/mod.rs"]
 mod secrets_tests;
 
 #[cfg(test)]
 #[path = "_tests_/workspace_tests.rs"]
 mod workspace_tests;
+
+#[cfg(test)]
+#[path = "_tests_/watch_adapter_tests.rs"]
+mod watch_adapter_tests;

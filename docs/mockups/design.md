@@ -230,19 +230,25 @@ sessions as tabs above the chat, and four tabs at the bottom.
   Archive, over the workspace and over the list. Its second line gives the
   day when the workspace leaves the list.
 - [The pull request bar](design-bar.md) gives its one main action in each
-  state, the line under the bar, the actions on top of the Checks tab of a
-  phone, and the question and the note of Continue.
+  state, the line under the bar, the branches and the actions on top of the
+  Checks tab of a phone, and the question and the note of Continue.
 - `NewWorkspaceDialog` in `src/components/new-workspace/` draws New
   workspace as a wide, compact dialog over the dimmed app, for a user who
   chose the dialog in Preferences. It lies in the layer and over the scrim
-  of `ConfirmDialog`. The repository picker sits at the top left, and the
-  org and the section of the new workspace, in plain text, at the top
-  right. The message and its files fill the middle, and the notices of the
-  New workspace page follow them. The attach button, the Capabilities icon,
-  and the model picker sit at the bottom left. The org login label follows
-  the model picker when the first message uses it. Create, with the hint of
-  the Enter key, sits at the bottom right. A phone always opens the page,
-  so the dialog has no phone layout.
+  of `ConfirmDialog`. The repository picker and the branch control
+  directly right of it sit at the top left, and the org and the section of
+  the new workspace, in plain text, at the top right. The target of a
+  picked branch lives in the dropdown of the branch control, so no line
+  follows the header (decision 309). The message and its files fill the
+  middle, and the notices of the New workspace page follow them.
+  The attach button, the Capabilities icon, and the model picker sit at
+  the bottom left. The org login label follows the model picker when the
+  first message uses it. Create, with the hint of the Enter key, sits at
+  the bottom right. A phone always opens the page, so the dialog has no
+  phone layout.
+- [New workspace](design-new-workspace.md) gives the branch control of the
+  page and of the dialog, its dropdown with the parts Start from and
+  Target, and the refusals of the branch check.
 - The account has five tabs, General, Agents, Preferences, Keyboard
   shortcuts, and Stats, as links, as the org settings have. The Mac app
   adds This Mac as its sixth tab. On a phone, a tab that
@@ -324,8 +330,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   its automations read-only under its notice. `RunLinks` in
   `src/components/workspace/` draws the line under the header of a run
   workspace, which links to its automation and to its pull request. The pull
-  request bar names the base branch of a workspace: the default branch, or
-  for a pull request run the head branch of its pull request. A long base
+  request bar names the base branch of a workspace: the default branch, the
+  picked branch of a start that stacks on it, or for a pull request run the
+  head branch of its pull request. A long base
   branch ends in an ellipsis at half of the line. The
   bubble of a message keeps its line breaks, as in the app, so the first
   message of a run shows the facts of its trigger on their own lines.
