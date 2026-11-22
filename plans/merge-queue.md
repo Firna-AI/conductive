@@ -234,8 +234,7 @@ github status bar". This changes decision 220 for this one action.
 - Design call of the agent, 22 November 2026: the bar control is an
   outline button in the form of Archive after a merge, beside the main
   action or alone. It shows to members with write access, on each state of
-  an open pull request that is not queued, and on a "Needs attention"
-  entry. Reason: Checks running and Blocked have no main action to hold a
+  an open pull request that is not queued. Reason: Checks running and Blocked have no main action to hold a
   menu, and in the states of Fix checks and Resolve conflicts a menu would
   hide Add to merge queue under an action of another kind. The mockups
   show it before the build.
@@ -388,6 +387,46 @@ applies to branches targetting main".
   held. It adds a block for each branch and a rule for the trunk of each
   queue.
 
+### Decision 321: who resolves the conflict of a restack
+
+Open. It blocks Milestone 6 and the `restack` and `rebase` pages of
+Milestone 1d.
+
+- **Severity:** Medium. **Effort:** Small.
+- **Source:** Design.
+- **Category:** Docs or spec.
+- **Location:** `plans/merge-queue.md`, under "Failures" and decision 319.
+- **Background:** The queue moves a layer onto the newest work below it
+  when a pull request joins, after a re-order, and after a push to a lower
+  layer. GitHub's server rebase does the move (decision 319). When the
+  move has a conflict, the first design sent an agent turn as the queuer
+  to resolve it. On 22 November 2026 Cal chose that failures are handled
+  by the user.
+- **Problem:** A conflict of a restack is not a failure of the pull
+  request. The queue's own move causes it. Cal's words do not say whether
+  it counts as a failure.
+- **Impact if no action:** Milestone 6 cannot build the restack.
+- **Root question:** When the queue's own move of a layer has a conflict,
+  who resolves it?
+- **Options:**
+  - **A.** The queue sends one agent turn as the queuer, with the rebase
+    prompt, as decision 319 B says. If the turn does not resolve it, the
+    entry waits for the user, as for a failure. Effort: Small.
+  - **B.** The user, as for any conflict. The bar shows Resolve conflicts
+    with the rebase prompt, and the entry and each layer above it wait.
+    Effort: Small.
+  - **C.** A for a join and a re-order, which a member started, and B for
+    a push to a lower layer. Effort: Small.
+- **Left out:** The queue rebases with no agent, because a conflict needs
+  a decision about the code.
+- **Wider fix:** None. This is one choice of who acts.
+- **Previous examples:** Decision 319 B sends a turn only on a conflict.
+- **Recommendation:** A. Each pull request then builds on the work ahead
+  with no click, which is the goal of the queue, and a failure of that
+  turn still goes to the user.
+- **Action:** ask the user, because Cal's words of 22 November 2026 can
+  read as B.
+
 ## Design
 
 These are design calls of the agent, made on 22 November 2026, unless a
@@ -413,8 +452,8 @@ line names a decision. The options check corrected them on the same day.
   before any restack. Reason: the stack's trunk is then not the default
   branch, and no member chose the new one.
 - Two orgs can save the same repository. A unit whose repository already
-  has a queue with entries in another org joins as "Needs attention", with
-  that reason. Reason: two queues would break each other's GitHub stack,
+  has a queue with entries in another org cannot join, and the drop target
+  and the bar name the reason. Reason: two queues would break each other's GitHub stack,
   and one org must not see another org's queue.
 - Every member of the org sees each queue. A member with write access or
   more to the repository can add, remove, and re-order entries. Reason:
@@ -506,9 +545,9 @@ line names a decision. The options check corrected them on the same day.
   uses the stored token of the queuer of the highest layer (decision 314),
   and that queuer's merge method, as Merge does.
 - A layer whose cloud computer holds local work that is not pushed is not
-  ready, as the bar puts Commit and push before Merge. After 30 minutes,
-  the entry becomes "Needs attention" with that reason. Reason: a merge
-  must not leave that work behind (decision 228).
+  ready, as the bar puts Commit and push before Merge. The queue waits,
+  and the bar says why. Reason: a merge must not leave that work behind
+  (decision 228).
 - A stack merge can stop partway. After each merge, the queue reads each
   layer again before its next step.
 - Each merged layer gets a merge record, as a merge from the bar does.
@@ -516,26 +555,31 @@ line names a decision. The options check corrected them on the same day.
 
 ### Failures
 
-- A red layer, a conflict, or requested changes gets one fix turn, with the
-  prompt of the bar's action: Fix checks, the rebase prompt, or Address
-  review. Reason: one try fixes most failures, and each turn uses the agent
-  login of the session.
-- When the layer is still not mergeable after that turn and its checks, the
-  entry becomes "Needs attention". It leaves the GitHub stack, and the
-  units above it move onto the unit below it. The entry stays in the
-  sidebar group, below the stack, until a member acts.
-- A member's Add to merge queue on a "Needs attention" entry joins it again
-  at the top.
-- When the queuer's stored token fails, when the session has no agent
-  login, or when GitHub refuses the merge, the entry becomes "Needs
-  attention" with that reason.
-- A fix turn goes to the newest open session of the workspace. The queue
-  waits until no session of the workspace runs a turn, up to 30 minutes,
-  then marks the entry "Needs attention". Reason: a message during a turn
-  joins that turn and pushes as the sender of that turn. A background wait
-  can last up to 30 days.
-- A stopped cloud computer resumes for a fix turn, as a message from an
-  agent tool does.
+Cal chose on 22 November 2026 that a failure is handled as it is outside
+the queue: "if something fails it should just be handled normally, I.e by
+the user. And the user can remove from the queue rather than fix they
+prefer". This replaces the first design, which sent one automatic fix turn
+and then moved the entry out of the stack as "Needs attention".
+
+- The queue sends no fix turn for failed checks or requested changes. The
+  bar of the workspace shows Fix checks or Address review, as it does
+  outside the queue, and a member acts or removes the entry. Decision 321
+  holds the conflicts of a restack.
+- An entry that cannot merge keeps its place on the line. Its list mark
+  shows its GitHub state, such as red for failed checks. The layers below
+  it still merge. The layers above it wait. Reason: Cal asked for no
+  section of its own and for the user to decide. A member who wants the
+  layers above to go first removes it or drags it up.
+- The bar line of a waiting entry says what the queue waits for, such as
+  "The queue waits for its checks", or for the layers above, "The queue
+  waits for #479". The bar line also names the reason when the queuer's
+  stored token fails or GitHub refuses the merge, with Open on GitHub.
+- An automatic turn of the queue goes to the newest open session of the
+  workspace. The queue waits until no session of the workspace runs a
+  turn. Reason: a message during a turn joins that turn and pushes as the
+  sender of that turn.
+- A stopped cloud computer resumes for an automatic turn, as a message
+  from an agent tool does.
 
 ### Re-order
 
@@ -601,10 +645,9 @@ line names a decision. The options check corrected them on the same day.
     a running step does, such as "Rebasing onto #479", and it ends with
     Remove from queue. Reason: the bar keeps the one main action of
     decision 220, and the place and the step need words.
-  - An entry that needs attention tints that line amber and names its
-    reason. The bar keeps its fix, such as Fix checks, and adds Add to
-    merge queue. A merge that GitHub refused adds Open on GitHub to the
-    line. Reason: a member acts from the bar, as on any other state.
+  - Replaced on 22 November 2026 by "Failures": an amber line for an
+    entry that needs attention. The bar keeps its fix, such as Fix checks,
+    and the line says what the queue waits for.
   - Remove from queue asks first. The question says that the pull request
     loses its place and targets the default branch again. On the lower
     entry of a member stack, it names the entries above it, which leave
@@ -634,11 +677,9 @@ line names a decision. The options check corrected them on the same day.
     the entries in the GitHub stack. Reason: Cal's review. The list mark
     already shows the GitHub state in its colour and shows running work
     with its motion, and the bar names the place and the step.
-  - An entry that needs attention shows after the joined rows, as a normal
-    row off the line, with no label. Its list mark keeps the colour of its
-    GitHub state, such as red for failed checks. Reason: Cal asked for no
-    section of its own. The entry has left the GitHub stack, so the line
-    must not join it. The bar names its reason.
+  - An entry that cannot merge stays on the line in its place, as
+    "Failures" says. Its list mark shows its GitHub state, such as red for
+    failed checks.
   - A member stack has no outline of its own, because the line already
     joins every entry. A drag still moves its rows together.
   - The block of a queue names its repository only when the org has
@@ -654,14 +695,14 @@ line names a decision. The options check corrected them on the same day.
     line, before Archive. The menu of a queued row has Remove from queue
     and no Move to section, because the row shows in no section.
   - On a phone, the compact row of the bar names the place, such as
-    "Queue 3 of 3", or "Needs attention". The line stands at the top of
+    "Queue 3 of 3". The line stands at the top of
     the Checks tab, and its actions wrap under its words.
 
 ### Not in this change
 
 - GitHub's own merge queue. At Add, the Worker reads the rules of the
-  trunk. When the trunk requires a GitHub merge queue, the entry joins as
-  "Needs attention" with that reason. Reason: the queue would otherwise
+  trunk. When the trunk requires a GitHub merge queue, the pull request
+  cannot join, and the drop target and the bar name the reason. Reason: the queue would otherwise
   run every restack and then fail at the merge.
 - Agent tools that add to the queue. A follow-up item records them.
 
@@ -726,6 +767,26 @@ the design under "The app" now says.
 - [x] Remove the outline of a member stack. Name the repository of a block
       only with queues in two or more repositories.
 - [x] Update the catalogue docs and the notes of each changed page.
+- [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
+
+## Milestone 1d: Failures handled by the user
+
+Tags: mockup
+
+Depends on: 1c
+
+Cal chose on 22 November 2026 that the user handles a failure. Draw the
+group and the bar as "Failures" now says.
+
+- [ ] Keep an entry that cannot merge on the line in its place, with its
+      red or amber mark, on every page of `app/merge-queue`. Remove the
+      row off the line.
+- [ ] Replace the amber "Needs attention" line of the bar with the line
+      that says what the queue waits for, and with the reason of a failed
+      token or a refused merge. Keep Fix checks and Remove from queue.
+- [ ] Remove the compact phone row "Needs attention".
+- [ ] Draw the `restack` and `rebase` pages after decision 321.
+- [ ] Update the catalogue docs and the notes of each changed page.
 - [ ] Run `npm run mockups:check`, and smoke-test the changed pages.
 
 ## Milestone 2: Documentation and protocol
@@ -828,7 +889,7 @@ browser.
 
 ## Milestone 6: Join, base moves, and sync
 
-Depends on: 5
+Depends on: 5, and decision 321
 
 - [ ] Join: change the pull request base, send the restack turn, and add
       the layer to the GitHub stack after its push.
@@ -849,9 +910,10 @@ Depends on: 6
 - [ ] Keep the restack rule after each read: from the lowest layer that
       does not hold the head below it, upward.
 - [ ] Run the leave step for each cause, with the base reset to the trunk.
-- [ ] One fix turn for a red layer, a conflict, or requested changes. Then
-      "Needs attention".
-- [ ] "Needs attention" for a failed queuer token and for a GitHub refusal.
+- [ ] Keep a layer that cannot merge in its place, merge the layers below
+      it, and give the bar line the reason that the queue waits
+      ("Failures").
+- [ ] Apply decision 321 to a conflict of a restack.
 - [ ] Re-order with unstack, base changes, restacks from the bottom up, and
       the add back.
 - [ ] Tests for each path, also with two steps that arrive at once.
