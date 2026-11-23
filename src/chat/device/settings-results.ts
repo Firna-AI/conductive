@@ -18,6 +18,8 @@ export interface ChangeResult {
   /** The exact command, or the name of the workspace of the grant. */
   subject: string
   outcome: DeviceSettingsOutcome
+  /** When the change ended, in Unix milliseconds, by the controller's clock. */
+  at: number
   /**
    * The change failed because this Mac was not available, so it never
    * reached the Mac: no pairing showed, the read before a start failed, or

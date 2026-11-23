@@ -72,6 +72,14 @@ pinch zoom keeps the behaviour of the browser. On
 Android, the viewport tag of `index.html` asks Chrome to resize the page
 for the keyboard, with `interactive-widget=resizes-content`.
 
+On iOS 26 and later, a Home Screen web app gets a blur over the top edge
+of the page, and the blur reaches the header. WebKit skips the blur when
+a fixed box with a solid background covers the top edge. So `index.html`
+holds the band `.top-edge`, only in a Home Screen app on iOS. The band is
+12px tall, full width, and in the colour of `--ui-bar`. It paints nothing,
+because `background-clip: text` clips its background to its text, and it
+has no text. It takes no taps.
+
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
 until its last day. The real chat fills the

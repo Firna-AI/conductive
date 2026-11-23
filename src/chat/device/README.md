@@ -115,7 +115,9 @@ const state = useThisMacState(mac)
   change of that control, and keeps no result.
   `ThisMacSection` lists the results under its lists. The bar keeps the
   result of a Stop after the grant ends, and while a grant runs it hides
-  only a change that the Mac made and saved. When a Stop that the Mac did
+  only a change that the Mac made and saved. A Stop that the Mac made and
+  saved shows on the bar for 5 seconds from the time that the controller
+  stamps on its result, so a new mount of the bar does not show it again. When a Stop that the Mac did
   not save or did not make took its row or its grant away, Try again on
   its result repeats the same change through the current pairing, only
   when the user presses it. A failed Keep shows only while its 15 minutes
@@ -198,6 +200,8 @@ menu of Allow over the region. Build the Mac app first, then run
   shared `ThisMac` of the window.
 - `settings-controls.ts`: the change that holds each control, and the
   result of the last change of each control, for `mac-settings.ts`.
+- `done-stop-time.ts`: whether the bar still shows a Stop that the Mac
+  made and saved.
 - `settings-view.ts`: the states of the settings that the reads give,
   current or kept, and `shownSettings`, which gives either.
 - `AllowedCommand.tsx`: one always-allowed command, short with Show all

@@ -34,9 +34,17 @@ function runPlan() {
     process.exitCode = 1
     return
   }
-  const sorted = Object.fromEntries(Object.entries(result.map).sort())
+  // The map is the record of every move, so a later plan only adds to it.
+  const known = existsSync(MAP_FILE)
+    ? (JSON.parse(readFileSync(MAP_FILE, 'utf8')) as PathMap)
+    : {}
+  const merged = { ...known, ...result.map }
+  const sorted = Object.fromEntries(Object.entries(merged).sort())
   writeFileSync(MAP_FILE, `${JSON.stringify(sorted, null, 2)}\n`)
-  console.log(`Wrote ${Object.keys(sorted).length} paths to ${MAP_FILE}.`)
+  const added = Object.keys(merged).length - Object.keys(known).length
+  console.log(
+    `Added ${added} paths. ${MAP_FILE} holds ${Object.keys(sorted).length}.`,
+  )
 }
 
 function runApply() {

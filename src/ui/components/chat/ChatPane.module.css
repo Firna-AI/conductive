@@ -64,6 +64,7 @@
  * and the notices keep their full height.
  */
 .footer {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -73,6 +74,37 @@
   margin: 0 auto;
   padding: 0 20px 16px;
   box-sizing: border-box;
+}
+
+/*
+ * The button that shows the bottom of the chat floats over the end of the
+ * transcript, just above the footer, so it never moves a row. It lines up
+ * with the right edge of the composer, away from Explain, which a phone
+ * shows in the middle. Its shadow lifts it off the text under it.
+ */
+.toBottom {
+  position: absolute;
+  right: 20px;
+  bottom: calc(100% + 10px);
+  z-index: 1;
+  border-radius: 50%;
+  box-shadow: 0 4px 14px var(--ui-shadow);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toBottom {
+    animation: to-bottom-in 120ms ease-out;
+  }
+}
+
+@keyframes to-bottom-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 /*
@@ -157,6 +189,10 @@
   padding: 0 10px 10px;
 }
 
+.mobile .toBottom {
+  right: 10px;
+}
+
 /*
  * A small chat, such as the popover of an explanation, keeps less room
  * around its transcript and its footer, and fills its box.
@@ -182,4 +218,9 @@
   gap: 8px;
   max-width: none;
   padding: 0 8px 8px;
+}
+
+.compact .toBottom {
+  right: 8px;
+  bottom: calc(100% + 8px);
 }

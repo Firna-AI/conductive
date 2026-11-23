@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.34.0](https://github.com/Firna-AI/conductive/compare/v0.33.0...v0.34.0) (2026-11-23)
+
+
+### Features
+
+* **models:** list model favourites first in every model picker ([#652](https://github.com/Firna-AI/conductive/issues/652)) ([302f963](https://github.com/Firna-AI/conductive/commit/302f96384628c69ceb8d04e7d4d74aaa3e5927b0))
+
+
+### Bug Fixes
+
+* **app:** keep the phone layout above the on-screen keyboard ([#645](https://github.com/Firna-AI/conductive/issues/645)) ([51b2467](https://github.com/Firna-AI/conductive/commit/51b2467d5029a90993e8e0677b6757246058a053))
+* **app:** stop the iOS edge blur over the header of the Home Screen app ([#650](https://github.com/Firna-AI/conductive/issues/650)) ([c5616c6](https://github.com/Firna-AI/conductive/commit/c5616c6bf60139709dfa0656ebfd834f8360190e))
+* **chat:** keep the follow-up field inside the Explain popover ([#651](https://github.com/Firna-AI/conductive/issues/651)) ([42c238a](https://github.com/Firna-AI/conductive/commit/42c238a0cb6a7641a48693490e9b8266bcb9ff57))
+
 ## [0.33.0](https://github.com/Firna-AI/conductive/compare/v0.32.0...v0.33.0) (2026-11-22)
 
 

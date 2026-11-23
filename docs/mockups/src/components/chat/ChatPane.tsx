@@ -25,7 +25,9 @@ import { secretRunWords } from '../../../../../src/ui/components/chat/secretRunC
 import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
 import type { FoldState } from './WorkFold'
 import { workFold } from '../../entries/components/chat/WorkFold.mockup'
+import { noop } from '../../../../../src/ui/noop'
 import { instanceKey } from '../../instanceKey'
+import { ToBottomButton } from '../../../../../src/ui/components/chat/ToBottomButton'
 import styles from '../../../../../src/ui/components/chat/ChatPane.module.css'
 
 /**
@@ -39,7 +41,8 @@ import styles from '../../../../../src/ui/components/chat/ChatPane.module.css'
  * shows at its place in the transcript. A request that outlived its tool
  * call stays at its place, as a late request. A small chat, such as the
  * popover of an explanation, is `compact`, and its `field` takes the place
- * of the composer.
+ * of the composer. While the reader reads higher up, a round button above
+ * the right end of the footer shows the bottom of the chat.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -81,6 +84,8 @@ export function ChatPane(props: {
    * while the cloud computer runs. Without reads, each shows as its link.
    */
   pictures?: PictureRead
+  /** The reader reads higher up, so the button to the bottom shows. */
+  scrolledUp?: boolean
 }) {
   const mac = useMacApp()
   const empty = props.items.length === 0 && !props.starting
@@ -170,6 +175,9 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
+        {props.scrolledUp && !(empty && props.empty) ? (
+          <ToBottomButton onPress={noop} />
+        ) : null}
         {pending.length > 0 ? (
           <div
             aria-label={secretRunWords.region}

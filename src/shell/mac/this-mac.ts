@@ -131,7 +131,9 @@ function thisMacOf(app: AppModel, userId: string): ThisMac {
   let mac = people.get(userId)
   if (!mac) {
     const api = createDeviceApi(app.services.api)
-    mac = new ThisMac(new MacSettingsController(api))
+    // The clock of the app, which the bar also reads, stamps each result.
+    const clock = { now: app.services.now }
+    mac = new ThisMac(new MacSettingsController(api, clock))
     people.set(userId, mac)
   }
   return mac

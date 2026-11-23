@@ -73,6 +73,7 @@
   "docs/mockups/src/components/chat/StandardSpeedNote.tsx": "src/ui/components/chat/StandardSpeedNote.tsx",
   "docs/mockups/src/components/chat/StopLine.module.css": "src/ui/components/chat/StopLine.module.css",
   "docs/mockups/src/components/chat/StopLine.tsx": "src/ui/components/chat/StopLine.tsx",
+  "docs/mockups/src/components/chat/ToBottomButton.tsx": "src/ui/components/chat/ToBottomButton.tsx",
   "docs/mockups/src/components/chat/ToolGroup.module.css": "src/ui/components/chat/ToolGroup.module.css",
   "docs/mockups/src/components/chat/TurnEnd.module.css": "src/ui/components/chat/TurnEnd.module.css",
   "docs/mockups/src/components/chat/TurnFileList.tsx": "src/ui/components/chat/TurnFileList.tsx",

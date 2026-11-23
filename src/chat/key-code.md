@@ -216,6 +216,10 @@ is relative to `src/chat/`, the folder of this guide.
   pending message of the session, takes the chat to its bottom. At each
   note it writes the place of the shown session, and a new keeper shows the
   place that the session kept.
+- `components/scrolled-up.ts`: `useScrolledUp` says whether the reader
+  reads at least `scrolledUpFrom` above the bottom. While they do,
+  `ChatPane` shows the shared `ToBottomButton` above the footer, and a
+  press calls `bottom` of the keeper.
 - `components/chat-place.ts`: the place of a session tab, at the bottom or
   at a row by its `data-row` key, which `components/transcript-rows.tsx`
   gives each row.
