@@ -12,7 +12,7 @@ runner, generated type, route, or app code, and it adds no wire field.
 Two adjacent modules also need changes: `worker/chat/files-storage.ts` for
 the transaction adapter, and `worker/chat/history-session-records.ts` for
 the indexed history reads that PR #572 added. These extend Cal's named
-Worker file list. Cal's plan approval must include those extensions.
+Worker file list. The approved plan includes them.
 Small private helpers may split the page logic to meet the 300-line limit.
 
 The projection is the last complete file tree and changes list that the
@@ -119,9 +119,12 @@ to workspace reads, indexed session reads, and legacy preparation.
   and use ci to test". So the agents run targeted tests, the typecheck, the
   lint, and the format check locally. CI runs the complete gate on each pull
   request.
-- Cal merges each pull request into `main` after its checks are green. His
-  authorization replaces `Agent merges: off` for this work, but no agent of
-  this plan merges a pull request into `main` itself.
+- Cal authorized the root coordinator, session
+  `hAtm84N9KBtseruCOEzvhBKGlQssEl7FfKcvM0eacqA` of workspace
+  `YxnjrS0efLxT8zULMxN_arL_4KEvcAWCHA_KuRGKLd0`, to merge each pull request
+  of this work into `main` after its checks are green. This authorization
+  replaces `Agent merges: off` for this work. The orchestrator of this plan
+  and its child agents do not merge a pull request into `main`.
 - The reader release starts at once, beside Milestone 1, at Cal's request.
   It changes no requirement, so it needs no text of Milestone 1.
 
@@ -617,7 +620,7 @@ The primary orchestrator owns this milestone's plan edits and TODO ticks.
       `implementation-review` skill after the push. Apply its fix rule.
       Push and re-review required fixes before opening the pull request. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Open the reader pull request into `main` after review and fixes. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] After Cal merges it, record the merge commit and the time of the
+- [ ] After the root coordinator merges it, record the merge commit and the time of the
       successful deploy run in `.context/workspace-object-memory/`.
 
 ## Milestone 3: History save path
@@ -767,8 +770,9 @@ the path labels, the list order, and the absent optional counts.
 - [ ] Merge `main` into this branch after Milestone 2 merges. Confirm that
       the layout module is the merged reader.
 - [ ] Give `FilesStorage` the transaction callback of design call 13. Move
-      each consumer of `write`, then delete `write`. Include the proposed
-      `worker/chat/files-storage.ts` extension in Cal's plan approval first.
+      each consumer of `write`, then delete `write`. This includes the
+      adapter in `worker/chat/files-storage.ts`, which the approved plan
+      includes.
 - [ ] Write full reports as design call 11 says. Write tree deltas as
       design call 10 says.
 - [ ] Write `beginConnection`, `files.unavailable`, and `markFilesMoved` as
