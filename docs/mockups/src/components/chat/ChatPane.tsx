@@ -23,6 +23,7 @@ import { isPendingRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { secretRunWords } from './secretRunCopy'
 import { toolGroup } from '../../entries/components/chat/ToolGroup.mockup'
+import { isPendingWakeUp, PendingWakeUpList } from './wakeUpViews'
 import type { FoldState } from './WorkFold'
 import { workFold } from '../../entries/components/chat/WorkFold.mockup'
 import { instanceKey } from '../../instanceKey'
@@ -37,9 +38,10 @@ import styles from './ChatPane.module.css'
  * the transcript and stay in view just above the composer, in a region
  * that scrolls when they need more room. Once answered, a command or a run
  * shows at its place in the transcript. A request that outlived its tool
- * call stays at its place, as a late request. A small chat, such as the
- * popover of an explanation, is `compact`, and its `field` takes the place
- * of the composer.
+ * call stays at its place, as a late request. The pending wake-ups leave
+ * the transcript too, and stay in view above the requests. A small chat,
+ * such as the popover of an explanation, is `compact`, and its `field`
+ * takes the place of the composer.
  */
 export function ChatPane(props: {
   items: readonly ChatItem[]
@@ -87,7 +89,10 @@ export function ChatPane(props: {
   const composer = !props.problem || !replacesComposer(props.problem)
   const pending = props.items.filter(isPendingRequest)
   const commands = pending.filter(isPendingCommand)
-  const transcript = props.items.filter((item) => !isPendingRequest(item))
+  const wakeUps = props.items.filter(isPendingWakeUp)
+  const transcript = props.items.filter(
+    (item) => !isPendingRequest(item) && !isPendingWakeUp(item),
+  )
   const entries = groupItems(transcript).filter(
     (entry) => entry.kind !== 'item' || entry.item.id !== props.hide,
   )
@@ -170,6 +175,13 @@ export function ChatPane(props: {
         </div>
       )}
       <div className={styles.footer}>
+        {wakeUps.length > 0 ? (
+          <PendingWakeUpList
+            items={wakeUps}
+            readOnly={props.problem?.problem === 'archived'}
+            viewer={props.viewer}
+          />
+        ) : null}
         {pending.length > 0 ? (
           <div
             aria-label={secretRunWords.region}

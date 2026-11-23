@@ -4,7 +4,9 @@ This page belongs to [the chat](design-chat.md). It gives the end of a turn
 whose changed files the cloud computer could not read, the line of a
 stopped turn, the end of a turn at the time limit of background work, and
 the end of a fast turn that ran at standard speed. It also gives the line
-that wakes a session when a turn that it watched ends.
+that wakes a session when a turn that it watched ends, and the wake-ups of
+an agent: a pending wake-up, the line of a wake-up at its time, and the
+line of a wake-up that ended with no turn.
 
 - Files that the cloud computer could not read never show as an empty list.
   A finished turn still ends with its duration, then "Changed files
@@ -86,3 +88,67 @@ that wakes a session when a turn that it watched ends.
   - `wakeCopy.ts` beside it holds the words. The agent of the woken
     session and the copy of a transcript get the same words, with the
     session link in place of the chip.
+
+## Wake-ups
+
+An agent can ask to go on with its work at a later time with a workspace
+tool, and end its reply. The Worker keeps each such wake-up, so the session
+waits with no turn, and its cloud computer can stop.
+[The chat and automations](catalogue-chat-and-automations.md) page gives
+the pages of `app/chat/wake-ups`.
+
+- `PendingWakeUps` and `PendingWakeUp` in `src/components/chat/` draw the
+  pending wake-ups of a session, from wake-up decision 3 B, as
+  `app/chat/wake-ups` shows.
+  - Each pending wake-up is a compact card with a full hairline outline,
+    as a request above the composer: the alarm icon, its time, such as
+    "Wake-up tomorrow at 09:00", and Cancel at the end. The text that the
+    agent set follows under them.
+  - The text shows two lines that end in an ellipsis. A press shows all of
+    it, with its line breaks and its code, as a message line in the work
+    of a turn opens.
+  - The cards stand soonest first at the top of the footer of the chat:
+    above the requests, and above the composer, or above the bar of a
+    cloud computer that does not run. They take the rules of the region of
+    the requests: at most 40% of the window, and a fade at an edge that
+    cuts a card.
+  - A pending wake-up waits for no member, so the workspace shows no Needs
+    input for it.
+  - Each member sees Cancel, which asks no question first, as Stop asks
+    none. A read-only workspace shows no Cancel.
+  - The time is in the local time of the reader, on the 24-hour clock:
+    "today at 16:30", "tomorrow at 09:00", "yesterday at 09:00", or its day,
+    such as "Mon 30 Nov at 09:00". A day of another year adds the year.
+- `WakeUpLine` beside them draws the line that a wake-up adds at its time,
+  as `app/chat/wake-ups/fired` shows: the alarm icon, "Wake-up:", then the
+  text that the agent set, with its code and its chips, a little stronger
+  than the lead.
+  - The line starts a turn of the session, or joins the turn that runs as
+    a new part, as a message during a turn does. It is not a message of a
+    member, so it has no bubble, and it never folds.
+  - The agent, a copy, and `read_session` get the same text, from
+    `wakeUpText`.
+- `WakeUpEndLine` beside them draws the line of a pending wake-up that
+  ended with no turn. It is centred and muted, as the stop line is.
+  - A wake-up that reached its time and could start no turn shows a clock
+    alert, from wake-up decision 4 B, as `app/chat/wake-ups/not-started`
+    shows. The line says that the wake-up could not start, then names the
+    action that gets the agent going again, in the words of a late secret
+    request: "The agent can go on after Cal connects Claude again", "after
+    an admin connects Acme's Claude login again", or "at the next
+    message". The agent goes on only after that action, so the line says
+    "can go on". A closed session and an archived workspace name the cause
+    in place of the action.
+  - A Cancel shows the alarm that is off and names the member who pressed
+    it, from wake-up decision 5 B, as `app/chat/wake-ups/cancelled` shows:
+    "Priya Raman cancelled the wake-up for tomorrow at 09:00", and "You
+    cancelled" to that member. A member who left the org gives "The
+    wake-up for tomorrow at 09:00 was cancelled".
+  - Both lines name the wake-up by its time, as its card did, because a
+    session can have several wake-ups.
+- `wakeUpCopy.ts` beside them holds all these words and the words of a
+  time. A copy and `read_session` give a time in UTC, from
+  `wakeUpTimeUtc`, such as "24 November 2026, 09:00 UTC", because the
+  Worker does not know the time zone of the reader. The module draws
+  nothing and reads no fixtures, so the Worker can import it. The parts
+  take no fixtures either, so the app can use them.

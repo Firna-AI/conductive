@@ -27,6 +27,7 @@ import {
 import { savedCartsDraft } from '../fixtures/newWorkspaceConversations'
 import { sessionLinkDraft } from '../fixtures/sessionLinkConversations'
 import { wakeRunningConversations } from '../fixtures/wakeConversations'
+import { wakeUpRunningConversations } from '../fixtures/wakeUpConversations'
 import { workspaceLinkDraft } from '../fixtures/workspaceLinkConversations'
 import type { Workspace } from '../fixtures/workspaces'
 import { paths } from '../paths'
@@ -70,6 +71,7 @@ const runningConversations = new Set([
   'secret-late-allowed',
   'secret-late-given',
   ...wakeRunningConversations,
+  ...wakeUpRunningConversations,
 ])
 
 type ComposerKey = WorkspaceState['composer']

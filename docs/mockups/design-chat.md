@@ -11,8 +11,9 @@ turn, and the data that the chat does not have.
 [The end of a turn](design-turn-ends.md) gives the files that the cloud
 computer could not read, the line of a stopped turn, the end of a turn at
 the time limit of background work, the end of a fast turn that ran at
-standard speed, and the line that wakes a session when a turn that it
-watched ends. [The Markdown of replies](design-markdown.md) gives the
+standard speed, the line that wakes a session when a turn that it watched
+ends, and the [wake-ups](design-turn-ends.md#wake-ups) of an agent.
+[The Markdown of replies](design-markdown.md) gives the
 tables, the headings, the quotes, the rules, the marks, and the line
 breaks of a reply and of a file preview. [Explain](#explain) gives the
 marks of explanations, the Explain button, and the popover of an

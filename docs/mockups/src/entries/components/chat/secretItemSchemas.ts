@@ -99,7 +99,7 @@ const secretGrantSchema = {
 } as const
 
 /** The login that a session keeps, as `KeptLogin`. */
-const keptLoginSchema = {
+export const keptLoginSchema = {
   anyOf: [
     {
       type: 'object',

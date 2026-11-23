@@ -1,0 +1,8 @@
+/*
+ * The text that the agent set, after the lead of a wake-up line. It reads
+ * a little stronger than the muted lead, and it keeps its line breaks.
+ */
+.text {
+  color: var(--ui-ink2);
+  white-space: pre-line;
+}

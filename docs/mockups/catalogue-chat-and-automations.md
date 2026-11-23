@@ -21,6 +21,30 @@ the new turn, which reads that session. Its variants have a failed turn,
 a stopped turn, a session of another workspace whose turn finished at the
 time limit of background work, with that end reason after a dot, and a
 wake that joins a turn that runs.
+
+`app/chat/wake-ups` draws the wake-ups of an agent, from wake-up decisions
+1 D, 3 B, 4 B, and 5 B. Its canonical screen has one pending wake-up above
+the composer, after the turn whose agent set it. Its child pages:
+
+- `app/chat/wake-ups/pending` has three pending wake-ups, soonest first.
+  Its `long` variant has a long text in two lines, and its `open` variant
+  has the whole text after a press. Its `stopped` variant has the card
+  above the bar of a stopped cloud computer, and its `member` variant has
+  the card as Priya reads it, in her local time.
+- `app/chat/wake-ups/fired` has the line of a wake-up that starts a new
+  turn. Its `ended` variant has that turn after its end, with its work
+  folded under the line. Its `during-turn` variant has the line that joins
+  a turn that runs, and its `starting` variant has the line while the
+  wake-up starts a stopped cloud computer.
+- `app/chat/wake-ups/not-started` has the line of a wake-up that could
+  start no turn, because the personal login of the session is gone. Its
+  variants have an org login that is gone, a sender who left the org, a
+  closed session, and an archived workspace.
+- `app/chat/wake-ups/cancelled` has the line of a Cancel, as the member
+  who pressed it reads it. Its variants have the line as the others read
+  it, one Cancel of three wake-ups, and the Cancel of a member who left
+  the org.
+
 `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with
 one message open, a turn with a message that the user sent during it, whose

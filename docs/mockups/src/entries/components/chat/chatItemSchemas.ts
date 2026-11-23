@@ -11,6 +11,7 @@ import {
 } from './chatKeys'
 import { lateAnswerItemSchema, secretRunItemSchema } from './secretItemSchemas'
 import { wakeItemSchema } from './wakeItemSchemas'
+import { wakeUpItemSchema } from './wakeUpItemSchemas'
 
 /** The kinds of a tool call, as `ToolKind` lists them. */
 const toolKinds = [
@@ -235,6 +236,7 @@ export const chatItemSchema = {
     secretRunItemSchema,
     lateAnswerItemSchema,
     wakeItemSchema,
+    wakeUpItemSchema,
   ],
 } as const
 
@@ -255,6 +257,7 @@ export const singleItemSchema = {
     secretRunItemSchema,
     lateAnswerItemSchema,
     wakeItemSchema,
+    wakeUpItemSchema,
   ],
 } as const
 

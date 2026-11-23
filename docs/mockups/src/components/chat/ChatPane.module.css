@@ -78,7 +78,8 @@
 /*
  * The requests that wait, just above the composer. The region takes at most
  * 40% of the window, so the transcript and the composer stay in view, and a
- * long command or many requests scroll inside it. The keyboard scrolls it
+ * long command or many requests scroll inside it. The group of the pending
+ * wake-ups above it takes the same rules. The keyboard scrolls it
  * from any control in it, and the focus keeps a control clear of the fade.
  * The menu of a request opens in the top layer, so the region never cuts it.
  */

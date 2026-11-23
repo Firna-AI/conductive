@@ -37,6 +37,7 @@ import type { StopSource } from './StopLine'
 import { stopLine } from '../../entries/components/chat/StopLine.mockup'
 import { memberStopped, stoppedUnnamed } from './stopCopy'
 import { WakeLine } from './WakeLine'
+import { WakeUpView } from './wakeUpViews'
 import { turnEnd } from '../../entries/components/chat/TurnEnd.mockup'
 import { defined } from '../../defined'
 import styles from './ChatItemView.module.css'
@@ -192,6 +193,8 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
           }
         />
       )
+    case 'wake-up':
+      return <WakeUpView item={item} viewer={viewer} />
     case 'secret-run':
       return isLateRequest(item) ? (
         <SecretRequest item={item} viewer={viewer} />

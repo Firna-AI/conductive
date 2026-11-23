@@ -47,6 +47,8 @@ import { tableConversations } from './tableConversations'
 import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
 import { wakeConversations, type WakeItem } from './wakeConversations'
+import { wakeUpConversations } from './wakeUpConversations'
+import type { WakeUpItem } from './wakeUps'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
@@ -172,6 +174,7 @@ export type ChatItem =
   | SecretRunItem
   | LateAnswerItem
   | WakeItem
+  | WakeUpItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -226,6 +229,7 @@ export const conversations: Readonly<
   ...speedConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
   ...wakeConversations(history),
+  ...wakeUpConversations(history),
   ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),

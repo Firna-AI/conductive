@@ -1,0 +1,3 @@
+{
+  "order": ["pending", "fired", "not-started", "cancelled"]
+}

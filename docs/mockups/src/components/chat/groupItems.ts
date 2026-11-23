@@ -24,6 +24,20 @@ export type ChatEntry =
   | { kind: 'tools'; id: string; calls: ToolCallItem[]; open: boolean }
   | { kind: 'work'; id: string; steps: WorkItem[] }
 
+/**
+ * An item that starts a turn, or joins the running turn as a new part when
+ * it has `during`: a message of a member, the line of a wake, or the line
+ * of a wake-up at its time.
+ */
+type TurnInput =
+  | Extract<ChatItem, { kind: 'user' | 'wake' }>
+  | Extract<ChatItem, { kind: 'wake-up'; state: 'fired' }>
+
+function isTurnInput(item: ChatItem): item is TurnInput {
+  if (item.kind === 'wake-up') return item.state === 'fired'
+  return item.kind === 'user' || item.kind === 'wake'
+}
+
 /** Whether an item ends its turn: the turn finished, stopped, or failed. */
 function isEnd(item: ChatItem): boolean {
   switch (item.kind) {
@@ -61,15 +75,16 @@ function isWork(item: ChatItem): item is WorkItem {
  * The parts of each ended turn. The mockup items have no turn IDs, so the
  * items after a member message, up to an end, form one turn. The line of
  * a late Allow starts a turn too. A message sent during the turn joins it
- * and starts a new part. The line of a wake starts a turn, or joins the
- * running turn as a message does. A linked line starts no turn. A turn
- * without an end, such as a running one, does not fold.
+ * and starts a new part. The line of a wake or of a wake-up starts a turn,
+ * or joins the running turn as a message does. A linked line starts no
+ * turn, and neither does the line of a wake-up that ended with no turn. A
+ * turn without an end, such as a running one, does not fold.
  */
 function endedParts(items: readonly ChatItem[]): ChatItem[][] {
   const ended: ChatItem[][] = []
   let parts: ChatItem[][] = []
   for (const item of items) {
-    if (item.kind === 'user' || item.kind === 'wake') {
+    if (isTurnInput(item)) {
       parts = item.during && parts.length > 0 ? [...parts, []] : [[]]
     } else if (item.kind === 'late-answer') {
       parts = [[]]
@@ -108,9 +123,9 @@ function foldedRuns(part: readonly ChatItem[]): WorkItem[][] {
 
 /**
  * The IDs of the items of the running turn: the items after the member
- * message, the late Allow, or the wake that started it, up to the working
- * line. A message or a wake during the turn joins it. No turn runs when
- * the chat has no working line.
+ * message, the late Allow, the wake, or the wake-up that started it, up to
+ * the working line. A message, a wake, or a wake-up during the turn joins
+ * it. No turn runs when the chat has no working line.
  */
 function runningItems(items: readonly ChatItem[]): Set<string> {
   const working = items.findIndex((item) => item.kind === 'working')
@@ -118,7 +133,7 @@ function runningItems(items: readonly ChatItem[]): Set<string> {
   const start = items.findLastIndex(
     (item, index) =>
       index < working &&
-      (((item.kind === 'user' || item.kind === 'wake') && !item.during) ||
+      ((isTurnInput(item) && !item.during) ||
         item.kind === 'late-answer' ||
         isEnd(item)),
   )

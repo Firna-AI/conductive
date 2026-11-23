@@ -210,6 +210,7 @@ export const paths = {
   chat: 'app/chat',
   agentStop: 'app/chat/agent-stops',
   agentStopOther: 'app/chat/agent-stops/other-workspace',
+  wakeUpCancelled: 'app/chat/wake-ups/cancelled',
   sessions: 'app/sessions',
   sessionHistory: 'app/sessions/history',
   noStarterLogin: 'app/sessions/no-starter-login',

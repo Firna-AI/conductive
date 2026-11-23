@@ -153,9 +153,13 @@ export type SessionLoginOwner =
 
 /**
  * Who connects the login of a session again, and what they connect. Only
- * an admin connects the org login, so that action names no member.
+ * an admin connects the org login, so that action names no member. The
+ * line of a wake-up that could not start names the same action.
  */
-function reconnectAction(owner: SessionLoginOwner, agent: string): string {
+export function reconnectAction(
+  owner: SessionLoginOwner,
+  agent: string,
+): string {
   switch (owner.type) {
     case 'personal':
       return owner.name === 'you'

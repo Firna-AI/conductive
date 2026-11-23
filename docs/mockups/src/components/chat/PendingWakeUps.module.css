@@ -1,0 +1,75 @@
+/*
+ * A compact card with a full hairline outline, as a request above the
+ * composer. No edge has a strip.
+ */
+.wakeUp {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  padding: 2px 8px 7px 12px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+}
+
+/* The icon, the time, and Cancel at the end, as high as Cancel. */
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--ui-control-height);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--ui-muted);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-sm);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.end {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* The text, under the time. */
+.more {
+  margin-left: 22px;
+}
+
+/*
+ * Closed, the text shows two lines and ends in an ellipsis. A press opens
+ * the whole text, with its line breaks.
+ */
+.text {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  list-style: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.text::-webkit-details-marker {
+  display: none;
+}
+
+.more[open] .text {
+  display: block;
+  -webkit-line-clamp: none;
+  line-clamp: none;
+}

@@ -131,9 +131,22 @@ Raised by the options check on 22 November 2026. Cal chose B on 23 November 2026
 
 ### Chat and agent text
 
-- The session shows each pending wake-up, with its time in the local time of the reader, its text, and Cancel. The mockups set its place.
+- The session shows each pending wake-up, with its time in the local time of the reader, its text, and Cancel. The mockups set its place, as the mockup calls below say.
 - A fired wake-up adds one wake-up line, not a member bubble. One shared text gives the words to the chat, the agent, a copy, and `read_session`.
 - The agent gets a fixed lead and its own text, as a normal message with its sender line. So older runners need no update.
+- `docs/mockups/src/components/chat/wakeUpCopy.ts` holds all the words below and the words of a time. It draws nothing and reads no fixtures, so the Worker can import it. `PendingWakeUps.tsx` and `WakeUpLines.tsx` beside it draw the card and the lines, and take no fixtures, so the app can use them. The catalogue draws them at `app/chat/wake-ups`.
+
+The mockups made these calls on 23 November 2026. Each is a mockup call, not a user decision.
+
+- Place: each pending wake-up is a compact card at the top of the footer of the chat, soonest first. It stands above the requests that wait, and above the composer or the bar of a cloud computer that does not run. The group takes the rules of the region of the requests: at most 40% of the window, and a fade at a cut edge. Reason: a wake-up can be days away, so a member must see it whatever the scroll, and the chat already keeps waiting items there.
+- The card shows the alarm icon, "Wake-up tomorrow at 09:00", Cancel, and two lines of the text. A press shows the whole text. A pending wake-up waits for no member, so it sets no Needs input. Reason: the text can be long, and the card must stay small above the composer.
+- Cancel asks no question first. Each member sees it, and a read-only workspace shows none. Reason: Stop asks no question, and a Cancel has the rights of a Stop.
+- The lead is "Wake-up:". The chat draws the text after it as the text of a message, with its code and its chips. Reason: one short lead reads well in the chat, for the agent, and in a copy, also when the line joins a running turn.
+- The line of a wake-up that could not start says so, then names the action in the words of a late secret request: "The wake-up for today at 09:00 could not start. The agent can go on after Cal connects Claude again." The org login gives "after an admin connects Acme's Claude login again". A sender who left the org, and a starter who no longer shares the login with the sender, give "at the next message". A closed session and an archived workspace name the cause in place of an action. Reason: the wake-up ended, so the agent goes on only after that action and a new message.
+- The line of a Cancel is "Priya Raman cancelled the wake-up for tomorrow at 09:00", with "You" for that member. A member who left the org gives "The wake-up for tomorrow at 09:00 was cancelled". Reason: the line names the wake-up by its time, as its card did, because a session can have several, and the chat names no member who left, as for a stop line.
+- Times: the chat gives the local time of the reader on the 24-hour clock: "today at 16:30", "tomorrow at 09:00", "yesterday at 09:00", or "Mon 30 Nov at 09:00", with the year for another year. A copy and `read_session` give UTC, such as "24 November 2026, 09:00 UTC". Reason: the Worker does not know the time zone of the reader, as for the time of a copy.
+- The events of the Cancel line and of the line of a wake-up that could not start carry the time of the wake-up, and the member or the cause. The Worker records the cause as the late-answer notice records its failure: a sender who left or a login that is not shared, a login that is gone with its owner and agent, a closed session, or an archived workspace. Reason: the watch admission gives only "no turn", and the words need the cause.
+- An Archive keeps the pending wake-ups. The read-only workspace shows them without Cancel. At its time, a wake-up of a workspace that is still archived could not start. Reason: the wake-up ends only at its time, so a Restore before it keeps the work.
 
 ### The Claude adapter
 
@@ -170,12 +183,14 @@ Depends on: none
 
 Use the `ui implementor` action. Draw the pending wake-up and the wake-up line, on desktop and on a phone.
 
-- [ ] Add the pending wake-up to the session chat, with one and with three pending wake-ups, a long text, and Cancel.
-- [ ] Add the wake-up line in a new turn, and in a turn that runs.
-- [ ] Draw the end of a wake-up that can start no turn, and the end of a Cancel. Decisions 4 B and 5 B give their words.
-- [ ] Put the pure words in one module that the Worker and the chat can import later.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that the mockups show.
+- [x] Add the pending wake-up to the session chat, with one and with three pending wake-ups, a long text, and Cancel.
+- [x] Add the wake-up line in a new turn, and in a turn that runs.
+- [x] Draw the end of a wake-up that can start no turn, and the end of a Cancel. Decisions 4 B and 5 B give their words.
+- [x] Put the pure words in one module that the Worker and the chat can import later.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Update the design and the TODOs of this plan for each problem that the mockups show.
+
+The mockups raised four questions that wait for Cal: what a Stop and a Close do to pending wake-ups, the line of a cancel by an agent, and how the agent learns of a Cancel or a miss. The report gives them in full: `.context/agent-wake/reports/m1-mockups.md`. The screenshots are in `.context/agent-wake/screenshots/`.
 
 ## Milestone 2: Documentation and protocol
 
