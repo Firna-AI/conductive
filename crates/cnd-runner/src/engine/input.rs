@@ -134,7 +134,18 @@ impl Session {
             }
             let was_waiting = turn.background.as_ref().is_some_and(|b| b.waiting);
             if let Some(background) = &mut turn.background {
-                background.input(received_at, self.dependencies.background_limit);
+                let member_message = !matches!(
+                    &input,
+                    ProviderInput::Message(RunnerMessageDuringTurn::Message {
+                        wake_up: Some(true),
+                        ..
+                    })
+                );
+                background.input(
+                    received_at,
+                    self.dependencies.background_limit,
+                    member_message,
+                );
             }
             if !turn.waiting.is_empty() {
                 turn.waiting.push_back(input);

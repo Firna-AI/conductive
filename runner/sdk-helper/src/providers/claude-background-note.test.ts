@@ -23,11 +23,19 @@ async function fixture() {
   return { ...h, stop }
 }
 
-const guidance = [
+const taskGuidance = [
   'This turn stays open while it runs, for up to 30 days from the first wait.',
   'A member message during a wait starts the count again.',
-  'You get a notification when each task ends or each wake-up fires.',
+  'You get a notification when each task ends.',
   'Stop each task that you do not need with TaskStop.',
+]
+
+const wakeUpGuidance = [
+  'This turn does not wait for these wake-ups.',
+  'Set each wake-up again with schedule_wake_up.',
+]
+
+const replyGuidance = [
   'Run temporary check servers as tracked background work.',
   'Stop each temporary check server with TaskStop before your reply.',
   'Run each server that must continue after your reply as a service.',
@@ -37,7 +45,6 @@ const guidance = [
   'Say that preview use adds no awake time.',
   'Services add no activity and hold no turn open.',
   'Keep builds, tests, and CI waits that must finish in this turn.',
-  'Delete each wake-up that you do not need with CronDelete.',
   'Then end your reply.',
 ]
 
@@ -74,8 +81,11 @@ it('gives non-error guidance once for each new live task or wake-up', async () =
         'Background work still runs:',
         '- Task server: Local dev server',
         '- Task build: Build the image',
+        ...taskGuidance,
+        'In-process wake-ups:',
         '- Wake-up check (0 23 * * *): Check progress',
-        ...guidance,
+        ...wakeUpGuidance,
+        ...replyGuidance,
       ].join('\n'),
     },
   })
@@ -108,11 +118,15 @@ it('gives non-error guidance once for each new live task or wake-up', async () =
       additionalContext: [
         'Background work still runs:',
         '- Task tests: Run the tests',
-        ...guidance,
+        ...taskGuidance,
+        ...replyGuidance,
       ].join('\n'),
     },
   })
   expect(await h.stop({ background_tasks: [next] })).toEqual({})
+  expect(h.warnings).toEqual([
+    'Claude reported an unexpected in-process wake-up.',
+  ])
 })
 
 it('ignores absent, completed, and ambient work without marking it as already named', async () => {
@@ -145,7 +159,8 @@ it('ignores absent, completed, and ambient work without marking it as already na
       additionalContext: [
         'Background work still runs:',
         '- Task watch: Watch files',
-        ...guidance,
+        ...taskGuidance,
+        ...replyGuidance,
       ].join('\n'),
     },
   })
@@ -161,13 +176,42 @@ it('ignores absent, completed, and ambient work without marking it as already na
     hookSpecificOutput: {
       hookEventName: 'Stop',
       additionalContext: [
-        'Background work still runs:',
+        'In-process wake-ups:',
         '- Wake-up loop (*/5 * * * *): Check again',
-        ...guidance,
+        ...wakeUpGuidance,
+        ...replyGuidance,
       ].join('\n'),
     },
   })
   expect(
     await h.stop({ session_crons: [recurring], stop_hook_active: true }),
   ).toEqual({})
+})
+
+it('warns once for a cron-only stop and keeps the live work signal false', async () => {
+  const h = await fixture()
+  const input = {
+    session_crons: [
+      {
+        id: 'unexpected',
+        schedule: '0 23 * * *',
+        recurring: false,
+        prompt: 'Check the private result',
+      },
+    ],
+  }
+  expect(await h.stop(input)).toMatchObject({
+    hookSpecificOutput: {
+      hookEventName: 'Stop',
+      additionalContext: expect.stringContaining('schedule_wake_up'),
+    },
+  })
+  expect(await h.stop({ ...input, stop_hook_active: true })).toEqual({})
+  expect(h.warnings).toEqual([
+    'Claude reported an unexpected in-process wake-up.',
+  ])
+  expect(h.events.filter((event) => event.type === 'background')).toEqual([
+    { type: 'background', live: false, idle: false },
+    { type: 'background', live: false, idle: false },
+  ])
 })

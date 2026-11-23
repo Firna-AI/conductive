@@ -36,9 +36,12 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     pathToClaudeCodeExecutable: '/pinned/sdk/claude',
     includePartialMessages: true,
     persistSession: true,
+    disallowedTools: ['CronCreate', 'CronDelete', 'CronList', 'ScheduleWakeup'],
+    settings: { skillOverrides: { loop: 'off' } },
     mcpServers: { computer: fakeComputerServer },
   })
   expect(env.CLAUDE_CONFIG_DIR).toBe(`${h.home}/.conductive/claude`)
+  expect(env.CLAUDE_CODE_DISABLE_CRON).toBe('1')
   expect(env).not.toHaveProperty('ANTHROPIC_API_KEY')
   expect(env).not.toHaveProperty('CLAUDE_CODE_OAUTH_TOKEN')
   await sdk.raw({ type: 'system', subtype: 'init', session_id: 'sdk-session' })
@@ -118,6 +121,7 @@ it('maps SDK partial text, thinking, tools, message UUIDs, and stopped output', 
     effortLevel: 'max',
     ultracode: false,
     fastMode: false,
+    skillOverrides: { loop: 'off' },
   })
   await provider.interrupt()
   await sdk.raw({

@@ -241,9 +241,12 @@ Saved sessions keep their exact instructions across runner updates.
 
 Helper handoffs retain the first turn's token, author, tool context, conversation,
 and background deadline. Result lists resolve only their named inputs.
-An empty ordinary result resolves all sent inputs. A wake-up resolves none.
+An empty ordinary result resolves all sent inputs. A task notification
+result with no waiting input resolves none.
 Claude background work can keep a turn open for thirty days from its first
 wait. Member input during a wait resets the deadline from its receipt time.
+A scheduled wake-up or a watch wake keeps the deadline.
+[Background work](../../runner/background-work.md#the-time-limit)
 
 Stop signals cancellation outside the session queue. Completion waits for
 helper cleanup and OS exit. A canceled completion scan gets a fresh file

@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto'
 
-import { query, type Query } from '@anthropic-ai/claude-agent-sdk'
+import {
+  query,
+  type Query,
+  type Settings,
+} from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
 import { claudeBinary } from './binaries'
@@ -74,7 +78,10 @@ export function createClaudeFactory(
     )
     const credentials = await preparation
     const skillsDiscovery = await prepareClaudeSkills(options, lifetime)
-    const skillSettings = claudeSkillSettings(options.orgSkills)
+    const skillSettings = {
+      ...claudeSkillSettings(options.orgSkills),
+      skillOverrides: { loop: 'off' },
+    } satisfies Settings
     const env = providerEnvironment(
       options.home,
       options.tools,
@@ -91,10 +98,12 @@ export function createClaudeFactory(
       env.ANTHROPIC_CONFIG_DIR = credentials.directory
       env.ANTHROPIC_PROFILE = credentials.name
     } else env.ANTHROPIC_BASE_URL = options.endpoint
+    env.CLAUDE_CODE_DISABLE_CRON = '1'
     const input = new ClaudeInputWindow()
     const background = new ClaudeBackground(options.event)
     const note = new ClaudeBackgroundNote(
       (id) => background.isAmbient(id),
+      options.warn,
       options.backgroundNoteIds,
     )
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
@@ -145,7 +154,10 @@ export function createClaudeFactory(
                       !hook.agent_id
                     ) {
                       background.stop(hook.session_crons ?? [])
-                      const context = note.context(hook)
+                      const context = note.context(
+                        hook.background_tasks ?? [],
+                        background.sessionCrons,
+                      )
                       if (context !== undefined) {
                         options.backgroundNotes?.([
                           ...(options.backgroundNoteIds ?? []),
@@ -170,6 +182,12 @@ export function createClaudeFactory(
           ...(options.conversationId ? { resume: options.conversationId } : {}),
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
+          disallowedTools: [
+            'CronCreate',
+            'CronDelete',
+            'CronList',
+            'ScheduleWakeup',
+          ],
           includePartialMessages: true,
           persistSession: true,
           settingSources: ['project'],

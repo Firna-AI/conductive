@@ -63,4 +63,8 @@ it('keeps named work IDs across provider handoffs and ignores closed hooks', asy
       additionalContext: expect.stringContaining('Wake-up new-job'),
     },
   })
+  expect(h.warnings).toEqual([
+    'Claude reported an unexpected in-process wake-up.',
+    'Claude reported an unexpected in-process wake-up.',
+  ])
 })

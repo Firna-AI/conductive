@@ -60,10 +60,11 @@ recovery, agent settings, filtering, and shutdown.
 
 ## Background work
 
-[Background work](background-work.md) gives how a Claude turn waits for the
-background work of its agent, the note at the end of a reply, the time
-limit of 30 days, the end reason, and their key code. A workspace gets
-this behavior when its software update applies.
+A Claude turn can wait for live background tasks. Claude and Codex use
+Conductive wake-ups to continue later. A wake-up or watch wake that joins a
+waiting turn keeps its 30-day deadline. The guide gives the wait, the end
+reason, the Claude scheduler settings, and their key code.
+[Background work](background-work.md)
 
 ## Org skills
 

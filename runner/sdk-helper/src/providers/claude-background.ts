@@ -17,7 +17,7 @@ export class ClaudeBackground {
   }
 
   get live(): boolean {
-    return this.tasks.size > 0 || this.crons.length > 0
+    return this.tasks.size > 0
   }
 
   /**
@@ -35,6 +35,10 @@ export class ClaudeBackground {
 
   isAmbient(id: string): boolean {
     return this.ambient.has(id)
+  }
+
+  get sessionCrons(): readonly SessionCronSummary[] {
+    return this.crons
   }
 
   stop(crons: readonly SessionCronSummary[]): void {

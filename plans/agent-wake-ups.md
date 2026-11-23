@@ -319,13 +319,15 @@ Depends on: 4
 
 Use the `non-ui implementor` action.
 
-- [ ] Set `disallowedTools` and `CLAUDE_CODE_DISABLE_CRON=1` in `runner/sdk-helper/src/providers/claude.ts`.
-- [ ] Set `skillOverrides: { loop: 'off' }`. Check in the SDK run that neither the model nor `/loop` gets the skill.
-- [ ] Keep the cron set and the `session_crons` read as the guard of decision 1 D: change the note text, log a warning, and wait for no such wake-up. Update their tests. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
-- [ ] Keep the deadline of a waiting turn when the input carries the wake-up field, for a wake-up and a watch wake, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
-- [ ] Check with a real SDK run that the model sees no cron tool and that `session_crons` stays empty. Start the run with a durable job in `.claude/scheduled_tasks.json`, and check that it never fires. Save the result in `.context/agent-wake/`.
-- [ ] Check the pinned Codex 0.170.0 for a scheduling tool. Turn off each one that it has.
-- [ ] Update `runner/background-work.md` and `runner/README.md`.
+- [x] Set `disallowedTools` and `CLAUDE_CODE_DISABLE_CRON=1` in `runner/sdk-helper/src/providers/claude.ts`.
+- [x] Set `skillOverrides: { loop: 'off' }`. Check in the SDK run that neither the model nor `/loop` gets the skill.
+- [x] Keep the cron set and the `session_crons` read as the guard of decision 1 D: change the note text, log a warning, and wait for no such wake-up. Update their tests. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
+- [x] Keep the deadline of a waiting turn when the input carries the wake-up field, for a wake-up and a watch wake, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
+- [x] Check with a real SDK run that the model sees no cron tool and that `session_crons` stays empty. Start the run with a durable job in `.claude/scheduled_tasks.json`, and check that it never fires. Save the result in `.context/agent-wake/`.
+- [x] Check the pinned Codex 0.170.0 for a scheduling tool. Turn off each one that it has.
+- [x] Update `runner/background-work.md` and `runner/README.md`.
+
+The report is `.context/agent-wake/reports/m6-runner.md`. The SDK probe evidence is in `.context/agent-wake/m6-sdk-run/`.
 
 ## Milestone 7: Verification, commit, review, and pull request
 

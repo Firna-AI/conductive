@@ -70,9 +70,9 @@ and other support files remain available for an agent to choose to read or run.
 The optional `HelperOptions.orgSkills` value of each start sets the trust policy.
 Its `OrgSkills` fields are `repository`, `trustedRepository`, and `directory`.
 The trusted name and directory can be absent.
-Without the value, neither adapter loads org skills, and Claude keeps the
-settings of the workspace. When its trusted repository does not match its
-configured repository, the repository is untrusted. The Claude adapter
+Without the value, neither adapter loads org skills. When the trusted
+repository does not match the configured repository, the repository is
+untrusted. The Claude adapter
 then sets `disableSkillShellExecution: true` in the SDK flag settings.
 Those settings also carry effort and fast mode. Later model, effort, and
 fast mode changes keep the restriction, and project settings cannot turn
@@ -153,7 +153,8 @@ The Rust runner drives the helper directly. The release contains no separate run
 - [text-lines.ts](src/text-lines.ts) splits UTF-8 input into lines at LF only, for both JSON-line readers.
 - [process.ts](src/providers/process.ts) starts the Codex App Server and reads its output lines.
 - [read-request.ts](src/read-request.ts) and [read-output.ts](src/read-output.ts) validate boundary data.
-- [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
+- [claude.ts](src/providers/claude.ts) starts Claude with scheduling disabled and registers the Stop hook. [Background work](../background-work.md#scheduling)
+- [codex.ts](src/providers/codex.ts) starts the Codex App Server and registers the Conductive tools.
 - [skills.ts](src/skills.ts) caches skill discovery from Claude folders and the Codex app server or fallback folders.
 - [skill-input.ts](src/providers/skill-input.ts) selects explicit Codex skill input from each message.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.

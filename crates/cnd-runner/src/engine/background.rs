@@ -34,8 +34,8 @@ impl Background {
         }
         self.replied && idle && !self.live
     }
-    pub(super) fn input(&mut self, received_at: i64, limit: Duration) {
-        if self.waiting && self.deadline.is_some() {
+    pub(super) fn input(&mut self, received_at: i64, limit: Duration, member_message: bool) {
+        if member_message && self.waiting && self.deadline.is_some() {
             self.deadline = Some(received_at.saturating_add(limit.as_millis() as i64));
         }
         self.waiting = false;

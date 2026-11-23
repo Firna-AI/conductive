@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use cnd_runner::runtime::CommandHandler;
 use cnd_runner_interface::provider_events::{ProviderEvent, ProviderResultState};
+use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerMessageDuringTurn};
 use serde_json::json;
 
 use super::builders::{message, turn};
@@ -96,6 +97,53 @@ async fn resets_only_waiting_input_and_does_not_acknowledge_input_on_wakeup() ->
             end[1]["userMessageIds"],
             json!(["message-first", "message-next"])
         );
+        h.close().await?;
+    }
+    Ok(())
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_workspace_wake_keeps_the_wait_deadline_through_delivery_and_handoff() -> TestResult {
+    for handoff in [false, true] {
+        let h = Fixture::new().await?;
+        h.command(turn("session", "first")?).await?;
+        wait(&h).await?;
+        h.advance(Duration::from_secs(1)).await;
+
+        let first = h.latest()?;
+        first.deferred.store(handoff, Ordering::SeqCst);
+        let mut wake = message("session", "first", "wake")?;
+        let RunnerCommand::RunnerMessageDuringTurn(RunnerMessageDuringTurn::Message {
+            wake_up,
+            ..
+        }) = &mut wake
+        else {
+            return Err("Expected a message during the turn".into());
+        };
+        *wake_up = Some(true);
+        h.command(wake).await?;
+        assert_eq!(first.closed.load(Ordering::SeqCst), handoff);
+
+        let replying = h.latest()?;
+        replying.event(ProviderEvent::Background {
+            live: true,
+            idle: false,
+        });
+        h.engine.idle().await?;
+        h.advance(LIMIT - Duration::from_secs(1)).await;
+        assert_eq!(h.events().await.len(), 1);
+        replying.result(&["message-wake"]);
+        h.engine.idle().await?;
+        let events = h.events().await;
+        assert_eq!(events.len(), 2, "handoff={handoff}");
+        let end = serde_json::to_value(&events[1])?;
+        assert_eq!(end["endReason"], "background_work_limit");
+        assert_eq!(end["durationMs"], LIMIT.as_millis() as u64);
+        assert_eq!(
+            end["userMessageIds"],
+            json!(["message-first", "message-wake"])
+        );
+        assert!(replying.closed.load(Ordering::SeqCst));
         h.close().await?;
     }
     Ok(())

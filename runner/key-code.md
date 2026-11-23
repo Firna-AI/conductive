@@ -8,6 +8,7 @@ This guide belongs to the [agent runner](README.md).
 - [link](../crates/cnd-runner/src/link/) owns hello, welcome, confirmations, replay, and the private parts of complete tool details.
 - [state](../crates/cnd-runner/src/state/) owns the Node-compatible atomic state file and recovered turns.
 - [engine](../crates/cnd-runner/src/engine/) owns each session actor, input, helper handoffs, and turn completion.
+- [Background work](background-work.md#key-code) traces the Claude scheduling controls, Stop hook, and wait deadline to their entry points.
 - [filter](../crates/cnd-runner/src/filter/) masks credentials before event limits and storage.
 - [helper](../crates/cnd-runner/src/helper/) drives the private Node child and confirms a release after its first welcome.
 - [reports](../crates/cnd-runner/src/reports/) serializes scans, revisions, retained replies, and bounded parts.
@@ -18,6 +19,6 @@ This guide belongs to the [agent runner](README.md).
 - [cnd-relay](../crates/cnd-relay/README.md) owns the preview relay and inherited socket.
 - [SDK helper](sdk-helper/README.md#key-code) owns adapters, credentials, tools, and measurement bundles.
 
-[Agent input](agent-input.md#key-code), [background work](background-work.md#key-code),
-[file reports](file-reports.md#key-code), and [agent logins](agent-logins.md#key-code)
+[Agent input](agent-input.md#key-code), [file reports](file-reports.md#key-code),
+and [agent logins](agent-logins.md#key-code)
 give the entry points of each area.
