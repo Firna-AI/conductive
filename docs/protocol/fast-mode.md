@@ -33,7 +33,7 @@ says. The [mockup catalogue](../mockups/catalogue.md) draws the switch at
 ## The Fast switch
 
 - Each choice holds fast mode, on or off (fast mode decision 255).
-- The model menu shows a Fast row after the effort rows, under a line.
+- The model menu shows a Fast row after the Effort row.
   [The model menu](model-favourites.md#the-model-menu) gives the order of
   all its rows.
 - The row holds only the word "Fast" and a switch.

@@ -16,13 +16,14 @@ const placements = [
 /**
  * The picker of the model and the effort, registered with Mokly. Its pages
  * show the picker, fast mode, and the menu open: with the favourites, with
- * the submenu of All models, and with no favourite.
+ * the submenu of All models, with the submenu of Effort, and with no
+ * favourite.
  */
 export const modelPicker = defineComponent({
   slug: 'model-picker',
   title: 'Model picker',
   description:
-    'One picker for the model and the effort of the next message, such as "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast" after it while fast mode is on. Its menu lists the favourites of the viewer first, then All models, which opens the submenu of every model, then the efforts and Fast. With no favourite, the menu starts with All models. In a session with messages, a model or a favourite of the other agent opens a new session. A screen can supply an open menu in place of the model menu, such as nothing where the screen draws the menu above the page. Its own page shows the default choice.',
+    'One picker for the model and the effort of the next message, such as "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast" after it while fast mode is on. Its menu lists the favourites of the viewer first, then All models, which opens the submenu of every model, then Effort, which shows the current effort and opens the submenu of the efforts, then Fast. With no favourite, the menu starts with All models. In a session with messages, a model or a favourite of the other agent opens a new session. A screen can supply an open menu in place of the model menu, such as nothing where the screen draws the menu above the page. Its own page shows the default choice.',
   relatedDocs: ['docs/mockups/design-model-menu.md'],
   propSchema: {
     type: 'object',
@@ -47,6 +48,8 @@ export const modelPicker = defineComponent({
       favourites: { type: 'array', items: agentChoiceSchema },
       /** The submenu of All models is open. */
       allModels: { type: 'boolean' },
+      /** The submenu of Effort is open. */
+      effort: { type: 'boolean' },
     },
   } as const,
   slots: ['menu'],
@@ -55,6 +58,7 @@ export const modelPicker = defineComponent({
     <ModelPicker
       allModels={props.allModels}
       choice={props.choice}
+      effort={props.effort}
       fastKey={props.fastKey}
       favourites={props.favourites}
       hiddenModels={props.hiddenModels}
@@ -75,7 +79,7 @@ export const modelPicker = defineComponent({
       slug: 'open',
       title: 'Menu open',
       description:
-        'The menu below the picker: the favourites of the viewer, the current one marked, then All models, the efforts, and Fast.',
+        'The menu below the picker: the favourites of the viewer, the current one marked, then All models, Effort with the current effort, and Fast.',
       props: { open: true, placement: 'below-start' },
     },
     {
@@ -86,10 +90,17 @@ export const modelPicker = defineComponent({
       props: { open: true, placement: 'below-start', allModels: true },
     },
     {
+      slug: 'effort',
+      title: 'Effort open',
+      description:
+        'The submenu of Effort beside the menu, level with its row, with the efforts of the current model and the current effort marked. The Effort row shows the current effort in the muted colour.',
+      props: { open: true, placement: 'below-start', effort: true },
+    },
+    {
       slug: 'no-favourites',
       title: 'No favourites',
       description:
-        'The menu with no favourite, as the picker of a Favourites row shows it: All models first, then the efforts and Fast.',
+        'The menu with no favourite, as the picker of a Favourites row shows it: All models first, then Effort and Fast.',
       props: { open: true, placement: 'below-start', favourites: noFavourites },
     },
   ],

@@ -44,6 +44,11 @@ export type MenuSubmenu = {
   id: string
   label: string
   icon?: LucideIcon
+  /**
+   * Muted words that follow the label in its line, such as the current
+   * effort after Effort.
+   */
+  muted?: string
   /** The choices that `MenuButton` shows for the item. */
   entries?: readonly MenuRow[]
 }

@@ -89,8 +89,8 @@ describe('the Fast switch of the model picker of a session', () => {
       ],
       sol: 'Model and effort: GPT-6.1 Sol, High, Fast',
       sonnet: 'Model and effort: Sonnet 5.5, High',
-      // All models, then the efforts, with no Fast row.
-      roles: ['menuitem', 'menuitemradio'],
+      // All models, then Effort, with no Fast row.
+      roles: ['menuitem'],
     })
   })
 })
