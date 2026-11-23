@@ -12,20 +12,18 @@ const SUBJECT_KEYS = [
 ] as const
 
 /**
- * Agent tools whose name stays the target, with the argument that names
- * their subject. The Claude `Skill` tool names its skill in `skill`, so its
- * line reads "Used Skill brainstorming".
+ * Agent tools whose name is always the target, with the one argument that
+ * gives their detail. The Claude `Skill` tool names its skill in `skill`,
+ * so its line reads "Used Skill brainstorming".
  */
-const NAMED_SUBJECTS: ReadonlyMap<string, string> = new Map([
-  ['Skill', 'skill'],
-])
+const NAMED_TOOLS: ReadonlyMap<string, string> = new Map([['Skill', 'skill']])
 
 /**
  * Maps one tool call to its chat line. A call to a tool of an MCP server
  * shows `mcpTool`, its name without the server, and its subject as the
- * detail. A call to a tool of `NAMED_SUBJECTS` shows its name, and its
- * subject as the detail. Any other call shows its subject, and its
- * description as the detail.
+ * detail. A call to a tool of `NAMED_TOOLS` shows its name, and only its
+ * named argument as the detail, whatever other arguments it has. Any other
+ * call shows its subject, and its description as the detail.
  */
 export function mapTool(
   id: string,
@@ -34,21 +32,20 @@ export function mapTool(
   state: ToolCall['state'],
   mcpTool: string | null = null,
 ): ToolCall {
-  let subject: string | null = null
-  let description: string | null = null
-  let named: string | null = null
-  if (input !== null && typeof input === 'object') {
-    const args = object(input)
-    const key = SUBJECT_KEYS.find((item) => typeof args[item] === 'string')
-    if (key) subject = string(args[key])
-    if (typeof args.description === 'string') description = args.description
-    const namedKey = mcpTool === null ? NAMED_SUBJECTS.get(name) : undefined
-    if (namedKey && typeof args[namedKey] === 'string')
-      named = string(args[namedKey])
-  }
-  const keepsName = mcpTool !== null || named !== null
-  const target = keepsName ? (mcpTool ?? name) : (subject ?? name)
-  const detail = keepsName ? (named ?? subject ?? description) : description
+  const args = input !== null && typeof input === 'object' ? object(input) : {}
+  const text = (key: string) =>
+    typeof args[key] === 'string' ? string(args[key]) : null
+  const subjectKey = SUBJECT_KEYS.find((key) => text(key) !== null)
+  const subject = subjectKey ? text(subjectKey) : null
+  const description = text('description')
+  const namedKey = mcpTool === null ? NAMED_TOOLS.get(name) : undefined
+  const target = mcpTool ?? (namedKey === undefined ? (subject ?? name) : name)
+  const detail =
+    namedKey !== undefined
+      ? text(namedKey)
+      : mcpTool !== null
+        ? (subject ?? description)
+        : description
   const lower = name.toLowerCase()
   const kind = /computer|browser/.test(lower)
     ? 'computer'

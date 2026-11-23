@@ -86,8 +86,11 @@ it('shows the Claude Skill tool by its name, with the skill as the detail', () =
   })
 })
 
-it('shows the Claude Skill tool by its name alone when it names no skill', () => {
-  expect(mapTool('call', 'Skill', {}, 'running')).toMatchObject({
+it.each([
+  ['no arguments', {}],
+  ['other arguments', { path: 'brainstorming/SKILL.md', description: 'Plan' }],
+])('shows the Claude Skill tool by its name alone with %s', (_, input) => {
+  expect(mapTool('call', 'Skill', input, 'failed')).toMatchObject({
     target: 'Skill',
     detail: null,
   })
