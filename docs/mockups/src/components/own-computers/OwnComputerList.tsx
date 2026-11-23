@@ -1,5 +1,5 @@
 import { KeyRound, SquareTerminal } from 'lucide-react'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
 import { ComputerStatus } from './ComputerStatus'
 import { ownComputerWords, rowMeta, usageText } from './ownComputerCopy'

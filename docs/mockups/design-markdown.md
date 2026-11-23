@@ -20,7 +20,8 @@ reader of the app.
 
 ## The parts
 
-- `AgentBlocks` and `LineBlocks` in `src/components/chat/` draw the blocks
+- `AgentBlocks` and `LineBlocks` in
+  [`src/ui/components/chat/`](../../src/ui/components/chat/) draw the blocks
   of an agent message, typed with `TextBlock` of the app. `AgentBlocks`
   draws an answer and the blocks under an open message line. `LineBlocks`
   draws the blocks in a message line, and its `holdsTable` finds where the
@@ -31,17 +32,19 @@ reader of the app.
     draws a code block, and says whether a heading shows words. The place
     says whether the text is in a message line, and whether a picture can
     show there.
-  - `fixtureDrawing.tsx` gives the drawing of the mockups. It draws the
-    text with `AnswerText`, a code block with `CodeBlock`, and a heading
-    only when `answerShowsWords` of the app finds words in its text.
+  - `fixtureDrawing.tsx` in `src/components/chat/` gives the drawing of
+    the mockups. It draws the text with `AnswerText`, a code block with
+    `CodeBlock`, and a heading only when `answerShowsWords` of the app
+    finds words in its text.
   - `agentText.ts` in `src/fixtures/` gives the builders of the blocks and
     of the inline text, such as `p`, `heading`, `bullets`, `task`,
     `strong`, and `link`. A string is a text node with exactly its
     characters. No builder reads Markdown, so a fixture copies no bug of
     the reader of the app.
-- `MarkdownTable` in `src/components/common/` draws each Markdown table of
-  a reply and of the Markdown preview of a file as a native table. It
-  imports no fixture, so the app can use it too. Each caller draws the
+- `MarkdownTable` in
+  [`src/ui/components/common/`](../../src/ui/components/common/) draws each
+  Markdown table of a reply and of the Markdown preview of a file as a
+  native table. The app uses `MarkdownTable` too. Each caller draws the
   content of the cells, such as inline code and line breaks.
   - The header row has the raised fill and the strong weight. One 1 px line
     in the border colour stands between two cells and around the table.
@@ -69,7 +72,8 @@ reader of the app.
     preview, so a cell of one line stays level with the first line of a
     higher cell. The user chose this on 18 November 2026, with item 12 B
     of the Markdown plan.
-- `MarkdownHeadings.module.css` in `src/components/common/` gives the
+- `MarkdownHeadings.module.css` in
+  [`src/ui/components/common/`](../../src/ui/components/common/) gives the
   Markdown headings of a reply and of the Markdown preview of a file one
   look, under its `headings` class. It sets the size, the weight, the
   colour, and the letter spacing of each level, and the line under a
@@ -98,11 +102,12 @@ reader of the app.
     the file has no space above it.
   - The text of a heading shows inline code, the marks, and workspace
     chips, as a paragraph does. A heading with no text draws nothing.
-- `MarkdownProse.module.css` in `src/components/common/` gives the quotes,
-  the rules, the bold text, the emphasis, the strikethrough, and the task
-  boxes of a reply and of the Markdown preview of a file one look, under
-  its `prose` class. Each view sets the space above and below its quotes
-  and rules, as `app/chat/formatting` and `app/files/markdown` show.
+- `MarkdownProse.module.css` in
+  [`src/ui/components/common/`](../../src/ui/components/common/) gives the
+  quotes, the rules, the bold text, the emphasis, the strikethrough, and
+  the task boxes of a reply and of the Markdown preview of a file one look,
+  under its `prose` class. Each view sets the space above and below its
+  quotes and rules, as `app/chat/formatting` and `app/files/markdown` show.
   - A quote has a 2 px line in the strong border colour at its left, 12 px
     from its text, and its text is muted. It has no fill and no other
     border, so the line is no accent. A quote holds blocks, such as
@@ -125,9 +130,10 @@ reader of the app.
     paragraph of the item, as on GitHub, so it stays on the line of its
     words, as the last task of `app/chat/lists/tasks` shows.
     `app/files/markdown` shows the box in the file preview.
-    `markdownTasks.ts` reads the box at the start of an item of the file
-    preview, and `TaskBox` draws it, both in `src/components/common/`. A
-    fixture of a reply writes the state of the box with `task` of
+    `markdownTasks.ts` in `src/components/common/` reads the box at the
+    start of an item of the file preview. `TaskBox` in
+    [`src/ui/components/common/`](../../src/ui/components/common/) draws
+    it. A fixture of a reply writes the state of the box with `task` of
     `agentText.ts`.
   - The box has the look of the design, not of the browser, in both views
     and in a message line, from item 82 B of the Markdown plan. The

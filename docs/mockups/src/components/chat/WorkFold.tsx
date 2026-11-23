@@ -9,7 +9,7 @@ import {
   foldLine,
 } from '../../entries/components/chat/ToolGroup.mockup'
 import { instanceKey } from '../../instanceKey'
-import styles from './ToolGroup.module.css'
+import styles from '../../../../../src/ui/components/chat/ToolGroup.module.css'
 
 /**
  * How the mockups draw the folds of ended turns: closed, as each fold

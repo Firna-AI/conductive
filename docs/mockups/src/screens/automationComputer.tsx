@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
+import { Menu } from '../../../../src/ui/components/common/Menu'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import {
   ComputerPicker,
   computerMenu,

@@ -1,5 +1,5 @@
 import type { RunnerEventRefused } from '../chat-events'
-import type { LostWhat } from '../../../docs/mockups/src/components/chat/lostCopy'
+import type { LostWhat } from '../../ui/components/chat/lostCopy'
 
 /**
  * The data that each refused runner event carried, in the words of the chat.

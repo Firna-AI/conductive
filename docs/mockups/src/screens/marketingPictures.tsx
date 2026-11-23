@@ -10,7 +10,7 @@ import {
   type MarketingPictureKey,
   type PictureLayout,
   type ScreenViewport,
-} from './marketingPictureList'
+} from '../../../../src/ui/screens/marketingPictureList'
 import { MacAppScreen } from './MacAppScreen'
 import type { MacAppState } from './macAppState'
 import { OrgSettingsScreen } from './OrgSettingsScreen'

@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
 import {
   previewTabLabel,
   serverDescription,
-} from '../../../../docs/mockups/src/components/tools/previewCopy'
+} from '../../../ui/components/tools/previewCopy'
 import { useNavigation } from '../../../app/navigation'
 import type { RenderedTab } from '../../../chat/components/tab-row'
 import { OpenInNewTab } from '../../../previews/PreviewFrame'

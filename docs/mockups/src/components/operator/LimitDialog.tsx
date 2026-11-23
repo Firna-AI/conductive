@@ -1,14 +1,14 @@
 import type { Viewport } from '@mokly/mokly'
 import { Input } from '@firna/ui/input'
 import { limitOrg } from '../../fixtures/migrationJob'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
   confirmDialog,
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { Linked } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { limitWords } from './migrationCopy'
 
 /**

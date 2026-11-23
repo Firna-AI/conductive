@@ -1,10 +1,10 @@
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useTouch } from '../common/touch'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
 import { instanceKey } from '../../instanceKey'
-import tabScroll from '../workspace/TabScroll.module.css'
-import styles from './PreviewTabs.module.css'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
+import styles from '../../../../../src/ui/components/tools/PreviewTabs.module.css'
 
 export type PreviewTab = {
   /** The port and the cut name of the server, from `previewTabLabel`. */

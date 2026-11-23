@@ -97,8 +97,8 @@ the Help row of the command palette opens.
   `BuildsResponse.changes`, as
   [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
   says, so each of these tabs reads the builds while it shows. Its state
-  comes from `repositoryWaitOf`, and its words and its look from
-  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx` of the mockups. In
+  comes from `repositoryWaitOf`, and its words and its look from the shared
+  `repositoryChangeCopy.ts` and `RepositoryNotice.tsx`. In
   a suspended org it names no admin who can act. The build history stays
   closed while a change of the install script or of the repositories
   waits for a build.
@@ -148,14 +148,15 @@ the Help row of the command palette opens.
   `placeWorkspaces`, the shared rule of the Worker, so a row whose parent
   is archived shows under the nearest live row above it. Each row that the
   list shows above a row in its tree indents it by one step, through the
-  classes `.nested` and `.indent1` to `.indent3` of the mockups. The guide
+  classes `.nested` and `.indent1` to `.indent3` of the shared
+  `WorkspaceRow.module.css`. The guide
   lines join the rows of a tree as in a file tree, as
   [the design](../../docs/mockups/design.md) says. A stub runs down from
   the mark of a row with nested rows, and a connector runs to the mark of
   each nested row. A line ends at its last nested row. An outer line runs
   through a row only while its row has a nested row further down.
   `treeRows` in `list-trees.ts` gives each row its lines from `treeLines`,
-  a shared helper. The mockups use the same helper, and their
+  a shared helper. The mockups use the same helper, and the shared
   `guideClasses` gives the classes of the lines. A collapsed section
   counts its nested rows too. The Archived group and the command palette
   stay flat.
@@ -261,8 +262,8 @@ the Help row of the command palette opens.
   notice of the first build on the page and in the dialog, as
   [Create a workspace](../../docs/protocol/create-a-workspace.md#before-the-first-good-build)
   says, and Send, Create, and Try again stay off. The shared form watches
-  the builds and owns the notice. Its words come from
-  `firstBuildCopy.ts` of the mockups. When the repositories reply shows a
+  the builds and owns the notice. Its words come from the shared
+  `firstBuildCopy.ts`. When the repositories reply shows a
   good image, through `imageReady` or a ready repository, the builds are
   older, and the notice gives way. `imageReadyOf` reads every repository
   of the reply, also one that the org no longer chose. While the builds

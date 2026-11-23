@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
-import { sameShortcut, type Shortcut } from '../common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../../src/ui/components/common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import {
   keyButton,
@@ -8,7 +11,7 @@ import {
 } from '../../entries/components/settings/ShortcutParts.mockup'
 import { instanceKey, shortcutKey } from '../../instanceKey'
 import { defined } from '../../defined'
-import styles from './ShortcutsSections.module.css'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /** The browser that keeps a shortcut in a normal tab, or none. */
 function keeper(shortcut: Shortcut, tab?: BrowserTab) {

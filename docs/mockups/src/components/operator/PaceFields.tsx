@@ -1,6 +1,6 @@
 import { InputFrame } from '@firna/ui/input'
-import { noop } from '../../noop'
-import { useControlSizes } from '../common/touch'
+import { noop } from '../../../../../src/ui/noop'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { paceFieldLabel, paceWords } from './migrationCopy'
 import styles from './PaceFields.module.css'
 

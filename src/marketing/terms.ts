@@ -1,8 +1,4 @@
-import {
-  appDomain,
-  productDomain,
-  productName,
-} from '../../docs/mockups/src/brand'
+import { appDomain, productDomain, productName } from '../shared/brand'
 import {
   abuseAddress,
   legalAddress,

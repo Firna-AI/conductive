@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../../src/shared/brand'
 
 export type OutboundRequestOptions = Omit<RequestInit, 'redirect'>
 

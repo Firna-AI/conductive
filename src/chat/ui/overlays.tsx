@@ -1,10 +1,10 @@
 import { useRef, type ReactNode } from 'react'
 import { useModalLayer } from '../../shell/ui/layers'
 import ui from '../../shell/ui/ui.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import sheetStyles from '../../../docs/mockups/src/components/common/Sheet.module.css'
-import styles from '../../../docs/mockups/src/components/common/ConfirmDialog.module.css'
-import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
+import { classes } from '../../ui/components/common/classes'
+import sheetStyles from '../../ui/components/common/Sheet.module.css'
+import styles from '../../ui/components/common/ConfirmDialog.module.css'
+import card from '../../ui/components/common/ModalCard.module.css'
 import { useEscape, useFocusInside, useFocusTrap } from './dismiss'
 
 type FirstFocus = (node: HTMLElement) => HTMLElement | null

@@ -88,7 +88,7 @@ the folder of this page.
   whether the focus fell to the page. `PointMenu.tsx`, `useLayerFocus` of
   `Overlay.tsx`, and `useFocusInside` of `../chat/ui/dismiss.ts` call it.
   So the menus, sheets, and dialogs of the shell and the chat share it.
-- [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css):
+- [ModalCard.module.css](../ui/components/common/ModalCard.module.css):
   the parts of the modal card, the card of a desktop dialog. They keep the
   card inside its layer. Its `.head` and its `.foot` keep their size, and
   only its `.body` scrolls when the content is taller.
@@ -177,8 +177,8 @@ the folder of this page.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
   its message box. `Sheet` puts its content in the scrolling `.body` of
-  the mockup sheet.
-- [feedbackCopy.ts](../../docs/mockups/src/components/feedback/feedbackCopy.ts):
+  the shared `Sheet.module.css`.
+- [feedbackCopy.ts](../ui/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
   mockups share. Its `sendLimitBody` gives the words of a send over the
   limit.

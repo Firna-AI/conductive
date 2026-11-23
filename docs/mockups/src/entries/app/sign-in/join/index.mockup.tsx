@@ -1,5 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
-import { appDomain } from '../../../../brand'
+import { appDomain } from '../../../../../../../src/shared/brand'
 import { linkCode } from '../../../../fixtures/waitlist'
 import { SignInScreen } from '../../../../screens/SignInScreen'
 

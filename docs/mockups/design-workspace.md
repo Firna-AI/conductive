@@ -39,10 +39,11 @@ link, and the bars of the cloud computer.
   Rename session opens a field in place of the title of that tab, also when
   the tab does not show. The field marks that tab, which takes no fill, so
   only the shown tab is filled. On a phone, a long press that ends without a
-  move opens the menu as a sheet. `WorkspaceTabs.module.css` styles the row
-  and its tabs. `TabScroll.module.css` styles a full row, `TabDrag.module.css`
-  a drag, and `TabRename.module.css` the rename field. The app shares these
-  modules.
+  move opens the menu as a sheet. `WorkspaceTabs.module.css` in
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+  styles the row and its tabs. `TabScroll.module.css` beside it styles a
+  full row, `TabDrag.module.css` a drag, and `TabRename.module.css` the
+  rename field. The app shares these modules.
 - The temporary tab, from decisions 284 to 287, is the one file or diff tab
   that the next press on a file or a diff replaces, as
   `app/files/temporary` shows. A press on a row of All files or Changes, or
@@ -80,12 +81,14 @@ link, and the bars of the cloud computer.
   hides a secret value opens no menu. A read-only workspace shows no rows.
   The row of an open menu keeps the fill of a hover, as a tab with an open
   menu does, also under the sheet of a phone. `FileRowMenu.tsx` beside the
-  lists gives the items and the sheet, and `rowMenuCopy.ts` gives the
+  lists gives the items and the sheet, and `rowMenuCopy.ts` in
+  [`src/ui/components/files/`](../../src/ui/components/files/) gives the
   words of the items and of the toast. Add to chat has the icon of the `@`
   of a mention, because the speech bubble with a plus names New session.
 - The tab of an HTML file shows its page in a frame, from HTML preview
   decision 1 A, as `app/files/html` shows. `PageFrame` in
-  `src/components/files/` holds the page from edge to edge under the
+  [`src/ui/components/files/`](../../src/ui/components/files/) holds the
+  page from edge to edge under the
   header of the file, as a Preview tab holds the page of a port. The page
   is the member's own, so it keeps its own colours in both colour schemes.
   The header adds Reload and Open, from `PreviewActions` of the Preview
@@ -101,7 +104,8 @@ link, and the bars of the cloud computer.
     that asks for Restart. It imports no fixture, so the app can share it.
   - A failed open shows `PreviewOpenFailure` of `src/components/tools/`:
     "The preview couldn't open", the message of the server, and Try
-    again, as a Preview tab shows it. The words live in `previewCopy.ts`.
+    again, as a Preview tab shows it. The words live in
+    [`src/ui/components/tools/previewCopy.ts`](../../src/ui/components/tools/previewCopy.ts).
 - `TerminalTabs` in `src/components/tools/` draws the terminals of a
   workspace as a row of tabs above the shown terminal, with + at its end,
   from decisions 1 to 3 of the terminal tabs change, as `app/tools` shows. Its tabs are
@@ -133,15 +137,20 @@ link, and the bars of the cloud computer.
   - `ServiceResultToast` shows a failed control as the toast of a failed
     change, an unconfirmed control as a warning toast, and a control for a
     run that ended as an info toast.
-  - `serviceCopy.ts` beside them holds the words, which take plain values
-    or the types of the report, and the sample shapes of the mockups. It
-    imports no fixture, so the app shares its words.
+  - `serviceCopy.ts` in
+    [`src/ui/components/tools/`](../../src/ui/components/tools/) holds the
+    words, which take plain values or the types of the report, and the
+    sample shapes of the mockups. It imports no fixture, so the app shares
+    its words.
 - Each workspace has a number in its org, and `workspaceLabel` in
-  `src/components/workspaces/label.ts` shows it as `W-395`. The number
+  [`src/ui/components/workspaces/label.ts`](../../src/ui/components/workspaces/label.ts)
+  shows it as `W-395`. The number
   shows in the header, in chips, and in a row of the command palette
   whose search matches it. The rows of the list keep their layout.
-  - `CopyLinkButton` in `src/components/workspace/` is the label in the
-    header, after the name. The label shows alone, without an icon, as a
+  - `CopyLinkButton` in
+    [`src/ui/components/workspace/`](../../src/ui/components/workspace/) is
+    the label in the header, after the name. The label shows alone, without
+    an icon, as a
     plain Firna button: a pointer over it shows the hover fill, and the
     keyboard focus shows the focus ring. A press copies the link of the
     workspace, and a note under it says "Link copied" for a moment, over
@@ -173,8 +182,10 @@ link, and the bars of the cloud computer.
   read-only. It says that the cloud computer is being deleted while the
   workspace names it or such a request can still hold it, and that it is
   deleted only after the delete. Its panels say Removed.
-  `sandboxNoticeState.ts` beside it owns the types of the bar and the
-  panels, which the app imports too. It also owns the stage of an archived
+  `sandboxNoticeState.ts` in
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/) owns
+  the types of the bar and the panels, which the app imports too. It also
+  owns the stage of an archived
   workspace, which keeps what the app knows of the cloud computer apart
   from Restore. `sandboxProblems.ts` beside them holds the words of each
   state of the mockups, and the rules that pick them.

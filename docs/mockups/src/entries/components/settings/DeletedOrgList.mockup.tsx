@@ -8,8 +8,8 @@ import { orgTile } from '../orgs/OrgTile.mockup'
 import {
   DeletedOrgList,
   type DeletedOrgRow,
-} from '../../../components/settings/DeletedOrgList'
-import { deletedOrgsCopy as copy } from '../../../components/settings/deletedOrgsCopy'
+} from '../../../../../../src/ui/components/settings/DeletedOrgList'
+import { deletedOrgsCopy as copy } from '../../../../../../src/ui/components/settings/deletedOrgsCopy'
 import { accountDeletedOrg, orgs } from '../../../fixtures/orgs'
 import { paths } from '../../../paths'
 import { orgSchema } from '../layout/railSchemas'

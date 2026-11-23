@@ -11,9 +11,9 @@ import {
   deletedOrgBody,
   suspendedOrgBody,
   suspendedTitle,
-} from './operatorCopy'
+} from '../../../../../src/ui/components/operator/operatorCopy'
 import { TargetList, TargetRow } from './targets'
-import { WorkspaceStates } from './WorkspaceStates'
+import { WorkspaceStates } from '../../../../../src/ui/components/operator/WorkspaceStates'
 import { instanceKey } from '../../instanceKey'
 import { defined } from '../../defined'
 

@@ -5,9 +5,18 @@ import {
   Hourglass,
   type LucideIcon,
 } from 'lucide-react'
-import { StatusText, type StatusTone } from '../common/StatusText'
-import { DetailList, type Detail } from '../settings/DetailList'
-import { Section, SectionText } from '../settings/Section'
+import {
+  StatusText,
+  type StatusTone,
+} from '../../../../../src/ui/components/common/StatusText'
+import {
+  DetailList,
+  type Detail,
+} from '../../../../../src/ui/components/settings/DetailList'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
 import { JobAccounts } from './JobAccounts'
 import {
   jobStateLabels,

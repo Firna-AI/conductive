@@ -16,14 +16,17 @@ import {
   signedOutStatus,
 } from '../../entries/components/settings/LoginNotUsable.mockup'
 import { loginShare } from '../../entries/components/settings/LoginShare.mockup'
-import { classes } from '../common/classes'
-import { StatusText } from '../common/StatusText'
-import { loginLabels } from './agentConnectCopy'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
+import { loginLabels } from '../../../../../src/ui/components/settings/agentConnectCopy'
 import type { EndpointEntry } from './EndpointFields'
-import type { SignInStep } from './chatGptSignInCopy'
+import type { SignInStep } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
 import type { UnusableLogin } from './LoginNotUsable'
-import { OrgLoginLines, type OrgLoginUse } from './OrgLoginLines'
-import styles from './AccountSections.module.css'
+import {
+  OrgLoginLines,
+  type OrgLoginUse,
+} from '../../../../../src/ui/components/settings/OrgLoginLines'
+import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 
 /** The state of a connected login or of GitHub, in its row. */
 export const connected = <StatusText label="Connected" tone="success" />

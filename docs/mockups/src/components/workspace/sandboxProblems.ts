@@ -1,13 +1,13 @@
 import type { ArchiveDays } from '../../fixtures/archive'
 import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
 import { removedComputerArchiveWords } from '../own-computers/computerChoiceCopy'
-import { refusedIcon } from '../orgs/suspension'
+import { refusedIcon } from '../../../../../src/ui/components/orgs/suspension'
 import type { BarNotice } from './SandboxNotice'
 import {
   archiveStage,
   type SandboxNoticeState,
   type SandboxProblem,
-} from './sandboxNoticeState'
+} from '../../../../../src/ui/components/workspace/sandboxNoticeState'
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 

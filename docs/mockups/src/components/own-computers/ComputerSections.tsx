@@ -1,12 +1,15 @@
 import { Input } from '@firna/ui/input'
 import { Trash2, Unplug } from 'lucide-react'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
+import { noop } from '../../../../../src/ui/noop'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { Notice } from '../../../../../src/ui/components/common/Notice'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { DetailList, type Detail } from '../settings/DetailList'
-import { Section } from '../settings/Section'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  DetailList,
+  type Detail,
+} from '../../../../../src/ui/components/settings/DetailList'
+import { Section } from '../../../../../src/ui/components/settings/Section'
 import { ComputerStatus } from './ComputerStatus'
 import { computerPageWords as words, sizeText } from './ownComputerCopy'
 import { defaultLimit, type OwnComputer } from './ownComputer'

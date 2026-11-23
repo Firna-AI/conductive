@@ -3,7 +3,7 @@ import {
   SandboxBar,
   SandboxPanel,
 } from '../../../components/workspace/SandboxNotice'
-import { orgSuspendedReason } from '../../../components/orgs/suspension'
+import { orgSuspendedReason } from '../../../../../../src/ui/components/orgs/suspension'
 import { archivedNow } from '../../../fixtures/archive'
 import { sandboxNoticeSchema, sandboxPanelSchema } from './sandboxSchemas'
 

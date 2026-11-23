@@ -1,9 +1,6 @@
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Square } from 'lucide-react'
-import {
-  useControlSizes,
-  useTouch,
-} from '../../../docs/mockups/src/components/common/touch'
+import { useControlSizes, useTouch } from '../../ui/components/common/touch'
 import { ActionButton } from '../ui/actions'
 
 /**

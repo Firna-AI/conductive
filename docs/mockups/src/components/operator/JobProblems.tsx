@@ -1,8 +1,11 @@
 import { CircleAlert, Copy } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { Section, SectionText } from '../settings/Section'
-import { workspaceLabel } from '../workspaces/label'
-import { copyComputerLabel } from './longRunsCopy'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
+import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
+import { copyComputerLabel } from '../../../../../src/ui/components/operator/longRunsCopy'
 import {
   failureText,
   noAdminLine,
@@ -11,7 +14,7 @@ import {
 } from './jobProblemsCopy'
 import type { JobFailure, JobProblems, SkipReason } from './migrationModel'
 import styles from './JobProblems.module.css'
-import rows from './WorkspaceStates.module.css'
+import rows from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 
 /** The reasons of a skip, in the order of the list. */
 const skipOrder: readonly SkipReason[] = [

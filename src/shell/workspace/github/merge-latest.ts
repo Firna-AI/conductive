@@ -2,7 +2,7 @@ import { useMemo, useSyncExternalStore } from 'react'
 import {
   mergeLatestLabel,
   mergeLatestPrompt,
-} from '../../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+} from '../../../ui/components/workspace/mergeLatestCopy'
 import { baseBranchLabel } from '../../../github/bannerStatus'
 import type { BarActions } from '../../../github/barActions'
 import { offersAgentActions } from '../../../github/barView'

@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Gauge, Unplug } from 'lucide-react'
-import { Menu } from '../components/common/Menu'
-import { Notice } from '../components/common/Notice'
-import { Sheet } from '../components/common/Sheet'
+import { Menu } from '../../../../src/ui/components/common/Menu'
+import { Notice } from '../../../../src/ui/components/common/Notice'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import {
   ComputerPicker,
   computerMenu,

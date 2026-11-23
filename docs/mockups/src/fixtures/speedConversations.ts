@@ -1,4 +1,4 @@
-import type { StandardSpeedCause } from '../components/chat/speedCopy'
+import type { StandardSpeedCause } from '../../../../src/ui/components/chat/speedCopy'
 import type { ChatItem } from './conversations'
 
 /**

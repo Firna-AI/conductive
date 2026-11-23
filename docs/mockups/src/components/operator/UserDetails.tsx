@@ -4,8 +4,14 @@ import { notice as noticePart } from '../../entries/components/common/Notice.moc
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { AppAccessSection, ReferralSection } from './AccessSections'
-import { noVerifiedEmail, waitingNotice } from './accessCopy'
-import { suspendedTitle, suspendedUserBody } from './operatorCopy'
+import {
+  noVerifiedEmail,
+  waitingNotice,
+} from '../../../../../src/ui/components/operator/accessCopy'
+import {
+  suspendedTitle,
+  suspendedUserBody,
+} from '../../../../../src/ui/components/operator/operatorCopy'
 import { TargetList, TargetRow } from './targets'
 
 /**

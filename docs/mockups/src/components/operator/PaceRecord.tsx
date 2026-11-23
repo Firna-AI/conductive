@@ -1,4 +1,4 @@
-import { DetailList } from '../settings/DetailList'
+import { DetailList } from '../../../../../src/ui/components/settings/DetailList'
 import { paceText } from './migrationCopy'
 import type { Pace } from './migrationModel'
 

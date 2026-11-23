@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { entryName } from '../../../components/chat/entryPaths'
-import { FileChip } from '../../../components/chat/FileChip'
+import { entryName } from '../../../../../../src/ui/components/chat/entryPaths'
+import { FileChip } from '../../../../../../src/ui/components/chat/FileChip'
 import { entryIcon } from '../files/fileIcons.mockup'
 import { previewPaths } from '../../../components/files/previewPaths'
 import { paths } from '../../../paths'

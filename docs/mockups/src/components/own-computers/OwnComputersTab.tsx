@@ -1,7 +1,10 @@
 import { Plus } from 'lucide-react'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { Section, SectionText } from '../settings/Section'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
 import { OwnComputerList, type ComputerListLinks } from './OwnComputerList'
 import { ownComputerWords } from './ownComputerCopy'
 import type { OwnComputer } from './ownComputer'

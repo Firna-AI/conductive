@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { TabIntro } from '../../../components/settings/TabIntro'
+import { TabIntro } from '../../../../../../src/ui/components/settings/TabIntro'
 
 /**
  * The heading of a settings tab, registered with Mokly. A screen supplies

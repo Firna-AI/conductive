@@ -1,9 +1,9 @@
-import { SessionChip } from '../../../docs/mockups/src/components/chat/SessionChip'
-import { SkillChip } from '../../../docs/mockups/src/components/chat/SkillChip'
+import { SessionChip } from '../../ui/components/chat/SessionChip'
+import { SkillChip } from '../../ui/components/chat/SkillChip'
 import {
   WorkspaceChip,
   type ChipOpener,
-} from '../../../docs/mockups/src/components/chat/WorkspaceChip'
+} from '../../ui/components/chat/WorkspaceChip'
 import { routes } from '../../app/router'
 import type { Attachment } from '../../shared/generated/Attachment'
 import { sessionLink } from '../../shared/session-link'

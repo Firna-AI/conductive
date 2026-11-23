@@ -1,12 +1,12 @@
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import {
   approvalDetail,
   secretsPartWords,
   valueDetail,
-} from './capabilitiesCopy'
-import styles from './Capabilities.module.css'
+} from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
+import styles from '../../../../../src/ui/components/capabilities/Capabilities.module.css'
 
 /** One grant: the secret, what it covers, and Remove. */
 function GrantRow(props: { name: string; detail: string; what: string }) {

@@ -1,4 +1,7 @@
-import { barModel, type BarModel } from '../components/workspace/barModel'
+import {
+  barModel,
+  type BarModel,
+} from '../../../../src/ui/components/workspace/barModel'
 import type { OwnComputerLabel } from '../components/workspace/HeaderState'
 import { defined } from '../defined'
 import { continuedBranch, viewerMergeMethod } from '../fixtures/barActions'

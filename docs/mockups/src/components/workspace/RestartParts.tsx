@@ -1,18 +1,21 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { RotateCw } from 'lucide-react'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { Menu } from '../common/Menu'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
+import { Menu } from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
-import { Sheet } from '../common/Sheet'
+import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import { ToastLayer } from '../common/ToastLayer'
 import {
   restartMenu,
   stateMenuLabel,
   type OwnComputerLabel,
 } from './HeaderState'
-import { restartCopy } from './restartCopy'
+import { restartCopy } from '../../../../../src/ui/components/workspace/restartCopy'
 
 /**
  * The menu of the header state on a phone, as a sheet. `computer` names

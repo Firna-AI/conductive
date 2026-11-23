@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy as copy } from '../../ui/components/settings/chatGptSignInCopy'
 import { ManualDelay } from '../../app/test-kit'
 import { ACCOUNT_PATHS } from '../../shared/account'
 import { byRole, queryByText } from '../../test-support/dom-queries'

@@ -1,5 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { ORG_COLORS } from '../design/orgColors'
+import { ORG_COLORS } from '../../../../src/ui/design/orgColors'
 import { repositoryOrderStates } from '../components/settings/RepositoryOrderList'
 import { computerListViews, ownComputerKeys } from '../fixtures/ownComputers'
 import { repositoryChanges } from '../fixtures/repositories'

@@ -1,11 +1,8 @@
 import { Fragment, useEffect } from 'react'
 import { ArrowUpRight, Plus } from 'lucide-react'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
-import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
-import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import { getStartedCopy } from '../../ui/screens/getStartedCopy'
+import styles from '../../ui/screens/GetStartedScreen.module.css'
 import type { StepState } from '../../app/get-started'
 import { useStore, valueOf } from '../../app/store'
 import type { GitHubInstallation } from '../../shared/account'

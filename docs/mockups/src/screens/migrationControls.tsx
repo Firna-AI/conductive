@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { ListFilter, Pause, Play, type LucideIcon } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { ActionButton } from '../../../../src/ui/components/common/actions'
 import { Linked } from '../components/common/ScreenLink'
 import { LimitDialog } from '../components/operator/LimitDialog'
 import { jobWords } from '../components/operator/migrationCopy'

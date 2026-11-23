@@ -2,8 +2,8 @@ import {
   approvalDetail,
   secretsPartWords,
   valueDetail,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import styles from '../../../docs/mockups/src/components/capabilities/Capabilities.module.css'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import styles from '../../ui/components/capabilities/Capabilities.module.css'
 import type { SessionSecretApproval } from '../../shared/secrets'
 import { ActionButton } from '../ui/actions'
 

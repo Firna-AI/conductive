@@ -199,7 +199,10 @@ that sends feedback.
 `app/model-favourites` draws the model menu with favourites, which the user
 chose on 16 November 2026. The menu lists up to five favourites first, each
 as its model with its effort and Fast in the muted colour. All models opens
-a submenu with every model. The efforts and the Fast switch follow. Every
+a submenu with every model. Effort follows, with the current effort in the
+muted colour, and opens a submenu with the efforts, as the user chose on
+23 November 2026. The `effort` state of the model picker component shows
+that submenu. The Fast switch follows Effort. Every
 model picker shows this menu, so each page with an open picker shows it.
 [The model menu](design-model-menu.md) gives its design. On 20 November
 2026 the user chose that a new account starts with five favourites, that a
@@ -217,7 +220,7 @@ starts with All models. Its child pages:
   favourite.
 - `endpoint` leaves out Fable 5.1 Low, because the model list of Cal's
   proxy does not name Fable 5.1.
-- `no-favourites` starts with All models, then the efforts and Fast, with
+- `no-favourites` starts with All models, then Effort and Fast, with
   no favourite. Its `all-models` variant opens the submenu, level with the
   top of the menu on a computer.
 - `new-account` lists the starting favourites.
@@ -276,8 +279,9 @@ Capabilities control in a browser and in the Mac app, and the flow
 `user-flows/secret-request`.
 
 `components` holds the registered shared parts, in a folder named after
-their folder of `src/components/`, and `components/screens` for the
-registered helper parts of `src/screens/`. A shared part without a
+their folder of [`src/ui/components/`](../../src/ui/components/) or of
+`src/components/`, and `components/screens` for the registered helper
+parts of `src/screens/`. A shared part without a
 registration has no page there. Each part has its own page and at most four
 variants, such as `components/workspaces/workspace-mark`.
 [Registered parts](registered-parts.md) gives the rules.

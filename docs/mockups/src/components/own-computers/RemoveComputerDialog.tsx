@@ -1,7 +1,10 @@
 import type { Viewport } from '@mokly/mokly'
 import { Trash2 } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
 import { computerPageWords as words } from './ownComputerCopy'
 import type { OwnComputer } from './ownComputer'

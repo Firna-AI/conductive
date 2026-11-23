@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { ActionButton } from '../../../../src/ui/components/common/actions'
 import { Linked } from '../components/common/ScreenLink'
 import { JobProblemsSection } from '../components/operator/JobProblems'
 import { MigrationJobSection } from '../components/operator/MigrationJob'
@@ -10,7 +10,10 @@ import {
 } from '../components/operator/migrationCopy'
 import { PaceFields } from '../components/operator/PaceFields'
 import { PaceRecord } from '../components/operator/PaceRecord'
-import { Section, SectionText } from '../components/settings/Section'
+import {
+  Section,
+  SectionText,
+} from '../../../../src/ui/components/settings/Section'
 import { migrationJob } from '../fixtures/migrationJob'
 import {
   defaultPace,
@@ -22,7 +25,7 @@ import { jobProblems } from '../fixtures/migrationProblems'
 import type { JobRecord } from '../fixtures/migrationRecord'
 import { account } from '../fixtures/orgs'
 import { jobControls, savePaceTo } from './migrationControls'
-import styles from './OperatorProvidersScreen.module.css'
+import styles from '../../../../src/ui/screens/OperatorProvidersScreen.module.css'
 
 /** The line of the last change of the pace, once an operator saved one. */
 function ChangedLine(props: { record: JobRecord }) {

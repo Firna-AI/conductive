@@ -7,8 +7,8 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from './SandboxNotice.module.css'
-import type { SandboxNoticeState } from './sandboxNoticeState'
+import styles from '../../../../../src/ui/components/workspace/SandboxNotice.module.css'
+import type { SandboxNoticeState } from '../../../../../src/ui/components/workspace/sandboxNoticeState'
 import {
   barBody,
   keptBody,

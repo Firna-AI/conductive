@@ -6,18 +6,21 @@ import {
   type LineRange,
 } from '../../../../../src/shared/line-target'
 import { shotViews } from '../../fixtures/answerFiles'
-import type { MentionEntry } from '../../fixtures/fileMentions'
+import type { MentionEntry } from '../../../../../src/ui/components/chat/mentionEntry'
 import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
 import { paths } from '../../paths'
-import inline from '../common/InlineText.module.css'
+import inline from '../../../../../src/ui/components/common/InlineText.module.css'
 import { ScreenLink } from '../common/ScreenLink'
-import { EntryIcon } from '../files/fileIcons'
+import { EntryIcon } from '../../../../../src/ui/components/files/fileIcons'
 import { previewPaths } from '../files/previewPaths'
-import { AnswerPicture, type PictureState } from './AnswerPicture'
+import {
+  AnswerPicture,
+  type PictureState,
+} from '../../../../../src/ui/components/chat/AnswerPicture'
 import { mockupEntry } from './chatReading'
 import { useChatPictures, type PictureRead } from './chatPictures'
-import { entryName } from './entryPaths'
-import { FileChip } from './FileChip'
+import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
+import { FileChip } from '../../../../../src/ui/components/chat/FileChip'
 
 /** The icon of an entry, as the All files of the mockups draws it. */
 export function iconOf(entry: MentionEntry) {

@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { _electron, chromium, expect, test } from '@playwright/test'
 import type { Browser, ElectronApplication } from '@playwright/test'
 
-import { previewOpeningCopy } from '../../docs/mockups/src/components/tools/previewCopy.js'
+import { previewOpeningCopy } from '../../src/ui/components/tools/previewCopy.js'
 import {
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,

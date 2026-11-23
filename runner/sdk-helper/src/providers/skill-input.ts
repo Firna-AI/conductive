@@ -1,6 +1,9 @@
+import { sep } from 'node:path'
+
 import type { Agent } from '../generated/Agent'
 import type { SkillInput } from '../generated/SkillInput'
 import { skillNames } from '../../../../src/shared/skill-text'
+import { orgSkillsCopyRoot } from './org-skills'
 
 /** The current skill list of each agent. The skills report fills it. */
 export interface SkillSource {
@@ -17,6 +20,28 @@ export class SkillInputs implements SkillSource {
 
   replace(entries: readonly SkillInput[]): void {
     this.entries = entries
+  }
+}
+
+/**
+ * The list gives each org skill with its path in the copy of the skills
+ * repository. An agent start reads the org skills from its own safe view.
+ * So an org skill takes its path in that view, by its name. An org skill
+ * that the view lacks gives no input.
+ */
+export function withOrgSkillPaths(
+  skills: SkillSource,
+  home: string,
+  view: ReadonlyMap<string, string>,
+): SkillSource {
+  const root = orgSkillsCopyRoot(home) + sep
+  return {
+    of: (agent) =>
+      skills.of(agent).flatMap((skill) => {
+        if (!skill.path.startsWith(root)) return [skill]
+        const path = view.get(skill.name)
+        return path === undefined ? [] : [{ name: skill.name, path }]
+      }),
   }
 }
 

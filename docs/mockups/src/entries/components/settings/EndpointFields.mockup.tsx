@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { productName } from '../../../brand'
+import { productName } from '../../../../../../src/shared/brand'
 import { EndpointFields } from '../../../components/settings/EndpointFields'
 import { agentKeySchema, endpointEntrySchema } from './loginSchemas'
 

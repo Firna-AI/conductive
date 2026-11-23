@@ -8,7 +8,7 @@ import {
   TargetState,
 } from '../components/operator/directory'
 import { OperatorPage } from '../components/operator/OperatorPage'
-import { orgAccountWords } from '../components/operator/providerCopy'
+import { orgAccountWords } from '../../../../src/ui/components/operator/providerCopy'
 import { orgPagePaths } from '../components/operator/targetPages'
 import { NameLink, TargetMark } from '../components/operator/targets'
 import { operatorTotals } from '../fixtures/operator'

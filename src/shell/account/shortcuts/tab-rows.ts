@@ -1,4 +1,4 @@
-import { productName } from '../../../../docs/mockups/src/brand'
+import { productName } from '../../../shared/brand'
 import { matchRank, searchWords } from '../../../app/palette/matcher'
 import { shortcutKeyAvailability } from '../../../app/shortcuts/browser-keys'
 import {

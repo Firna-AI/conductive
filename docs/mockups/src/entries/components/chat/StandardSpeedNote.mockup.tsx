@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { StandardSpeedNote } from '../../../components/chat/StandardSpeedNote'
+import { StandardSpeedNote } from '../../../../../../src/ui/components/chat/StandardSpeedNote'
 import { speedCauses } from './chatKeys'
 
 /**

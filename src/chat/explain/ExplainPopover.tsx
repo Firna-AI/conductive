@@ -11,8 +11,8 @@ import {
   usePanelPlace,
   useSheetTop,
 } from './popover-place'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import popover from '../../../docs/mockups/src/components/explain/ExplainPopover.module.css'
+import { classes } from '../../ui/components/common/classes'
+import popover from '../../ui/components/explain/ExplainPopover.module.css'
 import styles from './explain.module.css'
 import { PopoverHeader, SheetHandle } from './PopoverParts'
 

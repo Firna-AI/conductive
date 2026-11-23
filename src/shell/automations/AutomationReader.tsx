@@ -2,7 +2,7 @@ import { Power, Trash2 } from 'lucide-react'
 import {
   hasPullRequestTrigger,
   hasSchedule,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
+} from '../../ui/components/automations/triggerCopy'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import { turnOffAutomation } from '../../app/automation-actions'

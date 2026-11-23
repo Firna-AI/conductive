@@ -11,7 +11,7 @@ async function metadata(path: string, agent: Agent) {
   return skillMetadata(content, path, agent)
 }
 
-async function repositoryNames(options: ProviderOptions, agent: Agent) {
+async function repositoryNames(options: OrgSkillOptions, agent: Agent) {
   const result = new Set<string>()
   const visited = new Set<string>()
   const walk = async (directory: string): Promise<void> => {
@@ -53,14 +53,20 @@ async function repositoryNames(options: ProviderOptions, agent: Agent) {
   return result
 }
 
+/** What the choice of the org skills needs: the repository folder, the org skills, and a warning. */
+export type OrgSkillOptions = Pick<
+  ProviderOptions,
+  'cwd' | 'orgSkills' | 'warn'
+>
+
 export async function selectAgentSkills(
-  options: ProviderOptions,
+  options: OrgSkillOptions,
   agent: Agent,
 ) {
   const skills = await orgSkillFolders(options)
   if (!skills.length) return []
   const local = await repositoryNames(options, agent)
-  const selected: typeof skills = []
+  const selected: ((typeof skills)[number] & { shownName: string })[] = []
   const shown = new Map<string, string>()
   for (const skill of skills) {
     const value = await metadata(skill.path, agent)
@@ -81,7 +87,7 @@ export async function selectAgentSkills(
         )
       else {
         shown.set(value.name, path)
-        selected.push(skill)
+        selected.push({ ...skill, shownName: value.name })
       }
     }
   }

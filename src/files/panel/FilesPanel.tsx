@@ -1,7 +1,7 @@
 import { useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { CircleAlert, CircleSlash, FileDiff, Files } from 'lucide-react'
 import type { WorkspaceTab } from '../../shared/workspace-view'
-import { allFilesUnavailable } from '../../../docs/mockups/src/components/chat/lostCopy'
+import { allFilesUnavailable } from '../../ui/components/chat/lostCopy'
 import type { FilesError } from '../api/files-errors'
 import type { FilesSnapshot, WorkspaceFiles } from '../model/files-store'
 import { treeRows } from '../model/tree-rows'

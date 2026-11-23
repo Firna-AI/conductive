@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { productName } from '../../../docs/mockups/src/brand'
+import { productName } from '../../shared/brand'
 import { AppModel } from '../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'

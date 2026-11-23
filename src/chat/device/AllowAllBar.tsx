@@ -6,8 +6,8 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import type { DeviceSettings, DeviceWorkspaceWindow } from '../../shared/device'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/mac/AllowAllBar.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/mac/AllowAllBar.module.css'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import { timeLeft } from '../../shared/transcript/command-words'
@@ -23,6 +23,7 @@ import {
   type ChangeResult,
 } from './settings-results'
 import { shownSettings, type MacSettingsState } from './settings-view'
+import { doneStop, doneStopGone } from './done-stop-time'
 
 /** The grant of one workspace in the settings that show, while it runs. */
 function runningWindow(
@@ -72,8 +73,11 @@ function shownResult(
  * left, from the end time that the Mac keeps, Keep until I stop, and Stop.
  * Keep turns them into a grant until Stop (Mac until-stop decision 2). A
  * grant until Stop shows Until you stop and Stop. After a Stop, the bar
- * names its result until the next change of the workspace, also after the
- * Stop ended the grant, a read, or a new pairing. While a grant runs, the
+ * names its result, also after the Stop ended the grant. A Stop that the
+ * Mac made and saved shows for 5 seconds from its end, then goes, also in
+ * a new mount of the bar. A Stop that the Mac
+ * did not save or did not make shows until the next change of the
+ * workspace, also after a read or a new pairing. While a grant runs, the
  * bar keeps its controls beside a change that the Mac did not save or did
  * not make. When no grant runs, Try again repeats such a Stop through the
  * current pairing. The bar shows nothing at other times. After a read that
@@ -89,17 +93,23 @@ export function AllowAllBar(props: {
   clock?: Clock
 }) {
   const { controller, state, workspaceId } = props
+  const clock = props.clock ?? systemClock
   const settings = shownSettings(state)?.settings ?? null
   const listed =
     settings?.workspaceWindows.some(
       (grant) => grant.workspaceId === workspaceId,
     ) ?? false
-  const now = useNow(props.clock ?? systemClock, listed)
-  const grant = runningWindow(settings, workspaceId, now)
   const stop = { action: 'stop-workspace', workspaceId } as const
   const keep = { action: 'keep-workspace', workspaceId } as const
   const key = controlOf(stop)
-  const result = shownResult(state, key, grant !== null)
+  const done = doneStop(
+    Object.hasOwn(state.results, key) ? state.results[key] : undefined,
+  )
+  // The bar renders each second while a done Stop shows, so that it goes.
+  const gone = done !== null && doneStopGone(done, clock.now())
+  const now = useNow(clock, listed || (done !== null && !gone))
+  const grant = runningWindow(settings, workspaceId, now)
+  const result = gone ? null : shownResult(state, key, grant !== null)
   // The pressed button spins and keeps the focus. The other one is off.
   const busy = state.busy.includes(key)
   const waits = Object.hasOwn(state.waiting, key) ? state.waiting[key] : null

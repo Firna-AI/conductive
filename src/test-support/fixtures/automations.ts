@@ -1,6 +1,6 @@
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { automationRows } from '../../../docs/mockups/src/fixtures/automationRows'
-import type { RunState } from '../../../docs/mockups/src/fixtures/automationRuns'
+import type { RunState } from '../../ui/components/workspaces/activityStatus'
 import {
   offAfterFailedRuns,
   automations as mockupAutomations,

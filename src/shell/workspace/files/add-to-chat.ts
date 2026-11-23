@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { addToChatItem } from '../../../../docs/mockups/src/components/files/rowMenuCopy'
+import { addToChatItem } from '../../../ui/components/files/rowMenuCopy'
 import { useNavigation } from '../../../app/navigation'
 import { routes } from '../../../app/router'
 import {

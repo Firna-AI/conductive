@@ -1,4 +1,4 @@
-import type { SkillsLookup } from '../../../components/settings/skillsCopy'
+import type { SkillsLookup } from '../../../../../../src/ui/components/settings/skillsCopy'
 import { agentSkills } from '../../../fixtures/computer'
 
 /** Why a saved repository gives no list, as the other results of `SkillsLookup`. */

@@ -1,10 +1,13 @@
 import { useId } from 'react'
 import { Switch } from '@firna/ui/switch'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
-import { useControlSizes } from '../common/touch'
-import { skillsTrustCopy as copy, trustHint } from './skillsTrustCopy'
-import styles from './SkillsTrust.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  skillsTrustCopy as copy,
+  trustHint,
+} from '../../../../../src/ui/components/settings/skillsTrustCopy'
+import styles from '../../../../../src/ui/components/settings/SkillsTrust.module.css'
 
 /**
  * The trust choice of the repository that the Skills section names: the

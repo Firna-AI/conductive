@@ -4,10 +4,13 @@ import {
   Hourglass,
   type LucideIcon,
 } from 'lucide-react'
-import { classes } from '../common/classes'
-import { InlineText } from '../common/InlineText'
-import { StatusText, type StatusTone } from '../common/StatusText'
-import { SectionText } from '../settings/Section'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { InlineText } from '../../../../../src/ui/components/common/InlineText'
+import {
+  StatusText,
+  type StatusTone,
+} from '../../../../../src/ui/components/common/StatusText'
+import { SectionText } from '../../../../../src/ui/components/settings/Section'
 import {
   accountStageLabel,
   expectedLine,
@@ -26,7 +29,7 @@ import {
   type JobAccount,
 } from './migrationModel'
 import styles from './MigrationJob.module.css'
-import rows from './WorkspaceStates.module.css'
+import rows from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 
 /** The glyph and the colour of each stage, so no stage is colour alone. */
 const stageLooks: Readonly<

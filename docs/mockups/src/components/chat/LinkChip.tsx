@@ -2,11 +2,14 @@ import type { ReactNode } from 'react'
 import type { LinkTarget as ReadTarget } from '../../../../../src/chat/links/workspace-links'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import { ScreenLink } from '../common/ScreenLink'
-import { workspaceLabel } from '../workspaces/label'
+import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import { useChatWorkspaces } from './chatWorkspaces'
-import type { ChipRemoval } from './ChipRemove'
-import { SessionChip, type ChipSession } from './SessionChip'
+import type { ChipRemoval } from '../../../../../src/ui/components/chat/ChipRemove'
+import {
+  SessionChip,
+  type ChipSession,
+} from '../../../../../src/ui/components/chat/SessionChip'
 import {
   linkPage,
   linkTarget,
@@ -17,7 +20,7 @@ import {
   WorkspaceChip,
   type ChipOpener,
   type ChipWorkspace,
-} from './WorkspaceChip'
+} from '../../../../../src/ui/components/chat/WorkspaceChip'
 
 /** What the chip of a workspace shows of its row in the list of the org. */
 function chipOf(row: WorkspaceRow): ChipWorkspace {

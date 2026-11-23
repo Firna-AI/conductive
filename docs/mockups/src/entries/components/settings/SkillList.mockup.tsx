@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { SkillList } from '../../../components/settings/SkillList'
+import { SkillList } from '../../../../../../src/ui/components/settings/SkillList'
 import { agentSkills, cutTreeSkills } from '../../../fixtures/computer'
 
 /**

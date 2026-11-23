@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { PanelBar } from '../../../components/workspace/PanelBar'
+import { PanelBar } from '../../../../../../src/ui/components/workspace/PanelBar'
 
 /**
  * The bar at the top of a panel, registered with Mokly. A panel supplies

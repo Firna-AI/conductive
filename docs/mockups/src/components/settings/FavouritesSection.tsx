@@ -22,9 +22,9 @@ import {
 } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
 import { addFavouriteEntries } from '../chat/pickers'
-import { classes } from '../common/classes'
-import { useTouch } from '../common/touch'
-import styles from './FavouritesSection.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/settings/FavouritesSection.module.css'
 
 /** The error of a change whose save failed. The list keeps its saved value. */
 const changeNotSaved = "The change wasn't saved. Try again."
