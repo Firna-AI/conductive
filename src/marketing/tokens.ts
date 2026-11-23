@@ -1,8 +1,5 @@
-import {
-  darkPalette,
-  lightPalette,
-} from '../../docs/mockups/src/design/palette'
-import { fonts, metrics, radii } from '../../docs/mockups/src/design/metrics'
+import { darkPalette, lightPalette } from '../ui/design/palette'
+import { fonts, metrics, radii } from '../ui/design/metrics'
 
 function kebab(name: string): string {
   return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)

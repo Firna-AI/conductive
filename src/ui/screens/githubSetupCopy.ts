@@ -1,4 +1,4 @@
-import { productName } from '../brand'
+import { productName } from '../../shared/brand'
 
 /**
  * The words of the page that the browser shows after an install of the

@@ -1,4 +1,4 @@
-import { appDomain } from '../brand'
+import { appDomain } from '../../../../src/shared/brand'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type PersonKey } from './members'
 import { orgs, type Org } from './orgs'

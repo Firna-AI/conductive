@@ -1,12 +1,12 @@
 import { memo } from 'react'
-import { samePlainData } from '../../../../../src/chat/components/same-data'
+import { samePlainData } from '../../../chat/components/same-data'
 import type {
   HeadingLevel,
   TextBlock,
   TextItem,
-} from '../../../../../src/chat/markdown/agent-blocks'
-import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
-import { MarkdownItem } from '../../../../../src/markdown/MarkdownItem'
+} from '../../../chat/markdown/agent-blocks'
+import type { InlineText } from '../../../chat/markdown/agent-inline'
+import { MarkdownItem } from '../../../markdown/MarkdownItem'
 import { MarkdownTable } from '../common/MarkdownTable'
 import type { AgentDrawing, TextPlace } from './agentDrawing'
 

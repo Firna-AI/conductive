@@ -1,4 +1,4 @@
-import { productDomain } from '../../brand'
+import { productDomain } from '../../../shared/brand'
 
 /**
  * The words of the trust choice of the skills repository, under the field

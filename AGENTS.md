@@ -147,7 +147,7 @@ Apple silicon Mac jobs on Blacksmith.
   in Markdown. Check each relative link of a changed Markdown file
   yourself.
 - The product is "Conductive", on `conductive.build`, as the user chose
-  for decision 100. Code reads the name from `docs/mockups/src/brand.ts`,
+  for decision 100. Code reads the name from `src/shared/brand.ts`,
   so that one change renames the product.
 - Never use "Claude Code" as a name of the product or of its features.
   Write "agents powered by Claude and Codex", as

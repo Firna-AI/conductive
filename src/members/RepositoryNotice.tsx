@@ -1,5 +1,5 @@
 import { CircleAlert, Hammer } from 'lucide-react'
-import { repositoryNoticeText } from '../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { repositoryNoticeText } from '../ui/components/settings/repositoryChangeCopy'
 import { repositoryChangesOf } from '../app/repository-changes'
 import type { Org } from '../shared/api'
 import type { BuildsResponse } from '../shared/org-settings'

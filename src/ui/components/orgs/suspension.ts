@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Ban } from 'lucide-react'
-import { abuseAddress } from '../../../../../src/marketing/legal-text'
+import { abuseAddress } from '../../../marketing/legal-text'
 
 /**
  * The mark of a refusal: a refused start, and the notice of a suspended

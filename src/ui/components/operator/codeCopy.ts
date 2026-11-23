@@ -6,7 +6,7 @@
  * `@`, and a time as the page writes it. This module imports no fixture, so
  * the app uses it too.
  */
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /** The state of a code as a word: it lets people in, its uses ran out, or it was disabled. */
 export const codeStateLabels = {

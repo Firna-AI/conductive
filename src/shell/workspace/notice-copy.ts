@@ -1,10 +1,10 @@
 import type { LucideIcon } from 'lucide-react'
 import { Archive, CircleAlert, CirclePause } from 'lucide-react'
-import { refusedIcon } from '../../../docs/mockups/src/components/orgs/suspension'
+import { refusedIcon } from '../../ui/components/orgs/suspension'
 import {
   archiveStage,
   type SandboxNoticeState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 

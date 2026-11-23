@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /**
  * The states of the invite code of a user: invites left, sign-ups paused,

@@ -1,5 +1,5 @@
 import { ChevronDown, FolderGit2 } from 'lucide-react'
-import { menuNotes } from '../../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { menuNotes } from '../../ui/components/settings/repositoryChangeCopy'
 import type { WaitingRepositories } from '../../app/repository-changes'
 import type { Repository } from '../../shared/org-settings'
 import type { Section } from '../../shared/sections'

@@ -10,7 +10,7 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { SkillChip } from '../../../../docs/mockups/src/components/chat/SkillChip'
+import { SkillChip } from '../../../ui/components/chat/SkillChip'
 import type { Agent } from '../../../shared/generated/Agent'
 import { skillTextAt } from '../../../shared/skill-text'
 import {

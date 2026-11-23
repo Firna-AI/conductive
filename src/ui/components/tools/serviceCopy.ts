@@ -7,10 +7,10 @@
  * sample shapes below serve only the mockups.
  */
 
-import type { ServiceProcessResult } from '../../../../../src/shared/generated/ServiceProcessResult'
-import type { ServiceSource } from '../../../../../src/shared/generated/ServiceSource'
-import type { ServiceState } from '../../../../../src/shared/generated/ServiceState'
-import { nameLabel } from '../../../../../src/shared/name-label'
+import type { ServiceProcessResult } from '../../../shared/generated/ServiceProcessResult'
+import type { ServiceSource } from '../../../shared/generated/ServiceSource'
+import type { ServiceState } from '../../../shared/generated/ServiceState'
+import { nameLabel } from '../../../shared/name-label'
 
 /**
  * The state that a row shows: the state of the run from the latest report,

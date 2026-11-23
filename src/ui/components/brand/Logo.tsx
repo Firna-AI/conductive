@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 import styles from './Logo.module.css'
 
 /**

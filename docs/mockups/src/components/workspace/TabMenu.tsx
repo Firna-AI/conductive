@@ -3,10 +3,10 @@ import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { sheet } from '../../entries/components/common/Sheet.mockup'
-import { copyPathItem } from '../files/rowMenuCopy'
-import { linkItem } from './linkCopy'
+import { copyPathItem } from '../../../../../src/ui/components/files/rowMenuCopy'
+import { linkItem } from '../../../../../src/ui/components/workspace/linkCopy'
 import type { WorkspaceTab } from './TabItem'
-import { transcriptItems } from './transcriptCopy'
+import { transcriptItems } from '../../../../../src/ui/components/workspace/transcriptCopy'
 
 /** An item of the menu of a tab. */
 type TabMenuItem = {

@@ -1,6 +1,6 @@
 import { agentKeys } from '../../../fixtures/agents'
 import type { SecretRunItem } from '../../../fixtures/secretRequests'
-import type { ValueLifetime } from '../../../components/chat/secretGrant'
+import type { ValueLifetime } from '../../../../../../src/ui/components/chat/secretGrant'
 import { personKeys } from '../layout/railSchemas'
 
 /** The states of a run with secrets, as `SecretRunItem` lists them. */

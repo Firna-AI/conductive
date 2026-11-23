@@ -1,4 +1,4 @@
-import { productName } from '../brand'
+import { productName } from '../../shared/brand'
 
 /**
  * Why a code did not let a person in: no code has its text, an operator

@@ -1,12 +1,12 @@
 import type { ReactElement } from 'react'
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { CornerDownLeft, Info } from 'lucide-react'
 import { defined } from '../../defined'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
 import { paths } from '../../paths'
 import { messageField } from '../../entries/components/chat/MessageField.mockup'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { confirmDialog } from '../../entries/components/common/ConfirmDialog.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
@@ -21,14 +21,14 @@ import {
   sendFeedbackLabel,
   sendingLabel,
   sendLabel,
-} from './feedbackCopy'
+} from '../../../../../src/ui/components/feedback/feedbackCopy'
 import {
   replyFailure,
   replyLine,
 } from '../../entries/components/feedback/FeedbackReply.mockup'
 import type { FeedbackReply } from './FeedbackReply'
 import { screenshotRow } from '../../entries/components/feedback/ScreenshotRow.mockup'
-import styles from './FeedbackDialog.module.css'
+import styles from '../../../../../src/ui/components/feedback/FeedbackDialog.module.css'
 
 /**
  * What a notice under the message box names: a file that the dialog did

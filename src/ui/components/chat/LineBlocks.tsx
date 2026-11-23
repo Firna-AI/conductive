@@ -4,8 +4,8 @@ import type {
   TextItem,
   TextList,
   TextTable,
-} from '../../../../../src/chat/markdown/agent-blocks'
-import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
+} from '../../../chat/markdown/agent-blocks'
+import type { InlineText } from '../../../chat/markdown/agent-inline'
 import { classes } from '../common/classes'
 import prose from '../common/MarkdownProse.module.css'
 import { TaskBox } from '../common/TaskBox'

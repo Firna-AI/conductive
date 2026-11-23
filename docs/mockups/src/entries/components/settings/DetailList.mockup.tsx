@@ -1,7 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
-import { DetailList } from '../../../components/settings/DetailList'
-import { OrgColorValue } from '../../../components/settings/OrgColorField'
-import { ORG_COLORS } from '../../../design/orgColors'
+import { DetailList } from '../../../../../../src/ui/components/settings/DetailList'
+import { OrgColorValue } from '../../../../../../src/ui/components/settings/OrgColorField'
+import { ORG_COLORS } from '../../../../../../src/ui/design/orgColors'
 import { orgPages } from '../../../fixtures/operatorPages'
 import { orgs } from '../../../fixtures/orgs'
 

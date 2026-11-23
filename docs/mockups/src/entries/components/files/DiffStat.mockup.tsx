@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { DiffStat } from '../../../components/files/DiffStat'
+import { DiffStat } from '../../../../../../src/ui/components/files/DiffStat'
 
 /**
  * The lines that a change adds and removes, registered with Mokly. The app

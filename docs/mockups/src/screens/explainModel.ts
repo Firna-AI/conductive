@@ -1,8 +1,8 @@
 import { nameLabel } from '../../../../src/shared/name-label'
-import type { ExplainMarkState } from '../components/explain/explainCopy'
+import type { ExplainMarkState } from '../../../../src/ui/components/explain/explainCopy'
 import type { WorkspaceTab } from '../components/workspace/TabItem'
 import { explanations, type Explanation } from '../fixtures/explanations'
-import type { ActivityStatus } from '../components/workspaces/activityStatus'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import { explainPaths } from './explainPaths'
 import type { WorkspaceState } from './workspaceState'
 

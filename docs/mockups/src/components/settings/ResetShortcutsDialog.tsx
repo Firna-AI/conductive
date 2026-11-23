@@ -1,5 +1,5 @@
-import type { Viewport } from '../common/viewport'
-import { productName } from '../../brand'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { productName } from '../../../../../src/shared/brand'
 import {
   keyboardOf,
   type Keyboard,

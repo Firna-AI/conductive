@@ -1,17 +1,20 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Square } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
 import { FailureToast } from '../common/FailureToast'
-import { Menu } from '../common/Menu'
+import { Menu } from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
-import { Sheet } from '../common/Sheet'
+import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import { ToastLayer } from '../common/ToastLayer'
 import {
   serviceControlCopy,
   servicesCopy,
   type ServiceEntry,
-} from './serviceCopy'
+} from '../../../../../src/ui/components/tools/serviceCopy'
 import { serviceMenu } from './serviceMenu'
 
 /** The menu of a row on a phone, as a sheet with the name of the service. */

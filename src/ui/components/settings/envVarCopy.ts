@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /**
  * The note under the list of env vars: what the Secret mark does, and when

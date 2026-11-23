@@ -1,11 +1,11 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { PersonKey } from '../../fixtures/members'
 import type { Run } from '../../fixtures/automationRuns'
 import type { Automation } from '../../fixtures/automations'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { RunList } from './RunList'
-import styles from './RunsPanel.module.css'
+import styles from '../../../../../src/ui/components/automations/RunsPanel.module.css'
 
 /** The runs that the panel shows, and what the list needs to draw them. */
 export type RunsPanelProps = {

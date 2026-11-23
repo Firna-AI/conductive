@@ -1,8 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
-import type {
-  CellAlign,
-  TableCells,
-} from '../../../../../src/markdown/table-rows'
+import type { CellAlign, TableCells } from '../../../markdown/table-rows'
 import { classes } from './classes'
 import styles from './MarkdownTable.module.css'
 

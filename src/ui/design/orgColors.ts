@@ -1,5 +1,5 @@
 import type { SharedUiTheme } from '@firna/ui/theme'
-import { ORG_COLORS, type OrgColor } from '../../../../src/shared/org-colors'
+import { ORG_COLORS, type OrgColor } from '../../shared/org-colors'
 
 export { ORG_COLORS, type OrgColor }
 

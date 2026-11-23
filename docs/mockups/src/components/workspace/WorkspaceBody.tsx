@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { defined } from '../../defined'
 import { rightColumn } from '../../entries/components/workspace/RightColumn.mockup'
-import styles from './WorkspaceBody.module.css'
+import styles from '../../../../../src/ui/components/workspace/WorkspaceBody.module.css'
 
 /**
  * The desktop workspace beside the sidebar: the centre column with its

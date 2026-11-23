@@ -1,13 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
-import { loginLabels } from '../../../docs/mockups/src/components/settings/agentConnectCopy'
+import { loginLabels } from '../../ui/components/settings/agentConnectCopy'
 import {
   EndpointAddressNote,
   EndpointReadFailed,
-} from '../../../docs/mockups/src/components/settings/EndpointRead'
-import { endpointReadCopy as copy } from '../../../docs/mockups/src/components/settings/endpointReadCopy'
-import { LoginEndpoint } from '../../../docs/mockups/src/components/settings/LoginEndpoint'
+} from '../../ui/components/settings/EndpointRead'
+import { endpointReadCopy as copy } from '../../ui/components/settings/endpointReadCopy'
+import { LoginEndpoint } from '../../ui/components/settings/LoginEndpoint'
 import { unlistedModels } from '../../app/endpoint-models'
 import {
   endpointReadOf,

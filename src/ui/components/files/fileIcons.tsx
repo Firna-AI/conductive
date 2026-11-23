@@ -1,8 +1,5 @@
 import { File, FileCode, FileText, Folder, FolderOpen } from 'lucide-react'
-import {
-  fileKind,
-  type FileKind,
-} from '../../../../../src/files/code/file-kind'
+import { fileKind, type FileKind } from '../../../files/code/file-kind'
 
 const kindIcons: Record<FileKind, typeof File> = {
   markdown: FileText,

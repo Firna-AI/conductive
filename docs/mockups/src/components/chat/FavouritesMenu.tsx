@@ -2,10 +2,10 @@ import type { CSSProperties } from 'react'
 import type { AgentChoice, AgentKey } from '../../fixtures/agents'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
-import { classes } from '../common/classes'
-import type { Shortcut } from '../common/KeyChips'
-import type { MenuPlacement } from '../common/Menu'
-import { useTouch } from '../common/touch'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import type { MenuPlacement } from '../../../../../src/ui/components/common/Menu'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
 import {
   divider,
   favouritesMenu,

@@ -1,18 +1,18 @@
 import type { ReactNode } from 'react'
-import { classes } from '../common/classes'
-import { TouchScreen } from '../common/touch'
-import { useMacApp } from '../mac/MacApp'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { TouchScreen } from '../../../../../src/ui/components/common/touch'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
 import { WindowControls } from '../mac/WindowControls'
 import { acmeRail, type RailState } from './OrgRail'
 import { orgRail } from '../../entries/components/layout/OrgRail.mockup'
-import { sidebarWidth } from './ResizeHandle'
+import { sidebarWidth } from '../../../../../src/ui/components/layout/ResizeHandle'
 import { resizeHandle } from '../../entries/components/layout/ResizeHandle.mockup'
 import {
   CornerControlsProvider,
   SidebarToggleProvider,
   type SidebarView,
 } from './sidebarPlace'
-import styles from './AppFrame.module.css'
+import styles from '../../../../../src/ui/components/layout/AppFrame.module.css'
 
 /**
  * The desktop app: the org rail, the sidebar of the org, and the main area.

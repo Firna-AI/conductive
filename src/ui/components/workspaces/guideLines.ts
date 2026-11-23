@@ -1,4 +1,4 @@
-import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
+import type { TreeLines } from '../../../shared/workspace-tree-lines'
 import { classes } from '../common/classes'
 import guides from './GuideLines.module.css'
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import type { BarAction } from '../ui/components/workspace/barModel'
 import { barCommands, buttonKey, type CommandKeyOf } from './barKeys'
 import type { BarView } from './barView'
 

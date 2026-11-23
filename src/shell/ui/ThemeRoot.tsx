@@ -1,8 +1,8 @@
 import { useLayoutEffect, useSyncExternalStore, type ReactNode } from 'react'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { ToastProvider } from '@firna/ui/toast'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
-import '../../../docs/mockups/src/render.css'
+import { themeFor, tokensCss } from '../../ui/theme'
+import '../../ui/render.css'
 
 export type ColorScheme = 'light' | 'dark'
 

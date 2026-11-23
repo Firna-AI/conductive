@@ -13,7 +13,7 @@ import {
   workspaceList,
   type Workspace,
 } from '../../fixtures/workspaces'
-import { type ActivityStatus } from './activityStatus'
+import { type ActivityStatus } from '../../../../../src/ui/components/workspaces/activityStatus'
 import { paths } from '../../paths'
 import type { RowIndent } from './trees'
 

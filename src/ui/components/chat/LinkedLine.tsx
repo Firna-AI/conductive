@@ -1,4 +1,4 @@
-import { turnCopy } from '../../../../../src/shared/transcript/turn-words'
+import { turnCopy } from '../../../shared/transcript/turn-words'
 import type { ReactNode } from 'react'
 import { Link2 } from 'lucide-react'
 import styles from './LinkedLine.module.css'

@@ -1,13 +1,13 @@
 import { Ban, Trash2 } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   deletedOrgBody,
   suspendedOrgBody,
   type OrgDeletion,
-} from '../../../docs/mockups/src/components/operator/operatorCopy'
-import { WorkspaceStates } from '../../../docs/mockups/src/components/operator/WorkspaceStates'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/operator/operatorCopy'
+import { WorkspaceStates } from '../../ui/components/operator/WorkspaceStates'
+import { DetailList } from '../../ui/components/settings/DetailList'
+import { Section } from '../../ui/components/settings/Section'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import type { Loadable } from '../../app/store'

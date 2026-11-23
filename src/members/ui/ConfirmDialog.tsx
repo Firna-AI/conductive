@@ -5,7 +5,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react'
-import card from '../../../docs/mockups/src/components/common/ModalCard.module.css'
+import card from '../../ui/components/common/ModalCard.module.css'
 import { controlsOf, tabWithScrollingBody } from '../../shell/ui/tab-stops'
 import ui from '../../shell/ui/ui.module.css'
 import { ActionButton } from './actions'

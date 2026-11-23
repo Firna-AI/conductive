@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { ChevronLeft } from 'lucide-react'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import styles from './Page.module.css'
+import styles from '../../../../../src/ui/components/layout/Page.module.css'
 
 export type BackLink = { label: string; to: string }
 

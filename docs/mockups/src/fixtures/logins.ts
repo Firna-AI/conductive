@@ -1,7 +1,7 @@
-import { chatGptSignInCopy } from '../components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../../../src/ui/components/settings/chatGptSignInCopy'
 import type { AgentKey } from './agents'
 import { keptModelCheck, proxyModelCheck } from './endpointModels'
-import { type ModelListCheck } from '../components/settings/modelListCheck'
+import { type ModelListCheck } from '../../../../src/ui/components/settings/modelListCheck'
 
 /**
  * How a user connects an agent: Claude with a subscription token from

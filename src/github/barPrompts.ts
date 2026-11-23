@@ -2,7 +2,7 @@ import {
   agentPrompt,
   type AgentAction,
   type PromptFacts,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+} from '../ui/components/workspace/barCopy'
 import type { GitHubCheck } from '../shared/github'
 import type { GitHubSnapshot } from './githubClient'
 

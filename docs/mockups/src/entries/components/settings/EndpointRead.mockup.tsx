@@ -2,8 +2,8 @@ import { defineComponent } from '@mokly/mokly'
 import {
   EndpointAddressNote,
   EndpointReadFailed,
-} from '../../../components/settings/EndpointRead'
-import { endpointReadCopy as copy } from '../../../components/settings/endpointReadCopy'
+} from '../../../../../../src/ui/components/settings/EndpointRead'
+import { endpointReadCopy as copy } from '../../../../../../src/ui/components/settings/endpointReadCopy'
 import { agents } from '../../../fixtures/agents'
 import { actionButton } from '../common/actions.mockup'
 

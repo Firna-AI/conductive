@@ -1,5 +1,5 @@
 import { TimerOff, type LucideIcon } from 'lucide-react'
-import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
+import type { TurnEndReason } from '../../../shared/generated/TurnEndReason'
 import { endReasonText } from './endReasonCopy'
 import styles from './LinkedLine.module.css'
 

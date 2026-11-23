@@ -7,12 +7,12 @@ import {
   type Ref,
 } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
-import { classes } from '../../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../../ui/components/common/classes'
 import {
   KeyChips,
   spokenShortcut,
-} from '../../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+} from '../../../ui/components/common/KeyChips'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import { useServices } from '../../../app/services'
 import {
   restoreLayoutModifiers,

@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { StopTimeChoice } from '../../../docs/mockups/src/components/operator/StopTimeChoice'
+import { StopTimeChoice } from '../../ui/components/operator/StopTimeChoice'
 import {
   stopTimeChangedLine,
   stopTimeWords,
-} from '../../../docs/mockups/src/components/operator/stopTimeCopy'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
-import styles from '../../../docs/mockups/src/screens/OperatorProvidersScreen.module.css'
+} from '../../ui/components/operator/stopTimeCopy'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import styles from '../../ui/screens/OperatorProvidersScreen.module.css'
 import { OperatorIdleStop } from '../../app/operator-idle-stop'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'

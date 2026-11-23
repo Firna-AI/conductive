@@ -8,19 +8,19 @@ import {
 } from '../capabilities/CapabilitiesButton'
 import { messageField } from '../../entries/components/chat/MessageField.mockup'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
-import type { SessionLogin } from '../chat/SessionLogin'
+import type { SessionLogin } from '../../../../../src/ui/components/chat/SessionLogin'
 import { sessionLoginLabel } from '../../entries/components/chat/SessionLogin.mockup'
 import { defined } from '../../defined'
 import {
   actionButton,
   iconButton,
 } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import dialog from '../common/ConfirmDialog.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import dialog from '../../../../../src/ui/components/common/ConfirmDialog.module.css'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
-import card from '../common/ModalCard.module.css'
-import styles from './NewWorkspaceDialog.module.css'
+import card from '../../../../../src/ui/components/common/ModalCard.module.css'
+import styles from '../../../../../src/ui/components/new-workspace/NewWorkspaceDialog.module.css'
 
 /**
  * The repository of the new workspace, as a compact picker. `menu` draws

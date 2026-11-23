@@ -2,7 +2,7 @@ import { defineComponent } from '@mokly/mokly'
 import {
   AttachedName,
   KindIcon,
-} from '../../../components/chat/attachedFileParts'
+} from '../../../../../../src/ui/components/chat/attachedFileParts'
 
 /**
  * The icon of the kind of an attached file, registered with Mokly. The app

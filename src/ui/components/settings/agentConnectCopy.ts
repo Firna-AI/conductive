@@ -1,6 +1,6 @@
-import type { AgentLoginStatus } from '../../../../../src/shared/account'
-import type { Agent } from '../../../../../src/shared/generated/Agent'
-import { productName } from '../../brand'
+import type { AgentLoginStatus } from '../../../shared/account'
+import type { Agent } from '../../../shared/generated/Agent'
+import { productName } from '../../../shared/brand'
 
 /** The kind of a connected login, as the account API names it. */
 type LoginKind = Extract<AgentLoginStatus, { connected: true }>['kind']

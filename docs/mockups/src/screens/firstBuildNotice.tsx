@@ -3,7 +3,7 @@ import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { type FirstBuildState, runningBuild } from '../fixtures/computer'
 import { paths } from '../paths'
-import { firstBuildCopy as copy } from './firstBuildCopy'
+import { firstBuildCopy as copy } from '../../../../src/ui/screens/firstBuildCopy'
 import { defined } from '../defined'
 
 /** The time of the build that runs, which a narrow phone keeps on one line. */

@@ -1,4 +1,4 @@
-import type { BannerState } from '../components/workspace/barModel'
+import type { BannerState } from '../../../../src/ui/components/workspace/barModel'
 import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
 
 /**

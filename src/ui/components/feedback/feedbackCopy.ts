@@ -4,7 +4,7 @@
  * choose them, and the app can share them.
  */
 
-import { FEEDBACK_SENDS_PER_HOUR } from '../../../../../src/shared/feedback'
+import { FEEDBACK_SENDS_PER_HOUR } from '../../../shared/feedback'
 
 /** The label of the row, and the title of the dialog that it opens. */
 export const sendFeedbackLabel = 'Send feedback'

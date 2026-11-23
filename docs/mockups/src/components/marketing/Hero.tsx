@@ -1,7 +1,7 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { screenFrame } from '../../entries/components/marketing/ScreenFrame.mockup'
 import type { FramedPicture } from '../../screens/marketingPictures'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { SiteActions } from './SiteActions'
 import styles from './Hero.module.css'
 

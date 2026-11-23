@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Ban, CircleAlert, LockOpen, TriangleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { disableCodeOffer } from '../../../docs/mockups/src/components/operator/accessCopy'
+import { Notice } from '../../ui/components/common/Notice'
+import { disableCodeOffer } from '../../ui/components/operator/accessCopy'
 import {
   liftQuestion,
   selfSuspendWarning,
   suspendQuestion,
   type QuestionTarget,
-} from '../../../docs/mockups/src/components/operator/operatorCopy'
+} from '../../ui/components/operator/operatorCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { CheckOption } from './CheckOption'

@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { StatTileRow } from '@firna/ui/chart'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Table } from '@firna/ui/table'
@@ -8,9 +8,9 @@ import { section } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
 import { orgColumns, orgTableSize } from './LargestOrgs'
 import { longRunColumns } from './LongRuns'
-import { longRunsWords } from './longRunsCopy'
-import tiles from './OperatorTiles.module.css'
-import list from './WorkspaceStates.module.css'
+import { longRunsWords } from '../../../../../src/ui/components/operator/longRunsCopy'
+import tiles from '../../../../../src/ui/components/operator/OperatorTiles.module.css'
+import list from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 
 /** A placeholder tile takes the least width of a real tile. */
 const tileStyle = { flex: 1, minWidth: 120 }

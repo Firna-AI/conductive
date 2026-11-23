@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Maximize2, X } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { Linked } from '../common/ScreenLink'
-import sheet from '../common/Sheet.module.css'
-import { closeLabel, expandLabel } from './explainCopy'
-import styles from './ExplainPopover.module.css'
+import sheet from '../../../../../src/ui/components/common/Sheet.module.css'
+import {
+  closeLabel,
+  expandLabel,
+} from '../../../../../src/ui/components/explain/explainCopy'
+import styles from '../../../../../src/ui/components/explain/ExplainPopover.module.css'
 
 /**
  * The height of the sheet of a phone: half the screen, as it opens, or the

@@ -11,7 +11,7 @@ import type {
   MemberGrant as AnyMemberGrant,
   SecretGrant as AnySecretGrant,
   ValueLifetime,
-} from '../components/chat/secretGrant'
+} from '../../../../src/ui/components/chat/secretGrant'
 import type { PersonKey } from './members'
 import { figmaToken, replicaUrl, vercelToken } from './secrets'
 import { workspaceSessions } from './sessions'

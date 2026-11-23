@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
 import type { ActivityStatus } from '../workspaces/activityStatus'
 import a11y from '../common/a11y.module.css'
 import { classes } from '../common/classes'

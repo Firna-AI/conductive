@@ -1,10 +1,10 @@
 import { ChevronRight } from 'lucide-react'
 import type { PersonKey } from '../../fixtures/members'
 import type { Run } from '../../fixtures/automationRuns'
-import type { RunState } from '../workspaces/activityStatus'
+import type { RunState } from '../../../../../src/ui/components/workspaces/activityStatus'
 import { repositoryOf, type Automation } from '../../fixtures/automations'
 import { orgs } from '../../fixtures/orgs'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
@@ -14,7 +14,7 @@ import {
   runTriggerLabel,
   skipCopy,
 } from './runCopy'
-import styles from './RunList.module.css'
+import styles from '../../../../../src/ui/components/automations/RunList.module.css'
 
 /** The run that a row draws, and what the list knows about it. */
 type RowProps = {

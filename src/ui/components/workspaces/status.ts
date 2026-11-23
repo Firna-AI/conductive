@@ -1,4 +1,4 @@
-import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
+import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
 import type { ActivityStatus } from './activityStatus'
 
 /**

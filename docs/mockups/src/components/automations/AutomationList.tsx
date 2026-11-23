@@ -1,15 +1,15 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { AutomationRow } from '../../fixtures/automationRows'
 import { offAfterFailedRuns, repositoryOf } from '../../fixtures/automations'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import type { StatusTone } from '../common/StatusText'
+import type { StatusTone } from '../../../../../src/ui/components/common/StatusText'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
 import { runStateLabels } from './runCopy'
-import { triggersSummary } from './triggerCopy'
-import styles from './AutomationList.module.css'
+import { triggersSummary } from '../../../../../src/ui/components/automations/triggerCopy'
+import styles from '../../../../../src/ui/components/automations/AutomationList.module.css'
 
 /** The state of the last run and its time, or no run yet. */
 function LastRun(props: { row: AutomationRow }) {

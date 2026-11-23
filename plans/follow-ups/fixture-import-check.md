@@ -16,7 +16,7 @@
   - The app reuses mockup parts and CSS modules, so that the app and the mockups look the same.
   - `src/chat/README.md` says: "Reusable code imports no fixture data and no fake." It also says that the app reuses only the mockup parts that are pure.
   - Review round 3 of pull request #75 found a break of this rule. The app's two model pickers imported a style helper from the mockup picker module. That module imports `fixtures/agents.ts` and a menu built from the fixtures. So the chat page loaded the fixtures in development. The production build kept none of the fixture model names.
-  - The fix moved the helper into the pure module `docs/mockups/src/components/chat/pickerButton.ts`.
+  - The fix moved the helper into the pure module `src/ui/components/chat/pickerButton.ts`.
   - The rule lives only in README text, and the break passed the gate.
   - A finding check wrote an import walk that follows only the imports that run in the browser. It took 0.6 seconds. It found the two chains above and none on `main` before that branch.
 - **Problem:** Nothing fails when a production module under `src/` reaches a fixture through its imports. Only a reviewer can see it.

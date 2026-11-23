@@ -128,7 +128,7 @@ a sent message. `AnswerPicture` beside them draws a Markdown image of an
 answer to a picture file: its picture, the box of its label while it
 loads, or its link. `ImageView` in `src/components/files/` draws the
 picture of an image file in its tab. These four parts take no fixtures, so
-the app can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+the app can draw them too. [attachmentCopy.ts](../../src/ui/components/chat/attachmentCopy.ts)
 holds the words of the chips, and of the notices for a file over 1 GB and
 a dropped folder that the browser cannot read. The app shares these words.
 [The chat](design-chat.md) gives the design of each part.
@@ -193,7 +193,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
 - `ConfirmDialog` and `NewWorkspaceDialog` lay out their cards with the
-  parts of [ModalCard.module.css](src/components/common/ModalCard.module.css).
+  parts of [ModalCard.module.css](../../src/ui/components/common/ModalCard.module.css).
   A card taller than the window keeps its head and its foot, and only its
   body scrolls. The dialogs of the app import the same parts.
 - Controls come from `@firna/ui`. A control without a handler renders as

@@ -1,4 +1,4 @@
-import { productDomain } from '../docs/mockups/src/brand'
+import { productDomain } from '../src/shared/brand'
 import { GITHUB_INSTALL_SCREEN, isMacInstall } from '../src/shared/github-setup'
 import { githubInstallUrl } from './app-api/feature-github'
 import type { AppEnv } from './env'

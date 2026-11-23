@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react'
-import type { TextTable } from '../../../../../src/chat/markdown/agent-blocks'
-import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
+import type { TextTable } from '../../../chat/markdown/agent-blocks'
+import type { InlineText } from '../../../chat/markdown/agent-inline'
 
 /**
  * Where the shared blocks of an agent message draw an inline text. `line`

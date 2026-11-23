@@ -7,8 +7,8 @@ import type {
 import {
   replacesList,
   type ArchiveRestore,
-} from '../components/workspace/sandboxNoticeState'
-import { orgSuspendedReason } from '../components/orgs/suspension'
+} from '../../../../src/ui/components/workspace/sandboxNoticeState'
+import { orgSuspendedReason } from '../../../../src/ui/components/orgs/suspension'
 import {
   archivedNow,
   postcodeArchive,
@@ -18,7 +18,7 @@ import { conversations, type ConversationKey } from '../fixtures/conversations'
 import { startErrors } from '../fixtures/starting'
 import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { OpenableWorkspace } from '../fixtures/workspaces'
-import type { ActivityStatus } from '../components/workspaces/activityStatus'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import { isRunning } from './composerFor'
 import { explainActivity } from './explainModel'
 import { isNew } from './workspaceTabs'

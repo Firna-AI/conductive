@@ -11,7 +11,7 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { FileChip } from '../../../../docs/mockups/src/components/chat/FileChip'
+import { FileChip } from '../../../ui/components/chat/FileChip'
 import { MentionIcon } from '../../mentions/MentionIcon'
 import { mentionAt } from '../../../shared/mention-text'
 import {

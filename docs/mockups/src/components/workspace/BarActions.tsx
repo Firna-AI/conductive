@@ -5,10 +5,13 @@ import { repositories } from '../../fixtures/repositories'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
-import { TintedTheme, type ButtonTint } from '../common/tint'
+import {
+  TintedTheme,
+  type ButtonTint,
+} from '../../../../../src/ui/components/common/tint'
 import {
   agentActionCommand,
   agentActionLabels,
@@ -16,16 +19,19 @@ import {
   barMessageText,
   mergeLabels,
   type BarMessageKind,
-} from './barCopy'
-import { agentIcons } from './barIcons'
-import type { BarAction, BarModel } from './barModel'
+} from '../../../../../src/ui/components/workspace/barCopy'
+import { agentIcons } from '../../../../../src/ui/components/workspace/barIcons'
+import type {
+  BarAction,
+  BarModel,
+} from '../../../../../src/ui/components/workspace/barModel'
 import {
   barGitHubLink,
   githubLink,
 } from '../../entries/components/workspace/barParts.mockup'
 import { barTint, hasPullRequest } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
-import styles from './BarActions.module.css'
+import styles from '../../../../../src/ui/components/workspace/BarActions.module.css'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge

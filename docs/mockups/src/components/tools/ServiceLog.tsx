@@ -1,13 +1,16 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { RotateCw } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog } from '../common/ConfirmDialog'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { ConfirmDialog } from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { serviceLogCopy, type ServiceEntry } from './serviceCopy'
-import { ServiceState } from './ServiceState'
-import styles from './ServiceLog.module.css'
+import {
+  serviceLogCopy,
+  type ServiceEntry,
+} from '../../../../../src/ui/components/tools/serviceCopy'
+import { ServiceState } from '../../../../../src/ui/components/tools/ServiceState'
+import styles from '../../../../../src/ui/components/tools/ServiceLog.module.css'
 
 /**
  * What the log shows: the end of the output, which says when it leaves

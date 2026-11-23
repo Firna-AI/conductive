@@ -3,10 +3,10 @@ import type { RefCallback } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
-import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { pickerButtonStyle } from '../../ui/components/chat/pickerButton'
+import styles from '../../ui/components/chat/ModelPicker.module.css'
 import {
   modelMenuRows,
   type ModelMenuRow,

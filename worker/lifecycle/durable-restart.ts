@@ -1,7 +1,7 @@
 import {
   restartableStates,
   restartCopy,
-} from '../../docs/mockups/src/components/workspace/restartCopy'
+} from '../../src/ui/components/workspace/restartCopy'
 import { HttpError } from '../http'
 import type { DurableLifecycleState } from './durable-types'
 

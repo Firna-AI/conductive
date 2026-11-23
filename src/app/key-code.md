@@ -89,8 +89,8 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/auth/SignInFrame.tsx`: the frame that the sign-in, the sign-in
   of a join link, and the waitlist share. `../shell/layout/Alone.tsx`: a
   page without the rail, and the wait of the first load.
-- [waitlistCopy.ts](../../docs/mockups/src/screens/waitlistCopy.ts) and
-  [inviteCodeCopy.ts](../../docs/mockups/src/components/settings/inviteCodeCopy.ts):
+- [waitlistCopy.ts](../ui/screens/waitlistCopy.ts) and
+  [inviteCodeCopy.ts](../ui/components/settings/inviteCodeCopy.ts):
   the words of the waitlist and of the invite code that the app and the
   mockups share.
 - `invitations-model.ts`: `InvitationsModel`, the pending invitations,
@@ -100,7 +100,7 @@ Each path is relative to `src/app/`, the folder of this page.
   `setup-steps.ts`: `setupSteps`, the steps that the screens show, and
   `setupOrg`, the org of Get started and of the address `/`. The agent
   step is complete with an own login or an org login that serves.
-- [getStartedCopy.ts](../../docs/mockups/src/screens/getStartedCopy.ts): the
+- [getStartedCopy.ts](../ui/screens/getStartedCopy.ts): the
   setup text that the app and mockups share.
 - `org-model.ts`: the sections, workspaces, repositories, builds, members,
   automations, computer settings, and org logins of one org, with `watch`.

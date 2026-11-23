@@ -1,4 +1,4 @@
-import type { MentionEntry } from '../components/chat/mentionEntry'
+import type { MentionEntry } from '../../../../src/ui/components/chat/mentionEntry'
 import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import { code, p } from './agentText'
 import type { ChatItem } from './conversations'

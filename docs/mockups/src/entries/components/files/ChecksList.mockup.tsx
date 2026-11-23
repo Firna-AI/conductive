@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { ChecksList } from '../../../components/files/ChecksList'
-import { bannerStates } from '../../../components/workspace/barModel'
+import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
 
 /**
  * The Checks list of the files panel, registered with Mokly. Its pages

@@ -11,11 +11,11 @@ import {
   orgDetailsSection,
 } from '../entries/components/settings/OrgSections.mockup'
 import { OrgColorSection } from '../components/settings/OrgSections'
-import { type ReadOnlyCause } from '../components/settings/readOnlyCause'
+import { type ReadOnlyCause } from '../../../../src/ui/components/settings/readOnlyCause'
 import { RepositoryEditToggle } from '../components/settings/RepositoryList'
 import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
-import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
+import { EditRepositoryNotice } from '../../../../src/ui/components/settings/RepositoryNotice'
 import { section } from '../entries/components/settings/Section.mockup'
 import {
   memberViewer,

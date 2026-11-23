@@ -13,7 +13,7 @@ import {
   workspaceMenuItems,
   type RowAccess,
   type Submenu,
-} from './workspaceMenu'
+} from '../../../../../src/ui/components/workspaces/workspaceMenu'
 
 /**
  * What a view draws on one row: the menu that a right click or the menu

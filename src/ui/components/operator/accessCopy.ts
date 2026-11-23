@@ -6,7 +6,7 @@
  * where the words need it, and a day or a time as the page writes it. This
  * module imports no fixture, so the app uses it too.
  */
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /** The person of the question before an approval. */
 export type ApproveTarget = {

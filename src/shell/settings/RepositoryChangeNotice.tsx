@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { RepositoryNotice } from '../../../docs/mockups/src/components/settings/RepositoryNotice'
-import type { RepositoryWait } from '../../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { RepositoryNotice } from '../../ui/components/settings/RepositoryNotice'
+import type { RepositoryWait } from '../../ui/components/settings/repositoryChangeCopy'
 import { latestBuild } from '../../app/org-model'
 import { repositoryChangesOf } from '../../app/repository-changes'
 import type { BuildsResponse } from '../../shared/org-settings'

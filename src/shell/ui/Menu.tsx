@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
 import { ownPress } from '../../app/pointer-drag'
 import { useMenuLayer } from './layers'
 import { OpenMenu } from './OpenMenu'

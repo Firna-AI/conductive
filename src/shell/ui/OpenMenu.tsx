@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent, type RefObject } from 'react'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
 import type { MenuEntry, MenuSubmenu } from './Menu'
 import { MenuList, type SubmenuControl } from './MenuList'
 import { PopoverSurface } from './PopoverSurface'

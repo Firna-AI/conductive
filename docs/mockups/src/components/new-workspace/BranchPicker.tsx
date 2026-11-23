@@ -1,13 +1,19 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronDown, GitBranch } from 'lucide-react'
-import { ActionButton, type ActionTone } from '../common/actions'
-import { classes } from '../common/classes'
-import menu from '../common/Menu.module.css'
+import {
+  ActionButton,
+  type ActionTone,
+} from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import menu from '../../../../../src/ui/components/common/Menu.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { SearchField } from '../common/SearchField'
-import { useControlSizes, useTouch } from '../common/touch'
-import { branchCopy } from './branchCopy'
-import styles from './BranchPicker.module.css'
+import {
+  useControlSizes,
+  useTouch,
+} from '../../../../../src/ui/components/common/touch'
+import { branchCopy } from '../../../../../src/ui/components/new-workspace/branchCopy'
+import styles from '../../../../../src/ui/components/new-workspace/BranchPicker.module.css'
 
 /** A row of the list of branches. */
 export type BranchOption = {

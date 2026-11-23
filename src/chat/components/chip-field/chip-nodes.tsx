@@ -11,8 +11,8 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { SessionChip } from '../../../../docs/mockups/src/components/chat/SessionChip'
-import { WorkspaceChip } from '../../../../docs/mockups/src/components/chat/WorkspaceChip'
+import { SessionChip } from '../../../ui/components/chat/SessionChip'
+import { WorkspaceChip } from '../../../ui/components/chat/WorkspaceChip'
 import { chipOf, useChatLinks } from '../../links/LinksContext'
 import { sessionChipOf, useLinkedSession } from '../../links/session-links'
 import { linkTarget } from '../../links/workspace-links'

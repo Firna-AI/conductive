@@ -1,5 +1,5 @@
-import type { ChipFile } from '../../../components/chat/attachedFileParts'
-import type { MentionEntry } from '../../../components/chat/mentionEntry'
+import type { ChipFile } from '../../../../../../src/ui/components/chat/attachedFileParts'
+import type { MentionEntry } from '../../../../../../src/ui/components/chat/mentionEntry'
 import { activityStatuses, githubSchema } from '../workspaces/workspaceSchemas'
 
 /**

@@ -1,8 +1,8 @@
 import { Ban, CircleCheck, KeyRound } from 'lucide-react'
-import card from '../../../docs/mockups/src/components/chat/MacCommand.module.css'
-import { secretRunWords } from '../../../docs/mockups/src/components/chat/secretRunCopy'
-import styles from '../../../docs/mockups/src/components/chat/SecretRun.module.css'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import card from '../../ui/components/chat/MacCommand.module.css'
+import { secretRunWords } from '../../ui/components/chat/secretRunCopy'
+import styles from '../../ui/components/chat/SecretRun.module.css'
+import { StatusText } from '../../ui/components/common/StatusText'
 import type {
   SecretRequest,
   SecretWorkspaceEvent,

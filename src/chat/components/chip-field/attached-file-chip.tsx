@@ -1,7 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import { $getNodeByKey, type NodeKey } from 'lexical'
-import { DraftFileChip } from '../../../../docs/mockups/src/components/chat/DraftFileChip'
+import { DraftFileChip } from '../../../ui/components/chat/DraftFileChip'
 import type { DraftFile } from '../../../app/draft-files'
 import {
   chipFileOf,

@@ -6,7 +6,7 @@ import {
 } from '../entries/components/layout/AppFrame.mockup'
 import type { RailState } from '../components/layout/OrgRail'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { useMacApp } from '../components/mac/MacApp'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
 // The tabs come first, so that their styles keep their place in the bundle.
 import { accountTabs } from '../entries/components/settings/AccountTabs.mockup'
 import {

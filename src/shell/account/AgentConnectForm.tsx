@@ -2,15 +2,15 @@ import { useState } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { TriangleAlert } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   agentConnectCopy,
   connectKinds,
   loginLabels,
   orgConnectKinds,
-} from '../../../docs/mockups/src/components/settings/agentConnectCopy'
-import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
+} from '../../ui/components/settings/agentConnectCopy'
+import styles from '../../ui/components/settings/AgentConnectForm.module.css'
 import { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import type { SaveAgentLoginRequest } from '../../shared/account'

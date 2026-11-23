@@ -8,7 +8,7 @@
 
 /** The most characters that a tab shows of a name, "…" included. */
 
-import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
+import type { ListeningPort } from '../../../shared/generated/ListeningPort'
 const tabNameLength = 10
 
 /** A name as a tab shows it: at most 10 characters, or 9 and "…". */

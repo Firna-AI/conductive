@@ -2,9 +2,9 @@ import type { ReactNode } from 'react'
 import { shownShortcut } from '../../fixtures/shortcutChanges'
 import type { CommandId } from '../../fixtures/shortcutCommands'
 import { pageHost } from '../../fixtures/shortcutHosts'
-import { useMacApp } from '../mac/MacApp'
-import type { Shortcut } from './KeyChips'
-import { useTouchScreen } from './touch'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { useTouchScreen } from '../../../../../src/ui/components/common/touch'
 import styles from './ShortcutTip.module.css'
 
 /**

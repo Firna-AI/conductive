@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { TableCell, type TableColumn } from '@firna/ui/table'
-import { orgAccountWords } from '../../../docs/mockups/src/components/operator/providerCopy'
+import { orgAccountWords } from '../../ui/components/operator/providerCopy'
 import { readOrgsPage } from '../../app/api/read-operator'
 import {
   OperatorDirectory,

@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { checkOption } from '../../entries/components/common/CheckOption.mockup'
 import {
@@ -7,12 +7,12 @@ import {
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { disableCodeOffer } from './accessCopy'
+import { disableCodeOffer } from '../../../../../src/ui/components/operator/accessCopy'
 import {
   selfSuspendWarning,
   suspendQuestion,
   type QuestionTarget,
-} from './operatorCopy'
+} from '../../../../../src/ui/components/operator/operatorCopy'
 import { instanceKey } from '../../instanceKey'
 
 /**

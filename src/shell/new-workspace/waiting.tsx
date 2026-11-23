@@ -4,8 +4,8 @@ import {
   type FormRepositories,
   formWait,
   WaitingRepositoryNotice,
-} from '../../../docs/mockups/src/components/new-workspace/waitingRepository'
-import { firstBuildCopy } from '../../../docs/mockups/src/screens/firstBuildCopy'
+} from '../../ui/components/new-workspace/waitingRepository'
+import { firstBuildCopy } from '../../ui/screens/firstBuildCopy'
 import type { WaitingRepositories } from '../../app/repository-changes'
 import { routes } from '../../app/router'
 import type { Repository } from '../../shared/org-settings'

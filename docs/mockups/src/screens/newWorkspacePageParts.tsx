@@ -3,7 +3,7 @@ import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import {
   type FormRepositories,
   formWait,
-} from '../components/new-workspace/waitingRepository'
+} from '../../../../src/ui/components/new-workspace/waitingRepository'
 import {
   newOrgSections,
   suspendedSections,

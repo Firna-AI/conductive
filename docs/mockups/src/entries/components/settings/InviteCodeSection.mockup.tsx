@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { InviteCodeSection } from '../../../components/settings/InviteCodeSection'
-import { inviteStates } from '../../../components/settings/inviteCodeCopy'
+import { inviteStates } from '../../../../../../src/ui/components/settings/inviteCodeCopy'
 
 /** The invite code of the user, registered with Mokly. */
 export const inviteCodeSection = defineComponent({

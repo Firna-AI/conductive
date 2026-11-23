@@ -2,8 +2,8 @@ import {
   eventLabels,
   scheduleLabels,
   triggersSummary,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
+} from '../../ui/components/automations/triggerCopy'
+import { activityPresentation } from '../../ui/components/workspaces/status'
 import type { CronProblem } from '../../app/automation-cron'
 import type {
   AutomationRun,

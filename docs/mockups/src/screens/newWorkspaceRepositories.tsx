@@ -6,16 +6,16 @@ import {
   type FormRepositories,
   type FormRepository,
   formWait,
-} from '../components/new-workspace/waitingRepository'
+} from '../../../../src/ui/components/new-workspace/waitingRepository'
 import { waitingRepositoryNotice } from '../entries/components/new-workspace/waitingRepository.mockup'
 import {
   menuNotes,
   type RepositoryWait,
-} from '../components/settings/repositoryChangeCopy'
+} from '../../../../src/ui/components/settings/repositoryChangeCopy'
 import { addedRepository, repositories } from '../fixtures/repositories'
 import { savedCarts } from '../fixtures/workspaces'
 import { paths } from '../paths'
-import { firstBuildCopy } from './firstBuildCopy'
+import { firstBuildCopy } from '../../../../src/ui/screens/firstBuildCopy'
 import type { NewWorkspaceFormState } from './newWorkspaceParts'
 
 /**

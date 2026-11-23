@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /**
  * The words of the lines that the reads of the model list of an own

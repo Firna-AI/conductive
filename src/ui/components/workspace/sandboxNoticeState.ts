@@ -4,7 +4,7 @@
  * else defines them.
  */
 
-import type { ArchivedComputerState } from '../../../../../src/shared/generated/ArchivedComputerState'
+import type { ArchivedComputerState } from '../../../shared/generated/ArchivedComputerState'
 
 /**
  * Why the sandbox is not running. `refused` is a start that the app

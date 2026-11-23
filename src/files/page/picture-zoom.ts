@@ -1,4 +1,4 @@
-import type { PictureSize } from '../../../docs/mockups/src/components/files/ImageView'
+import type { PictureSize } from '../../ui/components/files/ImageView'
 
 /**
  * The zoom of a picture in its view. `fit` shows the whole picture at its

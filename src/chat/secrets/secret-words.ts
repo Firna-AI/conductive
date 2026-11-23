@@ -10,7 +10,7 @@ import {
   lifetimeHint,
   lifetimeLabels,
   type SessionLoginOwner,
-} from '../../../docs/mockups/src/components/chat/secretRunCopy'
+} from '../../ui/components/chat/secretRunCopy'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import {

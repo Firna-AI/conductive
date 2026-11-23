@@ -1,4 +1,4 @@
-import type { Agent } from '../../../../../src/shared/generated/Agent'
+import type { Agent } from '../../../shared/generated/Agent'
 import styles from './OrgLoginLines.module.css'
 
 /**

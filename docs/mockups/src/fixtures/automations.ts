@@ -5,7 +5,7 @@
  * the agent login and the GitHub access of that person (decision 502).
  */
 
-import type { Trigger } from '../components/automations/triggers'
+import type { Trigger } from '../../../../src/ui/components/automations/triggers'
 import { defaultChoice, type AgentChoice } from './agents'
 import { people, type Person } from './members'
 import {

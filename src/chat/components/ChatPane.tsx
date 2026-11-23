@@ -1,6 +1,6 @@
 import { useRef, type ReactNode, type Ref } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/chat/ChatPane.module.css'
 import { NearViewRoot } from '../ui/near-view'
 import type { PlaceMemory } from './chat-place'
 import { ChatKeeper, useReadingPlace } from './reading-place'

@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { Automation } from '../../fixtures/automations'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'

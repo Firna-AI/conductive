@@ -2,7 +2,7 @@ import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import {
   IDLE_STOP_CHOICES,
   type IdleStopMinutes,
-} from '../../../../../src/shared/operator-idle-stop'
+} from '../../../shared/operator-idle-stop'
 import { noop } from '../../noop'
 import { useControlSizes } from '../common/touch'
 import { stopTimeLabel, stopTimeWords } from './stopTimeCopy'

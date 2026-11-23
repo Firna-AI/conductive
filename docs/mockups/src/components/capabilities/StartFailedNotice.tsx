@@ -1,6 +1,6 @@
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
-import { thisMacWords } from './capabilitiesCopy'
+import { thisMacWords } from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
 import { startCauses, type FailedStart } from './MacAccessPart'
 
 /**

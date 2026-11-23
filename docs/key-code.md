@@ -5,7 +5,7 @@
 - `docs/mockups/src/screens/`: one React component for each screen.
 - `docs/mockups/src/components/`: the parts that the screens share.
 - `docs/mockups/src/fixtures/`: the sample data of the screens.
-- `docs/mockups/src/brand.ts`: the product name, which every screen reads, and the GitHub repository of the releases.
+- `src/shared/brand.ts`: the product name, which every screen reads, and the GitHub repository of the releases.
 - `mokly.config.json`: the Mokly configuration.
 
 - `worker/app.ts`: the Worker's HTTP entry point.

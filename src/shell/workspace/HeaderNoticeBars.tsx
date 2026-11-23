@@ -1,9 +1,9 @@
 import { CircleSlash, X } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/chat/LostUpdate.module.css'
+import styles from '../../ui/components/chat/LostUpdate.module.css'
 import {
   unavailableText,
   type UnavailableData,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
+} from '../../ui/components/chat/lostCopy'
 import { useStore } from '../../app/store'
 import { useNow } from '../../app/time'
 import { formatAgo } from '../../chat/state/format'

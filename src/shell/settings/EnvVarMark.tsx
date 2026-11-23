@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SecretSwitch } from '../../../docs/mockups/src/components/settings/EnvVarParts'
+import { SecretSwitch } from '../../ui/components/settings/EnvVarParts'
 import type { ComputerModel } from '../../app/computer-model'
 import type { OrgSettings } from '../../shared/org-settings'
 import { useAction } from '../ui/useAction'

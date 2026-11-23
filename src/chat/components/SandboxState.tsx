@@ -10,8 +10,8 @@ import {
   WORKSPACE_RESTORE_MS,
   workspaceRemovedAt,
 } from '../../shared/workspaces'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import styles from '../../../docs/mockups/src/components/workspace/StartingCard.module.css'
+import { Notice } from '../../ui/components/common/Notice'
+import styles from '../../ui/components/workspace/StartingCard.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
 import { problemOf as noticeProblemOf } from '../../shell/workspace/notice-copy'
 import { formatDay } from '../state/format'

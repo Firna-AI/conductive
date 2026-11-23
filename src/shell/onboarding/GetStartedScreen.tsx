@@ -1,6 +1,6 @@
 import { ArrowRight } from 'lucide-react'
-import { getStartedCopy as copy } from '../../../docs/mockups/src/screens/getStartedCopy'
-import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
+import { getStartedCopy as copy } from '../../ui/screens/getStartedCopy'
+import styles from '../../ui/screens/GetStartedScreen.module.css'
 import { useFirstBuild, type FirstBuild } from '../../app/first-build'
 import { nextStep, stepState } from '../../app/get-started'
 import { personName } from '../../app/people'

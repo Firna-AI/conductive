@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { ScreenLink } from '../common/ScreenLink'
 import type { TextMark } from './chatMarks'
-import { MarkGlyph } from './MarkGlyph'
-import { markLabel } from './explainCopy'
-import styles from './MarkedText.module.css'
+import { MarkGlyph } from '../../../../../src/ui/components/explain/MarkGlyph'
+import { markLabel } from '../../../../../src/ui/components/explain/explainCopy'
+import styles from '../../../../../src/ui/components/explain/MarkedText.module.css'
 
 /**
  * A message whose mark covers it whole, because the text of the mark no

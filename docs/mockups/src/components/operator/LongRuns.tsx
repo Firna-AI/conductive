@@ -1,25 +1,25 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Copy } from 'lucide-react'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import type { LongRun, RunOwner } from '../../fixtures/operatorRuns'
 import { instanceKey } from '../../instanceKey'
-import { IconButton } from '../common/actions'
-import a11y from '../common/a11y.module.css'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { section } from '../../entries/components/settings/Section.mockup'
-import { workspaceLabel } from '../workspaces/label'
-import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
+import { activityPresentation } from '../../../../../src/ui/components/workspaces/status'
+import { StatusGlyph } from '../../../../../src/ui/components/workspaces/StatusGlyph'
 import { NameCell, TargetState } from './directory'
-import directory from './directory.module.css'
+import directory from '../../../../../src/ui/components/operator/directory.module.css'
 import { orgTableSize } from './LargestOrgs'
 import {
   copyComputerLabel,
   formatRunLength,
   longRunsWords,
-} from './longRunsCopy'
+} from '../../../../../src/ui/components/operator/longRunsCopy'
 import { orgPagePaths, userPagePath } from './targetPages'
 import { InlineLink, NameLink } from './targets'
-import styles from './LongRuns.module.css'
+import styles from '../../../../../src/ui/components/operator/LongRuns.module.css'
 
 /**
  * The fixed columns fit their longest text: a login such as @calummoore,

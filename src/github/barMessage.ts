@@ -1,5 +1,5 @@
-import { barMessageText } from '../../docs/mockups/src/components/workspace/barCopy'
-import type { BarModel } from '../../docs/mockups/src/components/workspace/barModel'
+import { barMessageText } from '../ui/components/workspace/barCopy'
+import type { BarModel } from '../ui/components/workspace/barModel'
 import type { GitHubBanner } from '../shared/github'
 import { baseBranchLabel, baseMovedLabel, branchLabel } from './bannerStatus'
 import type { BarMessage, BarOutcome } from './barView'

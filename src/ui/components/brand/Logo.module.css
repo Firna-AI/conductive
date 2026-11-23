@@ -12,7 +12,7 @@
   display: inline-block;
   flex-shrink: 0;
   border-radius: 22.5%;
-  background: url('../../../../brand/conductive-icon.svg') center / 124.27%
+  background: url('../../../../docs/brand/conductive-icon.svg') center / 124.27%
     no-repeat;
 }
 
@@ -20,7 +20,7 @@
 .appIcon {
   display: inline-block;
   flex-shrink: 0;
-  background: url('../../../../brand/conductive-icon.svg') center / contain
+  background: url('../../../../docs/brand/conductive-icon.svg') center / contain
     no-repeat;
 }
 
@@ -33,10 +33,10 @@
   flex-shrink: 0;
   height: var(--ui-lockup-height);
   aspect-ratio: 681.86 / 127.32;
-  background: url('../../../../brand/conductive-lockup-light.svg') center /
+  background: url('../../../../docs/brand/conductive-lockup-light.svg') center /
     contain no-repeat;
 }
 
 :global(html[style*='dark']) .lockup {
-  background-image: url('../../../../brand/conductive-lockup-dark.svg');
+  background-image: url('../../../../docs/brand/conductive-lockup-dark.svg');
 }

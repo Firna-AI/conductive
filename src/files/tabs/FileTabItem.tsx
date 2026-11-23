@@ -1,6 +1,6 @@
 import type { ComponentProps, ComponentPropsWithRef, Ref } from 'react'
 import { X } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { labelName } from '../model/file-labels'
 import type { FilesNavigation, FilesTab } from '../navigation'
 import { FileIcon } from '../panel/file-icons'

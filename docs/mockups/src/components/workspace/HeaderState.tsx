@@ -1,15 +1,21 @@
 import { Button } from '@firna/ui/button'
 import { ChevronDown, RotateCw } from 'lucide-react'
-import type { ActivityStatus } from '../workspaces/activityStatus'
-import { noop } from '../../noop'
+import type { ActivityStatus } from '../../../../../src/ui/components/workspaces/activityStatus'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { Menu, type MenuEntry } from '../common/Menu'
+import {
+  Menu,
+  type MenuEntry,
+} from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { activityPresentation } from '../workspaces/status'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { activityPresentation } from '../../../../../src/ui/components/workspaces/status'
 import { statusGlyph } from '../../entries/components/workspaces/StatusGlyph.mockup'
-import styles from './HeaderState.module.css'
-import { restartableStates, restartCopy } from './restartCopy'
+import styles from '../../../../../src/ui/components/workspace/HeaderState.module.css'
+import {
+  restartableStates,
+  restartCopy,
+} from '../../../../../src/ui/components/workspace/restartCopy'
 
 /** The menu of the header state: Restart, and a note on what it does. */
 export function restartMenu(highlighted = false): MenuEntry[] {

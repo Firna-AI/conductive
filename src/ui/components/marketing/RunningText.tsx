@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import type { LinkTarget, Text } from '../../../../../src/marketing/legal-text'
+import type { LinkTarget, Text } from '../../../marketing/legal-text'
 import styles from './RunningText.module.css'
 
 /** Draws a link of running text: to a page of the site, or to an email. */

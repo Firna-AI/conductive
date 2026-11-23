@@ -1,11 +1,11 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { defined } from '../../defined'
 import { tabItem } from '../../entries/components/workspace/TabItem.mockup'
-import tabScroll from '../workspace/TabScroll.module.css'
-import tabRow from '../workspace/WorkspaceTabs.module.css'
-import styles from './TerminalTabs.module.css'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
+import tabRow from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
+import styles from '../../../../../src/ui/components/tools/TerminalTabs.module.css'
 
 /** The words under the row at the limit of 10 terminals. */
 const terminalLimitHint =

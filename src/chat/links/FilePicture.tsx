@@ -3,8 +3,8 @@ import {
   AnswerPicture,
   type PictureOpener,
   type PictureState,
-} from '../../../docs/mockups/src/components/chat/AnswerPicture'
-import { ChipCopyText } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+} from '../../ui/components/chat/AnswerPicture'
+import { ChipCopyText } from '../../ui/components/chat/ChipCopyText'
 import { useChatMentions } from '../mentions/MentionsContext'
 import { useNearView } from '../ui/near-view'
 import { fileOpener, fileTitle } from './file-opener'

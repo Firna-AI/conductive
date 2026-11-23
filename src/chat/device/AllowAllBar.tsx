@@ -6,8 +6,8 @@ import {
   TriangleAlert,
 } from 'lucide-react'
 import type { DeviceSettings, DeviceWorkspaceWindow } from '../../shared/device'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/mac/AllowAllBar.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/mac/AllowAllBar.module.css'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import { timeLeft } from '../../shared/transcript/command-words'

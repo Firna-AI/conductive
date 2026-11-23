@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent } from 'react'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type { PaletteController } from '../../app/palette/controller'
 import { paletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'

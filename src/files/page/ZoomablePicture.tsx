@@ -9,12 +9,9 @@ import { Maximize2, Shrink, ZoomIn, ZoomOut } from 'lucide-react'
 import {
   ImageView,
   type PictureSize,
-} from '../../../docs/mockups/src/components/files/ImageView'
-import {
-  pictureCopy,
-  zoomPercent,
-} from '../../../docs/mockups/src/components/files/pictureCopy'
-import bar from '../../../docs/mockups/src/components/files/PictureZoomBar.module.css'
+} from '../../ui/components/files/ImageView'
+import { pictureCopy, zoomPercent } from '../../ui/components/files/pictureCopy'
+import bar from '../../ui/components/files/PictureZoomBar.module.css'
 import { IconButton } from '../ui/actions'
 import { useFilesLayout } from '../ui/layout'
 import { ExpandedPicture } from './ExpandedPicture'

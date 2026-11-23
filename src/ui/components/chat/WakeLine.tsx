@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { BellRing } from 'lucide-react'
-import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
+import type { TurnEndReason } from '../../../shared/generated/TurnEndReason'
 import { wakeWords } from './wakeCopy'
-import type { SessionWatchEndState } from '../../../../../src/shared/generated/SessionWatchEndState'
+import type { SessionWatchEndState } from '../../../shared/generated/SessionWatchEndState'
 import styles from './StopLine.module.css'
 
 /**

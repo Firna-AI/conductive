@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   samOkafor,
@@ -11,11 +11,15 @@ import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
-import { approvedEmailLines, approvedLabel, emptyWaitlist } from './accessCopy'
+import {
+  approvedEmailLines,
+  approvedLabel,
+  emptyWaitlist,
+} from '../../../../../src/ui/components/operator/accessCopy'
 import { NameCell } from './directory'
 import { ProfileLink, TargetMark } from './targets'
 import { instanceKey } from '../../instanceKey'
-import styles from './waitlist.module.css'
+import styles from '../../../../../src/ui/components/operator/waitlist.module.css'
 
 /**
  * A phone keeps the person and Approve, and gives the age of the GitHub

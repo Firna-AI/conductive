@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { SwitchPicture } from '../../../components/common/SwitchPicture'
+import { SwitchPicture } from '../../../../../../src/ui/components/common/SwitchPicture'
 
 /**
  * The picture of a switch at the end of a menu row, registered with Mokly.

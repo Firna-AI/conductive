@@ -9,7 +9,7 @@
 - **Terms:**
   - **Automation notes:** the notes of the automation page: why an automation turned off (three failed runs, an owner who left, a removed repository) and who can change it.
   - **Mockups:** the visual spec in `docs/mockups/`. The app takes its words from them, and it may import a mockup component or module, but not a mockup screen, fixture, `paths.ts`, `ScreenLink`, or Mokly.
-- **Background:** The app and the mockups each write the words of the automation notes. Other automation words already have one shared home that both import, such as `docs/mockups/src/components/automations/triggerCopy.ts`, which `src/shell/automations/AuthorFilter.tsx` imports.
+- **Background:** The app and the mockups each write the words of the automation notes. Other automation words already have one shared home that both import, such as `src/ui/components/automations/triggerCopy.ts`, which `src/shell/automations/AuthorFilter.tsx` imports.
 - **Problem:** A change of a note's words in the mockups does not reach the app, and the two copies can drift.
 - **Impact if no action:** The app can show words that the visual spec no longer holds.
 - **Root question:** How do the app and the mockups share the words of the automation notes?

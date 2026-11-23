@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext } from 'react'
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'
@@ -7,7 +7,7 @@ import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { defined } from '../../defined'
 import { instanceKey } from '../../instanceKey'
 import {
@@ -16,8 +16,8 @@ import {
 } from '../../entries/components/workspace/TabItem.mockup'
 import type { WorkspaceTab } from './TabItem'
 import { tabMenuOf } from './TabMenu'
-import tabScroll from './TabScroll.module.css'
-import styles from './WorkspaceTabs.module.css'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
+import styles from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
 
 /**
  * A tab in the middle of a drag: the key of the tab, and the place where it

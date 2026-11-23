@@ -1,7 +1,7 @@
 import type { ComponentProps, ComponentPropsWithRef, Ref } from 'react'
 import { Globe, X } from 'lucide-react'
-import styles from '../../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
-import { classes } from '../../../../docs/mockups/src/components/common/classes'
+import styles from '../../../ui/components/workspace/WorkspaceTabs.module.css'
+import { classes } from '../../../ui/components/common/classes'
 import { IconButton } from '../../../files/ui/actions'
 import { AppLink } from '../../ui/AppLink'
 

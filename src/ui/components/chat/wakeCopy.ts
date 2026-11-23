@@ -7,8 +7,8 @@
  * apart. The module draws nothing and reads no fixtures.
  */
 
-import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
-import type { SessionWatchEndState } from '../../../../../src/shared/generated/SessionWatchEndState'
+import type { TurnEndReason } from '../../../shared/generated/TurnEndReason'
+import type { SessionWatchEndState } from '../../../shared/generated/SessionWatchEndState'
 import { endReasonText } from './endReasonCopy'
 
 /**

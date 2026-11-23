@@ -1,6 +1,9 @@
 import { RotateCw, Square } from 'lucide-react'
-import type { MenuEntry } from '../common/Menu'
-import { servicesCopy, type ServicePhase } from './serviceCopy'
+import type { MenuEntry } from '../../../../../src/ui/components/common/Menu'
+import {
+  servicesCopy,
+  type ServicePhase,
+} from '../../../../../src/ui/components/tools/serviceCopy'
 
 /**
  * The items of the menu of a service row, beside its button on desktop and

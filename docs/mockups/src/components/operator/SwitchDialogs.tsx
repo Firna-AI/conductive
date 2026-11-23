@@ -1,12 +1,15 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { ArrowLeftRight, CircleStop } from 'lucide-react'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
+import { noop } from '../../../../../src/ui/noop'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { CheckOption } from '../common/CheckOption'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import {
   endBuildOffer,
   stopQuestion,
@@ -17,7 +20,7 @@ import {
   switchWords,
   type OrgSwitch,
   type SwitchWait,
-} from './switchCopy'
+} from '../../../../../src/ui/components/operator/switchCopy'
 
 /** The links of a question: the page of Cancel, and the page after it. */
 type QuestionLinks = { cancel: string; done: string }

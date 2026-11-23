@@ -6,7 +6,7 @@
  * member cannot change it.
  */
 
-import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndReason'
+import type { TurnEndReason } from '../../../shared/generated/TurnEndReason'
 const reasons: Readonly<Record<TurnEndReason, string>> = {
   background_work_limit: 'Background work stopped at the time limit',
 }

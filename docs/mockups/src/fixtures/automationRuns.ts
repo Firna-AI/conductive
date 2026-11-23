@@ -8,15 +8,15 @@
  * with, so a later change of its automation changes no past run.
  */
 
-import type { RunState } from '../components/workspaces/activityStatus'
+import type { RunState } from '../../../../src/ui/components/workspaces/activityStatus'
 import type { AgentKey } from './agents'
 import type { Person } from './members'
 import type { Automation } from './automations'
 import type {
   PullRequestEvent,
   ScheduleTrigger,
-} from '../components/automations/triggers'
-import type { ActivityStatus } from '../components/workspaces/activityStatus'
+} from '../../../../src/ui/components/automations/triggers'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 
 /** What started a run: a schedule, Run now, or a pull request event. */
 export type RunTrigger =

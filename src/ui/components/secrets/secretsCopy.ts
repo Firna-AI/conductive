@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../shared/brand'
 
 /**
  * The words of the Secrets tab of the org settings (secrets decisions 2,

@@ -1,5 +1,5 @@
 import { FileDiff } from 'lucide-react'
-import { EntryIcon } from '../../../docs/mockups/src/components/files/fileIcons'
+import { EntryIcon } from '../../ui/components/files/fileIcons'
 
 /**
  * The icon of a file or of its diff. A file takes the icon of the one icon

@@ -1,4 +1,7 @@
-import type { DailyCount, StateCounts } from '../components/settings/statCounts'
+import type {
+  DailyCount,
+  StateCounts,
+} from '../../../../src/ui/components/settings/statCounts'
 
 /**
  * The numbers of the operator page: counts across every org, at one

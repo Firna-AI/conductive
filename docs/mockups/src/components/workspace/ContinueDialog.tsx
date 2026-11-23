@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { unpushedWork } from '../../fixtures/barActions'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
@@ -9,7 +9,7 @@ import {
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { continueQuestion } from './barCopy'
+import { continueQuestion } from '../../../../../src/ui/components/workspace/barCopy'
 import { localWorkList } from '../../entries/components/workspace/LocalWorkList.mockup'
 
 /**

@@ -1,7 +1,7 @@
 import type {
   ModelListCheck,
   UnlistedModel,
-} from '../components/settings/modelListCheck'
+} from '../../../../src/ui/components/settings/modelListCheck'
 import type { AgentChoice } from './agents'
 import type { ChatItem } from './conversations'
 

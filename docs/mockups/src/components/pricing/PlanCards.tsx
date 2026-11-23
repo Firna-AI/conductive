@@ -1,11 +1,11 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import {
   planCopy,
   pricingPageCopy,
   pricingPlans,
   type PricingPlan,
 } from '../../../../../src/marketing/pricing'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { siteIcons } from '../marketing/siteIcons'
 import styles from './PlanCards.module.css'
 

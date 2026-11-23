@@ -1,4 +1,4 @@
-import type { Viewport } from '../common/viewport'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { people, removedMember } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'

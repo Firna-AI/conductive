@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-09, from the mockup milestone of branch `calummoore/markdown-table-failure`, as a problem outside its scope.
-- **Location:** `tools/marketing-pictures/run.ts`, the capture command. `tools/marketing-pictures/page.ts:50`, where each capture waits for the fonts. `tools/marketing-pictures/cdp.ts:140`, the launch of Chrome. `docs/mockups/src/design/metrics.ts:8`, the monospace fonts of the mockups. `src/marketing/pictures/review-desktop-dark.webp`, the picture that changed.
+- **Location:** `tools/marketing-pictures/run.ts`, the capture command. `tools/marketing-pictures/page.ts:50`, where each capture waits for the fonts. `tools/marketing-pictures/cdp.ts:140`, the launch of Chrome. `src/ui/design/metrics.ts:8`, the monospace fonts of the mockups. `src/marketing/pictures/review-desktop-dark.webp`, the picture that changed.
 - **Reason:** The branch that found it changed no part that the picture shows, and the cause needs its own investigation.
 
 - **Terms:**
@@ -13,7 +13,7 @@
   - `npm run marketing:pictures` makes 14 captures and writes 28 picture files, as `src/marketing/pictures.md` says. Before the Mac picture came, it wrote 26 files. A person runs it after a change to a screen that a picture shows, and commits the changed pictures.
   - Before each picture, the capture waits for `document.fonts.ready` and for the images, at `tools/marketing-pictures/page.ts:50`.
   - The capture launches `google-chrome` with `--headless=new`, `--font-render-hinting=none`, and `--force-color-profile=srgb`, at `tools/marketing-pictures/cdp.ts:140`.
-  - The mockups take their monospace font from the system: `'SF Mono', ui-monospace, Menlo, 'Source Code Pro', Consolas, 'Liberation Mono', monospace`, at `docs/mockups/src/design/metrics.ts:8`. Nobody checked which of these fonts drew the digits.
+  - The mockups take their monospace font from the system: `'SF Mono', ui-monospace, Menlo, 'Source Code Pro', Consolas, 'Liberation Mono', monospace`, at `src/ui/design/metrics.ts:8`. Nobody checked which of these fonts drew the digits.
   - On 9 November 2026, a branch that adds tables to agent messages ran the capture twice from the repository root. It ran in a cloud sandbox with Amazon Linux 2023 and Google Chrome 157.0.8103.38.
   - That branch did not change the parts that `review-desktop-dark.webp` shows: the pull request bar and the Changes list.
   - Run 1 ended with exit 0 after 1 min 38 s. 25 of the 26 pictures were byte-identical to the committed files. `src/marketing/pictures/review-desktop-dark.webp` changed in 2,934 pixels.
@@ -26,7 +26,7 @@
 - **Root question:** How does each capture of the same page draw the same pixels?
 - **Options:**
   - **C.** Change nothing. A person captures again when a picture changes with no screen change. Effort: Small.
-  - **B.** Ship one monospace font with the mockups and load it in the renderer, as `docs/mockups/src/fonts/` ships Inter. Then capture several times again. No capture then uses a system monospace font, but this fixes the shift only when the system font is its cause. Effort: Small.
+  - **B.** Ship one monospace font with the mockups and load it in the renderer, as `src/ui/fonts/` ships Inter. Then capture several times again. No capture then uses a system monospace font, but this fixes the shift only when the system font is its cause. Effort: Small.
   - **A.** Find the source of the shift, then fix it. Capture `review-desktop-dark.webp` about 20 times on one machine, and keep each result. For each run, record the font that Chrome used for the shifted digits, for example with the DevTools protocol command `CSS.getPlatformFontsForNode`. Compare the shifted runs with the stable runs. Then fix the source in the capture command or in the mockup fonts. Effort: Medium.
 - **Left out:** A check that accepts a small pixel difference, because no check compares pictures today, and a new check is a gate that the user decides.
 - **Wider fix:** None yet, because the cause is unknown. When option A finds the cause in the system font, option B prevents the class on every machine.

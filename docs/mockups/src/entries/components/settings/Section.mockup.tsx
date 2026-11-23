@@ -3,9 +3,9 @@ import {
   MonoBlock,
   Section,
   SectionText,
-} from '../../../components/settings/Section'
-import { secretNote } from '../../../components/settings/envVarCopy'
-import { inviteCodeCopy } from '../../../components/settings/inviteCodeCopy'
+} from '../../../../../../src/ui/components/settings/Section'
+import { secretNote } from '../../../../../../src/ui/components/settings/envVarCopy'
+import { inviteCodeCopy } from '../../../../../../src/ui/components/settings/inviteCodeCopy'
 import { startupScript } from '../../../fixtures/computer'
 import { inviteLimit } from '../../../fixtures/waitlist'
 import { actionButton } from '../common/actions.mockup'

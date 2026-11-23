@@ -1,4 +1,4 @@
-import type { ActivityStatus } from '../components/workspaces/activityStatus'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import type { GitHubSummary } from '../../../../src/shared/generated/GitHubSummary'
 import type { AgentChoice } from './agents'
 import type { PersonKey } from './members'
