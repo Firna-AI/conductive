@@ -3,7 +3,10 @@ import type { LineRange } from '../../shared/line-target'
 import { splitLines } from '../model/file-text'
 import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
+import { classes } from '../ui/classes'
 import { useKeptScroll, type ScrollAim } from '../ui/kept-scroll'
+import { focusClass } from '../ui/layout'
+import { selectAllInBox } from './select-all'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -99,7 +102,14 @@ export function CodeView(props: {
   const isMarked = (number: number) =>
     start !== null && end !== null && number >= start && number <= end
   return (
-    <div className={styles.scroll} ref={box}>
+    <div
+      aria-label="Code"
+      className={classes(styles.scroll, focusClass)}
+      onKeyDown={selectAllInBox}
+      ref={box}
+      role="region"
+      tabIndex={0}
+    >
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div

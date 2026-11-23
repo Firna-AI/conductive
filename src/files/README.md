@@ -142,6 +142,15 @@ tests the hook, and `TabScroll.test.tsx` of the
 [workspace files](../shell/workspace/files/) tests the tabs of the
 workspace screen.
 
+### Select all in a file
+
+The scroll box of `CodeView` and of `DiffView` is a focusable region, so
+a press in the text gives it the focus. Its key handler,
+`selectAllInBox` of `code/select-all.ts`, turns Cmd+A or Ctrl+A into a
+selection of the box only. The browser would otherwise select the whole
+app. The line numbers cannot be selected, so a copy leaves them out.
+`code/CodeView.dom.test.tsx` tests the handler.
+
 ## Labels of paths
 
 [Labels of paths](labels.md) gives the label that each screen shows in
