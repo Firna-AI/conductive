@@ -104,6 +104,14 @@ states the filters, labels, limits, and scan timing.
   scans. Each such skill needs a front matter with a `description`, as
   Codex needs it. The runner warns once, until the app server answers
   again.
+- With a configured skills repository, each scan request carries the
+  leased current copy. Both lists then also hold the org skills that an
+  agent start chooses, after the skills of the agent's own folders. Their
+  names and descriptions come from the safe view of each agent. The
+  [helper README](sdk-helper/README.md#org-skills) gives the details.
+- Each new copy of the skills repository also signals the skills report,
+  while the repository watcher runs. The engine and the scanner share one
+  copy.
 - A scan reads a `SKILL.md` again only when its size, times, or inode
   changed. One `SKILL.md` that does not read, or that holds more than
   1 MiB, warns and leaves out its skill. A skill folder that does not read
