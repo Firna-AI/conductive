@@ -69,7 +69,8 @@ The numbers 313 to 320 were the next free numbers on 22 November 2026, on
 `main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
 22 November 2026, with the options and the letters that Cal saw in the
 brainstorm. Decisions 316 to 320 hold Cal's later answers of the same
-day. No decision is open.
+day, and decision 321 holds his answer of 23 November 2026. No decision is
+open.
 
 A second options check ran on the same day over the changed decision 318,
 decision 320, and the new design calls. It added option D to decision 318
@@ -389,8 +390,11 @@ applies to branches targetting main".
 
 ### Decision 321: who resolves the conflict of a restack
 
-Open. It blocks Milestone 6 and the `restack` and `rebase` pages of
-Milestone 1d.
+Chosen by Cal on 23 November 2026: A. When the queue's own move of a layer
+has a conflict, the queue sends one agent turn as the queuer, with the
+rebase prompt. If the turn does not resolve it, the entry waits in its
+place for a member, as "Failures" says. The record below keeps the options
+that Cal saw.
 
 - **Severity:** Medium. **Effort:** Small.
 - **Source:** Design.
@@ -566,8 +570,11 @@ and then moved the entry out of the stack as "Needs attention".
 
 - The queue sends no fix turn for failed checks or requested changes. The
   bar of the workspace shows Fix checks or Address review, as it does
-  outside the queue, and a member acts or removes the entry. Decision 321
-  holds the conflicts of a restack.
+  outside the queue, and a member acts or removes the entry.
+- A conflict of a restack gets one agent turn as the queuer (decision 321).
+  When that turn ends and the conflict stays, the entry waits like any
+  failure, and its bar line says "The queue waits for a rebase onto
+  #479.", with Resolve conflicts as the main action.
 - An entry that cannot merge keeps its place on the line. Its list mark
   shows its GitHub state, such as red for failed checks. The layers below
   it still merge. The layers above it wait. Reason: Cal asked for no
@@ -789,7 +796,8 @@ group and the bar as "Failures" now says.
       that says what the queue waits for, and with the reason of a failed
       token or a refused merge. Keep Fix checks and Remove from queue.
 - [x] Remove the compact phone row "Needs attention".
-- [ ] Draw the `restack` and `rebase` pages after decision 321.
+- [ ] Draw the `restack` and `rebase` pages after decision 321, and the
+      entry that waits after the agent's turn did not resolve the conflict.
 - [ ] Draw the bar line of an entry that waits for its local work.
 - [x] Update the catalogue docs and the notes of each changed page.
 - [x] Run `npm run mockups:check`, and smoke-test the changed pages.
@@ -894,7 +902,7 @@ browser.
 
 ## Milestone 6: Join, base moves, and sync
 
-Depends on: 5, and decision 321
+Depends on: 5
 
 - [ ] Join: change the pull request base, send the restack turn, and add
       the layer to the GitHub stack after its push.
@@ -918,7 +926,8 @@ Depends on: 6
 - [ ] Keep a layer that cannot merge in its place, merge the layers below
       it, and give the bar line the reason that the queue waits
       ("Failures").
-- [ ] Apply decision 321 to a conflict of a restack.
+- [ ] Send one agent turn for a conflict of a restack, then wait for a
+      member (decision 321).
 - [ ] Re-order with unstack, base changes, restacks from the bottom up, and
       the add back.
 - [ ] Tests for each path, also with two steps that arrive at once.
