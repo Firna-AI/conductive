@@ -28,7 +28,7 @@ use cnd_runner_interface::tools::workspaces::{
 
 use crate::call::Name;
 use crate::error::{Error, ErrorResultExt, Result};
-use crate::reply_validation::{cap_output, normalize_paths, valid};
+use crate::reply_validation::{cap_output, mark_member_author, normalize_paths, valid};
 use crate::secrets::response;
 use crate::services::tools;
 
@@ -103,6 +103,9 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
         Err(_) => return Err(Error::Reply { mac }),
     };
     normalize_paths(&mut value);
+    if name == Name::GetMessage {
+        mark_member_author(&mut value);
+    }
     if name == Name::ListSecrets {
         return response::list(value).map(Reply::ListSecrets);
     }

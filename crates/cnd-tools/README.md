@@ -105,7 +105,8 @@ name a member message or a finished message of the agent, such as the
 `Message:` ID of an Explain prompt. The typed reply names the `author`,
 `member` or `agent`. Each request sends `agentMessages=true`, so the
 Worker knows that this runner reads agent messages. An older runner sends
-no flag and gets HTTP 404 for an agent message.
+no flag and gets HTTP 404 for an agent message. A reply with no `author`,
+from a Worker before agent messages, reads as a member message.
 [Get a message](../../docs/protocol/session-management.md#get-a-message)
 states the rules.
 

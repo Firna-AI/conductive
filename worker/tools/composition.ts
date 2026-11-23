@@ -55,8 +55,8 @@ export function productionAgentTools(
               workspaceId,
               sessionId,
               messageId,
-              input,
               env.APP_ORIGIN,
+              input,
             ),
         ),
       manageSession: async (input) =>

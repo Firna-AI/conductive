@@ -85,8 +85,10 @@ export class AgentSessionReadWorkspace extends AttachmentWorkspace {
     workspaceId: string,
     sessionId: string,
     messageId: string,
-    input: AgentGetMessageRequest,
     origin: string,
+    // Last and optional: during a deploy, the previous Worker calls this
+    // object without it, and an older object ignores it.
+    input: AgentGetMessageRequest = { agentMessages: false },
   ) {
     return featureResult(() =>
       this.chat.readWorkspace(

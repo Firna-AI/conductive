@@ -258,4 +258,16 @@ it('gets a finished agent message only for a caller that reads agent messages', 
       error: { code: 'message_not_found' },
     })
   }
+  // The previous Worker calls the workspace object with no request input.
+  expect(
+    await (
+      await active.actor(OUTER_WORKSPACE)
+    ).getAgentMessage(
+      OUTER_ORG,
+      OUTER_WORKSPACE,
+      answer.sessionId,
+      answer.messageId,
+      active.env.APP_ORIGIN,
+    ),
+  ).toMatchObject({ ok: false, error: { code: 'message_not_found' } })
 })

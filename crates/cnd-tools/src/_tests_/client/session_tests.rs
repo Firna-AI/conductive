@@ -189,3 +189,25 @@ async fn reads_member_and_agent_message_replies() -> Result<()> {
     }
     Ok(())
 }
+
+#[tokio::test]
+async fn reads_a_message_without_author_from_an_older_worker_as_a_member_message() -> Result<()> {
+    let message = json!({"id":"ask", "sessionId":"session", "text":"Work",
+        "sender":{"id":"owner", "githubLogin":"member", "displayName":null, "avatarUrl":null},
+        "state":"sent", "createdAt":1000});
+    let raw = json!({"workspace":super::fixtures::workspace(),
+        "session":{"id":"session", "link":"https://app.conductive.test/session"},
+        "message":message, "turnId":null});
+    let reply = client(Ok(response(raw)))?
+        .execute(Call::GetMessage(
+            "current".into(),
+            "session".into(),
+            "ask".into(),
+        ))
+        .await?;
+    assert_eq!(
+        serde_json::to_value(reply).internal()?["message"]["author"],
+        json!("member")
+    );
+    Ok(())
+}
