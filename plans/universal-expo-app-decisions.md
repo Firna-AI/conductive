@@ -93,7 +93,7 @@ Terms:
 
 ## 13. Check each pull request on the phones
 
-- **Severity:** Medium. **Effort:** Medium.
+- **Severity:** Medium. **Effort:** Large.
 - **Source:** Design, from the answer to decision 10.
 - **Category:** Process.
 - **Location:** `.github/workflows/ci.yml`.
