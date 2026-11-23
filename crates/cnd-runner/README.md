@@ -15,7 +15,7 @@ The `conductive runner` command composes this crate. The installed service runs 
 - Keep conversation references, instructions, file revisions, turn records, and report receipts.
 - Read and write the existing Node state file format without a migration.
 - Read safe repository files and compare Git changes through private indexes and objects.
-- Stream repository files over private loopback HTTP for HTML file previews.
+- Stream repository files and system fonts over private loopback HTTP for HTML file previews.
 - Send bounded file reports, stable listening-port reports, and agent skill reports.
 - Keep private skill paths in memory and supply explicit Codex skills on each send.
 - Watch recursive repository changes and repair watches after a restore.
@@ -133,8 +133,17 @@ The [file server protocol](../../docs/protocol/file-server.md) defines its
 private request headers, file access, indexes, types, cache dates, and byte ranges.
 The server shares descriptor checks with file reads. It streams files
 without the file-tab size limit and refuses dot files and links to dot files.
-It reads the current repository folder of the runner at each request, so a
+It reads the runner's current repository folder once for each request, so a
 repository move points it at the new folder with no new bind.
+HTML, CSS, and SVG replies change local `file:` addresses to absolute paths
+as they stream, so they carry no length and serve no byte ranges.
+A path that the repository refuses or lacks can still serve a repository file
+by its absolute path, or a font under `/usr/share/fonts` or `/usr/local/share/fonts`.
+HTML replies link the generated `/__conductive/system-fonts.css` stylesheet
+of those fonts. The protocol sections on
+[local file addresses](../../docs/protocol/file-server.md#local-file-addresses),
+[system fonts](../../docs/protocol/file-server.md#system-fonts), and
+[changed replies](../../docs/protocol/file-server.md#changed-replies) give the rules.
 
 The skills schedule runs its first copy without blocking startup and checks
 every five minutes. It retains the last complete copy across failed fetches
@@ -316,6 +325,10 @@ and connection drops. It does not run the Worker.
 - [policy.rs](src/file_server/policy.rs): `FileRequests` enforces private HTTP requests, paths, and file replies.
 - [range.rs](src/file_server/range.rs): selects byte ranges only when `If-Range` is absent or matches the file's modification date to the second.
 - [files.rs](src/file_server/files.rs): `Files` provides safe repository files and rejects dot files.
+- [font_files.rs](src/file_server/font_files.rs): `PreviewFiles` adds the system fonts of `/usr/share/fonts` and `/usr/local/share/fonts` to the repository files.
+- [rewrite.rs](src/file_server/rewrite.rs): changes local `file:` addresses to paths in HTML, CSS, and SVG replies, across chunks.
+- [html.rs](src/file_server/html.rs): finds the place of the font stylesheet link at the start of an HTML page.
+- [stylesheet.rs](src/file_server/stylesheet.rs), [font_face.rs](src/file_server/font_face.rs), and [font_tables.rs](src/file_server/font_tables.rs): build and cache the font stylesheet from bounded reads of each font's tables.
 - [setup.rs](src/repository/setup.rs): context setup adds the exclude rule once and creates attachment storage.
 - [files.rs](src/reports/files.rs): `FileReporter` serializes captured report parts and file requests.
 - [handler.rs](src/reports/handler.rs): `ReportCommandHandler` connects reports to commands and durable state.

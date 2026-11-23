@@ -32,7 +32,7 @@ The change does not cover these cases:
 Contract owners:
 
 - [File server](../docs/protocol/file-server.md).
-- [HTML file preview](../docs/protocol/html-file-preview.md#which-files-a-page-can-load).
+- [Files of an HTML page](../docs/protocol/html-page-files.md).
 - The [runner README](../crates/cnd-runner/README.md).
 - The public guides [Files and changes](../src/marketing/docs/files-and-changes.md)
   and [Security](../src/marketing/docs/security.md).
@@ -86,7 +86,7 @@ Date: 23 November 2026. Chosen by Cal: **D**.
   `file:` address to a path from the top of the site. The browser then
   asks the files preview for the absolute path of the file.
   - The match is `file:` in any case, then `//`, an optional `localhost` in
-    any case, and all the `/` that follow. It becomes one `/`. So
+    any case, and one or more `/`. It becomes one `/`. So
     `file:////home/x` becomes `/home/x`, not `//home/x`, which a browser
     sends to the host `home`.
   - `file:/` before a character that is not `/` also becomes `/`, as Java
@@ -238,6 +238,11 @@ My calls, 23 November 2026, with the fixes of the options check:
   build would start a process. `fontdb` was not chosen, because it reads
   whole files and follows links to folders. `.woff` and `.woff2` files load
   by their path but get no rule. Type 1 and collection files do not load.
+- "Which files a page can load" moves to its own protocol doc,
+  `docs/protocol/html-page-files.md`, and its heading in
+  `html-file-preview.md` keeps a link. Reason: the new rules made the doc
+  longer than the target of the `documentation` skill, and the old anchor
+  keeps working.
 - The stylesheet cache is in memory and has no copy on disk. Reason: its
   first build takes under 0.1 s here.
 
@@ -248,35 +253,35 @@ Depends on: none
 State the new requirements and Sandbox files decision 1 in the protocol
 docs, the runner README, and the public guides.
 
-- [ ] Update `docs/protocol/file-server.md`: the `file:` change of HTML,
+- [x] Update `docs/protocol/file-server.md`: the `file:` change of HTML,
       CSS, and SVG replies, the mapped repository folder path, the system
       fonts and their stylesheet, the `<link>`, and the `ETag`, 304,
       length, and range rules of a changed reply. Fix the rule that every
       reply for one version of a file carries the same `ETag`.
-- [ ] Update `docs/protocol/html-file-preview.md`: a page can load a file
+- [x] Update `docs/protocol/html-file-preview.md`: a page can load a file
       by a `file:` address or an absolute path in the repository folder,
       and it can load the system fonts. Add Sandbox files decision 1, its
       accepted risks, and the cases that the change does not cover, under
       "Which files a page can load".
-- [ ] Update the file server part of `crates/cnd-runner/README.md`.
-- [ ] Update `src/marketing/docs/files-and-changes.md` and
+- [x] Update the file server part of `crates/cnd-runner/README.md`.
+- [x] Update `src/marketing/docs/files-and-changes.md` and
       `src/marketing/docs/security.md` for the files that a page can load.
       Read each public guide in full and update each sentence that restates
       a changed fact.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in
       full. Update each sentence that restates a changed fact. When the
       Terms text changes, set its effective date.
-- [ ] Check the line of the files preview in `docs/architecture.md`.
+- [x] Check the line of the files preview in `docs/architecture.md`.
 
 ## Milestone 2: Map the repository folder path
 
 Depends on: 1
 
-- [ ] Add one helper that strips a folder prefix by whole segments.
-- [ ] Read the repository folder once for each request. When the
+- [x] Add one helper that strips a folder prefix by whole segments.
+- [x] Read the repository folder once for each request. When the
       repository refuses or does not have the path, and the path starts
       with that folder, serve the rest of the path with every check.
-- [ ] Test: a mapped file, a repository file that wins, a `ciproxy2`
+- [x] Test: a mapped file, a repository file that wins, a `ciproxy2`
       prefix that does not map, a mapped dot file that gets 404, a mapped
       folder redirect, a path that the repository refuses, and the folder
       after a repository change.
@@ -285,13 +290,13 @@ Depends on: 1
 
 Depends on: 2
 
-- [ ] Add a streaming change of local `file:` addresses to `/` for HTML,
+- [x] Add a streaming change of local `file:` addresses to `/` for HTML,
       CSS, and SVG replies, as the design says, also across chunk
       boundaries.
-- [ ] Give changed replies the `ETag`, 304, length, and range rules of the
+- [x] Give changed replies the `ETag`, 304, length, and range rules of the
       design, also for `HEAD`. Move the length, 206, and 416 tests of
       `policy_tests.rs` to a type that does not change.
-- [ ] Test: a prefix split across chunks, `file:////`, `file://LOCALHOST/`,
+- [x] Test: a prefix split across chunks, `file:////`, `file://LOCALHOST/`,
       `file:/x`, `xfile:///a`, another host, a reply with no `file:`, a
       JavaScript file that does not change, `If-None-Match`, a lone
       `If-Modified-Since`, `HEAD`, and `Range`.
@@ -300,10 +305,10 @@ Depends on: 2
 
 Depends on: 2
 
-- [ ] Serve a font file under `/usr/share/fonts/` or
+- [x] Serve a font file under `/usr/share/fonts/` or
       `/usr/local/share/fonts/` as the design says. Inject the two folders,
       so that the tests use a temporary folder.
-- [ ] Test: a font, an extension in upper case, a link inside the folders,
+- [x] Test: a font, an extension in upper case, a link inside the folders,
       a link that leaves them, a font folder that is a link, a file with
       another extension, a dot segment, and a repository file that wins.
 
@@ -311,18 +316,18 @@ Depends on: 2
 
 Depends on: 3, 4
 
-- [ ] Add `ttf-parser`. Build the stylesheet with its cache, its walk
+- [x] Add `ttf-parser`. Build the stylesheet with its cache, its walk
       rules, and its escaping, as the design says.
-- [ ] Serve the stylesheet at `/__conductive/system-fonts.css` with the
+- [x] Serve the stylesheet at `/__conductive/system-fonts.css` with the
       reply rules of the design.
-- [ ] Add the `<link>` to each HTML reply with the tokenizer scan of the
+- [x] Add the `<link>` to each HTML reply with the tokenizer scan of the
       design.
-- [ ] Test the stylesheet: a static font, a variable font, an italic font,
+- [x] Test the stylesheet: a static font, a variable font, an italic font,
       a face with two family names, a family name with a quote and a
       control character, a `#` in a file name, a broken font, a table over
       the size limit, a link to a folder, the cache after a change, and no
       fonts.
-- [ ] Test the `<link>`: a doctype, a doctype in upper case, whitespace and
+- [x] Test the `<link>`: a doctype, a doctype in upper case, whitespace and
       a byte order mark before it, an `<?xml ...?>` line, `<!-->` and
       `--!>` comments, no doctype, a UTF-16 page, and more than 8 KiB of
       comments.
@@ -331,16 +336,18 @@ Depends on: 3, 4
 
 Depends on: every other milestone
 
-- [ ] Run `cargo fmt --all -- --check`,
+- [x] Run `cargo fmt --all -- --check`,
       `cargo clippy --workspace --all-targets -- -D warnings`, and
       `cargo test --workspace`. Run the Rust release build.
-- [ ] Run `npm run check:static`, for the changed guides.
-- [ ] Smoke-test a local build of the file server with a copy of the
+- [x] Run `npm run check:static`, for the changed guides.
+- [x] Smoke-test a local build of the file server with a copy of the
       incident page, behind a local proxy that sends
       `X-Content-Type-Options: nosniff`, as the Worker does. Load it in
       Chromium on the desktop, and save a screenshot under
       `.context/html-preview-sandbox-files/`.
-- [ ] Commit with Conventional Commits and push the branch.
+  Evidence: `.context/html-preview-sandbox-files/smoke/` and
+  `.context/html-preview-sandbox-files/rust-verification.md`.
+- [x] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
