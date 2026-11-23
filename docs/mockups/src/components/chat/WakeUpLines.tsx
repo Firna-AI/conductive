@@ -33,16 +33,26 @@ const endIcons = { cancelled: AlarmClockOff, 'not-started': ClockAlert }
  * The line of a pending wake-up that ended with no turn, at the place of
  * its end: a Cancel, with the alarm that is off, or a time at which it
  * could start no turn, with the clock alert. `text` holds the words of
- * `wakeUpCopy.ts`. The line starts no turn and never folds. The chat
- * centres it, as its other event lines, and a narrow chat wraps it into
- * balanced lines. It takes no fixtures, so the app can use it too.
+ * `wakeUpCopy.ts`. A cancel through the workspace tools gives `session`,
+ * the chip of the sending session, which follows the words, as the chip of
+ * a stop from a session does. The line starts no turn and never folds. The
+ * chat centres it, as its other event lines. A narrow chat wraps it into
+ * balanced lines, and the chip moves to the next line whole. It takes no
+ * fixtures, so the app can use it too.
  */
-export function WakeUpEndLine(props: { end: WakeUpEnd; text: string }) {
+export function WakeUpEndLine(props: {
+  end: WakeUpEnd
+  text: string
+  session?: ReactNode
+}) {
   const Icon = endIcons[props.end]
   return (
     <p className={lineStyles.line}>
       <Icon aria-hidden className={lineStyles.icon} size={13} />
-      <span>{props.text}</span>
+      <span>
+        {props.text}
+        {props.session === undefined ? null : <> {props.session}</>}
+      </span>
     </p>
   )
 }

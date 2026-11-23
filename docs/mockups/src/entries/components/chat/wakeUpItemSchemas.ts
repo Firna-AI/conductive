@@ -77,6 +77,17 @@ export const wakeUpItemSchema = {
     {
       type: 'object',
       additionalProperties: false,
+      required: [...required, 'from'],
+      properties: {
+        ...base,
+        state: { const: 'cancelled' },
+        /** The session link of the session whose agent cancelled it. */
+        from: { type: 'string', minLength: 1 },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
       required: [...required, 'miss'],
       properties: {
         ...base,

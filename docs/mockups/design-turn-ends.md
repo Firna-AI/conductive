@@ -144,11 +144,30 @@ the pages of `app/chat/wake-ups`.
     "Priya Raman cancelled the wake-up for tomorrow at 09:00", and "You
     cancelled" to that member. A member who left the org gives "The
     wake-up for tomorrow at 09:00 was cancelled".
-  - Both lines name the wake-up by its time, as its card did, because a
-    session can have several wake-ups.
+  - A cancel through the workspace tools names no member, as a stop
+    through the tools names none, from decision 279.
+    `app/chat/wake-ups/cancelled/from-session` shows its line: the title
+    of the card, then "Cancelled from" after a dot, then the session chip
+    of the sending session. An example is "Wake-up tomorrow at 09:00 ·
+    Cancelled from" and the chip. The words come before the chip, as
+    "Stopped from" does. A narrow chat moves the chip to the next line
+    whole. A cancel by the agent of the same session gives the same line,
+    with the chip of that session.
+  - Each of these lines names the wake-up by its time, as its card did,
+    because a session can have several wake-ups.
 - `wakeUpCopy.ts` beside them holds all these words and the words of a
   time. A copy and `read_session` give a time in UTC, from
   `wakeUpTimeUtc`, such as "24 November 2026, 09:00 UTC", because the
   Worker does not know the time zone of the reader. The module draws
   nothing and reads no fixtures, so the Worker can import it. The parts
   take no fixtures either, so the app can use them.
+  - A copy and `read_session` give the line of a cancel through the tools
+    with the session link in place of the chip, from `cancelledFromText`.
+  - They end with the pending wake-ups of the session, from
+    `pendingWakeUpsCopy`, as the chat shows them in its footer. The
+    heading "Pending wake-ups" comes first, at the level of the heading of
+    a sender. So the wake-ups do not read as the work of the last turn.
+    Then each wake-up, the soonest first, gives the title of its card in
+    italics, with its time in UTC, such as "Wake-up 24 November 2026,
+    09:00 UTC". The text that the agent set follows, as a copy gives the
+    text of a message. A session with no pending wake-up adds nothing.

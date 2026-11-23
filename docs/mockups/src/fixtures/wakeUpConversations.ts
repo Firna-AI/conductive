@@ -1,5 +1,6 @@
 import { p } from './agentText'
 import type { ChatItem } from './conversations'
+import { autocompleteSessions, sessionLink } from './sessionLinks'
 import {
   checksTurn,
   checksWakeUp,
@@ -29,6 +30,7 @@ export const wakeUpConversationKeys = [
   'wake-up-cancelled',
   'wake-up-cancelled-one',
   'wake-up-cancelled-left',
+  'wake-up-cancelled-from',
 ] as const
 
 type WakeUpConversationKey = (typeof wakeUpConversationKeys)[number]
@@ -67,6 +69,14 @@ const stagingWakeUp = pending(
   wakeUpTimes.afterMidnight,
   wakeUpTexts.staging,
 )
+
+/**
+ * The second session of Checkout address autocomplete, Debounce the address
+ * lookups to 250 ms. Its agent read the checks of #482 itself, and then
+ * cancelled the wake-up of the checks with a workspace tool. Its turn goes
+ * on, so the workspace still works.
+ */
+const canceller = sessionLink(autocompleteSessions.debounce)
 
 /** The turn that the wake-up of the checks starts, while it reads them. */
 function readingChecks(elapsed: string): ChatItem[] {
@@ -209,5 +219,9 @@ export function wakeUpConversations(history: readonly ChatItem[]) {
       reviewWakeUp,
     ],
     'wake-up-cancelled-left': [...checks, checksWakeUp({ state: 'cancelled' })],
+    'wake-up-cancelled-from': [
+      ...checks,
+      checksWakeUp({ state: 'cancelled', from: canceller }),
+    ],
   } as const satisfies Record<WakeUpConversationKey, readonly ChatItem[]>
 }

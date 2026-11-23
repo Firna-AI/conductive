@@ -2,9 +2,11 @@
  * The words of the wake-ups of an agent: a pending wake-up of a session,
  * the line that a wake-up adds at its time, and the line of a wake-up that
  * ended with no turn. The wake-up line gives one text to the chat, to the
- * agent, to the copy of a transcript, and to `read_session`. The app, the
- * Worker, and the mockups take the words from here, so the texts cannot
- * drift apart. The module draws nothing and reads no fixtures.
+ * agent, to the copy of a transcript, and to `read_session`. A copy and
+ * `read_session` also end with the pending wake-ups of the session, from
+ * `pendingWakeUpsCopy`. The app, the Worker, and the mockups take the words
+ * from here, so the texts cannot drift apart. The module draws nothing and
+ * reads no fixtures.
  *
  * A time comes in Unix milliseconds. The chat gives it in the local time of
  * the reader, from `wakeUpTime`. A text without a reader, such as a copy,
@@ -28,7 +30,10 @@ export function wakeUpText(text: string): string {
 /** The words of the pending wake-ups above the composer. */
 export const wakeUpWords = {
   cancel: 'Cancel',
-  /** The spoken name of the group of the pending wake-ups. */
+  /**
+   * The name of the group of the pending wake-ups: its spoken name in the
+   * chat, and its heading at the end of a copy.
+   */
   region: 'Pending wake-ups',
 } as const
 
@@ -54,6 +59,34 @@ export function memberCancelled(who: string, time: string): string {
 /** The line of a Cancel by a member who left the org, which names nobody. */
 export function cancelledUnnamed(time: string): string {
   return `The wake-up for ${time} was cancelled`
+}
+
+/**
+ * The words before the session whose agent cancelled a wake-up with a
+ * workspace tool, as "Stopped from" comes before the session of a stop.
+ */
+const cancelledFrom = 'Cancelled from'
+
+/**
+ * The words of the line of a cancel through the workspace tools, before
+ * the sending session: the title of the card of the wake-up, then
+ * "Cancelled from", such as "Wake-up tomorrow at 09:00 · Cancelled from".
+ * The line names no member, as a stop through the tools names none. The
+ * chat shows the chip of the sending session after the words, also when
+ * the agent of the same session cancelled the wake-up.
+ */
+export function cancelledFromLead(time: string): string {
+  return `${pendingWakeUpTitle(time)} · ${cancelledFrom}`
+}
+
+/**
+ * @public The line of a cancel through the workspace tools as one text,
+ * with `session` in place of the chip: the session link of the sending
+ * session, as a copy and `read_session` give it, such as "Wake-up 24
+ * November 2026, 09:00 UTC · Cancelled from <link>".
+ */
+export function cancelledFromText(time: string, session: string): string {
+  return `${cancelledFromLead(time)} ${session}`
 }
 
 /**
@@ -177,4 +210,35 @@ export function wakeUpTimeUtc(at: number): string {
     timeZone: 'UTC',
   }).format(at)
   return `${day}, ${clockTime(at, 'UTC')} UTC`
+}
+
+/**
+ * @public A pending wake-up, as the end of a copy gives it: its time, in
+ * Unix milliseconds, and the text that the agent set.
+ */
+export interface CopiedWakeUp {
+  at: number
+  text: string
+}
+
+/**
+ * @public The end of a copy and of `read_session`: the pending wake-ups of
+ * the session, as the chat shows them in its footer, as Markdown. The
+ * heading "Pending wake-ups" comes first, at level 2, as the heading of a
+ * sender. Then each wake-up gives the title of its card in italics, with
+ * its time in UTC, such as "Wake-up 24 November 2026, 09:00 UTC", and the
+ * text that the agent set, as a copy gives the text of a message. The
+ * soonest comes first, and two at the same time keep their order. With no
+ * pending wake-up the text is empty, so the copy ends as before.
+ */
+export function pendingWakeUpsCopy(wakeUps: readonly CopiedWakeUp[]): string {
+  if (wakeUps.length === 0) return ''
+  const soonest = [...wakeUps].sort((a, b) => a.at - b.at)
+  return [
+    `## ${wakeUpWords.region}`,
+    ...soonest.flatMap((wakeUp) => [
+      `_${pendingWakeUpTitle(wakeUpTimeUtc(wakeUp.at))}_`,
+      wakeUp.text,
+    ]),
+  ].join('\n\n')
 }

@@ -41,7 +41,8 @@ type WakeUpBase = {
  * composer. A fired one is the line that starts a turn, or that joins the
  * turn that ran at its time, as a message during a turn does. A cancelled
  * one names the member who pressed Cancel, while that member is in the
- * org. A wake-up that could start no turn names why.
+ * org. A cancel through the workspace tools names the sending session in
+ * place of a member. A wake-up that could start no turn names why.
  */
 export type WakeUpItem =
   | (WakeUpBase & {
@@ -51,6 +52,11 @@ export type WakeUpItem =
     })
   | (WakeUpBase & { state: 'fired'; during?: true })
   | (WakeUpBase & { state: 'cancelled'; by?: PersonKey })
+  | (WakeUpBase & {
+      state: 'cancelled'
+      /** The session link of the session whose agent cancelled it. */
+      from: string
+    })
   | (WakeUpBase & { state: 'not-started'; miss: WakeUpMissCause })
 
 /**
@@ -161,7 +167,8 @@ export function checksWakeUp(
   more:
     | { state: 'pending' }
     | { state: 'fired'; during?: true }
-    | { state: 'cancelled'; by?: PersonKey },
+    | { state: 'cancelled'; by?: PersonKey }
+    | { state: 'cancelled'; from: string },
 ): WakeUpItem {
   return {
     kind: 'wake-up',

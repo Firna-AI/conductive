@@ -42,8 +42,8 @@ the composer, after the turn whose agent set it. Its child pages:
   closed session, and an archived workspace.
 - `app/chat/wake-ups/cancelled` has the line of a Cancel, as the member
   who pressed it reads it. Its variants have the line as the others read
-  it, one Cancel of three wake-ups, and the Cancel of a member who left
-  the org.
+  it, one Cancel of three wake-ups, the Cancel of a member who left the
+  org, and the "Cancelled from" line of a cancel through the tools.
 
 `app/chat/work` draws the work of ended
 turns, from decisions 150 and 151: the open work of the finished turn with

@@ -1,4 +1,7 @@
-import { messageText } from '../../entries/components/chat/MessageText.mockup'
+import {
+  linkText,
+  messageText,
+} from '../../entries/components/chat/MessageText.mockup'
 import { agents } from '../../fixtures/agents'
 import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
@@ -17,6 +20,7 @@ import { PendingWakeUp, PendingWakeUps } from './PendingWakeUps'
 import { whoOf } from './SecretRun'
 import { WakeUpEndLine, WakeUpLine } from './WakeUpLines'
 import {
+  cancelledFromLead,
   cancelledUnnamed,
   cancelWakeUpLabel,
   memberCancelled,
@@ -122,7 +126,9 @@ export function PendingWakeUpList(props: {
  * A wake-up at its place in the transcript, as `viewer` reads it: the line
  * that starts or joins a turn, or the line of its end with no turn. The
  * line of a Cancel says "You" to the member who pressed it, and names no
- * member who left the org. A pending one shows as its card.
+ * member who left the org. A cancel through the workspace tools names the
+ * sending session with its chip, as a stop from a session does. A pending
+ * one shows as its card.
  */
 export function WakeUpView(props: { item: WakeUpItem; viewer: PersonKey }) {
   const { item, viewer } = props
@@ -143,6 +149,20 @@ export function WakeUpView(props: { item: WakeUpItem; viewer: PersonKey }) {
       )
     case 'cancelled': {
       const time = wakeUpTime(item.at, clockOf(viewer))
+      if ('from' in item) {
+        return (
+          <WakeUpEndLine
+            end="cancelled"
+            session={
+              <linkText.Component
+                href={item.from}
+                moklyInstance="wake-up-session"
+              />
+            }
+            text={cancelledFromLead(time)}
+          />
+        )
+      }
       const text =
         item.by === undefined
           ? cancelledUnnamed(time)
