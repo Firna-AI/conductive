@@ -84,9 +84,10 @@ for the screens.
 - At most one popover is open, and a change of the shown session closes
   it. On a computer, a press outside the popover closes it, and the focus
   goes where the press puts it. A press counts as the pointer goes down.
-  `keepPopover` of `press-outside.ts` keeps the popover at a press in it,
-  also in a part that it opens through a portal, and at a press on a mark,
-  whose click opens its own popover or menu. The shell's `usePressOutside`
+  `keepPopover` of `press-outside.ts` keeps the popover at a press in the
+  Explain layer, the popover and the menu of overlapping marks, also in a
+  part that lies in a portal. It also keeps it at a press on a mark, whose
+  click opens its own popover or menu. The shell's `usePressOutside`
   reads that mark. A sheet on a phone stays open. The popover lies in the
   layer of the app frame, as a dialog does. On
   a computer, CSS anchor positioning keeps it at the box of the open mark,
@@ -130,8 +131,10 @@ for the screens.
   reopens a closed explanation for a follow-up and for Expand, shows a
   read-only popover, and follows a linked session.
 - `PopoverDismiss.dom.test.tsx` closes the popover at a press outside it
-  on a computer, and keeps it at a press in it and on its mark. A press on
-  the text of overlapping marks keeps it while their menu opens. On a
+  on a computer, with no move of the focus, and keeps it at a press in it
+  and on its mark. A press on the text of overlapping marks keeps it while
+  their menu opens, and a press on a row of the menu keeps it until the
+  row opens its own popover. On a
   phone, the sheet stays open.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running

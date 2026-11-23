@@ -58,13 +58,16 @@ describe('a press outside the popover of an explanation', () => {
     await pointerDown(byRole('button', `${title}, Ready`))
     const kept = queryByRole('dialog', title) !== null
     await pointerDown(parentAnswer())
-    expect({ kept, closed: queryByRole('dialog', title) }).toEqual({
-      kept: true,
-      closed: null,
-    })
+    // Plain text takes no focus, so a close that moved the focus to the
+    // mark would show here.
+    expect({
+      kept,
+      closed: queryByRole('dialog', title),
+      focus: document.activeElement === document.body,
+    }).toEqual({ kept: true, closed: null, focus: true })
   })
 
-  it('keeps the popover at a press on the text of overlapping marks while their menu opens', async () => {
+  it('keeps the popover at a press on the text of overlapping marks and in their menu', async () => {
     const { events, record } = explained(
       'explain-1',
       'Manual entry still works',
@@ -88,13 +91,18 @@ describe('a press outside the popover of an explanation', () => {
     act(() => {
       text.dispatchEvent(new MouseEvent('click', { bubbles: true, ...at }))
     })
-    await waitFor(
-      () => queryAllByRole('menuitem', 'Explain "entry still"').length > 0,
-      'the menu of the overlapping marks',
-    )
-    expect({ pressed, menu: queryByRole('dialog', title) === popover }).toEqual(
-      { pressed: true, menu: true },
-    )
+    const [row] = await waitFor(() => {
+      const found = queryAllByRole('menuitem', 'Explain "entry still"')
+      return found.length > 0 && found
+    }, 'the menu of the overlapping marks')
+    const menu = row?.closest('[role="menu"]')
+    if (!row || !menu) throw new Error('The menu has no row.')
+    await pointerDown(menu)
+    await pointerDown(row)
+    expect({
+      pressed,
+      menu: queryByRole('dialog', title) === popover,
+    }).toEqual({ pressed: true, menu: true })
     lines.mockRestore()
   })
 

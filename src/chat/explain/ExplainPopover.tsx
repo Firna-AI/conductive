@@ -16,7 +16,7 @@ import popover from '../../../docs/mockups/src/components/explain/ExplainPopover
 import { usePressOutside } from '../../shell/ui/press-outside'
 import styles from './explain.module.css'
 import { PopoverHeader, SheetHandle } from './PopoverParts'
-import { keepPopover, keepsPopover } from './press-outside'
+import { keepsPopover } from './press-outside'
 
 /**
  * The popover of an explanation. On a computer it is a panel 400 px wide by
@@ -30,8 +30,8 @@ import { keepPopover, keepsPopover } from './press-outside'
  * view above it. The parent chat stays live, so no dim lies over the app.
  * The popover takes the focus when it opens, and Escape or Close closes it
  * and gives the focus back to its mark. On a computer, a press outside it
- * closes it too, and the focus goes where the press puts it. A press on a
- * mark keeps it, as `keepPopover` says.
+ * closes it too, and the focus goes where the press puts it. A press in
+ * the Explain layer or on a mark keeps it, as `keepPopover` says.
  */
 export function ExplainPopover(props: {
   /** The title of the explanation, which names the popover. */
@@ -83,7 +83,6 @@ export function ExplainPopover(props: {
           : classes(popover.panel, !props.anchor && styles.unanchored)
       }
       onKeyDown={onKeyDown}
-      onPointerDown={(event) => keepPopover(event.nativeEvent)}
       ref={ref}
       role="dialog"
       tabIndex={-1}
