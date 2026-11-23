@@ -2,7 +2,7 @@
 
 This module serves the Files and Changes API for Conductive.
 It keeps the runner's last tree and branch changes in workspace Durable Object storage.
-It joins the numbered parts of each full runner report before it stores the complete report.
+It checks the numbered parts on arrival and joins each full runner report at its last part.
 It also sends file and diff requests to the connected runner.
 Each diff request names the base branch of the workspace's last complete changes report.
 Without that report, it names the stored workspace base branch, with the repository default as a fallback.
@@ -50,18 +50,29 @@ The last complete tree and changes stay, and the projection then belongs to the 
 A reconnect of the same stream keeps its revisions and pending parts.
 
 Each new file event that passes the event checks goes to `accept(event)`.
-It checks each part against the stored parts of its report before it writes anything.
-It stores each tree or changes part as a part manifest and JSON chunks, together with the assembly state.
+It checks each part's revision, part number, and part count on arrival.
+It reads the stored copy of a repeated part to check that the copies are identical.
+For a changes report, the assembly state keeps the base branch, the counts, and the summary of part 1.
+`accept` compares those fields with each later part on arrival.
+A later part with other fields is invalid.
+An older assembly state can lack these fields.
+If the saved fields are absent or malformed, `accept` reads part 1 once when the next new part arrives.
+It saves the recovered fields with the new part.
+The counts are the current branch's `unpushedCommits` and the runner's raw status count, `uncommittedFileCount`.
+Older runners can omit either count.
+The stored report and API keep an omitted count absent.
+`accept` stores each tree or changes part with the assembly state.
+It stores each part as a manifest and JSON chunks.
 Each chunk has at most 65,536 JavaScript string characters.
 The chat backend applies the byte limits to the raw runner event.
 Its filter can then add masked display labels, so a stored part can be larger than those limits.
 A part stored as one value, without a manifest, stays readable.
 A newer revision, a refusal, and a new stream remove each obsolete part with its chunks.
-After the last part, `accept` joins the entries in part order.
-A complete changes report must have a summary that counts its files and the sum of their added and removed lines.
-It also keeps two counts across parts, storage, and publication: the current branch's `unpushedCommits`, and `uncommittedFileCount`, the raw status count of the runner.
-Each part of a report must repeat the same counts, or the part is invalid.
-Reports from older runner images can omit either count. The stored report and API keep it absent.
+When the last part arrives, `accept` loads the stored parts once.
+It joins all entries in part order.
+It refuses the last part if a path occurs more than once.
+It also refuses the last part if the report is empty and has more than one part.
+For a changes report, it checks that the summary counts the files and their added and removed lines.
 `accept` then applies the complete report to the projection and returns it for the history and the browser tabs.
 It returns `null` while parts are pending and for an identical repeated part.
 It applies a tree delta only when the delta has the next tree revision and no tree report is incomplete.
@@ -197,8 +208,9 @@ Its `evict` evicts the object, so that a test can check a reload.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
-The part joining and report repair tests run through the chat backend:
-`npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
+`runner-part-checks.test.ts` checks the storage reads, changes fields, and older assembly state.
+The part joining and report repair tests run through the chat backend.
+Run `npm run test -- worker/chat/runner-file-parts.test.ts worker/chat/runner-files-durable.test.ts worker/chat/runner-repair-parts.test.ts worker/chat/runner-receipt-crash.test.ts worker/chat/runner-grown-reports.test.ts`.
 `runner-grown-reports.test.ts` checks tree and changes parts that masking makes larger than one storage value.
 It runs on the production workspace object with the native SQLite value limit.
 File reports remain in Durable Object storage.
@@ -210,8 +222,10 @@ The D1 workspace schema holds the base branch.
 - [workspace.ts](workspace.ts) exposes the workspace integration object and RPC port.
 - [handlers.ts](handlers.ts) exposes the gated HTTP handler and its required options.
 - [state.ts](state.ts) applies snapshots and tree updates and keeps branch changes.
-- [runner-reports.ts](runner-reports.ts) joins runner report parts and applies each complete report in the caller's transaction.
-- [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind, as part manifests and chunks. Its `storedReportKeys` lists each part key and chunk key that a removal needs.
+- [runner-reports.ts](runner-reports.ts) checks runner report parts on arrival and applies each complete report in the caller's transaction.
+- [report-storage.ts](report-storage.ts) keeps the assembly state with the fields of part 1 of a changes report.
+  It stores each part as a manifest and chunks.
+  Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
 - [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
