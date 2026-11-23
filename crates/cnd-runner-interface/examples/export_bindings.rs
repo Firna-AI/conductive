@@ -5,7 +5,7 @@ use std::{env, error::Error, fs, path::Path, process::Command};
 use ts_rs::{Config, TS};
 
 use cnd_runner_interface::{
-    agents, api, chat_events, commit_author, file_changes, file_tree, files, messages, ports,
+    agents, api, chat_events, commit_author, file_changes, file_tree, files, host, messages, ports,
     preview_ingress, provider_events, runner, runner_commands, runner_credentials, runner_files,
     runner_handshake, runner_repository, sdk_helper, sdk_helper_options, services, skills, tools,
     workspaces,
@@ -45,6 +45,17 @@ fn main() -> Result<(), Box<dyn Error>> {
     file_tree::RunnerFileTreePart::export_all(&cfg)?;
     files::DiffResponse::export_all(&cfg)?;
     files::FileResponse::export_all(&cfg)?;
+    host::frames::HostFrame::export_all(&cfg)?;
+    host::literals::HostPath::export_all(&cfg)?;
+    host::literals::HostProtocolVersion::export_all(&cfg)?;
+    host::literals::HostStreamPort::export_all(&cfg)?;
+    host::messages::HostToWorker::export_all(&cfg)?;
+    host::messages::WorkerToHost::export_all(&cfg)?;
+    host::operations::HostOperation::export_all(&cfg)?;
+    host::results::HostCommandState::export_all(&cfg)?;
+    host::results::HostErrorCode::export_all(&cfg)?;
+    host::results::HostFileEncoding::export_all(&cfg)?;
+    host::results::HostResult::export_all(&cfg)?;
     messages::Attachment::export_all(&cfg)?;
     messages::MessageSender::export_all(&cfg)?;
     messages::UserMessage::export_all(&cfg)?;

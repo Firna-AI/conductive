@@ -429,8 +429,10 @@ name = "cnd-runner-interface"
 version = "0.1.0"
 dependencies = [
  "insta",
+ "internal-error",
  "serde",
  "serde_json",
+ "thiserror",
  "ts-rs",
 ]
 

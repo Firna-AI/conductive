@@ -1,0 +1,19 @@
+---
+source: crates/cnd-runner-interface/tests/host/results_tests.rs
+assertion_line: 10
+description: "Host protocol v1. Camel-case fields, exact tags, JSON numbers, and required nulls follow the host connection contract."
+expression: message
+---
+{
+  "kind": "command.status",
+  "processId": 123,
+  "state": "lost",
+  "running": false,
+  "exitCode": null,
+  "timedOut": null,
+  "stdout": "",
+  "stderr": "",
+  "stdoutNextOffset": 0,
+  "stderrNextOffset": 0,
+  "more": false
+}

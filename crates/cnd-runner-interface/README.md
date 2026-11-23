@@ -1,6 +1,6 @@
 # cnd-runner-interface
 
-This crate owns Conductive's runner, SDK helper, agent chat event, and
+This crate owns Conductive's host, runner, SDK helper, agent chat event, and
 workspace tool types. Depend on it when Rust code sends or reads these messages.
 The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
@@ -8,6 +8,7 @@ The Worker, web app, Mac app, and SDK helper import its generated TypeScript.
 
 - Keep the current runner JSON wire format stable.
 - Define protocol version 2 and workspace tool messages and their dependent types once.
+- Define the independent host protocol version 1 and its binary frame codec.
 - Generate TypeScript with serde names, optional fields, and read-only arrays.
 
 ## What This Crate Does
@@ -69,6 +70,14 @@ Browser-only events and local socket adapters remain in TypeScript.
 Secret tool contracts keep the raw Worker response separate from printable results.
 The value-bearing run response has no serializer and no debug output.
 
+The `host` modules define the machine connection's text messages, fixed
+operations, results, and error codes. The welcome version and route have
+literal types. `HostStreamPort` accepts only the terminal and preview relay
+ports. The pure frame codec checks headers, reserved flags, and payload
+limits. It keeps message parts as bytes, because a part can split a UTF-8
+code point. `HostFrame` also generates the TypeScript view used by the
+shared codec. The host protocol does not change the runner protocol.
+
 Optional fields omit `None`. Required nullable fields serialize `None` as null.
 Literal booleans and the protocol version preserve their exact JSON values.
 Wire integers use JSON numbers within JavaScript's safe integer range.
@@ -113,10 +122,17 @@ It removes old generated files before export. Commit the generated files.
 The export command does not add a gate check for generated changes.
 Wire tests cover message forms and optional or nullable fields.
 Service tests use the public JSON decoder and typed serializers.
-One test compares the TypeScript runtime limits with their Rust constants.
+Constant tests compare the TypeScript runtime limits with their Rust constants.
+Host wire snapshots cover both message directions and each operation and result.
+Rust and TypeScript frame tests use the same golden bytes.
 
 ### Key Code
 
+- [Host messages](src/host/messages.rs) define `HostToWorker` and `WorkerToHost`.
+- [Host operations](src/host/operations.rs) and [results](src/host/results.rs) define the fixed command, file, and stream contracts.
+- [Host literals](src/host/literals.rs) define the exact welcome version, route, and local stream ports.
+- [Host frames](src/host/frames.rs) encode and decode bounded binary frames.
+- [Host limits](src/host/limits.rs) define the transport budgets and close codes.
 - [Handshake](src/runner_handshake.rs) defines the two message directions and event envelope.
 - [File server](src/file_server.rs) defines the reserved loopback port and files-mark header.
 - [Commands](src/runner_commands.rs) defines turn, message, control, and report requests.
@@ -152,6 +168,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 
 ### Related Docs
 
+- [Host connection protocol](../../docs/protocol/host-connection.md)
 - [Agent runner protocol](../../docs/protocol/agent-runner.md)
 - [File server protocol](../../docs/protocol/file-server.md)
 - [Runner warnings](../../docs/protocol/runner-warnings.md)
