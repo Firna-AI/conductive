@@ -6,9 +6,9 @@ import { savedCarts, workspaceList, type Workspace } from './workspaces'
 
 /**
  * The merge queues of Acme: the pull requests of the workspaces that they
- * hold, and the facts that the fix turns of the queue name. Only the pages
- * of the merge queue draw a queue. The other pages keep the list of Acme
- * without one.
+ * hold, and the facts that the one turn of the queue and Resolve conflicts
+ * name. Only the pages of the merge queue draw a queue. The other pages
+ * keep the list of Acme without one.
  */
 
 /** The pull request of each workspace that a queue holds, by its key. */
@@ -60,8 +60,8 @@ export const releaseBranch = 'release/2026.11'
 const applePayBranch = queuedWorkspace('apple-pay').branch
 
 /**
- * The restack of #482 onto the newest head of #479, after a fix turn of
- * #479 pushed new commits and the rebase of GitHub hit a conflict.
+ * The restack of #482 onto the newest head of #479, after a fix of #479
+ * pushed new commits and the rebase of GitHub hit a conflict.
  */
 export const restackFacts: RestackFacts = {
   number: pullRequest.number,
@@ -78,4 +78,5 @@ export const queuedPromptFacts: PromptFacts = {
   ...promptFacts,
   base: applePayBranch,
   rebase: true,
+  oldBase: restackFacts.oldBase,
 }

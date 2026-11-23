@@ -161,6 +161,12 @@ export type PromptFacts = {
    * of the pull request below it, in place of a merge.
    */
   rebase?: true
+  /**
+   * In the merge queue, the old base commit, where the own commits of the
+   * branch start. Resolve conflicts then moves only those commits, with
+   * `--onto`, as the restack does.
+   */
+  oldBase?: string
 }
 
 /** The facts that the restack prompt of the merge queue names. */
@@ -200,15 +206,19 @@ const commitAndPush =
  */
 function rebaseConflicts(facts: PromptFacts): string {
   const base = `origin/${facts.base}`
-  return `Pull request #${facts.number} has conflicts with \`${facts.base}\`, and the merge queue needs a linear history. Fetch \`${base}\` and rebase this branch onto it. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`${base}\` into this branch.`
+  const rebase = facts.oldBase
+    ? `run \`git rebase --onto ${base} ${facts.oldBase}\`: \`${facts.oldBase}\` is the old base, so only the commits of this branch move`
+    : 'rebase this branch onto it'
+  return `Pull request #${facts.number} has conflicts with \`${facts.base}\`, and the merge queue needs a linear history. Fetch \`${base}\` and ${rebase}. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`${base}\` into this branch.`
 }
 
 /**
- * The fixed prompt of a restack: the fix turn that the merge queue sends,
- * as a message of the queuer, when a layer must move onto the newest head
- * of the branch below it and GitHub could not move it. It names the new
- * head and the old base commit, so that `--onto` moves only the own
- * commits of the branch, also after a squash merge below it.
+ * The fixed prompt of a restack: the one fix turn that the merge queue
+ * sends, as a message of the queuer, when a layer must move onto the
+ * newest head of the branch below it and the rebase of GitHub hit a
+ * conflict (decision 321 A). It names the new head and the old base
+ * commit, so that `--onto` moves only the own commits of the branch, also
+ * after a squash merge below it.
  */
 export function restackPrompt(facts: RestackFacts): string {
   const base = `origin/${facts.base}`

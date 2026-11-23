@@ -120,6 +120,20 @@ app can use them too. `barModel` reads the queue from the optional fact
   because it merges with the token of the member who clicks.
   `queueLineText` in `queueCopy.ts` gives the words, and `cannotMerge` in
   `queueModel.ts` gives the GitHub states that wait for a member.
+- A conflict of the queue's own move of a layer gets one agent turn as
+  the queuer, with the restack prompt, as Cal chose for decision 321 A on
+  23 November 2026. The move keeps its line, "Rebasing onto #479", with a
+  spinner, until that turn ends. When the conflict stays, the queue sends
+  no second turn. The entry then waits as an entry that cannot merge: the
+  bar keeps Resolve conflicts, and the line says "The queue waits for a
+  rebase onto #479.".
+- A layer whose cloud computer holds local work that is not pushed is not
+  ready, because a merge must not leave that work behind (decision 228).
+  The bar keeps Commit and push, or Push, in the place of Merge, as
+  outside the queue, and the line says "The queue waits for its local work
+  to be pushed.". `barQueueOf` in `queueModel.ts` gives the line the local
+  work of the bar, so the words and the button always agree. A lower layer
+  that the queue waits for still comes first in the line.
 - Merge on a queued workspace goes through the queue (decision 316 D). It
   shows only while the layer and each layer below it are in the stack and
   ready, and its label counts the layers ahead of it in the queue, such
@@ -129,9 +143,10 @@ app can use them too. `barModel` reads the queue from the optional fact
 - While a workspace is queued, Resolve conflicts asks for a rebase onto
   the branch below, with `git push --force-with-lease`, because a GitHub
   stack needs a linear history. The fact `rebase` of the prompt facts in
-  `barCopy.ts` chooses it. `restackPrompt` beside it gives the fix turn
-  that moves a layer onto the newest head below it, with
-  `git rebase --onto`, and names the new head and the old base commit.
+  `barCopy.ts` chooses it. `restackPrompt` beside it gives the one turn of
+  the queue for a conflict of its move of a layer onto the newest head
+  below it, with `git rebase --onto`, and names the new head and the old
+  base commit.
 - On a phone the compact row names the place, such as Queue 3 of 3, also
   for an entry that cannot merge. The line stands at the top of the Checks
   tab, above the buttons.

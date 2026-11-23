@@ -74,12 +74,12 @@ export function QueueAddButton(props: { beside: boolean }) {
   )
 }
 
-/** The steps that run now, so a spinner takes the place of the icon. */
-const runningSteps: ReadonlySet<QueueStep> = new Set([
-  'rebasing',
-  'fixing',
-  'merging',
-])
+/**
+ * The steps that run now, so a spinner takes the place of the icon. The
+ * move onto the layer below runs until the one turn of the queue for its
+ * conflict ends (decision 321 A).
+ */
+const runningSteps: ReadonlySet<QueueStep> = new Set(['rebasing', 'merging'])
 
 /**
  * The line of a queued workspace under the bar, and at the top of the

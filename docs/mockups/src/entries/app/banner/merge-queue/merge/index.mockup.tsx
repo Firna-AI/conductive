@@ -41,5 +41,14 @@ export const bannerMergeQueueMerge = defineScreen({
         'Checkout address autocomplete is place 1 of 3 and ready to merge. No layer lands with it, so Merge keeps its own label, Squash and merge, and the click still goes through the queue.',
       props: { queue: 'bottom-merge' },
     },
+    {
+      slug: 'local-work',
+      title: 'Local work not pushed',
+      description:
+        'Each layer is ready to merge, but the cloud computer of Checkout address autocomplete has changed files that are not committed. So the bar offers Commit and push in the place of Merge with 2 ahead, as outside the queue, and the line says "Place 3 of 3 in the merge queue. The queue waits for its local work to be pushed." After the push, the checks of #482 run again, and the queue merges it when they pass.',
+      rationale:
+        'A merge must not leave work behind in the cloud computer (decision 228). So the queue does not count a layer with local work as ready, as the bar puts Commit and push before Merge. With only commits that are not pushed, the bar offers Push, and the line stays the same.',
+      props: { queue: 'local-work', localWork: 'changes' },
+    },
   ],
 })

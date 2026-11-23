@@ -116,6 +116,8 @@ export const queueLineSchema = {
     problem: { enum: mergeProblems },
     stackedAbove: { type: 'integer', minimum: 1 },
     remove: { type: 'boolean' },
+    /** The cloud computer holds work that is not pushed. */
+    localWork: { const: true },
   },
 } as const
 

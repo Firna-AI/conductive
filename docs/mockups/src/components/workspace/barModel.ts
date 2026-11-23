@@ -248,6 +248,7 @@ export function barModel(facts: BarFacts): BarModel {
   const queue = barQueueOf(facts.queue, {
     open: isOpen(banner),
     change: facts.access === 'write',
+    localWork,
   })
   return {
     ...bar,

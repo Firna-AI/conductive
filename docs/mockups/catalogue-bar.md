@@ -69,7 +69,9 @@ the merge and Continue to the next task.
 
 `app/banner/merge-queue` draws the bar of the merge queue of the plan
 `plans/merge-queue.md`, from decisions 313 to 320 of 22 November 2026,
-and from Cal's choice of the same day that the user handles a failure.
+from Cal's choice of the same day that the user handles a failure, and
+from decision 321 of 23 November 2026, which gives a conflict of a
+restack one turn of the queue.
 Its canonical screen has Checkout address autocomplete just after Add to
 merge queue: place 3 of 3 of the queue of acme/storefront, while its
 checks run. A line under the bar names the place and the pull request
@@ -85,14 +87,22 @@ from `src/screens/queueBarStates.ts`, draws the pages. Its child pages:
   button after Fix checks, alone while the checks run, and in the
   workspace menu of the header.
 - `app/banner/merge-queue/queued` has the bottom layer, place 1, which
-  builds on main. Its `restack` variant has the restack fix turn that the
-  queue sends as a message of the queuer, with a spinner in the line. Its
-  `rebase` variant has the fix turn of a conflict, whose prompt asks for a
-  rebase onto the branch below, not a merge.
+  builds on main. Its `restack` variant has the one turn of the queue for
+  a conflict of its own move of a layer (decision 321 A). The queue sends
+  the restack prompt as a message of the queuer, and the line keeps a
+  spinner and "Rebasing onto #479" until the turn ends. Its `rebase-waits`
+  variant has the entry after that turn left the conflict: the queue sends
+  no second turn, the bar shows Resolve conflicts, and the line says "The
+  queue waits for a rebase onto #479.". Its `rebase` variant has Resolve
+  conflicts after that turn, as a message of the member who pressed it,
+  whose prompt asks for a rebase onto the branch below, not a merge.
 - `app/banner/merge-queue/merge` has Merge with 2 ahead, while each layer
   is in the stack and ready (decision 316 D). Its variants have the merge
   that runs, a Merge that waits for a lower layer, and the Merge of the
-  bottom layer, which keeps its own label.
+  bottom layer, which keeps its own label. Its `local-work` variant has a
+  cloud computer with changed files that are not committed: the bar offers
+  Commit and push in the place of Merge, as outside the queue, and the
+  line says "The queue waits for its local work to be pushed.".
 - `app/banner/merge-queue/cannot-merge` has an entry whose checks failed,
   place 2 of 3. It keeps its place, the bar keeps Fix checks, and the
   normal line says "The queue waits for its checks.", with Remove from

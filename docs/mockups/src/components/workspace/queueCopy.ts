@@ -44,7 +44,9 @@ const problemText: Readonly<Record<MergeProblem, string>> = {
  * What the queue waits for on a layer whose own pull request cannot merge
  * until a member acts, in the words of its GitHub state: its checks, a
  * rebase onto the branch below it, its review, or the rules of GitHub.
- * Nothing for a state that needs no member, such as running checks.
+ * A conflict waits for a member after the one turn of the queue did not
+ * resolve it (decision 321 A). Nothing for a state that needs no member,
+ * such as running checks.
  */
 function ownWait(
   github: GitHubSummary | null,
@@ -67,8 +69,9 @@ function ownWait(
 /**
  * What the line of a layer that waits or is ready says after its place:
  * why the queue could not merge it, the lowest layer below it that the
- * queue waits for, what the queue waits for on its own pull request, or
- * the pull request that it builds on.
+ * queue waits for, its local work, which the bar asks to push first, what
+ * the queue waits for on its own pull request, or the pull request that it
+ * builds on.
  */
 function waitText(
   line: QueueLine,
@@ -79,14 +82,17 @@ function waitText(
   if (line.waitsFor !== undefined) {
     return `The queue waits for #${line.waitsFor}.`
   }
+  if (line.localWork) return 'The queue waits for its local work to be pushed.'
   return ownWait(github, below) ?? `It builds on ${below}.`
 }
 
 /**
  * The line under the bar of a queued workspace: its place, then what its
- * step does, what the queue waits for, or the pull request below it. An
- * entry that cannot merge keeps its place, and the bar keeps its fix, as
- * outside the queue. `github` is the GitHub state of its pull request.
+ * step does, what the queue waits for, or the pull request below it. The
+ * move onto the layer below keeps its words while the one turn of the
+ * queue resolves a conflict of the move (decision 321 A). An entry that
+ * cannot merge keeps its place, and the bar keeps its fix, as outside the
+ * queue. `github` is the GitHub state of its pull request.
  */
 export function queueLineText(
   line: QueueLine,
@@ -101,8 +107,6 @@ export function queueLineText(
       return `${place} ${waitText(line, context.github, below)}`
     case 'rebasing':
       return `${place} Rebasing onto ${below}.`
-    case 'fixing':
-      return `${place} Resolving conflicts.`
     case 'merging':
       return `${place} Merging into ${trunk}.`
   }

@@ -11,17 +11,13 @@ import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSu
 /**
  * The step of an entry in the stack: it waits, for its checks or for a
  * member who fixes its pull request, it moves onto the newest head of the
- * layer below it, a turn of the queue resolves a conflict of that move, it
- * is ready to merge, or it merges. The open decision 321 says who resolves
- * the conflict of a move.
+ * layer below it, it is ready to merge, or it merges. GitHub's rebase
+ * makes the move (decision 319 B). On a conflict of the move, the queue
+ * sends one agent turn as the queuer, and the move lasts until that turn
+ * ends (decision 321 A). When the conflict stays, the entry waits for a
+ * member, as an entry that cannot merge does.
  */
-export const queueSteps = [
-  'waiting',
-  'rebasing',
-  'fixing',
-  'ready',
-  'merging',
-] as const
+export const queueSteps = ['waiting', 'rebasing', 'ready', 'merging'] as const
 
 export type QueueStep = (typeof queueSteps)[number]
 
@@ -88,9 +84,12 @@ export type QueueFacts = { kind: 'open' } | EntryFacts
 /**
  * The line under the bar of a queued workspace: its place, and the pull
  * request below it or what the queue waits for. `remove`: the viewer may
- * change the queue, so the line offers Remove from queue.
+ * change the queue, so the line offers Remove from queue. `localWork`: the
+ * cloud computer holds work that is not pushed, so the queue waits for the
+ * push before it merges the layer, as the bar puts Commit and push before
+ * Merge (decision 228).
  */
-export type QueueLine = EntryFacts & { remove: boolean }
+export type QueueLine = EntryFacts & { remove: boolean; localWork?: true }
 
 /** What the bar shows of the merge queue. */
 export type BarQueue = {
@@ -104,19 +103,23 @@ export type BarQueue = {
  * pull request that can join, which Add puts at the top of the stack
  * (decision 317). A queued workspace shows its line in its place. Only a
  * member with write access changes the queue, as for Merge (decision
- * 221), and a layer that merges cannot leave.
+ * 221), and a layer that merges cannot leave. `bar`: the pull request is
+ * open, the viewer may change the queue, and the cloud computer holds
+ * local work. The line takes the local work of the bar, so its words and
+ * Commit and push always agree.
  */
 export function barQueueOf(
   queue: QueueFacts | undefined,
-  can: { open: boolean; change: boolean },
+  bar: { open: boolean; change: boolean; localWork: boolean },
 ): BarQueue | undefined {
   if (queue === undefined) return undefined
   if (queue.kind === 'open') {
-    return can.open && can.change ? { add: true } : undefined
+    return bar.open && bar.change ? { add: true } : undefined
   }
   // A layer that merges cannot leave, so its line offers no Remove.
-  const remove = can.change && queue.step !== 'merging'
-  return { add: false, line: { ...queue, remove } }
+  const remove = bar.change && queue.step !== 'merging'
+  const local = bar.localWork ? ({ localWork: true } as const) : {}
+  return { add: false, line: { ...queue, remove, ...local } }
 }
 
 /**

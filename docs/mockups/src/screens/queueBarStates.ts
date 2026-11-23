@@ -17,12 +17,13 @@ import { failedLayer, stackQueue, twoLayers } from './queueSpecs'
  * The merge queue of the open workspace, Checkout address autocomplete
  * (#482), as values of the `queue` prop of the workspace screen: no queue,
  * the queue of acme/storefront that it can join, place 3 of 3, the bottom
- * layer, a restack, its fix turn of a conflict, Merge with the layers below
- * it, that merge, a Merge that waits for a lower layer, Merge of the bottom
- * layer, place 2 of 3 while its own pull request cannot merge, place 3 of
- * 3 above a layer that cannot merge, a ready layer whose merge failed for
- * the token of its queuer or for a refusal of GitHub, and the lower layer
- * of a member stack.
+ * layer, a restack while the one turn of the queue resolves its conflict,
+ * the wait for a rebase by a member after that turn, Merge with the layers
+ * below it, that merge, a Merge that waits for a lower layer, Merge of the
+ * bottom layer, the wait for its local work, place 2 of 3 while its own
+ * pull request cannot merge, place 3 of 3 above a layer that cannot merge,
+ * a ready layer whose merge failed for the token of its queuer or for a
+ * refusal of GitHub, and the lower layer of a member stack.
  */
 export const workspaceQueueStates = [
   'none',
@@ -35,6 +36,7 @@ export const workspaceQueueStates = [
   'merging',
   'waits',
   'bottom-merge',
+  'local-work',
   'cannot-merge',
   'above',
   'token-failed',
@@ -54,12 +56,11 @@ function storefront(...stack: LayerSpec[]): QueueSpec {
 /** A layer of a workspace of the list, other than the open one. */
 function layer(key: string, step: Step): LayerSpec {
   const github = step === 'waiting' ? 'checks-running' : 'ready-to-merge'
-  const working = step === 'rebasing' || step === 'fixing'
   return {
     key,
     step,
     github,
-    ...(working ? ({ status: 'working' } as const) : {}),
+    ...(step === 'rebasing' ? ({ status: 'working' } as const) : {}),
   }
 }
 
@@ -76,6 +77,17 @@ function unmerged(problem: MergeProblem): LayerSpec {
 const nextJs = (step: Step) => layer('next-16', step)
 const applePay = (step: Step) => layer('apple-pay', step)
 
+/**
+ * Place 3 of 3 on two ready layers, while the queue waits for a member:
+ * for a rebase after the one turn of the queue left a conflict (decision
+ * 321 A), or for a push of its local work. The bar gives the reason.
+ */
+const waitsOnTop = storefront(
+  nextJs('ready'),
+  applePay('ready'),
+  open('waiting'),
+)
+
 const specs: Readonly<Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec>> =
   {
     open: twoLayers,
@@ -85,8 +97,9 @@ const specs: Readonly<Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec>> =
       nextJs('waiting'),
       applePay('rebasing'),
     ),
+    // The move onto #479 lasts while the one turn of the queue runs.
     restack: storefront(nextJs('ready'), applePay('ready'), open('rebasing')),
-    rebase: storefront(nextJs('ready'), applePay('ready'), open('fixing')),
+    rebase: waitsOnTop,
     merge: storefront(nextJs('ready'), applePay('ready'), open('ready')),
     merging: storefront(
       nextJs('merging'),
@@ -99,6 +112,8 @@ const specs: Readonly<Record<Exclude<WorkspaceQueueState, 'none'>, QueueSpec>> =
       nextJs('waiting'),
       applePay('rebasing'),
     ),
+    // A layer whose cloud computer holds local work is not ready.
+    'local-work': waitsOnTop,
     // The bar of the open workspace gives its own GitHub state.
     'cannot-merge': storefront(
       nextJs('ready'),

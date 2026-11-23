@@ -392,7 +392,7 @@ applies to branches targetting main".
 
 Chosen by Cal on 23 November 2026: A. When the queue's own move of a layer
 has a conflict, the queue sends one agent turn as the queuer, with the
-rebase prompt. If the turn does not resolve it, the entry waits in its
+restack prompt. If the turn does not resolve it, the entry waits in its
 place for a member, as "Failures" says. The record below keeps the options
 that Cal saw.
 
@@ -513,6 +513,11 @@ line names a decision. The options check corrected them on the same day.
 - GitHub needs a linear history. While a workspace is queued, the bar's
   Resolve conflicts, Merge latest, and the restack prompts ask for a
   rebase, not a merge.
+- While a workspace is queued, Resolve conflicts names the old base commit
+  and runs `git rebase --onto`, as the restack prompt does. Reason: a plain
+  rebase onto a lower layer that a restack rewrote would replay that
+  layer's old commits and give more conflicts. Agent's call of 23 November
+  2026, after the mockups.
 
 ### The base follows GitHub
 
@@ -796,9 +801,9 @@ group and the bar as "Failures" now says.
       that says what the queue waits for, and with the reason of a failed
       token or a refused merge. Keep Fix checks and Remove from queue.
 - [x] Remove the compact phone row "Needs attention".
-- [ ] Draw the `restack` and `rebase` pages after decision 321, and the
+- [x] Draw the `restack` and `rebase` pages after decision 321, and the
       entry that waits after the agent's turn did not resolve the conflict.
-- [ ] Draw the bar line of an entry that waits for its local work.
+- [x] Draw the bar line of an entry that waits for its local work.
 - [x] Update the catalogue docs and the notes of each changed page.
 - [x] Run `npm run mockups:check`, and smoke-test the changed pages.
 

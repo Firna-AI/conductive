@@ -13,13 +13,20 @@ export const queuePaths = {
   add: 'app/banner/merge-queue/add',
   /** The bottom layer, on the default branch. */
   bottom: 'app/banner/merge-queue/queued',
-  /** The restack fix turn of a layer after the layer below it changed. */
+  /**
+   * The one turn of the queue, as the queuer, for a conflict of its own
+   * move of a layer onto the newest head below it (decision 321 A).
+   */
   restack: 'app/banner/merge-queue/queued/restack',
+  /** The entry that waits for a member after that turn left the conflict. */
+  rebaseWaits: 'app/banner/merge-queue/queued/rebase-waits',
   /** Resolve conflicts of a queued layer, with a rebase onto the layer below. */
   rebase: 'app/banner/merge-queue/queued/rebase',
   /** Merge with the layers below it, through the queue (decision 316). */
   merge: 'app/banner/merge-queue/merge',
   merging: 'app/banner/merge-queue/merge/merging',
+  /** A layer that waits for its local work to be pushed. */
+  localWork: 'app/banner/merge-queue/merge/local-work',
   /**
    * An entry that cannot merge, which keeps its place and waits for a
    * member, and the layers that wait for it.
