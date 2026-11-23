@@ -1,0 +1,45 @@
+# Upload ring passes native SVG props to the DOM
+
+- **Severity:** Low. **Likelihood:** Common. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 2 review.
+- **Location:** `src/ui/components/chat/DraftFileChip.tsx:1` and `:39-52`. `ProgressRing` in `node_modules/@firna/ui/dist/node/loader/ProgressRing.js:23-43`. The web SVG parts in `node_modules/@firna/ui/dist/node/primitives/svg.web.js:36-48`. The pin of `@firna/ui` at `package.json:36`.
+- **Reason:** The defect comes from `@firna/ui` 4.0.0, which the base of the change that found it used too.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Draft file chip:** `DraftFileChip` in `src/ui/components/chat/DraftFileChip.tsx`, the chip of a file in the text of a message box. The app and the mockup catalogue share it.
+  - **Upload ring:** the ring in the icon cell of a draft file chip. It shows the share of the file that the browser measured as sent.
+  - **Web shim:** the web build of the SVG parts of `@firna/ui`. It draws each part as a plain DOM element, in place of `react-native-svg`.
+- **Background:**
+  - `@firna/ui` is the shared UI library of Firna apps, from the repository `futex-ai/ui`. This repository pins version 4.0.0 at `package.json:36`. `.npmrc` sets `legacy-peer-deps=true`, because npm cannot install that version without it.
+  - The draft file chip draws the upload ring with `ProgressRing` from `@firna/ui/loader`, while a file uploads and the browser has measured sent bytes. Before the first measurement, it draws a `Spinner`. It is the only user of `ProgressRing` in this repository.
+  - `ProgressRing` draws the arc with a `Circle` that gets the props `originX`, `originY`, and `rotation: -90`, at lines 39-42. Its comment says that these props turn the arc a quarter turn back, so that the arc starts at 12 o'clock. `react-native-svg` reads these props on a phone.
+  - On the web, `Circle` comes from the web shim. `createChildElement` in `svg.web.js` passes each prop to a DOM `<circle>` element as it is.
+  - So React prints this warning in a development build: "React does not recognize the `originX` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `originx` instead. If you accidentally passed it from a parent component, remove it from the DOM element." It prints the same warning for `originY`.
+  - The page then holds `<circle cx="6" cy="6" fill="none" originx="6" originy="6" r="5" rotation="-90" ...>`. SVG has no such attributes, so the browser ignores them, and the arc starts at 3 o'clock.
+  - On 23 November 2026, headless Chrome drew that markup with the arc from 3 o'clock. The same circle with `transform="rotate(-90 6 6)"` started at 12 o'clock.
+  - On 23 November 2026, the strict mockup build, `npm run mockups:check`, printed each of the two warnings 32 times. A build of the base of the change that found this printed the same count.
+  - Five catalogue pages draw the ring: `app/attachments`, `app/new-workspace/files`, `app/new-workspace/dialog/files`, `components/chat/draft-file-chip/uploading`, and `components/chat/draft-text/uploading`.
+  - The app draws the chip in the composer, through `FieldAttachedChip` in `src/chat/components/chip-field/attached-file-chip.tsx`. A production build of React prints no warning, but the arc still starts at 3 o'clock.
+  - `ProgressRing` gives the ring the role `progressbar`, a label, and the share on the range 0 to 100. `progressAccessibility` in `node_modules/@firna/ui/dist/node/loader/progressValue.js` sets `aria-valuenow` and `aria-valuetext` for it.
+  - `@firna/ui` 5.1.0, the newest version on npm on 23 November 2026, has the same `ProgressRing` and the same web shim.
+  - Commit `ece84da69` added the chip as `docs/mockups/src/components/chat/DraftFileChip.tsx`. Main commit `7107425f6` moved it to `src/ui/components/chat/DraftFileChip.tsx`.
+  - `src/ui/README.md` says: "Check `@firna/ui` first, then this folder, before you create a part."
+- **Problem:** The upload ring passes `originX`, `originY`, and `rotation` to a DOM `<circle>`. React warns for the first two in each development render and in each mockup build. The browser ignores all three, so the arc starts at 3 o'clock, not at 12 o'clock as `ProgressRing` intends.
+- **Impact if no action:** Each mockup build prints 64 lines of warnings, which can hide a new warning. The app shows the share of an upload from another start point than the part intends.
+- **Root question:** How does the upload ring draw its share from 12 o'clock, with only DOM attributes on the page?
+- **Options:**
+  - **A.** Draw the upload ring in this repository, as a small part beside the draft file chip in `src/ui/components/chat/`. It draws the track and the arc as two `<circle>` elements, and it turns the arc with `transform="rotate(-90 6 6)"`. It keeps the role, the label, and the share from 0 to 100 of `ProgressRing`. It also keeps the colours of the theme and the geometry of a 12-pixel `Spinner`. Cost: a second ring beside the one of `@firna/ui`, which a later fix of `@firna/ui` makes needless. Effort: Small.
+  - **B.** Fix the web shim in `futex-ai/ui`. It turns `originX`, `originY`, and `rotation` into one `transform` attribute, and it passes no other prop that is not a DOM attribute. Release a new version, and update `@firna/ui` in this repository. Cost: a change and a release in another repository, which need access and npm credentials outside this repository. The update from 4.0.0 can bring other changes of a major version. Effort: Medium.
+  - **C.** Patch the installed `@firna/ui` in this repository with `patch-package`, as B would change it. Cost: a new dependency and a `postinstall` step. When a later update of `@firna/ui` breaks the patch, the install fails, which is a new install error. Effort: Small.
+- **Left out:**
+  - Change nothing: it fails the goal, because the warnings and the start at 3 o'clock stay.
+  - A filter that hides the warnings in the build or in the console: it fails the goal, because the arc still starts at 3 o'clock. It can also hide other warnings.
+  - A turn of the whole ring through the `style` prop of `ProgressRing`: the arc then starts at 12 o'clock. But React still warns, because `ProgressRing` still passes `originX` and `originY`.
+  - Another part of `@firna/ui`, such as `Loader`, `Spinner`, or `ProgressBar`: the first two show no share. A bar does not fit the 12-pixel icon cell that the catalogue draws.
+  - An update to `@firna/ui` 5.1.0: that version has the same defect.
+- **Wider fix:** B. It fixes the shim that each SVG part of `@firna/ui` uses on the web, so no part can pass these props to the DOM. B is blocked, because it needs a change and a release in another repository. The branch that applies A records B as its own item, with the kind Needs decision.
+- **Previous examples:** None found.
+- **Recommendation:** A. It removes the warnings and draws the arc from 12 o'clock with a change in this repository only. B best protects the codebase, but it needs a release of `@firna/ui` from `futex-ai/ui`. C adds a new install error, which needs the user.
+- **Action:** fix after merge, apply A, because the defect is older than the change that found it, and A reaches `src/ui/` outside that change.

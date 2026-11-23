@@ -15,6 +15,7 @@
     "open-a-removed-workspace",
     "create-org",
     "switch-org-account",
+    "pause-the-migration-job",
     "add-own-computer",
     "mac-command",
     "secret-request",

@@ -20,10 +20,17 @@ import { ownerSuspendedRefusal } from '../fixtures/startRefusals'
 import type { OpenableWorkspace } from '../fixtures/workspaces'
 import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import { isRunning } from './composerFor'
-import { computerRefusal, computerStartError } from './workspaceComputer'
+import {
+  computerRefusal,
+  computerStartError,
+  computerStopMessage,
+  removedArchiveComputer,
+} from './workspaceComputer'
 import { explainActivity } from './explainModel'
+import { recoveryPage } from './ownComputerPages'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
+import { firstStartRetry, recovery, restorePage } from './workspaceRecovery'
 
 /**
  * The chats of a session whose turn ended while another session of the
@@ -69,12 +76,14 @@ export function drawnState(state: WorkspaceState): WorkspaceState {
  * every member, except in a suspended org, which refuses it. After that
  * day, Restore ended, also while the delete of the cloud computer tries
  * again. A workspace that is not archived, or that names no cloud computer,
- * has none.
+ * has none. Nor has a workspace whose own computer an admin removed,
+ * because the app cannot reach its files there.
  */
 export function archiveRestore(
   state: WorkspaceState,
 ): ArchiveRestore | undefined {
   if (state.sandbox !== 'archived') return undefined
+  if (removedArchiveComputer(state) !== undefined) return undefined
   switch (state.archive) {
     case 'pending':
     case 'none':
@@ -142,12 +151,31 @@ function beforeFirstStart(state: WorkspaceState): boolean {
 }
 
 /**
+ * The archived notice of a workspace whose own computer an admin removed:
+ * the container may still exist on that server, because the app deletes
+ * nothing there, and the notice names the computer. `archiveRestore` gives
+ * it no Restore.
+ */
+function onRemovedComputer(name: string): {
+  computer: ArchivedComputerState
+  removedComputer: string
+} {
+  return { computer: 'may-exist', removedComputer: name }
+}
+
+/**
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
- * carries the message that the app saved for it. A failed first start
- * keeps the composer under its bar. An archived workspace says what it can
- * get back, what the app knows of its cloud computer, and when it leaves
- * the list or when it left it.
+ * carries the message that the app saved for it, and so does a stop after
+ * the own computer of the workspace went offline. A failed first start
+ * keeps the composer under its bar. The notice names the page of its one
+ * way forward, from the state of the workspace: Resume and the Try again of
+ * a later start open the next state of the same workspace, the Try again
+ * of a failed first start opens its retry, and Restore opens the restored
+ * workspace, each when the catalogue draws it. An archived workspace says
+ * what it can get back, what the app knows of its cloud computer, and when
+ * it leaves the list or when it left it. On an own computer that an admin
+ * removed, it says that its files stay on that server.
  */
 export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
@@ -159,22 +187,35 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
             ? orgSuspendedReason
             : (computerRefusal(state) ?? ownerSuspendedRefusal),
       }
-    case 'error':
+    case 'error': {
+      const firstStart = beforeFirstStart(state)
       return {
         problem: 'error',
         message: computerStartError(state) ?? startErrors[state.startError],
-        firstStart: beforeFirstStart(state),
+        firstStart,
+        ...recovery(firstStart ? firstStartRetry(state) : recoveryPage(state)),
       }
-    case 'stopped':
-      return { problem: 'stopped' }
-    case 'archived':
+    }
+    case 'stopped': {
+      const message = computerStopMessage(state)
+      return {
+        problem: 'stopped',
+        ...(message ? { message } : {}),
+        ...recovery(recoveryPage(state)),
+      }
+    }
+    case 'archived': {
+      const removedComputer = removedArchiveComputer(state)
       return {
         problem: 'archived',
         restore: archiveRestore(state),
         removed: isRemoved(state.archive),
         computer: archivedComputer(state.archive),
         days: archiveDays[state.workspace],
+        ...(removedComputer ? onRemovedComputer(removedComputer) : {}),
+        ...recovery(restorePage(state)),
       }
+    }
     case 'ready':
     case 'starting':
       return undefined

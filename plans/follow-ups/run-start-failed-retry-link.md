@@ -1,0 +1,44 @@
+# Failed run retry opens another workspace
+
+- **Severity:** Medium. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 2 finding checks, a new problem of the check of finding 9.
+- **Location:** The variant `start-failed` at `docs/mockups/src/entries/app/automations/run-workspace/index.mockup.tsx:41-49`. `firstStartRetry` in `docs/mockups/src/screens/workspaceRecovery.ts`. `docs/mockups/src/entries/app/new-workspace/retrying/index.mockup.tsx`. `startFailedWorkspace` and `startFailedRun` in `docs/mockups/src/fixtures/failedRunWorkspaces.ts`.
+- **Reason:** The link is older than the change that found it: the base of that change and `origin/main` have the same link.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Catalogue:** the mockup pages that Mokly 0.21.0 builds from `docs/mockups/`, which are the visual spec of Conductive. A link names another page by its path only, so it cannot carry props.
+  - **Failed run page:** the page `app/automations/run-workspace/start-failed`. It draws Review order history, W-405, the workspace of an automation run whose first start failed.
+  - **Retry page:** the page `app/new-workspace/retrying`. It draws Saved carts, W-402, a workspace that a person created, after Try again on its failed first start.
+- **Background:**
+  - The automation Review pull requests started a run for the event PR opened of pull request #486, which Priya opened. The first start of its workspace, Review order history, W-405, on the branch `calummoore/faro-2h7c`, failed 4 hours ago.
+  - The failed run page draws that workspace in the error state. The bar says "The cloud computer could not start. Try again. Your chat is saved." with Try again. The first message of the run waits in the queue. The row of the run in the Runs list opens this page, through `docs/mockups/src/screens/automationParts.tsx:41`.
+  - Its description says that Try again starts a new sandbox in the same workspace. `docs/protocol/automation-runs.md`, in "Failed runs", says the same, and adds that a failed run keeps its failed outcome after this retry. `docs/protocol/create-a-workspace.md`, in "A failed first start", says that Try again starts a new sandbox for the same workspace and branch.
+  - Try again on the failed run page opens the retry page. The retry page draws Saved carts, with three queued messages. The last one is the message that Priya sent during the error of Saved carts. The descriptions of the pages of Saved carts still call it Lisbon, the city name that the workspace had before its title.
+  - `isNew` in `docs/mockups/src/screens/workspaceTabs.ts:29-31` counts each run workspace as new. `beforeFirstStart` in `docs/mockups/src/screens/workspaceSandbox.ts` then makes its error a failed first start, because each of its messages waits in the queue.
+  - Commit `f3479cd8e` sent each failed first start to the retry page on 8 November 2026, when the catalogue drew one failed first start. Commit `d39e64eb1` added the failed run page on 10 November 2026, under the old name `app/routines/run-workspace/start-failed`, and it got the same link.
+  - On 23 November 2026, `firstStartRetry` started to choose the retry page from the workspace state. It still gives the retry page to each failed first start on the cloud computer, so the failed run page keeps its link. `sandboxNotice` in `docs/mockups/src/screens/workspaceSandbox.ts` puts that page in the notice, and the bar links to it.
+  - No drawn page shows Review order history after Try again. `app/automations/run-workspace/starting` draws the start of another run: Review address autocomplete, W-403, the run of pull request #482.
+  - The page `app/automations/run-workspace` renders five screens: the run and four variants. The `mockups` skill allows no sixth screen on a page, and a page with child pages renders one screen and links to its children.
+- **Problem:** Try again on the failed run page opens a page of another workspace, Saved carts, with the chat of the create flow. The protocol says that Try again starts a new sandbox for the same workspace.
+- **Impact if no action:** A reader who follows Try again sees the work of the run move to another workspace. A builder can take the link for the spec of the retry of a failed run.
+- **Root question:** How does the catalogue show what Try again does on the workspace of a failed run?
+- **Options:**
+  - **A.** Give Try again on the failed run page no link: `firstStartRetry` gives a run workspace no retry page. Cost: the catalogue then draws no retry of a failed run, so a reader cannot follow Try again there. The description of the page still says what Try again does. Effort: Small.
+  - **B.** Draw Review order history after Try again on a new page, and link Try again on the failed run page to it. Effort: Medium.
+    - The new page draws a new cloud computer that starts in the same workspace. The first message of the run waits in the queue, and the steps fetch pull request #486, as `startFailedRun.starting` gives them.
+    - Put the page under the failed run page, such as `app/automations/run-workspace/start-failed/retrying`. Move the four variants of `app/automations/run-workspace` into their own folders with the same paths, as the variants of `app/shell/own-computer` moved on 23 November 2026.
+    - `firstStartRetry` gives the failed run page this page.
+    - Cost: a new page, and a move of four entries.
+- **Left out:**
+  - Fewer than three approaches are real. A link must open a drawn page of the same workspace, so the catalogue draws that page, or the control gets no link.
+  - Change nothing: it fails the goal, because the link shows the work of the run in another workspace.
+  - A link to `app/automations/run-workspace/starting`: it fails the goal, because that page draws another run.
+  - A user flow of the failed run alone: it fails the goal, because the wrong link stays on the page.
+  - A test that compares each link with its source page: a test for the class is a blocked option. The catalogue also has no test harness.
+- **Wider fix:** None in this item. The wider fix of the class is option D of `plans/follow-ups/first-start-retry-page-table.md`. It gives each drawn failed first start one table row, with the page that its Try again opens. It keeps the wrong page of the failed run page until this item chooses the page of its row.
+- **Previous examples:** Until 23 November 2026, Try again after a failed first start on an own computer opened a page of the cloud computer. A fix of that day chose the page from the workspace state.
+- **Related:** `plans/follow-ups/first-start-retry-page-table.md`: the same code. Its option D gives the failed run page a row, and this item chooses the page of that row. Neither item waits for the other. When that item lands first, this item changes only the row of the failed run page.
+- **Recommendation:** B. The link then leads to the same workspace, as the protocol says, and a reader can still follow the retry of a failed run.
+- **Action:** fix after merge, apply B, because the link is older than the change that found it, and B reaches entries outside that change.

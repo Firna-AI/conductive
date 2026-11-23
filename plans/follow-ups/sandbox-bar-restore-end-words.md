@@ -1,0 +1,38 @@
+# Sandbox bar description ties Restore to the delete
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 1 review.
+- **Location:** `docs/mockups/src/entries/components/workspace/SandboxNotice.mockup.tsx:15`.
+- **Reason:** The wrong sentence came to `main` on 20 November 2026, and the change that found it fixed only its own review findings.
+
+- **Source:** Review. **Category:** Docs or spec.
+- **Terms:**
+  - **Registered part:** a shared mockup component that `defineComponent` of Mokly registers, whose description the catalogue shows as the spec of the part.
+  - **Sandbox bar:** the registered part `components/workspace/sandbox-bar`, which is the bar under the chat while the cloud computer of a workspace is not running.
+  - **Restore:** the action that brings an archived workspace back, stopped, with its files and its agent sessions.
+- **Background:**
+  - The mockup catalogue under `docs/mockups/` is part of the spec of Conductive.
+  - The description of the sandbox bar at `SandboxNotice.mockup.tsx:15` says: "An archived workspace offers Restore until the app deletes its cloud computer, and gives the day when it leaves the list."
+  - The Archive section of `docs/protocol/workspace-life.md` says: "Restore ends 14 days after the Archive. The app then deletes the sandbox, with its files and its agent sessions."
+  - The same section says: "The end of Restore does not wait for the delete. While the delete still retries, the sandbox can still exist, but the workspace offers no Restore. Reason: the last day of Restore on the bar stays true."
+  - The drawn bar follows the protocol. Before the last day, it says "Restore it until <day> to bring back its files and sessions. It leaves the list on that day." After that day, a bar whose cloud computer is still being deleted offers no Restore. These words live in `docs/mockups/src/components/workspace/sandboxProblems.ts`.
+  - The doc comment of `SandboxBar` in `docs/mockups/src/components/workspace/SandboxNotice.tsx` gives the rule correctly: "An archived workspace offers Restore until its last day while it names its cloud computer, and gives the day when it leaves the list."
+  - `docs/mockups/design-workspace.md` also says that an archived workspace offers Restore until its last day.
+  - The app follows the protocol too: `mayRestore` in `src/app/permissions.ts` offers Restore only until `restoreUntil`.
+  - Commit `061ec1961` added the description on 20 November 2026, when it registered the shared mockup parts. It copied the doc comment of `SandboxBar` of that day. Commit `1efe2db2a` fixed that doc comment on 21 November 2026, but not the copy in the description.
+  - The description says nothing about an archived workspace on an own computer that an admin removed. Whether such a workspace offers Restore waits for a choice of the user, as `docs/mockups/catalogue-own-computers.md` says. So a fix of this item leaves that case out.
+- **Problem:** The description makes the delete of the cloud computer the end of Restore. The protocol ends Restore 14 days after the Archive, also while a failed delete still retries.
+- **Impact if no action:** A reader of the catalogue can build or review a Restore that lasts until the delete. That Restore breaks the protocol while a delete retries.
+- **Root question:** How does the catalogue text of the sandbox bar say when Restore ends?
+- **Options:**
+  - **A.** Replace the sentence with the words of the doc comment of `SandboxBar`: "An archived workspace offers Restore until its last day while it names its cloud computer, and gives the day when it leaves the list." Cost: the mockups keep two copies of the rule, in the description and in the doc comment. Effort: Small.
+  - **B.** Remove the end of Restore from the description, and add `docs/protocol/workspace-life.md` to its `relatedDocs`. The description then says only that an archived workspace offers Restore, and that it gives the day when it leaves the list. Cost: a reader of the catalogue must open the protocol to learn when Restore ends. Effort: Small.
+- **Left out:**
+  - Change nothing: it fails the goal, because the spec text then contradicts the protocol.
+  - A change of the protocol, so that Restore lasts until the delete: it breaks a requirement that stays. The protocol keeps the end of Restore apart from the delete, so that the last day of Restore on the bar stays true.
+  - One shared text for the description and the doc comment: a doc comment cannot read a constant, so the second copy stays.
+- **Wider fix:** None. The wider fix is already in force: the `documentation` skill keeps each doc of the spec aligned with the protocol.
+- **Previous examples:** Commit `1efe2db2a` fixed the same words in the doc comment of `SandboxBar`, as the background says.
+- **Recommendation:** A. The catalogue then keeps a full description of what the bar draws, in the words that the doc comment and `docs/mockups/design-workspace.md` already use.
+- **Action:** fix after merge, apply A, because the sentence is older than the change that found it.

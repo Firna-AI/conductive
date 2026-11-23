@@ -1,0 +1,59 @@
+# First-start retry links come from a rule
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-23, from PR #658, round 2 finding checks: the wider fix of finding 9, option D. That change applied the direct fix, option B.
+- **Location:** `firstStartRetry` in `docs/mockups/src/screens/workspaceRecovery.ts`. The case `error` of `sandboxNotice` in `docs/mockups/src/screens/workspaceSandbox.ts`. `ownComputerPages` and `recoveryPage` in `docs/mockups/src/screens/ownComputerPages.ts`. `pageWithProps` in `docs/mockups/src/pageLookup.ts`. The entries `docs/mockups/src/entries/app/new-workspace/error/index.mockup.tsx:10-50`, `docs/mockups/src/entries/app/new-workspace/time-limit/index.mockup.tsx:8-27`, and the variant `start-failed` at `docs/mockups/src/entries/app/automations/run-workspace/index.mockup.tsx:41-49`.
+- **Reason:** The wider fix changes three catalogue entries that the change that found it did not touch, so that change applied only the direct fix.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Catalogue:** the mockup pages that Mokly 0.21.0 builds from `docs/mockups/`, which are the visual spec of Conductive. Each page has a path, such as `app/new-workspace/error`, and props.
+  - **Failed first start:** a new workspace whose first sandbox did not start. It stays in the error state with its chat, its queued messages, and Try again.
+  - **Retry page:** the page `app/new-workspace/retrying`. It draws the workspace Saved carts, W-402, after Try again: a new cloud computer starts, and three messages wait in the queue.
+  - **Workspace state:** the props of a workspace page, `WorkspaceState` in `docs/mockups/src/screens/workspaceState.ts`. Its field `computer` is `cloud`, `own`, `full`, `offline`, `went-offline`, or `removed`.
+  - **Page lookup:** `pageWithProps` in `docs/mockups/src/pageLookup.ts`. It gives the path of the drawn page whose props equal the given props, or none.
+- **Background:**
+  - A link of the catalogue names a page by its path only, so a link cannot carry props. The preview controls of a page let a reader change its props, such as Computer.
+  - `docs/protocol/create-a-workspace.md`, in "A failed first start", says that Try again starts a new sandbox for the same workspace and branch. On an own computer, Try again starts the new container on the same computer.
+  - `docs/protocol/own-computers-workspaces.md`, in "The computer of a workspace", says that a workspace never moves between computers.
+  - `docs/protocol/automation-runs.md`, in "Failed runs", says that Try again on the workspace of a failed run starts a new sandbox for the same workspace.
+  - Five drawn pages show a failed first start on the cloud computer, and their Try again opens the retry page:
+    - `app/new-workspace/error`, with its variants `member` and `files`. These pages draw Saved carts, the workspace of the retry page.
+    - `app/new-workspace/time-limit`, which draws Saved carts too.
+    - `app/automations/run-workspace/start-failed`, the failed run page. It draws Review order history, W-405, the workspace of an automation run. So its Try again opens the retry of another workspace. `plans/follow-ups/run-start-failed-retry-link.md` records that defect.
+  - Commit `f3479cd8e` added the link to the retry page on 8 November 2026, when the catalogue drew one failed first start. Until 23 November 2026, `recoveryPath` in `docs/mockups/src/components/workspace/SandboxNotice.tsx` sent each failed first start to the retry page, whatever its other props were.
+  - So with Computer set to `full` on `app/new-workspace/error`, the bar named build-02, an own computer, and Try again opened a page of the cloud computer. A review of the own computer mockups found this on 23 November 2026, and its fix applied option B below.
+  - Since then, `firstStartRetry` chooses the retry page of a failed first start from the workspace state. On the cloud computer, it gives the retry page. On an own computer, it gives the drawn page of the next state through `recoveryPage`. The catalogue draws no such page today, so Try again there has no link.
+  - The case `error` of `sandboxNotice` puts that page in the field `recoverTo` of the notice, as for Resume. The bar and the panels link to it.
+  - Resume, and Try again after a later start, open the drawn page of the next state of the same workspace. `recoveryPage` builds that state: the sandbox starts, no start error is saved, and `went-offline` becomes `offline`. It finds the page with the page lookup in the table `ownComputerPages`. With no such page, the button has no link.
+  - `ownComputerPages` holds the props of each page of a workspace on an own computer, by its path. The entries of those pages read their props from it.
+  - A generated page of the catalogue renders no more than five screens, as the `mockups` skill says.
+  - The app imports none of these mockup modules.
+- **Problem:** A rule that reads the computer chooses the retry page of a failed first start, not the drawn pages. So each failed first start on the cloud computer opens the retry page of Saved carts, whatever its other props are. The drawn failed run page then opens the retry of another workspace, and a new first-start page can repeat the defect.
+- **Impact if no action:** A reader who follows Try again after a failed first start can see another workspace, chat, or state start. The catalogue then shows a retry that the protocol forbids.
+- **Root question:** How does Try again after a failed first start keep the workspace and its computer, in each state that a preview can draw?
+- **Options:**
+  - **A.** Give the bar enough information to drop the fixed retry link on an own computer. The bar then still has two ways to choose the page of Try again. A first start opens a fixed page, and a later start opens its next state. Effort: Small.
+  - **B.** Choose the retry page where the workspace state is known. Give the bar and the panels the same page for a first start and for a later start. Keep the link of the drawn cloud first starts, and give Try again no link where the catalogue draws no matching page. This option is in force since 23 November 2026. Cost: a rule that names the computer chooses the page, so the drawn failed run page keeps the retry of Saved carts. Effort: Small.
+  - **C.** Apply B, and draw a failed first start on a full own computer and its retry, with a link between them. This adds pages beyond the failed resume on build-02, which the catalogue draws at `app/shell/own-computer/full/failed`. Effort: Medium.
+  - **D.** Give each drawn failed first start one row in a table of workspace pages, as `ownComputerPages` does. Effort: Medium.
+    - A row holds the props of a page and the page that its Try again opens.
+    - Today five rows open `app/new-workspace/retrying`: the error page of Saved carts, its `member` and `files` variants, `app/new-workspace/time-limit`, and the failed run page. So no drawn link changes.
+    - `firstStartRetry` gives a first start the page of the row whose props equal the props of the screen. Every other failed start uses `recoveryPage`, the lookup of the next state. So an own computer gets no link until the catalogue draws its retry.
+    - The three entries read their props from the table, and the fixed first-start page leaves `firstStartRetry`. Restore can use the same table later.
+    - D drops the assumption that a failed first start on the cloud always links to `app/new-workspace/retrying`, whatever its other props are. Source: the comment of `firstStartRetry`, and the text of the option that fixed Resume and Try again on own computers. An agent chose that option on 23 November 2026. It is not a user decision or a protocol rule. Its reason holds only for the drawn pages of Saved carts, and it fails on the drawn failed run page.
+    - Cost: three entries change. The failed run page keeps its wrong row until its own fix.
+- **Left out:**
+  - The current wait page of a full own computer, `app/shell/own-computer/full`, as the retry page: it fails the goal, because it draws another workspace and chat.
+  - A Computer control that offers only the cloud on the first-start pages: B is better on every point. It has the same effort, keeps the state drawable, and adds no validation. A narrower control is also a stricter validation, which the always-on rules reserve for the user.
+  - A prop of each entry that names its retry page: it fails the goal. A control that changes the computer keeps the prop and the wrong link.
+  - A test or a build check that compares each link with its source page: a test for the class is a blocked option. The catalogue also has no test harness, and D prevents the class without a check.
+  - Change nothing more, so that B stays: it fails the goal on the drawn failed run page, which still opens the retry of another workspace.
+- **Wider fix:** D. B must keep the cloud link with a rule that names the computer, so B is a direct fix in a better place. The drawn failed run page shows that the same rule also drops the workspace, and B does not reach it.
+- **Previous examples:** The Resume and Try again buttons of the workspace pages on own computers opened fixed pages until 23 November 2026. Their fix built `recoveryPage`, the lookup of the next state. The migration job pages of the operator section had the same class on the same day.
+- **Related:**
+  - `plans/follow-ups/run-start-failed-retry-link.md`: the same code. D gives the failed run page a row. That item chooses the page of the row: a new retry page of the run, or none. Neither item waits for the other. When D lands first, that item changes only the row of the failed run page.
+  - `plans/follow-ups/operator-org-links-drop-page-state.md`: the same class in the operator org pages. Its fix uses the same page lookup. A change of that lookup for one item must keep the other working.
+- **Recommendation:** D. Only D removes the fixed link from each state that no entry draws, with no rule that names the computer.
+- **Action:** fix after merge, apply D, because D changes three catalogue entries outside the change that found it, which applied the direct fix B.

@@ -1,0 +1,11 @@
+{
+  "order": [
+    "counted",
+    "pausing",
+    "paused",
+    "refused",
+    "one-org",
+    "pace",
+    "done"
+  ]
+}

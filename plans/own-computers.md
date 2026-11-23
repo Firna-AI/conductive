@@ -576,6 +576,109 @@ mockups of Milestone 1 showed.
   workspaces that run on them, without names. Reason: the design call above
   allows the number and the state, and no content.
 
+These are agent calls, made on 23 November 2026, for problems that the
+mockups of Milestone 8a showed.
+
+- The migration job has three boxes at the top of the Providers tab,
+  before New orgs: Migration job, Pace of the job, and Failures and skips.
+  Without a job, the tab shows none of them. Reason: the job is the urgent
+  part of the tab while it runs, and each setting keeps its own box and
+  its own Save.
+- "By state and kind" gives one row for each state, with the kind of its
+  step: Running with a restart, Stopped, Error, and Archived with a brief
+  start, and Org images with a refresh. A row shows how many machines the
+  job handled of its count: done, failed, or skipped. A row with no
+  machine does not show. Reason: a restart starts no machine, so the
+  expected starts count only the brief starts and the refreshes.
+- Each account shows its expected starts before its first start, and then
+  the starts that are left, with their time at the starts in each hour of
+  that account. Reason: the pace is set for each account.
+- The job waits for no operator. It counts, restarts the running machines,
+  then starts machines at the default pace. Pause job and Limit to one org
+  work while it counts. Reason: the deploy starts the job, and no rule
+  makes it wait.
+- The job states are Counting, Running, Waiting, Pausing with its count of
+  running steps, Paused, and Done. Each account shows Running, Waiting
+  until a time of day, Pausing with its count, Paused, Waiting for the
+  limit, or Done, each with a glyph. After a refusal of the provider, an
+  amber line names the cause. Reason: no state depends on colour alone,
+  and the operator sees when the starts go on.
+- Pause job, Continue job, and Remove limit act at once. Limit to one org
+  opens a field for the org ID, with Cancel. No control asks a
+  confirmation question. Reason: Pause job and Continue job undo each
+  other, and so do Limit to one org and Remove limit. The limit needs an
+  org ID, so its control opens a field for it.
+- After Pause job, the job starts no new step, and each running step goes
+  on to its end. While steps still run, the Migration job box shows
+  Pausing with the count of running steps. Each account shows its own
+  count, and the job shows the sum. An account or the job with no running
+  step shows Paused. This is an agent call of the orchestrator of the
+  primary branch, not a decision of Cal. Reason: the operator then knows
+  when no machine of the job still runs, and no step ends half done.
+- The limit takes an org ID, and the hint names the org that the ID finds.
+  A limited job keeps the counts of the whole job, with one line for the
+  progress of that org. When that org is done, the job waits for Remove
+  limit. Reason: an ID finds exactly one org, and the job does not go past
+  the limit that the operator set.
+- The line of the limit uses the rows of that org by state and kind, the
+  same rows that an account uses, restarts included. One rule over every
+  row gives the line its remaining work and its end. While the job counts,
+  the limit has no rows, and the line names the org with no progress.
+  Reason: a restart uses no start, so a count of the starts alone can end
+  the line while restarts still wait.
+- The pace is two whole-number fields for each account: the starts in each
+  hour and the machines at once. Save pace is on only after a change, and
+  it asks no question. The mockups draw a default of 30 in each hour and 3
+  at once. Milestone 9 sets the real low default. Reason: the app knows no
+  limit of an account, so it has no choices to offer.
+- The app records the time and the operator of the last change of the
+  pace, and the Pace box names them. This is an agent call of the
+  orchestrator of the primary branch, not a decision of Cal. Reason: the
+  boxes of the weights of new orgs and of the stop time already name the
+  operator and the time of their last change.
+- Each failed step shows the org, the workspace number, and the cloud
+  computer ID with Copy, then the step, its cause, and the time. The cause
+  is typed, with fixed words for each cause and neutral words for an
+  unknown cause. The box never shows raw error text. The box counts the
+  skips of each reason, and names each org with no active admin. Reason:
+  the operator section shows only counts, names, IDs, dates, and states,
+  and a guessed cause can send the operator to the wrong problem.
+- The causes of a failed step follow the rules of that step. A restart
+  fails at the download of the release, at the restart of the runner, or
+  when the runner is not ready within 3 minutes. A brief start fails at
+  the download, or when the host program does not connect within 30
+  minutes. A refresh fails at its 60-minute limit. Each step also has an
+  unknown cause. Reason: Restart, the brief start, and the time limit of a
+  refresh already name these ends.
+- A finished job keeps its boxes as a record, with no action. Its Pace box
+  shows the saved pace of each account as text, with no field and no Save
+  pace. Reason: the bootstrap covers each failed or skipped machine at its
+  next start, and a finished job starts no machine at any pace.
+- A start on a full own computer shows the step "Waiting for a free place
+  on build-02" with its time. Its failure says that build-02 is full, and
+  that no place came free within the 20-minute limit of a start, with Try
+  again. It gives no count of workspaces. Reason: the limit of decision
+  9 B reads as the limit of a start, as in the message of an offline
+  computer, and a count of workspaces can change.
+- The stop after an own computer went offline uses the stopped bar with
+  Resume. Its saved message says that the computer went offline, and that
+  Resume starts the workspace when the computer connects again. A turn
+  that ran ends with "The agent stopped". Reason: decision 10 B adds no
+  new state, and each stop without a Stop already shows that line.
+- The bar of an archived workspace on a removed own computer says that the
+  files stay on that computer, and gives no day of a delete. Until its 14
+  days end, it gives the day when the workspace leaves the list. After
+  them, its title says "Removed on" with that day. Reason: the app deletes
+  nothing on a removed computer, and every archived workspace leaves the
+  list after its 14 days.
+- The notice contract in
+  `src/ui/components/workspace/sandboxNoticeState.ts` gets two
+  optional fields: `message` on a stopped notice, and `removedComputer` on
+  an archived notice, whose words take the place of the words of the
+  archive stage. `archiveStage` stays the same. Reason: the app imports
+  this contract, so it draws the same until Milestones 12 and 13 use the
+  fields.
+
 ## Milestone 1: Mockups
 
 Tags: mockup
@@ -722,23 +825,32 @@ Depends on: 2
 
 The docs of Milestone 2 found two screens with no mockup.
 
-- [ ] Add the migration job to the Providers tab of the operator section:
+- [x] Add the migration job to the Providers tab of the operator section:
       the count by account and state, the expected starts and days, the
       pace settings, the progress, the failures, Pause, Continue, and the
       limit to one org.
-- [ ] Show the bar of a removed workspace on a removed own computer. It
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+- [x] Show the bar of a removed workspace on a removed own computer. It
       says that the files stay on that server, and gives no delete date.
       Agent call, 23 November 2026: the Remove question already says that
       the app deletes no file on the server.
-- [ ] Show the start that fails on a full own computer: its message says
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+- [x] Show the start that fails on a full own computer: its message says
       that the computer is full, and names the computer and the limit, with
       Try again (own computer decision 9 B).
-- [ ] Show a workspace that stopped after its own computer went offline:
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+- [x] Show a workspace that stopped after its own computer went offline:
       its message says that the computer went offline (own computer
       decision 10 B).
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
-- [ ] Update the design and the TODOs of this plan for each problem that
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+- [x] Update the design and the TODOs of this plan for each problem that
       the mockups show.
+      Branch: `calummoore/own-computers-milestone-8a-mockups-lg92`.
+
+The screenshots and the check logs of this milestone are in
+`.context/own-computers/m8a/`.
 
 ## Milestone 9: Old computers, and removal of the provider path
 
@@ -799,9 +911,25 @@ The second options check gave most of these TODOs. Its report is in
       `rate_limited` or capacity reply. Do the running computers first.
 - [ ] Before the first start, count the computers of each account by state
       and kind. Give an operator route with the count, the expected starts,
-      the expected days, the progress, and the failures. Add the routes that
-      pause and continue the job, and that limit it to one org. Milestone 9b
-      builds the screens.
+      the expected days, the progress, and the failures. Each failure gives
+      the typed cause of its step. While the job has a limit, the route also
+      gives the progress of that org by state and kind, restarts included.
+      Add the routes that pause and continue the job, and that limit it to
+      one org. Milestone 9b builds the screens.
+- [ ] Build the Pausing state and the record of the last change of the
+      pace, as the design calls say. After a pause, the job starts no new
+      step, and each running step goes on to its end. The operator route
+      gives the count of running steps of each account. A step is a
+      restart, a brief start, or a refresh. At each save of the pace, the
+      app records the time and the operator of the save, and the route
+      gives this last change.
+- [ ] The orchestrator of the primary branch adds three rules to "Pace and
+      control" in `docs/protocol/host-connection-migration.md`. They cover
+      Pausing with its count of running steps, the record of the last
+      change of the pace, and the cause of each failed step. In the same
+      change, it reads both legal pages and each public guide in full, as
+      `CLAUDE.md` says. It updates each sentence of them that restates a
+      changed fact.
 - [ ] Refresh each org image once on the current account of its org, as
       the daily timer does. Skip an image that is already new. Report each
       org with no active admin. Do not refresh an image on an old account.
@@ -895,7 +1023,9 @@ Depends on: 1, 12
       form.
 - [ ] Build the workspace states and the operator counts.
 - [ ] Build the bar of a removed workspace on a removed own computer, as
-      Milestone 8a draws it.
+      Milestone 8a draws it. Whether such a workspace offers Restore waits
+      for Cal's answer, which the orchestrator of the primary branch tracks
+      as its item 14. Until then, the mockups draw no Restore there.
 
 ## Milestone 14: Agent tools and guides
 

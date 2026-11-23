@@ -23,14 +23,21 @@ const archiveDaysSchema = {
 
 /**
  * The states of a sandbox that is not running, as `BarNotice`: the states
- * of `SandboxNoticeState`, with the days of an archived workspace.
+ * of `SandboxNoticeState`, with the days of an archived workspace, and the
+ * page that Resume, Try again, or Restore opens.
  */
 const noticeStates = [
   {
     type: 'object',
     additionalProperties: false,
     required: ['problem'],
-    properties: { problem: { const: 'stopped' } },
+    properties: {
+      problem: { const: 'stopped' },
+      /** The message that the app saved for the stop. */
+      message: { type: ['string', 'null'] },
+      /** The page that Resume opens: the next state of the workspace. */
+      recoverTo: { type: 'string' },
+    },
   },
   {
     type: 'object',
@@ -52,6 +59,13 @@ const noticeStates = [
       removed: { type: 'boolean' },
       /** The day of the Archive, and the day when it leaves the list. */
       days: archiveDaysSchema,
+      /**
+       * The own computer of the workspace, after an admin removed it. Its
+       * files then stay on that server.
+       */
+      removedComputer: { type: 'string' },
+      /** The page that Restore opens: the restored workspace. */
+      recoverTo: { type: 'string' },
     },
   },
   {
@@ -64,6 +78,8 @@ const noticeStates = [
       message: { type: ['string', 'null'] },
       /** The failed first start of a new workspace. */
       firstStart: { type: 'boolean' },
+      /** The page that Try again opens: the next state of the workspace. */
+      recoverTo: { type: 'string' },
     },
   },
   {

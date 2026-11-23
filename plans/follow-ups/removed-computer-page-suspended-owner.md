@@ -1,0 +1,43 @@
+# Removed computer page draws a suspended owner
+
+- **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 1 review.
+- **Location:** `docs/mockups/src/screens/workspaceOpen.ts:23-29`, the `refused` case of `sandboxNotice` in `docs/mockups/src/screens/workspaceSandbox.ts`, `docs/mockups/src/screens/workspaceComputer.ts:99-103`, `docs/mockups/src/fixtures/startRefusals.ts:11-16`, and `docs/mockups/src/entries/app/shell/own-computer/removed/index.mockup.tsx`.
+- **Reason:** The defect is older than the change that found it, and its fix reaches `workspaceOpen.ts`, which that change did not touch.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Own computer:** a Linux server that an org admin adds to Conductive, where each workspace runs in its own container.
+  - **Refused start:** a start that the app refuses until its cause changes, while the bar under the chat shows the refusal and no action.
+  - **Workspace state:** the props of a workspace page of the mockup catalogue, in `docs/mockups/src/screens/workspaceState.ts`, whose fields `sandbox`, `org`, and `computer` give the refusal.
+- **Background:**
+  - The mockup catalogue under `docs/mockups/` is the visual spec of Conductive. Each page has a path, such as `app/shell/refused`.
+  - Each refused start of the catalogue sets `sandbox: 'refused'` in the props of its page. Three pages draw the three causes of a refused start. All three draw Checkout address autocomplete, a workspace that Cal owns. Cal is the admin who is signed in.
+    - `app/shell/refused`: the operator suspended Jonas Weber, and the page draws him as the owner. The props add nothing more.
+    - `app/orgs/suspended/workspace`: the operator suspended the org. The props add `org: 'suspended'`.
+    - `app/shell/own-computer/removed`: an admin removed old-runner, the own computer of the workspace. The props add `computer: 'removed'`.
+  - The `refused` case of `sandboxNotice` in `workspaceSandbox.ts` picks the words of the refusal. It takes the first of these that applies:
+    - the words of a suspended org
+    - the words of `computerRefusal`, for a removed computer
+    - the words of a suspended owner
+  - `workspaceOpen` in `workspaceOpen.ts:23-29` picks the owner. It sets `ownerRefused` for each refused start outside a suspended org, and then draws `suspendedOwner`, Jonas Weber, as the owner. It does not read `computer`.
+  - The header shows that owner in the owner picker. For an admin, the owner picker is not read-only on this page. The owner also decides who may archive the workspace, through `mayArchiveWorkspace` at `workspaceOpen.ts:39-40`.
+  - `app/archive/computer-removed` draws the same workspace on the same removed computer after an Archive. Its sandbox is `archived`, not `refused`, so it draws Cal as the owner.
+  - The section "Removal of a computer" of `docs/protocol/own-computers-workspaces.md` says that each workspace on a removed computer keeps its chat. The app refuses each start of such a workspace, and the refusal names the computer. The removal does not change the owner.
+  - The first mockups of own computers drew this refused start on 22 November 2026, as a variant of `app/shell/own-computer`. The mockups of the migration job moved it to its own page on 23 November 2026, with the same path. The rule `ownerRefused` is older: it came with the mockups of a suspended org in commit `303780618`.
+  - The app imports neither `workspaceOpen.ts` nor `startRefusals.ts`. The app takes the owner from the workspace record.
+- **Problem:** On `app/shell/own-computer/removed`, the owner picker shows Jonas Weber, the suspended member of `app/shell/refused`, in place of Cal. The refusal on that page comes from the removed computer, not from a suspension of the owner.
+- **Impact if no action:** The visual spec draws an owner change that the removal of a computer does not make. A reader can take the refusal for a suspension of the owner, and can expect that a new owner ends it.
+- **Root question:** How does each refused start of the catalogue draw an owner that fits the cause of its refusal?
+- **Options:**
+  - **A.** In `workspaceOpen`, set `ownerRefused` only when no other cause refuses the start: also require `computerRefusal(state) === undefined`. Cost: the cause of a refusal stays in two places, so the next new cause must change both. Effort: Small.
+  - **B.** Add one function that gives the cause of a refused start: `org`, `computer`, or `owner`. It keeps the order that `sandboxNotice` uses now. `sandboxNotice` takes the words from that cause. `workspaceOpen` draws `suspendedOwner` only for the cause `owner`. Cost: a small change in two screen files. Effort: Small.
+  - **C.** Remove the owner override, so that each page draws the owner of the workspace record, as the app does. Draw the pages of a suspended owner, `app/shell/refused` and its variants, with an openable workspace whose record names Jonas Weber. Cost: those pages change their workspace, so their chat, files, and branch change too. They need a new openable fixture, or a new owner of an existing one. Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal, because the page keeps an owner that the removal does not give.
+  - A new field of the workspace state that names the cause of each refusal: B is better on every point. B reads the cause from `org` and `computer`, which exist, and a new field can disagree with them.
+- **Wider fix:** B. One function then gives the words and the owner of a refused start, so a new cause cannot draw a suspended owner by mistake.
+- **Previous examples:** None found.
+- **Recommendation:** B. It costs as little as A, and the words and the owner of each refusal then follow one rule.
+- **Action:** fix after merge, apply B, because the defect is older than the change that found it, and B reaches a file outside that change.

@@ -105,7 +105,8 @@ The [own computers](catalogue-own-computers.md) page gives the Own
 computers tab of the org settings with its child pages, the computer
 choice of New workspace and of the automation form, a workspace on an own
 computer, the own computers on the operator page of an org, and their
-flows.
+flows. The [Archive and Restore](catalogue-archive.md) page gives
+`app/archive` and its child pages.
 
 `app/attachments` shows each attached file as a chip at its place in the
 text of the message box. `app/attachments/drop` shows a drop of files into
@@ -158,8 +159,9 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
 | `src/components/`         | Layout and parts that only the mockups use, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/computerPaths.ts` for own computers |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/computerPaths.ts` for own computers, and `src/migrationPaths.ts` for the migration job of the operator |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
+| `src/pageLookup.ts`       | The drawn page whose props equal the result of a control, so that the control links only to a page with that state |
 | `../../src/ui/`           | The shared UI: the parts that the app uses too, with the screen styles and words, the design tokens in `design/`, the theme in `theme.ts`, the global stylesheet `render.css`, and Inter with its licence in `fonts/`. Its [README](../../src/ui/README.md) gives the folders |
 | `../../src/shared/brand.ts` | The name "Conductive", its domains, its repository, and DMG names |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
@@ -197,7 +199,7 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
   what lies open over them, which `src/screens/workspaceServices.tsx`
   draws. `src/screens/computerState.ts` holds the computer of the
   workspace: the cloud computer, or an own computer, which
-  `src/screens/workspaceComputer.ts` names in the start and in the header. The pages of the services start from `servicesWorkspace` in
+  `src/screens/workspaceComputer.ts` names in the start, the stop, the archive, and the header. The pages of the services start from `servicesWorkspace` in
   `src/screens/servicesWorkspace.ts`.
 - A flow (`defineUseCase`) lists the paths of existing screens. Each screen
   that a flow uses names the flow in `useCasePaths`.

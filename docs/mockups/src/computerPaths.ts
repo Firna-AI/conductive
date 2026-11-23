@@ -2,8 +2,8 @@
  * The screens of own computers: Linux servers that an admin adds to an org,
  * where each workspace runs in its own container. The Own computers tab of
  * the org settings lists them, with the page of each computer and the Add
- * computer dialog. New workspace, the automation form, the workspace, and
- * the operator page of an org show them too.
+ * computer dialog. New workspace, the automation form, the workspace, its
+ * archive, and the operator page of an org show them too.
  */
 export const computerPaths = {
   settings: {
@@ -49,9 +49,18 @@ export const computerPaths = {
   workspace: {
     starting: 'app/shell/own-computer',
     menu: 'app/shell/own-computer/menu',
+    wentOffline: 'app/shell/own-computer/went-offline',
+    wentOfflineDuringTurn: 'app/shell/own-computer/went-offline/during-turn',
     waiting: 'app/shell/own-computer/waiting',
+    waitingStoppedTurn: 'app/shell/own-computer/waiting/stopped-turn',
     offline: 'app/shell/own-computer/offline',
+    full: 'app/shell/own-computer/full',
+    fullFailed: 'app/shell/own-computer/full/failed',
     removed: 'app/shell/own-computer/removed',
+  },
+  archive: {
+    computerRemoved: 'app/archive/computer-removed',
+    computerRemovedLeft: 'app/archive/computer-removed/removed',
   },
   operatorOrg: 'app/operator/org/own-computers',
 } as const

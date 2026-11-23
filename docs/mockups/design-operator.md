@@ -5,9 +5,9 @@ layouts, the design tokens, and the shared parts. This page gives the
 tabs, the tables, the long runs, the Waitlist tab, the codes, and the
 approval email of the operator section. It also gives Suspend, Lift, and
 Approve, the daily chart, the notice of a pause, the waitlist switch, the
-Providers tab, the account of each org, the switch of that account, the
-own computers of an org, and the account choice of an operator on Create
-org.
+Providers tab, the migration job of the host connection, the account of
+each org, the switch of that account, the own computers of an org, and the
+account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
   Invite codes, Providers, and Settings, from `OperatorPage` in
@@ -164,6 +164,96 @@ org.
   on them now, in the rows of the workspaces by state. A state with no
   computer stays quiet. The box names no computer and shows nothing of its
   work, and an org without own computers shows no box.
+- The migration job of the host connection has three boxes at the top of
+  the Providers tab, from own computer decision 7 D. They show only counts,
+  names, IDs, dates, states, and the pace, and nothing of the work in a
+  machine. Without a job, the tab shows none of them.
+  - `MigrationJobSection` in `src/components/operator/MigrationJob.tsx`
+    draws the Migration job box: its state with its glyph beside the
+    title, what the job does, and its facts in `DetailList`: Started,
+    Orgs, and Paused or Done when they apply. Paused gives the time and
+    the operator of the pause. While steps still run, the same row is
+    named Pause asked. A limit to one org adds a
+    line with the work that is left of that org: each restart, brief
+    start, and refresh, over its rows by state and kind, as `workLeft`
+    counts them. The line says that the org is done only when that work
+    ended. While the job counts, the org has no rows yet, and the line
+    says that the job works only on that org after the count. Until the
+    count ends, a line says so in place of the accounts, in each state,
+    also after a pause.
+  - One rule in `migrationModel.ts` derives what the job and each account
+    show, from the facts that the route gives and the settings. After
+    Pause job, the job starts no new step, and each running step goes on
+    to its end. An account with running steps shows Pausing with their
+    count, and the job shows Pausing with the sum. With no running step,
+    both show Paused. A line in the box then says what Pausing means. A
+    pause keeps a wait after a refusal and a limit. `accountStage` and
+    `jobState` hold the rule, so the app can import it.
+  - `JobAccounts` beside it gives each account by its ID, with the state
+    of the job there as `StatusText` draws it: a spinner while it runs or
+    pauses, an hourglass while it waits after a refusal of the provider or
+    for the limit, a pause mark when it is paused, and a check when it is
+    done. A row for each state and kind of
+    machine gives how many of the count the job handled. The rows look
+    like the rows of the workspaces by state. A row with no machine does
+    not show, and a row that the job handled whole takes the muted colour.
+  - A line under the rows of an account gives the expected starts before
+    the first start, or the starts that are left, with their time at the
+    pace of the account. A refusal adds a line in the deep amber of a
+    warning, which names the account by its ID. The line stays while the
+    job pauses, because a pause keeps the wait.
+  - The actions sit at the bottom of the box: Limit to one org, or Remove
+    limit, then Pause job, or Continue job in the primary colour. None asks
+    first, because each one undoes the other. A finished job has none.
+    `LimitDialog` asks for the ID of the org with `ConfirmDialog`, and its
+    hint names the org that the ID finds.
+  - Each page of the job has one state, in `src/fixtures/migrationRecord.ts`,
+    in two groups. The settings are the pause request, the limit with its
+    question, the saved pace, and the typed pace. Only a control changes
+    them:
+    - Pause job and Continue job change the pause request.
+    - Limit to one org, Remove limit, Cancel, and Limit job change the
+      limit.
+    - Save pace turns the typed pace into the saved pace.
+  - The facts are what the time of the page decides. They are the work
+    done, a wait after a refusal, the running steps of each account, and
+    the times of the actions before it. No control changes them, so each
+    action takes the time of its page. A pause after Save pace then cannot
+    show an earlier time than the save. The helpers of the counts, the waits, and
+    the times read only the facts. `src/fixtures/migrationMoments.ts` gives
+    the time of each moment.
+  - A control links only to the page whose state equals its result, from
+    `migrationPages` in `src/screens/migrationPages.ts`, which the entries
+    also read. With no such page, `Linked` draws the control with no link,
+    as Continue job on the paused job, whose result comes at a later time.
+  - The Pace of the job box gives each account a row with two fields of
+    whole numbers, the starts in each hour and the machines at once, from
+    `PaceFields`. A narrow box puts the fields under the ID. Its line gives
+    the low default. Save pace is on only after a change, and it asks no
+    question. A failed save keeps the typed pace and shows its error under
+    the fields. A line gives the last change, as the New orgs box does.
+  - A finished job shows the Pace box as part of its record. `PaceRecord`
+    beside `PaceFields` gives the saved pace of each account as text, in
+    `DetailList`, with no field and no Save pace. The box takes its mode
+    from the run of the job, and its values from the saved pace, never
+    from a typed one.
+  - The Failures and skips box, from `JobProblemsSection`, lists each step
+    that failed, newest first: the org, the workspace number, and the
+    cloud computer ID with Copy, then the step with its cause, and when,
+    after the alert glyph in red. Each cause has fixed words for its step,
+    from the rules of that step. A cause that the job does not know gets
+    neutral words that name only the step. The box never shows the text
+    of an error. A heading counts the failed steps, and another
+    counts the skips. The skips show as a count for each reason that has
+    one. A line names each org with no active admin. The box says that
+    each such machine gets the host program at its next start.
+  - `migrationCopy.ts` and `jobProblemsCopy.ts` hold the words.
+    `migrationModel.ts` holds the data of the job, the rules of its
+    counts, and the rule of what it shows. `jobProblemsModel.ts` holds the
+    data of the failures and the skips. Each count takes its singular or plural word from `counted` in
+    `src/components/common/counted.ts`. They import no fixture, and
+    neither do the parts other than `LimitDialog`, so the app can share
+    them.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
   choice live in

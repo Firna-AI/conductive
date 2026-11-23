@@ -107,7 +107,8 @@ plan limits.
   days after the Archive. The bar gives that last day. Every member of an
   org that is not suspended sees Restore, from decision 2 of PR #138, as
   `app/command-palette/actions/archived` shows. After the last day, nothing
-  offers Restore.
+  offers Restore. Nothing offers it either for a workspace whose own
+  computer an admin removed, as `app/archive/computer-removed` shows.
 - On the last day of Restore, the workspace also leaves the list, from
   decision 518 D of 13 November 2026: the Archived group, its count, and
   the palette leave it out. The app keeps all its data, so a direct link
