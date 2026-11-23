@@ -26,6 +26,7 @@ import {
   removedArchiveComputer,
 } from './workspaceComputer'
 import { explainActivity } from './explainModel'
+import { recoveryPage } from './ownComputerPages'
 import { isNew } from './workspaceTabs'
 import type { WorkspaceState } from './workspaceState'
 
@@ -161,14 +162,25 @@ function onRemovedComputer(name: string): {
 }
 
 /**
+ * The page that Resume or Try again opens, as a part of the notice, when
+ * the catalogue draws the next state of the same workspace.
+ */
+function recovery(state: WorkspaceState): { recoverTo?: string } {
+  const page = recoveryPage(state)
+  return page ? { recoverTo: page } : {}
+}
+
+/**
  * The bar under the chat while the sandbox is not running. A refused start
  * shows the words of its cause: the org or the owner. A failed start
  * carries the message that the app saved for it, and so does a stop after
  * the own computer of the workspace went offline. A failed first start
- * keeps the composer under its bar. An archived workspace says what it can
- * get back, what the app knows of its cloud computer, and when it leaves
- * the list or when it left it. On an own computer that an admin removed,
- * it says that its files stay on that server.
+ * keeps the composer under its bar. Resume and the Try again of a later
+ * start open the next state of the same workspace, when the catalogue
+ * draws it. An archived workspace says what it can get back, what the app
+ * knows of its cloud computer, and when it leaves the list or when it left
+ * it. On an own computer that an admin removed, it says that its files
+ * stay on that server.
  */
 export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
   switch (state.sandbox) {
@@ -180,15 +192,22 @@ export function sandboxNotice(state: WorkspaceState): BarNotice | undefined {
             ? orgSuspendedReason
             : (computerRefusal(state) ?? ownerSuspendedRefusal),
       }
-    case 'error':
+    case 'error': {
+      const firstStart = beforeFirstStart(state)
       return {
         problem: 'error',
         message: computerStartError(state) ?? startErrors[state.startError],
-        firstStart: beforeFirstStart(state),
+        firstStart,
+        ...(firstStart ? {} : recovery(state)),
       }
+    }
     case 'stopped': {
       const message = computerStopMessage(state)
-      return message ? { problem: 'stopped', message } : { problem: 'stopped' }
+      return {
+        problem: 'stopped',
+        ...(message ? { message } : {}),
+        ...recovery(state),
+      }
     }
     case 'archived': {
       const removedComputer = removedArchiveComputer(state)

@@ -2,7 +2,7 @@ import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { defined } from '../../defined'
 import type { ArchiveDays } from '../../fixtures/archive'
-import { computerPaths, paths } from '../../paths'
+import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
@@ -19,33 +19,43 @@ import {
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 
+/** A stop or a failed start, whose bar offers Resume or Try again. */
+type RecoverableNotice = Extract<
+  SandboxNoticeState,
+  { problem: 'stopped' | 'error' }
+>
+
 /**
- * A notice as the mockups draw it: the notice of the contract, and for an
- * archived workspace the days that its bar gives.
+ * A notice as the mockups draw it: the notice of the contract, for an
+ * archived workspace the days that its bar gives, and for a stop or a
+ * failed start the page that Resume or Try again opens, when the catalogue
+ * draws the next state of the same workspace.
  */
 export type BarNotice =
-  | Exclude<SandboxNoticeState, ArchivedNotice>
+  | Extract<SandboxNoticeState, { problem: 'refused' }>
+  | (RecoverableNotice & { recoverTo?: string })
   | (ArchivedNotice & { days: ArchiveDays })
 
 /** What a panel shows: the notice of the bar, or the wait of a start. */
 export type PanelNotice = BarNotice | { problem: 'starting' }
 
 /**
- * The screen that the one way forward leads to, when the mockups draw it:
- * the start of a new cloud computer after the one failed first start that
- * they draw, the workspace back in its section after a Restore, and the
- * resume that waits for lab-server after the stop that it went offline,
- * the one stop with a saved message that they draw.
+ * The screen that the one way forward leads to, when the mockups draw it.
+ * A Restore and the retry of the one failed first start that they draw
+ * open fixed pages. Resume and the other Try again open the page that the
+ * notice names: the next state of the same workspace.
  */
 function recoveryPath(state: BarNotice): string | undefined {
-  if (state.problem === 'archived') return paths.restored
-  if (state.problem === 'error' && state.firstStart === true) {
-    return paths.retrying
+  switch (state.problem) {
+    case 'archived':
+      return paths.restored
+    case 'error':
+      return state.firstStart === true ? paths.retrying : state.recoverTo
+    case 'stopped':
+      return state.recoverTo
+    case 'refused':
+      return undefined
   }
-  if (state.problem === 'stopped' && state.message) {
-    return computerPaths.workspace.waiting
-  }
-  return undefined
 }
 
 /** The one way forward, as a link where the mockups draw its screen. */

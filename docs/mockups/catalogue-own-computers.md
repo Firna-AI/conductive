@@ -79,8 +79,9 @@ after an admin removed old-runner, the own computer of its runs.
 
 `app/shell/own-computer` has Saved carts, which starts on build-01: the
 first step of the start names it. Its states moved into their own folders
-and kept their paths, so the page shows only its canonical screen. Its
-child pages:
+and kept their paths, so the page shows only its canonical screen. Resume
+and Try again on these pages open the next state of the same workspace,
+with every other part kept. Its child pages:
 
 - `menu` has the menu of the header state, whose first line says that
   the workspace runs on build-01.
@@ -89,14 +90,18 @@ child pages:
   minutes, the workspace shows stopped, and the saved message says that
   lab-server went offline (decision 10 B). Resume leads to `waiting`. Its
   `during-turn` variant has the same stop while the agent worked, so the
-  chat says "The agent stopped".
-- `waiting` has a resume that waits for lab-server, which is offline.
+  chat says "The agent stopped". Its Resume leads to the `stopped-turn`
+  variant of `waiting`.
+- `waiting` has a resume that waits for lab-server, which is offline. Its
+  `stopped-turn` variant keeps the chat of the turn that stopped, with no
+  pull request bar.
 - `offline` has the start that failed at the 20-minute limit while
-  lab-server stayed offline, with Try again.
+  lab-server stayed offline, with Try again, which leads to `waiting`.
 - `full` has a resume that waits for a free place on build-02, which runs
   4 of its 4 workspaces (decision 9 B). Its `failed` variant has the start
   that failed at the 20-minute limit. Its saved message says that build-02
-  is full and names the limit, with Try again.
+  is full and names the limit, with Try again, which leads back to the
+  wait.
 - `removed` has the refused start of a workspace whose own computer an
   admin removed.
 

@@ -16,7 +16,7 @@ import {
   onlyOrg,
   pausedValue,
 } from './migrationCopy'
-import type { JobState, MigrationJob } from './migrationModel'
+import { workLeft, type JobState, type MigrationJob } from './migrationModel'
 
 /** The glyph and the colour of each state, so no state is colour alone. */
 const stateLooks: Readonly<
@@ -55,9 +55,11 @@ function jobDetails(job: MigrationJob): Detail[] {
  * The box of the migration job on the Providers tab of the operator (own
  * computer decision 7 D): the state of the job with its glyph, what it
  * does, its facts, the line of its limit to one org, and the job on each
- * provider account. While it counts, a line says so in place of the
- * accounts. The screen gives the actions, such as Pause job. It imports no
- * fixture, so the app can use it too.
+ * provider account. The line of the limit takes the work that is left in
+ * every row of that org, restarts included, so it says Done only when
+ * each step there ended. While the job counts, a line says so in place of
+ * the accounts. The screen gives the actions, such as Pause job. It
+ * imports no fixture, so the app can use it too.
  */
 export function MigrationJobSection(props: {
   job: MigrationJob
@@ -82,7 +84,10 @@ export function MigrationJobSection(props: {
       <DetailList rows={jobDetails(job)} />
       {job.limit ? (
         <SectionText>
-          {limitLine(job.limit.org, job.limit.handled, job.limit.starts)}
+          {limitLine(
+            job.limit.org,
+            job.limit.rows ? workLeft(job.limit.rows) : null,
+          )}
         </SectionText>
       ) : null}
       {job.state === 'counting' ? (

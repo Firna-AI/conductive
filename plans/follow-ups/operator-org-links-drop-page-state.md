@@ -1,0 +1,49 @@
+# Operator org controls open pages with other state
+
+- **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 1 finding checks.
+- **Location:** `docs/mockups/src/screens/OperatorOrgScreen.tsx:80-93`, `:115-125`, and `:156-164`. `docs/mockups/src/screens/operatorOrgLinks.ts:33-45` and `:60-71`. The entries under `docs/mockups/src/entries/app/operator/org/`.
+- **Reason:** The links are older than the change that found them, and their fix reaches the operator org pages, which that change did not touch.
+
+- **Source:** Review. **Category:** Mockup.
+- **Terms:**
+  - **Operator org page:** the page of one org in the operator section of the catalogue, at `app/operator/org` or a child page, which `OperatorOrgScreen` draws.
+  - **State of a page:** the six props of an operator org page: `status`, `switch`, `build`, `accounts`, `computers`, and `dialog`, the question that is open over the page.
+  - **Plain Hexwave:** the state `hexwavePage`, which draws the org Hexwave in use on `boat`, with two accounts and no switch, build, own computer, or question.
+- **Background:**
+  - Mokly 0.21.0 builds the catalogue as static pages. A control links to another page by its path only, so a link cannot carry props.
+  - `OperatorOrgScreen.tsx:80-93` gives two fixed sets of paths: `live` and `deleted`. Each page of an org that is not deleted uses `live`, whatever its other fields hold.
+  - `OrgAction` at `OperatorOrgScreen.tsx:115-125` links Suspend org to `live.suspend`, the path `app/operator/org/suspend`. That page draws plain Hexwave with the Suspend question over it.
+  - So Suspend org opens the question over plain Hexwave from each page below. Each entry names the part that the page behind the question loses:
+    - `app/operator/org/own-computers`: the Own computers box.
+    - `app/operator/org/switch-build`: the switch build that runs.
+    - `app/operator/org/switch-build/failed`: the failed switch.
+    - `app/operator/org/switch-waiting`: the waiting switch, and the build of the org that runs.
+    - `app/operator/org/switch-waiting/no-admin`: the waiting switch, and the suspension of its only admin.
+    - `app/operator/org/switched`: the switch that changed the account to `e2b`.
+  - Two question pages, `app/operator/org/switch/running-build` and `app/operator/org/switch-build/stop`, hold the same link behind their question.
+  - `accountQuestion` at `operatorOrgLinks.ts:60-71` links Switch account to `app/operator/org/switch`, a question over plain Hexwave. It does so also from `app/operator/org/own-computers` and from `app/operator/org/switch-build/failed`. The Own computers box and the failed switch then leave the page behind the question.
+  - `switchLinks` at `operatorOrgLinks.ts:33-45` sends Cancel of the switch question to `app/operator/org`, or to `app/operator/org/suspended` for a suspended org. On `app/operator/org/switch/running-build`, Cancel then drops the build that runs.
+  - `SuspendDialog` at `OperatorOrgScreen.tsx:156-164` sends Cancel to `live.page` and Suspend to `live.suspended`. These fixed links fit only the two Suspend questions that exist: over plain Hexwave, and over the deleted Hexwave with the `deleted` paths.
+  - The catalogue already draws some of the results that these controls could reach. `docs/protocol/switch-account.md` says that a suspension during a switch build ends that build, and that the switch then waits for Lift. `app/operator/org/switch-waiting/suspended` draws that state.
+  - Lift already picks its page from the state of the org: `liftOf` at `operatorOrgLinks.ts:78-97` opens the Lift question of a switch that waits for Lift.
+  - The migration job pages under `app/operator/providers/migration` had the same class. On 23 November 2026, their fix gave each page one state record, and a lookup that finds the drawn page whose props equal a state. A control links only to such a page. Otherwise `Linked` in `docs/mockups/src/components/common/ScreenLink.tsx` draws it with no link. At the time of writing, the lookup is `pageWithProps` in `docs/mockups/src/pageLookup.ts`.
+  - A generated page of the catalogue renders no more than five screens, as the `mockups` skill says.
+  - The app imports neither `OperatorOrgScreen.tsx` nor `operatorOrgLinks.ts`. In the app, Suspend and Switch account open their questions over the page where they start.
+- **Problem:** Suspend org on six operator org pages, and Switch account on two, open a question over plain Hexwave. The page behind the question loses the own computers, the switch, or the build that the first page showed. Cancel of the switch question on `app/operator/org/switch/running-build` also returns to a page with other state.
+- **Impact if no action:** A reader who follows these links sees the own computers or the switch disappear when a question opens. The catalogue then shows a sequence that the app does not have.
+- **Root question:** How does each control of an operator org page open a page that keeps each part of the org that it does not change?
+- **Options:**
+  - **A.** Add the missing pages, and link each control by hand to the page of its own state. Examples are a Suspend question over the own computers and over each switch state, and the page after each such Suspend. Cost: about a dozen new screens, over several pages because of the limit of five. Each new page or control needs its own links again. Effort: Large.
+  - **B.** Draw each of these controls with no link, through `Linked`, where the catalogue draws no page with its result. Keep each link that already leads to the right page, such as Suspend org on `app/operator/org`. Cost: those controls do nothing when a reader clicks them, and a new page can bring the class back. Effort: Small.
+  - **C.** Give each operator org page one state record, which its entry reads. Each control derives its next state from the record of its page. It links only to a page whose record equals that state, through the lookup of the migration job pages. Otherwise `Linked` draws it with no link. Apply this to Suspend org, Lift, Switch account, Stop switch, and the Cancel and the result of each question. Cost: the props of the entries under `app/operator/org` change. Until pages exist for their results, the controls of B lose their links too. Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal, because the wrong links stay.
+  - A user flow, or text under the screens, alone: it fails the goal, because the wrong links stay.
+  - Links that carry props: Mokly 0.21.0 names a page by its path only, and Mokly is outside this repository.
+  - A test of each link against its first page: a test for the class is a blocked option. The catalogue also has no test harness, and C prevents the class without a test.
+- **Wider fix:** C. A link can then name only a page whose state matches, so a new page or a new control cannot bring the class back.
+- **Previous examples:** The migration job pages, and the Resume and Try again buttons of the workspace pages on own computers, had the same class. Their fixes of 23 November 2026 use the pattern of C.
+- **Recommendation:** C. It reuses the lookup of the migration job pages. It removes only links that lead to a wrong page now, so the catalogue loses no correct sequence.
+- **Action:** fix after merge, apply C, because the links are older than the change that found them, and C reaches files that change did not touch.

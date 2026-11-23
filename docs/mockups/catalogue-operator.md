@@ -190,26 +190,34 @@ and on each machine that a workspace keeps. It also refreshes each org
 image once. `app/operator/providers/migration` has the Providers tab while the
 job runs on every org, with its three boxes before New orgs. The counts are
 those of the Overview, so every workspace runs on `boat`, and `e2b` has
-only the org image of Acme Labs. Its child pages:
+only the org image of Acme Labs. Each control changes one part of the job
+and keeps the others. It links only to a page that draws its result, and
+else it has no link. Its child pages:
 
 - `counted` has the job before its first start, while it restarts the
   running machines, with the expected starts and their time on each
-  account. Its `counting` variant has the count itself.
-- `paused` has the job that an operator paused, with Continue job. Cal has
-  not chosen yet what the box shows while steps still run after a pause,
-  so it shows Paused at once.
+  account. Its `counting` variant has the count itself. Pause job and
+  Limit to one org have no link there, because the catalogue draws no
+  pause and no limit during the count.
+- `paused` has the job that an operator paused, with Continue job. Its
+  `limited` variant keeps the limit to Hexwave. Its `limit-question`
+  variant has the question over the paused job. Its `saved-pace` variant
+  keeps the saved pace of `boat`. Cal has not chosen yet what the box
+  shows while steps still run after a pause, so it shows Paused at once.
 - `refused` has `boat` waiting until 11:52 after a refusal for its rate
   limit. Its `capacity` variant has a refusal for its capacity.
 - `one-org` has the question before the limit to one org, with the ID of
-  Hexwave. Its `limited` variant has the job limited to Hexwave, and its
-  `limited-done` variant has Hexwave done while the other orgs wait.
+  Hexwave. Its `limited` variant has the job limited to Hexwave, with the
+  steps of Hexwave that are left, restarts included. Its `limited-done`
+  variant has Hexwave done while the other orgs wait.
 - `pace` has a faster pace of `boat` that the operator typed and has not
   saved. Its `saved` variant has it after Save pace, with the time and the
   operator, and its `not-saved` variant has a save that failed. Cal has
   not chosen yet whether the app records each change of the pace, or
   which values an operator can save. So `saved` draws the recommended
   line of the last change, and no field shows a refusal.
-- `done` has the finished job, with its failures and skips as a record.
+- `done` has the finished job, with its saved pace as text and its
+  failures and skips as a record.
 
 The child pages of `app/operator/user` follow. The first two were variants
 of `app/operator/user` and kept their paths:

@@ -155,6 +155,7 @@ a dropped folder that the browser cannot read. The app shares these words.
 | `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/computerPaths.ts` for own computers, and `src/migrationPaths.ts` for the migration job of the operator |
 | `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
+| `src/pageLookup.ts`       | The drawn page whose props equal the result of a control, so that the control links only to a page with that state |
 | `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 

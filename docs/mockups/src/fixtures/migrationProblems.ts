@@ -9,15 +9,19 @@ import type {
   JobProblems,
   SkipReason,
 } from '../components/operator/migrationModel'
-import type { JobMoment } from './migrationJob'
+import type { JobRecord } from './migrationRecord'
 
-/** The steps that failed by 24 Nov at 11:40, newest first. */
+/**
+ * The steps that failed by 24 Nov at 11:40, newest first, each with its
+ * cause. The job knows no cause for the brief start of Blue Harbor.
+ */
 const midwayFailures: readonly JobFailure[] = [
   {
     org: 'Northwind',
     number: 88,
     computer: 'sbx_q2v7k1xd',
     step: 'brief-start',
+    cause: 'no-connection',
     at: '24 Nov at 10:52',
   },
   {
@@ -25,14 +29,21 @@ const midwayFailures: readonly JobFailure[] = [
     number: 31,
     computer: 'sbx_m4k8z2pe',
     step: 'brief-start',
+    cause: 'unknown',
     at: '24 Nov at 02:17',
   },
-  { org: 'Orbit Studio', step: 'refresh', at: '23 Nov at 21:30' },
+  {
+    org: 'Orbit Studio',
+    step: 'refresh',
+    cause: 'time-limit',
+    at: '23 Nov at 21:30',
+  },
   {
     org: 'Kestrel Labs',
     number: 140,
     computer: 'sbx_r8d2n6tw',
     step: 'restart',
+    cause: 'not-ready',
     at: '23 Nov at 06:05',
   },
 ]
@@ -52,15 +63,15 @@ const noSkips: Readonly<Record<SkipReason, number>> = {
 const noAdmin = ['Lumen Works']
 
 /**
- * The failures and the skips at each moment: none just after the count,
- * those of 24 Nov at 11:40 while the job runs, and the last ones when it
- * is done.
+ * The failures and the skips in a state of the page: none during and just
+ * after the count, those of 24 Nov at 11:40 in the later job, and the last
+ * ones when the job is done.
  */
-export function jobProblems(moment: JobMoment): JobProblems {
-  if (moment === 'counting' || moment === 'counted') {
+export function jobProblems(record: JobRecord): JobProblems {
+  if (record.run !== 'done' && record.progress !== 'later') {
     return { failures: [], skips: noSkips, noAdmin: [] }
   }
-  if (moment !== 'done') {
+  if (record.run !== 'done') {
     const skips = {
       ...noSkips,
       suspended: 23,
@@ -78,6 +89,7 @@ export function jobProblems(moment: JobMoment): JobProblems {
       number: 77,
       computer: 'sbx_k7s2l9ab',
       step: 'brief-start',
+      cause: 'download',
       at: '25 Nov at 23:41',
     },
     {
@@ -85,6 +97,7 @@ export function jobProblems(moment: JobMoment): JobProblems {
       number: 3,
       computer: 'sbx_t1d3p8wl',
       step: 'brief-start',
+      cause: 'no-connection',
       at: '25 Nov at 14:08',
     },
     ...midwayFailures,

@@ -26,7 +26,7 @@ export type JobRow = (typeof jobRows)[number]
  * One row: what the job counted before its first start, and how many of
  * them it handled. A handled machine is done, failed, or skipped.
  */
-export type RowProgress = { count: number; handled: number }
+type RowProgress = { count: number; handled: number }
 
 /** The pace of one account: the starts in each hour, and the machines at once. */
 export type Pace = { perHour: number; atOnce: number }
@@ -43,11 +43,14 @@ export type AccountStage =
   | { kind: 'limited' }
   | { kind: 'done' }
 
+/** The rows of the job on one account or on one org, by state and kind. */
+export type JobRows = Readonly<Record<JobRow, RowProgress>>
+
 /** The job on one provider account, which the settings of the Worker name. */
 export type JobAccount = {
   id: string
   stage: AccountStage
-  rows: Readonly<Record<JobRow, RowProgress>>
+  rows: JobRows
   /** The saved pace of the account. */
   pace: Pace
 }
@@ -55,8 +58,12 @@ export type JobAccount = {
 /** The state of the whole job. */
 export type JobState = 'counting' | 'running' | 'waiting' | 'paused' | 'done'
 
-/** The one org that the job is limited to, and its starts. */
-type JobLimit = { org: string; starts: number; handled: number }
+/**
+ * The one org that the job is limited to, with its machines and its org
+ * image by state and kind, in the rows of an account, restarts included.
+ * While the job counts, the org has no rows yet.
+ */
+type JobLimit = { org: string; rows?: JobRows }
 
 /**
  * The job: its state, when it started, when and by whom it was paused, when
@@ -93,18 +100,50 @@ export function beforeFirstStart(account: JobAccount): boolean {
   return startsLeft(account) === expectedStarts(account)
 }
 
+/**
+ * The work that the job has not handled yet in some rows: each restart,
+ * brief start, and refresh, over every row. The work of the rows ended
+ * when it is 0.
+ */
+export function workLeft(rows: JobRows): number {
+  return jobRows.reduce((sum, row) => {
+    const { count, handled } = rows[row]
+    return sum + count - handled
+  }, 0)
+}
+
 /** The step of the job that failed on a machine. */
-export type FailedStep = 'restart' | 'brief-start' | 'refresh'
+type FailedStep = 'restart' | 'brief-start' | 'refresh'
+
+/**
+ * The causes that the job tells apart for each step, from the rules of
+ * that step, and `unknown` when the job has no cause:
+ * - A restart downloads the release of the Worker, then restarts the
+ *   runner, which must be ready within 3 minutes, as Restart does.
+ * - A brief start installs the release, as the bootstrap does, and ends
+ *   when the host program connects within its 30 minutes.
+ * - A refresh has the 60-minute limit of each refresh of an org image.
+ */
+type StepCauses = {
+  restart: 'download' | 'restart' | 'not-ready' | 'unknown'
+  'brief-start': 'download' | 'no-connection' | 'unknown'
+  refresh: 'time-limit' | 'unknown'
+}
+
+/** A failed step with one cause of that step. */
+export type StepFailure = {
+  [Step in FailedStep]: { step: Step; cause: StepCauses[Step] }
+}[FailedStep]
 
 /**
  * A step that failed: its org, the workspace number and the cloud computer
- * ID of its machine, which an org image has none of, its step, and when.
+ * ID of its machine, which an org image has none of, its step with its
+ * cause, and when.
  */
-export type JobFailure = {
+export type JobFailure = StepFailure & {
   org: string
   number?: number
   computer?: string
-  step: FailedStep
   at: string
 }
 

@@ -1,0 +1,63 @@
+# Unknown switch build failures blame the install script
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Outside the scope.
+- **Added:** 2026-11-23, from PR #658, round 1 finding checks.
+- **Location:** `worker/lifecycle/provider-switch-end.ts:20-33` and `:61`, `worker/lifecycle/image-build-failure.ts:82-107`, `worker/lifecycle/provider-switch-repair-data.ts:70-86`, `src/shell/operator/account-switch.ts:82-97`, `docs/mockups/src/components/operator/switchCopy.ts:32-37` and `:143-153`, `docs/protocol/switch-account.md:216-225`, and `migrations/202611201600_org_provider_switches.sql:17`.
+- **Reason:** The recommended fix changes a closed list of causes in a protocol doc, so it waits for the user.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Switch build:** the hidden build of the org image on a new provider account, which Switch account starts, and whose success moves the org there.
+  - **Provider account box:** the box on the operator page of an org that gives its account, its switch, and the cause of a failed switch build.
+  - **Build phase:** the step of an image build at its failure, `job.phase`: `create`, `allocating`, `sources`, `software`, `install`, `snapshot`, or `publish`.
+- **Background:**
+  - `docs/protocol/switch-account.md:216-225` says that a failed switch build gives its length and its cause. The cause is in words for the operator. It is one of these three:
+    - The new account gave errors.
+    - The install script failed.
+    - The build passed its 60-minute limit.
+  - Commit `d0f24d1b3` brought Switch account to `main` on 21 November 2026, with these three causes and the default `script`.
+  - `docs/protocol/switch-account.md:224-225` rejects the saved message of the build for the operator. That message is for members, and it asks them to read a log that the section does not show.
+  - `docs/protocol/operator-section.md:73-76` lets the operator section show only counts, names, IDs, dates, roles, states, codes, weights, the stop time, and the pace of the migration job. So the box cannot show raw error text.
+  - `handleImageBuildFailure` at `worker/lifecycle/image-build-failure.ts:100-107` saves the cause of each failed build with `switchBuildFailureCause(failure)`. For a switch build, `switchFailureStatements` at `worker/lifecycle/provider-switch-end.ts:43-65` writes the cause to `org_provider_switches.failure_cause`. It writes `script` when it gets no cause, at line 61.
+  - `switchBuildFailureCause` at `provider-switch-end.ts:20-33` returns `time-limit` for `JobTimeLimit`, `provider` for `ProviderRetryExhausted` and `ProviderError`, and `script` for every other error.
+  - Only a failed command in the `install` phase is a failure of the install script. That is a `CommandFailed` from `advanceBuildCommand` at `worker/lifecycle/build-execution.ts:63-79`. These other failures also get `script`:
+    - A build machine in the provider state `error` or `stopped`: `Error('Image sandbox did not start')` at `worker/lifecycle/image-build-steps.ts:47-50`.
+    - A failed save of the image: `Error('Image save failed')` at `image-build-steps.ts:74`.
+    - A failed copy of the repositories in the `sources` phase, at `image-build-steps.ts:91-114`.
+    - A failed command in the `software` phase, which installs the sandbox software of the app, not the install script of the org.
+    - An org with no admin: `HttpError(404, 'org_not_found')` at `worker/lifecycle/image-builds.ts:175-177`.
+    - An error in the Worker, such as `Error('Missing build sandbox')` or a failed D1 call.
+  - `endedSwitchRepairStatements` at `worker/lifecycle/provider-switch-repair-data.ts:70-86` repairs a switch whose build ended without the switch update. It maps the saved message of the build to a cause:
+    - The message of the time limit gives `time-limit`.
+    - The message of `ProviderRetryExhausted` gives `provider`.
+    - Every other message gives `script`.
+  - `handleImageBuildFailure` saves the text of the error only for an `HttpError`, at `image-build-failure.ts:82-85`, and neither provider error is one. So the repair also reads each provider failure as `script`.
+  - No failed switch has a missing cause today, because both writers fall back to `script`. Only a switch that waits has no cause.
+  - The app maps the cause to words in `failureOf` at `src/shell/operator/account-switch.ts:82-97`. `provider` gives `account`, and both `script` and a missing cause give `script`. `failureLine` at `docs/mockups/src/components/operator/switchCopy.ts:143-153` gives the words. The app imports them in `src/shell/operator/AccountBox.tsx`.
+  - For `script`, the box says "The install script failed on <account>."
+  - The column `failure_cause` allows only `provider`, `script`, `time-limit`, or NULL, through a check at `migrations/202611201600_org_provider_switches.sql:17`. SQLite cannot change such a check without a rebuild of the table.
+  - `readProviderSwitch` in `src/app/api/read-operator-switch.ts` reads `failure` with `maybeChoice`. It reads `null` as no cause. It rejects any other unknown value with a `ParseError` from `choice` at `src/app/api/parse.ts:55-64`, so an older open tab cannot read a new value.
+  - The mockup `app/operator/org/switch-build/failed` draws the cause `account`.
+  - On 23 November 2026, the migration job of own computers chose the pattern of B for its failed steps. Each failed step gets a typed cause with fixed words, and an unknown cause gets neutral words.
+- **Problem:** Each failed switch build without a known cause saves `script`. The Provider account box then says that the install script failed. It says so also after a failed save of the image, a stopped build machine, or a Worker error.
+- **Impact if no action:** The operator can blame the install script of the org for a failure of the provider or of the app. The operator cannot check the claim, because the section shows no build log.
+- **Root question:** How does the Provider account box name the cause of a failed switch build, without a cause that the Worker did not establish?
+- **Options:**
+  - **A.** Keep the three causes. Sort two more failures into `provider`: a failed save of the image, and a build machine in the provider state `error`. Every other failure keeps `script`. Cost: a failure in the copy of the repositories, in the sandbox software, or in the Worker still says that the install script failed. Effort: Small.
+  - **B.** Apply A, and add an unknown cause with neutral words, such as "The build failed on <account>."
+    - Give `script` only to a failed command in the `install` phase. Pass the build phase to `switchBuildFailureCause` for this.
+    - Save no cause, NULL, for each other failed switch build, in `switchFailureStatements` and in the repair. NULL needs no migration and no new value on the wire. An older open tab reads it as `script`, as today.
+    - Let `failureOf` read a missing cause on a failed switch as unknown, and add the words to `failureLine`.
+    - Add the cause to `docs/protocol/switch-account.md`, and draw it in a variant of `app/operator/org/switch-build/failed`.
+    - Cost: a change of a requirement, which also needs a full read of both legal pages and of each public guide, as `CLAUDE.md` says. Failed switches of the past keep `script`. Effort: Medium.
+  - **C.** Name the build phase that failed in place of a cause, such as "The build failed while it copied the repositories." Keep the time limit as its own cause. Save the phase with the failed switch. Cost: a new column and a migration, and a change of a requirement. The phase does not tell a fault of the provider from a failed command in the same phase. Effort: Medium.
+- **Left out:**
+  - Change nothing: it fails the goal, because the box keeps a cause that the Worker did not establish.
+  - Raw error text, or the saved message of the build: it breaks the rule of `docs/protocol/operator-section.md:73-76`, and `docs/protocol/switch-account.md` rejects the saved message for the operator.
+  - The default `provider` in place of `script`: it fails the goal, because it only moves the guess to the new account.
+- **Wider fix:** B. A typed cause with an unknown value cannot name a cause without evidence, also for a failure that a later change adds.
+- **Previous examples:** Commit `e623b74d8` replaced a guessed clash of Continue with stored stop causes and an `unknown` cause, in `worker/lifecycle/continue-stop-causes.ts`. `failureOf` already reads a missing cause as `script`, for the same reason as `switchBuildFailureCause`.
+- **Related:** `plans/follow-ups/switch-mockup-states.md` adds variants of the Provider account box under `docs/mockups/src/entries/app/operator/org/`. B and C of this item add one more variant there, so one branch can draw them all. Neither item waits for the other.
+- **Recommendation:** B. It never names a cause that the Worker did not establish, and it needs no migration and no new value on the wire.
+- **Action:** ask the user, because B adds a fourth cause to the closed list of three causes in `docs/protocol/switch-account.md`, and no user decision covers that change.

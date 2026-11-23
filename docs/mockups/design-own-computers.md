@@ -107,6 +107,14 @@ pages.
     saved." It says that the computer went offline, and that Resume starts
     the workspace when the computer connects again. Resume waits for the
     computer, as a start on an offline computer does.
+  - Resume and Try again open the next state of the same workspace. It
+    keeps every part of the state, except that the sandbox starts, no
+    start error is saved, and a computer that went offline is offline.
+    `recoveryPage` in `src/screens/ownComputerPages.ts` finds the page that
+    draws that state, from the props that the entries read there too. The
+    notice of the bar and the panels carries that page. With no such page,
+    the button has no link. Restore and the retry of a failed first start
+    keep their fixed pages.
   - The bar of an archived workspace on a removed own computer says that
     the files stay on that computer, and gives no day of a delete, because
     the app deletes nothing there. Nothing offers Restore: not the bar, not

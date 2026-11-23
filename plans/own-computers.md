@@ -602,25 +602,45 @@ mockups of Milestone 8a showed.
   the limit, or Done, each with a glyph. After a refusal of the provider,
   an amber line names the cause. Reason: no state depends on colour alone,
   and the operator sees when the starts go on.
-- Pause job, Continue job, Limit to one org, and Remove limit act at once,
-  with no question. Reason: each one undoes the other.
+- Pause job, Continue job, and Remove limit act at once. Limit to one org
+  opens a field for the org ID, with Cancel. No control asks a
+  confirmation question. Reason: Pause job and Continue job undo each
+  other, and so do Limit to one org and Remove limit. The limit needs an
+  org ID, so its control opens a field for it.
 - The limit takes an org ID, and the hint names the org that the ID finds.
   A limited job keeps the counts of the whole job, with one line for the
   progress of that org. When that org is done, the job waits for Remove
   limit. Reason: an ID finds exactly one org, and the job does not go past
   the limit that the operator set.
+- The line of the limit uses the rows of that org by state and kind, the
+  same rows that an account uses, restarts included. One rule over every
+  row gives the line its remaining work and its end. While the job counts,
+  the limit has no rows, and the line names the org with no progress.
+  Reason: a restart uses no start, so a count of the starts alone can end
+  the line while restarts still wait.
 - The pace is two whole-number fields for each account: the starts in each
   hour and the machines at once. Save pace is on only after a change, and
   it asks no question. The mockups draw a default of 30 in each hour and 3
   at once. Milestone 9 sets the real low default. Reason: the app knows no
   limit of an account, so it has no choices to offer.
 - Each failed step shows the org, the workspace number, and the cloud
-  computer ID with Copy, then the step, the reason, and the time. The box
-  counts the skips of each reason, and names each org with no active
-  admin. Reason: the operator section shows only counts, names, IDs,
-  dates, and states.
-- A finished job keeps its boxes as a record, with no action. Reason: the
-  bootstrap covers each failed or skipped machine at its next start.
+  computer ID with Copy, then the step, its cause, and the time. The cause
+  is typed, with fixed words for each cause and neutral words for an
+  unknown cause. The box never shows raw error text. The box counts the
+  skips of each reason, and names each org with no active admin. Reason:
+  the operator section shows only counts, names, IDs, dates, and states,
+  and a guessed cause can send the operator to the wrong problem.
+- The causes of a failed step follow the rules of that step. A restart
+  fails at the download of the release, at the restart of the runner, or
+  when the runner is not ready within 3 minutes. A brief start fails at
+  the download, or when the host program does not connect within 30
+  minutes. A refresh fails at its 60-minute limit. Each step also has an
+  unknown cause. Reason: Restart, the brief start, and the time limit of a
+  refresh already name these ends.
+- A finished job keeps its boxes as a record, with no action. Its Pace box
+  shows the saved pace of each account as text, with no field and no Save
+  pace. Reason: the bootstrap covers each failed or skipped machine at its
+  next start, and a finished job starts no machine at any pace.
 - A start on a full own computer shows the step "Waiting for a free place
   on build-02" with its time. Its failure says that build-02 is full, and
   that no place came free within the 20-minute limit of a start, with Try
@@ -878,9 +898,11 @@ The second options check gave most of these TODOs. Its report is in
       `rate_limited` or capacity reply. Do the running computers first.
 - [ ] Before the first start, count the computers of each account by state
       and kind. Give an operator route with the count, the expected starts,
-      the expected days, the progress, and the failures. Add the routes that
-      pause and continue the job, and that limit it to one org. Milestone 9b
-      builds the screens.
+      the expected days, the progress, and the failures. Each failure gives
+      the typed cause of its step. While the job has a limit, the route also
+      gives the progress of that org by state and kind, restarts included.
+      Add the routes that pause and continue the job, and that limit it to
+      one org. Milestone 9b builds the screens.
 - [ ] Refresh each org image once on the current account of its org, as
       the daily timer does. Skip an image that is already new. Report each
       org with no active admin. Do not refresh an image on an old account.

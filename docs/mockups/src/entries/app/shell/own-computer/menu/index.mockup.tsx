@@ -1,9 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../../screens/WorkspaceScreen'
-import {
-  readyWorkspace,
-  workspaceStateSchema,
-} from '../../../../../screens/workspaceState'
+import { computerPaths } from '../../../../../computerPaths'
+import { ownComputerPages } from '../../../../../screens/ownComputerPages'
+import { workspaceStateSchema } from '../../../../../screens/workspaceState'
 
 export const ownComputerMenu = defineScreen({
   title: 'Header state menu',
@@ -13,7 +12,7 @@ export const ownComputerMenu = defineScreen({
     'The menu of the header state is the menu of the computer of the workspace, so it names the own computer. The cloud computer is the default, so a workspace on the cloud computer shows no such line. Moved here from a variant of app/shell/own-computer, with the same path, so that the page shows only its canonical screen.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: { ...readyWorkspace, computer: 'own', overlay: 'restart' },
+  props: ownComputerPages[computerPaths.workspace.menu],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

@@ -4,11 +4,11 @@ import { Section, SectionText } from '../settings/Section'
 import { workspaceLabel } from '../workspaces/label'
 import { copyComputerLabel } from './longRunsCopy'
 import {
-  failedStepLabels,
+  failureText,
   noAdminLine,
   problemWords,
   skipLabels,
-} from './migrationCopy'
+} from './jobProblemsCopy'
 import type { JobFailure, JobProblems, SkipReason } from './migrationModel'
 import styles from './JobProblems.module.css'
 import rows from './WorkspaceStates.module.css'
@@ -26,12 +26,12 @@ const skipOrder: readonly SkipReason[] = [
 
 /**
  * One step that failed: its org, the workspace number, and the cloud
- * computer ID with Copy, for a search on the Orgs tab, then what failed and
- * when. An org image has no workspace and no ID. The glyph and the words
- * carry the failure, so it never depends on colour alone.
+ * computer ID with Copy, for a search on the Orgs tab, then the step with
+ * its cause, and when. An org image has no workspace and no ID. The glyph
+ * and the words carry the failure, so it never depends on colour alone.
  */
 function FailureRow(props: { failure: JobFailure }) {
-  const { org, number, computer, step, at } = props.failure
+  const { org, number, computer, at } = props.failure
   return (
     <li className={styles.failure}>
       <span className={styles.where}>
@@ -50,7 +50,7 @@ function FailureRow(props: { failure: JobFailure }) {
       </span>
       <span className={styles.what}>
         <CircleAlert aria-hidden className={styles.icon} size={13} />
-        <span>{`${failedStepLabels[step]} · ${at}`}</span>
+        <span>{`${failureText(props.failure)} · ${at}`}</span>
       </span>
     </li>
   )

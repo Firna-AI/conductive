@@ -22,11 +22,9 @@ import {
   type ProviderSettings,
 } from '../fixtures/operatorProviders'
 import { paths } from '../paths'
-import {
-  migrationDialog,
-  MigrationSections,
-  migrationStateProperties,
-} from './operatorMigration'
+import { limitQuestion } from './migrationControls'
+import { jobRecordSchema } from './migrationPages'
+import { MigrationSections } from './operatorMigration'
 import styles from './OperatorProvidersScreen.module.css'
 
 export const operatorProvidersSchema = {
@@ -49,10 +47,12 @@ export const operatorProvidersSchema = {
     /** Sign-ups are open, or an operator paused them. */
     signUps: { enum: ['open', 'paused'] },
     /**
-     * The migration job of the host connection and its pace, as
-     * `operatorMigration.tsx` says. Without them, the tab draws no job.
+     * The state of the migration job of the host connection: its progress,
+     * its run, its limit and the question before it, and its saved and
+     * typed pace, as `fixtures/migrationRecord.ts` says. Without it, the
+     * tab draws no job.
      */
-    ...migrationStateProperties,
+    job: jobRecordSchema,
   },
 } as const
 
@@ -184,16 +184,16 @@ export function OperatorProvidersScreen(props: {
   viewport: Viewport
 }) {
   const settings = settingsOf(props.state)
-  const job = props.state.job ?? 'none'
+  const { job } = props.state
   return (
     <OperatorPage
-      dialog={migrationDialog(job, props.viewport)}
+      dialog={limitQuestion(job, props.viewport)}
       signUps={props.state.signUps}
       tab="providers"
       title="Operator"
       viewport={props.viewport}
     >
-      <MigrationSections job={job} pace={props.state.pace ?? 'default'} />
+      <MigrationSections record={job} />
       <WeightsSection settings={settings} weights={props.state.weights} />
       <AccountCounts accounts={settings.accounts} />
     </OperatorPage>

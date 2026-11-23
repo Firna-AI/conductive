@@ -171,7 +171,11 @@ account choice of an operator on Create org.
     draws the Migration job box: its state with its glyph beside the
     title, what the job does, and its facts in `DetailList`: Started,
     Orgs, and Paused or Done when they apply. A limit to one org adds a
-    line with the progress of that org.
+    line with the work that is left of that org: each restart, brief
+    start, and refresh, over its rows by state and kind, as `workLeft`
+    counts them. The line says that the org is done only when that work
+    ended. While the job counts, the org has no rows yet, and the line
+    says that the job works only on that org after the count.
   - `JobAccounts` beside it gives each account by its ID, with the state
     of the job there as `StatusText` draws it: a spinner while it runs,
     an hourglass while it waits after a refusal of the provider or for the
@@ -188,23 +192,45 @@ account choice of an operator on Create org.
     first, because each one undoes the other. A finished job has none.
     `LimitDialog` asks for the ID of the org with `ConfirmDialog`, and its
     hint names the org that the ID finds.
+  - Each page of the job has one state, in `src/fixtures/migrationRecord.ts`.
+    Its parts are the progress, the run, the limit with the question
+    before it, the saved pace, and the typed pace. Each control changes
+    only its own part, so a pause keeps the limit and the saved pace:
+    - Pause job and Continue job change the run.
+    - Limit to one org, Remove limit, Cancel, and Limit job change the
+      limit.
+    - Save pace turns the typed pace into the saved pace.
+  - A control links only to the page whose state equals its result, from
+    `migrationPages` in `src/screens/migrationPages.ts`, which the entries
+    also read. With no such page, `Linked` draws the control with no link,
+    as Pause job and Limit to one org during the count.
   - The Pace of the job box gives each account a row with two fields of
     whole numbers, the starts in each hour and the machines at once, from
     `PaceFields`. A narrow box puts the fields under the ID. Its line gives
     the low default. Save pace is on only after a change, and it asks no
     question. A failed save keeps the typed pace and shows its error under
     the fields. A line gives the last change, as the New orgs box does.
+  - A finished job shows the Pace box as part of its record. `PaceRecord`
+    beside `PaceFields` gives the saved pace of each account as text, in
+    `DetailList`, with no field and no Save pace. The box takes its mode
+    from the run of the job, and its values from the saved pace, never
+    from a typed one.
   - The Failures and skips box, from `JobProblemsSection`, lists each step
     that failed, newest first: the org, the workspace number, and the
-    cloud computer ID with Copy, then what failed and when, after the
-    alert glyph in red. A heading counts the failed steps, and another
+    cloud computer ID with Copy, then the step with its cause, and when,
+    after the alert glyph in red. Each cause has fixed words for its step,
+    from the rules of that step. A cause that the job does not know gets
+    neutral words that name only the step. The box never shows the text
+    of an error. A heading counts the failed steps, and another
     counts the skips. The skips show as a count for each reason that has
     one. A line names each org with no active admin. The box says that
     each such machine gets the host program at its next start.
-  - `migrationCopy.ts` holds the words, and `migrationModel.ts` holds the
-    data of the job and the rules of its counts. They import no fixture,
-    and neither do the parts other than `LimitDialog`, so the app can
-    share them.
+  - `migrationCopy.ts` and `jobProblemsCopy.ts` hold the words, and
+    `migrationModel.ts` holds the data of the job and the rules of its
+    counts. Each count takes its singular or plural word from `counted` in
+    `src/components/common/counted.ts`. They import no fixture, and
+    neither do the parts other than `LimitDialog`, so the app can share
+    them.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
   choice live in `providerCopy.ts`. It imports no fixture, so the app uses

@@ -2,13 +2,12 @@ import type { Viewport } from '@mokly/mokly'
 import { Input } from '@firna/ui/input'
 import { limitOrg } from '../../fixtures/migrationJob'
 import { noop } from '../../noop'
-import { migrationPaths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
   confirmDialog,
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
-import { ScreenLink } from '../common/ScreenLink'
+import { Linked } from '../common/ScreenLink'
 import { useControlSizes } from '../common/touch'
 import { limitWords } from './migrationCopy'
 
@@ -16,27 +15,33 @@ import { limitWords } from './migrationCopy'
  * The question before the limit of the migration job to one org. The
  * operator gives the ID of the org, as its page and the Orgs tab show it,
  * and the hint names the org that the ID finds, with its workspaces and
- * its account. Cancel keeps every org.
+ * its account. Cancel keeps every org. The caller gives the page of each
+ * result, which keeps the run and the pace of the job, or none when the
+ * catalogue draws no such page.
  */
-export function LimitDialog(props: { viewport: Viewport }) {
+export function LimitDialog(props: {
+  viewport: Viewport
+  cancelTo?: string
+  limitTo?: string
+}) {
   const { field } = useControlSizes()
   return (
     <confirmDialog.Component
       actions={
         <>
-          <ScreenLink asChild to={migrationPaths.running}>
+          <Linked to={props.cancelTo}>
             <actionButton.Component moklyInstance="dialog-cancel">
               {limitWords.cancel}
             </actionButton.Component>
-          </ScreenLink>
-          <ScreenLink asChild to={migrationPaths.limited}>
+          </Linked>
+          <Linked to={props.limitTo}>
             <actionButton.Component
               moklyInstance="dialog-limit-job"
               tone="primary"
             >
               {limitWords.confirm}
             </actionButton.Component>
-          </ScreenLink>
+          </Linked>
         </>
       }
       moklyInstance="limit-job-dialog"

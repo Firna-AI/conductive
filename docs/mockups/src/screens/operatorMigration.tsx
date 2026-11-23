@@ -1,205 +1,110 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
-import { CircleAlert, ListFilter, Pause, Play } from 'lucide-react'
+import { CircleAlert } from 'lucide-react'
 import { ActionButton } from '../components/common/actions'
-import { ScreenLink } from '../components/common/ScreenLink'
+import { Linked } from '../components/common/ScreenLink'
 import { JobProblemsSection } from '../components/operator/JobProblems'
-import { LimitDialog } from '../components/operator/LimitDialog'
 import { MigrationJobSection } from '../components/operator/MigrationJob'
 import {
-  jobWords,
   paceChangedLine,
   paceWords,
 } from '../components/operator/migrationCopy'
 import { PaceFields } from '../components/operator/PaceFields'
+import { PaceRecord } from '../components/operator/PaceRecord'
 import { Section, SectionText } from '../components/settings/Section'
+import { migrationJob } from '../fixtures/migrationJob'
 import {
   defaultPace,
-  migrationJob,
   paceFields,
   paceSavedAt,
-  type JobMoment,
-} from '../fixtures/migrationJob'
+  savedPaces,
+} from '../fixtures/migrationPace'
 import { jobProblems } from '../fixtures/migrationProblems'
+import type { JobRecord } from '../fixtures/migrationRecord'
 import { account } from '../fixtures/orgs'
-import { migrationPaths } from '../paths'
+import { jobControls, savePaceTo } from './migrationControls'
 import styles from './OperatorProvidersScreen.module.css'
 
-/**
- * The views of the migration job on the Providers tab: none, as before the
- * deploy that adds the host connection, the count, the count before the
- * first start while the running machines restart, the job that runs,
- * paused, waiting after a refusal of `boat` for its rate limit or its
- * capacity, the question before the limit to one org, the job limited to
- * Hexwave, Hexwave done, and the finished job.
- */
-const jobViews = [
-  'none',
-  'counting',
-  'counted',
-  'running',
-  'paused',
-  'refused',
-  'capacity',
-  'limit',
-  'limited',
-  'limited-done',
-  'done',
-] as const
-
-type JobView = (typeof jobViews)[number]
-
-/**
- * The pace of the job: the default on each account, a faster pace of
- * `boat` that the operator typed and has not saved, the same pace after
- * Save pace, or a save that failed and keeps the typed pace.
- */
-const paceViews = ['default', 'changed', 'saved', 'not-saved'] as const
-
-type PaceView = (typeof paceViews)[number]
-
-/** The props of the Providers tab that draw the migration job. */
-export const migrationStateProperties = {
-  job: { enum: jobViews },
-  pace: { enum: paceViews },
-} as const
-
-/** The moment of the job that a view draws: a question lies over the job. */
-function momentOf(view: Exclude<JobView, 'none'>): JobMoment {
-  return view === 'limit' ? 'running' : view
-}
-
-/** A button that leads to the page of its result. */
-function LinkButton(props: {
-  to: string
-  label: string
-  icon?: typeof Pause
-  primary?: boolean
-}) {
+/** The line of the last change of the pace, once an operator saved one. */
+function ChangedLine(props: { record: JobRecord }) {
+  if (props.record.savedPace === 'default') return null
   return (
-    <ScreenLink asChild to={props.to}>
-      <ActionButton
-        icon={props.icon}
-        tone={props.primary ? 'primary' : 'secondary'}
-      >
-        {props.label}
-      </ActionButton>
-    </ScreenLink>
+    <SectionText muted>
+      {paceChangedLine(paceSavedAt, account.login)}
+    </SectionText>
   )
 }
 
 /**
- * The actions of the job: Limit to one org, or Remove limit while a limit
- * holds, then Pause job, or Continue job while it is paused. A finished job
- * has none. None of them asks first, because each one can be undone.
+ * The Pace box while the job can still change: the starts in each hour and
+ * the machines at once on each account, with the low default in its line.
+ * The fields hold the pace that the operator typed, or else the saved
+ * pace. Save pace is on only while the fields hold a typed pace, and it
+ * asks no question. A failed save keeps the typed pace and says so.
  */
-function jobActions(view: Exclude<JobView, 'none'>): ReactNode {
-  if (view === 'done') return undefined
-  const limited = view === 'limited' || view === 'limited-done'
-  return (
-    <>
-      {limited ? (
-        <LinkButton label={jobWords.removeLimit} to={migrationPaths.running} />
-      ) : (
-        <LinkButton
-          icon={ListFilter}
-          label={jobWords.limit}
-          to={migrationPaths.limit}
-        />
-      )}
-      {view === 'paused' ? (
-        <LinkButton
-          icon={Play}
-          label={jobWords.continue}
-          primary
-          to={migrationPaths.running}
-        />
-      ) : (
-        <LinkButton
-          icon={Pause}
-          label={jobWords.pause}
-          to={migrationPaths.paused}
-        />
-      )}
-    </>
-  )
-}
-
-/**
- * The Pace box: the starts in each hour and the machines at once on each
- * account, with the low default in its line. Save pace is on only while
- * the fields hold a pace that is not saved, and it asks no question. A
- * failed save keeps the typed pace and says so. The line under the fields
- * gives the last change, with its time and its operator.
- */
-function PaceSection(props: { pace: PaceView }) {
-  const { pace } = props
-  const unsaved = pace === 'changed' || pace === 'not-saved'
-  const save = (
-    <ActionButton disabled={!unsaved} tone="primary">
-      {paceWords.save}
-    </ActionButton>
-  )
+function PaceForm(props: { record: JobRecord }) {
+  const { record } = props
   return (
     <Section
       actions={
-        unsaved ? (
-          <ScreenLink asChild to={migrationPaths.paceSaved}>
-            {save}
-          </ScreenLink>
-        ) : (
-          save
-        )
+        <Linked to={savePaceTo(record)}>
+          <ActionButton disabled={record.typedPace === 'none'} tone="primary">
+            {paceWords.save}
+          </ActionButton>
+        </Linked>
       }
       description={paceWords.line(defaultPace.perHour, defaultPace.atOnce)}
       title={paceWords.title}
     >
-      <PaceFields fields={paceFields(pace !== 'default')} />
-      {pace === 'not-saved' ? (
+      <PaceFields fields={paceFields(record)} />
+      {record.typedPace === 'save-failed' ? (
         <span className={styles.error} role="alert">
           <CircleAlert aria-hidden className={styles.icon} size={13} />
           <span>{paceWords.notSaved}</span>
         </span>
       ) : null}
-      {pace === 'saved' ? (
-        <SectionText muted>
-          {paceChangedLine(paceSavedAt, account.login)}
-        </SectionText>
-      ) : null}
+      <ChangedLine record={record} />
     </Section>
   )
 }
 
 /**
- * The boxes of the migration job at the top of the Providers tab: the job
- * with its actions, its pace, and its failures and skips, which show from
- * the end of the count. Without a job, the tab draws none of them.
+ * The Pace box of a finished job, as part of its record: the saved pace of
+ * each account as text, with no field and no Save pace. It reads the saved
+ * pace only, never a typed one.
  */
-export function MigrationSections(props: {
-  job: JobView
-  pace: PaceView
-}): ReactNode {
-  const { job: view } = props
-  if (view === 'none') return null
-  const moment = momentOf(view)
+function PaceRecordSection(props: { record: JobRecord }) {
   return (
-    <>
-      <MigrationJobSection
-        actions={jobActions(view)}
-        job={migrationJob(moment, props.pace === 'saved')}
-      />
-      <PaceSection pace={props.pace} />
-      {moment === 'counting' ? null : (
-        <JobProblemsSection problems={jobProblems(moment)} />
-      )}
-    </>
+    <Section description={paceWords.record} title={paceWords.title}>
+      <PaceRecord paces={savedPaces(props.record)} />
+      <ChangedLine record={props.record} />
+    </Section>
   )
 }
 
-/** The question that lies over the Providers tab, if any. */
-export function migrationDialog(
-  job: JobView,
-  viewport: Viewport,
-): ReactNode | undefined {
-  return job === 'limit' ? <LimitDialog viewport={viewport} /> : undefined
+/**
+ * The boxes of the migration job at the top of the Providers tab, from the
+ * state of the page: the job with its actions, its pace, and its failures
+ * and skips, which show from the end of the count. The Pace box takes its
+ * mode from the run of the job: a finished job shows its record. Without a
+ * job, the tab draws none of them.
+ */
+export function MigrationSections(props: { record?: JobRecord }): ReactNode {
+  const { record } = props
+  if (record === undefined) return null
+  return (
+    <>
+      <MigrationJobSection
+        actions={jobControls(record)}
+        job={migrationJob(record)}
+      />
+      {record.run === 'done' ? (
+        <PaceRecordSection record={record} />
+      ) : (
+        <PaceForm record={record} />
+      )}
+      {record.progress === 'counting' && record.run !== 'done' ? null : (
+        <JobProblemsSection problems={jobProblems(record)} />
+      )}
+    </>
+  )
 }

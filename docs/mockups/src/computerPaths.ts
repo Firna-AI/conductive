@@ -52,6 +52,7 @@ export const computerPaths = {
     wentOffline: 'app/shell/own-computer/went-offline',
     wentOfflineDuringTurn: 'app/shell/own-computer/went-offline/during-turn',
     waiting: 'app/shell/own-computer/waiting',
+    waitingStoppedTurn: 'app/shell/own-computer/waiting/stopped-turn',
     offline: 'app/shell/own-computer/offline',
     full: 'app/shell/own-computer/full',
     fullFailed: 'app/shell/own-computer/full/failed',

@@ -1,27 +1,23 @@
 /**
  * The migration job of the host connection, as the Providers tab of the
- * operator shows it at each moment (own computer decision 7 D). The job
- * started on 23 Nov at 06:02, after the deploy. Its counts are those of
- * the Overview: every workspace runs on boat, and e2b holds only Acme Labs,
- * the test org of the operator, with no workspace.
+ * operator shows it in each state of its pages (own computer decision
+ * 7 D). The job started on 23 Nov at 06:02, after the deploy. Its counts
+ * are those of the Overview: every workspace runs on boat, and e2b holds
+ * only Acme Labs, the test org of the operator, with no workspace.
  */
-import type { PaceField } from '../components/operator/PaceFields'
 import type {
+  AccountStage,
   JobAccount,
   JobRow,
+  JobRows,
+  JobState,
   MigrationJob,
-  Pace,
-  RowProgress,
 } from '../components/operator/migrationModel'
+import { defaultPace, savedBoatPace } from './migrationPace'
+import type { JobRecord } from './migrationRecord'
 import { workspaceStates } from './operator'
 import { orgPages } from './operatorPages'
 import { account } from './orgs'
-
-/** The low default pace of each account, because the app knows no limit. */
-export const defaultPace: Pace = { perHour: 30, atOnce: 3 }
-
-/** The pace that the operator gives boat on the pace pages. */
-const fasterPace: Pace = { perHour: 60, atOnce: 6 }
 
 type RowCounts = Readonly<Record<JobRow, number>>
 
@@ -39,6 +35,24 @@ const boatCount: RowCounts = {
   images: 298,
 }
 
+/** Just after the count: the restarts of the running machines run first. */
+const boatAtCount: RowCounts = {
+  running: 9,
+  stopped: 0,
+  error: 0,
+  archived: 0,
+  images: 0,
+}
+
+/** The machines that the job handled on boat by 24 Nov at 11:40. */
+const boatLater: RowCounts = {
+  running: 37,
+  stopped: 562,
+  error: 12,
+  archived: 166,
+  images: 148,
+}
+
 /** e2b holds Acme Labs only, with no workspace, so it has one org image. */
 const e2bCount: RowCounts = {
   running: 0,
@@ -48,71 +62,43 @@ const e2bCount: RowCounts = {
   images: 1,
 }
 
-/** Just after the count: the restarts of the running machines run first. */
-const atCount: RowCounts = {
-  running: 9,
+/** e2b before its one refresh. */
+const e2bBefore: RowCounts = { ...e2bCount, images: 0 }
+
+/**
+ * Hexwave, the org of the limit, by state and kind on boat: a restart for
+ * each running workspace, a brief start for each stopped and failed one,
+ * and a refresh of its org image.
+ */
+const hexwave = orgPages.active
+const hexwaveCount: RowCounts = {
+  running: hexwave.states.running,
+  stopped: hexwave.states.stopped,
+  error: hexwave.states.failed,
+  archived: hexwave.states.archived,
+  images: 1,
+}
+
+/** What the job handled of Hexwave just after the count: one restart. */
+const hexwaveAtCount: RowCounts = {
+  running: 1,
   stopped: 0,
   error: 0,
   archived: 0,
   images: 0,
 }
 
-/** The machines that the job handled on boat by 24 Nov at 11:40. */
-const midway: RowCounts = {
-  running: 37,
-  stopped: 562,
-  error: 12,
-  archived: 166,
-  images: 148,
-}
-
-/** Each row of a count, with how many of it the job handled. */
-function rowsOf(count: RowCounts, handled: RowCounts) {
-  const row = (key: JobRow): RowProgress => ({
-    count: count[key],
-    handled: handled[key],
-  })
-  return {
-    running: row('running'),
-    stopped: row('stopped'),
-    error: row('error'),
-    archived: row('archived'),
-    images: row('images'),
-  }
-}
-
-/** boat at a moment of the job, at its stage, with its saved pace. */
-function boat(
-  handled: RowCounts,
-  stage: JobAccount['stage'],
-  pace: Pace,
-): JobAccount {
-  return { id: 'boat', stage, rows: rowsOf(boatCount, handled), pace }
-}
-
-/** e2b before its one refresh. */
-const e2bBefore: RowCounts = { ...e2bCount, images: 0 }
-
-/** e2b before its one refresh, and after it. */
-function e2b(done: boolean): JobAccount {
-  const handled = done ? e2bCount : e2bBefore
-  const stage: JobAccount['stage'] = { kind: done ? 'done' : 'running' }
-  return {
-    id: 'e2b',
-    stage,
-    rows: rowsOf(e2bCount, handled),
-    pace: defaultPace,
-  }
-}
-
 /**
- * The starts of Hexwave, the org of the limit: a brief start for each
- * stopped and failed workspace, and the refresh of its org image. Its 3
- * running workspaces had their restarts before the limit.
+ * What the job handled of Hexwave by 24 Nov at 11:40: its restarts, its
+ * failed workspace, and 2 of its stopped ones.
  */
-const hexwave = orgPages.active
-const hexwaveStarts =
-  hexwave.states.stopped + hexwave.states.failed + hexwave.states.archived + 1
+const hexwaveLater: RowCounts = {
+  running: hexwaveCount.running,
+  stopped: 2,
+  error: hexwaveCount.error,
+  archived: 0,
+  images: 0,
+}
 
 /** The org of the limit, as the question finds it by its ID. */
 export const limitOrg = {
@@ -122,122 +108,141 @@ export const limitOrg = {
   workspaces: Object.values(hexwave.states).reduce((sum, n) => sum + n, 0),
 }
 
-/** The moments of the job that the pages of the Providers tab show. */
-export type JobMoment =
-  | 'counting'
-  | 'counted'
-  | 'running'
-  | 'paused'
-  | 'refused'
-  | 'capacity'
-  | 'limited'
-  | 'limited-done'
-  | 'done'
+/** Each row of a count, with how many of it the job handled. */
+function rowsOf(count: RowCounts, handled: RowCounts): JobRows {
+  const row = (key: JobRow) => ({ count: count[key], handled: handled[key] })
+  return {
+    running: row('running'),
+    stopped: row('stopped'),
+    error: row('error'),
+    archived: row('archived'),
+    images: row('images'),
+  }
+}
 
-const started = '23 Nov at 06:02'
+/** Two counts combined row by row, such as a sum or a difference. */
+function rowWise(
+  first: RowCounts,
+  second: RowCounts,
+  combine: (a: number, b: number) => number,
+): RowCounts {
+  const row = (key: JobRow) => combine(first[key], second[key])
+  return {
+    running: row('running'),
+    stopped: row('stopped'),
+    error: row('error'),
+    archived: row('archived'),
+    images: row('images'),
+  }
+}
+
+/** Whether the work of Hexwave ended, so each of its rows is whole. */
+function hexwaveEnded(record: JobRecord): boolean {
+  return record.limit === 'hexwave-done' || record.run === 'done'
+}
 
 /**
- * The job at a moment, with the saved pace: the default, or the faster
- * pace of boat after Save pace.
+ * What the job handled on boat. When the work of Hexwave ended under the
+ * limit, the rest of its steps add to the later job.
  */
-export function migrationJob(moment: JobMoment, saved: boolean): MigrationJob {
-  const pace = saved ? fasterPace : defaultPace
-  const running = (stage: JobAccount['stage']): MigrationJob['accounts'] => [
-    boat(midway, stage, pace),
-    e2b(true),
-  ]
-  const until = '11:52'
-  switch (moment) {
-    case 'counting':
-      return { state: 'counting', started, accounts: [] }
-    case 'counted':
-      return {
-        state: 'running',
-        started,
-        accounts: [boat(atCount, { kind: 'running' }, pace), e2b(false)],
-      }
-    case 'running':
-      return {
-        state: 'running',
-        started,
-        accounts: running({ kind: 'running' }),
-      }
+function boatHandled(record: JobRecord): RowCounts {
+  if (record.run === 'done') return boatCount
+  if (record.progress !== 'later') return boatAtCount
+  if (record.limit !== 'hexwave-done') return boatLater
+  const rest = rowWise(
+    hexwaveCount,
+    hexwaveLater,
+    (count, done) => count - done,
+  )
+  return rowWise(boatLater, rest, (done, more) => done + more)
+}
+
+/**
+ * The limit to Hexwave, with its rows by state and kind once the job has
+ * counted them. The question before a limit sets none yet.
+ */
+function limitOf(record: JobRecord): MigrationJob['limit'] {
+  if (record.limit !== 'hexwave' && record.limit !== 'hexwave-done') {
+    return undefined
+  }
+  if (record.progress === 'counting') return { org: hexwave.name }
+  const handled = hexwaveEnded(record)
+    ? hexwaveCount
+    : record.progress === 'counted'
+      ? hexwaveAtCount
+      : hexwaveLater
+  return { org: hexwave.name, rows: rowsOf(hexwaveCount, handled) }
+}
+
+/** The state of the whole job, from its run, its progress, and its limit. */
+function stateOf(record: JobRecord): JobState {
+  switch (record.run) {
+    case 'done':
+      return 'done'
     case 'paused':
-      return {
-        state: 'paused',
-        started,
-        paused: { at: '24 Nov at 11:42', by: account.login },
-        accounts: running({ kind: 'paused' }),
-      }
+      return 'paused'
     case 'refused':
     case 'capacity':
-      return {
-        state: 'waiting',
-        started,
-        accounts: running({
-          kind: 'refused',
-          until,
-          reason: moment === 'refused' ? 'rate-limit' : 'capacity',
-        }),
-      }
-    case 'limited':
-      return {
-        state: 'running',
-        started,
-        limit: { org: hexwave.name, starts: hexwaveStarts, handled: 3 },
-        accounts: running({ kind: 'running' }),
-      }
-    case 'limited-done':
-      return {
-        state: 'waiting',
-        started,
-        limit: {
-          org: hexwave.name,
-          starts: hexwaveStarts,
-          handled: hexwaveStarts,
-        },
-        accounts: [
-          boat(
-            {
-              ...midway,
-              stopped: midway.stopped + 4,
-              images: midway.images + 1,
-            },
-            { kind: 'limited' },
-            pace,
-          ),
-          e2b(true),
-        ],
-      }
+      return 'waiting'
+    case 'running':
+      if (record.progress === 'counting') return 'counting'
+      return record.limit === 'hexwave-done' ? 'waiting' : 'running'
+  }
+}
+
+/** Where the job stands on boat. */
+function boatStage(record: JobRecord): AccountStage {
+  switch (record.run) {
     case 'done':
-      return {
-        state: 'done',
-        started,
-        done: '26 Nov at 04:10',
-        accounts: [boat(boatCount, { kind: 'done' }, pace), e2b(true)],
-      }
+      return { kind: 'done' }
+    case 'paused':
+      return { kind: 'paused' }
+    case 'refused':
+    case 'capacity': {
+      const reason = record.run === 'refused' ? 'rate-limit' : 'capacity'
+      return { kind: 'refused', until: '11:52', reason }
+    }
+    case 'running':
+      return { kind: record.limit === 'hexwave-done' ? 'limited' : 'running' }
+  }
+}
+
+/** e2b, which ends its one refresh after the count. */
+function e2b(record: JobRecord): JobAccount {
+  const ended = record.run === 'done' || record.progress === 'later'
+  const stage: AccountStage = ended
+    ? { kind: 'done' }
+    : { kind: record.run === 'paused' ? 'paused' : 'running' }
+  const handled = ended ? e2bCount : e2bBefore
+  return {
+    id: 'e2b',
+    stage,
+    rows: rowsOf(e2bCount, handled),
+    pace: defaultPace,
   }
 }
 
 /**
- * The fields of the pace: the default on each account, or 60 starts in
- * each hour and 6 at once on boat, which the operator typed.
+ * The job in a state of its page, with the saved pace of each account.
+ * While it counts, it has no account yet.
  */
-export function paceFields(changed: boolean): readonly PaceField[] {
-  const boatPace = changed ? fasterPace : defaultPace
-  return [
-    {
-      id: 'boat',
-      perHour: String(boatPace.perHour),
-      atOnce: String(boatPace.atOnce),
-    },
-    {
-      id: 'e2b',
-      perHour: String(defaultPace.perHour),
-      atOnce: String(defaultPace.atOnce),
-    },
-  ]
+export function migrationJob(record: JobRecord): MigrationJob {
+  const counting = record.progress === 'counting' && record.run !== 'done'
+  const boat: JobAccount = {
+    id: 'boat',
+    stage: boatStage(record),
+    rows: rowsOf(boatCount, boatHandled(record)),
+    pace: savedBoatPace(record),
+  }
+  return {
+    state: stateOf(record),
+    started: '23 Nov at 06:02',
+    paused:
+      record.run === 'paused'
+        ? { at: '24 Nov at 11:42', by: account.login }
+        : undefined,
+    done: record.run === 'done' ? '26 Nov at 04:10' : undefined,
+    limit: limitOf(record),
+    accounts: counting ? [] : [boat, e2b(record)],
+  }
 }
-
-/** When the operator saved the faster pace of boat. */
-export const paceSavedAt = '24 Nov at 11:46'

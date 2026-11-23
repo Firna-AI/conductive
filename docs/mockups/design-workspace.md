@@ -185,7 +185,9 @@ link, and the bars of the cloud computer.
     after the computer went offline name the computer. On a removed own
     computer, the bar of an archived workspace says that the files stay
     there. It offers no Restore, as
-    [own computers](design-own-computers.md) gives.
+    [own computers](design-own-computers.md) gives. There, Resume and Try
+    again link to the page that the notice names: the next state of the
+    same workspace, when the catalogue draws it.
   - For a suspended org, the words name the org and the abuse address, as
     `app/orgs/suspended/workspace` shows. The New workspace page of such an
     org shows the same bar in place of the composer.

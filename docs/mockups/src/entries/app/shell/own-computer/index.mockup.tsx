@@ -1,9 +1,8 @@
 import { defineScreen } from '@mokly/mokly'
 import { WorkspaceScreen } from '../../../../screens/WorkspaceScreen'
-import {
-  readyWorkspace,
-  workspaceStateSchema,
-} from '../../../../screens/workspaceState'
+import { computerPaths } from '../../../../computerPaths'
+import { ownComputerPages } from '../../../../screens/ownComputerPages'
+import { workspaceStateSchema } from '../../../../screens/workspaceState'
 
 export const ownComputerWorkspace = defineScreen({
   title: 'On an own computer',
@@ -13,14 +12,7 @@ export const ownComputerWorkspace = defineScreen({
     'Each workspace on an own computer runs in its own container there, with the same sandbox software as a cloud computer (own computer decision 1 D). So the workspace looks the same, and each text that names the cloud computer of the workspace names its own computer instead. A workspace never moves between a cloud computer and an own computer. The states of this page moved into their own folders with the same paths, so that it shows only its canonical screen.',
   relatedDocs: [],
   propSchema: workspaceStateSchema,
-  props: {
-    ...readyWorkspace,
-    workspace: 'saved-carts',
-    sandbox: 'starting',
-    conversation: 'queued',
-    banner: 'no-commits',
-    computer: 'own',
-  },
+  props: ownComputerPages[computerPaths.workspace.starting],
   useCasePaths: ['user-flows/create-workspace-on-own-computer'],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />

@@ -1,15 +1,11 @@
-import type {
-  AccountStage,
-  FailedStep,
-  JobRow,
-  JobState,
-  SkipReason,
-} from './migrationModel'
+import { counted } from '../common/counted'
+import type { AccountStage, JobRow, JobState, Pace } from './migrationModel'
 
 /**
  * The words of the migration job on the Providers tab of the operator
- * (own computer decision 7 D): its box, the pace of each account, the
- * failures and the skips, and the limit to one org. Operator screens name
+ * (own computer decision 7 D): its box, the pace of each account, and the
+ * limit to one org. `jobProblemsCopy.ts` holds the words of the failures
+ * and the skips. Operator screens name
  * each provider account by its ID. A login goes in without `@`, and a time
  * as the page writes it. This module imports no fixture, so the app can
  * use it too.
@@ -64,15 +60,14 @@ export function rowProgress(handled: number, total: number): string {
 
 /**
  * The time that a number of starts takes at the pace of an account, from
- * its starts in each hour: "less than an hour", "about 20 hours", or
- * "about 3 days".
+ * its starts in each hour: "less than an hour", "about 1 hour", "about 20
+ * hours", "about 1 day", or "about 3 days".
  */
 function timeAtPace(starts: number, perHour: number): string {
   const hours = starts / perHour
   if (hours < 1) return 'less than an hour'
-  if (hours < 24) return `about ${Math.round(hours)} hours`
-  const days = Math.round(hours / 24)
-  return days === 1 ? 'about 1 day' : `about ${days} days`
+  if (hours < 24) return `about ${counted(Math.round(hours), 'hour')}`
+  return `about ${counted(Math.round(hours / 24), 'day')}`
 }
 
 /**
@@ -85,14 +80,12 @@ export function expectedLine(
   restarts: boolean,
 ): string {
   const after = restarts ? ' after the restarts' : ''
-  const noun = starts === 1 ? 'start' : 'starts'
-  return `${count(starts)} expected ${noun}${after}: ${timeAtPace(starts, perHour)} at this pace.`
+  return `${counted(starts, 'expected start')}${after}: ${timeAtPace(starts, perHour)} at this pace.`
 }
 
 /** The line of an account while the job runs: the starts that are left. */
 export function leftLine(left: number, perHour: number): string {
-  const noun = left === 1 ? 'start' : 'starts'
-  return `${count(left)} ${noun} left: ${timeAtPace(left, perHour)} at this pace.`
+  return `${counted(left, 'start')} left: ${timeAtPace(left, perHour)} at this pace.`
 }
 
 /** The state of the job on one account, as its label says it. */
@@ -135,18 +128,19 @@ export function onlyOrg(org: string): string {
 }
 
 /**
- * The line of the job while it is limited to one org: its progress there,
- * or that it is done there, and what the other orgs do.
+ * The line of the job while it is limited to one org. `left` is the work
+ * of that org that the job has not handled yet, over every row, restarts
+ * included, or null while the job counts. The line says what the job does
+ * for that org, or that the work there ended, and what the other orgs do.
  */
-export function limitLine(
-  org: string,
-  handled: number,
-  starts: number,
-): string {
-  if (handled === starts) {
+export function limitLine(org: string, left: number | null): string {
+  if (left === null) {
+    return `After the count, the job works only on ${org}. The other orgs wait until you remove the limit.`
+  }
+  if (left === 0) {
     return `${org} is done. Remove the limit to go on with every org.`
   }
-  return `The job works only on ${org}: ${count(handled)} of its ${count(starts)} starts are done. The other orgs wait until you remove the limit.`
+  return `The job works only on ${org}, which has ${counted(left, 'step')} left. The other orgs wait until you remove the limit.`
 }
 
 /** The words of the Pace box: the starts in each hour and the machines at once. */
@@ -159,7 +153,16 @@ export const paceWords = {
   atOnce: 'at once',
   save: 'Save pace',
   notSaved: "The pace wasn't saved. Try again.",
+  record: 'The saved pace of each account when the job ended.',
 } as const
+
+/**
+ * The pace of one account as text, such as "30 starts in each hour and 3
+ * machines at once".
+ */
+export function paceText(pace: Pace): string {
+  return `${counted(pace.perHour, 'start')} in each hour and ${counted(pace.atOnce, 'machine')} at once`
+}
 
 /** The spoken name of one field of the pace of an account. */
 export function paceFieldLabel(account: string, field: 'perHour' | 'atOnce') {
@@ -172,49 +175,13 @@ export function paceChangedLine(when: string, operator: string): string {
   return `Changed on ${when} by @${operator}`
 }
 
-/** The words of the box of the failures and the skips. */
-export const problemWords = {
-  title: 'Failures and skips',
-  line: 'A machine that the job skipped, or whose step failed, gets the host program at its next start.',
-  failed: 'Failed',
-  skipped: 'Skipped',
-  none: 'No failure and no skip yet.',
-  orgImage: 'Org image',
-} as const
-
-/** What failed in each step. */
-export const failedStepLabels: Readonly<Record<FailedStep, string>> = {
-  restart: 'Restart: no host connection after the restart',
-  'brief-start': 'Brief start: no host connection within 30 minutes',
-  refresh: 'Refresh: the refresh failed',
-}
-
-/** Each reason of a skip, in the order of the list. */
-export const skipLabels: Readonly<Record<SkipReason, string>> = {
-  suspended: 'Owner or org suspended',
-  'deleted-org': 'Org deleted',
-  'restore-ends': 'Restore ends within a day',
-  'no-sandbox': 'No sandbox, or its delete runs',
-  'provider-error': 'Provider error or missing disk',
-  creating: 'Creating or starting',
-  'not-configured': 'Account not configured',
-}
-
-/** The line that names the orgs with no active admin, which get no refresh. */
-export function noAdminLine(orgs: readonly string[]): string {
-  const names = orgs.join(', ')
-  return orgs.length === 1
-    ? `${names} has no active admin, so its org image gets no refresh.`
-    : `${names} have no active admin, so their org images get no refresh.`
-}
-
 /** The words of the question before the limit to one org. */
 export const limitWords = {
   title: 'Limit the job to one org',
   text: 'The job then works only on the machines and the org image of this org. The other orgs wait until you remove the limit.',
   field: 'Org ID',
   found: (org: string, workspaces: number, account: string) =>
-    `${org}: ${count(workspaces)} workspaces on ${account}`,
+    `${org}: ${counted(workspaces, 'workspace')} on ${account}`,
   confirm: 'Limit job',
   cancel: 'Cancel',
 } as const
