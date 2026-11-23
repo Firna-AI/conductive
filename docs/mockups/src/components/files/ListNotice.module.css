@@ -1,0 +1,31 @@
+/*
+ * A row in the fill of a raised surface, as the notice of a list that is not
+ * the latest one is a row in amber. Its edges stay neutral: the line under it
+ * divides it from the rows. A narrow column wraps the text.
+ */
+.notice {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 8px var(--ui-pad-x);
+  border-bottom: 1px solid var(--ui-border);
+  background: var(--ui-raised);
+  box-sizing: border-box;
+  color: var(--ui-ink2);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--ui-muted);
+}
+
+.text {
+  flex: 1;
+  min-width: 0;
+  text-wrap: pretty;
+}

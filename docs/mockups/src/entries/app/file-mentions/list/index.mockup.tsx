@@ -45,5 +45,14 @@ export const fileMentionList = defineScreen({
         'The words follow All files, so the two places agree on the same state of the tree.',
       props: { composer: 'mention-unavailable', tree: 'none' },
     },
+    {
+      slug: 'limited',
+      title: 'A file that the list leaves out',
+      description:
+        'The branch is large, so All files and this list leave out 18,412 files and folders, such as tsconfig.json at the root. Cal typed `@tsconfig`. One line says Nothing matches “tsconfig”, that some files are not listed, and that Cal can type the path or ask the agent. A typed path stays text in the message, and the agent reads it. The right column shows Changes of the same branch, with its notice.',
+      rationale:
+        'Runner file report limits: Cal chose item 3 A on 23 November 2026. The list of `@`, the chips of a message, and the chips and pictures of an answer keep the one tree of All files, so a path that the tree leaves out stays text or code, with no chip and no picture. A file that a message attaches keeps its chip, and a link to a path still opens the file. A design call of 23 November 2026 adds the reason and the way on to the line of no match, so no one reads the file as deleted. A list with matches shows no such line, because the matches answer the query.',
+      props: { composer: 'mention-omitted', lists: 'limited' },
+    },
   ],
 })

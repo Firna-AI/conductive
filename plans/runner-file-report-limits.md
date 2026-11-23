@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is in progress. Milestone 4 waits for the memory plan's pull request. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 waits for Cal's next stage message. Milestone 4 waits for the memory plan's pull request. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -268,6 +268,25 @@ Item 3 A needs no new chat inventory or resolver.
 Verify the existing mention, answer-picture, attachment, and Add to chat behavior with a limited tree.
 Only change those consumers if Cal chooses B, C, or D, after the extra scope is recorded.
 
+### Mockup results
+
+- **Orchestrator call, 23 November 2026:** The All files notice sits at the top of the tree, and the Changes notice sits under the Changes summary. Neither scrolls with the rows. Each is a neutral row with an info icon. Amber stays for a list that is out of date.
+- **Orchestrator call, 23 November 2026:** A saved limited list shows its omission notice and the unavailable or failed-repair notice together, each in its own place.
+- **Orchestrator call, 23 November 2026:** The display order of the retained Changes rows stays as the panel draws it today. Item 2 B sets only which rows the runner keeps.
+- **Orchestrator call, 23 November 2026:** Item 3 A explains the limited coverage in the no-match line of the `@` list, only while the tree is limited. This adds words to the existing list, not an inventory or a resolver.
+- **Orchestrator call, 23 November 2026:** Large counts in the Files panel use thousands separators. The mockups format the tab and summary counts. The shared `DiffStat` part in `src/ui/` still prints raw line totals, so Milestone 5 formats them.
+
+The words of the notices:
+
+- All files: "18,412 files and folders are not listed. Find them in the terminal, or ask the agent."
+- Changes: "The totals include 1,243 files that are not listed. Review them in the terminal, or ask the agent."
+- The `@` list: "Nothing matches “tsconfig”. Some files are not listed, so type the path or ask the agent."
+
+Residual design issue for Cal: item 1 F fills its groups in path order.
+A large early folder, such as `tests/fixtures/`, can then push out later root files such as `tsconfig.json`.
+The mockup fixture shows this result.
+Item 1 F is in force. A change, such as shallow entries first inside each group, needs Cal to reopen item 1 before Milestone 3.
+
 ### Coordination
 
 - **Orchestrator call, 20 November 2026:** Milestone 4 waits for the memory plan's pull request to merge into `main`. It owns the overlapping report assembly and storage refactor.
@@ -304,15 +323,18 @@ Depends on: Cal approves the plan and answers items 1 to 3. Both done on 23 Nove
 Draw the limited All files and Changes panels on desktop and phone.
 Use the current workspace layout, shared components, and existing notice patterns.
 
-- [ ] Read the `mockups` and `product-ui` skills. Check `@firna/ui` and existing shared file components first.
-- [ ] Add linked catalogue states for each limited list, with actual retained and omitted counts in fixtures.
-- [ ] Show full aggregate Changes totals and distinguish them from visible rows.
-- [ ] Show the tree notice with files and directories counted as entries.
-- [ ] Draw saved limited lists beside unavailable or failed-repair notices without conflicting messages.
-- [ ] Show the mention consequence of item 3 in an existing linked screen when the chosen option needs it.
-- [ ] Run `npm run mockups:check`. Check desktop and phone, in both color schemes.
-- [ ] Save PNG screenshots under `.context/runner-file-report-limits/` for the report. Commit no generated output.
-- [ ] Update this plan's design and TODOs for every problem that the mockups show. Raise only choices that pass the decision test.
+- [x] Read the `mockups` and `product-ui` skills. Check `@firna/ui` and existing shared file components first.
+- [x] Add linked catalogue states for each limited list, with actual retained and omitted counts in fixtures.
+- [x] Show full aggregate Changes totals and distinguish them from visible rows.
+- [x] Show the tree notice with files and directories counted as entries.
+- [x] Draw saved limited lists beside unavailable or failed-repair notices without conflicting messages.
+- [x] Show the mention consequence of item 3 in an existing linked screen when the chosen option needs it.
+- [x] Run `npm run mockups:check`. Check desktop and phone, in both color schemes.
+- [x] Save PNG screenshots under `.context/runner-file-report-limits/` for the report. Commit no generated output.
+- [x] Update this plan's design and TODOs for every problem that the mockups show. Raise only choices that pass the decision test.
+
+The implementor report is `.context/runner-file-report-limits/m1-implementor-report.md`.
+The screenshots are in `.context/runner-file-report-limits/screenshots/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -386,6 +408,8 @@ Render the approved mockups with real retained lists and omitted totals.
 - [ ] Keep omission notices with saved lists during sleep, restart, and unavailable scans. Remove them after an explicit-zero replacement.
 - [ ] Keep file and diff reads usable when their paths are outside the retained lists. Check refresh after omitted-content changes.
 - [ ] Verify the approved mention behavior, answer links and pictures, Add to chat, and attached-file chips. Add no second tree under item 3 A.
+- [ ] Show the limited-coverage words in the no-match line of the `@` list while the tree is limited, as `app/file-mentions/list/limited` draws.
+- [ ] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`.
 - [ ] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
 - [ ] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
 - [ ] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.

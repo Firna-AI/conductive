@@ -108,7 +108,11 @@ the chat.
   the message box: the icon, the name, and the folder of each entry that
   matches the query, with the first row highlighted. One line takes the
   place of the rows while the tree loads, when no tree is available, and
-  when nothing matches. `fileMentions.ts` beside it orders the rows.
+  when nothing matches. When the tree of a large branch leaves out entries,
+  the line of no match also says that some files are not listed, and asks
+  the member to type the path or to ask the agent, as
+  `app/file-mentions/list/limited` shows. `fileMentions.ts` beside it
+  orders the rows.
   `answerParts`, `chatParts`, and `mentionParts` of the app read the
   mentions of a text, with the tree that `chatReading.ts` gives.
 - `SkillChip` in [`src/ui/components/chat/`](../../src/ui/components/chat/)

@@ -5,6 +5,7 @@ import {
   treeStates,
 } from '../../../components/files/FilesPanel'
 import { pathStates } from '../../../fixtures/maskedFiles'
+import { listStates } from '../../../fixtures/limitedFiles'
 import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
 import { fileTabViews } from './fileSchemas'
 import { fileRowMenuSchema } from './rowMenuSchemas'
@@ -18,7 +19,7 @@ export const filesPanel = defineComponent({
   slug: 'files-panel',
   title: 'Files panel',
   description:
-    'The files of the workspace: the All files, Changes, and Checks tabs, then the shown list. When the cloud computer could not read the files, All files keeps the saved list under a notice, or says that no list is available. A right click on a row of All files or Changes opens its menu at the pointer. A screen can supply the state of a sandbox in place of the lists, and the actions of the pull request bar above the checks. Its own page shows the Changes of the branch.',
+    'The files of the workspace: the All files, Changes, and Checks tabs, then the shown list. When the cloud computer could not read the files, All files keeps the saved list under a notice, or says that no list is available. The limited lists of a large branch each show a notice of the entries that they leave out, and the Changes tab counts the whole change. A right click on a row of All files or Changes opens its menu at the pointer. A screen can supply the state of a sandbox in place of the lists, and the actions of the pull request bar above the checks. Its own page shows the Changes of the branch.',
   relatedDocs: ['docs/mockups/catalogue-attachments-and-files.md'],
   propSchema: {
     type: 'object',
@@ -33,6 +34,8 @@ export const filesPanel = defineComponent({
       banner: { enum: bannerStates },
       /** The list of All files: the latest, a saved one, or none. */
       tree: { enum: treeStates },
+      /** The lists of All files and Changes: complete, or limited. */
+      lists: { enum: listStates },
       /** The file of the open tab, whose row the lists mark. */
       open: { enum: fileTabViews },
       /** Two files whose labels hide a secret value. */
@@ -55,6 +58,7 @@ export const filesPanel = defineComponent({
       banner={props.banner}
       checksTop={props.checksTop}
       edited={props.edited}
+      lists={props.lists}
       menu={props.menu}
       only={props.only}
       open={props.open}

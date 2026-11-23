@@ -84,7 +84,10 @@ export const temporaryTabStates = [
  * list lacks a model.
  *
  * The `mention-` states open the list of `@`: with a query, without one,
- * with no match, while the tree loads, and with no tree. `file-chips` holds
+ * with no match, while the tree loads, and with no tree. `mention-omitted`
+ * asks for tsconfig.json, which a limited tree leaves out, so nothing that
+ * the list offers matches (item 3 A of runner file report limits). Use it
+ * with the limited `lists` of the workspace. `file-chips` holds
  * a file chip and a folder chip. `file-added` holds the chip that Add to
  * chat of a row menu put at the end of the draft, with a space after it.
  * The field takes the focus on desktop, so the caret stands after the
@@ -140,6 +143,7 @@ export const composerStates = [
   'mention-none',
   'mention-loading',
   'mention-unavailable',
+  'mention-omitted',
   'file-chips',
   'file-added',
   'file-chip-pointer',

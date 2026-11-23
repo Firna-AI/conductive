@@ -130,6 +130,7 @@ const mentionLists: Partial<
   'mention-none': { draft: mentionDrafts.none, tree: 'latest' },
   'mention-loading': { draft: mentionDrafts.query, tree: 'loading' },
   'mention-unavailable': { draft: mentionDrafts.query, tree: 'unavailable' },
+  'mention-omitted': { draft: mentionDrafts.omitted, tree: 'limited' },
 }
 
 /**

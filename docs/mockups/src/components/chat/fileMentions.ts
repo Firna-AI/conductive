@@ -25,13 +25,17 @@ function rankOf(entry: MentionEntry, query: string): number | null {
 }
 
 /**
- * The rows of the list for a query. The best matches come first. In each
- * rank, folders come before files, each in the order of their names.
- * Without a query, every entry matches in the same rank, as in Conductor.
+ * The rows of the list for a query, from the entries of the tree. The best
+ * matches come first. In each rank, folders come before files, each in the
+ * order of their names. Without a query, every entry matches in the same
+ * rank, as in Conductor.
  */
-export function mentionRows(query: string): MentionEntry[] {
+export function mentionRows(
+  query: string,
+  entries: readonly MentionEntry[] = mentionEntries,
+): MentionEntry[] {
   const wanted = query.toLowerCase()
-  return mentionEntries
+  return entries
     .flatMap((entry) => {
       const rank = rankOf(entry, wanted)
       return rank === null ? [] : [{ entry, rank }]

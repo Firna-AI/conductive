@@ -145,6 +145,8 @@ export function FilesContent(props: {
       view={state.files}
       {...defined({
         checksTop: props.checksTop,
+        // Complete lists pass nothing, so the panel keeps its earlier props.
+        lists: state.lists === 'limited' ? state.lists : undefined,
         menu: rowMenuOf(state, props.viewport),
         only: changedPaths(state),
         open,
