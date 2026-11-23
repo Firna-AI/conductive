@@ -607,38 +607,38 @@ The primary orchestrator owns this milestone's plan edits and TODO ticks.
 - [x] Create a nested workspace for this milestone. Start its branch from
       `main`. Add its `Branch:` markers here. Include this milestone and
       its review order in the delegation prompt. Keep this plan off that branch.
-- [ ] Define the bucket layout in one module under `worker/files/`. Give
+- [x] Define the bucket layout in one module under `worker/files/`. Give
       its keys, marker, chunks, order text, counts, and digests in the doc
       comment of the module. Keep room for the optional scalar fields of
       design call 9. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Read either layout through one function over a supplied
+- [x] Read either layout through one function over a supplied
       `FilesStorage`. Use only `get` and `getMany`. Read one list without
       the other. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Make each write path convert a bucket-layout projection back:
+- [x] Make each write path convert a bucket-layout projection back:
       `beginConnection`, `apply` for each file event type, and
       `markFilesMoved`. Each one writes the current layout and removes each
       bucket key and order key in one transaction. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Treat a damaged bucket layout as damaged data, as today. A missing
+- [x] Treat a damaged bucket layout as damaged data, as today. A missing
       chunk, a count that does not match the order text, or an unknown
       marker value gives the existing invalid file response. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Add tests with records that a test builder writes in the documented
+- [x] Add tests with records that a test builder writes in the documented
       layout. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-  - [ ] A tree with the unavailable mark reads back exactly. So do a
+  - [x] A tree with the unavailable mark reads back exactly. So do a
         changes list with and without both optional counts, an empty list,
         a bucket of more than one chunk, and a list in an order that is not
         path order.
-  - [ ] Each damaged case fails as a damaged old-layout record fails.
-  - [ ] Each write path converts back, leaves no bucket key, and reloads in
+  - [x] Each damaged case fails as a damaged old-layout record fails.
+  - [x] Each write path converts back, leaves no bucket key, and reloads in
         the old layout.
-  - [ ] The existing tests of the old layout pass unchanged.
-- [ ] Update the storage section and Key Code of the
+  - [x] The existing tests of the old layout pass unchanged.
+- [x] Update the storage section and Key Code of the
       [files README](../worker/files/README.md). Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Run the targeted tests, `npm run test -- worker/files`. CI runs the
+- [x] Run the targeted tests, `npm run test -- worker/files`. CI runs the
       complete gate on the pull request. Commit and push the branch. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Apply its fix rule.
       Push and re-review required fixes before opening the pull request. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] Open the reader pull request into `main` after review and fixes. Branch: `calummoore/memory-projection-reader-release-jrq9`.
+- [x] Open the reader pull request into `main` after review and fixes. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] After the root coordinator merges it, record the merge commit and the time of the
       successful deploy run in `.context/workspace-object-memory/`.
 
