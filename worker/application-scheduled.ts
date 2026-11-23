@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from './env'
+import { wakeUpRepairReceiver } from './chat/session-wake-up-repair'
 import { repairLifecycleAlarms } from './lifecycle/repair'
 import { imageRuntime, workspaceRuntime } from './lifecycle/runtime'
 import { latestSoftwareRelease } from './lifecycle/software-release'
@@ -33,6 +34,11 @@ export async function runScheduledMaintenance(
   await runScheduledStep('software_image_repair_failed', () =>
     repairSoftwareImages({ env, dependencies }),
   )
+  const workspaces = env.WORKSPACES
+  if (workspaces)
+    await runScheduledStep('wake_up_alarm_repair_failed', () =>
+      workspaces.getByName(wakeUpRepairReceiver).repairRestoredWakeUpAlarms(),
+    )
   // Last, so that a slow or failed email never holds back the repairs.
   await runScheduledStep('approval_email_retry_failed', () =>
     retryApprovalEmails(env, dependencies),

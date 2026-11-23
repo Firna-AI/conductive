@@ -31,6 +31,8 @@ pub(crate) enum Command {
     Workspaces(PendingArgs),
     /// Manage sessions.
     Sessions(PendingArgs),
+    /// Schedule, list, or cancel wake-ups.
+    WakeUps(PendingArgs),
     /// Read messages.
     Messages(PendingArgs),
     /// Manage sections.
@@ -60,6 +62,7 @@ impl fmt::Display for Command {
             Self::Update(_) => "update",
             Self::Workspaces(_) => "workspaces",
             Self::Sessions(_) => "sessions",
+            Self::WakeUps(_) => "wake-ups",
             Self::Messages(_) => "messages",
             Self::Sections(_) => "sections",
             Self::Repositories(_) => "repositories",

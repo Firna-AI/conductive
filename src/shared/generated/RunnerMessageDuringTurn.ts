@@ -27,6 +27,10 @@ export type RunnerMessageDuringTurn = {
    */
   message: UserMessage
   /**
+   * True for a wake that keeps a waiting turn's background deadline.
+   */
+  wakeUp?: boolean
+  /**
    * branches.
    */
   branches?: RunnerBranches

@@ -4,6 +4,7 @@ import type { Session } from '../generated/Session'
 import type { TranscriptDetail } from '../generated/TranscriptDetail'
 import type { Workspace } from '../generated/Workspace'
 import type { AgentChoice } from '../generated/AgentChoice'
+import type { WakeUp } from '../generated/WakeUp'
 import { effortLabels, modelLabel } from '../agents'
 
 import { nameLabel } from '../name-label'
@@ -26,6 +27,7 @@ import { SessionLog } from './session-log'
 import { transcriptLookups } from './transcript-lookups'
 import { groupEntries, workSummary } from './transcript-entries'
 import { turnCopy, type ChatReaders } from './turn-words'
+import { pendingWakeUpsMarkdown } from './wake-up-markdown'
 
 export interface TranscriptDocument {
   linkContext: { origin: string; orgId: string }
@@ -37,6 +39,7 @@ export interface TranscriptDocument {
   models: readonly AgentModel[]
   members: ChatReaders['members']
   commands: readonly DeviceCommandRecord[]
+  pendingWakeUps?: readonly WakeUp[]
   sourceTitle?: string | null
 }
 
@@ -162,7 +165,11 @@ export class SessionMarkdown {
         // The note of a Continue or of a repository change belongs to no
         // turn, so it has no heading.
         const { kind } = entry.item
-        if (kind !== 'continued' && kind !== 'repository-changed') {
+        if (
+          kind !== 'continued' &&
+          kind !== 'repository-changed' &&
+          kind !== 'wake-up'
+        ) {
           heading(turnOf(transcript, entry.item))
         }
         blocks.push(
@@ -171,6 +178,7 @@ export class SessionMarkdown {
             transcript,
             readers,
             this.document.linkContext,
+            orgName,
           ),
         )
       } else if (entry.kind === 'insert') {
@@ -219,6 +227,7 @@ export class SessionMarkdown {
         .filter((request) => request.state === 'waiting')
         .map(commandMarkdown),
     )
+    blocks.push(pendingWakeUpsMarkdown(this.document.pendingWakeUps ?? []))
     return blocks.filter((block) => block.length > 0).join('\n\n') + '\n'
   }
 }

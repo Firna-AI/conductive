@@ -1,4 +1,3 @@
-import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import { sessionLink } from '../../src/shared/session-link'
 import {
   wakeText,
@@ -7,7 +6,7 @@ import {
 import type { AppEnv } from '../env'
 import type { ChatOperation } from './operation'
 import type { ChatDependencies } from './types'
-import { TurnLifecycle } from './turn-lifecycle'
+import { saveWakeMessage } from './wake-message'
 import { watchAdmission } from './session-watch-admission'
 import type { ReadySessionWatch, WatchReceipt } from './session-watch-records'
 
@@ -44,46 +43,24 @@ export async function acceptSessionWatchNotice(
   return operation.change(async (view) => {
     await view.watches.assertActive(generation)
     const { session, user } = admitted
-    const turn = await new TurnLifecycle(view, session).select(
-      user.id,
+    const messageId = `session-watch:${watch.id}`
+    const turnId = await saveWakeMessage(
+      view,
+      session,
+      user,
+      {
+        id: messageId,
+        text: wakeText(wakeWords(watch.state, watch.reason ?? undefined), link),
+        watchId: watch.id,
+      },
       dependencies.randomId,
     )
-    const message: UserMessage = {
-      id: `session-watch:${watch.id}`,
-      sessionId: session.id,
-      text: wakeText(wakeWords(watch.state, watch.reason ?? undefined), link),
-      sender: {
-        id: user.id,
-        githubLogin: user.githubLogin,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-      },
-      attachments: [],
-      choice: session.choice,
-      createdAt: view.now,
-      state: 'queued',
-    }
-    await view.saveMessage(message)
-    const type = turn.messageIds.length ? 'message' : 'turn'
-    turn.messageIds.push(message.id)
-    await view.saveTurn(turn)
-    await view.saveMessageTurn(message.id, turn.id)
-    await view.saveNewestTurn(session.id, turn.id)
-    await view.saveCommand({
-      type,
-      commandId: dependencies.randomId(),
-      sessionId: session.id,
-      turnId: turn.id,
-      messageId: message.id,
-      sessionWatchId: watch.id,
-      attachments: [],
-    })
     await view.emit({
       type: 'session.watch-notice',
       watchId: watch.id,
-      messageId: message.id,
+      messageId,
       sessionId: session.id,
-      turnId: turn.id,
+      turnId,
       watchedWorkspaceId: watch.workspaceId,
       watchedSession: { id: watch.sessionId, link },
       watchedTurnId: watch.turnId,
@@ -95,7 +72,7 @@ export async function acceptSessionWatchNotice(
     const receipt: WatchReceipt = {
       watch,
       state: 'accepted',
-      messageId: message.id,
+      messageId,
       resume: 'pending',
     }
     await view.watches.saveReceipt(receipt)

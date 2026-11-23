@@ -113,6 +113,7 @@ export class RunnerCommandPreparation {
       sessionId: command.sessionId,
       turnId: command.turnId,
       message: { ...message, state: 'sent' as const },
+      ...(command.wakeUp || command.sessionWatchId ? { wakeUp: true } : {}),
       attachments: command.attachments,
       login,
       branches,

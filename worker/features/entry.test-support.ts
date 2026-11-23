@@ -165,6 +165,10 @@ export class Workspace extends NativeAlarmWorkspace {
       : undefined
   }
 
+  clearSessionWakeUpAlarm(): Promise<void> {
+    return this.integration.alarms.set('session-wake-ups', null)
+  }
+
   waitForActivity(): Promise<void> {
     return this.activity.settled()
   }

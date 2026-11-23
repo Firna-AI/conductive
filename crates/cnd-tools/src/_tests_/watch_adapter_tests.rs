@@ -5,12 +5,12 @@ use serde_json::{Value, json};
 use crate::error::{Error, ErrorResultExt, Result};
 use crate::ports::HttpResponse;
 
-#[path = "watch_support.rs"]
-mod support;
+use super::session_tool_support::{reply, result, run};
 
 #[tokio::test]
 async fn watch_discovery_requires_only_the_target_session() -> Result<()> {
-    let output = support::run(
+    let output = run(
+        "watch_session",
         true,
         &[],
         None,
@@ -25,7 +25,7 @@ async fn watch_discovery_requires_only_the_target_session() -> Result<()> {
     assert_eq!(output.status, 0);
     assert_eq!(output.stderr, Vec::<String>::new());
     assert_eq!(output.requests.len(), 0);
-    let result = support::result(&output)?;
+    let result = result(&output)?;
     let tools = &result["tools"];
     let watch = tools
         .as_array()
@@ -123,14 +123,15 @@ async fn watch_adapters_preserve_target_selection_and_each_typed_result() -> Res
             json!({"state":"stopped", "turnId":"stopped-turn"}),
         ),
     ] {
-        let expected = support::reply(state.clone())?;
+        let expected = reply(state.clone())?;
         let mut raw = expected.clone();
         raw["unknown"] = json!("private-field");
         let response = HttpResponse {
             status: 200,
             body: raw.to_string(),
         };
-        let cli = support::run(
+        let cli = run(
+            "watch_session",
             false,
             &args,
             Some(fields.clone()),
@@ -139,7 +140,8 @@ async fn watch_adapters_preserve_target_selection_and_each_typed_result() -> Res
             false,
         )
         .await?;
-        let mcp = support::run(
+        let mcp = run(
+            "watch_session",
             true,
             &args,
             Some(fields),
@@ -169,7 +171,7 @@ async fn watch_adapters_preserve_target_selection_and_each_typed_result() -> Res
             serde_json::from_str::<Value>(&cli.stdout[0]).internal()?,
             expected
         );
-        let result = support::result(&mcp)?;
+        let result = result(&mcp)?;
         assert_eq!(result["isError"], false);
         assert_eq!(result["structuredContent"], expected);
         let text: Value = serde_json::from_str(
@@ -189,18 +191,18 @@ async fn watch_adapters_keep_worker_refusals_and_reject_malformed_replies() -> R
         (HttpResponse {status:400, body:json!({"error":{"code":"invalid_input", "message":"A turn cannot watch itself."}}).to_string()}, Some("calling-turn"), "invalid_input: A turn cannot watch itself."),
         (HttpResponse {status:403, body:json!({"error":{"code":"calling_turn_required", "message":"Use an active turn. watch-test-credential"}}).to_string()}, None, "calling_turn_required: Use an active turn. [redacted]"),
         (HttpResponse {status:404, body:json!({"error":{"code":"turn_not_found", "message":"Turn missing."}}).to_string()}, Some("calling-turn"), "turn_not_found: Turn missing."),
-        (HttpResponse {status:200, body:support::reply(json!({"state":"watching", "turnId":"target-turn"}))?.to_string()}, Some("calling-turn"), "The workspace reply is not valid. Try again."),
+        (HttpResponse {status:200, body:reply(json!({"state":"watching", "turnId":"target-turn"}))?.to_string()}, Some("calling-turn"), "The workspace reply is not valid. Try again."),
     ] {
         let args = &["sessions", "watch", "--session", "target-session"];
         let fields = Some(json!({"sessionId":"target-session"}));
-        let cli = support::run(false, args, fields.clone(), response.clone(), turn, true).await?;
-        let mcp = support::run(true, args, fields, response, turn, true).await?;
+        let cli = run("watch_session", false, args, fields.clone(), response.clone(), turn, true).await?;
+        let mcp = run("watch_session", true, args, fields, response, turn, true).await?;
         assert_eq!(cli.status, 1);
         assert_eq!(cli.stdout, Vec::<String>::new());
         assert_eq!(cli.stderr, vec![format!("{expected}\n")]);
         assert_eq!(mcp.status, 0);
         assert_eq!(mcp.stderr, Vec::<String>::new());
-        assert_eq!(support::result(&mcp)?, json!({"isError":true, "content":[{"type":"text", "text":expected}]}));
+        assert_eq!(result(&mcp)?, json!({"isError":true, "content":[{"type":"text", "text":expected}]}));
         for output in [&cli, &mcp] {
             assert_eq!(output.requests.len(), 1);
             assert_eq!(output.requests[0].turn_id.as_deref(), turn);

@@ -84,6 +84,7 @@ pub(super) fn message(
             session_id,
             turn_id: turn_id.into(),
             message,
+            wake_up: None,
             branches,
             repository,
             attachments,

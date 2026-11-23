@@ -252,9 +252,17 @@ Depends on: 2
 
 Use the `ui implementor` action. Milestone 2 found a mockup gap: no mockup and no words for the line of a cancel through the workspace tools, or for the pending wake-ups at the end of a copy.
 
-- [ ] Add the words to `docs/mockups/src/components/chat/wakeUpCopy.ts`: the "Cancelled from" line with the session link of the sending session, and the copy text of the pending wake-ups, soonest first, with the time in UTC and the text.
-- [ ] Draw the "Cancelled from" line with its session chip, on desktop and on a phone.
-- [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
+- [x] Add the words to `docs/mockups/src/components/chat/wakeUpCopy.ts`: the "Cancelled from" line with the session link of the sending session, and the copy text of the pending wake-ups, soonest first, with the time in UTC and the text.
+- [x] Draw the "Cancelled from" line with its session chip, on desktop and on a phone.
+- [x] Run `npm run mockups:check`. Smoke-test the changed pages.
+
+The catalogue draws the line at `app/chat/wake-ups/cancelled/from-session`. The check passed in a temporary worktree that held only this change on the branch head, because unfinished Milestone 3 work in the shared tree broke its typecheck at that time. The report is `.context/agent-wake/reports/m2a-mockups.md`. The screenshots are in `.context/agent-wake/screenshots/`, and their names start with `app_chat_wake-ups_cancelled_from-session`. The mockups made these calls on 23 November 2026. Each is a mockup call, not a user decision:
+
+- The line of a cancel through the tools is "Wake-up tomorrow at 09:00 · Cancelled from", then the session chip of the sending session. A copy gives "Wake-up 24 November 2026, 09:00 UTC · Cancelled from", then the session link. Reason: the docs give the words "Cancelled from", as a stop gives "Stopped from". The words come before the chip, and the title of the card names the wake-up first, because a session can have several.
+- The line keeps the icon of a Cancel, the alarm that is off. Reason: the line records a cancel, and the icon of a stop would read as a stopped turn.
+- A copy and `read_session` end with the heading "Pending wake-ups", at the level of the heading of a sender. Each wake-up then gives the title of its card in italics, with its time in UTC, and its text as the text of a message. Reason: the heading keeps the wake-ups apart from the work of the last turn, and the text in its own block keeps its code and its lists whole.
+
+A cancel by the agent of the same session gives the same line in its own turn. The line stays in view there and does not fold. Reason: "The work of a turn" in `docs/protocol/chat-and-events.md` lists what folds, and an end line is not in that list. The report gives two notes for the orchestrator, on the end of a copy and on times past the range of a JavaScript date.
 
 ## Milestone 3: Worker wake-ups and shared contracts
 
@@ -262,18 +270,25 @@ Depends on: 2, and PR #627 merged into `main`
 
 Use the `non-ui implementor` action. Merge `main` into the branch first.
 
-- [ ] Add the Rust boundary types and run the generator. Commit `src/shared/generated/`.
-- [ ] Store wake-ups in the Durable Object of the workspace, with a new alarm source. Keep the alarm set while a wake-up waits.
-- [ ] Add the three tool routes, with the calling-turn checks and the merge of repeats.
-- [ ] Fire each wake-up through the delivery path of watches. Cover each case where no turn can start, as decision 4 says.
-- [ ] Keep pending wake-ups at the idle stop. Add a test.
+- [x] Add the Rust boundary types and run the generator. Commit `src/shared/generated/`.
+- [x] Store wake-ups in the Durable Object of the workspace, with a new alarm source. Keep the alarm set while a wake-up waits.
+- [x] Add the three tool routes, with the calling-turn checks and the merge of repeats.
+- [x] Fire each wake-up through the delivery path of watches. Cover each case where no turn can start, as decision 4 says.
+- [x] Keep pending wake-ups at the idle stop. Add a test.
 - [ ] Apply the Stop rule of decision 6. Blocked until Cal answers.
 - [ ] Apply the Close rule of decision 7. Blocked until Cal answers.
-- [ ] Add the member Cancel route and the chat events for pending wake-ups, with the Cancel line of decision 5.
-- [ ] Add the additive wake-up field to the runner command in `crates/cnd-runner-interface/`. Set it for a watch wake too, because background work lets only a member message restart the 30-day count, and the watch change of PR #627 left that gap.
-- [ ] Check that the previous Worker keeps working with the new keys, as `migrations/README.md` says. A rollback must not lose a wake-up for good.
-- [ ] Add Worker tests with a fake clock: fire, a stopped computer, a closed session, a Stop, a cancel, a retry, a repeat while pending, and a repeat after the fire.
-- [ ] Update `worker/tools/README.md` and the README of each changed Worker area.
+- [x] Add the member Cancel route and the chat events for pending wake-ups, with the Cancel line of decision 5.
+- [x] Add the additive wake-up field to the runner command in `crates/cnd-runner-interface/`. Set it for a watch wake too, because background work lets only a member message restart the 30-day count, and the watch change of PR #627 left that gap.
+- [x] Check that the previous Worker keeps working with the new keys, as `migrations/README.md` says. A rollback must not lose a wake-up for good.
+- [x] Add Worker tests with a fake clock: fire, a stopped computer, a closed session, a Stop, a cancel, a retry, a repeat while pending, and a repeat after the fire.
+- [x] Update `worker/tools/README.md` and the README of each changed Worker area.
+
+Implementation calls on 23 November 2026:
+
+- Give the browser a per-session snapshot with its workspace event number. A tab can use it with later events after it loads a page of history.
+- Keep the original time in the pending record and keep a small terminal record for Cancel retries. Accept the hidden message and the resume receipt together so a resume retry cannot add a second line.
+- Rebuild the alarm on Restore. The maintenance scan also visits restored orgs in batches because the previous Worker could remove the alarm on Delete and leave it absent after Restore.
+- The fake-clock Stop case uses the idle stop of the cloud computer. The generator output is ready for the orchestrator commit. The evidence is in `.context/agent-wake/reports/m3-m4.md`.
 
 ## Milestone 4: CLI and MCP tools
 
@@ -281,9 +296,9 @@ Depends on: 3
 
 Use the `non-ui implementor` action.
 
-- [ ] Add the three calls to `crates/cnd-tools/`, as MCP tools and CLI commands, with the tool text of the design.
-- [ ] Add the guidance to the agent instructions.
-- [ ] Run the Rust checks and the CLI tests. Update `crates/cnd-tools/README.md`.
+- [x] Add the three calls to `crates/cnd-tools/`, as MCP tools and CLI commands, with the tool text of the design.
+- [x] Add the guidance to the agent instructions.
+- [x] Run the Rust checks and the CLI tests. Update `crates/cnd-tools/README.md`.
 
 ## Milestone 5: Chat implementation
 

@@ -102,7 +102,9 @@ A tab whose grant read ended before the suspension can still register after that
 Late summary reads cannot recreate chat metadata. Suspended stop callbacks can still write their final events.
 The production receiver keeps a stopped create checkpoint after Delete, before or after allocation.
 Restore starts no workspace sandbox. The normal resume route requeues
-that create when the workspace opens. After activation, Restore also wakes
+that create when the workspace opens. Restore rearms the workspace's
+wake-ups from their saved due times. They can run after activation.
+After activation, Restore also wakes
 a waiting provider switch through
 [`wakeProviderSwitch`](../lifecycle/provider-switch-control.ts). Its switch
 build can then start. The guarded deletion batch records a running switch

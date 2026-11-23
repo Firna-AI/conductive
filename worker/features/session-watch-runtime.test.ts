@@ -226,6 +226,7 @@ describe('normal watch resume', () => {
       const command = await runner.waitForTurn(string(accepted.event?.turnId))
       expect(command).toMatchObject({
         type: 'turn',
+        wakeUp: true,
         sessionId: active.sourceSessionId,
         message: {
           sender: { id: 'member' },

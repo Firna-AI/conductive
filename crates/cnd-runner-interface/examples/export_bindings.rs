@@ -122,6 +122,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::session_watches::AgentWatchSessionRequest::export_all(&cfg)?;
     tools::session_watches::AgentWatchSessionResponse::export_all(&cfg)?;
     tools::session_watches::SessionWatchNotice::export_all(&cfg)?;
+    tools::wake_ups::AgentScheduleWakeUpRequest::export_all(&cfg)?;
+    tools::wake_ups::AgentScheduleWakeUpResponse::export_all(&cfg)?;
+    tools::wake_ups::AgentListWakeUpsResponse::export_all(&cfg)?;
+    tools::wake_ups::AgentCancelWakeUpResponse::export_all(&cfg)?;
+    tools::wake_ups::SessionWakeUpsResponse::export_all(&cfg)?;
+    tools::wake_ups::SessionCancelWakeUpResponse::export_all(&cfg)?;
+    tools::wake_ups::SessionWakeUpEvent::export_all(&cfg)?;
     tools::sessions::AgentCreateSessionRequest::export_all(&cfg)?;
     tools::sessions::AgentSendMessageRequest::export_all(&cfg)?;
     tools::sessions::AgentSessionAccepted::export_all(&cfg)?;

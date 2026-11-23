@@ -13,6 +13,7 @@ export interface PlacedCommand<Request> {
 const turnOf = (item: TranscriptItem): string | null =>
   item.kind === 'user' ||
   item.kind === 'wake' ||
+  item.kind === 'wake-up' ||
   item.kind === 'lost' ||
   item.kind === 'continued' ||
   item.kind === 'repository-changed'

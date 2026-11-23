@@ -71,6 +71,18 @@ pub(crate) fn request(call: &Call) -> Result<Request> {
         Call::WatchSession(workspace, session, input) => {
             write(format!("{}/watch", session_path(workspace, session)), input)?
         }
+        Call::ScheduleWakeUp(input) => write("/v1/tools/wake-ups".into(), input)?,
+        Call::ListWakeUps(workspace, session) => {
+            read(format!("{}/wake-ups", session_path(workspace, session)))
+        }
+        Call::CancelWakeUp(workspace, session, wake_up) => write(
+            format!(
+                "{}/wake-ups/{}/cancel",
+                session_path(workspace, session),
+                component(wake_up)
+            ),
+            &(),
+        )?,
         Call::GetMessage(workspace, session, message) => read(format!(
             "{}/messages/{}",
             session_path(workspace, session),

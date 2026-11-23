@@ -11,6 +11,7 @@ use cnd_runner_interface::tools::{
     session_reads::{AgentListSessionsRequest, AgentReadSessionRequest},
     session_watches::AgentWatchSessionRequest,
     sessions::{AgentCreateSessionRequest, AgentSendMessageRequest},
+    wake_ups::AgentScheduleWakeUpRequest,
     workspaces::{
         AgentCreateWorkspaceRequest, AgentListWorkspacesRequest, AgentMoveWorkspaceRequest,
         AgentRenameWorkspaceRequest,
@@ -19,7 +20,7 @@ use cnd_runner_interface::tools::{
 
 use crate::process::CommandInput;
 
-/// The 27 public tool identities.
+/// Public workspace tool identities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Name {
@@ -44,6 +45,9 @@ pub(crate) enum Name {
     CloseSession,
     StopSession,
     WatchSession,
+    ScheduleWakeUp,
+    ListWakeUps,
+    CancelWakeUp,
     GetMessage,
     CreateSection,
     DeleteSection,
@@ -76,6 +80,9 @@ pub(crate) enum Call {
     CloseSession(String, String, AgentCloseSessionRequest),
     StopSession(String, String),
     WatchSession(String, String, AgentWatchSessionRequest),
+    ScheduleWakeUp(AgentScheduleWakeUpRequest),
+    ListWakeUps(String, String),
+    CancelWakeUp(String, String, String),
     GetMessage(String, String, String),
     CreateSection(AgentCreateSectionRequest),
     DeleteSection(String),
@@ -108,6 +115,9 @@ impl Call {
             Self::CloseSession(..) => Name::CloseSession,
             Self::StopSession(..) => Name::StopSession,
             Self::WatchSession(..) => Name::WatchSession,
+            Self::ScheduleWakeUp(..) => Name::ScheduleWakeUp,
+            Self::ListWakeUps(..) => Name::ListWakeUps,
+            Self::CancelWakeUp(..) => Name::CancelWakeUp,
             Self::GetMessage(..) => Name::GetMessage,
             Self::CreateSection(..) => Name::CreateSection,
             Self::DeleteSection(..) => Name::DeleteSection,

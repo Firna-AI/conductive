@@ -116,6 +116,7 @@ describe('workspace chat recorded events', () => {
           event.type === 'secrets.run' ||
           event.type === 'secrets.notice' ||
           event.type === 'session.watch-notice' ||
+          event.type === 'session.wake-up-fired' ||
           event.type === 'runner.event-refused'
         )
           continue

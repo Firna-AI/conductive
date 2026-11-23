@@ -1,5 +1,6 @@
 import type { WorkspaceChat } from '../chat/backend'
 import { SessionWatchRecords } from '../chat/session-watch-records'
+import { SessionWakeUpRecords } from '../chat/session-wake-up-records'
 import type { WorkspaceFeatures } from '../features/workspace'
 import type { DurableLifecycleState } from '../lifecycle/durable-types'
 import type { ImageCoordinatorState } from '../lifecycle/image-timers'
@@ -166,6 +167,12 @@ export class WorkspaceMembersReceiver {
         )
         if (watchDue !== null)
           await transaction.put('alarm:session-watches', this.now())
+        const wakeUps = new SessionWakeUpRecords(transaction)
+        const wakeUpDue = (await wakeUps.hasResume())
+          ? this.now()
+          : await wakeUps.next()
+        if (wakeUpDue !== null)
+          await transaction.put('alarm:session-wake-ups', wakeUpDue)
         await scheduleWorkspaceAlarm(transaction, { resumeRegular: true })
       },
     )

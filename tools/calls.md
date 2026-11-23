@@ -1,7 +1,7 @@
 # Workspace tool calls
 
 This page belongs to the [workspace CLI and MCP server](README.md). It
-gives the 27 Worker calls, their options, and their replies.
+gives the 30 Worker calls, their options, and their replies.
 The five [local service calls](services.md) use the same CLI and MCP server.
 [Agent tools](../docs/protocol/agent-tools.md#workspace-tools) and the
 pages that it links state the requirements.
@@ -34,6 +34,9 @@ with `conductive`.
 | `close_session` | `sessions close --session ID [--workspace ID] [--stop-running-turn]` | Write |
 | `stop_session` | `sessions stop --session ID [--workspace ID]` | Write |
 | `watch_session` | `sessions watch --session ID [--workspace ID] [--turn-id ID]` | Write |
+| `schedule_wake_up` | `wake-ups schedule --message TEXT (--delay-seconds SECONDS \| --at ISO_TIME)` | Write |
+| `list_wake_ups` | `wake-ups list --session ID [--workspace ID]` | Read |
+| `cancel_wake_up` | `wake-ups cancel --session ID --wake-up-id ID [--workspace ID]` | Write |
 | `get_message` | `messages get --session ID --message-id ID [--workspace ID]` | Read |
 | `list_previews` | `previews list [--workspace ID]` | Read |
 | `open_preview` | `previews open --port NUMBER [--workspace ID]` | Write |
@@ -46,9 +49,9 @@ The MCP fields take the values of the CLI options, with these names:
 
 - An option that takes an ID gives a field that ends with `Id`:
   `workspaceId`, `sessionId`, `messageId`, `sectionId`, `previewId`,
-  `repositoryId`, `ownerId`, and `parentId`.
+  `repositoryId`, `ownerId`, `parentId`, and `wakeUpId`.
 - `--message` gives `firstMessage` for the two create calls, and `text`
-  for `send_message`.
+  for `send_message` and `schedule_wake_up`.
 - `--agent` and `--model` give one `model` field with `agent` and `model`.
 - `--stop-running-turn` gives `stopRunningTurn: true`.
 - `--top-level` gives `topLevel: true` for a workspace move.
@@ -124,7 +127,8 @@ rules.
   message started that turn, with that member's rights in the app. A
   message of another member during the turn does not change this.
 - Every member can rename and move a workspace, rename, close, and stop a
-  session, watch a turn, create and delete sections, and open and close previews.
+  session, watch a turn, schedule and cancel wake-ups, create and delete
+  sections, and open and close previews.
 - Only the workspace owner or an org admin can archive a workspace.
   Another sender gets HTTP 403 `archive_forbidden`, and nothing changes.
 - The CLI help and the MCP descriptions give these rules. They ask the
@@ -321,6 +325,28 @@ Delivery rechecks current member and session login access.
 A new wake turn acts for the member who set the watch.
 A wake that joins a running turn keeps that turn's sender.
 [Session watches](../docs/protocol/session-watches.md) states the requirements.
+
+## Wake-ups
+
+Schedule takes MCP `text` and either `delaySeconds` or `at`. Supply a
+date and time with its UTC offset for `at`. The adapters convert it to Unix
+milliseconds before sending `POST /v1/tools/wake-ups`. The Worker reads
+the session and sender from the active turn. A time in the past fires at
+once. Repeats for the same turn, text, and submitted time return the same
+ID while it waits. The reply gives `workspace`, `session`, and `wakeUp`
+with `id`, `at`, `atUtc`, and `text`.
+
+List reads `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/wake-ups`.
+Its reply gives `workspace`, `session`, and `wakeUps` in time order.
+Cancel posts to the same path plus `/{wakeUpId}/cancel`. It gives
+`workspace`, `session`, `wakeUpId`, and `state`. The state is `cancelled`,
+`already-fired`, or `already-ended`. An unknown wake-up or a wake-up of
+another session gives HTTP 404 `wake_up_not_found`.
+
+The two target calls use `current` when the workspace is omitted.
+List needs only the workspace token. Cancel needs an active calling
+turn and the rights of Stop on the target session.
+[Wake-ups](../docs/protocol/wake-ups.md) gives the delivery and access rules.
 
 ## Sections and previews
 

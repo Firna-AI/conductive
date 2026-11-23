@@ -201,3 +201,11 @@ mod workspace_tests;
 #[cfg(test)]
 #[path = "_tests_/watch_adapter_tests.rs"]
 mod watch_adapter_tests;
+
+#[cfg(test)]
+#[path = "_tests_/watch_support.rs"]
+mod session_tool_support;
+
+#[cfg(test)]
+#[path = "_tests_/wake_up_adapter_tests.rs"]
+mod wake_up_adapter_tests;

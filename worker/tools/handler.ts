@@ -19,6 +19,7 @@ import { createdWorkspace } from './workspace-replies'
 import { isAgentToolPath, listFromTool } from './lists'
 import type { AgentToolServices } from './services'
 import { callingWorkspace } from './store'
+import { wakeUpFromTool, wakeUpToolMethods } from './wake-up-routes'
 import {
   readSessionsFromTool,
   sessionToolMethods,
@@ -48,6 +49,7 @@ export function createAgentToolsHandler(
         previewToolMethods(url.pathname) ??
         workspaceToolMethods(url.pathname) ??
         sessionToolMethods(url.pathname) ??
+        wakeUpToolMethods(url.pathname) ??
         (url.pathname === MACHINE_PATHS.workspaces ? ['GET', 'POST'] : ['GET'])
       const allow = methods.join(', ')
       if (!methods.includes(request.method) || request.headers.has('Upgrade')) {
@@ -73,6 +75,14 @@ export function createAgentToolsHandler(
           'The workspace login is not valid. Start the workspace again.',
         )
       }
+      const wakeUp = await wakeUpFromTool(
+        request,
+        url,
+        env.DB,
+        caller,
+        services,
+      )
+      if (wakeUp) return privateResponse(wakeUp)
       if (request.method === 'GET') {
         const previews = await readPreviewsFromTool(
           url,

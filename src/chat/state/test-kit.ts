@@ -278,6 +278,10 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `repository changed by ${item.member.githubLogin}: ${item.repository.fullName} on ${item.branch}`
       case 'wake':
         return `wake: ${item.notice.state} in ${item.notice.watchedSession.id}`
+      case 'wake-up':
+        return item.notice.type === 'session.wake-up-fired'
+          ? `wake-up: ${item.notice.text}`
+          : `wake-up ended: ${item.notice.outcome.kind}`
     }
   })
 }

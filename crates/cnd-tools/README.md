@@ -7,7 +7,7 @@ Use `cnd-runner-interface` for the shared wire types.
 ## Responsibilities
 
 Parse tool options. Preserve valid Unicode message text. Authenticate fixed-route HTTP
-requests. Validate replies. Serve 27 Worker calls and five local service calls through CLI and MCP.
+requests. Validate replies. Serve 30 Worker calls and five local service calls through CLI and MCP.
 Run commands with approved secrets under their variable names, and filter their output.
 
 ## What This Crate Does
@@ -104,6 +104,18 @@ A turn end does not mean the whole delegated task is complete.
 Explicit Stop drops older pending wakes of the calling session.
 Automatic idle computer stops keep watches.
 
+### Wake-ups
+
+`wake-ups schedule` and `schedule_wake_up` set one continuation of the
+calling session. A schedule takes a message and one time. The adapter
+sends a delay in seconds or converts an ISO 8601 time with an offset to
+Unix milliseconds. The reply gives the wake-up ID, time, and session
+link.
+
+`wake-ups list` needs the workspace token. `wake-ups cancel` and schedule
+need an active turn. List and cancel default to the calling workspace.
+For more examples and the replies, see [Wake-up calls](../../tools/calls.md#wake-ups).
+
 ## Quick Start
 
 Run from the repository root:
@@ -146,6 +158,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [input](src/input/mod.rs) validates untrusted fields without changing text.
 - [request.rs](src/request.rs) maps typed calls to fixed HTTP routes.
 - [watches.rs](src/input/watches.rs) parses optional exact-turn selection for session watches.
+- [wake_ups.rs](src/input/wake_ups.rs) reads one schedule time and converts an absolute time before dispatch.
 - [mcp](src/mcp/mod.rs) runs concurrent protocol requests and drains them at EOF.
 - [mcp-tools.json](src/mcp-tools.json) holds the MCP descriptors and input schemas.
 - [ports.rs](src/ports.rs) defines replaceable runtime and transport effects.
@@ -161,6 +174,7 @@ isolation and filtered output. Worker route tests need no Rust build.
 - [Agent tools](../../docs/protocol/agent-tools.md)
 - [Service calls](../../docs/protocol/service-calls.md)
 - [Session watches](../../docs/protocol/session-watches.md)
+- [Wake-ups](../../docs/protocol/wake-ups.md)
 - [Secret requests](../../docs/protocol/secret-requests.md)
 - [Secret variables](../../docs/protocol/secret-variables.md)
 - [Workspace commands](../../tools/README.md)

@@ -29,6 +29,10 @@ export type RunnerTurn = {
    */
   message: UserMessage
   /**
+   * True for a scheduled wake-up or a session watch wake.
+   */
+  wakeUp?: boolean
+  /**
    * Current Worker branches. Older command producers can omit them.
    */
   branches?: RunnerBranches

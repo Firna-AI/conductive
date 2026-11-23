@@ -1,6 +1,6 @@
 # Workspace CLI and MCP server
 
-The Rust program `conductive` provides 27 Worker tools and five local service
+The Rust program `conductive` provides 30 Worker tools and five local service
 tools as CLI commands and as a stdio MCP server. It manages workspaces,
 sessions, messages, sections, and private port previews. It lists repositories and models.
 It can ask to run a command on the active turn sender's connected Mac.
@@ -100,7 +100,7 @@ Every read needs only the workspace token.
 
 ## MCP
 
-The stdio server exposes the 27 Worker calls of [the call table](calls.md#the-calls).
+The stdio server exposes the 30 Worker calls of [the call table](calls.md#the-calls).
 Their fields take the values of the CLI options.
 Their optional `workspaceId` defaults to the caller.
 The ID fields name the calls or links that supply their values.
@@ -140,6 +140,23 @@ A turn end does not mean the whole delegated task is complete.
 Explicit Stop drops older pending wakes of the calling session.
 Automatic idle computer stops keep watches.
 [Session watches](calls.md#session-watches) gives the options and typed replies.
+
+## Wake-ups
+
+```sh
+conductive wake-ups schedule --message 'Check the result.' --delay-seconds 3600
+conductive wake-ups list --session session-id
+conductive wake-ups cancel --session session-id --wake-up-id wake-up-id
+```
+
+A wake-up starts or joins a turn in the calling session at its time.
+Schedule and cancel need an active turn. List needs the workspace token.
+Give a delay or use `--at` with an ISO 8601 time that includes its UTC offset.
+Set the wake-up, then end the reply so the cloud computer can stop.
+Background tasks and dev servers end when the computer stops.
+A member can cancel a wake-up, and a wake-up can fail to start.
+List your wake-ups before you rely on one.
+[Wake-up calls](calls.md#wake-ups) gives the MCP fields and the replies.
 
 ## Secrets
 

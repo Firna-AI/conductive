@@ -686,6 +686,89 @@
     }
   },
   {
+    "name": "schedule_wake_up",
+    "description": "Set one wake-up in the calling session. At its time it starts or joins one turn, for the member who sent the calling turn. A running turn keeps its sender. Needs an active calling turn. Give a delay in seconds or a date and time with its UTC offset. A past time fires at once. Set the wake-up, then end your reply so the cloud computer can stop. Background tasks and dev servers end when the cloud computer stops. A member can cancel a wake-up, and it can fail to start. List your wake-ups before you rely on one. The reply gives the wake-up ID, time in Unix milliseconds and UTC, and links. Use names and returned links in normal answers.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The message the agent will receive when the wake-up fires."
+        },
+        "delaySeconds": {
+          "type": "number",
+          "description": "Delay in seconds. Use this field or at."
+        },
+        "at": {
+          "type": "string",
+          "description": "An ISO 8601 date and time with a UTC offset, such as 2026-11-23T09:00:00+01:00. Use this field or delaySeconds."
+        }
+      },
+      "required": ["text"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false
+    }
+  },
+  {
+    "name": "list_wake_ups",
+    "description": "List pending wake-ups of a session, soonest first. Needs only the workspace token. Reaches sessions in this org. An omitted workspaceId names the calling workspace. Each wake-up has an ID, time in Unix milliseconds and UTC, and its text. A member can cancel a wake-up, and it can fail to start. List your wake-ups before you rely on one. Use names and returned links in normal answers.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The workspace ID from a reply or session link. Defaults to the calling workspace."
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The session ID from a reply or session link."
+        }
+      },
+      "required": ["sessionId"]
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true
+    }
+  },
+  {
+    "name": "cancel_wake_up",
+    "description": "Cancel one pending wake-up and leave a line with the calling session in the target chat. Needs an active calling turn and the rights of Stop on the target session. Reaches sessions in this org. An omitted workspaceId names the calling workspace. The reply says if the wake-up already fired or ended. Use names and returned links in normal answers.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The workspace ID from a reply or session link. Defaults to the calling workspace."
+        },
+        "sessionId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The session ID from a reply or session link."
+        },
+        "wakeUpId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The wake-up ID from schedule_wake_up or list_wake_ups."
+        }
+      },
+      "required": ["sessionId", "wakeUpId"]
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true
+    }
+  },
+  {
     "name": "get_message",
     "description": "Get one message's text, sender, state, turn, and time. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {

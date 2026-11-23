@@ -22,6 +22,9 @@ use cnd_runner_interface::tools::session_reads::{
 };
 use cnd_runner_interface::tools::session_watches::AgentWatchSessionResponse;
 use cnd_runner_interface::tools::sessions::{AgentCreateSessionResponse, AgentSendMessageResponse};
+use cnd_runner_interface::tools::wake_ups::{
+    AgentCancelWakeUpResponse, AgentListWakeUpsResponse, AgentScheduleWakeUpResponse,
+};
 use cnd_runner_interface::tools::workspaces::{
     AgentCreateWorkspaceResponse, AgentListWorkspacesResponse, AgentWorkspaceResponse,
 };
@@ -57,6 +60,9 @@ pub(crate) enum Reply {
     CloseSession(AgentSessionResponse),
     StopSession(AgentStopSessionResponse),
     WatchSession(AgentWatchSessionResponse),
+    ScheduleWakeUp(AgentScheduleWakeUpResponse),
+    ListWakeUps(AgentListWakeUpsResponse),
+    CancelWakeUp(AgentCancelWakeUpResponse),
     GetMessage(AgentGetMessageResponse),
     CreateSection(AgentCreateSectionResponse),
     DeleteSection(AgentDeleteSectionResponse),
@@ -165,6 +171,14 @@ pub(crate) fn parse(name: Name, body: &str) -> Result<Reply> {
             }
             Name::WatchSession => {
                 serde_json::from_value::<AgentWatchSessionResponse>(value).map(Reply::WatchSession)
+            }
+            Name::ScheduleWakeUp => serde_json::from_value::<AgentScheduleWakeUpResponse>(value)
+                .map(Reply::ScheduleWakeUp),
+            Name::ListWakeUps => {
+                serde_json::from_value::<AgentListWakeUpsResponse>(value).map(Reply::ListWakeUps)
+            }
+            Name::CancelWakeUp => {
+                serde_json::from_value::<AgentCancelWakeUpResponse>(value).map(Reply::CancelWakeUp)
             }
             Name::GetMessage => {
                 serde_json::from_value::<AgentGetMessageResponse>(value).map(Reply::GetMessage)

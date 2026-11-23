@@ -19,6 +19,7 @@ export const MACHINE_PATHS = {
   repositories: '/v1/tools/repositories',
   sections: '/v1/tools/sections',
   models: '/v1/tools/models',
+  wakeUps: '/v1/tools/wake-ups',
 } as const
 
 /** @public The SDK helper registers this server with runtime turn and token context. */

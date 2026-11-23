@@ -22,6 +22,7 @@ pub(crate) fn selected(args: &[String]) -> bool {
                 "mcp"
                     | "workspaces"
                     | "sessions"
+                    | "wake-ups"
                     | "messages"
                     | "sections"
                     | "repositories"

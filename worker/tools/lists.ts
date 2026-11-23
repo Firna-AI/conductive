@@ -19,6 +19,7 @@ import { readOrgProviderAccount } from '../data/org-provider-account'
 import { readImageRepositories } from '../lifecycle/published-image-data'
 import type { AgentToolServices } from './services'
 import { isAgentSessionPath } from './session-routes'
+import { wakeUpToolMethods } from './wake-up-routes'
 import { type CallingWorkspace, orgSections, ownerPreference } from './store'
 
 export function isAgentToolPath(path: string): boolean {
@@ -27,6 +28,7 @@ export function isAgentToolPath(path: string): boolean {
     previewToolMethods(path) !== null ||
     workspaceToolMethods(path) !== null ||
     isAgentSessionPath(path) ||
+    wakeUpToolMethods(path) !== null ||
     [
       MACHINE_PATHS.workspaces,
       MACHINE_PATHS.repositories,

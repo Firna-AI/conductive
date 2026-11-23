@@ -2,6 +2,7 @@
 
 mod call;
 pub mod cli;
+mod cli_options;
 mod cli_parse;
 mod cli_secrets;
 pub mod client;

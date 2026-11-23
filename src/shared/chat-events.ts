@@ -6,6 +6,7 @@ import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentChatEvent } from './generated/AgentChatEvent'
 import type { TurnStopRequester } from './session-stop'
 import type { SessionWatchNotice } from './generated/SessionWatchNotice'
+import type { SessionWakeUpEvent } from './generated/SessionWakeUpEvent'
 
 /**
  * Maximum UTF-8 bytes of JSON.stringify(non-null detail), including quotes
@@ -64,6 +65,7 @@ export interface RunnerEventRefused {
 export type ChatEvent =
   | AgentChatEvent
   | SessionWatchNotice
+  | SessionWakeUpEvent
   | {
       type: 'workspace.continued'
       sessionId: string

@@ -1,4 +1,5 @@
 import { AgentSessionReadWorkspace } from './session-read-workspace'
+import type { AgentScheduleWakeUpRequest } from '../../src/shared/generated/AgentScheduleWakeUpRequest'
 import { featureResult } from '../features/result'
 import { findChatWorkspace } from '../chat/queries'
 import { activeStoredTurn } from '../devices/access'
@@ -7,12 +8,21 @@ import { toolSessionWorkspace } from './session-access'
 import { toolUser } from './composition-data'
 import type { ToolSessionWrite, ToolSessionManagement } from './services'
 import { SessionWatches } from '../chat/session-watches'
+import { SessionWakeUps, type ToolWakeCancel } from '../chat/session-wake-ups'
+import {
+  repairRestoredWakeUpAlarms,
+  wakeUpRepairReceiver,
+} from '../chat/session-wake-up-repair'
 import type {
   ReadySessionWatch,
   ToolSessionWatch,
 } from '../chat/session-watch-records'
 
 export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
+  protected readonly sessionWakeUps = new SessionWakeUps(
+    this.env,
+    this.integration,
+  )
   protected readonly sessionWatches = new SessionWatches(
     this.env,
     this.integration,
@@ -44,6 +54,56 @@ export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
 
   acceptSessionWatch(watch: ReadySessionWatch) {
     return this.sessionWatches.accept(watch)
+  }
+
+  scheduleAgentWakeUp(
+    orgId: string,
+    workspaceId: string,
+    turnId: string,
+    input: AgentScheduleWakeUpRequest,
+  ) {
+    return featureResult(() =>
+      this.sessionWakeUps.schedule(
+        orgId,
+        workspaceId,
+        turnId,
+        input,
+        (senderUserId) =>
+          this.writeAccess({ orgId, workspaceId, senderUserId }),
+      ),
+    )
+  }
+
+  listAgentWakeUps(orgId: string, workspaceId: string, sessionId: string) {
+    return featureResult(async () =>
+      this.sessionWakeUps.list(
+        { orgId, workspaceId, sessionId },
+        await toolSessionWorkspace(
+          this.env.DB,
+          orgId,
+          workspaceId,
+          this.env.APP_ORIGIN,
+        ),
+      ),
+    )
+  }
+
+  cancelAgentWakeUp(input: ToolWakeCancel) {
+    return featureResult(() =>
+      this.sessionWakeUps.cancel(input, () => this.writeAccess(input)),
+    )
+  }
+
+  async repairSessionWakeUpAlarm(workspaceId: string): Promise<void> {
+    if (this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
+      await this.sessionWakeUps.repairAlarm()
+  }
+
+  async repairRestoredWakeUpAlarms(): Promise<void> {
+    if (
+      this.env.WORKSPACES.idFromName(wakeUpRepairReceiver).equals(this.ctx.id)
+    )
+      await repairRestoredWakeUpAlarms(this.env, this.integration.storage)
   }
 
   async callingToolTurn(workspaceId: string, turnId: string) {

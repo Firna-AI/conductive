@@ -6,6 +6,8 @@ import type { TranscriptItem } from './transcript'
 function messageIdOf(item: TranscriptItem): string | null {
   if (item.kind === 'user') return item.message.id
   if (item.kind === 'wake') return item.notice.messageId
+  if (item.kind === 'wake-up' && item.notice.type === 'session.wake-up-fired')
+    return item.notice.messageId
   return null
 }
 
@@ -37,6 +39,10 @@ export class FoldItems {
         return this.turns.owner(item.message.id)
       case 'wake':
         return this.turns.owner(item.notice.messageId)
+      case 'wake-up':
+        return item.notice.type === 'session.wake-up-fired'
+          ? this.turns.owner(item.notice.messageId)
+          : null
       case 'lost':
         return item.marker.turnId
       case 'continued':

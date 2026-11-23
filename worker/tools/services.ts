@@ -24,6 +24,11 @@ import type { AgentClosePreviewResponse } from '../../src/shared/generated/Agent
 import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { MessageSender } from '../../src/shared/generated/MessageSender'
 import type { AgentWatchSessionResponse } from '../../src/shared/generated/AgentWatchSessionResponse'
+import type { AgentScheduleWakeUpRequest } from '../../src/shared/generated/AgentScheduleWakeUpRequest'
+import type { AgentScheduleWakeUpResponse } from '../../src/shared/generated/AgentScheduleWakeUpResponse'
+import type { AgentListWakeUpsResponse } from '../../src/shared/generated/AgentListWakeUpsResponse'
+import type { AgentCancelWakeUpResponse } from '../../src/shared/generated/AgentCancelWakeUpResponse'
+import type { ToolWakeCancel } from '../chat/session-wake-ups'
 import type {
   CallingWatchTurn,
   ToolSessionWatch,
@@ -124,6 +129,18 @@ export interface AgentToolServices {
     turnId: string,
   ): Promise<CallingWatchTurn | null>
   watchSession(input: ToolSessionWatch): Promise<AgentWatchSessionResponse>
+  scheduleWakeUp(
+    orgId: string,
+    workspaceId: string,
+    turnId: string,
+    input: AgentScheduleWakeUpRequest,
+  ): Promise<AgentScheduleWakeUpResponse>
+  listWakeUps(
+    orgId: string,
+    workspaceId: string,
+    sessionId: string,
+  ): Promise<AgentListWakeUpsResponse>
+  cancelWakeUp(input: ToolWakeCancel): Promise<AgentCancelWakeUpResponse>
   writeSection(
     input: ToolSectionWrite,
   ): Promise<AgentCreateSectionResponse | AgentDeleteSectionResponse>

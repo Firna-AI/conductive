@@ -44,6 +44,8 @@ filter entry points. These routes record no activity.
 - [preview-data.ts](preview-data.ts) reads revoked preview IDs for publication, with no port filter.
 - [workspace-alarm.ts](workspace-alarm.ts) dispatches due workspace and security work.
 - [alarms.ts](alarms.ts) saves each alarm owner's deadline.
+- [Wake-up key code](../chat/key-code-wake-ups.md) gives the regular
+  `session-wake-ups` alarm and its durable delivery records.
 
 ## Checks
 

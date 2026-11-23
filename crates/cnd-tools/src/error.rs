@@ -173,6 +173,14 @@ pub enum InputError {
     /// Choose one of the session commands.
     #[error("Use sessions list, get, read, create, send, rename, close, stop, or watch.")]
     SessionCommand,
+    /// Choose an operation for wake-ups.
+    #[error("Use wake-ups schedule, list, or cancel.")]
+    WakeUpCommand,
+    /// Supply one wake-up time with the required units.
+    #[error(
+        "Set one wake-up time. Use a delay in seconds or an ISO 8601 time with its UTC offset."
+    )]
+    WakeUpTime,
     /// Supply a Mac command, folder, and reason.
     #[error("Use mac run with a command, folder, and reason.")]
     MacCommand,

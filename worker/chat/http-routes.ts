@@ -20,6 +20,7 @@ import type { WorkspaceLinkContext } from '../data/workspace-link'
 import { presentWorkspaceHistory } from './workspace-events'
 import { explainSession } from './explain-session'
 import { prepareWorkspaceEventLabels } from './workspace-labels'
+import { sessionWakeUpRoute } from './session-wake-up-route'
 
 export function afterNumber(url: URL): number {
   const value = url.searchParams.get('after')
@@ -44,6 +45,13 @@ export async function chatRoute(
   env: AppEnv,
 ): Promise<Response> {
   const url = new URL(request.url)
+  const wakeUps = await sessionWakeUpRoute(
+    request.method,
+    suffix,
+    context,
+    operation,
+  )
+  if (wakeUps) return wakeUps
   if (suffix === '/history' && request.method === 'GET') {
     const sessionId = identifier(url.searchParams.get('sessionId'))
     await operation.read((view) => sessionFor(view, sessionId))

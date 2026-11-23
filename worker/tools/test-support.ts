@@ -182,6 +182,9 @@ export async function toolFixture(harness: TestHarness) {
   const services = {
     callingWatchTurn: vi.fn<AgentToolServices['callingWatchTurn']>(),
     watchSession: vi.fn<AgentToolServices['watchSession']>(),
+    scheduleWakeUp: vi.fn<AgentToolServices['scheduleWakeUp']>(),
+    listWakeUps: vi.fn<AgentToolServices['listWakeUps']>(),
+    cancelWakeUp: vi.fn<AgentToolServices['cancelWakeUp']>(),
     writeSection: vi.fn<AgentToolServices['writeSection']>(),
     previewCall: vi.fn<AgentToolServices['previewCall']>(),
     replayWorkspaceCreation: vi

@@ -35,6 +35,8 @@ which serves these routes. The path helpers live in
 | `POST` messages | `sessionPaths.messages` | Accepts a message. During a running turn, the message joins that turn. When the session login cannot serve the sender, a linked session takes the sender's default login, as [Session logins](integration/README.md#session-logins) says |
 | `POST` retry | `retryMessagePath` | Sends the message that `Session.retryMessageId` names again, also to a new linked session. Each other message gets `409 retry_not_available`, as [Retries](#retries) says |
 | `POST` interrupt | `sessionPaths.interrupt` | Stops a turn |
+| `GET` wake-ups | `sessionWakeUpPaths.list` | Reads pending wake-ups of a session at one workspace event number |
+| `POST` wake-up cancel | `sessionWakeUpPaths.cancel` | Cancels one wake-up with the chat permissions of Stop |
 | `PUT` model | `sessionPaths.model` | Changes the model. A model of the other agent creates a session that the requester starts. A session with no turn yet keeps it and changes its agent |
 | `POST` close, reopen | `sessionPaths.close`, `sessionPaths.reopen` | Moves a session to the session history, and back |
 | `GET` transcript | `sessionTranscriptPath` | Copies one session as concise or full Markdown |
@@ -112,6 +114,7 @@ through that cutoff in a separate `ChatStore.run` task. Runner events and
 writes can proceed between pages. The captured session record stays fixed.
 The shared `SessionMarkdown` folds pages and renders both kinds of copy.
 It uses the same grouping, command placement, and words as browser chat.
+The captured pending wake-ups go at the end of both copies in time order.
 The route gives it the app origin and the org as `TranscriptDocument.linkContext`.
 So the copy of a tool stop writes "Stopped from" and the session link, in angle brackets.
 It puts the line of a turn's end reason before the duration and the changed
@@ -195,6 +198,16 @@ of the tab and runner sockets across a wake.
 [History and event order](history.md) gives the serial queue, the one
 publisher, the event numbers, the runner streams, and the order of the
 runner commands.
+
+## Wake-ups
+
+[Wake-ups](../../docs/protocol/wake-ups.md) gives the call and delivery
+rules. [Wake-up key code](key-code-wake-ups.md) gives the store, alarm,
+and delivery entry points. `SessionWakeUps` keeps pending work in the
+workspace object and uses the watch path to deliver an ordinary runner
+message with a separate chat line. The `wakeUp` command field also marks
+watch wakes. The pending reply carries a workspace event number that the
+chat can use with subsequent wake-up events.
 
 ## Retries
 

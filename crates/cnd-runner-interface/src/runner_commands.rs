@@ -38,6 +38,10 @@ pub enum RunnerTurn {
         turn_id: String,
         /// message.
         message: UserMessage,
+        /// True for a scheduled wake-up or a session watch wake.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        wake_up: Option<bool>,
         /// Current Worker branches. Older command producers can omit them.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]
@@ -91,6 +95,10 @@ pub enum RunnerMessageDuringTurn {
         turn_id: String,
         /// message.
         message: UserMessage,
+        /// True for a wake that keeps a waiting turn's background deadline.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional)]
+        wake_up: Option<bool>,
         /// branches.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[ts(optional)]

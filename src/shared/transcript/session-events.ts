@@ -54,6 +54,9 @@ export function asSessionEvent(
     case 'workspace.continued':
     case 'workspace.repository-changed':
     case 'session.watch-notice':
+    case 'session.wake-up-scheduled':
+    case 'session.wake-up-fired':
+    case 'session.wake-up-ended':
       return event
     default:
       return null

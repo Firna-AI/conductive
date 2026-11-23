@@ -23,9 +23,9 @@ variables uses `0.0.0-dev` and an empty parts list. This development version
 sorts below every release.
 
 The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
-`workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
+`workspaces`, `sessions`, `wake-ups`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and
-`mcp` run 27 Worker calls and five local service calls in
+`mcp` run 30 Worker calls and five local service calls in
 [cnd-tools](../cnd-tools/README.md). They preserve the Worker replies and
 refusal codes. `relay` serves previews through [cnd-relay](../cnd-relay/README.md).
 `secrets list` returns metadata only. `secrets run --secret NAME -- <command>`
@@ -134,6 +134,13 @@ After a wake, use `read_session` for the result.
 An idle or ended reply means read it at once.
 A turn end does not mean the whole delegated task is complete.
 [Session watches](../../tools/calls.md#session-watches) gives targeting, replies, and Stop behavior.
+
+### Wake-ups
+
+`conductive wake-ups schedule --message TEXT --delay-seconds SECONDS`
+sets a one-time wake-up in the calling session. Use `--at ISO_TIME`
+with a UTC offset to set an absolute time. Use `wake-ups list` and
+`wake-ups cancel` with the target session. See [Wake-up calls](../../tools/calls.md#wake-ups).
 
 ## Quick Start
 

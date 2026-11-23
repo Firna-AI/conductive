@@ -36,6 +36,7 @@ import { formatDuration } from './duration'
 import { lostData } from './lost-data'
 import { codeBlock, inlineCode, plainText } from './markdown-code'
 import { foldLabel, toolEnding, toolVerb } from './tool-words'
+import { wakeUpMarkdown } from './wake-up-markdown'
 import type { Transcript, TranscriptItem } from './transcript'
 import {
   continuedBy,
@@ -106,6 +107,7 @@ export function itemMarkdown(
   transcript: Transcript,
   readers: ChatReaders,
   links: { origin: string; orgId: string },
+  orgName: string | null = null,
 ): string {
   switch (item.kind) {
     case 'user':
@@ -191,6 +193,8 @@ export function itemMarkdown(
         ),
       )
     }
+    case 'wake-up':
+      return wakeUpMarkdown(item.notice, readers, links, orgName)
   }
 }
 

@@ -30,3 +30,5 @@ export const repositoryChangedKey = (repositoryId: string, branch: string) =>
 
 /** The line that wakes a session: one for each watch, which fires once. */
 export const wakeKey = (watchId: string) => `wake:${watchId}`
+
+export const wakeUpKey = (id: string) => `wake-up:${id}`

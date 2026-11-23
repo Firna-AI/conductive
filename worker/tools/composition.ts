@@ -10,6 +10,7 @@ import {
 import { writeWorkspaceFromTool } from './workspace-write-composition'
 import { writeSectionFromTool } from './section-composition'
 import { writeSessionFromTool } from './session-write-composition'
+import { toolSessionWorkspace } from './session-access'
 
 export function productionAgentTools(
   request: Request,
@@ -86,6 +87,33 @@ export function productionAgentTools(
             .getByName(input.workspaceId)
             .watchAgentSession(input),
         ),
+      scheduleWakeUp: async (orgId, id, turnId, input) =>
+        requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(id)
+            .scheduleAgentWakeUp(orgId, id, turnId, input),
+        ),
+      listWakeUps: async (orgId, id, sessionId) => {
+        await toolSessionWorkspace(env.DB, orgId, id, env.APP_ORIGIN)
+        return requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(id)
+            .listAgentWakeUps(orgId, id, sessionId),
+        )
+      },
+      cancelWakeUp: async (input) => {
+        await toolSessionWorkspace(
+          env.DB,
+          input.orgId,
+          input.workspaceId,
+          env.APP_ORIGIN,
+        )
+        return requireFeatureResult(
+          await workspaceBinding(env)
+            .getByName(input.workspaceId)
+            .cancelAgentWakeUp(input),
+        )
+      },
       ownerDefaultChoice: async () => configuredDefaultChoice(env),
       createWorkspace: (input) =>
         createWorkspaceFromTool(env, dependencies, input),

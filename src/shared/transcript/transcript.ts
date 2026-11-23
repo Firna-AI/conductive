@@ -5,6 +5,7 @@ import type { ChangedFile } from '../generated/ChangedFile'
 import type { MessageSender } from '../generated/MessageSender'
 import type { UserMessage } from '../generated/UserMessage'
 import type { SessionWatchNotice } from '../generated/SessionWatchNotice'
+import type { SessionWakeUpEvent } from '../generated/SessionWakeUpEvent'
 import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
 import type { KnownTurn } from './known-turns'
@@ -92,6 +93,11 @@ export type TranscriptItem =
       kind: 'wake'
       id: string
       notice: SessionWatchNotice
+    }
+  | {
+      kind: 'wake-up'
+      id: string
+      notice: Exclude<SessionWakeUpEvent, { type: 'session.wake-up-scheduled' }>
     }
 
 interface RunningTurn {

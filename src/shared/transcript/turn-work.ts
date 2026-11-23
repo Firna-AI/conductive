@@ -35,8 +35,13 @@ function partsOf(
 ): number[][] {
   const parts: number[][] = [[]]
   for (const position of positions) {
-    const { kind } = items[position]
-    if (kind === 'user' || kind === 'wake') parts.push([])
+    const item = items[position]
+    if (
+      item.kind === 'user' ||
+      item.kind === 'wake' ||
+      (item.kind === 'wake-up' && item.notice.type === 'session.wake-up-fired')
+    )
+      parts.push([])
     else parts.at(-1)?.push(position)
   }
   return parts

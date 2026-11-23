@@ -29,6 +29,7 @@ import { readChatMetadata, type ChatMetadata } from './store-metadata'
 import { SecretRequestRecords } from '../secrets/request-records'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
 import { SessionWatchRecords } from './session-watch-records'
+import { SessionWakeUpRecords } from './session-wake-up-records'
 import {
   WorkspaceEventLabelPreparation,
   WorkspaceEventLabels,
@@ -48,6 +49,7 @@ export class ChatTransaction extends ChatRecords {
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
   readonly watches: SessionWatchRecords
+  readonly wakeUps: SessionWakeUpRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
   private readonly labels: WorkspaceEventLabelPreparation | undefined
@@ -69,6 +71,7 @@ export class ChatTransaction extends ChatRecords {
     this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
     this.watches = new SessionWatchRecords(data)
+    this.wakeUps = new SessionWakeUpRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
     this.github = {

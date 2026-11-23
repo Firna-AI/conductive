@@ -91,6 +91,7 @@ it('keeps the safe end reason and uses the running caller sender under the fixed
     {
       type: 'message',
       turnId: busy.turnId,
+      wakeUp: true,
       message: {
         sender: { id: f.owner.id },
         text: `A turn finished in ${sessionLink(f.env.APP_ORIGIN, f.org.id, WORKSPACE_ID, f.target.id)} · Background work stopped at the time limit`,

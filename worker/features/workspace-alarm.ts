@@ -39,6 +39,7 @@ interface WorkspaceAlarmInput {
   lifecycle: (dispatchRestart?: DispatchAutomaticRestart) => Promise<void>
   automationReport: () => Promise<void>
   sessionWatches: () => Promise<void>
+  sessionWakeUps: () => Promise<void>
 }
 
 export class WorkspaceAlarmRunner {
@@ -131,6 +132,7 @@ export class WorkspaceAlarmRunner {
           },
           automationReport: this.input.automationReport,
           sessionWatches: this.input.sessionWatches,
+          sessionWakeUps: this.input.sessionWakeUps,
         },
         { securityHandled: true, fallbackLifecycle: security.size === 0 },
       )

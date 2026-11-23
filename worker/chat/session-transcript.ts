@@ -67,19 +67,22 @@ export async function buildSessionTranscript(
   const document = await store.run(() =>
     store.read(workspaceId, async (view) => {
       const session = await sessionFor(view, sessionId)
-      const [names, members, commands, source] = await Promise.all([
-        transcriptWorkspaceName(env.DB, workspaceId),
-        orgMembers(env.DB, access.orgId),
-        readDeviceCommands(storage),
-        session.sourceSessionId
-          ? view.session(session.sourceSessionId)
-          : undefined,
-      ])
+      const [names, members, commands, source, pendingWakeUps] =
+        await Promise.all([
+          transcriptWorkspaceName(env.DB, workspaceId),
+          orgMembers(env.DB, access.orgId),
+          readDeviceCommands(storage),
+          session.sourceSessionId
+            ? view.session(session.sourceSessionId)
+            : undefined,
+          view.wakeUps.pending(sessionId),
+        ])
       return {
         linkContext: { origin: access.origin, orgId: access.orgId },
         orgName: names?.orgName ?? null,
         session,
         eventNumber: view.eventNumber,
+        pendingWakeUps,
         copiedAt: view.now,
         workspace: {
           number: access.number,

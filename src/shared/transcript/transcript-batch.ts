@@ -8,6 +8,7 @@ import {
   repositoryChangedKey,
   userKey,
   wakeKey,
+  wakeUpKey,
 } from './item-keys'
 import type { TurnItem } from './item-placement'
 import { foldLate } from './late-events'
@@ -84,6 +85,17 @@ export class TranscriptBatch {
         this.items.put({
           kind: 'wake',
           id: wakeKey(event.watchId),
+          notice: event,
+        })
+        return
+      case 'session.wake-up-scheduled':
+        return
+      case 'session.wake-up-fired':
+      case 'session.wake-up-ended':
+        this.changed = true
+        this.items.put({
+          kind: 'wake-up',
+          id: wakeUpKey(event.wakeUpId),
           notice: event,
         })
         return

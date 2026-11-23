@@ -42,6 +42,7 @@ pub(super) fn reply(state: Value) -> Result<Value> {
 }
 
 pub(super) async fn run(
+    name: &str,
     mcp: bool,
     args: &[&str],
     fields: Option<Value>,
@@ -55,7 +56,7 @@ pub(super) async fn run(
     let calling = fields.is_some();
     let request = match fields {
         Some(fields) => json!({"jsonrpc":"2.0", "id":"watch", "method":"tools/call", "params":{
-            "name":"watch_session", "arguments":fields
+            "name":name, "arguments":fields
         }}),
         None => json!({"jsonrpc":"2.0", "id":"watch", "method":"tools/list", "params":{}}),
     };

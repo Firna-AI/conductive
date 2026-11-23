@@ -2,6 +2,7 @@
 
 mod lists;
 mod parse;
+mod wake_ups;
 mod watches;
 mod writes;
 

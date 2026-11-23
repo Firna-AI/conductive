@@ -37,6 +37,7 @@ It accepts GET and POST at `MACHINE_PATHS.workspaces`, which is `/v1/tools/works
 It also accepts GET at `/v1/tools/repositories`, `/v1/tools/sections`, and `/v1/tools/models`.
 It accepts the section writes and the preview routes, as [Routes](sections-and-previews.md#routes) says.
 It accepts session list, transcript read, create, and send routes under `/v1/tools/workspaces/<workspaceId>/sessions`.
+It accepts the three [wake-up calls](#wake-ups).
 It also accepts session get, message get, rename, close, and stop routes there, as [Routes](sessions.md#routes) says.
 It accepts GET at `/v1/tools/workspaces/<workspaceId>`, and POST at its `rename`, `move`, and `archive` paths, as [Routes and access](workspaces.md#routes-and-access) says.
 It uses workspace bearer authentication instead of browser sessions.
@@ -242,6 +243,25 @@ The real-object route tests live in [worker/features](../features/).
 [Tests](workspaces.md#tests) lists the tests of the workspace calls, and [Tests](sessions.md#tests) those of session management.
 [Tests](sections-and-previews.md#tests) lists those of the section and preview calls.
 
+## Wake-ups
+
+[Wake-ups](../../docs/protocol/wake-ups.md) gives the call and delivery
+rules. [wake-up-paths.ts](../../src/shared/wake-up-paths.ts) builds the
+paths. The replies have typed workspace and session links.
+
+| Method and path | Body | Reply |
+| --- | --- | --- |
+| `POST /v1/tools/wake-ups` | `AgentScheduleWakeUpRequest` | `AgentScheduleWakeUpResponse` |
+| `GET /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/wake-ups` | None | `AgentListWakeUpsResponse` |
+| `POST /v1/tools/workspaces/{workspaceId}/sessions/{sessionId}/wake-ups/{wakeUpId}/cancel` | None | `AgentCancelWakeUpResponse` |
+
+Schedule takes `text` and either `delaySeconds` or `at` in Unix
+milliseconds. The target object obtains the session and sender from its
+active calling turn. List needs the workspace token. Cancel also needs
+the current calling turn. It records the calling session and uses the
+target rights of Stop. The target workspace checks the calling org for
+both list and cancel.
+
 ## Key code
 
 - [handler.ts](handler.ts) owns the public machine handler and token gate.
@@ -262,6 +282,7 @@ The real-object route tests live in [worker/features](../features/).
 - [services.ts](services.ts) defines the lifecycle and active-turn integration boundary.
 - [session-routes.ts](session-routes.ts) parses the machine session routes and read query options, and sends management to `manageSession`.
 - [session-watch-route.ts](session-watch-route.ts) captures the stored calling turn and its Stop nonce before it calls the target watch RPC.
+- [wake-up-routes.ts](wake-up-routes.ts) dispatches the three wake-up calls and reads the schedule time.
 - [session-page.ts](session-page.ts) reads the session list `limit` and `offset`.
 - [session-summary.ts](session-summary.ts) builds one session entry and its state.
 - [session-read-workspace.ts](session-read-workspace.ts) holds the trusted session list, get, message, and transcript read RPCs.

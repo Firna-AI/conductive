@@ -38,6 +38,8 @@ export const SIMPLE_WARNINGS = {
     'A runner hello had an invalid file server announcement. It counts as no file server.',
   workspace_alarm_failed:
     'Workspace alarm work failed. Its durable deadline will retry.',
+  wake_up_alarm_repair_failed:
+    'A wake-up alarm repair failed. The next scan will continue.',
   start_record_failed:
     'A job step record of a start could not be saved. The start goes on without it.',
   start_record_send_failed:

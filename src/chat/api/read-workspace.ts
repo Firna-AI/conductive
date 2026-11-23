@@ -17,6 +17,7 @@ import {
   UnreadableResponse,
 } from './json'
 import { readChatEvent, readChoice, readSender } from './read-chat'
+import { readWakeUpEvent } from './read-wake-up'
 
 /**
  * The workspace events that the chat reads, with the requests, the runs,
@@ -145,6 +146,10 @@ function readEvent(value: unknown): ChatStreamEvent | null {
     case 'secrets.run':
     case 'secrets.notice':
       return readSecretEvent(value)
+    case 'session.wake-up-scheduled':
+    case 'session.wake-up-fired':
+    case 'session.wake-up-ended':
+      return readWakeUpEvent(value)
     default:
       return readChatEvent(value)
   }

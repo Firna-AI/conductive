@@ -29,7 +29,7 @@ function sessionChoice(
   }
 }
 
-function messageText(value: unknown): string {
+export function messageText(value: unknown): string {
   const text = string(value)
   return text.trim() ? text : invalidInput()
 }

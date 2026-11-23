@@ -123,6 +123,23 @@ Explicit Stop of the calling session drops older pending wakes. Automatic idle c
 Watch follows the common tool rights and current member and session login checks.
 A new wake turn acts for the member who set the watch. A joined wake keeps the running turn's sender.
 
+Wake-ups
+
+conductive wake-ups schedule --message TEXT (--delay-seconds SECONDS | --at ISO_TIME)
+conductive wake-ups list --session ID [--workspace ID]
+conductive wake-ups cancel --session ID --wake-up-id ID [--workspace ID]
+
+Schedule starts or joins one turn in the calling session at its time. It uses the sender of the calling turn.
+A running turn keeps its sender. Each wake-up fires once. A past time fires at once.
+Give one time. For --at, include the UTC offset, such as 2026-11-23T09:00:00+01:00.
+Schedule and cancel need an active calling turn. List needs only the workspace token.
+List and cancel reach sessions in this org. An omitted --workspace names the calling workspace.
+Cancel has the target session's Stop rights. Its reply says if the wake-up already fired or ended.
+Schedule gives the wake-up ID, time in Unix milliseconds and UTC, and links.
+Set the wake-up, then end your reply so the cloud computer can stop.
+Background tasks and dev servers end when the cloud computer stops.
+A member can cancel a wake-up, and it can fail to start. List your wake-ups before you rely on one.
+
 Secrets list gives each org secret's name, environmentVariable, description, and availability, never its value.
 Read each value through its environmentVariable, also when the secret name has spaces.
 A running turn adds session approvals to availability. Without it, only org and workspace grants count.

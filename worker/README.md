@@ -147,6 +147,7 @@ It also retries pending approval emails until delivery or 24 hours from
 approval. [Approval delivery](operator/README.md#approval-email-delivery)
 describes the saved messages and delivery keys.
 It also repairs overdue workspace disk and archive alarms and org image refreshes after a 15-minute grace period.
+It checks restored orgs in batches for [missing wake-up alarms](chat/key-code-wake-ups.md).
 It then advances unfinished software image builds and retries their cleanup
 in each provider account of `software_images`.
 The repair checks at most 50 workspaces and 50 orgs per run.

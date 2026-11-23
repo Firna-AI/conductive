@@ -57,6 +57,11 @@ export function turnOf(
       return (
         transcriptLookups(transcript).owners.get(item.notice.messageId) ?? null
       )
+    case 'wake-up':
+      return item.notice.type === 'session.wake-up-fired'
+        ? (transcriptLookups(transcript).owners.get(item.notice.messageId) ??
+            null)
+        : null
     case 'lost':
       return item.marker.turnId
     case 'continued':

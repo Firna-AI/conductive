@@ -12,6 +12,7 @@ export type AlarmSource =
   | 'repository-change'
   | 'automation-report'
   | 'session-watches'
+  | 'session-wake-ups'
   | 'browser'
   | 'runner'
 

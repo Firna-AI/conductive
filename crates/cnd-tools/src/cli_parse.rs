@@ -3,6 +3,7 @@
 use serde_json::{Map, Value};
 
 use crate::call::Name;
+use crate::cli_options::{field, number, options};
 use crate::cli_secrets;
 use crate::error::{Error, InputError, Result};
 use crate::services;
@@ -24,8 +25,11 @@ pub(crate) fn help(args: &[String]) -> bool {
     if args[0] == "services" {
         return services::cli::help(args);
     }
-    if args.first().is_none_or(|value| value != "sessions") {
+    if !matches!(args[0].as_str(), "sessions" | "wake-ups") {
         return args.iter().any(|value| value == "--help");
+    }
+    if args.get(1).is_some_and(|arg| arg == "--help") {
+        return true;
     }
     let mut i = 2;
     while i < args.len() {
@@ -63,6 +67,9 @@ fn name(group: &str, verb: &str) -> Result<Name> {
         ("sessions", "close") => Name::CloseSession,
         ("sessions", "stop") => Name::StopSession,
         ("sessions", "watch") => Name::WatchSession,
+        ("wake-ups", "schedule") => Name::ScheduleWakeUp,
+        ("wake-ups", "list") => Name::ListWakeUps,
+        ("wake-ups", "cancel") => Name::CancelWakeUp,
         ("messages", "get") => Name::GetMessage,
         ("previews", "list") => Name::ListPreviews,
         ("previews", "open") => Name::OpenPreview,
@@ -70,66 +77,10 @@ fn name(group: &str, verb: &str) -> Result<Name> {
         ("mac", "run") => Name::RunMacCommand,
         ("workspaces", _) => return Err(Error::Input(InputError::WorkspaceCommand)),
         ("sessions", _) => return Err(Error::Input(InputError::SessionCommand)),
+        ("wake-ups", _) => return Err(Error::Input(InputError::WakeUpCommand)),
         ("mac", _) => return Err(Error::Input(InputError::MacCommand)),
         _ => return Err(Error::Input(InputError::Unknown)),
     })
-}
-
-fn options(name: Name) -> Vec<&'static str> {
-    let options = match name {
-        Name::ListSecrets | Name::RunWithSecrets => "",
-        Name::CreateWorkspace => {
-            "repository message message-file agent model effort fast section parent name first-session-title request-id start-branch base-branch"
-        }
-        Name::ListWorkspaces => {
-            "owner parent state repository query updated-since archived removed limit offset"
-        }
-        Name::GetWorkspace | Name::ArchiveWorkspace | Name::ListPreviews => "workspace",
-        Name::RenameWorkspace => "workspace name",
-        Name::MoveWorkspace => "workspace section parent top-level",
-        Name::ListSessions => "workspace limit offset",
-        Name::ReadSession => "workspace session detail start-line start-offset",
-        Name::CreateSession => {
-            "workspace message message-file title agent model effort fast request-id"
-        }
-        Name::SendMessage => {
-            "workspace session message message-file agent model effort fast request-id"
-        }
-        Name::GetSession | Name::StopSession => "workspace session",
-        Name::WatchSession => "workspace session turn-id",
-        Name::RenameSession => "workspace session title",
-        Name::CloseSession => "workspace session stop-running-turn",
-        Name::GetMessage => "workspace session message-id",
-        Name::CreateSection => "name",
-        Name::DeleteSection => "section",
-        Name::OpenPreview => "workspace port",
-        Name::ClosePreview => "workspace preview",
-        Name::RunMacCommand => {
-            "command folder reason timeout-seconds longer-timeout-reason request-id"
-        }
-        Name::ListRepositories | Name::ListSections | Name::ListModels => "",
-    };
-    options.split_whitespace().collect()
-}
-
-fn field(key: &str) -> String {
-    match key {
-        "workspace" | "session" | "repository" | "section" | "preview" | "owner" | "parent" => {
-            format!("{key}Id")
-        }
-        _ => {
-            let mut parts = key.split('-');
-            let mut result = parts.next().unwrap_or_default().to_string();
-            for part in parts {
-                let mut chars = part.chars();
-                if let Some(first) = chars.next() {
-                    result.extend(first.to_uppercase());
-                    result.extend(chars);
-                }
-            }
-            result
-        }
-    }
 }
 
 pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
@@ -201,7 +152,7 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
     }
     if let Some(value) = fields.remove("message") {
         fields.insert(
-            if name == Name::SendMessage {
+            if matches!(name, Name::SendMessage | Name::ScheduleWakeUp) {
                 "text"
             } else {
                 "firstMessage"
@@ -209,6 +160,14 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
             .into(),
             value,
         );
+    }
+    if let Some(Value::String(value)) = fields.get("delaySeconds") {
+        let value = if value.trim().is_empty() {
+            Value::Null
+        } else {
+            number(value)
+        };
+        fields.insert("delaySeconds".into(), value);
     }
     if fields.contains_key("agent") || fields.contains_key("model") {
         let mut model = Map::new();
@@ -264,31 +223,4 @@ pub(crate) fn parse(args: &[String]) -> Result<Arguments> {
         message_path,
         command: None,
     })
-}
-
-fn number(value: &str) -> Value {
-    let value = value.trim();
-    if value.is_empty() {
-        return Value::from(0);
-    }
-    for (prefixes, radix) in [(["0x", "0X"], 16), (["0b", "0B"], 2), (["0o", "0O"], 8)] {
-        if let Some(digits) = prefixes
-            .iter()
-            .find_map(|prefix| value.strip_prefix(prefix))
-        {
-            return u64::from_str_radix(digits, radix)
-                .map(Value::from)
-                .unwrap_or(Value::Null);
-        }
-    }
-    if let Ok(integer) = value.parse::<i64>() {
-        return Value::from(integer);
-    }
-    if let Ok(number) = value.parse::<f64>() {
-        if number.is_finite() && number.fract() == 0.0 && number.abs() <= 9_007_199_254_740_991.0 {
-            return Value::from(number as i64);
-        }
-        return Value::from(number);
-    }
-    Value::Null
 }
