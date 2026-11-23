@@ -722,12 +722,13 @@ This milestone bounds each history page, as M2 A says. It builds on the
 
 ## Milestone 5: Runner part checks
 
-Depends on: 1 and 2 under decision 1 C. Without that reader release, 1.
+Depends on: none for the code. Its protocol text comes from Milestone 1.
 
 This milestone changes when `RunnerFileReports.accept` checks a part, as
-M5 B says. It can run beside the history work in a nested workspace. It
-waits for the reader release because both milestones update the files
-README. The part code itself needs no reader change.
+M5 B says. It runs beside the history work in a nested workspace, from 23
+November 2026. It and the reader release change separate sections of the
+files README, so it does not wait for the reader release. The part code
+itself needs no reader change.
 
 - [ ] Check the numbers and the fields of each part when it arrives, as
       design call 16 says. Read no earlier part. Do not join the parts or
