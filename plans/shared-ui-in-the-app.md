@@ -191,7 +191,7 @@ Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
       config that names a moved path.
 - [x] Update each relative link and each path mention in the Markdown
       files. Check each changed relative link.
-- [ ] Run `npm run typecheck`, `npm run mockups:check`, `npm run lint`,
+- [x] Run `npm run typecheck`, `npm run mockups:check`, `npm run lint`,
       and `npm run format:check`. Fix each error. The typecheck, the lint,
       the format check, and the strict catalogue build without the
       comparison pass. The strict build with the comparison runs out of
@@ -222,16 +222,19 @@ Depends on: 3
 
 Depends on: every other milestone
 
-- [ ] Run the targeted tests and the complete gate named in `CLAUDE.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Run the targeted tests and the complete gate named in `CLAUDE.md`.
+      Every step passed locally except the strict catalogue build with the
+      comparison, which needs more memory. The CI of the pull request runs
+      the complete gate.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Add a follow-up item that deletes `tools/ui-move/` when no open
+- [x] Add a follow-up item that deletes `tools/ui-move/` when no open
       branch needs it.
-- [ ] Delete this plan when the `plans` skill says, under "Deleting the
+- [x] Delete this plan when the `plans` skill says, under "Deleting the
       plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this
