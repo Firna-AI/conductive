@@ -1,24 +1,17 @@
-import type { LucideIcon } from 'lucide-react'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookmarkCheck,
-  Copy,
-  CopyPlus,
-  Pencil,
-  X,
-} from 'lucide-react'
-import { Menu, type MenuEntry } from '../common/Menu'
-import { Sheet } from '../common/Sheet'
-import { copyPathItem } from '../files/rowMenuCopy'
-import { linkItem } from './linkCopy'
+import { defined } from '../../defined'
+import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import { sheet } from '../../entries/components/common/Sheet.mockup'
+import { copyPathItem } from '../../../../../src/ui/components/files/rowMenuCopy'
+import { linkItem } from '../../../../../src/ui/components/workspace/linkCopy'
 import type { WorkspaceTab } from './TabItem'
-import { transcriptItems } from './transcriptCopy'
+import { transcriptItems } from '../../../../../src/ui/components/workspace/transcriptCopy'
 
 /** An item of the menu of a tab. */
 type TabMenuItem = {
   label: string
-  icon: LucideIcon
+  icon: IconKey
   /** The place of the tab rules the item out, so it shows greyed. */
   disabled?: boolean
   /**
@@ -30,14 +23,14 @@ type TabMenuItem = {
 }
 
 /** The groups that keep an item, with a line between two groups. */
-function joined(groups: readonly (readonly TabMenuItem[])[]): MenuEntry[] {
-  const entries: MenuEntry[] = []
+function joined(groups: readonly (readonly TabMenuItem[])[]): MenuEntryData[] {
+  const entries: MenuEntryData[] = []
   for (const group of groups) {
     if (group.length === 0) continue
     if (entries.length > 0) entries.push({ kind: 'divider' })
     for (const item of group) {
       const { label, icon, disabled } = item
-      entries.push({ kind: 'item', label, icon, disabled })
+      entries.push({ kind: 'item', label, icon, ...defined({ disabled }) })
     }
   }
   return entries
@@ -50,7 +43,7 @@ function joined(groups: readonly (readonly TabMenuItem[])[]): MenuEntry[] {
  */
 const keepOpen: TabMenuItem = {
   label: 'Keep open',
-  icon: BookmarkCheck,
+  icon: 'bookmark-check',
   changes: true,
 }
 
@@ -59,7 +52,11 @@ const keepOpen: TabMenuItem = {
  * repository, as the Copy path item of a row of the Files panel does
  * (decision 3 B of the file row menu change). A copy changes nothing.
  */
-const copyPath: TabMenuItem = { ...copyPathItem, changes: false }
+const copyPath: TabMenuItem = {
+  label: copyPathItem.label,
+  icon: iconKeyOf(copyPathItem.icon),
+  changes: false,
+}
 
 /**
  * The groups of the menu of a tab, before a read-only workspace leaves
@@ -77,11 +74,15 @@ function groupsOf(
 ): readonly (readonly TabMenuItem[])[] {
   if (tab.kind === 'session') {
     return [
-      [{ label: 'Rename session', icon: Pencil, changes: true }],
+      [{ label: 'Rename session', icon: 'pencil', changes: true }],
       [
-        { ...linkItem, changes: false },
-        { label: transcriptItems.concise, icon: Copy, changes: false },
-        { label: transcriptItems.full, icon: CopyPlus, changes: false },
+        {
+          label: linkItem.label,
+          icon: iconKeyOf(linkItem.icon),
+          changes: false,
+        },
+        { label: transcriptItems.concise, icon: 'copy', changes: false },
+        { label: transcriptItems.full, icon: 'copy-plus', changes: false },
       ],
       moves,
       closes,
@@ -109,20 +110,20 @@ export function tabMenuOf(
   tabs: readonly WorkspaceTab[],
   key: string,
   readOnly: boolean,
-): readonly MenuEntry[] {
+): readonly MenuEntryData[] {
   const index = tabs.findIndex((tab) => tab.key === key)
   const tab = tabs[index]
   if (!tab) return []
   const moves: TabMenuItem[] = [
     {
       label: 'Move left',
-      icon: ArrowLeft,
+      icon: 'arrow-left',
       disabled: index === 0,
       changes: true,
     },
     {
       label: 'Move right',
-      icon: ArrowRight,
+      icon: 'arrow-right',
       disabled: index === tabs.length - 1,
       changes: true,
     },
@@ -130,13 +131,13 @@ export function tabMenuOf(
   const closes: TabMenuItem[] = [
     {
       label: 'Close other tabs',
-      icon: X,
+      icon: 'x',
       disabled: tabs.length === 1,
       changes: true,
     },
     {
       label: 'Close tabs to the right',
-      icon: X,
+      icon: 'x',
       disabled: index === tabs.length - 1,
       changes: true,
     },
@@ -163,8 +164,13 @@ export function TabMenuSheet(props: {
   const entries = tabMenuOf(props.tabs, tab.key, props.readOnly)
   if (entries.length === 0) return null
   return (
-    <Sheet title={tab.title}>
-      <Menu entries={entries} label={tab.title} placement="sheet" />
-    </Sheet>
+    <sheet.Component moklyInstance="tab-menu-sheet" title={tab.title}>
+      <menu.Component
+        entries={entries}
+        label={tab.title}
+        moklyInstance="tab-menu"
+        placement="sheet"
+      />
+    </sheet.Component>
   )
 }

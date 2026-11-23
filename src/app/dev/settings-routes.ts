@@ -1,5 +1,6 @@
 import {
   compareRepositoryNames,
+  buildsAtAdd,
   orgSettingsPaths,
   repositoryPath,
   repositoryPositionPath,
@@ -8,6 +9,7 @@ import {
   type RepositoryOrderResponse,
   type Repository,
 } from '../../shared/org-settings'
+import { savedSkillsRepositorySettings } from '../../shared/skills-repository-settings'
 import {
   choice,
   count,
@@ -17,6 +19,7 @@ import {
   type JsonObject,
 } from '../api/parse'
 import { requireOrg, type DevBackend } from './backend'
+import { imageRepositories } from './build-changes'
 import { startBuild } from './build-routes'
 import {
   ID,
@@ -78,9 +81,10 @@ function envChanges(object: JsonObject, key: string) {
 }
 
 /**
- * The scripts and the env vars. Only the names and the marks of env vars
- * stay, so no reply holds a value. A changed install script asks for a
- * build.
+ * The scripts, the env vars, and the skills repository. Only the names and
+ * the marks of env vars stay, so no reply holds a value. A changed install
+ * script asks for a build. With `skillsSave=fail`, the first save that
+ * names the skills repository or its trust fails and changes nothing.
  */
 function updateSettings(
   backend: DevBackend,
@@ -90,7 +94,19 @@ function updateSettings(
   const fields = record(body)
   const installScript = optional(fields, 'installScript', text)
   const startupScript = optional(fields, 'startupScript', text)
+  const skillsRepository = optional(fields, 'skillsRepository', text)
+  const trustedSkillsRepository = optional(
+    fields,
+    'trustedSkillsRepository',
+    text,
+  )
   const changes = optional(fields, 'envVars', envChanges) ?? []
+  const namesSkills =
+    skillsRepository !== undefined || trustedSkillsRepository !== undefined
+  if (namesSkills && backend.state.skillsSaveFails) {
+    backend.state.skillsSaveFails = false
+    throw new Error('The save failed.')
+  }
   const current = org.settings
   const changedInstall =
     installScript !== undefined && installScript !== current.installScript
@@ -98,6 +114,10 @@ function updateSettings(
     ...current,
     installScript: installScript ?? current.installScript,
     startupScript: startupScript ?? current.startupScript,
+    ...savedSkillsRepositorySettings(current, {
+      skillsRepository,
+      trustedSkillsRepository,
+    }),
     envVars: changes.reduce(applyEnvChange, current.envVars),
     updatedAt: backend.now(),
   }
@@ -121,9 +141,21 @@ function inRepositoryOrder(
   ]
 }
 
+/**
+ * The repositories of the org in the order of the Worker, also after an
+ * add or a removal. As in the Worker, each says whether the org has a good
+ * image, and whether that image holds it, also a repository that the org
+ * no longer chose.
+ */
 function repositoriesReply(org: OrgState): Response {
+  const held = new Set(imageRepositories(org).map(({ id }) => id))
+  const imageReady = org.currentImageBuildId !== null
   return json({
-    repositories: inRepositoryOrder(org.repositories),
+    repositories: inRepositoryOrder(org.repositories).map((repository) => ({
+      ...repository,
+      ready: held.has(repository.id),
+      imageReady,
+    })),
   } satisfies RepositoriesResponse)
 }
 
@@ -165,15 +197,17 @@ function moveRepository(
  * Chooses a repository of the org, or removes it. A newly chosen
  * repository goes to the end of the repository order. A removal turns off
  * each automation in the repository with the reason that its page shows,
- * as the Worker does.
+ * as the Worker does. An add starts a build unless the body says
+ * `build: false`.
  */
 function setRepository(
   backend: DevBackend,
   org: OrgState,
   repositoryId: string,
-  selected: boolean,
+  change: { selected: boolean; build: boolean },
   now: number,
 ): Response {
+  const { selected } = change
   const changed = org.repositories.some(
     (repository) =>
       repository.id === repositoryId && repository.selected !== selected,
@@ -202,7 +236,7 @@ function setRepository(
     )
   }
   if (changed) org.settingsRevision += 1
-  if (changed && selected) startBuild(backend, org)
+  if (changed && selected && change.build) startBuild(backend, org)
   return repositoriesReply(org)
 }
 
@@ -224,12 +258,12 @@ export function settingsRoutes(backend: DevBackend): Route[] {
     {
       method: 'PUT',
       path: repositoryPath(ID.org, ID.repository),
-      answer: ({ params }) =>
+      answer: ({ params, body }) =>
         setRepository(
           backend,
           orgOf(params),
           params.repository,
-          true,
+          { selected: true, build: buildsAtAdd(body) },
           backend.now(),
         ),
     },
@@ -241,7 +275,7 @@ export function settingsRoutes(backend: DevBackend): Route[] {
           backend,
           orgOf(params),
           params.repository,
-          false,
+          { selected: false, build: false },
           backend.now(),
         ),
     },

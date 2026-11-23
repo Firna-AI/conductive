@@ -17,8 +17,8 @@ sends no preview request and imports nothing from the Preview tool.
   the previews store. `createFilesPreviewStore` of
   [the previews](../../previews/README.md) makes it, and
   `ShownWorkspaces.filesPreview` keeps it. It holds the files preview that
-  lives, the previews that ended, and whether an open runs. No list of the
-  Preview tool holds it.
+  lives, the previews that ended, whether an open runs, and its running
+  period. No list of the Preview tool holds it.
 - `KeptConnections` connects it for the whole screen, through
   `useFilesPreviewConnection` of `previews/kept-files-preview.ts`, also
   while the sandbox does not run. A `preview.revoked` event of its ID ends
@@ -32,10 +32,22 @@ sends no preview request and imports nothing from the Preview tool.
   previews for a new read. The files preview can expire, or end by a
   revoke or a stop, while no screen watches it. So the first show after a
   return opens it again, and the route answers the one that lives, or a
-  new one. An open belongs to the connection in which it started, and its
-  answer after the end of that connection changes nothing.
+  new one.
 - A failed open forgets the files preview too, but ends no ID. So Try
   again, a return, and the tab of another HTML file open it again.
+- The workspace screen gives `KeptConnections` the value of
+  `WorkspaceModel.opened`: whether the open of the visit ended. A running
+  period of the store lasts while that open has ended and the workspace is
+  ready. Until then, the screen can show the state that the tab saved,
+  such as Ready after the cloud computer stopped while the member was
+  away. So that saved state starts no running period. A running period
+  ends when the workspace leaves Ready, and when the visit ends.
+- Each start and each end of a running period begins a new period of the
+  store, and so does each end of the connection. A new period ends the
+  open that runs. A start or an end of a running period keeps the files
+  preview, so a Restart keeps the page that a tab shows. An open belongs
+  to the period in which it started. Its answer in a later period changes
+  nothing, also no failure and no page of the tab.
 
 ## The page of the tab
 
@@ -43,14 +55,21 @@ sends no preview request and imports nothing from the Preview tool.
   The hook then opens the files preview once for each show, when the app
   has none. A show is the first show of the page, a visit that shows the
   tab again, as `useTabVisits` says, and Reload or Try again while the app
-  has no files preview. It waits while the sandbox does not run and while
-  an open runs. One hook serves each file tab of the centre, so a new tab
-  ends the show, the failure, and the page of the last one.
-- When the workspace leaves Starting, such as after a Restart or a resume,
-  the hook ends a failure, and the next show that it serves opens the
-  files preview again, also while the app keeps one: the show that runs,
-  or the first show after it. The open answers the files preview that
-  lives.
+  has no files preview. It waits while the cloud computer does not run and
+  while an open runs. One hook serves each file tab of the centre, so a
+  new tab ends the show, the failure, and the page of the last one.
+- For the hook, the cloud computer runs only while the screen shows Ready
+  and the files preview store is in a running period. So a return that
+  first shows the saved Ready state sends no open. Meanwhile the page
+  shows the look of the launch page. When the visit confirms Ready, the
+  hook opens the files preview. When the visit reads another state, the
+  tab shows the state of the cloud computer, such as Starting.
+- A running period starts, for example, when the workspace leaves Starting
+  after a Restart or a resume. It also starts when the open of a visit
+  confirms Ready. At each start, the hook ends a failure. Then the next
+  show that it serves opens the files preview again, also while the app
+  keeps one: the show that runs, or the first show after it. The open
+  answers the files preview that lives.
 - While the cloud computer does not run, the hook builds no page from the
   files preview, also while a Restart keeps it. A tab keeps only the page
   that it shows when Starting begins, and only while that show runs. Each
@@ -71,6 +90,11 @@ sends no preview request and imports nothing from the Preview tool.
   `versionOf` of its file grows.
 - Open is `OpenInNewTab` of the previews, at the path of the file, while a
   files preview lives and the cloud computer runs.
+- Expand shows on desktop while the page shows and a files preview lives.
+  It asks the `PageFrames` to expand the path. `KeptPageFrames` then shows
+  the kept frame in the large window of `ExpandableFrames`, with no new
+  load. The window closes at Close, at Escape, at a press on the dim
+  layer, at another tab, and when the files preview ends.
 
 ## Kept frames
 

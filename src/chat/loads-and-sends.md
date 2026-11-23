@@ -106,6 +106,38 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   tab shows again. The notice "The session didn't close" shows with the
   tab, or on the shown tab when the restored tab stays hidden.
   [`state/close-actions.ts`](state/close-actions.ts) holds these steps.
+- A history load, and the stored history that the stream sends before its
+  live events, each replay stored events in pages. While a replay runs,
+  the chat holds the changes that its session records make to the open
+  tabs, their order, and the shown tab. A page shows its messages and the
+  newer fields of its session records, such as a title or a model, when it
+  merges. When the connection of the stream drops during its replay, the
+  hold lasts until the next final page, also an empty one.
+- When the last running replay ends, after a success or a failure, the
+  tabs follow the newest record of each session. The end compares the
+  newest record of each session that the chat knows with the record that
+  places its tab. It also compares that record with the open and the
+  closed lists of the snapshot, `sessions` and `history`. It places each
+  session that differs. So a change also shows when a failed load held
+  it, or when its event comes again as a repeat.
+- The first load counts as a running replay from before the history load
+  of the shown session until its second session list read ends. This
+  holds also when that read fails. So that list sets the tabs, also when
+  the history load ends first. After a failed read, the newest records
+  place the tabs when the last replay ends.
+- Local tabs are the session tabs of a read-only chat after its first tab
+  change in the browser only. `archiveTabs` holds them. While local tabs
+  exist, a replay changes no tab, no order of the tabs, no shown session,
+  and no view. It still puts each session in the open or the closed list,
+  also a session that first shows in the replay. These lists need no hold
+  then, because the local tabs hold the navigation. Each page updates them
+  when it merges. So the session history also lists a session that first
+  shows in a replay, and a Restore shows the stored open sessions as tabs.
+- A close, a reopen, a choice of a tab, and a model change apply at once,
+  also during a replay. A failed close during a replay puts its tab back,
+  also when a page of the replay says that the session closed.
+  [`state/session-replay.ts`](state/session-replay.ts) holds the steps of a
+  replay.
 
 ## Sends and Stop
 
@@ -117,10 +149,10 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools)
   says. The line shows "Stopped from" and the chip of that session, then
   the notes of the turn. `components/TranscriptItem.tsx` draws each stop
-  line with the mockups' `StopLine`, and `SessionLinkText` of
+  line with the shared `StopLine`, and `SessionLinkText` of
   `links/LinkedText.tsx` draws the chip.
 - That chip finds its session and opens its page as the chip of a session
-  link in a message does, as [Workspace chips](agent-text.md#workspace-chips)
+  link in a message does, as [Workspace chips](text-links.md#workspace-chips)
   says. This holds also for a session of another workspace, and for a
   closed or unknown session. A workspace that the list of the org does not
   hold leaves the session link as text, with the origin of the link of the

@@ -24,6 +24,21 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   lives in the centre.
 - Reason for "Open": Safari blocks the cookies of the previewed app inside
   a frame.
+- On desktop, the bar also holds Expand, after Reload. Expand shows the
+  page in a large window over the whole app, on the dim layer of a dialog.
+  The header of the window names the page with the label of its tab, and
+  holds Reload, Open, and Close. The user asked for this on 20 November
+  2026, so a page is easy to view in a larger size.
+- Close, Escape, and a press on the dim layer close the window, and the
+  page stays in its tab. The window also closes when another tab shows or
+  the page goes, such as when the cloud computer stops. While the window
+  shows, the keys of the app run no command, and Tab stays in the window.
+- The window shows the same frame, so the page keeps its state: its
+  address, its scroll place, and its sign-in. A new frame in the window
+  was rejected, because it loads the page again at the root address of
+  the preview. This is a design call of 20 November 2026.
+- A phone has no Expand, because its Preview page already shows the page
+  across the whole width of the screen.
 - On a phone, the Preview page shows the page in a frame, with a bar of
   the tabs of the open previews, "+", Reload, and Open. Reason: a phone has
   no tab row of files, so it shows no Preview tab.
@@ -36,6 +51,9 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   preview is open, and after "+".
   [Listening ports](agent-runner.md#listening-ports) says which ports the
   list holds.
+- Above the servers, the form lists the [services](services.md) of the
+  workspace, as [The list](services-in-the-app.md#the-list) says. A port
+  that a service owns shows only in the row of its service.
 - Reason: a user often does not know the port, such as when an agent
   started the server. The report is ready when the form shows, and it
   needs no call to Boat.
@@ -66,22 +84,24 @@ the addresses in the terminal open, as [Terminal](terminal.md) says.
   1 B).
 - A click on a server opens its preview with the same request and checks
   as a typed port.
-- On desktop, the list holds each port: each server of the report, then
-  each port with a Preview tab or an open preview that the report does not
-  name, as `Port 8080`. A click on a port shows its Preview tab when it has
-  one. Else a new Preview tab opens at the end of the row and shows
-  (decision 291). The row of the port whose tab shows is the current one.
+- On desktop, the list holds each port: each server of the report that no
+  service owns, then each port with a Preview tab or an open preview that
+  the report does not name, as `Port 8080`. A click on a port shows its
+  Preview tab when it has one. Else a new Preview tab opens at the end of
+  the row and shows (decision 291). The row of the port whose tab shows is
+  the current one.
 - Reason: the tool opens many ports at the same time, and a port with a
   tab must stay reachable from the tool.
 - On a phone, a port that has an open preview leaves the list, because its
-  tab shows it.
+  tab shows it. The row of a service stays, with each of its ports.
 - A server joins or leaves the list within about 4 seconds after it starts
   or stops. Each open tab gets each new list, and a tab that opens later
   shows the latest list.
 - The port field stays below the list, as a smaller "Other port" row. It
   uses the same preview checks for ports that the list leaves out.
 - When the runner reports no server, the form asks the user to start one
-  in the terminal, or to ask the agent. The field stays.
+  in the terminal, or to ask the agent. The field stays. When the software
+  gives services, the Services section takes the place of that request.
 - When the app has no report, the form shows only the field. This holds
   for a sandbox whose runner does not report ports, until an update gives
   it a newer runner.

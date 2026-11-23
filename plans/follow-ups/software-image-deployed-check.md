@@ -7,7 +7,7 @@
 - **Reason:** the remaining checks need read-only production D1 access, and a person who signs in and creates a test org.
 
 - **Terms:**
-  - **Software image:** one saved snapshot for each version of the app's own software. It is the base image with a release of the sandbox software, the terminal packages, and the GitHub CLI. It holds no org data. `docs/protocol/sandbox-software.md` gives its rules.
+  - **Software image:** one saved snapshot for each version of the app's own software. It is the base image with a release of the sandbox software, the terminal packages, and the GitHub CLI. It holds no org data. `docs/protocol/software-image.md` gives its rules.
   - **First build:** a build of an org that has no org image yet. It starts from the ready software image of the newest release, copies the repositories, installs the newest release, and runs the install script. Without that image, it starts from the base image and installs all of the app's own software.
   - **Software step:** the step of a build that installs the app's own software. The build log starts it with the line "Installing the cloud computer software.".
   - **Apt part:** the part of the software step that installs `gh`, `tmux`, and `ttyd` with apt. It also masks the ttyd service of the package.
@@ -17,7 +17,7 @@
   - Two different limits apply. Each request may take 30 seconds, the request limit. All requests together may take 15 minutes, the total wait.
   - The tests use fake provider and GitHub servers and a local D1. No test proves the real Cloudflare binding, the real provider snapshot, or the length of a real build.
   - The Worker refuses the route with 404 when the binding gives a creation time that does not parse. So a wrong binding format makes every deploy run fail at the job `software-image`.
-  - On 16 November 2026, PR #342, commit `a20746b99`, made each org build install the newest release. This includes a first build from the software image. `docs/protocol/sandbox-software.md` requires it, in "Installs in a build" and "The software image". `worker/lifecycle/software-image-start.test.ts` expects the line "Installing the cloud computer software." in such a first build.
+  - On 16 November 2026, PR #342, commit `a20746b99`, made each org build install the newest release. This includes a first build from the software image. `docs/protocol/sandbox-software.md` requires it in "Installs in a build", and `docs/protocol/software-image.md` in "The software image". `worker/lifecycle/software-image-start.test.ts` expects the line "Installing the cloud computer software." in such a first build.
   - On 16 November 2026, PR #390, commit `4373e1450`, let the software step skip the apt part. The skip needs a source image that recorded the current apt part version. That image must also hold the three packages and the masked ttyd service. The step then prints "The system packages are already installed.". A first build gets such a source only from the software image.
   - When the image holds the program `conductive`, the step installs the newest release with the updater of that program. The updater downloads only the changed parts. When that update fails, the step prints "The installed updater did not get the release. Downloading the full release.".
   - A first build pins the ready software image of the newest release when it starts. Each deploy run publishes its release before its software image is ready. A first build in that time starts from the base image.

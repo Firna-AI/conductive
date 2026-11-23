@@ -1,9 +1,7 @@
 import { expect, it } from 'vitest'
 
-import {
-  RunnerConnectionStore,
-  type StoredRunnerConnection,
-} from './runner-connection-store'
+import { RunnerConnectionStore } from './runner-connection-store'
+import type { RunnerConnectionState } from './runner-connection-state'
 import type { ChatData, ChatStorage } from './types'
 
 function memory(): ChatStorage & { values: Map<string, unknown> } {
@@ -20,7 +18,7 @@ function memory(): ChatStorage & { values: Map<string, unknown> } {
   return { ...data, values, transaction: (work) => work(data) }
 }
 
-const connection: Omit<StoredRunnerConnection, 'generation'> = {
+const connection: Omit<RunnerConnectionState, 'generation'> = {
   id: 'connection',
   workspace: {
     id: 'workspace',
@@ -61,4 +59,44 @@ it('refuses a saved repository folder that is not text', async () => {
   await expect(store.current()).rejects.toThrow(
     'The saved runner connection is invalid.',
   )
+})
+
+it('keeps the capability notice announcement across a wake and defaults older records to no support', async () => {
+  const storage = memory()
+  const store = new RunnerConnectionStore(storage)
+  const capable = await store.replace({
+    ...connection,
+    capabilityNotices: true,
+  })
+  expect(await store.current()).toMatchObject({ capabilityNotices: true })
+  await store.save({ ...capable, capabilityNotices: false }, capable.generation)
+  expect(await store.current()).not.toHaveProperty('capabilityNotices')
+  await store.replace(connection)
+  expect(await store.current()).not.toHaveProperty('capabilityNotices')
+})
+
+it('keeps pending and refused repository moves and reads records without a move', async () => {
+  const storage = memory()
+  const store = new RunnerConnectionStore(storage)
+  const repositoryMove = {
+    commandId: 'move-billing',
+    folder: '/home/user/code/billing',
+    refused: false,
+  }
+  const saved = await store.replace({ ...connection, repositoryMove })
+  expect(await store.current()).toEqual({ ...saved, repositoryMove })
+  const refused = {
+    ...saved,
+    repositoryMove: { ...repositoryMove, refused: true },
+  }
+  await store.save(refused, saved.generation)
+  expect(await store.current()).toEqual(refused)
+  const older = await store.replace(connection)
+  expect(await store.current()).toEqual(older)
+  const malformed = { ...older, repositoryMove: { commandId: 7 } }
+  storage.values.set(
+    'native:runner:state:0',
+    JSON.stringify({ generation: older.generation, connection: malformed }),
+  )
+  expect(await store.current()).toEqual(older)
 })

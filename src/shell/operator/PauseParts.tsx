@@ -1,9 +1,6 @@
 import { CircleAlert, CirclePause, Pause, Play } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import {
-  pausedTitle,
-  pauseWords,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
+import { Notice } from '../../ui/components/common/Notice'
+import { pausedTitle, pauseWords } from '../../ui/components/operator/codeCopy'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { ActionButton } from '../ui/actions'

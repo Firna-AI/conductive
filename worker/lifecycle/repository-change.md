@@ -141,7 +141,8 @@ the new folder with the isolated source command, in this order:
 3. It imports the staged base and creates the new branch with the
    checkout of Continue. Changed files move with the branch. When Git
    refuses, the command exits with code 82, and the job ends with the
-   clash message of `repositoryFailure` in the mockup copy.
+   clash message of `repositoryFailure` in the shared
+   `repositoryMoveCopy.ts`.
 4. It points `origin/HEAD` at the base and sets the `gh-merge-base`
    setting of the new branch.
 
@@ -189,6 +190,36 @@ runs after a good move. It never runs Git again.
 - It schedules a GitHub read of the new binding and ends the reservation.
   The job then sends `repository.move` to a connected runner, as
   [the runner check](../chat/key-code.md) says, and flushes the held turns.
+
+## Labels
+
+The job and each stored `workspace.repository-changed` note keep the real
+names. Git and each request use them. The Worker adds a masked label
+beside each name that a screen shows, as
+[Secrets that users enter](../../docs/protocol/tokens-and-secrets.md#secrets-that-users-enter)
+requires.
+
+- `publishRepositoryChange` writes each new note with its real names
+  only. It replays a saved note through the `publish` of its authorized
+  operation. The chat backend adds `displayBranch` and
+  `displayBaseBranch`, as
+  [Branch and path labels](../chat/integration/README.md#branch-and-path-labels)
+  says. `filterRepositoryChanged` of
+  [the output fields](../../src/shared/output-fields.ts) fills them, and
+  leaves out a label that equals its real name.
+- `repositoryChangeRoute` passes each result of the workspace object
+  through `labelRepositoryChangeResult` of
+  [`repository-change-output.ts`](repository-change-output.ts). Only a
+  `confirmation-required` reply and a `workspace_repository_change_failed`
+  error get labels, so the route reads the secret values only for them.
+- The question gets `displayUncommittedFiles` in `work.localWork` and
+  `displayCarriedFiles` in `work`: the label of each path, in the same
+  order. `filterRepositoryChangeResponse` of the output fields leaves out
+  a list when each label equals its path. The `branch` and `baseBranch`
+  of the question get no label, because no screen shows them.
+- The route hides each secret value in the message of a
+  `workspace_repository_change_failed` error. The saved error keeps the
+  real names, such as the default branch in the message of a failed fetch.
 
 ## Failures and recovery
 
@@ -249,3 +280,14 @@ have it.
 - [`repository-change-routes.test.ts`](../features/repository-change-routes.test.ts)
   runs a change through the real routes of the production Worker, with a
   runner that cannot move, and the GitHub events of the new repository.
+- [`repository-change.test.ts` route](../app-api/repository-change.test.ts):
+  the [labels](#labels) of both file lists of a question and of a failure
+  message, in a POST and a GET reply. The request, the stored question, and
+  the stored message keep the real names. A refusal and each other result
+  pass unchanged, with no read of the secret values.
+- [`repository-change-labels.test.ts`](../chat/repository-change-labels.test.ts):
+  the [labels](#labels) of a new and a replayed note, also on a tab that
+  opened before the secret values changed. The job, its keys, and the Git
+  commands keep the real names. An old note without labels gets them in
+  a new tab, a page of the session history, and both transcript copies.
+  Its stored event does not change.

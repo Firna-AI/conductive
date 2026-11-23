@@ -1,15 +1,20 @@
+import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
-import { Globe } from 'lucide-react'
 import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { EmptyState } from '../common/EmptyState'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { portFormCopy, serverDescription } from './previewCopy'
-import styles from './PortForm.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  portFormCopy,
+  serverDescription,
+} from '../../../../../src/ui/components/tools/previewCopy'
+import { servicesCopy } from '../../../../../src/ui/components/tools/serviceCopy'
+import { ToolHeading } from './ServiceList'
+import styles from '../../../../../src/ui/components/tools/PortForm.module.css'
 
 /** The port field and Open preview, primary alone or secondary under a list. */
 function PortField(props: { label: string; placeholder: string }) {
@@ -65,14 +70,22 @@ function ServerRow(props: { server: ListeningPort; current: boolean }) {
 /**
  * The port form with the servers of the sandbox, and the smaller Other port
  * row under them. The list scrolls when it does not fit. `current` is the
- * port of the Preview tab that shows, on desktop.
+ * port of the Preview tab that shows, on desktop. `services` lies above
+ * the servers, in the same scroll, and then the servers take a heading.
  */
 export function ServerList(props: {
   servers: readonly ListeningPort[]
   current?: number | null
+  services?: ReactNode
 }) {
   return (
     <div className={styles.list}>
+      {props.services ? (
+        <>
+          {props.services}
+          <ToolHeading>{servicesCopy.serversHeading}</ToolHeading>
+        </>
+      ) : null}
       <p className={styles.intro}>{portFormCopy.body}</p>
       <ul aria-label={portFormCopy.listLabel} className={styles.rows}>
         {props.servers.map((server) => (
@@ -88,7 +101,9 @@ export function ServerList(props: {
           {portFormCopy.otherPort}
         </span>
         <PortField label={portFormCopy.otherPort} placeholder="8080" />
-        <ActionButton>{portFormCopy.open}</ActionButton>
+        <actionButton.Component moklyInstance="open-other-port">
+          {portFormCopy.open}
+        </actionButton.Component>
       </div>
     </div>
   )
@@ -101,15 +116,18 @@ export function ServerList(props: {
  */
 export function PortMessage(props: { body: string }) {
   return (
-    <EmptyState
+    <emptyState.Component
+      moklyInstance="port-message"
       action={
         <div className={styles.open}>
           <PortField label="Port" placeholder="3000" />
-          <ActionButton tone="primary">{portFormCopy.open}</ActionButton>
+          <actionButton.Component moklyInstance="open-port" tone="primary">
+            {portFormCopy.open}
+          </actionButton.Component>
         </div>
       }
       body={props.body}
-      icon={Globe}
+      icon="globe"
       title={portFormCopy.title}
     />
   )

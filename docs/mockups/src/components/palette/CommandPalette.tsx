@@ -1,22 +1,24 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { InputFrame } from '@firna/ui/input'
-import { Archive, ChevronDown, FolderGit2, Search } from 'lucide-react'
+import { ChevronDown, Search } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'
 import { pageHost } from '../../fixtures/shortcutHosts'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { LinkTabs } from '../common/LinkTabs'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { Sheet } from '../common/Sheet'
+import { sheet } from '../../entries/components/common/Sheet.mockup'
 import {
   paletteContent,
   type PaletteContent,
   type PaletteContext,
 } from './paletteContent'
 import type { PaletteFilters } from './paletteFilters'
-import { PaletteResults, type PaletteKeys } from './PaletteRows'
+import type { PaletteKeys } from './PaletteRows'
+import { paletteResults } from '../../entries/components/palette/PaletteRows.mockup'
 import {
   macPaletteTabPaths,
   paletteTabLabels,
@@ -24,7 +26,7 @@ import {
   paletteTabs,
   type OpenPaletteView,
 } from './paletteViews'
-import styles from './CommandPalette.module.css'
+import styles from '../../../../../src/ui/components/palette/CommandPalette.module.css'
 
 const chevron = <ChevronDown aria-hidden className={styles.chevron} size={13} />
 
@@ -46,7 +48,7 @@ function SearchField(props: { content: PaletteContent; mobile: boolean }) {
 }
 
 /** The choices of the repository filter, with the current one checked. */
-function repositoryEntries(selected: string): MenuEntry[] {
+function repositoryEntries(selected: string): MenuEntryData[] {
   return [
     {
       kind: 'item',
@@ -55,7 +57,7 @@ function repositoryEntries(selected: string): MenuEntry[] {
       highlighted: true,
     },
     { kind: 'divider' },
-    ...Object.values(repositories).map((repository): MenuEntry => ({
+    ...Object.values(repositories).map((repository): MenuEntryData => ({
       kind: 'item',
       label: repository.name,
       checked: selected === repository.name,
@@ -75,20 +77,22 @@ function Filters(props: { filters: PaletteFilters; mobile: boolean }) {
     <div className={styles.filters}>
       <span className={styles.anchor}>
         <ScreenLink asChild to={paths.paletteRepository}>
-          <ActionButton
+          <actionButton.Component
             expanded={filters.repositoryMenu}
-            icon={FolderGit2}
+            icon="folder-git-2"
             menu
+            moklyInstance="repository-filter"
             tone="plain"
             trailing={chevron}
           >
             {filters.repository}
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
         {filters.repositoryMenu && !props.mobile ? (
-          <Menu
+          <menu.Component
             entries={repositoryEntries(filters.repository)}
             label="Repository"
+            moklyInstance="repository-menu"
             placement="below-end"
           />
         ) : null}
@@ -97,9 +101,15 @@ function Filters(props: { filters: PaletteFilters; mobile: boolean }) {
         asChild
         to={archived ? paths.paletteWorkspaces : paths.paletteArchived}
       >
-        <ActionButton icon={Archive} menu tone="plain" trailing={chevron}>
+        <actionButton.Component
+          icon="archive"
+          menu
+          moklyInstance="state-filter"
+          tone="plain"
+          trailing={chevron}
+        >
           {filters.state}
-        </ActionButton>
+        </actionButton.Component>
       </ScreenLink>
     </div>
   )
@@ -123,7 +133,11 @@ function TabBar(props: {
   }))
   return (
     <div className={styles.bar}>
-      <LinkTabs label="Search in" tabs={tabs} />
+      <linkTabs.Component
+        label="Search in"
+        moklyInstance="palette-tabs"
+        tabs={tabs}
+      />
       {content.filters && !props.mobile ? (
         <Filters filters={content.filters} mobile={false} />
       ) : null}
@@ -134,9 +148,13 @@ function TabBar(props: {
 /**
  * The palette on a phone: a page that fills the screen, with the search
  * field and Cancel at the top. Cancel goes back to the list, where the
- * Search row opened it.
+ * Search row opened it. `content` is the content of `view` and `context`.
  */
-function PalettePage(props: { content: PaletteContent }) {
+function PalettePage(props: {
+  content: PaletteContent
+  view: OpenPaletteView
+  context: PaletteContext
+}) {
   const { content } = props
   return (
     <section aria-label="Search" className={styles.page}>
@@ -145,7 +163,9 @@ function PalettePage(props: { content: PaletteContent }) {
           <SearchField content={content} mobile />
         </div>
         <ScreenLink asChild to={paths.shell}>
-          <ActionButton tone="plain">Cancel</ActionButton>
+          <actionButton.Component moklyInstance="cancel-search" tone="plain">
+            Cancel
+          </actionButton.Component>
         </ScreenLink>
       </header>
       <TabBar content={content} mobile />
@@ -154,15 +174,16 @@ function PalettePage(props: { content: PaletteContent }) {
           <Filters filters={content.filters} mobile />
         </div>
       ) : null}
-      <PaletteResults content={content} />
+      <paletteResults.Component context={props.context} view={props.view} />
       {content.filters?.repositoryMenu ? (
-        <Sheet title="Repository">
-          <Menu
+        <sheet.Component moklyInstance="repository-sheet" title="Repository">
+          <menu.Component
             entries={repositoryEntries(content.filters.repository)}
             label="Repository"
+            moklyInstance="repository-menu"
             placement="sheet"
           />
-        </Sheet>
+        </sheet.Component>
       ) : null}
     </section>
   )
@@ -183,7 +204,9 @@ export function CommandPalette(props: {
 }) {
   const { context } = props
   const content = paletteContent(props.view, context)
-  if (props.viewport === 'mobile') return <PalettePage content={content} />
+  if (props.viewport === 'mobile') {
+    return <PalettePage content={content} context={context} view={props.view} />
+  }
   const keys: PaletteKeys = {
     changes: context.shortcuts ?? {},
     host: pageHost(context.mac === true),
@@ -201,7 +224,11 @@ export function CommandPalette(props: {
           <SearchField content={content} mobile={false} />
         </div>
         <TabBar content={content} mac={context.mac} mobile={false} />
-        <PaletteResults content={content} keys={keys} />
+        <paletteResults.Component
+          context={context}
+          keys={keys}
+          view={props.view}
+        />
       </section>
     </div>
   )

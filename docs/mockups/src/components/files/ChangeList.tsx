@@ -1,12 +1,12 @@
-import { FileDiff } from 'lucide-react'
 import { splitPath, type ChangedFile } from '../../fixtures/files'
-import { EmptyState } from '../common/EmptyState'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { ChangeIcon } from './ChangeIcon'
-import { DiffStat } from './DiffStat'
+import { changeIcon } from '../../entries/components/files/ChangeIcon.mockup'
+import { diffStat } from '../../entries/components/files/DiffStat.mockup'
+import { instanceKey } from '../../instanceKey'
 import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
 import { paths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './ChangeList.module.css'
 
 /**
@@ -21,14 +21,22 @@ function Row(props: {
 }) {
   const { file } = props
   const { folder, name } = splitPath(file.path)
+  const key = instanceKey(file.path)
   const content = (
     <>
       <span className={styles.path}>
         {folder ? <span className={styles.folder}>{folder}/</span> : null}
         <span className={styles.name}>{name}</span>
       </span>
-      <DiffStat added={file.added} removed={file.removed} />
-      <ChangeIcon change={file.change} />
+      <diffStat.Component
+        added={file.added}
+        moklyInstance={`stat-${key}`}
+        removed={file.removed}
+      />
+      <changeIcon.Component
+        change={file.change}
+        moklyInstance={`change-${key}`}
+      />
     </>
   )
   const className = classes(
@@ -58,7 +66,11 @@ function Summary(props: { files: readonly ChangedFile[] }) {
       <span className={styles.count}>
         {count} {count === 1 ? 'file' : 'files'} changed
       </span>
-      <DiffStat added={added} removed={removed} />
+      <diffStat.Component
+        added={added}
+        moklyInstance="summary-stat"
+        removed={removed}
+      />
     </div>
   )
 }
@@ -77,9 +89,10 @@ export function ChangeList(props: {
 }) {
   if (props.files.length === 0) {
     return (
-      <EmptyState
+      <emptyState.Component
         body="Files that the agent edits appear as it works."
-        icon={FileDiff}
+        icon="file-diff"
+        moklyInstance="changes-empty"
         title="Changes show here"
       />
     )

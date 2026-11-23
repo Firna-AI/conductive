@@ -1,239 +1,145 @@
 import { parseRoute } from '../../../../../src/app/router'
-import { pictureType } from '../../../../../src/files/page/file-view'
-import { lineLabelEnds } from '../../../../../src/markdown/markdown-labels'
 import {
-  webAddressParts,
-  type WebAddressPart,
+  linkTarget as readTarget,
+  type LinkTarget as ReadTarget,
+  type WorkspaceLinks,
+} from '../../../../../src/chat/links/workspace-links'
+import {
+  webLink,
+  type WebLink,
   type WebLinkContext,
 } from '../../../../../src/markdown/web-links'
-import { appDomain } from '../../brand'
-import type { Attachment } from '../../fixtures/attachments'
-import {
-  codeTarget,
-  linkTarget as fileTarget,
-  type PathTarget,
-} from './answerPaths'
-import { entryName } from './entryPaths'
+import type { Workspace as AppWorkspace } from '../../../../../src/shared/generated/Workspace'
+import { appDomain } from '../../../../../src/shared/brand'
+import { people } from '../../fixtures/members'
+import { orgs } from '../../fixtures/orgs'
 import type { ChatRow, ChatSession } from './chatWorkspaces'
-import {
-  mentionParts,
-  type AttachedPart,
-  type MentionPart,
-} from './fileMentions'
-
-/**
- * A part of a text: plain text, code in backticks, a link, a mention of a
- * file or a folder, or a mention of an attached file of the message. Code
- * whose text, without the spaces at its ends, is one web address gives
- * that address as `href`.
- */
-export type TextPart =
-  | WebAddressPart
-  | { kind: 'code'; text: string; href?: string }
-  | MentionPart
-  | AttachedPart
-  | FileLinkPart
-
-/**
- * A Markdown link or image of an answer to an entry of the tree. It shows
- * as a normal link with its label, which opens the file. `picture` marks
- * the Markdown image of a PNG, JPEG, GIF, or WebP file, which can show as
- * its picture (screenshot decision 2). The file tab shows the same files
- * as pictures, so an SVG file stays a link.
- */
-export type FileLinkPart = {
-  kind: 'file-link'
-  label: string
-  source: string
-  picture: boolean
-} & PathTarget
-
-/** A Markdown link or image: its start, source, label, and target. */
-type PathLink = { index: number; source: string; label: string; target: string }
-
-/**
- * The target of a Markdown link or image after its `](`, through its `)`:
- * a target in angle brackets, or one with no space, parenthesis, or angle
- * bracket.
- */
-const pathTarget = /(?:<([^<>\n]+)>|([^\s()<>]+))\)/y
-
-/**
- * The Markdown links and images of a text, in order, as a global search
- * for `[label](target)` with an optional `!` before it finds them. A label
- * ends at the first `]` of its line. One pass reads that end for each `[`,
- * and each end reads its target once. A link hides each `[` inside it.
- * After a `[` that starts no link, the next `[` tries.
- */
-function* pathLinks(text: string): Generator<PathLink> {
-  const labelEndAt = lineLabelEnds(text, 'plain')
-  const targets = new Map<number, RegExpExecArray | null>()
-  const targetAt = (end: number) => {
-    let target = targets.get(end)
-    if (target === undefined) {
-      pathTarget.lastIndex = end + 2
-      target = pathTarget.exec(text)
-      targets.set(end, target)
-    }
-    return target
-  }
-  let at = text.indexOf('[')
-  while (at >= 0) {
-    const end = labelEndAt(at)
-    const target = end >= 0 && text[end + 1] === '(' ? targetAt(end) : null
-    if (!target) {
-      at = text.indexOf('[', at + 1)
-      continue
-    }
-    // A link ends with `)`, so a `!` before a `[` is in no earlier link.
-    const index = text[at - 1] === '!' ? at - 1 : at
-    const next = end + 2 + target[0].length
-    yield {
-      index,
-      source: text.slice(index, next),
-      label: text.slice(at + 1, end),
-      target: target[1] ?? target[2] ?? '',
-    }
-    at = text.indexOf('[', next)
-  }
-}
-
-/**
- * Plain text of an answer with its links to files of the tree. Each other
- * part reads as `rest` says.
- */
-function fileLinkParts(
-  text: string,
-  rest: (text: string) => TextPart[],
-): TextPart[] {
-  const parts: TextPart[] = []
-  let end = 0
-  for (const link of pathLinks(text)) {
-    const target = fileTarget(link.target)
-    if (!target) continue
-    parts.push(...rest(text.slice(end, link.index)))
-    const label =
-      link.label.trim() === '' ? entryName(target.entry) : link.label
-    const { folder, path } = target.entry
-    const image = link.source.startsWith('!')
-    const picture = image && !folder && pictureType(path) !== undefined
-    parts.push({
-      kind: 'file-link',
-      label,
-      source: link.source,
-      picture,
-      ...target,
-    })
-    end = link.index + link.source.length
-  }
-  return [...parts, ...rest(text.slice(end))]
-}
-
-/** Plain text with its links, and with its mentions when `mentions` asks. */
-function plainParts(
-  text: string,
-  mentions: boolean,
-  files: readonly Attachment[],
-  marks = false,
-): TextPart[] {
-  if (!mentions) return webAddressParts(text)
-  return mentionParts(text, files, marks).flatMap((part): TextPart[] =>
-    part.kind === 'text' ? webAddressParts(part.text) : [part],
-  )
-}
-
-/** Code, with the web address that it holds alone, if any. */
-function webCodePart(text: string): TextPart {
-  const parts = webAddressParts(text.trim(), false)
-  const [only] = parts
-  return parts.length === 1 && only?.kind === 'link'
-    ? { kind: 'code', text, href: only.href }
-    : { kind: 'code', text }
-}
-
-/**
- * A part in backticks: code, or in an answer, the file chip of the entry
- * of the tree that the whole code names.
- */
-function codePart(text: string, answer: boolean): TextPart {
-  const target = answer ? codeTarget(text) : undefined
-  return target
-    ? { kind: 'mention', ...target, source: text, code: true }
-    : webCodePart(text)
-}
-
-/**
- * Splits a text into plain text, code, links, and mentions. In a sent
- * message or an answer, `code` is true: each part in backticks is code,
- * and a mention in it stays code. A web address alone in code is a link.
- * A message box keeps plain
- * text, so it reads no code. The text of a member reads mentions when
- * `mentions` asks. An `answer` reads mentions too, and code whose whole
- * text is a path of the tree is a file chip (answer chip decision 1). A
- * mention of the copy path of one of the `files` of a sent message is the
- * mention of that file.
- */
-export function textParts(
-  text: string,
-  code: boolean,
-  mentions = false,
-  files: readonly Attachment[] = [],
-  answer = false,
-): TextPart[] {
-  if (!code) return plainParts(text, mentions, files)
-  return text
-    .split('`')
-    .flatMap((part, index): TextPart[] =>
-      index % 2 === 1
-        ? [codePart(part, answer)]
-        : answer
-          ? fileLinkParts(part, (rest) => plainParts(rest, true, files, true))
-          : plainParts(part, mentions, files),
-    )
-}
 
 /** The mockups supply the app origin and the router's page check. */
-export const linkContext: WebLinkContext = {
+const linkContext: WebLinkContext = {
   appOrigin: `https://${appDomain}`,
   isAppPage: (url) =>
     parseRoute(url.pathname, url.search).screen !== 'not-found',
+}
+
+/** Where a web address of chat text leads, or undefined when it stays text. */
+export function webLinkOf(href: string): WebLink | undefined {
+  return webLink(href, linkContext)
 }
 
 /** What a link names: a workspace, and one of its sessions, if any. */
 export type LinkTarget = { row: ChatRow; session?: ChatSession }
 
 /**
- * The workspace that a link names, and its session when the link is the
- * address of a session: the link of the workspace, then `sessions` and the
- * ID of the session. The link must have the origin of the app and lead to
- * a page of a workspace, which can be one of its tabs. The URL parser
- * resolves odd parts such as `..` first. Only a workspace in the list of
- * the org of the reader matches. So a link to another org, or to a
- * workspace that the reader cannot see, finds none and is no chip.
- * Only a session that the chat read for that workspace, open or closed,
- * matches. A link to any other session names only its workspace.
+ * The rows that a chat finds for its chips, as the reader of the app finds
+ * them: the workspaces of the app that the rows stand for, and the row of
+ * each of those workspaces.
  */
-export function linkTarget(
-  href: string,
-  rows: readonly ChatRow[],
-): LinkTarget | undefined {
+export interface RowLinks {
+  links: WorkspaceLinks
+  rows: ReadonlyMap<AppWorkspace, ChatRow>
+}
+
+/** The IDs of the workspace and of the org in a link, as the router reads them. */
+function routeIds(link: string): { id: string; orgId: string } | undefined {
   let url: URL
   try {
-    url = new URL(href)
+    url = new URL(link)
   } catch {
     return undefined
   }
-  const [, orgsPart, org, workspacesPart, id, ...rest] = url.pathname.split('/')
-  if (orgsPart !== 'orgs' || workspacesPart !== 'workspaces') return undefined
-  const link = `${url.origin}/orgs/${org}/workspaces/${id}`
-  const row = rows.find((item) => item.workspace.link === link)
+  const route = parseRoute(url.pathname, url.search)
+  if (route.screen !== 'workspace') return undefined
+  return { id: route.workspaceId, orgId: route.orgId }
+}
+
+/**
+ * The record of the app for a row. The reader of the app finds the
+ * workspace of a link by the ID in the link and by the origin of the link
+ * of the workspace. The row gives the other values that it holds. It holds
+ * no times and no parent, so those values stay empty.
+ */
+function appWorkspace(
+  row: ChatRow,
+  ids: { id: string; orgId: string },
+): AppWorkspace {
+  const { workspace } = row
+  const owner = people[workspace.owner]
+  return {
+    ...ids,
+    number: workspace.number,
+    link: workspace.link,
+    repositoryId: workspace.repository,
+    sectionId: workspace.section,
+    parentId: null,
+    owner: {
+      id: owner.key,
+      githubLogin: owner.login,
+      displayName: owner.name,
+      avatarUrl: null,
+    },
+    name: workspace.name,
+    branch: workspace.branch,
+    choice: { ...workspace.choice, fast: workspace.choice.fast ?? false },
+    state: row.status,
+    github: row.github,
+    createdAt: 0,
+    updatedAt: 0,
+    archivedAt: null,
+    restoreUntil: null,
+  }
+}
+
+/**
+ * The links of the rows of a chat. Each chat of the mockups is in Acme, so
+ * a link to a workspace of another org names no row.
+ */
+export function rowLinks(rows: readonly ChatRow[]): RowLinks {
+  const byWorkspace = new Map<AppWorkspace, ChatRow>()
+  for (const row of rows) {
+    const ids = routeIds(row.workspace.link)
+    if (ids) byWorkspace.set(appWorkspace(row, ids), row)
+  }
+  return {
+    links: { orgId: orgs.acme.id, workspaces: [...byWorkspace.keys()] },
+    rows: byWorkspace,
+  }
+}
+
+/**
+ * The row of the workspace that a target of the reader of the app names,
+ * with the session of a session link. Only a session that the chat read for
+ * that workspace, open or closed, matches. A link to any other session
+ * names only its workspace.
+ */
+export function rowTarget(
+  target: ReadTarget,
+  links: RowLinks,
+): LinkTarget | undefined {
+  const row = links.rows.get(target.workspace)
   if (!row) return undefined
-  const [sessionsPart, sessionId, ...more] = rest
-  const named = sessionsPart === 'sessions' && more.length === 0
-  const session = named
-    ? row.sessions?.find((item) => item.id === sessionId)
-    : undefined
+  const { sessionId } = target
+  const session =
+    sessionId === null
+      ? undefined
+      : row.sessions?.find((item) => item.id === sessionId)
   return { row, session }
+}
+
+/**
+ * The workspace that a link names, and its session, as the app reads the
+ * link: a page of a workspace of the org, which can be one of its tabs, at
+ * the origin of the link of that workspace. The URL parser resolves odd
+ * parts such as `..` first. Only a workspace in the list of the org of the
+ * reader matches. So a link to another org, or to a workspace that the
+ * reader cannot see, finds none and is no chip.
+ */
+export function linkTarget(
+  href: string,
+  links: RowLinks,
+): LinkTarget | undefined {
+  const target = readTarget(href, links.links)
+  return target && rowTarget(target, links)
 }
 
 /**

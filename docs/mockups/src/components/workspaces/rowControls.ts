@@ -1,12 +1,19 @@
+import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
 import { sections, type SectionKey } from '../../fixtures/sections'
-import type { MenuEntry } from '../common/Menu'
+import { iconKeyOf } from '../../entries/components/common/icons'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import type { OpenSubmenu } from '../common/PointMenu'
 import { reassignMenu } from '../workspace/OwnerPicker'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { isNested } from './trees'
-import { renames, workspaceMenuOf, type Submenu } from './workspaceMenu'
+import {
+  renames,
+  workspaceMenuItems,
+  type RowAccess,
+  type Submenu,
+} from '../../../../../src/ui/components/workspaces/workspaceMenu'
 
 /**
  * What a view draws on one row: the menu that a right click or the menu
@@ -39,10 +46,10 @@ export type RowContext = {
 function sectionChoices(
   current: SectionKey,
   keys: readonly SectionKey[],
-): MenuEntry[] {
+): MenuEntryData[] {
   return [
     { kind: 'label', label: 'Section' },
-    ...keys.map((key): MenuEntry => ({
+    ...keys.map((key): MenuEntryData => ({
       kind: 'item',
       label: sections[key].name,
       checked: key === current,
@@ -58,7 +65,7 @@ function submenuOf(
   kind: Submenu,
   row: WorkspaceRow,
   context: RowContext,
-  entries: readonly MenuEntry[],
+  entries: readonly MenuEntryData[],
 ): OpenSubmenu {
   const { workspace } = row
   const at = entries.findIndex(
@@ -78,6 +85,27 @@ function submenuOf(
     item,
     wide: true,
   }
+}
+
+/**
+ * The menu of a workspace as the registered menu takes it, on its row and
+ * from the name in its header: the actions of `workspaceMenuItems`, with
+ * the key of each icon. `open` is the submenu that shows its choices.
+ */
+export function workspaceMenuOf(
+  access: RowAccess,
+  open?: Submenu,
+): MenuEntryData[] {
+  return workspaceMenuItems(access).map((item): MenuEntryData => {
+    if (item.kind === 'divider') return item
+    const entry = {
+      kind: 'item',
+      label: item.label,
+      icon: iconKeyOf(item.icon),
+    } as const
+    if (!item.submenu) return entry
+    return { ...entry, submenu: open === item.action ? 'open' : 'closed' }
+  })
 }
 
 /**
@@ -118,7 +146,9 @@ export function rowControls(
       at: context.sheet ? 'sheet' : 'pointer',
       label: workspace.name,
       entries,
-      submenu: submenu && submenuOf(submenu, row, context, entries),
+      ...defined({
+        submenu: submenu && submenuOf(submenu, row, context, entries),
+      }),
     },
   }
 }

@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { pricingLinkText } from '../../../../../src/marketing/pricing'
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { MailLink } from './CatalogueText'
 import { LegalLinks } from './LegalLinks'
 import type { SiteLinks } from './SiteHeader'
@@ -37,7 +37,7 @@ export function SiteFooter(props: {
     <footer className={classes(styles.footer, mobile && styles.mobile)}>
       <div className={styles.inner}>
         <div className={styles.brand}>
-          <Wordmark to={props.links.home} />
+          <Wordmark place="footer" to={props.links.home} />
           <p className={styles.tagline}>{props.tagline}</p>
         </div>
         <Column title="Product">

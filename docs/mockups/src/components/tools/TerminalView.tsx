@@ -4,9 +4,10 @@ import type {
   TerminalTone,
 } from '../../fixtures/terminal'
 import type { SharedSize } from '../../fixtures/terminals'
-import { ActionButton } from '../common/actions'
-import { useTouchScreen } from '../common/touch'
-import styles from './TerminalView.module.css'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { instanceKey } from '../../instanceKey'
+import { useTouchScreen } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/tools/TerminalView.module.css'
 
 const toneClass: Readonly<Record<TerminalTone, string>> = {
   prompt: styles.prompt,
@@ -95,9 +96,13 @@ export function TerminalView(props: {
       {props.extraKeys ? (
         <div className={styles.keys}>
           {extraKeys.map((key) => (
-            <ActionButton accessibilityLabel={key.name} key={key.name}>
+            <actionButton.Component
+              accessibilityLabel={key.name}
+              key={key.name}
+              moklyInstance={`key-${instanceKey(key.name)}`}
+            >
               {key.label}
-            </ActionButton>
+            </actionButton.Component>
           ))}
         </div>
       ) : null}

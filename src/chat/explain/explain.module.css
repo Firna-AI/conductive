@@ -1,0 +1,114 @@
+/*
+ * The rules of Explain that only the app has: the highlights that draw the
+ * marks, the slots and the buttons of their states, the box of the open
+ * mark, and the places of Explain and of the popover. The look comes from
+ * the shared `MarkedText`, `ExplainButton`, `ExplainPopover`, and
+ * `FollowUpField` modules.
+ */
+
+/*
+ * The text of a message that Explain reads. It holds the state of each mark,
+ * Explain by a selection, and the box of the open mark, so it sets their
+ * place.
+ */
+.message {
+  position: relative;
+}
+
+/* The pointer over a mark: a press opens it. */
+.pointing {
+  cursor: pointer;
+}
+
+/*
+ * The mark of an explanation, with the fills of the shared `.mark`: its
+ * quote on the soft amber fill, deeper under the pointer, while its popover
+ * is open, and where two marks overlap. The text keeps its colour.
+ */
+::highlight(explain-mark) {
+  background-color: var(--ui-amber-soft);
+}
+
+::highlight(explain-overlap),
+::highlight(explain-hover),
+::highlight(explain-active) {
+  background-color: var(--ui-warning-border);
+}
+
+/*
+ * The end of a mark, which holds its state. It keeps the fill of the mark
+ * around the state, so the mark ends after it.
+ */
+.slot {
+  border-radius: 0 2px 2px 0;
+  background: var(--ui-amber-soft);
+  white-space: nowrap;
+}
+
+/*
+ * The state of an explanation as a button. The pointer deepens its fill,
+ * and so does the popover of its explanation while it is open.
+ */
+.markButton:hover,
+.active {
+  background: var(--ui-warning-border);
+}
+
+/* At the end of a mark, the button is as high as the line. */
+.inline {
+  display: inline-flex;
+  align-items: center;
+  height: 1lh;
+  border-radius: 2px;
+  vertical-align: top;
+}
+
+/* The states of the marks that cover the whole message, in a row. */
+.wholeGlyphs {
+  display: flex;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  gap: 2px;
+}
+
+.wholeGlyphs > button {
+  position: static;
+}
+
+/* The box of the open mark, which the popover keeps to. It draws nothing. */
+.anchor {
+  position: absolute;
+  pointer-events: none;
+  anchor-name: --explain-mark;
+}
+
+/* Explain floats over the text of the message, at the place of the app. */
+.floating {
+  position: absolute;
+  z-index: 5;
+}
+
+/* A panel whose mark does not show stands at the top right of the frame. */
+.unanchored {
+  top: 64px;
+  right: 16px;
+}
+
+/* The root of the popover and the menu, which draws no box of its own. */
+.layer {
+  display: contents;
+}
+
+/* The handle of the phone sheet takes a drag in a zone a finger can reach. */
+.drag {
+  position: relative;
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag::before {
+  position: absolute;
+  inset: -14px -48px -10px;
+  content: '';
+}

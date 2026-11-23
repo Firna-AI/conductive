@@ -23,12 +23,20 @@ plan limits.
   waitlist screen, where Accept invitation also gives app access, as
   `app/sign-in/waitlist/invited` shows.
 - Only an admin renames the org, and changes the repositories, the scripts,
-  the env vars, and the org logins, from decisions 54 and 57. A member sees
-  the General, Repositories, Cloud computer, and Agents tabs read-only: the
-  values, without edit fields, Save, Build computer, or Connect. The
-  General tab of a member is the child page `app/org-settings/member`,
-  because `app/org-settings` has child pages. `DetailList` in
-  `src/components/settings/` shows such values.
+  the env vars, the skills repository and its trust choice, and the org
+  logins, from decisions 54 and 57, decision 2 of the org skills
+  repository plan, and decision 403 of the skills trust plan. A member sees the General,
+  Repositories, Cloud computer, and Agents tabs read-only: the values, without edit
+  fields, Save, Build computer, or Connect. The General tab of a member is the child
+  page `app/org-settings/member`, because `app/org-settings` has child
+  pages. `DetailList` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/) shows
+  such values.
+  A member also sees the skills that the lookup of the skills repository
+  finds, and each notice in place of that list, from decision 7 of the
+  org skills repository plan. A notice that asks for a change of the
+  repository says that an admin can make it, as
+  `app/org-settings/cloud-computer/member/private-skills` shows.
 - Every member adds secrets on the Secrets tab, and replaces or deletes
   the secrets that they added, from secrets decision 3. Only an admin
   switches the mark for all agents and reveals a value, as
@@ -68,7 +76,8 @@ plan limits.
   `app/composer/no-agent` shows. The new session starts with a line that
   links back to the first session, then the new message, as
   `app/sessions/linked` shows. The parts live in
-  `src/components/chat/SessionLogin.tsx` and `LinkedLine.tsx`.
+  [`src/ui/components/chat/SessionLogin.tsx`](../../src/ui/components/chat/SessionLogin.tsx)
+  and `LinkedLine.tsx`.
 - A stopped turn names the member who pressed Stop, from decision 72,
   because all members of an org see the same chat. That member sees "You
   stopped the agent", as `app/chat/turns/interrupted` shows. The other members
@@ -128,8 +137,9 @@ plan limits.
   Manage access, as `app/orgs/new/no-access` shows.
 - Create org of an operator also offers the provider account of the org,
   from e2b decision 222: By weights, the default, or an account by its ID,
-  as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The org keeps its account for its whole
-  life. Nobody else sees the choice, so no other screen names a provider.
+  as `app/orgs/new/operator` shows. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. An operator can switch the account
+  later, on the page of the org, as `app/operator/org/switch` shows.
+  Nobody else sees the choice, so no other screen names a provider.
 - Delete org asks for the org name. The deleted org leaves the rail. Until
   the date when everything is deleted, the General tab of the Account page
   lists it for its admins with Restore, as `app/account/deleted-orgs`
@@ -161,7 +171,49 @@ plan limits.
   the screen names no step that the suspended org refuses.
 - Three orgs show: Acme, Firna, the first org of the sign-up, and Acme Labs,
   which Create org makes. Priya is a member of Acme and of Firna who is not
-  an admin. The parts live in `src/components/members/`.
+  an admin. The parts live in `src/components/members/`. The parts and
+  styles that the app shares live in
+  [`src/ui/components/members/`](../../src/ui/components/members/).
+
+No screen shows the value of an env var. Each env var of an org has a
+Secret mark: an admin switches it in the row, and a new variable starts
+secret. A member sees the mark as a word, without a control.
+[`src/ui/components/settings/EnvVarParts.tsx`](../../src/ui/components/settings/EnvVarParts.tsx)
+gives the switch and the mark, and `envVarCopy.ts` beside it gives the
+note under the list. The app shares both.
+`app/org-settings/cloud-computer`, its `add-variable` and `change-value`
+pages, and its `member` page show them.
+
+The Skills section of the Cloud computer tab names the public GitHub
+repository whose skills the agents of every workspace use. An admin edits
+it in a field, and a member sees it as text. Under it, the section lists
+the skills that a lookup on GitHub finds, or it shows a notice in place of
+the list. `src/components/settings/SkillsSection.tsx` draws the section.
+`SkillList.tsx` in
+[`src/ui/components/settings/`](../../src/ui/components/settings/) draws
+the list, and `skillsCopy.ts` beside it holds the words and the result of
+the lookup. The app shares both. Under the field, an admin sets the
+switch "Trust this skills repository", which starts off for each
+repository, and a member sees the saved choice as text. The choice exists
+only while the field names a repository as owner/name. `SkillsTrust.tsx`
+beside `SkillsSection.tsx` draws the switch and the read-only choice.
+`skillsTrustCopy.ts` beside `SkillList.tsx` holds their words and the
+address of the guide. [The catalogue](catalogue.md) gives its pages.
+
+A secret of an org differs from an env var. An env var reaches every cloud
+computer at each start. A secret reaches only one command that an agent
+runs after a member allows it. The agent gets its name and its variable
+name, never its value. Every
+member adds secrets on the Secrets tab, and only an admin reveals a value,
+one at a time, as `app/org-settings/secrets` shows.
+[Secrets and Capabilities](design-secrets.md) gives the tab, the
+Capabilities control, and the requests in the chat.
+
+A file path can hold a secret value. The lists, the tabs, the page
+headers, and the files of a finished turn then show "[redacted]" in place
+of the value, and each file still opens by its real path. A tab whose file
+name the app does not know shows "File". The `paths` state of the
+workspace screen draws them, as `app/chat/masked-paths` shows.
 
 ## Logins
 
@@ -222,8 +274,10 @@ sign-in gives app access, from decision 230. This is open sign-up.
 - The words say "waitlist" as one word, "invite code" and "invite link"
   for every code, "Sign-ups are paused" for the pause, and "Anyone can
   sign up now" for open sign-up. They never say "referral", and they never
-  name the waitlist switch. The mockups take them from `src/screens/waitlistCopy.ts`
-  and `src/components/settings/inviteCodeCopy.ts`.
+  name the waitlist switch. The mockups take them from
+  [`src/ui/screens/waitlistCopy.ts`](../../src/ui/screens/waitlistCopy.ts)
+  and
+  [`src/ui/components/settings/inviteCodeCopy.ts`](../../src/ui/components/settings/inviteCodeCopy.ts).
 - The waitlist, the sign-in, and the sign-in of an invite link share one
   frame, as [the design](design.md) gives. The home page asks a visitor
   to sign up, as [the marketing site](marketing-site.md) gives. Outside

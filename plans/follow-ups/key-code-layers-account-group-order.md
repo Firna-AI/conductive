@@ -9,7 +9,7 @@
 - **Terms:**
   - **Account group:** the group of the Settings tab of the command palette that lists the sections and tabs of the Account page.
 - **Background:**
-  - `accountSettingIds` in `src/app/palette/commands.ts:132` lists the Account group: Sign-in, GitHub, Agents, New workspaces, Keyboard shortcuts, and This Mac last.
+  - `accountSettingIds` in `src/app/palette/commands.ts:155` lists the Account group: Sign-in, GitHub, Agents, Favourites, New workspaces, Keyboard shortcuts, and This Mac last. Favourites joined on 22 November 2026, with the model favourites change.
   - `src/app/key-code-layers.md:22` says that "This Mac follows Sign-in in the Mac app" and that "the group ends with Keyboard shortcuts".
 - **Problem:** The doc gives an order that the code does not have.
 - **Impact if no action:** A reader of the doc expects This Mac after Sign-in, and can move the row to match the doc.

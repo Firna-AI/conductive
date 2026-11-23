@@ -5,6 +5,7 @@ import type { Timestamp } from './generated/Timestamp'
 import type { MessageSender } from './generated/MessageSender'
 import type { SessionLogin } from './generated/SessionLogin'
 import { orgPath } from './api'
+import type { OrgSecret } from './secrets'
 
 export function automationsPath(orgId: string): string {
   return `${orgPath(orgId)}/automations`
@@ -76,6 +77,10 @@ export type AutomationTrigger =
 export type AutomationInactiveReason =
   'owner_left' | 'repository_removed' | 'failed_runs'
 
+export interface AutomationCapabilities {
+  preapprovedSecretIds: readonly string[]
+}
+
 export interface Automation {
   id: string
   orgId: string
@@ -86,6 +91,7 @@ export interface Automation {
   sectionId: string
   prompt: string
   choice: AgentChoice
+  capabilities: AutomationCapabilities
   active: boolean
   inactiveReason: AutomationInactiveReason | null
   failedRunsInARow: number
@@ -134,6 +140,7 @@ export interface CreateAutomationRequest {
   sectionId?: string
   prompt: string
   choice: AgentChoice
+  capabilities?: AutomationCapabilities
   active?: boolean
   timeZone: string
   triggers: readonly AutomationTriggerInput[]
@@ -144,6 +151,7 @@ export type UpdateAutomationRequest = Partial<CreateAutomationRequest>
 export interface AutomationResponse {
   automation: Automation
   runLogin: SessionLogin | null
+  chosenSecrets?: readonly Pick<OrgSecret, 'id' | 'name'>[]
 }
 
 export interface AutomationsResponse {

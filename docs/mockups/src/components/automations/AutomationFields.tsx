@@ -1,33 +1,42 @@
 import { useId, type ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
-import type { LucideIcon } from 'lucide-react'
-import { ChevronDown, FolderGit2, Rows3 } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 import { repositoryOf, type Automation } from '../../fixtures/automations'
 import { sections } from '../../fixtures/sections'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { useControlSizes } from '../common/touch'
-import { PersonAvatar } from '../orgs/OrgTile'
-import { DetailList } from '../settings/DetailList'
-import form from './form.module.css'
-import styles from './AutomationFields.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import type { IconKey } from '../../entries/components/common/icons'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
+import { detailList } from '../../entries/components/settings/DetailList.mockup'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/AutomationFields.module.css'
 
-/** A closed menu button that picks a value, such as the repository. */
-function Picker(props: { icon: LucideIcon; name: string; value: string }) {
+/**
+ * A closed menu button that picks a value, such as the repository. `id`
+ * names the picker for Mokly.
+ */
+function Picker(props: {
+  id: 'repository' | 'section'
+  icon: IconKey
+  name: string
+  value: string
+}) {
   return (
     <span className={styles.picker}>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`${props.name}: ${props.value}`}
         icon={props.icon}
         menu
+        moklyInstance={`${props.id}-picker`}
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {props.value}
-      </ActionButton>
+      </actionButton.Component>
     </span>
   )
 }
@@ -47,7 +56,11 @@ function Creator(props: { automation: Automation }) {
   return (
     <span className={styles.by}>
       By
-      <PersonAvatar initials={owner.initials} size={18} />
+      <personAvatar.Component
+        initials={owner.initials}
+        moklyInstance="creator"
+        size={18}
+      />
       <span className={styles.person}>{owner.name}</span>
     </span>
   )
@@ -93,14 +106,16 @@ export function AutomationFields(props: {
       <div className={mobile ? styles.stack : styles.meta}>
         <Field label="Repository">
           <Picker
-            icon={FolderGit2}
+            icon="folder-git-2"
+            id="repository"
             name="Repository"
             value={repositoryOf(automation)}
           />
         </Field>
         <Field label="Section">
           <Picker
-            icon={Rows3}
+            icon="rows-3"
+            id="section"
             name="Section of the run workspaces"
             value={sections[automation.section].name}
           />
@@ -125,7 +140,8 @@ export function AutomationFacts(props: {
 }) {
   const { automation } = props
   return (
-    <DetailList
+    <detailList.Component
+      moklyInstance="facts"
       rows={[
         { term: 'State', value: automation.active ? 'Active' : 'Off' },
         { term: 'Repository', value: repositoryOf(automation) },

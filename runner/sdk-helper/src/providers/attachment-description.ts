@@ -7,7 +7,7 @@ export const attachmentReadInstruction =
 export const ATTACHMENT_IMAGE_MAX_BYTES = 25_000_000
 
 export function attachmentDescription(
-  command: ProviderInput,
+  command: Exclude<ProviderInput, { type: 'notice' }>,
   attachment: RunnerAttachment,
 ): string {
   const metadata = command.message.attachments.find(

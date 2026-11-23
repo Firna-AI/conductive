@@ -1,5 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
-import { Ban, Copy, Link } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   codeState,
@@ -7,19 +6,20 @@ import {
   type CodeRow,
   type CodeState,
 } from '../../fixtures/operatorCodes'
+import { instanceKey } from '../../instanceKey'
 import { paths } from '../../paths'
-import { IconButton } from '../common/actions'
+import { iconButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
 import {
   codeStateLabels,
   copyLabels,
   disableLabel,
   referralCodeLabel,
   referralCodeName,
-} from './codeCopy'
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { InlineLink } from './targets'
-import styles from './codes.module.css'
+import styles from '../../../../../src/ui/components/operator/codes.module.css'
 
 /**
  * A phone keeps the label, the uses, and Disable. It puts the code with
@@ -41,16 +41,37 @@ export const codeColumns: Readonly<Record<Viewport, TableColumn[]>> = {
   ],
 }
 
-/** The state of a code as a glyph and a word. */
-export function CodeStateText(props: { state: CodeState }) {
+/**
+ * The state of a code as a glyph and a word. `code` is the code, which
+ * names the state for Mokly.
+ */
+export function CodeStateText(props: { state: CodeState; code: string }) {
+  const name = `state-${instanceKey(props.code)}`
   switch (props.state) {
     case 'active':
-      return <StatusText label={codeStateLabels.active} tone="success" />
+      return (
+        <statusText.Component
+          label={codeStateLabels.active}
+          moklyInstance={name}
+          tone="success"
+        />
+      )
     case 'used-up':
-      return <StatusText label={codeStateLabels.usedUp} tone="muted" />
+      return (
+        <statusText.Component
+          label={codeStateLabels.usedUp}
+          moklyInstance={name}
+          tone="muted"
+        />
+      )
     case 'disabled':
       return (
-        <StatusText icon={Ban} label={codeStateLabels.disabled} tone="muted" />
+        <statusText.Component
+          icon="ban"
+          label={codeStateLabels.disabled}
+          moklyInstance={name}
+          tone="muted"
+        />
       )
   }
 }
@@ -64,9 +85,19 @@ export function CopyableCode(props: { code: string; works: boolean }) {
   return (
     <span className={styles.codeCell}>
       <span className={styles.code}>{props.code}</span>
-      <IconButton icon={Copy} label={copyLabels.code(props.code)} quiet />
+      <iconButton.Component
+        icon="copy"
+        label={copyLabels.code(props.code)}
+        moklyInstance={`copy-${instanceKey(props.code)}`}
+        quiet
+      />
       {props.works ? (
-        <IconButton icon={Link} label={copyLabels.joinLink(props.code)} quiet />
+        <iconButton.Component
+          icon="link"
+          label={copyLabels.joinLink(props.code)}
+          moklyInstance={`copy-link-${instanceKey(props.code)}`}
+          quiet
+        />
       ) : null}
     </span>
   )
@@ -131,7 +162,12 @@ function DisableButton(props: { row: CodeRow }) {
     return <span aria-hidden className={styles.noAction} />
   }
   const button = (
-    <IconButton icon={Ban} label={disableLabel(codeName(row))} quiet />
+    <iconButton.Component
+      icon="ban"
+      label={disableLabel(codeName(row))}
+      moklyInstance={`disable-${instanceKey(row.code)}`}
+      quiet
+    />
   )
   if (row.code !== meetupLisbon.code) return button
   return (
@@ -157,11 +193,11 @@ export function codeCell(viewport: Viewport) {
         return (
           <span className={styles.usesCell}>
             <span className={styles.uses}>{uses}</span>
-            <CodeStateText state={codeState(row)} />
+            <CodeStateText code={row.code} state={codeState(row)} />
           </span>
         )
       case 'state':
-        return <CodeStateText state={codeState(row)} />
+        return <CodeStateText code={row.code} state={codeState(row)} />
       default:
         return <DisableButton row={row} />
     }

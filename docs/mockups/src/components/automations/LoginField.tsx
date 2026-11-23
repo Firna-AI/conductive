@@ -2,18 +2,18 @@ import { useId } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { CircleAlert, Users, X } from 'lucide-react'
 import { acmeMembers, people, type Person } from '../../fixtures/members'
-import { noop } from '../../noop'
-import { classes } from '../common/classes'
-import { Menu, type MenuEntry } from '../common/Menu'
-import { useControlSizes } from '../common/touch'
-import { PersonAvatar } from '../orgs/OrgTile'
-import form from './form.module.css'
-import styles from './LoginField.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/LoginField.module.css'
 
 /** The entry that stands for every member, and whether the list holds it. */
 type Group = { label: string; listed: boolean }
 
-const divider: MenuEntry = { kind: 'divider' }
+const divider: MenuEntryData = { kind: 'divider' }
 
 /** The members whose name or login holds the text, and not listed yet. */
 function matches(text: string, listed: readonly string[]): Person[] {
@@ -35,13 +35,13 @@ function suggestionMenu(
   typed: string,
   logins: readonly string[],
   group?: Group,
-): MenuEntry[] {
+): MenuEntryData[] {
   const text = typed.toLowerCase()
-  const members = matches(text, logins).map((person): MenuEntry => ({
+  const members = matches(text, logins).map((person): MenuEntryData => ({
     kind: 'item',
     label: person.name,
     detail: `@${person.login}`,
-    mark: <PersonAvatar initials={person.initials} size={18} />,
+    mark: { kind: 'person', initials: person.initials },
   }))
   if (
     group === undefined ||
@@ -55,7 +55,7 @@ function suggestionMenu(
       kind: 'item',
       label: group.label,
       detail: 'Every member',
-      icon: Users,
+      icon: 'users',
       highlighted: true,
     },
     ...(members.length > 0 ? [divider] : []),
@@ -142,9 +142,10 @@ export function LoginField(props: {
           </span>
         </div>
         {suggestions.length > 0 ? (
-          <Menu
+          <menu.Component
             entries={suggestions}
             label="Suggestions"
+            moklyInstance="login-suggestions"
             placement="below-start"
           />
         ) : null}

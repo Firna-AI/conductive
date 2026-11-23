@@ -3,13 +3,14 @@ import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import {
   type FormRepositories,
   formWait,
-} from '../components/new-workspace/waitingRepository'
+} from '../../../../src/ui/components/new-workspace/waitingRepository'
 import {
   newOrgSections,
   suspendedSections,
   workspaceSections,
 } from '../components/workspaces/sections'
-import { Sidebar } from '../components/workspaces/Sidebar'
+import { defined, plainData } from '../defined'
+import { sidebar } from '../entries/components/workspaces/Sidebar.mockup'
 import { type AgentChoice, defaultChoice } from '../fixtures/agents'
 import { firstGoodBuild, lastBuild } from '../fixtures/computer'
 import { savedCartsMessage } from '../fixtures/newWorkspaceConversations'
@@ -92,12 +93,14 @@ export function pageOrg(state: NewWorkspaceState): PageOrg {
 
 /** The rail of the page, with the person signed in. */
 export function railOf(state: NewWorkspaceState): RailState {
-  const person = state.viewer === 'admin' ? undefined : people[memberViewer]
-  if (state.org === 'new') return { orgs: orgList, current: 'firna', person }
+  // The rail of an admin shows the account of the mockups.
+  const person =
+    state.viewer === 'admin' ? {} : { person: people[memberViewer] }
+  if (state.org === 'new') return { orgs: orgList, current: 'firna', ...person }
   if (state.org === 'suspended') {
-    return { ...acmeRail, suspended: suspendedOrg, person }
+    return { ...acmeRail, suspended: suspendedOrg, ...person }
   }
-  return { ...acmeRail, person }
+  return { ...acmeRail, ...person }
 }
 
 /**
@@ -126,35 +129,38 @@ export function sidebarOf(
     case 'suspended':
       // The sidebar of a suspended org has no New workspace to select.
       return (
-        <Sidebar
+        <sidebar.Component
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={suspendedSections()}
-          shortcuts={shortcuts}
+          sections={plainData(suspendedSections())}
           suspended
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
     case 'new':
       return (
-        <Sidebar
+        <sidebar.Component
           current="new-workspace"
+          moklyInstance="sidebar"
           newWorkspaceTo={paths.firstBuildWorkspace}
           org={orgs.firna}
           sections={newOrgSections()}
           settingsAlert={state.firstBuild === 'failed'}
-          shortcuts={shortcuts}
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
     case 'active':
       return (
-        <Sidebar
+        <sidebar.Component
           current="new-workspace"
+          moklyInstance="sidebar"
           org={orgs.acme}
-          sections={workspaceSections(undefined, needsInput)}
+          sections={plainData(workspaceSections(undefined, needsInput))}
           settingsAlert={acmeBuildFailed(state)}
-          shortcuts={shortcuts}
           viewer={viewer}
+          {...defined({ shortcuts })}
         />
       )
   }

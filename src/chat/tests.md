@@ -13,15 +13,23 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. After the second try sends, the next send of the same
 prompt gets a new client ID. While one prompt waits, another prompt sends
 nothing, also in another session, and a send from the composer still goes.
-`components/ContinuedNote.test.tsx` folds the note of
-Continue once at its place, also after a repeat and in a new tab, in the
-history of a closed session, and draws "You" or the name of the member.
+`components/ContinuedNote.test.tsx` folds the note of Continue once at its
+place, also after a repeat, in a new tab, and in a closed session. It draws
+"You" or the member, and each branch by its label, also in a copy.
 `state/repository-folder.test.ts` checks that a record of another
 repository reads the view again for the folder of the new repository, that
 a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/NewSessionText.test.tsx` checks that the New session text names
+the branch of the chat's record by its real name when the host gives the
+GitHub state of another branch, or of that branch without a label.
+
+`components/CapabilityChangeNote.test.tsx` checks the note of a change of
+the capabilities in the same way. It also checks that the stream reader
+skips a note that it cannot read, such as one with a change of an unknown
+kind, and keeps its event number.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that
@@ -38,13 +46,24 @@ when a read names a login that serves and at the unmount, and a notice that
 shows again starts a new one. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. In an empty session of another
+message that starts a linked session. It reads the models in All models,
+and in the reader's own session the favourites of the account, without the
+favourite on a model that the list leaves out. In an empty session of another
 member, it checks that the label and the picker follow the default login
 that the record names, the org login. `components/ModelPicker.dom.test.tsx`
-checks the New session mark of each model of the other agent, and the Fast
-row of the model picker: the keys reach it, a change of it sends a choice
-that differs only in fast and keeps the menu open, the trigger names Fast,
-and a model without fast mode has no row and turns fast off. `components/SourceLink.dom.test.tsx` presses the link
+checks the New session mark of each model of the other agent in All
+models, and the Fast row of the model picker: the keys reach it, a change
+of it sends a choice that differs only in fast and keeps the menu open, the
+trigger names Fast, and a model without fast mode has no row and turns fast
+off. `components/ModelFavourites.dom.test.tsx` checks the favourites of the
+menu: their rows with the muted words, a favourite on a model that the
+picker does not offer, the mark of an exact match only, a pick, a favourite
+of the other agent, and the menu with no favourite to show, which starts
+with All models.
+`components/AllModels.dom.test.tsx` checks the submenu of All models: its
+keys, a hover, a pick, and its form in the phone layout, with Back.
+`components/model-picker-test-kit.tsx` holds the models, the session, and
+the readers of the menu that these picker tests share. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -70,11 +89,39 @@ with a table keeps a name. An open table-first line has no hidden link
 that the keyboard can reach. The chip stays active in its table.
 `components/open-fold-test-kit.tsx` holds the mount and layout helpers.
 `components/AgentText.dom.test.tsx` renders `AgentText`. It checks where a
-table starts and ends, the alignment, the content of a cell, HTML as text,
-code blocks, the cells of each row, and the span of at most 1,000 columns.
-It also checks workspace chips in cells and links that stay code inside
-a code span. It checks the heading element of each level, with code, bold,
-and a chip in a heading, and that an empty heading draws nothing.
+table starts, the lines after a list item without its indent, the
+alignment, the content of a cell, HTML as text, code blocks, the cells of
+each row, and the span of at most 1,000 columns. It also checks workspace
+chips in cells and links that stay code inside a code span. It checks the
+heading element of each level, with code, bold, and a chip in a heading,
+and that an empty heading draws nothing.
+`components/AgentLists.dom.test.tsx` renders lists in an answer and in a
+message line: the numbers from the first item, a list under an item, the
+list that holds the first table, which opens under the line, and task
+boxes. A task box is a disabled check box before the words of its task,
+and each box of a line has a name that says whether its task is done.
+`components/AgentUpdates.dom.test.tsx` makes a live update of an answer,
+and counts the blocks that draw again with a spy on `answerParts`. Then it
+changes the workspaces, the tree, and the links of the screen, and checks
+the chips and the links of the blocks whose text did not change.
+`components/TranscriptView.test.tsx` renders the line of a stopped turn
+and of an end reason. It also closes the open mark of the message that
+the running turn writes last, and shows it as typed once a later step or
+the end of the turn follows.
+`components/AgentProse.dom.test.tsx` renders quotes, rules, emphasis,
+strikethrough, and line breaks in an answer, with the shared prose style.
+It checks them in a closed and an open message line, and a quote that
+holds the first table of a message, which opens under the line.
+`markdown/agent-blocks.test.ts` reads the blocks of agent messages: lists
+by the rules of CommonMark, headings, underlines, quotes, rules, the own
+cells of a table row in a quote, and the depth limit of lists and quotes
+with no lost text. `markdown/agent-live.test.ts` reads live text: an open
+mark closes only in the paragraph, the heading, or the table cell where
+the text ends, and a finished message keeps it as typed. A live block that
+reads a reference link keeps its reading. `markdown/agent-inline.test.ts` reads marks, entities,
+escapes, code, and each form of a line break, with the line breaks that a
+block draws. `markdown/agent-text-test-kit.ts` writes blocks and inline
+text in a short form.
 `components/MessageLine.dom.test.tsx` renders a message line. A heading in
 a closed line is a span in the line, and the summary holds no heading
 element. A line whose table follows only empty headings keeps a name.
@@ -152,6 +199,45 @@ tab during the close, the tab shows again with the notice
 user chose during the close stays selected. With the Preview tab, the
 failed close also keeps the session of the chat. In both cases, the notice
 goes to the chat, with no session.
+`state/replay-navigation.test.ts` sends pages of the stored history of the
+stream. Pages that close the shown session and then open it again keep the
+saved order and the shown tab. A later save and a new start keep them too.
+A dropped connection keeps the tabs until the next final page. An empty
+final page then closes the tab of a session that stays closed. A close and
+a reopen of the user apply at once. A failed close puts its tab back, keeps
+the tab that the user chose, and shows its notice.
+`state/replay-history.test.ts` checks history loads, a model change, and a
+read-only chat during a replay. While the history of a selected session
+loads beside the pages, its newer title and model show at once, and Send
+sends that model. A failed earlier page of the first history load lets the
+later session list set the tabs. The new session of a model change shows
+from its first page, and its draft moves once. A read-only chat keeps its
+local tabs and writes nothing.
+`state/replay-completion.test.ts` checks the end of a replay after a
+failed history load, and the hold of the first load. A selected session
+whose newest page holds its close, and whose earlier page fails, closes
+its tab when the load ends. The other session shows, and the closed list
+holds the session. A page of the stream and live copies of the same events
+then keep the tabs, and each message shows once and in order. While the
+stored history of the stream still loads, a failed load, a successful Try
+again, and a page with the same close keep the tabs. The empty final page
+then closes the tab, and each message shows once and in order. When the
+history of the first load ends before the second read of the session
+list, the saved tabs stay, and that list sets them. When that read fails,
+the hold still ends: the session whose newest record is closed leaves the
+row, and the next tab shows.
+`state/replay-read-only.test.ts` checks the open and the closed lists of a
+read-only chat with local tabs. In each case, a replay closes a session,
+reopens one, or brings a new one, with the Archive or a suspension. The
+reader also closes, reopens, or chooses a tab. The local tabs, the shown
+session, and the view stay, and nothing writes. The lists follow the
+newest records, so a closed session leaves the open list. The session
+history lists a new or a reopened session that has no tab. A suspended
+chat with local tabs updates the lists at each page. After a dropped
+connection and a local choice, the empty final page settles them. After a
+Restore, the stored open sessions show as tabs in the saved view.
+`state/replay-test-kit.ts` gives the replay tests a chat with two open
+sessions, their saved view, and pages of session records and messages.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the
@@ -212,6 +298,17 @@ opens the list of `@`, moves its highlight, picks with Enter and Tab,
 closes it with Esc and a space, starts each query at the top, continues
 a restored query, shows its one-line states, also with the real store of
 the files, and checks that Enter then sends nothing.
+`components/chip-field/SkillList.dom.test.tsx` opens the list of `/`,
+orders and filters its rows, picks with Enter and Tab, closes it with Esc
+and a space, sends with Enter when no skill matches and while the loading
+or the unavailable line shows, shows the line of an agent without skills
+for `/` alone, shows the skills of the agent of a newly chosen model, and
+offers a manual-only Claude skill only when `/` starts the text.
+`components/chip-field/SkillChips.dom.test.tsx` restores skill chips of
+either agent from a draft, keeps a skill text with more after it as text,
+removes a chip with its × and with Backspace, copies and pastes a chip,
+follows skill lists that load later, and keeps a chip after a change of
+the model.
 `components/chip-field/FileChips.dom.test.tsx` restores file chips from a
 draft, opens a file and a folder, removes a chip with its ×, also as the
 first change, pastes a mention, and follows the tree.
@@ -254,13 +351,19 @@ happy-dom cannot do.
 `components/chip-field/mention-field-test-kit.tsx` mounts the field with the
 files of a chat: a fake with two plain states, no tree and a tree of
 entries, or the real store of the Files screens over the fake API for the
-states that the cloud computer marks. The attached kit takes its tree from
+states that the cloud computer marks. It also gives the skill lists of
+`mentions/skills-test-kit.ts` and an agent that a test can change. The attached kit takes its tree from
 the same fake. The DOM tests focus, type, paste, clear, and read the field
 through `src/test-support/message-field.ts`. Its `messageText` reads each
 field as a field without attached files, so the tests of attached files
 read the draft that the owner keeps.
 `../shared/mention-text.test.ts` reads and writes mentions, and
 `mentions/mention-rows.test.ts` orders the rows of the list.
+`mentions/skill-rows.test.ts` orders and limits the rows of the list of
+`/`. `links/SkillLink.dom.test.tsx` shows a skill chip in a sent message
+for a skill of either agent, keeps other skill texts and code as text,
+copies the skill text of a chip, and keeps each skill text as text
+without a list.
 `../shared/attachment-mentions.test.ts` finds the attached file of a file
 mention, and leaves a folder mention and other mentions alone. It puts the
 original names in place of those mentions, and checks for words outside
@@ -268,7 +371,7 @@ them. For a title, it leaves out the mentions of attached images.
 `links/chat-parts-mentions.test.ts` reads mentions in a sent message. A
 mention of a file of the message is its chip, also when the tree holds
 that path, and also without a tree. A folder mention of that path stays
-text, and a mention in code stays code.
+text, and a mention or a path in code stays code.
 `links/MessageFileChips.dom.test.tsx` opens a file and a folder from its
 chip, copies messages with file chips in the copy state, and moves a
 selection edge inside a chip to its edge.
@@ -288,7 +391,7 @@ real copy in Chrome was a manual check. `components/AttachmentChips.test.tsx` re
 files over the size limit, with one name or the count and the limit. It
 also renders the files under a sent message, with their sizes and no
 Remove.
-`links/AnswerText.dom.test.tsx` mounts answers with file chips through
+`markdown/AnswerText.dom.test.tsx` mounts answers with file chips through
 `AgentText`, which parses an answer again only when its text changes. One
 case holds the reply of the tree. Until the tree comes, a mention and a
 Markdown link of a file show as typed, and a path in code stays code.
@@ -297,40 +400,49 @@ show as file chips, and the Markdown link shows as a file link.
 `chat-files-test-kit.ts` starts the real store of the Files screens,
 `WorkspaceFiles`, over the fake API, with the tree entries that a test
 gives. It can hold the reply of the tree until the test releases it.
-`links/AnswerText.dom.test.tsx`, `links/MessageFileChips.dom.test.tsx`,
+`markdown/AnswerText.dom.test.tsx`, `links/MessageFileChips.dom.test.tsx`,
 `components/SentFileChips.dom.test.tsx`, and
 `components/MessageLine.dom.test.tsx` take their files from it.
+`markdown/answer-files.test.ts` reads the file chips and the file links of
+an answer, with and without a tree, and the mentions right after a mark.
+It also checks that only the image of a picture file can show as its
+picture. `markdown/answer-links.test.ts` reads the web links of an answer:
+a bare address in bold, a label with its formatting, a label that reads as
+an address, a link that shows as typed, web images, code that holds one
+address alone, and balanced square brackets in a bare address.
+`markdown/answer-test-kit.ts` reads the first text of a message and writes
+its parts in a short form.
 `links/FilePicture.dom.test.tsx` mounts an answer with the Markdown image
-of a screenshot in the chat pane, with a fake picture reader. The box of
-the label shows, and the read starts for the message only when the box
-comes near the view, with the scroll box of the chat as the root. The
-picture shows at its own size with the label as its alternative text. A
-plain press opens the file tab, and a press with a modifier key stays with
-the browser. The link shows without a reader, with the code of its label,
-and after a failed read and for bytes that the browser cannot draw. Without
-a reader, nothing watches the image. An unmount aborts the read, and a copy
-gives the Markdown image while the box and while the picture shows.
+of a screenshot in the chat pane, with a fake picture reader. Until the
+tree comes, the image shows its alt text. The box of the label shows, and
+the read starts for the message only when the box comes near the view,
+with the scroll box of the chat as the root. The picture shows at its own
+size with the label as its alternative text. A plain press opens the file
+tab, and a press with a modifier key stays with the browser. The link
+shows without a reader, with the code of its label, and after a failed
+read and for bytes that the browser cannot draw. Without a reader, nothing
+watches the image. An unmount aborts the read, and a copy gives the
+Markdown image while the box and while the picture shows.
 `components/AgentPictures.dom.test.tsx` checks the places of a picture: a
-paragraph and a list item show it, and a heading and a table cell keep
-the link. A closed message line shows the link, and the open line shows
-the picture, which a press opens. happy-dom toggles a `<details>` for a
-click on a link in its summary, which a browser does not, so the browser
-smoke test checks that the line stays open.
+paragraph, a list item, and a quote show it, and a heading and a table
+cell keep the link. A closed message line shows the link, and the open
+line shows the picture, which a press opens. happy-dom toggles a
+`<details>` for a click on a link in its summary, which a browser does
+not, so the browser smoke test checks that the line stays open.
 `links/picture-test-kit.tsx` holds their helpers: a stand-in for
 `IntersectionObserver`, the fake reader, and the mount. They take the
 image decoder of `fakeDecoder` from `../files/page/picture-test-kit.tsx`.
-`links/chat-parts-answers.test.ts` also checks that only the image of a
-picture file can show as its picture.
+`components/same-data.test.ts` checks both compares of
+`components/same-data.ts`: the props of a row for three levels under each
+prop, and the plain data of the blocks of an answer at each depth.
 `links/workspace-links.test.ts` reads links with and without a tab path,
 Markdown links, a code label in a sent message, code, `..`, other origins
 and orgs, which are links and no chips, unknown workspaces, and
 punctuation. `links/LinkedText.test.tsx`
 mounts an answer with chips: in bold, in a list, with a bold or a code
 label, and a link in inline code and in a code block.
-`links/chat-parts-links.test.ts` reads the web links of an answer and of a
-sent message: a bare address in bold, a label with its code and bold, a
-label that reads as an address, a Markdown link that shows as typed, the
-Markdown of an image, and code that holds one address alone.
+`links/chat-parts-links.test.ts` reads the web links of a sent message,
+whose Markdown links show as typed around their addresses.
 `links/WebLinkText.dom.test.tsx` mounts an answer in a screen that opens
 links. It checks the words, the title, and the target of each kind of
 link, a plain press and a press with a modifier key on each, a workspace

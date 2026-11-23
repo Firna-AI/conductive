@@ -2,5 +2,7 @@
 
 #![allow(clippy::unwrap_used)]
 
+mod service_support;
+mod services_tests;
 mod support;
 mod swap_tests;

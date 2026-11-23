@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
-import type { BannerState } from '../shared/github'
+import type { BarAction } from '../ui/components/workspace/barModel'
+import type { BannerState, GitHubBanner } from '../shared/github'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { PullRequestBanner } from './bannerStatus'
 import { barViewOf, type BarControls, type BarInput } from './barView'
@@ -73,8 +73,20 @@ export function readyFeed(snapshot: GitHubSnapshot): GitHubFeed {
   return feedOf({ status: 'ready', snapshot })
 }
 
-/** A banner and checks for a branch without a pull request. */
-export function branchFeed(state: 'none' | 'no-commits'): GitHubFeed {
+/** The branch, its base, or the deleted base of a base that moved. */
+type BranchNames = Partial<
+  Pick<GitHubBanner, 'branch' | 'baseBranch' | 'baseMoved'>
+>
+
+/**
+ * A banner and checks for a branch without a pull request. By default the
+ * branch `calummoore/checkout-autocomplete` targets `main`, and `names`
+ * changes them.
+ */
+export function branchFeed(
+  state: 'none' | 'no-commits',
+  names: BranchNames = {},
+): GitHubFeed {
   return readyFeed({
     banner: {
       branch: 'calummoore/checkout-autocomplete',
@@ -82,6 +94,7 @@ export function branchFeed(state: 'none' | 'no-commits'): GitHubFeed {
       updatedAt: 1_800_000_000_000,
       state,
       pullRequest: null,
+      ...names,
     },
     checks: { state: 'waiting-for-pull-request', checks: [] },
   })

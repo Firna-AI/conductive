@@ -2,7 +2,7 @@ import {
   appActions,
   gitHubAccesses,
   localWorkKinds,
-} from '../components/workspace/barModel'
+} from '../../../../src/ui/components/workspace/barModel'
 
 /**
  * The parts of the workspace state that choose the actions of the pull
@@ -35,6 +35,13 @@ export const barStateProperties = {
    */
   branch: { enum: ['first', 'continued'] },
   /**
+   * The base branch of the workspace: its own, the picked branch after a
+   * start that stacks on it (decision 301), or the default branch after
+   * GitHub deleted that picked branch (decision 304). Then a line under
+   * the bar says that the base moved.
+   */
+  base: { enum: ['own', 'stacked', 'moved'] },
+  /**
    * The repository change of the workspace: none, a change that runs, or
    * the workspace after the change, on a new branch of acme/billing-service.
    */
@@ -46,14 +53,16 @@ export const barStateKeys = [
   'access',
   'appAction',
   'branch',
+  'base',
   'repositoryMove',
 ] as const
 
-/** No local work, write access, and no action of the app. */
+/** No local work, write access, no action of the app, and its own base. */
 export const barStateDefaults = {
   localWork: 'none',
   access: 'write',
   appAction: 'none',
   branch: 'first',
+  base: 'own',
   repositoryMove: 'none',
 } as const

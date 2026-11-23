@@ -9,8 +9,15 @@ import {
   continueMoveCommand,
 } from './continue-commands'
 import { authorizeContinue } from './continue-data'
+import { continueFailed } from './continue-failure'
 import type { ContinueJob, ContinueOptions } from './continue-types'
 import { publishContinue } from './continue-publication'
+import { continueBase } from './continue-base'
+import { workspaceAutoStopSeconds } from './idle-stop'
+import {
+  CONTINUE_EXIT_CODES,
+  continueCommandStopCause,
+} from './continue-stop-causes'
 
 export interface ContinueProgress {
   scope: string | null
@@ -35,7 +42,10 @@ export async function advanceContinue(
     await settleContinueCommand(options, progress, job)
     return
   }
-  if (job.cancelled) throw continueFailed(job)
+  if (job.cancelled) {
+    job.stopCause = 'cancelled'
+    throw continueFailed(job)
+  }
   const row = await options.run(() => authorizeContinue(options, job))
   if (job.phase === 'verify') {
     const snapshot = await options.refresh(job.binding, {
@@ -48,7 +58,8 @@ export async function advanceContinue(
         'workspace_not_merged',
         'Merge the pull request before you continue.',
       )
-    job.baseBranch = await options.defaultBranch(job.binding, job.member.id)
+    job.defaultBranch = await options.defaultBranch(job.binding, job.member.id)
+    job.baseBranch = await continueBase(options, job, snapshot)
     job.phase =
       row.state === 'stopped' ||
       row.state === 'error' ||
@@ -62,11 +73,19 @@ export async function advanceContinue(
     if (!job.resumeQueued || row.state === 'stopped') {
       job.resumeQueued = true
       await progress.save(job)
-      await options.resume(job.binding.orgId, job.binding.id, job.member.id)
+      try {
+        await options.resume(job.binding.orgId, job.binding.id, job.member.id)
+      } catch (error) {
+        job.stopCause = 'sandbox-start-failed'
+        throw error
+      }
       return
     }
     if (row.state === 'starting') return
-    if (row.state === 'error') throw continueFailed(job)
+    if (row.state === 'error') {
+      job.stopCause = 'sandbox-start-failed'
+      throw continueFailed(job)
+    }
     job.phase = 'check'
     await progress.save(job)
     return
@@ -99,11 +118,7 @@ export async function advanceContinue(
     await progress.save(job)
     return
   }
-  const provider = providerForAccount(
-    options.env,
-    options.dependencies.fetch,
-    job.providerAccount,
-  )
+  const provider = continueProvider(options, job)
   if (!(await advanceContinueCommand(provider, options, progress, job))) return
   await completeCommand(progress, job)
 }
@@ -118,6 +133,7 @@ async function completeCommand(progress: ContinueProgress, job: ContinueJob) {
     })
     return
   }
+  job.stopCause = 'unknown'
   job.phase = job.phase === 'fetch' ? 'move' : 'publish'
   job.processId = null
   job.commandStarted = false
@@ -144,13 +160,25 @@ async function settleContinueCommand(
     await progress.save(job)
   }
   if (job.cancelled) progress.scope = null
-  const provider = providerForAccount(
-    options.env,
-    options.dependencies.fetch,
-    job.providerAccount,
-  )
+  const provider = continueProvider(options, job)
   if (await advanceContinueCommand(provider, options, progress, job))
     await completeCommand(progress, job)
+}
+
+function continueProvider(
+  options: ContinueOptions,
+  job: ContinueJob,
+): SandboxProvider {
+  try {
+    return providerForAccount(
+      options.env,
+      options.dependencies.fetch,
+      job.providerAccount,
+    )
+  } catch (error) {
+    job.stopCause = 'provider-preparation-failed'
+    throw error
+  }
 }
 
 async function advanceContinueCommand(
@@ -164,7 +192,15 @@ async function advanceContinueCommand(
     const recoverOnly = job.commandStarted
     if (!recoverOnly) {
       await options.run(() => authorizeContinue(options, job))
-      await provider.setAutoStop(job.sandboxId, 1_800)
+      try {
+        await provider.setAutoStop(
+          job.sandboxId,
+          await workspaceAutoStopSeconds(options.env.DB),
+        )
+      } catch (error) {
+        job.stopCause = 'provider-preparation-failed'
+        throw error
+      }
       await options.run(() => authorizeContinue(options, job))
       job.commandStarted = true
       await progress.save(job)
@@ -189,9 +225,12 @@ async function advanceContinueCommand(
         ),
       )
       job.processId = started.processId
+      if (!job.cancelled) job.stopCause = 'unknown'
       await progress.save(job)
     } catch {
       progress.scope = null
+      if (!job.cancelled) job.stopCause = 'command-start-uncertain'
+      await progress.save(job)
     }
     return false
   }
@@ -202,17 +241,19 @@ async function advanceContinueCommand(
   if (status.state !== 'running') progress.scope = null
   job.stdoutOffset = status.stdoutNextOffset
   job.stderrOffset = status.stderrNextOffset
+  if (!status.more && !status.running && !job.cancelled && !job.failure)
+    job.stopCause = continueCommandStopCause(job.phase, status)
   await progress.save(job)
   if (status.more || status.running) return false
   if (status.state === 'lost') {
-    if (job.phase === 'move' && (await switchedBranch(provider, job)))
+    if (job.phase === 'move' && (await switchedBranch(provider, progress, job)))
       return true
     job.processId = null
     await progress.save(job)
     return false
   }
   if (status.state !== 'exited' || status.exitCode !== 0 || status.timedOut) {
-    if (job.phase === 'move' && (await switchedBranch(provider, job)))
+    if (job.phase === 'move' && (await switchedBranch(provider, progress, job)))
       return true
     const error = job.failure ?? continueFailed(job)
     await progress.finish(job, {
@@ -226,25 +267,23 @@ async function advanceContinueCommand(
 
 async function switchedBranch(
   provider: SandboxProvider,
+  progress: ContinueProgress,
   job: ContinueJob,
 ): Promise<boolean> {
   const result = await provider.runCommand(
     job.sandboxId,
     continueBranchCommand(job),
   )
+  if (
+    result.exitCode === CONTINUE_EXIT_CODES.comparisonMetadata &&
+    !result.timedOut
+  ) {
+    job.stopCause = 'comparison-metadata-failed'
+    await progress.save(job)
+  }
   if (result.exitCode === 0 && !result.timedOut) {
     if (result.stdout === `${job.branch}\n`) return true
     if (result.stdout === `${job.binding.branch}\n`) return false
   }
   throw new Error('The branch change still needs reconciliation.')
-}
-
-export function continueFailed(job: ContinueJob): HttpError {
-  return new HttpError(
-    409,
-    'workspace_continue_failed',
-    job.phase === 'move'
-      ? `Continue stopped: the changed files clash with the latest ${job.baseBranch}. The workspace stays on ${job.binding.branch}.`
-      : 'Continue could not finish. Check GitHub access and try again.',
-  )
 }

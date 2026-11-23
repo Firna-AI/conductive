@@ -1,18 +1,31 @@
 import type { ReactNode } from 'react'
+import type { CodePart } from '../../../../../src/chat/links/link-parts'
 import {
   labelHidesAddress,
-  webAddressParts,
-  webLink,
-  type WebAddressLink,
   type WebLink,
 } from '../../../../../src/markdown/web-links'
 import { openPort } from '../../fixtures/previews'
 import { paths } from '../../paths'
-import inline from '../common/InlineText.module.css'
+import inline from '../../../../../src/ui/components/common/InlineText.module.css'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
-import { TextLink, type LinkOpener } from '../common/TextLink'
+import {
+  TextLink,
+  type LinkOpener,
+} from '../../../../../src/ui/components/common/TextLink'
 import { useChatWorkspaces } from './chatWorkspaces'
-import { linkContext, linkPage, linkTarget } from './workspaceLinks'
+import { linkPage, linkTarget, webLinkOf } from './workspaceLinks'
+
+/**
+ * A Markdown image of the Markdown preview of a file, such as a picture at
+ * a web address. No picture loads: it shows its alt text, as a link when
+ * its target is a web address (item 10 B of the Markdown plan).
+ */
+export type ImagePart = {
+  kind: 'image'
+  alt: string
+  href: string
+  source: string
+}
 
 /**
  * The screen of each port whose preview the mockups draw: the dev server
@@ -26,7 +39,7 @@ const portScreens: ReadonlyMap<number, string> = new Map([
  * An anchor that opens a page outside the app in a new tab, with no opener
  * and no referrer, so the page gets no address of the app.
  */
-function NewTabAnchor(props: LinkOpener & { href: string }) {
+export function NewTabAnchor(props: LinkOpener & { href: string }) {
   const { href, ...link } = props
   return (
     <a
@@ -44,10 +57,10 @@ function NewTabAnchor(props: LinkOpener & { href: string }) {
  * a local address. A link to a page that the mockups do not draw has none.
  */
 function useScreen(link: WebLink): string | undefined {
-  const rows = useChatWorkspaces()
+  const links = useChatWorkspaces()
   if (link.kind === 'local') return portScreens.get(link.port)
   if (link.kind === 'web') return undefined
-  const target = linkTarget(link.url.href, rows)
+  const target = linkTarget(link.url.href, links)
   return target ? linkPage(target) : undefined
 }
 
@@ -63,14 +76,14 @@ function openerOf(link: WebLink, to: string | undefined) {
 }
 
 /**
- * A web link of chat text, with the look of `TextLink`. A press on a link
- * of the app opens its page in the app, in the same window, as a chip
- * does. A press on a local address opens the port preview of its port, in
- * the workspace of the chat. A press on any other link opens a new tab.
- * The mockups open the screen of an app page or of a port preview when
+ * A web link of chat text, with the look of `TextLink`, and its words. A
+ * press on a link of the app opens its page in the app, in the same window,
+ * as a chip does. A press on a local address opens the port preview of its
+ * port, in the workspace of the chat. A press on any other link opens a new
+ * tab. The mockups open the screen of an app page or of a port preview when
  * they draw it.
  */
-function WebLinkText(props: { link: WebLink; children: ReactNode }) {
+export function WebLinkText(props: { link: WebLink; children: ReactNode }) {
   const { link } = props
   const to = useScreen(link)
   return (
@@ -81,37 +94,19 @@ function WebLinkText(props: { link: WebLink; children: ReactNode }) {
 }
 
 /**
- * Text as typed, such as a Markdown link of a sent message: each bare
- * address in it is a link, and the rest is text.
+ * A Markdown image of the file preview. No picture loads from a web
+ * address, so the image shows its alt text as a link to its address, with
+ * the rules of a Markdown link: alt text that reads as an address, or that
+ * shows nothing, shows the address in its place. An image with no valid
+ * address shows its alt text only.
  */
-function TypedText(props: { text: string }) {
-  return webAddressParts(props.text, false).map((part, index) =>
-    part.kind === 'text' ? (
-      part.text
-    ) : (
-      <WebLinkPart answer={false} key={index} part={part} />
-    ),
+export function WebImagePart(props: { part: ImagePart }) {
+  const { alt, href } = props.part
+  const link = webLinkOf(href)
+  if (!link) return alt
+  return (
+    <WebLinkText link={link}>{labelHidesAddress(alt) ? href : alt}</WebLinkText>
   )
-}
-
-/**
- * A link of chat text that names no workspace of the org. A bare address
- * shows as the text has it. In an answer, a Markdown link shows as its
- * label, or as its address when the label reads as an address or shows
- * nothing, and its title gives the address. Its link title does not show.
- * In a message of a member, a Markdown link shows as typed, and its address
- * is the link. An address that is no link, such as one with a user name,
- * shows as typed.
- */
-export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
-  const { href, source, label } = props.part
-  const link = webLink(href, linkContext)
-  if (label === undefined) {
-    return link ? <WebLinkText link={link}>{source}</WebLinkText> : source
-  }
-  if (!link || !props.answer) return <TypedText text={source} />
-  const shown = labelHidesAddress(label) ? href : label
-  return <WebLinkText link={link}>{shown}</WebLinkText>
 }
 
 /**
@@ -120,18 +115,16 @@ export function WebLinkPart(props: { part: WebAddressLink; answer: boolean }) {
  * the box. The address of a workspace is such a link too, not a chip, so
  * the code keeps its text.
  */
-export function CodeText(props: { text: string; href?: string }) {
-  const { text, href } = props
-  const link = href === undefined ? undefined : webLink(href, linkContext)
-  if (href === undefined || !link) {
-    return <code className={inline.code}>{text}</code>
-  }
-  const start = text.indexOf(href)
+export function CodeText(props: { part: CodePart }) {
+  const { text, link } = props.part
+  if (!link) return <code className={inline.code}>{text}</code>
+  const address = text.trim()
+  const start = text.indexOf(address)
   return (
     <code className={inline.code}>
       {text.slice(0, start)}
-      <WebLinkText link={link}>{href}</WebLinkText>
-      {text.slice(start + href.length)}
+      <WebLinkText link={link}>{address}</WebLinkText>
+      {text.slice(start + address.length)}
     </code>
   )
 }

@@ -6,8 +6,46 @@ import { HttpError } from '../http'
 import { toolSessionWorkspace } from './session-access'
 import { toolUser } from './composition-data'
 import type { ToolSessionWrite, ToolSessionManagement } from './services'
+import { SessionWatches } from '../chat/session-watches'
+import type {
+  ReadySessionWatch,
+  ToolSessionWatch,
+} from '../chat/session-watch-records'
 
 export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
+  protected readonly sessionWatches = new SessionWatches(
+    this.env,
+    this.integration,
+    this.context,
+  )
+
+  callingWatchTurn(workspaceId: string, turnId: string) {
+    return this.chat.readWorkspace(workspaceId, async (view) => {
+      const turn = await activeStoredTurn(this.chat, workspaceId, turnId)
+      return turn
+        ? {
+            workspaceId,
+            turnId,
+            sessionId: turn.sessionId,
+            senderUserId: turn.senderId,
+            stopNonce: await view.watches.stopNonce(turn.sessionId),
+          }
+        : null
+    })
+  }
+
+  watchAgentSession(input: ToolSessionWatch) {
+    return featureResult(() =>
+      this.sessionWatches.register(input, () =>
+        this.writeAccess({ ...input, senderUserId: input.caller.senderUserId }),
+      ),
+    )
+  }
+
+  acceptSessionWatch(watch: ReadySessionWatch) {
+    return this.sessionWatches.accept(watch)
+  }
+
   async callingToolTurn(workspaceId: string, turnId: string) {
     if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
       return null

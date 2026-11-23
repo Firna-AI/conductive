@@ -1,13 +1,13 @@
 import { InputFrame } from '@firna/ui/input'
-import { Mail, UserPlus } from 'lucide-react'
+import { Mail } from 'lucide-react'
 import type { Invite, Membership, PersonKey } from '../../fixtures/members'
 import type { Workspace } from '../../fixtures/workspaces'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { useControlSizes } from '../common/touch'
-import { Section } from '../settings/Section'
-import { MemberList } from './MemberList'
-import styles from './Members.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { memberList } from '../../entries/components/members/MemberList.mockup'
+import styles from '../../../../../src/ui/components/members/Members.module.css'
 
 /**
  * The invite of an admin, by email. The person joins with a GitHub account
@@ -16,8 +16,9 @@ import styles from './Members.module.css'
 function InviteSection() {
   const { field } = useControlSizes()
   return (
-    <Section
+    <section.Component
       description="Invite a person by an email that is verified on their GitHub account. They join when they accept."
+      moklyInstance="invite"
       title="Invite a member"
     >
       <div className={styles.invite}>
@@ -30,9 +31,11 @@ function InviteSection() {
           size={field}
           value=""
         />
-        <ActionButton icon={UserPlus}>Invite</ActionButton>
+        <actionButton.Component icon="user-plus" moklyInstance="invite-member">
+          Invite
+        </actionButton.Component>
       </div>
-    </Section>
+    </section.Component>
   )
 }
 
@@ -53,18 +56,20 @@ export function MembersTab(props: {
   return (
     <>
       {props.canManage ? <InviteSection /> : null}
-      <Section
+      <section.Component
         description="Admins manage the members and who owns each workspace. Members work in the workspaces."
+        moklyInstance="members"
         title="Members"
       >
-        <MemberList
+        <memberList.Component
           canManage={props.canManage}
           invites={props.canManage ? props.invites : []}
           members={props.members}
+          moklyInstance="member-list"
           viewer={props.viewer}
           workspaces={props.workspaces}
         />
-      </Section>
+      </section.Component>
     </>
   )
 }

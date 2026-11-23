@@ -1,0 +1,68 @@
+/*
+ * The layout of the blocks of an agent message in the work of a turn, as
+ * the app and the mockups draw them: the blocks of an open message line,
+ * which `LineBlocks` draws, and the blocks under the line after its first
+ * table. `.message` marks the `<details>` of the line, beside the `.message`
+ * of ToolGroup.module.css, and `.messageBody` marks the part under the line,
+ * beside its `.messageBody`. ToolGroup.module.css draws the rest of the line.
+ */
+
+/*
+ * Each block of the open line, `.lineBlock`, starts 6px lower when it
+ * follows another block, also after a list or a table, and a code block
+ * does too. ToolGroup.module.css sets the same space for paragraphs and
+ * lists.
+ */
+.message[open] .lineBlock + .lineBlock {
+  margin-top: 6px;
+}
+
+/*
+ * A heading after another block starts 10px lower, also after a code
+ * block. This rule follows the rule above, so it wins.
+ */
+.message[open] .lineBlock + .lineHeading {
+  margin-top: 10px;
+}
+
+/* An open code block takes the look of the code block of an answer. */
+.message[open] .code {
+  display: block;
+  margin-bottom: 0;
+  white-space: pre;
+}
+
+/* A numbered list and a code block under the line, after the table. */
+.messageBody ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.messageBody pre {
+  margin: 0;
+}
+
+/*
+ * A block after the text of a list item, such as a second paragraph. The
+ * rules name the blocks of an item, so a chip in its text keeps its place.
+ */
+.messageBody li > :is(p, pre, div, ol, ul) + :is(p, pre, div) {
+  margin-top: 6px;
+}
+
+/* A list under the text of its item, as close as the next item. */
+.messageBody li > :is(p, pre, div, ol, ul) + :is(ol, ul) {
+  margin-top: 2px;
+}
+
+/*
+ * A heading in a list item stands as far from the block above it as a
+ * heading of the open line, and the block under it as under a paragraph.
+ */
+.messageBody li > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 10px;
+}
+
+.messageBody li > :is(h1, h2, h3, h4, h5, h6) + :is(p, pre, div, ol, ul) {
+  margin-top: 6px;
+}

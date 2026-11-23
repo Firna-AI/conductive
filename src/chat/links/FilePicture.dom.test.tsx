@@ -67,8 +67,10 @@ describe('the picture of a Markdown image in an answer', () => {
     files.start()
     const view = await mountAnswer(answer, files)
     view.near.come()
-    expect(view.container.querySelector('p')?.textContent).toContain(
-      '[Phone view](shots/after.png)',
+    // Until the tree arrives, the path names no entry, so the image shows
+    // its alt text, as file-mentions-answers.md says.
+    expect(view.container.querySelector('p')?.textContent).toBe(
+      'The phone view: Phone view. It fits.',
     )
     expect({
       images: imagesIn(view.container),

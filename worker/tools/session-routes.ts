@@ -1,4 +1,5 @@
 import type { AgentReadSessionRequest } from '../../src/shared/generated/AgentReadSessionRequest'
+import type { AgentGetMessageRequest } from '../../src/shared/generated/AgentGetMessageRequest'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 
 import { sessionTitleFrom } from '../../src/shared/session-title'
@@ -12,9 +13,10 @@ import { TOOL_TURN_HEADER } from '../../src/shared/agent-tools'
 import { requireCallingToolTurn } from './calling-turn'
 import { createSessionInput, sendSessionInput } from './session-input'
 import { sessionPageInput } from './session-page'
+import { watchSessionFromTool } from './session-watch-route'
 
 const SESSION_ROUTE = new RegExp(
-  `^${MACHINE_PATHS.workspaces}/([^/]+)/sessions(?:/([^/]+)(?:/(transcript|rename|close|stop)|/messages(?:/([^/]+))?)?)?$`,
+  `^${MACHINE_PATHS.workspaces}/([^/]+)/sessions(?:/([^/]+)(?:/(transcript|rename|close|stop|watch)|/messages(?:/([^/]+))?)?)?$`,
 )
 
 type SessionToolAction =
@@ -26,6 +28,7 @@ type SessionToolAction =
   | 'rename'
   | 'close'
   | 'stop'
+  | 'watch'
 
 function route(path: string) {
   const match = path.match(SESSION_ROUTE)
@@ -36,6 +39,7 @@ function route(path: string) {
     case 'rename':
     case 'close':
     case 'stop':
+    case 'watch':
       action = match[3]
       break
     default:
@@ -94,6 +98,11 @@ function readOptions(query: URLSearchParams): AgentReadSessionRequest {
   }
 }
 
+/** Older runners send no query, so they get no agent message. */
+function messageOptions(query: URLSearchParams): AgentGetMessageRequest {
+  return { agentMessages: query.get('agentMessages') === 'true' }
+}
+
 export async function readSessionsFromTool(
   url: URL,
   db: D1Database,
@@ -127,6 +136,7 @@ export async function readSessionsFromTool(
       workspaceId,
       sessionId,
       decode(match.messageId),
+      messageOptions(url.searchParams),
     )
   return services.readSession(
     caller.orgId,
@@ -146,6 +156,17 @@ export async function writeSessionsFromTool(
   const match = route(url.pathname)
   if (!match || ['get', 'message', 'transcript'].includes(match.action))
     return null
+  if (match.action === 'watch')
+    return watchSessionFromTool(
+      request,
+      db,
+      caller,
+      services,
+      match.workspaceId === 'current'
+        ? caller.workspaceId
+        : decode(match.workspaceId),
+      decode(match.sessionId),
+    )
   const { turn } = await requireCallingToolTurn(
     db,
     caller,

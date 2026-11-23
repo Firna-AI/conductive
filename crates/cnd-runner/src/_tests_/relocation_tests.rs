@@ -30,6 +30,8 @@ fn configuration() -> Configuration {
         home: "/home/user".into(),
         default_branch: "main".into(),
         workspace_branch: Some("alice/cart-v1-ab12".into()),
+        skills_repository: None,
+        trusted_skills_repository: None,
         repository_directories: BTreeMap::from([
             (
                 "CONDUCTIVE_REPOSITORY_BILLING_DIR".into(),

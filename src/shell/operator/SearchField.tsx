@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { Search } from 'lucide-react'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { useControlSizes } from '../../ui/components/common/touch'
 import { useNavigation } from '../../app/navigation'
 import { useServices } from '../../app/services'
 

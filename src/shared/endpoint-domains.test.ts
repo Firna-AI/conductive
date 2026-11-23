@@ -2,7 +2,7 @@ import { expect, it, vi } from 'vitest'
 
 import { readEndpointAddress } from './endpoint-address'
 
-vi.mock('../../docs/mockups/src/brand', () => ({
+vi.mock('./brand', () => ({
   productDomain: 'renamed.example.test',
 }))
 

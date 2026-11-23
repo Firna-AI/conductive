@@ -32,13 +32,18 @@ export function startGuard(
   }
   return async (call) => {
     const before = await checkpoint()
-    const result = await turn.outside(async () => {
+    const leave = async () => {
       try {
         return { ok: true as const, value: await call() }
       } catch (error) {
         return { ok: false as const, error }
       }
-    })
+    }
+    // The start records count the wait to enter the queue again.
+    const records = platform.startRecords
+    const result = await (records
+      ? records.outside(turn, leave)
+      : turn.outside(leave))
     const after = await checkpoint()
     if (before.job !== after.job || before.epoch !== after.epoch)
       throw new StartSuperseded()

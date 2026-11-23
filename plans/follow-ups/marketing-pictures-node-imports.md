@@ -3,7 +3,7 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-18, from branch `calummoore/fix-marketing-picture-command-import-hfoi`, which fixed the import that broke the command.
-- **Location:** `docs/mockups/src/paths.ts:266`, the import that broke. `docs/mockups/src/screens/marketingPictureCaptures.ts:9`, the only statement of the rule. `tools/marketing-pictures/tsconfig.json`, a `NodeNext` config that no script runs. The `typecheck` script of `package.json`. `tools/marketing-pictures/run.ts`, the command.
+- **Location:** `docs/mockups/src/paths.ts:266`, the import that broke. `src/ui/screens/marketingPictureCaptures.ts:9`, the only statement of the rule. `tools/marketing-pictures/tsconfig.json`, a `NodeNext` config that no script runs. The `typecheck` script of `package.json`. `tools/marketing-pictures/run.ts`, the command.
 - **Reason:** The recommended check adds a step to the gate, which only the user can approve. The user chose to record this class for a later task.
 
 - **Source:** Implementation. **Category:** Test.
@@ -16,8 +16,8 @@
 - **Background:**
   - `run.ts` imports seven tool modules. Through `capture-pictures.ts` and `capture-preview.ts`, the command loads these shared modules:
     - `docs/mockups/src/paths.ts`, which re-exports `docs/mockups/src/bannerPaths.ts`
-    - `docs/mockups/src/screens/marketingPictureCaptures.ts` and `marketingPictureList.ts` beside it
-    - `docs/mockups/src/brand.ts` and `src/marketing/features.ts`
+    - `src/ui/screens/marketingPictureCaptures.ts` and `marketingPictureList.ts` beside it
+    - `src/shared/brand.ts` and `src/marketing/features.ts`
   - The rule lives only in a comment at `marketingPictureCaptures.ts:9`: "The import names the `.ts` file, because Node needs it." No README states it. The other shared modules have no such comment.
   - `docs/mockups/README.md` requires a new capture after each change to a screen that a marketing picture shows.
   - On 18 November 2026, commit `424bf736d` (#423) moved two path groups from `paths.ts` into the new `bannerPaths.ts`. Before it, `paths.ts` had 299 lines. The lint rejects a file over 300 lines.

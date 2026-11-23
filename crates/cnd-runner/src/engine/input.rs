@@ -8,7 +8,6 @@ use cnd_runner_interface::chat_events::{
     AgentChatEvent, AgentChatEventTurnFailedError, TurnEventContext,
 };
 use cnd_runner_interface::runner_commands::{RunnerMessageDuringTurn, RunnerTurn};
-use cnd_runner_interface::sdk_helper::HelperModelResult;
 use cnd_runner_interface::sdk_helper_options::ProviderInput;
 
 use crate::error::{Error, Result};
@@ -27,7 +26,7 @@ impl Session {
         control: Control,
         received_at: i64,
     ) -> Result<()> {
-        let (session_id, turn_id, message) = identity(&input);
+        let (session_id, turn_id, message) = identity(&input).ok_or(Error::InvalidCommand)?;
         let context = TurnEventContext {
             session_id: session_id.to_owned(),
             turn_id: turn_id.to_owned(),
@@ -55,6 +54,7 @@ impl Session {
                     },
                     retry_message_id: message.id.clone(),
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }
@@ -68,6 +68,7 @@ impl Session {
                     },
                     retry_message_id: message.id.clone(),
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }
@@ -76,12 +77,18 @@ impl Session {
             | ProviderInput::Message(RunnerMessageDuringTurn::Message { branches, .. }) => {
                 branches.as_ref()
             }
+            ProviderInput::Notice(_) => None,
         };
         let needs_instructions = self.saved.as_ref().is_none_or(|s| s.instructions.is_none());
         if needs_instructions {
+            let capabilities = match &input {
+                ProviderInput::Turn(RunnerTurn::Turn { capabilities, .. }) => capabilities.as_ref(),
+                ProviderInput::Message(_) | ProviderInput::Notice(_) => None,
+            };
             let (text, branches) = instructions::build(
                 &self.dependencies.configuration,
                 branches,
+                capabilities,
                 &message.choice.agent,
             )?;
             let conversation = self
@@ -128,31 +135,8 @@ impl Session {
         {
             control.run(self.dependencies.store.remember(saved)).await?;
         }
-        if let Some(turn) = &mut self.active {
-            if turn.control.stopped() {
-                return Ok(());
-            }
-            let was_waiting = turn.background.as_ref().is_some_and(|b| b.waiting);
-            if let Some(background) = &mut turn.background {
-                background.input(received_at, self.dependencies.background_limit);
-            }
-            if !turn.waiting.is_empty() {
-                turn.waiting.push_back(input);
-            } else if self.deliver(input.clone()).await? == HelperModelResult::Deferred
-                && let Some(turn) = &mut self.active
-            {
-                turn.waiting.push_back(input);
-            }
-            if was_waiting && self.active.as_ref().is_some_and(|t| !t.waiting.is_empty()) {
-                self.result(
-                    cnd_runner_interface::provider_events::ProviderResultState::Finished,
-                    vec![],
-                    None,
-                    false,
-                )
-                .await?;
-            }
-            return Ok(());
+        if self.active.is_some() {
+            return self.steer(input, received_at).await;
         }
         let ProviderInput::Turn(first) = &input else {
             return Ok(());
@@ -173,8 +157,11 @@ impl Session {
             retry_message_id: message.id.clone(),
             message_ids: vec![message.id.clone()],
             resolved: BTreeSet::new(),
+            notice_ids: vec![],
+            read_notice_ids: BTreeSet::new(),
             waiting: VecDeque::new(),
             helper: None,
+            skills_lease: None,
             baseline: None,
             output: TurnOutput::new(context),
             background: (message.choice.agent == Agent::Claude).then(Background::default),

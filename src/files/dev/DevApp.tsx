@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
+import { OverlayHost } from '../../shell/ui/Overlay'
+import { themeFor, tokensCss } from '../../ui/theme'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,
@@ -153,93 +154,101 @@ export function DevApp(props: {
     <SharedUiThemeProvider theme={themeFor(view.theme)}>
       <style>{domBackendCss}</style>
       <style>{tokensCss(view.theme)}</style>
-      {view.layout === 'phone' ? (
-        <main className={styles.phone}>{page ?? panel}</main>
-      ) : (
-        <div className={styles.desktop}>
-          <main className={styles.center}>
-            <nav aria-label="Open files" className={styles.tabBar}>
-              <ul className={styles.tabs}>
-                {tabs.map((tab) => (
-                  <FileTabItem
-                    key={`${tab.kind}:${tab.path}`}
-                    label={tabLabel(snapshot, tab.path, tab.kind)}
-                    navigation={navigation}
-                    onClose={() => close(tab)}
-                    selected={view.active !== null && sameTab(view.active, tab)}
-                    tab={tab}
-                  />
-                ))}
-              </ul>
-            </nav>
-            {page ?? (
-              <div className={styles.waiting}>
-                Open a file or a change from the list.
-              </div>
-            )}
-          </main>
-          <aside aria-label="Files" className={styles.right}>
-            {panel}
-          </aside>
-        </div>
-      )}
-      {view.controls ? (
-        <div className={styles.controls}>
-          <button
-            onClick={() =>
-              show({
-                ...view,
-                layout: view.layout === 'phone' ? 'desktop' : 'phone',
-              })
-            }
-            type="button"
-          >
-            {view.layout === 'phone' ? 'Desktop' : 'Phone'}
-          </button>
-          <button
-            onClick={() =>
-              show({ ...view, theme: view.theme === 'dark' ? 'light' : 'dark' })
-            }
-            type="button"
-          >
-            {view.theme === 'dark' ? 'Light' : 'Dark'}
-          </button>
-          <button
-            onClick={() =>
-              location.assign(
-                viewQuery({
-                  ...view,
-                  scenario: view.scenario === 'live' ? 'mockup' : 'live',
-                }),
-              )
-            }
-            type="button"
-          >
-            {view.scenario === 'live' ? 'Mockup data' : 'Live data'}
-          </button>
-          <button onClick={() => playRecordedUpdates(server)} type="button">
-            Play the recorded updates
-          </button>
-          <RepairControls files={files} server={server} />
-          <HtmlPreviewControls
-            onChange={(preview) => show({ ...view, preview })}
-            value={view.preview}
-          />
-          {view.active ? (
+      {/* The layer of the expanded window of a picture. */}
+      <OverlayHost>
+        {view.layout === 'phone' ? (
+          <main className={styles.phone}>{page ?? panel}</main>
+        ) : (
+          <div className={styles.desktop}>
+            <main className={styles.center}>
+              <nav aria-label="Open files" className={styles.tabBar}>
+                <ul className={styles.tabs}>
+                  {tabs.map((tab) => (
+                    <FileTabItem
+                      key={`${tab.kind}:${tab.path}`}
+                      label={tabLabel(snapshot, tab.path, tab.kind)}
+                      navigation={navigation}
+                      onClose={() => close(tab)}
+                      selected={
+                        view.active !== null && sameTab(view.active, tab)
+                      }
+                      tab={tab}
+                    />
+                  ))}
+                </ul>
+              </nav>
+              {page ?? (
+                <div className={styles.waiting}>
+                  Open a file or a change from the list.
+                </div>
+              )}
+            </main>
+            <aside aria-label="Files" className={styles.right}>
+              {panel}
+            </aside>
+          </div>
+        )}
+        {view.controls ? (
+          <div className={styles.controls}>
             <button
-              onClick={() => {
-                const edit = edits + 1
-                setEdits(edit)
-                if (view.active)
-                  void editOpenTab(server, files, view.active, edit)
-              }}
+              onClick={() =>
+                show({
+                  ...view,
+                  layout: view.layout === 'phone' ? 'desktop' : 'phone',
+                })
+              }
               type="button"
             >
-              Edit the open file
+              {view.layout === 'phone' ? 'Desktop' : 'Phone'}
             </button>
-          ) : null}
-        </div>
-      ) : null}
+            <button
+              onClick={() =>
+                show({
+                  ...view,
+                  theme: view.theme === 'dark' ? 'light' : 'dark',
+                })
+              }
+              type="button"
+            >
+              {view.theme === 'dark' ? 'Light' : 'Dark'}
+            </button>
+            <button
+              onClick={() =>
+                location.assign(
+                  viewQuery({
+                    ...view,
+                    scenario: view.scenario === 'live' ? 'mockup' : 'live',
+                  }),
+                )
+              }
+              type="button"
+            >
+              {view.scenario === 'live' ? 'Mockup data' : 'Live data'}
+            </button>
+            <button onClick={() => playRecordedUpdates(server)} type="button">
+              Play the recorded updates
+            </button>
+            <RepairControls files={files} server={server} />
+            <HtmlPreviewControls
+              onChange={(preview) => show({ ...view, preview })}
+              value={view.preview}
+            />
+            {view.active ? (
+              <button
+                onClick={() => {
+                  const edit = edits + 1
+                  setEdits(edit)
+                  if (view.active)
+                    void editOpenTab(server, files, view.active, edit)
+                }}
+                type="button"
+              >
+                Edit the open file
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </OverlayHost>
     </SharedUiThemeProvider>
   )
 }

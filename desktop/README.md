@@ -17,10 +17,14 @@ It cancels downloads from child frames, preview frames, and other windows.
 It also cancels non-blob downloads and downloads with no native source frame.
 The file flow adds no renderer bridge.
 
-The desktop entry supplies the configured Worker origin to the app's API and event services.
+The desktop entry gives the configured Worker origin and the `include` credential mode to the shared [live services](../src/app/live-services.ts) of the web app.
+The web entry gives the same services the origin of its page.
 API calls use `credentials: include`, so Chromium sends the HttpOnly desktop session cookie.
 File uploads go to the same origin in parts. Each part is one raw `XMLHttpRequest` `PUT` with credentials and no other header than `Content-Type`, so it sends the same cookie and reports its progress.
 Workspace sockets use the same Worker origin.
+`AppServices.appOrigin` and the paths that `leave` opens, such as sign-in, use it too.
+The join links of the Account page and of the operator section start with that origin, so they name the deployment that owns their codes.
+Chat and file preview links to a page of the app at that origin open the page in the window.
 The renderer keeps its normal `fetch` function and has no OS bridge.
 
 ## Development
@@ -74,73 +78,9 @@ The Dock can reopen the window.
 
 ## Device commands
 
-The main process connects the signed-in, awake Mac to the Worker.
-It reads the desktop cookie from the Chromium session.
-Its authenticated session read checks app access before opening the device socket.
-While the user waits, it repeats that read with the existing backoff:
-1, 2, 4, 8, 16, then at most 30 seconds between attempts.
-It connects after access arrives with the same cookie and no new launch.
-Sleep, sign-out, cookie expiry, and app exit cancel the pending attempt.
-Unauthorized and replaced sockets keep their existing stop behavior.
-The renderer sends approval and settings choices through the Worker relay.
-It receives no cookie or local command bridge.
-
-Local permissions belong to the signed-in account on this Mac.
-The app keeps exact allowed commands and workspace deadlines under its private user-data directory.
-A workspace grant until Stop stays only in memory.
-A quit, a sign-out, an expired or rejected sign-in, or another account ends it.
-Keep turns the running 15 minutes of a workspace into a grant until Stop.
-The settings name comes from the OS hostname.
-The connection sends that hostname as display metadata for command requests.
-Remove and Stop revoke permissions in memory even when saving fails.
-The revocation stays in force for the rest of the app run, including reconnects.
-A failed save can restore the old permission after a full app restart.
-Extend sets a running 15-minute grant's end to the Mac's current time plus 15 minutes.
-It leaves a grant until Stop unchanged.
-It keeps the workspace name and never starts a grant that ended or does not exist.
-The Mac saves the new end before replacing the grant and its timer.
-A failed save keeps the old end and timer and reports failed.
-Extend reports done only after a successful save.
-Settings replies report whether the change was saved.
-Each reply includes the current effective settings.
-A settings reply that is too large fails its own operation and keeps commands connected.
-
-Always allow has a budget of 900,000 UTF-8 bytes for the JSON-encoded list of always-allowed commands.
-A save above the budget fails.
-The saved list stays unchanged in memory and on disk.
-A new request for the same command can then use Allow.
-Allow runs the command once and saves no rule.
-Permission files that already hold a larger list still load.
-
-Commands run in the user's shell with bounded output and time.
-Folders `~` and `~/...` use the local OS account's home directory.
-Other folder values stay exact. The app does not expand shell variables in them.
-Sleep, sign-out, cookie replacement, connection loss, and app exit cancel the command process groups.
-A replacement connection stops automatic retries on the old Mac.
-Wake or a cookie change can connect it again.
-
-Background requests show a native notification.
-A click restores the window and opens the request's workspace.
-It does not approve the request.
-See the [Mac app protocol](../docs/protocol/desktop-commands.md) for the device requirements.
-
-Focused device checks use these commands:
-
-```sh
-npm --prefix desktop run test:logic -- src/device
-npm --prefix desktop run test:electron -- tests/device-command.spec.ts
-npm --prefix desktop run test:electron -- tests/approval-region.spec.ts
-```
-
-Build the desktop app before the Electron check.
-That check uses an isolated relay and the real main process, cookie store, shell, and power-event hooks.
-It checks command results and process-group cancellation on sleep and sign-out.
-The existing shell check continues to check renderer isolation and session persistence.
-The [Mac notification test](tests/device-notification.spec.ts) reopens a closed window and keeps its request after Dock activation.
-Native notification display and click behavior also need a Mac smoke check.
-
-The main-process socket uses `ws` because the native WebSocket API cannot set authenticated upgrade headers.
-`@types/ws` supplies its TypeScript types.
+See [Mac device commands](src/device/README.md) for the connection, local permissions, execution, and focused checks.
+The connected Mac applies its local permissions to command requests.
+The stored workspace Mac access field does not block requests or grant starts.
 
 ## Window integration
 
@@ -205,7 +145,7 @@ npm --prefix desktop run test:electron
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
 The smoke tests wait for the bundled page title.
-They read the product name from the [shared brand file](../docs/mockups/src/brand.ts).
+They read the product name from the [shared brand file](../src/shared/brand.ts).
 This wait does not depend on the sign-in state.
 Linux is a test host, not a release target.
 
@@ -290,19 +230,10 @@ The package includes only `dist/app/` and `dist/bundle/`.
 - [Install location](src/install-location.ts) decides at launch whether to offer the move into Applications.
   It tests for a read-only volume next to the app, and keeps the version that Not now dismissed.
 - [Renderer entry](renderer/main.tsx) gives the shared App its desktop services and browser navigation inside `MacApp`.
-- [Renderer services](renderer/services.ts) routes credentialed API calls, file uploads, and event sockets to the configured Worker.
-  It supplies the Mac keyboard and the fixed Mac app host for shortcuts.
+- [Renderer services](renderer/services.ts) gives the shared live services the configured Worker origin and the `include` credential mode.
+  It supplies the Mac keyboard and the fixed `mac-app` shortcut host.
 - [Window](src/window.ts) owns native controls and saved bounds.
 - [Sign-in](src/sign-in.ts) owns the verifier and session exchange.
-- [Device composition](src/device/main.ts) connects cookie, power, notification, and app-exit hooks.
-- [Device session factory](src/device/session-factory.ts) keeps each account's permission store across connections and disposes all stores at app exit.
-- [Device connection](src/device/connection.ts) owns authentication, pairing, heartbeat, and reconnect state.
-- [Device session](src/device/session.ts) owns pending requests, scoped approvals, settings operations, and cancellation.
-- [Device settings](src/device/settings.ts) reports change outcomes and checks settings replies against the device message budget.
-- [Local permissions](src/device/permissions.ts) owns exact command rules, the Always allow budget, workspace deadlines, and grants until Stop.
-- [Permission file](src/device/permission-file.ts) reads and writes the saved permissions, without the grants until Stop.
-- [Command runner](src/device/runner.ts) owns time and output limits through injected process and clock boundaries.
-- [Device contract](../src/shared/device.ts) supplies shared message types, routes, and wire limits.
 - [Desktop contract](../worker/security/desktop-contract.ts) shares the desktop origin and session cookie format without Worker dependencies.
 - [Navigation](src/navigation.ts) keeps remote pages outside the main frame.
 - [Downloads](src/downloads.ts) allows file response blobs from the bundled main frame only.

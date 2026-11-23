@@ -16,7 +16,9 @@ decision number names a decision of the change that adds
 - **Calling turn:** the agent turn that makes a call.
 - **Sender:** the member whose message started the calling turn. A turn
   that a late answer to a secret request starts has the sender of the turn
-  that asked, as [Late answers](secret-requests.md#late-answers) says.
+  that asked, as [Late answers](secret-requests.md#late-answers) says. A
+  turn that a wake starts has the sender of the turn that set its watch,
+  as [Delivery](session-watches.md#delivery) says.
 - **Read:** a call that changes nothing: a list, the read of a session, or
   the get of one workspace, session, or message.
 - **Write:** each other call of the workspace tools, except a Mac command
@@ -86,6 +88,8 @@ decision number names a decision of the change that adds
 - The record of a turn that a late answer to a secret request starts names
   the sender of the turn that asked (secrets decision 10 B). It never names
   the member who answered.
+- The record of a turn that a wake starts names the sender of the turn that
+  set its watch, as [Delivery](session-watches.md#delivery) says.
 - At each write, the Worker checks that the sender is still a member of
   the org and is not suspended. Otherwise the write gets HTTP 403 with the
   error code `membership_required`.

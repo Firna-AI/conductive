@@ -155,13 +155,14 @@ The preview proxy reports no input (decision 293).
   fenced by the member generation. The shared deadline hook checks the org
   before this queued local write. The write publishes no shown state and
   waits for no provider call.
-- The idle stop still comes 30 minutes after `lastActivityAt`.
+- The idle stop still comes the stop time after `lastActivityAt`.
 - The owner updates D1 and the provider at most once a minute. The first
   input after a quiet minute starts an update. One more update follows for
   the newest input of that minute.
 - An update moves `last_activity_at` forward only, while the workspace, its
   sandbox, and the org generation stay active. It then sets the provider's
-  auto-stop to 1,860 seconds, which covers the minute of collection.
+  auto-stop to the stop time plus 60 seconds, which covers the minute of
+  collection.
 - When the provider reports a stopped or failed sandbox, the update
   reconciles the durable lifecycle state.
 - A failed update keeps its input time for the next minute, also without

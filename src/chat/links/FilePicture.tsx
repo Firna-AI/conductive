@@ -1,15 +1,14 @@
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import {
   AnswerPicture,
   type PictureOpener,
   type PictureState,
-} from '../../../docs/mockups/src/components/chat/AnswerPicture'
-import { ChipCopyText } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+} from '../../ui/components/chat/AnswerPicture'
+import { ChipCopyText } from '../../ui/components/chat/ChipCopyText'
 import { useChatMentions } from '../mentions/MentionsContext'
 import { useNearView } from '../ui/near-view'
-import type { FileLinkPart } from './chat-parts'
 import { fileOpener, fileTitle } from './file-opener'
-import { labelText } from './FileTextLink'
+import type { FileTarget } from './file-targets'
 import { usePictureRead, type PictureOutcome } from './picture-read'
 
 /**
@@ -38,8 +37,20 @@ function stateOf(
   return { kind: 'picture', size: outcome.size, picture }
 }
 
+/** The Markdown image of a picture file of the tree, in an agent message. */
+interface FilePictureProps extends FileTarget {
+  /** The image as the agent wrote it, which a copy of the picture gives. */
+  source: string
+  /** The label as plain text: the alternative text and the text of the box. */
+  label: string
+  /** The ID of the agent message that the reads of the picture belong to. */
+  message: string
+  /** The label of the link, with its code and its marks. */
+  children: ReactNode
+}
+
 /**
- * The Markdown image of a picture file in an answer, as the mockups'
+ * The Markdown image of a picture file in an answer, as the shared
  * `AnswerPicture` draws it (screenshot decision 2). The chat reads the file
  * only while the shell gives `ChatMentions.pictures`, which it does only
  * while the cloud computer runs. The read starts when the picture comes
@@ -50,16 +61,15 @@ function stateOf(
  * In each state, a press opens the file tab, as the link of a file does,
  * and a click with a modifier key stays with the browser. The title is the
  * path. The alternative text and the box show the label as plain text. The
- * link shows it with its code and bold, as the link of each other file. A
- * copy of the picture or of its box gives the Markdown image as the agent
- * wrote it, as a copy of a chip gives its text. A copy of the link gives
- * its label, as for each other link.
+ * link shows it with its code and its marks, as the link of each other
+ * file. A copy of the picture or of its box gives the Markdown image as the
+ * agent wrote it, as a copy of a chip gives its text. A copy of the link
+ * gives its label, as for each other link.
  */
-export function FilePicture(props: { part: FileLinkPart; message: string }) {
+export function FilePicture(props: FilePictureProps) {
   const mentions = useChatMentions()
   const reader = mentions?.pictures
-  const { entry, lines, source } = props.part
-  const label = props.part.label.map((word) => word.text).join('')
+  const { entry, lines, source, label } = props
   const target = useRef<HTMLAnchorElement>(null)
   const near = useNearView(target, reader !== undefined)
   const outcome = usePictureRead(reader, entry.path, props.message, near)
@@ -70,7 +80,7 @@ export function FilePicture(props: { part: FileLinkPart; message: string }) {
         if (state.kind === 'link') {
           return (
             <a {...parts} {...opens} ref={target}>
-              {labelText(props.part.label)}
+              {props.children}
             </a>
           )
         }

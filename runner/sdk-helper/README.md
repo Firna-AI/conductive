@@ -15,7 +15,11 @@ Rust defines these messages in [cnd-runner-interface](../../crates/cnd-runner-in
 Its export command writes their TypeScript into `src/generated/`.
 Import each generated type directly. Never edit generated files.
 
-Requests start an agent, send input, change model, interrupt, close, or warm the Claude binary.
+Requests start an agent, send input, change model, interrupt, close, warm the
+Claude binary, or scan skills. A scanner helper stays separate from agent
+helpers. It returns metadata and private skill paths. Rust filters and
+bounds that data before it saves a workspace report. Each agent send can
+carry the latest private Codex skill paths.
 Request IDs match response or error messages.
 Agent events stream while a request waits. Result message lists retain their exact IDs and order.
 Background note updates carry the work IDs that the active turn already named.
@@ -40,6 +44,80 @@ image input size limit. Codex uses the same image list for its image
 inputs and the image sentence after the read line.
 [What the agent gets](../../docs/protocol/attachment-transfers.md#what-the-agent-gets)
 states the read line and the size rule.
+
+## Org skills
+
+Both adapters load org skills from a temporary view in
+`~/.conductive/skill-sessions/turn-*/`. They do not load the raw snapshot.
+The runner closes snapshot links before publication and keeps the source
+snapshot until the helper closes. The view maps each support link to its
+target inside the view. It walks physical directories, so a link to an
+ancestor cannot cause a loop. It sanitizes every `SKILL.md`, including
+nested files and linked instruction files. Close removes the view. The
+runner's startup sweep removes views left by a killed helper.
+View cleanup waits for Claude's discovery links as well as the exported files.
+
+The frontmatter allowlist keeps `name`, `description`, `argument-hint`,
+`arguments`, `disable-model-invocation`, `user-invocable`, `when_to_use`,
+`version`, `license`, `compatibility`, and `metadata.short-description`.
+These fields describe a skill or control its invocation. All execution,
+tool-grant, model-setting, and unknown fields are omitted. Shell markers
+in the body become ordinary inline or fenced code, except in Claude's view
+of a trusted repository. This includes markers
+before argument placeholders, which Claude expands after export. Scripts
+and other support files remain available for an agent to choose to read or run.
+
+The optional `HelperOptions.orgSkills` value of each start sets the trust policy.
+Its `OrgSkills` fields are `repository`, `trustedRepository`, and `directory`.
+The trusted name and directory can be absent.
+Without the value, neither adapter loads org skills, and Claude keeps the
+settings of the workspace. When its trusted repository does not match its
+configured repository, the repository is untrusted. The Claude adapter
+then sets `disableSkillShellExecution: true` in the SDK flag settings.
+Those settings also carry effort and fast mode. Later model, effort, and
+fast mode changes keep the restriction, and project settings cannot turn
+it off. The restriction applies also before the first copy ends and when
+no skill folder is selected. When both names match without regard to
+letter case, the repository is trusted. Claude's view then keeps the
+original inline shell syntax of each body, and the adapter omits the
+setting. Omitting it keeps each restriction that Claude settings or a
+managed policy supply. The Codex view filters shell markers for either
+policy. Claude's additional directory holds only `.claude/skills` links
+to the selected skill folders, so trust loads no separate custom slash
+command, setting, hook, or agent of the repository.
+
+Codex also reads `agents/openai.yaml`. The view keeps only its descriptive
+`interface` fields (`display_name`, `short_description`, `icon_small`,
+`icon_large`, `brand_color`, `default_prompt`) and
+`policy.allow_implicit_invocation`. It omits MCP dependencies, install and
+execution fields, and unknown fields. This also applies through support
+links. Per-process settings disable each nested Codex skill.
+
+One YAML reader follows each pinned agent's parsing and repair rules for
+both workspace and org names. Workspace skills take precedence. Claude
+keeps an org folder name as its discovery alias only if all its
+characters are ASCII letters, digits, `.`, `_`, or `-`.
+Other org folders get generated aliases that no workspace skill uses.
+Their displayed names stay in the filtered
+frontmatter. Workspace precedence uses these aliases and displayed names.
+Codex uses the folder only as a fallback when the parsed name is empty.
+It requires a description and limits names to 64 characters.
+After shared folder selection, the first org skill in
+path order with a given agent-shown name wins. Unusable names and duplicate
+names produce warnings. Workspace skill files are unchanged.
+[Org skills](../../docs/protocol/org-skills.md#what-loads) gives the loading
+requirements, and
+[Repository trust](../../docs/protocol/org-skills-trust.md#what-claude-and-codex-get)
+gives the requirements of each trust policy.
+
+The skills scanner lists the same org skills. Each `skills` request can
+carry the `orgSkills` value with the leased current copy. The scanner makes
+the choice of an agent start, reads each chosen `SKILL.md` of the copy, and
+takes the name and the description from its safe view. It adds these skills
+after the skills of each agent's own folders. A failed read also fails an
+agent start, so the lists then hold no org skills, and the scanner warns. Each listed path is the `SKILL.md` of the copy. A
+Codex start gives an org skill of a message the path of the skill in its
+own view, by name, and leaves out an org skill that its view lacks.
 
 ## Development
 
@@ -85,6 +163,11 @@ The Rust runner drives the helper directly. The release contains no separate run
 - [process.ts](src/providers/process.ts) starts the Codex App Server and reads its output lines.
 - [read-request.ts](src/read-request.ts) and [read-output.ts](src/read-output.ts) validate boundary data.
 - [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
+- [skills.ts](src/skills.ts) caches skill discovery from Claude folders and the Codex app server or fallback folders.
+- [skill-org.ts](src/skill-org.ts) lists the org skills of the copy for each agent.
+- [skill-input.ts](src/providers/skill-input.ts) selects explicit Codex skill input from each message and maps org skills to the view of the start.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.
+- [skill-view.ts](src/providers/skill-view.ts) exports and removes the safe org skills view.
+- [skill-metadata.ts](src/providers/skill-metadata.ts) reads names and limits exported metadata.
 - [test-support](test-support/) holds the fake SDK query, App Server, and provider fixtures.
 - [Rust driver](../../crates/cnd-runner/src/helper/driver.rs) drives helper processes.

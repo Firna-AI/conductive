@@ -1,4 +1,4 @@
-import { beforeEach, expect, it, onTestFinished } from 'vitest'
+import { beforeEach, expect, it, onTestFinished, vi } from 'vitest'
 
 import { FakeAppServers } from '../../test-support/app-server'
 import { mockComputerServer } from '../../test-support/computer-mcp'
@@ -165,4 +165,32 @@ it('streams App Server partial text and sends steer, model, and interrupt contro
     code: 'agent_failed',
     message: 'The service is unavailable for secret-bob.',
   })
+  const usageLimit =
+    'You’ve hit your usage limit. Try again at Nov 23rd, 2026 12:58 AM.'
+  const usageLimitCause = (zone: string) => ({
+    type: 'failed',
+    code: 'agent_usage_limit',
+    message: `The agent account reached its usage limit. Check your agent account. Try again at Nov 23rd, 2026 12:58 AM ${zone}.`,
+  })
+  onTestFinished(() => {
+    vi.unstubAllEnvs()
+  })
+  vi.stubEnv('TZ', 'Etc/UTC')
+  await resumed.send(turn('6', 'bob', 'codex'))
+  servers.latest.notify('error', {
+    error: { message: usageLimit },
+    willRetry: false,
+    turnId: 'codex-turn-3',
+  })
+  expect(h.events.at(-1)).toEqual(usageLimitCause('UTC'))
+  vi.stubEnv('TZ', 'UTC+3')
+  await resumed.send(turn('7', 'bob', 'codex'))
+  servers.latest.notify('turn/completed', {
+    turn: {
+      id: 'codex-turn-4',
+      status: 'failed',
+      error: { message: usageLimit },
+    },
+  })
+  expect(h.events.at(-1)).toEqual(usageLimitCause('sandbox time'))
 })

@@ -8,10 +8,41 @@ agent login forms, and model lists in the web app.
   address. General holds the sign-in, GitHub, and the invite
   code. Agents, at `/account/agents`, holds the logins of Claude and
   Codex. The `?connect=` address of an agent opens its Connect form on
-  Agents. An older `/account?connect=` link opens Agents too. Preferences holds the New
-  workspaces section: Model and effort, and
+  Agents. An older `/account?connect=` link opens Agents too. Preferences holds the
+  [Favourites section](../../docs/protocol/model-favourites.md#the-favourites-section),
+  then the New workspaces section: Model and effort, and
   [the choice of how New workspace opens](../../docs/protocol/create-a-workspace.md#the-preference).
   On a phone, a tab that does not fit moves to a second line.
+- `FavouritesSection` in `../shell/account/` lists the favourites of the
+  account in the order of the model menu. Each row has a handle, the shell
+  `ModelPicker`, and ×.
+  The picker offers the models of the person and keeps the model of the
+  favourite. It shows no favourites, so its menu starts with All models. A
+  drag moves a row, as Alt with Up or Down does while the focus is
+  in the row, through `useListOrder` of `../shell/ui/`, as the repository
+  order does. A favourite that the model list no longer holds, or that the
+  list of an own endpoint does not name, shows greyed with the line of
+  `hiddenLine` in `../shell/account/favourite-rows.ts`. With no favourite,
+  a muted line takes the place of the list.
+- `AddFavourite.tsx` opens the list of each model that the pickers of the
+  person offer, in the groups of All models: below the button on a
+  computer, and in a sheet on a phone. A pick adds the favourite that
+  `addedFavourite` in `favourite-rows.ts` gives, at the end of the list,
+  and the picker of the new row then takes the focus. It takes the effort
+  of the default of new workspaces, or the nearest lower one, and else the
+  nearest free effort, lower efforts first, as
+  [The Favourites section](../../docs/protocol/model-favourites.md#the-favourites-section)
+  says. A pick with no free effort saves nothing, and a muted line under
+  the list says so until the next change. Add a favourite is off at five.
+- Each move, removal, pick, and add saves the whole list at once through
+  `AccountModel.setFavourites`. The account state queues no save, so the
+  section sends one save at a time. While a save runs, the section shows
+  the list that it sent and takes no other change, and its controls stay
+  on, so a row that moved by keys keeps the focus. After the reply, it
+  shows the saved list. A failed save shows the saved list with its error
+  under the list until the next change. Each row keeps its ID through a
+  move, a pick, and the reply, as `keptRows` says, so its elements and the
+  focus stay.
 - Model and effort saves each change at once through
   `AccountModel.setDefaultChoice`. While it saves, the picker shows the new
   choice. A Fast change keeps the menu open, so the switch shows its new
@@ -32,8 +63,9 @@ agent login forms, and model lists in the web app.
   at once through `AccountModel.setNoReuse`. While it saves, it shows the
   new value and takes no other change. A failed save shows its cause under
   the switch until the next change, and the switch shows the saved value.
-  A share reply that a later save or remove of the same login overtook does
-  not show, so a removed login stays removed.
+  A save or a Remove of the same login that starts while the switch saves
+  waits until the share change ends. Then its own answer shows last, so a
+  removed login stays removed, as [Login data](login-data.md#rules) says.
 - The Connect form of an agent offers each kind of its login: Claude a
   subscription token, an API key, or an own endpoint, and Codex an API key,
   a ChatGPT plan, or an own endpoint. On a phone the kinds wrap onto two lines. Get
@@ -114,7 +146,7 @@ agent login forms, and model lists in the web app.
 - Under each agent, the account and Get started name each org whose org
   login the new sessions of the person take, such as "Your new sessions in
   Acme use Acme's login.", also under an own login. The words come from
-  `OrgLoginLines.tsx` of the mockups. With only an org login, the agent
+  the shared `OrgLoginLines.tsx`. With only an org login, the agent
   step of Get started says Ready, with the words of `getStartedCopy.ts`
   that name the org login.
 - After each change of a login of an agent, an own login or an org login,
@@ -130,7 +162,7 @@ agent login forms, and model lists in the web app.
   [The Agents tab](../../docs/protocol/org-logins.md#the-agents-tab)
   says. It reads the logins while it shows, again at each return to the
   page, and once a minute while an org endpoint is connected. Its words
-  come from `orgAgentsCopy.ts` of the mockups.
+  come from the shared `orgAgentsCopy.ts`.
 - An admin uses the parts of the account. `AgentConnectForm` with `org`
   offers only API key and Own endpoint, and its words ask for a key of
   the account of the org. Replace opens that form under the login, on the

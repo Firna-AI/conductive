@@ -2,28 +2,17 @@ import type { RunnerLoginKind } from '../../src/shared/generated/RunnerLoginKind
 import { RUNNER_SUPPORTED_LOGIN_KINDS } from '../../src/shared/runner'
 import { isRecord } from '../http'
 import { warningProcessStartId } from '../warning-values'
-import type { ChatData, ChatStorage, RunnerWorkspaceRecord } from './types'
+import { readBinding } from '../services/binding'
+import type { ChatData, ChatStorage } from './types'
+import type { RunnerConnectionState } from './runner-connection-state'
+import type { RepositoryMoveState } from './runner-repository-move'
 
 const KEY = 'native:runner:current'
 const chunkKey = (part: number) => `native:runner:state:${part}`
 
-export interface StoredRunnerConnection {
-  id: string
-  generation: number
-  workspace: RunnerWorkspaceRecord
-  streamId: string | null
-  processStartId: string | null
-  protocolVersion: number | null
-  loginKinds?: readonly RunnerLoginKind[]
-  repositoryFolder?: string
-  fileServer?: boolean
-  ready: boolean
-  checkAt: number
-}
-
 interface RunnerState {
   generation: number
-  connection: StoredRunnerConnection | null
+  connection: RunnerConnectionState | null
 }
 
 function readLoginKinds(value: unknown): readonly RunnerLoginKind[] {
@@ -39,7 +28,22 @@ function readLoginKinds(value: unknown): readonly RunnerLoginKind[] {
   })
 }
 
-function readConnection(value: unknown): StoredRunnerConnection {
+function readRepositoryMove(value: unknown): RepositoryMoveState | undefined {
+  if (
+    !isRecord(value) ||
+    typeof value.commandId !== 'string' ||
+    typeof value.folder !== 'string' ||
+    typeof value.refused !== 'boolean'
+  )
+    return undefined
+  return {
+    commandId: value.commandId,
+    folder: value.folder,
+    refused: value.refused,
+  }
+}
+
+function readConnection(value: unknown): RunnerConnectionState {
   if (
     !isRecord(value) ||
     typeof value.id !== 'string' ||
@@ -71,6 +75,7 @@ function readConnection(value: unknown): StoredRunnerConnection {
     !Number.isFinite(value.checkAt)
   )
     throw new Error('The saved runner connection is invalid.')
+  const repositoryMove = readRepositoryMove(value.repositoryMove)
   return {
     id: value.id,
     generation: value.generation,
@@ -84,12 +89,23 @@ function readConnection(value: unknown): StoredRunnerConnection {
     processStartId: warningProcessStartId(value.processStartId),
     protocolVersion: value.protocolVersion ?? null,
     ...(value.fileServer === true ? { fileServer: true } : {}),
+    ...(value.capabilityNotices === true ? { capabilityNotices: true } : {}),
+    ...(value.services === true ? { services: true } : {}),
+    ...(value.serviceBinding === undefined
+      ? {}
+      : { serviceBinding: readBinding(value.serviceBinding) }),
+    // A diagnostic value cannot prevent the restore of the connection.
+    ...(typeof value.watchUntil === 'number' &&
+    Number.isFinite(value.watchUntil)
+      ? { watchUntil: value.watchUntil }
+      : {}),
     ...(value.loginKinds === undefined
       ? {}
       : { loginKinds: readLoginKinds(value.loginKinds) }),
     ...(value.repositoryFolder === undefined
       ? {}
       : { repositoryFolder: value.repositoryFolder }),
+    ...(repositoryMove === undefined ? {} : { repositoryMove }),
     ready: value.ready,
     checkAt: value.checkAt,
   }
@@ -138,13 +154,13 @@ export class RunnerConnectionStore {
     this.storage = storage
   }
 
-  async current(): Promise<StoredRunnerConnection | null> {
+  async current(): Promise<RunnerConnectionState | null> {
     return (await read(this.storage)).connection
   }
 
   replace(
-    connection: Omit<StoredRunnerConnection, 'generation'>,
-  ): Promise<StoredRunnerConnection> {
+    connection: Omit<RunnerConnectionState, 'generation'>,
+  ): Promise<RunnerConnectionState> {
     return this.storage.transaction(async (data) => {
       const generation = (await read(data)).generation + 1
       const record = { ...connection, generation }
@@ -154,7 +170,7 @@ export class RunnerConnectionStore {
   }
 
   save(
-    connection: StoredRunnerConnection | null,
+    connection: RunnerConnectionState | null,
     generation: number,
   ): Promise<void> {
     return this.storage.transaction(async (data) => {

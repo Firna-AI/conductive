@@ -7,6 +7,8 @@
     "requests",
     "stop",
     "extend",
+    "capabilities",
+    "new-workspace",
     "this-mac",
     "shortcuts",
     "command-palette"

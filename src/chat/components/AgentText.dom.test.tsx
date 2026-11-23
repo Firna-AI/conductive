@@ -166,13 +166,14 @@ it('shows a workspace link in a table cell as its chip, and a link in code as co
   ])
 })
 
-it('starts a table directly after a line of a paragraph or a list, and ends it at a line without a pipe', () => {
+it('starts a table directly after a line of a paragraph, and reads unindented lines after a list item as text of the item, as CommonMark does', () => {
   const page = render(
     [
       'The sizes are:',
       '| Bundle | Main |',
       '| --- | --- |',
       '| checkout | 182 KB |',
+      '',
       'The places proxy runs on the server.',
       '- Then the tests:',
       '| Test | Time |',
@@ -187,11 +188,7 @@ it('starts a table directly after a line of a paragraph or a list, and ends it a
       ['checkout', '182 KB'],
     ],
     'The places proxy runs on the server.',
-    'Then the tests:',
-    [
-      ['Test', 'Time'],
-      ['unit', '41s'],
-    ],
+    'Then the tests: | Test | Time | | --- | --- | | unit | 41s |',
   ])
 })
 
@@ -265,6 +262,7 @@ it('draws each heading at the level that the agent wrote, with its code, strong 
           '##### Unit tests',
           `###### Compare ${linked.link}`,
           '## ',
+          '## ![](x)',
         ].join('\n')}
       />
     </LinksProvider>,

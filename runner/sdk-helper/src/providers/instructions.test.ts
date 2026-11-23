@@ -53,13 +53,13 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file, or the parts of a large file that you need, before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
+              '  Keep this text.\n\nAnd this line.  \nThe sender attached these files. Read each file, or the parts of a large file that you need, before you answer.\nAttached file: {"name":"image.png","mediaType":"image/png","path":"/uploads/image.png","sizeBytes":10}\nAttached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}\n\nSender: Alice Example Member (@alice) [member ID: "member-alice-id"]',
           }
         : {
             input: [
               {
                 type: 'text',
-                text: 'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]\n\n  Keep this text.\n\nAnd this line.  ',
+                text: '  Keep this text.\n\nAnd this line.  ',
                 text_elements: [],
               },
               {
@@ -76,6 +76,11 @@ it.each(['claude', 'codex'] as const)(
               {
                 type: 'text',
                 text: 'Attached file: {"name":"notes.txt","mediaType":"text/plain","path":"/uploads/notes.txt","sizeBytes":20}',
+                text_elements: [],
+              },
+              {
+                type: 'text',
+                text: 'Sender: Alice Example Member (@alice) [member ID: "member-alice-id"]',
                 text_elements: [],
               },
             ],
@@ -95,13 +100,14 @@ it.each(['claude', 'codex'] as const)(
         ? {
             role: 'user',
             content:
-              'Sender: @bob [member ID: "member-bob-id"]\n\nChange the file.',
+              'Change the file.\n\nSender: @bob [member ID: "member-bob-id"]',
           }
         : {
             input: [
+              { type: 'text', text: 'Change the file.', text_elements: [] },
               {
                 type: 'text',
-                text: 'Sender: @bob [member ID: "member-bob-id"]\n\nChange the file.',
+                text: 'Sender: @bob [member ID: "member-bob-id"]',
                 text_elements: [],
               },
             ],

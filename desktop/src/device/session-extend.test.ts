@@ -5,7 +5,10 @@ import { workerMessage } from './messages.js'
 
 it('extends through a settings frame, returns the effective settings, and ignores a repeated operation ID', () => {
   const test = sessionFixture()
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.approval',
     operationId: 'allow-workspace',

@@ -2,9 +2,15 @@ import { useState } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { TriangleAlert } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
+import {
+  agentConnectCopy,
+  connectKinds,
+  loginLabels,
+  orgConnectKinds,
+} from '../../ui/components/settings/agentConnectCopy'
+import styles from '../../ui/components/settings/AgentConnectForm.module.css'
 import { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import type { SaveAgentLoginRequest } from '../../shared/account'
@@ -13,13 +19,7 @@ import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { addressProblem, EndpointFields } from './EndpointFields'
 import { ChatGptSignIn } from './ChatGptSignIn'
-import {
-  agentLoginKinds,
-  agentNames,
-  loginLabels,
-  orgLoginKinds,
-  type LoginKind,
-} from './labels'
+import { agentNames, type LoginKind } from './labels'
 import { refusesAddress, SecretField, SecretText } from './SecretFields'
 
 function loginRequest(
@@ -79,7 +79,7 @@ export function AgentConnectForm(props: {
   const app = useApp()
   const { field } = useControlSizes()
   const [form] = useState(() => new SecretForm())
-  const kinds = (props.org ? orgLoginKinds : agentLoginKinds)[props.agent]
+  const kinds = (props.org ? orgConnectKinds : connectKinds)[props.agent]
   const name = agentNames[props.agent]
   const [kind, setKind] = useState<LoginKind>(props.kind ?? kinds[0])
   const [address, setAddress] = useState('')
@@ -106,7 +106,7 @@ export function AgentConnectForm(props: {
   return (
     <div className={styles.form}>
       <SegmentedControl
-        accessibilityLabel="Connect with"
+        accessibilityLabel={agentConnectCopy.switchLabel}
         disabled={state.saving}
         onChange={setKind}
         options={kinds.map((item) => ({

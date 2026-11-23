@@ -1,4 +1,4 @@
-import { ChevronDown, Mail, UserMinus, X } from 'lucide-react'
+import { ChevronDown, Mail } from 'lucide-react'
 import {
   people,
   removedMember,
@@ -9,11 +9,15 @@ import {
   type PersonKey,
 } from '../../fixtures/members'
 import type { Workspace } from '../../fixtures/workspaces'
+import { instanceKey } from '../../instanceKey'
 import { paths } from '../../paths'
-import { ActionButton, IconButton } from '../common/actions'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { PersonAvatar } from '../orgs/OrgTile'
-import styles from './Members.module.css'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
+import styles from '../../../../../src/ui/components/members/Members.module.css'
 
 /** How many workspaces of the org a member owns. */
 function owned(
@@ -46,19 +50,26 @@ function RoleActions(props: {
       </>
     )
   }
-  const remove = <IconButton icon={UserMinus} label={`Remove ${person.name}`} />
+  const remove = (
+    <iconButton.Component
+      icon="user-minus"
+      label={`Remove ${person.name}`}
+      moklyInstance={`remove-${person.key}`}
+    />
+  )
   return (
     <>
-      <ActionButton
+      <actionButton.Component
         accessibilityLabel={`Role of ${person.name}: ${role}`}
         menu
+        moklyInstance={`role-${person.key}`}
         tone="plain"
         trailing={
           <ChevronDown aria-hidden className={styles.chevron} size={13} />
         }
       >
         {role}
-      </ActionButton>
+      </actionButton.Component>
       {person.key === removedMember ? (
         <ScreenLink asChild to={paths.removeMember}>
           {remove}
@@ -81,7 +92,11 @@ function MemberRow(props: {
   const yours = membership.person === props.viewer
   return (
     <li className={styles.row}>
-      <PersonAvatar initials={person.initials} size={28} />
+      <personAvatar.Component
+        initials={person.initials}
+        moklyInstance={`member-${person.key}`}
+        size={28}
+      />
       <span className={styles.text}>
         <span className={styles.name}>
           {person.name}
@@ -112,7 +127,11 @@ function InviteRow(props: { invite: Invite }) {
         <span className={styles.name}>{invite.email}</span>
         <span className={styles.detail}>Invited {invite.sent}</span>
       </span>
-      <IconButton icon={X} label={`Cancel the invite to ${invite.email}`} />
+      <iconButton.Component
+        icon="x"
+        label={`Cancel the invite to ${invite.email}`}
+        moklyInstance={`cancel-invite-${instanceKey(invite.email)}`}
+      />
     </li>
   )
 }

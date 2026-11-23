@@ -2,10 +2,10 @@ import { useCallback, useState, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
-import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
-import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { SuspendedOrgNotice } from '../../ui/components/orgs/SuspendedOrgNotice'
+import body from '../../ui/components/workspace/WorkspaceBody.module.css'
+import page from '../../ui/screens/WorkspaceScreen.module.css'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import {
@@ -78,7 +78,7 @@ export function WorkspaceScreen(props: {
     { orgId: props.org.id, workspaceId: props.workspaceId },
     { create, connect: connectView },
   )
-  const { model, notices, chat, toolEvents } = shown
+  const { model, notices, chat, toolEvents, skills } = shown
   const [terminalFocus] = useState(() => new TerminalFocus())
   const restore = useTabRestore()
   const startError = useStore(model.startError)
@@ -146,6 +146,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    computer: workspace.archivedComputer?.state,
     removed,
     opened,
   })
@@ -164,6 +165,7 @@ export function WorkspaceScreen(props: {
     savedView: chat,
     chat,
     toolEvents: toolEvents.subscribe,
+    skills,
     terminalFocus,
     archive: mayArchive(access, workspace, props.viewer)
       ? () => lifecycle.archive(workspace)
@@ -260,14 +262,14 @@ export function WorkspaceScreen(props: {
     // row and no Checks, so it reads no GitHub state and no files.
     if (archived) return screen
     return (
-      <KeptConnections context={context}>
+      <KeptConnections context={context} opened={opened}>
         <WorkspaceGitHub context={context}>{screen}</WorkspaceGitHub>
       </KeptConnections>
     )
   }
   // The bar of the Mac app tops the main area, above the whole workspace.
   return (
-    <KeptConnections context={context}>
+    <KeptConnections context={context} opened={opened}>
       <WorkspaceGitHub context={context}>
         <WorkspaceLinks context={context}>
           <WorkspaceMacBar context={context} />

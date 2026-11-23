@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LostUpdateRow } from '../../docs/mockups/src/components/chat/LostUpdate'
+import { LostUpdateRow } from '../ui/components/chat/LostUpdate'
 import { formatAgo } from '../chat/state/format'
 
 const halfMinute = 30_000

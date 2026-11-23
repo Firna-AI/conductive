@@ -2,10 +2,10 @@ import type { ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, MessageSquarePlus } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import waitStyles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { Notice } from '../../ui/components/common/Notice'
+import itemStyles from '../../ui/components/chat/ChatItemView.module.css'
+import waitStyles from '../../ui/components/workspace/SandboxNotice.module.css'
 import {
   sessionState,
   type ChatSnapshot,
@@ -77,7 +77,26 @@ export function EarlierLoading() {
   )
 }
 
-function Waiting(props: { text: string }) {
+/**
+ * A branch of the GitHub state that the app shows: its real name, and the
+ * label that hides each secret value in it, when the two differ.
+ */
+export interface GitHubBranch {
+  branch: string
+  displayBranch?: string
+}
+
+/**
+ * The name of the workspace branch in the New session text: the label of
+ * the GitHub state of that same branch, or else its real name, as the
+ * GitHub screens fall back.
+ */
+function branchName(branch: string, github: GitHubBranch | null): string {
+  return github?.branch === branch ? (github.displayBranch ?? branch) : branch
+}
+
+/** A chat with nothing to show yet, with what it waits for. */
+export function Waiting(props: { text: string }) {
   const theme = useSharedUiTheme()
   return (
     <div className={waitStyles.waiting}>
@@ -92,13 +111,16 @@ function Waiting(props: { text: string }) {
  * session, the history of a session with nothing to show yet, or a new
  * session. A chat with content shows its history status beside it. The
  * start steps count as content while `starting` holds. A read-only chat
- * names only the session history, because it starts no session.
+ * names only the session history, because it starts no session. A new
+ * session names the workspace branch, by the label of `github` when it is
+ * the GitHub state of that branch.
  */
 export function emptyView(props: {
   snapshot: ChatSnapshot
   controller: ChatController
   starting: boolean
   readOnly?: boolean
+  github?: GitHubBranch | null
 }): ReactNode {
   const { snapshot, controller } = props
   const { load, workspace } = snapshot
@@ -143,9 +165,10 @@ export function emptyView(props: {
       />
     )
   }
+  const branch = branchName(workspace.branch, props.github ?? null)
   return (
     <EmptyState
-      body={`The agent works on ${workspace.branch}, on the same cloud computer as the other sessions.`}
+      body={`The agent works on ${branch}, on the same cloud computer as the other sessions.`}
       icon={MessageSquarePlus}
       title="New session"
     />

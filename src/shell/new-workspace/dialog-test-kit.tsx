@@ -4,6 +4,7 @@ import { fileMark } from '../../app/draft-marks'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { routes } from '../../app/router'
+import { Store } from '../../app/store'
 import {
   ACCOUNT_PATHS,
   type AccountResponse,
@@ -20,6 +21,7 @@ import {
   pressInField,
 } from '../../test-support/message-field'
 import { holdAnimationFrames } from '../../test-support/mount'
+import { MacApp, type MacWindow, type MacWindowState } from '../mac/mac-app'
 import { Shell } from '../Shell'
 import { mountScreen, settle } from '../test-mount'
 import { startedApp } from '../test-render'
@@ -31,17 +33,19 @@ import { here, org, recordingSocket } from '../workspace/kept-test-kit'
 /**
  * The fake API, where the user chose how New workspace opens. `role` is the
  * role of the user in the orgs, and `account` changes the account reply,
- * such as to disconnect an agent.
+ * such as to disconnect an agent. With `onMac`, the window is the Mac app
+ * on the Mac of the user, as `FakeApiOptions` says.
  */
 export function serverWith(
   view: NewWorkspaceView,
   options: {
     role?: OrgRole
     account?: (account: AccountResponse) => AccountResponse
+    onMac?: boolean
   } = {},
 ): FakeApiServer {
   const role = options.role ?? 'admin'
-  const server = new FakeApiServer({ role })
+  const server = new FakeApiServer({ role, onMac: options.onMac })
   const account = { ...coreFixtures(role).account, newWorkspaceView: view }
   server.json(
     'GET',
@@ -51,14 +55,31 @@ export function serverWith(
   return server
 }
 
+/** A window of the Mac app that never moves, for a page in the Mac app. */
+const macWindow: MacWindow = {
+  state: new Store<MacWindowState>({
+    mode: 'window',
+    canGoBack: false,
+    canGoForward: false,
+  }),
+  back: () => undefined,
+  forward: () => undefined,
+}
+
 /**
  * The whole app in a tab at `at`, the workspace by default, on a memory
  * address bar that the test moves. `fetch` stands between the app and the
- * fake API, such as the fetch of `HeldRequests`.
+ * fake API, such as the fetch of `HeldRequests`. `macApp` shows the page
+ * in the Mac app, as its desktop entry does, and otherwise in a browser.
  */
 export async function openTab(
   server: FakeApiServer,
-  options: { at?: string; viewport?: Viewport; fetch?: FetchLike } = {},
+  options: {
+    at?: string
+    viewport?: Viewport
+    fetch?: FetchLike
+    macApp?: boolean
+  } = {},
 ) {
   holdAnimationFrames()
   const app = await startedApp(server, {
@@ -66,11 +87,14 @@ export async function openTab(
     ...(options.fetch ? { fetch: options.fetch } : {}),
   })
   const navigation = memoryNavigation(options.at ?? here)
-  const view = mountScreen(
-    app,
+  const shell = (
     <NavigationContext.Provider value={navigation}>
       <Shell />
-    </NavigationContext.Provider>,
+    </NavigationContext.Provider>
+  )
+  const view = mountScreen(
+    app,
+    options.macApp ? <MacApp window={macWindow}>{shell}</MacApp> : shell,
     { viewport: options.viewport },
   )
   await settle()
@@ -98,8 +122,8 @@ export function openDialog(view: HTMLElement): HTMLElement {
 }
 
 /**
- * The org and the section that the dialog names on its Section menu, such
- * as "Acme · General".
+ * The section that the dialog names on its Section menu, such as
+ * "General".
  */
 export function placeOf(dialog: HTMLElement): string | undefined {
   const menu = dialog.querySelector('[aria-label^="Section: "]')

@@ -77,8 +77,16 @@ examples.
   that reaches a workspace Durable Object. It does not turn on
   `request_signal_passthrough`. So forwarding a request by itself does not
   pass its incoming signal to a subrequest.
-- Set each secret with `npx wrangler secret put <NAME>`. The command asks
-  for the value. Never put a secret in `wrangler.jsonc` or in Git.
+- Set each single-line secret with `npx wrangler secret put <NAME>`. The
+  command asks for the value. Never put a secret in `wrangler.jsonc` or in
+  Git.
+- Set each multiline secret from a file outside the repository, such as
+  the PEM file from GitHub:
+  `npx wrangler secret put GITHUB_APP_PRIVATE_KEY < ~/github-app-private-key.pem`.
+  Wrangler then keeps the line breaks inside the value. It removes the
+  whitespace at the end of the value.
+  - Do not paste a multiline value at the prompt. The prompt removes the
+    line breaks of a pasted value. It can also keep only the first line.
 - The Worker reads each variable as text. Write a JSON value as one
   string. In the `vars` of `wrangler.jsonc`, a JSON array or object reaches
   the Worker as an object, and the Worker refuses it.
@@ -110,6 +118,7 @@ examples.
 | `BOAT_ORG_ID` | Each call to the `boat` account | The ID of the app's Boat organization, as [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | [Model configuration dependencies](deployment/models.md#configuration-failures) | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | [Default choice dependencies](deployment/models.md#configuration-failures) | The JSON default choice, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_STARTING_FAVOURITES` | The account reads of the accounts that never saved favourites | Optional. The JSON starting favourites, as [Starting favourites](deployment/models.md#starting-favourites) says. Without it, or with a bad value, such an account gets only the app default as a favourite, and the Worker logs a warning. It is not a secret. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RELEASE_SERVER` | Image builds, refreshes, and workspace bootstrap | Optional release base URL. The default is `https://runner.conductive.build`. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
@@ -200,6 +209,8 @@ above.
 [Models](deployment/models.md#models) gives the model list of
 `CONDUCTIVE_MODELS` and the default choice of `CONDUCTIVE_DEFAULT_CHOICE`:
 their shape, the operations that need them, and their configuration failures.
+[Starting favourites](deployment/models.md#starting-favourites) gives the
+starting favourites of `CONDUCTIVE_STARTING_FAVOURITES`.
 
 ## The title model
 
@@ -269,10 +280,13 @@ template installs the Cua Driver and writes the same entry at each boot,
 as [Computer tools](protocol/agent-tools.md#computer-tools) says. An E2B
 org image gets the entry only from a template build that has it.
 
-`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. A create or a resume
-gives the default branch of the repository of the workspace, from its
-queued start. A disk retention restart gives the current default branch of
-that repository.
+`CONDUCTIVE_DEFAULT_BRANCH` needs no deployment input. It names the base
+branch of the workspace, as
+[Base branches](protocol/base-branches.md#the-base-branch-of-a-workspace)
+says. A create, a resume, and a disk retention restart give the base
+branch that the Worker's record of the workspace names. Without one, a
+create or a resume gives the default branch of its queued start, and a
+disk retention restart gives the current default branch.
 
 `CONDUCTIVE_WORKSPACE_BRANCH` needs no deployment input either. A create, a
 resume, and a disk retention restart give the workspace branch that the

@@ -5,8 +5,8 @@ import { FolderGit2, GitBranch } from 'lucide-react'
 import { useFileDropGuard } from '../../app/file-drags'
 import { nameLabel } from '../../shared/name-label'
 
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
-import header from '../../../docs/mockups/src/components/workspace/WorkspaceHeader.module.css'
+import { StatusGlyph } from '../../ui/components/workspaces/StatusGlyph'
+import header from '../../ui/components/workspace/WorkspaceHeader.module.css'
 import { ThisMacSection } from '../device/ThisMacSection'
 import type { Clock } from '../ui/clock'
 import { WorkspaceChat } from '../WorkspaceChat'
@@ -100,7 +100,7 @@ export function DevPage(props: {
     (line: string) => setLog((lines) => [line, ...lines].slice(0, 6)),
     [],
   )
-  const [mentions] = useState(() => devMentions(note))
+  const [mentions] = useState(() => devMentions(note, options.skills))
   // As the workspace screen does, the chat reads pictures only while the
   // sandbox runs, so a stopped sandbox shows each picture as its link.
   const runs = runningStates.has(workspace.state)

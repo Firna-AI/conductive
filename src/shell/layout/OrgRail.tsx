@@ -1,11 +1,11 @@
 import { Fragment, useCallback, type ReactNode, type Ref } from 'react'
 import { Gauge, Plus } from 'lucide-react'
-import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
+import { LogoTile } from '../../ui/components/brand/Logo'
+import { classes } from '../../ui/components/common/classes'
+import { KeyChips } from '../../ui/components/common/KeyChips'
 import { orgCommand } from '../../app/palette/commands'
-import styles from '../../../docs/mockups/src/components/layout/OrgRail.module.css'
-import orgDrag from '../../../docs/mockups/src/components/orgs/OrgDrag.module.css'
+import styles from '../../ui/components/layout/OrgRail.module.css'
+import orgDrag from '../../ui/components/orgs/OrgDrag.module.css'
 import { isSuspended } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
@@ -88,7 +88,7 @@ function RailHint(props: { name: string; hint?: ShortcutHint }) {
       {props.name}
       {props.hint ? (
         <span className={styles.hintKey}>
-          <KeyChips shortcut={props.hint.text} />
+          <KeyChips shortcut={props.hint.tokens} />
         </span>
       ) : null}
     </span>

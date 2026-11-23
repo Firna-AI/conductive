@@ -16,11 +16,11 @@ import type { SaveShortcutsRequest } from '../shared/shortcuts'
 import { WAITLIST_PATHS, type WaitlistStateResponse } from '../shared/waitlist'
 import { AgentLogins } from './agent-logins'
 import { AccountLoginReads } from './account-login-reads'
+import { AccountLoginRequests } from './account-login-requests'
 import { AccountLoginWrites } from './account-login-writes'
-import { ignore, nested, record } from './api/parse'
-import { readChoice, readNewWorkspaceView } from './api/read-core'
+import { AccountPreferenceWrites } from './account-preference-writes'
+import { ignore } from './api/parse'
 import { readGitHubRepositories, readInstallations } from './api/read-github'
-import { readSavedShortcuts } from './api/read-shortcuts'
 import { readWaitlistState } from './api/read-waitlist'
 import type { AppModel } from './app-model'
 import { EndpointReads, type LoginReads } from './endpoint-reads'
@@ -31,13 +31,14 @@ import type { AppServices } from './services'
 import { load, loading, Store, type Loadable, type Readable } from './store'
 
 /**
- * The account of the person signed in: the agent logins, the preferences,
- * the shortcut changes, and the GitHub App installations. The Worker keeps
- * ChatGPT tokens. The account shows each login's kind and share setting,
- * which says whether other members' messages in the person's sessions run
- * on it. Own endpoints also show their host and model list, which the
- * owner's pickers follow. `AccountLoginWrites` sends the writes of the
- * logins.
+ * The account of the person signed in: the agent logins, the preferences
+ * with the model favourites, the shortcut changes, and the GitHub App
+ * installations. The Worker keeps ChatGPT tokens. The account shows each
+ * login's kind and share setting, which says whether other members'
+ * messages in the person's sessions run on it. Own endpoints also show
+ * their host and model list, which the owner's pickers follow.
+ * `AccountLoginWrites` sends the writes of the logins, and
+ * `AccountPreferenceWrites` the saves of the preferences.
  */
 export class AccountModel {
   readonly account = new Store<AccountResponse | null>(null)
@@ -58,8 +59,10 @@ export class AccountModel {
   readonly waitlist = new Store<Loadable<WaitlistStateResponse>>(loading)
   /** The logins of `account`, in the order of their changes. */
   private readonly logins = new AgentLogins(this.account)
+  private readonly loginRequests = new AccountLoginRequests()
   private readonly loginReads: AccountLoginReads
   private readonly loginWrites: AccountLoginWrites
+  private readonly preferenceWrites: AccountPreferenceWrites
   private readonly services: AppServices
   private readonly app: AppModel
   private readonly installationReads: Refresher<GitHubInstallationsResponse>
@@ -69,7 +72,12 @@ export class AccountModel {
   constructor(services: AppServices, app: AppModel) {
     this.services = services
     this.app = app
-    this.loginReads = new AccountLoginReads(app, this.account, this.logins)
+    this.loginReads = new AccountLoginReads(
+      app,
+      this.account,
+      this.logins,
+      this.loginRequests,
+    )
     const endpointReads = new EndpointReads()
     this.endpointReads = endpointReads.store
     this.loginWrites = new AccountLoginWrites(
@@ -78,6 +86,7 @@ export class AccountModel {
       this.loginReads,
       endpointReads,
     )
+    this.preferenceWrites = new AccountPreferenceWrites(services, this.account)
     const installations = new Resource(() =>
       services.api.get(ACCOUNT_PATHS.githubInstallations, readInstallations),
     )
@@ -179,22 +188,31 @@ export class AccountModel {
 
   /** Saves a login, as `AccountLoginWrites.save` says. */
   saveLogin(request: SaveAgentLoginRequest): Promise<void> {
-    return this.loginWrites.save(request)
+    this.logins.change(request.agent)
+    return this.loginRequests.run([request.agent], () =>
+      this.loginWrites.save(request),
+    )
   }
 
   /** Starts a ChatGPT sign-in of Codex. No token comes to the browser. */
   startCodexSignIn(): Promise<StartCodexDeviceResponse> {
-    return this.loginWrites.startCodexSignIn()
+    return this.loginRequests.run(['codex'], () =>
+      this.loginWrites.startCodexSignIn(),
+    )
   }
 
   /** Asks the Worker for the state of the ChatGPT sign-in of `handle`. */
   pollCodexSignIn(handle: string): Promise<PollCodexDeviceResponse> {
-    return this.loginWrites.pollCodexSignIn(handle)
+    return this.loginRequests.run(['codex'], () =>
+      this.loginWrites.pollCodexSignIn(handle),
+    )
   }
 
   /** Refreshes an endpoint list, without restoring a changed login. */
   refreshModels(agent: Agent): Promise<void> {
-    return this.loginWrites.refreshModels(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.refreshModels(agent),
+    )
   }
 
   /**
@@ -202,12 +220,16 @@ export class AccountModel {
    * run on a login of the user, as `AccountLoginWrites.setNoReuse` says.
    */
   setNoReuse(agent: Agent, noReuse: boolean): Promise<void> {
-    return this.loginWrites.setNoReuse(agent, noReuse)
+    this.logins.change(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.setNoReuse(agent, noReuse),
+    )
   }
 
   /** Removes a login, with the note and the warning of its reads. */
   removeLogin(agent: Agent): Promise<void> {
-    return this.loginWrites.remove(agent)
+    this.logins.change(agent)
+    return this.loginRequests.run([agent], () => this.loginWrites.remove(agent))
   }
 
   /**
@@ -215,50 +237,37 @@ export class AccountModel {
    * account are read again, as `AccountLoginWrites.orgLoginChanged` says.
    */
   orgLoginChanged(agent: Agent): Promise<void> {
-    return this.loginWrites.orgLoginChanged(agent)
+    if (this.logins.namesDefaults()) this.logins.change(agent)
+    return this.loginRequests.run([agent], () =>
+      this.loginWrites.orgLoginChanged(agent),
+    )
   }
 
-  async setDefaultChoice(choice: AgentChoice): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.defaultModel,
-      { choice },
-      (body) => nested(record(body), 'choice', readChoice),
-    )
-    const account = this.account.get()
-    if (account) this.account.set({ ...account, defaultChoice: saved })
-  }
-
-  async setNewWorkspaceView(view: NewWorkspaceView): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.newWorkspaceView,
-      { view },
-      readNewWorkspaceView,
-    )
-    const account = this.account.get()
-    if (account) this.account.set({ ...account, newWorkspaceView: saved.view })
+  /** Saves the default model, as `AccountPreferenceWrites` says. */
+  setDefaultChoice(choice: AgentChoice): Promise<void> {
+    return this.preferenceWrites.setDefaultChoice(choice)
   }
 
   /**
-   * Saves the shortcut changes of one keyboard in one batch: all of them or
-   * none. The reply holds every change of that keyboard, which the keymap
-   * of the keys and of each hint read from the account. A failed save
-   * changes nothing, so the account keeps the saved keys.
+   * Saves the model favourites, as `AccountPreferenceWrites.setFavourites`
+   * says. A failed save keeps the saved list, and fails with the error.
    */
-  async saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
-    const saved = await this.services.api.send(
-      'PUT',
-      ACCOUNT_PATHS.shortcuts,
-      request,
-      readSavedShortcuts,
-    )
-    const account = this.account.get()
-    if (!account) return
-    this.account.set({
-      ...account,
-      shortcuts: { ...account.shortcuts, [saved.keyboard]: saved.changes },
-    })
+  setFavourites(favourites: readonly AgentChoice[]): Promise<void> {
+    return this.preferenceWrites.setFavourites(favourites)
+  }
+
+  /** Saves the New workspace view, as `AccountPreferenceWrites` says. */
+  setNewWorkspaceView(view: NewWorkspaceView): Promise<void> {
+    return this.preferenceWrites.setNewWorkspaceView(view)
+  }
+
+  /**
+   * Saves the shortcut changes of one keyboard in one batch, as
+   * `AccountPreferenceWrites.saveShortcuts` says. A failed save changes
+   * nothing, so the account keeps the saved keys.
+   */
+  saveShortcuts(request: SaveShortcutsRequest): Promise<void> {
+    return this.preferenceWrites.saveShortcuts(request)
   }
 
   async signOut(): Promise<void> {

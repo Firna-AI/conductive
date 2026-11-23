@@ -1,7 +1,7 @@
 import { act, type ReactNode } from 'react'
 import { onTestFinished, vi } from 'vitest'
-import paneStyles from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
-import pictureStyles from '../../../docs/mockups/src/components/chat/AnswerPicture.module.css'
+import paneStyles from '../../ui/components/chat/ChatPane.module.css'
+import pictureStyles from '../../ui/components/chat/AnswerPicture.module.css'
 import { filesFor, startFiles } from '../../files/files-test-kit'
 import type { WorkspaceFiles } from '../../files/model/files-store'
 import type { ChatPictures, PictureRead } from '../../files/page/picture-reads'
@@ -15,6 +15,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { LinksProvider } from './LinksContext'
 import { Copying } from './mention-copy-test-kit'
 
@@ -154,6 +155,7 @@ export async function mountPictures(
   if (!files) await startFiles(store)
   const mentions: ChatMentions = {
     files: store,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     pictures: reader,
     openFile: (path) => opened.push(path),
     showFolder: () => undefined,

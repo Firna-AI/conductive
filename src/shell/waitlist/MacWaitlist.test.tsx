@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { expect, test, vi } from 'vitest'
-import frame from '../../../docs/mockups/src/screens/signInFrame.module.css'
+import frame from '../../ui/screens/signInFrame.module.css'
 import { AppModel } from '../../app/app-model'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'

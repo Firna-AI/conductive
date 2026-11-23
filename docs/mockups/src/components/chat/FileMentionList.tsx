@@ -1,8 +1,10 @@
-import { EntryIcon } from '../files/fileIcons'
-import { entryFolder, entryName } from './entryPaths'
-import { allFilesUnavailable } from './lostCopy'
+import {
+  entryFolder,
+  entryName,
+} from '../../../../../src/ui/components/chat/entryPaths'
+import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
 import { mentionRows } from './fileMentions'
-import { MentionList } from './MentionList'
+import { mentionList } from '../../entries/components/chat/MentionList.mockup'
 
 /**
  * The file tree as the list of `@` finds it: the latest tree, a tree that
@@ -25,17 +27,16 @@ export function FileMentionList(props: { query: string; tree: MentionTree }) {
     line = allFilesUnavailable.title
   } else if (entries.length === 0) line = `Nothing matches “${props.query}”`
   return (
-    <MentionList
+    <mentionList.Component
       highlighted={entries.length > 0 ? 0 : null}
       id="file-mentions"
       line={line}
+      moklyInstance="mention-list"
       rows={entries.map((entry) => ({
         key: entry.path,
         name: entryName(entry),
         folder: entryFolder(entry),
-        icon: (
-          <EntryIcon folder={entry.folder} name={entryName(entry)} size={14} />
-        ),
+        icon: entry.folder ? 'folder' : 'file',
       }))}
     />
   )

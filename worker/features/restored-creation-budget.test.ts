@@ -29,6 +29,9 @@ afterEach(async () => {
 it('gives an allocated create opened after three retained days a fresh 20-minute budget without changing its allocation or creation date', async () => {
   const active = (fixture = await retainedCreationFixture(bundle))
   const { id } = await admitRetainedCreation(active)
+  active.boat.afterCreate = async (sandboxId) => {
+    active.boat.states.set(sandboxId, 'provisioning')
+  }
   const original = await advanceRetainedCreation(active, id, 'ready')
   expect(original.deadlineAt).toBe(3_000_001_200_000)
   expect(
@@ -62,6 +65,10 @@ it('gives an allocated create opened after three retained days a fresh 20-minute
     start: { kind: 'create', startedAt: openedAt },
     error: null,
   })
+  active.boat.beforeSandboxRead = async (sandboxId) => {
+    if (active.boat.resumeIds.includes(sandboxId))
+      active.boat.states.set(sandboxId, 'provisioning')
+  }
   await active.actor(id).advanceTo(openedAt + 1_000)
   expect(
     featureState(await active.actor(id).inspectFeatureState()).get(

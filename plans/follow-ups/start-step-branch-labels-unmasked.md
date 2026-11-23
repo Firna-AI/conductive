@@ -1,0 +1,33 @@
+# A start step names its branch without a label
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** Medium. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-22, from the merge of `origin/main` at `bad6521f1` into the branch `calummoore/delft-39rk` (workspace starts from another branch).
+- **Location:** `worker/lifecycle/creation-fetch-label.ts:26`, `worker/lifecycle/start-progress.ts:38`.
+- **Reason:** The fix belongs in the shared publication of the start steps, which `main` uses for the runs of automations too.
+
+- **Source:** Implementation.
+- **Category:** Security.
+- **Terms:**
+  - **Label:** the text that a screen shows for a path or a branch name. It hides each exact copy of a secret value, as `docs/protocol/tokens-and-secrets.md` says.
+  - **Running secrets:** the values of the secret env vars of the org that the cloud computer of a workspace got at its last start. `runningOutputSecrets` in `worker/lifecycle/output-secrets.ts` reads them.
+  - **Start step:** a progress line that a new workspace shows while its cloud computer starts, such as "Fetching develop of storefront".
+- **Background:**
+  - `creationFetchLabel` gives the text of the fetch step: "Fetching <branch> of <repository>". On `main`, the branch is the base branch of a run of an automation. This branch adds the start branch of a create from another branch.
+  - The lifecycle stores the text in the state of the start and sends it to each open tab.
+  - `main` labels the branch names of the pull request bar and of the notes of Continue and of a repository change with the running secrets (pull requests #621, #629, and #637). It does not label the text of a start step.
+  - At the fetch step, the cloud computer has started, so its running secrets exist.
+- **Problem:** A branch name that holds a secret value shows that value in the start steps of the workspace, to each member who watches it start.
+- **Impact if no action:** A secret value in a branch name shows in the start steps, against the label rule of `docs/protocol/tokens-and-secrets.md`.
+- **Root question:** How does each start step that names a branch hide the secret values of the start?
+- **Options:**
+  - **A.** Label the text of the fetch step with the running secrets before the lifecycle stores it, in `start-progress.ts`. Effort: Small.
+  - **B.** Label the text of each start step where the start state goes to the tabs, as the chat backend labels the notes of Continue. Each later step text with a name is covered too. Effort: Medium.
+- **Left out:** A step text without the branch name, because the fetch step names its branch on purpose, as `plans/follow-ups/fetch-step-names-its-branch.md` says.
+- **Wider fix:** B. One place labels each step text.
+- **Previous examples:** Pull requests #621, #629, and #637 of `main` labelled the pull request bar, the notes of Continue, and the notes of a repository change.
+- **Related:**
+  - `plans/follow-ups/new-workspace-branch-names-unmasked.md`: New workspace names the same branch before the create, also without a label.
+  - `plans/follow-ups/fetch-step-names-its-branch.md`: its option B names a branch in each fetch step, so this fix should come first.
+- **Recommendation:** B. It covers every step text in one place.
+- **Action:** fix after merge, apply B, because the same gap is on `main` for the runs of automations, and one change to the shared publication covers both.

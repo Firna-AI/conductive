@@ -90,7 +90,10 @@ it('sends approved before execution and keeps Allow limited to one request', asy
 
 it('applies exact always-allow policy and returns matching settings operations', () => {
   const test = sessionFixture()
-  test.session.receive({ type: 'command.request', request: test.command() })
+  test.session.receive({
+    type: 'command.request',
+    request: test.command(),
+  })
   test.session.receive({
     type: 'command.approval',
     workspaceId: 'workspace-one',

@@ -5,6 +5,8 @@ use std::time::{Duration, UNIX_EPOCH};
 
 use super::support::Fixture;
 
+#[path = "cache_tests.rs"]
+mod cache_tests;
 #[path = "if_range_tests.rs"]
 mod if_range_tests;
 
@@ -52,7 +54,7 @@ async fn uses_fixed_case_insensitive_web_types_with_an_octet_stream_fallback() {
 }
 
 #[tokio::test]
-async fn cache_validators_compare_seconds_and_head_sends_headers_without_a_body() {
+async fn date_fallback_keeps_full_precision_and_head_sends_headers_without_a_body() {
     let h = Fixture::new().await;
     h.write("page.html", b"body");
     File::options()
@@ -83,7 +85,7 @@ async fn cache_validators_compare_seconds_and_head_sends_headers_without_a_body(
     assert!(head.body.is_empty());
     for (date, expected) in [
         ("Thu, 01 Jan 1970 00:16:39 GMT", 200),
-        ("Thu, 01 Jan 1970 00:16:40 GMT", 304),
+        ("Thu, 01 Jan 1970 00:16:40 GMT", 200),
         ("Thu, 01 Jan 1970 00:16:41 GMT", 304),
         ("invalid", 200),
     ] {
@@ -92,6 +94,7 @@ async fn cache_validators_compare_seconds_and_head_sends_headers_without_a_body(
             .await;
         assert_eq!(response.status, expected, "{date}");
     }
+    assert_eq!(head.headers["etag"], get.headers["etag"]);
     h.finish().await;
 }
 

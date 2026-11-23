@@ -16,7 +16,7 @@ export type ControlSizes = {
 
 /**
  * The dense controls of the desktop layout. The values follow the control
- * tokens of the design in `docs/mockups/src/design/metrics.ts`.
+ * tokens of the design in `src/ui/design/metrics.ts`.
  */
 const denseControls: ControlSizes = {
   height: 26,

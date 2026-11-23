@@ -14,7 +14,8 @@ names a decision of the change that adds the org logins, as
 [Tokens and secrets](tokens-and-secrets.md) says. An e2b decision number
 names a decision of the change that adds E2B as the second
 [sandbox provider](workspaces-and-sandboxes.md#the-provider), as that doc
-says.
+says. A switch decision number names a decision of the change that adds
+[Switch account](switch-account.md), as that doc says.
 
 ## Orgs
 
@@ -27,10 +28,15 @@ says.
 - All orgs share the app's GitHub App. The personal logins of a user serve
   all of that user's orgs (decision 21). An org login serves only the
   members of its own org.
-- Each org runs in one provider account of the app for its whole life,
-  and shares its plan limits with the other orgs of that account, as
-  [The provider](workspaces-and-sandboxes.md#the-provider) says
-  (decision 80, and e2b decision 222). No org has a provider key.
+- Each org runs in one provider account of the app at a time
+  (decision 80, and e2b decision 222). It shares the plan limits of that
+  account with the other orgs on it, as
+  [The provider](workspaces-and-sandboxes.md#the-provider) says. No org
+  has a provider key.
+- An operator can switch an org to another account. New workspaces of the
+  org start on that account when the build there succeeds. Existing
+  workspaces stay on their own account, as
+  [Switch account](switch-account.md) says (switch decision 1 B).
 - Orgs that mirror GitHub accounts were rejected, because a new org would
   then need the GitHub App on another GitHub account.
 - The org rail lists the orgs of the user that are not deleted, and the
@@ -44,6 +50,8 @@ says.
   says.
 - Reason: an operator can then put a test org on each provider. The
   choice lists only configured accounts.
+- The hint of the choice says that only operators see it. It also says
+  that an operator can switch the account later, on the page of the org.
 - The create of the first org of an operator, from Get started, shows the
   choice too. Nobody else sees the choice.
 - The Worker reads the choice only from an operator. From anyone else, it
@@ -112,50 +120,9 @@ says.
 
 ## Repository order
 
-A repository-order decision number names a decision of the change that
-adds this order. The pull request of that change keeps its record.
-
-- The chosen repositories of an org have one order, the same for each
-  member. The user asked for it on 18 November 2026.
-- The first repository of the order is the default repository of the org.
-  New workspace picks it, as
-  [Waiting repositories](new-workspace-notices.md#waiting-repositories)
-  says. A new automation gets it, as [Automations](automations.md) says.
-- The Repositories tab lists the chosen repositories in the order. The
-  first row shows Default, for every person. The tab says that new
-  workspaces and automations start in the first one, and that new
-  workspaces start in the next ready one while it waits for a build.
-- The New workspace repository menu, the repository menu of an
-  automation, and each other list of the chosen repositories follow the
-  order. The agent tool list follows it too, as
-  [Repositories](create-call-lists.md#repositories) says.
-- Only an admin changes the order (decision 57). Other members see it
-  read-only. Reason: the order sets the default of the whole org.
-- An admin moves a chosen repository in three ways
-  (repository-order decision 1 F):
-  - A drag of its row. Its handle shows where it lifts. On a phone, a long
-    press lifts the row. A press on the row menu starts no drag. The lifted row, its faint copy, and the line where it lands look
-    like the drag of an org tile. Escape ends the drag, and the order
-    stays as it was.
-  - The row menu: Make default, Move up, and Move down. Make default moves
-    the row to the top. On the first row, Make default and Move up are
-    off. On the last row, Move down is off. A phone opens the menu as a
-    sheet.
-  - Alt and Up or Down, with no other modifier key, on a focused row. The
-    focus stays on the row.
-- After a move, a screen reader hears the name and the new place, such as
-  "acme/web moves to place 1 of 3".
-- Each move saves at once. A move starts no build, and the cloud computer
-  does not change. Reason: the order is a setting of the app lists, not of
-  the cloud computer.
-- The moves show outside Edit only. Edit lists every repository that the
-  GitHub App reaches, by name.
-- A newly chosen repository goes to the end of the order. A repository
-  that the org removes and adds again also goes to the end. So an add
-  never changes the default.
-- Create org saves its chosen repositories in the order of their names.
-- A member sees an order that an admin changed at the next read of the
-  list, as for a section move.
+- [Repository order](repository-order.md) holds the requirements of the
+  order of the chosen repositories of an org. It covers the default
+  repository, the lists that follow the order, and the moves of an admin.
 
 ## Get started
 
@@ -193,6 +160,9 @@ adds this order. The pull request of that change keeps its record.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin changes the skills repository, as
+  [The Skills section](org-skills.md#the-skills-section) says. Other
+  members see it read-only.
 - Only an admin changes the org's name, initials, and colour. Other
   members see them read-only.
 - Only an admin connects, replaces, or removes an org login, and changes
@@ -208,8 +178,9 @@ adds this order. The pull request of that change keeps its record.
   for all agents and reveals a value (secrets decisions 2 A and 3 B).
   [Rights](secrets.md#rights) gives the reasons.
 - Every member can see and change the Capabilities of each workspace: its
-  pre-approved secrets, its Mac access, and its other grants
-  (secrets decision 8 B).
+  pre-approved secrets and its other grants of secrets
+  (secrets decision 8 B). The Mac access switch acts only on the Mac of the
+  member who uses it, as [Mac access](mac-access.md#the-switch) says.
 - Every member who sees a session can answer its secret requests
   (secrets decision 4 B).
 - Every member of the org sees all of its workspaces (decision 39).

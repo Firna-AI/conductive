@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import { waitlistText } from './access-copy'
 
 /**
@@ -161,7 +161,7 @@ const hoursRules: readonly HoursRule[] = [
   },
   {
     title: 'Idle computers stop',
-    text: 'A cloud computer stops after 30 minutes without activity, unless an agent is at work. A stopped computer uses no hours.',
+    text: 'A cloud computer stops after a set time without activity, unless an agent is at work. A stopped computer uses no hours.',
   },
   {
     title: 'Extra hours',

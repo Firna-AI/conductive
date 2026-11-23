@@ -5,12 +5,9 @@ import {
   envVarsNote,
   secretsIntro,
   secretsWords,
-} from '../../../docs/mockups/src/components/secrets/secretsCopy'
-import styles from '../../../docs/mockups/src/components/secrets/SecretsTab.module.css'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/secrets/secretsCopy'
+import styles from '../../ui/components/secrets/SecretsTab.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
 import { mayAddSecret, secretRights } from '../../app/permissions'
 import { routes } from '../../app/router'
 import type { SecretsModel } from '../../app/secrets-model'

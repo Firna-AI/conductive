@@ -10,6 +10,7 @@ import { LinkTabs } from '../ui/links'
 import { useViewport } from '../ui/viewport'
 import { AgentsSection, SignInSection } from './AccountSections'
 import { DeletedOrgsSection } from './DeletedOrgsSection'
+import { FavouritesSection } from './FavouritesSection'
 import { GitHubSection } from './GitHubSection'
 import { InviteCodeSection } from './InviteCodeSection'
 import { DefaultsSection } from './PreferencesSections'
@@ -41,7 +42,12 @@ function TabContent(props: {
     case 'agents':
       return <AgentsSection connect={props.connect} />
     case 'preferences':
-      return <DefaultsSection />
+      return (
+        <>
+          <FavouritesSection />
+          <DefaultsSection />
+        </>
+      )
     case 'shortcuts':
       return <ShortcutsTab />
     case 'stats':
@@ -91,8 +97,9 @@ function GeneralTab(props: { user: User }) {
  * General holds the GitHub sign-in, the GitHub App, and the invite code of
  * the user. Agents holds the logins of Claude and Codex, which every org
  * shares. `connect` opens the Connect form of an agent at first, as the
- * link of a missing login does. Preferences holds how new workspaces
- * start: their model, and how New workspace opens. Keyboard shortcuts
+ * link of a missing login does. Preferences holds the favourites of the
+ * model menu, then how new workspaces start: their model, and how New
+ * workspace opens. Keyboard shortcuts
  * holds the keys of the commands. Stats holds the counts of the person,
  * which it reads each time that it opens. A phone moves a tab that does not fit to a second line.
  * The Mac app adds This Mac last. A browser shows General at its address.

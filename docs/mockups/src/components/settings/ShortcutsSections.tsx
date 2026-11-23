@@ -11,7 +11,6 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import {
-  browserTabOf,
   keyboardOf,
   type Keyboard,
   type ShortcutHost,
@@ -24,23 +23,25 @@ import {
   type CommandRow,
   type ShortcutGroup,
 } from '../../fixtures/shortcuts'
-import { SearchField } from '../common/SearchField'
-import { NoResults } from '../palette/PaletteEmpty'
-import { Section } from './Section'
-import { ShortcutIntro } from './ShortcutIntro'
+import { searchField } from '../../entries/components/common/SearchField.mockup'
+import { noResults } from '../../entries/components/palette/PaletteEmpty.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { shortcutIntro } from '../../entries/components/settings/ShortcutIntro.mockup'
 import { shortcutPages, type ShortcutPages } from './shortcutPages'
 import type { RefusedShortcut } from './ShortcutParts'
 import {
-  CommandShortcuts,
-  FixedShortcuts,
-  type CommandRowState,
-} from './ShortcutRows'
+  commandShortcuts,
+  fixedShortcuts,
+} from '../../entries/components/settings/ShortcutRows.mockup'
+import type { CommandRowState } from './ShortcutRows'
 import {
   matchingGroups,
   shortcutQueries,
   type ShortcutSearch,
 } from './shortcutSearch'
-import styles from './ShortcutsSections.module.css'
+import { instanceKey } from '../../instanceKey'
+import { defined, plainData } from '../../defined'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * The change of a shortcut on the tab, in progress or last: none, a row
@@ -175,7 +176,6 @@ export function ShortcutsTab(props: {
   const query = shortcutQueries[props.search]
   const shown = matchingGroups(query, shortcutGroups(host))
   const pages = shortcutPages[host]
-  const tab = browserTabOf(host)
   const context: RowContext = {
     changes: props.changes,
     change: props.change,
@@ -185,51 +185,59 @@ export function ShortcutsTab(props: {
   }
   return (
     <>
-      <SearchField
+      <searchField.Component
         label="Search shortcuts"
+        moklyInstance="search-shortcuts"
         placeholder="Search shortcuts"
         query={query}
       />
-      <ShortcutIntro
+      <shortcutIntro.Component
         changed={changed}
         host={host}
+        moklyInstance="intro"
         resetAllFailed={props.change === 'reset-all-failed'}
-        resetAllTo={pages.resetAll}
+        {...defined({ resetAllTo: pages.resetAll })}
       />
       {shown.length === 0 ? (
-        <NoResults
+        <noResults.Component
           hint="Try a command name, such as Close tab."
+          moklyInstance="no-results"
           query={query}
         />
       ) : null}
       {shown.map(({ group, rows }) => (
-        <Section
-          description={
-            group.description ?? (allFixed(group) ? fixedGroupLine : undefined)
-          }
+        <section.Component
           key={group.label}
+          moklyInstance={`group-${instanceKey(group.label)}`}
           title={group.label}
+          {...defined({
+            description:
+              group.description ??
+              (allFixed(group) ? fixedGroupLine : undefined),
+          })}
         >
           <ul aria-label={group.label} className={styles.list}>
             {rows.map((row) => (
               <li className={styles.row} key={row.label}>
                 {row.kind === 'command' ? (
-                  <CommandShortcuts
+                  <commandShortcuts.Component
+                    host={host}
                     label={row.label}
-                    state={rowState(row, context)}
-                    tab={tab}
+                    moklyInstance={`row-${instanceKey(row.label)}`}
+                    state={plainData(rowState(row, context))}
                   />
                 ) : (
-                  <FixedShortcuts
+                  <fixedShortcuts.Component
                     keys={row.keys}
                     label={row.label}
+                    moklyInstance={`row-${instanceKey(row.label)}`}
                     note={!allFixed(group)}
                   />
                 )}
               </li>
             ))}
           </ul>
-        </Section>
+        </section.Component>
       ))}
     </>
   )

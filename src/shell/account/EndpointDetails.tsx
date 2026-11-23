@@ -1,12 +1,13 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import { RefreshCw } from 'lucide-react'
 import type { Agent } from '../../shared/generated/Agent'
+import { loginLabels } from '../../ui/components/settings/agentConnectCopy'
 import {
   EndpointAddressNote,
   EndpointReadFailed,
-} from '../../../docs/mockups/src/components/settings/EndpointRead'
-import { endpointReadCopy as copy } from '../../../docs/mockups/src/components/settings/endpointReadCopy'
-import { LoginEndpoint } from '../../../docs/mockups/src/components/settings/LoginEndpoint'
+} from '../../ui/components/settings/EndpointRead'
+import { endpointReadCopy as copy } from '../../ui/components/settings/endpointReadCopy'
+import { LoginEndpoint } from '../../ui/components/settings/LoginEndpoint'
 import { unlistedModels } from '../../app/endpoint-models'
 import {
   endpointReadOf,
@@ -18,7 +19,7 @@ import { useApp } from '../context'
 import { ActionButton } from '../ui/actions'
 import { useAction } from '../ui/useAction'
 import { EndpointModels } from './EndpointModels'
-import { agentNames, loginLabels } from './labels'
+import { agentNames } from './labels'
 
 /** A connected own endpoint login of the account, or an org endpoint. */
 type EndpointLogin = Extract<AnyLogin, { kind: 'endpoint' }>

@@ -58,7 +58,13 @@ export type BannerState =
 
 export type GitHubBanner = {
   branch: string
+  displayBranch?: string
   baseBranch: string
+  displayBaseBranch?: string
+  /** The deleted base, until this branch has a pull request. */
+  baseMoved?: string
+  /** The label of `baseMoved`, which hides each secret value. */
+  displayBaseMoved?: string
   updatedAt: Timestamp
 } & (
   | {

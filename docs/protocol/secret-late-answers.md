@@ -40,6 +40,8 @@ decision number names a decision of the change that adds
   that sender.
 - When a turn of that session runs at the time of the answer, the line
   joins that turn, as a message does. That turn keeps its sender.
+- The [wake](session-watches.md#delivery) of a watch follows these rules
+  for its turn, its sender, and its login.
 - When the line can start no turn, the app sends nothing. Examples are a
   starter who does not share the login with that sender, a login that is
   gone, and a sender who left the org.
@@ -74,6 +76,10 @@ decision number names a decision of the change that adds
   is not shared by default.
 - A notice that waits for the next message of the session was rejected.
   So was a new linked session, because it has none of the earlier history.
+- Reason for the turn: the agent asked for the answer, and the work that
+  needs it waits. A [change note](capabilities-agents.md#where-the-note-goes)
+  of the capabilities waits for the next message instead. No agent asked
+  for that change, and it can reach each session of the workspace.
 - A late Deny sends nothing. The late request then shows that it was
   denied. Reason: no agent waits, because its call already ended.
 - One answer sends at most one line for each session, also when it allows

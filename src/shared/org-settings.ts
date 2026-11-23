@@ -2,10 +2,12 @@ import type { Timestamp } from './generated/Timestamp'
 import type { Agent } from './generated/Agent'
 import { orgPath } from './api'
 import type { BaseImage } from './base-image'
+import type { SkillFolderClash } from './skill-folders'
 
 export const orgSettingsPaths = {
   repositories: (orgId: string) => `${orgPath(orgId)}/repositories`,
   settings: (orgId: string) => `${orgPath(orgId)}/settings`,
+  skills: (orgId: string) => `${orgPath(orgId)}/settings/skills`,
   agentLogins: (orgId: string) => `${orgPath(orgId)}/agent-logins`,
   builds: (orgId: string) => `${orgPath(orgId)}/builds`,
   refresh: (orgId: string) => `${orgPath(orgId)}/image/refresh`,
@@ -52,6 +54,10 @@ export interface Repository {
   defaultBranch: string
   installationId: number
   selected: boolean
+  /** The current org image holds this repository. Older replies omit it. */
+  ready?: boolean
+  /** The current account has a published org image. Older replies omit it. */
+  imageReady?: boolean
 }
 
 /**
@@ -90,6 +96,24 @@ export function compareRepositoryNames(
   )
 }
 
+/**
+ * The body of an add or a removal of a repository. With `build: false`, an
+ * add starts no build, so that one build at Done holds every add of an
+ * edit. A body without `build` starts a build at each add.
+ */
+export interface RepositoryChangeRequest {
+  build?: boolean
+}
+
+/** Whether a repository add starts a build: each body but `build: false`. */
+export function buildsAtAdd(body: unknown): boolean {
+  return !(
+    typeof body === 'object' &&
+    body !== null &&
+    'build' in body &&
+    body.build === false
+  )
+}
 export interface RepositoriesResponse {
   repositories: readonly Repository[]
 }
@@ -99,6 +123,10 @@ export interface OrgSettings {
   baseImage?: BaseImage
   installScript: string
   startupScript: string
+  /** Older replies may omit the skills repository. */
+  skillsRepository?: string
+  /** An absent name means untrusted, also in older replies. */
+  trustedSkillsRepository?: string
   /** A stored value never goes back to the browser. */
   envVars: readonly { name: string; secret: boolean }[]
   updatedAt: Timestamp
@@ -109,11 +137,23 @@ export interface OrgSettingsResponse {
 export interface UpdateOrgSettingsRequest {
   installScript?: string
   startupScript?: string
+  skillsRepository?: string
+  trustedSkillsRepository?: string
   envVars?: readonly (
     | { operation: 'set'; name: string; value: string; secret?: boolean }
     | { operation: 'classify'; name: string; secret: boolean }
     | { operation: 'remove'; name: string }
   )[]
+}
+
+type SkillsRepositoryNotice =
+  'private' | 'not-found' | 'no-skills' | 'incomplete' | 'failed'
+
+export interface SkillsRepositoryLookupResponse {
+  repository: string
+  skills: readonly string[]
+  notice: SkillsRepositoryNotice | null
+  clashes: readonly SkillFolderClash[]
 }
 
 export interface ImageBuild {

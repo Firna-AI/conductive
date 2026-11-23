@@ -1,10 +1,10 @@
 import { Button } from '@firna/ui/button'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { GitHubMark } from '../common/GitHubMark'
+import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { siteIcons } from './siteIcons'
 import styles from './SiteActions.module.css'
 
@@ -19,12 +19,20 @@ export function StartButton(props: {
   to: string
   size: 'md' | 'lg'
   block?: boolean
+  /** The place of the button, which names its mark for Mokly. */
+  place: 'header' | 'hero' | 'closing'
 }) {
   return (
     <ScreenLink asChild to={props.to}>
       <Button
         block={props.block}
-        iconNode={<GitHubMark className={styles.mark} size={16} />}
+        iconNode={
+          <githubMark.Component
+            className={styles.mark}
+            moklyInstance={`sign-up-${props.place}`}
+            size={16}
+          />
+        }
         onPress={noop}
         size={props.size}
         tone="primary"
@@ -41,10 +49,19 @@ export function StartButton(props: {
  * the Mac app section of the home page with the download of each chip.
  * `stack` puts them under each other at full width, as on a phone.
  */
-export function SiteActions(props: { to: string; stack?: boolean }) {
+export function SiteActions(props: {
+  to: string
+  stack?: boolean
+  place: 'hero' | 'closing'
+}) {
   return (
     <div className={classes(styles.actions, props.stack && styles.stack)}>
-      <StartButton block={props.stack} size="lg" to={props.to} />
+      <StartButton
+        block={props.stack}
+        place={props.place}
+        size="lg"
+        to={props.to}
+      />
       <ScreenLink asChild fragment="mac-app" to={paths.marketing}>
         <Button
           block={props.stack}

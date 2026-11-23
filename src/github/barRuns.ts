@@ -88,7 +88,7 @@ export function mergeOutcome(error: unknown): BarOutcome {
 /**
  * The outcome of Ready for review that GitHub or the app refused. A missing
  * right, another pull request, and another refusal of GitHub take the
- * words of the mockups. Any other failure keeps the app's safe words.
+ * shared words of `barCopy`. Any other failure keeps the app's safe words.
  */
 export function readyOutcome(error: unknown): BarOutcome {
   if (!(error instanceof GitHubActionError)) {

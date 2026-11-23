@@ -3,6 +3,7 @@ import type { AgentChatEvent } from './AgentChatEvent.js'
 import type { RunnerFileEvent } from './RunnerFileEvent.js'
 import type { RunnerPortsUpdated } from './RunnerPortsUpdated.js'
 import type { RunnerReady } from './RunnerReady.js'
+import type { RunnerSkillsUpdated } from './RunnerSkillsUpdated.js'
 import type { RunnerStartUpdated } from './RunnerStartUpdated.js'
 import type { RunnerToolDetailPart } from './RunnerToolDetailPart.js'
 import type { RunnerWorkspaceTitle } from './RunnerWorkspaceTitle.js'
@@ -16,6 +17,7 @@ export type RunnerEvent =
   | AgentChatEvent
   | RunnerFileEvent
   | RunnerPortsUpdated
+  | RunnerSkillsUpdated
   | RunnerReady
   | RunnerStartUpdated
   | RunnerWorkspaceTitle

@@ -1,23 +1,26 @@
-import type { ReactNode } from 'react'
-import { Plus } from 'lucide-react'
 import type { BrowserTab } from '../../fixtures/shortcutHosts'
 import { shortcutLimit } from '../../fixtures/shortcuts'
-import { ActionButton, IconButton } from '../common/actions'
-import { KeyChips, type Shortcut } from '../common/KeyChips'
 import {
-  CancelButton,
-  ConflictActions,
-  ConflictLine,
-  KeyButton,
-  Linked,
-  Recorder,
-  RefusedLine,
-  RemoveButton,
-  RowLayout,
-  RowMessage,
-  type RefusedShortcut,
-} from './ShortcutParts'
-import styles from './ShortcutsSections.module.css'
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { keyChips } from '../../entries/components/common/KeyChips.mockup'
+import { Linked } from '../common/ScreenLink'
+import {
+  cancelButton,
+  conflictActions,
+  conflictLine,
+  refusedLine,
+  removeButton,
+  rowLayout,
+  rowMessage,
+} from '../../entries/components/settings/ShortcutParts.mockup'
+import { type HeldShortcut, type RefusedShortcut } from './ShortcutParts'
+import { keyOf, recordingKeys, resetKeys } from './shortcutRowKeys'
+import { instanceKey, shortcutKey } from '../../instanceKey'
+import { defined } from '../../defined'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * The state of the row of a command. A row shows its shortcuts, with Reset
@@ -80,74 +83,33 @@ export function FixedShortcuts(props: {
   note: boolean
 }) {
   return (
-    <RowLayout
-      keys={props.keys.map((shortcut) => (
-        <span className={styles.still} key={shortcut}>
-          <KeyChips shortcut={shortcut} />
+    <rowLayout.Component
+      keys={props.keys.map((shortcut, index) => (
+        <span className={styles.still} key={index}>
+          <keyChips.Component
+            moklyInstance={`${instanceKey(props.label)}-${shortcutKey(shortcut)}`}
+            shortcut={shortcut}
+          />
         </span>
       ))}
       label={props.label}
-      note={
-        props.note ? (
+      moklyInstance="row"
+      {...defined({
+        note: props.note ? (
           <span className={styles.fixed}>Fixed shortcut</span>
-        ) : undefined
-      }
+        ) : undefined,
+      })}
     />
   )
 }
 
-/** The browser that keeps a shortcut in a normal tab, or none. */
-function keeper(shortcut: Shortcut, tab?: BrowserTab) {
-  return tab?.kept.has(shortcut) ? tab.browser : undefined
-}
-
 /**
- * The shortcuts of a row that records: the recorder takes the place of the
- * pressed shortcut, or follows the others after a press on Add.
+ * The shortcut that another command holds, from the state of a row, with
+ * only the fields of `HeldShortcut`, as the data of a Mokly part.
  */
-function recordingKeys(
-  label: string,
-  state: { keys: readonly Shortcut[]; replaces?: Shortcut },
-  tab?: BrowserTab,
-  recorded?: Shortcut,
-): ReactNode[] {
-  const recorder = <Recorder key="recorder" shortcut={recorded} />
-  const others = state.keys.map((shortcut) =>
-    shortcut === state.replaces ? (
-      recorder
-    ) : (
-      <KeyButton
-        key={shortcut}
-        keptBy={keeper(shortcut, tab)}
-        label={label}
-        shortcut={shortcut}
-      />
-    ),
-  )
-  return state.replaces === undefined ? [...others, recorder] : others
-}
-
-/**
- * The default shortcuts that Reset would give a row. The shortcut that
- * another command holds waits in the field of the recorder, as a recorded
- * shortcut does. The others show without a control until the answer.
- */
-function resetKeys(
-  state: { keys: readonly Shortcut[]; shortcut: Shortcut },
-  tab?: BrowserTab,
-): ReactNode[] {
-  return state.keys.map((shortcut) =>
-    shortcut === state.shortcut ? (
-      <Recorder key={shortcut} shortcut={shortcut} />
-    ) : (
-      <span className={styles.still} key={shortcut}>
-        <KeyChips
-          dimmed={keeper(shortcut, tab) !== undefined}
-          shortcut={shortcut}
-        />
-      </span>
-    ),
-  )
+function heldOf(state: HeldShortcut): HeldShortcut {
+  const { shortcut, owner, cancelTo, replaceTo } = state
+  return { shortcut, owner, cancelTo, ...defined({ replaceTo }) }
 }
 
 /**
@@ -164,38 +126,59 @@ export function CommandShortcuts(props: {
   switch (state.kind) {
     case 'recording':
       return (
-        <RowLayout
+        <rowLayout.Component
           end={
             <>
               {state.replaces ? (
-                <RemoveButton label={label} shortcut={state.replaces} />
+                <removeButton.Component
+                  label={label}
+                  moklyInstance="remove"
+                  shortcut={state.replaces}
+                />
               ) : null}
-              <CancelButton to={state.cancelTo} />
+              <cancelButton.Component
+                moklyInstance="cancel"
+                to={state.cancelTo}
+              />
             </>
           }
           keys={recordingKeys(label, state, tab)}
           label={label}
-          message={
-            state.refused ? <RefusedLine refused={state.refused} /> : undefined
-          }
+          moklyInstance="row"
+          {...defined({
+            message: state.refused ? (
+              <refusedLine.Component
+                moklyInstance="refused"
+                refused={state.refused}
+              />
+            ) : undefined,
+          })}
         />
       )
     case 'conflict':
-      return (
-        <RowLayout
-          end={<ConflictActions held={state} label={label} />}
-          keys={recordingKeys(label, state, tab, state.shortcut)}
-          label={label}
-          message={<ConflictLine held={state} />}
-        />
-      )
     case 'reset-conflict':
       return (
-        <RowLayout
-          end={<ConflictActions held={state} label={label} />}
-          keys={resetKeys(state, tab)}
+        <rowLayout.Component
+          end={
+            <conflictActions.Component
+              held={heldOf(state)}
+              label={label}
+              moklyInstance="conflict-actions"
+            />
+          }
+          keys={
+            state.kind === 'conflict'
+              ? recordingKeys(label, state, tab, state.shortcut)
+              : resetKeys(label, state, tab)
+          }
           label={label}
-          message={<ConflictLine held={state} />}
+          message={
+            <conflictLine.Component
+              held={heldOf(state)}
+              moklyInstance="conflict-line"
+            />
+          }
+          moklyInstance="row"
         />
       )
     case 'shortcuts':
@@ -212,50 +195,61 @@ function ShortcutsLine(props: {
   const { label, state } = props
   const count = state.keys.length
   return (
-    <RowLayout
-      end={
-        count > 0 && count < shortcutLimit ? (
-          <Linked to={state.addTo}>
-            <IconButton icon={Plus} label={`Add shortcut for ${label}`} quiet />
-          </Linked>
-        ) : undefined
-      }
+    <rowLayout.Component
       keys={
         count === 0 ? (
-          <ActionButton
+          <actionButton.Component
             accessibilityLabel={`Add shortcut for ${label}`}
-            icon={Plus}
+            icon="plus"
+            moklyInstance={`add-${instanceKey(label)}`}
             tone="plain"
           >
             Add shortcut
-          </ActionButton>
+          </actionButton.Component>
         ) : (
-          state.keys.map((shortcut, index) => (
-            <KeyButton
-              key={shortcut}
-              keptBy={keeper(shortcut, props.tab)}
-              label={label}
-              shortcut={shortcut}
-              to={index === 0 ? state.recordTo : undefined}
-            />
-          ))
+          state.keys.map((shortcut, index) =>
+            keyOf(
+              label,
+              shortcut,
+              props.tab,
+              index === 0 ? state.recordTo : undefined,
+            ),
+          )
         )
       }
       label={label}
-      message={
-        state.unsaved ? (
-          <RowMessage tone="danger">
-            <KeyChips shortcut={state.unsaved} /> wasn't saved. Try again.
-          </RowMessage>
-        ) : undefined
-      }
-      note={
-        state.changed ? (
-          <ActionButton accessibilityLabel={`Reset ${label}`} tone="plain">
+      moklyInstance="row"
+      {...defined({
+        end:
+          count > 0 && count < shortcutLimit ? (
+            <Linked to={state.addTo}>
+              <iconButton.Component
+                icon="plus"
+                label={`Add shortcut for ${label}`}
+                moklyInstance={`add-${instanceKey(label)}`}
+                quiet
+              />
+            </Linked>
+          ) : undefined,
+        message: state.unsaved ? (
+          <rowMessage.Component moklyInstance="unsaved" tone="danger">
+            <keyChips.Component
+              moklyInstance={`unsaved-${instanceKey(label)}`}
+              shortcut={state.unsaved}
+            />{' '}
+            wasn't saved. Try again.
+          </rowMessage.Component>
+        ) : undefined,
+        note: state.changed ? (
+          <actionButton.Component
+            accessibilityLabel={`Reset ${label}`}
+            moklyInstance={`reset-${instanceKey(label)}`}
+            tone="plain"
+          >
             Reset
-          </ActionButton>
-        ) : undefined
-      }
+          </actionButton.Component>
+        ) : undefined,
+      })}
     />
   )
 }
