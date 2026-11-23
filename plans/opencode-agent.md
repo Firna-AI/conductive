@@ -211,7 +211,7 @@ Risks of B, C, and D: OpenRouter's model list held 477 models in 927,044 bytes o
 
 ### OpenCode decision 5. Older clients and the new agent
 
-Changed by the options check: a wider root question, the cost of B, and new option D.
+Changed by the options check: a wider root question, the cost of B, and new option D. Changed on 23 November 2026: the user proposed option E, and the recommendation moved from B to E.
 
 - **Severity:** High. **Effort:** Large.
 - **Source:** Design.
@@ -226,12 +226,13 @@ Changed by the options check: a wider root question, the cost of B, and new opti
   - **B.** A, and each new client sends a header that names the agents that it reads. The Worker leaves OpenCode values out of each reply to a client without it. The event stream sends an older socket a neutral event with the same number. An older client whose saved default is OpenCode gets the app default. Older clients show no OpenCode models, logins, or sessions, and keep working. Effort: Large.
   - **C.** A, and OpenCode starts behind a switch for each org that an operator turns on. Under OpenCode decision 4 A or C, every older app still meets the model list. Effort: Medium.
   - **D.** A, and after the launch the Worker answers the start reads of a client without the new header with an error. Its text asks the user to update the Mac app or reload the page. An older app shows that text on "The app didn't load", and its updater still installs the new version. This is a new gate that refuses older clients, so it needs the user's approval. Effort: Small.
+  - **E.** Proposed by the user on 23 November 2026. B, but each client sends its app version in place of a list of agents. The web app and the Mac app send the product version, such as `0.34.0`, from `package.json`, which `build-version.ts` already reads. The agent tools send the release version of the sandbox software. The event socket takes the version as a query value, because a browser cannot set a header on a WebSocket. The Worker keeps one table of the first version that reads each new value. It treats a missing or unreadable version as old, and a `development` build as current. The header is not a security boundary: a client that sends a false version only breaks its own reads. Effort: Large.
 - **Left out:** Map an OpenCode value to Codex for older apps, because the app would then show wrong data.
-- **Wider fix:** B, with a header that names the agents that the client reads. It also protects older clients from the next new agent.
+- **Wider fix:** E. One version covers the whole product (`docs/protocol/desktop-packages-and-updates.md`), so the same header and table protect older clients from each later new value, not only from new agents.
 - **Previous examples:** [Service reports](../docs/protocol/service-reports.md#the-worker-and-the-app) adds no new top-level message, because older apps refuse it. [Switch account](../docs/protocol/switch-account.md) words a wait so that older apps show it.
 - **Related:** OpenCode decision 4.
-- **Recommendation:** B. It is the only option that keeps older clients working, as the repository rules ask. If you accept a short break, D is better than A. The options check also recommends B.
-- **Action:** ask the user, because A, C, and D break older clients for some users, D adds a gate, and B costs more.
+- **Recommendation:** E, changed from B after the user's proposal. It keeps older clients working as B does. It also uses the one product version that already exists, and it serves each later compatibility change. A version moves only at a release, so a build between the merge of the new readers and the next release counts as old. That build only shows no OpenCode. The options check recommended B, before E existed.
+- **Action:** ask the user, because A, C, and D break older clients for some users, D adds a gate, and B and E cost more.
 
 ### OpenCode decision 6. Repository settings of OpenCode
 
@@ -464,8 +465,8 @@ do not know. This ships before any OpenCode value reaches a client.
       event that it cannot read, as the chat reader does.
 - [ ] Make the agent tools in `crates/cnd-tools/` skip an entry with an
       unknown agent.
-- [ ] Send the header of OpenCode decision 5 B from the web app and the
-      agent tools, if B is chosen.
+- [ ] Send the header of OpenCode decision 5 B or E from the web app, the
+      Mac app, the event socket, and the agent tools, if B or E is chosen.
 - [ ] Test each reader with an unknown agent.
 
 ## Milestone 5: Wire types and stored data
@@ -480,7 +481,7 @@ Depends on: 4
 - [ ] Make `runnerSupportsLogin` refuse an OpenCode login on a runner that
       does not advertise it. Send OpenCode commands only to such a runner.
 - [ ] Make the Worker leave OpenCode values out of replies and events for
-      older clients, if OpenCode decision 5 B is chosen.
+      older clients, if OpenCode decision 5 B or E is chosen.
 
 ## Milestone 6: OpenCode logins and the gateway
 
