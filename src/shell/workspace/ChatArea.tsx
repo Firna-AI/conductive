@@ -3,7 +3,7 @@ import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import {
   replacesComposer,
   type SandboxNoticeState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'

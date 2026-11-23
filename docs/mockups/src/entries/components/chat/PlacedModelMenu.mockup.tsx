@@ -15,7 +15,7 @@ export const placedModelMenu = defineComponent({
   slug: 'placed-model-menu',
   title: 'Placed model menu',
   description:
-    'The open model menu of a picker, drawn above the page at the picker, as the app opens a menu in the top layer of the browser, so no box that clips or scrolls cuts it. It lists the favourites of the viewer first, then All models, the efforts, and Fast. It opens on the side of its placement when it fits there, otherwise on the other side. Its own page shows the menu of the default of new workspaces, with no picker to place it at.',
+    'The open model menu of a picker, drawn above the page at the picker, as the app opens a menu in the top layer of the browser, so no box that clips or scrolls cuts it. It lists the favourites of the viewer first, then All models, Effort, and Fast. It opens on the side of its placement when it fits there, otherwise on the other side. Its own page shows the menu of the default of new workspaces, with no picker to place it at.',
   relatedDocs: ['docs/mockups/design-model-menu.md'],
   propSchema: {
     type: 'object',

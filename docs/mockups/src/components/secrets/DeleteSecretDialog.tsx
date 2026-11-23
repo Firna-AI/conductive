@@ -1,11 +1,17 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Trash2 } from 'lucide-react'
 import { deletedSecret } from '../../fixtures/secrets'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { deleteTitle, secretsWords } from './secretsCopy'
+import {
+  deleteTitle,
+  secretsWords,
+} from '../../../../../src/ui/components/secrets/secretsCopy'
 
 /**
  * The question before Delete. A deleted secret ends each of its grants,

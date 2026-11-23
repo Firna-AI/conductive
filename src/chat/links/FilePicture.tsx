@@ -3,8 +3,8 @@ import {
   AnswerPicture,
   type PictureOpener,
   type PictureState,
-} from '../../../docs/mockups/src/components/chat/AnswerPicture'
-import { ChipCopyText } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+} from '../../ui/components/chat/AnswerPicture'
+import { ChipCopyText } from '../../ui/components/chat/ChipCopyText'
 import { useChatMentions } from '../mentions/MentionsContext'
 import { useNearView } from '../ui/near-view'
 import { fileOpener, fileTitle } from './file-opener'
@@ -50,7 +50,7 @@ interface FilePictureProps extends FileTarget {
 }
 
 /**
- * The Markdown image of a picture file in an answer, as the mockups'
+ * The Markdown image of a picture file in an answer, as the shared
  * `AnswerPicture` draws it (screenshot decision 2). The chat reads the file
  * only while the shell gives `ChatMentions.pictures`, which it does only
  * while the cloud computer runs. The read starts when the picture comes

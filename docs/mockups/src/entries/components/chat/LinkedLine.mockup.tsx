@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { LinkedLine } from '../../../components/chat/LinkedLine'
+import { LinkedLine } from '../../../../../../src/ui/components/chat/LinkedLine'
 import { ScreenLink } from '../../../components/common/ScreenLink'
 import { linkedSession } from '../../../fixtures/sessions'
 import { paths } from '../../../paths'

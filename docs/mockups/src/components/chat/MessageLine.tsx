@@ -1,13 +1,17 @@
 import { MessageSquareText } from 'lucide-react'
 import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
 import type { ChatItem } from '../../fixtures/conversations'
-import { classes } from '../common/classes'
-import prose from '../common/MarkdownProse.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
 import { fixtureDrawing } from './fixtureDrawing'
-import { holdsTable, LineBlocks, type LineState } from './LineBlocks'
-import blockStyles from './LineBlocks.module.css'
-import line from './MessageLine.module.css'
-import styles from './ToolGroup.module.css'
+import {
+  holdsTable,
+  LineBlocks,
+  type LineState,
+} from '../../../../../src/ui/components/chat/LineBlocks'
+import blockStyles from '../../../../../src/ui/components/chat/LineBlocks.module.css'
+import line from '../../../../../src/ui/components/chat/MessageLine.module.css'
+import styles from '../../../../../src/ui/components/chat/ToolGroup.module.css'
 
 type AgentItem = Extract<ChatItem, { kind: 'agent' }>
 

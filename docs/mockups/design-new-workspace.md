@@ -64,10 +64,11 @@ of the New workspace dialog.
   missing branch offers Start from and the default branch, which puts the
   control back on that branch and keeps the message. A GitHub account that
   cannot read the repository gets Try again.
-- `branchCopy.ts` holds the words of the control, of the two parts of the
-  dropdown, and of the refusals. It imports no fixture, and neither do the
-  parts, so the app can share them. No word says "fork", because on GitHub
-  a fork is a copy of the repository.
+- `branchCopy.ts` in
+  [`src/ui/components/new-workspace/`](../../src/ui/components/new-workspace/)
+  holds the words of the control, of the two parts of the dropdown, and of
+  the refusals. The app and the mockups both import these words. No word
+  says "fork", because on GitHub a fork is a copy of the repository.
 - In an org with own computers, the computer choice follows the branch
   control, on the page and in the dialog, as
   [own computers](design-own-computers.md) gives.

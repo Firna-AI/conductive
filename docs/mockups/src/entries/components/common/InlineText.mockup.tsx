@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { InlineText } from '../../../components/common/InlineText'
+import { InlineText } from '../../../../../../src/ui/components/common/InlineText'
 
 /**
  * Text with each part in backticks as inline code, registered with Mokly.

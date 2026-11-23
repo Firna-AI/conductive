@@ -6,7 +6,7 @@ import {
   type PointerEvent,
   type MouseEvent,
 } from 'react'
-import type { PictureSize } from '../../../docs/mockups/src/components/files/ImageView'
+import type { PictureSize } from '../../ui/components/files/ImageView'
 import {
   fitScale,
   fitZoom,

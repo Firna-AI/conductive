@@ -1,8 +1,11 @@
 import type { CSSProperties } from 'react'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { useControlSizes, useTouch } from '../common/touch'
+import {
+  useControlSizes,
+  useTouch,
+} from '../../../../../src/ui/components/common/touch'
 import { instanceKey } from '../../instanceKey'
-import markdown from '../files/MarkdownView.module.css'
+import markdown from '../../../../../src/ui/components/files/MarkdownView.module.css'
 import styles from './CodeBlock.module.css'
 
 /**

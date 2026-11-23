@@ -1,5 +1,5 @@
 import { previewPath } from '../../../../src/shared/previews'
-import { appDomain } from '../brand'
+import { appDomain } from '../../../../src/shared/brand'
 import { contextFiles } from './files'
 import { orgs } from './orgs'
 import { checkoutAutocomplete } from './workspaces'

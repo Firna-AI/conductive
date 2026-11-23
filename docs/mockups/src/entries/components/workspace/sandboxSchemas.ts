@@ -1,5 +1,5 @@
 import { ARCHIVED_COMPUTER_STATES } from '../../../../../../src/shared/archived-computer-read'
-import type { ArchiveRestore } from '../../../components/workspace/sandboxNoticeState'
+import type { ArchiveRestore } from '../../../../../../src/ui/components/workspace/sandboxNoticeState'
 
 /** What an archived workspace can get back, as `ArchiveRestore`. */
 const archiveRestores = [

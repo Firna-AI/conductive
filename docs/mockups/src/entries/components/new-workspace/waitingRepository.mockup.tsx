@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { WaitingRepositoryNotice } from '../../../components/new-workspace/waitingRepository'
-import { repositoryWaits } from '../../../components/settings/repositoryChangeCopy'
+import { WaitingRepositoryNotice } from '../../../../../../src/ui/components/new-workspace/waitingRepository'
+import { repositoryWaits } from '../../../../../../src/ui/components/settings/repositoryChangeCopy'
 import { repositories } from '../../../fixtures/repositories'
 
 /**

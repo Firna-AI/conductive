@@ -1,3 +1,8 @@
+import type {
+  DailyCount,
+  StateCounts,
+} from '../../../../src/ui/components/settings/statCounts'
+
 /**
  * The numbers of the operator page: counts across every org, at one
  * moment. The page reads them again each time it opens.
@@ -24,18 +29,6 @@ export const operatorUpdatedAt = '14:32'
  * those of the builds of the cloud computer of an org.
  */
 export const runningComputers = { workspaces: 37, builds: 2 } as const
-
-/**
- * The states that the page counts the workspaces in. `archived` counts the
- * archived workspaces in the list, those of the last 14 days. `removed`
- * counts the archived workspaces whose 14 days ended, which left the list.
- * The app keeps the data of both.
- */
-export type WorkspaceStateKey =
-  'running' | 'stopped' | 'failed' | 'archived' | 'removed'
-
-/** The workspaces of one scope in each state. */
-export type StateCounts = Readonly<Record<WorkspaceStateKey, number>>
 
 /** The workspaces of every org in each state. They add up to the total. */
 export const workspaceStates: StateCounts = {
@@ -83,9 +76,6 @@ export const newWorkspacesByDay: readonly DailyCount[] = [
   { date: '2026-11-07', count: 16 },
   { date: '2026-11-08', count: 16 },
 ]
-
-/** A count of one UTC day. */
-export type DailyCount = { date: string; count: number }
 
 /**
  * The new users of each day in UTC, for the same 30 days. The last 7 days

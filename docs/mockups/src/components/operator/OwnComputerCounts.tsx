@@ -1,8 +1,11 @@
 import { StateText } from '../own-computers/ComputerStatus'
 import { stateLabels } from '../own-computers/ownComputerCopy'
 import type { ComputerState } from '../own-computers/ownComputer'
-import { Section, SectionText } from '../settings/Section'
-import styles from './WorkspaceStates.module.css'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
+import styles from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 
 /**
  * The states that the operator counts. A computer that never connected,

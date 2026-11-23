@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
+import { EmptyState } from '../ui/components/common/EmptyState'
 import { inFirstRun } from '../app/get-started'
 import { startPage } from '../app/last-workspaces'
 import { useNavigation, useRoute } from '../app/navigation'

@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { WorkspaceChip } from '../../../components/chat/WorkspaceChip'
-import { workspaceLabel } from '../../../components/workspaces/label'
+import { WorkspaceChip } from '../../../../../../src/ui/components/chat/WorkspaceChip'
+import { workspaceLabel } from '../../../../../../src/ui/components/workspaces/label'
 import { savedCarts } from '../../../fixtures/workspaces'
 import { paths } from '../../../paths'
 import { chipToSchema, openerTo } from './chipOpener'

@@ -5,7 +5,7 @@ import {
   SKIP_DOM_SELECTION_TAG,
   type LexicalEditor,
 } from 'lexical'
-import { allFilesUnavailable } from '../../../../docs/mockups/src/components/chat/lostCopy'
+import { allFilesUnavailable } from '../../../ui/components/chat/lostCopy'
 import type { FileEntry } from '../../../shared/generated/FileEntry'
 import { useChatLinks } from '../../links/LinksContext'
 import { MentionIcon } from '../../mentions/MentionIcon'

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import glyph from '../../../docs/mockups/src/components/workspaces/StatusGlyph.module.css'
+import glyph from '../../ui/components/workspaces/StatusGlyph.module.css'
 import { routes } from '../../app/router'
 import { API_PATHS } from '../../shared/api'
 import { automationPaths, type Automation } from '../../shared/automations'

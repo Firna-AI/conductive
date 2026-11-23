@@ -4,7 +4,7 @@ import {
   type MouseEvent,
   type RefCallback,
 } from 'react'
-import { tileMenuItems } from '../../../docs/mockups/src/components/orgs/orgTileMenu'
+import { tileMenuItems } from '../../ui/components/orgs/orgTileMenu'
 import type { OrgSummary } from '../../shared/orgs'
 import type { MenuEntry } from '../ui/Menu'
 import { opensMenu } from '../ui/menu-keys'

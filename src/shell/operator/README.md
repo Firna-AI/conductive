@@ -185,13 +185,13 @@ and Stop switch, with no new-switch action or question.
 
 ## Parts shared with the mockups
 
-The section reuses the parts of the mockups that import no fixture:
+The section and the mockups both import the shared parts in `src/ui/`:
 `WorkspaceStates`, `DailyChart`, `InlineText`, `StatusGlyph`,
 `WeightSlider`, `WeightFields`, `AccountCounts`, `AccountChoice`, the words
 of `operatorCopy.ts`, `accessCopy.ts`, `codeCopy.ts`, `longRunsCopy.ts`
 with its run length format, `providerCopy.ts`, `switchCopy.ts`, and `stopTimeCopy.ts`, the state words of
 `status.ts`, the workspace label of `label.ts`, and the CSS modules of
-`docs/mockups/src/components/operator/`, of `CheckOption`, and of the
+`src/ui/components/operator/`, of `CheckOption`, and of the
 Providers screen. So the app and the mockups keep the same words, dates,
 and look. `StopTimeChoice` comes from there too. On a phone, the seven tabs use the `flow` mode of `LinkTabs`, as
 the mockups do.

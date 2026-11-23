@@ -1,4 +1,7 @@
-import { sameShortcut, type Shortcut } from '../components/common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../src/ui/components/common/KeyChips'
 import type { CommandId } from './shortcutCommands'
 import {
   keyboardOf,

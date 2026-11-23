@@ -1,16 +1,17 @@
+import type { ReadOnlyCause } from '../../../../../src/ui/components/settings/readOnlyCause'
 import { Input } from '@firna/ui/input'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { computerPaths, paths } from '../../paths'
-import type { OrgColor } from '../../design/orgColors'
+import type { OrgColor } from '../../../../../src/ui/design/orgColors'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
-import { OrgColorField } from './OrgColorField'
+import { OrgColorField } from '../../../../../src/ui/components/settings/OrgColorField'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { defined } from '../../defined'
-import styles from './OrgSections.module.css'
+import styles from '../../../../../src/ui/components/settings/OrgSections.module.css'
 
 export type SettingsTab =
   | 'general'
@@ -20,14 +21,6 @@ export type SettingsTab =
   | 'agents'
   | 'secrets'
   | 'members'
-
-/**
- * Why the settings show without edit fields and actions: the person signed
- * in is a member who is not an admin, or the operator suspended the org. A
- * member's view says that only an admin can change a value. The notice of a
- * suspended org says why, so its sections say nothing more.
- */
-export type ReadOnlyCause = 'member' | 'suspended'
 
 /** The page of each tab of the org settings. */
 export const settingsLinks: Readonly<Record<SettingsTab, string>> = {

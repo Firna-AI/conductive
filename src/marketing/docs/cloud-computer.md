@@ -242,6 +242,8 @@ It follows the repository's default branch and checks for new commits every 5 mi
 Agent turns do not wait for a copy or an update check.
 A turn that starts before the first copy finishes runs without the shared skills.
 Updated skills apply at the next turn of each session.
+The shared skills also show in the list that `/` opens in the message box, after the first copy finishes.
+That list shows updated skills soon after each new copy.
 A failed update keeps the last successful copy, including across a stop and resume.
 
 An older cloud computer needs software that supports org skills.
@@ -254,6 +256,7 @@ The section looks up the saved repository on GitHub when an admin saves it and e
 It shows the names of the skill folders that it finds.
 The list describes the current repository contents on GitHub.
 The list does not confirm which skills each workspace has copied.
+The list that `/` opens in a workspace shows the skills that its cloud computer copied.
 
 A private repository gives no skills.
 Ask an admin to choose a public repository.

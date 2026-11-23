@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { MessageSquare } from 'lucide-react'
-import tabRename from '../../../docs/mockups/src/components/workspace/TabRename.module.css'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import tabRename from '../../ui/components/workspace/TabRename.module.css'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { nameLabel } from '../../shared/name-label'
 
 /**

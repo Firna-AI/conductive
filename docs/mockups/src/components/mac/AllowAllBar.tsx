@@ -16,10 +16,13 @@ import {
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useMacApp, type MacChange } from './MacApp'
-import styles from './AllowAllBar.module.css'
+import {
+  useMacApp,
+  type MacChange,
+} from '../../../../../src/ui/components/mac/MacApp'
+import styles from '../../../../../src/ui/components/mac/AllowAllBar.module.css'
 
 /** The result of Stop, Keep, or Extend that the bar names. */
 type BarResult = {
@@ -81,7 +84,8 @@ const results: Partial<Record<MacChange, BarResult>> = {
  * you stop in place of the time left, with no Keep or Extend. Keep turns
  * the running 15 minutes into a grant until Stop (Mac until-stop decision
  * 2). After a Stop or a Keep, the bar names its result until the next
- * change of the grant, also when the Stop ended it. A change that failed
+ * change of the grant, also when the Stop ended it. The app takes away a
+ * Stop that the Mac made and saved after 5 seconds. A change that failed
  * keeps the grant and its controls, so the user can act again. A Stop
  * that the Mac made but did not save offers Try again, which saves it.
  */

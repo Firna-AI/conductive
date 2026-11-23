@@ -1,11 +1,11 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useRef, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
+import { classes } from '../../ui/components/common/classes'
+import menuStyles from '../../ui/components/common/Menu.module.css'
 import type {
   Submenu,
   WorkspaceMenuItem,
-} from '../../../docs/mockups/src/components/workspaces/workspaceMenu'
+} from '../../ui/components/workspaces/workspaceMenu'
 import { OwnerChoices, useOwnerChoices } from '../../members/OwnerChoices'
 import { nameLabel } from '../../shared/name-label'
 import type { Section } from '../../shared/sections'

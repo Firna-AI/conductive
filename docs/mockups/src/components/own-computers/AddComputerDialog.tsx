@@ -4,11 +4,17 @@ import { Input } from '@firna/ui/input'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { ArrowRight, Copy, KeyRound } from 'lucide-react'
-import { noop } from '../../noop'
-import { ActionButton, IconButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
+import { noop } from '../../../../../src/ui/noop'
+import {
+  ActionButton,
+  IconButton,
+} from '../../../../../src/ui/components/common/actions'
+import {
+  ConfirmDialog,
+  DialogText,
+} from '../../../../../src/ui/components/common/ConfirmDialog'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { addComputerWords as words } from './addComputerCopy'
 import type { ComputerResources } from './ownComputer'
 import styles from './AddComputerDialog.module.css'

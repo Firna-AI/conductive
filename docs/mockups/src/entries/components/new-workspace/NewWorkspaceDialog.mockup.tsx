@@ -7,7 +7,6 @@ import {
   firstMessageDraft,
   firstMessageDrafts,
 } from '../../../fixtures/attachments'
-import { orgs } from '../../../fixtures/orgs'
 import { repositories } from '../../../fixtures/repositories'
 import { sections } from '../../../fixtures/sections'
 import { withPanel } from '../chat/capabilitiesSlot'
@@ -61,13 +60,12 @@ export const newWorkspaceDialog = defineComponent({
   slug: 'new-workspace-dialog',
   title: 'New workspace dialog',
   description:
-    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker, the branch control right of it, and the computer choice of an org with own computers at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
+    'New workspace as a wide, compact dialog over the dimmed app, for a computer. The branch control sits close to the repository picker at the top left. The computer choice follows them in an org with own computers. The section picker sits at the top right. The repository, branch, and section controls have no chevrons. On the default branch, the branch control shows only a muted icon. The message in the middle shows a chip for each file. The model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create sit at the bottom. The whole card takes a drop of files. The page supplies the notices above the footer. Its own page shows the dialog as it opens.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: [
-      'place',
       'section',
       'text',
       'attachments',
@@ -79,8 +77,7 @@ export const newWorkspaceDialog = defineComponent({
       /** The chosen repository, or none while the org has chosen none. */
       repository: { type: 'string' },
       repositoryMenu: menuSchema.properties.entries,
-      /** The org and the section that the new workspace joins. */
-      place: { type: 'string' },
+      /** The section that the new workspace joins. */
       section: { type: 'string' },
       sectionMenu: menuSchema.properties.entries,
       /** The message, with a chip for each of its files at its place. */
@@ -103,7 +100,6 @@ export const newWorkspaceDialog = defineComponent({
   slots: ['notices', 'capabilitiesPanel', 'branch', 'computer'],
   props: {
     repository: repositories.storefront.name,
-    place: `${orgs.acme.name} · ${sections.general.name}`,
     section: sections.general.name,
     text: '',
     attachments: [],
@@ -122,7 +118,6 @@ export const newWorkspaceDialog = defineComponent({
       drop={props.drop}
       login={props.login}
       notices={props.notices}
-      place={props.place}
       placeholder={props.placeholder}
       ready={props.ready}
       repository={props.repository}

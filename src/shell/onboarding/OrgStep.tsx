@@ -1,11 +1,8 @@
 import { useEffect } from 'react'
 import { Plus } from 'lucide-react'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
-import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
-import styles from '../../../docs/mockups/src/screens/GetStartedScreen.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import { getStartedCopy } from '../../ui/screens/getStartedCopy'
+import styles from '../../ui/screens/GetStartedScreen.module.css'
 import { useFirstBuild, type FirstBuild } from '../../app/first-build'
 import type { StepState } from '../../app/get-started'
 import type { OrgModel } from '../../app/org-model'

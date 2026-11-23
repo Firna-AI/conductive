@@ -4,8 +4,8 @@ import { Blocks } from 'lucide-react'
 import {
   capabilitiesIntro,
   capabilitiesLabel,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import { CapabilitiesPanel } from '../../ui/components/capabilities/CapabilitiesPanel'
 import { keptCapabilities } from '../../app/capabilities-model'
 import { nameInSentence } from '../../app/people'
 import {

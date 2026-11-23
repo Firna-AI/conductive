@@ -9,8 +9,8 @@ import {
   runningBuild,
 } from '../fixtures/computer'
 import { paths } from '../paths'
-import { getStartedCopy as copy } from './getStartedCopy'
-import styles from './GetStartedScreen.module.css'
+import { getStartedCopy as copy } from '../../../../src/ui/screens/getStartedCopy'
+import styles from '../../../../src/ui/screens/GetStartedScreen.module.css'
 
 /** The state of the first build, with its time while it runs. */
 function BuildStatus(props: { build: FirstBuildState }) {

@@ -70,16 +70,23 @@ change that adds the org logins, as
   - Each favourite that the menu shows, in the order of the favourites,
     with no heading.
   - A line, then All models.
-  - A line, the label Effort, and the efforts of the current model.
+  - A line, then Effort, which shows the current effort in the muted
+    colour, such as "Effort High". Its submenu holds the efforts of the
+    current model.
   - The Fast row of a model with fast mode, as
     [The Fast switch](fast-mode.md#the-fast-switch) says.
 - A pick of a favourite makes it the current choice, with its model, its
   effort, and its fast mode.
-- After a pick, the efforts and the Fast row change only the current
+- After a pick, Effort and the Fast row change only the current
   choice. The favourite stays as it was. The user asked on 16 November
   2026 that the effort and Fast stay open to change after a pick.
-- The efforts stay rows of the menu, not a submenu, as the user chose on
-  16 November 2026.
+- The efforts are in a submenu of Effort, as the user chose on
+  23 November 2026. This replaces the choice of 16 November 2026, which
+  kept the efforts as rows of the menu. Reason: the menu stays short, and
+  the Effort row still shows the current effort.
+- The submenu of Effort opens as the submenu of All models does, as
+  [All models](#all-models) says: beside the menu on a computer, and in
+  place of the menu, with Back at its top, in the phone layout.
 - The menu has no row that adds a favourite (model favourites decision
   2 A). [The Favourites section](#the-favourites-section) gives the reason.
 
@@ -89,7 +96,7 @@ change that adds the org logins, as
   exactly: the same agent, model, effort, and fast mode. So after a change
   of the effort or of fast mode, the menu can mark no favourite.
 - Reason: the menu then never shows a changed choice as a favourite.
-- The menu marks the current effort among the efforts. All models marks the
+- The submenu of Effort marks the current effort. All models marks the
   current model.
 
 ### A favourite of the other agent
@@ -126,7 +133,7 @@ change that adds the org logins, as
 ### A menu with no favourites
 
 - When the menu has no favourite to show, it starts with the All models
-  row. The efforts and the Fast row follow, as in each other menu.
+  row. Effort and the Fast row follow, as in each other menu.
 - Reason: the user chose this on 22 November 2026 (model favourites
   decision 6), because more models will come, and a flat list of every
   model does not scale. A list of every model at the top of the menu was

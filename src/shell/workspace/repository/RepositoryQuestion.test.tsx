@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { repositoryFailure } from '../../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { repositoryFailure } from '../../../ui/components/workspace/repositoryMoveCopy'
 import {
   byLabel,
   byRole,

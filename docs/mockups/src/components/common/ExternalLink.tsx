@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ExternalLink as ExternalLinkIcon } from 'lucide-react'
 import { useOutsideHref } from './ScreenLink'
-import styles from './ExternalLink.module.css'
+import styles from '../../../../../src/ui/components/common/ExternalLink.module.css'
 
 /** A link that opens a page outside the app in a new tab. */
 export function ExternalLink(props: {

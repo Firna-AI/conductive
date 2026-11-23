@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { formatRunLength } from '../../../docs/mockups/src/components/operator/longRunsCopy'
+import { formatRunLength } from '../../ui/components/operator/longRunsCopy'
 import { routes } from '../../app/router'
 import {
   operatorOrgPath,

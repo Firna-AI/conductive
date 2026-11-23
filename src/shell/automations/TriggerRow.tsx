@@ -1,10 +1,10 @@
 import { ChevronDown, ChevronUp, Clock, GitPullRequest, X } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/automations/TriggerRow.module.css'
+import styles from '../../ui/components/automations/TriggerRow.module.css'
 import {
   authorSummary,
   triggerSummary,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
-import sheet from '../../../docs/mockups/src/screens/AutomationScreen.module.css'
+} from '../../ui/components/automations/triggerCopy'
+import sheet from '../../ui/screens/AutomationScreen.module.css'
 import type { User } from '../../shared/api'
 import type { AutomationTriggerInput } from '../../shared/automations'
 import { ActionButton, IconButton } from '../ui/actions'

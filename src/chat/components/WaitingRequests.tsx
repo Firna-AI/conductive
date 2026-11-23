@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
-import pane from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
-import { secretRunWords } from '../../../docs/mockups/src/components/chat/secretRunCopy'
+import pane from '../../ui/components/chat/ChatPane.module.css'
+import { secretRunWords } from '../../ui/components/chat/secretRunCopy'
 import type { WaitingItem } from '../secrets/session-secrets'
 
 /**

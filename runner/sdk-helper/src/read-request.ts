@@ -156,6 +156,9 @@ export function readRequest(value: unknown): HelperRequest {
         repository: string(input.repository),
         home: string(input.home),
         reload: boolean(input.reload),
+        ...(input.orgSkills === undefined
+          ? {}
+          : { orgSkills: orgSkills(input.orgSkills) }),
       }
     case 'model':
       return { type: 'model', requestId, choice: parseChoice(input.choice) }

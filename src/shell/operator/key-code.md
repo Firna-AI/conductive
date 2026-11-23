@@ -13,7 +13,7 @@ this guide.
 - `OverviewTab.tsx`, `OverviewParts.tsx`, and `OverviewLoading.tsx`: the
   Overview, its tiles with the count of the people who wait, largest orgs,
   and placeholders. Its charts are `DailyChart` of
-  `docs/mockups/src/components/operator/`.
+  `src/ui/components/operator/`.
 - `LongRuns.tsx`: Long runs, with its columns, which the placeholders
   share.
 - `useCopyToast.ts`: Copy of a value, such as a code or a cloud computer

@@ -3,10 +3,10 @@ import type { RefCallback } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
-import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { pickerButtonStyle } from '../../ui/components/chat/pickerButton'
+import styles from '../../ui/components/chat/ModelPicker.module.css'
 import {
   modelMenuRows,
   type ModelMenuRow,
@@ -52,7 +52,7 @@ function rowEntry(
 
 /**
  * The entries of the menu, from the rows of `modelMenuRows`. All models
- * shows its rows as the choices of its submenu.
+ * and Effort show their rows as the choices of their submenus.
  */
 function menuEntries(
   rows: readonly ModelMenuRow[],
@@ -60,11 +60,12 @@ function menuEntries(
   change: (choice: AgentChoice) => void,
 ): MenuEntry[] {
   return rows.map((row): MenuEntry => {
-    if (row.kind !== 'all-models') return rowEntry(row, choice, change)
+    if (row.kind !== 'submenu') return rowEntry(row, choice, change)
     return {
       kind: 'submenu',
-      id: 'all-models',
+      id: row.key,
       label: row.label,
+      muted: row.muted,
       entries: row.rows.map((item) => rowEntry(item, choice, change)),
     }
   })
@@ -73,8 +74,8 @@ function menuEntries(
 /**
  * One picker for the model and the effort, such as "Opus 5.5 High", with
  * "Fast" after the effort while fast mode is on. It names no agent brand.
- * Its menu lists the favourites first, then All models, then the efforts
- * and the Fast switch, as `modelMenuRows` says. A pick of a favourite sets
+ * Its menu lists the favourites first, then All models, then Effort with
+ * its submenu and the Fast switch, as `modelMenuRows` says. A pick of a favourite sets
  * its model, its effort, and its fast mode. The phone layout opens the menu
  * beside the picker too, as the picker of a session does (model favourites
  * decision 5 B). The picker shows fast mode as off for a model that the

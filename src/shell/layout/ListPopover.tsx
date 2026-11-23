@@ -9,8 +9,8 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import frame from '../../../docs/mockups/src/components/layout/AppFrame.module.css'
+import { classes } from '../../ui/components/common/classes'
+import frame from '../../ui/components/layout/AppFrame.module.css'
 import { useHref, useNavigation } from '../../app/navigation'
 import { useStore } from '../../app/store'
 import { useMacApp, useNarrowWindow } from '../mac/mac-app'

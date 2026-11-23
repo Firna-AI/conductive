@@ -11,10 +11,11 @@ gives the chips, which take the place of a link to a workspace of the org.
 
 ## The link part
 
-- `TextLink` in `src/components/common/` draws a link in untrusted text.
-  It is the one link part of chat text and of the Markdown preview of a
-  file, from chat link decision 1. It takes no fixtures, so the app can
-  use it too.
+- `TextLink` in
+  [`src/ui/components/common/`](../../src/ui/components/common/) draws a
+  link in untrusted text. It is the one link part of chat text and of the
+  Markdown preview of a file, from chat link decision 1. The app and the
+  mockups both import it.
   - The words of the link take the link colour, `--ui-link`, and an
     underline 2 px under the text, as a link of the file preview has.
   - The link keeps the font, the size, and the weight of the text around
@@ -91,8 +92,9 @@ gives the chips, which take the place of a link to a workspace of the org.
 - A Markdown image of an answer to a PNG, JPEG, GIF, or WebP file shows as
   a small picture, from screenshot decision 2 of 18 November 2026, as
   `app/file-mentions/answers` shows. An SVG file and a link without `!`
-  stay links. `AnswerPicture` in `src/components/chat/` draws it. It takes
-  no fixtures, so the app can draw it too.
+  stay links. `AnswerPicture` in
+  [`src/ui/components/chat/`](../../src/ui/components/chat/) draws it. The
+  app and the mockups both import it.
   - The picture stands in the line of text at the place of the image. The
     text of the line keeps to its top edge, as beside a chip.
   - The picture keeps its proportions. It is never larger than its own

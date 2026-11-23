@@ -2,7 +2,7 @@ import { defineComponent } from '@mokly/mokly'
 import {
   ConfirmDialog,
   DialogText,
-} from '../../../components/common/ConfirmDialog'
+} from '../../../../../../src/ui/components/common/ConfirmDialog'
 import { actionButton } from './actions.mockup'
 import { viewports } from './viewports'
 

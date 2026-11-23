@@ -1,14 +1,14 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { FailureToast } from '../components/common/FailureToast'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
+import { Menu } from '../../../../src/ui/components/common/Menu'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import { RepositoryChangeDialog } from '../components/workspace/RepositoryChangeDialog'
 import { repositoryMenuEntries } from '../components/workspace/RepositoryPicker'
 import {
   repositoryFailure,
   repositoryMenu,
-} from '../components/workspace/repositoryMoveCopy'
+} from '../../../../src/ui/components/workspace/repositoryMoveCopy'
 import { repositories } from '../fixtures/repositories'
 import { movedRepository } from '../fixtures/repositoryMove'
 import type { Workspace } from '../fixtures/workspaces'

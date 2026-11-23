@@ -1,4 +1,4 @@
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import {
   browserTabOf,
   keyboardOf,
@@ -10,7 +10,7 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { rowMessage } from '../../entries/components/settings/ShortcutParts.mockup'
-import styles from './ShortcutsSections.module.css'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * The keys that the terminal keeps while it has the focus, from the user

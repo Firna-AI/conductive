@@ -122,8 +122,8 @@ export function openDialog(view: HTMLElement): HTMLElement {
 }
 
 /**
- * The org and the section that the dialog names on its Section menu, such
- * as "Acme · General".
+ * The section that the dialog names on its Section menu, such as
+ * "General".
  */
 export function placeOf(dialog: HTMLElement): string | undefined {
   const menu = dialog.querySelector('[aria-label^="Section: "]')
