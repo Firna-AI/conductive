@@ -1,6 +1,7 @@
 import { DurableObject } from 'cloudflare:workers'
 
 import { isRecord } from '../../http'
+import { FILES_KEY } from '../bucket-layout'
 import { durableFilesStorage, type FilesStorage } from '../storage'
 
 interface StorageWorkerEnv {
@@ -40,20 +41,25 @@ export class StoredFiles extends DurableObject<StorageWorkerEnv> {
   }
 
   private async inspect(): Promise<Response> {
-    const entries = await this.ctx.storage.list<unknown>({
-      prefix: 'files:state:v1',
-    })
+    const prefix = `${FILES_KEY}:`
+    const entries = await this.ctx.storage.list<unknown>({ prefix })
     const sizes = [...entries.values()]
       .filter((value): value is string => typeof value === 'string')
       .map((value) => new TextEncoder().encode(value).byteLength)
-    const keys = [...entries.keys()]
+    const keys = [...entries.keys()].map((key) => key.slice(prefix.length))
     return Response.json({
       chunks: sizes.length,
-      treeChunks: keys.filter((key) => key.startsWith('files:state:v1:tree:'))
+      treeChunks: keys.filter((key) => /^tree:\d+$/.test(key)).length,
+      changesChunks: keys.filter((key) => /^changes:\d+$/.test(key)).length,
+      treeBucketChunks: keys.filter((key) => /^tree:bucket:\d+:\d+$/.test(key))
         .length,
-      changesChunks: keys.filter((key) =>
-        key.startsWith('files:state:v1:changes:'),
+      changesBucketChunks: keys.filter((key) =>
+        /^changes:bucket:\d+:\d+$/.test(key),
       ).length,
+      treeOrderChunks: keys.filter((key) => /^tree:order:\d+$/.test(key))
+        .length,
+      changesOrderChunks: keys.filter((key) => /^changes:order:\d+$/.test(key))
+        .length,
       maxBytes: Math.max(0, ...sizes),
       totalBytes: sizes.reduce((sum, size) => sum + size, 0),
     })
