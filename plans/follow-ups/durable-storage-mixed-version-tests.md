@@ -1,10 +1,10 @@
 # No lasting test runs two Worker versions on storage
 
 - **Severity:** Low. **Effort:** Large. **Confidence:** Medium. **Harder later:** No.
-- **Kind:** Needs decision.
+- **Kind:** Outside the scope.
 - **Added:** 2026-11-23, wider fixes of findings 1 and 5 of the review of branch `calummoore/memory-runner-part-checks-2hfc` (PR #672).
 - **Location:** `worker/files/runner-reports.ts`, `worker/files/report-storage.ts`, `worker/files/storage.ts`, and `worker/test-support/test-bundles.ts:60-80`.
-- **Reason:** A new kind of test for a whole class of faults needs Cal's approval.
+- **Reason:** The memory rollout keeps its one-time rollback proofs (an orchestrator call of 23 November 2026). A permanent harness or mutation gate is new scope, outside that rollout.
 
 **Terms**
 - **Previous Worker:** the Worker version that was live before a deploy. It runs again after a rollback, and it reads the Durable Object storage that the new version wrote.
@@ -16,7 +16,7 @@
 
 **Impact if no action:** A format change that breaks the previous Worker, or an untested condition, can reach production unnoticed. One-time proofs cover only the changes that run them.
 
-**Root question:** Should the repository add a lasting check that two Worker versions can share Durable Object storage, or a mutation test of the report checks?
+**Root question:** Should a later change add a lasting check that two Worker versions can share Durable Object storage, or a mutation test of the report checks?
 
 **Options:**
 - **A.** Keep one-time rollback proofs for each storage format change. Effort: Small.
@@ -27,6 +27,6 @@
 
 **Wider fix:** B covers the class of storage compatibility faults.
 
-**Recommendation:** A now, and revisit B when a second storage format changes.
+**Recommendation:** A for the memory rollout. The orchestrator of the workspace object memory work chose A on 23 November 2026 as an execution call. It adds a one-time handover of a multipart changes report between the two Worker versions in both directions, with a mismatched middle part, to the rollback proof. No gate is added or authorized. Revisit B when another storage format changes.
 
-**Action:** ask the user, because B and C add a new kind of gate.
+**Action:** none now. A proposal of B or C needs its own scope decision by the user before any work.

@@ -276,6 +276,15 @@ Projection, under option C of decision 1:
 
 Runner parts:
 
+20. Orchestrator execution call, 23 November 2026: the rollout keeps
+    one-time rollback proofs of the storage formats, not a lasting
+    mixed-version test. Milestone 7 adds a handover of a multipart changes
+    report between the two Worker versions in both directions, with a
+    mismatched middle part. Reason: the proofs are already part of the
+    approved Milestone 7, and a lasting harness or mutation gate would be
+    new scope. Cal gave no separate answer on this. The follow-up item
+    `plans/follow-ups/durable-storage-mixed-version-tests.md` keeps the
+    later options.
 16. When part 1 of a changes report is stored, the open report in the
     assembly state keeps its base branch, its two counts, and its summary.
     A later part compares its fields with them, and it reads no earlier
