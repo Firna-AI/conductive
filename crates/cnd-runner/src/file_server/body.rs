@@ -60,7 +60,7 @@ impl ChangedDocument {
 
     /// Combine the file validator with the version and inputs of the transformation.
     pub(super) fn etag(&self, file_tag: &str) -> String {
-        const VERSION: &[u8] = b"conductive-preview-rewrite-1";
+        const VERSION: &[u8] = b"conductive-preview-rewrite-2";
         let mut digest = Sha256::new();
         digest.update(VERSION);
         match self {

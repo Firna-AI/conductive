@@ -277,8 +277,10 @@ cargo build --release --target x86_64-unknown-linux-musl -p cnd-cli
 ```
 
 Unit tests use unimock at the disk, Git, process, watch, scan, and link boundaries.
-File policy unit tests mock file access. HTTP integration tests bind isolated
-loopback listeners and stream real repository files from temporary folders.
+File policy unit tests mock file access. The font server tests run the file
+policy over real temporary repository and font folders. HTTP integration tests
+bind isolated loopback listeners and stream real repository files from
+temporary folders.
 Connection-loop tests hold message processing after receipt and control report completion.
 Timer tests use paused Tokio time. Integration tests use temporary real Git
 repositories, native watches, a controlled disk, and an in-memory endpoint.

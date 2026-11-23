@@ -81,6 +81,29 @@ async fn rewrites_only_local_file_prefixes_across_chunks() {
 }
 
 #[tokio::test]
+async fn rewrites_slash_and_backslash_prefixes_to_one_leading_slash() {
+    for (input, expected) in [
+        (r"file:/\evil.com/x.png", "/evil.com/x.png"),
+        (r"file:\\\home\x", r"/home\x"),
+        (r"file://localhost\x", "/x"),
+        (r"file:///\evil.com", "/evil.com"),
+        (r"FiLe:\\LOCALHOST/\x", "/x"),
+        (r"file:/\file:/x", "/file:/x"),
+        (r"file:\\server\share", r"file:\\server\share"),
+    ] {
+        let reply = policy(open(input.as_bytes(), 1))
+            .respond(request("/file.svg"))
+            .await;
+        assert_eq!(reply.status(), StatusCode::OK);
+        assert_eq!(
+            reply.into_body().collect().await.unwrap().to_bytes(),
+            expected,
+            "{input}"
+        );
+    }
+}
+
+#[tokio::test]
 async fn leaves_script_bytes_and_text_without_a_local_address_intact() {
     let script = policy(open(b"let url = 'file:///home/x';", 4));
     let reply = script.respond(request("/file.js")).await;

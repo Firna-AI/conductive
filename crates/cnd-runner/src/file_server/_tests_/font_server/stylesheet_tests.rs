@@ -9,7 +9,7 @@ use std::time::UNIX_EPOCH;
 use http_body_util::BodyExt;
 use hyper::{Method, StatusCode};
 
-use super::font_fixture::{font, regular, regular_tables, sfnt};
+use super::font_fixture::{SfntFormat, font, italic_cff_tables, regular, regular_tables, sfnt};
 use super::support::{Fixture, STYLESHEET};
 
 async fn stylesheet(h: &Fixture) -> String {
@@ -39,7 +39,7 @@ async fn emits_static_italic_and_variable_faces_for_distinct_localized_families(
     )
     .unwrap();
     let italic = h.local.join("italic.OTF");
-    fs::write(&italic, font(&[(1, "Italic")], 700, 5, 1, &[])).unwrap();
+    fs::write(&italic, sfnt(SfntFormat::Cff, italic_cff_tables("Italic"))).unwrap();
     let variable = h.local.join("variable.ttf");
     fs::write(
         &variable,
@@ -127,7 +127,7 @@ async fn omits_broken_oversized_hidden_and_non_utf8_fonts_and_never_walks_folder
     let mut big = regular_tables("Too large");
     let (_, name) = big.iter_mut().find(|(tag, _)| tag == b"name").unwrap();
     name.resize(256 * 1024 + 1, 0);
-    fs::write(h.system.join("big.ttf"), sfnt(big)).unwrap();
+    fs::write(h.system.join("big.ttf"), sfnt(SfntFormat::TrueType, big)).unwrap();
     fs::write(h.system.join(".hidden.ttf"), regular("Hidden")).unwrap();
     fs::write(
         h.system.join(std::ffi::OsStr::from_bytes(b"name\xff.ttf")),
@@ -140,7 +140,14 @@ async fn omits_broken_oversized_hidden_and_non_utf8_fonts_and_never_walks_folder
     fs::write(folder.join("font.ttf"), regular("Included")).unwrap();
     symlink(&folder, h.local.join("alias")).unwrap();
     symlink(folder.join("font.ttf"), h.local.join("alias.ttf")).unwrap();
+    let home = h.temp.path().join("home");
+    fs::create_dir(&home).unwrap();
+    let outside = home.join("private.ttf");
+    fs::write(&outside, regular("Outside font")).unwrap();
+    symlink(&outside, h.local.join("outside.ttf")).unwrap();
     let sheet = stylesheet(&h).await;
+    assert!(!sheet.contains("Outside font"), "{sheet}");
+    assert!(!sheet.contains("/outside.ttf"), "{sheet}");
     assert_eq!(sheet.matches("@font-face").count(), 2, "{sheet}");
     assert_eq!(
         sheet.matches("font-family: \"Included\"").count(),
@@ -157,7 +164,18 @@ async fn omits_a_font_with_valid_names_and_a_missing_required_table() {
     let h = Fixture::new();
     let mut font = regular_tables("Missing post");
     font.retain(|(tag, _)| tag != b"post");
-    fs::write(h.system.join("missing.ttf"), sfnt(font)).unwrap();
+    fs::write(
+        h.system.join("missing.ttf"),
+        sfnt(SfntFormat::TrueType, font),
+    )
+    .unwrap();
+    let mut no_glyphs = italic_cff_tables("Missing glyphs");
+    no_glyphs.retain(|(tag, _)| tag != b"CFF ");
+    fs::write(
+        h.system.join("no-glyphs.otf"),
+        sfnt(SfntFormat::Cff, no_glyphs),
+    )
+    .unwrap();
     assert_eq!(stylesheet(&h).await, "");
 }
 
@@ -171,7 +189,7 @@ async fn omits_fonts_when_hmtx_or_loca_cannot_hold_the_declared_records() {
         let mut font = regular_tables(family);
         let (_, data) = font.iter_mut().find(|(table, _)| table == tag).unwrap();
         data.pop().unwrap();
-        fs::write(h.system.join(filename), sfnt(font)).unwrap();
+        fs::write(h.system.join(filename), sfnt(SfntFormat::TrueType, font)).unwrap();
     }
     assert_eq!(stylesheet(&h).await, "");
 }

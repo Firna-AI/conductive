@@ -115,12 +115,18 @@ says.
 - In the body of each changed reply, the file server changes each local
   `file:` address to a path from the top of the site. So the browser asks
   the files preview for the absolute path of the file.
-- A match is `file:` in any case, then `//`, an optional `localhost` in
-  any case, and one or more `/`. The match becomes one `/`. Reason:
-  `file:////home/x` must become `/home/x`, because a browser sends
-  `//home/x` to the host `home`.
-- `file:/` before a character that is not `/` also becomes `/`. Reason:
+- A separator is `/` or `\`, because a browser reads `\` as `/` in a
+  `file:` address.
+- A match is `file:` in any case, then two equal separators, an optional
+  `localhost` in any case, and one or more separators. The match and each
+  separator after it become one `/`. Reason: `file:////home/x` must become
+  `/home/x`, because a browser sends `//home/x` to the host `home`.
+- `file:` and one separator before a character that is not the same
+  separator also becomes one `/`, with each separator after it. Reason:
   Java writes file addresses in this form, such as `file:/home/x`.
+- So a changed address never starts with two separators, and the browser
+  never sends it to another host. For example, `file:/\evil.com/x` becomes
+  `/evil.com/x` on the files preview.
 - A match needs the start of a word: the byte before `file:` is not an
   ASCII letter, an ASCII digit, `+`, `-`, or `.`.
 - A `file://` address with another host, such as `file://server/x`, does
@@ -175,7 +181,8 @@ says.
   two folders. The compare uses the two folder paths as written, not their
   real paths. So a font folder that is a link into the home folder serves
   nothing.
-- No segment of the path in the request can start with a dot.
+- No segment of the path in the request can start with a dot. No segment
+  of the real path can start with a dot either.
 - The reply of a system font is not a changed reply. So it gets each rule
   of a reply for a file, such as the rules of its `ETag`, its dates, and its
   byte ranges.

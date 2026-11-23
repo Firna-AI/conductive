@@ -30,17 +30,17 @@ impl FileAddresses {
     fn rewrite(&mut self, mut input: &[u8]) -> Vec<u8> {
         let mut output = Vec::with_capacity(input.len());
         while let Some((&byte, rest)) = input.split_first() {
-            if self.skip_slashes && byte == b'/' {
-                input = rest;
-                continue;
-            }
-            self.skip_slashes = false;
-            if byte.eq_ignore_ascii_case(&b'f') && !self.follows_scheme_byte {
+            if self.skip_slashes {
+                if is_separator(byte) {
+                    input = rest;
+                    continue;
+                }
+                self.skip_slashes = false;
+            } else if byte.eq_ignore_ascii_case(&b'f') && !self.follows_scheme_byte {
                 match local_prefix(input) {
                     Prefix::Local(length) => {
                         output.push(b'/');
                         input = &input[length..];
-                        self.follows_scheme_byte = false;
                         self.skip_slashes = true;
                         continue;
                     }
@@ -71,29 +71,42 @@ fn agrees_with(input: &[u8], prefix: &[u8]) -> bool {
     input[..length].eq_ignore_ascii_case(&prefix[..length])
 }
 
+fn is_separator(byte: u8) -> bool {
+    matches!(byte, b'/' | b'\\')
+}
+
+/// Two identical separators can introduce an authority. A mixed pair starts a path.
 fn local_prefix(input: &[u8]) -> Prefix {
-    const SINGLE_SLASH: &[u8] = b"file:/";
-    const LOCAL_HOST: &[u8] = b"localhost/";
-    if !agrees_with(input, SINGLE_SLASH) {
+    const SCHEME: &[u8] = b"file:";
+    const LOCAL_HOST: &[u8] = b"localhost";
+    if !agrees_with(input, SCHEME) {
         return Prefix::Other;
     }
-    let Some((&slash, after_slash)) = input
-        .get(SINGLE_SLASH.len()..)
-        .and_then(<[u8]>::split_first)
+    let Some((&first, after_first)) = input.get(SCHEME.len()..).and_then(<[u8]>::split_first)
     else {
         return Prefix::Incomplete;
     };
-    if slash != b'/' {
-        return Prefix::Local(SINGLE_SLASH.len());
-    }
-    if after_slash.starts_with(b"/") {
-        return Prefix::Local(SINGLE_SLASH.len() + 2);
-    }
-    if !agrees_with(after_slash, LOCAL_HOST) {
+    if !is_separator(first) {
         return Prefix::Other;
     }
-    if after_slash.len() < LOCAL_HOST.len() {
+    let Some((&second, authority)) = after_first.split_first() else {
         return Prefix::Incomplete;
+    };
+    if first != second {
+        return Prefix::Local(SCHEME.len() + 1);
     }
-    Prefix::Local(SINGLE_SLASH.len() + 1 + LOCAL_HOST.len())
+    if authority.first().copied().is_some_and(is_separator) {
+        return Prefix::Local(SCHEME.len() + 3);
+    }
+    if !agrees_with(authority, LOCAL_HOST) {
+        return Prefix::Other;
+    }
+    let Some(&separator) = authority.get(LOCAL_HOST.len()) else {
+        return Prefix::Incomplete;
+    };
+    if is_separator(separator) {
+        Prefix::Local(SCHEME.len() + 2 + LOCAL_HOST.len() + 1)
+    } else {
+        Prefix::Other
+    }
 }
