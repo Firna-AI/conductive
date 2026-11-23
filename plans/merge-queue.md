@@ -929,15 +929,17 @@ browser.
 
 Depends on: 5
 
-- [ ] Join: change the pull request base, send the restack turn, and add
+- [x] Join: change the pull request base, send the restack turn, and add
       the layer to the GitHub stack after its push.
-- [ ] Move the stored base with the saved base move and its fetch for each
+- [x] Move the stored base with the saved base move and its fetch for each
       queue base change.
-- [ ] Follow a base change on GitHub for queued workspaces, from the
+- [x] Follow a base change on GitHub for queued workspaces, from the
       `pull_request` `edited` webhook.
-- [ ] Run the guarded sync after GitHub rewrites a workspace branch.
-- [ ] Tests for each step, a failed step, a retry, and a webhook that
+- [x] Run the guarded sync after GitHub rewrites a workspace branch.
+- [x] Tests for each step, a failed step, a retry, and a webhook that
       arrives twice.
+
+Verification logs are listed in `.context/merge-queue/m6-checks.md`.
 
 ## Milestone 7: Merge, leaves, failures, and re-order
 
@@ -953,7 +955,7 @@ Depends on: 6
       ("Failures").
 - [ ] Send one agent turn for a conflict of a restack, then wait for a
       member (decision 321).
-- [ ] Re-order with unstack, base changes, restacks from the bottom up, and
+- [x] Re-order with unstack, base changes, restacks from the bottom up, and
       the add back.
 - [ ] Tests for each path, also with two steps that arrive at once.
 

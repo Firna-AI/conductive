@@ -19,10 +19,8 @@ export async function reconcileMergePulls(
 ) {
   const { env, dependencies } = runtime
   let remaining = entries
-  for (const { entry, snapshot } of reads) {
-    if (!snapshot) continue
-    const { banner } = snapshot
-    if (banner.state === 'merged') {
+  for (const { entry, pull } of reads) {
+    if (pull.state === 'MERGED') {
       const workspace = queueWorkspace(queue, entry)
       await recordPullRequestMerge(
         env.DB,
@@ -31,7 +29,7 @@ export async function reconcileMergePulls(
           orgId: queue.orgId,
           workspaceId: entry.workspaceId,
           number: entry.pullNumber,
-          mergedAt: banner.mergedAt ?? dependencies.now(),
+          mergedAt: pull.mergedAt ?? dependencies.now(),
         },
         dependencies.now(),
       )
@@ -45,14 +43,18 @@ export async function reconcileMergePulls(
         warnWorker({ kind: 'merge_queue_refresh_failed' })
       }
     }
-    if (
-      banner.state === 'merged' ||
-      banner.state === 'closed' ||
-      banner.state === 'draft'
-    )
+    const cause =
+      pull.state === 'MERGED'
+        ? 'merged'
+        : pull.state === 'CLOSED'
+          ? 'closed'
+          : pull.draft
+            ? 'draft'
+            : null
+    if (cause)
       remaining = await leaveQueue(runtime, queue, remaining, {
         ...queueLeaveFor(entry),
-        cause: banner.state,
+        cause,
       })
   }
   return remaining
@@ -74,7 +76,7 @@ export async function settleMergeJob(
   )
   if (
     job.outcome === 'merged' &&
-    target?.snapshot?.banner.state !== 'merged' &&
+    target?.pull.state !== 'MERGED' &&
     remaining.some((entry) => entry.workspaceId === job.target.workspaceId)
   )
     return false

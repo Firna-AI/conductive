@@ -7,7 +7,9 @@ const queueEntryColumns = `queue_id AS queueId, workspace_id AS workspaceId, bra
   place, unit_id AS unitId, state, wait_reason AS wait,
   queued_at AS queuedAt, step_at AS stepAt, member_base AS memberBase,
   merge_head AS mergeHead, refused_head AS refusedHead,
-  old_base_sha AS oldBase, old_base_head AS oldBaseHead`
+  old_base_sha AS oldBase, old_base_head AS oldBaseHead, github_base AS githubBase,
+  pending_base AS pendingBase, observed_head AS observedHead, sync_from AS syncFrom,
+  sync_old_base AS syncOldBase`
 
 export function readQueue(
   db: D1Database,
@@ -19,6 +21,8 @@ export function readQueue(
        q.github_repository_id AS githubRepositoryId, q.trunk,
        r.full_name AS fullName, r.installation_id AS installationId,
        q.github_stack_number AS githubStackNumber, q.pending_write AS pendingWrite,
+       q.stack_writer_user_id AS stackWriterUserId, q.rebuild_stack AS rebuildStack,
+       q.reordering,
        r.default_branch AS defaultBranch, o.suspended_at AS suspendedAt
      FROM merge_queues q
      JOIN repositories r ON r.id = q.repository_id AND r.org_id = q.org_id
@@ -64,8 +68,10 @@ export async function otherOrgQueuesRepository(
   return (
     (await db
       .prepare(
-        `SELECT 1 FROM merge_queues q JOIN merge_queue_entries e ON e.queue_id = q.id
-     WHERE q.github_repository_id = ? AND q.org_id != ? LIMIT 1`,
+        `SELECT 1 FROM merge_queues q WHERE q.github_repository_id = ? AND q.org_id != ?
+       AND (q.github_stack_number IS NOT NULL OR q.creating_stack = 1 OR EXISTS (
+         SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
+       )) LIMIT 1`,
       )
       .bind(scope.githubRepositoryId, scope.orgId)
       .first()) !== null

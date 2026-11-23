@@ -5,6 +5,10 @@ CREATE TABLE merge_queues (
   github_repository_id INTEGER NOT NULL,
   trunk TEXT NOT NULL,
   github_stack_number INTEGER,
+  stack_writer_user_id TEXT,
+  rebuild_stack INTEGER NOT NULL DEFAULT 0,
+  creating_stack INTEGER NOT NULL DEFAULT 0,
+  reordering INTEGER NOT NULL DEFAULT 0,
   pending_write TEXT,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL,
@@ -26,6 +30,26 @@ CREATE TABLE merge_queue_entries (
   wait_reason TEXT,
   queued_at INTEGER NOT NULL,
   step_at INTEGER NOT NULL,
+  member_base TEXT,
+  merge_head TEXT,
+  refused_head TEXT,
+  blocking_pull_number INTEGER,
+  old_base_sha TEXT,
+  old_base_head TEXT,
+  github_base TEXT,
+  pending_base TEXT,
+  observed_head TEXT,
+  sync_from TEXT,
+  sync_old_base TEXT,
   UNIQUE (queue_id, pull_number)
 );
 CREATE INDEX merge_queue_entries_order ON merge_queue_entries(queue_id, place);
+
+CREATE TABLE merge_queue_leave_notices (
+  workspace_id TEXT PRIMARY KEY REFERENCES workspaces(id) ON DELETE CASCADE,
+  org_id TEXT NOT NULL,
+  github_repository_id INTEGER NOT NULL,
+  branch TEXT NOT NULL,
+  pull_number INTEGER NOT NULL,
+  base_branch TEXT NOT NULL
+);

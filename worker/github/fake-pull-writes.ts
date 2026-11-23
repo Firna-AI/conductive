@@ -30,6 +30,11 @@ export async function changeFakePullBase(
       { status: 403 },
     )
   const input: unknown = await request.json()
+  if (api.refusedBaseWrites.has(number))
+    return Response.json(
+      { message: 'GitHub refused the base write.' },
+      { status: 422 },
+    )
   if (
     !isRecord(input) ||
     typeof input.base !== 'string' ||

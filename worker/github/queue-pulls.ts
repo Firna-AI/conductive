@@ -23,7 +23,7 @@ const pullFields =
 const QUEUE_PULL = `query QueuePull($owner: String!, $name: String!, $head: String!, $after: String, $ref: String!) {
   repository(owner: $owner, name: $name) {
     databaseId nameWithOwner defaultBranchRef { name }
-    ref(qualifiedName: $ref) { name }
+    ref(qualifiedName: $ref) { target { oid } }
     pullRequests(first: 5, after: $after, headRefName: $head, states: [OPEN],
       orderBy: {field: CREATED_AT, direction: DESC}) {
       nodes { ${pullFields} }
@@ -48,6 +48,7 @@ type QueuePullResult = {
   defaultBranch: string
   fullName: string
   refExists: boolean
+  refHead?: string
 } & PullResult
 
 function pickOpenPull(
@@ -102,10 +103,15 @@ export async function readQueuePull(
     const repository = object(data.repository)
     if (integer(repository.databaseId) !== workspace.repositoryId)
       throw githubFailure()
+    const oid =
+      repository.ref === null
+        ? undefined
+        : object(object(repository.ref).target).oid
     const context = {
       defaultBranch: text(object(repository.defaultBranchRef).name),
       fullName: text(repository.nameWithOwner),
       refExists: repository.ref !== null,
+      refHead: isGitCommitOid(oid) ? oid : undefined,
     }
     const pulls = object(repository.pullRequests)
     const found = pickOpenPull(pulls, head, workspace.repositoryId)

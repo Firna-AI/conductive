@@ -9,8 +9,11 @@ import {
 import { leaveNoticeWrites, type QueueLeaveNotice } from './leave-data'
 
 const noOtherQueue = `NOT EXISTS (
-  SELECT 1 FROM merge_queues q JOIN merge_queue_entries e ON e.queue_id = q.id
+  SELECT 1 FROM merge_queues q
   WHERE q.github_repository_id = r.github_repository_id AND q.org_id != r.org_id
+    AND (q.github_stack_number IS NOT NULL OR q.creating_stack = 1 OR EXISTS (
+      SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
+    ))
 )`
 
 const liveWorkspace = `w.repository_id = r.id AND w.org_id = r.org_id
@@ -95,11 +98,14 @@ export async function addQueueEntries(
       .prepare(
         `INSERT INTO merge_queue_entries (
          workspace_id, queue_id, branch, pull_number, queuer_user_id,
-         place, unit_id, state, queued_at, step_at, member_base, old_base_sha, old_base_head
+         place, unit_id, state, queued_at, step_at, member_base, old_base_sha, old_base_head,
+         github_base, observed_head
        )
        SELECT json_extract(c.value, '$.workspaceId'), q.id, json_extract(c.value, '$.branch'),
          json_extract(c.value, '$.pullNumber'), ?, ? + c.key, ?, 'queued', ?, ?,
-         json_extract(c.value, '$.memberBase'), json_extract(c.value, '$.oldBase'), json_extract(c.value, '$.oldBaseHead')
+         json_extract(c.value, '$.memberBase'), json_extract(c.value, '$.oldBase'),
+         json_extract(c.value, '$.oldBaseHead'), json_extract(c.value, '$.githubBase'),
+         json_extract(c.value, '$.oldBaseHead')
        FROM merge_queues q, json_each(?) c WHERE q.id = ? AND q.pending_write = ?`,
       )
       .bind(memberId, place, unitId, now, now, json, id, writeId),
@@ -117,13 +123,29 @@ export async function saveQueueOrder(
     writeId: string
     writer?: QueueWriter
     notices?: readonly QueueLeaveNotice[]
+    merged?: QueueEntry
+    reordering?: true
   },
 ): Promise<boolean> {
-  const { id, remaining, removed, now, writeId, writer, notices } = input
+  const {
+    id,
+    remaining,
+    removed,
+    now,
+    writeId,
+    writer,
+    notices,
+    merged,
+    reordering,
+  } = input
   const results = await db.batch([
     db
       .prepare(
-        `UPDATE merge_queues SET updated_at = ?, pending_write = ? WHERE id = ?
+        `UPDATE merge_queues SET updated_at = ?, pending_write = ?,
+         rebuild_stack = CASE WHEN ? AND github_stack_number IS NOT NULL THEN 1 ELSE rebuild_stack END,
+         reordering = CASE WHEN ? THEN 1 ELSE reordering END,
+         stack_writer_user_id = COALESCE(stack_writer_user_id, ?)
+         WHERE id = ?
          AND (? IS NULL OR EXISTS (
            SELECT 1 FROM workspaces w
            JOIN orgs o ON o.id = w.org_id AND o.deleted_at IS NULL AND o.suspended_at IS NULL
@@ -139,6 +161,9 @@ export async function saveQueueOrder(
       .bind(
         now,
         writeId,
+        removed.length > 0 || reordering === true,
+        reordering === true,
+        removed[0]?.queuerUserId ?? null,
         id,
         writer?.memberId ?? null,
         writer?.memberId ?? null,
@@ -148,6 +173,18 @@ export async function saveQueueOrder(
       ),
     ...(removed.length
       ? leaveNoticeWrites(db, id, writeId, removed, notices ?? [])
+      : []),
+    ...(merged
+      ? [
+          db
+            .prepare(
+              `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, observed_head),
+             sync_old_base = COALESCE(sync_old_base, old_base_sha)
+             WHERE queue_id = ? AND place > ?
+             AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,
+            )
+            .bind(id, merged.place, id, writeId),
+        ]
       : []),
     db
       .prepare(

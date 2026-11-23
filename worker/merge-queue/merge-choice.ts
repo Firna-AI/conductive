@@ -63,6 +63,7 @@ export interface MergeProjection {
 export function layerWait(read: QueuePullRead): MergeQueueWait | null {
   const { entry, snapshot, stacked, standalone, clean } = read
   if (entry.state === 'restacking') return 'rebase'
+  if (read.restackWait) return read.restackWait
   if (
     entry.wait === 'active-turn' ||
     entry.wait === 'agent-login' ||

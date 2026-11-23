@@ -1,7 +1,9 @@
 import { HttpError } from '../http'
 import { requireActiveOrg } from '../data/user-access'
 import { readQueueWriteAccess } from '../github/merge-capabilities'
+import { compareMergeBase } from '../github/compare-merge-base'
 import { changePullRequestBase } from '../github/pull-client'
+import { readQueuePull } from '../github/queue-pulls'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import type { QueueEntry, QueueLeave, QueueRecord } from './contracts'
 import { canResetBase, leaveOwner, type QueueLeaveNotice } from './leave-data'
@@ -26,7 +28,7 @@ async function resetBase(
     signal.actorId,
     owner?.id,
   ])
-  let baseBranch: string | undefined
+  let baseBranch = entry.githubBase ?? undefined
   for (const user of candidates) {
     if (user === undefined || !(await canResetBase(env.DB, queue, entry, user)))
       continue
@@ -44,6 +46,30 @@ async function resetBase(
       if (!(await canResetBase(env.DB, queue, entry, user))) continue
       if (signal.cause !== 'org-suspended')
         await requireActiveOrg(env.DB, queue.orgId)
+      const live = await readQueuePull(
+        dependencies.fetch,
+        token,
+        binding,
+        entry.branch,
+        queue.trunk,
+      )
+      if (
+        live.kind !== 'open' ||
+        live.pull.number !== entry.pullNumber ||
+        live.pull.headSha !== pull.headSha ||
+        live.pull.base !== baseBranch ||
+        !live.refHead ||
+        live.fullName !== queue.fullName
+      )
+        break
+      const common = await compareMergeBase(
+        dependencies.fetch,
+        token,
+        queue.fullName,
+        live.refHead,
+        live.pull.headSha,
+      )
+      if (!common || common === live.pull.headSha) break
       try {
         await changePullRequestBase(
           dependencies.fetch,
@@ -72,7 +98,7 @@ async function resetBase(
   } catch (error) {
     if (!(error instanceof HttpError)) throw error
   }
-  return baseBranch === undefined
+  return baseBranch === undefined || baseBranch === queue.trunk
     ? null
     : {
         workspaceId: entry.workspaceId,

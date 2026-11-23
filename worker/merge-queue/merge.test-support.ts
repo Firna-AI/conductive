@@ -8,7 +8,7 @@ import {
   OTHER_WORKSPACE,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
-import { passedRun } from '../github/fake-pull'
+import { HEAD_SHA, passedRun } from '../github/fake-pull'
 import { createPullRequestStack } from '../github/stack-client'
 import { queueId } from './contracts'
 import {
@@ -19,6 +19,9 @@ import {
 } from './queue.test-support'
 
 let key: string | undefined
+export const TRUNK_HEAD = '1'.repeat(40)
+export const TOP_HEAD = '3'.repeat(40)
+export const PARALLEL_HEAD = '4'.repeat(40)
 
 export async function mergeFixture(
   bundle: string,
@@ -33,6 +36,16 @@ export async function mergeFixture(
     const top = mode === 'units' ? PARALLEL : OTHER_WORKSPACE
     const pullNumber = mode === 'units' ? 4 : 3
     const branch = mode === 'units' ? 'parallel' : 'layer-two'
+    f.api.branches.set('refs/heads/main', TRUNK_HEAD)
+    f.api.branches.set('refs/heads/layer-two', TOP_HEAD)
+    f.api.branches.set('refs/heads/parallel', PARALLEL_HEAD)
+    f.api.pulls[3].headRefOid = TOP_HEAD
+    f.api.pulls[4].headRefOid = PARALLEL_HEAD
+    f.api.mergeBases.set(`${TRUNK_HEAD}...${HEAD_SHA}`, TRUNK_HEAD)
+    for (const head of [TOP_HEAD, PARALLEL_HEAD]) {
+      f.api.mergeBases.set(`${TRUNK_HEAD}...${head}`, TRUNK_HEAD)
+      f.api.mergeBases.set(`${HEAD_SHA}...${head}`, HEAD_SHA)
+    }
     expect((await f.change('POST', OUTER_WORKSPACE)).status).toBe(204)
     if (mode !== 'single') {
       expect(
@@ -49,6 +62,12 @@ export async function mergeFixture(
       await f.db
         .prepare('UPDATE merge_queues SET github_stack_number = ? WHERE id = ?')
         .bind(stack.number, queueId(f.scope))
+        .run()
+      await f.db
+        .prepare(
+          "UPDATE merge_queue_entries SET github_base = 'changes' WHERE pull_number = ?",
+        )
+        .bind(pullNumber)
         .run()
     }
     f.api.merges.memberDefaults.set(MEMBER_TOKEN, 'REBASE')

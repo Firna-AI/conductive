@@ -159,7 +159,7 @@ it('preserves a member stack base and an explicit GitHub base change', async () 
 it('shows the base that remains after GitHub refuses the reset', async () => {
   const f = await mergeFixture(bundle, 'units')
   try {
-    f.api.branches.delete('refs/heads/main')
+    f.api.refusedBaseWrites.add(f.pullNumber)
     expect((await f.change('DELETE', f.top)).status).toBe(204)
     const bar = await f.bar(f.top)
     expect(bar.status).toBe(200)

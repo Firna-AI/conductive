@@ -161,6 +161,12 @@ it('finishes polling before applying an archive received during the merge', asyn
     await f.queue.advanceStartAlarm()
     expect(patches()).toHaveLength(1)
     expect(await patches()[0].clone().json()).toEqual({ base: 'main' })
+    expect(
+      await f.db
+        .prepare('SELECT base_branch FROM workspaces WHERE id = ?')
+        .bind(f.top)
+        .first('base_branch'),
+    ).toBeNull()
     expect((await f.entries()).map(({ workspaceId }) => workspaceId)).toEqual([
       OUTER_WORKSPACE,
     ])

@@ -14,17 +14,14 @@ import { queueChanged } from './errors'
 import { resetLeavingBases } from './leave-base'
 import { leaveOrder } from './order'
 import { queueReadToken, queueWorkspace } from './repository'
+import { followWorkspaceBase } from './restack-data'
 import { renameQueueTrunk, staleQueueEntries } from './step-data'
 import { completeQueueStep, saveQueueOrder } from './writes'
 
 export interface QueueRuntime {
   env: AppEnv
   dependencies: AppDependencies
-  restackAfterLeave?(
-    queue: QueueRecord,
-    remaining: readonly QueueEntry[],
-    removed: readonly QueueEntry[],
-  ): Promise<void>
+  restackAfterLeave?(queue: QueueRecord): Promise<void>
 }
 
 export async function leaveQueue(
@@ -42,6 +39,22 @@ export async function leaveQueue(
     ...signal,
     actorId: writer?.memberId ?? signal.actorId,
   })
+  if (signal.cause !== 'merged') {
+    for (const entry of removed) {
+      const base =
+        signal.cause === 'base-changed' &&
+        entry.workspaceId === signal.workspaceId
+          ? signal.baseBranch
+          : (notices.find(
+              ({ workspaceId }) => workspaceId === entry.workspaceId,
+            )?.baseBranch ??
+            (entry.githubBase === queue.trunk
+              ? queue.trunk
+              : entry.memberBase) ??
+            queue.trunk)
+      if (base) await followWorkspaceBase(runtime, queue, entry, base)
+    }
+  }
   const saved = await saveQueueOrder(runtime.env.DB, {
     id: queue.id,
     remaining,
@@ -50,12 +63,13 @@ export async function leaveQueue(
     writeId: runtime.dependencies.randomToken(),
     writer,
     notices,
+    ...(signal.cause === 'merged' && { merged: removed[0] }),
   })
   if (!saved && writer) {
     await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)
     throw queueChanged()
   }
-  if (saved) await runtime.restackAfterLeave?.(queue, remaining, removed)
+  if (saved) await runtime.restackAfterLeave?.(queue)
   return remaining
 }
 

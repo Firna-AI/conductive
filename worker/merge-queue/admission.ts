@@ -57,6 +57,15 @@ async function readUnit(context: AddContext) {
       pull: top.pull,
     },
   ]
+  if (
+    context.entries.some(
+      (entry) =>
+        entry.workspaceId === workspace.id &&
+        entry.branch === workspace.branch &&
+        entry.pullNumber === top.pull.number,
+    )
+  )
+    return { layers, trunk, fullName: top.fullName }
   const heads = new Set([workspace.branch])
   let base = top.pull.base
   while (base !== trunk) {
@@ -79,6 +88,15 @@ async function readUnit(context: AddContext) {
       pullNumber: lower.pull.number,
       pull: lower.pull,
     })
+    if (
+      context.entries.some(
+        (entry) =>
+          entry.workspaceId === row.id &&
+          entry.pullNumber === lower.pull.number &&
+          entry.branch === base,
+      )
+    )
+      break
     base = lower.pull.base
   }
   layers.reverse()
@@ -202,6 +220,7 @@ export async function addUnit(context: AddContext): Promise<void> {
       branch,
       pullNumber,
       memberBase: pull.base === trunk ? null : pull.base,
+      githubBase: pull.base,
       oldBase: await compareMergeBase(
         member.fetch,
         member.token,

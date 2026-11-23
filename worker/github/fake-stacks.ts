@@ -22,6 +22,7 @@ function missingStack() {
 
 export class RepositoryStacks {
   readonly lockedPulls = new Set<number>()
+  loseNextCreateReply = false
   private nextNumber = 1
   private readonly stacks = new Map<number, FakeStack>()
   private readonly api: RepositoryGitHub
@@ -160,6 +161,10 @@ export class RepositoryStacks {
       pullNumbers: numbers,
     }
     this.stacks.set(created.number, created)
+    if (this.loseNextCreateReply) {
+      this.loseNextCreateReply = false
+      return new Response(null, { status: 503 })
+    }
     return Response.json(this.reply(created, false), { status: 201 })
   }
 }

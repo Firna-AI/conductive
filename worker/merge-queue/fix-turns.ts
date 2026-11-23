@@ -32,9 +32,28 @@ export class QueueFixTurns {
     this.storage = storage
   }
 
-  private async active() {
+  async active() {
     const id = await this.storage.get<string>(ACTIVE)
     return id ? this.storage.get<QueueFix>(fixKey(id)) : undefined
+  }
+
+  read(id: string) {
+    return this.storage.get<QueueFix>(fixKey(id))
+  }
+
+  async cancelUnsent(fix: QueueFix): Promise<boolean> {
+    if (fix.state !== 'pending' || fix.mayHaveMessage) return false
+    await saveFixBarState(
+      this.runtime.env.DB,
+      fix,
+      { state: 'queued', wait: null },
+      this.runtime.dependencies.now(),
+    )
+    await this.storage.transaction(async (storage) => {
+      await storage.delete(ACTIVE)
+      await storage.delete(fixKey(fix.restack.id))
+    })
+    return true
   }
 
   async request(scope: QueueScope, workspaceId: string, restack: QueueRestack) {
@@ -80,7 +99,7 @@ export class QueueFixTurns {
 
   async advance(scope: QueueScope): Promise<void> {
     const fix = await this.active()
-    if (!fix) return
+    if (!fix || fix.state === 'ended') return
     if (fix.state === 'pending') await this.retry(scope)
     const { env } = this.runtime
     if (!(await currentFixEntry(env.DB, fix))) {
@@ -130,7 +149,10 @@ export class QueueFixTurns {
     )
   }
 
-  private async advanceOwned(queue: QueueRecord, fix: QueueFix): Promise<void> {
+  private async advanceOwned(
+    queue: QueueRecord,
+    fix: Exclude<QueueFix, { state: 'ended' }>,
+  ): Promise<void> {
     const { env, dependencies } = this.runtime
     const access = await queueFixAccess(this.runtime, fix)
     const now = dependencies.now()
@@ -167,6 +189,8 @@ export class QueueFixTurns {
     const target = workspaceBinding(env).getByName(workspaceId, {
       locationHint: 'weur',
     })
+    const key = fixKey(fix.restack.id)
+    await this.storage.put<QueueFix>(key, { ...fix, mayHaveMessage: true })
     const admission = requireFeatureResult(await target.writeMergeQueueFix(fix))
     if (admission.kind === 'waiting') {
       await saveFixBarState(
@@ -176,7 +200,17 @@ export class QueueFixTurns {
         now,
       )
     }
-    if (admission.kind !== 'accepted') return
+    if (admission.kind !== 'accepted') {
+      const pending: QueueFix = {
+        scope: fix.scope,
+        entry: fix.entry,
+        restack: fix.restack,
+        messageId: fix.messageId,
+        state: 'pending',
+      }
+      await this.storage.put(key, pending)
+      return
+    }
     await saveFixBarState(env.DB, fix, { state: 'restacking', wait: null }, now)
     if (admission.queued) {
       const { resume } = await startAcceptedMessage(
@@ -187,7 +221,7 @@ export class QueueFixTurns {
       )
       if (resume.state === 'failed') return
     }
-    await this.storage.put<QueueFix>(fixKey(fix.restack.id), {
+    await this.storage.put<QueueFix>(key, {
       ...fix,
       state: 'sent',
       turnId: admission.turnId,

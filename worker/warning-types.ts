@@ -50,6 +50,8 @@ export const SIMPLE_WARNINGS = {
     'A merge queue turn report failed. The workspace alarm will retry it.',
   merge_queue_merge_retry:
     'A merge queue merge step failed. The queue alarm will retry it.',
+  merge_queue_step_retry:
+    'A merge queue step failed. The queue alarm will retry it.',
   merge_queue_refresh_failed:
     'The merged pull request was recorded. The workspace GitHub refresh failed.',
   marketing_site_unavailable: 'The built marketing site is not available.',

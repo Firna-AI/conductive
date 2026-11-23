@@ -15,10 +15,9 @@ entries of another org in the same D1 batch
 that records the new entries. The browser gets a fixed refusal when the
 repository is in use. It gets no entry or org details for that queue.
 
-Admission records the GitHub comparison's merge base against the exact
-pull request head. A later read can carry the saved base to a new head
-after GitHub confirms ancestry. The bar sends the base for the matching
-head, so the conflict prompt can move the layer's own commits.
+Admission records the GitHub base and the common commit of the base and
+pull request head. The bar sends the saved commit for the matching head,
+so the conflict prompt can move the layer's own commits.
 
 Admission reads the current pull requests and trunk rules with the
 requesting member's token. It checks their base chain and verifies a
@@ -39,6 +38,33 @@ name its pull request number. Archive, Continue, and a repository change
 send the binding from before the move. A webhook can wake or leave the
 queue. The object saves leave signals that arrive during a merge.
 
+The queue reads the trunk and each layer again before it selects a merge.
+It starts with the lowest layer that needs a restack. Commit comparisons
+check that the layer includes the newest base and drops commits from any
+old lower layer that the new base does not include. A restack sends the
+fixed prompt once for that base and head. If the turn leaves the commits
+out of order, the entry waits for a member.
+
+The queue rechecks both refs before it changes a pull request's base.
+It records the intended edit before GitHub receives the write. A new
+stack starts with two pull requests. Further layers append in order.
+A leave or a re-order unstacks the old stack before the remaining layers
+join it again under a new number. A re-order holds merges until the
+stack is ready. If a stack creation loses its response, the next read
+can recover the new stack number from GitHub.
+
+An edited webhook wakes the queue. The queue checks the current GitHub
+base against the saved base and the edit it requested. It also accepts
+GitHub's retarget after a lower merge. An independent edit makes the
+workspace leave and keeps its new base. Each workspace base change uses
+[the saved owner-token move](../lifecycle/moved-bases.md). After GitHub
+rewrites a branch, a guarded sync checks the local head before it moves.
+An unsafe local move uses the restack turn.
+
+The [server rebase flag](server-rebase.ts) defaults to off. It uses the
+current GitHub base and the pinned pull request head. Decision 319 needs
+the scratch test of a server rebase after a squash merge beneath it.
+
 The coordinator checks the ready layers from the trunk up. It reuses
 the GitHub bar state and checks each workspace's local work. The queue
 can wait 15 minutes for the next layer's checks. A member's request to
@@ -56,10 +82,8 @@ The workspace saves the message with its receipt, then the normal
 accepted-message path resumes the cloud computer when necessary.
 
 The workspace reports the final state of the turn from its own alarm.
-The coordinator saves the result under the restack ID for the next queue
-step. A caller can read it by repeating the same request. The fix step
-reads permissions and sends chat messages. Its caller decides when a
-restack is necessary and checks GitHub after the result.
+The coordinator saves the result under the restack ID. The next step
+checks the pushed branch against the latest base again.
 
 ## Development
 
@@ -73,6 +97,9 @@ Run `npm run test -- worker/merge-queue`.
 - [Admission](admission.ts) reads the unit and adds its entries.
 - [Queue steps](step.ts) select and run a leave, a trunk check, or the
   completion of a saved write.
+- [Restacks](restacks.ts) read the open layers and move them from the
+  trunk up. [Stack changes](stack-changes.ts) manage membership and
+  recover a stack creation after a retry.
 - [Merge selection](merges.ts) checks the ready layers and starts a merge.
 - [Merge jobs](merge-job.ts) start, poll, and resume a saved GitHub merge.
 - [Base resets](leave-base.ts) check member access and reset a base on leave.

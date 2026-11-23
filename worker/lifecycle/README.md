@@ -79,6 +79,8 @@ The metadata command does not depend on the current HEAD, and a failed update do
 It leaves both settings unchanged when the new base has no remote-tracking reference.
 An unfinished base move uses [the saved move job](#moved-bases) before startup.
 That startup skips its ordinary metadata command, so it cannot apply an unfinished move before the fetch.
+The [merge queue](../merge-queue/README.md) also uses the saved move for
+an explicit base and uses the owner fetch for a guarded branch sync.
 Try again keeps the saved start and base branches with its new allocation.
 
 The browser create takes optional workspace capabilities.

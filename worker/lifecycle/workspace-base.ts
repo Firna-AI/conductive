@@ -15,16 +15,14 @@ import {
 } from './base-change-job'
 import { currentRepositoryDefaultJob } from './repository-default-job'
 import { closeRepositoryDefaultWrites } from './repository-default-data'
-import {
-  baseChangeFetchCommand,
-  baseChangeInstallCommand,
-} from './base-change-commands'
+import { baseChangeInstallCommand } from './base-change-commands'
+import { WorkspaceBaseFetches } from './base-change-fetch'
 import { pendingWorkspaceChange } from './repository-change-types'
 import { repositoryLocation } from './repository-locations'
 import { workspaceRepositoryLocations } from './repository-location-data'
+import { moveQueueBase } from './queue-base-change'
 
 interface FetchScope {
-  id: string
   revision: string | undefined
   ownerUserId: string
   sandboxId: string
@@ -34,7 +32,7 @@ interface FetchScope {
 /** One saved job owns the D1 repair, isolated fetch, settings, and retry. */
 export class WorkspaceBaseChanges {
   private advancing: Promise<void> = Promise.resolve()
-  private scope: FetchScope | null = null
+  readonly fetches = new WorkspaceBaseFetches()
   private readonly env: AppEnv
   private readonly dependencies: AppDependencies
   private readonly storage: ReceiverStorage
@@ -76,16 +74,21 @@ export class WorkspaceBaseChanges {
       )
       if (!resolved) return await this.finish(job)
       job = resolved
-      const current = await baseChangeWorkspace(this.env.DB, job)
-      if (!current)
-        return job.repositoryBeforeSave
-          ? await this.retry(job)
-          : await this.finish(job)
-      const moved = await moveWorkspaceBase(
-        this.env.DB,
-        current.binding,
-        job.change,
-      )
+      const currentJob = job
+      let moved
+      if (job.queueBase) moved = await moveQueueBase(this.env.DB, job)
+      else {
+        const current = await baseChangeWorkspace(this.env.DB, job)
+        if (!current)
+          return job.repositoryBeforeSave
+            ? await this.retry(job)
+            : await this.finish(job)
+        moved = await moveWorkspaceBase(
+          this.env.DB,
+          current.binding,
+          job.change,
+        )
+      }
       if (!moved) return await this.finish(job)
       if (await pendingWorkspaceChange(this.storage))
         return await this.retry(job)
@@ -94,6 +97,7 @@ export class WorkspaceBaseChanges {
         return job.repositoryBeforeSave
           ? await this.retry(job)
           : await this.finish(job)
+      if (job.queueBase && row.sandboxId === null) return await this.finish(job)
       if (!baseChangeComputerReady(row) || !row.sandboxId)
         return await this.retry(job)
       const source = {
@@ -111,28 +115,24 @@ export class WorkspaceBaseChanges {
         row.providerAccount,
       )
       const scope: FetchScope = {
-        id: job.id,
         revision: job.revision,
         ownerUserId: row.ownerUserId,
         sandboxId: row.sandboxId,
         providerAccount: row.providerAccount,
       }
-      if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
-      this.scope = scope
-      let fetched = false
-      try {
-        const result = await provider.runCommand(
-          row.sandboxId,
-          baseChangeFetchCommand({
-            ...source,
-            fetchId: job.id,
-            fullName: job.binding.fullName,
-          }),
-        )
-        fetched = result.exitCode === 0 && !result.timedOut
-      } finally {
-        this.scope = null
-      }
+      const fetched = await this.fetches.fetch(
+        provider,
+        row.sandboxId,
+        {
+          ...source,
+          fetchId: job.id,
+          fullName: job.binding.fullName,
+        },
+        {
+          ownerUserId: scope.ownerUserId,
+          authorize: () => this.authorizeFetch(currentJob, scope),
+        },
+      )
       if (!fetched) return await this.retry(job)
       if (!(await this.authorizeFetch(job, scope))) return await this.retry(job)
       const result = await provider.runCommand(
@@ -153,8 +153,6 @@ export class WorkspaceBaseChanges {
     } catch {
       // Provider output and credentials never enter the saved job or its logs.
       await this.retry(job)
-    } finally {
-      this.scope = null
     }
   }
 
@@ -178,15 +176,8 @@ export class WorkspaceBaseChanges {
     )
   }
 
-  async credentialSender(fetchId: string): Promise<string | null | undefined> {
-    if (!fetchId.startsWith('baseChange-')) return undefined
-    const scope = this.scope
-    if (!scope || scope.id !== fetchId) return null
-    const job = await this.storage.get<BaseChangeJob | null>(
-      BASE_CHANGE_JOB_KEY,
-    )
-    if (!job || !(await this.authorizeFetch(job, scope))) return null
-    return this.scope === scope ? scope.ownerUserId : null
+  credentialSender(fetchId: string): Promise<string | null | undefined> {
+    return this.fetches.credentialSender(fetchId)
   }
 
   private async retry(job: BaseChangeJob): Promise<void> {

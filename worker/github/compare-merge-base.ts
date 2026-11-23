@@ -16,6 +16,7 @@ export async function compareMergeBase(
   head: string | undefined,
 ) {
   if (!isGitCommitOid(base) || !isGitCommitOid(head)) return undefined
+  if (base === head) return base
   const path = `${githubRepositoryPath(fullName)}/compare/${base}...${head}?per_page=1`
   const reply = object(
     await githubActionJson(fetch, githubRequest(path, token), [200]),

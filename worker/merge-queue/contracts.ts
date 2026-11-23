@@ -15,6 +15,9 @@ export interface QueueRecord extends QueueScope {
   installationId: number
   trunk: string
   githubStackNumber: number | null
+  stackWriterUserId: string | null
+  rebuildStack: number
+  reordering: number
   defaultBranch: string
   pendingWrite: string | null
   suspendedAt: number | null
@@ -33,6 +36,11 @@ export interface QueueEntry extends MergeQueueEntry {
   refusedHead?: string | null
   oldBase?: string | null
   oldBaseHead?: string | null
+  githubBase?: string | null
+  pendingBase?: string | null
+  observedHead?: string | null
+  syncFrom?: string | null
+  syncOldBase?: string | null
 }
 
 export type QueueCandidate = Pick<
@@ -43,6 +51,7 @@ export type QueueCandidate = Pick<
   | 'memberBase'
   | 'oldBase'
   | 'oldBaseHead'
+  | 'githubBase'
 >
 
 export type QueueMemberAction =
@@ -74,6 +83,7 @@ export type QueueLeave = (
       workspaceId: string
       branch: string
       pullNumber?: number
+      baseBranch?: string
     }
 ) & { actorId?: string }
 

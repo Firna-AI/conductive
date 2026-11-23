@@ -9,7 +9,7 @@ import {
 import { requireFeatureResult } from '../features/result'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
 import { saveGitHubTokens } from '../security/github-tokens'
-import { mergeFixture } from './merge.test-support'
+import { mergeFixture, TOP_HEAD, TRUNK_HEAD } from './merge.test-support'
 import { MEMBER_TOKEN, OWNER_TOKEN, queueBundle } from './queue.test-support'
 
 let bundle: string
@@ -27,7 +27,7 @@ it('merges the highest ready layer as its queuer and records each landed pull re
     const [request] = f.writes()
     expect(request.headers.get('Authorization')).toBe(`Bearer ${MEMBER_TOKEN}`)
     expect(await request.clone().json()).toEqual({
-      sha: 'layer-two-head',
+      sha: TOP_HEAD,
       merge_method: 'rebase',
       merge_action: 'direct_merge',
       bypass_rules: false,
@@ -130,7 +130,7 @@ it('refuses a missing stack, wrong count, lower check failure and direct merge b
     expect(hint).not.toHaveProperty('queue.mergeAhead')
     const direct = await f.request(githubPaths.merge(OUTER_ORG, f.top), {
       method: 'POST',
-      body: JSON.stringify({ headSha: 'layer-two-head', method: 'squash' }),
+      body: JSON.stringify({ headSha: TOP_HEAD, method: 'squash' }),
     })
     expect(direct.status).toBe(409)
     expect(await direct.json()).toHaveProperty(
@@ -177,8 +177,11 @@ it('records a partial merge and keeps the unmerged layer with a safe refusal', a
     f.api.pulls[2].state = 'MERGED'
     f.api.pulls[2].mergedAt = '2026-11-09T22:00:00Z'
     f.api.pulls[3].baseRefName = 'main'
-    f.api.pulls[3].headRefOid = 'updated-top'
-    f.api.branches.set('refs/heads/layer-two', 'updated-top')
+    const rewritten = '7'.repeat(40)
+    f.api.pulls[3].headRefOid = rewritten
+    f.api.branches.set('refs/heads/layer-two', rewritten)
+    f.api.mergeBases.set(`${TRUNK_HEAD}...${rewritten}`, TRUNK_HEAD)
+    f.api.mergeBases.set(`${HEAD_SHA}...${rewritten}`, TRUNK_HEAD)
     const earlier = f.api.requests.length
     await f.queue.advanceStartAlarm()
     const exactReads = await Promise.all(
@@ -204,7 +207,7 @@ it('records a partial merge and keeps the unmerged layer with a safe refusal', a
       { place: 1, pullNumber: 3, state: 'waiting', wait: 'merge-refused' },
     ])
     expect(await (await f.bar(f.top)).json()).toMatchObject({
-      queue: { mergeAhead: 0, wait: 'merge-refused' },
+      queue: { wait: 'merge-refused' },
     })
     expect(f.writes()).toHaveLength(1)
   } finally {
@@ -237,7 +240,7 @@ it('leaves a token failure waiting and lets a different member merge its checked
     const [request] = f.writes()
     expect(request.headers.get('Authorization')).toBe(`Bearer ${MEMBER_TOKEN}`)
     expect(await request.clone().json()).toMatchObject({
-      sha: 'layer-two-head',
+      sha: TOP_HEAD,
       merge_method: 'rebase',
     })
   } finally {

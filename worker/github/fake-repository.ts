@@ -38,6 +38,7 @@ export class RepositoryGitHub {
   failure: Response | null = null
   /** GitHub refuses Ready for review, such as for a rule of the branch. */
   readyRefused = false
+  readonly refusedBaseWrites = new Set<number>()
   onRequest: ((operation: string) => Promise<void>) | null = null
   private readonly signIn: FakeGitHub
 
@@ -124,7 +125,10 @@ export class RepositoryGitHub {
       /^\/repos\/([^/]+)\/([^/]+)\/compare\/([^/]+)$/,
     )
     if (compare) {
-      const sha = this.mergeBases.get(compare[3])
+      const [base, head] = compare[3].split('...')
+      const sha =
+        this.mergeBases.get(compare[3]) ??
+        this.mergeBases.get(`${head}...${base}`)
       return sha && `${compare[1]}/${compare[2]}` === this.fullName
         ? Response.json({ merge_base_commit: { sha } })
         : Response.json({}, { status: 404 })

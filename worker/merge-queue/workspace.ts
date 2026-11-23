@@ -1,8 +1,10 @@
 import { featureResult } from '../features/result'
-import type { GitHubSnapshot } from '../github/contracts'
+import type { GitHubSnapshot, GitHubWorkspace } from '../github/contracts'
 import { GITHUB_STATE_KEY } from '../github/workspace-state'
 import { lifecycleDependencies } from '../lifecycle/runtime'
 import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
+import { saveQueueBaseChange } from '../lifecycle/queue-base-change'
+import { syncQueueHead } from '../lifecycle/queue-head-sync'
 import { AgentSessionWorkspace } from '../tools/workspace'
 import { QueueCoordinator } from './coordinator'
 import type { QueueLeave, QueueMemberAction, QueueScope } from './contracts'
@@ -69,6 +71,52 @@ export class MergeQueueWorkspace extends AgentSessionWorkspace {
 
   reportMergeQueueFix(scope: QueueScope, result: QueueFixEnd) {
     return featureResult(() => this.mergeQueue.reportFix(scope, result))
+  }
+
+  saveMergeQueueBase(binding: GitHubWorkspace, to: string | null) {
+    return featureResult(async () => {
+      if (!this.env.WORKSPACES.idFromName(binding.id).equals(this.ctx.id))
+        return false
+      return saveQueueBaseChange(
+        this.env.DB,
+        this.integration.storage,
+        binding,
+        to,
+        this.integration.now(),
+      )
+    })
+  }
+
+  syncMergeQueueHead(
+    binding: GitHubWorkspace,
+    head: { oldHead: string; newHead: string },
+  ) {
+    return featureResult(async () => {
+      if (!this.env.WORKSPACES.idFromName(binding.id).equals(this.ctx.id))
+        return 'retry' as const
+      const { baseChanges, storage, now } = this.integration
+      const chat = this.chat.operation(binding.id)
+      return syncQueueHead(
+        {
+          env: this.env,
+          dependencies: { ...lifecycleDependencies(), now },
+          storage,
+          fetches: baseChanges.fetches,
+        },
+        binding,
+        head,
+        (operation) =>
+          this.run(async () => {
+            if (await pendingWorkspaceChange(storage)) return 'retry'
+            const active = await chat.read(async (view) =>
+              (await view.sessions()).some(
+                ({ activeTurnId }) => activeTurnId !== null,
+              ),
+            )
+            return active ? 'active-turn' : operation()
+          }),
+      )
+    })
   }
 
   async mergeQueueLocalClean(input: QueueLocalWork): Promise<boolean> {

@@ -13,6 +13,7 @@ export interface BaseChangeJob {
   at: number
   failures: number
   revision?: string
+  queueBase?: { repositoryId: string; from: string | null; to: string | null }
   repositoryDeliveries?: string[]
   repositoryBeforeSave?: {
     fullName: string
@@ -39,7 +40,7 @@ export async function saveBaseChangeJob(
     BASE_CHANGE_JOB_KEY,
   )
   if (pending?.binding.branch === snapshot.banner.branch) {
-    snapshot.baseChange ??= pending.change
+    if (!pending.queueBase) snapshot.baseChange ??= pending.change
     return
   }
   if (!snapshot.baseChange) return

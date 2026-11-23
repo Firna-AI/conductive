@@ -14,6 +14,7 @@ import { readMergeWorkspace } from './merge-access'
 import type { WorkspaceGitHubState } from './workspace-state'
 import { moveWorkspaceBase } from './base-data'
 import { saveBaseChangeJob } from '../lifecycle/base-change-job'
+import { scopeForQueueWorkspace } from '../merge-queue/data'
 
 // Three fresh reads, one second apart, bound GitHub's merge-state retry work.
 const MERGE_STATE_RETRY_LIMIT = 3
@@ -199,7 +200,8 @@ async function readAndCommit(
           signal.pushBranch !== branches.baseBranch
         )
           return null
-        const snapshot = await reader.read(branches)
+        const queued = await scopeForQueueWorkspace(db, binding)
+        const snapshot = await reader.read(branches, !queued)
         if (
           !snapshot.banner.pullRequest &&
           !snapshot.banner.baseMoved &&

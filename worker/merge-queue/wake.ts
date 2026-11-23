@@ -89,6 +89,8 @@ export async function wakeQueueWebhook(env: AppEnv, route: WebhookRoute) {
         continue
       }
     }
+    // An edited delivery can name an earlier base. The queue uses a fresh
+    // GitHub read to accept the edit or leave the queue.
     await wakeQueue(env, scope)
   }
 }

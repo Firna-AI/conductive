@@ -18,6 +18,7 @@ import { QueueMerges } from './merges'
 import { moveUnit } from './order'
 import { QUEUE_SCOPE_KEY, saveQueueAlarm } from './queue-alarm'
 import { leaveQueue, stepQueue, type QueueRuntime } from './step'
+import { QueueRestacks } from './restacks'
 import { saveQueueOrder } from './writes'
 
 const DEFERRED_LEAVES = 'merge-queue:deferred-leaves'
@@ -27,13 +28,18 @@ export class QueueCoordinator {
   private readonly context: DurableObjectState
   private readonly fixes: QueueFixTurns
   private readonly merges: QueueMerges
+  private readonly restacks: QueueRestacks
   private pending: Promise<void> = Promise.resolve()
 
   constructor(runtime: QueueRuntime, context: DurableObjectState) {
-    this.runtime = runtime
     this.context = context
-    this.fixes = new QueueFixTurns(runtime, context.storage)
-    this.merges = new QueueMerges(runtime, context.storage)
+    this.runtime = {
+      ...runtime,
+      restackAfterLeave: (queue) => this.schedule(queue),
+    }
+    this.fixes = new QueueFixTurns(this.runtime, context.storage)
+    this.merges = new QueueMerges(this.runtime, context.storage)
+    this.restacks = new QueueRestacks(this.runtime, context.storage, this.fixes)
   }
 
   private run<T>(work: () => Promise<T>): Promise<T> {
@@ -153,6 +159,7 @@ export class QueueCoordinator {
           now: dependencies.now(),
           writeId: dependencies.randomToken(),
           writer,
+          reordering: true,
         })
         if (!saved) {
           await member.authorize()
@@ -208,13 +215,18 @@ export class QueueCoordinator {
     this.checkName(scope)
     await this.run(async () => {
       if (await this.merges.resume()) return
-      await this.drainLeaves(scope)
-      await stepQueue(this.runtime, scope)
-      await this.fixes.advance(scope)
       try {
-        await this.merges.automatic(scope)
+        await this.drainLeaves(scope)
+        await stepQueue(this.runtime, scope)
+        if (this.runtime.env.GITHUB_APP_PRIVATE_KEY) {
+          const restack = await this.restacks.advance(scope)
+          if (restack) await this.merges.automatic(scope, restack)
+        } else {
+          await this.fixes.advance(scope)
+          await this.merges.automatic(scope)
+        }
       } catch {
-        warnWorker({ kind: 'merge_queue_merge_retry' })
+        warnWorker({ kind: 'merge_queue_step_retry' })
         await this.context.storage.transaction((storage) =>
           saveQueueAlarm(
             storage,

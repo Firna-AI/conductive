@@ -10,7 +10,9 @@ export async function queueScopesForRepository(
       `SELECT q.org_id AS orgId, q.github_repository_id AS githubRepositoryId
      FROM merge_queues q JOIN repositories r ON r.id = q.repository_id AND r.org_id = q.org_id
      WHERE q.github_repository_id = ? AND r.installation_id = ?
-       AND EXISTS (SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id)`,
+       AND (q.github_stack_number IS NOT NULL OR q.creating_stack = 1 OR EXISTS (
+         SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
+       ))`,
     )
     .bind(repositoryId, installationId)
     .all<QueueScope>()
@@ -46,14 +48,29 @@ export async function renameQueueTrunk(
   queue: QueueRecord,
   now: number,
 ) {
-  await db
-    .prepare(
-      `UPDATE merge_queues SET trunk = ?, updated_at = ?
+  await db.batch([
+    db
+      .prepare(
+        `UPDATE merge_queues SET trunk = ?, updated_at = ?
      WHERE id = ? AND trunk = ? AND EXISTS (
        SELECT 1 FROM repositories r WHERE r.id = repository_id
        AND r.org_id = merge_queues.org_id AND r.default_branch = ?
      )`,
-    )
-    .bind(queue.defaultBranch, now, queue.id, queue.trunk, queue.defaultBranch)
-    .run()
+      )
+      .bind(
+        queue.defaultBranch,
+        now,
+        queue.id,
+        queue.trunk,
+        queue.defaultBranch,
+      ),
+    db
+      .prepare(
+        `UPDATE merge_queue_entries SET github_base = ? WHERE queue_id = ?
+       AND github_base = ? AND EXISTS (
+         SELECT 1 FROM merge_queues q WHERE q.id = queue_id AND q.trunk = ?
+       )`,
+      )
+      .bind(queue.defaultBranch, queue.id, queue.trunk, queue.defaultBranch),
+  ])
 }

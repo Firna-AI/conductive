@@ -38,7 +38,8 @@ export async function queueBarState(
        SELECT e.workspace_id, ROW_NUMBER() OVER (ORDER BY e.place) AS place,
          COUNT(*) OVER () AS count, LAG(e.pull_number) OVER (ORDER BY e.place) AS belowPullNumber,
          q.trunk, e.state, e.wait_reason AS wait, e.pull_number AS pullNumber, e.place AS savedPlace,
-         CASE WHEN q.trunk = r.default_branch THEN e.merge_head END AS mergeHead,
+         CASE WHEN q.trunk = r.default_branch AND q.github_stack_number IS NOT NULL
+           AND q.rebuild_stack = 0 AND q.reordering = 0 THEN e.merge_head END AS mergeHead,
          e.blocking_pull_number AS blockedByPullNumber, e.old_base_sha AS oldBase,
          e.old_base_head AS oldBaseHead
        FROM merge_queue_entries e ${queueEntryBindingSql}

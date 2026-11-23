@@ -265,6 +265,8 @@ The reader checks each explicit workspace base through [checkRepositoryBranch](b
 Only `branch_not_found` moves the base to GitHub's live default branch.
 A failed read or missing repository access keeps the base.
 [Base branches](../../docs/protocol/base-branches.md#a-base-branch-that-github-deleted) states the requirement.
+The [merge queue](../merge-queue/README.md) owns base moves for queued
+workspaces. A regular refresh uses their saved comparison base.
 
 The snapshot records its private `baseChange` repair marker with one saved `baseChange:job` and its alarm source in the same transaction.
 The native alarm registers before that transaction commits.
@@ -344,7 +346,7 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [output.ts](output.ts) adds the masked labels `displayBranch`, `displayBaseBranch`, and `displayBaseMoved` to the banner of the fresh and stored replies of `app-handler.ts`, with the secret values of the last start of the sandbox. The chat backend labels each `github.updated` event, as [Branch and path labels](../chat/integration/README.md#branch-and-path-labels) says. Snapshots and receipts keep the real names.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
-- [queue-pulls.ts](queue-pulls.ts) reads open pull requests, their GitHub bases, and the rules of the queue's trunk with a member token.
+- [queue-pulls.ts](queue-pulls.ts) reads open pull requests, their GitHub bases, pinned branch heads, and the rules of the queue's trunk.
   It batches the pull request and fork facts for the workspace list by repository.
 - [compare-merge-base.ts](compare-merge-base.ts) reads the common commit of two pinned commits for a queued layer's conflict prompt.
 - [stack-client.ts](stack-client.ts) lists stacks for one pull request and reads, creates, extends, and unstacks them.

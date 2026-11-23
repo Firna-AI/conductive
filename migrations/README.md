@@ -100,9 +100,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
-| Merge queue storage and routes | `202611231200`–`202611231259` |
-| Merge queue merges and leave notices | `202611231300`–`202611231359` |
-| Merge queue rebase prompt | `202611231400`–`202611231459` |
+| Merge queue | `202611231200`–`202611231259` |
 
 ## Key code
 
@@ -618,17 +616,9 @@ row. The new reader explicitly excludes those rows. The
 [provider switch guide](../worker/lifecycle/provider-switches.md) gives
 the atomic transition into execution and the separate execution deadline.
 
-`202611231200_merge_queue.sql` adds `merge_queues` and
-`merge_queue_entries`. The tables store the repository trunk, stack number,
-entry places, units, queuers, states, and step times. Their foreign keys
-remove entries when their workspaces or queues are deleted. The previous
-Worker can keep writing the existing tables. The
+`202611231200_merge_queue.sql` adds the queue, entry, and leave notice
+tables. They store the trunk, stack number, order, queuers, step times,
+and commits for restacks, syncs, and merges. A leave notice records the
+branch that a pull request still targets after a failed base reset. The
+previous Worker can keep writing the existing tables. The
 [merge queue backend](../worker/merge-queue/README.md) owns the new tables.
-
-`202611231300_merge_queue_merge.sql` adds nullable columns for each entry's
-member base, checked merge head, refused head, and blocking pull request.
-It adds `merge_queue_leave_notices` for the base that remains after a
-failed reset. The previous Worker can keep writing the queue tables.
-
-`202611231400_merge_queue_old_base.sql` adds the saved base commit and the
-pull request head that it applies to. Both columns accept a missing value.

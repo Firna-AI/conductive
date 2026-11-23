@@ -36,7 +36,7 @@ export interface QueueFixEnd {
 
 export type QueueFix = QueueFixRequest &
   (
-    | { state: 'pending' }
+    | { state: 'pending'; mayHaveMessage?: true }
     | { state: 'sent'; turnId: string }
     | { state: 'ended'; result: QueueFixEnd }
   )

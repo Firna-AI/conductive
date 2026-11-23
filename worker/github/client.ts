@@ -17,6 +17,7 @@ import {
   text,
 } from './parsers'
 import { CHECKS, COMPARE, LOOKUP, PULL, REVIEWS } from './queries'
+import { readChangesRequestedBy } from './reviewers'
 import { graphql } from './transport'
 import { checkRepositoryBranch } from './branch-check'
 import { requireGitBranchName } from './branch-name'
@@ -79,9 +80,12 @@ export class GitHubReader {
     return comparison === null ? 0 : integer(object(comparison).aheadBy)
   }
 
-  async read(branches?: GitHubBranchDependencies): Promise<GitHubSnapshot> {
+  async read(
+    branches?: GitHubBranchDependencies,
+    followDeletedBase = true,
+  ): Promise<GitHubSnapshot> {
     const lookup = branches ?? (await this.dependenciesForBranch())
-    const baseChange = await this.baseChange()
+    const baseChange = followDeletedBase ? await this.baseChange() : undefined
     if (lookup.pullNumber === null) {
       const snapshot = await this.withoutPull(
         lookup.headSha,
@@ -104,9 +108,22 @@ export class GitHubReader {
     return this.snapshot(firstPage, baseChange)
   }
 
-  /** Read the saved pull request number, even when its head has a newer pull request. */
-  async readPull(pullNumber: number): Promise<GitHubSnapshot> {
-    return this.snapshot(await this.pull(pullNumber))
+  async queuedPull(pullNumber: number) {
+    const page = await this.pull(pullNumber)
+    const pull = parsePull(page, this.workspace)
+    const snapshot = await this.snapshot(page, undefined, pull).catch(
+      (error: unknown) => {
+        if (error instanceof HttpError && error.code === 'github_pending')
+          return null
+        throw error
+      },
+    )
+    return {
+      pull,
+      snapshot,
+      nodeId: text(page.id),
+      baseHead: isGitCommitOid(page.baseRefOid) ? page.baseRefOid : undefined,
+    }
   }
 
   async pullDetails(pullNumber: number) {
@@ -124,14 +141,18 @@ export class GitHubReader {
   private async snapshot(
     firstPage: Record<string, unknown>,
     baseChange?: GitHubSnapshot['baseChange'],
+    pull = parsePull(firstPage, this.workspace),
   ): Promise<GitHubSnapshot> {
-    const pull = parsePull(firstPage, this.workspace)
     const checks = await readChecks(pull, firstPage, (after, mergeAfter) =>
       this.repository(CHECKS, { number: pull.number, after, mergeAfter }),
     )
-    const reviewers = await this.reviewers(
-      pull.number,
+    const reviewers = await readChangesRequestedBy(
       firstPage.latestOpinionatedReviews,
+      async (after) =>
+        object(
+          (await this.repository(REVIEWS, { number: pull.number, after }))
+            .pullRequest,
+        ).latestOpinionatedReviews,
     )
     return {
       banner: pullBanner(
@@ -263,30 +284,5 @@ export class GitHubReader {
       checks: { state: 'waiting-for-pull-request', checks: [] },
       headSha,
     }
-  }
-
-  private async reviewers(
-    number: number,
-    firstPage: unknown,
-  ): Promise<string[]> {
-    const reviewers: string[] = []
-    let after: string | null = null
-    let connection = object(firstPage)
-    do {
-      for (const value of nodes(connection.nodes)) {
-        const review = object(value)
-        if (review.state === 'CHANGES_REQUESTED' && review.author !== null) {
-          reviewers.push(text(object(review.author).login))
-        }
-      }
-      after = nextPage(connection.pageInfo, after)
-      if (after !== null) {
-        const repository = await this.repository(REVIEWS, { number, after })
-        connection = object(
-          object(repository.pullRequest).latestOpinionatedReviews,
-        )
-      }
-    } while (after !== null)
-    return reviewers
   }
 }

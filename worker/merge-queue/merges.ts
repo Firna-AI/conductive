@@ -19,6 +19,7 @@ import {
 import { readMergePulls, type QueuePullRead } from './merge-read'
 import { reconcileMergePulls } from './merge-settle'
 import { saveQueueAlarm } from './queue-alarm'
+import type { QueueRestackRead } from './restacks'
 import { leaveQueue, type QueueRuntime } from './step'
 
 const CHECK_WAIT = 'merge-queue:checks-wait'
@@ -59,9 +60,16 @@ export class QueueMerges {
     queue: QueueRecord,
     entries: QueueEntry[],
     clicker?: string,
+    restack?: QueueRestackRead,
   ) {
     const { env, dependencies } = this.runtime
-    const reads = await readMergePulls(this.runtime, queue, entries, clicker)
+    const reads = await readMergePulls(
+      this.runtime,
+      queue,
+      entries,
+      clicker,
+      restack,
+    )
     const remaining = await reconcileMergePulls(
       this.runtime,
       queue,
@@ -106,6 +114,7 @@ export class QueueMerges {
     if (await this.jobs.active()) throw queueMerging()
     if (
       target.place !== ahead + 1 ||
+      queue.reordering !== 0 ||
       queue.githubStackNumber === null ||
       queue.trunk !== queue.defaultBranch
     )
@@ -153,9 +162,9 @@ export class QueueMerges {
     return true
   }
 
-  async automatic(scope: QueueScope) {
+  async automatic(scope: QueueScope, restack?: QueueRestackRead) {
     const { env, dependencies } = this.runtime
-    const queue = await readQueue(env.DB, scope)
+    const queue = restack?.queue ?? (await readQueue(env.DB, scope))
     if (
       !queue ||
       queue.suspendedAt !== null ||
@@ -163,10 +172,11 @@ export class QueueMerges {
       (!env.GITHUB_APP_PRIVATE_KEY && queue.githubStackNumber === null)
     )
       return
-    const entries = await readQueueEntries(env.DB, queue.id)
+    const entries =
+      restack?.entries ?? (await readQueueEntries(env.DB, queue.id))
     if (!entries.length) return
-    const read = await this.read(queue, entries)
-    if (!read) return
+    const read = await this.read(queue, entries, undefined, restack)
+    if (!read || queue.reordering) return
     const target = read.automatic.at(-1)
     if (!target) {
       await this.storage.delete(CHECK_WAIT)
