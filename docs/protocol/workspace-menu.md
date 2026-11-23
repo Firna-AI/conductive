@@ -3,7 +3,8 @@
 This doc holds the requirements and the decisions in force for the menu
 of a workspace row, which the header of the open workspace also opens.
 The menu moves, reassigns, renames, and archives the
-workspace of its row, and it copies the link of that workspace. It belongs
+workspace of its row, and it copies the link of that workspace. It also
+adds the workspace to the merge queue, or removes it. It belongs
 to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md). The terms are
 those of the [architecture doc](../architecture.md#terms). A decision
@@ -25,17 +26,22 @@ number names a dated record, as
   [A run is a workspace](automation-runs.md#a-run-is-a-workspace) says.
 - The header of the open workspace has the same menu, as
   [The menu in the header](#the-menu-in-the-header) says.
-- The menu holds Move to section, Reassign to, Rename, Copy link, and
-  Archive, in that order. A line comes before Archive.
+- The menu holds Move to section, Reassign to, Rename, Copy link, Add to
+  merge queue, and Archive, in that order. A line comes before Add to
+  merge queue and Archive, when the menu shows either of them.
+- On a queued row, Remove from queue takes the place of Add to merge
+  queue. [Merge queue in the app](merge-queue-in-the-app.md) gives both.
 - On 9 November 2026 the user chose the four actions that change the
   workspace. On 12 November 2026 the user added Copy link, as
-  [Copy link](#copy-link) says.
+  [Copy link](#copy-link) says. On 22 November 2026 the user added Add to
+  merge queue (decision 317).
 - Other actions, such as Pin and Mark as unread, were rejected for the
-  menu, because the user chose these five actions.
+  menu, because the user chose these actions.
 - Each action other than Copy link changes the workspace of its row, also
   while another workspace is open.
 - Each such action changes only its own part of the workspace: the
-  section, the owner, the name, or the archive state.
+  section, the owner, the name, the archive state, or its entry in the
+  merge queue.
 - Archive can also advance the activity time, as [Archive](#archive) says.
 - The reply to an action does not bring back an older value of another
   part, such as an older state of the workspace.
@@ -136,8 +142,12 @@ number names a dated record, as
   [What members of a suspended org keep](operator-actions.md#what-members-of-a-suspended-org-keep)
   says.
 - Move to section shows only when the org has more than one section.
-- A nested row has no Move to section, as [Moves](sub-workspaces.md#moves)
-  says.
+- A nested row has no Move to section, as
+  [Moves](sub-workspace-list.md#moves) says. A queued row has none either,
+  because it shows in no section.
+- Add to merge queue and Remove from queue show only to a member with
+  write access or more to the repository. Add to merge queue shows only
+  for a workspace that can join.
 - A change of the role, the workspace, or the org can take an action away
   while the menu is open. The menu then drops that action and its choices.
   Copy link stays, so the menu stays open.

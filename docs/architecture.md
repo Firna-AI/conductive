@@ -159,6 +159,10 @@ each feature.
 - **Start branch:** the branch whose newest commit a new workspace branch
   starts from. It is the default branch of the repository, unless the
   create names another branch.
+- **Merge queue:** the ordered list of the queued workspaces of one
+  repository of an org. The app merges their pull requests into the
+  default branch as one GitHub stack, as
+  [Merge queue](protocol/merge-queue.md) says.
 
 ## Components
 

@@ -134,7 +134,9 @@ record, as [Decision numbers](../architecture.md#decision-numbers) says.
 
 1. A member presses Merge in the pull request bar. The Worker starts the
    merge on GitHub with the GitHub token of that member, and with the head
-   commit that the bar showed.
+   commit that the bar showed. On a workspace in the merge queue, the
+   click goes to the queue, which merges as its next step, as
+   [The merge](../protocol/merge-queue.md#the-merge) says.
 2. The bar asks the Worker for the result until GitHub reports it.
 3. GitHub sends the event of the merge. The Worker routes it to the
    workspace, and the Durable Object pushes the merged state to every open

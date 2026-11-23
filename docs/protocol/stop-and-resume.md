@@ -92,6 +92,9 @@ says. A services decision number names a decision of the change that adds
 - An accepted wake of a watch also starts the sandbox of the calling
   session in the same cases, with the same checks. The wake starts or joins
   a turn there, as [Delivery](session-watches.md#delivery) says.
+- A restack turn of the merge queue also starts the sandbox in the same
+  cases, with the same checks, as
+  [Restack turns](merge-queue-stack.md#restack-turns) says.
 - A failed first start keeps waiting for Try again, as
   [A failed first start](create-a-workspace.md#a-failed-first-start)
   says. An empty session from the agent tools starts nothing.

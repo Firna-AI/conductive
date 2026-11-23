@@ -2,6 +2,9 @@
 
 This doc states how a cloud computer gets GitHub access, who its commits
 name as their author, and how the Worker acts on GitHub as a member.
+[GitHub tokens: the Worker as a member](github-tokens-worker.md) states
+the merges, the branch reads, the fetches of the trusted jobs, and the
+steps of the merge queue.
 [GitHub tokens: image builds](github-tokens-image-builds.md) states which
 GitHub tokens an image job uses to copy the repositories. An image job is
 a build or a refresh of the org image.
@@ -31,8 +34,10 @@ decision number names a decision of the change that adds the
   never falls back to the workspace owner.
 - Trusted jobs are the other cases. The fetch of a Continue job or of a
   repository change job gets the token of the member who pressed the
-  action, as [Continue](#continue) says. The fetch of a moved base gets
-  the token of the workspace owner, as [A moved base](#a-moved-base) says.
+  action, as [Continue](github-tokens-worker.md#continue) says. The fetch
+  of a moved base, also of a base move of a queued workspace, gets the
+  token of the workspace owner, as
+  [A moved base](github-tokens-worker.md#a-moved-base) says.
 - Each command that an agent runs in a turn has the ID of that turn. This
   holds also in a shell that loads the sandbox's own variables again, such
   as the login shell in which Codex runs each command.
@@ -186,103 +191,25 @@ decision number names a decision of the change that adds the
 
 ## Merge as the member
 
-- The Worker reads, for each member, the access of that member to the
-  repository and the merge method that GitHub gives that member
-  (decision 221). It reads with the member's own GitHub token, and the
-  answer goes only to that member.
-- A member may merge when GitHub gives that member write access or more.
-  GitHub still checks the rules of the branch at the merge.
-- Reason: GitHub reports no single field for the right to merge.
-- The Worker merges with the GitHub token of the member who clicks Merge
-  (decision 220). GitHub then shows that member as the merger, and checks
-  the rights of that member.
-- A merge with a token of the app was rejected. GitHub would then show the
-  app as the merger, and skip the rights of the member.
-- The Worker refuses a merge for a person who is not a member of the org,
-  in a suspended org, and in an archived workspace.
-- No GitHub error text reaches the browser. The Worker gives each refusal
-  of GitHub as an error code of the app.
-- The Worker also marks a draft ready for review with the GitHub token of
-  the member who clicks Ready for review, as
-  [Ready for review](github-banner.md#ready-for-review) says. The same
-  access rule, refusals, and error codes of the app apply. The user chose
-  this on 17 November 2026.
+[Merge as the member](github-tokens-worker.md#merge-as-the-member) states
+whose GitHub token a merge and Ready for review use.
 
 ## Branch reads
 
-- The picker of New workspace lists the branches of one repository of the
-  org. The Worker reads them live from GitHub with the GitHub user token of
-  the member who opens the picker. It stores no list.
-- The live branch reply holds only branches that GitHub lists, newest
-  commit first. The picker gets its default row from the saved repository.
-- The Worker answers only a member of the org, and only for a repository
-  of that org. The answer goes only to that member.
-- Reason: the browser gets no GitHub token, and each member sees only the
-  branches that GitHub shows to that member.
-- The branch check of a create asks GitHub for each named branch with the
-  GitHub user token of the sender, as
-  [The branch check](start-from-a-branch.md#the-branch-check) says. The
-  sender of a create call is the sender of the calling turn.
-- GitHub then checks the read access of that member. When the token cannot
-  read the repository, the app says so, and it does not claim that a
-  branch is missing.
-- The Worker gives each refusal of GitHub as an error code of the app, as
-  for a merge.
+[Branch reads](github-tokens-worker.md#branch-reads) states whose GitHub
+token reads the branches of a repository.
 
 ## Continue
 
-- Continue reads the merged pull request with the GitHub token of the
-  member who pressed Continue. With that token, it also asks GitHub whether
-  the base branch of that pull request still exists.
-- Continue fetches the latest commit of its base branch with the same
-  token (decision 226). GitHub then checks the read access of that member.
-  [The base and the new branch](continue.md#the-base-and-the-new-branch)
-  gives that base branch (decision 300).
-- The workspace runs this fetch as a trusted Continue job, as it runs the
-  fetch of a create. The credential route gives the token to that job only
-  while its fetch runs.
-- The token reaches only that fetch. No Git setting and no hook of the
-  repository folder runs with it. Reason: agent code can change the Git
-  settings and the hooks of the repository folder.
-- Every member may press Continue (decision 224). So the token of a member
-  who is not the owner reaches the sandbox of the owner for the fetch, as
-  it does for a message of that member.
-- A [repository change](repository-change.md) fetches the latest default
-  branch of the new repository in the same way, with the token of the
-  member who changes the repository.
-- These ways were rejected (decision 226):
-  - The token of the workspace owner, through the mode that `gh` uses
-    outside a turn. It works only in a workspace from a newer org image.
-  - An installation token that reads only the one repository. A workspace
-    sandbox then gets an installation token, and the fetch needs the revoke
-    steps of image builds.
+[Continue](github-tokens-worker.md#continue) states whose GitHub token the
+fetch of Continue and of a repository change uses.
 
 ## A moved base
 
-- When GitHub deletes the base branch of a workspace, the Worker moves the
-  base branch to the default branch (decision 304). The cloud computer
-  then fetches the latest commit of the default branch, as
-  [The move in the cloud computer](base-branches.md#the-move-in-the-cloud-computer)
-  says.
-- That fetch gets the GitHub token of the workspace owner (decision 307).
-  The owner's account is the one that `gh` already uses outside an agent
-  turn.
-- Reason: no member starts the move. The Worker starts it after a GitHub
-  read, such as the read after a GitHub webhook. The saved retry of the
-  move or a resume runs the fetch. So no turn and no press of a member
-  gives a token.
-- The workspace runs this fetch as a trusted job, as it runs the fetch of
-  Continue. The credential route gives the token to that job only while
-  its fetch runs. GitHub then checks the read access of the owner.
-- As for Continue, the token reaches only that fetch. No Git setting and
-  no hook of the repository folder runs with it.
-- These ways were rejected (decision 307):
-  - A fetch only with the token of a turn or of the member who presses
-    Continue. A move after a GitHub webhook, at a retry, or at a resume
-    then gets no token.
-  - A base commit that the Worker reads from GitHub and gives to the agent
-    runner. It changes the contract of the agent runner.
-  - The move at the next agent turn, with the token of the sender of that
-    turn. A workspace that waits for review then keeps the old comparison.
-  - A button on the message of a moved base, which fetches with the token
-    of the member who presses it. Changes then wait for that press.
+[A moved base](github-tokens-worker.md#a-moved-base) states whose GitHub
+token the fetch of a moved base uses.
+
+## The merge queue
+
+[The merge queue](github-tokens-worker.md#the-merge-queue) states whose
+GitHub token each step of the merge queue uses.

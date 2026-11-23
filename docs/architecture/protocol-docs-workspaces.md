@@ -33,8 +33,8 @@ protocol docs.
     notice before the first good build, and the notice of a waiting
     repository.
 - [Base branches](../protocol/base-branches.md): the base branch of each
-  workspace, a base branch that GitHub deleted, and the branch of a pull
-  request run.
+  workspace, a base branch that GitHub deleted, the base of a queued
+  workspace, and the branch of a pull request run.
 - [Repository folders](../protocol/repository-folders.md): the folder and the
   shell variable of each repository in a sandbox, and the context folder
   of each workspace.
@@ -61,10 +61,14 @@ protocol docs.
   workspace to another repository of its org, on a new branch with the
   same sandbox and sessions.
 - [Workspace menu](../protocol/workspace-menu.md): the menu of a workspace
-  row, which moves, reassigns, renames, and archives the workspace.
+  row, which moves, reassigns, renames, and archives the workspace, and
+  adds it to the merge queue or removes it.
 - [Sub-workspaces](../protocol/sub-workspaces.md): the parent link, when
-  to nest, the depth limit, the nested rows of the list, an archived parent, the moves
-  of a tree, and the agent context.
+  to nest, the depth limit, the section of a new sub-workspace, and the
+  agent context.
+  - [Sub-workspaces in the list](../protocol/sub-workspace-list.md): the
+    nested rows of the list, an archived or a queued parent, and the moves
+    of a tree.
   - [Parent changes](../protocol/parent-changes.md): the moves that nest
     a workspace under another parent or take it out of its tree, the
     place of the moved tree, and the refusals.

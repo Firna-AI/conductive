@@ -12,55 +12,8 @@ This page lists each protocol doc and what it covers.
   that belong to it.
 - [Chat and events](../protocol/chat-and-events.md): sessions, messages, what
   the chat shows, and the events.
-  - [Messages and attachments](../protocol/messages-and-attachments.md)
-    - [Message attachments](../protocol/message-attachments.md): the size
-      limit, the upload, the storage, and the deletion of the files of a
-      message, and their chips and their drop in the message field.
-      - [Attachment transfers](../protocol/attachment-transfers.md): the
-        transfer of each file into the cloud computer, the deletion of its
-        stored copy, the check of a later message, and what the agent gets.
-    - [Fast mode](../protocol/fast-mode.md): the Fast switch of the model
-      menu, the models that show it, who may turn it on, and the speed of a
-      turn that cannot run fast.
-    - [Dropped answers](../protocol/dropped-answers.md): the continue
-      message of a Claude turn after its model answer drops.
-  - [The scroll of the chat](../protocol/chat-scroll.md): the row that
-    stays in view, the scroll after a send, and the place that each tab
-    keeps.
-  - [File mentions](../protocol/file-mentions.md): the list of `@` in the
-    composer, the chips of files and folders, Add to chat, the sent chips
-    of attached files, and the removal of each chip of the composer.
-    - [File mentions: files in answers](../protocol/file-mentions-answers.md):
-      the file chips, the file links, and the pictures in the answers of
-      the agents, and their line targets.
-  - [Skill mentions](../protocol/skill-mentions.md): the list of `/` in the
-    composer, the skill chips and their text, and the skills report of the
-    runner that fills the list.
-  - [Agent runner](../protocol/agent-runner.md): the connection of the runner,
-    its events and their limits, its turns, what an out-of-memory kill ends,
-    the background work of Claude turns with its note and its time limit,
-    its port reports, its skills report, and the repair of lost workspace updates.
-    - [Background work of Claude turns](../protocol/background-work.md):
-      the wait of a Claude turn for background work, its note, and its time
-      limit.
-    - [Listening ports](../protocol/listening-ports.md): the scanner's
-      eligibility, labels, limits, and full reports.
-    - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
-      reports that belong to no session, the repair request after a refused
-      update, and the notice of a failed repair.
-    - [Runner warnings](../protocol/runner-warnings.md): the warnings of the
-      Worker for runner connections and for turn ends with no Stop request,
-      and the process-start ID of the runner.
-    - [Services](../protocol/services.md): the named programs outside every
-      turn, with [Service calls](../protocol/service-calls.md),
-      [Services in the app](../protocol/services-in-the-app.md), and
-      [Service reports](../protocol/service-reports.md).
-  - [Session transcripts](../protocol/session-transcripts.md): copying a
-    session as concise or full Markdown, and the text of a copy.
-    - [Transcript routes](../protocol/transcript-routes.md): the route of
-      a copy.
-    - [Transcript reads by agents](../protocol/transcript-reads.md): the
-      route of `read_session`, and the parts of a long text.
+  [Chat protocol docs](protocol-docs-chat.md) lists the docs that belong
+  to it.
 - [Access and security](../protocol/access-and-security.md): sign-in, the
   gates, the secrets, and the isolation of sandboxes and previews.
   - [Isolation of orgs and sandboxes](../protocol/isolation.md)
@@ -131,6 +84,17 @@ This page lists each protocol doc and what it covers.
   - [Repository changes on GitHub](../protocol/repository-changes-on-github.md):
     a new name or default branch of a repository, the saved values, and the
     build that the change starts.
+  - [GitHub banner: merge and after](../protocol/github-banner-merge.md):
+    Merge, Ready for review, Continue and Archive after the merge, and the
+    merge record.
+- [Merge queue](../protocol/merge-queue.md): the queue of each repository,
+  who may join, member stacks, the leave, the merge, and the failures.
+  - [Merge queue: the GitHub stack](../protocol/merge-queue-stack.md): the
+    stack of a queue, its restacks, the restack turns, and the re-order.
+  - [Merge queue in the app](../protocol/merge-queue-in-the-app.md): the
+    Merge queue group of the list, Add to merge queue, the bar of a queued
+    workspace, Remove from queue, Merge on a queued workspace, its prompts,
+    and the commands.
 - [Agent tools](../protocol/agent-tools.md): the tools that agents use in a
   sandbox, and Mac commands.
   - [Agent tool access](../protocol/agent-tool-access.md): what each call
@@ -171,8 +135,8 @@ This page lists each protocol doc and what it covers.
   - [Delete org](../protocol/delete-org.md): the end of an org, its restore
     within 7 days, and the delete of its data.
   - [Sections](../protocol/sections.md): the sections of an org, the moves
-    of workspaces between them, the Archived group, and the rows of the
-    workspace list.
+    of workspaces between them, the Archived group, the place of the Merge
+    queue group, and the rows of the workspace list.
 - [Pricing](../protocol/pricing.md): the plans and their cloud hours, the
   extra hours, the seller and the tax, the pricing page, and the planned
   billing changes. Use is free until billing starts.
@@ -210,6 +174,7 @@ This page lists each protocol doc and what it covers.
 - [Keyboard shortcuts](../protocol/keyboard-shortcuts.md): the commands that
   keys run, where a key goes, and where the changes of a person live.
   - [Keyboard shortcuts: the keys](../protocol/keyboard-shortcuts-keys.md)
+    - [Keyboard shortcuts: the keys of the browsers](../protocol/keyboard-shortcuts-browser-keys.md)
   - [Keyboard shortcuts: fixed keys and text keys](../protocol/keyboard-shortcuts-fixed-keys.md)
   - [Keyboard shortcuts: the hosts](../protocol/keyboard-shortcuts-hosts.md)
   - [Keyboard shortcuts: matching a press](../protocol/keyboard-shortcuts-matching.md)
@@ -250,6 +215,9 @@ This page lists each protocol doc and what it covers.
   Worker as a member.
   - [GitHub tokens: image builds](../protocol/github-tokens-image-builds.md):
     the GitHub tokens that an image job uses to copy the repositories.
+  - [GitHub tokens: the Worker as a member](../protocol/github-tokens-worker.md):
+    the merges, Ready for review, the branch reads, the fetches of Continue
+    and of a moved base, and the steps of the merge queue.
 - [Agent instructions](../protocol/agent-instructions.md): the text that each
   agent session gets, and the skills of a message.
   - [Session instructions](../protocol/session-instructions.md): the same

@@ -713,6 +713,22 @@ and then moved the entry out of the stack as "Needs attention".
     "Queue 3 of 3". The line stands at the top of
     the Checks tab, and its actions wrap under its words.
 
+### Calls after the protocol docs
+
+Agent's calls of 23 November 2026, from the questions of the docs
+implementor. The protocol docs state them.
+
+- The other GitHub writes of the queue for an entry, such as base changes,
+  stack calls, and server rebases, use the queuer's stored token (decision
+  314). When the queuer can no longer act, the leave step resets the base
+  with the token of the member whose action caused the leave, else with the
+  workspace owner's token, as for a moved base (decision 307).
+- The sync of the local branch fetches with the workspace owner's token.
+- A leave because a member changed the base on GitHub keeps that base.
+- The keys that move a focused row move a queued row inside its block.
+- An agent call that moves a queued workspace changes only its stored
+  section or parent. The row stays in the group.
+
 ### Not in this change
 
 - GitHub's own merge queue. At Add, the Worker reads the rules of the
@@ -813,21 +829,21 @@ Depends on: 1
 
 State the requirements and the decisions of the queue.
 
-- [ ] Write `docs/protocol/merge-queue.md` with the rules of the queue, the
+- [x] Write `docs/protocol/merge-queue.md` with the rules of the queue, the
       GitHub stack, the merge, the failures, the re-order, and the group.
       Add it to `docs/architecture/protocol-docs.md`.
-- [ ] Update `docs/protocol/github-banner.md`: the bar actions of the
+- [x] Update `docs/protocol/github-banner.md`: the bar actions of the
       queue, decision 316, and the Merge section that says stacks are not
       part of the bar.
-- [ ] Update `docs/protocol/base-branches.md`: the base of a queued
+- [x] Update `docs/protocol/base-branches.md`: the base of a queued
       workspace follows the queue and GitHub (decision 313).
-- [ ] Update `docs/protocol/github-tokens.md`: the queue merges and sends
+- [x] Update `docs/protocol/github-tokens.md`: the queue merges and sends
       fix turns as the queuer (decision 314). The fetches of its base moves
       use the owner's token (decision 307).
-- [ ] Update `docs/protocol/sections.md`: the Merge queue group.
-- [ ] State that a click on Merge of a queued workspace merges as the next
+- [x] Update `docs/protocol/sections.md`: the Merge queue group.
+- [x] State that a click on Merge of a queued workspace merges as the next
       step of the queue, with the clicker's merge method.
-- [ ] Update `docs/protocol/sub-workspaces.md`: a queued workspace leaves
+- [x] Update `docs/protocol/sub-workspaces.md`: a queued workspace leaves
       its tree, and its sub-workspaces move up a level (decision 318).
 - [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact, such as the token of a merge.

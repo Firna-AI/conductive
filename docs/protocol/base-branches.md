@@ -1,8 +1,9 @@
 # Base branches
 
 This doc holds the requirements and the decisions in force for the base
-branch of each workspace, also after GitHub deletes it. It also covers the
-branch of a pull request run. It belongs to
+branch of each workspace, also after GitHub deletes it and while the
+workspace is in the merge queue. It also covers the branch of a pull
+request run. It belongs to
 [Workspaces and sandboxes](workspaces-and-sandboxes.md), which covers the
 start of a workspace and its tools.
 [Pull request runs](pull-request-runs.md) says which events start a pull
@@ -47,9 +48,13 @@ says.
   Continue do (decision 312). The base then follows a later rename.
   Keeping its name was rejected, because a rename would look like a
   deleted base and give the wrong cause in the pull request bar.
-- A change of the base of an open pull request on GitHub does not change
-  the base branch of the workspace. A base branch that follows the pull
-  request on GitHub was left out for now (decisions 301 and 304).
+- Outside the merge queue, a change of the base of an open pull request on
+  GitHub does not change the base branch of the workspace. A base branch
+  that follows the pull request on GitHub was left out for now (decisions
+  301 and 304).
+- The base branch of a queued workspace follows the queue and GitHub, as
+  [The base of a queued workspace](#the-base-of-a-queued-workspace) says
+  (decision 313).
 - Changes and each diff compare the branch with its base branch, from the
   merge base of the two.
 - Reason: the base branch can move while a workspace works. A plain
@@ -113,6 +118,43 @@ says.
     rename.
   - A fetch at each start. A running computer waits for its next start,
     and each start needs a token.
+
+## The base of a queued workspace
+
+- The base branch of a workspace in the [merge queue](merge-queue.md)
+  follows the queue and GitHub (decision 313). Decisions 301 and 304 stay
+  in force for each workspace outside the queue.
+- Reason: each queued pull request targets the branch of the layer below
+  it, and that branch changes with each join, leave, re-order, and merge.
+- A queued workspace stores the branch of the layer below it as its base
+  branch. The bottom entry stores a null base, which means the default
+  branch, as a create and Continue store it (decision 312).
+- Each change of that base runs a base move in the cloud computer. The
+  cloud computer first fetches the newest commit of the new base branch,
+  and only then targets it, with the saved retry of
+  [The move in the cloud computer](#the-move-in-the-cloud-computer)
+  (decisions 307 and 308). The fetch uses the token of the workspace
+  owner, as [A moved base](github-tokens-worker.md#a-moved-base) says.
+- When GitHub changes the base of a queued pull request, such as after a
+  merge below it, the stored base moves to the new base on GitHub
+  (decision 313). The same change gives the same result when it arrives
+  twice, also for the base changes that the queue makes.
+- A base change on GitHub that the queue did not make is a leave, as
+  [Leaving the queue](merge-queue.md#leaving-the-queue) says.
+- After a leave, each workspace whose pull request targets the trunk
+  again stores a null base again. An upper workspace of a member stack
+  keeps the branch below it as its base, as
+  [Leaving the queue](merge-queue.md#leaving-the-queue) says.
+- After a merge, GitHub rebases each layer that stays in the queue. So the
+  branch of each such workspace gets new commits on GitHub.
+- The Worker then syncs the local branch in each such cloud computer, when
+  no session runs a turn and the repository folder has no changes. The
+  sync fetches the branch. When the local branch is at the old head on
+  GitHub, the sync moves it to the new head. Otherwise the queue sends a
+  restack turn, as
+  [Restack turns](merge-queue-stack.md#restack-turns) says.
+- Reason: an old local branch would make the next push of the agent fail,
+  or undo the rebase of GitHub.
 
 ## The move in the cloud computer
 
