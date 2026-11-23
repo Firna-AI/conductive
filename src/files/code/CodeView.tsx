@@ -23,15 +23,20 @@ export function digitStyle(lastLine: number): DigitStyle {
   return { '--number-digits': String(String(lastLine).length) }
 }
 
+/** The coloured tokens of one line. */
+export function TokenSpans(props: { tokens: readonly Token[] }) {
+  return props.tokens.map((token, index) => (
+    <span className={tokenClass[token.kind]} key={index}>
+      {token.text}
+    </span>
+  ))
+}
+
 /** The cell of the coloured tokens of one line. */
 export function LineText(props: { tokens: readonly Token[] }) {
   return (
     <span className={styles.text} data-copy-text="">
-      {props.tokens.map((token, index) => (
-        <span className={tokenClass[token.kind]} key={index}>
-          {token.text}
-        </span>
-      ))}
+      <TokenSpans tokens={props.tokens} />
     </span>
   )
 }
