@@ -11,15 +11,8 @@ import {
  * The kinds of event that send a notice to a phone: work that waits for a
  * person, and the end of a turn that the member started.
  */
-export const noticeKinds = [
-  'approval',
-  'secret',
-  'question',
-  'finished',
-  'failed',
-] as const
-
-export type NoticeKind = (typeof noticeKinds)[number]
+export type NoticeKind =
+  'approval' | 'secret' | 'question' | 'finished' | 'failed'
 
 /** A notice of the phone app: its workspace, its kind, and its age. */
 export type PhoneNotice = {
