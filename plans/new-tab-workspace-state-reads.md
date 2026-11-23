@@ -33,8 +33,13 @@ legacy history scan of the workspace summary unchanged.
 
 Approval: Cal wrote "Ok progress those plans and merge when go is green" on
 23 November 2026. Cal also said that the complete gate runs in CI, not
-locally. Cal merges each pull request after its checks pass. No agent
-merges into `main`.
+locally. The root coordinator session of the parent workspace,
+`hAtm84N9KBtseruCOEzvhBKGlQssEl7FfKcvM0eacqA` in workspace
+`YxnjrS0efLxT8zULMxN_arL_4KEvcAWCHA_KuRGKLd0`, acts for Cal on this
+approval. It gives the start signal. It merges each pull request into
+`main` after CI is green on the exact head of that pull request. This
+workspace and its child agents never merge into `main`. They report each
+pull request to that session.
 
 PR #477 merged on 22 November 2026 as `6408c9523`. On 23 November 2026
 this branch merged `main` at `48b8a3a98`, in merge commit `e34a9c5ac`.
@@ -46,9 +51,9 @@ files memory (`plans/workspace-object-memory.md`, branch
 `calummoore/object-memory-history-and-files-state-14g5`) changes the
 shared Worker code and the Events section first. It ships as a reader
 release and then a final writer pull request. Milestone 1 of this plan
-starts only after that final pull request merges and Cal gives the
-signal. Each milestone then merges `main` first, with the `git-merge`
-skill. The memory plan owns these parts:
+starts only after that final pull request merges and the root
+coordinator gives the signal. Each milestone then merges `main` first,
+with the `git-merge` skill. The memory plan owns these parts:
 
 - The Events section of `docs/protocol/chat-and-events.md`: it replaces
   "stores every event" with the retention of the newest tree and the
@@ -491,7 +496,8 @@ records the current code in calls 5 to 9, 13, and 14.
 
 Depends on: [PR #477](https://github.com/Firna-AI/conductive/pull/477)
 merged by Cal, and `main` merged into this branch after it. The final pull
-request of the memory plan merged into `main`, and Cal's signal to start.
+request of the memory plan merged into `main`, and the start signal of
+the root coordinator.
 
 The protocol docs state the requirements and Decision 1 for the work
 below. Code READMEs change with the code in later milestones.
@@ -499,8 +505,8 @@ below. Code READMEs change with the code in later milestones.
 - [x] Confirm that Cal merged PR #477. Merge `main` into this branch with
       the `git-merge` skill.
 - [ ] Confirm that the final pull request of the memory plan merged and
-      that Cal gave the signal. Merge `main` into this branch with the
-      `git-merge` skill.
+      that the root coordinator gave the signal. Merge `main` into this
+      branch with the `git-merge` skill.
 - [ ] Create `docs/protocol/workspace-events.md`. Move the Events section
       of `chat-and-events.md` to it, with the lines of PR #477 and of the
       memory plan. Keep `## Events` in `chat-and-events.md` with one link
@@ -775,7 +781,9 @@ Depends on: 1, 2, 3, 4, 5
       design calls of this plan with their dates, a permalink to this plan,
       and the follow-up items that the change adds. It names no breaking
       change: each new member is optional, and the full replay stays.
-      Report it to Cal. Cal merges it after the checks of its head pass.
+      Report it to the root coordinator session. That session merges it
+      after CI is green on its exact head. No agent of this workspace
+      merges it.
 
 ## Post-merge follow-up (non-blocking)
 
