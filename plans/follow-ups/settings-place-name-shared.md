@@ -15,9 +15,9 @@
 - **Root question:** How does every text in code name the place of the account settings in one way?
 - **Options:**
   - **A.** Change nothing, and keep the search that the `documentation` skill asks for at each rename. Effort: Small.
-  - **B.** Add one constant for the name in `src/shared/`, as `docs/mockups/src/brand.ts` gives the product name. The Worker text, the group title of Settings, and the palette label use it. Docs, guides, legal pages, and test names keep their prose. Effort: Medium.
+  - **B.** Add one constant for the name in `src/shared/`, as `src/shared/brand.ts` gives the product name. The Worker text, the group title of Settings, and the palette label use it. Docs, guides, legal pages, and test names keep their prose. Effort: Medium.
 - **Left out:** A link to the Agents tab inside the failed-turn cause. It changes a recorded chat field, so it needs the user, and B meets the goal without it.
 - **Wider fix:** B.
-- **Previous examples:** `docs/mockups/src/brand.ts` holds the product name for all code, so one change renames the product.
+- **Previous examples:** `src/shared/brand.ts` holds the product name for all code, so one change renames the product.
 - **Recommendation:** B. A later rename then changes every text in code at once.
 - **Action:** fix after merge, apply B, because it reaches Worker and shared code outside the files of the branch.

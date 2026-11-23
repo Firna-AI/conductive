@@ -1,7 +1,7 @@
 import { useId, type Ref } from 'react'
 import { ChevronRight } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/settings/SettingsNav.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/settings/SettingsNav.module.css'
 import { AppLink } from '../ui/AppLink'
 import type { SettingsGroup, SettingsRow } from './settings-tabs'
 

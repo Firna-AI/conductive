@@ -1,7 +1,7 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from './SettingsNav.module.css'
+import styles from '../../../../../src/ui/components/settings/SettingsNav.module.css'
 
 type SettingsNavRow = {
   key: string

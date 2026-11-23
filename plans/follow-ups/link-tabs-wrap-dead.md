@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/sync-user-and-org-settings-r8nj`, review round 2.
-- **Location:** `src/shell/ui/links.tsx:16-35`, `docs/mockups/src/components/common/LinkTabs.tsx:21-40`, `docs/mockups/src/components/common/LinkTabs.module.css:10-18`.
+- **Location:** `src/shell/ui/links.tsx:16-35`, `docs/mockups/src/components/common/LinkTabs.tsx:21-40`, `src/ui/components/common/LinkTabs.module.css:10-18`.
 - **Reason:** The review of the Settings branch came after its last fix round.
 
 - **Background:** `LinkTabs` draws a row of tab links. Its `wrap` mode put the org settings tabs in three columns on a phone. Settings replaced those tabs with a list on 20 November 2026, and deleted the app and mockup screens that passed `wrap`. Searches for `wrap={` find no `LinkTabs` caller, only the segmented control of `AgentConnectForm`. No test, plan, or protocol doc names the mode.

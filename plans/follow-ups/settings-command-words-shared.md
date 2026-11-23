@@ -12,7 +12,7 @@
 - **Root question:** How do the app and the mockups give the Settings command the same search words?
 - **Options:**
   - **A.** Change the words of the fixture to "account" and "preferences". Effort: Small.
-  - **B.** Put the words in one shared constant in the mockups, as `sendFeedbackWords` of `docs/mockups/src/components/feedback/feedbackCopy.ts` is. The fixture and `commands.ts` both use it. Effort: Small.
+  - **B.** Put the words in one shared constant in the mockups, as `sendFeedbackWords` of `src/ui/components/feedback/feedbackCopy.ts` is. The fixture and `commands.ts` both use it. Effort: Small.
 - **Left out:** The fixture reads the words from the app: the mockups are the spec, so the app takes shared copy from the mockups.
 - **Wider fix:** B.
 - **Previous examples:** `sendFeedbackWords` serves the app and the mockups.

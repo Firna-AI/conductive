@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { IconButton } from '../common/actions'
 import { SettingsNav, type SettingsNavGroup } from './SettingsNav'
-import styles from './SettingsDialog.module.css'
+import styles from '../../../../../src/ui/components/settings/SettingsDialog.module.css'
 
 /**
  * Settings on a desktop: a large dialog over the whole window, the rail and

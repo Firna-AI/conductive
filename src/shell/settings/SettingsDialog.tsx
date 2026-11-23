@@ -1,6 +1,6 @@
 import { createContext, useContext, useId, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/settings/SettingsDialog.module.css'
+import styles from '../../ui/components/settings/SettingsDialog.module.css'
 import { IconButton } from '../ui/actions'
 import { Overlay, useEscapeLayer, useLayerFocus } from '../ui/Overlay'
 import { trapTab } from '../ui/Sheet'

@@ -1,4 +1,4 @@
-import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
+import { SuspendedOrgNotice } from '../../ui/components/orgs/SuspendedOrgNotice'
 import type { SettingsTab } from '../../app/router'
 import type { User } from '../../shared/api'
 import type { OrgSummary } from '../../shared/orgs'

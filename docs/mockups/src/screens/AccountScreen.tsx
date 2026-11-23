@@ -40,7 +40,6 @@ import {
   settingsGroups,
 } from '../components/settings/settingsGroups'
 
-
 /** At the first run the rail has no org yet. */
 const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 
