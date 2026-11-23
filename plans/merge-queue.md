@@ -69,8 +69,8 @@ The numbers 313 to 320 were the next free numbers on 22 November 2026, on
 `main` and on every open branch. Decisions 313 to 315 hold Cal's answers of
 22 November 2026, with the options and the letters that Cal saw in the
 brainstorm. Decisions 316 to 320 hold Cal's later answers of the same
-day, and decision 321 holds his answer of 23 November 2026. No decision is
-open.
+day, and decisions 321 to 323 hold his answers of 23 November 2026. No
+decision is open.
 
 A second options check ran on the same day over the changed decision 318,
 decision 320, and the new design calls. It added option D to decision 318
@@ -430,6 +430,36 @@ that Cal saw.
   turn still goes to the user.
 - **Action:** ask the user, because Cal's words of 22 November 2026 can
   read as B.
+
+### Decision 322: a queued unit below pull requests that are not queued
+
+Chosen by Cal on 23 November 2026: B, from finding 9 of the review. When a
+queued unit is the lowest part of a member's GitHub stack whose upper pull
+requests are not queued, the queue merges that unit straight from the
+member's stack, and leaves the upper pull requests to the member. The queue
+keeps its own GitHub stack for its other units. This changes decision 313
+for this case only.
+
+- Root question: how does the queue merge a queued pull request that sits
+  below pull requests that a member did not queue?
+- Rejected: A, refuse the add, because it adds a refusal. C, ask the member
+  to add the whole stack, because it needs a new question. D, break up the
+  member's GitHub stack, because its upper pull requests lose GitHub's stack
+  checks and automatic rebase.
+- Left out: adding the upper pull requests without asking, because the
+  queue would then merge work that nobody queued.
+
+### Decision 323: who removes a leftover GitHub stack
+
+Chosen by Cal on 23 November 2026: B, from finding 8 of the review. When the
+queue removes its GitHub stack and the member who created it can no longer
+act, it uses the fallback of the base reset: the member who caused the
+leave, else the workspace owner. Each try checks again that this member is
+in the org and has write access.
+
+- Rejected: A, a Clean up action that a member clicks, because it needs a
+  new screen for an empty queue. C, the GitHub App's own token, because
+  work on GitHub runs as a member (decision 50).
 
 ## Design
 
