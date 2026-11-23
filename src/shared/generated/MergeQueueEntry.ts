@@ -21,4 +21,8 @@ export type MergeQueueEntry = {
    * The current step.
    */
   state: MergeQueueEntryState
+  /**
+   * The number of the queued pull request.
+   */
+  pullNumber?: number
 }

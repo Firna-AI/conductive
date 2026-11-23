@@ -22,6 +22,15 @@ export const billingQueue: readonly (readonly string[])[] = [
 /** The base on GitHub of a pull request that cannot join: a release branch. */
 export const releaseBase = 'release/2026.11'
 
+const pullNumbers: Readonly<Record<string, number>> = {
+  'next-16': 476,
+  'fix-cart-flake': 478,
+  'apple-pay': 479,
+  'checkout-autocomplete': 482,
+  'webhook-retries': 480,
+  'retry-queue': 485,
+}
+
 /**
  * The workspaces with the fields that the list read carries for the queue:
  * write access and a pull request into main for each open pull request,
@@ -51,6 +60,7 @@ export function withMergeQueue(
           place: peers.indexOf(workspace.id) + 1,
           unitId: `unit-${unit[0]}`,
           state: 'queued' as const,
+          pullNumber: pullNumbers[workspace.id],
         },
       }),
     }

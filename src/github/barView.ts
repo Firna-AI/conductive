@@ -223,7 +223,10 @@ export function barViewOf(input: BarInput): BarView {
     banner: banner.state,
     localWork: input.localWork === 'unknown' ? 'none' : input.localWork,
     access,
-    method: input.localWork === 'unknown' ? null : method,
+    method:
+      !snapshot.queue && (input.localWork === 'unknown' || input.queue?.listed)
+        ? null
+        : method,
     appAction: appActionOf(outcome),
     turnRuns: input.turnRuns,
     readOnly: input.readOnly,

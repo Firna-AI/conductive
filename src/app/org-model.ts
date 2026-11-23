@@ -1,4 +1,5 @@
 import type { Workspace } from '../shared/generated/Workspace'
+import type { WorkspaceListRepository } from '../shared/generated/WorkspaceListRepository'
 import type { GitHubCapabilities } from '../shared/github'
 import type { MembersResponse } from '../shared/members'
 import {
@@ -70,6 +71,9 @@ export class OrgModel {
    */
   readonly confirmedWorkspaces: Readable<Loadable<readonly Workspace[]>>
   readonly repositories: Readable<Loadable<readonly Repository[]>>
+  readonly listRepositories: Readable<
+    Loadable<readonly WorkspaceListRepository[] | undefined>
+  >
   readonly builds: Readable<Loadable<BuildsResponse>>
   readonly members: Readable<Loadable<MembersResponse>>
   readonly automations: Readable<Loadable<readonly ListedAutomation[]>>
@@ -116,6 +120,7 @@ export class OrgModel {
     this.secrets = new SecretsModel(api, orgId, services.now)
     this.workspaceActions = new WorkspaceActions(this)
     this.sections = partOf(list.store, (value) => value.sections)
+    this.listRepositories = partOf(list.store, (value) => value.repositories)
     this.confirmedWorkspaces = derived(
       partOf(list.store, (value) => value.workspaces),
       this.liveGitHub.store,

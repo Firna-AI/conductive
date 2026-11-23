@@ -31,11 +31,18 @@ export interface QueueEntry extends MergeQueueEntry {
   memberBase?: string | null
   mergeHead?: string | null
   refusedHead?: string | null
+  oldBase?: string | null
+  oldBaseHead?: string | null
 }
 
 export type QueueCandidate = Pick<
   QueueEntry,
-  'workspaceId' | 'branch' | 'pullNumber' | 'memberBase'
+  | 'workspaceId'
+  | 'branch'
+  | 'pullNumber'
+  | 'memberBase'
+  | 'oldBase'
+  | 'oldBaseHead'
 >
 
 export type QueueMemberAction =

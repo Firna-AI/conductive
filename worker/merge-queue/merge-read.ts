@@ -7,10 +7,11 @@ import {
   getPullRequestStack,
   listPullRequestStacks,
 } from '../github/stack-client'
-import type { GitHubStack } from '../github/stack-parsers'
+import type { GitHubStackPullRequest } from '../github/stack-parsers'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
 import { liveMergePrefix } from './merge-data'
+import { rememberQueueBase } from './old-base'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import type { QueueRuntime } from './step'
 
@@ -53,7 +54,7 @@ async function savedStack(queue: QueueRecord, fetch: HttpFetch, token: string) {
 
 function matchesStack(
   queue: QueueRecord,
-  layer: GitHubStack['layers'][number] | undefined,
+  layer: GitHubStackPullRequest | undefined,
   entry: QueueEntry,
   headSha: string | null | undefined,
   base: string,
@@ -193,6 +194,7 @@ export async function readMergePulls(
     entries,
     token,
   )) {
+    await rememberQueueBase(runtime, queue, token, { entry, snapshot })
     prefix =
       prefix &&
       snapshot?.pullBaseBranch === base &&

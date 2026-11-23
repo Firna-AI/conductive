@@ -23,11 +23,12 @@ const { org } = FAKE_IDS
 /** The org page with two entries of acme/storefront in its queue. */
 async function opened() {
   const server = new FakeApiServer()
-  const workspaces = withMergeQueue(workspaceFixtures().workspaces.workspaces, [
+  const listed = workspaceFixtures().workspaces
+  const workspaces = withMergeQueue(listed.workspaces, [
     ['next-16'],
-    ['apple-pay'],
+    ['apple-pay', 'checkout-autocomplete'],
   ])
-  server.json('GET', workspacesPath(org), { workspaces })
+  server.json('GET', workspacesPath(org), { ...listed, workspaces })
   server.empty('POST', mergeQueuePaths.entry(org, 'webhook-retries'))
   server.empty('DELETE', mergeQueuePaths.entry(org, 'apple-pay'))
   const tab = await openPaletteTab(routes.org(org), { server })
@@ -90,7 +91,7 @@ describe('the merge queue in the menu of a row', () => {
     expect({ added, question, asked, all: writes(server, from) }).toEqual({
       added: [`POST ${mergeQueuePaths.entry(org, 'webhook-retries')}`],
       question: expect.stringContaining(
-        'The pull request loses its place and targets main again.',
+        'Checkout address autocomplete (#482) builds on this pull request',
       ),
       asked: 1,
       all: [

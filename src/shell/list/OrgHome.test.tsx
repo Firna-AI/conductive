@@ -3,6 +3,8 @@
 import { describe, expect, test, vi } from 'vitest'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
+import { requestLines } from '../../app/test-kit'
+import { orgSettingsPaths } from '../../shared/org-settings'
 import { workspacesPath } from '../../shared/workspaces'
 import { queryByText } from '../../test-support/dom-queries'
 import { FakeApiServer } from '../../test-support/fake-api'
@@ -20,6 +22,14 @@ describe('the page of an org', () => {
     const server = new FakeApiServer()
     server.json('GET', workspacesPath(FAKE_IDS.org), {
       workspaces: [removedWorkspace()],
+      repositories: [
+        {
+          id: 'selected',
+          fullName: 'acme/from-list',
+          defaultBranch: 'trunk',
+          selected: true,
+        },
+      ],
     })
     const app = await startedApp(server)
     const navigation = memoryNavigation(routes.org(FAKE_IDS.org))
@@ -30,5 +40,9 @@ describe('the page of an org', () => {
       first: queryByText('Start the first workspace in Acme', main) !== null,
       choose: queryByText('Choose a workspace', main) !== null,
     }).toEqual({ first: true, choose: false })
+    expect(main.textContent).toContain('acme/from-list')
+    expect(requestLines(server)).not.toContain(
+      `GET ${orgSettingsPaths.repositories(FAKE_IDS.org)}`,
+    )
   })
 })

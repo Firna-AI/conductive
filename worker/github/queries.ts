@@ -30,7 +30,7 @@ function reviews(after: string): string {
 }
 
 const PULL_FIELDS = `number title url state isDraft mergeable mergeStateStatus
-  baseRefName headRefName headRepository { databaseId }
+  baseRefName baseRefOid headRefName headRepository { databaseId }
   mergedAt closedAt reviewDecision
   ${checks('null', 'null')}
   ${reviews('null')}`

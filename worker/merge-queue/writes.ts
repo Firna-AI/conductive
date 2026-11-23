@@ -95,11 +95,11 @@ export async function addQueueEntries(
       .prepare(
         `INSERT INTO merge_queue_entries (
          workspace_id, queue_id, branch, pull_number, queuer_user_id,
-         place, unit_id, state, queued_at, step_at, member_base
+         place, unit_id, state, queued_at, step_at, member_base, old_base_sha, old_base_head
        )
        SELECT json_extract(c.value, '$.workspaceId'), q.id, json_extract(c.value, '$.branch'),
          json_extract(c.value, '$.pullNumber'), ?, ? + c.key, ?, 'queued', ?, ?,
-         json_extract(c.value, '$.memberBase')
+         json_extract(c.value, '$.memberBase'), json_extract(c.value, '$.oldBase'), json_extract(c.value, '$.oldBaseHead')
        FROM merge_queues q, json_each(?) c WHERE q.id = ? AND q.pending_write = ?`,
       )
       .bind(memberId, place, unitId, now, now, json, id, writeId),

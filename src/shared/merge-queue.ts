@@ -5,4 +5,6 @@ export const mergeQueuePaths = {
     `${workspacePath(orgId, id)}/merge-queue`,
   order: (orgId: string, id: string) =>
     `${workspacePath(orgId, id)}/merge-queue/order`,
+  merge: (orgId: string, id: string) =>
+    `${workspacePath(orgId, id)}/merge-queue/merge`,
 }

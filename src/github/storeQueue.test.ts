@@ -46,3 +46,36 @@ it('reads a bar without a queue state, as from an older Worker, as a workspace o
   const state = store.getSnapshot()
   expect(state.status === 'ready' && 'queue' in state.snapshot).toBe(false)
 })
+
+it('drops the saved merge and rebase facts when a live event changes the head', async () => {
+  const server = new FakeApiServer({ banner: 'ready-to-merge' })
+  const { banner } = toolFixtures('ready-to-merge').banner
+  server.json('GET', githubPaths.banner(target.orgId, target.workspaceId), {
+    banner,
+    queue: { ...queue, oldBase: 'a'.repeat(40), mergeAhead: 1 },
+  })
+  const events = new FakeWorkspaceEvents([])
+  const store = new GitHubStore(target)
+  connect(store, server.fetch, events)
+  await nextChange(store)
+  const envelope = githubEvent(1, 'ready-to-merge')
+  const { event } = envelope
+  if (event.type !== 'github.updated' || event.banner.pullRequest === null)
+    throw new Error('Expected a pull request')
+  events.emit({
+    ...envelope,
+    event: {
+      ...event,
+      banner: {
+        ...event.banner,
+        pullRequest: { ...event.banner.pullRequest, headSha: 'new-head' },
+      },
+    },
+  })
+  expect(store.getSnapshot()).toMatchObject({
+    status: 'ready',
+    snapshot: { queue },
+  })
+  expect(store.getSnapshot()).not.toHaveProperty('snapshot.queue.oldBase')
+  expect(store.getSnapshot()).not.toHaveProperty('snapshot.queue.mergeAhead')
+})

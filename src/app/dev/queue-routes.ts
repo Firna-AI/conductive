@@ -28,16 +28,6 @@ import type { OrgState } from './state'
  */
 export type DevQueue = 'open' | 'one' | 'two'
 
-/** The numbers of the pull requests of the fake, for the bar of an entry. */
-const pullNumbers: Readonly<Record<string, number>> = {
-  'next-16': 476,
-  'fix-cart-flake': 478,
-  'apple-pay': 479,
-  'checkout-autocomplete': 482,
-  'webhook-retries': 480,
-  'retry-queue': 485,
-}
-
 const queues: Readonly<Record<DevQueue, readonly (readonly string[])[]>> = {
   open: [],
   one: storefrontQueue,
@@ -62,7 +52,12 @@ function barState(org: OrgState, workspace: Workspace): MergeQueueBarState {
   return {
     place: at + 1,
     count: entries.length,
-    belowPullNumber: below ? (pullNumbers[below.id] ?? null) : null,
+    belowPullNumber: below?.mergeQueue?.pullNumber ?? null,
+    ...(entries
+      .slice(0, at + 1)
+      .every(({ github }) => github === 'ready-to-merge') && {
+      mergeAhead: at,
+    }),
     trunk: 'main',
     state: workspace.mergeQueue?.state ?? 'queued',
     wait: null,
@@ -78,7 +73,7 @@ function change(org: OrgState, list: ListChange): Response {
   return noContent()
 }
 
-/** The routes of the queue: add, remove, re-order, and the bar of an entry. */
+/** The routes of the fake queue and the bar of an entry. */
 export function queueRoutes(backend: DevBackend, recorded: FetchLike): Route[] {
   const orgOf = (org: string) => requireOrg(backend.state, org)
   const entry = mergeQueuePaths.entry(ID.org, ID.workspace)
@@ -111,6 +106,33 @@ export function queueRoutes(backend: DevBackend, recorded: FetchLike): Route[] {
         const before = record(body).beforeWorkspaceId
         const target = typeof before === 'string' ? before : null
         return change(orgOf(params.org), queueMoved(params.workspace, target))
+      },
+    },
+    {
+      method: 'POST',
+      path: mergeQueuePaths.merge(ID.org, ID.workspace),
+      answer: ({ params, body }) => {
+        const org = orgOf(params.org)
+        const workspace = requireWorkspace(org, params.workspace)
+        const { mergeAhead } = barState(org, workspace)
+        if (
+          !isQueued(workspace) ||
+          mergeAhead === undefined ||
+          mergeAhead !== record(body).ahead
+        )
+          throw new RouteError(
+            409,
+            'merge_queue_not_ready',
+            'This pull request and the ones ahead must be ready in the GitHub stack.',
+          )
+        org.workspaces = org.workspaces.map((item) =>
+          item.repositoryId === workspace.repositoryId &&
+          item.mergeQueue &&
+          item.mergeQueue.place <= mergeAhead + 1
+            ? { ...item, mergeQueue: { ...item.mergeQueue, state: 'merging' } }
+            : item,
+        )
+        return new Response(null, { status: 202 })
       },
     },
     {

@@ -11,15 +11,17 @@ import type { QueueFacts, QueueMenuAction } from './merge-queue'
 
 /** A pull request that is open on GitHub, also a draft. */
 function hasOpenPull(workspace: Workspace): boolean {
-  return workspace.github !== null && workspace.github !== 'merged'
+  return (
+    workspace.githubPullBase !== undefined ||
+    (workspace.github !== null && workspace.github !== 'merged')
+  )
 }
 
 /**
  * Whether a workspace that is not queued can join the queue of its
  * repository, as the list knows it. `unknown`: the list lacks a fact, such
  * as the access of the viewer or the default branch. The Worker then
- * decides, and a refusal names its reason. The list has no fact of a fork,
- * of GitHub's own merge queue, or of a queue of another org.
+ * decides, and a refusal names its reason.
  */
 export type JoinCheck =
   | { kind: 'can-join' }
@@ -52,10 +54,11 @@ function unitBase(
         item.repositoryId === workspace.repositoryId &&
         item.state !== 'archived' &&
         item.branch === branch &&
-        hasOpenPull(item) &&
+        (hasOpenPull(item) || item.githubPullFromFork === true) &&
         !seen.has(item.id),
     )
     if (!lower) return refused({ kind: 'other-branch', base: branch, trunk })
+    if (lower.githubPullFromFork) return refused({ kind: 'fork' })
     if (lower.mergeQueue !== undefined) return { kind: 'can-join' }
     seen.add(lower.id)
     base = lower.githubPullBase
@@ -69,6 +72,7 @@ function unitBase(
  * the default branch.
  */
 export function joinCheck(workspace: Workspace, facts: QueueFacts): JoinCheck {
+  if (workspace.githubPullFromFork) return refused({ kind: 'fork' })
   if (!hasOpenPull(workspace)) return refused({ kind: 'no-pull-request' })
   const repository = facts.repositories.find(
     (item) => item.id === workspace.repositoryId,
@@ -77,6 +81,12 @@ export function joinCheck(workspace: Workspace, facts: QueueFacts): JoinCheck {
     const name = repository?.fullName ?? 'this repository'
     return refused({ kind: 'write-access', repository: name })
   }
+  if (repository?.githubQueueRequired)
+    return refused({
+      kind: 'github-merge-queue',
+      trunk: repository.defaultBranch,
+    })
+  if (repository?.queueInUse) return refused({ kind: 'other-org' })
   if (workspace.githubCanWrite === undefined || !repository) {
     return { kind: 'unknown' }
   }

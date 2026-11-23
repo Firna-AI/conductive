@@ -102,6 +102,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Sub-workspaces | `202611161700`–`202611161759` |
 | Merge queue storage and routes | `202611231200`–`202611231259` |
 | Merge queue merges and leave notices | `202611231300`–`202611231359` |
+| Merge queue rebase prompt | `202611231400`–`202611231459` |
 
 ## Key code
 
@@ -628,3 +629,6 @@ Worker can keep writing the existing tables. The
 member base, checked merge head, refused head, and blocking pull request.
 It adds `merge_queue_leave_notices` for the base that remains after a
 failed reset. The previous Worker can keep writing the queue tables.
+
+`202611231400_merge_queue_old_base.sql` adds the saved base commit and the
+pull request head that it applies to. Both columns accept a missing value.

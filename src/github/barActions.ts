@@ -108,11 +108,19 @@ export class BarActions {
     const method =
       access.status === 'ready' ? access.capabilities.mergeMethod : null
     if (pullRequest === null || method === null) return
+    const { queue } = snapshot
+    if (queue && (queue.mergeAhead === undefined || queue.state === 'merging'))
+      return
     const run = this.begin({ kind: 'merging' })
     if (!run) return
     const { signal } = run
     const { github } = this.ports
     try {
+      if (queue?.mergeAhead !== undefined) {
+        await github.mergeQueue({ ahead: queue.mergeAhead }, signal)
+        if (this.end(run, { kind: 'merging' })) this.ports.refreshGitHub()
+        return
+      }
       let reply = await github.merge(
         { headSha: pullRequest.headSha, method },
         signal,

@@ -34,10 +34,10 @@ function ChooseWorkspace(props: { org: OrgSummary }) {
   const all = valueOf(useStore(model.workspaces))
   const listTime = useListTime(all ?? [])
   const workspaces = all ? listedWorkspaces(all, listTime) : undefined
-  const repositories = valueOf(useStore(model.repositories))
+  const repositories = valueOf(useStore(model.listRepositories))
   const go = useGo()
   const open = useNewWorkspace().open
-  useEffect(() => model.watch('repositories'), [model])
+  useEffect(() => model.watch('list'), [model])
   const newWorkspace = (
     <ActionButton
       icon={Plus}

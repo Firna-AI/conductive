@@ -1,5 +1,4 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { useEffect } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { joinRefusalText } from '../../../docs/mockups/src/components/workspace/queueCopy'
 import { errorMessage } from '../../app/api/client'
@@ -20,9 +19,7 @@ import type { RowQueue } from './useRowMenus'
  * group, the reason that its drop target names for a row that cannot
  * join, and the writes of the queue, each with a toast that names a
  * failure. A write shows at once, and the list goes back when it fails.
- * The list reads the repositories of the org while a queue has entries or
- * the viewer may write to a repository: they give the names and the order
- * of the blocks, and the default branch that a pull request must target.
+ * The workspace list gives the repository names, order, and default branches.
  */
 export function useListQueue(
   org: OrgModel,
@@ -37,16 +34,8 @@ export function useListQueue(
   remove: (workspaceId: string) => Promise<boolean>
 } {
   const { toast } = useToast()
-  const repositories = valueOf(useStore(org.repositories))
-  const needed = workspaces.some(
-    (item) => item.mergeQueue !== undefined || item.githubCanWrite === true,
-  )
-  useEffect(
-    () => (needed ? org.watch('repositories') : undefined),
-    [org, needed],
-  )
-  const chosen = (repositories ?? []).filter((item) => item.selected)
-  const facts: QueueFacts = { workspaces, repositories: chosen }
+  const repositories = valueOf(useStore(org.listRepositories)) ?? []
+  const facts: QueueFacts = { workspaces, repositories }
   const run = (write: Promise<void>, title: string) =>
     write.then(
       () => true,
@@ -71,7 +60,7 @@ export function useListQueue(
       "The merge queue didn't change.",
     )
   const list: QueueList = {
-    blocks: queueBlocks(queued, chosen),
+    blocks: queueBlocks(queued, repositories),
     refusal: (workspace) => {
       const check = joinCheck(workspace, facts)
       return check.kind === 'refused' ? joinRefusalText(check.refusal) : null

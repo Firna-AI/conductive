@@ -89,7 +89,8 @@ export function useBarControls(screen: BarScreen): BarControls | null {
             })
           return
         case 'merge':
-          void actions.merge(snapshot)
+          if (!action.busy && (!queue?.input.listed || snapshot.queue))
+            void actions.merge(snapshot)
           return
         case 'ready':
           void actions.markReady(snapshot)

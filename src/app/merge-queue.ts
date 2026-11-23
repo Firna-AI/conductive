@@ -1,5 +1,5 @@
 import type { Workspace } from '../shared/generated/Workspace'
-import type { Repository } from '../shared/org-settings'
+import type { WorkspaceListRepository } from '../shared/generated/WorkspaceListRepository'
 
 /*
  * The merge queue as the workspace list reads it: one queue for each
@@ -10,10 +10,7 @@ import type { Repository } from '../shared/org-settings'
  */
 
 /** The facts of a chosen repository that the queue reads, in the org order. */
-export type QueueRepository = Pick<
-  Repository,
-  'id' | 'fullName' | 'defaultBranch'
->
+export type QueueRepository = Omit<WorkspaceListRepository, 'selected'>
 
 /** The queue of one repository: its entries from place 1, the next to merge. */
 export interface QueueBlock {

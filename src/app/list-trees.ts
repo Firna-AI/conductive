@@ -1,5 +1,8 @@
 import type { Workspace } from '../shared/generated/Workspace'
-import type { WorkspacePlacement } from '../shared/workspace-tree'
+import {
+  leavesSection,
+  type WorkspacePlacement,
+} from '../shared/workspace-tree'
 import { treeLines, type TreeLines } from '../shared/workspace-tree-lines'
 
 /**
@@ -82,7 +85,7 @@ function shownUnder(
     for (const workspace of workspaces) {
       if (workspace.parentId !== parent || seen.has(workspace.id)) continue
       seen.add(workspace.id)
-      if (workspace.state === 'archived') parents.push(workspace.id)
+      if (leavesSection(workspace)) parents.push(workspace.id)
       else shown.add(workspace.id)
     }
   }
@@ -109,7 +112,7 @@ export function replaceWorkspace(
   const next = change(current)
   if (next === current) return workspaces
   const changed = workspaces.with(index, next)
-  if (current.state === 'archived' || next.state !== 'archived') return changed
+  if (leavesSection(current) || next.state !== 'archived') return changed
   const under = shownUnder(changed, workspaceId)
   if (under.size === 0) return changed
   const moved = changed

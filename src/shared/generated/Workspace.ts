@@ -76,6 +76,10 @@ export type Workspace = {
    */
   githubPullBase?: string
   /**
+   * Whether only a fork has an open pull request for the branch name.
+   */
+  githubPullFromFork?: boolean
+  /**
    * created at.
    */
   createdAt: Timestamp

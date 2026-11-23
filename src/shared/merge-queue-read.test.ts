@@ -4,6 +4,8 @@ import {
   readGitHubPullBase,
   readMergeQueueBarState,
   readMergeQueueEntry,
+  readMergeQueueLeaveNotice,
+  readWorkspaceListRepositories,
 } from './merge-queue-read'
 
 const entry = { queueId: 'q1', place: 2, unitId: 'u1', state: 'queued' }
@@ -64,5 +66,50 @@ describe('the readers of the merge queue fields', () => {
     expect(readGitHubPullBase('main')).toBe('main')
     expect(readGitHubPullBase('')).toBe(undefined)
     expect(readGitHubPullBase(4)).toBe(undefined)
+  })
+
+  test('preserve checked merge counts, blocking pull numbers and saved commit IDs', () => {
+    const first = { ...bar, place: 1, belowPullNumber: null }
+    expect(readMergeQueueBarState({ ...first, mergeAhead: 0 })).toEqual({
+      ...first,
+      mergeAhead: 0,
+    })
+    const oldBase = 'a'.repeat(40)
+    expect(
+      readMergeQueueBarState({
+        ...bar,
+        mergeAhead: 2,
+        blockedByPullNumber: 476,
+        oldBase,
+      }),
+    ).toEqual({ ...bar, mergeAhead: 2, blockedByPullNumber: 476, oldBase })
+    expect(
+      readMergeQueueBarState({
+        ...bar,
+        mergeAhead: -1,
+        blockedByPullNumber: -1,
+        oldBase: 'HEAD~2',
+      }),
+    ).toEqual(bar)
+    expect(readMergeQueueEntry({ ...entry, pullNumber: 479 })).toEqual({
+      ...entry,
+      pullNumber: 479,
+    })
+  })
+
+  test('reads optional repository metadata and a masked leave notice', () => {
+    const repository = {
+      id: 'repo',
+      fullName: 'org/repo',
+      defaultBranch: 'trunk',
+      selected: true,
+      githubQueueRequired: false,
+      queueInUse: true,
+    }
+    expect(readWorkspaceListRepositories([repository])).toEqual([repository])
+    expect(readWorkspaceListRepositories(undefined)).toBe(undefined)
+    expect(
+      readMergeQueueLeaveNotice({ baseBranch: 'feature/[hidden]' }),
+    ).toEqual({ baseBranch: 'feature/[hidden]' })
   })
 })

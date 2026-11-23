@@ -24,6 +24,7 @@ export interface GitHubSnapshot {
   checks: GitHubChecksResponse
   headSha: string | null
   pullBaseBranch?: string
+  pullBaseSha?: string
   baseChange?: { from: string; to: string }
 }
 

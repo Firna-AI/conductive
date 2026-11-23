@@ -7,6 +7,7 @@ import {
   GitHubLoadError,
   loadGitHubSnapshot,
   loadStoredSnapshot,
+  queueOnGitHubEvent,
   type GitHubSnapshot,
   type WorkspaceTarget,
 } from './githubClient'
@@ -236,13 +237,13 @@ export class GitHubStore {
     this.lastEventNumber = envelope.eventNumber
     const { event } = envelope
     if (event.type !== 'github.updated') return null
-    // An event carries no merge queue state, so the last read keeps it.
-    const queue =
-      this.state.status === 'ready' ? this.state.snapshot.queue : undefined
     return {
       banner: event.banner,
       checks: event.checks,
-      ...(queue && { queue }),
+      ...queueOnGitHubEvent(
+        this.state.status === 'ready' ? this.state.snapshot : undefined,
+        event.banner,
+      ),
     }
   }
 

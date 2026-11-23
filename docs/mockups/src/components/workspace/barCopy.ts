@@ -208,7 +208,7 @@ function rebaseConflicts(facts: PromptFacts): string {
   const base = `origin/${facts.base}`
   const rebase = facts.oldBase
     ? `run \`git rebase --onto ${base} ${facts.oldBase}\`: \`${facts.oldBase}\` is the old base, so only the commits of this branch move`
-    : 'rebase this branch onto it'
+    : `find the old base where this layer's own commits begin. If you can verify it, rebase with \`git rebase --onto ${base} <old-base>\`. If you cannot verify it, stop and say so`
   return `Pull request #${facts.number} has conflicts with \`${facts.base}\`, and the merge queue needs a linear history. Fetch \`${base}\` and ${rebase}. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`${base}\` into this branch.`
 }
 

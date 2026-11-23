@@ -19,10 +19,9 @@ export interface WorkspacePlacement<T extends TreeWorkspace> {
  * Whether a workspace shows in no section: an archived one shows in the
  * Archived group, and a queued one in the Merge queue group (decision
  * 318). Its live sub-workspaces show under the nearest workspace above
- * them that shows in a section. A caller without the merge queue entry,
- * such as a read of the Worker, places a queued workspace in its section.
+ * them that shows in a section.
  */
-function leavesSection(workspace: TreeWorkspace): boolean {
+export function leavesSection(workspace: TreeWorkspace): boolean {
   return workspace.state === 'archived' || workspace.mergeQueue !== undefined
 }
 

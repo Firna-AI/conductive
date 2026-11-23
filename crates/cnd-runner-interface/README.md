@@ -44,12 +44,14 @@ accepted message and turn pairs, resume errors, and transcript positions.
 Workspace creation carries optional `startBranch` and `baseBranch` strings.
 The Worker resolves their defaults and validates them after creation replay.
 Workspace records and list entries give a required nullable parent ID.
-The app workspace list can include the merge queue entry, GitHub write
-access of the viewer, and the GitHub base of the open pull request.
+The app workspace list can include the numbered merge queue entry, GitHub
+write access of the viewer, and the GitHub base or fork of the open pull
+request. The list can also carry saved repository metadata and queue rules.
 The merge queue bar can report a wait for a turn, an open session, or a
 session login that the queuer can use.
 Its optional fields give the count of layers that can merge with it and
-the pull request that blocks it. A queue merge request carries the shown
+the pull request that blocks it. The conflict prompt uses the checked old
+base commit. A queue merge request carries the shown
 count. A leave notice gives the base that remains after a failed reset.
 Workspace details give the parent entry, stored depth, and direct children.
 `Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`

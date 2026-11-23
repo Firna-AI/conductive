@@ -42,11 +42,10 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
     base: banner.baseBranch,
     failedChecks: failingChecks(snapshot),
     reviewers: banner.changesRequestedBy,
-    // The GitHub stack of the merge queue needs a linear history, so a
-    // queued workspace resolves its conflicts with a rebase. The bar read
-    // names no old base commit yet, so the prompt asks for a plain rebase
-    // onto the branch below, not for `--onto`.
-    ...(snapshot.queue && { rebase: true as const }),
+    ...(snapshot.queue && {
+      rebase: true as const,
+      oldBase: snapshot.queue.oldBase,
+    }),
   }
 }
 

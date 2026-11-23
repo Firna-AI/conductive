@@ -31,11 +31,23 @@ async function storedBody(
   env: AppEnv,
   workspace: GitHubWorkspace,
   stored: GitHubSnapshot | undefined,
+  queued: boolean,
 ): Promise<GitHubStoredResponse> {
   if (!stored || stored.banner.branch !== workspace.branch)
     return { state: null }
   const labels = await githubBranchLabels(env, workspace)
-  return { state: { banner: labels(stored.banner), checks: stored.checks } }
+  return {
+    state: {
+      banner: labels(bannerForQueue(stored, queued)),
+      checks: stored.checks,
+    },
+  }
+}
+
+function bannerForQueue(snapshot: GitHubSnapshot, queued: boolean) {
+  return queued && snapshot.pullBaseBranch
+    ? { ...snapshot.banner, baseBranch: snapshot.pullBaseBranch }
+    : snapshot.banner
 }
 
 async function readBody(
@@ -47,9 +59,10 @@ async function readBody(
 ) {
   if (route === '/stored') {
     const stored = await dependencies.stored(workspace)
+    const queueBar = await readQueueBar(env, workspace, stored)
     return {
-      ...(await storedBody(env, workspace, stored)),
-      ...(await readQueueBar(env, workspace, stored)),
+      ...(await storedBody(env, workspace, stored, !!queueBar.queue)),
+      ...queueBar,
     }
   }
   const snapshot = await dependencies.refresh(workspace, { userId })
@@ -60,7 +73,7 @@ async function readBody(
     readQueueBar(env, workspace, snapshot),
   ])
   return {
-    banner: labels(snapshot.banner),
+    banner: labels(bannerForQueue(snapshot, !!queueBar.queue)),
     ...queueBar,
   } satisfies GitHubBannerResponse
 }

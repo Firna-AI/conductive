@@ -3,6 +3,7 @@ import type { MergeQueueEntryState } from '../shared/generated/MergeQueueEntrySt
 import {
   queueLineText,
   queueRowText,
+  resetBaseFailedText,
 } from '../../docs/mockups/src/components/workspace/queueCopy'
 import type {
   BarQueue,
@@ -49,13 +50,7 @@ export interface QueueView {
   row: string | null
 }
 
-/**
- * The step of the mockups for the state of an entry. An entry without a
- * running step counts as waiting until the queue takes a click of Merge
- * (decision 316, Milestone 7). So the bar offers no direct merge of a
- * queued layer, which decision 316 rejected, and shows Merge only busy
- * while the queue merges.
- */
+/** The step that the queue reports for this entry. */
 function stepOf(state: MergeQueueEntryState): QueueStep {
   switch (state) {
     case 'restacking':
@@ -90,8 +85,7 @@ function turnWaitOf(queue: MergeQueueBarState): TurnWait | undefined {
 /**
  * The queue facts of the bar: a layer of the stack from the bar read, or a
  * pull request that can join, which neither the bar nor the list holds as
- * an entry. The bar read names no layer that a wait waits for, so the line
- * of such a wait names the pull request below instead.
+ * an entry.
  */
 export function queueFactsOf(
   queue: MergeQueueBarState | undefined,
@@ -108,6 +102,11 @@ export function queueFactsOf(
       step: stepOf(queue.state),
       ...(problem && { problem }),
       ...(turnWait && { turnWait }),
+      ...(queue.wait === 'lower-layer' &&
+        queue.blockedByPullNumber !== undefined && {
+          waitsFor: queue.blockedByPullNumber,
+        }),
+      ...(queue.mergeAhead !== undefined && { mergeAhead: queue.mergeAhead }),
     }
   }
   if (input && !input.listed && input.canJoin) return { kind: 'open' }
@@ -124,19 +123,22 @@ export function queueViewOf(
   snapshot: GitHubSnapshot,
   input: QueueInput | undefined,
 ): QueueView | null {
-  if (!bar) return null
-  const { line } = bar
-  const { banner, queue } = snapshot
+  const { banner, queue, queueLeave } = snapshot
+  if (!bar && !queueLeave) return null
+  const line = bar?.line
   const trunk =
     queue && queue.trunk === banner.baseBranch
       ? baseBranchLabel(banner)
       : (queue?.trunk ?? '')
   return {
-    add: bar.add,
+    add: bar?.add ?? false,
     adding: input?.adding ?? false,
     line: line
       ? {
-          text: queueLineText(line, { trunk, github: githubSummary(banner) }),
+          text: queueLineText(
+            { ...line, ...(queue?.wait === 'push' && { localWork: true }) },
+            { trunk, github: githubSummary(banner) },
+          ),
           running: line.step === 'rebasing' || line.step === 'merging',
           remove: line.remove,
           href:
@@ -144,7 +146,14 @@ export function queueViewOf(
               ? (banner.pullRequest?.url ?? null)
               : null,
         }
-      : null,
+      : queueLeave
+        ? {
+            text: resetBaseFailedText(queueLeave.baseBranch),
+            running: false,
+            remove: false,
+            href: banner.pullRequest?.url ?? null,
+          }
+        : null,
     row: line ? queueRowText(line) : null,
   }
 }

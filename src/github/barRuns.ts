@@ -77,6 +77,7 @@ export function mergeOutcome(error: unknown): BarOutcome {
     case 'github_head_changed':
       return { kind: 'merge-refused', reason: 'merge-moved-head' }
     case 'github_merge_forbidden':
+    case 'merge_queue_write_required':
       return { kind: 'merge-refused', reason: 'merge-no-right' }
     case 'github_merge_refused':
       return { kind: 'merge-refused', reason: 'merge-refused' }

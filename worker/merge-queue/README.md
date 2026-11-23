@@ -15,6 +15,11 @@ entries of another org in the same D1 batch
 that records the new entries. The browser gets a fixed refusal when the
 repository is in use. It gets no entry or org details for that queue.
 
+Admission records the GitHub comparison's merge base against the exact
+pull request head. A later read can carry the saved base to a new head
+after GitHub confirms ancestry. The bar sends the base for the matching
+head, so the conflict prompt can move the layer's own commits.
+
 Admission reads the current pull requests and trunk rules with the
 requesting member's token. It checks their base chain and verifies a
 member stack that GitHub records. A new unit joins at the end. An extension

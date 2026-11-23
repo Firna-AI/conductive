@@ -126,6 +126,10 @@ export function queueRowText(line: QueueLine): string {
   return `Queue ${line.place} of ${line.size}`
 }
 
+export function resetBaseFailedText(branch: string): string {
+  return `The queue couldn't reset the base. This pull request still targets ${branch}.`
+}
+
 /**
  * A pull request that leaves the queue with the one that a member removes,
  * by the name of its workspace. A list that lacks its number names the

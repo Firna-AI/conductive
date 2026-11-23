@@ -15,7 +15,7 @@ import { queueId } from './contracts'
 import { queueFixture } from './queue.test-support'
 import { queueBarState } from './read'
 
-export const restack = {
+const restack = {
   id: 'fix-this-restack',
   base: 'main',
   baseHead: '896a470385279ec0a99c30b956e1b90a64569b45',

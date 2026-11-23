@@ -21,7 +21,7 @@ export function queueObject(env: AppEnv, scope: QueueScope) {
   })
 }
 
-export async function wakeQueue(
+async function wakeQueue(
   env: AppEnv,
   scope: QueueScope,
   leave?: QueueLeave,

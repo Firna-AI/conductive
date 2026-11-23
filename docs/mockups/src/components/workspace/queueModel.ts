@@ -76,6 +76,8 @@ type EntryFacts = {
    * not ready yet. Its Merge waits for that layer (decision 316).
    */
   waitsFor?: number
+  /** The count from the queue when a member can land this layer and the ones ahead. */
+  mergeAhead?: number
   /** Why the queue could not merge it, while it is ready. */
   problem?: MergeProblem
   /** What holds the message that the queue sends as the queuer. */
@@ -148,6 +150,8 @@ export function queuedMerge(
   if (queue === undefined || queue.kind === 'open') return undefined
   const below = queue.place - 1
   if (queue.step === 'merging') return { below, busy: true }
+  if (queue.mergeAhead !== undefined)
+    return { below: queue.mergeAhead, busy: false }
   const whole = queue.step === 'ready' && queue.waitsFor === undefined
   return whole ? { below, busy: false } : null
 }

@@ -1,7 +1,7 @@
-import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
 import {
   githubPaths,
   type GitHubBanner,
+  type GitHubBannerResponse,
   type GitHubChecksResponse,
 } from '../shared/github'
 import {
@@ -25,10 +25,12 @@ export interface WorkspaceTarget {
  * and the merge queue state of a queued workspace, which only the reads of
  * the bar carry.
  */
-export interface GitHubSnapshot {
+export interface GitHubSnapshot extends Pick<
+  GitHubBannerResponse,
+  'queue' | 'queueLeave'
+> {
   banner: GitHubBanner
   checks: GitHubChecksResponse
-  queue?: MergeQueueBarState
 }
 
 /** A read that failed. `userMessage` is the API's own text, when it sent one. */
@@ -88,8 +90,7 @@ export async function loadGitHubSnapshot(
       readChecksResponse,
     ),
   ])
-  const { queue } = banner
-  return { banner: banner.banner, checks, ...(queue && { queue }) }
+  return { ...banner, checks }
 }
 
 /**
@@ -110,6 +111,35 @@ export async function loadStoredSnapshot(
     signal,
     readStoredResponse,
   )
-  const { state, queue } = reply
-  return state && { ...state, ...(queue && { queue }) }
+  const { state, ...queue } = reply
+  return state && { ...state, ...queue }
+}
+
+/** Keep queue fields that still apply after a socket event. */
+export function queueOnGitHubEvent(
+  shown: GitHubSnapshot | undefined,
+  banner: GitHubBanner,
+) {
+  if (
+    !shown ||
+    !banner.pullRequest ||
+    shown.banner.branch !== banner.branch ||
+    shown.banner.pullRequest?.number !== banner.pullRequest.number ||
+    banner.state === 'merged' ||
+    banner.state === 'closed'
+  )
+    return {}
+  const { queue, queueLeave } = shown
+  const sameHead =
+    shown.banner.pullRequest.headSha === banner.pullRequest.headSha
+  const sameBase = shown.banner.baseBranch === banner.baseBranch
+  const next = queue && { ...queue }
+  if (next && (!sameHead || !sameBase)) {
+    delete next.mergeAhead
+    delete next.oldBase
+  }
+  return {
+    ...(next && { queue: next }),
+    ...(queueLeave && sameBase && { queueLeave }),
+  }
 }

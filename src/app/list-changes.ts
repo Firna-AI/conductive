@@ -1,5 +1,6 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import type { Section } from '../shared/sections'
+import type { WorkspacesResponse } from '../shared/workspaces'
 
 import { replaceWorkspace } from './list-trees'
 import type { Change } from './resource'
@@ -11,9 +12,8 @@ import {
 } from './sections'
 
 /** The list of an org: its sections, and its workspaces in their order. */
-export interface ListData {
+export interface ListData extends WorkspacesResponse {
   sections: readonly Section[]
-  workspaces: readonly Workspace[]
 }
 
 export type ListChange = Change<ListData>
@@ -54,12 +54,17 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
 /** The fields that only the list read carries, which a listed row keeps. */
 function listedFields(
   workspace: Workspace,
-): Pick<Workspace, 'mergeQueue' | 'githubCanWrite' | 'githubPullBase'> {
-  const { mergeQueue, githubCanWrite, githubPullBase } = workspace
+): Pick<
+  Workspace,
+  'mergeQueue' | 'githubCanWrite' | 'githubPullBase' | 'githubPullFromFork'
+> {
+  const { mergeQueue, githubCanWrite, githubPullBase, githubPullFromFork } =
+    workspace
   return {
     ...(mergeQueue !== undefined && { mergeQueue }),
     ...(githubCanWrite !== undefined && { githubCanWrite }),
     ...(githubPullBase !== undefined && { githubPullBase }),
+    ...(githubPullFromFork !== undefined && { githubPullFromFork }),
   }
 }
 
@@ -186,7 +191,10 @@ export function sectionMoved(sectionId: string, index: number): ListChange {
 
 /** Deleting a section moves its workspaces to General. */
 export function sectionDeleted(sectionId: string): ListChange {
-  return (list) => withoutSection(list.sections, list.workspaces, sectionId)
+  return (list) => ({
+    ...list,
+    ...withoutSection(list.sections, list.workspaces, sectionId),
+  })
 }
 
 /**

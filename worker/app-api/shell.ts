@@ -57,7 +57,7 @@ export async function shellRoute(
       return Response.json(await listMembers(env.DB, orgId, userId))
     if (path === workspacesPath(orgId)) {
       const rows = await shellWorkspaces(env.DB, orgId, userId)
-      const fields = await listMergeQueueFields(
+      const { fields, repositories } = await listMergeQueueFields(
         env,
         dependencies,
         orgId,
@@ -65,6 +65,7 @@ export async function shellRoute(
         rows,
       )
       return Response.json({
+        repositories,
         workspaces: await Promise.all(
           rows.map(async (row) => ({
             ...(await workspaceForViewer(

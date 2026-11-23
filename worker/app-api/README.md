@@ -34,6 +34,10 @@ The [merge queue backend](../merge-queue/README.md) runs each queue change throu
 in the workspace's GitHub bar. It returns an empty `202` when the
 coordinator accepts the merge. It uses the requesting member's GitHub
 token and merge method.
+
+The workspace list also carries its repositories' names, default branches,
+and selection. It reads queue use from D1 and GitHub pull facts in batches
+by repository. The drop target uses these facts before it sends Add.
 Add and remove take an empty JSON object. Re-order takes a target workspace ID in `beforeWorkspaceId`, or null for the end.
 Each successful change returns 204.
 The workspace list gives the optional queue entry, GitHub write access for the viewer, and the saved GitHub base of an open pull request.
@@ -354,7 +358,7 @@ The machine tools use the configured app origin instead.
 - `writeWorkspaceTree` selects the current top-level rows and descendants
   with recursive SQL inside its D1 batch. The selection follows
   [the shared placement rule](../../src/shared/workspace-tree.ts), including
-  archived ancestors and the default section for an unknown section.
+  archived or queued ancestors and the default section for an unknown section.
   A move writes every descendant's section, including archived descendants.
   `RETURNING` gives the workspace IDs for metadata publication after the batch.
   A section-only move of a nested row changes no placement or activity time.

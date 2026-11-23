@@ -1,5 +1,6 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import { describe, expect, test } from 'vitest'
+import { joinRefusalText } from '../../docs/mockups/src/components/workspace/queueCopy'
 import {
   billingQueue,
   releaseBase,
@@ -115,6 +116,38 @@ describe('who may join the merge queue', () => {
       kind: 'refused',
       refusal: { kind: 'other-branch', base: releaseBase, trunk: 'main' },
     })
+  })
+
+  test('names the fork, GitHub queue rule, and other org before a drop', () => {
+    const workspaces = list([])
+    const apple = one(workspaces, 'apple-pay')
+    const check = (
+      workspace: Workspace,
+      flags: Partial<QueueFacts['repositories'][number]>,
+    ) => {
+      const result = joinCheck(workspace, {
+        workspaces,
+        repositories: [{ ...repositories[0], ...flags }],
+      })
+      return result.kind === 'refused' ? joinRefusalText(result.refusal) : null
+    }
+    expect(
+      check(
+        {
+          ...apple,
+          github: null,
+          githubPullBase: undefined,
+          githubPullFromFork: true,
+        },
+        {},
+      ),
+    ).toBe("Pull requests from forks can't join the queue.")
+    expect(
+      check(apple, { defaultBranch: 'trunk', githubQueueRequired: true }),
+    ).toBe("trunk needs GitHub's own merge queue.")
+    expect(check(apple, { queueInUse: true })).toBe(
+      'Another org has a merge queue for this repository.',
+    )
   })
 
   test('leaves the decision to the Worker while the list lacks the access, the base, or the repository', () => {

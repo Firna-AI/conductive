@@ -1,7 +1,10 @@
 import type { MergeQueueBarState } from './generated/MergeQueueBarState'
 import type { MergeQueueEntry } from './generated/MergeQueueEntry'
 import type { MergeQueueEntryState } from './generated/MergeQueueEntryState'
+import type { MergeQueueLeaveNotice } from './generated/MergeQueueLeaveNotice'
 import type { MergeQueueWait } from './generated/MergeQueueWait'
+import type { WorkspaceListRepository } from './generated/WorkspaceListRepository'
+import { isGitCommitOid } from './git-commit-oid'
 
 /*
  * The browser readers of the optional merge queue fields of the Worker's
@@ -62,11 +65,17 @@ export function readMergeQueueEntry(
   value: unknown,
 ): MergeQueueEntry | undefined {
   if (!isRecord(value)) return undefined
-  const { queueId, place, unitId } = value
+  const { queueId, place, unitId, pullNumber } = value
   const state = stateOf(value.state)
   if (!isText(queueId) || !isPositive(place) || !isText(unitId) || !state)
     return undefined
-  return { queueId, place, unitId, state }
+  return {
+    queueId,
+    place,
+    unitId,
+    state,
+    ...(isPositive(pullNumber) && { pullNumber }),
+  }
 }
 
 /**
@@ -77,7 +86,15 @@ export function readMergeQueueBarState(
   value: unknown,
 ): MergeQueueBarState | undefined {
   if (!isRecord(value)) return undefined
-  const { place, count, belowPullNumber, trunk } = value
+  const {
+    place,
+    count,
+    belowPullNumber,
+    trunk,
+    mergeAhead,
+    blockedByPullNumber,
+    oldBase,
+  } = value
   const state = stateOf(value.state)
   const below =
     belowPullNumber === null
@@ -95,7 +112,57 @@ export function readMergeQueueBarState(
     trunk,
     state,
     wait: isWait(value.wait) ? value.wait : null,
+    ...(typeof mergeAhead === 'number' &&
+      Number.isSafeInteger(mergeAhead) &&
+      mergeAhead >= 0 && { mergeAhead }),
+    ...(isPositive(blockedByPullNumber) && { blockedByPullNumber }),
+    ...(isGitCommitOid(oldBase) && { oldBase }),
   }
+}
+
+export function readMergeQueueLeaveNotice(
+  value: unknown,
+): MergeQueueLeaveNotice | undefined {
+  return isRecord(value) && isText(value.baseBranch)
+    ? { baseBranch: value.baseBranch }
+    : undefined
+}
+
+export function readWorkspaceListRepositories(
+  value: unknown,
+): WorkspaceListRepository[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  const rows: readonly unknown[] = value
+  return rows.flatMap((item) => {
+    if (!isRecord(item)) return []
+    const {
+      id,
+      fullName,
+      defaultBranch,
+      selected,
+      githubQueueRequired,
+      queueInUse,
+    } = item
+    if (
+      !isText(id) ||
+      !isText(fullName) ||
+      !isText(defaultBranch) ||
+      typeof selected !== 'boolean'
+    )
+      return []
+    return [
+      {
+        id,
+        fullName,
+        defaultBranch,
+        selected,
+        ...(typeof githubQueueRequired === 'boolean' && {
+          githubQueueRequired,
+        }),
+        ...(typeof queueInUse === 'boolean' && { queueInUse }),
+      },
+    ]
+  })
 }
 
 /** Whether the viewer may write to the repository, or none when unknown. */

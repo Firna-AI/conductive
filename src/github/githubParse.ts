@@ -7,7 +7,10 @@ import type {
   GitHubStoredResponse,
   PullRequest,
 } from '../shared/github'
-import { readMergeQueueBarState } from '../shared/merge-queue-read'
+import {
+  readMergeQueueBarState,
+  readMergeQueueLeaveNotice,
+} from '../shared/merge-queue-read'
 
 type PullRequestState = Exclude<BannerState, 'none' | 'no-commits'>
 type CheckState = GitHubCheck['state']
@@ -174,7 +177,8 @@ function readCheck(value: unknown): GitHubCheck | null {
  */
 function queueOf(body: Record<string, unknown>) {
   const queue = readMergeQueueBarState(body.queue)
-  return queue ? { queue } : {}
+  const queueLeave = readMergeQueueLeaveNotice(body.queueLeave)
+  return { ...(queue && { queue }), ...(queueLeave && { queueLeave }) }
 }
 
 /** Narrows a banner reply. A reply outside the contract gives null. */

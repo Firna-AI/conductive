@@ -152,6 +152,10 @@ pub struct Workspace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub github_pull_base: Option<String>,
+    /// Whether only a fork has an open pull request for the branch name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub github_pull_from_fork: Option<bool>,
     /// created at.
     pub created_at: Timestamp,
     /// updated at.

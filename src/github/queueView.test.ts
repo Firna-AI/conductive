@@ -87,6 +87,10 @@ describe('the merge queue in the bar', () => {
     expect(line('ready-to-merge', { wait: 'token' })?.text).toBe(
       'Place 3 of 3 in the merge queue. The GitHub access of the member who added it stopped working.',
     )
+    expect(
+      line('ready-to-merge', { wait: 'lower-layer', blockedByPullNumber: 476 })
+        ?.text,
+    ).toBe('Place 3 of 3 in the merge queue. The queue waits for #476.')
     const held = (wait: MergeQueueBarState['wait']) =>
       line('conflict', { state: 'waiting', wait })?.text
     expect([
@@ -121,6 +125,29 @@ describe('the merge queue in the bar', () => {
     })
   })
 
+  it('uses the count from the checked prefix and preserves the bottom-layer action', () => {
+    expect(
+      view('ready-to-merge', {
+        ...entry,
+        mergeAhead: 2,
+        wait: 'lower-layer',
+        blockedByPullNumber: 476,
+      }).actions,
+    ).toEqual([{ kind: 'merge', method: 'squash', below: 2, busy: false }])
+    expect(
+      view('ready-to-merge', {
+        ...entry,
+        place: 1,
+        belowPullNumber: null,
+        mergeAhead: 0,
+      }).actions,
+    ).toEqual([{ kind: 'merge', method: 'squash', below: 0, busy: false }])
+    expect(
+      view('ready-to-merge', undefined, { queue: { ...canJoin, listed: true } })
+        .actions,
+    ).toEqual([])
+  })
+
   it('shows Add to merge queue on an open pull request that can join, for a member with write access, beside the main action', () => {
     const add = (
       state: BannerState,
@@ -152,13 +179,17 @@ describe('the merge queue in the bar', () => {
   })
 
   it('asks for a rebase in Resolve conflicts while the workspace is queued', () => {
-    const snapshot = { ...snapshotOf('conflict'), queue: entry }
+    const oldBase = 'a'.repeat(40)
+    const snapshot = { ...snapshotOf('conflict'), queue: { ...entry, oldBase } }
     const prompt = promptOf('resolve-conflicts', snapshot)
     expect(prompt).toContain('the merge queue needs a linear history')
-    expect(prompt).toContain('rebase this branch onto it')
+    expect(prompt).toContain(`git rebase --onto origin/main ${oldBase}`)
     expect(prompt).toContain('git push --force-with-lease')
     expect(promptOf('resolve-conflicts', snapshotOf('conflict'))).toContain(
       'merge it into this branch',
     )
+    expect(
+      promptOf('resolve-conflicts', { ...snapshot, queue: entry }),
+    ).toContain('If you cannot verify it, stop and say so')
   })
 })

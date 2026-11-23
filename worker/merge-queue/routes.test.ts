@@ -137,6 +137,7 @@ it('projects the queue and live branch facts and clears the archived entry', asy
             place: 3,
             unitId: first.unitId,
             state: 'queued',
+            pullNumber: 3,
           },
         }),
       ]),

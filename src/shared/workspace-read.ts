@@ -55,6 +55,10 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
     const mergeQueue = readMergeQueueEntry(source.mergeQueue)
     const githubCanWrite = readGitHubCanWrite(source.githubCanWrite)
     const githubPullBase = readGitHubPullBase(source.githubPullBase)
+    const githubPullFromFork =
+      typeof source.githubPullFromFork === 'boolean'
+        ? source.githubPullFromFork
+        : undefined
     return {
       id: read.text(source, 'id'),
       number: read.count(source, 'number'),
@@ -76,6 +80,7 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       ...(mergeQueue !== undefined && { mergeQueue }),
       ...(githubCanWrite !== undefined && { githubCanWrite }),
       ...(githubPullBase !== undefined && { githubPullBase }),
+      ...(githubPullFromFork !== undefined && { githubPullFromFork }),
       createdAt: read.count(source, 'createdAt'),
       updatedAt: read.count(source, 'updatedAt'),
       archivedAt: read.nullableCount(source, 'archivedAt'),

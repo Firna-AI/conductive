@@ -84,10 +84,9 @@ adds what the app knows:
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
 mockups' `barCopy.ts` with the number, the target branch, the blocking
 checks in GitHub's order, and the reviewers. While the bar read names a
-queue state, Resolve conflicts asks for a rebase onto the branch below,
-because the GitHub stack of the queue needs a linear history. The bar
-read names no old base commit yet, so the prompt asks for a plain rebase,
-not for `git rebase --onto`.
+queue state, Resolve conflicts uses `git rebase --onto` with the saved
+old base commit for that head. If the read lacks the commit, the prompt
+asks the agent to verify where the layer's own commits begin.
 
 ## The merge queue
 
@@ -105,10 +104,10 @@ of its line from the mockups' `queueCopy.ts`.
   what the queue waits for: its checks, a rebase, its review, the rules of
   GitHub, its local work, a running turn, an agent login, or an open
   session. A failed token and a refused merge name their reason, and a
-  refused merge leads to the pull request on GitHub. The bar read names
-  no layer that a lower-layer wait waits for, so that line names the pull
-  request below. Remove from queue ends the line for a member with write
-  access, except while the layer merges, and it asks first.
+  refused merge leads to the pull request on GitHub. A wait for a lower
+  layer names the blocking pull request. Remove from queue ends the line
+  for a member with write access, except while the layer merges, and it
+  asks first. A failed base reset names the remaining GitHub base.
 - Add to merge queue shows on an open pull request that can join, for a
   member with write access, beside the main action or alone. The list of
   the org gives whether the pull request can join, and whether it holds
@@ -116,10 +115,10 @@ of its line from the mockups' `queueCopy.ts`.
   action, it shows only its icon.
 - The compact row of a phone names the place, such as "Queue 3 of 3", and
   the line tops the Checks tab.
-- Merge on a queued workspace needs a route of the queue that takes the
-  click (decision 316). Until then, a queued layer counts as waiting, so
-  the bar offers no direct merge of a queued layer, which decision 316
-  rejected. Merge shows busy while the queue merges.
+- Merge on a queued workspace sends the displayed ahead count to the
+  queue. The Worker reads the clicker's token and preferred method. The
+  bar shows the count while the queue can accept the merge and shows
+  Merge busy while the merge runs.
 - Merge latest asks for a rebase onto its target branch while the bar
   read names a queue state.
 

@@ -6,7 +6,8 @@ const queueEntryColumns = `queue_id AS queueId, workspace_id AS workspaceId, bra
   pull_number AS pullNumber, queuer_user_id AS queuerUserId,
   place, unit_id AS unitId, state, wait_reason AS wait,
   queued_at AS queuedAt, step_at AS stepAt, member_base AS memberBase,
-  merge_head AS mergeHead, refused_head AS refusedHead`
+  merge_head AS mergeHead, refused_head AS refusedHead,
+  old_base_sha AS oldBase, old_base_head AS oldBaseHead`
 
 export function readQueue(
   db: D1Database,

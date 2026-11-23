@@ -42,8 +42,7 @@ export function withQueueItem(
  * The facts that the question before Remove from queue names: the number
  * of the pull request, when the screen knows it, the branch that it
  * targets again, and the entries above it in its member stack, which leave
- * with it (decision 315). The list read carries no number of a pull
- * request, so the entries above it show by their names.
+ * with it (decision 315).
  */
 export interface RemoveQuestion {
   workspaceId: string
@@ -71,12 +70,16 @@ export function removeQuestionOf(
   const repository = facts.repositories.find(
     (item) => item.id === workspace.repositoryId,
   )
+  const number = known.number ?? workspace.mergeQueue?.pullNumber
   return {
     workspaceId: workspace.id,
-    ...(known.number !== undefined && { number: known.number }),
+    ...(number !== undefined && { number }),
     trunk: known.trunk ?? repository?.defaultBranch ?? 'the default branch',
     above: unitAbove(entries, workspace.id).map((item) => ({
       name: nameLabel(item.name),
+      ...(item.mergeQueue?.pullNumber !== undefined && {
+        number: item.mergeQueue.pullNumber,
+      }),
     })),
   }
 }

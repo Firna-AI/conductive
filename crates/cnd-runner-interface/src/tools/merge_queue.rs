@@ -57,6 +57,10 @@ pub struct MergeQueueEntry {
     pub unit_id: String,
     /// The current step.
     pub state: MergeQueueEntryState,
+    /// The number of the queued pull request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub pull_number: Option<u64>,
 }
 
 /// The queue state returned with a workspace's GitHub bar.
@@ -83,6 +87,32 @@ pub struct MergeQueueBarState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub blocked_by_pull_number: Option<u64>,
+    /// The commit where the queued layer's own commits begin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub old_base: Option<String>,
+}
+
+/// Repository metadata returned with an org's workspace list.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct WorkspaceListRepository {
+    /// The repository ID in this org.
+    pub id: String,
+    /// The GitHub name, including the owner.
+    pub full_name: String,
+    /// The repository's saved default branch.
+    pub default_branch: String,
+    /// Whether the org selected this repository for new workspaces.
+    pub selected: bool,
+    /// Whether GitHub requires its own queue on the default branch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub github_queue_required: Option<bool>,
+    /// Whether another org has a non-empty queue for this repository.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub queue_in_use: Option<bool>,
 }
 
 /// Merges this pull request with the number of earlier layers shown by the bar.

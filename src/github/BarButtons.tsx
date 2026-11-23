@@ -66,6 +66,11 @@ function BarButton(props: {
           icon={GitMerge}
           onPress={press}
           tint={tint}
+          tooltip={
+            action.below !== undefined && !action.busy && !touch
+              ? mergeLabels[action.method]
+              : undefined
+          }
           touch={touch}
         >
           {action.busy

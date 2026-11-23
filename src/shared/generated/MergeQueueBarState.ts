@@ -38,4 +38,8 @@ export type MergeQueueBarState = {
    * The lower pull request that holds this layer.
    */
   blockedByPullNumber?: number
+  /**
+   * The commit where the queued layer's own commits begin.
+   */
+  oldBase?: string
 }

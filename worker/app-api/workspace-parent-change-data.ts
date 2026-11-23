@@ -106,11 +106,13 @@ export async function writeWorkspaceParentChange(
           SELECT id, ROW_NUMBER() OVER (ORDER BY position, created_at, id) AS position
           FROM top_level WHERE shown_section_id = (SELECT destination FROM moving)
             AND id NOT IN (SELECT id FROM subtree) AND ?3 IS NULL
+            AND NOT EXISTS (SELECT 1 FROM placements WHERE id = ?2 AND queued)
         ) UPDATE workspaces SET
           parent_workspace_id = CASE WHEN id = ?2 THEN ?3 ELSE parent_workspace_id END,
           section_id = CASE WHEN id IN (SELECT id FROM subtree)
             THEN (SELECT destination FROM moving) ELSE section_id END,
-          position = CASE WHEN id = ?2 AND ?3 IS NULL THEN 0
+          position = CASE WHEN id = ?2 AND ?3 IS NULL
+            AND NOT EXISTS (SELECT 1 FROM placements WHERE id = ?2 AND queued) THEN 0
             ELSE COALESCE((SELECT position FROM ranks WHERE ranks.id = workspaces.id), position) END,
           updated_at = CASE WHEN id IN (SELECT id FROM subtree)
             THEN MAX(updated_at, ?5) ELSE updated_at END

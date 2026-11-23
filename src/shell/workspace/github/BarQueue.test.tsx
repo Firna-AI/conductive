@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
+import { barLabels } from '../../../../docs/mockups/src/components/workspace/barCopy'
 import { routes } from '../../../app/router'
 import { requestLines } from '../../../app/test-kit'
-import { githubPaths } from '../../../shared/github'
+import { githubPaths, type BannerState } from '../../../shared/github'
 import { mergeQueuePaths } from '../../../shared/merge-queue'
 import { workspacesPath } from '../../../shared/workspaces'
 import { accessibleName, byRole } from '../../../test-support/dom-queries'
@@ -39,15 +40,17 @@ const queue = {
 }
 
 /** A server whose list queues `units`, and whose bar of the workspace has `bar`. */
-function queueServer(units: readonly (readonly string[])[], bar?: object) {
-  const server = new FakeApiServer({ banner: 'checks-running' })
+function queueServer(
+  units: readonly (readonly string[])[],
+  bar?: object,
+  state: BannerState = 'checks-running',
+) {
+  const server = new FakeApiServer({ banner: state })
   serveWork(server, 'none')
-  const workspaces = withMergeQueue(
-    workspaceFixtures().workspaces.workspaces,
-    units,
-  )
-  server.json('GET', workspacesPath(org), { workspaces })
-  const { banner } = toolFixtures('checks-running').banner
+  const listed = workspaceFixtures().workspaces
+  const workspaces = withMergeQueue(listed.workspaces, units)
+  server.json('GET', workspacesPath(org), { ...listed, workspaces })
+  const { banner } = toolFixtures(state).banner
   server.json('GET', githubPaths.banner(org, id), { banner, ...bar })
   return server
 }
@@ -77,6 +80,54 @@ const writes = (server: FakeApiServer, from: number) =>
     .filter((line) => line.includes('/merge-queue'))
 
 describe('the merge queue in the pull request bar', () => {
+  test('sends the displayed ahead count to the queue and shows the running merge', async () => {
+    const server = queueServer(
+      [['next-16'], ['apple-pay'], [id]],
+      { queue: { ...queue, mergeAhead: 2 } },
+      'ready-to-merge',
+    )
+    const received: unknown[] = []
+    server.handle('POST', mergeQueuePaths.merge(org, id), async (request) => {
+      received.push(await request.json())
+      server.json('GET', githubPaths.banner(org, id), {
+        ...toolFixtures('ready-to-merge').banner,
+        queue: { ...queue, state: 'merging' },
+      })
+      return new Response(null, { status: 202 })
+    })
+    const { view } = await opened(server)
+    const from = requestLines(server).length
+    const merge = byRole('button', 'Merge with 2 ahead', view)
+    expect(merge.closest('[title]')?.getAttribute('title')).toContain(
+      'Squash and merge',
+    )
+    click(merge)
+    await settle()
+    expect(received).toEqual([{ ahead: 2 }])
+    expect(writes(server, from)).toEqual([
+      `POST ${mergeQueuePaths.merge(org, id)}`,
+    ])
+    expect(requestLines(server).slice(from)).not.toContain(
+      `POST ${githubPaths.merge(org, id)}`,
+    )
+    expect(
+      byRole('button', barLabels.merging, view).getAttribute('aria-busy'),
+    ).toBe('true')
+    expect(queueLine(view).textContent).toBe(
+      'Place 3 of 3 in the merge queue. Merging into main.',
+    )
+  })
+
+  test('names the remaining GitHub base after the queue fails to reset it', async () => {
+    const server = queueServer([], {
+      queueLeave: { baseBranch: 'feature/lower' },
+    })
+    const { view } = await opened(server)
+    expect(view.textContent).toContain(
+      "The queue couldn't reset the base. This pull request still targets feature/lower.",
+    )
+  })
+
   test('a queued workspace shows its place and the pull request that it builds on, and Remove from queue asks first', async () => {
     const server = queueServer([['next-16'], ['apple-pay'], [id]], { queue })
     server.empty('DELETE', mergeQueuePaths.entry(org, id))

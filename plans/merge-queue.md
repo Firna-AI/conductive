@@ -988,7 +988,7 @@ Depends on: 1, 4
 
 - [x] Add the queued states and Remove from queue from the mockup, and
       the second button Add to merge queue (decision 317).
-- [ ] Show Merge on a queued workspace with the count of the layers below
+- [x] Show Merge on a queued workspace with the count of the layers below
       it, and send the click to the queue (decision 316).
 - [x] Use the rebase prompts while a workspace is queued, also the words
       of Merge latest in `mergeLatestCopy.ts`.

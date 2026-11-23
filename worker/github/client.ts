@@ -1,4 +1,5 @@
 import type { GitHubBanner } from '../../src/shared/github'
+import { isGitCommitOid } from '../../src/shared/git-commit-oid'
 import { parsePull, pullBanner } from './banner'
 import { readChecks } from './check-rollup'
 import type {
@@ -145,6 +146,9 @@ export class GitHubReader {
       checks: { state: 'available', checks },
       headSha: pull.headSha,
       pullBaseBranch: pull.baseBranch,
+      ...(isGitCommitOid(firstPage.baseRefOid) && {
+        pullBaseSha: firstPage.baseRefOid,
+      }),
       ...(baseChange ? { baseChange } : {}),
     }
   }

@@ -1,4 +1,5 @@
 import type { AppDependencies, AppEnv } from '../env'
+import { compareMergeBase } from '../github/compare-merge-base'
 import type { GitHubWorkspace } from '../github/contracts'
 import { readMergeWorkspace } from '../github/merge-access'
 import type { repositoryMemberGitHub } from '../github/member-github'
@@ -195,6 +196,23 @@ export async function addUnit(context: AddContext): Promise<void> {
         markPullRequestReady(member.fetch, member.token, layer.pull.nodeId),
       )
   await member.authorize()
+  const candidates = await Promise.all(
+    appended.map(async ({ workspaceId, branch, pullNumber, pull }) => ({
+      workspaceId,
+      branch,
+      pullNumber,
+      memberBase: pull.base === trunk ? null : pull.base,
+      oldBase: await compareMergeBase(
+        member.fetch,
+        member.token,
+        fullName,
+        pull.baseSha,
+        pull.headSha,
+      ).catch(() => undefined),
+      oldBaseHead: pull.headSha,
+    })),
+  )
+  await member.authorize()
   const added = await addQueueEntries(env.DB, {
     scope,
     workspace,
@@ -202,12 +220,7 @@ export async function addUnit(context: AddContext): Promise<void> {
     trunk,
     unitId: lower?.unitId ?? dependencies.randomToken(),
     place: (lower?.place ?? entries.at(-1)?.place ?? 0) + 1,
-    candidates: appended.map(({ workspaceId, branch, pullNumber, pull }) => ({
-      workspaceId,
-      branch,
-      pullNumber,
-      memberBase: pull.base === trunk ? null : pull.base,
-    })),
+    candidates,
     now: dependencies.now(),
     writeId: dependencies.randomToken(),
   })

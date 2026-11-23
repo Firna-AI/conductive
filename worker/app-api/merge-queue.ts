@@ -22,7 +22,7 @@ function parseAction(
       return { kind: 'remove' } satisfies QueueMemberAction
   }
   if (
-    path === `${mergeQueuePaths.entry(orgId, workspaceId)}/merge` &&
+    path === mergeQueuePaths.merge(orgId, workspaceId) &&
     request.method === 'POST'
   ) {
     const ahead = context.body?.ahead
