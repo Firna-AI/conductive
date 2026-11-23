@@ -46,7 +46,7 @@ the two lists:
   repair. A first loss adds nothing. The chat owns the markers of a session.
 - Only a later full report of the same list in the stream clears it. A
   tree delta and a report of the other list clear nothing.
-  [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+  [File reports](../../docs/protocol/file-reports.md)
   says which reports replace a list.
 - A reply of a route clears nothing, also the read of the tree after a gap
   in the revisions. Only the order of the stream shows that a report is

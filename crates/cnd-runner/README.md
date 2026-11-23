@@ -347,4 +347,5 @@ and connection drops. It does not run the Worker.
 - [File reports](../../runner/file-reports.md)
 - [Report requests](../../runner/reports.md)
 - [Workspace files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
+- [Workspace file reports](../../docs/protocol/file-reports.md)
 - [Runner configuration](../../runner/configuration.md)

@@ -4,7 +4,7 @@ import {
   type FirstWorkspaceMessage,
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
-import { saveHistoryEvent } from './history-storage'
+import { isFileEventWithPayload, saveHistoryEvent } from './history-storage'
 import { HistoryPages, type ReadScope } from './history-pages'
 import { prepareSessionHistory } from './history-session-preparation'
 import { ChatRecords } from './chat-records'
@@ -34,6 +34,15 @@ import {
   WorkspaceEventLabelPreparation,
   WorkspaceEventLabels,
 } from './workspace-event-labels'
+
+function deepFreeze(value: object): void {
+  const children: readonly unknown[] = Array.isArray(value)
+    ? value
+    : Object.values(value)
+  for (const child of children)
+    if (child !== null && typeof child === 'object') deepFreeze(child)
+  Object.freeze(value)
+}
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -151,13 +160,16 @@ export class ChatTransaction extends ChatRecords {
     occurredAt = this.now,
     late?: true,
   ): Promise<WorkspaceEventEnvelope> {
-    const labeled = this.labels ? await this.labels.event(event) : event
+    const fileEvent = isFileEventWithPayload(event)
+    if (fileEvent) deepFreeze(event)
+    const labeled =
+      !fileEvent && this.labels ? await this.labels.event(event) : event
     await this.pages.prepare(this.through)
     const envelope: WorkspaceEventEnvelope = {
       workspaceId: this.workspaceId,
       eventNumber: ++this.through,
       occurredAt,
-      event: structuredClone(labeled),
+      event: fileEvent ? event : structuredClone(labeled),
       ...(late ? { late } : {}),
     }
     await this.summary.event(envelope)

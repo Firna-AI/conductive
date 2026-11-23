@@ -35,9 +35,14 @@ streams, and the order of the runner commands.
 - Each event gets the next workspace event number. The numbers start at 1,
   have no gaps, and span all sessions and runner streams.
 - A new full tree or a new `skills.updated` event deletes the older stored
-  event of its kind from the history. So the history keeps only the latest
-  tree and the latest skill lists, and the event numbers can have gaps
-  there.
+  event of its kind from the history. The history keeps every tree delta.
+- The first changes list that compaction visits records the current stored
+  workspace event number in `chat:v1:history-index:changes-cutover`.
+  Preparation preserves changes lists through that number.
+  `chat:v1:history-index:changes` points to the newest indexed changes list
+  after that number. A newer list deletes the prior indexed list and its
+  chunks. These deletions can leave gaps in stored event numbers. An older
+  Worker can leave extra changes lists during a rollback.
 - A tab connects with `after`, the last event number that it has. It gets
   the stored events after that number in one or more `history` pages, in
   the shape of `ChatHistoryResponse` in
@@ -62,6 +67,12 @@ streams, and the order of the runner commands.
   socket once. The upgrade route then writes the `unexpected_error`
   warning for an error that is not an `HttpError`.
 - The records use the `chat:v1:` key prefix of the Durable Object storage.
+- An event record holds its full envelope unless it uses a file stub.
+  A `files.snapshot`, `files.changed`, or `changes.updated` envelope above
+  4,096 UTF-8 JSON bytes uses a stub with `workspaceId`, `eventNumber`,
+  `occurredAt`, and `fileEventChunks`. Each chunk holds up to 65,536
+  UTF-16 code units of the event JSON. The chunk keys start with
+  `chat:v1:history-chunk:<eventNumber>:` and end with a zero-based part number.
 - Each runner stream numbers its events from 1. The Durable Object stores
   a runner event, or its refusal marker, only when its number is the stream
   cursor plus one.
@@ -205,10 +216,12 @@ The browser history route and the transcript copy read through
 `ChatStore.read`. Before such a session read, `prepareSessionHistory`
 brings the session index and the compaction index up to the cutoff of the
 read. Each batch reads at most 32 stored records. It commits their keys
-and the new frontier in one storage transaction. Between batches, the read
-gives the queue up with `outside` of its queue task, so other queue tasks
-run. The read keeps the cutoff that it had before the first batch. After a
-stop, the next session read continues after the last committed batch.
+and the new frontier in one storage transaction. When the compaction index
+covers a file stub, the batch uses its event number without loading its
+chunks. Between batches, the read gives the queue up with `outside` of its
+queue task, so other queue tasks run. The read keeps the cutoff that it
+had before the first batch. After a stop, the next session read continues
+after the last committed batch.
 
 A session read in a write transaction cannot give the queue up. The stop
 request lookup of an older turn record is one. It uses the index only when

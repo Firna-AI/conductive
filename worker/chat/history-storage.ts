@@ -1,9 +1,8 @@
-import type { WorkspaceEventEnvelope } from './workspace-events'
-import { RUNNER_EVENT_MAX_BYTES } from '../../src/shared/runner'
-import { parseFileEvent } from '../files/parsers'
 import { jsonBytes } from '../../src/shared/event-limits'
+import { parseFileEvent } from '../files/parsers'
 import { normalizeSession } from './session-storage'
 import type { ChatData } from './types'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 
 interface StoredFileEvent {
   workspaceId: string
@@ -13,24 +12,34 @@ interface StoredFileEvent {
 }
 
 export type StoredWorkspaceEvent = WorkspaceEventEnvelope | StoredFileEvent
-const CHUNK_CHARACTERS = RUNNER_EVENT_MAX_BYTES / 16
+const INLINE_FILE_EVENT_BYTES = 4_096
+const CHUNK_CHARACTERS = 65_536
+const encoder = new TextEncoder()
 const chunkKey = (eventNumber: number, part: number) =>
   `chat:v1:history-chunk:${eventNumber}:${part}`
 
-/** Joined reports and sanitized tree deltas can exceed one storage value. */
+export function isFileEventWithPayload(event: WorkspaceEvent): boolean {
+  return (
+    event.type === 'files.snapshot' ||
+    event.type === 'files.changed' ||
+    event.type === 'changes.updated'
+  )
+}
+
+/** File event stubs let session readers skip the payload. */
 export async function saveHistoryEvent(
   data: ChatData,
   key: string,
   envelope: WorkspaceEventEnvelope,
 ): Promise<void> {
+  if (!isFileEventWithPayload(envelope.event)) return data.put(key, envelope)
+  const text = JSON.stringify(envelope.event)
+  const envelopeBytes = jsonBytes({ ...envelope, event: 0 }) - 1
   if (
-    (envelope.event.type !== 'files.snapshot' &&
-      envelope.event.type !== 'files.changed' &&
-      envelope.event.type !== 'changes.updated') ||
-    jsonBytes(envelope) <= RUNNER_EVENT_MAX_BYTES
+    envelopeBytes + encoder.encode(text).byteLength <=
+    INLINE_FILE_EVENT_BYTES
   )
     return data.put(key, envelope)
-  const text = JSON.stringify(envelope.event)
   const fileEventChunks = Math.ceil(text.length / CHUNK_CHARACTERS)
   for (let part = 0; part < fileEventChunks; part++) {
     await data.put(
