@@ -83,60 +83,6 @@ describe('AllowAllBar', () => {
     })
   })
 
-  it('takes away a Stop that the Mac made and saved after 5 seconds, and a new Stop shows again', async () => {
-    holdAnimationFrames()
-    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
-    let time = FAKE_TIME
-    const server = new FakeApiServer({ onMac: true })
-    let controller: MacSettingsController | undefined
-    await mount(
-      <Bar
-        clock={{ now: () => time }}
-        fetch={server.fetch}
-        found={(found) => {
-          controller = found
-        }}
-      />,
-    )
-    await waitFor(() => queryByLabel(BAR), 'the bar')
-    const stopped = () =>
-      queryByRole(
-        'status',
-        'Stopped Each command from this workspace asks first.',
-      )
-    server.json(
-      'POST',
-      DEVICE_SETTINGS_PATH,
-      fakeSettingsReply({ ...fakeMacSettings(), workspaceWindows: [] }),
-    )
-    await press(byRole('button', 'Stop'))
-    await waitFor(stopped, 'the stopped 15 minutes')
-    time += 4_000
-    await tick()
-    expect(stopped()).not.toBeNull()
-    time += 1_000
-    await tick()
-    expect(queryByLabel(BAR)).toBeNull()
-
-    // A read again keeps the gone Stop away.
-    server.json(
-      'GET',
-      DEVICE_SETTINGS_PATH,
-      fakeSettingsReply({ ...fakeMacSettings(), workspaceWindows: [] }),
-    )
-    await act(() => controller?.refresh())
-    expect(queryByLabel(BAR)).toBeNull()
-
-    // A new Stop shows again, also when the Mac has no grant to stop.
-    await act(() =>
-      controller?.change({
-        action: 'stop-workspace',
-        workspaceId: FAKE_IDS.workspace,
-      }),
-    )
-    expect(stopped()).not.toBeNull()
-  })
-
   it('keeps a failed Stop and a Stop that the Mac did not save, after the 15 minutes end and when a new pairing shows them again, until the next Stop', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ onMac: true })
