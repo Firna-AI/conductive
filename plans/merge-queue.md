@@ -851,7 +851,7 @@ State the requirements and the decisions of the queue.
 - [x] Read each public guide in full. Update each sentence that restates a
       changed fact, mostly in `pull-requests.md` and `workspaces.md`. Add a
       merge queue section to `pull-requests.md`.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
 
 ## Milestone 3: GitHub stack client
 
