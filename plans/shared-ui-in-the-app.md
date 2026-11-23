@@ -81,9 +81,11 @@ These are my calls, from 2026-11-23.
   their users. A type that a moved module reads from a mockup-only part,
   such as `MenuPlacement`, moves into `src/ui/` as one type, and the
   mockup part imports it from there. No local copy can drift.
-- The walk of the move script skips the `import()` calls behind
-  `import.meta.env.DEV`, because only the development fake reaches the
-  fixtures through them.
+- The move script starts from the direct imports of shipped files, not
+  from a walk of the entry points. So it needs no rule for the `import()`
+  calls behind `import.meta.env.DEV`: their targets are `dev/` files,
+  which do not count. My call on 2026-11-23, during Milestone 2. It
+  replaces the call to skip those calls in a walk.
 - The move script gets no unit test. The `testing` skill says that a
   migration never gets a test. Its proof is one run: the gate passes and
   the catalogue compare shows no change.
@@ -108,10 +110,15 @@ These are my calls, from 2026-11-23.
   Module into its class names, so Changes lists each view that draws a
   moved module one time. Branches compare with their merge base, so they
   see no lasting noise.
-- `plans/follow-ups/desktop-ci-skips-mockup-styles.md` gets narrowed. The
-  moved styles then match the `src/**` path filter of the Mac CI job.
-  Only the mockup-only styles stay outside it, and the app does not use
-  them.
+- `plans/follow-ups/desktop-ci-skips-mockup-styles.md` is deleted, not
+  narrowed. After the move, every style of the app lives under `src/**`,
+  which the path filter of the Mac CI job covers. A change under
+  `docs/mockups/` changes only the catalogue. My call on 2026-11-23,
+  during Milestone 4.
+- `ChecksBranches` moves out of the mockup part
+  `docs/mockups/src/components/workspace/BarActions.tsx` into its own
+  file. The longer import paths made that file pass 300 lines. It is a
+  plain helper, so no registration changes. My call on 2026-11-23.
 
 Contract owners:
 
@@ -155,33 +162,30 @@ it. The path mentions of each doc change in Milestone 3, with the move.
 
 Depends on: none
 
-- [ ] Write `tools/ui-move/` with the TypeScript parser that the
-      repository has. It walks the run-time imports from the entry points
-      of the app, the Worker, the Mac app, and the marketing site, and
-      lists each reached module under `docs/mockups/src/`. It writes the
-      path map as JSON.
-- [ ] Add the rewrite step. For each source file, it reads each relative
+- [x] Write `tools/ui-move/`. It lists each module under
+      `docs/mockups/src/` that a shipped file of `src/`, `worker/`, or
+      `desktop/` imports, and each module that those import in turn. It
+      writes the path map as JSON.
+- [x] Add the rewrite step. For each source file, it reads each relative
       import, `import()`, CSS `@import` and `url()`, and relative
       Markdown link. When the target moved, or the file itself moved, it
       writes the new relative path. It keeps the extension style of each
       specifier. A second run changes nothing.
-- [ ] Make the walk skip the `import()` calls behind
-      `import.meta.env.DEV`.
-- [ ] Document the script and the steps for an open branch in
+- [x] Document the script and the steps for an open branch in
       `tools/ui-move/README.md`.
 
 ## Milestone 3: The move
 
 Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
 
-- [ ] Merge `origin/main`. Run the script. Commit the pure renames apart
+- [x] Merge `origin/main`. Run the script. Commit the pure renames apart
       from the edits. A squash merge joins the two commits, so keep the
       edits of each moved file small enough that Git still finds the
       rename.
-- [ ] Move the fixture domain types that moved modules read into
+- [x] Move the fixture domain types that moved modules read into
       `src/ui/`. Replace the type imports of mockup-only parts with local
       types. Check that no file under `src/ui/` imports `docs/mockups/`.
-- [ ] Update the paths in `astro.config.*`, `tools/marketing-pictures/`,
+- [x] Update the paths in `astro.config.*`, `tools/marketing-pictures/`,
       the Knip config, `.github/workflows/desktop-ci.yml`, and each other
       config that names a moved path.
 - [ ] Update each relative link and each path mention in the Markdown
@@ -198,15 +202,16 @@ Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
 
 Depends on: 3
 
-- [ ] Add the `no-restricted-imports` rule of decision 3 to
+- [x] Add the `no-restricted-imports` rule of decision 3 to
       `eslint.config.js`. Exempt `**/dev/**`, `**/*.test.ts(x)`, and
       `**/test-support/**`.
-- [ ] Move each production import that the rule finds, such as
+- [x] Move each production import that the rule finds, such as
       `marketingPictureList.ts`, into the app.
 - [ ] Replace the README rule with a sentence that names the lint.
-- [ ] Narrow `plans/follow-ups/fixture-import-check.md` to the chains
-      that the lint does not find, with option C of decision 3. Narrow
-      `plans/follow-ups/desktop-ci-skips-mockup-styles.md`.
+- [x] Narrow `plans/follow-ups/fixture-import-check.md` to the chains
+      that the lint does not find, with option C of decision 3. Delete
+      `plans/follow-ups/desktop-ci-skips-mockup-styles.md`, which the
+      move fixes.
 
 ## Milestone 5: Verification, commit, review, and pull request
 
