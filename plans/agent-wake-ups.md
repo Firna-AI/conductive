@@ -1,6 +1,6 @@
 # Agent wake-ups that survive a stop
 
-Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Cal chose 1 D, 4 B, and 5 B on 23 November 2026, and asked for the implementation. No decision is open. [PR #627](https://github.com/Firna-AI/conductive/pull/627) merged into `main` on 22 November 2026, and the branch took `main` at `c5616c6bf`. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Cal chose 1 D, 4 B, and 5 B on 23 November 2026, and asked for the implementation. Wake-up decisions 6 and 7, from the mockups, wait for Cal. They block only the Stop and Close rules. [PR #627](https://github.com/Firna-AI/conductive/pull/627) merged into `main` on 22 November 2026, and the branch took `main` at `c5616c6bf`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 An agent can ask to continue its work later only with the built-in cron
 tools of the Claude agent program. Those wake-ups live in the agent
@@ -109,6 +109,30 @@ Raised by the options check on 22 November 2026. Cal chose B on 23 November 2026
 - **B.** A line that names the member, such as "Priya cancelled a wake-up", as a stop line does. Effort: Small.
 - **Recommendation:** B. A Cancel is a member action that ends later work, as Stop is, so the chat records it the same way.
 
+### Wake-up decision 6: What a Stop does to pending wake-ups
+
+Open. Raised by the mockups on 23 November 2026. The full item is in `.context/agent-wake/reports/m1-mockups.md`, item 1.
+
+- **Root question:** What happens to the pending wake-ups of a session when a member stops a turn of that session?
+- **Background:** The first design call said that an explicit Stop drops each wake-up that the session set before that Stop, as watch decision 5 D does for watches. The mockups show each pending wake-up as a card with Cancel. A Stop of one later turn would then also drop a wake-up for next week, with no line.
+- **A.** Keep the rule. The stop line also names what the Stop ended, such as "You stopped the agent · 2 wake-ups cancelled". Effort: Small.
+- **B.** A Stop drops only the wake-ups that the stopped turn set. Earlier wake-ups stay, each with its Cancel. The stop line names the dropped ones, as in A. Effort: Small.
+- **C.** Keep the rule, with no line. Effort: Small.
+- **Left out:** a Stop that drops no wake-up, because a member stops a chain of wake-ups with Stop, as `docs/protocol/session-calls.md` requires. A question before Stop, because Stop asks none.
+- **Recommendation:** B. Each card has its own Cancel, and a member presses Stop to halt the turn in front of them.
+
+### Wake-up decision 7: What a Close does to pending wake-ups
+
+Open. Raised by the mockups on 23 November 2026. The full item is in `.context/agent-wake/reports/m1-mockups.md`, item 2.
+
+- **Root question:** What happens to a pending wake-up when a member closes its session before its time?
+- **Background:** A Close of an idle session asks nothing. Decision 4 B lists a closed session among the cases where a wake-up can start no turn, so its line waits in a closed session, where nobody looks.
+- **A.** Keep the plan. At its time, the wake-up ends with the line "could not start, because the session was closed". Effort: Small.
+- **B.** A Close ends the pending wake-ups at once, with the Cancel line of the member who closed. It asks no question. Effort: Small.
+- **C.** A Close asks first when wake-ups wait, as the Close of a running session asks. After the Close, each one ends with the Cancel line of that member. Effort: Medium.
+- **D.** At its time, the wake-up opens its session again and starts its turn. Today a closed session refuses each tool message. Effort: Medium.
+- **Recommendation:** C. The member learns of the loss before it happens, and the question follows the Close of a running session.
+
 ## Design
 
 ### The calls
@@ -168,8 +192,10 @@ All are orchestrator calls of 22 November 2026, from the options report, not use
 - The text follows the rules of the text of a tool message. Reason: it reaches the agent as a message.
 - Calls of one calling turn with the same text and the same time input give one wake-up, while that wake-up is pending. A call after it fired or was cancelled sets a new one. Reason: a retry after a lost reply is a new call, as watch decision 4 C says, and a chain inside one long turn must not stop without a word. The options check raised the pending rule.
 - A wake-up that joins a waiting turn keeps its deadline. Reason: background work lets only a member message restart the count, and a chain must not keep a forgotten dev server running without end. The options check raised this. PR #627 has the same gap for watch wakes.
-- An explicit Stop of the session drops the wake-ups that the session set before that Stop. The idle stop keeps them. Reason: watch decision 5 D, and Stop ends in-process wake-ups today.
+- The idle stop of the cloud computer keeps each pending wake-up. Reason: the goal is that a wake-up survives that stop. What an explicit Stop does waits for decision 6.
 - A member may cancel a wake-up when the member may stop a turn of that session. Reason: Cancel stops later work as Stop does. A Cancel adds a line that names the member, such as "Priya cancelled a wake-up" (decision 5 B).
+- A cancel through the workspace tools follows the stop line in full: its line gives "Cancelled from" and the session link of the sending session, where the chat shows its session chip. Reason: decision 5 B says "as a stop line does", and decision 279 gives a stop through the tools these words. Orchestrator call of 23 November 2026, from mockup item 3.
+- The tool text of `schedule_wake_up` and the agent instructions say that a member can cancel a wake-up and that a wake-up can fail to start, so the agent lists its wake-ups before it relies on one. Reason: one sentence of tool text covers both ends and sends no new message. Orchestrator call of 23 November 2026, from mockup item 4.
 - The woken turn uses the current model, effort, and fast mode of the session. Reason: a late answer does the same.
 - The tool text and the agent instructions say: set the wake-up, then end the reply. They say that background tasks and dev servers end when the computer stops. Reason: the computer can stop only after the turn ends.
 - Turn the cron tools off with `disallowedTools` and the environment variable together. Reason: `disallowedTools` is documented, and only the variable stops a durable job from an older run. The options check found that `CronList` and `CronDelete` stay on while that file holds jobs, unless `disallowedTools` removes them.
@@ -190,7 +216,7 @@ Use the `ui implementor` action. Draw the pending wake-up and the wake-up line, 
 - [x] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [x] Update the design and the TODOs of this plan for each problem that the mockups show.
 
-The mockups raised four questions that wait for Cal: what a Stop and a Close do to pending wake-ups, the line of a cancel by an agent, and how the agent learns of a Cancel or a miss. The report gives them in full: `.context/agent-wake/reports/m1-mockups.md`. The screenshots are in `.context/agent-wake/screenshots/`.
+The mockups raised four questions. Two wait for Cal as decisions 6 and 7. The orchestrator settled the other two as design calls, because decisions 5 B and 279 settle the cancel line, and the other is tool text. The report gives them in full: `.context/agent-wake/reports/m1-mockups.md`. The screenshots are in `.context/agent-wake/screenshots/`.
 
 ## Milestone 2: Documentation and protocol
 
@@ -216,7 +242,9 @@ Use the `non-ui implementor` action. Merge `main` into the branch first.
 - [ ] Store wake-ups in the Durable Object of the workspace, with a new alarm source. Keep the alarm set while a wake-up waits.
 - [ ] Add the three tool routes, with the calling-turn checks and the merge of repeats.
 - [ ] Fire each wake-up through the delivery path of watches. Cover each case where no turn can start, as decision 4 says.
-- [ ] Drop pending wake-ups at an explicit Stop. Keep them at the idle stop.
+- [ ] Keep pending wake-ups at the idle stop. Add a test.
+- [ ] Apply the Stop rule of decision 6. Blocked until Cal answers.
+- [ ] Apply the Close rule of decision 7. Blocked until Cal answers.
 - [ ] Add the member Cancel route and the chat events for pending wake-ups, with the Cancel line of decision 5.
 - [ ] Add the additive wake-up field to the runner command in `crates/cnd-runner-interface/`.
 - [ ] Check that the previous Worker keeps working with the new keys, as `migrations/README.md` says. A rollback must not lose a wake-up for good.
