@@ -95,6 +95,33 @@ export async function prepareAgentEvent(
       olderRunner = true
   }
   return async () => {
+    if (
+      (event.type === 'assistant.completed' ||
+        event.type === 'turn.completed' ||
+        event.type === 'turn.failed') &&
+      event.noticeIds
+    ) {
+      await transaction.capabilityNotes.acknowledge(
+        session.id,
+        turn.id,
+        event.noticeIds,
+      )
+      for (const command of await transaction.pending()) {
+        if (
+          command.type === 'notice' &&
+          command.sessionId === session.id &&
+          command.turnId === turn.id
+        ) {
+          const waiting = await transaction.capabilityNotes.waiting(session.id)
+          if (
+            !command.noticeIds.some((id) =>
+              waiting.some((note) => note.id === id),
+            )
+          )
+            await transaction.removeCommand(command.commandId)
+        }
+      }
+    }
     if (target.ended) {
       if (
         turn.state === 'failed' &&

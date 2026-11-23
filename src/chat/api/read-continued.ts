@@ -3,7 +3,8 @@ import type { MessageSender } from '../../shared/generated/MessageSender'
 import { record, text } from './json'
 import { label } from './read-changed-file'
 
-function readMember(value: unknown): MessageSender {
+/** The member whom a note of the app names, as the note keeps it. */
+export function readMember(value: unknown): MessageSender {
   const member = record(value, 'member')
   return {
     id: text(member.id),

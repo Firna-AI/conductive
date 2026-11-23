@@ -252,6 +252,9 @@ is relative to `src/chat/`, the folder of this guide.
   `api/read-continued.ts` reads the note of Continue and the note of a
   repository change with their real branches and their optional labels,
   with the same `label` reader.
+  `api/read-capability-change.ts` reads the note of a change of the
+  capabilities. A change of an unknown kind makes the whole note
+  unreadable, so the chat skips it.
   `api/read-view.ts` reads the saved view of the view route, with each
   Preview tab at its place in the row and the shown terminal.
 - `components/`: the tabs, the chat, the composer, the model picker, and the

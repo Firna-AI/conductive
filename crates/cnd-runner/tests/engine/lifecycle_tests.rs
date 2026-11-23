@@ -31,6 +31,7 @@ async fn streams_output_and_matches_only_the_result_messages_before_ending() -> 
         message_id: "answer".into(),
         text: "Hello world".into(),
         user_message_ids: vec!["message-first".into()],
+        notice_ids: vec![],
     });
     helper.event(ProviderEvent::Tool {
         tool: ToolCall {
@@ -45,6 +46,7 @@ async fn streams_output_and_matches_only_the_result_messages_before_ending() -> 
     helper.event(ProviderEvent::Result {
         state: ProviderResultState::Stopped,
         user_message_ids: vec!["message-first".into()],
+        notice_ids: vec![],
         end_reason: None,
     });
     h.engine.idle().await?;

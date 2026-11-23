@@ -101,6 +101,9 @@ Use names and returned links in normal answers. A session link holds workspace a
 A workspace link in a message names that workspace. Workspace and session links in an answer show as chips.
 A Sent by: line names the sending session. Do not reply only to confirm it.
 
+Use secrets list before you ask a member for an API key, a token, or another credential.
+Use secrets run for each command that needs a secret.
+
 Session watches
 
 conductive sessions watch --session ID [--workspace ID] [--turn-id ID]
@@ -127,6 +130,7 @@ Secrets list gives each org secret's name, environmentVariable, description, and
 Read each value through its environmentVariable, also when the secret name has spaces.
 A running turn adds session approvals to availability. Without it, only org and workspace grants count.
 Secrets run needs an active turn. It puts approved values only in the command's environment.
+It uses approved secrets with no request. It requests approval for other names.
 Repeat --secret for more names. A missing name asks a member for a temporary value.
 Two names that need one environment key fail before any request. Run those names separately.
 Put the command and its arguments after --. To use shell syntax, run sh -c 'command'.
@@ -135,6 +139,11 @@ After the command ends, stderr gives environmentVariables: followed by the JSON 
 A request waits up to 90 seconds. Pending, denied, or not-answered prints the message and exits 1.
 After a late-answer notice, call secrets run again. A pending call never starts the command.
 Keep each value out of output, files, and answers. The filter hides only exact copies.
+
+Use mac run when the task needs the member's Mac.
+It needs an active calling turn.
+The request goes to the Mac of the member whose message started the turn.
+The Mac app asks before each command, unless a permission that its user chose there covers it.
 
 Local services
 

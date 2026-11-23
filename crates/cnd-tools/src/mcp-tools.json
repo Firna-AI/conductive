@@ -1,7 +1,7 @@
 [
   {
     "name": "list_secrets",
-    "description": "List the secrets of this org with each name, environmentVariable, description, and availability. Read each value through its environmentVariable. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
+    "description": "List the secrets of this org with each name, environmentVariable, description, and availability. Call before you ask a member for an API key, a token, or another credential. Use run_with_secrets for each command that needs a secret. Read each value through its environmentVariable. Needs only the workspace token. An active turn adds its session approvals to availability. Never returns values. Keep secret values out of output, files, and answers.",
     "inputSchema": { "type": "object", "properties": {} },
     "annotations": {
       "readOnlyHint": true,
@@ -11,7 +11,7 @@
   },
   {
     "name": "run_with_secrets",
-    "description": "Run a shell command on this cloud computer with named secrets in its environment. Needs an active calling turn. Acts for the member whose message started that turn. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Read each value through the environmentVariable from list_secrets. Two names that need one environment key fail before any request. Run those names separately. Returns filtered stdout, stderr, exitCode, and the environmentVariables name-to-variable map. Keep each value out of output, files, and answers. The filter hides only exact copies.",
+    "description": "Run a shell command on this cloud computer with named secrets in its environment. Use for each command that needs a secret. Call list_secrets before you ask a member for an API key, a token, or another credential. Needs an active calling turn. Acts for the member whose message started that turn. Uses approved secrets with no request. Requests approval when needed and waits up to 90 seconds. A pending result ends without a command. After a late-answer notice, call again. Read each value through the environmentVariable from list_secrets. Two names that need one environment key fail before any request. Run those names separately. Returns filtered stdout, stderr, exitCode, and the environmentVariables name-to-variable map. Keep each value out of output, files, and answers. The filter hides only exact copies.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -40,7 +40,7 @@
   },
   {
     "name": "run_mac_command",
-    "description": "Ask to run a command on the active turn sender's connected Mac. Approval stays on that Mac.",
+    "description": "Ask to run a command when the task needs the member's Mac. Needs an active calling turn. The request goes to the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.",
     "inputSchema": {
       "type": "object",
       "properties": {

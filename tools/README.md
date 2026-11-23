@@ -143,6 +143,11 @@ Automatic idle computer stops keep watches.
 
 ## Secrets
 
+Call `secrets list` or `list_secrets` before you ask a member for an API key,
+a token, or another credential. Use `secrets run` or `run_with_secrets` for
+each command that needs a secret. Read each value through its
+`environmentVariable`.
+
 `secrets list` and `list_secrets` return each org secret's name, description,
 availability, and `environmentVariable`. They never return values. A running
 turn adds session approvals to availability. Without one, only org and
@@ -153,7 +158,8 @@ name. The Worker's list reply has no variable names.
 two requested names that need one environment key. That refusal is a local
 failure before any Worker call. It names both secrets and the shared
 variable, and never a value. Otherwise the tools send the names, command
-text, and optional reason to the Worker. A missing grant makes a request
+text, and optional reason to the Worker. Grants that cover each name allow
+the command with no request. A missing grant makes a request
 that waits up to 90 seconds. A pending result starts no command. After a
 notice of a late answer, the agent calls run again.
 
@@ -185,6 +191,11 @@ See [Secret variables](../docs/protocol/secret-variables.md) and
 [Secret requests](../docs/protocol/secret-requests.md).
 
 ## Mac commands
+
+Use `mac run` or `run_mac_command` when the task needs the member's Mac.
+The call needs an active calling turn.
+The request goes to the Mac of the member whose message started the turn.
+The Mac app asks before each command, unless a permission that its user chose there covers it.
 
 Mac commands use the same runtime token and active turn context.
 The Worker selects the stored sender, not the workspace owner or a caller-supplied user.

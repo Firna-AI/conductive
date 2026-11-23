@@ -118,6 +118,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A change of the capabilities shows a change note in the sessions whose
+  facts it changes, as [In the chat](capabilities-agents.md#in-the-chat) says.
 - A wake of a watch shows as one line of the app at its place. It gives
   the end of the watched turn and the session chip of the watched session,
   as [The wake line](session-watches.md#the-wake-line) says. It shows no
