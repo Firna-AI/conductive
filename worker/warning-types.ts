@@ -44,6 +44,14 @@ export const SIMPLE_WARNINGS = {
     'A queued automation run could not start. The next scan will try again.',
   automation_background_start_failed:
     'A pull request run could not start in the background.',
+  merge_queue_fix_retry:
+    'A merge queue fix step failed. The queue alarm will retry it.',
+  merge_queue_report_failed:
+    'A merge queue turn report failed. The workspace alarm will retry it.',
+  merge_queue_merge_retry:
+    'A merge queue merge step failed. The queue alarm will retry it.',
+  merge_queue_refresh_failed:
+    'The merged pull request was recorded. The workspace GitHub refresh failed.',
   marketing_site_unavailable: 'The built marketing site is not available.',
   turn_speed_invalid:
     'A turn end had a speed that the Worker does not know. It counts as standard speed.',

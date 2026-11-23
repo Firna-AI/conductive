@@ -18,11 +18,13 @@ import {
 } from '../../docs/mockups/src/components/workspace/barCopy'
 import { agentIcons } from '../../docs/mockups/src/components/workspace/barIcons'
 import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import { queuedMergeLabel } from '../../docs/mockups/src/components/workspace/queueCopy'
 import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
 import { buttonKey, type CommandKeyOf } from './barKeys'
 import type { BarBranches, BarControls, BarMessage } from './barView'
+import { QueueAddButton, QueueLine } from './QueueBarParts'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge
@@ -66,7 +68,11 @@ function BarButton(props: {
           tint={tint}
           touch={touch}
         >
-          {action.busy ? barLabels.merging : mergeLabels[action.method]}
+          {action.busy
+            ? barLabels.merging
+            : action.below === undefined
+              ? mergeLabels[action.method]
+              : queuedMergeLabel(action.method, action.below)}
         </ActionButton>
       )
     case 'ready':
@@ -114,9 +120,10 @@ function BarButton(props: {
 }
 
 /**
- * The buttons and the link of the bar, in order: the main action first, and
- * the link to GitHub last. Without `link`, it shows no link: the desktop bar
- * of a pull request links its number instead. `keyOf` gives the key of
+ * The buttons and the link of the bar, in order: the main action first,
+ * then Add to merge queue when the pull request can join the queue, and
+ * the link to GitHub last. Without `link`, it shows no link: the desktop
+ * bar of a pull request links its number instead. `keyOf` gives the key of
  * each command, which the tooltips name.
  */
 export function BarButtons(props: {
@@ -125,7 +132,7 @@ export function BarButtons(props: {
   touch?: boolean
   link?: boolean
 }) {
-  const { view, onAction } = props.controls
+  const { view, onAction, onQueue } = props.controls
   const touch = props.touch ?? false
   return (
     <>
@@ -139,6 +146,14 @@ export function BarButtons(props: {
           touch={touch}
         />
       ))}
+      {view.queue?.add ? (
+        <QueueAddButton
+          beside={view.actions.length > 0}
+          busy={view.queue.adding}
+          onPress={() => onQueue?.('add')}
+          touch={touch}
+        />
+      ) : null}
       {view.link && props.link !== false ? (
         <GitHubLink
           href={view.link.href}
@@ -215,21 +230,30 @@ function ChecksBranches(props: { branches: BarBranches }) {
 }
 
 /**
- * The top of the Checks tab of a phone: the message of the bar, then its
- * actions and its link to GitHub. While the branch has no pull request, the
- * branch and its base stand above the actions, also when the bar has none.
- * The row above opens this tab, because a button cannot sit inside the link
- * of the row.
+ * The top of the Checks tab of a phone: the message of the bar, the line
+ * of a queued workspace, then its actions and its link to GitHub. While the
+ * branch has no pull request, the branch and its base stand above the
+ * actions, also when the bar has none. The row above opens this tab,
+ * because a button cannot sit inside the link of the row.
  */
 export function ChecksActions(props: { controls: BarControls | null }) {
   const { controls } = props
   if (!controls) return null
   const { view } = controls
-  const buttons = view.actions.length > 0 || view.link !== null
-  if (!view.message && !buttons && !view.branches) return null
+  const line = view.queue?.line ?? null
+  const buttons =
+    view.actions.length > 0 || view.link !== null || view.queue?.add === true
+  if (!view.message && !line && !buttons && !view.branches) return null
   return (
     <div aria-label="Pull request actions" className={styles.top} role="group">
       {view.message ? <BarMessageLine message={view.message} touch /> : null}
+      {line ? (
+        <QueueLine
+          line={line}
+          onRemove={() => controls.onQueue?.('remove')}
+          touch
+        />
+      ) : null}
       {buttons || view.branches ? (
         <div className={styles.buttons}>
           {view.branches ? <ChecksBranches branches={view.branches} /> : null}

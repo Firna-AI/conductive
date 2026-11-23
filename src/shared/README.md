@@ -305,6 +305,13 @@ per-target outer alias and no credential.
   cutoff time. It drops a missing, malformed, or future value, and it
   rejects no record for it. The record then keeps the older notice.
   `ARCHIVED_COMPUTER_STATES` lists the known states.
+- [The merge queue readers](merge-queue-read.ts) read the optional
+  merge queue fields: the entry, the access of the viewer, and the GitHub
+  base of a listed workspace, and the queue state of a bar reply. The
+  workspace record reader uses the first three. Each drops a missing or
+  malformed value, and rejects no record for it. A wait that the app does
+  not know reads as no wait. [Merge queue paths](merge-queue.ts) give the
+  routes of Add, Remove, and a move.
 - [Workspace views](workspace-view.ts) define the saved view and its
   `temporaryTab` field. The field names one file or diff by kind and path,
   without a display mode, or is null. The Worker and browser readers use

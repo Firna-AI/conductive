@@ -34,7 +34,7 @@ export function rowLink(view: HTMLElement, workspaceId: string): HTMLElement {
 }
 
 /** Gives an element a box `height` px high, `top` px down the page. */
-function placeAt(element: Element | null, top: number, height: number) {
+export function placeAt(element: Element | null, top: number, height: number) {
   if (!element) throw new Error('The list has no element to place.')
   const box = new DOMRect(0, top, 200, height)
   Object.defineProperty(element, 'getBoundingClientRect', {

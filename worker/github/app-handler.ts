@@ -6,7 +6,7 @@ import {
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
-import { queueBarState } from '../merge-queue/read'
+import { queueBarState, queueLeaveBase } from '../merge-queue/read'
 import type {
   GitHubRefreshWorkspace,
   GitHubSnapshot,
@@ -46,26 +46,39 @@ async function readBody(
   dependencies: GitHubAppDependencies,
 ) {
   if (route === '/stored') {
-    const [stored, queue] = await Promise.all([
-      dependencies.stored(workspace),
-      queueBarState(env.DB, workspace),
-    ])
+    const stored = await dependencies.stored(workspace)
     return {
       ...(await storedBody(env, workspace, stored)),
-      ...(queue ? { queue } : {}),
+      ...(await readQueueBar(env, workspace, stored)),
     }
   }
   const snapshot = await dependencies.refresh(workspace, { userId })
   if (snapshot === null) throw githubFailure()
   if (route === '/checks') return snapshot.checks satisfies GitHubChecksResponse
-  const [labels, queue] = await Promise.all([
+  const [labels, queueBar] = await Promise.all([
     githubBranchLabels(env, workspace),
-    queueBarState(env.DB, workspace),
+    readQueueBar(env, workspace, snapshot),
   ])
   return {
     banner: labels(snapshot.banner),
-    ...(queue ? { queue } : {}),
+    ...queueBar,
   } satisfies GitHubBannerResponse
+}
+
+async function readQueueBar(
+  env: AppEnv,
+  workspace: GitHubWorkspace,
+  snapshot: GitHubSnapshot | undefined,
+) {
+  const current =
+    snapshot?.banner.branch === workspace.branch ? snapshot : undefined
+  const queue = await queueBarState(env.DB, workspace, current)
+  if (queue) return { queue }
+  const base = await queueLeaveBase(env.DB, workspace, current)
+  if (!base || !current) return {}
+  const labels = await githubBranchLabels(env, workspace)
+  const labeled = labels({ ...current.banner, baseBranch: base })
+  return { queueLeave: { baseBranch: labeled.displayBaseBranch ?? base } }
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */

@@ -2,6 +2,8 @@ import { workspaceBinding } from '../app-api/workspace-state'
 import type { AppEnv } from '../env'
 import { requireFeatureResult } from '../features/result'
 import type { GitHubWorkspace } from '../github/contracts'
+import type { WebhookRoute } from '../github/webhook-routing'
+import { githubUserAccess } from '../data/user-access'
 import { queueId, type QueueLeave, type QueueScope } from './contracts'
 import {
   queueScopesForOrg,
@@ -9,6 +11,7 @@ import {
   scopesWithQueuer,
 } from './data'
 import { queueScopesForRepository } from './step-data'
+import { workspaceForQueueBranch } from './data'
 
 type WorkspaceLeave = Extract<QueueLeave, { workspaceId: string }>
 
@@ -32,7 +35,7 @@ export async function leaveWorkspaceQueue(
   env: AppEnv,
   workspace: Pick<GitHubWorkspace, 'id' | 'orgId' | 'branch'>,
   cause: WorkspaceLeave['cause'],
-  pullNumber?: number,
+  options: { pullNumber?: number; actorId?: string } = {},
 ): Promise<void> {
   const scope = await scopeForQueueWorkspace(env.DB, workspace)
   if (scope)
@@ -40,7 +43,7 @@ export async function leaveWorkspaceQueue(
       cause,
       workspaceId: workspace.id,
       branch: workspace.branch,
-      pullNumber,
+      ...options,
     })
 }
 
@@ -55,6 +58,39 @@ export async function wakeRepositoryQueues(
     installationId,
   ))
     await wakeQueue(env, scope)
+}
+
+export async function wakeQueueWebhook(env: AppEnv, route: WebhookRoute) {
+  const { repositoryId, installationId, branch, queueLeave } = route
+  for (const scope of await queueScopesForRepository(
+    env.DB,
+    repositoryId,
+    installationId,
+  )) {
+    if (queueLeave && branch) {
+      const workspace = await workspaceForQueueBranch(
+        env.DB,
+        scope,
+        branch,
+        queueLeave.pullNumber,
+      )
+      if (workspace) {
+        const actor =
+          queueLeave.githubActorId === undefined
+            ? null
+            : await githubUserAccess(env.DB, queueLeave.githubActorId)
+        await wakeQueue(env, scope, {
+          cause: queueLeave.cause,
+          workspaceId: workspace.id,
+          branch,
+          pullNumber: queueLeave.pullNumber,
+          actorId: actor?.id,
+        })
+        continue
+      }
+    }
+    await wakeQueue(env, scope)
+  }
 }
 
 export async function leaveOrgQueues(env: AppEnv, orgId: string) {

@@ -1,5 +1,6 @@
 import type { ChatController } from '../../chat/state/controller'
 import { ContinueDialog } from './ContinueDialog'
+import { QueueQuestion } from './github/workspace-queue'
 import type { WorkspaceContext } from './features'
 import { LeaveMovedFiles } from './files/moved-files'
 import { ResumeOnTabOpen } from './files/tab-open-resume'
@@ -9,7 +10,8 @@ import { WorkspacePaletteActions } from './WorkspacePaletteActions'
 
 /**
  * The parts of the workspace screen that draw no place of their own: the
- * Continue dialog, the palette actions, the restore of the shown tab, the
+ * Continue dialog, the question of Remove from queue, the palette actions,
+ * the restore of the shown tab, the
  * Resume at a tab open, the way off a file page of an old repository, and
  * the session address, in each layout. The screen keeps
  * `restore` for its whole show, so a new mount of these parts restores
@@ -25,6 +27,7 @@ export function ScreenAddons(props: {
   return (
     <>
       <ContinueDialog />
+      <QueueQuestion />
       <WorkspacePaletteActions chat={chat} context={context} />
       <RestoreShownTab context={context} restore={props.restore} />
       <ResumeOnTabOpen context={context} />

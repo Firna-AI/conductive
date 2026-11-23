@@ -7,6 +7,7 @@ import { promptOf } from './barPrompts'
 import { barViewOf, type BarControls, type LocalWork } from './barView'
 import type { WorkspaceTarget } from './githubClient'
 import type { GitHubFeed } from './githubStore'
+import type { QueueInput } from './queueView'
 
 function connectBar(actions: BarActions): () => void {
   return actions.connect()
@@ -53,6 +54,16 @@ export interface BarScreen {
    * The caller uses only a result from the connection of the press.
    */
   showChat: () => void
+  /**
+   * The merge queue of the workspace, from the list of the org: its facts,
+   * Add to merge queue, and Remove from queue, which asks first. Without
+   * it, the bar shows no part of the queue.
+   */
+  queue?: {
+    input: QueueInput
+    add: () => void
+    remove: () => void
+  }
 }
 
 /**
@@ -62,7 +73,7 @@ export interface BarScreen {
  */
 export function useBarControls(screen: BarScreen): BarControls | null {
   const { github, actions, localWork, turnRuns, readOnly } = screen
-  const { archive, archiving, showChat } = screen
+  const { archive, archiving, showChat, queue } = screen
   const shown = useSyncExternalStore(actions.subscribe, actions.getSnapshot)
   const { state } = github
   return useMemo(() => {
@@ -100,8 +111,13 @@ export function useBarControls(screen: BarScreen): BarControls | null {
       readOnly,
       archivable: archive !== null,
       archiving,
+      ...(queue && { queue: queue.input }),
     })
-    return { view, onAction }
+    const onQueue = (action: 'add' | 'remove') => {
+      if (action === 'add') queue?.add()
+      else queue?.remove()
+    }
+    return { view, onAction, onQueue }
   }, [
     state,
     shown,
@@ -112,5 +128,6 @@ export function useBarControls(screen: BarScreen): BarControls | null {
     archiving,
     actions,
     showChat,
+    queue,
   ])
 }

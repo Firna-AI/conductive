@@ -14,6 +14,7 @@ import {
   type DevBranchCheck,
   type DevBranchList,
 } from './branch-routes'
+import type { DevQueue } from './queue-routes'
 import { SECRET_SCENARIOS, type SecretScenario } from './secret-request-seed'
 
 const ROLES = ['admin', 'member'] as const satisfies readonly OrgRole[]
@@ -58,6 +59,12 @@ const BANNERS = [
 ] as const satisfies readonly BannerState[]
 
 const PATHS = ['plain', 'masked'] as const
+
+const MERGE_QUEUES = [
+  'open',
+  'one',
+  'two',
+] as const satisfies readonly DevQueue[]
 
 /** Endpoint model lists and hosts for save and Refresh previews. */
 const MODEL_LISTS = ['unlisted', 'none', 'v1-only', 'read-failed'] as const
@@ -149,6 +156,8 @@ export interface DevOptions {
   switchSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
+  /** The merge queue of Acme, or null for none, as `seedMergeQueue` says. */
+  mergeQueue: DevQueue | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -215,6 +224,7 @@ export function readDevOptions(search: string): DevOptions {
     switches: params.get('switches') === '1',
     switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
+    mergeQueue: pick(params, 'mergeQueue', MERGE_QUEUES) ?? null,
   }
 }
 

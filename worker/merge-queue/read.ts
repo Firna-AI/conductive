@@ -1,6 +1,6 @@
 import type { MergeQueueBarState } from '../../src/shared/generated/MergeQueueBarState'
 import type { MergeQueueEntry } from '../../src/shared/generated/MergeQueueEntry'
-import type { GitHubWorkspace } from '../github/contracts'
+import type { GitHubSnapshot, GitHubWorkspace } from '../github/contracts'
 
 const activeEntry = `JOIN merge_queues q ON q.id = e.queue_id
   JOIN workspaces w ON w.id = e.workspace_id AND w.org_id = q.org_id
@@ -23,24 +23,83 @@ export async function listedQueueEntries(db: D1Database, orgId: string) {
   )
 }
 
-export function queueBarState(
+export async function queueBarState(
   db: D1Database,
   workspace: GitHubWorkspace,
-): Promise<MergeQueueBarState | null> {
-  return db
+  snapshot?: GitHubSnapshot | null,
+) {
+  const row = await db
     .prepare(
       `WITH bar AS (
        SELECT e.workspace_id, ROW_NUMBER() OVER (ORDER BY e.place) AS place,
          COUNT(*) OVER () AS count, LAG(e.pull_number) OVER (ORDER BY e.place) AS belowPullNumber,
-         q.trunk, e.state, e.wait_reason AS wait
+         q.trunk, e.state, e.wait_reason AS wait, e.pull_number AS pullNumber, e.place AS savedPlace,
+         CASE WHEN q.trunk = r.default_branch THEN e.merge_head END AS mergeHead,
+         e.blocking_pull_number AS blockedByPullNumber
        FROM merge_queue_entries e ${activeEntry}
+       JOIN repositories r ON r.id = q.repository_id AND r.org_id = q.org_id
        WHERE q.org_id = ? AND q.github_repository_id = ?
      )
-     SELECT place, count, belowPullNumber, trunk, state, wait
+     SELECT place, count, belowPullNumber, trunk, state, wait, pullNumber, savedPlace,
+       mergeHead, blockedByPullNumber
      FROM bar WHERE workspace_id = ?`,
     )
     .bind(workspace.orgId, workspace.repositoryId, workspace.id)
-    .first<MergeQueueBarState>()
+    .first<
+      MergeQueueBarState & {
+        pullNumber: number
+        savedPlace: number
+        mergeHead: string | null
+        blockedByPullNumber: number | null
+      }
+    >()
+  if (!row) return null
+  const { mergeHead, pullNumber, savedPlace, blockedByPullNumber, ...entry } =
+    row
+  const pull = snapshot?.banner.pullRequest
+  const mergeAhead =
+    mergeHead &&
+    entry.place === savedPlace &&
+    snapshot?.banner.state === 'ready-to-merge' &&
+    pull?.headSha === mergeHead &&
+    pull.number === pullNumber
+      ? entry.place - 1
+      : undefined
+  return {
+    ...entry,
+    ...(mergeAhead !== undefined && { mergeAhead }),
+    ...(blockedByPullNumber !== null && { blockedByPullNumber }),
+  }
+}
+
+export async function queueLeaveBase(
+  db: D1Database,
+  workspace: GitHubWorkspace,
+  snapshot: GitHubSnapshot | undefined,
+) {
+  const pull = snapshot?.banner.pullRequest
+  if (
+    !pull ||
+    !snapshot?.pullBaseBranch ||
+    snapshot.banner.state === 'merged' ||
+    snapshot.banner.state === 'closed'
+  )
+    return null
+  return db
+    .prepare(
+      `SELECT base_branch FROM merge_queue_leave_notices
+    WHERE workspace_id = ? AND org_id = ? AND github_repository_id = ?
+      AND branch = ? AND pull_number = ? AND base_branch = ?`,
+    )
+    .bind(
+      workspace.id,
+      workspace.orgId,
+      workspace.repositoryId,
+      workspace.branch,
+      pull.number,
+      snapshot.pullBaseBranch,
+    )
+    .first<string>('base_branch')
 }
 
 export async function listedGitHubRepositories(

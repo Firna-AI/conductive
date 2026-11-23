@@ -97,6 +97,7 @@ const entry = (name: string, number: number, unitId: string): QueueEntry => ({
   state: 'queued',
   wait: null,
   queuerUserId: 'member',
+  queuedAt: 1,
   stepAt: 1,
 })
 

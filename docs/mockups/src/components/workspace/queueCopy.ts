@@ -1,6 +1,6 @@
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
 import { mergeLabels, type MergeMethod } from './barCopy'
-import type { MergeProblem, QueueLine } from './queueModel'
+import type { MergeProblem, QueueLine, TurnWait } from './queueModel'
 
 /**
  * The words of the merge queue: the group of the list, the reason of a row
@@ -40,6 +40,14 @@ const problemText: Readonly<Record<MergeProblem, string>> = {
   'merge-refused': 'GitHub refused the merge.',
 }
 
+/** What holds the message that the queue sends as the queuer. */
+const turnWaitText: Readonly<Record<TurnWait, string>> = {
+  'active-turn': 'The queue waits for a running turn to end.',
+  'agent-login':
+    'The queue waits for an agent login for the member who added it.',
+  'open-session': 'The queue waits for an open session.',
+}
+
 /**
  * What the queue waits for on a layer whose own pull request cannot merge
  * until a member acts, in the words of its GitHub state: its checks, a
@@ -68,10 +76,10 @@ function ownWait(
 
 /**
  * What the line of a layer that waits or is ready says after its place:
- * why the queue could not merge it, the lowest layer below it that the
- * queue waits for, its local work, which the bar asks to push first, what
- * the queue waits for on its own pull request, or the pull request that it
- * builds on.
+ * why the queue could not merge it, what holds the message that the queue
+ * sends as the queuer, the lowest layer below it that the queue waits for,
+ * its local work, which the bar asks to push first, what the queue waits
+ * for on its own pull request, or the pull request that it builds on.
  */
 function waitText(
   line: QueueLine,
@@ -79,6 +87,7 @@ function waitText(
   below: string,
 ): string {
   if (line.problem !== undefined) return problemText[line.problem]
+  if (line.turnWait !== undefined) return turnWaitText[line.turnWait]
   if (line.waitsFor !== undefined) {
     return `The queue waits for #${line.waitsFor}.`
   }
@@ -117,8 +126,12 @@ export function queueRowText(line: QueueLine): string {
   return `Queue ${line.place} of ${line.size}`
 }
 
-/** A pull request that leaves the queue with the one that a member removes. */
-export type LeavingLayer = { name: string; number: number }
+/**
+ * A pull request that leaves the queue with the one that a member removes,
+ * by the name of its workspace. A list that lacks its number names the
+ * workspace alone.
+ */
+export type LeavingLayer = { name: string; number?: number }
 
 /** A list in running text: "a", "a and b", or "a, b, and c". */
 function listText(items: readonly string[]): string {
@@ -130,15 +143,20 @@ function listText(items: readonly string[]): string {
  * The words of the question before Remove from queue. A lower entry of a
  * member stack takes the entries above it in its unit along, because a
  * member stack moves as one unit (decision 315), and the question names
- * them.
+ * them. A screen that lacks the number of the pull request names it
+ * without its number.
  */
 export const removeQuestion = {
   title: 'Remove from the merge queue?',
-  alone: (number: number, trunk: string) =>
-    `Pull request #${number} loses its place and targets ${trunk} again. Add it again to join at the end of the queue.`,
+  alone: (number: number | undefined, trunk: string) =>
+    `${number === undefined ? 'The pull request' : `Pull request #${number}`} loses its place and targets ${trunk} again. Add it again to join at the end of the queue.`,
   withUnit: (above: readonly LeavingLayer[]) => {
     const names = listText(
-      above.map((item) => `${item.name} (#${item.number})`),
+      above.map((item) =>
+        item.number === undefined
+          ? item.name
+          : `${item.name} (#${item.number})`,
+      ),
     )
     const one = above.length === 1
     return `${names} ${one ? 'builds' : 'build'} on this pull request, so ${one ? 'it leaves' : 'they leave'} the queue too. Add them again to join at the end of the queue.`

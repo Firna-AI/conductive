@@ -1,4 +1,7 @@
+import type { User } from '../../src/shared/api'
+import type { QueueFixRequest } from '../merge-queue/fix-contracts'
 import type { WorkspaceEventEnvelope } from './workspace-events'
+import { acceptQueueFix } from './queue-fix'
 import { SessionLogins } from './session-login'
 import type { ChatStore, ChatTransaction } from './store'
 import type { ChatDependencies } from './types'
@@ -8,6 +11,7 @@ export class ChatOperation {
   readonly logins: SessionLogins
   readonly workspaceId: string
   private readonly store: ChatStore
+  private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
 
   constructor(
@@ -17,6 +21,7 @@ export class ChatOperation {
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
   ) {
     this.store = store
+    this.dependencies = dependencies
     this.workspaceId = workspaceId
     this.publish = publish
     this.logins = new SessionLogins(this, dependencies)
@@ -28,5 +33,9 @@ export class ChatOperation {
 
   change<T>(work: (transaction: ChatTransaction) => Promise<T>): Promise<T> {
     return this.store.change(this.workspaceId, work, this.publish)
+  }
+
+  acceptQueueFix(fix: QueueFixRequest, authorize: () => Promise<User>) {
+    return acceptQueueFix(this, fix, authorize, this.dependencies)
   }
 }

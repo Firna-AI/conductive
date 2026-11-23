@@ -1,0 +1,150 @@
+import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
+import type { MergeQueueEntryState } from '../shared/generated/MergeQueueEntryState'
+import {
+  queueLineText,
+  queueRowText,
+} from '../../docs/mockups/src/components/workspace/queueCopy'
+import type {
+  BarQueue,
+  MergeProblem,
+  QueueFacts,
+  QueueStep,
+  TurnWait,
+} from '../../docs/mockups/src/components/workspace/queueModel'
+import { githubSummary } from '../shared/github'
+import { baseBranchLabel } from './bannerStatus'
+import type { GitHubSnapshot } from './githubClient'
+
+/**
+ * What the bar knows of the merge queue beside its GitHub state, from the
+ * list of the org: whether the list holds the workspace as an entry, and
+ * whether its pull request can join, by write access and a unit that
+ * targets the default branch (decision 320).
+ */
+export interface QueueInput {
+  listed: boolean
+  canJoin: boolean
+  /** Add to merge queue runs, so its button shows busy. */
+  adding: boolean
+}
+
+/** The line under the bar of a queued workspace. */
+export interface QueueLineView {
+  text: string
+  /** A step runs, so a spinner takes the place of the icon. */
+  running: boolean
+  /** Remove from queue ends the line. */
+  remove: boolean
+  /** GitHub refused the merge, so the line leads to the pull request. */
+  href: string | null
+}
+
+/** What the bar, the phone row, and the top of the Checks tab show of the queue. */
+export interface QueueView {
+  /** Add to merge queue, the outline button after the main action. */
+  add: boolean
+  adding: boolean
+  line: QueueLineView | null
+  /** The place in the compact row of a phone, such as "Queue 3 of 3". */
+  row: string | null
+}
+
+/**
+ * The step of the mockups for the state of an entry. An entry without a
+ * running step counts as waiting until the queue takes a click of Merge
+ * (decision 316, Milestone 7). So the bar offers no direct merge of a
+ * queued layer, which decision 316 rejected, and shows Merge only busy
+ * while the queue merges.
+ */
+function stepOf(state: MergeQueueEntryState): QueueStep {
+  switch (state) {
+    case 'restacking':
+      return 'rebasing'
+    case 'merging':
+      return 'merging'
+    case 'queued':
+    case 'waiting':
+      return 'waiting'
+  }
+}
+
+/** Why the queue could not merge a layer, when the bar read names it. */
+function problemOf(queue: MergeQueueBarState): MergeProblem | undefined {
+  if (queue.wait === 'token') return 'token-failed'
+  if (queue.wait === 'merge-refused') return 'merge-refused'
+  return undefined
+}
+
+/** What holds the message that the queue sends as the queuer, if any. */
+function turnWaitOf(queue: MergeQueueBarState): TurnWait | undefined {
+  switch (queue.wait) {
+    case 'active-turn':
+    case 'agent-login':
+    case 'open-session':
+      return queue.wait
+    default:
+      return undefined
+  }
+}
+
+/**
+ * The queue facts of the bar: a layer of the stack from the bar read, or a
+ * pull request that can join, which neither the bar nor the list holds as
+ * an entry. The bar read names no layer that a wait waits for, so the line
+ * of such a wait names the pull request below instead.
+ */
+export function queueFactsOf(
+  queue: MergeQueueBarState | undefined,
+  input: QueueInput | undefined,
+): QueueFacts | undefined {
+  if (queue) {
+    const problem = problemOf(queue)
+    const turnWait = turnWaitOf(queue)
+    return {
+      kind: 'entry',
+      place: queue.place,
+      size: queue.count,
+      below: queue.belowPullNumber,
+      step: stepOf(queue.state),
+      ...(problem && { problem }),
+      ...(turnWait && { turnWait }),
+    }
+  }
+  if (input && !input.listed && input.canJoin) return { kind: 'open' }
+  return undefined
+}
+
+/**
+ * The queue of the bar as the views draw it: Add to merge queue, and the
+ * line of a queued workspace with its words. The trunk shows by the label
+ * of the base when the base is the trunk, which hides each secret value.
+ */
+export function queueViewOf(
+  bar: BarQueue | undefined,
+  snapshot: GitHubSnapshot,
+  input: QueueInput | undefined,
+): QueueView | null {
+  if (!bar) return null
+  const { line } = bar
+  const { banner, queue } = snapshot
+  const trunk =
+    queue && queue.trunk === banner.baseBranch
+      ? baseBranchLabel(banner)
+      : (queue?.trunk ?? '')
+  return {
+    add: bar.add,
+    adding: input?.adding ?? false,
+    line: line
+      ? {
+          text: queueLineText(line, { trunk, github: githubSummary(banner) }),
+          running: line.step === 'rebasing' || line.step === 'merging',
+          remove: line.remove,
+          href:
+            line.problem === 'merge-refused'
+              ? (banner.pullRequest?.url ?? null)
+              : null,
+        }
+      : null,
+    row: line ? queueRowText(line) : null,
+  }
+}

@@ -8,6 +8,7 @@ import type { PrStatus } from '../../../components/workspace/prStatus'
 import {
   mergeProblems,
   queueSteps,
+  turnWaits,
 } from '../../../components/workspace/queueModel'
 import { bannerStates } from '../../../fixtures/pullRequests'
 import { iconKeyOf, iconKeys, type IconKey } from '../common/icons'
@@ -114,6 +115,8 @@ export const queueLineSchema = {
     waitsFor: { type: 'integer', minimum: 1 },
     /** Why the queue could not merge it. */
     problem: { enum: mergeProblems },
+    /** What holds the message that the queue sends as the queuer. */
+    turnWait: { enum: turnWaits },
     stackedAbove: { type: 'integer', minimum: 1 },
     remove: { type: 'boolean' },
     /** The cloud computer holds work that is not pushed. */

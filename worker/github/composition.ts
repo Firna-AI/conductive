@@ -11,7 +11,7 @@ import { requireFeatureResult } from '../features/result'
 import { dispatchPullRequestRuns } from '../automations/pull-request-dispatch'
 import { automationRunRuntime } from '../automations/run-runtime'
 import { warnWorker } from '../warnings'
-import { wakeRepositoryQueues } from '../merge-queue/wake'
+import { wakeQueueWebhook, wakeRepositoryQueues } from '../merge-queue/wake'
 
 export async function productionGitHubWebhook(
   request: Request,
@@ -29,6 +29,7 @@ export async function productionGitHubWebhook(
     },
     {
       now: dependencies.now,
+      queue: (route) => wakeQueueWebhook(env, route),
       pullRequest: (event, deliveryId) =>
         dispatchPullRequestRuns(
           automationRunRuntime(env, dependencies),

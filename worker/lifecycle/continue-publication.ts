@@ -17,7 +17,9 @@ export async function publishContinue(
 ): Promise<void> {
   await requireActiveOrg(options.env.DB, job.binding.orgId)
   const row = await storeContinuedBranch(options, job)
-  await leaveWorkspaceQueue(options.env, job.binding, 'continued')
+  await leaveWorkspaceQueue(options.env, job.binding, 'continued', {
+    actorId: job.member.id,
+  })
   const binding = {
     ...job.binding,
     branch: job.branch,

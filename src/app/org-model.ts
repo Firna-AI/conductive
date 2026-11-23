@@ -22,7 +22,14 @@ import { orgResources, type OrgResources } from './org-resources'
 import type { Refreshing } from './refresh'
 import { SecretsModel } from './secrets-model'
 import type { AppServices } from './services'
-import { derived, partOf, valueOf, type Loadable, type Readable } from './store'
+import {
+  derived,
+  partOf,
+  Store,
+  valueOf,
+  type Loadable,
+  type Readable,
+} from './store'
 import { WorkspaceActions } from './workspace-actions'
 import {
   neverSuspended,
@@ -76,6 +83,12 @@ export class OrgModel {
   readonly liveGitHub = new LiveGitHubStates()
   /** The GitHub access of the signed-in member, by repository ID. */
   private readonly githubAccess = new Map<string, GitHubCapabilities>()
+  private readonly queueWriteCount = new Store(0)
+  /**
+   * Counts the writes of the merge queue that worked in this tab, so the
+   * bar of the open workspace reads its place again after each one.
+   */
+  readonly queueWrites: Readable<number> = this.queueWriteCount
   /** The branches of each repository that the member reads in a picker. */
   readonly branches: BranchLists
   readonly workspaceActions: WorkspaceActions
@@ -136,6 +149,19 @@ export class OrgModel {
   /** Reads a part now, such as for Try again. */
   reload(part: OrgPart): Promise<void> {
     return this.parts[part].refresh()
+  }
+
+  /**
+   * Reads the list again after any read that runs, such as after a write
+   * of the merge queue, which can change more rows than its change shows.
+   */
+  rereadList(): Promise<void> {
+    return this.parts.list.reread()
+  }
+
+  /** A write of the merge queue worked, as `queueWrites` counts it. */
+  queueWritten(): void {
+    this.queueWriteCount.set(this.queueWriteCount.get() + 1)
   }
 
   /** The draft of New workspace for a section. It stays while the app is open. */

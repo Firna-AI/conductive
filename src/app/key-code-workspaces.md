@@ -23,6 +23,18 @@ rules of Archive and Restore.
   `listedWorkspaces`, which the list, its counts, and the palette share.
   `sections.test.ts` and `archive-overlay.test.ts` check the trees of a
   section, their moves, and an Archive of a parent.
+- `merge-queue.ts`: the merge queue as the list reads it. `queueBlocks`
+  gives the blocks of the Merge queue group, `queueUnits` the units of a
+  block, and `queueStep` and `unitBefore` the places of a move by keys or
+  by a drop. `merge-queue-join.ts`: `joinCheck`, whether a row can join,
+  with the reason of a refusal, `mayRemove`, and `queueMenuAction`, the
+  queue item of a menu. `merge-queue-changes.ts` gives the changes that a
+  write shows at once, and `merge-queue-actions.ts` the writes of Add,
+  Remove, and a move, which read the list again after their answer and
+  count in `OrgModel.queueWrites`. `merge-queue.test.ts`,
+  `merge-queue-groups.test.ts`, and `merge-queue-actions.test.ts` check
+  the blocks, the join rule, the placement of decision 318, the writes,
+  and their rollback.
 - `workspace-actions.ts`: `OrgModel.workspaceActions`, the Rename write,
   owner-only confirmation, the Archive and Restore flows of unopened rows,
   and `running`, the Archive or the Restore that runs for each workspace.
@@ -53,7 +65,15 @@ rules of Archive and Restore.
   time on hover until the last day of Restore.
   `SectionHeader.tsx` draws a section header with its menu and Rename
   section. `useListActions.ts` runs the list changes, with a toast for a
-  failure. `RowContent.tsx` draws the content of a row and the indent of
+  failure. `MergeQueueGroup.tsx` and `QueueBlock.tsx` draw the Merge queue
+  group, `useQueueGroup.tsx` and `useQueueDrag.ts` give it its rows and
+  the drag of its entries, with the boxes of `queue-layout.ts`, and
+  `useListQueue.ts` its facts and its writes, each with a toast for a
+  failure. `useRowMoves.ts` moves a focused row by keys. `row-queue.ts`
+  puts the queue item in a menu, and `RemoveQueueDialog.tsx` asks before
+  Remove from queue. `MergeQueueGroup.test.tsx` and
+  `RowQueueMenu.test.tsx` check the group, its drags, its keys, and the
+  queue items of the menus. `RowContent.tsx` draws the content of a row and the indent of
   a nested row. `RowDrop.tsx` draws the drop line and the lifted row of a
   tree, with the count of its nested rows. `SectionTrees.test.tsx` and
   `TreeDrag.test.tsx` check the trees of the list, their keys, and their

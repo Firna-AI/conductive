@@ -236,7 +236,14 @@ export class GitHubStore {
     this.lastEventNumber = envelope.eventNumber
     const { event } = envelope
     if (event.type !== 'github.updated') return null
-    return { banner: event.banner, checks: event.checks }
+    // An event carries no merge queue state, so the last read keeps it.
+    const queue =
+      this.state.status === 'ready' ? this.state.snapshot.queue : undefined
+    return {
+      banner: event.banner,
+      checks: event.checks,
+      ...(queue && { queue }),
+    }
   }
 
   private readHistory(history: GitHubSnapshot): void {

@@ -100,6 +100,30 @@ export class GitHubReader {
               .pullRequest,
           )
     this.branchPull = null
+    return this.snapshot(firstPage, baseChange)
+  }
+
+  /** Read the saved pull request number, even when its head has a newer pull request. */
+  async readPull(pullNumber: number): Promise<GitHubSnapshot> {
+    return this.snapshot(await this.pull(pullNumber))
+  }
+
+  async pullDetails(pullNumber: number) {
+    return parsePull(await this.pull(pullNumber), this.workspace)
+  }
+
+  private async pull(pullNumber: number) {
+    const pull = object(
+      (await this.repository(PULL, { number: pullNumber })).pullRequest,
+    )
+    if (integer(pull.number) !== pullNumber) throw githubFailure()
+    return pull
+  }
+
+  private async snapshot(
+    firstPage: Record<string, unknown>,
+    baseChange?: GitHubSnapshot['baseChange'],
+  ): Promise<GitHubSnapshot> {
     const pull = parsePull(firstPage, this.workspace)
     const checks = await readChecks(pull, firstPage, (after, mergeAfter) =>
       this.repository(CHECKS, { number: pull.number, after, mergeAfter }),

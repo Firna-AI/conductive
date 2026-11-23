@@ -18,6 +18,7 @@ export const PARALLEL = 'parallel workspace'
 export const FOREIGN = 'foreign workspace'
 export const OWNER_TOKEN = 'owner-queue-token'
 export const MEMBER_TOKEN = 'member-queue-token'
+export const QUEUE_WEBHOOK_SECRET = 'merge-queue-webhook-secret'
 export const queueBundle = () =>
   outerWorkerBundle('worker/features/entry.test-support.ts')
 
@@ -64,11 +65,19 @@ async function seedWorkspace(
   ])
 }
 
-export async function queueFixture(bundle: string) {
+export async function queueFixture(bundle: string, privateKey?: string) {
   let api: RepositoryGitHub | undefined
   const fixture = await featureFixture(bundle, {
+    configuration: {
+      GITHUB_APP_PRIVATE_KEY: privateKey,
+      GITHUB_WEBHOOK_SECRET: QUEUE_WEBHOOK_SECRET,
+    },
     outbound: (request, fallback) => {
       const path = new URL(request.url).pathname
+      if (privateKey && path === '/app/installations/1/access_tokens')
+        return Promise.resolve(
+          Response.json({ token: 'queue-installation-read-token' }),
+        )
       return api && (path === '/graphql' || path.startsWith('/repos/'))
         ? api.fetch(request)
         : fallback(request)

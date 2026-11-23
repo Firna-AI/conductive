@@ -7,6 +7,7 @@ import { CHAT_ROOT, chatKey } from './storage-keys'
 import type { ChatData, ModelSessionCreation, StoredTurn } from './types'
 import type { PendingCommand } from './pending-command'
 import type { ToolSessionRequest } from './tool-session-requests'
+import { QueueFixRecords } from './queue-fix-records'
 
 const FIRST_SESSION_KEY = `${CHAT_ROOT}first-session`
 
@@ -17,9 +18,11 @@ interface FirstSession {
 
 export class ChatRecords {
   protected readonly data: ChatData
+  readonly queueFixes: QueueFixRecords
 
   constructor(data: ChatData) {
     this.data = data
+    this.queueFixes = new QueueFixRecords(data)
   }
 
   async cursor(streamId: string): Promise<number> {

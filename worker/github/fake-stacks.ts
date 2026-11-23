@@ -30,6 +30,20 @@ export class RepositoryStacks {
     this.api = api
   }
 
+  landThrough(pullNumber: number) {
+    for (const stack of this.stacks.values()) {
+      const end = stack.pullNumbers.indexOf(pullNumber)
+      if (end < 0) continue
+      for (const number of stack.pullNumbers.slice(0, end + 1)) {
+        const pull = this.api.pulls[number]
+        if (pull.state === 'OPEN') {
+          pull.state = 'MERGED'
+          pull.mergedAt = this.api.pulls[pullNumber].mergedAt
+        }
+      }
+    }
+  }
+
   private reply(stack: FakeStack, minimal: boolean) {
     const pulls = stack.pullNumbers.map((number) =>
       restPull(this.api.pulls[number], this.api),

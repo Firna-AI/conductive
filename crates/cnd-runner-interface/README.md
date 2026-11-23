@@ -46,6 +46,11 @@ The Worker resolves their defaults and validates them after creation replay.
 Workspace records and list entries give a required nullable parent ID.
 The app workspace list can include the merge queue entry, GitHub write
 access of the viewer, and the GitHub base of the open pull request.
+The merge queue bar can report a wait for a turn, an open session, or a
+session login that the queuer can use.
+Its optional fields give the count of layers that can merge with it and
+the pull request that blocks it. A queue merge request carries the shown
+count. A leave notice gives the base that remains after a failed reset.
 Workspace details give the parent entry, stored depth, and direct children.
 `Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`
 of an archived workspace and its original Restore cutoff. Its deserializer
@@ -147,7 +152,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [Secret contracts](src/tools/secrets.rs) defines the legacy Worker list, run input, grants, and non-printable values.
 - [Secret results](src/tools/secret_results.rs) defines printable command output and tool outcomes.
 - [Workspace records](src/tools/workspace_types.rs) defines the app's workspace record with its nullable parent ID and its optional archived computer.
-- [Merge queue records](src/tools/merge_queue.rs) defines the list entry, the bar state, and the re-order request.
+- [Merge queue records](src/tools/merge_queue.rs) defines the list entry, the bar state, the merge and re-order requests, and the leave notice.
 - [Wire helpers](src/wire.rs) preserves literal booleans and read-only array views.
 - [JSON decoder](src/json/decoder.rs) reads JavaScript JSON strings for the runner and workspace tools.
 - [Export example](examples/export_bindings.rs) registers and formats every shared type.

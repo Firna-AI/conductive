@@ -127,7 +127,15 @@ export class RepositoryGitHub {
       )
         return Response.json({}, { status: 404 })
       await this.onRequest?.(merge[4] ? 'MergeResult' : 'MergeStart')
-      return this.merges.fetch(request, this.pulls[Number(merge[3])], merge[4])
+      const number = Number(merge[3])
+      const reply = await this.merges.fetch(
+        request,
+        this.pulls[number],
+        merge[4],
+      )
+      if (merge[4] && this.merges.jobs.get(merge[4])?.state === 'merged')
+        this.stacks.landThrough(number)
+      return reply
     }
     const stack = url.pathname.match(
       /^\/repos\/([^/]+)\/([^/]+)\/stacks(?:\/(\d+)(?:\/(add|unstack))?)?$/,

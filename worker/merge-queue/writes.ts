@@ -6,6 +6,7 @@ import {
   type QueueScope,
   type QueueWriter,
 } from './contracts'
+import { leaveNoticeWrites, type QueueLeaveNotice } from './leave-data'
 
 const noOtherQueue = `NOT EXISTS (
   SELECT 1 FROM merge_queues q JOIN merge_queue_entries e ON e.queue_id = q.id
@@ -85,7 +86,7 @@ export async function addQueueEntries(
       ),
     db
       .prepare(
-        `UPDATE merge_queue_entries SET place = place + ?
+        `UPDATE merge_queue_entries SET place = place + ?, merge_head = NULL
        WHERE queue_id = ? AND place >= ?
          AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,
       )
@@ -94,10 +95,11 @@ export async function addQueueEntries(
       .prepare(
         `INSERT INTO merge_queue_entries (
          workspace_id, queue_id, branch, pull_number, queuer_user_id,
-         place, unit_id, state, queued_at, step_at
+         place, unit_id, state, queued_at, step_at, member_base
        )
        SELECT json_extract(c.value, '$.workspaceId'), q.id, json_extract(c.value, '$.branch'),
-         json_extract(c.value, '$.pullNumber'), ?, ? + c.key, ?, 'queued', ?, ?
+         json_extract(c.value, '$.pullNumber'), ?, ? + c.key, ?, 'queued', ?, ?,
+         json_extract(c.value, '$.memberBase')
        FROM merge_queues q, json_each(?) c WHERE q.id = ? AND q.pending_write = ?`,
       )
       .bind(memberId, place, unitId, now, now, json, id, writeId),
@@ -114,9 +116,10 @@ export async function saveQueueOrder(
     now: number
     writeId: string
     writer?: QueueWriter
+    notices?: readonly QueueLeaveNotice[]
   },
 ): Promise<boolean> {
-  const { id, remaining, removed, now, writeId, writer } = input
+  const { id, remaining, removed, now, writeId, writer, notices } = input
   const results = await db.batch([
     db
       .prepare(
@@ -143,6 +146,19 @@ export async function saveQueueOrder(
         writer?.workspace.branch ?? null,
         writer?.workspace.installationId ?? null,
       ),
+    ...(removed.length
+      ? leaveNoticeWrites(db, id, writeId, removed, notices ?? [])
+      : []),
+    db
+      .prepare(
+        `UPDATE merge_queue_entries AS e SET member_base = (
+       SELECT lower.branch FROM merge_queue_entries lower
+       WHERE lower.queue_id = e.queue_id AND lower.unit_id = e.unit_id AND lower.place < e.place
+       ORDER BY lower.place DESC LIMIT 1)
+       WHERE e.queue_id = ? AND e.member_base IS NULL
+       AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,
+      )
+      .bind(id, id, writeId),
     db
       .prepare(
         `DELETE FROM merge_queue_entries
@@ -160,7 +176,7 @@ export async function saveQueueOrder(
         `WITH changes AS (
          SELECT value AS workspace_id, key + 1 AS place FROM json_each(?)
        )
-       UPDATE merge_queue_entries SET place = changes.place
+       UPDATE merge_queue_entries SET place = changes.place, merge_head = NULL
        FROM changes
        WHERE queue_id = ? AND merge_queue_entries.workspace_id = changes.workspace_id
          AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,

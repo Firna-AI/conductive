@@ -7,6 +7,7 @@ import type {
   GitHubStoredResponse,
   PullRequest,
 } from '../shared/github'
+import { readMergeQueueBarState } from '../shared/merge-queue-read'
 
 type PullRequestState = Exclude<BannerState, 'none' | 'no-commits'>
 type CheckState = GitHubCheck['state']
@@ -167,11 +168,20 @@ function readCheck(value: unknown): GitHubCheck | null {
   }
 }
 
+/**
+ * The queue state of a reply of a queued workspace. It is optional, so a
+ * reply without it, or with a malformed one, still reads.
+ */
+function queueOf(body: Record<string, unknown>) {
+  const queue = readMergeQueueBarState(body.queue)
+  return queue ? { queue } : {}
+}
+
 /** Narrows a banner reply. A reply outside the contract gives null. */
 export function readBannerResponse(body: unknown): GitHubBannerResponse | null {
   if (!isRecord(body)) return null
   const banner = readBanner(body.banner)
-  return banner ? { banner } : null
+  return banner ? { banner, ...queueOf(body) } : null
 }
 
 /** Narrows a checks reply, and keeps GitHub's order of the checks. */
@@ -192,11 +202,13 @@ export function readChecksResponse(body: unknown): GitHubChecksResponse | null {
 /** Narrows a stored reply. A state of null is valid: none is stored yet. */
 export function readStoredResponse(body: unknown): GitHubStoredResponse | null {
   if (!isRecord(body) || !Object.hasOwn(body, 'state')) return null
-  if (body.state === null) return { state: null }
+  if (body.state === null) return { state: null, ...queueOf(body) }
   if (!isRecord(body.state)) return null
   const banner = readBanner(body.state.banner)
   const checks = readChecksResponse(body.state.checks)
-  return banner && checks ? { state: { banner, checks } } : null
+  return banner && checks
+    ? { state: { banner, checks }, ...queueOf(body) }
+    : null
 }
 
 /** The text of an API error reply, which the Worker writes for users. */

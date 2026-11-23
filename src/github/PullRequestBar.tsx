@@ -15,6 +15,7 @@ import { BarButtons, BarMessageLine } from './BarButtons'
 import type { CommandKeyOf } from './barKeys'
 import type { BarControls } from './barView'
 import type { GitHubFeed } from './githubStore'
+import { QueueLine } from './QueueBarParts'
 import styles from './PullRequestBar.module.css'
 
 export interface PullRequestBarProps {
@@ -46,10 +47,12 @@ function Pending() {
 
 /**
  * The pull request bar at the top of the right column. It shows the GitHub
- * state of the workspace branch and its main action. The number of a pull
- * request opens it on GitHub. A branch without a pull request shows its
- * target and Create PR. A message, such as a refusal of GitHub, shows under
- * the bar. Beside an action, a narrow bar drops its detail.
+ * state of the workspace branch and its main action, then Add to merge
+ * queue when the pull request can join. The number of a pull request opens
+ * it on GitHub. A branch without a pull request shows its target and
+ * Create PR. A message, such as a refusal of GitHub, shows under the bar,
+ * and then the line of a queued workspace. Beside an action, a narrow bar
+ * drops its detail.
  */
 export function PullRequestBar(props: PullRequestBarProps) {
   const { state, retry } = props.github
@@ -70,10 +73,23 @@ export function PullRequestBar(props: PullRequestBarProps) {
   if (!controls) return <Pending />
   const { banner, checks } = state.snapshot
   const { view } = controls
-  const withActions = view.actions.length > 0 && styles.withActions
-  const message = view.message ? (
-    <BarMessageLine keyOf={props.keyOf} message={view.message} />
-  ) : null
+  const buttons = view.actions.length > 0 || view.queue?.add === true
+  const withActions = buttons && styles.withActions
+  const line = view.queue?.line
+  const message = (
+    <>
+      {view.message ? (
+        <BarMessageLine keyOf={props.keyOf} message={view.message} />
+      ) : null}
+      {line ? (
+        <QueueLine
+          keyOf={props.keyOf}
+          line={line}
+          onRemove={() => controls.onQueue?.('remove')}
+        />
+      ) : null}
+    </>
+  )
   // The number of a pull request links to it, so the bar shows no other link.
   const actions = (
     <span className={styles.actions}>

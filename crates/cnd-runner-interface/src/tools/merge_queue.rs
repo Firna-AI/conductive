@@ -35,6 +35,12 @@ pub enum MergeQueueWait {
     LowerLayer,
     /// The queuer's GitHub token stopped working.
     Token,
+    /// A turn in the workspace must end before the queue sends its message.
+    ActiveTurn,
+    /// The newest open session needs a login that the queuer can use.
+    AgentLogin,
+    /// The workspace needs an open session for the queue message.
+    OpenSession,
     /// GitHub refused the merge.
     MergeRefused,
 }
@@ -69,6 +75,29 @@ pub struct MergeQueueBarState {
     pub state: MergeQueueEntryState,
     /// The condition that the entry waits for, if any.
     pub wait: Option<MergeQueueWait>,
+    /// Earlier layers a member can merge with this entry, when GitHub and the workspace are ready.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub merge_ahead: Option<u64>,
+    /// The lower pull request that holds this layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub blocked_by_pull_number: Option<u64>,
+}
+
+/// Merges this pull request with the number of earlier layers shown by the bar.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+pub struct RequestQueueMerge {
+    /// Earlier layers named by the bar. Zero names only this pull request.
+    pub ahead: u64,
+}
+
+/// The GitHub base that remains after a workspace leaves the queue.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeQueueLeaveNotice {
+    /// The display label of the base that the queue could not reset.
+    pub base_branch: String,
 }
 
 /// Moves an entry's unit before another unit or to the end of its queue.

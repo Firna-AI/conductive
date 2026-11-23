@@ -61,6 +61,11 @@ export interface WorkspacePage {
    * branch, and the member may push, as for an agent action of the bar.
    */
   mergeLatest: boolean
+  /**
+   * The action of the merge queue that the menu of the workspace offers:
+   * Add to merge queue, Remove from queue, or none.
+   */
+  queue?: 'add' | 'remove' | null
 }
 
 /**
@@ -99,9 +104,10 @@ export function showsGoToRows(
  * to rows follow `showsGoToRows`. Go to Desktop also needs the Desktop
  * tool. Merge latest needs a workspace that takes changes and a page that
  * can send its prompt. No control of the page offers it (merge latest
- * decision 2 A). Archive follows `mayArchive`. Restore workspace follows
- * the archived bar of the chat, which offers it to every member until its
- * last day.
+ * decision 2 A). Add to merge queue and Remove from queue follow the menu
+ * of the workspace, as `queue` says (decision 317). Archive follows
+ * `mayArchive`. Restore workspace follows the archived bar of the chat,
+ * which offers it to every member until its last day.
  */
 export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
   const { access, workspace } = page
@@ -116,6 +122,8 @@ export function workspaceActionIds(page: WorkspacePage): WorkspaceActionId[] {
     )
   }
   if (page.mergeLatest && !readOnly) ids.push('merge-latest')
+  if (page.queue === 'add' && !readOnly) ids.push('add-to-merge-queue')
+  if (page.queue === 'remove' && !readOnly) ids.push('remove-from-merge-queue')
   if (mayArchive(access, workspace, page.viewer)) ids.push('archive-workspace')
   if (page.chat && page.offersRestore) ids.push('restore-workspace')
   return ids

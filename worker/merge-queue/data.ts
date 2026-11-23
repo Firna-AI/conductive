@@ -2,6 +2,12 @@ import type { GitHubWorkspace } from '../github/contracts'
 import type { QueueEntry, QueueRecord, QueueScope } from './contracts'
 import { queueId } from './contracts'
 
+const queueEntryColumns = `queue_id AS queueId, workspace_id AS workspaceId, branch,
+  pull_number AS pullNumber, queuer_user_id AS queuerUserId,
+  place, unit_id AS unitId, state, wait_reason AS wait,
+  queued_at AS queuedAt, step_at AS stepAt, member_base AS memberBase,
+  merge_head AS mergeHead, refused_head AS refusedHead`
+
 export function readQueue(
   db: D1Database,
   scope: QueueScope,
@@ -10,6 +16,7 @@ export function readQueue(
     .prepare(
       `SELECT q.id, q.org_id AS orgId, q.repository_id AS repositoryId,
        q.github_repository_id AS githubRepositoryId, q.trunk,
+       r.full_name AS fullName, r.installation_id AS installationId,
        q.github_stack_number AS githubStackNumber, q.pending_write AS pendingWrite,
        r.default_branch AS defaultBranch, o.suspended_at AS suspendedAt
      FROM merge_queues q
@@ -27,14 +34,26 @@ export async function readQueueEntries(
 ): Promise<QueueEntry[]> {
   const { results } = await db
     .prepare(
-      `SELECT queue_id AS queueId, workspace_id AS workspaceId, branch,
-       pull_number AS pullNumber, queuer_user_id AS queuerUserId,
-       place, unit_id AS unitId, state, wait_reason AS wait, step_at AS stepAt
+      `SELECT ${queueEntryColumns}
      FROM merge_queue_entries WHERE queue_id = ? ORDER BY place, workspace_id`,
     )
     .bind(id)
     .all<QueueEntry>()
   return results
+}
+
+export function readQueueEntry(
+  db: D1Database,
+  id: string,
+  workspaceId: string,
+): Promise<QueueEntry | null> {
+  return db
+    .prepare(
+      `SELECT ${queueEntryColumns} FROM merge_queue_entries
+       WHERE queue_id = ? AND workspace_id = ?`,
+    )
+    .bind(id, workspaceId)
+    .first<QueueEntry>()
 }
 
 export async function otherOrgQueuesRepository(

@@ -11,4 +11,7 @@ export type MergeQueueWait =
   | 'push'
   | 'lower-layer'
   | 'token'
+  | 'active-turn'
+  | 'agent-login'
+  | 'open-session'
   | 'merge-refused'

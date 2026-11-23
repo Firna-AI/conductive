@@ -101,6 +101,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
 | Merge queue storage and routes | `202611231200`–`202611231259` |
+| Merge queue merges and leave notices | `202611231300`–`202611231359` |
 
 ## Key code
 
@@ -622,3 +623,8 @@ entry places, units, queuers, states, and step times. Their foreign keys
 remove entries when their workspaces or queues are deleted. The previous
 Worker can keep writing the existing tables. The
 [merge queue backend](../worker/merge-queue/README.md) owns the new tables.
+
+`202611231300_merge_queue_merge.sql` adds nullable columns for each entry's
+member base, checked merge head, refused head, and blocking pull request.
+It adds `merge_queue_leave_notices` for the base that remains after a
+failed reset. The previous Worker can keep writing the queue tables.

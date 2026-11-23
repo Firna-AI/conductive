@@ -16,6 +16,12 @@ import { bannerStatus, baseBranchLabel, branchLabel } from './bannerStatus'
 import { messageOf } from './barMessage'
 import { failingChecks } from './barPrompts'
 import type { GitHubSnapshot } from './githubClient'
+import {
+  queueFactsOf,
+  queueViewOf,
+  type QueueInput,
+  type QueueView,
+} from './queueView'
 
 /** The member's own GitHub access: still read, read, or a read that failed. */
 export type CapabilityState =
@@ -57,6 +63,8 @@ export interface BarInput {
   archivable: boolean
   /** The Archive of the workspace runs. */
   archiving: boolean
+  /** What the list of the org knows of the merge queue, when it shows. */
+  queue?: QueueInput
 }
 
 export interface BarMessage {
@@ -100,6 +108,12 @@ export interface BarView {
    * matches the bar. Null on a bar without a tint.
    */
   tint: ButtonTint | null
+  /**
+   * The merge queue: Add to merge queue on a pull request that can join,
+   * or the line of a queued workspace. Without it, or with null, the bar
+   * shows no part of the queue.
+   */
+  queue?: QueueView | null
 }
 
 /**
@@ -110,6 +124,11 @@ export interface BarView {
 export interface BarControls {
   view: BarView
   onAction: (action: BarAction) => void
+  /**
+   * Add to merge queue, or Remove from queue, which asks first. A view
+   * without a part of the queue needs none.
+   */
+  onQueue?: (action: 'add' | 'remove') => void
 }
 
 /** The report sends this count, and the count is above zero. */
@@ -211,6 +230,7 @@ export function barViewOf(input: BarInput): BarView {
     archivable: input.archivable,
     archiving: input.archiving,
     baseMoved: banner.baseMoved !== undefined,
+    queue: queueFactsOf(snapshot.queue, input.queue),
   })
   const named = failingChecks(snapshot).length > 0
   const actions = model.actions.filter(
@@ -218,7 +238,8 @@ export function barViewOf(input: BarInput): BarView {
       named || action.kind !== 'agent' || action.action !== 'fix-checks',
   )
   const link = linkOf(model, banner)
-  const empty = actions.length === 0 && link === null
+  const queue = queueViewOf(model.queue, snapshot, input.queue)
+  const empty = actions.length === 0 && link === null && !queue?.add
   const tone =
     banner.pullRequest === null
       ? 'neutral'
@@ -241,5 +262,6 @@ export function barViewOf(input: BarInput): BarView {
       banner.pullRequest === null
         ? { branch: branchLabel(banner), base: baseBranchLabel(banner) }
         : null,
+    queue,
   }
 }

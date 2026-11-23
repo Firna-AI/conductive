@@ -28,3 +28,13 @@ export function mergeLatestLabel(base: string): string {
 export function mergeLatestPrompt(base: string): string {
   return `Fetch \`origin/${base}\` and merge it into this branch. If the branch already has every commit of \`origin/${base}\`, say so and stop. Otherwise resolve each conflict, run the tests, then commit and push.`
 }
+
+/**
+ * The fixed prompt of the palette row while the workspace is in the merge
+ * queue. The GitHub stack of the queue needs a linear history, so it asks
+ * for a rebase onto the target branch in place of a merge, and a push that
+ * replaces only the branch that the agent read.
+ */
+export function mergeLatestRebasePrompt(base: string): string {
+  return `Fetch \`origin/${base}\` and rebase this branch onto it, because the merge queue needs a linear history. If the branch already has every commit of \`origin/${base}\`, say so and stop. Otherwise resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`origin/${base}\` into this branch.`
+}

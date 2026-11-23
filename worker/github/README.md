@@ -328,12 +328,12 @@ The GitHub tests that store state run on the production workspace object in Mini
 
 - [Production composition](../features/github.ts) owns the state adapter and retry alarm, and the reads that Continue and a repository change ask for. Its `defaultBranch` can read another repository of the org while access follows the record, for the new repository of a change. Its `branchWork` reads the work of the old branch for the question of a change.
 - [branch-work.ts](branch-work.ts) reads that work from a fresh snapshot: an open pull request, and the pushed commits that the base does not hold. A merged or closed pull request is not such work, and a merged branch counts no pushed commits.
-- [composition.ts](composition.ts) mounts verified webhooks, image refresh, and background automation starts.
+- [composition.ts](composition.ts) mounts verified webhooks, image refresh, background automation starts, and merge queue wakes.
 - [contracts.ts](contracts.ts) defines the server-side integration ports.
 - [webhook.ts](webhook.ts) verifies deliveries, stores pull request runs and merge records, and starts workspace refreshes.
 - [webhook-routing.ts](webhook-routing.ts) reads pull request facts, GitHub account IDs, and available author and sender logins after signature verification.
   It also reads stack membership and the old and new base refs and SHAs from pull request edits.
-- [app-handler.ts](app-handler.ts) serves protected banner and checks reads.
+- [app-handler.ts](app-handler.ts) serves protected banner and checks reads. The fresh and stored banner replies include the queue state or the display label of a base that the queue could not reset.
 - [workspace-state.ts](workspace-state.ts) serializes refreshes, commits changed snapshots, replays delivery receipts, and runs the summary copy.
 - [summary-data.ts](summary-data.ts) writes a changed GitHub summary to the workspace record.
 - [base-data.ts](base-data.ts) applies the base move of a committed snapshot to D1.
@@ -345,7 +345,6 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
 - [queue-pulls.ts](queue-pulls.ts) reads open pull requests, their GitHub bases, and the rules of the queue's trunk with a member token.
-  The banner and stored reads include the [merge queue state](../merge-queue/README.md) for a queued workspace.
 - [stack-client.ts](stack-client.ts) lists stacks for one pull request and reads, creates, extends, and unstacks them.
   [stack-parsers.ts](stack-parsers.ts) reads layers from REST responses and stack membership from webhooks.
   An unstack returns the remaining stack or null when GitHub dissolves it.
@@ -363,6 +362,7 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [merge-handler.ts](merge-handler.ts) gates and parses the member merge routes.
 - [merge.ts](merge.ts) selects the capability, starts and polls merges, and diagnoses refusals.
 - [merge-capabilities.ts](merge-capabilities.ts) reads member permissions, allowed methods, and the member's default method with their fresh token.
+  It also detects lost write access and a failed token for the merge queue.
 - [merge-client.ts](merge-client.ts) sends direct asynchronous merges with the expected head and reads their result.
 - [merge-jobs.ts](merge-jobs.ts) reads and stores member jobs in the workspace object.
 - [merge-access.ts](merge-access.ts) and [merge-data.ts](merge-data.ts) check active member access for merge operations and their shared-state publication.

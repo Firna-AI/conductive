@@ -23,6 +23,18 @@ export type AsyncMergeResult =
     }
   | { state: 'merged' | 'failed' | 'enqueued' }
 
+export function matchesDirectMerge(
+  result: Extract<AsyncMergeResult, { state: 'pending' }>,
+  input: GitHubMergeRequest,
+): boolean {
+  return (
+    result.method === input.method &&
+    result.action === 'direct_merge' &&
+    result.headSha === input.headSha &&
+    !result.bypass
+  )
+}
+
 function parseResult(value: unknown): AsyncMergeResult {
   const input = object(value)
   const details = object(input.details)

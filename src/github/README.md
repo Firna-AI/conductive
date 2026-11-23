@@ -63,7 +63,10 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
   Give it a value that changes each minute.
 - `controls` gives the actions, the link, and the message of the state that
   shows, from the one action state of the screen, as
-  [The actions of the bar](actions.md) says. The bar and the row draw only
+  [The actions of the bar](actions.md) says. It also gives the merge queue
+  of the workspace: Add to merge queue, and the line of a queued
+  workspace with Remove from queue, as
+  [The merge queue](actions.md#the-merge-queue) says. The bar and the row draw only
   what it gives. After a merge, Archive shows only to the workspace owner
   and the admins. `archive` runs the app's Archive, which archives at once
   with one request, and `archiving` makes the button busy while it runs.
@@ -265,7 +268,8 @@ mounts it, and the production build leaves it out.
   banner, the checks, and the stored state, and check them against the
   contract, with the head commit of the pull request. They keep the
   optional labels `displayBranch`, `displayBaseBranch`, and
-  `displayBaseMoved` of the banner.
+  `displayBaseMoved` of the banner, and the optional queue state of a
+  queued workspace, which the snapshot keeps as `queue`.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.

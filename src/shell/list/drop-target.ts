@@ -8,6 +8,21 @@ export interface DropTarget {
   index: number
 }
 
+/** A row of a section over the Merge queue group, which a drop adds. */
+export interface QueuePlace {
+  readonly queue: true
+}
+
+/** The one place of the Merge queue group, so that a move keeps it. */
+export const intoQueue: QueuePlace = { queue: true }
+
+/** Where a dragged row of a section lands: a section, or the merge queue. */
+export type RowPlace = DropTarget | QueuePlace
+
+export function isQueuePlace(place: RowPlace): place is QueuePlace {
+  return 'queue' in place
+}
+
 type ElementRef = (node: HTMLElement | null) => void
 
 /**
@@ -16,11 +31,25 @@ type ElementRef = (node: HTMLElement | null) => void
  * callback ref, so the drag reads only the elements of its own list.
  */
 export class DropLayout {
+  private queueGroup: HTMLElement | null = null
   private readonly sections = new Map<string, HTMLElement>()
   private readonly rows = new Map<
     string,
     { sectionId: string; treeId: string; element: HTMLElement }
   >()
+
+  /** The ref of the Merge queue group, while it shows. */
+  readonly group: ElementRef = (node) => {
+    this.queueGroup = node
+  }
+
+  /** Whether the pointer is over the Merge queue group. */
+  inGroup(y: number): boolean {
+    const box = this.queueGroup?.getBoundingClientRect()
+    return (
+      box !== undefined && box.height > 0 && y >= box.top && y <= box.bottom
+    )
+  }
 
   section(sectionId: string): ElementRef {
     return (node) => {

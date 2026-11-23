@@ -6,7 +6,7 @@ import type {
 import type { AppEnv } from '../env'
 import type { GitHubWorkspace } from './contracts'
 import { memberGitHub } from './member-github'
-import { requestMerge, type AsyncMergeResult } from './merge-client'
+import { matchesDirectMerge, requestMerge } from './merge-client'
 import {
   mergeForbidden,
   mergeHeadChanged,
@@ -15,6 +15,8 @@ import {
 } from './merge-errors'
 import type { GitHubMergeDependencies } from './merge-handler'
 import { readMergeJob, saveMergeJob } from './merge-jobs'
+import { scopeForQueueWorkspace } from '../merge-queue/data'
+import { queueMergeRequired } from '../merge-queue/errors'
 
 export class GitHubMerge {
   private readonly env: AppEnv
@@ -62,6 +64,8 @@ export class GitHubMerge {
     userId: string,
     input: GitHubMergeRequest,
   ): Promise<GitHubMergeResponse> {
+    if (await scopeForQueueWorkspace(this.env.DB, workspace))
+      throw queueMergeRequired()
     const context = await this.context(workspace, userId)
     const access = await context.capabilities()
     if (!access.canWrite) throw mergeForbidden()
@@ -69,6 +73,8 @@ export class GitHubMerge {
     const current = await context.branches()
     if (current.pullNumber === null) throw mergeRefused()
     if (current.headSha !== input.headSha) throw mergeHeadChanged()
+    if (await scopeForQueueWorkspace(this.env.DB, workspace))
+      throw queueMergeRequired()
     const reply = await context.request(
       current.fullName,
       current.pullNumber,
@@ -78,7 +84,7 @@ export class GitHubMerge {
     const result = reply.result
     if (result?.state === 'merged') return this.completed(context)
     if (result?.state !== 'pending') return context.diagnose(input.headSha)
-    if (!this.matches(result, input)) throw mergeRefused()
+    if (!matchesDirectMerge(result, input)) throw mergeRefused()
     const mergeId = this.dependencies.randomToken()
     await saveMergeJob(this.dependencies.storage, mergeId, {
       userId,
@@ -114,23 +120,11 @@ export class GitHubMerge {
     if (result?.state === 'merged') return this.completed(context)
     if (
       result?.state === 'pending' &&
-      this.matches(result, job) &&
+      matchesDirectMerge(result, job) &&
       result.uuid === job.uuid
     )
       return { state: 'pending', mergeId }
     return context.diagnose(job.headSha)
-  }
-
-  private matches(
-    result: Extract<AsyncMergeResult, { state: 'pending' }>,
-    input: GitHubMergeRequest,
-  ): boolean {
-    return (
-      result.method === input.method &&
-      result.action === 'direct_merge' &&
-      result.headSha === input.headSha &&
-      !result.bypass
-    )
   }
 
   private async completed(context: {

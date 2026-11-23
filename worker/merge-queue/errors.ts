@@ -76,3 +76,17 @@ export const queueChanged = () =>
     'merge_queue_changed',
     'The merge queue or pull request changed. Try again.',
   )
+
+export const queueMergeNotReady = () =>
+  new HttpError(
+    409,
+    'merge_queue_not_ready',
+    'This pull request and the ones ahead must be ready in the GitHub stack.',
+  )
+
+export const queueMergeRequired = () =>
+  new HttpError(
+    409,
+    'merge_queue_required',
+    'Use the merge queue to merge this pull request.',
+  )

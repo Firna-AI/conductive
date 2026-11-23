@@ -22,7 +22,9 @@ export async function publishRepositoryChange(
 ): Promise<void> {
   await requireActiveOrg(options.env.DB, job.binding.orgId)
   const row = await storeChangedRepository(options, job)
-  await leaveWorkspaceQueue(options.env, job.binding, 'repository-changed')
+  await leaveWorkspaceQueue(options.env, job.binding, 'repository-changed', {
+    actorId: job.member.id,
+  })
   await options.chat.authorizedWorkspaceOperation(
     job.binding.id,
     async () => {

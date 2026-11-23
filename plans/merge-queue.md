@@ -915,15 +915,15 @@ Depends on: 4
 A Worker path that sends a fixed prompt as a message of the queuer, with no
 browser.
 
-- [ ] Add a Durable Object entry point that sends a queue message as the
+- [x] Add a Durable Object entry point that sends a queue message as the
       queuer, to the newest open session, without the agent tool footer.
-- [ ] Wait while any session of the workspace runs a turn. Resume a
+- [x] Wait while any session of the workspace runs a turn. Resume a
       stopped cloud computer.
-- [ ] Check at each step that the queuer is still a member with write
+- [x] Check at each step that the queuer is still a member with write
       access, in an org that is not suspended.
-- [ ] Report the end of each queue turn to the queue object, with a saved
+- [x] Report the end of each queue turn to the queue object, with a saved
       retry, as the automation run report does.
-- [ ] Tests for the send, the wait, the resume, and the report.
+- [x] Tests for the send, the wait, the resume, and the report.
 
 ## Milestone 6: Join, base moves, and sync
 
@@ -943,12 +943,12 @@ Depends on: 5
 
 Depends on: 6
 
-- [ ] Merge the highest ready layer as its queuer, with the wait for the
+- [x] Merge the highest ready layer as its queuer, with the wait for the
       layer above it, and save the merge records.
 - [ ] Keep the restack rule after each read: from the lowest layer that
       does not hold the head below it, upward.
 - [ ] Run the leave step for each cause, with the base reset to the trunk.
-- [ ] Keep a layer that cannot merge in its place, merge the layers below
+- [x] Keep a layer that cannot merge in its place, merge the layers below
       it, and give the bar line the reason that the queue waits
       ("Failures").
 - [ ] Send one agent turn for a conflict of a restack, then wait for a
@@ -957,26 +957,28 @@ Depends on: 6
       the add back.
 - [ ] Tests for each path, also with two steps that arrive at once.
 
+Verification logs are listed in `.context/merge-queue/m7-checks.md`.
+
 ## Milestone 8: The sidebar group
 
 Tags: ui
 
 Depends on: 1, 1b, 4
 
-- [ ] Build the Merge queue group from the mockup, with its blocks, rows,
+- [x] Build the Merge queue group from the mockup, with its blocks, rows,
       and states.
-- [ ] Add Remove from queue to the row menu and the header menu, with its
+- [x] Add Remove from queue to the row menu and the header menu, with its
       command.
-- [ ] Show the reason on the drop target for a row that cannot join.
-- [ ] Leave queued workspaces out of their sections, and move their
+- [x] Show the reason on the drop target for a row that cannot join.
+- [x] Leave queued workspaces out of their sections, and move their
       sub-workspaces up with the placement rule of archived parents in
       `src/shared/workspace-tree.ts` (decision 318).
-- [ ] Add Add to merge queue to the row menu, the header menu, and the
+- [x] Add Add to merge queue to the row menu, the header menu, and the
       palette, each with its command, and the drag into the group
       (decision 317).
-- [ ] Re-order by drag and by long press, with the same rollback on failure
+- [x] Re-order by drag and by long press, with the same rollback on failure
       as a section move.
-- [ ] Tests for the grouping, the drag, and the rollback.
+- [x] Tests for the grouping, the drag, and the rollback.
 
 ## Milestone 9: The bar
 
@@ -984,17 +986,17 @@ Tags: ui
 
 Depends on: 1, 4
 
-- [ ] Add the queued states and Remove from queue from the mockup, and
+- [x] Add the queued states and Remove from queue from the mockup, and
       the second button Add to merge queue (decision 317).
 - [ ] Show Merge on a queued workspace with the count of the layers below
       it, and send the click to the queue (decision 316).
-- [ ] Use the rebase prompts while a workspace is queued, also the words
+- [x] Use the rebase prompts while a workspace is queued, also the words
       of Merge latest in `mergeLatestCopy.ts`.
-- [ ] Add commands for Add to merge queue and Remove from queue, in the
+- [x] Add commands for Add to merge queue and Remove from queue, in the
       palette and in Keyboard shortcuts.
-- [ ] Recapture the marketing pictures that show the bar of an open pull
+- [x] Recapture the marketing pictures that show the bar of an open pull
       request, with `npm run marketing:pictures`.
-- [ ] Tests for each state and each action.
+- [x] Tests for each state and each action.
 
 ## Milestone 10: Verification, commit, review, and pull request
 

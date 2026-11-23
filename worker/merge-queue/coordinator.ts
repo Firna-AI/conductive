@@ -1,4 +1,5 @@
 import { HttpError } from '../http'
+import { warnWorker } from '../warnings'
 import { readMergeWorkspace } from '../github/merge-access'
 import { repositoryMemberGitHub } from '../github/member-github'
 import { addUnit } from './admission'
@@ -10,20 +11,29 @@ import {
 } from './contracts'
 import { readQueue, readQueueEntries } from './data'
 import { queueChanged, queueMissing, queueWriteRequired } from './errors'
+import type { QueueFixEnd, QueueRestack } from './fix-contracts'
+import { QueueFixTurns } from './fix-turns'
+import { MERGE_RETRY_MS } from './merge-job'
+import { QueueMerges } from './merges'
 import { moveUnit } from './order'
+import { QUEUE_SCOPE_KEY, saveQueueAlarm } from './queue-alarm'
 import { leaveQueue, stepQueue, type QueueRuntime } from './step'
 import { saveQueueOrder } from './writes'
 
-const SCOPE = 'merge-queue:scope'
+const DEFERRED_LEAVES = 'merge-queue:deferred-leaves'
 
 export class QueueCoordinator {
   private readonly runtime: QueueRuntime
   private readonly context: DurableObjectState
+  private readonly fixes: QueueFixTurns
+  private readonly merges: QueueMerges
   private pending: Promise<void> = Promise.resolve()
 
   constructor(runtime: QueueRuntime, context: DurableObjectState) {
     this.runtime = runtime
     this.context = context
+    this.fixes = new QueueFixTurns(runtime, context.storage)
+    this.merges = new QueueMerges(runtime, context.storage)
   }
 
   private run<T>(work: () => Promise<T>): Promise<T> {
@@ -41,13 +51,30 @@ export class QueueCoordinator {
       throw new HttpError(404, 'not_found', 'The page is not available.')
   }
 
-  private async schedule(scope: QueueScope): Promise<void> {
-    const now = Math.max(1, this.runtime.dependencies.now())
-    await this.context.storage.transaction(async (storage) => {
-      await storage.put(SCOPE, scope)
-      const earlier = await storage.getAlarm()
-      if (earlier === null || earlier > now) await storage.setAlarm(now)
-    })
+  private schedule(scope: QueueScope): Promise<void> {
+    return this.context.storage.transaction((storage) =>
+      saveQueueAlarm(storage, scope, this.runtime.dependencies.now()),
+    )
+  }
+
+  private async applyLeave(scope: QueueScope, signal: QueueLeave) {
+    const db = this.runtime.env.DB
+    const queue = await readQueue(db, scope)
+    if (queue)
+      await leaveQueue(
+        this.runtime,
+        queue,
+        await readQueueEntries(db, queue.id),
+        signal,
+      )
+  }
+
+  private async drainLeaves(scope: QueueScope) {
+    const storage = this.context.storage
+    const leaves = await storage.get<QueueLeave[]>(DEFERRED_LEAVES)
+    if (!leaves) return
+    for (const signal of leaves) await this.applyLeave(scope, signal)
+    await storage.delete(DEFERRED_LEAVES)
   }
 
   change(
@@ -58,6 +85,7 @@ export class QueueCoordinator {
   ): Promise<void> {
     return this.run(async () => {
       this.checkName(scope)
+      if (!(await this.merges.jobs.active())) await this.drainLeaves(scope)
       const { env, dependencies } = this.runtime
       const workspace = await readMergeWorkspace(
         env.DB,
@@ -67,6 +95,16 @@ export class QueueCoordinator {
       )
       if (workspace.repositoryId !== scope.githubRepositoryId)
         throw queueMissing()
+      const queue = await readQueue(env.DB, scope)
+      const entries = queue ? await readQueueEntries(env.DB, queue.id) : []
+      const entry = entries.find(
+        (item) =>
+          item.workspaceId === workspaceId && item.branch === workspace.branch,
+      )
+      if (action.kind === 'merge') {
+        if (!queue || !entry) throw queueMissing()
+        return this.merges.manual(queue, entries, entry, userId, action.ahead)
+      }
       const member = await repositoryMemberGitHub(
         env,
         dependencies,
@@ -74,8 +112,6 @@ export class QueueCoordinator {
         userId,
       )
       if (!(await member.capabilities()).canWrite) throw queueWriteRequired()
-      const queue = await readQueue(env.DB, scope)
-      const entries = queue ? await readQueueEntries(env.DB, queue.id) : []
       if (action.kind === 'add') {
         await this.schedule(scope)
         return addUnit({
@@ -90,10 +126,6 @@ export class QueueCoordinator {
           storedTrunk: queue?.trunk ?? null,
         })
       }
-      const entry = entries.find(
-        (item) =>
-          item.workspaceId === workspaceId && item.branch === workspace.branch,
-      )
       if (!queue || !entry) throw queueMissing()
       await member.authorize()
       await this.schedule(scope)
@@ -133,25 +165,65 @@ export class QueueCoordinator {
   wake(scope: QueueScope, signal?: QueueLeave): Promise<void> {
     return this.run(async () => {
       this.checkName(scope)
+      const job = signal && (await this.merges.jobs.active())
+      if (job && signal) {
+        await this.context.storage.transaction(async (storage) => {
+          const leaves =
+            (await storage.get<QueueLeave[]>(DEFERRED_LEAVES)) ?? []
+          if (
+            !leaves.some(
+              (leave) => JSON.stringify(leave) === JSON.stringify(signal),
+            )
+          )
+            await storage.put(DEFERRED_LEAVES, [...leaves, signal])
+          await saveQueueAlarm(storage, scope, job.nextAt)
+        })
+        return
+      }
       await this.schedule(scope)
-      if (!signal) return
-      const db = this.runtime.env.DB
-      const queue = await readQueue(db, scope)
-      if (queue)
-        await leaveQueue(
-          this.runtime,
-          queue,
-          await readQueueEntries(db, queue.id),
-          signal,
-        )
+      if (signal) {
+        await this.drainLeaves(scope)
+        await this.applyLeave(scope, signal)
+      }
+    })
+  }
+
+  requestFix(scope: QueueScope, workspaceId: string, restack: QueueRestack) {
+    return this.run(() => {
+      this.checkName(scope)
+      return this.fixes.request(scope, workspaceId, restack)
+    })
+  }
+
+  reportFix(scope: QueueScope, result: QueueFixEnd): Promise<void> {
+    return this.run(() => {
+      this.checkName(scope)
+      return this.fixes.report(scope, result)
     })
   }
 
   async alarm(): Promise<boolean> {
-    const scope = await this.context.storage.get<QueueScope>(SCOPE)
+    const scope = await this.context.storage.get<QueueScope>(QUEUE_SCOPE_KEY)
     if (!scope) return false
     this.checkName(scope)
-    await this.run(() => stepQueue(this.runtime, scope))
+    await this.run(async () => {
+      if (await this.merges.resume()) return
+      await this.drainLeaves(scope)
+      await stepQueue(this.runtime, scope)
+      await this.fixes.advance(scope)
+      try {
+        await this.merges.automatic(scope)
+      } catch {
+        warnWorker({ kind: 'merge_queue_merge_retry' })
+        await this.context.storage.transaction((storage) =>
+          saveQueueAlarm(
+            storage,
+            scope,
+            this.runtime.dependencies.now() + MERGE_RETRY_MS,
+          ),
+        )
+      }
+    })
     return true
   }
 }

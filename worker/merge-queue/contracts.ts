@@ -11,6 +11,8 @@ export interface QueueScope {
 export interface QueueRecord extends QueueScope {
   id: string
   repositoryId: string
+  fullName: string
+  installationId: number
   trunk: string
   githubStackNumber: number | null
   defaultBranch: string
@@ -24,17 +26,22 @@ export interface QueueEntry extends MergeQueueEntry {
   pullNumber: number
   queuerUserId: string
   wait: MergeQueueWait | null
+  queuedAt: number
   stepAt: number
+  memberBase?: string | null
+  mergeHead?: string | null
+  refusedHead?: string | null
 }
 
 export type QueueCandidate = Pick<
   QueueEntry,
-  'workspaceId' | 'branch' | 'pullNumber'
+  'workspaceId' | 'branch' | 'pullNumber' | 'memberBase'
 >
 
 export type QueueMemberAction =
   | { kind: 'add' }
   | { kind: 'remove' }
+  | { kind: 'merge'; ahead: number }
   | ({ kind: 'reorder' } & ReorderMergeQueue)
 
 export interface QueueWriter {
@@ -42,7 +49,7 @@ export interface QueueWriter {
   memberId: string
 }
 
-export type QueueLeave =
+export type QueueLeave = (
   | { cause: 'org-suspended' | 'default-branch-switched' }
   | {
       cause:
@@ -61,6 +68,7 @@ export type QueueLeave =
       branch: string
       pullNumber?: number
     }
+) & { actorId?: string }
 
 export function queueId(scope: QueueScope): string {
   return `merge-queue:${scope.orgId}:${scope.githubRepositoryId}`

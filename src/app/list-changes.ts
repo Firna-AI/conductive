@@ -28,7 +28,9 @@ export type ListChange = Change<ListData>
  * read replaces on the same branch. A branch change takes the new branch's
  * summary. A new workspace goes to the top with its initial summary. An
  * open pull request bar shows its own state over the summary, as
- * `LiveGitHubStates` says.
+ * `LiveGitHubStates` says. Only the list read carries the merge queue
+ * entry, the access of the viewer, and the GitHub base, so a listed row
+ * keeps them on the same branch.
  */
 export function workspaceUpdated(workspace: Workspace): ListChange {
   return (list) => {
@@ -39,12 +41,25 @@ export function workspaceUpdated(workspace: Workspace): ListChange {
       ...list,
       workspaces: replaceWorkspace(list.workspaces, workspace.id, (item) => ({
         ...workspace,
+        ...(item.branch === workspace.branch && listedFields(item)),
         parentId: item.parentId,
         sectionId: item.sectionId,
         github:
           item.branch === workspace.branch ? item.github : workspace.github,
       })),
     }
+  }
+}
+
+/** The fields that only the list read carries, which a listed row keeps. */
+function listedFields(
+  workspace: Workspace,
+): Pick<Workspace, 'mergeQueue' | 'githubCanWrite' | 'githubPullBase'> {
+  const { mergeQueue, githubCanWrite, githubPullBase } = workspace
+  return {
+    ...(mergeQueue !== undefined && { mergeQueue }),
+    ...(githubCanWrite !== undefined && { githubCanWrite }),
+    ...(githubPullBase !== undefined && { githubPullBase }),
   }
 }
 

@@ -2,9 +2,18 @@ import { featureResult } from '../features/result'
 import type { GitHubSnapshot } from '../github/contracts'
 import { GITHUB_STATE_KEY } from '../github/workspace-state'
 import { lifecycleDependencies } from '../lifecycle/runtime'
+import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { AgentSessionWorkspace } from '../tools/workspace'
 import { QueueCoordinator } from './coordinator'
 import type { QueueLeave, QueueMemberAction, QueueScope } from './contracts'
+import { queueFixSender } from './fix-access'
+import type {
+  QueueFixAdmission,
+  QueueFixEnd,
+  QueueFixRequest,
+  QueueRestack,
+} from './fix-contracts'
+import { queueLocalClean, type QueueLocalWork } from './local-work'
 
 export class MergeQueueWorkspace extends AgentSessionWorkspace {
   private readonly mergeQueue: QueueCoordinator
@@ -33,6 +42,47 @@ export class MergeQueueWorkspace extends AgentSessionWorkspace {
 
   wakeMergeQueue(scope: QueueScope, signal?: QueueLeave) {
     return featureResult(() => this.mergeQueue.wake(scope, signal))
+  }
+
+  requestMergeQueueFix(
+    scope: QueueScope,
+    workspaceId: string,
+    restack: QueueRestack,
+  ) {
+    return featureResult(() =>
+      this.mergeQueue.requestFix(scope, workspaceId, restack),
+    )
+  }
+
+  writeMergeQueueFix(fix: QueueFixRequest) {
+    return featureResult(() => {
+      const operation = this.chat.operation(fix.entry.workspaceId)
+      return this.run(async (): Promise<QueueFixAdmission> => {
+        if (await pendingWorkspaceChange(this.integration.storage))
+          return { kind: 'deferred' }
+        return operation.acceptQueueFix(fix, () =>
+          queueFixSender(this.env.DB, fix),
+        )
+      })
+    })
+  }
+
+  reportMergeQueueFix(scope: QueueScope, result: QueueFixEnd) {
+    return featureResult(() => this.mergeQueue.reportFix(scope, result))
+  }
+
+  async mergeQueueLocalClean(input: QueueLocalWork): Promise<boolean> {
+    if (!this.env.WORKSPACES.idFromName(input.workspaceId).equals(this.ctx.id))
+      return false
+    if (await pendingWorkspaceChange(this.integration.storage)) return false
+    return queueLocalClean(
+      {
+        env: this.env,
+        dependencies: { ...lifecycleDependencies(), now: this.integration.now },
+      },
+      this.integration.files,
+      input,
+    )
   }
 
   protected async alarmWithQueue(fallback: () => Promise<void>): Promise<void> {

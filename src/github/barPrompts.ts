@@ -42,12 +42,18 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
     base: banner.baseBranch,
     failedChecks: failingChecks(snapshot),
     reviewers: banner.changesRequestedBy,
+    // The GitHub stack of the merge queue needs a linear history, so a
+    // queued workspace resolves its conflicts with a rebase. The bar read
+    // names no old base commit yet, so the prompt asks for a plain rebase
+    // onto the branch below, not for `--onto`.
+    ...(snapshot.queue && { rebase: true as const }),
   }
 }
 
 /**
  * The fixed prompt of an agent action, with the facts of the state that the
- * bar shows. The words come from the copy module of the mockups.
+ * bar shows. The words come from the copy module of the mockups. While the
+ * workspace is queued, Resolve conflicts asks for a rebase.
  */
 export function promptOf(
   action: AgentAction,

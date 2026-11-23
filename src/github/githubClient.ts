@@ -1,3 +1,4 @@
+import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
 import {
   githubPaths,
   type GitHubBanner,
@@ -19,10 +20,15 @@ export interface WorkspaceTarget {
   workspaceId: string
 }
 
-/** The GitHub state of a branch: its banner and its checks, read together. */
+/**
+ * The GitHub state of a branch: its banner and its checks, read together,
+ * and the merge queue state of a queued workspace, which only the reads of
+ * the bar carry.
+ */
 export interface GitHubSnapshot {
   banner: GitHubBanner
   checks: GitHubChecksResponse
+  queue?: MergeQueueBarState
 }
 
 /** A read that failed. `userMessage` is the API's own text, when it sent one. */
@@ -82,7 +88,8 @@ export async function loadGitHubSnapshot(
       readChecksResponse,
     ),
   ])
-  return { banner: banner.banner, checks }
+  const { queue } = banner
+  return { banner: banner.banner, checks, ...(queue && { queue }) }
 }
 
 /**
@@ -103,5 +110,6 @@ export async function loadStoredSnapshot(
     signal,
     readStoredResponse,
   )
-  return reply.state
+  const { state, queue } = reply
+  return state && { ...state, ...(queue && { queue }) }
 }

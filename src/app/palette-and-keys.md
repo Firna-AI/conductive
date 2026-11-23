@@ -102,4 +102,12 @@ state what they do.
   the list page, Next workspace that needs input starts from the top.
 - The Workspaces tab of the palette stays flat. It shows each
   sub-workspace in the section that shows its row, in the order of the
-  list, and names no parent.
+  list, and names no parent. The queued workspaces come first, under the
+  label of the Merge queue group, in the order of its blocks.
+- A focused row of the Merge queue group moves on the same keys, inside
+  its block, with the whole unit of its entry. The keys of the list count
+  the rows of the group first, unless the group is collapsed.
+- Add to merge queue and Remove from queue are commands of the palette
+  with no default key. The screen of a workspace offers the one that the
+  menu of its header offers. Remove from queue asks first, as its item in
+  a menu does.

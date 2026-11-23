@@ -30,4 +30,12 @@ export type MergeQueueBarState = {
    * The condition that the entry waits for, if any.
    */
   wait: MergeQueueWait | null
+  /**
+   * Earlier layers a member can merge with this entry, when GitHub and the workspace are ready.
+   */
+  mergeAhead?: number
+  /**
+   * The lower pull request that holds this layer.
+   */
+  blockedByPullNumber?: number
 }

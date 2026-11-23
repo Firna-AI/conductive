@@ -11,13 +11,20 @@ import type {
 } from './contracts'
 import { readQueue, readQueueEntries } from './data'
 import { queueChanged } from './errors'
+import { resetLeavingBases } from './leave-base'
 import { leaveOrder } from './order'
+import { queueReadToken, queueWorkspace } from './repository'
 import { renameQueueTrunk, staleQueueEntries } from './step-data'
 import { completeQueueStep, saveQueueOrder } from './writes'
 
 export interface QueueRuntime {
   env: AppEnv
   dependencies: AppDependencies
+  restackAfterLeave?(
+    queue: QueueRecord,
+    remaining: readonly QueueEntry[],
+    removed: readonly QueueEntry[],
+  ): Promise<void>
 }
 
 export async function leaveQueue(
@@ -29,6 +36,12 @@ export async function leaveQueue(
 ): Promise<QueueEntry[]> {
   const { remaining, removed } = leaveOrder(entries, signal)
   if (!removed.length) return entries
+  if (writer)
+    await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)
+  const notices = await resetLeavingBases(runtime, queue, entries, removed, {
+    ...signal,
+    actorId: writer?.memberId ?? signal.actorId,
+  })
   const saved = await saveQueueOrder(runtime.env.DB, {
     id: queue.id,
     remaining,
@@ -36,11 +49,13 @@ export async function leaveQueue(
     now: runtime.dependencies.now(),
     writeId: runtime.dependencies.randomToken(),
     writer,
+    notices,
   })
   if (!saved && writer) {
     await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)
     throw queueChanged()
   }
+  if (saved) await runtime.restackAfterLeave?.(queue, remaining, removed)
   return remaining
 }
 
@@ -52,27 +67,7 @@ async function checkTrunk(
   const bottom = entries[0]
   if (!bottom || queue.trunk === queue.defaultBranch) return
   const { env, dependencies } = runtime
-  const workspace = await readMergeWorkspace(
-    env.DB,
-    queue.orgId,
-    bottom.workspaceId,
-    bottom.queuerUserId,
-  )
-  const member = await repositoryMemberGitHub(
-    env,
-    dependencies,
-    workspace,
-    bottom.queuerUserId,
-  )
-  const live = await member.checked(() =>
-    readQueuePull(
-      member.fetch,
-      member.token,
-      workspace,
-      bottom.branch,
-      queue.trunk,
-    ),
-  )
+  const live = await readTrunk(runtime, queue, bottom)
   if (live.defaultBranch !== queue.defaultBranch) return
   if (live.refExists) {
     await leaveQueue(runtime, queue, entries, {
@@ -86,6 +81,32 @@ async function checkTrunk(
     live.pull.base === live.defaultBranch
   )
     await renameQueueTrunk(env.DB, queue, dependencies.now())
+}
+
+async function readTrunk(
+  runtime: QueueRuntime,
+  queue: QueueRecord,
+  bottom: QueueEntry,
+) {
+  const { env, dependencies } = runtime
+  const binding = queueWorkspace(queue, bottom)
+  const read = (fetch: AppDependencies['fetch'], token: string) =>
+    readQueuePull(fetch, token, binding, bottom.branch, queue.trunk)
+  if (env.GITHUB_APP_PRIVATE_KEY)
+    return read(dependencies.fetch, await queueReadToken(runtime, binding))
+  const workspace = await readMergeWorkspace(
+    env.DB,
+    queue.orgId,
+    bottom.workspaceId,
+    bottom.queuerUserId,
+  )
+  const member = await repositoryMemberGitHub(
+    env,
+    dependencies,
+    workspace,
+    bottom.queuerUserId,
+  )
+  return member.checked(() => read(member.fetch, member.token))
 }
 
 type QueueStep =

@@ -40,8 +40,9 @@ export interface PullRequestRowProps {
 /**
  * The compact pull request row at the top of a workspace on a phone. It is
  * one link to the Checks tab, whose top holds the actions of the bar and
- * its links to GitHub. A branch without a commit and without local work is
- * not a link. The row is at least 40 px high.
+ * its links to GitHub. A queued workspace names its place, such as "Queue 3
+ * of 3". A branch without a commit and without local work is not a link.
+ * The row is at least 40 px high.
  */
 export function PullRequestRow(props: PullRequestRowProps) {
   const { state, retry } = props.github
@@ -94,6 +95,7 @@ export function PullRequestRow(props: PullRequestRowProps) {
     )
   }
   const status = bannerStatus(banner, checks.checks)
+  const place = props.controls?.view.queue?.row ?? null
   return (
     <a
       className={classes(styles.row, styles[status.tone])}
@@ -104,6 +106,7 @@ export function PullRequestRow(props: PullRequestRowProps) {
       <StateLabel status={status} />
       <span className={a11y.hidden}>Show the checks</span>
       <span className={styles.spacer} />
+      {place ? <span className={styles.queue}>{place}</span> : null}
       <ChevronRight aria-hidden className={styles.muted} size={15} />
     </a>
   )

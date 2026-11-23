@@ -43,6 +43,8 @@ filter entry points. These routes record no activity.
 - [../services/handler.ts](../services/handler.ts) serves the service routes with workspace read and software-control access checks.
 - [preview-data.ts](preview-data.ts) reads revoked preview IDs for publication, with no port filter.
 - [workspace-alarm.ts](workspace-alarm.ts) dispatches due workspace and security work.
+- [Merge queue turn reports](../merge-queue/fix-report.ts) deliver saved
+  chat results from the regular alarm and keep failed deliveries for retry.
 - [alarms.ts](alarms.ts) saves each alarm owner's deadline.
 
 ## Checks

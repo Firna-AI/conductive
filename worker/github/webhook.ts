@@ -19,6 +19,7 @@ import {
   webhookRepository,
   webhookRoute,
   type GitHubPullRequestEvent,
+  type WebhookRoute,
 } from './webhook-routing'
 
 export const GITHUB_WEBHOOK_BODY_BYTES = 26 * 1024 * 1024
@@ -43,6 +44,7 @@ export interface GitHubWebhookDependencies {
   ) => Promise<void>
   /** Without it, the handler ignores repository changes. */
   repositoryChange?: RepositoryChangeDependencies
+  queue?: (route: WebhookRoute) => Promise<void>
 }
 
 async function authenticatedBody(
@@ -219,6 +221,7 @@ export async function handleGitHubWebhook(
     if (pullRequestFailure) throw pullRequestFailure.error
     if (mergeFailure) throw mergeFailure.error
     if (failure) throw failure.error
+    await dependencies.queue?.(route)
     await completeDelivery(env.DB, deliveryId, dependencies.now())
     return new Response(null, { status: 204 })
   } catch (error) {

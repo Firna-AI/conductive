@@ -31,6 +31,9 @@ each route under `/api/orgs/:orgId/workspaces/:workspaceId`.
   `workspace_archived`.
 - The repository and the pull request come from the workspace record,
   never from the request.
+- A queued workspace uses the merge route of the
+  [queue coordinator](../merge-queue/README.md). A direct merge of that
+  workspace returns 409 `merge_queue_required`.
 - A body without a `headSha` text, or with another method than `merge`,
   `squash`, or `rebase`, returns 400 `invalid_input`. A ready body without
   a positive integer `pullNumber` returns the same error.

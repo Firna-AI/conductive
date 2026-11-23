@@ -202,10 +202,11 @@ export async function addUnit(context: AddContext): Promise<void> {
     trunk,
     unitId: lower?.unitId ?? dependencies.randomToken(),
     place: (lower?.place ?? entries.at(-1)?.place ?? 0) + 1,
-    candidates: appended.map(({ workspaceId, branch, pullNumber }) => ({
+    candidates: appended.map(({ workspaceId, branch, pullNumber, pull }) => ({
       workspaceId,
       branch,
       pullNumber,
+      memberBase: pull.base === trunk ? null : pull.base,
     })),
     now: dependencies.now(),
     writeId: dependencies.randomToken(),

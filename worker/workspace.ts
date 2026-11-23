@@ -25,7 +25,6 @@ import { createAutomaticRestart } from './lifecycle/automatic-restart'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
-import { retryAutomationReport } from './chat/automation-run'
 
 export class Workspace extends MergeQueueWorkspace {
   private readonly features: WorkspaceFeatures
@@ -116,8 +115,7 @@ export class Workspace extends MergeQueueWorkspace {
       features: this.features,
       lifecycle: (dispatch) =>
         this.alarmLifecycle(dispatch && (() => restart(dispatch))),
-      automationReport: () =>
-        retryAutomationReport(env.DB, this.chat.store, now),
+      chatStore: this.chat.store,
       sessionWatches: () => this.sessionWatches.alarm(),
     })
   }
@@ -225,7 +223,7 @@ export class Workspace extends MergeQueueWorkspace {
     origin: string,
   ) {
     return featureResult(() =>
-      this.run(async () => {
+      this.run(async (turn) => {
         await this.jobs.assertIdle()
         return archiveWorkspace(
           this.env,
@@ -238,6 +236,7 @@ export class Workspace extends MergeQueueWorkspace {
             archiveLifecycle: () =>
               this.controller.archiveLifecycle(workspaceId),
             reserveArchive: () => this.controller.reserveArchive(workspaceId),
+            outside: turn.outside,
           },
         )
       }),

@@ -114,6 +114,31 @@ describe('Merge latest in the palette', () => {
     },
   )
 
+  test('asks for a rebase onto the target branch while the workspace is in the merge queue', async () => {
+    holdAnimationFrames()
+    const server = new FakeApiServer({ banner: 'ready-to-merge' })
+    serveWork(server, 'none')
+    const { banner } = toolFixtures('ready-to-merge').banner
+    server.json('GET', githubPaths.banner(org, id), {
+      banner: { ...banner, baseBranch: 'calummoore/apple-pay' },
+      queue: {
+        place: 2,
+        count: 2,
+        belowPullNumber: 479,
+        trunk: 'main',
+        state: 'queued',
+        wait: null,
+      },
+    })
+    const { rows } = await searchMergeLatest(server)
+    const [row] = rows
+    if (row) click(row)
+    await settle()
+    expect((await sends(server)).map((body) => Object(body).text)).toEqual([
+      "Fetch `origin/calummoore/apple-pay` and rebase this branch onto it, because the merge queue needs a linear history. If the branch already has every commit of `origin/calummoore/apple-pay`, say so and stop. Otherwise resolve each conflict, run the tests, then push with `git push --force-with-lease`. Don't merge `origin/calummoore/apple-pay` into this branch.",
+    ])
+  })
+
   test('a send that fails shows the chat of the session, whose composer names the cause', async () => {
     holdAnimationFrames()
     const server = new FakeApiServer({ banner: 'ready-to-merge' })

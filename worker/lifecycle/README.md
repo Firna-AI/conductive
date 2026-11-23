@@ -44,6 +44,10 @@ gives the create, read, resume, and activity routes of a workspace to
   [Automatic restart](../../docs/protocol/restart-the-software.md#automatic-restart) says.
 - Give the GitHub CLI the workspace owner's token outside an agent turn.
 
+An accepted [merge queue fix message](../merge-queue/README.md) uses
+[`startAcceptedMessage`](accepted-message-start.ts) to resume a stopped
+computer as the member who queued the work.
+
 ## Integration points
 
 ### Browser routes
@@ -109,7 +113,8 @@ when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
 Archive, Continue, and repository change use the prior workspace binding
-to remove its [merge queue entry](../merge-queue/README.md).
+to remove its [merge queue entry](../merge-queue/README.md). They give the
+coordinator the member who caused the leave for the base reset.
 
 ### Continue
 

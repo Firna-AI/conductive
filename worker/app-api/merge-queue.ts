@@ -22,6 +22,19 @@ function parseAction(
       return { kind: 'remove' } satisfies QueueMemberAction
   }
   if (
+    path === `${mergeQueuePaths.entry(orgId, workspaceId)}/merge` &&
+    request.method === 'POST'
+  ) {
+    const ahead = context.body?.ahead
+    if (typeof ahead !== 'number' || !Number.isSafeInteger(ahead) || ahead < 0)
+      throw new HttpError(
+        400,
+        'invalid_input',
+        'Review the merge queue and try again.',
+      )
+    return { kind: 'merge', ahead } satisfies QueueMemberAction
+  }
+  if (
     path === mergeQueuePaths.order(orgId, workspaceId) &&
     request.method === 'PUT'
   ) {
@@ -67,5 +80,5 @@ export async function mergeQueueRoute(
       action,
     ),
   )
-  return new Response(null, { status: 204 })
+  return new Response(null, { status: action.kind === 'merge' ? 202 : 204 })
 }

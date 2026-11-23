@@ -31,6 +31,17 @@ export const mergeProblems = ['token-failed', 'merge-refused'] as const
 export type MergeProblem = (typeof mergeProblems)[number]
 
 /**
+ * What holds a message that the queue sends as the queuer, such as the one
+ * turn for a conflict of a move (decision 321 A): a turn that runs in a
+ * session of the workspace, no agent login of the session for the queuer,
+ * or no open session. The entry waits in its place, and the line under its
+ * bar names the reason.
+ */
+export const turnWaits = ['active-turn', 'agent-login', 'open-session'] as const
+
+export type TurnWait = (typeof turnWaits)[number]
+
+/**
  * The GitHub states of a pull request that cannot merge until a member
  * acts: failed checks, a conflict, requested changes, and a block of the
  * rules of GitHub. Its list mark is red or amber. The queue sends it no fix
@@ -67,6 +78,8 @@ type EntryFacts = {
   waitsFor?: number
   /** Why the queue could not merge it, while it is ready. */
   problem?: MergeProblem
+  /** What holds the message that the queue sends as the queuer. */
+  turnWait?: TurnWait
   /**
    * The layers above it in its member stack, which Remove from queue takes
    * along, because the stack moves as one unit (decision 315).

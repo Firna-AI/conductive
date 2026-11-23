@@ -83,7 +83,45 @@ adds what the app knows:
 
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
 mockups' `barCopy.ts` with the number, the target branch, the blocking
-checks in GitHub's order, and the reviewers.
+checks in GitHub's order, and the reviewers. While the bar read names a
+queue state, Resolve conflicts asks for a rebase onto the branch below,
+because the GitHub stack of the queue needs a linear history. The bar
+read names no old base commit yet, so the prompt asks for a plain rebase,
+not for `git rebase --onto`.
+
+## The merge queue
+
+[Merge queue in the app](../../docs/protocol/merge-queue-in-the-app.md)
+states the requirements. `queueFactsOf` in [queueView.ts](queueView.ts)
+gives `barModel` the queue facts of the bar, and `queueViewOf` the words
+of its line from the mockups' `queueCopy.ts`.
+
+- The bar read and the stored read carry the queue state of a queued
+  workspace. A GitHub event carries none, so the store keeps the state of
+  the last read. The bar reads again after each write of the queue in
+  the tab, and when a read of the list shows another entry of the
+  workspace.
+- The line under the bar names the place and the pull request below, or
+  what the queue waits for: its checks, a rebase, its review, the rules of
+  GitHub, its local work, a running turn, an agent login, or an open
+  session. A failed token and a refused merge name their reason, and a
+  refused merge leads to the pull request on GitHub. The bar read names
+  no layer that a lower-layer wait waits for, so that line names the pull
+  request below. Remove from queue ends the line for a member with write
+  access, except while the layer merges, and it asks first.
+- Add to merge queue shows on an open pull request that can join, for a
+  member with write access, beside the main action or alone. The list of
+  the org gives whether the pull request can join, and whether it holds
+  the workspace as an entry. In a bar narrower than 540 px beside a main
+  action, it shows only its icon.
+- The compact row of a phone names the place, such as "Queue 3 of 3", and
+  the line tops the Checks tab.
+- Merge on a queued workspace needs a route of the queue that takes the
+  click (decision 316). Until then, a queued layer counts as waiting, so
+  the bar offers no direct merge of a queued layer, which decision 316
+  rejected. Merge shows busy while the queue merges.
+- Merge latest asks for a rebase onto its target branch while the bar
+  read names a queue state.
 
 ## Merge
 
@@ -210,6 +248,10 @@ says.
   base of `ChecksBranches`. `ChecksActions.test.tsx` checks that top.
 - `barKeys.ts`: `barCommands`, the commands that the keys of the bar run,
   and `buttonKey`, the key that the tooltip of a button names.
+- `queueView.ts` and `QueueBarParts.tsx`: the queue facts and words of
+  the bar, Add to merge queue, and the line of a queued workspace.
+  `queueView.test.ts` checks each state of the line, Add, and the rebase
+  prompt, and `storeQueue.test.ts` the queue state of the store.
 - `barActions.test.ts`, `barView.test.ts`, and `barPrompts.test.ts`: the
   runs over the fake API with a manual timer, the rules, and the prompts.
 - `barReady.test.ts`: the rules and the run of Ready for review.
