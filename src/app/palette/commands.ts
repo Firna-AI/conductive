@@ -1,11 +1,11 @@
 import {
   sendFeedbackLabel,
   sendFeedbackWords,
-} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+} from '../../ui/components/feedback/feedbackCopy'
 import {
   mergeLatestCommandLabel,
   mergeLatestWords,
-} from '../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+} from '../../ui/components/workspace/mergeLatestCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,

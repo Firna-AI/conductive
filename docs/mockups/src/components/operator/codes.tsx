@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   codeState,
@@ -17,9 +17,9 @@ import {
   disableLabel,
   referralCodeLabel,
   referralCodeName,
-} from './codeCopy'
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { InlineLink } from './targets'
-import styles from './codes.module.css'
+import styles from '../../../../../src/ui/components/operator/codes.module.css'
 
 /**
  * A phone keeps the label, the uses, and Disable. It puts the code with

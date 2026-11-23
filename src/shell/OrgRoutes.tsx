@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { SearchX } from 'lucide-react'
-import { EmptyState } from '../../docs/mockups/src/components/common/EmptyState'
+import { EmptyState } from '../ui/components/common/EmptyState'
 import type { Route } from '../app/router'
 import { routes } from '../app/router'
 import { useStore } from '../app/store'

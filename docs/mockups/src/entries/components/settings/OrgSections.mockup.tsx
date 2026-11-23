@@ -8,7 +8,7 @@ import {
   suspendedSettingsLinks,
   type SettingsTab,
 } from '../../../components/settings/OrgSections'
-import { ORG_COLORS } from '../../../design/orgColors'
+import { ORG_COLORS } from '../../../../../../src/ui/design/orgColors'
 import { orgs } from '../../../fixtures/orgs'
 import { readOnlyCauseSchema } from './computerSchemas'
 

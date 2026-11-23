@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { Section } from '../../ui/components/settings/Section'
 import type { ComputerModel, ScriptKind } from '../../app/computer-model'
 import { CodeField } from '../../files/code/CodeField'
 import { ActionButton } from '../ui/actions'
@@ -19,8 +19,8 @@ interface ScriptProps {
 
 /**
  * A script of the org, which an admin edits in a code field with line
- * numbers and shell colours (decision 57). Save script waits for a change. The field keeps the text that the user
- * types while a save runs.
+ * numbers and shell colours (decision 57). Save script waits for a change.
+ * The field keeps the text that the user types while a save runs.
  */
 export function ScriptSection(props: ScriptProps) {
   const script = useSavedDraft(props.script)

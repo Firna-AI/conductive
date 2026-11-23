@@ -1,16 +1,16 @@
 import type { ReactNode } from 'react'
 import { FolderSearch, Lock, SearchX, type LucideIcon } from 'lucide-react'
-import { secretNote } from '../../docs/mockups/src/components/settings/envVarCopy'
+import { secretNote } from '../ui/components/settings/envVarCopy'
 import {
   skillCount,
   skillsCopy,
   skillsNoticeText,
   type NoSkillsCause,
-} from '../../docs/mockups/src/components/settings/skillsCopy'
+} from '../ui/components/settings/skillsCopy'
 import {
   skillsTrustCopy,
   trustHint,
-} from '../../docs/mockups/src/components/settings/skillsTrustCopy'
+} from '../ui/components/settings/skillsTrustCopy'
 import { shownSkills } from '../app/skills-lookup'
 import { CodeBlock } from '../files/code/CodeField'
 import type {

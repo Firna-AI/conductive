@@ -1,5 +1,5 @@
-import { sendFeedbackWords } from '../components/feedback/feedbackCopy'
-import { mergeLatestWords } from '../components/workspace/mergeLatestCopy'
+import { sendFeedbackWords } from '../../../../src/ui/components/feedback/feedbackCopy'
+import { mergeLatestWords } from '../../../../src/ui/components/workspace/mergeLatestCopy'
 import type { CommandId } from './shortcutCommands'
 
 /**

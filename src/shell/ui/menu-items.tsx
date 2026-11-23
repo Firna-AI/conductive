@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import { classes } from '../../ui/components/common/classes'
+import menu from '../../ui/components/common/Menu.module.css'
+import { SwitchPicture } from '../../ui/components/common/SwitchPicture'
 import type { MenuAction, MenuSubmenu, MenuSwitch } from './Menu'
 import type { SubmenuControl } from './MenuList'
 import ui from './ui.module.css'
@@ -91,7 +91,8 @@ export function SwitchItem(props: { entry: MenuSwitch; busy: boolean }) {
 
 /**
  * An item that shows its choices: beside the menu, or in place of the menu
- * in a sheet and in the phone layout. An arrow at its end says so. Its open
+ * in a sheet and in the phone layout. Its muted words follow its label, and
+ * an arrow at its end says that it has choices. Its open
  * choices keep it highlighted. While `busy`, it is off as an action is, and
  * shows no choices.
  */
@@ -124,7 +125,12 @@ export function SubmenuItem(props: {
       type="button"
     >
       {Icon ? <Icon aria-hidden className={menu.icon} size={14} /> : null}
-      <span className={menu.label}>{entry.label}</span>
+      <span className={menu.label}>
+        {entry.label}
+        {entry.muted ? (
+          <span className={menu.muted}> {entry.muted}</span>
+        ) : null}
+      </span>
       <ChevronRight aria-hidden className={menu.icon} size={14} />
     </button>
   )

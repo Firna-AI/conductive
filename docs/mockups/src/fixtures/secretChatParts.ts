@@ -13,8 +13,8 @@ import {
   type MemberGrant,
   type SecretRequest,
   type SecretRunItem,
-  type ValueLifetime,
 } from './secretRequests'
+import { type ValueLifetime } from '../../../../src/ui/components/chat/secretGrant'
 
 /** A run of one request in a state, at the place of its first run. */
 export function run(

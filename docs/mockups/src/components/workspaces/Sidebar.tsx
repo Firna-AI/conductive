@@ -6,7 +6,7 @@ import {
   type ShortcutChanges,
 } from '../../fixtures/shortcutChanges'
 import { paths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { useSidebarToggle } from '../layout/sidebarPlace'
@@ -24,7 +24,7 @@ import {
   searchLink,
   settingsLink,
 } from '../../entries/components/workspaces/SidebarLinks.mockup'
-import styles from './Sidebar.module.css'
+import styles from '../../../../../src/ui/components/workspaces/Sidebar.module.css'
 
 /**
  * The desktop sidebar beside the org rail: the org name with its Settings

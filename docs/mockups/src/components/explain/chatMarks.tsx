@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import type { ExplainMarkState } from './explainCopy'
+import type { ExplainMarkState } from '../../../../../src/ui/components/explain/explainCopy'
 
 /** An explanation that the chat marks, with the run state of its session. */
 export type TextMark = {

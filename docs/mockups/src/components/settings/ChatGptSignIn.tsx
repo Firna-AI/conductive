@@ -6,13 +6,16 @@ import {
   signInRefusedCause,
 } from '../../fixtures/logins'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { chatGptSignInCopy as copy, type SignInStep } from './chatGptSignInCopy'
-import formStyles from './AgentConnectForm.module.css'
-import styles from './ChatGptSignIn.module.css'
+import {
+  chatGptSignInCopy as copy,
+  type SignInStep,
+} from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import formStyles from '../../../../../src/ui/components/settings/AgentConnectForm.module.css'
+import styles from '../../../../../src/ui/components/settings/ChatGptSignIn.module.css'
 
 /** The address of the page of OpenAI, as the user reads and types it. */
 const deviceAddress = chatGptDevicePage.replace(/^https:\/\//, '')

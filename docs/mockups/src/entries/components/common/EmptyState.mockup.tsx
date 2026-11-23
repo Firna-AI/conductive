@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { EmptyState } from '../../../components/common/EmptyState'
+import { EmptyState } from '../../../../../../src/ui/components/common/EmptyState'
 import { actionButton } from './actions.mockup'
 import { iconKeys, icons } from './icons'
 

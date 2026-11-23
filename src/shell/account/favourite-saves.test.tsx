@@ -174,6 +174,7 @@ describe('the moves and the saves of the Favourites section', () => {
     held.holdAnswer('PUT', favouritesPath)
     const picker = pickerAt(view, 1)
     click(picker)
+    click(byRole('menuitem', 'Effort Max'))
     click(byRole('menuitemradio', 'High'))
     await settle()
     const sending = {

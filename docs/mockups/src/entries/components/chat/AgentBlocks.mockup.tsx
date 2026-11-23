@@ -3,7 +3,7 @@ import type {
   TextBlock,
   TextTable,
 } from '../../../../../../src/chat/markdown/agent-blocks'
-import { AgentBlocks } from '../../../components/chat/AgentBlocks'
+import { AgentBlocks } from '../../../../../../src/ui/components/chat/AgentBlocks'
 import { fixtureDrawing } from '../../../components/chat/fixtureDrawing'
 import {
   bullets,

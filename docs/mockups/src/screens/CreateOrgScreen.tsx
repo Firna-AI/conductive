@@ -3,7 +3,7 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { AccountChoice } from '../components/operator/AccountChoice'
+import { AccountChoice } from '../../../../src/ui/components/operator/AccountChoice'
 import { orgNameFields } from '../entries/components/settings/OrgSections.mockup'
 import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { createAccounts } from '../fixtures/operatorProviders'
@@ -14,7 +14,7 @@ import {
 } from '../fixtures/repositories'
 import { paths } from '../paths'
 import { defined } from '../defined'
-import styles from './forms.module.css'
+import styles from '../../../../src/ui/screens/forms.module.css'
 
 export const createOrgSchema = {
   type: 'object',

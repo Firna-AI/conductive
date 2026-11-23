@@ -7,9 +7,9 @@ import {
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { useMacApp } from '../components/mac/MacApp'
-import { formWait } from '../components/new-workspace/waitingRepository'
-import { orgSuspendedReason } from '../components/orgs/suspension'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
+import { orgSuspendedReason } from '../../../../src/ui/components/orgs/suspension'
 import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'

@@ -150,7 +150,7 @@ The launch page and the authorizer page share one look from
 `app/tools/preview-opening` of the mockups draws it. The page is one small
 file. Its style and its drawings are inline, and it loads no font, image,
 or script file. So each CSP adds only a `style-src` with the page nonce.
-The words come from `previewOpeningCopy` in the mockups, so the mockup and
+The words come from the shared `previewOpeningCopy`, so the mockup and
 the page read the same.
 
 The `authorize` hostname never serves sandbox content. So no service worker of

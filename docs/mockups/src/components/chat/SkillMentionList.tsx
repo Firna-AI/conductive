@@ -1,6 +1,6 @@
-import { MentionList } from './MentionList'
-import { SkillIcon } from './SkillChip'
-import { skillListCopy } from './skillCopy'
+import { MentionList } from '../../../../../src/ui/components/chat/MentionList'
+import { SkillIcon } from '../../../../../src/ui/components/chat/SkillChip'
+import { skillListCopy } from '../../../../../src/ui/components/chat/skillCopy'
 import { skillRows } from './skillMentions'
 
 /**

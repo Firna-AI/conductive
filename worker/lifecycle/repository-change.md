@@ -141,7 +141,8 @@ the new folder with the isolated source command, in this order:
 3. It imports the staged base and creates the new branch with the
    checkout of Continue. Changed files move with the branch. When Git
    refuses, the command exits with code 82, and the job ends with the
-   clash message of `repositoryFailure` in the mockup copy.
+   clash message of `repositoryFailure` in the shared
+   `repositoryMoveCopy.ts`.
 4. It points `origin/HEAD` at the base and sets the `gh-merge-base`
    setting of the new branch.
 

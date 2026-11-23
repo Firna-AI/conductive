@@ -1,7 +1,7 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useEffect, type ReactNode, type RefObject } from 'react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import type { SessionLogin } from '../../ui/components/chat/SessionLogin'
 import { newSessionLogin } from '../../app/default-logins'
 import {
   formBranch,

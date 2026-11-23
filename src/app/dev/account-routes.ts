@@ -10,7 +10,7 @@ import {
   type SetFavouritesResponse,
   type SetNewWorkspaceViewResponse,
 } from '../../shared/account'
-import { chatGptSignInCopy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../ui/components/settings/chatGptSignInCopy'
 import {
   GET_STARTED_PATH,
   type GetStartedResponse,

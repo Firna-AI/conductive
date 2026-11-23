@@ -10,7 +10,7 @@ import {
   type WebLinkContext,
 } from '../../../../../src/markdown/web-links'
 import type { Workspace as AppWorkspace } from '../../../../../src/shared/generated/Workspace'
-import { appDomain } from '../../brand'
+import { appDomain } from '../../../../../src/shared/brand'
 import { people } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import type { ChatRow, ChatSession } from './chatWorkspaces'

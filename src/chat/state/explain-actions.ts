@@ -1,5 +1,5 @@
 import type { ExplainSessionRequest } from '../../shared/sessions'
-import { explainFailedTitle } from '../../../docs/mockups/src/components/explain/explainCopy'
+import { explainFailedTitle } from '../../ui/components/explain/explainCopy'
 import { showNotice, type ChatContext } from './context'
 import { takeReply, type SendingView } from './linked-replies'
 import { sendDraft } from './message-actions'

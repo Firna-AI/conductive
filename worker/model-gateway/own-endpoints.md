@@ -8,7 +8,7 @@ An own endpoint login replaces the native upstream base in the
 It accepts only public HTTPS addresses with host names.
 It refuses every IPv4 and IPv6 address, credentials, internal names, and the app and preview domains.
 It normalizes the base path.
-The host check reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+The host check reads the product domain from `productDomain` in `src/shared/brand.ts`.
 The gateway runtime supplies `env.PREVIEW_DOMAIN` as an extra refused domain before each fetch.
 It preserves the endpoint query and appends the model request query.
 Claude drops a final `/v1` from the base before its route is added.

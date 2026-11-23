@@ -145,7 +145,7 @@ npm --prefix desktop run test:electron
 The shell test runs under Xvfb on Linux.
 It also runs on macOS.
 The smoke tests wait for the bundled page title.
-They read the product name from the [shared brand file](../docs/mockups/src/brand.ts).
+They read the product name from the [shared brand file](../src/shared/brand.ts).
 This wait does not depend on the sign-in state.
 Linux is a test host, not a release target.
 

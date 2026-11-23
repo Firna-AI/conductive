@@ -139,7 +139,7 @@ describe('the New workspace dialog', () => {
         file: true,
       },
       pressedOutside: { dialog: null, pressKept: true, rowFocused: true },
-      generalMenu: { place: 'Acme · General', text: withFile },
+      generalMenu: { place: 'General', text: withFile },
       address: here,
     })
   })

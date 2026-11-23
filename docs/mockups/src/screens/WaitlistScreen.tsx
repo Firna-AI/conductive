@@ -3,7 +3,7 @@ import { InputFrame } from '@firna/ui/input'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { useControlSizes } from '../components/common/touch'
+import { useControlSizes } from '../../../../src/ui/components/common/touch'
 import { pendingInviteList } from '../entries/components/members/PendingInvites.mockup'
 import { personAvatar } from '../entries/components/orgs/OrgTile.mockup'
 import {
@@ -12,14 +12,17 @@ import {
   waitingInvites,
   waitingPerson,
 } from '../fixtures/waitlist'
-import { noop } from '../noop'
+import { noop } from '../../../../src/ui/noop'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
 import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
-import { codeFailures, waitlistCopy as copy } from './waitlistCopy'
-import forms from './forms.module.css'
-import signIn from './SignInScreen.module.css'
-import styles from './WaitlistScreen.module.css'
+import {
+  codeFailures,
+  waitlistCopy as copy,
+} from '../../../../src/ui/screens/waitlistCopy'
+import forms from '../../../../src/ui/screens/forms.module.css'
+import signIn from '../../../../src/ui/screens/SignInScreen.module.css'
+import styles from '../../../../src/ui/screens/WaitlistScreen.module.css'
 
 export const waitlistSchema = {
   type: 'object',

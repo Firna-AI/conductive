@@ -15,8 +15,6 @@ use tokio::sync::oneshot;
 use crate::error::{Error, Result};
 use crate::runtime::CommandHandler;
 use crate::skills::boundary::OrgSkills;
-use crate::skills::disk::DiskSkills;
-use crate::skills::git::CleanGit;
 use crate::skills::service::SkillsCopy;
 use crate::state::records::{RunnerState, SavedTurn};
 
@@ -51,12 +49,9 @@ pub struct AgentEngine {
 impl AgentEngine {
     /// Compose from loaded state. RunnerCore recovers unfinished turns before start.
     pub fn new(dependencies: EngineDependencies, loaded: RunnerState) -> Self {
-        let skills: Arc<dyn OrgSkills> = Arc::new(SkillsCopy::new(
+        let skills: Arc<dyn OrgSkills> = Arc::new(SkillsCopy::on_disk(
             dependencies.configuration.skills_repository.clone(),
-            Arc::new(DiskSkills::new(
-                dependencies.configuration.home.clone(),
-                Arc::new(CleanGit),
-            )),
+            dependencies.configuration.home.clone(),
         ));
         Self {
             skills,

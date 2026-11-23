@@ -3,7 +3,7 @@ import { PreviewTabs } from '../../../components/tools/PreviewTabs'
 import {
   previewTabLabel,
   serverDescription,
-} from '../../../components/tools/previewCopy'
+} from '../../../../../../src/ui/components/tools/previewCopy'
 import {
   detectedServers,
   openPort,

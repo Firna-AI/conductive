@@ -11,12 +11,12 @@ import {
   linkedReasonText,
   linkedTitle,
   type LinkedReason,
-} from '../../../docs/mockups/src/components/chat/linkedCopy'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+} from '../../ui/components/chat/linkedCopy'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   reopenBody,
   reopenTitle,
-} from '../../../docs/mockups/src/components/explain/explainCopy'
+} from '../../ui/components/explain/explainCopy'
 import type { SendBlock } from '../state/blockers'
 import type { ChatNotice } from '../state/chat-snapshot'
 import { ActionButton, IconButton } from '../ui/actions'

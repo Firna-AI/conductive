@@ -55,7 +55,7 @@ describe('the keys of the commands of a page', () => {
         at: navigation.href(),
       },
     }).toEqual({
-      opened: { place: 'Acme · General', address: routes.account() },
+      opened: { place: 'General', address: routes.account() },
       shortcuts: { prevented: true, at: routes.accountTab('shortcuts') },
     })
     // The key of Send feedback opens the Feedback dialog over the tab.

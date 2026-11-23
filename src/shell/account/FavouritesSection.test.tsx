@@ -40,9 +40,12 @@ function addOff(view: HTMLElement): boolean {
   return add.getAttribute('aria-disabled') === 'true'
 }
 
-/** The names of the items of the open model menu, and the marked ones. */
-function openMenu() {
-  const menu = byRole('menu', 'Model and effort')
+/**
+ * The names of the items of the open menu with `label`, and the marked
+ * ones.
+ */
+function openMenu(label = 'Model and effort') {
+  const menu = byRole('menu', label)
   const items = Array.from(menu.querySelectorAll('[role^="menuitem"]'))
   return {
     items: items.map(accessibleName),
@@ -60,12 +63,15 @@ describe('the Favourites section of Preferences', () => {
       accessibleName(Array.from(row.querySelectorAll('button')).at(-1) ?? row),
     )
     click(pickerAt(view, 1))
+    const menu = openMenu()
+    click(byRole('menuitem', 'Effort Max'))
     expect({
       rows: favouriteRows(view),
       removes,
       addOff: addOff(view),
       limit: queryAllByText(limitLine, view).length,
-      menu: openMenu(),
+      menu,
+      efforts: openMenu('Effort'),
     }).toEqual({
       rows: [
         'Opus 5.5, High',
@@ -84,16 +90,11 @@ describe('the Favourites section of Preferences', () => {
       addOff: true,
       limit: 1,
       menu: {
-        items: [
-          'All models',
-          'Low',
-          'Medium',
-          'High',
-          'Extra high',
-          'Max',
-          'Ultra',
-          'Fast',
-        ],
+        items: ['All models', 'Effort Max', 'Fast'],
+        marked: [],
+      },
+      efforts: {
+        items: ['Low', 'Medium', 'High', 'Extra high', 'Max', 'Ultra'],
         marked: ['Max'],
       },
     })

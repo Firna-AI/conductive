@@ -1,4 +1,4 @@
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { useControlSizes } from '../../ui/components/common/touch'
 
 /**
  * The send key of every composer: the chat of a workspace, and the page and

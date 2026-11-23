@@ -1,8 +1,8 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { MacAppSection } from '../../../../../src/marketing/features'
 import { macDownloadHref } from '../../../../../src/marketing/links'
 import { useOutsideHref } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './MacDownloads.module.css'
 import { siteIcons } from './siteIcons'
 

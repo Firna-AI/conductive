@@ -34,7 +34,7 @@ const startingFavourites: readonly AgentChoice[] = [
 
 /**
  * No favourites, after the member removed each one. The model menu then
- * starts with All models, then the efforts and Fast (model favourites
+ * starts with All models, then Effort and Fast (model favourites
  * decision 6). The picker of a Favourites row shows the same menu, because
  * the row sets one favourite.
  */

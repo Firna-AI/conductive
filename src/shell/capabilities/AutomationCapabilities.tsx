@@ -3,8 +3,8 @@ import { Blocks } from 'lucide-react'
 import {
   capabilitiesIntro,
   capabilitiesLabel,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import { CapabilitiesPanel } from '../../ui/components/capabilities/CapabilitiesPanel'
 import { useStore } from '../../app/store'
 import type { ComposerTool } from '../../chat/components/ComposerTools'
 import type { OrgSummary } from '../../shared/orgs'

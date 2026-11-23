@@ -4,7 +4,7 @@ import {
   CodeField,
 } from '../../../../../../src/files/code/CodeField'
 import { installScript, startupScript } from '../../../fixtures/computer'
-import { noop } from '../../../noop'
+import { noop } from '../../../../../../src/ui/noop'
 
 /** The props of a code field and of a code block. */
 const codeSchema = {

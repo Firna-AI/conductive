@@ -1,18 +1,18 @@
 import { FolderGit2, GripVertical, MoreHorizontal } from 'lucide-react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { ReachableRepository } from '../../fixtures/repositories'
-import { IconButton } from '../common/actions'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
-import { Sheet } from '../common/Sheet'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { Menu } from '../../../../../src/ui/components/common/Menu'
+import { Sheet } from '../../../../../src/ui/components/common/Sheet'
 import {
   defaultRepositoryLabel,
   repositoryMenuOf,
   repositoryPlaceText,
-} from './repositoryOrder'
-import list from './RepositoryList.module.css'
-import styles from './RepositoryOrderList.module.css'
+} from '../../../../../src/ui/components/settings/repositoryOrder'
+import list from '../../../../../src/ui/components/settings/RepositoryList.module.css'
+import styles from '../../../../../src/ui/components/settings/RepositoryOrderList.module.css'
 
 /**
  * The state of the order on the Repositories tab: the plain list, the row

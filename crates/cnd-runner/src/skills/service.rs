@@ -9,7 +9,11 @@ use tokio::task::JoinHandle;
 use tokio::time::{MissedTickBehavior, interval};
 use tracing::instrument::WithSubscriber;
 
+use std::path::PathBuf;
+
 use super::boundary::{OrgSkills, SkillsStorage};
+use super::disk::DiskSkills;
+use super::git::CleanGit;
 use super::lease::SkillsLease;
 use super::schedule::Schedule;
 
@@ -36,6 +40,19 @@ impl SkillsCopy {
             job: Mutex::new(None),
             interval: Duration::from_secs(5 * 60),
         }
+    }
+
+    /// Keep the copies under this agent home, with public Git access only.
+    pub fn on_disk(repository: Option<String>, home: PathBuf) -> Self {
+        Self::new(
+            repository,
+            Arc::new(DiskSkills::new(home, Arc::new(CleanGit))),
+        )
+    }
+
+    /// Follow each new current copy, such as a first copy or a new commit.
+    pub fn changes(&self) -> watch::Receiver<Option<SkillsLease>> {
+        self.current.subscribe()
     }
 }
 

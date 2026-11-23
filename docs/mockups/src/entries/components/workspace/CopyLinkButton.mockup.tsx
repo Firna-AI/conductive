@@ -2,10 +2,10 @@ import { defineComponent } from '@mokly/mokly'
 import {
   CopyLinkButton,
   type CopyResult,
-} from '../../../components/workspace/CopyLinkButton'
-import { workspaceLabel } from '../../../components/workspaces/label'
+} from '../../../../../../src/ui/components/workspace/CopyLinkButton'
+import { workspaceLabel } from '../../../../../../src/ui/components/workspaces/label'
 import { checkoutAutocomplete } from '../../../fixtures/workspaces'
-import { noop } from '../../../noop'
+import { noop } from '../../../../../../src/ui/noop'
 
 /** The results of a copy, as `CopyResult` lists them. */
 const copyResults = [

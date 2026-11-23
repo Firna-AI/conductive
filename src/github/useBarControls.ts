@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import type { BarAction } from '../ui/components/workspace/barModel'
 import { useWorkspaceStore } from '../app/workspace-store'
 import { BarActions } from './barActions'
 import type { BarActionsPorts } from './barPorts'

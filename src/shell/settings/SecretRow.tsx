@@ -1,10 +1,7 @@
-import { AllAgentsMark } from '../../../docs/mockups/src/components/secrets/SecretParts'
-import {
-  addedBy,
-  revealedBy,
-} from '../../../docs/mockups/src/components/secrets/secretsCopy'
-import styles from '../../../docs/mockups/src/components/secrets/SecretsTab.module.css'
-import { ValueDots } from '../../../docs/mockups/src/components/settings/EnvVarParts'
+import { AllAgentsMark } from '../../ui/components/secrets/SecretParts'
+import { addedBy, revealedBy } from '../../ui/components/secrets/secretsCopy'
+import styles from '../../ui/components/secrets/SecretsTab.module.css'
+import { ValueDots } from '../../ui/components/settings/EnvVarParts'
 import { nameInSentence } from '../../app/people'
 import type { SecretRights } from '../../app/permissions'
 import type { SecretsModel } from '../../app/secrets-model'

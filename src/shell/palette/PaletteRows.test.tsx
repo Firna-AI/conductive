@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import paletteStyles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import paletteStyles from '../../ui/components/palette/CommandPalette.module.css'
 import { routes } from '../../app/router'
 import { requestLines } from '../../app/test-kit'
 import { workspacePaths } from '../../shared/workspaces'

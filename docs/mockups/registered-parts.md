@@ -21,10 +21,16 @@ shows that state.
 ## Where a registration lives
 
 - A registered part has an entry module under
-  `src/entries/components/<folder>/<File>.mockup.tsx`, one for each source
-  file of `src/components/`, or for a file of helper parts in
-  `src/screens/`. It exports one `defineComponent` for each registered
-  part of the file.
+  `docs/mockups/src/entries/components/<folder>/<File>.mockup.tsx`, from
+  the repository root. Its source file is a shared part in
+  [`src/ui/components/<folder>/`](../../src/ui/components/), a part that
+  only the mockups use in `docs/mockups/src/components/<folder>/`, or a
+  file of helper parts in `docs/mockups/src/screens/`. Each source file
+  has one entry module, with the same folder and file name. The entry
+  module exports one `defineComponent` for each registered part of the
+  file.
+- A part that moves to `src/ui/` keeps its entry module, so its catalogue
+  path does not change.
 - The path of a part is `components/<folder>/<part>`, in kebab-case, such
   as `components/workspaces/workspace-mark`. The `components` folder comes
   last in the catalogue.
@@ -39,10 +45,12 @@ shows that state.
 
 - A mockup screen and a part that only the mockups use render the
   wrapper, `part.Component`, in place of the plain part.
-- The app under `src/` of the repository imports many parts. The wrapper
-  works only inside a Mokly render, and it throws outside one. So a file
-  that the app reaches never imports an entry module and renders only
-  plain parts.
+- The app imports the shared parts from
+  [`src/ui/`](../../src/ui/README.md) at the repository root. The wrapper
+  works only inside a Mokly render, and it throws outside one. So each
+  file that the app reaches lives outside the mockups, in `src/ui/` or in
+  another folder of the app. Such a file never imports an entry module,
+  and it renders only plain parts.
 - Each use of a wrapper has a `moklyInstance` name in kebab-case. The name
   comes from a stable key of the fixture, such as the key of a workspace,
   with the list in front: `sidebar-apple-pay`. A name never comes from a

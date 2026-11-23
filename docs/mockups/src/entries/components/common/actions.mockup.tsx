@@ -4,7 +4,7 @@ import {
   ActionButton,
   IconButton,
   type ActionTone,
-} from '../../../components/common/actions'
+} from '../../../../../../src/ui/components/common/actions'
 import { iconKeys, icons } from './icons'
 
 /** The tones of an action button, as `ActionTone` lists them. */

@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { previewOpeningCopy } from '../../docs/mockups/src/components/tools/previewCopy'
+import { previewOpeningCopy } from '../../src/ui/components/tools/previewCopy'
 import { previewBrowserDocument } from './browser-launch'
 import { previewLaunchDocument } from './launch-document'
 

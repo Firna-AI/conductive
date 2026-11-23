@@ -6,7 +6,7 @@ import {
   productSummary,
   smallerFeatures,
 } from '../../../../src/marketing/features'
-import { classes } from '../components/common/classes'
+import { classes } from '../../../../src/ui/components/common/classes'
 import { ClosingCall } from '../components/marketing/ClosingCall'
 import { FeatureGrid } from '../components/marketing/FeatureGrid'
 import { FeatureSection } from '../components/marketing/FeatureSection'

@@ -171,7 +171,7 @@ the text stays text. Quotes and lists nest at most 16 levels deep, and
 deeper content shows as text. The parse runs in the worker, off the thread
 of the page, so a long or crafted file cannot stop the page.
 
-Each link of the preview has the look of the mockups' `TextLink`, and its
+Each link of the preview has the look of the shared `TextLink`, and its
 title gives its whole address. The link opener of the app shell opens
 it, as
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)

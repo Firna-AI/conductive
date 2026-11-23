@@ -6,8 +6,11 @@
 
 import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { LostReason, LostWhat } from '../components/chat/lostCopy'
-import type { StandardSpeedCause } from '../components/chat/speedCopy'
+import type {
+  LostReason,
+  LostWhat,
+} from '../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../src/ui/components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'

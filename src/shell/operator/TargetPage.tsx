@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Ban, LockOpen } from 'lucide-react'
-import { suspendedTitle } from '../../../docs/mockups/src/components/operator/operatorCopy'
+import { suspendedTitle } from '../../ui/components/operator/operatorCopy'
 import type { OperatorTarget } from '../../app/operator-target'
 import { useStore, type Loadable } from '../../app/store'
 import type { OperatorSuspension } from '../../shared/operator'

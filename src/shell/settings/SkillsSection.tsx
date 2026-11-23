@@ -1,15 +1,15 @@
 import { Input } from '@firna/ui/input'
 import { FolderSearch, Lock, SearchX, type LucideIcon } from 'lucide-react'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
-import { SkillList } from '../../../docs/mockups/src/components/settings/SkillList'
+import { InlineText } from '../../ui/components/common/InlineText'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { Section } from '../../ui/components/settings/Section'
+import { SkillList } from '../../ui/components/settings/SkillList'
 import {
   skillsCopy as copy,
   skillsNoticeText,
   type NoSkillsCause,
-} from '../../../docs/mockups/src/components/settings/skillsCopy'
+} from '../../ui/components/settings/skillsCopy'
 import type { ComputerModel } from '../../app/computer-model'
 import { shownSkills } from '../../app/skills-lookup'
 import {

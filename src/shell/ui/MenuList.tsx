@@ -5,9 +5,9 @@ import {
   type RefObject,
 } from 'react'
 import { ChevronLeft } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import type { MenuPlacement } from '../../../docs/mockups/src/components/common/Menu'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
+import { classes } from '../../ui/components/common/classes'
+import type { MenuPlacement } from '../../ui/components/common/Menu'
+import menu from '../../ui/components/common/Menu.module.css'
 import type { MenuEntry } from './Menu'
 import { ActionItem, SubmenuItem, SwitchItem } from './menu-items'
 import { useLayerFocus } from './Overlay'

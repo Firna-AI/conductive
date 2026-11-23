@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { Menu } from '../../../components/common/Menu'
+import { Menu } from '../../../../../../src/ui/components/common/Menu'
 import { menuSchema, plainEntry } from './menuEntries'
 
 /**

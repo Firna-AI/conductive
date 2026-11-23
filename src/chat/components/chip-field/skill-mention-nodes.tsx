@@ -10,7 +10,7 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { SkillChip } from '../../../../docs/mockups/src/components/chat/SkillChip'
+import { SkillChip } from '../../../ui/components/chat/SkillChip'
 import type { Agent } from '../../../shared/generated/Agent'
 import { skillTextAt } from '../../../shared/skill-text'
 import {
@@ -63,7 +63,7 @@ export function namedSkill(
 }
 
 /**
- * The chip of a skill in the field: the skill chip of the mockups, with the
+ * The chip of a skill in the field: the shared `SkillChip`, with the
  * skill icon and the name. Its title is the description of the skill of
  * the agent of the composer, else of the other agent. A press opens
  * nothing. The × of its icon removes it as one step of undo, while the

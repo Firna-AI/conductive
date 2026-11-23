@@ -2,8 +2,8 @@ import { defineComponent } from '@mokly/mokly'
 import {
   LostUpdateBar,
   LostUpdateRow,
-} from '../../../components/chat/LostUpdate'
-import type { UnavailableData } from '../../../components/chat/lostCopy'
+} from '../../../../../../src/ui/components/chat/LostUpdate'
+import type { UnavailableData } from '../../../../../../src/ui/components/chat/lostCopy'
 
 /** The data that a failed repair leaves unavailable. */
 const unavailableData = [

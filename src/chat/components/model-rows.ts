@@ -40,9 +40,21 @@ export type ModelRow =
   | { kind: 'label'; label: string }
   | { kind: 'divider' }
 
-/** A row of the menu: a `ModelRow`, or All models with its submenu. */
-export type ModelMenuRow =
-  ModelRow | { kind: 'all-models'; label: string; rows: readonly ModelRow[] }
+/**
+ * A row of the menu that opens a submenu of `rows`: All models, or Effort.
+ * `muted` follows the label in the muted colour, such as the current
+ * effort after Effort.
+ */
+type ModelSubmenuRow = {
+  kind: 'submenu'
+  key: 'all-models' | 'effort'
+  label: string
+  muted?: string
+  rows: readonly ModelRow[]
+}
+
+/** A row of the menu: a `ModelRow`, or a row with its submenu. */
+export type ModelMenuRow = ModelRow | ModelSubmenuRow
 
 /** What the menu shows besides the models and the current choice. */
 export interface ModelMenuOptions {
@@ -155,16 +167,20 @@ function favouriteChoices(
 }
 
 /**
- * The efforts of the current model under the Effort label, with the
- * current effort marked, then the Fast switch of a model with fast mode.
+ * Effort, with the current effort after it in the muted colour, whose
+ * submenu holds the efforts of the current model with the current effort
+ * marked. The Fast switch of a model with fast mode follows it.
  */
 function effortRows(
   models: readonly AgentModel[],
   choice: AgentChoice,
-): ModelRow[] {
-  const rows: ModelRow[] = [
-    { kind: 'label', label: 'Effort' },
-    ...effortsOf(models, choice).map((effort): ModelRow => ({
+): ModelMenuRow[] {
+  const effort: ModelMenuRow = {
+    kind: 'submenu',
+    key: 'effort',
+    label: 'Effort',
+    muted: effortLabels[choice.effort],
+    rows: effortsOf(models, choice).map((effort): ModelRow => ({
       kind: 'choice',
       key: `effort:${effort}`,
       label: effortLabels[effort],
@@ -172,17 +188,17 @@ function effortRows(
       opensSession: false,
       choice: { ...choice, effort },
     })),
-  ]
-  if (findModel(models, choice)?.fast !== true) return rows
-  return [...rows, divider, { kind: 'fast', label: 'Fast', on: choice.fast }]
+  }
+  if (findModel(models, choice)?.fast !== true) return [effort]
+  return [effort, { kind: 'fast', label: 'Fast', on: choice.fast }]
 }
 
 /**
  * The rows of the model menu of a picker that offers `models`, for the
  * current choice. The favourites that the menu shows come first, with no
  * heading. A line and All models follow, whose submenu holds the models of
- * each agent. Then come a line, the efforts of the current model, and the
- * Fast switch of a model with fast mode. In a session with messages, a pick
+ * each agent. Then come a line, Effort, whose submenu holds the efforts of
+ * the current model, and the Fast switch of a model with fast mode. In a session with messages, a pick
  * of a favourite or of a model of the other agent opens a new session. With
  * no favourite to show, the menu starts with All models (model favourites
  * decision 6), so it keeps the same short shape however many models the app
@@ -198,7 +214,8 @@ export function modelMenuRows(
     ...favourites,
     ...(favourites.length > 0 ? [divider] : []),
     {
-      kind: 'all-models',
+      kind: 'submenu',
+      key: 'all-models',
       label: 'All models',
       rows: modelChoices(models, choice, options.sessionAgent),
     },

@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import '../../../docs/mockups/src/render.css'
+import '../../ui/render.css'
 import type { WorkspaceIdentity } from '../../app/workspace-store'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { storeFailedRepairs } from '../../test-support/recorded-repairs'
