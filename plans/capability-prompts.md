@@ -1,6 +1,6 @@
 # Capability prompts
 
-Status: Active. On branch `calummoore/workspace-capability-prompts-issue-2daj`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. [PR #660](https://github.com/Firna-AI/conductive/pull/660) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 A workspace can start with capabilities: secrets that its sessions use with
 no approval, and Mac access. Members choose them in New workspace or in the
