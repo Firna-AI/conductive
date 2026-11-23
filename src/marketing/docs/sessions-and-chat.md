@@ -363,6 +363,7 @@ Ask a follow-up at the foot of the panel.
 A follow-up during a turn guides that turn.
 **Stop** ends the turn.
 Select **Expand** to open the session in its tab.
+On a computer, click outside the panel to close it.
 Closing the panel leaves the agent working.
 
 The text keeps a mark that every member sees.

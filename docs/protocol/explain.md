@@ -263,6 +263,11 @@ in the design of the chat gives the look of each part.
   reopens it first, as [A closed explanation](#a-closed-explanation) says.
 - Close closes the popover. The explanation goes on as it is, and its mark
   shows its state.
+- On a computer, a press outside the popover closes it too. A press on a
+  mark keeps it, because the mark then opens its own popover or menu. A
+  press in a part that the popover opens, such as a menu, keeps it too.
+  The user chose this on 23 November 2026. Reason: the popover then closes
+  as the other panels and menus of the app do.
 
 ### Keys and focus
 

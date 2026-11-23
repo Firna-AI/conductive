@@ -82,7 +82,11 @@ for the screens.
   turn failed, and the icon of Explain otherwise. A read-only workspace
   shows only an ended turn or a failure.
 - At most one popover is open, and a change of the shown session closes
-  it. The popover lies in the layer of the app frame, as a dialog does. On
+  it. On a computer, a press outside the popover closes it, and the focus
+  goes where the press puts it. A press counts as the pointer goes down.
+  `keepPopover` of `press-outside.ts` keeps the popover at a press in it,
+  also in a part that it opens through a portal, and at a press on a mark,
+  whose click opens its own popover or menu. A sheet on a phone stays open. The popover lies in the layer of the app frame, as a dialog does. On
   a computer, CSS anchor positioning keeps it at the box of the open mark,
   and a browser without it gets the same place from `placePanel`. On a
   phone it is a sheet, which stops at the top of the chat at full height.
@@ -123,6 +127,9 @@ for the screens.
   written prompt, gives the focus back on Escape, steers and stops a turn,
   reopens a closed explanation for a follow-up and for Expand, shows a
   read-only popover, and follows a linked session.
+- `PopoverDismiss.dom.test.tsx` closes the popover at a press outside it
+  on a computer, keeps it at a press in it and on its mark, and keeps the
+  sheet on a phone.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
@@ -152,7 +159,8 @@ for the screens.
 - `ExplainButton.tsx`: Explain by the selection and above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,
-  its header and handle, and its field. `popover-place.ts` places it.
+  its header and handle, and its field. `popover-place.ts` places it, and
+  `press-outside.ts` closes it at a press outside it.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
 - `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.

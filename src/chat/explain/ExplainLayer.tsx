@@ -63,6 +63,7 @@ function Popover(props: {
       anchor={state.anchor}
       mobile={chat.mobile}
       onClose={() => state.closePopover(true)}
+      onPressOutside={() => state.closePopover(false)}
       onExpand={() => {
         state.closePopover(false)
         show(shown)

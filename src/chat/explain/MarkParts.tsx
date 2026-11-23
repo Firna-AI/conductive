@@ -8,6 +8,7 @@ import type { ExplainView } from './explain-context'
 import type { Explanation } from './explanations'
 import styles from './explain.module.css'
 import { uiAttribute } from './mark-layout'
+import { keepPopover } from './press-outside'
 
 const ui = { [uiAttribute]: '' }
 
@@ -17,7 +18,8 @@ const ui = { [uiAttribute]: '' }
  * of its mark, or in the box at the top right of a message that the mark
  * covers whole, as the mockups' `WholeMark` draws it. Screen readers hear
  * the title of the explanation and its state, and the pointer over it shows
- * the title. A press keeps a fold whose text holds it as it is.
+ * the title. A press keeps a fold whose text holds it as it is, and keeps
+ * the open popover until the press opens the popover of this mark.
  */
 export function MarkButton(props: {
   mark: Explanation
@@ -41,6 +43,7 @@ export function MarkButton(props: {
         event.stopPropagation()
         view.openPopover(mark.id)
       }}
+      onPointerDown={(event) => keepPopover(event.nativeEvent)}
       ref={(element) => view.noteGlyph(mark.id, element)}
       title={mark.title}
       type="button"
