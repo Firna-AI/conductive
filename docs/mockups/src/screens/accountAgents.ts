@@ -168,3 +168,16 @@ export function agentsFor(
     orgLogins: state.orgLogin === 'none' ? undefined : acmeLoginUse(),
   }
 }
+
+/**
+ * The models that the pickers of the account leave out in a state: each
+ * model of the app that the last model list of an own endpoint login does
+ * not name (decision 10 G of the own endpoint plan).
+ */
+export function hiddenModelsFor(state: AccountState): readonly string[] {
+  return Object.values(loginsFor(state)).flatMap((login) =>
+    login.kind === 'endpoint' && login.models
+      ? login.models.unlisted.map((model) => model.label)
+      : [],
+  )
+}

@@ -60,10 +60,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent ends with the
-  external link icon, because it opens a new session with the draft, from
-  decision 51. A screen reader says "New session" for the icon.
+  in every composer, such as "Opus 5.5 High". It names no agent brand.
+  [The model menu](design-model-menu.md) gives its menu, with the
+  favourites first.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as

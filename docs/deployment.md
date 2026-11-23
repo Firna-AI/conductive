@@ -118,6 +118,7 @@ examples.
 | `BOAT_ORG_ID` | Each call to the `boat` account | The ID of the app's Boat organization, as [The app's Boat account](sandbox-provider-accounts.md#the-apps-boat-account) says. It is not a secret. |
 | `CONDUCTIVE_MODELS` | [Model configuration dependencies](deployment/models.md#configuration-failures) | The JSON model list, as [Models](deployment/models.md#models) says. |
 | `CONDUCTIVE_DEFAULT_CHOICE` | [Default choice dependencies](deployment/models.md#configuration-failures) | The JSON default choice, as [Models](deployment/models.md#models) says. |
+| `CONDUCTIVE_STARTING_FAVOURITES` | The account reads of the accounts that never saved favourites | Optional. The JSON starting favourites, as [Starting favourites](deployment/models.md#starting-favourites) says. Without it, or with a bad value, such an account gets only the app default as a favourite, and the Worker logs a warning. It is not a secret. |
 | `CONDUCTIVE_TITLE_MODEL` | The title of a workspace that has no name | Optional. The Workers AI model ID of the title model, as [The title model](deployment/models.md#the-title-model) says. Without it, the app shows "Untitled" until a name is set. It is not a secret. |
 | `CONDUCTIVE_RELEASE_SERVER` | Image builds, refreshes, and workspace bootstrap | Optional release base URL. The default is `https://runner.conductive.build`. |
 | `CONDUCTIVE_DEPLOY_TOKEN_SHA256` | The software image route of the deploy run | The SHA-256 digest of the deploy token of the deploy run that made the Worker version, as 64 hexadecimal characters. Each deploy from `main` sets it, as [The software image](deployment/runner-archive.md#the-software-image) says. It is not a secret. |
@@ -208,6 +209,8 @@ above.
 [Models](deployment/models.md#models) gives the model list of
 `CONDUCTIVE_MODELS` and the default choice of `CONDUCTIVE_DEFAULT_CHOICE`:
 their shape, the operations that need them, and their configuration failures.
+[Starting favourites](deployment/models.md#starting-favourites) gives the
+starting favourites of `CONDUCTIVE_STARTING_FAVOURITES`.
 
 ## The title model
 

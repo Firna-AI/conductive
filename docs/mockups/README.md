@@ -54,6 +54,7 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the model menu](design-model-menu.md),
 of [the operator section](design-operator.md), of
 [the pull request bar](design-bar.md), and of
 [New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
@@ -169,7 +170,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   skills, attached files, drops, the chip of Add to chat, and the
   Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
-  with the login of the open session and the model of the next message.
+  with the login of the open session, the model of the next message, and
+  the favourites and All models of an open model menu.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/explainState.ts` holds the marks of

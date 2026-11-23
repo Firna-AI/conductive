@@ -614,3 +614,10 @@ The previous schema and write shapes therefore keep working. Its old
 row. The new reader explicitly excludes those rows. The
 [provider switch guide](../worker/lifecycle/provider-switches.md) gives
 the atomic transition into execution and the separate execution deadline.
+
+`202611221800_model_favourites.sql` adds the nullable text column
+`user_preferences.model_favourites`. It holds the saved JSON list of
+one account. Existing rows keep null. The migration changes no existing
+column, default, or constraint, so the previous Worker keeps working.
+[Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
+gives the rules for an account without a saved list.

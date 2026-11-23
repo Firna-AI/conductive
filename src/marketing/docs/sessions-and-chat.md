@@ -35,7 +35,8 @@ Conductive keeps its chat history until the org is deleted.
 ## Send a message
 
 1. Open the session's tab.
-2. Choose a model and effort in the message box.
+2. Choose a favourite or another model in the message box.
+   Adjust the effort and **Fast** if needed.
 3. Write your message.
 4. Use **Attach files** if the agent needs a file or picture.
 5. Select **Send**.
@@ -194,7 +195,21 @@ Use **Stop** in each affected session if agents keep replying to each other with
 
 ## Choose a model
 
-Each session has its own model and effort picker.
+Each session has its own model menu.
+The menu lists your favourites first.
+A favourite sets a model, its effort, and **Fast** together.
+Each row names those choices, such as **Opus 5.5 Max Fast**.
+
+1. Open the model menu in the message box.
+2. Choose a favourite, or open **All models** and choose another model.
+3. Adjust the effort or **Fast** in the menu if needed.
+
+On a phone, **All models** replaces the menu.
+Select **Back** to return.
+With no favourites to show, the menu starts with **All models**.
+A favourite gets a mark only while all three settings match your current choice.
+Changing the effort or **Fast** does not change your saved favourite.
+
 A different model of the same agent keeps the conversation in that session.
 
 A model of the other agent opens a new session when the session has messages.
@@ -229,8 +244,32 @@ They show all app models for the agent before the first successful read, or when
 The session keeps its current model.
 Other members' pickers in sessions on your personal endpoint still show all app models.
 On an org endpoint, every member's pickers follow the org endpoint's model list in the same way.
+This also hides favourites for those models and leaves them out of **All models**.
+Hidden favourites stay saved in your account.
 
 - [Refresh an endpoint's model list](/docs/agent-logins#keep-the-model-list-current)
+
+## Set your favourites
+
+Your account keeps up to five favourites, in the order you choose.
+Until you change the list, Conductive supplies five starting favourites.
+You add, order, and remove favourites only in the **Favourites** section of **Preferences**.
+
+1. Open **Account**.
+2. Open **Preferences**.
+3. In **Favourites**, select **Add a favourite** and choose a model, or move or remove a favourite.
+
+Use a row's model menu to change its model, effort, and **Fast** setting.
+Drag its handle to move it.
+Select **×** to remove it.
+The model menu follows this order.
+If you remove all favourites, the list stays empty, and you choose models in **All models**.
+
+A favourite with an unavailable model appears greyed in **Favourites**, with a reason.
+The same applies when your personal endpoint's model list omits it.
+Its row still lets you change, move, or remove it.
+If a change cannot save, the list keeps its saved values.
+Try the change again.
 
 ## Guide or stop a running agent
 

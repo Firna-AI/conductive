@@ -50,6 +50,8 @@ export function Composer(props: {
   /** The login of the first message when it is not the person's own. */
   login?: SessionLogin
   models: readonly AgentModel[]
+  /** The favourites of the account, which the model menu lists first. */
+  favourites: readonly AgentChoice[]
   /** Whether the message can go now. */
   ready: boolean
   send: () => void
@@ -126,6 +128,7 @@ export function Composer(props: {
               <ModelPicker
                 change={(choice) => props.model.setChoice(choice)}
                 choice={props.choice}
+                favourites={props.favourites}
                 models={props.models}
               />
             ) : null}

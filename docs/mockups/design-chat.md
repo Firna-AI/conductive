@@ -16,7 +16,9 @@ watched ends. [The Markdown of replies](design-markdown.md) gives the
 tables, the headings, the quotes, the rules, the marks, and the line
 breaks of a reply and of a file preview. [Explain](#explain) gives the
 marks of explanations, the Explain button, and the popover of an
-explanation.
+explanation. [The model menu](design-model-menu.md) gives the model
+picker of the composer, its favourites, and the Favourites section of
+Preferences.
 
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on

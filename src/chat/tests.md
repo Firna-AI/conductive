@@ -41,13 +41,24 @@ when a read names a login that serves and at the unmount, and a notice that
 shows again starts a new one. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. In an empty session of another
+message that starts a linked session. It reads the models in All models,
+and in the reader's own session the favourites of the account, without the
+favourite on a model that the list leaves out. In an empty session of another
 member, it checks that the label and the picker follow the default login
 that the record names, the org login. `components/ModelPicker.dom.test.tsx`
-checks the New session mark of each model of the other agent, and the Fast
-row of the model picker: the keys reach it, a change of it sends a choice
-that differs only in fast and keeps the menu open, the trigger names Fast,
-and a model without fast mode has no row and turns fast off. `components/SourceLink.dom.test.tsx` presses the link
+checks the New session mark of each model of the other agent in All
+models, and the Fast row of the model picker: the keys reach it, a change
+of it sends a choice that differs only in fast and keeps the menu open, the
+trigger names Fast, and a model without fast mode has no row and turns fast
+off. `components/ModelFavourites.dom.test.tsx` checks the favourites of the
+menu: their rows with the muted words, a favourite on a model that the
+picker does not offer, the mark of an exact match only, a pick, a favourite
+of the other agent, and the menu with no favourite to show, which starts
+with All models.
+`components/AllModels.dom.test.tsx` checks the submenu of All models: its
+keys, a hover, a pick, and its form in the phone layout, with Back.
+`components/model-picker-test-kit.tsx` holds the models, the session, and
+the readers of the menu that these picker tests share. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.

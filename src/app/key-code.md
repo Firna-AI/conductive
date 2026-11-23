@@ -142,9 +142,15 @@ Each path is relative to `src/app/`, the folder of this page.
 - `repository-changes.ts`: the repository changes and their readiness, in
   [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the shortcut changes of each
-  keyboard, the GitHub App installations, and the repositories that
-  Create org offers. `saveShortcuts` saves one batch of changes for one
+  default model, the model favourites, the New workspace view, the shortcut
+  changes of each keyboard, the GitHub App installations, and the
+  repositories that Create org offers. `account-preference-writes.ts`:
+  `AccountPreferenceWrites`, the saves of the preferences. Each save shows
+  the value of its reply, and a failed save keeps the saved value and fails
+  with its error. `setFavourites` saves the whole list of the favourites,
+  and the account then holds the list that the Worker kept, as
+  [The account routes](../../docs/protocol/model-favourites-account.md#the-account-routes)
+  says. `saveShortcuts` saves one batch of changes for one
   keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
@@ -250,14 +256,17 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/list/drop-target.ts`: `DropLayout`, the boxes of the sections,
   the rows, and the trees that a drop measures.
 - `../shell/ui/useListDrag.ts`: the drag of an item in a vertical list,
-  such as an org in the rail and in the org switcher of a phone, or a
-  chosen repository of an org, on `usePointerDrag`.
+  such as an org in the rail and in the org switcher of a phone, a chosen
+  repository of an org, or a model favourite, on `usePointerDrag`.
   `../shell/ui/useListMoves.ts`: the moves of such an item by a menu and by
   Alt and Up or Down. `../shell/orgs/useOrgMove.ts`: the move of an org with
   the toast of a failed save. `../shell/layout/useRailOrder.ts`: the drag,
   the tile menu (`useTileMenu.tsx`), and the moves of the org tiles.
   `../shell/settings/RepositoryOrder.tsx`: the same moves of the chosen
-  repositories, with their row menu. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
+  repositories, with their row menu. `../shell/account/FavouritesSection.tsx`:
+  the same moves of the favourites of Preferences, which save one at a
+  time, with the rows of `FavouriteParts.tsx` and the row IDs of
+  `favourite-rows.ts`. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
   a long press lifts an org.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways

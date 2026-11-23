@@ -230,6 +230,11 @@ This page lists each protocol doc and what it covers.
     text, its key, the written prompt, the explanation and its anchor, the
     marks in the parent chat, the popover, a closed explanation, and
     read-only workspaces.
+- [Model favourites](../protocol/model-favourites.md): the favourites of
+  each member, the rows and the marks of the model menu, All models, the
+  hidden favourites, and the Favourites section of Preferences.
+  - [Model favourites: the account](../protocol/model-favourites-account.md):
+    the starting favourites and the account routes.
 - [Workspace links](../protocol/workspace-links.md): Copy link, and the chips
   that show workspace links in chat.
 - [Chat Markdown](../protocol/chat-markdown.md): the formatting of agent

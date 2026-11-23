@@ -30,9 +30,15 @@ If you joined an org, its admin manages the repositories and shared setup.
    **New workspace** starts with the org's default repository.
 4. Keep the default branch, or choose another starting branch.
 5. If you choose another branch, open the branch control again and choose its target under **Target**.
-6. Choose a model and effort.
-7. Describe the task in the message box.
-8. Select **Send** on the page, or **Create** in the dialog.
+6. Choose a favourite or a model in **All models**.
+7. Adjust the effort and **Fast** if needed.
+8. Describe the task in the message box.
+9. Select **Send** on the page, or **Create** in the dialog.
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Choose models and set favourites](/docs/sessions-and-chat#choose-a-model)
 
 For example:
 
