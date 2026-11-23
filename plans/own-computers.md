@@ -594,9 +594,20 @@ These are agent calls, made on 23 November 2026, for Milestone 4.
   the create completes, as it keeps the workspace token. A resume gets its
   token just before the provider call. Reason: a replayed create must give
   the sandbox the token of the stored digest.
-- The Worker revokes the token just before each stop request, and when the
-  workspace object finds its machine stopped. Reason: no token then
-  outlives a stop request.
+- The Worker revokes the token just before each stop request, and at each
+  physical stop that it observes, also at the end of a disk-retention run
+  and of an archive maintenance run. A display state of `stopped` or
+  `error` alone revokes nothing, because the computer can still run: during
+  such a run, and after a failed restart. A failed revoke warns and lets
+  the stop go on. Where nothing observes a later stop, the retry of that
+  path repeats it. Reason: no token then outlives a stop, and a running
+  computer keeps its connection. The review of Milestone 4 changed the
+  first form of this call, which revoked at each publication of a stopped
+  display state.
+- The host program ends a connection attempt after 60 seconds, and each
+  operation except a command run and a stream open after 30 seconds.
+  Reason: a stalled handshake or a stuck file system must not stop the
+  reconnects or fill the operation slots.
 - The host program and its commands run as the sandbox user, as the
   provider commands do. A restart of the host program ends its started
   commands, and their status then reads lost.
@@ -706,25 +717,29 @@ Depends on: 2
 
 The host mode, the machine object, and the route. No consumer uses them yet.
 
-- [ ] Add the host protocol types to `crates/cnd-runner-interface/`, and
+- [x] Add the host protocol types to `crates/cnd-runner-interface/`, and
       regenerate `src/shared/generated/`.
       Branch: calummoore/own-computers-milestone-4-host-r5ki
-- [ ] Add the host mode to `conductive`, with its system service and its
+- [x] Add the host mode to `conductive`, with its system service and its
       reconnect. The release installer starts the host service at each
       apply, because today it starts no stopped service
       (`image/install.md:186-187`).
       Branch: calummoore/own-computers-milestone-4-host-r5ki
-- [ ] Add the machine token at create and resume, and keep its hash.
+- [x] Add the machine token at create and resume, and keep its hash.
       Revoke it at each stop of the machine, and let a new connection with
       the token replace the open one (own computer decision 11 B).
       Branch: calummoore/own-computers-milestone-4-host-r5ki
-- [ ] Add the `/v1/host` route and the machine object.
+- [x] Add the `/v1/host` route and the machine object.
       Branch: calummoore/own-computers-milestone-4-host-r5ki
-- [ ] Add the operations and the streams to a fixed list of local ports.
+- [x] Add the operations and the streams to a fixed list of local ports.
       Branch: calummoore/own-computers-milestone-4-host-r5ki
-- [ ] Test each operation, a dropped connection, a wrong token, the token
+- [x] Test each operation, a dropped connection, a wrong token, the token
       of a stopped machine, and an unknown protocol version.
       Branch: calummoore/own-computers-milestone-4-host-r5ki
+
+Evidence and review reports: `.context/own-computers/` and
+`.context/reviews/calummoore/own-computers-milestone-4-host-r5ki/`. Two
+review rounds ran. Every finding is fixed on the branch.
 
 ## Milestone 5: Speed of previews and the terminal
 

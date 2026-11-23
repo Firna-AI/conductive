@@ -33,10 +33,32 @@ it('opens each fixed port, enforces outbound credit, returns receive credit, and
     ),
   )
   expect(await read).toEqual({ done: false, value: new Uint8Array([1, 2, 3]) })
+  host.send({ type: 'ping' })
+  expect(await host.inbox.next()).toEqual({ type: 'pong' })
+  const rest = reader.read()
+  host.socket.send(
+    new Uint8Array(
+      encodeHostFrame({
+        kind: 'streamData',
+        streamId: 1,
+        data: new Uint8Array(HOST_STREAM_FRAME_BYTES - 3).fill(4),
+      }),
+    ),
+  )
+  const remaining = new Uint8Array(HOST_STREAM_FRAME_BYTES - 3)
+  let chunk = await rest
+  let offset = 0
+  while (offset < remaining.byteLength) {
+    if (chunk.done) throw new Error('The stream ended before the frame.')
+    remaining.set(chunk.value, offset)
+    offset += chunk.value.byteLength
+    if (offset < remaining.byteLength) chunk = await reader.read()
+  }
+  expect(remaining).toEqual(new Uint8Array(HOST_STREAM_FRAME_BYTES - 3).fill(4))
   expect(await host.inbox.next()).toEqual({
     type: 'stream.credit',
     streamId: 1,
-    bytes: 3,
+    bytes: 65_536,
   })
   let completed = false
   const write = writer
@@ -113,10 +135,32 @@ it('closes a stream at the peer request and rejects unknown stream data', async 
       }),
     ),
   )
+  host.send({ type: 'ping' })
+  expect(await host.inbox.next()).toEqual({ type: 'pong' })
+  host.socket.send(
+    new Uint8Array(
+      encodeHostFrame({
+        kind: 'streamData',
+        streamId: 1,
+        data: new Uint8Array([1]),
+      }),
+    ),
+  )
   expect(await host.inbox.next()).toEqual({
     type: 'stream.close',
-    streamId: 999,
+    streamId: 1,
   })
+  host.socket.send(
+    new Uint8Array(
+      encodeHostFrame({
+        kind: 'streamData',
+        streamId: 1,
+        data: new Uint8Array([1]),
+      }),
+    ),
+  )
+  host.send({ type: 'ping' })
+  expect(await host.inbox.next()).toEqual({ type: 'pong' })
 })
 
 it('fails both stream directions on a drop and bounds the open stream count', async () => {

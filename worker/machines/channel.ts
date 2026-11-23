@@ -24,6 +24,7 @@ import {
   type MachineSocket,
   type SocketIdentity,
 } from './socket-state'
+import { StreamClosePermits, type StreamCloseStorage } from './stream-close'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false })
@@ -32,13 +33,20 @@ export class MachineChannel {
   readonly socket: MachineSocket
   private readonly pending: PendingRequests
   private readonly state: SocketState
+  private readonly closes: StreamClosePermits
   private readonly streams = new Map<number, HostStream>()
   private disconnected = false
 
-  constructor(socket: MachineSocket, identity: SocketIdentity) {
+  constructor(
+    socket: MachineSocket,
+    identity: SocketIdentity,
+    storage: StreamCloseStorage,
+  ) {
     this.socket = socket
     this.state = new SocketState(socket, identity)
     this.pending = new PendingRequests(() => this.state.allocateId())
+    this.closes = new StreamClosePermits(storage)
+    if (identity.lastId === 0) this.closes.clear()
   }
   welcomed(): void {
     this.state.welcomed()
@@ -100,9 +108,14 @@ export class MachineChannel {
     if (!this.connected()) throw machineUnavailable()
     if (this.streams.size >= HOST_MAX_OPEN_STREAMS) throw machineBusy()
     const id = this.state.allocateId()
+    this.closes.add(id)
     const stream = new HostStream(
       id,
-      (message) => this.send(message),
+      (message) => {
+        if (!(message instanceof Uint8Array) && message.type === 'stream.close')
+          this.closeStream(message.streamId)
+        else this.send(message)
+      },
       () => this.streams.delete(id),
     )
     this.streams.set(id, stream)
@@ -117,6 +130,8 @@ export class MachineChannel {
 
   receive(value: string | ArrayBuffer): HostToWorker | null {
     if (typeof value === 'string') {
+      if (value.length > HOST_REPLY_MAX_BYTES)
+        throw new Error('Inline host message too large.')
       const bytes = encoder.encode(value).byteLength
       if (bytes > HOST_REPLY_MAX_BYTES)
         throw new Error('Inline host message too large.')
@@ -127,7 +142,7 @@ export class MachineChannel {
     if (frame.kind === 'streamData') {
       const stream = this.streams.get(frame.streamId)
       if (stream) stream.data(frame.data)
-      else this.send({ type: 'stream.close', streamId: frame.streamId })
+      else this.closeStream(frame.streamId)
     } else {
       const bytes = this.pending.part(frame.requestId, frame.data, frame.last)
       if (bytes) {
@@ -147,6 +162,12 @@ export class MachineChannel {
     this.pending.disconnect()
     for (const stream of this.streams.values()) stream.close(false)
     this.streams.clear()
+    this.closes.clear()
+  }
+
+  private closeStream(id: number): void {
+    if (this.state.wasAllocated(id) && this.closes.take(id))
+      this.send({ type: 'stream.close', streamId: id })
   }
 
   private message(
@@ -173,14 +194,14 @@ export class MachineChannel {
           message.result.kind === 'stream.opened' &&
           !this.streams.has(message.result.streamId)
         )
-          this.send({ type: 'stream.close', streamId: message.result.streamId })
+          this.closeStream(message.result.streamId)
         this.pending.reply(message.requestId, message.result, bytes)
         break
       default: {
         const stream = this.streams.get(message.streamId)
         if (!stream) {
           if (message.type !== 'stream.close')
-            this.send({ type: 'stream.close', streamId: message.streamId })
+            this.closeStream(message.streamId)
         } else if (message.type === 'stream.credit')
           stream.credit(message.bytes)
         else if (message.type === 'stream.end') stream.end()

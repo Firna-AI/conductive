@@ -6,6 +6,7 @@ import {
   HOST_REPLY_MAX_BYTES,
 } from '../../src/shared/host'
 import { HttpError } from '../http'
+import { BoundedByteBuffer } from './byte-buffer'
 import {
   hostError,
   machineBusy,
@@ -19,8 +20,7 @@ interface PendingRequest {
   resolve: (result: HostResult) => void
   reject: (error: HttpError) => void
   timer: ReturnType<typeof setTimeout>
-  parts: Uint8Array[]
-  bytes: number
+  parts: BoundedByteBuffer
 }
 
 function command(operation: HostOperation): boolean {
@@ -70,9 +70,17 @@ export class PendingRequests {
     this.allocateId = allocateId
   }
 
+  get bufferedBlocks(): number {
+    let count = 0
+    for (const request of this.requests.values())
+      count += request.parts.blockCount
+    return count
+  }
+
   create(operation: HostOperation) {
     if (this.requests.size >= HOST_MAX_PENDING_REQUESTS) throw machineBusy()
     const id = this.allocateId()
+    const budget = replyBudget(operation)
     const milliseconds =
       operation.kind === 'command.run'
         ? (operation.timeoutSeconds + 10) * 1_000
@@ -94,12 +102,11 @@ export class PendingRequests {
       )
       this.requests.set(id, {
         operation,
-        budget: replyBudget(operation),
+        budget,
         resolve,
         reject,
         timer,
-        parts: [],
-        bytes: 0,
+        parts: new BoundedByteBuffer(budget),
       })
     })
     return { id, promise }
@@ -129,26 +136,17 @@ export class PendingRequests {
   part(id: number, data: Uint8Array, last: boolean): Uint8Array | null {
     const request = this.requests.get(id)
     if (!request) return null
-    if (request.bytes + data.byteLength > request.budget) {
+    if (request.parts.byteLength + data.byteLength > request.budget) {
       this.fail(id, replyOverflow(command(request.operation)))
       return null
     }
     if (this.bytes + data.byteLength >= 2 * HOST_COMMAND_REPLY_MAX_BYTES)
       throw new Error('Host message assembly limit exceeded.')
-    request.parts.push(data)
-    request.bytes += data.byteLength
+    request.parts.append(data)
     this.bytes += data.byteLength
     if (!last) return null
-    const bytes = new Uint8Array(request.bytes)
-    let offset = 0
-    for (const part of request.parts) {
-      bytes.set(part, offset)
-      offset += part.byteLength
-    }
-    this.bytes -= request.bytes
-    request.bytes = 0
-    request.parts = []
-    return bytes
+    this.bytes -= request.parts.byteLength
+    return request.parts.take()
   }
 
   fail(id: number, error: HttpError): void {
@@ -161,7 +159,8 @@ export class PendingRequests {
     const request = this.requests.get(id)
     if (request) {
       clearTimeout(request.timer)
-      this.bytes -= request.bytes
+      this.bytes -= request.parts.byteLength
+      request.parts.clear()
       this.requests.delete(id)
     }
     return request

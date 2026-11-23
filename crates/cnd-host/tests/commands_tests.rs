@@ -1,5 +1,6 @@
 //! Real local command sessions, timeouts, detached records, and byte offsets.
 
+use std::collections::BTreeMap;
 use std::os::unix::fs::PermissionsExt;
 
 use cnd_runner_interface::host::results::{HostCommandState, HostResult};
@@ -7,22 +8,55 @@ use cnd_runner_interface::host::results::{HostCommandState, HostResult};
 #[path = "commands/support.rs"]
 mod support;
 
-use support::{Background, TestResult, commands, exited, record};
+use support::{Background, ENVIRONMENT_COMMAND, TestResult, commands, exited, record};
 
 #[tokio::test]
 async fn run_captures_both_pipes_uses_home_and_clears_machine_credentials() -> TestResult {
+    assert!(
+        std::env::var_os("CARGO_MANIFEST_DIR").is_some_and(|value| !value.is_empty()),
+        "cargo test must supply a nonempty inherited variable outside the allowed six"
+    );
     let folder = tempfile::tempdir()?;
     let commands = commands(folder.path());
-    let result = commands.run("printf '%s' \"${CONDUCTIVE_MACHINE_TOKEN-unset}/${CONDUCTIVE_MACHINE_ORIGIN-unset}/${WORKSPACE_TOKEN-unset}\"; printf 'problem' >&2; pwd", 10).await?;
+    let result = commands.run(ENVIRONMENT_COMMAND, 10).await?;
+    let HostResult::CommandResult {
+        exit_code,
+        stdout,
+        stderr,
+        timed_out,
+    } = result
+    else {
+        return Err("expected the command result".into());
+    };
+    let (environment, directory) = stdout
+        .split_once("\0\0")
+        .ok_or("environment probe separator missing")?;
+    let environment: BTreeMap<_, _> = environment
+        .split('\0')
+        .map(|entry| entry.split_once('=').unwrap_or((entry, "")))
+        .collect();
     assert_eq!(
-        result,
-        HostResult::CommandResult {
-            exit_code: Some(0),
-            stdout: format!("unset/unset/unset{}\n", folder.path().display()),
-            stderr: "problem".into(),
-            timed_out: false
-        }
+        environment,
+        BTreeMap::from([
+            (
+                "HOME",
+                folder.path().to_str().ok_or("fixture home is not UTF-8")?
+            ),
+            ("USER", "user"),
+            ("LOGNAME", "user"),
+            ("SHELL", "/bin/bash"),
+            ("LANG", "C.UTF-8"),
+            (
+                "PATH",
+                "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ),
+        ])
     );
+    assert_eq!(
+        (exit_code, stderr, timed_out),
+        (Some(0), "problem".into(), false)
+    );
+    assert_eq!(directory, format!("{}\n", folder.path().display()));
     let signaled = commands.run("kill -TERM $$", 10).await?;
     assert_eq!(
         signaled,

@@ -12,6 +12,19 @@ use rustix::process::{Pid, Signal, kill_process};
 
 pub(super) type TestResult = Result<(), Box<dyn Error>>;
 
+pub(super) const ENVIRONMENT_COMMAND: &str = r#"
+while IFS= read -r -d '' entry; do
+  name=${entry%%=*}
+  case "$name" in
+    HOME|USER|LOGNAME|SHELL|LANG|PATH) printf '%s\000' "$entry" ;;
+    *) printf '%s\000' "$name" ;;
+  esac
+done < "/proc/$$/environ"
+printf '\000'
+printf problem >&2
+pwd
+"#;
+
 pub(super) struct Background(Pid);
 
 impl Background {

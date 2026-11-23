@@ -1,35 +1,11 @@
 import { afterEach, expect, it, vi } from 'vitest'
 
 import { record, number } from '../chat/inputs'
-import { MachineChannel } from './channel'
-import { socketIdentity, type MachineSocket } from './socket-state'
+import { socketFixture } from './channel.test-support'
+import { encodeHostFrame } from '../../src/shared/host-frames'
+import { HOST_REPLY_MAX_BYTES } from '../../src/shared/host'
 
 afterEach(() => vi.useRealTimers())
-
-function socketFixture() {
-  const sent: unknown[] = []
-  let attachment: unknown = { generation: 1, ready: true, lastId: 0 }
-  const socket: MachineSocket = {
-    readyState: WebSocket.OPEN,
-    send(value: unknown) {
-      if (typeof value !== 'string') throw new Error('Expected JSON.')
-      sent.push(JSON.parse(value))
-    },
-    close() {},
-    serializeAttachment(value: unknown) {
-      attachment = structuredClone(value)
-    },
-    deserializeAttachment: () => structuredClone(attachment),
-  }
-  return {
-    sent,
-    channel: () => {
-      const identity = socketIdentity(socket.deserializeAttachment())
-      if (!identity) throw new Error('Missing socket identity.')
-      return new MachineChannel(socket, identity)
-    },
-  }
-}
 
 it('keeps request IDs across a wake and ignores a timed-out request reply', async () => {
   vi.useFakeTimers()
@@ -130,5 +106,64 @@ it.each([false, true])(
       }),
     )
     expect(sent.at(-1)).toEqual({ type: 'stream.close', streamId })
+    const awakened = channel()
+    for (let index = 0; index < 1_000; index++) {
+      awakened.receive(
+        encodeHostFrame({
+          kind: 'streamData',
+          streamId,
+          data: new Uint8Array([1]),
+        }).slice().buffer,
+      )
+      awakened.receive(JSON.stringify({ type: 'stream.end', streamId }))
+      awakened.receive(
+        JSON.stringify({ type: 'stream.credit', streamId, bytes: 1 }),
+      )
+      awakened.receive(
+        JSON.stringify({
+          type: 'reply',
+          requestId: number(request.requestId),
+          result: { kind: 'stream.opened', streamId },
+        }),
+      )
+      for (const neverOpened of [number(request.requestId), 999])
+        awakened.receive(
+          encodeHostFrame({
+            kind: 'streamData',
+            streamId: neverOpened,
+            data: new Uint8Array([1]),
+          }).slice().buffer,
+        )
+    }
+    expect(
+      sent.filter((value) => record(value).type === 'stream.close'),
+    ).toEqual([{ type: 'stream.close', streamId }])
   },
 )
+
+it('bounds inline UTF-8 bytes and rejects oversized strings before encoding', () => {
+  const { channel } = socketFixture()
+  const receiver = channel()
+  const encode = vi.spyOn(TextEncoder.prototype, 'encode')
+  try {
+    const ping = '{"type":"ping"}'
+    expect(receiver.receive(ping.padEnd(HOST_REPLY_MAX_BYTES, ' '))).toEqual({
+      type: 'ping',
+    })
+    expect(encode).toHaveBeenCalledTimes(1)
+    encode.mockClear()
+    expect(() =>
+      receiver.receive(ping.padEnd(HOST_REPLY_MAX_BYTES + 1, ' ')),
+    ).toThrow('Inline host message too large.')
+    expect(encode).not.toHaveBeenCalled()
+    encode.mockClear()
+    expect(() =>
+      receiver.receive(
+        JSON.stringify({ type: 'ping', extra: 'é'.repeat(524_288) }),
+      ),
+    ).toThrow('Inline host message too large.')
+    expect(encode).toHaveBeenCalledTimes(1)
+  } finally {
+    encode.mockRestore()
+  }
+})

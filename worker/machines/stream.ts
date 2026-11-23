@@ -5,6 +5,7 @@ import {
 } from '../../src/shared/host'
 import { encodeHostFrame } from '../../src/shared/host-frames'
 import { invalidRequest, machineDisconnected } from './errors'
+import { BoundedByteBuffer } from './byte-buffer'
 
 export interface MachineStream {
   readable: ReadableStream<Uint8Array>
@@ -18,8 +19,9 @@ export class HostStream {
   readonly pair: MachineStream
   private controller!: ReadableStreamDefaultController<Uint8Array>
   private writableController!: WritableStreamDefaultController
-  private readonly queue: Uint8Array[] = []
+  private readonly queue = new BoundedByteBuffer(HOST_STREAM_WINDOW_BYTES)
   private receiveCredit = HOST_STREAM_WINDOW_BYTES
+  private ungranted = 0
   private sendCredit = HOST_STREAM_WINDOW_BYTES
   private reading = false
   private pulled?: () => void
@@ -80,8 +82,11 @@ export class HostStream {
       return
     }
     this.receiveCredit -= bytes.byteLength
-    this.queue.push(bytes)
+    this.queue.append(bytes)
     this.drain()
+  }
+  get bufferedBlocks(): number {
+    return this.queue.blockCount
   }
   credit(bytes: number): void {
     if (bytes > HOST_STREAM_WINDOW_BYTES - this.sendCredit) {
@@ -104,7 +109,7 @@ export class HostStream {
     } finally {
       if (!this.readClosed) this.controller.error(machineDisconnected())
       this.writableController.error(machineDisconnected())
-      this.queue.length = 0
+      this.queue.clear()
       this.pulled?.()
       this.pulled = undefined
       this.wake?.()
@@ -115,20 +120,21 @@ export class HostStream {
 
   private drain(): void {
     if (this.closed || this.readClosed) return
-    const bytes = this.reading ? this.queue.shift() : undefined
+    const bytes = this.reading ? this.queue.read() : undefined
     if (bytes) {
       this.reading = false
       this.controller.enqueue(bytes)
-      this.receiveCredit += bytes.byteLength
-      this.send({
-        type: 'stream.credit',
-        streamId: this.id,
-        bytes: bytes.byteLength,
-      })
+      this.ungranted += bytes.byteLength
+      if (this.ungranted >= HOST_STREAM_FRAME_BYTES) {
+        const credit = this.ungranted
+        this.ungranted = 0
+        this.receiveCredit += credit
+        this.send({ type: 'stream.credit', streamId: this.id, bytes: credit })
+      }
       this.pulled?.()
       this.pulled = undefined
     }
-    if (this.readEnded && !this.queue.length) {
+    if (this.readEnded && !this.queue.byteLength) {
       this.readClosed = true
       this.controller.close()
       this.pulled?.()

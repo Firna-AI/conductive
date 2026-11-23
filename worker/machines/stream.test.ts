@@ -7,6 +7,65 @@ import {
 } from '../../src/shared/host'
 import { HostStream } from './stream'
 
+it('keeps unread one-byte frames in a byte-bounded number of blocks', async () => {
+  const stream = new HostStream(
+    6,
+    () => {},
+    () => {},
+  )
+  try {
+    for (let index = 0; index < 100_000; index++)
+      stream.data(new Uint8Array([3]))
+    expect(stream.bufferedBlocks).toBe(2)
+    const reader = stream.pair.readable.getReader()
+    const received = new Uint8Array(100_000)
+    let offset = 0
+    while (offset < received.byteLength) {
+      const chunk = await reader.read()
+      if (chunk.done) throw new Error('The stream ended before its data.')
+      received.set(chunk.value, offset)
+      offset += chunk.value.byteLength
+    }
+    expect(received).toEqual(new Uint8Array(100_000).fill(3))
+    expect(stream.bufferedBlocks).toBe(0)
+  } finally {
+    stream.close(false)
+  }
+})
+
+it('grants credit by delivered bytes when each host frame holds one byte', async () => {
+  const grants: number[] = []
+  const stream = new HostStream(
+    7,
+    (message) => {
+      if (!(message instanceof Uint8Array) && message.type === 'stream.credit')
+        grants.push(message.bytes)
+    },
+    () => {},
+  )
+  try {
+    const reader = stream.pair.readable.getReader()
+    for (let index = 0; index < 131_089; index++) {
+      const read = reader.read()
+      stream.data(new Uint8Array([9]))
+      const chunk = await read
+      if (chunk.done || chunk.value.byteLength !== 1 || chunk.value[0] !== 9)
+        throw new Error('The stream did not deliver the host byte.')
+    }
+    expect(grants.length).toBe(2)
+    expect(grants).toEqual([65_536, 65_536])
+    const larger = reader.read()
+    stream.data(new Uint8Array(HOST_STREAM_FRAME_BYTES).fill(4))
+    expect(await larger).toEqual({
+      done: false,
+      value: new Uint8Array(HOST_STREAM_FRAME_BYTES).fill(4),
+    })
+    expect(grants).toEqual([65_536, 65_536, 65_553])
+  } finally {
+    stream.close(false)
+  }
+})
+
 it('closes an unread stream at receive-credit overflow and errors both directions', async () => {
   const sent: (WorkerToHost | Uint8Array)[] = []
   let removed = 0

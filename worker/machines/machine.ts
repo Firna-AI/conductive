@@ -54,7 +54,7 @@ export class Machine extends DurableObject<AppEnv> {
           socket.readyState === WebSocket.OPEN
         ) {
           this.close(HOST_CLOSE_REPLACED)
-          this.channel = new MachineChannel(socket, state)
+          this.channel = new MachineChannel(socket, state, context.storage.kv)
         } else
           socket.close(
             HOST_CLOSE_TOKEN_CHANGED,
@@ -203,11 +203,11 @@ export class Machine extends DurableObject<AppEnv> {
           return errorResponse(tokenRequired())
         this.close(HOST_CLOSE_REPLACED)
         const pair = new WebSocketPair()
-        this.channel = new MachineChannel(pair[1], {
-          generation: this.record.generation,
-          ready: false,
-          lastId: 0,
-        })
+        this.channel = new MachineChannel(
+          pair[1],
+          { generation: this.record.generation, ready: false, lastId: 0 },
+          this.ctx.storage.kv,
+        )
         this.ctx.acceptWebSocket(pair[1])
         return new Response(null, { status: 101, webSocket: pair[0] })
       })

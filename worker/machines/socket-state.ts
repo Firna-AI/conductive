@@ -56,6 +56,10 @@ export class SocketState {
     return this.state.lastId
   }
 
+  wasAllocated(id: number): boolean {
+    return id > 0 && id <= this.state.lastId
+  }
+
   private save(): void {
     this.socket.serializeAttachment(this.state)
   }

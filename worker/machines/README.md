@@ -47,18 +47,31 @@ file, and port operations. Each operation checks its owner before dispatch.
 Request timeouts, reply byte budgets, and request counts bound pending work.
 Large messages use the shared binary frame codec. Incomplete reply parts
 share a memory budget. An overflow releases the request's parts immediately.
+Reply assembly and unread stream data use the same bounded byte-buffer
+implementation. It copies bytes into fixed 64 KiB blocks, independent of
+incoming fragment boundaries. Empty parts retain no block. Kept blocks
+follow the buffered bytes, with at most one partial block per buffer.
 One socket ID allocator serves requests and streams. It saves each allocation
 in the attachment before dispatch. Welcome updates the same attachment owner,
 and a wake restores the counter. IDs never wrap on one connection.
 An exhausted counter refuses new work until a new connection starts.
 
 Streams reach only the terminal and preview relay ports. Each direction
-has a byte credit window. A read returns credit after it delivers data.
+has a byte credit window. Reads accumulate delivered bytes and return
+credit only when the ungranted total reaches one 64 KiB frame. A grant
+can include the previous partial frame. An empty read queue leaves less
+than one frame ungranted, so the peer can continue sending.
 A write waits when its credit ends. End half closes one direction.
 Close or a dropped host connection fails both directions.
 Close still errors both directions and removes the stream when its send fails.
-An unowned `stream.opened` reply gets `stream.close`, including a late success
-after the open deadline or a wake. This cleanup keeps no failed-open state.
+An unowned stream gets at most one `stream.close` per Worker-allocated
+stream ID on the connection. This includes late `stream.opened` replies
+after an open deadline or a wake. IDs that the Worker never opened get
+no answer. One stored close allowance per allocated stream survives a wake
+without growing memory for host frames. Sending a close consumes that
+allowance. A new connection or a disconnect clears the remaining allowances.
+Inline text above the reply byte limit is refused by string length before
+UTF-8 encoding. Shorter strings still pass the existing UTF-8 byte check.
 An open stream keeps its RPC session until the stream ends. Plain RPC
 results release their session after the client reads them.
 
@@ -79,7 +92,11 @@ I/O context. Tests can still drive each read and write from Node.
 - [socket-state.ts](socket-state.ts): the attachment reader, its single writer,
   and the shared request and stream ID allocator.
 - [pending.ts](pending.ts): request deadlines, reply budgets, and assembly memory.
+- [byte-buffer.ts](byte-buffer.ts): shared fixed-block storage for reply
+  assembly and stream reads.
 - [stream.ts](stream.ts): stream credit, reads, writes, and half closes.
+- [stream-close.ts](stream-close.ts): stored close allowances for allocated
+  streams, consumed once and cleared in bounded batches.
 - [revoke.ts](revoke.ts): the revoke of a stop, by owner or through the computer ledger.
 - [host.test-support.ts](host.test-support.ts): the fake host and runtime fixture.
 

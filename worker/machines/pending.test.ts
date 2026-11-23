@@ -13,6 +13,31 @@ function pendingRequests() {
   return new PendingRequests(() => ++id)
 }
 
+it('keeps reply storage proportional to bytes across empty and one-byte parts', async () => {
+  const pending = pendingRequests()
+  const request = pending.create({ kind: 'command.start', command: 'true' })
+  try {
+    for (let index = 0; index < 100_000; index++)
+      pending.part(request.id, new Uint8Array(), false)
+    expect.soft(pending.bufferedBlocks).toBe(0)
+    for (let index = 0; index < 100_000; index++)
+      pending.part(request.id, new Uint8Array([7]), false)
+    expect.soft(pending.bufferedBlocks).toBe(2)
+    expect(pending.part(request.id, new Uint8Array(), true)).toEqual(
+      new Uint8Array(100_000).fill(7),
+    )
+    expect(pending.bufferedBlocks).toBe(0)
+    pending.reply(request.id, { kind: 'command.started', processId: 7 }, 64)
+    expect(await request.promise).toEqual({
+      kind: 'command.started',
+      processId: 7,
+    })
+  } finally {
+    pending.disconnect()
+    await request.promise.catch(() => undefined)
+  }
+})
+
 it('times out commands, port opens, and other requests at their specified deadlines', async () => {
   vi.useFakeTimers()
   const pending = pendingRequests()
