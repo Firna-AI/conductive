@@ -148,7 +148,20 @@ Terms:
     milestone, the script turns the CSS Modules of the area into React
     Native style modules with the tokens. It lists each rule that it
     cannot convert, and a person ports those rules by hand. Nothing stays
-    at run time. Effort: Medium.
+    at run time. Effort: Medium. Risks, added on 23 November 2026 when the
+    user asked:
+    - Output can look right and still differ: the column default, text
+      styles that no longer inherit, and the cascade of 16 views that join
+      two classes on one element. Mitigation: compare the screenshots of
+      each mockup before and after the port.
+    - 224 modules use `var()` tokens that change with the colour scheme.
+      The script must write theme lookups, not fixed values, or dark mode
+      breaks.
+    - 62 modules use `calc()` and 22 use `em` or `rem`. The script lists
+      them for a person.
+    - Layout rules, hover, focus, and container widths stay work by hand.
+      So the script saves the declarations, not the layout.
+    - The script is a development tool that goes with Milestone 25.
   - **I.** Ship the phone apps for phone screens only at first. iPad runs
     the iPhone app. The phone views then need no hover and no desktop
     width rules. Tablets show the phone layout until a later change.
