@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand.ts'
+import { productName } from '../../src/shared/brand.ts'
 import { productSummary } from '../../src/marketing/features.ts'
 
 type PreviewAssets = {

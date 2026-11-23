@@ -1,6 +1,6 @@
 import { act, useState } from 'react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
+import menuStyles from '../../ui/components/common/Menu.module.css'
 import { models, opus } from '../../chat/components/model-picker-test-kit'
 import { accessibleName, byRole } from '../../test-support/dom-queries'
 import { ModelPicker } from './ModelPicker'

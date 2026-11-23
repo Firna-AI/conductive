@@ -5,7 +5,7 @@ use ts_rs::TS;
 
 use crate::agents::AgentChoice;
 use crate::provider_events::ProviderEvent;
-use crate::sdk_helper_options::{HelperOptions, ProviderInput};
+use crate::sdk_helper_options::{HelperOptions, OrgSkills, ProviderInput};
 use crate::skills::{HelperSkillLists, SkillInput};
 use crate::wire::ReadonlyVec;
 
@@ -67,6 +67,10 @@ pub enum HelperRequest {
         home: String,
         /// Force a new Codex app-server list after a connect or refresh.
         reload: bool,
+        /// Org source, trust, and leased copy. Its selected skills join both lists.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional = nullable)]
+        org_skills: Option<OrgSkills>,
     },
 }
 

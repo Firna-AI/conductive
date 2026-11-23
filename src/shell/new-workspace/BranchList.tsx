@@ -9,12 +9,12 @@ import {
 } from 'react'
 import { InputFrame, type InputFrameProps } from '@firna/ui/input'
 import { Check, Lock, RotateCw, Search, TriangleAlert } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { branchCopy } from '../../../docs/mockups/src/components/new-workspace/branchCopy'
-import styles from '../../../docs/mockups/src/components/new-workspace/BranchPicker.module.css'
+import { classes } from '../../ui/components/common/classes'
+import menu from '../../ui/components/common/Menu.module.css'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { branchCopy } from '../../ui/components/new-workspace/branchCopy'
+import styles from '../../ui/components/new-workspace/BranchPicker.module.css'
 import {
   branchRows,
   type BranchRow,

@@ -1,8 +1,8 @@
 import { SendButton, StopButton } from '../chat/ComposerButtons'
 import { MessageField } from '../chat/MessageField'
 import { Linked } from '../common/ScreenLink'
-import { followUpPlaceholder } from './explainCopy'
-import styles from './FollowUpField.module.css'
+import { followUpPlaceholder } from '../../../../../src/ui/components/explain/explainCopy'
+import styles from '../../../../../src/ui/components/explain/FollowUpField.module.css'
 
 /**
  * The follow-up field at the foot of the popover: a message box of one

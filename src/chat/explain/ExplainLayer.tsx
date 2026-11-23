@@ -1,5 +1,5 @@
-import { markMenuTitle } from '../../../docs/mockups/src/components/explain/explainCopy'
-import { MarkGlyph } from '../../../docs/mockups/src/components/explain/MarkGlyph'
+import { markMenuTitle } from '../../ui/components/explain/explainCopy'
+import { MarkGlyph } from '../../ui/components/explain/MarkGlyph'
 import type { MenuEntry } from '../ui/Menu'
 import { PointMenu } from '../ui/PointMenu'
 import { waitsForMember, type Explanation } from './explanations'

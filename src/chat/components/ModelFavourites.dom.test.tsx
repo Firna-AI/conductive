@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
+import menuStyles from '../../ui/components/common/Menu.module.css'
 import { byRole, queryByRole } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'
 import {

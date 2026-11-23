@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import type { ShortcutCommand } from '../../../app/shortcuts/commands'
 import type { ShortcutHost } from '../../../app/shortcuts/host'
 import type {

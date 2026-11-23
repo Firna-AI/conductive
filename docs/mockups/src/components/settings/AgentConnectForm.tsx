@@ -1,26 +1,26 @@
 import type { ReactNode } from 'react'
 import { Input } from '@firna/ui/input'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import { agents, type AgentKey } from '../../fixtures/agents'
 import { pastedKey, type LoginKind } from '../../fixtures/logins'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import {
   agentConnectCopy as copy,
   connectKinds,
   loginLabels,
   orgConnectKinds,
-} from './agentConnectCopy'
+} from '../../../../../src/ui/components/settings/agentConnectCopy'
 import { chatGptSignIn } from '../../entries/components/settings/ChatGptSignIn.mockup'
 import { endpointFields } from '../../entries/components/settings/EndpointFields.mockup'
 import type { EndpointEntry } from './EndpointFields'
-import type { SignInStep } from './chatGptSignInCopy'
-import styles from './AgentConnectForm.module.css'
+import type { SignInStep } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import styles from '../../../../../src/ui/components/settings/AgentConnectForm.module.css'
 
 /** The app stores a secret without a test of it, as the app says too. */
 const keepHint = `${productName} keeps it encrypted, and never shows it again.`

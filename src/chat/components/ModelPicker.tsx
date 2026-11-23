@@ -10,9 +10,9 @@ import {
   modelLabel,
   sameChoice,
 } from '../../shared/agents'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
-import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { pickerButtonStyle } from '../../ui/components/chat/pickerButton'
+import styles from '../../ui/components/chat/ModelPicker.module.css'
 import { stepShortcutItem } from '../../app/shortcuts/navigation'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import {

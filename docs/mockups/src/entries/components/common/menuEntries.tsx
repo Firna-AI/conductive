@@ -1,5 +1,8 @@
 import type { SchemaProps } from '@mokly/mokly'
-import type { MenuEntry, MenuPlacement } from '../../../components/common/Menu'
+import type {
+  MenuEntry,
+  MenuPlacement,
+} from '../../../../../../src/ui/components/common/Menu'
 import { agentMark } from '../chat/AgentMark.mockup'
 import { instanceKey } from '../../../instanceKey'
 import { personAvatar } from '../orgs/OrgTile.mockup'

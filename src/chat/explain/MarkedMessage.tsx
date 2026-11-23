@@ -6,8 +6,8 @@ import {
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import marked from '../../../docs/mockups/src/components/explain/MarkedText.module.css'
+import { classes } from '../../ui/components/common/classes'
+import marked from '../../ui/components/explain/MarkedText.module.css'
 import { ExplainContext, type ExplainView } from './explain-context'
 import type { Explanation } from './explanations'
 import { FloatingExplain, type ExplainAlign } from './ExplainButton'

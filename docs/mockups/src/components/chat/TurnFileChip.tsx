@@ -3,7 +3,7 @@ import { splitPath, type ChangedFile } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
 import { diffStat } from '../../entries/components/files/DiffStat.mockup'
 import { paths } from '../../paths'
-import styles from './TurnEnd.module.css'
+import styles from '../../../../../src/ui/components/chat/TurnEnd.module.css'
 
 /**
  * A changed file of a finished turn, as the mockups draw it in the list of

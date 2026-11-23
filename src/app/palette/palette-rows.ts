@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { workspaceLabel } from '../../../docs/mockups/src/components/workspaces/label'
+import { workspaceLabel } from '../../ui/components/workspaces/label'
 import type { OrgSummary } from '../../shared/orgs'
 import type { ShortcutCommandId } from '../../shared/shortcut-commands'
 

@@ -1,4 +1,7 @@
-import { sameShortcut, type Shortcut } from '../components/common/KeyChips'
+import {
+  sameShortcut,
+  type Shortcut,
+} from '../../../../src/ui/components/common/KeyChips'
 import { tabKeys } from './browserTabKeys'
 
 /**

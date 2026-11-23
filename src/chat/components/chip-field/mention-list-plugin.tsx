@@ -13,7 +13,7 @@ import {
 import {
   MentionList,
   type MentionListRow,
-} from '../../../../docs/mockups/src/components/chat/MentionList'
+} from '../../../ui/components/chat/MentionList'
 import { useMenuLayer } from '../../../shell/ui/layers'
 import {
   $triggerQuery,

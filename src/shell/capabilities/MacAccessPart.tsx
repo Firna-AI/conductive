@@ -1,11 +1,11 @@
 import { Switch } from '@firna/ui/switch'
-import { macAccessWords } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import type { CapabilityPart } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { macAccessWords } from '../../ui/components/capabilities/capabilitiesCopy'
+import type { CapabilityPart } from '../../ui/components/capabilities/CapabilitiesPanel'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   ChangeOutcome,
   type ChangeStatus,
-} from '../../../docs/mockups/src/components/mac/ChangeOutcome'
+} from '../../ui/components/mac/ChangeOutcome'
 
 /** The result under the switch: a start that failed, or a Stop. */
 export interface SwitchResult {

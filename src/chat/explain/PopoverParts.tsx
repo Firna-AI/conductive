@@ -1,12 +1,12 @@
 import { useRef } from 'react'
 import { Maximize2, X } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import sheet from '../../../docs/mockups/src/components/common/Sheet.module.css'
+import { classes } from '../../ui/components/common/classes'
+import sheet from '../../ui/components/common/Sheet.module.css'
 import {
   closeLabel,
   expandLabel,
-} from '../../../docs/mockups/src/components/explain/explainCopy'
-import popover from '../../../docs/mockups/src/components/explain/ExplainPopover.module.css'
+} from '../../ui/components/explain/explainCopy'
+import popover from '../../ui/components/explain/ExplainPopover.module.css'
 import { IconButton } from '../ui/actions'
 import styles from './explain.module.css'
 

@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { Table, type TableColumn } from '@firna/ui/table'
-import directory from '../../../docs/mockups/src/components/operator/directory.module.css'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import directory from '../../ui/components/operator/directory.module.css'
+import { Section } from '../../ui/components/settings/Section'
 import type {
   DirectoryResult,
   OperatorDirectory,

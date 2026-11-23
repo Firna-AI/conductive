@@ -1,4 +1,4 @@
-import { filesShare } from '../../docs/mockups/src/components/layout/ResizeHandle'
+import { filesShare } from '../ui/components/layout/ResizeHandle'
 import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'
 import { Store } from './store'

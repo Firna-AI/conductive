@@ -4,7 +4,7 @@ import type { Role } from '../../../fixtures/members'
 import { agentKeys, type EffortKey } from '../../../fixtures/agents'
 import type { RepositoryKey } from '../../../fixtures/repositories'
 import { sectionKeys } from '../../../fixtures/sections'
-import type { ActivityStatus } from '../../../fixtures/workspaces'
+import type { ActivityStatus } from '../../../../../../src/ui/components/workspaces/activityStatus'
 import { personKeys } from '../layout/railSchemas'
 
 /**

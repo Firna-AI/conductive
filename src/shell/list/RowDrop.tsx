@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import styles from '../../ui/components/workspaces/SectionList.module.css'
 import ui from '../ui/ui.module.css'
 import type { RowDragState } from './useRowDrag'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'

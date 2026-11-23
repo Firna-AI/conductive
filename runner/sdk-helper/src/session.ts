@@ -66,7 +66,10 @@ export class HelperSession {
             now: Date.now,
             warn: (message) => this.output({ type: 'warning', message }),
           })
-          const skills = await this.scanner.scan(request.reload)
+          const skills = await this.scanner.scan(
+            request.reload,
+            request.orgSkills ?? null,
+          )
           this.output({ type: 'skills', requestId: request.requestId, skills })
           return
         }

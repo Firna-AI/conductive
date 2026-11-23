@@ -43,10 +43,7 @@ export async function capturePreview({
       new URL('../../docs/brand/conductive-lockup-light.svg', import.meta.url),
     ),
     readAsset(
-      new URL(
-        '../../docs/mockups/src/fonts/InterVariable.woff2',
-        import.meta.url,
-      ),
+      new URL('../../src/ui/fonts/InterVariable.woff2', import.meta.url),
     ),
   ])
   const html = previewDocument({

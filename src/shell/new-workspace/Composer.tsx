@@ -3,13 +3,13 @@ import { useRef, type RefObject } from 'react'
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Paperclip } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
+import styles from '../../ui/components/chat/Composer.module.css'
 import {
   SessionLoginLabel,
   type SessionLogin,
-} from '../../../docs/mockups/src/components/chat/SessionLogin'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+} from '../../ui/components/chat/SessionLogin'
+import { classes } from '../../ui/components/common/classes'
+import { useControlSizes } from '../../ui/components/common/touch'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
 import {

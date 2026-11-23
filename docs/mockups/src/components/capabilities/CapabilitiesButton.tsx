@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
 import { Button } from '@firna/ui/button'
 import { Blocks } from 'lucide-react'
-import { noop } from '../../noop'
-import actions from '../common/actions.module.css'
-import { classes } from '../common/classes'
+import { noop } from '../../../../../src/ui/noop'
+import actions from '../../../../../src/ui/components/common/actions.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { capabilitiesLabel } from './capabilitiesCopy'
-import styles from './Capabilities.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { capabilitiesLabel } from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
+import styles from '../../../../../src/ui/components/capabilities/Capabilities.module.css'
 
 /** The Capabilities icon of a message box, and its control when it is open. */
 export type CapabilitiesControl = {

@@ -5,13 +5,13 @@ import {
   CircleStop,
   Hourglass,
 } from 'lucide-react'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import countStyles from '../../../docs/mockups/src/components/operator/AccountCounts.module.css'
+import { InlineText } from '../../ui/components/common/InlineText'
+import { StatusText } from '../../ui/components/common/StatusText'
+import countStyles from '../../ui/components/operator/AccountCounts.module.css'
 import {
   orgAccountWords,
   providerWords,
-} from '../../../docs/mockups/src/components/operator/providerCopy'
+} from '../../ui/components/operator/providerCopy'
 import {
   lastSwitchLine,
   onlyAccountSwitchLine,
@@ -19,15 +19,12 @@ import {
   switchStartedLine,
   switchWords,
   type OrgSwitch,
-} from '../../../docs/mockups/src/components/operator/switchCopy'
+} from '../../ui/components/operator/switchCopy'
 import {
   DetailList,
   type Detail,
-} from '../../../docs/mockups/src/components/settings/DetailList'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/settings/DetailList'
+import { Section, SectionText } from '../../ui/components/settings/Section'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import type { Loadable } from '../../app/store'

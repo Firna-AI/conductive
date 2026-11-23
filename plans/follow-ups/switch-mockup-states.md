@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Fix after merge.
 - **Added:** 2026-11-20, from branch `calummoore/operator-switch-user-boat-e2b-rn5q`, Milestone 5 of the plan `plans/operator-provider-switch.md`.
-- **Location:** `docs/mockups/src/entries/app/operator/org/`, `docs/mockups/src/fixtures/operatorSwitch.ts`, `docs/mockups/src/components/operator/switchCopy.ts`.
+- **Location:** `docs/mockups/src/entries/app/operator/org/`, `docs/mockups/src/fixtures/operatorSwitch.ts`, `src/ui/components/operator/switchCopy.ts`.
 - **Reason:** The states are rare, the app already shows them with the words of `switchCopy.ts`, and the mockups need no change for the feature to work.
 
 - **Terms:**

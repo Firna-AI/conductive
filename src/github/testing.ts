@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+import type { BarAction } from '../ui/components/workspace/barModel'
 import type { BannerState, GitHubBanner } from '../shared/github'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { PullRequestBanner } from './bannerStatus'

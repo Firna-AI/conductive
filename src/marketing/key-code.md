@@ -68,14 +68,15 @@ Each path is relative to `src/marketing/` unless the link names another folder.
   Prism and the hooks, and the file list writer.
 - [`site-build.ts`](../shared/site-build.ts): shared folder, list, page,
   icon, marker, and file-list names and types.
-- `tokens.ts`, `styles/`: design tokens from the mockups and bundled CSS.
+- `tokens.ts`, `styles/`: design tokens from the shared
+  [`src/ui/design/`](../ui/design/) and bundled CSS.
 - `icon-shapes.ts`: the lucide icons of the home page features, the
   actions, such as the Mac app downloads, and the docs, as shapes for the Astro pages.
 - `picture-urls.ts`, `picture-styles.ts`: picture file addresses, media
   queries, frame classes, and picture-size CSS.
-- [`marketingPictureList.ts`](../../docs/mockups/src/screens/marketingPictureList.ts):
+- [`marketingPictureList.ts`](../ui/screens/marketingPictureList.ts):
   the shared picture list.
-- [`marketingPictureCaptures.ts`](../../docs/mockups/src/screens/marketingPictureCaptures.ts):
+- [`marketingPictureCaptures.ts`](../ui/screens/marketingPictureCaptures.ts):
   capture pages, bounds, and file names.
 - [`tools/marketing-pictures/run.ts`](../../tools/marketing-pictures/run.ts):
   the capture command, build, and cleanup.

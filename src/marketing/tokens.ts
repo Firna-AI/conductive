@@ -1,8 +1,5 @@
-import {
-  darkPalette,
-  lightPalette,
-} from '../../docs/mockups/src/design/palette'
-import { fonts, metrics, radii } from '../../docs/mockups/src/design/metrics'
+import { darkPalette, lightPalette } from '../ui/design/palette'
+import { fonts, metrics, radii } from '../ui/design/metrics'
 
 function kebab(name: string): string {
   return name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
@@ -15,8 +12,8 @@ function declarations(values: Readonly<Record<string, string>>): string {
 }
 
 /**
- * The design tokens of the mockups as `--ui-*` custom properties, with the
- * names that the mockup renderer writes. The site is dark first, as the
+ * The shared design tokens as `--ui-*` custom properties, with the names
+ * that the mockup renderer writes. The site is dark first, as the
  * design is. A visitor who prefers light gets the light scheme.
  */
 export function tokensCss(): string {

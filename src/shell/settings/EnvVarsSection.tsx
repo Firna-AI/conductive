@@ -1,16 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { secretNote } from '../../../docs/mockups/src/components/settings/envVarCopy'
-import {
-  SecretMark,
-  ValueDots,
-} from '../../../docs/mockups/src/components/settings/EnvVarParts'
-import styles from '../../../docs/mockups/src/components/settings/EnvironmentSections.module.css'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+import { classes } from '../../ui/components/common/classes'
+import { secretNote } from '../../ui/components/settings/envVarCopy'
+import { SecretMark, ValueDots } from '../../ui/components/settings/EnvVarParts'
+import styles from '../../ui/components/settings/EnvironmentSections.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
 import type { ComputerModel } from '../../app/computer-model'
 import { mayChangeSettings } from '../../app/permissions'
 import type { OrgSummary } from '../../shared/orgs'

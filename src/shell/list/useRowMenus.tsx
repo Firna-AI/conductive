@@ -4,8 +4,8 @@ import { useToast } from '@firna/ui/toast'
 import {
   workspaceMenuItems,
   type WorkspaceMenuItem,
-} from '../../../docs/mockups/src/components/workspaces/workspaceMenu'
-import { linkResults } from '../../../docs/mockups/src/components/workspace/linkCopy'
+} from '../../ui/components/workspaces/workspaceMenu'
+import { linkResults } from '../../ui/components/workspace/linkCopy'
 import { errorMessage } from '../../app/api/client'
 import type { ArchiveAction } from '../../app/archive-model'
 import { usePassedDeadlines } from '../../app/deadlines'

@@ -1,4 +1,7 @@
-import { agentPrompt, type AgentAction } from '../components/workspace/barCopy'
+import {
+  agentPrompt,
+  type AgentAction,
+} from '../../../../src/ui/components/workspace/barCopy'
 import { continuedBranch, promptFacts } from './barActions'
 import type { ChatItem } from './conversations'
 import type { PersonKey } from './members'

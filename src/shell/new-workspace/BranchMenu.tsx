@@ -1,12 +1,12 @@
 import { useRef, type KeyboardEvent } from 'react'
 import { Check } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import menu from '../../../docs/mockups/src/components/common/Menu.module.css'
+import { classes } from '../../ui/components/common/classes'
+import menu from '../../ui/components/common/Menu.module.css'
 import {
   branchCopy,
   targetCopy,
-} from '../../../docs/mockups/src/components/new-workspace/branchCopy'
-import styles from '../../../docs/mockups/src/components/new-workspace/BranchMenu.module.css'
+} from '../../ui/components/new-workspace/branchCopy'
+import styles from '../../ui/components/new-workspace/BranchMenu.module.css'
 import type { BranchTarget, FormBranch } from '../../app/new-workspace-branch'
 import type { Loadable } from '../../app/store'
 import type { RepositoryBranchesResponse } from '../../shared/branches'

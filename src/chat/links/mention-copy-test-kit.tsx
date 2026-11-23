@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { COPYING_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+import { COPYING_CLASS } from '../../ui/components/chat/ChipCopyText'
 import { useMentionCopy } from './mention-copy'
 
 /** Makes each copy of the chat text inside it give the text of each chip. */

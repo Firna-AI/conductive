@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { signInCopy } from '../../../docs/mockups/src/screens/signInCopy'
+import { signInCopy } from '../../ui/screens/signInCopy'
 import {
   operatorUserPath,
   userSuspensionPath,

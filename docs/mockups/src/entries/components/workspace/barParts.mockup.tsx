@@ -6,7 +6,7 @@ import {
   PullRequestNumber,
   StateLabel,
 } from '../../../components/workspace/barParts'
-import { barLabels } from '../../../components/workspace/barCopy'
+import { barLabels } from '../../../../../../src/ui/components/workspace/barCopy'
 import { prStatus } from '../../../components/workspace/prStatus'
 import { pullRequest } from '../../../fixtures/pullRequests'
 import { runWorkspaces } from '../../../fixtures/runWorkspaces'

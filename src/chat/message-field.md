@@ -98,7 +98,7 @@ that those chips show, from the attach to the send.
   `onChangeText`, and its files follow them, as
   [Marks and files](draft-files.md#marks-and-files) says.
 - The chip of an attached file is one unit of the text, as a file chip
-  is. It draws the pure `DraftFileChip` of the mockups with the live
+  is. It draws the shared `DraftFileChip` with the live
   upload of its file, also while the field takes no change. Its × removes
   it as one step of undo. Try again calls `retry`, and then the field takes
   the focus back. Both do nothing while the field takes no change. The

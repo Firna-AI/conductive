@@ -64,10 +64,11 @@ of the New workspace dialog.
   missing branch offers Start from and the default branch, which puts the
   control back on that branch and keeps the message. A GitHub account that
   cannot read the repository gets Try again.
-- `branchCopy.ts` holds the words of the control, of the two parts of the
-  dropdown, and of the refusals. It imports no fixture, and neither do the
-  parts, so the app can share them. No word says "fork", because on GitHub
-  a fork is a copy of the repository.
+- `branchCopy.ts` in
+  [`src/ui/components/new-workspace/`](../../src/ui/components/new-workspace/)
+  holds the words of the control, of the two parts of the dropdown, and of
+  the refusals. The app and the mockups both import these words. No word
+  says "fork", because on GitHub a fork is a copy of the repository.
 - [The pull request bar](design-bar.md) gives the line under the bar after
   GitHub deleted the stored base of a workspace. It also gives the branch
   and its base at the top of the Checks tab of a phone, which name a

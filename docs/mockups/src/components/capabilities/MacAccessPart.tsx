@@ -1,10 +1,16 @@
 import { Switch } from '@firna/ui/switch'
 import { failedMessage, stoppedResult } from '../../fixtures/mac'
-import { noop } from '../../noop'
-import { useControlSizes } from '../common/touch'
-import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
-import { macAccessWords, thisMacWords } from './capabilitiesCopy'
-import type { CapabilityPart } from './CapabilitiesPanel'
+import { noop } from '../../../../../src/ui/noop'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  ChangeOutcome,
+  type ChangeStatus,
+} from '../../../../../src/ui/components/mac/ChangeOutcome'
+import {
+  macAccessWords,
+  thisMacWords,
+} from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
+import type { CapabilityPart } from '../../../../../src/ui/components/capabilities/CapabilitiesPanel'
 
 /**
  * A start of the grant until Stop that failed: the Mac did not start it,

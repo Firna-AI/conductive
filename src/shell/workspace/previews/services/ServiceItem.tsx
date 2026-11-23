@@ -10,16 +10,16 @@ import {
 import type { ServiceControlAction } from '../../../../shared/generated/ServiceControlAction'
 import type { ServiceRow } from '../../../../shared/generated/ServiceRow'
 import type { ServiceSource } from '../../../../shared/generated/ServiceSource'
-import a11y from '../../../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../../../docs/mockups/src/components/common/classes'
+import a11y from '../../../../ui/components/common/a11y.module.css'
+import { classes } from '../../../../ui/components/common/classes'
 import {
   serviceControlCopy,
   serviceDescription,
   servicesCopy,
   serviceSourceLabel,
   serviceSourceText,
-} from '../../../../../docs/mockups/src/components/tools/serviceCopy'
-import styles from '../../../../../docs/mockups/src/components/tools/ServiceList.module.css'
+} from '../../../../ui/components/tools/serviceCopy'
+import styles from '../../../../ui/components/tools/ServiceList.module.css'
 import type { ServicePorts } from '../../../../previews/services/servicesPart'
 import { IconButton } from '../../../ui/actions'
 import { AppLink } from '../../../ui/AppLink'

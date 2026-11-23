@@ -7,14 +7,14 @@ import {
   noSecretMatch,
   noSecrets,
   secretsPartWords,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import styles from '../../../docs/mockups/src/components/capabilities/Capabilities.module.css'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import styles from '../../ui/components/capabilities/Capabilities.module.css'
 import {
   matchingSecrets,
   needsSecretSearch,
-} from '../../../docs/mockups/src/components/capabilities/secretSearch'
-import { SecretOption } from '../../../docs/mockups/src/components/capabilities/SecretOption'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+} from '../../ui/components/capabilities/secretSearch'
+import { SecretOption } from '../../ui/components/capabilities/SecretOption'
+import { useControlSizes } from '../../ui/components/common/touch'
 import { routes } from '../../app/router'
 import type { OrgSecret } from '../../shared/secrets'
 import { AppLink } from '../ui/AppLink'

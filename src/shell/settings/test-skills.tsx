@@ -1,4 +1,4 @@
-import trustStyles from '../../../docs/mockups/src/components/settings/SkillsTrust.module.css'
+import trustStyles from '../../ui/components/settings/SkillsTrust.module.css'
 import { requestLines } from '../../app/test-kit'
 import {
   orgSettingsPaths,

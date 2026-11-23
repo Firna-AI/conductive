@@ -1,17 +1,17 @@
 import type { ReactNode } from 'react'
 import type { Org } from '../../fixtures/orgs'
 import { paths } from '../../paths'
-import type { Shortcut } from '../common/KeyChips'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import orgDrag from '../orgs/OrgDrag.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import orgDrag from '../../../../../src/ui/components/orgs/OrgDrag.module.css'
 import { orgLinks } from '../orgs/orgLinks'
 import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
-import styles from './OrgRail.module.css'
+import styles from '../../../../../src/ui/components/layout/OrgRail.module.css'
 
 export function RailLink(props: {
   label: string
