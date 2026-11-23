@@ -169,7 +169,7 @@ it('keeps a refused layer in the queue and merges the ready layer below it', asy
   }
 })
 
-it('records a partial merge and keeps the unmerged layer with a safe refusal', async () => {
+it('records a partial merge and rechecks the rewritten layer for the next merge', async () => {
   const f = await mergeFixture(bundle)
   try {
     await f.queue.advanceStartAlarm()
@@ -204,12 +204,30 @@ it('records a partial merge and keeps the unmerged layer with a safe refusal', a
       { number: 2, workspaceId: OUTER_WORKSPACE },
     ])
     expect(await f.entries()).toMatchObject([
-      { place: 1, pullNumber: 3, state: 'waiting', wait: 'merge-refused' },
+      { place: 1, pullNumber: 3, refusedHead: TOP_HEAD, state: 'merging' },
     ])
-    expect(await (await f.bar(f.top)).json()).toMatchObject({
-      queue: { wait: 'merge-refused' },
-    })
-    expect(f.writes()).toHaveLength(1)
+    expect(f.writes()).toHaveLength(2)
+    expect(await f.writes()[1].clone().json()).toMatchObject({ sha: rewritten })
+  } finally {
+    await f.dispose()
+  }
+})
+
+it('tries the new head after GitHub refuses the earlier merge attempt', async () => {
+  const f = await mergeFixture(bundle, 'single')
+  try {
+    await f.queue.advanceStartAlarm()
+    const head = '6'.repeat(40)
+    f.api.pulls[2].headRefOid = head
+    f.api.branches.set('refs/heads/changes', head)
+    f.api.mergeBases.set(`${TRUNK_HEAD}...${head}`, TRUNK_HEAD)
+    for (const job of f.api.merges.jobs.values()) job.state = 'failed'
+    await f.queue.advanceStartAlarm()
+    expect(await f.entries()).toMatchObject([
+      { pullNumber: 2, refusedHead: HEAD_SHA, state: 'merging' },
+    ])
+    expect(f.writes()).toHaveLength(2)
+    expect(await f.writes()[1].clone().json()).toMatchObject({ sha: head })
   } finally {
     await f.dispose()
   }

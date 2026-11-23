@@ -1,4 +1,5 @@
 import type { GitHubSummary } from '../../../shared/generated/GitHubSummary'
+import type { MergeQueueBranchLabel } from '../../../shared/generated/MergeQueueBranchLabel'
 import { mergeLabels, type MergeMethod } from './barCopy'
 import type { MergeProblem, QueueLine, TurnWait } from './queueModel'
 
@@ -16,6 +17,10 @@ export const queueLabels = {
   remove: 'Remove from queue',
   drop: 'Drop here to add to the merge queue',
 } as const
+
+export const defaultQueueBranchLabel: MergeQueueBranchLabel = {
+  text: 'the default branch',
+}
 
 /**
  * The label of Merge on a queued workspace. It counts the layers ahead of
@@ -88,6 +93,10 @@ function waitText(
 ): string {
   if (line.problem !== undefined) return problemText[line.problem]
   if (line.turnWait !== undefined) return turnWaitText[line.turnWait]
+  if (line.queueWait === 'local-work')
+    return 'The queue waits to check its local work.'
+  if (line.queueWait === 'trunk-change')
+    return 'The queue waits to verify the default branch change.'
   if (line.waitsFor !== undefined) {
     return `The queue waits for #${line.waitsFor}.`
   }
@@ -108,9 +117,9 @@ function waitText(
  */
 export function queueLineText(
   line: QueueLine,
-  context: { trunk: string; github: GitHubSummary | null },
+  context: { trunk: MergeQueueBranchLabel; github: GitHubSummary | null },
 ): string {
-  const { trunk } = context
+  const trunk = context.trunk.text
   const place = `Place ${line.place} of ${line.size} in the merge queue.`
   const below = belowName(line.below, trunk)
   switch (line.step) {
@@ -155,9 +164,16 @@ function listText(items: readonly string[]): string {
  */
 export const removeQuestion = {
   title: 'Remove from the merge queue?',
-  alone: (number: number | undefined, trunk: string) =>
-    `${number === undefined ? 'The pull request' : `Pull request #${number}`} loses its place and targets ${trunk} again. Add it again to join at the end of the queue.`,
-  withUnit: (above: readonly LeavingLayer[]) => {
+  body: (
+    number: number | undefined,
+    base: MergeQueueBranchLabel,
+    above: readonly LeavingLayer[],
+  ) => {
+    const selected =
+      number === undefined ? 'The pull request' : `Pull request #${number}`
+    const target = `${selected} loses its place and targets ${base.text}.`
+    if (!above.length)
+      return `${target} Add it again to join at the end of the queue.`
     const names = listText(
       above.map((item) =>
         item.number === undefined
@@ -166,7 +182,7 @@ export const removeQuestion = {
       ),
     )
     const one = above.length === 1
-    return `${names} ${one ? 'builds' : 'build'} on this pull request, so ${one ? 'it leaves' : 'they leave'} the queue too. Add them again to join at the end of the queue.`
+    return `${target} ${names} ${one ? 'builds' : 'build'} on this pull request, so ${one ? 'it leaves' : 'they leave'} the queue too. Add them again to join at the end of the queue.`
   },
   cancel: 'Cancel',
   confirm: 'Remove',
@@ -192,10 +208,14 @@ export function queueAddStatus(name: string, place: number): string {
  */
 export type JoinRefusal =
   | { kind: 'no-pull-request' }
-  | { kind: 'other-branch'; base: string; trunk: string }
+  | {
+      kind: 'other-branch'
+      base: MergeQueueBranchLabel
+      trunk: MergeQueueBranchLabel
+    }
   | { kind: 'fork' }
   | { kind: 'write-access'; repository: string }
-  | { kind: 'github-merge-queue'; trunk: string }
+  | { kind: 'github-merge-queue'; trunk: MergeQueueBranchLabel }
   | { kind: 'other-org' }
 
 /**
@@ -208,13 +228,13 @@ export function joinRefusalText(refusal: JoinRefusal): string {
     case 'no-pull-request':
       return 'Open a pull request to add it to the queue.'
     case 'other-branch':
-      return `It targets ${refusal.base}. The queue merges into ${refusal.trunk}.`
+      return `It targets ${refusal.base.text}. The queue merges into ${refusal.trunk.text}.`
     case 'fork':
       return "Pull requests from forks can't join the queue."
     case 'write-access':
       return `You need write access to ${refusal.repository}.`
     case 'github-merge-queue':
-      return `${refusal.trunk} needs GitHub's own merge queue.`
+      return `${refusal.trunk.text} needs GitHub's own merge queue.`
     case 'other-org':
       return 'Another org has a merge queue for this repository.'
   }

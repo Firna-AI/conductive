@@ -2,6 +2,7 @@ import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { BodyBudgetExceeded, readBoundedBody } from '../http/bounded-body'
 import type { GitHubRefreshWorkspace } from './contracts'
+import { ageRepositoryListFacts } from '../merge-queue/list-facts-data'
 import {
   completeDelivery,
   isProcessed,
@@ -155,8 +156,16 @@ export async function handleGitHubWebhook(
         dependencies.now,
       )
     const route = webhookRoute(event, value)
-    if (route === null || (await isProcessed(env.DB, deliveryId)))
+    const agesList = event === 'pull_request' && repository
+    if ((!route && !agesList) || (await isProcessed(env.DB, deliveryId)))
       return new Response(null, { status: 204 })
+    if (agesList)
+      await ageRepositoryListFacts(
+        env.DB,
+        agesList.repositoryId,
+        agesList.installationId,
+      )
+    if (route === null) return new Response(null, { status: 204 })
     await recordDelivery(env.DB, deliveryId, dependencies.now())
     let pullRequestFailure: { error: unknown } | undefined
     try {

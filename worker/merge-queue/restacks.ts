@@ -8,7 +8,7 @@ import type { QueueFixTurns } from './fix-turns'
 import { queueLeaveFor } from './merge-choice'
 import { readMergeSnapshots, type QueuePullSnapshot } from './merge-read'
 import { reconcileMergePulls } from './merge-settle'
-import { saveQueueAlarm } from './queue-alarm'
+import { saveQueueAlarm, saveQueueRetry } from './queue-alarm'
 import { queueReadToken, queueWorkspace } from './repository'
 import { finishQueueReorder, followWorkspaceBase } from './restack-data'
 import { QueueLayerRestack } from './restack-layer'
@@ -87,12 +87,25 @@ export class QueueRestacks {
         return null
       }
     }
-    const token = await queueReadToken(this.runtime, binding)
-    if (await this.stacks.recoverCreation(queue, token)) {
-      await this.schedule(scope)
+    let token: string
+    let stack: GitHubStack | null
+    try {
+      token = await queueReadToken(this.runtime, binding)
+      if (await this.stacks.recoverCreation(queue, token)) {
+        await this.schedule(scope)
+        return null
+      }
+      stack = await this.stacks.current(queue, token)
+    } catch (error) {
+      if (
+        bottom ||
+        queue.githubStackNumber === null ||
+        !(error instanceof HttpError)
+      )
+        throw error
+      await this.retryCleanup(queue, true)
       return null
     }
-    const stack = await this.stacks.current(queue, token)
     const reads = await readMergeSnapshots(this.runtime, queue, entries, token)
     if (
       (await reconcileMergePulls(this.runtime, queue, entries, reads)) !==
@@ -123,9 +136,15 @@ export class QueueRestacks {
       }
       if (await this.followBases(queue, entries, reads)) return null
     }
-    const clean = await this.stacks.cleanup(queue, entries, stack)
+    const clean = await this.stacks
+      .cleanup(queue, entries, stack)
+      .catch((error: unknown) => {
+        if (error instanceof HttpError) return 'blocked' as const
+        throw error
+      })
+    await this.retryCleanup(queue, clean === 'blocked')
     if (clean !== 'ready') {
-      await this.schedule(scope, clean === 'changed' ? 0 : RESTACK_RETRY_MS)
+      if (clean === 'changed') await this.schedule(scope)
       return clean === 'changed' || !bottom
         ? null
         : { queue, entries, token, reads, stack, readyCount: 0, wait: 'rules' }
@@ -183,6 +202,16 @@ export class QueueRestacks {
       queue.reordering = 0
     }
     return { queue, entries, token, reads, stack, readyCount: reads.length }
+  }
+
+  private retryCleanup(queue: QueueRecord, blocked: boolean) {
+    return saveQueueRetry(
+      this.storage,
+      queue,
+      'stack-cleanup',
+      this.runtime.dependencies.now(),
+      blocked ? String(queue.githubStackNumber) : undefined,
+    )
   }
 
   private async followBases(

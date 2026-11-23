@@ -3,10 +3,12 @@ import { workspaceBinding } from '../app-api/workspace-state'
 import type { GitHubReader } from '../github/client'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
+import type { QueueLocalState } from './local-work'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import type { QueueRestackRead } from './restacks'
 import { hasOpenStack, matchesStack, readQueueStack } from './stack-read'
 import type { QueueRuntime } from './step'
+import { rememberTrunkPull } from './step-data'
 
 export type QueuePullSnapshot = Awaited<
   ReturnType<GitHubReader['queuedPull']>
@@ -18,7 +20,7 @@ export interface QueuePullRead extends QueuePullSnapshot {
   /** Contiguous, checked membership in the saved GitHub stack. */
   stacked: boolean
   standalone: boolean
-  clean: boolean
+  local: QueueLocalState
   restackWait?: MergeQueueWait
 }
 
@@ -39,7 +41,8 @@ async function cleanWorkspace(
         userId,
       })
   } catch (error) {
-    if (error instanceof HttpError || error instanceof Error) return false
+    if (error instanceof HttpError || error instanceof Error)
+      return 'unavailable'
     throw error
   }
 }
@@ -105,15 +108,15 @@ export async function readMergePulls(
             : syncing
               ? 'rebase'
               : undefined,
-      clean:
-        snapshot?.banner.state === 'ready-to-merge' &&
-        (prefix || single) &&
-        (await cleanWorkspace(
-          runtime,
-          queue,
-          entry,
-          clicker ?? entry.queuerUserId,
-        )),
+      local:
+        snapshot?.banner.state === 'ready-to-merge' && (prefix || single)
+          ? await cleanWorkspace(
+              runtime,
+              queue,
+              entry,
+              clicker ?? entry.queuerUserId,
+            )
+          : 'unavailable',
     })
     base = entry.branch
   }
@@ -138,5 +141,10 @@ export async function readMergeSnapshots(
     )
     reads.push({ entry, ...(await reader.queuedPull(entry.pullNumber)) })
   }
+  const witness = reads.findLast(
+    ({ pull }) => pull.state === 'OPEN' && pull.baseBranch === queue.trunk,
+  )
+  if (witness && witness.entry.pullNumber !== queue.trunkPullNumber)
+    await rememberTrunkPull(runtime.env.DB, queue, witness.entry.pullNumber)
   return reads
 }

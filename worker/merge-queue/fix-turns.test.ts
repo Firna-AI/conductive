@@ -126,7 +126,13 @@ it('waits for an older running session and sends one ordinary queuer turn to the
         sessionId: newest.id,
         sender: { id: 'member' },
         choice,
-        text: "Pull request #2 is in the merge queue, and it must build on the newest `main`. Run `git fetch origin` and check that `origin/main` is at `896a470385279ec0a99c30b956e1b90a64569b45`. Then run `git rebase --onto origin/main b8ba8d107d6359017c2537c03d7a2ec48c94d1d9`: `b8ba8d107d6359017c2537c03d7a2ec48c94d1d9` is the old base, so only the commits of this branch move. Resolve each conflict, run the tests, then push with `git push --force-with-lease`. Don't merge another branch into this one, and don't merge the pull request. If `origin/main` is at another commit, stop and say so.",
+        text: [
+          'Pull request #2 is in the merge queue. It must build on the newest `main`.',
+          'Run `git fetch origin` and check that `origin/main` is at `896a470385279ec0a99c30b956e1b90a64569b45`. If it is at another commit, stop and say so.',
+          'Run `git rebase --onto origin/main b8ba8d107d6359017c2537c03d7a2ec48c94d1d9`. Only the commits after the old base move.',
+          'Resolve each conflict, run the tests, then push with `git push --force-with-lease --force-if-includes`. If Git refuses the push, stop and report it.',
+          'Keep the branch history linear and keep the pull request open.',
+        ].join(' '),
       },
     ])
     const current = readSessions(

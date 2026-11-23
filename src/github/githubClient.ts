@@ -137,6 +137,10 @@ export function queueOnGitHubEvent(
   if (next && (!sameHead || !sameBase)) {
     delete next.mergeAhead
     delete next.oldBase
+    if (next.rebase) {
+      next.rebase = { ...next.rebase }
+      delete next.rebase.oldBase
+    }
   }
   return {
     ...(next && { queue: next }),

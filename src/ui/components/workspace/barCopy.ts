@@ -1,3 +1,9 @@
+import type { MergeQueueRebase } from '../../../shared/generated/MergeQueueRebase'
+import {
+  queueRebaseInstructions,
+  queueSyncInstructions,
+} from './queueRebaseCopy'
+
 /**
  * The words of the actions of the pull request bar: the labels, the
  * messages under the bar, and the fixed prompts that the agent actions send
@@ -160,25 +166,17 @@ export type PromptFacts = {
    * history. So Resolve conflicts asks for a rebase onto `base`, the branch
    * of the pull request below it, in place of a merge.
    */
-  rebase?: true
-  /**
-   * In the merge queue, the old base commit, where the own commits of the
-   * branch start. Resolve conflicts then moves only those commits, with
-   * `--onto`, as the restack does.
-   */
-  oldBase?: string
+  rebase?: MergeQueueRebase | null
 }
 
 /** The facts that the restack prompt of the merge queue names. */
-export type RestackFacts = {
+export type RestackFacts = Required<
+  Pick<MergeQueueRebase, 'base' | 'baseHead' | 'oldBase'>
+> & {
   /** The number of the pull request that moves. */
   number: number
-  /** The new base: the branch of the layer below, or the default branch. */
-  base: string
-  /** The head of `base` that the queue read, which the branch moves onto. */
-  baseHead: string
-  /** The old base commit, where the own commits of the branch start. */
-  oldBase: string
+  /** The GitHub branch and its new head after a rewrite. */
+  sync?: { branch: string; head: string }
 }
 
 /** A list in running text: "a", "a and b", or "a, b, and c". */
@@ -205,11 +203,7 @@ const commitAndPush =
  * only the branch that the agent read.
  */
 function rebaseConflicts(facts: PromptFacts): string {
-  const base = `origin/${facts.base}`
-  const rebase = facts.oldBase
-    ? `run \`git rebase --onto ${base} ${facts.oldBase}\`: \`${facts.oldBase}\` is the old base, so only the commits of this branch move`
-    : `find the old base where this layer's own commits begin. If you can verify it, rebase with \`git rebase --onto ${base} <old-base>\`. If you cannot verify it, stop and say so`
-  return `Pull request #${facts.number} has conflicts with \`${facts.base}\`, and the merge queue needs a linear history. Fetch \`${base}\` and ${rebase}. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`${base}\` into this branch.`
+  return `Resolve conflicts in pull request #${facts.number}, because the merge queue needs a linear history. ${queueRebaseInstructions(facts.rebase ?? null)}`
 }
 
 /**
@@ -221,8 +215,13 @@ function rebaseConflicts(facts: PromptFacts): string {
  * after a squash merge below it.
  */
 export function restackPrompt(facts: RestackFacts): string {
-  const base = `origin/${facts.base}`
-  return `Pull request #${facts.number} is in the merge queue, and it must build on the newest \`${facts.base}\`. Run \`git fetch origin\` and check that \`${base}\` is at \`${facts.baseHead}\`. Then run \`git rebase --onto ${base} ${facts.oldBase}\`: \`${facts.oldBase}\` is the old base, so only the commits of this branch move. Resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge another branch into this one, and don't merge the pull request. If \`${base}\` is at another commit, stop and say so.`
+  const purpose = facts.sync
+    ? 'GitHub rewrote its branch. Carry the local work onto the new GitHub head.'
+    : `It must build on the newest \`${facts.base}\`.`
+  const steps = facts.sync
+    ? queueSyncInstructions(facts.sync.branch, facts.sync.head, facts.oldBase)
+    : queueRebaseInstructions(facts)
+  return `Pull request #${facts.number} is in the merge queue. ${purpose} ${steps} Keep the branch history linear and keep the pull request open.`
 }
 
 /**
@@ -243,7 +242,7 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
     case 'fix-checks':
       return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
     case 'resolve-conflicts':
-      if (facts.rebase) return rebaseConflicts(facts)
+      if (facts.rebase !== undefined) return rebaseConflicts(facts)
       return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
     case 'address-review':
       return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`

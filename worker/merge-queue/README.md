@@ -9,15 +9,17 @@ in the `Workspace` class. It checks that name on each call. The object runs
 member changes, leave requests, and alarms in one sequence. A wake keeps
 the earliest saved alarm. The alarm can run after the object restarts.
 
-D1 stores the trunk, the optional GitHub stack number, entries, and step
-times. It saves the head and wait reason for the bar. Admission checks for
-entries of another org in the same D1 batch
-that records the new entries. The browser gets a fixed refusal when the
-repository is in use. It gets no entry or org details for that queue.
+D1 stores the trunk, the last pull request seen on it, the optional GitHub
+stack number, entries, and step times. It saves the head and wait reason
+for the bar. Admission checks for entries or a stack creation in another
+org in the same D1 batch that records the new entries. The browser gets a
+fixed refusal without entry or org details for that queue.
 
 Admission records the GitHub base and the common commit of the base and
-pull request head. The bar sends the saved commit for the matching head,
-so the conflict prompt can move the layer's own commits.
+pull request head. The list projects the planned base and unit suffix for
+Remove from queue using the same rules as the leave step. The bar projects
+the intended base from queue order and sends the saved old base commit
+for the matching head. The app uses these facts for the rebase prompts.
 
 Admission reads the current pull requests and trunk rules with the
 requesting member's token. It checks their base chain and verifies a
@@ -36,8 +38,10 @@ when another leave reaches the queue before the edited webhook.
 The step removes the affected suffix and compacts the places. A merge
 removes each completed layer. A wake names the entry's branch and can
 name its pull request number. Archive, Continue, and a repository change
-send the binding from before the move. A webhook can wake or leave the
-queue. The object saves leave signals that arrive during a merge.
+send the binding from before the move. A pull request webhook wakes the
+queue. The live GitHub state decides whether a close or draft makes an
+entry leave. The object saves leave signals from workspace actions that
+arrive during a merge.
 
 The queue reads the trunk and each layer again before it selects a merge.
 It starts with the lowest layer that needs a restack. Commit comparisons
@@ -52,7 +56,10 @@ stack starts with two pull requests. Further layers append in order.
 A leave or a re-order unstacks the old stack before the remaining layers
 join it again under a new number. A re-order holds merges until the
 stack is ready. If a stack creation loses its response, the next read
-can recover the new stack number from GitHub.
+can recover the new stack number from GitHub. An empty queue can keep its
+saved stack for cleanup. Another org can queue work in the repository and
+leaves that stack to the owning queue. Cleanup retries use a delay that
+doubles from 30 seconds up to 15 minutes.
 
 An edited webhook wakes the queue. The queue checks the current GitHub
 base against the saved base and the edit it requested. It also accepts
@@ -60,19 +67,23 @@ GitHub's retarget after a lower merge. An independent edit makes the
 workspace leave and keeps its new base. Each workspace base change uses
 [the saved owner-token move](../lifecycle/moved-bases.md). After GitHub
 rewrites a branch, a guarded sync checks the local head before it moves.
-An unsafe local move uses the restack turn.
+When the local branch has additional work, the restack turn moves only
+that work onto the rewritten head and asks for a plain push.
 
 The [server rebase flag](server-rebase.ts) defaults to off. It uses the
 current GitHub base and the pinned pull request head. Decision 319 needs
 the scratch test of a server rebase after a squash merge beneath it.
 
 The coordinator checks the ready layers from the trunk up. It reuses
-the GitHub bar state and checks each workspace's local work. The queue
-can wait 15 minutes for the next layer's checks. A member's request to
+the GitHub bar state and checks each workspace's local work. A dirty
+repository and an unavailable local read have separate waits. Their
+retries double from 30 seconds up to 15 minutes. The queue can wait 15
+minutes for the next layer's checks. A member's request to
 merge skips that wait. The coordinator verifies the live trunk and
 stack before it starts the async merge, then saves the result ID and
 the poll time. It reads the pull requests again at the end and records
-the layers that merged. A refused layer stays in its place.
+the layers that merged. A refused layer stays in its place with the
+refusal tied to the head of the saved merge job.
 
 A caller gives the queue an ID for one restack and the commits that the
 prompt needs. The coordinator saves the request and runs it on its alarm.

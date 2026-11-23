@@ -124,11 +124,10 @@ describe('the Merge queue group', () => {
     mouse(window, 'pointermove', { clientY: 45 })
     const moving = status(view)
     mouse(window, 'pointerup', { clientY: 45, buttons: 0 })
-    // Apple Pay button leaves the block, so its place stays its own.
+    // Apple Pay button previews a move, then releases beside the block.
     mouse(rowLink(view, 'apple-pay'), 'pointerdown', { clientY: 70 })
-    mouse(window, 'pointermove', { clientY: 76 })
-    mouse(window, 'pointermove', { clientY: 170 })
-    mouse(window, 'pointerup', { clientY: 170, buttons: 0 })
+    mouse(window, 'pointermove', { clientY: 25 })
+    mouse(window, 'pointerup', { clientX: 900, clientY: 25, buttons: 0 })
     expect({ moving, writes }).toEqual({
       moving:
         'Moving Checkout address autocomplete to place 2 of the merge queue',
@@ -258,5 +257,39 @@ describe('the Merge queue group', () => {
     expect(view.querySelector('div > span[role="status"]')?.textContent).toBe(
       'Apple Pay button moves to place 2 of the merge queue.',
     )
+  })
+
+  test('leaving the live queue target clears the preview and a fresh release checks the hit', async () => {
+    const writes: QueueWrite[] = []
+    const view = await mounted(storefrontQueue, writes)
+    const group = view.querySelector('section[aria-label="Merge queue"]')
+    if (!group) throw new Error('The merge queue has no group.')
+    const hit = vi.mocked(document.elementFromPoint)
+    const original = hit.getMockImplementation()
+    if (!original) throw new Error('The list has no hit test.')
+    for (const release of [
+      { clientX: 900, clientY: 60 },
+      { clientY: 130 },
+      { clientY: 60 },
+    ]) {
+      hit.mockImplementation(original)
+      mouse(rowLink(view, 'webhook-retries'), 'pointerdown', { clientY: 290 })
+      mouse(window, 'pointermove', { clientY: 296 })
+      layOutGroup(
+        view,
+        0,
+        ['next-16', 'fix-cart-flake', 'apple-pay', 'checkout-autocomplete'],
+        120,
+      )
+      mouse(window, 'pointermove', { clientY: 60 })
+      expect(status(view)).toContain('Adding Retry failed webhooks')
+      if (release.clientY === 60 && release.clientX === undefined) {
+        hit.mockReturnValue(null)
+        act(() => group.dispatchEvent(new Event('scroll')))
+        expect(status(view)).toBeUndefined()
+      }
+      mouse(window, 'pointerup', { ...release, buttons: 0 })
+    }
+    expect(writes).toEqual([])
   })
 })

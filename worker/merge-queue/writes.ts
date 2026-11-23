@@ -7,13 +7,13 @@ import {
   type QueueWriter,
 } from './contracts'
 import { leaveNoticeWrites, type QueueLeaveNotice } from './leave-data'
+import { queueReservesRepository } from './data'
+import { ageQueueListFacts } from './list-facts-data'
 
 const noOtherQueue = `NOT EXISTS (
   SELECT 1 FROM merge_queues q
   WHERE q.github_repository_id = r.github_repository_id AND q.org_id != r.org_id
-    AND (q.github_stack_number IS NOT NULL OR q.creating_stack = 1 OR EXISTS (
-      SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
-    ))
+    AND ${queueReservesRepository}
 )`
 
 const liveWorkspace = `w.repository_id = r.id AND w.org_id = r.org_id
@@ -51,9 +51,12 @@ export async function addQueueEntries(
     db
       .prepare(
         `INSERT INTO merge_queues (
-         id, org_id, repository_id, github_repository_id, trunk, pending_write, created_at, updated_at
+         id, org_id, repository_id, github_repository_id, trunk, pending_write, created_at, updated_at,
+         trunk_pull_number
        )
-       SELECT ?1, r.org_id, r.id, r.github_repository_id, ?6, ?7, ?8, ?8
+       SELECT ?1, r.org_id, r.id, r.github_repository_id, ?6, ?7, ?8, ?8,
+         (SELECT json_extract(c.value, '$.pullNumber') FROM json_each(?9) c
+          WHERE json_extract(c.value, '$.githubBase') = ?6 ORDER BY c.key DESC LIMIT 1)
        FROM repositories r
        JOIN orgs o ON o.id = r.org_id AND o.deleted_at IS NULL AND o.suspended_at IS NULL
        JOIN org_members m ON m.org_id = r.org_id AND m.user_id = ?4
@@ -71,7 +74,10 @@ export async function addQueueEntries(
            )
          )
        ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at,
-         pending_write = excluded.pending_write, trunk = excluded.trunk
+         pending_write = excluded.pending_write, trunk = excluded.trunk,
+         trunk_pull_number = CASE WHEN merge_queues.trunk = excluded.trunk
+           THEN COALESCE(excluded.trunk_pull_number, merge_queues.trunk_pull_number)
+           ELSE excluded.trunk_pull_number END
        WHERE merge_queues.trunk = excluded.trunk OR NOT EXISTS (
          SELECT 1 FROM merge_queue_entries WHERE queue_id = excluded.id
        )`,
@@ -109,6 +115,7 @@ export async function addQueueEntries(
        FROM merge_queues q, json_each(?) c WHERE q.id = ? AND q.pending_write = ?`,
       )
       .bind(memberId, place, unitId, now, now, json, id, writeId),
+    ageQueueListFacts(db, id, writeId),
   ])
   return results[2].meta.changes === candidates.length
 }
@@ -178,8 +185,7 @@ export async function saveQueueOrder(
       ? [
           db
             .prepare(
-              `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, observed_head),
-             sync_old_base = COALESCE(sync_old_base, old_base_sha)
+              `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, observed_head)
              WHERE queue_id = ? AND place > ?
              AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,
             )
@@ -224,6 +230,7 @@ export async function saveQueueOrder(
         id,
         writeId,
       ),
+    ageQueueListFacts(db, id, writeId),
   ])
   return results[0].meta.changes === 1
 }

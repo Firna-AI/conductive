@@ -269,7 +269,8 @@ mounts it, and the production build leaves it out.
   contract, with the head commit of the pull request. They keep the
   optional labels `displayBranch`, `displayBaseBranch`, and
   `displayBaseMoved` of the banner, and the optional queue state of a
-  queued workspace, which the snapshot keeps as `queue`.
+  queued workspace, which the snapshot keeps as `queue`. The queue state
+  can give filtered branch labels and the rebase input from queue order.
 - `githubActions.ts` and `githubActionParse.ts`: the action client and the
   checks of its replies. `githubActions.test.ts` checks the requests, the
   replies, the refusal codes, and replies outside the contract.

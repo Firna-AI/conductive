@@ -623,9 +623,11 @@ column, default, or constraint, so the previous Worker keeps working.
 [Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
 gives the rules for an account without a saved list.
 
-`202611231200_merge_queue.sql` adds the queue, entry, and leave notice
-tables. They store the trunk, stack number, order, queuers, step times,
-and commits for restacks, syncs, and merges. A leave notice records the
-branch that a pull request still targets after a failed base reset. The
-previous Worker can keep writing the existing tables. The
+`202611231200_merge_queue.sql` adds the queue, entry, leave notice, and
+list facts tables. The queue stores the trunk and the last pull request
+seen on it. Entries keep the order, queuers, step times, and commits for
+restacks, syncs, and merges. A leave notice records the branch that a pull
+request still targets after a failed reset. List facts hold expiring
+repository facts and per-viewer write access. The previous Worker can
+keep writing the existing tables. The
 [merge queue backend](../worker/merge-queue/README.md) owns the new tables.

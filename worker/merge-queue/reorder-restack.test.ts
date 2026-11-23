@@ -1,15 +1,59 @@
 import { beforeAll, expect, it } from 'vitest'
 
-import { OUTER_WORKSPACE } from '../chat/integration/outer-seed.test-support'
+import {
+  OUTER_REPOSITORY,
+  OUTER_WORKSPACE,
+} from '../chat/integration/outer-seed.test-support'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
 import { readQueue } from './data'
-import { TRUNK_HEAD } from './merge.test-support'
+import { mergeFixture, PARALLEL_HEAD, TRUNK_HEAD } from './merge.test-support'
 import { PARALLEL, queueBundle } from './queue.test-support'
 import { restackFixture } from './restack.test-support'
 
 let bundle: string
 beforeAll(async () => {
   bundle = await queueBundle()
+})
+
+it('uses the last trunk-facing pull when the trunk is renamed during a re-order', async () => {
+  const f = await mergeFixture(bundle, 'units')
+  try {
+    f.api.checks.set(HEAD_SHA, [{ ...passedRun, conclusion: 'FAILURE' }])
+    await f.queue.advanceStartAlarm()
+    expect(
+      (
+        await f.change('PUT', PARALLEL, {
+          body: { beforeWorkspaceId: OUTER_WORKSPACE },
+        })
+      ).status,
+    ).toBe(204)
+    const reordered = await f.bar(OUTER_WORKSPACE)
+    expect(await reordered.json()).toMatchObject({
+      queue: {
+        belowPullNumber: 4,
+        rebase: { base: 'parallel', baseHead: PARALLEL_HEAD },
+      },
+    })
+    f.api.defaultBranch = 'trunk'
+    f.api.branches.delete('refs/heads/main')
+    f.api.branches.set('refs/heads/trunk', TRUNK_HEAD)
+    await f.db
+      .prepare('UPDATE repositories SET default_branch = ? WHERE id = ?')
+      .bind('trunk', OUTER_REPOSITORY)
+      .run()
+    expect(await (await f.bar(PARALLEL)).json()).toMatchObject({
+      queue: { wait: 'trunk-change' },
+    })
+    f.api.pulls[2].baseRefName = 'trunk'
+    await f.queue.advanceStartAlarm()
+    expect(await readQueue(f.db, f.scope)).toMatchObject({ trunk: 'trunk' })
+    expect((await f.entries()).map(({ pullNumber }) => pullNumber)).toEqual([
+      4, 2,
+    ])
+    expect(f.writes()).toEqual([])
+  } finally {
+    await f.dispose()
+  }
 })
 
 it('rebuilds a reordered stack before any merge and refuses a move ahead of a merging layer', async () => {

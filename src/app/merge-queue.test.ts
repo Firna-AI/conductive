@@ -114,7 +114,11 @@ describe('who may join the merge queue', () => {
     })
     expect(of(one(workspaces, 'invoice-fonts'))).toEqual({
       kind: 'refused',
-      refusal: { kind: 'other-branch', base: releaseBase, trunk: 'main' },
+      refusal: {
+        kind: 'other-branch',
+        base: { text: releaseBase },
+        trunk: { text: 'main' },
+      },
     })
   })
 
@@ -143,7 +147,10 @@ describe('who may join the merge queue', () => {
       ),
     ).toBe("Pull requests from forks can't join the queue.")
     expect(
-      check(apple, { defaultBranch: 'trunk', githubQueueRequired: true }),
+      check(
+        { ...apple, mergeQueueLabels: { defaultBranch: { text: 'trunk' } } },
+        { defaultBranch: 'trunk', githubQueueRequired: true },
+      ),
     ).toBe("trunk needs GitHub's own merge queue.")
     expect(check(apple, { queueInUse: true })).toBe(
       'Another org has a merge queue for this repository.',
@@ -172,11 +179,24 @@ describe('who may join the merge queue', () => {
     const stacked = base.map((item) => (item.id === upper.id ? upper : item))
     expect(joinCheck(upper, facts(stacked))).toEqual({ kind: 'can-join' })
     const lowerOnRelease = stacked.map((item) =>
-      item.id === 'apple-pay' ? { ...item, githubPullBase: releaseBase } : item,
+      item.id === 'apple-pay'
+        ? {
+            ...item,
+            githubPullBase: releaseBase,
+            mergeQueueLabels: {
+              defaultBranch: { text: 'main' },
+              pullBase: { text: releaseBase },
+            },
+          }
+        : item,
     )
     expect(joinCheck(upper, facts(lowerOnRelease))).toEqual({
       kind: 'refused',
-      refusal: { kind: 'other-branch', base: releaseBase, trunk: 'main' },
+      refusal: {
+        kind: 'other-branch',
+        base: { text: releaseBase },
+        trunk: { text: 'main' },
+      },
     })
     // A queued lower pull request targets the layer below it in the queue.
     const queuedLower = withMergeQueue(base, [['apple-pay']]).map((item) =>

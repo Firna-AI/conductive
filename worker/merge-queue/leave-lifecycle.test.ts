@@ -173,6 +173,7 @@ it('records a signed external merge and leaves the surviving member layer in pla
       },
     })
     expect(response.status).toBe(204)
+    await f.queue.advanceStartAlarm()
     expect(await f.entries()).toMatchObject([
       { pullNumber: 3, place: 1, syncFrom: f.api.pulls[3].headRefOid },
     ])

@@ -7,6 +7,7 @@ import { readQueuePull } from '../github/queue-pulls'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import type { QueueEntry, QueueLeave, QueueRecord } from './contracts'
 import { canResetBase, leaveOwner, type QueueLeaveNotice } from './leave-data'
+import { removalPlan } from './order'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import { followsQueueBase } from './stack-read'
 import type { QueueRuntime } from './step'
@@ -126,7 +127,7 @@ export async function resetLeavingBases(
     return { bases, notices }
   for (const entry of removed) {
     const below = order[order.indexOf(entry) - 1]
-    if (entry.memberBase || below?.unitId === entry.unitId) continue
+    if (!removalPlan(order, entry, queue.trunk).reset) continue
     const base = await resetBase(
       runtime,
       queue,

@@ -17,8 +17,7 @@ export function saveQueuedGitHubRef(
       pending_base = CASE WHEN pending_base = ?1 THEN NULL ELSE pending_base END,
       old_base_sha = COALESCE(?3, old_base_sha),
       old_base_head = CASE WHEN ?3 IS NULL THEN old_base_head ELSE ?2 END,
-      sync_from = CASE WHEN ?4 THEN NULL ELSE sync_from END,
-      sync_old_base = CASE WHEN ?4 THEN NULL ELSE sync_old_base END
+      sync_from = CASE WHEN ?4 THEN NULL ELSE sync_from END
      WHERE queue_id = ? AND workspace_id = ? AND queued_at = ? AND pull_number = ?`,
     )
     .bind(
@@ -72,7 +71,7 @@ export function expectHeadRewrite(
   return db
     .prepare(
       `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, ?),
-      sync_old_base = COALESCE(sync_old_base, old_base_sha), merge_head = NULL
+      merge_head = NULL
      WHERE queue_id = ? AND workspace_id = ? AND queued_at = ? AND pull_number = ?`,
     )
     .bind(
@@ -93,9 +92,13 @@ export function saveQueueStack(
 ) {
   return db
     .prepare(
-      `UPDATE merge_queues SET github_stack_number = ?, stack_writer_user_id = ?,
+      `UPDATE merge_queues SET github_stack_number = ?1, stack_writer_user_id = ?2,
        rebuild_stack = 0, creating_stack = 0
-      WHERE id = ? AND github_stack_number IS ?`,
+      WHERE id = ?3 AND github_stack_number IS ?4 AND (?1 IS NULL OR NOT EXISTS (
+        SELECT 1 FROM merge_queues other WHERE other.id != ?3
+          AND other.github_repository_id = merge_queues.github_repository_id
+          AND other.github_stack_number = ?1
+      ))`,
     )
     .bind(number, writerId ?? null, queue.id, queue.githubStackNumber)
     .run()

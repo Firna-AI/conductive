@@ -111,7 +111,7 @@ export async function route(
   if (restart) return restart
   const boot = await bootRoute(request, env, context, dependencies)
   if (boot) return boot
-  const shell = await shellRoute(request, env, context, dependencies)
+  const shell = await shellRoute(request, env, context, dependencies, execution)
   if (shell) return shell
   const lifecycle = await chatLifecycleRoute(
     request,

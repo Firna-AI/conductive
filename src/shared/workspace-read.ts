@@ -6,6 +6,7 @@ import {
   readGitHubCanWrite,
   readGitHubPullBase,
   readMergeQueueEntry,
+  readMergeQueueListLabels,
 } from './merge-queue-read'
 
 type JsonObject = Readonly<Record<string, unknown>>
@@ -53,6 +54,7 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
     // The list read alone carries the merge queue fields. Each one is
     // optional, so a reply without them, or with a malformed one, still reads.
     const mergeQueue = readMergeQueueEntry(source.mergeQueue)
+    const mergeQueueLabels = readMergeQueueListLabels(source.mergeQueueLabels)
     const githubCanWrite = readGitHubCanWrite(source.githubCanWrite)
     const githubPullBase = readGitHubPullBase(source.githubPullBase)
     const githubPullFromFork =
@@ -78,6 +80,7 @@ export function createWorkspaceReader(read: WorkspaceFieldReaders) {
       state: readState(source.state, read.invalidState),
       github: readGitHubSummary(source.github),
       ...(mergeQueue !== undefined && { mergeQueue }),
+      ...(mergeQueueLabels !== undefined && { mergeQueueLabels }),
       ...(githubCanWrite !== undefined && { githubCanWrite }),
       ...(githubPullBase !== undefined && { githubPullBase }),
       ...(githubPullFromFork !== undefined && { githubPullFromFork }),

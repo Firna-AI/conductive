@@ -119,7 +119,7 @@ It sends its message in the same way as the agent actions of the bar.
 You see it when the agent actions are available to you.
 It is not offered after the pull request merges.
 
-While the workspace is queued, **Resolve conflicts** and the palette action for the latest target branch ask the agent to rebase onto the target branch.
+While the workspace is queued, **Resolve conflicts** and **Merge latest** ask the agent to move only this pull request's commits onto the branch that the queue selected.
 
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
@@ -165,7 +165,7 @@ A pull request that targets another branch, such as `develop`, cannot join on it
 If you already made a stack of pull requests, its first pull request must target the default branch.
 Adding a pull request from that stack also adds the earlier ones that are still outside the queue.
 The queue cannot accept pull requests if the default branch requires GitHub's own merge queue.
-It also cannot accept them while another org has entries queued for the same repository.
+It also cannot accept them while another org has entries or is creating its GitHub stack for the same repository.
 
 Add the pull request in one of these places.
 
@@ -197,15 +197,17 @@ A pull request with failed checks or requested changes keeps its place.
 Ready pull requests ahead of it can still merge.
 The ones after it wait.
 Use **Fix checks** or **Address review** to ask the agent to help.
-The queue also waits for work that has not been pushed.
+The queue waits while the workspace has work that has not been pushed.
+It checks again after a local change is discarded, and when it could not check local work earlier.
 
 If the queue's rebase hits a conflict, it starts one agent turn as the member who added the pull request.
 If the conflict remains, select **Resolve conflicts** or remove the pull request from the queue.
 
 Before the merge starts, use **Remove from queue** under the bar or in the row or header menu.
 Select **Remove** to confirm.
-The pull request loses its place.
+The question names the branch that the pull request will target after it loses its place.
 A pull request that joined on its own targets the default branch again.
+An upper pull request in a stack you made can keep the branch below it.
 If you remove a pull request from a stack you made, the later ones in that stack leave with it.
 
 ### Merge from the queue

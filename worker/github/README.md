@@ -10,6 +10,8 @@ The production Worker mounts the browser reads, the member merge routes, and the
 The workspace object owns one state adapter and its durable retry requests.
 Verified default-branch pushes also notify image refresh.
 Verified pull request events also store [automation runs](../automations/README.md).
+They age the workspace list's saved GitHub facts and wake the repository's
+[merge queue](../merge-queue/README.md) for a live read.
 The run callback and banner refresh have separate error boundaries.
 The production composition starts stored runs through `waitUntil` after webhook handling.
 Without a request execution context, the minute scan recovers the queued runs.

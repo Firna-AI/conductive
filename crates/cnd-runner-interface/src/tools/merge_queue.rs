@@ -31,6 +31,10 @@ pub enum MergeQueueWait {
     Rules,
     /// Local work has to be pushed.
     Push,
+    /// A local-work read failed or cannot run yet.
+    LocalWork,
+    /// The queue has to verify the change of default branch.
+    TrunkChange,
     /// A pull request earlier in the queue holds the merge.
     LowerLayer,
     /// The queuer's GitHub token stopped working.
@@ -61,6 +65,68 @@ pub struct MergeQueueEntry {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub pull_number: Option<u64>,
+    /// The planned result of removing this entry.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub removal: Option<MergeQueueRemoval>,
+}
+
+/// A branch label after the workspace's output filter.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+pub struct MergeQueueBranchLabel {
+    /// The branch text shown to the member.
+    pub text: String,
+}
+
+/// Branch labels used by the workspace list's queue controls.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeQueueListLabels {
+    /// The filtered name of the repository's default branch.
+    pub default_branch: MergeQueueBranchLabel,
+    /// The filtered GitHub base of this workspace's open pull request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub pull_base: Option<MergeQueueBranchLabel>,
+}
+
+/// A member-stack layer that leaves with the selected workspace.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeQueueLeavingLayer {
+    /// The workspace that leaves with the selected entry.
+    pub workspace_id: String,
+    /// The number of its pull request.
+    pub pull_number: u64,
+}
+
+/// The queue's removal plan, with a filtered base label for the question.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+pub struct MergeQueueRemoval {
+    /// The base the selected pull request will target after removal.
+    pub base: MergeQueueBranchLabel,
+    /// The higher pull requests in the same unit that also leave.
+    pub above: Vec<MergeQueueLeavingLayer>,
+}
+
+/// The branch selected by queue order and the commits that a rebase uses.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
+#[serde(rename_all = "camelCase")]
+pub struct MergeQueueRebase {
+    /// The raw ref for Git commands.
+    pub base: String,
+    /// The filtered label for a member control.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub label: Option<MergeQueueBranchLabel>,
+    /// The selected base head when the queue has verified it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub base_head: Option<String>,
+    /// The commit where this layer's own commits begin.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub old_base: Option<String>,
 }
 
 /// The queue state returned with a workspace's GitHub bar.
@@ -75,6 +141,10 @@ pub struct MergeQueueBarState {
     pub below_pull_number: Option<u64>,
     /// The branch at the bottom of the queue.
     pub trunk: String,
+    /// The filtered label of the branch at the bottom of the queue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub trunk_label: Option<MergeQueueBranchLabel>,
     /// The current step.
     pub state: MergeQueueEntryState,
     /// The condition that the entry waits for, if any.
@@ -91,6 +161,10 @@ pub struct MergeQueueBarState {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub old_base: Option<String>,
+    /// The rebase input selected by queue order.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub rebase: Option<MergeQueueRebase>,
 }
 
 /// Repository metadata returned with an org's workspace list.
@@ -109,7 +183,7 @@ pub struct WorkspaceListRepository {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub github_queue_required: Option<bool>,
-    /// Whether another org has a non-empty queue for this repository.
+    /// Whether another org has entries or is creating a stack for this repository.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub queue_in_use: Option<bool>,

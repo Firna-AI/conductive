@@ -60,9 +60,7 @@ export function RemoveQueueDialog(props: {
       viewport={props.viewport}
     >
       <dialogText.Component moklyInstance="queue-leaves">
-        {leaving.length > 0
-          ? removeQuestion.withUnit(leaving)
-          : removeQuestion.alone(pullRequest.number, trunk)}
+        {removeQuestion.body(pullRequest.number, { text: trunk }, leaving)}
       </dialogText.Component>
     </confirmDialog.Component>
   )

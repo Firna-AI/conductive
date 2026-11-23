@@ -61,7 +61,7 @@ export interface MergeProjection {
 }
 
 export function layerWait(read: QueuePullRead): MergeQueueWait | null {
-  const { entry, snapshot, stacked, standalone, clean } = read
+  const { entry, snapshot, stacked, standalone, local } = read
   if (entry.state === 'restacking') return 'rebase'
   if (read.restackWait) return read.restackWait
   if (
@@ -72,7 +72,9 @@ export function layerWait(read: QueuePullRead): MergeQueueWait | null {
     return entry.wait
   switch (snapshot?.banner.state) {
     case 'ready-to-merge':
-      return stacked || standalone ? (clean ? null : 'push') : 'rebase'
+      if (!stacked && !standalone) return 'rebase'
+      if (local === 'clean') return null
+      return local === 'dirty' ? 'push' : 'local-work'
     case 'checks-running':
     case 'checks-failed':
       return 'checks'

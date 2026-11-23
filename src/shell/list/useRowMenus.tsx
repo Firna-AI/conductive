@@ -42,7 +42,7 @@ export interface RowQueue {
   facts: QueueFacts
   add: (workspaceId: string) => void
   remove: (workspaceId: string) => void
-  known?: (workspaceId: string) => { number?: number; trunk?: string }
+  known?: (workspaceId: string) => { number?: number }
 }
 
 /**

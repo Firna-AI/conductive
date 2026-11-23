@@ -36,11 +36,16 @@ coordinator accepts the merge. It uses the requesting member's GitHub
 token and merge method.
 
 The workspace list also carries its repositories' names, default branches,
-and selection. It reads queue use from D1 and GitHub pull facts in batches
-by repository. The drop target uses these facts before it sends Add.
+and selection. The drop target uses saved queue and GitHub facts before it
+sends Add. [The list refresh](list-queue-refresh.ts) claims stale facts in
+D1 and reads GitHub in the background. It records write access by viewer
+and groups pull request and rule reads by repository. A queue write or pull
+request event marks the facts old. The cleanup timer removes expired facts.
 Add and remove take an empty JSON object. Re-order takes a target workspace ID in `beforeWorkspaceId`, or null for the end.
 Each successful change returns 204.
-The workspace list gives the optional queue entry, GitHub write access for the viewer, and the saved GitHub base of an open pull request.
+The workspace list gives the optional queue entry and its removal plan,
+GitHub write access for the viewer, and the saved GitHub base of an open
+pull request. Branch labels use the environment of each workspace start.
 The [Continue route](continue.ts) starts a Continue job and reads its result in the real workspace object, as [Continue routes](../lifecycle/continue-routes.md) says.
 The [repository change route](repository-change.ts) starts a repository change and reads its result in the same way, as [Repository change](../lifecycle/repository-change.md#routes) says.
 `membersRoute` alone serves the org list and one org.

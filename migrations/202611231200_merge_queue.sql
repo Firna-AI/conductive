@@ -4,6 +4,7 @@ CREATE TABLE merge_queues (
   repository_id TEXT NOT NULL,
   github_repository_id INTEGER NOT NULL,
   trunk TEXT NOT NULL,
+  trunk_pull_number INTEGER,
   github_stack_number INTEGER,
   stack_writer_user_id TEXT,
   rebuild_stack INTEGER NOT NULL DEFAULT 0,
@@ -40,7 +41,6 @@ CREATE TABLE merge_queue_entries (
   pending_base TEXT,
   observed_head TEXT,
   sync_from TEXT,
-  sync_old_base TEXT,
   UNIQUE (queue_id, pull_number)
 );
 CREATE INDEX merge_queue_entries_order ON merge_queue_entries(queue_id, place);
@@ -53,3 +53,20 @@ CREATE TABLE merge_queue_leave_notices (
   pull_number INTEGER NOT NULL,
   base_branch TEXT NOT NULL
 );
+
+CREATE TABLE merge_queue_list_facts (
+  org_id TEXT NOT NULL,
+  repository_id TEXT NOT NULL,
+  viewer_id TEXT NOT NULL,
+  binding TEXT NOT NULL,
+  payload TEXT,
+  generation INTEGER NOT NULL DEFAULT 0,
+  fresh_until INTEGER NOT NULL DEFAULT 0,
+  retry_at INTEGER NOT NULL,
+  claim_until INTEGER NOT NULL,
+  claim_id TEXT,
+  retain_until INTEGER NOT NULL,
+  PRIMARY KEY (org_id, repository_id, viewer_id),
+  FOREIGN KEY (org_id, repository_id) REFERENCES repositories(org_id, id) ON DELETE CASCADE
+);
+CREATE INDEX merge_queue_list_facts_retention ON merge_queue_list_facts(retain_until);

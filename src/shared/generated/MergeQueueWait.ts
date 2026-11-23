@@ -9,6 +9,8 @@ export type MergeQueueWait =
   | 'rebase'
   | 'rules'
   | 'push'
+  | 'local-work'
+  | 'trunk-change'
   | 'lower-layer'
   | 'token'
   | 'active-turn'

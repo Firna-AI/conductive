@@ -130,6 +130,16 @@ export class GitHubReader {
     return parsePull(await this.pull(pullNumber), this.workspace)
   }
 
+  async openPullBase(pullNumber: number) {
+    const pull = await this.pull(pullNumber)
+    return pull.state === 'OPEN' &&
+      pull.headRepository !== null &&
+      integer(object(pull.headRepository).databaseId) ===
+        this.workspace.repositoryId
+      ? text(pull.baseRefName)
+      : null
+  }
+
   private async pull(pullNumber: number) {
     const pull = object(
       (await this.repository(PULL, { number: pullNumber })).pullRequest,

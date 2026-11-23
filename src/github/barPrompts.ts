@@ -4,6 +4,8 @@ import {
   type PromptFacts,
 } from '../ui/components/workspace/barCopy'
 import type { GitHubCheck } from '../shared/github'
+import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
+import type { MergeQueueRebase } from '../shared/generated/MergeQueueRebase'
 import type { GitHubSnapshot } from './githubClient'
 
 /**
@@ -24,6 +26,22 @@ export function failingChecks(snapshot: GitHubSnapshot): string[] {
     .map((check) => check.name)
 }
 
+/** Old replies can still identify the bottom layer's intended branch. */
+export function queuedRebase(
+  queue: MergeQueueBarState,
+): MergeQueueRebase | null {
+  return (
+    queue.rebase ??
+    (queue.belowPullNumber === null
+      ? {
+          base: queue.trunk,
+          ...(queue.trunkLabel && { label: queue.trunkLabel }),
+          ...(queue.oldBase && { oldBase: queue.oldBase }),
+        }
+      : null)
+  )
+}
+
 /** The facts of the pull request that the prompts name. */
 function factsOf(snapshot: GitHubSnapshot): PromptFacts {
   const { banner } = snapshot
@@ -39,15 +57,11 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
   }
   return {
     number: banner.pullRequest.number,
-    base:
-      snapshot.queue?.belowPullNumber === null
-        ? snapshot.queue.trunk
-        : banner.baseBranch,
+    base: banner.baseBranch,
     failedChecks: failingChecks(snapshot),
     reviewers: banner.changesRequestedBy,
     ...(snapshot.queue && {
-      rebase: true as const,
-      oldBase: snapshot.queue.oldBase,
+      rebase: queuedRebase(snapshot.queue),
     }),
   }
 }

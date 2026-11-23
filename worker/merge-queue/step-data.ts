@@ -74,3 +74,16 @@ export async function renameQueueTrunk(
       .bind(queue.defaultBranch, queue.id, queue.trunk, queue.defaultBranch),
   ])
 }
+
+export function rememberTrunkPull(
+  db: D1Database,
+  queue: QueueRecord,
+  number: number,
+) {
+  return db
+    .prepare(
+      'UPDATE merge_queues SET trunk_pull_number = ? WHERE id = ? AND trunk = ? AND trunk_pull_number IS NOT ?',
+    )
+    .bind(number, queue.id, queue.trunk, number)
+    .run()
+}

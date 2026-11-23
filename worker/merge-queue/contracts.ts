@@ -14,6 +14,7 @@ export interface QueueRecord extends QueueScope {
   fullName: string
   installationId: number
   trunk: string
+  trunkPullNumber: number | null
   githubStackNumber: number | null
   stackWriterUserId: string | null
   rebuildStack: number
@@ -40,7 +41,6 @@ export interface QueueEntry extends MergeQueueEntry {
   pendingBase?: string | null
   observedHead?: string | null
   syncFrom?: string | null
-  syncOldBase?: string | null
 }
 
 export type QueueCandidate = Pick<

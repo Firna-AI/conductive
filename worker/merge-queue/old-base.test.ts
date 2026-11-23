@@ -27,24 +27,24 @@ it('shows the old fork point after the base moves and verifies it again after a 
     f.api.branches.set('refs/heads/main', newBase)
     f.api.pulls[2].mergeable = 'CONFLICTING'
     expect(await (await f.bar(OUTER_WORKSPACE)).json()).toMatchObject({
-      queue: { oldBase },
+      queue: { oldBase, rebase: { base: 'main', oldBase } },
     })
     expect(
       await (
         await f.request(githubPaths.stored(OUTER_ORG, OUTER_WORKSPACE))
       ).json(),
-    ).toMatchObject({ queue: { oldBase } })
+    ).toMatchObject({ queue: { oldBase, rebase: { base: 'main', oldBase } } })
 
     f.api.pulls[2].headRefOid = newHead
     f.api.branches.set('refs/heads/changes', newHead)
-    expect(await (await f.bar(OUTER_WORKSPACE)).json()).not.toHaveProperty(
-      'queue.oldBase',
-    )
+    const moved = await (await f.bar(OUTER_WORKSPACE)).json()
+    expect(moved).not.toHaveProperty('queue.oldBase')
+    expect(moved).not.toHaveProperty('queue.rebase.oldBase')
     f.api.mergeBases.set(`${newBase}...${newHead}`, 'e'.repeat(40))
     f.api.mergeBases.set(`${oldBase}...${newHead}`, oldBase)
     await f.queue.advanceStartAlarm()
     expect(await (await f.bar(OUTER_WORKSPACE)).json()).toMatchObject({
-      queue: { oldBase },
+      queue: { oldBase, rebase: { base: 'main', oldBase } },
     })
   } finally {
     await f.dispose()

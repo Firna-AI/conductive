@@ -44,11 +44,8 @@ export class DropLayout {
   }
 
   /** Whether the pointer is over the Merge queue group. */
-  inGroup(y: number): boolean {
-    const box = this.queueGroup?.getBoundingClientRect()
-    return (
-      box !== undefined && box.height > 0 && y >= box.top && y <= box.bottom
-    )
+  inGroup(hit: Element | null): boolean {
+    return this.queueGroup?.contains(hit) ?? false
   }
 
   section(sectionId: string): ElementRef {
@@ -94,13 +91,16 @@ export class DropLayout {
    * is below it. A tree spans its top-level row and each row nested under
    * it, so a drop never falls between two rows of one tree.
    */
-  targetAt(workspaceId: string, y: number): DropTarget | null {
-    const hit = [...this.sections].find(([, element]) => {
-      const box = element.getBoundingClientRect()
-      return box.height > 0 && y >= box.top && y <= box.bottom
-    })
-    if (!hit) return null
-    const [sectionId] = hit
+  targetAt(
+    workspaceId: string,
+    hit: Element | null,
+    y: number,
+  ): DropTarget | null {
+    const section = [...this.sections].find(([, element]) =>
+      element.contains(hit),
+    )
+    if (!section) return null
+    const [sectionId] = section
     const trees = new Map<string, { top: number; bottom: number }>()
     for (const row of this.rows.values()) {
       if (row.sectionId !== sectionId || row.treeId === workspaceId) continue

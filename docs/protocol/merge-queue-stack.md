@@ -17,6 +17,10 @@ says.
   conflicts in parallel, and one merge can land many of them.
 - A layer that cannot merge blocks each layer above it, and a re-order
   rebuilds the stack (decision 313).
+- Each queue owns its saved stack number. A later queue for the same
+  repository leaves that stack to its owner, even when the owner has no
+  entries. If cleanup fails, the owning queue retries with a delay that
+  doubles from 30 seconds up to 15 minutes.
 - Risk: GitHub merges a stack only with a linear history. A merge into the
   trunk from outside the queue, or a push to a lower layer, breaks it. Each
   layer above then needs a restack, one after another, before the next
@@ -87,10 +91,9 @@ says.
 - The restack prompt names the new head of the branch below and the old
   base commit of the layer. It asks the agent to move only the commits of
   the layer with `git rebase --onto`, to resolve each conflict, to run the
-  tests, and to push with `git push --force-with-lease`. It asks the agent
-  not to merge another branch, and not to merge the pull request. When the
-  branch below is at another commit than the prompt names, the agent stops
-  and says so.
+  tests, and to push with `git push --force-with-lease --force-if-includes`.
+  The prompt keeps the branch history linear and the pull request open.
+  The agent stops and reports a moved base head or a refused push.
 - Reason: the cloud computers have no `gh stack` extension, and `--onto`
   keeps only the commits of the layer, also after a squash merge below it.
 - The mockups give the words of the restack prompt.
@@ -111,7 +114,9 @@ says.
 - The sync after GitHub rewrites the branch of a queued workspace can also
   send a restack turn, as
   [The base of a queued workspace](base-branches.md#the-base-of-a-queued-workspace)
-  says.
+  says. The turn checks the new GitHub head. It rebases only the local work
+  with `git rebase --onto`, using the old GitHub head as the cutoff. It then
+  uses a plain push and stops if Git refuses it.
 
 ## Re-order
 

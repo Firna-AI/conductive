@@ -87,7 +87,7 @@ export function QueueBlockView({
   variant: RowVariant
   named: boolean
   adding: QueueAdd | null
-  moving: { unit: string; index: number } | null
+  moving: { unit: string; index: number | null } | null
   row: QueueRowOf
   /** The box of the block, which a drag of an entry measures. */
   measure: ElementRef
@@ -99,13 +99,14 @@ export function QueueBlockView({
     ? units.find((unit) => unit[0].id === moving.unit)
     : undefined
   const slots = units.filter((unit) => unit !== lifted)
-  const before = moving && lifted ? slots[moving.index]?.[0] : undefined
+  const index = moving?.index ?? null
+  const before = index !== null && lifted ? slots[index]?.[0] : undefined
   const line =
-    moving && lifted ? (
+    index !== null && lifted ? (
       <PlaceLine
         status={queueMoveStatus(
           nameLabel(lifted[0].name),
-          slots.slice(0, moving.index).flat().length + 1,
+          slots.slice(0, index).flat().length + 1,
         )}
       />
     ) : null

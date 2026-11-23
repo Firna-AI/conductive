@@ -198,6 +198,7 @@ it.each([
       },
     })
     expect(response.status).toBe(204)
+    await f.queue.advanceStartAlarm()
     expect((await f.entries()).map(({ pullNumber }) => pullNumber)).toEqual([2])
     expect(pull.baseRefName).toBe(action === 'closed' ? 'changes' : 'main')
     expect(
@@ -209,3 +210,35 @@ it.each([
     await f.dispose()
   }
 })
+
+it.each(['closed', 'converted_to_draft'])(
+  'keeps the open and ready entry after a delayed %s delivery',
+  async (action) => {
+    const f = await mergeFixture(bundle, 'units')
+    try {
+      f.topChecksRunning()
+      const response = await queueWebhook(f, 'pull_request', 'old-leave', {
+        ...recordedPullRequest,
+        action,
+        number: f.pullNumber,
+        pull_request: {
+          ...recordedPullRequest.pull_request,
+          number: f.pullNumber,
+          head: { ...recordedPullRequest.pull_request.head, ref: f.branch },
+        },
+      })
+      expect(response.status).toBe(204)
+      await f.queue.advanceStartAlarm()
+      expect((await f.entries()).map(({ pullNumber }) => pullNumber)).toEqual([
+        2,
+        f.pullNumber,
+      ])
+      expect(f.api.pulls[f.pullNumber].baseRefName).toBe('changes')
+      expect(f.api.requests.filter(({ method }) => method === 'PATCH')).toEqual(
+        [],
+      )
+    } finally {
+      await f.dispose()
+    }
+  },
+)

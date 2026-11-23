@@ -91,18 +91,18 @@ actions at `app/command-palette/actions`, and the settings at
 
 ## Merge latest
 
-- Merge latest asks the agent to merge the latest target branch into the
-  branch of the open workspace. Its row names the target branch, such as
-  "Merge latest main". The target branch is the base branch that the
-  [pull request bar](github-banner.md) shows.
+- The Merge latest row names its target branch, such as "Merge latest
+  main". Outside the queue, it asks the agent to merge the base branch
+  that the [pull request bar](github-banner.md) shows.
 - The row sends a fixed prompt at once, as an
   [agent action](github-banner.md#agent-actions) of the bar does (merge
   latest decision 1 A, 17 November 2026). The prompt asks the agent to
   fetch the target branch from GitHub and merge it. When the branch
   already has each commit, the agent says so and stops. Otherwise it
   resolves each conflict, runs the tests, then commits and pushes.
-- While the workspace is in the merge queue, the prompt asks for a rebase
-  in place of the merge, as
+- While the workspace is in the merge queue, the row names the branch
+  selected by queue order. The prompt rebases this layer onto that branch,
+  as
   [The prompts of a queued workspace](merge-queue-in-the-app.md#the-prompts-of-a-queued-workspace)
   says.
 - It follows the rules of

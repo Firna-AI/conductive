@@ -114,9 +114,9 @@ from `src/screens/queueBarStates.ts`, draws the pages. Its child pages:
   and its `merge-refused` variant a merge that GitHub refused, with Open on
   GitHub. Both keep Merge with 2 ahead, which merges with the token of the
   member who clicks.
-- `app/banner/merge-queue/remove` has the question before Remove from
-  queue. Its `stack` variant has the question on the lower entry of a
-  member stack, which names the entry above it, because it leaves too.
+- `app/banner/merge-queue/remove` names the planned base before Remove
+  from queue. Its `stack` variant also names the entry that leaves with
+  the selected lower entry of a member stack.
 
 The other pages of the bar draw no part of the queue, so their pictures
 stay as they are. [The workspace menu, sub-workspaces, and the merge

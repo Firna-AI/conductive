@@ -1,6 +1,36 @@
 import type { QueueEntry, QueueLeave } from './contracts'
 import { queueMerging, queueMissing } from './errors'
 
+type RemovalEntry = Pick<
+  QueueEntry,
+  'branch' | 'place' | 'unitId' | 'memberBase' | 'githubBase'
+>
+
+function removalSuffix<T extends RemovalEntry>(
+  entries: readonly T[],
+  target: T,
+) {
+  return entries.filter(
+    (entry) => entry.unitId === target.unitId && entry.place >= target.place,
+  )
+}
+
+export function removalPlan<T extends RemovalEntry>(
+  entries: readonly T[],
+  target: T,
+  trunk: string,
+) {
+  const below = entries.findLast(
+    (entry) => entry.unitId === target.unitId && entry.place < target.place,
+  )
+  const memberBase = target.memberBase ?? below?.branch
+  return {
+    base: target.githubBase === trunk ? trunk : (memberBase ?? trunk),
+    reset: memberBase === undefined,
+    above: removalSuffix(entries, target).filter((entry) => entry !== target),
+  }
+}
+
 export function leaveOrder(entries: QueueEntry[], signal: QueueLeave) {
   if (!('workspaceId' in signal)) return { remaining: [], removed: entries }
   const target = entries.find(
@@ -12,12 +42,7 @@ export function leaveOrder(entries: QueueEntry[], signal: QueueLeave) {
   )
   if (!target) return { remaining: entries, removed: [] }
   const removed =
-    signal.cause === 'merged'
-      ? [target]
-      : entries.filter(
-          (entry) =>
-            entry.unitId === target.unitId && entry.place >= target.place,
-        )
+    signal.cause === 'merged' ? [target] : removalSuffix(entries, target)
   if (
     signal.cause === 'removed' &&
     removed.some((entry) => entry.state === 'merging')

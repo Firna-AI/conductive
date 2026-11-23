@@ -102,8 +102,8 @@ of its line from the shared `queueCopy.ts`.
   workspace.
 - The line under the bar names the place and the pull request below, or
   what the queue waits for: its checks, a rebase, its review, the rules of
-  GitHub, its local work, a running turn, an agent login, or an open
-  session. A failed token and a refused merge name their reason, and a
+  GitHub, a push, a local-work read, a default branch check, a running turn,
+  an agent login, or an open session. A failed token and a refused merge name their reason, and a
   refused merge leads to the pull request on GitHub. A wait for a lower
   layer names the blocking pull request. Remove from queue ends the line
   for a member with write access, except while the layer merges, and it
@@ -119,8 +119,8 @@ of its line from the shared `queueCopy.ts`.
   queue. The Worker reads the clicker's token and preferred method. The
   bar shows the count while the queue can accept the merge and shows
   Merge busy while the merge runs.
-- Merge latest asks for a rebase onto its target branch while the bar
-  read names a queue state.
+- Resolve conflicts and Merge latest use the intended base in the bar
+  read. Their queue prompts use `git rebase --onto` and a guarded push.
 
 ## Merge
 

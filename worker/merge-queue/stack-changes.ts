@@ -8,6 +8,8 @@ import {
 import type { GitHubStack, GitHubStackLayer } from '../github/stack-parsers'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
+import { stackOfAnotherQueue } from './data'
+import { queueChanged } from './errors'
 import { readQueueStack } from './stack-read'
 import { reserveStackCreation, saveQueueStack } from './restack-data'
 import { stackCleanupWriter, type StackWriter } from './stack-writer'
@@ -107,14 +109,16 @@ export class QueueStackChanges {
           ({ number }, index) => number === saved.numbers[index],
         ),
     )
-    await saveQueueStack(
+    const adopted = await saveQueueStack(
       this.runtime.env.DB,
       queue,
       created?.number ?? null,
       created && saved.writerId,
     )
+    if (!adopted.meta.changes)
+      await saveQueueStack(this.runtime.env.DB, queue, null)
     await this.storage.delete(CREATING)
-    return created !== undefined
+    return created !== undefined && adopted.meta.changes === 1
   }
 
   async cleanup(
@@ -174,14 +178,16 @@ export class QueueStackChanges {
       ({ number }) => number !== queue.githubStackNumber,
     )
     if (!stack) return 'ready'
+    if (await stackOfAnotherQueue(this.runtime.env.DB, queue, stack.number))
+      return 'blocked'
     if (queue.githubStackNumber === null && isPrefix(stack, queue, entries)) {
-      await saveQueueStack(
+      const adopted = await saveQueueStack(
         this.runtime.env.DB,
         queue,
         stack.number,
         entry.queuerUserId,
       )
-      return 'changed'
+      return adopted.meta.changes === 1 ? 'changed' : 'blocked'
     }
     const unit = new Set(
       entries
@@ -227,12 +233,13 @@ export class QueueStackChanges {
       queue.fullName,
       numbers,
     )
-    await saveQueueStack(
+    const saved = await saveQueueStack(
       this.runtime.env.DB,
       queue,
       created.number,
       entry.queuerUserId,
     )
+    if (!saved.meta.changes) throw queueChanged()
     await this.storage.delete(CREATING)
     return true
   }

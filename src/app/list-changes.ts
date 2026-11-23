@@ -56,12 +56,22 @@ function listedFields(
   workspace: Workspace,
 ): Pick<
   Workspace,
-  'mergeQueue' | 'githubCanWrite' | 'githubPullBase' | 'githubPullFromFork'
+  | 'mergeQueue'
+  | 'mergeQueueLabels'
+  | 'githubCanWrite'
+  | 'githubPullBase'
+  | 'githubPullFromFork'
 > {
-  const { mergeQueue, githubCanWrite, githubPullBase, githubPullFromFork } =
-    workspace
+  const {
+    mergeQueue,
+    mergeQueueLabels,
+    githubCanWrite,
+    githubPullBase,
+    githubPullFromFork,
+  } = workspace
   return {
     ...(mergeQueue !== undefined && { mergeQueue }),
+    ...(mergeQueueLabels !== undefined && { mergeQueueLabels }),
     ...(githubCanWrite !== undefined && { githubCanWrite }),
     ...(githubPullBase !== undefined && { githubPullBase }),
     ...(githubPullFromFork !== undefined && { githubPullFromFork }),

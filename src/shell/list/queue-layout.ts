@@ -37,12 +37,18 @@ export class QueueLayout {
   /**
    * The place of a dragged unit under the pointer: the index before the
    * first other unit of its block whose middle is below it, counted
-   * without the dragged unit. Null outside the block, where the place
-   * stays as it was, because an entry moves only inside its block.
+   * without the dragged unit. A pointer outside the visible block has no
+   * drop place.
    */
-  indexAt(repositoryId: string, unit: string, y: number): number | null {
-    const block = this.blocks.get(repositoryId)?.getBoundingClientRect()
-    if (!block || block.height === 0 || y < block.top || y > block.bottom)
+  indexAt(
+    repositoryId: string,
+    unit: string,
+    x: number,
+    y: number,
+  ): number | null {
+    if (
+      !this.blocks.get(repositoryId)?.contains(document.elementFromPoint(x, y))
+    )
       return null
     const units = new Map<string, { top: number; bottom: number }>()
     for (const row of this.rows.values()) {

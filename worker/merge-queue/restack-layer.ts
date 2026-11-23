@@ -9,6 +9,7 @@ import type { GitHubStack } from '../github/stack-parsers'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
 import type { QueueFixTurns } from './fix-turns'
+import { ageQueueListFacts } from './list-facts-data'
 import { queueLeaveFor, queueMergeAccess } from './merge-choice'
 import type { QueuePullSnapshot } from './merge-read'
 import { queueWorkspace } from './repository'
@@ -84,7 +85,8 @@ export class QueueLayerRestack {
       const stillNeeded =
         (!aligned || syncing) &&
         active.restack.base === base.branch &&
-        active.restack.baseHead === base.head
+        active.restack.baseHead === base.head &&
+        (!active.restack.sync || active.restack.sync.head === headSha)
       if (stillNeeded || !(await this.fixes.cancelUnsent(active))) {
         await this.fixes.advance(queue)
         return 'fix'
@@ -104,14 +106,11 @@ export class QueueLayerRestack {
       )
       if (result === 'active-turn') return { wait: 'active-turn', retry: true }
       if (result === 'retry') return retryRebase
-      if (result === 'restack')
-        return this.fix(
-          queue,
-          entry,
-          base,
-          entry.syncOldBase ?? undefined,
-          true,
-        )
+      if (result === 'restack' && entry.syncFrom)
+        return this.fix(queue, entry, base, entry.syncFrom, {
+          branch: entry.branch,
+          head: headSha,
+        })
     }
 
     if (!aligned) {
@@ -206,6 +205,7 @@ export class QueueLayerRestack {
           await forgetExpectedQueueBase(env.DB, entry, base.branch)
         throw error
       }
+      await ageQueueListFacts(env.DB, queue.id).run()
       return 'changed'
     }
     return (await this.stacks.attach(queue, stack, entries, index, writer))
@@ -239,7 +239,7 @@ export class QueueLayerRestack {
     entry: QueueEntry,
     base: LayerBase,
     oldBase: string | undefined,
-    local = false,
+    sync?: { branch: string; head: string },
   ): Promise<LayerStep> {
     if (!isGitCommitOid(oldBase)) return rebaseWait
     const id = JSON.stringify([
@@ -249,7 +249,8 @@ export class QueueLayerRestack {
       entry.pullNumber,
       base.branch,
       base.head,
-      local ? entry.syncFrom : null,
+      sync?.head ?? null,
+      sync ? oldBase : null,
     ])
     const previous = await this.fixes.read(id)
     if (previous?.state === 'ended') return rebaseWait
@@ -263,6 +264,7 @@ export class QueueLayerRestack {
       base: base.branch,
       baseHead: base.head,
       oldBase,
+      ...(sync && { sync }),
     })
     await this.fixes.advance(queue)
     return 'fix'

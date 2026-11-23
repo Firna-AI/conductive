@@ -1,17 +1,13 @@
 import type { Workspace } from '../../shared/generated/Workspace'
+import type { MergeQueueBranchLabel } from '../../shared/generated/MergeQueueBranchLabel'
 import { ListPlus, ListX, type LucideIcon } from 'lucide-react'
 import {
   queueLabels,
+  defaultQueueBranchLabel,
   type LeavingLayer,
 } from '../../ui/components/workspace/queueCopy'
 import type { WorkspaceMenuItem } from '../../ui/components/workspaces/workspaceMenu'
-import {
-  byPlace,
-  isQueued,
-  unitAbove,
-  type QueueFacts,
-  type QueueMenuAction,
-} from '../../app/merge-queue'
+import { type QueueFacts, type QueueMenuAction } from '../../app/merge-queue'
 import { nameLabel } from '../../shared/name-label'
 
 /** An item of the menu of a row: an action of the workspace, or of the queue. */
@@ -47,39 +43,35 @@ export function withQueueItem(
 export interface RemoveQuestion {
   workspaceId: string
   number?: number
-  trunk: string
+  base: MergeQueueBranchLabel
   above: readonly LeavingLayer[]
 }
 
 /**
  * The question of Remove from queue for an entry, from the list. `known`
  * gives what the screen of the workspace knows: the number of its pull
- * request, and the trunk of its queue. Without them, the question names the
- * default branch of the repository, or "the default branch".
+ * request, when the list has no number yet.
  */
 export function removeQuestionOf(
   workspace: Workspace,
   facts: QueueFacts,
-  known: { number?: number; trunk?: string } = {},
+  known: { number?: number } = {},
 ): RemoveQuestion {
-  const entries = facts.workspaces
-    .filter(
-      (item) => item.repositoryId === workspace.repositoryId && isQueued(item),
-    )
-    .sort(byPlace)
-  const repository = facts.repositories.find(
-    (item) => item.id === workspace.repositoryId,
-  )
+  const plan = workspace.mergeQueue?.removal
   const number = known.number ?? workspace.mergeQueue?.pullNumber
   return {
     workspaceId: workspace.id,
     ...(number !== undefined && { number }),
-    trunk: known.trunk ?? repository?.defaultBranch ?? 'the default branch',
-    above: unitAbove(entries, workspace.id).map((item) => ({
-      name: nameLabel(item.name),
-      ...(item.mergeQueue?.pullNumber !== undefined && {
-        number: item.mergeQueue.pullNumber,
-      }),
+    base:
+      plan?.base ??
+      workspace.mergeQueueLabels?.defaultBranch ??
+      defaultQueueBranchLabel,
+    above: (plan?.above ?? []).map((item) => ({
+      name: nameLabel(
+        facts.workspaces.find(({ id }) => id === item.workspaceId)?.name ??
+          null,
+      ),
+      number: item.pullNumber,
     })),
   }
 }

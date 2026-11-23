@@ -32,7 +32,7 @@ function holdNothing(): void {}
  * drop place is in the section under the pointer, before the first other
  * tree whose middle is below it. Over the Merge queue group, a drop calls
  * `add`, which adds the workspace when it can join (decision 317). Outside
- * every section and the group, the place stays as it was. A release at the
+ * every section and the group, the row returns to its own place. A release at the
  * row's own place moves nothing, also after a long press that lets go
  * without a move.
  *
@@ -47,12 +47,14 @@ export function useRowDrag(
   /** The list gives its sections and rows to the layout through refs. */
   const [layout] = useState(() => new DropLayout())
   const { drag, bind } = usePointerDrag<Workspace, RowPlace>({
-    locate: (workspace, _x, y, last) => {
-      const target = layout.inGroup(y)
+    locateOnRelease: true,
+    locate: (workspace, x, y, last, from) => {
+      const hit = document.elementFromPoint(x, y)
+      const target = layout.inGroup(hit)
         ? intoQueue
-        : layout.targetAt(workspace.id, y)
+        : (layout.targetAt(workspace.id, hit, y) ?? from)
       // After a scroll, the hook draws again only for a new place object.
-      return target === null || samePlace(target, last) ? last : target
+      return samePlace(target, last) ? last : target
     },
     drop: ({ item, from, place }) => {
       if (isQueuePlace(place)) add(item)

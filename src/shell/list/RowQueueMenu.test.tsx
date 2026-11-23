@@ -21,13 +21,30 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 const { org } = FAKE_IDS
 
 /** The org page with two entries of acme/storefront in its queue. */
-async function opened() {
+async function opened(upperBase?: string) {
   const server = new FakeApiServer()
   const listed = workspaceFixtures().workspaces
   const workspaces = withMergeQueue(listed.workspaces, [
     ['next-16'],
     ['apple-pay', 'checkout-autocomplete'],
-  ])
+  ]).map((workspace) => {
+    if (
+      workspace.id !== 'checkout-autocomplete' ||
+      !workspace.mergeQueue ||
+      !upperBase
+    )
+      return workspace
+    return {
+      ...workspace,
+      mergeQueue: {
+        ...workspace.mergeQueue,
+        removal: {
+          base: { text: upperBase },
+          above: [],
+        },
+      },
+    }
+  })
   server.json('GET', workspacesPath(org), { ...listed, workspaces })
   server.empty('POST', mergeQueuePaths.entry(org, 'webhook-retries'))
   server.empty('DELETE', mergeQueuePaths.entry(org, 'apple-pay'))
@@ -85,6 +102,9 @@ describe('the merge queue in the menu of a row', () => {
     click(menuItem('Remove from queue'))
     const dialog = byRole('dialog', 'Remove from the merge queue?')
     const question = dialog.textContent
+    expect(question).toContain(
+      'Pull request #479 loses its place and targets main',
+    )
     const asked = writes(server, from).length
     click(byRole('button', 'Remove', dialog))
     await settle()
@@ -99,5 +119,16 @@ describe('the merge queue in the menu of a row', () => {
         `DELETE ${mergeQueuePaths.entry(org, 'apple-pay')}`,
       ],
     })
+  })
+
+  test('names the masked member base in the question for its upper pull request', async () => {
+    await opened('apple-pay-[redacted]')
+    rightClick(rowLink('checkout-autocomplete'), { clientX: 120, clientY: 300 })
+    click(menuItem('Remove from queue'))
+    expect(
+      byRole('dialog', 'Remove from the merge queue?').textContent,
+    ).toContain(
+      'Pull request #482 loses its place and targets apple-pay-[redacted]',
+    )
   })
 })

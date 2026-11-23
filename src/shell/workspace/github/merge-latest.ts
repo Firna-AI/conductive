@@ -6,6 +6,7 @@ import {
 } from '../../../ui/components/workspace/mergeLatestCopy'
 import { baseBranchLabel } from '../../../github/bannerStatus'
 import type { BarActions } from '../../../github/barActions'
+import { queuedRebase } from '../../../github/barPrompts'
 import { offersAgentActions } from '../../../github/barView'
 import type { GitHubFeed } from '../../../github/githubStore'
 import type { WorkspaceContext } from '../features'
@@ -42,18 +43,21 @@ export function useMergeLatest(
   const { state } = github
   return useMemo(() => {
     if (readOnly || state.status !== 'ready') return null
-    const { banner } = state.snapshot
+    const { banner, queue } = state.snapshot
     if (banner.state === 'merged') return null
     if (!offersAgentActions(shown.capabilities)) return null
-    const base = banner.baseBranch
-    // The GitHub stack of the merge queue needs a linear history.
-    const prompt = state.snapshot.queue
-      ? mergeLatestRebasePrompt(base)
-      : mergeLatestPrompt(base)
+    const rebase = queue ? queuedRebase(queue) : null
+    const prompt = queue
+      ? mergeLatestRebasePrompt(rebase)
+      : mergeLatestPrompt(banner.baseBranch)
     return {
       // The row shows the label, which hides each secret value. The prompt
       // keeps the real name, which Git needs.
-      label: mergeLatestLabel(baseBranchLabel(banner)),
+      label: mergeLatestLabel(
+        queue
+          ? (rebase?.label?.text ?? 'the queue base')
+          : baseBranchLabel(banner),
+      ),
       run: () => {
         void actions.sendPrompt(prompt).then((result) => {
           if (result !== null && result !== 'sent') showChat()

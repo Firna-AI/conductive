@@ -50,9 +50,11 @@ it('reads a bar without a queue state, as from an older Worker, as a workspace o
 it('drops the saved merge and rebase facts when a live event changes the head', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const { banner } = toolFixtures('ready-to-merge').banner
+  const oldBase = 'a'.repeat(40)
+  const rebase = { base: 'lower-branch' }
   server.json('GET', githubPaths.banner(target.orgId, target.workspaceId), {
     banner,
-    queue: { ...queue, oldBase: 'a'.repeat(40), mergeAhead: 1 },
+    queue: { ...queue, oldBase, mergeAhead: 1, rebase: { ...rebase, oldBase } },
   })
   const events = new FakeWorkspaceEvents([])
   const store = new GitHubStore(target)
@@ -74,8 +76,11 @@ it('drops the saved merge and rebase facts when a live event changes the head', 
   })
   expect(store.getSnapshot()).toMatchObject({
     status: 'ready',
-    snapshot: { queue },
+    snapshot: { queue: { ...queue, rebase } },
   })
   expect(store.getSnapshot()).not.toHaveProperty('snapshot.queue.oldBase')
+  expect(store.getSnapshot()).not.toHaveProperty(
+    'snapshot.queue.rebase.oldBase',
+  )
   expect(store.getSnapshot()).not.toHaveProperty('snapshot.queue.mergeAhead')
 })

@@ -57,6 +57,9 @@ and the terms below. A decision number names a dated record, as
   of each open pull request to the new name, and that move is not a leave.
   The queue then merges into the new name. Reason: decision 310 rejected a
   rename that makes members act again.
+- The queue remembers the last pull request it saw targeting the trunk.
+  It can use that pull request to confirm a rename after a leave or a
+  re-order changes which entry comes first. Merges wait during the check.
 - A switch of the default branch to another branch makes every unit leave,
   before any restack. Reason: the trunk of the stack is then not the
   default branch, and no member chose the new one.
@@ -66,10 +69,10 @@ and the terms below. A decision number names a dated record, as
   and re-order its entries. Reason: Merge already needs that access
   (decision 221).
 - A member reaches only the queues of the repositories of the org.
-- Two orgs can save the same repository. A unit whose repository already
-  has a queue with entries in another org cannot join. Reason: two queues
-  would break each other's GitHub stack, and one org must not see the
-  queue of another org.
+- Two orgs can save the same repository. A unit cannot join while another
+  org has entries or is creating its GitHub stack for that repository.
+  Reason: two active queues would interfere with the same GitHub stack.
+  Each org sees only its own entries.
 - In a suspended org, the Worker refuses each change of a queue, and every
   unit leaves.
 - The steps of one queue never run at the same time. Reason: each step
@@ -138,6 +141,9 @@ and the terms below. A decision number names a dated record, as
   - a queuer who left the org or lost write access, as
     [The merge queue](github-tokens-worker.md#the-merge-queue) says
   - a suspended org
+  - a switch of the default branch
+- A close or draft event wakes the queue, and the current GitHub state
+  decides whether the entry leaves.
 - When the cause is a base change on GitHub that the queue did not make,
   the leave step keeps the new base. Reason: a member chose that base.
 - For each other cause, the leave step sets the GitHub base of the lowest
@@ -178,8 +184,12 @@ and the terms below. A decision number names a dated record, as
   queuer of the highest layer, as
   [The merge queue](github-tokens-worker.md#the-merge-queue) says.
 - A layer whose cloud computer holds local work is not ready. The queue
-  waits for the push, as the bar puts Commit and push before Merge.
+  waits for the workspace to have no unpushed work. The bar puts Commit and
+  push before Merge.
   Reason: a merge must not leave that work behind (decision 228).
+- The queue also waits if it cannot check local work. It retries either
+  wait after 30 seconds and doubles the delay up to 15 minutes. A check with
+  no local work clears the wait. This also lets a local revert clear it.
 - No merge runs while the queue rebuilds the stack after a re-order.
 - A stack merge can stop partway. After each merge, the queue reads each
   layer again before its next step.
@@ -208,7 +218,8 @@ and the terms below. A decision number names a dated record, as
   as "Needs attention", was rejected for that reason.
 - After a failed refresh of the stored GitHub token of the queuer, the
   entry waits. After GitHub refuses the merge, the entry keeps its place
-  too.
+  too. The refusal applies to the head sent in that merge request. A new
+  head gets its own check.
 - The line under the bar of a waiting entry says what the queue waits for.
   It also names a failed token or a refused merge, as
   [The bar of a queued workspace](merge-queue-in-the-app.md#the-bar-of-a-queued-workspace)

@@ -1,40 +1,26 @@
 import type { Workspace } from '../../src/shared/generated/Workspace'
 import type { WorkspaceListRepository } from '../../src/shared/generated/WorkspaceListRepository'
 import type { AppDependencies, AppEnv } from '../env'
-import { readMergeCapabilities } from '../github/merge-capabilities'
-import { listQueuePulls, trunkRequiresMergeQueue } from '../github/queue-pulls'
+import { outputBranchLabels } from '../github/output'
+import { environmentSecrets } from '../lifecycle/org-environment'
+import { workspaceEnvironmentSettings } from '../lifecycle/settings-data'
 import {
   listedGitHubRepositories,
   listedQueueEntries,
+  listedRemovalPlans,
 } from '../merge-queue/read'
-import { freshGitHubUserToken } from '../security/github-tokens'
+import { cachedQueueListFacts } from './list-queue-refresh'
 import type { ListedWorkspaceRow } from './shell-data'
 
-type RepositoryRow = Awaited<
-  ReturnType<typeof listedGitHubRepositories>
->[number]
-
-async function githubListFacts(
-  dependencies: AppDependencies,
-  token: string,
-  repository: RepositoryRow,
-  branches: readonly string[],
-) {
-  const { fetch } = dependencies
-  const access = await readMergeCapabilities(fetch, token, repository).catch(
-    () => undefined,
-  )
-  if (!access?.canWrite || !branches.length) return { access }
-  const [pulls, githubQueueRequired] = await Promise.all([
-    listQueuePulls(fetch, token, repository, branches).catch(() => undefined),
-    trunkRequiresMergeQueue(
-      fetch,
-      token,
-      repository.fullName,
-      repository.defaultBranch,
-    ).catch(() => undefined),
-  ])
-  return { access, pulls, githubQueueRequired }
+function listsBranches(rows: readonly ListedWorkspaceRow[]) {
+  const branches = new Map<string, Set<string>>()
+  for (const row of rows) {
+    if (row.archivedAt !== null || row.state === 'archived') continue
+    const heads = branches.get(row.repositoryId) ?? new Set<string>()
+    heads.add(row.branch)
+    branches.set(row.repositoryId, heads)
+  }
+  return branches
 }
 
 export async function listMergeQueueFields(
@@ -44,42 +30,26 @@ export async function listMergeQueueFields(
   userId: string,
   rows: ListedWorkspaceRow[],
 ) {
-  const [entries, catalogue] = await Promise.all([
+  const [entries, plans, catalogue] = await Promise.all([
     listedQueueEntries(env.DB, orgId),
+    listedRemovalPlans(env.DB, orgId),
     listedGitHubRepositories(env.DB, orgId),
   ])
-  const branches = new Map<string, Set<string>>()
-  for (const row of rows) {
-    if (row.archivedAt !== null || row.state === 'archived') continue
-    const heads = branches.get(row.repositoryId) ?? new Set<string>()
-    heads.add(row.branch)
-    branches.set(row.repositoryId, heads)
-  }
-  const token = branches.size
-    ? await freshGitHubUserToken(env, userId, dependencies).catch(
-        () => undefined,
-      )
-    : undefined
-  const facts = new Map(
-    await Promise.all(
-      catalogue.map(
-        async (repository) =>
-          [
-            repository.id,
-            token &&
-            repository.installationId !== null &&
-            branches.has(repository.id)
-              ? await githubListFacts(dependencies, token, repository, [
-                  ...(branches.get(repository.id) ?? []),
-                ])
-              : undefined,
-          ] as const,
-      ),
-    ),
+  const { facts, refresh } = await cachedQueueListFacts(
+    env,
+    dependencies,
+    orgId,
+    userId,
+    catalogue,
+    listsBranches(rows),
+  )
+  const byId = new Map(
+    catalogue.map((repository) => [repository.id, repository]),
   )
   const repositories: WorkspaceListRepository[] = catalogue.map(
     (repository) => {
-      const githubQueueRequired = facts.get(repository.id)?.githubQueueRequired
+      const githubQueueRequired = facts.get(repository.id)?.repository
+        ?.githubQueueRequired
       return {
         id: repository.id,
         fullName: repository.fullName,
@@ -90,35 +60,56 @@ export async function listMergeQueueFields(
       }
     },
   )
+  // Only the raw facts are saved. Each read uses the environment of this start.
+  const filters = new Map<
+    string | null,
+    Promise<ReturnType<typeof outputBranchLabels> | undefined>
+  >()
+  const filter = (capture: string | null) => {
+    const existing = filters.get(capture)
+    if (existing) return existing
+    const loaded = workspaceEnvironmentSettings(env, orgId, capture)
+      .then((settings) => outputBranchLabels(environmentSecrets(settings)))
+      .catch(() => undefined)
+    filters.set(capture, loaded)
+    return loaded
+  }
   return {
     repositories,
+    refresh,
     async fields(
       row: ListedWorkspaceRow,
     ): Promise<
       Pick<
         Workspace,
         | 'mergeQueue'
+        | 'mergeQueueLabels'
         | 'githubCanWrite'
         | 'githubPullBase'
         | 'githubPullFromFork'
       >
     > {
-      const mergeQueue = entries.get(row.id)
-      const repository = facts.get(row.repositoryId)
-      const githubCanWrite = repository?.access?.canWrite
-      const pull = repository?.pulls?.get(row.branch)
-      let githubPullBase = pull?.kind === 'open' ? pull.pull.base : undefined
-      if (!pull && row.github && row.github !== 'merged')
-        githubPullBase = await env.WORKSPACES?.getByName(row.id, {
-          locationHint: 'weur',
-        })
-          .listedGitHubPullBase(row.id, row.branch)
-          .catch(() => undefined)
+      if (row.archivedAt !== null || row.state === 'archived') return {}
+      const entry = entries.get(row.id)
+      const plan = plans.get(row.id)
+      const repository = byId.get(row.repositoryId)
+      const fact = facts.get(row.repositoryId)
+      const pull = fact?.repository?.pulls.get(row.branch)
+      const labels = await filter(row.environmentCiphertext)
+      const removal = plan &&
+        labels && { base: labels.branch(plan.base), above: plan.above }
       return {
-        ...(mergeQueue ? { mergeQueue } : {}),
-        ...(githubCanWrite === undefined ? {} : { githubCanWrite }),
-        ...(githubPullBase === undefined ? {} : { githubPullBase }),
-        ...(pull?.kind === 'fork' && { githubPullFromFork: true }),
+        ...(entry && { mergeQueue: { ...entry, ...(removal && { removal }) } }),
+        ...(repository &&
+          labels && {
+            mergeQueueLabels: {
+              defaultBranch: labels.branch(repository.defaultBranch),
+              ...(pull?.base && { pullBase: labels.branch(pull.base) }),
+            },
+          }),
+        ...(fact?.canWrite !== undefined && { githubCanWrite: fact.canWrite }),
+        ...(pull?.base && { githubPullBase: pull.base }),
+        ...(pull?.fork && { githubPullFromFork: true }),
       }
     },
   }

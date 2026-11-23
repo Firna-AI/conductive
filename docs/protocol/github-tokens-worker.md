@@ -133,6 +133,10 @@ merge queue. A decision number names a dated record, as
   sender (decision 50).
 - Add to merge queue on a draft marks it ready for review with the GitHub
   token of the member who adds, as Ready for review does.
+- The workspace list reads saved queue facts. Its background refresh uses
+  the viewer's GitHub token to check write access. It shares pull request
+  and branch rule facts within the org with viewers who have write access.
+  Each queue write still checks current access.
 - At each step, the Worker checks that the queuer of the entry is still a
   member of the org with write access to the repository, and that the org
   is not suspended. When a check fails, the entry leaves, as
@@ -153,6 +157,8 @@ merge queue. A decision number names a dated record, as
   the token of the workspace owner, as for a moved base. When that write
   fails too, the line under the bar names the branch that the pull request
   still targets.
+- A GitHub close or draft event only asks the queue to read the pull
+  request again. The event supplies no member for a base reset.
 - These ways were rejected (decision 314):
   - Restack turns as the queuer, but a click on "Merge next" for each
     merge. The queue then stops each time nobody is there.

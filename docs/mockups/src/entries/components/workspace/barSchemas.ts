@@ -9,6 +9,7 @@ import { bannerStates } from '../../../../../../src/ui/components/workspace/barM
 import {
   mergeProblems,
   queueSteps,
+  queueWaits,
   turnWaits,
 } from '../../../../../../src/ui/components/workspace/queueModel'
 import { iconKeyOf, iconKeys, type IconKey } from '../common/icons'
@@ -117,6 +118,7 @@ export const queueLineSchema = {
     problem: { enum: mergeProblems },
     /** What holds the message that the queue sends as the queuer. */
     turnWait: { enum: turnWaits },
+    queueWait: { enum: queueWaits },
     stackedAbove: { type: 'integer', minimum: 1 },
     remove: { type: 'boolean' },
     /** The cloud computer holds work that is not pushed. */

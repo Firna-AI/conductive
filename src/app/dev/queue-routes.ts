@@ -49,6 +49,7 @@ function barState(org: OrgState, workspace: Workspace): MergeQueueBarState {
     .sort(byPlace)
   const at = entries.findIndex((item) => item.id === workspace.id)
   const below = entries[at - 1]
+  const base = below?.branch ?? 'main'
   return {
     place: at + 1,
     count: entries.length,
@@ -59,6 +60,8 @@ function barState(org: OrgState, workspace: Workspace): MergeQueueBarState {
       mergeAhead: at,
     }),
     trunk: 'main',
+    trunkLabel: { text: 'main' },
+    rebase: { base, label: { text: base } },
     state: workspace.mergeQueue?.state ?? 'queued',
     wait: null,
   }

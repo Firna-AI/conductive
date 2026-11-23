@@ -120,7 +120,10 @@ export function QueueLineView(props: {
       {icon}
       <span className={styles.lineBody}>
         <span className={styles.lineText}>
-          {queueLineText(line, { trunk, github: props.github })}
+          {queueLineText(line, {
+            trunk: { text: trunk },
+            github: props.github,
+          })}
         </span>
         {refused || line.remove ? (
           <span className={styles.lineActions}>

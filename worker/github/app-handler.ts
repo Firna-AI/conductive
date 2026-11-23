@@ -27,18 +27,17 @@ export interface GitHubAppDependencies {
  * The stored state of the current branch, or null. A state of an earlier
  * branch, such as the merged branch before Continue, does not apply.
  */
-async function storedBody(
-  env: AppEnv,
+function storedBody(
   workspace: GitHubWorkspace,
   stored: GitHubSnapshot | undefined,
   queued: boolean,
-): Promise<GitHubStoredResponse> {
+  labels: Awaited<ReturnType<typeof githubBranchLabels>>,
+): GitHubStoredResponse {
   if (!stored || stored.banner.branch !== workspace.branch)
     return { state: null }
-  const labels = await githubBranchLabels(env, workspace)
   return {
     state: {
-      banner: labels(bannerForQueue(stored, queued)),
+      banner: labels.banner(bannerForQueue(stored, queued)),
       checks: stored.checks,
     },
   }
@@ -58,22 +57,23 @@ async function readBody(
   dependencies: GitHubAppDependencies,
 ) {
   if (route === '/stored') {
-    const stored = await dependencies.stored(workspace)
-    const queueBar = await readQueueBar(env, workspace, stored)
+    const [stored, labels] = await Promise.all([
+      dependencies.stored(workspace),
+      githubBranchLabels(env, workspace),
+    ])
+    const queueBar = await readQueueBar(env, workspace, stored, labels)
     return {
-      ...(await storedBody(env, workspace, stored, !!queueBar.queue)),
+      ...storedBody(workspace, stored, !!queueBar.queue, labels),
       ...queueBar,
     }
   }
   const snapshot = await dependencies.refresh(workspace, { userId })
   if (snapshot === null) throw githubFailure()
   if (route === '/checks') return snapshot.checks satisfies GitHubChecksResponse
-  const [labels, queueBar] = await Promise.all([
-    githubBranchLabels(env, workspace),
-    readQueueBar(env, workspace, snapshot),
-  ])
+  const labels = await githubBranchLabels(env, workspace)
+  const queueBar = await readQueueBar(env, workspace, snapshot, labels)
   return {
-    banner: labels(bannerForQueue(snapshot, !!queueBar.queue)),
+    banner: labels.banner(bannerForQueue(snapshot, !!queueBar.queue)),
     ...queueBar,
   } satisfies GitHubBannerResponse
 }
@@ -82,16 +82,22 @@ async function readQueueBar(
   env: AppEnv,
   workspace: GitHubWorkspace,
   snapshot: GitHubSnapshot | undefined,
+  labels: Awaited<ReturnType<typeof githubBranchLabels>>,
 ) {
   const current =
     snapshot?.banner.branch === workspace.branch ? snapshot : undefined
   const queue = await queueBarState(env.DB, workspace, current)
-  if (queue) return { queue }
+  if (queue)
+    return {
+      queue: {
+        ...queue,
+        trunkLabel: labels.branch(queue.trunk),
+        rebase: { ...queue.rebase, label: labels.branch(queue.rebase.base) },
+      },
+    }
   const base = await queueLeaveBase(env.DB, workspace, current)
   if (!base || !current) return {}
-  const labels = await githubBranchLabels(env, workspace)
-  const labeled = labels({ ...current.banner, baseBranch: base })
-  return { queueLeave: { baseBranch: labeled.displayBaseBranch ?? base } }
+  return { queueLeave: { baseBranch: labels.branch(base).text } }
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */

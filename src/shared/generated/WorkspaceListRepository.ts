@@ -25,7 +25,7 @@ export type WorkspaceListRepository = {
    */
   githubQueueRequired?: boolean
   /**
-   * Whether another org has a non-empty queue for this repository.
+   * Whether another org has entries or is creating a stack for this repository.
    */
   queueInUse?: boolean
 }

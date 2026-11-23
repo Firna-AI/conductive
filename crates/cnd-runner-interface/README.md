@@ -46,12 +46,14 @@ The Worker resolves their defaults and validates them after creation replay.
 Workspace records and list entries give a required nullable parent ID.
 The app workspace list can include the numbered merge queue entry, GitHub
 write access of the viewer, and the GitHub base or fork of the open pull
-request. The list can also carry saved repository metadata and queue rules.
-The merge queue bar can report a wait for a turn, an open session, or a
-session login that the queuer can use.
+request. The list can also carry saved repository metadata, queue rules,
+and the removal plan. Separate branch labels hide secret values in the app.
+The bar can report a wait for a turn, an open session, or a session login
+that the queuer can use. It also distinguishes a wait for a local-work
+read and a pending change of the default branch.
 Its optional fields give the count of layers that can merge with it and
-the pull request that blocks it. The conflict prompt uses the checked old
-base commit. A queue merge request carries the shown
+the pull request that blocks it. The rebase input names the intended base
+from queue order and the checked old base commit. A queue merge request carries the shown
 count. A leave notice gives the base that remains after a failed reset.
 Workspace details give the parent entry, stored depth, and direct children.
 `Workspace.archivedComputer` is optional. It gives the `ArchivedComputerState`

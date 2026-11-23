@@ -43,6 +43,54 @@ it('blocks both kinds of merge while a lower workspace has local work', async ()
   }
 })
 
+it('rechecks local work with a growing delay and merges after a local revert', async () => {
+  const f = await mergeFixture(bundle, 'single')
+  try {
+    await f.db
+      .prepare(
+        "UPDATE workspaces SET sandbox_id = 'bx_queue_dirty', state = 'ready' WHERE id = ?",
+      )
+      .bind(OUTER_WORKSPACE)
+      .run()
+    f.boat.states.set('bx_queue_dirty', 'ready')
+    f.boat.synchronousOutput = '\0' + '1\n'
+    const now = await f.queue.testAlarmTime()
+    await f.queue.advanceStartAlarm()
+    expect(await f.queue.readStartAlarm()).toBe(now + 30_000)
+    await f.queue.advanceStartAlarm(now + 30_000)
+    expect(await f.queue.readStartAlarm()).toBe(now + 90_000)
+    expect(f.writes()).toEqual([])
+    f.boat.synchronousOutput = '\0' + '0\n'
+    await f.queue.advanceStartAlarm(now + 90_000)
+    expect(f.writes()).toHaveLength(1)
+  } finally {
+    await f.dispose()
+  }
+})
+
+it.each(['starting', 'ready'])(
+  'reports an unavailable read on a %s computer',
+  async (state) => {
+    const f = await mergeFixture(bundle, 'single')
+    try {
+      const sandbox = 'bx_queue_unavailable'
+      await f.db
+        .prepare('UPDATE workspaces SET state = ?, sandbox_id = ? WHERE id = ?')
+        .bind(state, sandbox, OUTER_WORKSPACE)
+        .run()
+      f.boat.states.set(sandbox, 'ready')
+      f.boat.synchronousExitCode = 1
+      await f.queue.advanceStartAlarm()
+      expect(await (await f.bar(OUTER_WORKSPACE)).json()).toMatchObject({
+        queue: { wait: 'local-work' },
+      })
+      expect(f.writes()).toEqual([])
+    } finally {
+      await f.dispose()
+    }
+  },
+)
+
 it('rejects a read-only clicker even with a ready prefix', async () => {
   const f = await mergeFixture(bundle)
   try {

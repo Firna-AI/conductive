@@ -1,3 +1,6 @@
+import type { MergeQueueRebase } from '../../../shared/generated/MergeQueueRebase'
+import { queueRebaseInstructions } from './queueRebaseCopy'
+
 /**
  * The words of Merge latest, the palette action that asks the agent to
  * merge the latest target branch into the workspace branch. It sends its
@@ -35,6 +38,8 @@ export function mergeLatestPrompt(base: string): string {
  * for a rebase onto the target branch in place of a merge, and a push that
  * replaces only the branch that the agent read.
  */
-export function mergeLatestRebasePrompt(base: string): string {
-  return `Fetch \`origin/${base}\` and rebase this branch onto it, because the merge queue needs a linear history. If the branch already has every commit of \`origin/${base}\`, say so and stop. Otherwise resolve each conflict, run the tests, then push with \`git push --force-with-lease\`. Don't merge \`origin/${base}\` into this branch.`
+export function mergeLatestRebasePrompt(
+  input: MergeQueueRebase | null,
+): string {
+  return `Update this branch for the merge queue's linear history. ${queueRebaseInstructions(input, true)}`
 }

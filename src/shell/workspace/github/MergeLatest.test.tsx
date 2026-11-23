@@ -120,7 +120,7 @@ describe('Merge latest in the palette', () => {
     serveWork(server, 'none')
     const { banner } = toolFixtures('ready-to-merge').banner
     server.json('GET', githubPaths.banner(org, id), {
-      banner: { ...banner, baseBranch: 'calummoore/apple-pay' },
+      banner: { ...banner, baseBranch: 'old-layer' },
       queue: {
         place: 2,
         count: 2,
@@ -128,14 +128,29 @@ describe('Merge latest in the palette', () => {
         trunk: 'main',
         state: 'queued',
         wait: null,
+        rebase: {
+          base: 'calummoore/apple-pay-secret123',
+          label: { text: 'calummoore/apple-pay-[redacted]' },
+          oldBase: 'a'.repeat(40),
+        },
       },
     })
     const { rows } = await searchMergeLatest(server)
+    expect(rows.map(accessibleName)).toEqual([
+      'Merge latest calummoore/apple-pay-[redacted]',
+    ])
     const [row] = rows
     if (row) click(row)
     await settle()
     expect((await sends(server)).map((body) => Object(body).text)).toEqual([
-      "Fetch `origin/calummoore/apple-pay` and rebase this branch onto it, because the merge queue needs a linear history. If the branch already has every commit of `origin/calummoore/apple-pay`, say so and stop. Otherwise resolve each conflict, run the tests, then push with `git push --force-with-lease`. Don't merge `origin/calummoore/apple-pay` into this branch.",
+      expect.stringContaining(
+        `git rebase --onto origin/calummoore/apple-pay-secret123 ${'a'.repeat(40)}`,
+      ),
+    ])
+    expect((await sends(server)).map((body) => Object(body).text)).toEqual([
+      expect.stringContaining(
+        'git push --force-with-lease --force-if-includes',
+      ),
     ])
   })
 

@@ -12,8 +12,8 @@ import type {
 import { readQueue, readQueueEntries } from './data'
 import { queueChanged } from './errors'
 import { resetLeavingBases } from './leave-base'
-import { leaveOrder } from './order'
-import { queueReadToken, queueWorkspace } from './repository'
+import { leaveOrder, removalPlan } from './order'
+import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import { followWorkspaceBase } from './restack-data'
 import { renameQueueTrunk, staleQueueEntries } from './step-data'
 import { completeQueueStep, saveQueueOrder } from './writes'
@@ -52,10 +52,7 @@ export async function leaveQueue(
         entry.workspaceId === signal.workspaceId
           ? signal.baseBranch
           : (bases.get(entry.workspaceId) ??
-            (entry.githubBase === queue.trunk
-              ? queue.trunk
-              : entry.memberBase) ??
-            queue.trunk)
+            removalPlan(entries, entry, queue.trunk).base)
       if (base) await followWorkspaceBase(runtime, queue, entry, base)
     }
   }
@@ -86,18 +83,13 @@ async function checkTrunk(
   if (!bottom || queue.trunk === queue.defaultBranch) return
   const { env, dependencies } = runtime
   const live = await readTrunk(runtime, queue, bottom)
-  if (live.defaultBranch !== queue.defaultBranch) return
-  if (live.refExists) {
+  if (live === 'switch') {
     await leaveQueue(runtime, queue, entries, {
       cause: 'default-branch-switched',
     })
     return
   }
-  if (
-    live.kind === 'open' &&
-    live.pull.number === bottom.pullNumber &&
-    live.pull.base === live.defaultBranch
-  )
+  if (live === 'rename')
     await renameQueueTrunk(env.DB, queue, dependencies.now())
 }
 
@@ -108,8 +100,26 @@ async function readTrunk(
 ) {
   const { env, dependencies } = runtime
   const binding = queueWorkspace(queue, bottom)
-  const read = (fetch: AppDependencies['fetch'], token: string) =>
-    readQueuePull(fetch, token, binding, bottom.branch, queue.trunk)
+  const read = async (fetch: AppDependencies['fetch'], token: string) => {
+    const live = await readQueuePull(
+      fetch,
+      token,
+      binding,
+      bottom.branch,
+      queue.trunk,
+    )
+    if (live.defaultBranch !== queue.defaultBranch) return 'waiting'
+    if (live.refExists) return 'switch'
+    const witness = queue.trunkPullNumber ?? bottom.pullNumber
+    if (live.kind === 'open' && live.pull.number === witness)
+      return live.pull.base === live.defaultBranch ? 'rename' : 'waiting'
+    const pull = await queueReader(
+      { env, dependencies: { ...dependencies, fetch } },
+      binding,
+      token,
+    ).openPullBase(witness)
+    return pull === live.defaultBranch ? 'rename' : 'waiting'
+  }
   if (env.GITHUB_APP_PRIVATE_KEY)
     return read(dependencies.fetch, await queueReadToken(runtime, binding))
   const workspace = await readMergeWorkspace(

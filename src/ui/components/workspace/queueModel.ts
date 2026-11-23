@@ -41,6 +41,10 @@ export const turnWaits = ['active-turn', 'agent-login', 'open-session'] as const
 
 export type TurnWait = (typeof turnWaits)[number]
 
+export const queueWaits = ['local-work', 'trunk-change'] as const
+
+type QueueWait = (typeof queueWaits)[number]
+
 /**
  * The GitHub states of a pull request that cannot merge until a member
  * acts: failed checks, a conflict, requested changes, and a block of the
@@ -82,6 +86,8 @@ type EntryFacts = {
   mergeAhead?: number
   /** Why the queue could not merge it, while it is ready. */
   problem?: MergeProblem
+  /** A check of the local work or default branch that has to finish. */
+  queueWait?: QueueWait
   /** What holds the message that the queue sends as the queuer. */
   turnWait?: TurnWait
   /**

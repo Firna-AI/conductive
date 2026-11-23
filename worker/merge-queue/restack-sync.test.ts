@@ -11,12 +11,54 @@ import {
   OUTER_ORG,
 } from '../chat/integration/outer-seed.test-support'
 import { HEAD_SHA, passedRun } from '../github/fake-pull'
+import { HEAD_SYNC_NEEDS_TURN } from '../lifecycle/queue-head-command'
 import { mergeFixture, TOP_HEAD, TRUNK_HEAD } from './merge.test-support'
 import { queueBundle } from './queue.test-support'
+import { restackFixture } from './restack.test-support'
 
 let bundle: string
 beforeAll(async () => {
   bundle = await queueBundle()
+})
+
+it('carries local work onto the rewritten GitHub branch with the old GitHub head and a plain push', async () => {
+  const f = await restackFixture(bundle, 'stack')
+  try {
+    const id = OTHER_WORKSPACE
+    const session = await f.session(id)
+    const sandbox = 'bx_queue_sync_local'
+    await f.db
+      .prepare('UPDATE workspaces SET sandbox_id = ? WHERE id = ?')
+      .bind(sandbox, id)
+      .run()
+    f.boat.states.set(sandbox, 'ready')
+    f.boat.beforeCommand = async (command) => {
+      f.boat.synchronousExitCode = command.includes('symbolic-ref --quiet HEAD')
+        ? HEAD_SYNC_NEEDS_TURN
+        : 0
+    }
+    const rewritten = '7'.repeat(40)
+    f.api.pulls[2].state = 'MERGED'
+    f.api.pulls[2].mergedAt = '2026-11-09T22:00:00Z'
+    f.api.pulls[3].baseRefName = 'main'
+    f.api.pulls[3].headRefOid = rewritten
+    f.api.branches.set('refs/heads/layer-two', rewritten)
+    f.api.mergeBases.set(`${TRUNK_HEAD}...${rewritten}`, TRUNK_HEAD)
+    f.api.mergeBases.set(`${HEAD_SHA}...${rewritten}`, TRUNK_HEAD)
+    await f.queue.advanceStartAlarm()
+    const messages = await f.messages(id, session)
+    expect(messages).toMatchObject([{ sender: { id: 'member' } }])
+    expect(messages[0].text).toContain(
+      `git rebase --onto origin/layer-two ${TOP_HEAD}`,
+    )
+    expect(messages[0].text).toContain(
+      `check that \`origin/layer-two\` is at \`${rewritten}\``,
+    )
+    expect(messages[0].text).toContain('run `git push`')
+    expect(messages[0].text).not.toContain('--force')
+  } finally {
+    await f.dispose()
+  }
 })
 
 it('retries an owner-token fetch and syncs the remaining branch after GitHub rewrites it', async () => {

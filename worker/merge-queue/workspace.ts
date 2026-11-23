@@ -1,6 +1,5 @@
 import { featureResult } from '../features/result'
-import type { GitHubSnapshot, GitHubWorkspace } from '../github/contracts'
-import { GITHUB_STATE_KEY } from '../github/workspace-state'
+import type { GitHubWorkspace } from '../github/contracts'
 import { lifecycleDependencies } from '../lifecycle/runtime'
 import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { saveQueueBaseChange } from '../lifecycle/queue-base-change'
@@ -15,7 +14,11 @@ import type {
   QueueFixRequest,
   QueueRestack,
 } from './fix-contracts'
-import { queueLocalClean, type QueueLocalWork } from './local-work'
+import {
+  queueLocalClean,
+  type QueueLocalState,
+  type QueueLocalWork,
+} from './local-work'
 
 export class MergeQueueWorkspace extends AgentSessionWorkspace {
   private readonly mergeQueue: QueueCoordinator
@@ -119,10 +122,11 @@ export class MergeQueueWorkspace extends AgentSessionWorkspace {
     })
   }
 
-  async mergeQueueLocalClean(input: QueueLocalWork): Promise<boolean> {
+  async mergeQueueLocalClean(input: QueueLocalWork): Promise<QueueLocalState> {
     if (!this.env.WORKSPACES.idFromName(input.workspaceId).equals(this.ctx.id))
-      return false
-    if (await pendingWorkspaceChange(this.integration.storage)) return false
+      return 'unavailable'
+    if (await pendingWorkspaceChange(this.integration.storage))
+      return 'unavailable'
     return queueLocalClean(
       {
         env: this.env,
@@ -135,23 +139,5 @@ export class MergeQueueWorkspace extends AgentSessionWorkspace {
 
   protected async alarmWithQueue(fallback: () => Promise<void>): Promise<void> {
     if (!(await this.mergeQueue.alarm())) await fallback()
-  }
-
-  async listedGitHubPullBase(
-    workspaceId: string,
-    branch: string,
-  ): Promise<string | undefined> {
-    if (!this.env.WORKSPACES.idFromName(workspaceId).equals(this.ctx.id))
-      return undefined
-    const snapshot = await this.chat.readWorkspace(workspaceId, (view) =>
-      view.github.get<GitHubSnapshot>(GITHUB_STATE_KEY),
-    )
-    const banner = snapshot?.banner
-    return banner?.branch === branch &&
-      banner.pullRequest &&
-      banner.state !== 'closed' &&
-      banner.state !== 'merged'
-      ? snapshot?.pullBaseBranch
-      : undefined
   }
 }

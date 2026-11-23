@@ -207,16 +207,34 @@ describe('the merge queue in the bar', () => {
 
   it('asks for a rebase in Resolve conflicts while the workspace is queued', () => {
     const oldBase = 'a'.repeat(40)
-    const snapshot = { ...snapshotOf('conflict'), queue: { ...entry, oldBase } }
+    const snapshot = {
+      ...snapshotOf('conflict'),
+      queue: { ...entry, rebase: { base: 'the-layer-below', oldBase } },
+    }
     const prompt = promptOf('resolve-conflicts', snapshot)
     expect(prompt).toContain('the merge queue needs a linear history')
-    expect(prompt).toContain(`git rebase --onto origin/main ${oldBase}`)
-    expect(prompt).toContain('git push --force-with-lease')
+    expect(prompt).toContain(
+      `git rebase --onto origin/the-layer-below ${oldBase}`,
+    )
+    expect(prompt).toContain('git push --force-with-lease --force-if-includes')
     expect(promptOf('resolve-conflicts', snapshotOf('conflict'))).toContain(
       'merge it into this branch',
     )
     expect(
       promptOf('resolve-conflicts', { ...snapshot, queue: entry }),
     ).toContain('If you cannot verify it, stop and say so')
+  })
+
+  it('shows the masked trunk even while GitHub names a different base', () => {
+    const queue = {
+      ...entry,
+      state: 'merging' as const,
+      trunk: 'main-secret123',
+      trunkLabel: { text: 'main-[redacted]' },
+    }
+    const bar = view('ready-to-merge', queue)
+    expect(bar.queue?.line?.text).toBe(
+      'Place 3 of 3 in the merge queue. Merging into main-[redacted].',
+    )
   })
 })

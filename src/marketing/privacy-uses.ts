@@ -252,7 +252,10 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         default branch. Each entry records its workspace, pull request,
         place, member who added it, state, and the time of each step.
         The queue uses these records and GitHub events to run and show its
-        progress to the org.`,
+        progress to the org. For the workspace list, ${productName}
+        temporarily stores whether you have write access to a repository.
+        It also stores open pull request bases, whether they come from
+        forks, and whether the default branch needs GitHub's queue.`,
       text`Merge records: ${productName} keeps one record for each merged
         pull request of a workspace branch. This includes each pull request
         that the queue merges. The record holds the GitHub

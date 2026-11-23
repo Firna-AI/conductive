@@ -143,7 +143,7 @@ describe('the merge queue in the pull request bar', () => {
     expect({ text, question, writes: writes(server, from) }).toEqual({
       text: 'Place 3 of 3 in the merge queue. It builds on #479.Remove from queue',
       question: expect.stringContaining(
-        'Pull request #482 loses its place and targets main again.',
+        'Pull request #482 loses its place and targets main.',
       ),
       writes: [`DELETE ${mergeQueuePaths.entry(org, id)}`],
     })

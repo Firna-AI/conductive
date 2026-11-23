@@ -39,6 +39,7 @@ export async function shellRoute(
   env: AppEnv,
   context: RequestContext,
   dependencies: AppDependencies,
+  execution?: Pick<ExecutionContext, 'waitUntil'>,
 ): Promise<Response | null> {
   if (!context.org) return null
   const orgId = context.org.id
@@ -57,14 +58,14 @@ export async function shellRoute(
       return Response.json(await listMembers(env.DB, orgId, userId))
     if (path === workspacesPath(orgId)) {
       const rows = await shellWorkspaces(env.DB, orgId, userId)
-      const { fields, repositories } = await listMergeQueueFields(
+      const { fields, repositories, refresh } = await listMergeQueueFields(
         env,
         dependencies,
         orgId,
         userId,
         rows,
       )
-      return Response.json({
+      const response = Response.json({
         repositories,
         workspaces: await Promise.all(
           rows.map(async (row) => ({
@@ -78,6 +79,9 @@ export async function shellRoute(
           })),
         ),
       })
+      if (refresh && execution)
+        execution.waitUntil(refresh().catch(() => undefined))
+      return response
     }
   }
   const workspaceId = workspaceChildId(path, orgId)

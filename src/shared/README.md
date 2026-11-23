@@ -18,7 +18,10 @@ Dates use Unix milliseconds. IDs and model names are opaque strings.
 `Workspace.link` is its absolute web link, with org and workspace IDs.
 `AgentWorkspaceSummary` gives the same number and link.
 `Workspace.github` is the GitHub summary of its pull request, or null.
-The list can also give `Workspace.mergeQueue`, `githubCanWrite`, and `githubPullBase`.
+The list can also give `Workspace.mergeQueue`, `githubCanWrite`, and
+`githubPullBase`. A queue entry can include the planned removal base and
+the entries that leave with it. `mergeQueueLabels` holds filtered branch
+labels for the list's queue controls.
 The [merge queue paths](merge-queue.ts) build the member routes.
 `GitHubSummary` comes from `generated/`. `githubSummary` in `github.ts` gives
 it from a banner: the state of the bar, or null without a pull request and

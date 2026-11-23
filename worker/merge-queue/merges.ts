@@ -18,7 +18,7 @@ import {
 } from './merge-job'
 import { readMergePulls, type QueuePullRead } from './merge-read'
 import { reconcileMergePulls } from './merge-settle'
-import { saveQueueAlarm } from './queue-alarm'
+import { saveQueueAlarm, saveQueueRetry } from './queue-alarm'
 import type { QueueRestackRead } from './restacks'
 import { leaveQueue, type QueueRuntime } from './step'
 
@@ -178,7 +178,21 @@ export class QueueMerges {
       restack?.entries ?? (await readQueueEntries(env.DB, queue.id))
     if (!entries.length) return
     const read = await this.read(queue, entries, undefined, restack)
-    if (!read || queue.reordering) return
+    if (!read) return
+    const local = read.projection.find(
+      ({ wait }) => wait === 'push' || wait === 'local-work',
+    )
+    const held = entries.find(
+      ({ workspaceId }) => workspaceId === local?.workspaceId,
+    )
+    await saveQueueRetry(
+      this.storage,
+      queue,
+      'local-work',
+      dependencies.now(),
+      held && JSON.stringify([held.workspaceId, held.queuedAt]),
+    )
+    if (queue.reordering) return
     const target = read.automatic.at(-1)
     if (!target) {
       await this.storage.delete(CHECK_WAIT)

@@ -81,13 +81,6 @@ export async function settleMergeJob(
   )
     return false
   await finishQueueMerge(env.DB, queue, now)
-  if (job.outcome === 'refused')
-    await markMergeRefused(
-      env.DB,
-      queue,
-      job.target,
-      target?.snapshot?.headSha ?? job.input.headSha,
-      now,
-    )
+  if (job.outcome === 'refused') await markMergeRefused(env.DB, job, now)
   return true
 }

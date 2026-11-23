@@ -22,7 +22,7 @@ export const bannerMergeQueueQueued = defineScreen({
       slug: 'restack',
       title: 'The one turn of the queue',
       description:
-        'A fix of #479 pushed new commits, so the queue moves #482 onto the new head of the branch of #479. The rebase of GitHub hit a conflict. So the queue sent its one fix turn for its own move: the restack prompt, as a message of Cal, who queued #482, and the agent works on it. The prompt names the new head of the branch of #479 and the old base commit, for `git rebase --onto`, then a push with `--force-with-lease`. The line shows a spinner and "Rebasing onto #479" until the turn ends. The bar shows the conflict, with the branch of #479 as its detail in a wide column. If the turn ends and the conflict stays, the queue sends no second turn, as the `rebase-waits` variant shows.',
+        'A fix of #479 pushed new commits. The queue moves #482 onto that new head and sends its one fix turn as Cal, who queued #482. The prompt names the new head and the old base commit for `git rebase --onto`. It asks for `git push --force-with-lease --force-if-includes`. The line shows a spinner and "Rebasing onto #479" until the turn ends. The bar shows the conflict, with the branch of #479 as its detail in a wide column. If the conflict stays, the entry waits for a member.',
       rationale:
         'Cal chose decision 321 A on 23 November 2026: the queue caused the conflict with its own move, so it sends one agent turn as the queuer, and each pull request builds on the work ahead with no click. Decision 319 B: the queue first asks GitHub for a server rebase, and sends the turn only on a conflict. The turn goes as a message of the queuer (decision 314 A). `--onto` keeps only the own commits of the branch, also after a squash merge below it.',
       props: {
@@ -49,7 +49,7 @@ export const bannerMergeQueueQueued = defineScreen({
       slug: 'rebase',
       title: 'Resolve conflicts with a rebase',
       description:
-        'After the turn of the queue left the conflict, Cal pressed Resolve conflicts in place of an answer to the agent. On a queued workspace, its prompt asks for a rebase onto the branch of #479 and a push with `--force-with-lease`, not a merge, and it goes as a message of the member who pressed it. The line still says "The queue waits for a rebase onto #479." until the push resolves the conflict.',
+        'After the turn of the queue left the conflict, Cal pressed Resolve conflicts. The prompt uses the branch of #479 from queue order. It asks for `git rebase --onto` and `git push --force-with-lease --force-if-includes`. It goes as a message of the member who pressed it. The line still says "The queue waits for a rebase onto #479." until the push resolves the conflict.',
       rationale:
         'A GitHub stack needs a linear history, so while a workspace is queued, Resolve conflicts, Merge latest, and the restack ask for a rebase. The queue itself sends only its one turn, with the restack prompt (decision 321 A).',
       props: {

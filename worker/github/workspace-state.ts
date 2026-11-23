@@ -8,7 +8,7 @@ import type {
   GitHubStateTransaction,
 } from './contracts'
 
-export const GITHUB_STATE_KEY = 'github:state'
+const GITHUB_STATE_KEY = 'github:state'
 
 /** Keep one instance per workspace DO. Reads and commits share its queue. */
 export class WorkspaceGitHubState {

@@ -80,6 +80,5 @@ export const restackFacts: RestackFacts = {
 export const queuedPromptFacts: PromptFacts = {
   ...promptFacts,
   base: applePayBranch,
-  rebase: true,
-  oldBase: restackFacts.oldBase,
+  rebase: { base: restackFacts.base, oldBase: restackFacts.oldBase },
 }

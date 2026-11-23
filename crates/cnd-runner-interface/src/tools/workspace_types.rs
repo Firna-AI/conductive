@@ -7,7 +7,7 @@ use ts_rs::TS;
 use crate::agents::AgentChoice;
 use crate::api::Timestamp;
 use crate::messages::MessageSender;
-use crate::tools::merge_queue::MergeQueueEntry;
+use crate::tools::merge_queue::{MergeQueueEntry, MergeQueueListLabels};
 
 /// Workspace activity; input means the agent waits for a user action.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
@@ -152,6 +152,10 @@ pub struct Workspace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]
     pub github_pull_base: Option<String>,
+    /// The filtered branch labels for the queue controls of this workspace.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[ts(optional)]
+    pub merge_queue_labels: Option<MergeQueueListLabels>,
     /// Whether only a fork has an open pull request for the branch name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[ts(optional)]

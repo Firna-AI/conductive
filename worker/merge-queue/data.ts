@@ -8,8 +8,11 @@ const queueEntryColumns = `queue_id AS queueId, workspace_id AS workspaceId, bra
   queued_at AS queuedAt, step_at AS stepAt, member_base AS memberBase,
   merge_head AS mergeHead, refused_head AS refusedHead,
   old_base_sha AS oldBase, old_base_head AS oldBaseHead, github_base AS githubBase,
-  pending_base AS pendingBase, observed_head AS observedHead, sync_from AS syncFrom,
-  sync_old_base AS syncOldBase`
+  pending_base AS pendingBase, observed_head AS observedHead, sync_from AS syncFrom`
+
+export const queueReservesRepository = `(q.creating_stack = 1 OR EXISTS (
+  SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
+))`
 
 export function readQueue(
   db: D1Database,
@@ -19,6 +22,7 @@ export function readQueue(
     .prepare(
       `SELECT q.id, q.org_id AS orgId, q.repository_id AS repositoryId,
        q.github_repository_id AS githubRepositoryId, q.trunk,
+       q.trunk_pull_number AS trunkPullNumber,
        r.full_name AS fullName, r.installation_id AS installationId,
        q.github_stack_number AS githubStackNumber, q.pending_write AS pendingWrite,
        q.stack_writer_user_id AS stackWriterUserId, q.rebuild_stack AS rebuildStack,
@@ -69,11 +73,24 @@ export async function otherOrgQueuesRepository(
     (await db
       .prepare(
         `SELECT 1 FROM merge_queues q WHERE q.github_repository_id = ? AND q.org_id != ?
-       AND (q.github_stack_number IS NOT NULL OR q.creating_stack = 1 OR EXISTS (
-         SELECT 1 FROM merge_queue_entries e WHERE e.queue_id = q.id
-       )) LIMIT 1`,
+       AND ${queueReservesRepository} LIMIT 1`,
       )
       .bind(scope.githubRepositoryId, scope.orgId)
+      .first()) !== null
+  )
+}
+
+export async function stackOfAnotherQueue(
+  db: D1Database,
+  queue: QueueRecord,
+  number: number,
+) {
+  return (
+    (await db
+      .prepare(
+        'SELECT 1 FROM merge_queues WHERE github_repository_id = ? AND github_stack_number = ? AND id != ?',
+      )
+      .bind(queue.githubRepositoryId, number, queue.id)
       .first()) !== null
   )
 }

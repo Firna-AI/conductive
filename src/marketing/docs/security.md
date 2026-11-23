@@ -272,6 +272,7 @@ Earlier chat and logs keep their text.
 Changed or encoded values can still appear.
 File content, pictures in agent replies, diff content, downloaded files, and Terminal do not hide secret values.
 Some displayed path labels hide values, but the browser still receives real file paths.
+Merge queue controls also hide these values in branch labels. Git operations use the real branch names.
 
 - [Set environment variables](/docs/cloud-computer#set-environment-variables)
 

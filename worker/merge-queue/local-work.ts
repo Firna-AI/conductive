@@ -11,11 +11,13 @@ export interface QueueLocalWork {
   userId: string
 }
 
+export type QueueLocalState = 'clean' | 'dirty' | 'unavailable'
+
 export async function queueLocalClean(
   runtime: QueueRuntime,
   files: WorkspaceFiles,
   input: QueueLocalWork,
-): Promise<boolean> {
+): Promise<QueueLocalState> {
   const { env, dependencies } = runtime
   const current = () => readWorkspace(env.DB, input.orgId, input.workspaceId)
   const matches = (row: Awaited<ReturnType<typeof current>>) =>
@@ -25,13 +27,14 @@ export async function queueLocalClean(
     row.state !== 'archived' &&
     row.state !== 'starting'
   const row = await current()
-  if (!matches(row)) return false
-  if (!row.sandboxId) return true
+  if (!matches(row)) return 'unavailable'
+  if (!row.sandboxId) return 'clean'
   let clean: boolean
   if (row.state === 'stopped' || row.state === 'error') {
     const changes = await files.changes()
+    if (!changes) return 'unavailable'
     clean =
-      changes?.unpushedCommits === 0 &&
+      changes.unpushedCommits === 0 &&
       changes.uncommittedFileCount === 0 &&
       changes.files.every((file) => !file.uncommitted)
   } else {
@@ -45,10 +48,11 @@ export async function queueLocalClean(
     clean = work.unpushedCommits === 0 && work.uncommittedFiles.length === 0
   }
   const latest = await current()
-  return (
-    clean &&
-    matches(latest) &&
-    latest.sandboxId === row.sandboxId &&
-    latest.state === row.state
+  if (
+    !matches(latest) ||
+    latest.sandboxId !== row.sandboxId ||
+    latest.state !== row.state
   )
+    return 'unavailable'
+  return clean ? 'clean' : 'dirty'
 }

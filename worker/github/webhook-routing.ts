@@ -26,11 +26,6 @@ export interface WebhookRoute extends ReachedRepository {
   /** The branches that a check event names. Empty when it names none. */
   branches?: string[]
   push: boolean
-  queueLeave?: {
-    cause: 'merged' | 'closed' | 'draft'
-    pullNumber: number
-    githubActorId?: number
-  }
   pullRequest?: GitHubPullRequestEvent
   pullRequestChange?: {
     number: number
@@ -165,29 +160,10 @@ export function webhookRoute(
     if (event !== 'pull_request') return { ...common, branch }
     const action = string(value.action)
     const change = pullRequestChange(value, action, base)
-    const cause =
-      action === 'closed'
-        ? value.pull_request.merged === true
-          ? 'merged'
-          : 'closed'
-        : action === 'converted_to_draft'
-          ? 'draft'
-          : undefined
-    const queueLeave: WebhookRoute['queueLeave'] = cause
-      ? {
-          cause,
-          pullNumber: id({ id: value.number }),
-          githubActorId:
-            isRecord(value.sender) && typeof value.sender.id === 'number'
-              ? id(value.sender)
-              : undefined,
-        }
-      : undefined
     const target = {
       ...common,
       branch,
       ...(change && { pullRequestChange: change }),
-      ...(queueLeave && { queueLeave }),
     }
     const merged = value.pull_request.merged
     const kind =

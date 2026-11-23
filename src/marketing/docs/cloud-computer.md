@@ -70,6 +70,7 @@ A stopped computer completes this move when it resumes.
 Outside the merge queue, workspaces that target another branch keep that target.
 Renaming the default branch keeps the merge queue.
 Choosing a different default branch empties the queue.
+The pull request bar shows a wait while the queue verifies the change.
 If a build is running, the new build starts after it.
 If the last build failed, the change waits for **Try again**.
 

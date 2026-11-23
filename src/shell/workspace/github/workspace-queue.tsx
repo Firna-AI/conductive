@@ -12,23 +12,22 @@ import type { WorkspaceContext } from '../features'
 import { useGitHubFeed, useScreenBar } from './WorkspaceGitHub'
 
 /** What the screen of a workspace knows for the question of Remove from queue. */
-type Known = { number?: number; trunk?: string }
+type Known = { number?: number }
 
-/** The number of the pull request and the trunk of the queue, from the bar. */
+/** The number of the pull request, from the bar. */
 function knownOf(feed: GitHubFeed | null): Known {
   const state = feed?.state
   if (state?.status !== 'ready') return {}
-  const { banner, queue } = state.snapshot
+  const { banner } = state.snapshot
   return {
     ...(banner.pullRequest && { number: banner.pullRequest.number }),
-    ...(queue && { trunk: queue.trunk }),
   }
 }
 
 /**
  * What the bar of the open workspace knows for the question of Remove from
- * queue of the menu of its header: the number of its pull request and the
- * trunk of its queue. Another workspace gets nothing.
+ * queue of the menu of its header: the number of its pull request.
+ * Another workspace gets nothing.
  */
 export function useQueueKnown(workspaceId: string): (id: string) => Known {
   const known = knownOf(useGitHubFeed())

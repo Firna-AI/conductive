@@ -50,10 +50,18 @@ export function withMergeQueue(
     const peers = units
       .filter((item) => repositoryOf(item[0]) === workspace.repositoryId)
       .flat()
+    const githubPullBase =
+      workspace.id === 'invoice-fonts' ? releaseBase : 'main'
+    const at = unit?.indexOf(workspace.id) ?? 0
+    const below = workspaces.find(({ id }) => id === unit?.[at - 1])
     return {
       ...workspace,
       githubCanWrite: true,
-      githubPullBase: workspace.id === 'invoice-fonts' ? releaseBase : 'main',
+      githubPullBase,
+      mergeQueueLabels: {
+        defaultBranch: { text: 'main' },
+        pullBase: { text: githubPullBase },
+      },
       ...(unit && {
         mergeQueue: {
           queueId: `queue-${workspace.repositoryId}`,
@@ -61,6 +69,15 @@ export function withMergeQueue(
           unitId: `unit-${unit[0]}`,
           state: 'queued' as const,
           pullNumber: pullNumbers[workspace.id],
+          removal: {
+            base: { text: below?.branch ?? 'main' },
+            above: unit.slice(at + 1).flatMap((workspaceId) => {
+              const pullNumber = pullNumbers[workspaceId]
+              return pullNumber === undefined
+                ? []
+                : [{ workspaceId, pullNumber }]
+            }),
+          },
         },
       }),
     }

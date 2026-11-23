@@ -1,8 +1,12 @@
 import type { MergeQueueBarState } from './generated/MergeQueueBarState'
+import type { MergeQueueBranchLabel } from './generated/MergeQueueBranchLabel'
 import type { MergeQueueEntry } from './generated/MergeQueueEntry'
 import type { MergeQueueEntryState } from './generated/MergeQueueEntryState'
 import type { MergeQueueLeaveNotice } from './generated/MergeQueueLeaveNotice'
 import type { MergeQueueWait } from './generated/MergeQueueWait'
+import type { MergeQueueListLabels } from './generated/MergeQueueListLabels'
+import type { MergeQueueRebase } from './generated/MergeQueueRebase'
+import type { MergeQueueRemoval } from './generated/MergeQueueRemoval'
 import type { WorkspaceListRepository } from './generated/WorkspaceListRepository'
 import { isGitCommitOid } from './git-commit-oid'
 
@@ -27,6 +31,8 @@ const waitRecord: Readonly<Record<MergeQueueWait, true>> = {
   rebase: true,
   rules: true,
   push: true,
+  'local-work': true,
+  'trunk-change': true,
   'lower-layer': true,
   token: true,
   'active-turn': true,
@@ -60,6 +66,49 @@ function stateOf(value: unknown): MergeQueueEntryState | undefined {
   return isEntryState(value) ? value : undefined
 }
 
+function readBranchLabel(value: unknown): MergeQueueBranchLabel | undefined {
+  return isRecord(value) && isText(value.text)
+    ? { text: value.text }
+    : undefined
+}
+
+export function readMergeQueueListLabels(
+  value: unknown,
+): MergeQueueListLabels | undefined {
+  if (!isRecord(value)) return undefined
+  const defaultBranch = readBranchLabel(value.defaultBranch)
+  const pullBase = readBranchLabel(value.pullBase)
+  return defaultBranch && { defaultBranch, ...(pullBase && { pullBase }) }
+}
+
+function readRemoval(value: unknown): MergeQueueRemoval | undefined {
+  if (!isRecord(value) || !Array.isArray(value.above)) return undefined
+  const base = readBranchLabel(value.base)
+  if (!base) return undefined
+  const above: readonly unknown[] = value.above
+  return {
+    base,
+    above: above.flatMap((entry) =>
+      isRecord(entry) &&
+      isText(entry.workspaceId) &&
+      isPositive(entry.pullNumber)
+        ? [{ workspaceId: entry.workspaceId, pullNumber: entry.pullNumber }]
+        : [],
+    ),
+  }
+}
+
+function readRebase(value: unknown): MergeQueueRebase | undefined {
+  if (!isRecord(value) || !isText(value.base)) return undefined
+  const label = readBranchLabel(value.label)
+  return {
+    base: value.base,
+    ...(label && { label }),
+    ...(isGitCommitOid(value.baseHead) && { baseHead: value.baseHead }),
+    ...(isGitCommitOid(value.oldBase) && { oldBase: value.oldBase }),
+  }
+}
+
 /** The queue entry of a listed workspace, or none. */
 export function readMergeQueueEntry(
   value: unknown,
@@ -67,6 +116,7 @@ export function readMergeQueueEntry(
   if (!isRecord(value)) return undefined
   const { queueId, place, unitId, pullNumber } = value
   const state = stateOf(value.state)
+  const removal = readRemoval(value.removal)
   if (!isText(queueId) || !isPositive(place) || !isText(unitId) || !state)
     return undefined
   return {
@@ -75,6 +125,7 @@ export function readMergeQueueEntry(
     unitId,
     state,
     ...(isPositive(pullNumber) && { pullNumber }),
+    ...(removal && { removal }),
   }
 }
 
@@ -96,6 +147,8 @@ export function readMergeQueueBarState(
     oldBase,
   } = value
   const state = stateOf(value.state)
+  const trunkLabel = readBranchLabel(value.trunkLabel)
+  const rebase = readRebase(value.rebase)
   const below =
     belowPullNumber === null
       ? null
@@ -117,6 +170,8 @@ export function readMergeQueueBarState(
       mergeAhead >= 0 && { mergeAhead }),
     ...(isPositive(blockedByPullNumber) && { blockedByPullNumber }),
     ...(isGitCommitOid(oldBase) && { oldBase }),
+    ...(trunkLabel && { trunkLabel }),
+    ...(rebase && { rebase }),
   }
 }
 

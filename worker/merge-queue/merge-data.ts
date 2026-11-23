@@ -1,5 +1,7 @@
 import type { QueueEntry, QueueRecord } from './contracts'
 import type { MergeProjection } from './merge-choice'
+import type { QueueMergeJob } from './merge-job'
+import { ageQueueListFacts } from './list-facts-data'
 
 export async function projectMerge(
   db: D1Database,
@@ -52,6 +54,7 @@ export async function markQueueMerging(
         queue.id,
         JSON.stringify(entries.map(({ workspaceId }) => workspaceId)),
       ),
+    ageQueueListFacts(db, queue.id),
   ])
 }
 
@@ -80,11 +83,10 @@ export async function finishQueueMerge(
 
 export async function markMergeRefused(
   db: D1Database,
-  queue: QueueRecord,
-  entry: QueueEntry,
-  head: string,
+  job: Extract<QueueMergeJob, { stage: 'settling' }>,
   now: number,
 ) {
+  const { queue, target, input } = job
   await db
     .prepare(
       `UPDATE merge_queue_entries SET state = 'waiting', wait_reason = 'merge-refused',
@@ -93,12 +95,12 @@ export async function markMergeRefused(
     )
     .bind(
       now,
-      head,
+      input.headSha,
       queue.id,
-      entry.workspaceId,
-      entry.branch,
-      entry.queuedAt,
-      entry.unitId,
+      target.workspaceId,
+      target.branch,
+      target.queuedAt,
+      target.unitId,
     )
     .run()
 }

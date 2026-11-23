@@ -1,5 +1,6 @@
 import { beforeAll, expect, it } from 'vitest'
 
+import { readWorkspaces } from '../../src/app/api/read-workspaces'
 import { githubPaths } from '../../src/shared/github'
 import { workspacePaths, workspacesPath } from '../../src/shared/workspaces'
 import {
@@ -101,7 +102,7 @@ it('adds a draft member stack, moves the unit, and removes its suffix', async ()
   }
 })
 
-it('projects the queue and live branch facts and clears the archived entry', async () => {
+it('projects queue placement and clears the archived entry', async () => {
   const f = await queueFixture(bundle)
   try {
     expect((await f.change('POST', PARALLEL)).status).toBe(204)
@@ -121,27 +122,25 @@ it('projects the queue and live branch facts and clears the archived entry', asy
         requireWritable: true,
       }),
     )
-    f.api.merges.memberPermissions.set(MEMBER_TOKEN, 'READ')
     const list = await f.request(workspacesPath(OUTER_ORG), {
       headers: { Cookie: cookie },
     })
     expect(list.status).toBe(200)
-    expect(await list.json()).toMatchObject({
-      workspaces: expect.arrayContaining([
-        expect.objectContaining({
-          id: OTHER_WORKSPACE,
-          githubCanWrite: false,
-          githubPullBase: 'changes',
-          mergeQueue: {
-            queueId: first.queueId,
-            place: 3,
-            unitId: first.unitId,
-            state: 'queued',
-            pullNumber: 3,
-          },
-        }),
-      ]),
+    const listed = readWorkspaces(await list.json()).find(
+      ({ id }) => id === OTHER_WORKSPACE,
+    )
+    expect(listed).toMatchObject({
+      github: 'ready-to-merge',
+      mergeQueue: {
+        queueId: first.queueId,
+        place: 3,
+        unitId: first.unitId,
+        state: 'queued',
+        pullNumber: 3,
+        removal: { base: { text: 'changes' }, above: [] },
+      },
     })
+    expect(listed).not.toHaveProperty('githubPullBase')
     const bar = await f.request(githubPaths.stored(OUTER_ORG, OTHER_WORKSPACE))
     expect(bar.status).toBe(200)
     expect(await bar.json()).toMatchObject({

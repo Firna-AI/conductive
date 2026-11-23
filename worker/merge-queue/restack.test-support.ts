@@ -15,8 +15,11 @@ import { recordedPullRequest, recordedPush } from '../github/recorded-webhooks'
 import { mergeFixture } from './merge.test-support'
 import { queueWebhook } from './queue.test-support'
 
-export async function restackFixture(bundle: string) {
-  const f = await mergeFixture(bundle, 'single')
+export async function restackFixture(
+  bundle: string,
+  mode: 'single' | 'stack' = 'single',
+) {
+  const f = await mergeFixture(bundle, mode)
   f.api.checks.set(HEAD_SHA, [{ ...passedRun, conclusion: 'FAILURE' }])
   const post = (path: string, value: unknown) =>
     f.request(path, {

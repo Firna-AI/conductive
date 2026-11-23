@@ -17,7 +17,7 @@ export interface QueueItem {
  * A drag of an entry of the Merge queue group. Its places are indexes
  * among the other units of its block.
  */
-export type QueueDragState = PointerDrag<QueueItem, number>
+export type QueueDragState = PointerDrag<QueueItem, number | null>
 
 /**
  * Drag and drop of the entries of the Merge queue group, on the shared
@@ -25,17 +25,17 @@ export type QueueDragState = PointerDrag<QueueItem, number>
  * row after a long press. A drag lifts the whole unit of the entry, and
  * moves it only inside its block (decision 315). The drop place is before
  * the first other unit whose middle is below the pointer. Outside the
- * block, the place stays as it was. A release at the own place of the
- * unit moves nothing, also after a long press that lets go without a move.
+ * block, the drop has no place. A release at the unit's own place moves
+ * nothing, also after a long press that lets go without a move.
  */
 export function useQueueDrag(move: (item: QueueItem, index: number) => void) {
   /** The group gives its blocks and rows to the layout through refs. */
   const [layout] = useState(() => new QueueLayout())
-  const { drag, bind } = usePointerDrag<QueueItem, number>({
-    locate: (item, _x, y, last) =>
-      layout.indexAt(item.repositoryId, item.unit, y) ?? last,
+  const { drag, bind } = usePointerDrag<QueueItem, number | null>({
+    locateOnRelease: true,
+    locate: (item, x, y) => layout.indexAt(item.repositoryId, item.unit, x, y),
     drop: ({ item, from, place }) => {
-      if (place !== from) move(item, place)
+      if (place !== null && place !== from) move(item, place)
     },
   })
   return { drag, bind, layout }

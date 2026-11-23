@@ -60,6 +60,10 @@ question, reason, and prompt.
   lifts the row.
 - A drag lifts the whole unit of the entry. It moves the unit only inside
   its block, and the drop line falls only between two units.
+- Moving the pointer, scrolling, and releasing each check the visible
+  target under the pointer. A release outside the queue or its eligible
+  block makes no queue change. Outside the group and sections, a dragged
+  section row returns to its own place.
 - When the move fails, the rows go back to their places, and a toast names
   the failure, as for a move between sections.
 - During each drag of a row of a section, the group shows as a drop target
@@ -76,6 +80,13 @@ question, reason, and prompt.
   member without write access to the repository, a default branch that
   needs GitHub's own merge queue, and a repository that another org
   already queues.
+- The workspace list uses saved GitHub facts for the controls and drop
+  reasons. Write access is specific to the viewer. The Worker refreshes
+  those facts in the background and checks current access and eligibility
+  on each queue change.
+- Branch names in queue messages use labels that hide the known secret
+  values from the workspace's latest computer start. Git uses the real
+  names, as [Tokens and secrets](tokens-and-secrets.md) says.
 
 ## Add to merge queue
 
@@ -128,8 +139,10 @@ question, reason, and prompt.
   restack turn of a conflict ends.
 - While the entry waits, the line says what the queue waits for, in place
   of the pull request below. It names its checks, its review, a rebase onto
-  the branch below, the rules of GitHub, the push of its local work, or a
-  lower layer, such as "The queue waits for #479."
+  the branch below, the rules of GitHub, the push of local work, or a lower
+  layer, such as "The queue waits for #479."
+- The line also names a wait to check local work or to verify the change
+  of the default branch.
 - When the stored GitHub token of the queuer stopped working, or GitHub
   refused the merge, the line names that reason. After a refusal, the line
   also offers Open on GitHub. No GitHub error text reaches the browser.
@@ -154,10 +167,11 @@ question, reason, and prompt.
 - A layer that merges offers no Remove from queue. Reason: a merge cannot
   stop for a removal.
 - Remove from queue asks first. The question says that the pull request
-  loses its place, names the branch that it targets again, such as the
-  default branch, and says that a later add puts it at the end of the
-  queue. On a lower entry of a member stack, it names the entries above it,
-  which leave too. On a phone, the question opens as a sheet.
+  loses its place and names its planned base. An upper entry of a member
+  stack can keep the branch below it. The question also names the upper
+  entries of the unit that leave with the selected pull request. A later
+  add joins at the end of the queue. On a phone, the question opens as a
+  sheet.
 - Reason: a member cannot get a place back.
 - A confirmed removal runs the leave step, as
   [Leaving the queue](merge-queue.md#leaving-the-queue) says.
@@ -201,13 +215,13 @@ question, reason, and prompt.
 - GitHub merges a stack only with a linear history. So while a workspace
   is queued, Resolve conflicts, Merge latest, and the restack ask for a
   rebase, not a merge.
-- Resolve conflicts of a queued workspace names the old base commit. It
-  asks for `git rebase --onto` onto the branch below, as the restack prompt
-  does, and for a push with `git push --force-with-lease`.
+- Resolve conflicts and Merge latest use the branch selected by queue
+  order. That branch is the trunk or the branch directly below the entry.
+  Each prompt asks for `git rebase --onto` with the old base commit and for
+  a push with `git push --force-with-lease --force-if-includes`.
+  The agent stops if it cannot verify the base or if Git refuses the push.
 - Reason: a plain rebase onto a lower layer that a restack rewrote would
   replay the old commits of that layer, and give more conflicts.
-- The prompt of Merge latest asks for a rebase onto the target branch, in
-  place of a merge.
 - These prompts go as a message of the member who clicks, as outside the
   queue. The restack prompt goes as a message of the queuer, as
   [Restack turns](merge-queue-stack.md#restack-turns) says.

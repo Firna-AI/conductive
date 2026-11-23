@@ -1,5 +1,8 @@
 import type { Workspace } from '../shared/generated/Workspace'
-import type { JoinRefusal } from '../ui/components/workspace/queueCopy'
+import {
+  defaultQueueBranchLabel,
+  type JoinRefusal,
+} from '../ui/components/workspace/queueCopy'
 import type { QueueFacts, QueueMenuAction } from './merge-queue'
 
 /*
@@ -45,10 +48,10 @@ function unitBase(
   trunk: string,
 ): JoinCheck {
   const seen = new Set([workspace.id])
-  let base = workspace.githubPullBase
-  while (base !== undefined) {
-    if (base === trunk) return { kind: 'can-join' }
-    const branch = base
+  let layer = workspace
+  while (layer.githubPullBase !== undefined) {
+    if (layer.githubPullBase === trunk) return { kind: 'can-join' }
+    const branch = layer.githubPullBase
     const lower = workspaces.find(
       (item) =>
         item.repositoryId === workspace.repositoryId &&
@@ -57,11 +60,17 @@ function unitBase(
         (hasOpenPull(item) || item.githubPullFromFork === true) &&
         !seen.has(item.id),
     )
-    if (!lower) return refused({ kind: 'other-branch', base: branch, trunk })
+    if (!lower)
+      return refused({
+        kind: 'other-branch',
+        base: layer.mergeQueueLabels?.pullBase ?? { text: 'another branch' },
+        trunk:
+          workspace.mergeQueueLabels?.defaultBranch ?? defaultQueueBranchLabel,
+      })
     if (lower.githubPullFromFork) return refused({ kind: 'fork' })
     if (lower.mergeQueue !== undefined) return { kind: 'can-join' }
     seen.add(lower.id)
-    base = lower.githubPullBase
+    layer = lower
   }
   return { kind: 'unknown' }
 }
@@ -84,7 +93,8 @@ export function joinCheck(workspace: Workspace, facts: QueueFacts): JoinCheck {
   if (repository?.githubQueueRequired)
     return refused({
       kind: 'github-merge-queue',
-      trunk: repository.defaultBranch,
+      trunk:
+        workspace.mergeQueueLabels?.defaultBranch ?? defaultQueueBranchLabel,
     })
   if (repository?.queueInUse) return refused({ kind: 'other-org' })
   if (workspace.githubCanWrite === undefined || !repository) {

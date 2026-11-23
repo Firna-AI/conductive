@@ -2,6 +2,7 @@ import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
 import type { MergeQueueEntryState } from '../shared/generated/MergeQueueEntryState'
 import {
   queueLineText,
+  defaultQueueBranchLabel,
   queueRowText,
   resetBaseFailedText,
 } from '../ui/components/workspace/queueCopy'
@@ -102,6 +103,9 @@ export function queueFactsOf(
       step: stepOf(queue.state),
       ...(problem && { problem }),
       ...(turnWait && { turnWait }),
+      ...((queue.wait === 'local-work' || queue.wait === 'trunk-change') && {
+        queueWait: queue.wait,
+      }),
       ...(queue.state === 'waiting' &&
         queue.wait === 'rebase' && {
           waitsForRebase: true as const,
@@ -131,9 +135,10 @@ export function queueViewOf(
   if (!bar && !queueLeave) return null
   const line = bar?.line
   const trunk =
-    queue && queue.trunk === banner.baseBranch
-      ? baseBranchLabel(banner)
-      : (queue?.trunk ?? '')
+    queue?.trunkLabel ??
+    (queue && queue.trunk === banner.baseBranch
+      ? { text: baseBranchLabel(banner) }
+      : defaultQueueBranchLabel)
   return {
     add: bar?.add ?? false,
     adding: input?.adding ?? false,

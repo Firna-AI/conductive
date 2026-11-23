@@ -153,8 +153,8 @@ const scenarios: Readonly<Record<Exclude<MergeQueueState, 'none'>, Scenario>> =
       spec: dragQueue,
       queueDrag: refusedDrag('fix-cart-flake', {
         kind: 'other-branch',
-        base: releaseBranch,
-        trunk: storefront.defaultBranch,
+        base: { text: releaseBranch },
+        trunk: { text: storefront.defaultBranch },
       }),
       queueable: ['invoice-fonts'],
     },
