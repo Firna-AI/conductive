@@ -12,10 +12,20 @@ const SUBJECT_KEYS = [
 ] as const
 
 /**
+ * Agent tools whose name stays the target, with the argument that names
+ * their subject. The Claude `Skill` tool names its skill in `skill`, so its
+ * line reads "Used Skill brainstorming".
+ */
+const NAMED_SUBJECTS: ReadonlyMap<string, string> = new Map([
+  ['Skill', 'skill'],
+])
+
+/**
  * Maps one tool call to its chat line. A call to a tool of an MCP server
  * shows `mcpTool`, its name without the server, and its subject as the
- * detail. Any other call shows its subject, and its description as the
- * detail.
+ * detail. A call to a tool of `NAMED_SUBJECTS` shows its name, and its
+ * subject as the detail. Any other call shows its subject, and its
+ * description as the detail.
  */
 export function mapTool(
   id: string,
@@ -26,14 +36,19 @@ export function mapTool(
 ): ToolCall {
   let subject: string | null = null
   let description: string | null = null
+  let named: string | null = null
   if (input !== null && typeof input === 'object') {
     const args = object(input)
     const key = SUBJECT_KEYS.find((item) => typeof args[item] === 'string')
     if (key) subject = string(args[key])
     if (typeof args.description === 'string') description = args.description
+    const namedKey = mcpTool === null ? NAMED_SUBJECTS.get(name) : undefined
+    if (namedKey && typeof args[namedKey] === 'string')
+      named = string(args[namedKey])
   }
-  const target = mcpTool ?? subject ?? name
-  const detail = mcpTool === null ? description : (subject ?? description)
+  const keepsName = mcpTool !== null || named !== null
+  const target = keepsName ? (mcpTool ?? name) : (subject ?? name)
+  const detail = keepsName ? (named ?? subject ?? description) : description
   const lower = name.toLowerCase()
   const kind = /computer|browser/.test(lower)
     ? 'computer'

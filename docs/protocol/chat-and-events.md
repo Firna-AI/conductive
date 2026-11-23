@@ -185,6 +185,8 @@ view, the scroll after a send, and the place that each tab keeps.
   tools, is the name of that tool without its server, such as
   `get_window_state`. Its detail is the subject of the call, such as a
   query, a path, or an address.
+- The target of a call to the Claude `Skill` tool is `Skill`. Its detail
+  is the name of the skill, such as "Used `Skill` brainstorming".
 - Reason: a subject alone, such as `menu`, does not say which tool ran,
   and a full name, such as `mcp__computer__get_window_state`, is hard to
   read. Words of the app for each computer tool were rejected, because

@@ -2,6 +2,7 @@ import { expect, it } from 'vitest'
 
 import { ClaudeEvents } from './claude-events'
 import { codexNotification } from './codex-events'
+import { mapTool } from './tool'
 import type { ProviderEvent } from '../generated/ProviderEvent'
 
 const windowRead = { window_id: 7, query: 'menu' }
@@ -71,3 +72,29 @@ it.each([
     ])
   },
 )
+
+it('shows the Claude Skill tool by its name, with the skill as the detail', () => {
+  expect(
+    mapTool('call', 'Skill', { skill: 'brainstorming', args: 'x' }, 'done'),
+  ).toEqual({
+    id: 'call',
+    kind: 'other',
+    target: 'Skill',
+    detail: 'brainstorming',
+    omittedDetailBytes: 0,
+    state: 'done',
+  })
+})
+
+it('shows the Claude Skill tool by its name alone when it names no skill', () => {
+  expect(mapTool('call', 'Skill', {}, 'running')).toMatchObject({
+    target: 'Skill',
+    detail: null,
+  })
+})
+
+it('keeps the subject as the target of a tool outside the named list', () => {
+  expect(
+    mapTool('call', 'Other', { skill: 'brainstorming', path: 'a.ts' }, 'done'),
+  ).toMatchObject({ target: 'a.ts', detail: null })
+})
