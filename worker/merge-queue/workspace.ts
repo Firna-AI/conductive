@@ -1,5 +1,6 @@
 import { featureResult } from '../features/result'
 import type { GitHubWorkspace } from '../github/contracts'
+import { githubBranchLabels } from '../github/output'
 import { lifecycleDependencies } from '../lifecycle/runtime'
 import { pendingWorkspaceChange } from '../lifecycle/repository-change-types'
 import { saveQueueBaseChange } from '../lifecycle/queue-base-change'
@@ -65,8 +66,16 @@ export class MergeQueueWorkspace extends AgentSessionWorkspace {
       return this.run(async (): Promise<QueueFixAdmission> => {
         if (await pendingWorkspaceChange(this.integration.storage))
           return { kind: 'deferred' }
-        return operation.acceptQueueFix(fix, () =>
-          queueFixSender(this.env.DB, fix),
+        return operation.acceptQueueFix(
+          fix,
+          () => queueFixSender(this.env.DB, fix),
+          async () => {
+            const labels = await githubBranchLabels(this.env, {
+              id: fix.entry.workspaceId,
+              orgId: fix.scope.orgId,
+            })
+            return labels.branch(fix.restack.base)
+          },
         )
       })
     })

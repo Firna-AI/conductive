@@ -117,7 +117,7 @@ it('stops the timer at disconnect, and ignores a timed read that ends after it',
   }).toEqual({ shown: 'ready-to-merge', reads: 3, waiting: 0 })
 })
 
-it('stops the timer while another read runs, keeps it through a live event, and starts it again when a live event cancels a timed read', async () => {
+it('waits for a timed read to finish when a live event arrives during it', async () => {
   const server = new FakeApiServer({ banner: 'ready-to-merge' })
   const replies = heldReplies(server)
   const timers = new ManualDelay()
@@ -141,18 +141,19 @@ it('stops the timer while another read runs, keeps it through a live event, and 
   await retrying
   const timed = timers.runAll()
   server.events.emit(githubEvent(next + 1, 'merged'))
-  const afterCancel = timers.pending
+  const duringTimedRead = timers.pending
   await replies.release()
   await timed
 
-  expect({ afterEvent, duringRetry, afterCancel }).toEqual({
+  expect({ afterEvent, duringRetry, duringTimedRead }).toEqual({
     afterEvent: { set: 1, waiting: 1 },
     duringRetry: 0,
-    afterCancel: 1,
+    duringTimedRead: 0,
   })
   expect({
     shown: shown(store),
     reads: readsOf(server),
     set: timersSet,
-  }).toEqual({ shown: 'merged', reads: 3, set: 3 })
+    waiting: timers.pending,
+  }).toEqual({ shown: 'merged', reads: 3, set: 3, waiting: 1 })
 })

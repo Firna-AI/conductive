@@ -29,12 +29,12 @@ export interface QueuePullRead extends QueuePullSnapshot {
   restackWait?: MergeQueueWait
 }
 
-async function cleanWorkspace(
+export async function readMergeLocalWork(
   runtime: QueueRuntime,
   queue: QueueRecord,
   entry: QueueEntry,
   userId: string,
-) {
+): Promise<QueueLocalState> {
   try {
     return await workspaceBinding(runtime.env)
       .getByName(entry.workspaceId)
@@ -130,7 +130,7 @@ export async function readMergePulls(
               : undefined,
       local:
         snapshot?.banner.state === 'ready-to-merge' && (prefix || single)
-          ? await cleanWorkspace(
+          ? await readMergeLocalWork(
               runtime,
               queue,
               entry,

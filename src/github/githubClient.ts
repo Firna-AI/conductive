@@ -104,18 +104,26 @@ export async function loadStoredSnapshot(
   target: WorkspaceTarget,
   signal: AbortSignal,
 ): Promise<GitHubSnapshot | null> {
+  const { state, ...queue } = await loadStoredGitHubState(fetch, target, signal)
+  return state && { ...state, ...queue }
+}
+
+/** Reads the stored banner and the current queue, even without a stored banner. */
+export function loadStoredGitHubState(
+  fetch: FetchLike,
+  target: WorkspaceTarget,
+  signal: AbortSignal,
+) {
   const { orgId, workspaceId } = target
-  const reply = await readJson(
+  return readJson(
     fetch,
     githubPaths.stored(orgId, workspaceId),
     signal,
     readStoredResponse,
   )
-  const { state, ...queue } = reply
-  return state && { ...state, ...queue }
 }
 
-/** Keep queue fields that still apply after a socket event. */
+/** Keep queue fields when the two banners describe the same open pull request. */
 export function queueOnGitHubEvent(
   shown: GitHubSnapshot | undefined,
   banner: GitHubBanner,
@@ -128,7 +136,7 @@ export function queueOnGitHubEvent(
     banner.state === 'merged' ||
     banner.state === 'closed'
   )
-    return {}
+    return undefined
   const { queue, queueLeave } = shown
   const sameHead =
     shown.banner.pullRequest.headSha === banner.pullRequest.headSha

@@ -7,7 +7,13 @@ import { HttpError } from '../http'
 import { warnWorker } from '../warnings'
 import type { QueueEntry, QueueRecord } from './contracts'
 import { queueMergeAccess } from './merge-choice'
-import { liveMergePrefix, markQueueMerging } from './merge-data'
+import {
+  clearMergeHeads,
+  finishQueueMerge,
+  liveMergePrefix,
+  markQueueMerging,
+} from './merge-data'
+import { readMergeLocalWork } from './merge-read'
 import { verifyMergePrefix, type CheckedLayer } from './merge-verify'
 import { settleMergeJob } from './merge-settle'
 import { saveQueueAlarm } from './queue-alarm'
@@ -23,7 +29,7 @@ export type QueueMergeJob = {
   memberStackNumber?: number
   nextAt: number
 } & (
-  | { stage: 'starting' }
+  | { stage: 'starting'; sent?: boolean }
   | { stage: 'polling'; uuid: string }
   | { stage: 'settling'; outcome: 'merged' | 'refused' | 'refresh' }
 )
@@ -52,7 +58,7 @@ export class QueueMergeJobs {
 
   async start(job: StartingJob, member: MergeMember) {
     await this.save(job)
-    await this.advance(job, member)
+    return this.advance(job, member)
   }
 
   async resume() {
@@ -73,28 +79,46 @@ export class QueueMergeJobs {
     })
   }
 
+  private finish(job: QueueMergeJob, at: number) {
+    return this.storage.transaction(async (storage) => {
+      await storage.delete(JOB)
+      await saveQueueAlarm(storage, job.queue, at)
+    })
+  }
+
   private async advance(job: QueueMergeJob, prepared?: MergeMember) {
     const { env, dependencies } = this.runtime
     const now = dependencies.now()
-    await this.save({ ...job, nextAt: now + MERGE_RETRY_MS })
+    const retryAt = now + MERGE_RETRY_MS
+    await this.save({ ...job, nextAt: retryAt })
     try {
       if (job.stage === 'settling') {
         if (await settleMergeJob(this.runtime, job))
-          await this.storage.transaction(async (storage) => {
-            await storage.delete(JOB)
-            const next = job.outcome === 'refresh' ? now + MERGE_RETRY_MS : now
-            await saveQueueAlarm(storage, job.queue, next)
-          })
-        return
+          await this.finish(job, job.outcome === 'refresh' ? retryAt : now)
+        return true
       }
-      if (job.stage === 'starting')
-        await markQueueMerging(
-          env.DB,
-          job.queue,
-          job.layers.map(({ entry }) => entry),
-          now,
-        )
-      const next = await sendQueueMerge(this.runtime, job, prepared)
+      const next = await sendQueueMerge(
+        this.runtime,
+        job,
+        async (starting) => {
+          await markQueueMerging(
+            env.DB,
+            starting.queue,
+            starting.layers.map(({ entry }) => entry),
+            now,
+          )
+          await this.save({ ...starting, sent: true, nextAt: retryAt })
+        },
+        prepared,
+      )
+      if (!next) {
+        // A starting job saved before the sent field existed may already be on GitHub.
+        if (job.stage !== 'starting' || job.sent !== false) return true
+        await finishQueueMerge(env.DB, job.queue, now)
+        await clearMergeHeads(env.DB, job.queue)
+        await this.finish(job, now)
+        return false
+      }
       await this.save({
         ...next,
         nextAt: dependencies.now() + (next.stage === 'polling' ? POLL_MS : 0),
@@ -102,6 +126,7 @@ export class QueueMergeJobs {
     } catch {
       warnWorker({ kind: 'merge_queue_merge_retry' })
     }
+    return true
   }
 }
 
@@ -192,14 +217,22 @@ async function pollQueueMerge(runtime: QueueRuntime, job: PollingJob) {
 async function sendQueueMerge(
   runtime: QueueRuntime,
   job: StartingJob | PollingJob,
+  beforeSend: (job: StartingJob) => Promise<void>,
   prepared?: MergeMember,
-): Promise<QueueMergeJob> {
+): Promise<QueueMergeJob | null> {
   const { queue, target, input } = job
   let reply: Awaited<ReturnType<typeof requestMerge>>
   if (job.stage === 'starting') {
     const member = prepared ?? (await prepareQueueMerge(runtime, job))
+    if (!member) return { ...job, stage: 'settling', outcome: 'refresh' }
+    for (const { entry } of job.layers) {
+      if (
+        (await readMergeLocalWork(runtime, queue, entry, job.userId)) !==
+        'clean'
+      )
+        return null
+    }
     if (
-      !member ||
       !(await liveMergePrefix(
         runtime.env.DB,
         queue,
@@ -207,6 +240,7 @@ async function sendQueueMerge(
       ))
     )
       return { ...job, stage: 'settling', outcome: 'refresh' }
+    await beforeSend(job)
     reply = await requestMerge(
       member.fetch,
       member.token,

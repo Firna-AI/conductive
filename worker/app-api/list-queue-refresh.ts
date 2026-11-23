@@ -5,6 +5,7 @@ import { isRecord } from '../http'
 import {
   claimListFacts,
   finishListFacts,
+  LIST_FACTS_FRESH_MS,
   readListFacts,
   type ListFactsKey,
   type ListFactsRow,
@@ -22,6 +23,21 @@ type RepositoryFacts = {
 }
 
 const REPOSITORIES_PER_REFRESH = 8
+
+function writeAccess(payload: string | null | undefined, now: number) {
+  if (!payload) return undefined
+  const grant: unknown = JSON.parse(payload)
+  if (grant === false || (isRecord(grant) && grant.canWrite === false))
+    return false
+  if (
+    isRecord(grant) &&
+    grant.canWrite === true &&
+    typeof grant.verifiedAt === 'number' &&
+    grant.verifiedAt + LIST_FACTS_FRESH_MS > now
+  )
+    return true
+  return undefined
+}
 
 function repositoryFacts(payload: string | null): RepositoryFacts | undefined {
   if (!payload) return undefined
@@ -116,12 +132,7 @@ export async function cachedQueueListFacts(
     const storedShared = sharedByRepository.get(repository.id)
     const access = storedAccess?.binding === binding ? storedAccess : undefined
     const shared = storedShared?.binding === binding ? storedShared : undefined
-    const canWrite =
-      access?.payload === 'true'
-        ? true
-        : access?.payload === 'false'
-          ? false
-          : undefined
+    const canWrite = writeAccess(access?.payload, now)
     const repositoryCache = canWrite
       ? repositoryFacts(shared?.payload ?? null)
       : undefined
@@ -139,7 +150,7 @@ export async function cachedQueueListFacts(
         sharedDue ? (shared?.freshUntil ?? 0) : Infinity,
       ),
       run: async () => {
-        const write = accessDue
+        const permission = accessDue
           ? await checkedFacts(
               env,
               dependencies,
@@ -147,17 +158,20 @@ export async function cachedQueueListFacts(
               async () => {
                 const auth = await token()
                 if (!auth) return undefined
-                return JSON.stringify(
-                  await readQueueWriteAccess(
-                    dependencies.fetch,
-                    auth,
-                    repository,
-                  ),
+                const canWrite = await readQueueWriteAccess(
+                  dependencies.fetch,
+                  auth,
+                  repository,
                 )
+                return JSON.stringify({
+                  canWrite,
+                  verifiedAt: dependencies.now(),
+                })
               },
             )
           : access?.payload
-        if (write !== 'true' || !sharedDue) return
+        if (!sharedDue || writeAccess(permission, dependencies.now()) !== true)
+          return
         await checkedFacts(
           env,
           dependencies,

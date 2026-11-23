@@ -1,5 +1,6 @@
 import { restackPrompt } from '../../src/ui/components/workspace/barCopy'
 import type { User } from '../../src/shared/api'
+import type { MergeQueueBranchLabel } from '../../src/shared/generated/MergeQueueBranchLabel'
 import { queueId } from '../merge-queue/contracts'
 import { queueChanged } from '../merge-queue/errors'
 import type {
@@ -41,6 +42,7 @@ export async function acceptQueueFix(
   operation: ChatOperation,
   fix: QueueFixRequest,
   authorize: () => Promise<User>,
+  baseLabel: () => Promise<MergeQueueBranchLabel>,
   dependencies: ChatDependencies,
 ): Promise<QueueFixAdmission> {
   const { messageId, scope, entry, restack } = fix
@@ -60,6 +62,7 @@ export async function acceptQueueFix(
     user.id,
   )
   if (!login || !owner) return { kind: 'waiting', wait: 'agent-login' }
+  const label = restack.sync ? undefined : await baseLabel()
   return operation.change(async (transaction) => {
     const current = await fixSession(transaction)
     if (current.kind === 'waiting') return current
@@ -76,7 +79,14 @@ export async function acceptQueueFix(
       session.id,
       {
         id: messageId,
-        text: restackPrompt({ ...restack, number: entry.pullNumber }),
+        text: restackPrompt({
+          number: entry.pullNumber,
+          baseHead: restack.baseHead,
+          basePullNumber: restack.basePullNumber,
+          oldBase: restack.oldBase,
+          sync: restack.sync,
+          label,
+        }),
         choice: session.choice,
         attachmentIds: [],
       },

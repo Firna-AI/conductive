@@ -113,7 +113,7 @@ pub struct MergeQueueRemoval {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]
 pub struct MergeQueueRebase {
-    /// The raw ref for Git commands.
+    /// The branch name used to build the filtered label.
     pub base: String,
     /// The filtered label for a member control.
     #[serde(default, skip_serializing_if = "Option::is_none")]

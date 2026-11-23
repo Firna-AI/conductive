@@ -18,6 +18,7 @@ export class RepositoryMerges {
   allowedMethods: readonly GitHubMergeMethod[] = ['merge', 'squash', 'rebase']
   jobs = new Map<string, FakeMergeJob>()
   startResponse: Response | null = null
+  loseNextStartReply = false
   resultResponse: Response | null = null
 
   capabilities(token: string) {
@@ -104,6 +105,10 @@ export class RepositoryMerges {
       state: 'pending',
     }
     this.jobs.set(id, job)
+    if (this.loseNextStartReply) {
+      this.loseNextStartReply = false
+      return new Response(null, { status: 503 })
+    }
     return Response.json(this.result(id, job), { status: 202 })
   }
 }

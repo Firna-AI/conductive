@@ -85,8 +85,8 @@ question, reason, and prompt.
   those facts in the background and checks current access and eligibility
   on each queue change.
 - Branch names in queue messages use labels that hide the known secret
-  values from the workspace's latest computer start. Git uses the real
-  names, as [Tokens and secrets](tokens-and-secrets.md) says.
+  values from the workspace's latest computer start. See
+  [Tokens and secrets](tokens-and-secrets.md).
 
 ## Add to merge queue
 
@@ -217,6 +217,12 @@ question, reason, and prompt.
   rebase, not a merge.
 - Resolve conflicts and Merge latest use the branch selected by queue
   order. That branch is the trunk or the branch directly below the entry.
+- Both actions read the stored workspace state at the click. They send no
+  prompt if that read fails. A live GitHub event keeps the bar's queue
+  read in progress.
+- The prompts show branch labels. Their commands fetch by pull request
+  number or fetch the default branch through GitHub's `HEAD`. They check
+  the fetched head against the verified commit when known.
   Each prompt asks for `git rebase --onto` with the old base commit and for
   a push with `git push --force-with-lease --force-if-includes`.
   The agent stops if it cannot verify the base or if Git refuses the push.

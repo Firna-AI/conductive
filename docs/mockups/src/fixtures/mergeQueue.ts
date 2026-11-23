@@ -68,9 +68,10 @@ const applePayBranch = queuedWorkspace('apple-pay').branch
  */
 export const restackFacts: RestackFacts = {
   number: pullRequest.number,
-  base: applePayBranch,
-  baseHead: '4c1e9a2',
-  oldBase: '9b07d3f',
+  basePullNumber: pullRequestOf('apple-pay'),
+  label: { text: applePayBranch },
+  baseHead: '4c1e9a204370727cafd6e1c4d5184da48275f062',
+  oldBase: '9b07d3fdee7cbfe75bcd09c0b27c8fd8db6e910a',
 }
 
 /**
@@ -80,5 +81,5 @@ export const restackFacts: RestackFacts = {
 export const queuedPromptFacts: PromptFacts = {
   ...promptFacts,
   base: applePayBranch,
-  rebase: { base: restackFacts.base, oldBase: restackFacts.oldBase },
+  rebase: restackFacts,
 }

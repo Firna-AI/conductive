@@ -538,11 +538,13 @@ line names a decision. The options check corrected them on the same day.
   pull request to the stack. Reason: a base that already holds the head of
   the layer would show that layer's commits as removed, so the code that
   changes a base never sets a base that holds the head.
-- A restack with a fix turn uses plain Git, `git rebase --onto origin/<new
-  base> <old base commit>`, and `git push --force-with-lease`. The prompt
-  names both commits. Reason: the cloud computers have no `gh stack`
-  extension, and `--onto` keeps only the layer's own commits, also after a
-  squash merge below it. Decision 319 holds a server rebase first.
+- A restack with a fix turn fetches by pull request number or GitHub's
+  `HEAD`. It uses `git rebase --onto` with the verified head and old base
+  commit, and pushes with `--force-with-lease --force-if-includes`. It
+  shows branch names with their masked labels. The cloud computers have
+  no `gh stack` extension. The `--onto` form keeps only the layer's own
+  commits, also after a squash merge below it. Decision 319 holds a server
+  rebase first.
 - GitHub needs a linear history. While a workspace is queued, the bar's
   Resolve conflicts, Merge latest, and the restack prompts ask for a
   rebase, not a merge.
@@ -632,8 +634,11 @@ and then moved the entry out of the stack as "Needs attention".
 ### Re-order
 
 - A drag in the sidebar group changes the order. Unstack cannot start at a
-  place in the stack, so a re-order unstacks the whole stack. No merge runs
-  until the new stack exists.
+  place in the stack, so a re-order unstacks the whole stack.
+- Replaced on 23 November 2026. The previous rule said "No merge runs
+  until the new stack exists." This hold blocked ready lower layers
+  during an upper restack. Once the old stack is gone, the queue can merge
+  the checked, ready prefix.
 - Each changed entry restacks first, from the bottom up, one after the
   other. The Worker then sets its GitHub base, and adds the layers back.
 - A re-order cannot move an entry below a layer that is merging.

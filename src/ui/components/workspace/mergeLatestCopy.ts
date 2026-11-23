@@ -1,5 +1,7 @@
-import type { MergeQueueRebase } from '../../../shared/generated/MergeQueueRebase'
-import { queueRebaseInstructions } from './queueRebaseCopy'
+import {
+  queueRebaseInstructions,
+  type QueueRebaseTarget,
+} from './queueRebaseCopy'
 
 /**
  * The words of Merge latest, the palette action that asks the agent to
@@ -38,8 +40,6 @@ export function mergeLatestPrompt(base: string): string {
  * for a rebase onto the target branch in place of a merge, and a push that
  * replaces only the branch that the agent read.
  */
-export function mergeLatestRebasePrompt(
-  input: MergeQueueRebase | null,
-): string {
+export function mergeLatestRebasePrompt(input: QueueRebaseTarget): string {
   return `Update this branch for the merge queue's linear history. ${queueRebaseInstructions(input, true)}`
 }

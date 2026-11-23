@@ -148,7 +148,7 @@ describe('the merge queue in the bar', () => {
       queue: { ...queue, place: 1, belowPullNumber: null, oldBase },
     }
     expect(promptOf('resolve-conflicts', bottom)).toContain(
-      `git rebase --onto origin/main ${oldBase}`,
+      `git rebase --onto FETCH_HEAD ${oldBase}`,
     )
   })
 
@@ -213,16 +213,14 @@ describe('the merge queue in the bar', () => {
     }
     const prompt = promptOf('resolve-conflicts', snapshot)
     expect(prompt).toContain('the merge queue needs a linear history')
-    expect(prompt).toContain(
-      `git rebase --onto origin/the-layer-below ${oldBase}`,
-    )
+    expect(prompt).toContain(`git rebase --onto FETCH_HEAD ${oldBase}`)
     expect(prompt).toContain('git push --force-with-lease --force-if-includes')
     expect(promptOf('resolve-conflicts', snapshotOf('conflict'))).toContain(
       'merge it into this branch',
     )
     expect(
       promptOf('resolve-conflicts', { ...snapshot, queue: entry }),
-    ).toContain('If you cannot verify it, stop and say so')
+    ).toContain('If you cannot verify the fetched base, stop and say so')
   })
 
   it('shows the masked trunk even while GitHub names a different base', () => {

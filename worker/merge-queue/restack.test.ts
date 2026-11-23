@@ -33,9 +33,10 @@ it('waits for the queuer push before setting a base, creating a stack, and addin
     expect(await f.base(PARALLEL)).toBe('changes')
     const messages = await f.messages(PARALLEL, session)
     expect(messages).toMatchObject([{ sender: { id: 'member' } }])
-    expect(messages[0].text).toContain(`origin/changes\` is at \`${HEAD_SHA}`)
+    expect(messages[0].text).toContain(`\`FETCH_HEAD\` is at \`${HEAD_SHA}`)
+    expect(messages[0].text).toContain('git fetch origin refs/pull/2/head')
     expect(messages[0].text).toContain(
-      `git rebase --onto origin/changes ${TRUNK_HEAD}`,
+      `git rebase --onto ${HEAD_SHA} ${TRUNK_HEAD}`,
     )
     expect(messages[0].text).not.toContain('Sent by:')
 

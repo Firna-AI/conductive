@@ -47,21 +47,24 @@ export function useMergeLatest(
     if (banner.state === 'merged') return null
     if (!offersAgentActions(shown.capabilities)) return null
     const rebase = queue ? queuedRebase(queue) : null
-    const prompt = queue
-      ? mergeLatestRebasePrompt(rebase)
-      : mergeLatestPrompt(banner.baseBranch)
     return {
-      // The row shows the label, which hides each secret value. The prompt
-      // keeps the real name, which Git needs.
       label: mergeLatestLabel(
         queue
           ? (rebase?.label?.text ?? 'the queue base')
           : baseBranchLabel(banner),
       ),
       run: () => {
-        void actions.sendPrompt(prompt).then((result) => {
-          if (result !== null && result !== 'sent') showChat()
-        })
+        void actions
+          .sendPrompt(({ state, queue }) =>
+            queue
+              ? mergeLatestRebasePrompt(queuedRebase(queue))
+              : mergeLatestPrompt(
+                  state?.banner.baseBranch ?? banner.baseBranch,
+                ),
+          )
+          .then((result) => {
+            if (result !== null && result !== 'sent') showChat()
+          })
       },
     }
   }, [readOnly, state, shown.capabilities, actions, showChat])

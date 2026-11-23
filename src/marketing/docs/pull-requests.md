@@ -119,7 +119,8 @@ It sends its message in the same way as the agent actions of the bar.
 You see it when the agent actions are available to you.
 It is not offered after the pull request merges.
 
-While the workspace is queued, **Resolve conflicts** and **Merge latest** ask the agent to move only this pull request's commits onto the branch that the queue selected.
+**Resolve conflicts** and **Merge latest** check the queue when you select them.
+While the workspace is queued, they ask the agent to move only this pull request's commits onto the branch that the queue selected.
 
 **Address review** asks the agent to change code without replying on GitHub.
 Select the pull request number to read, reply to, or resolve review comment threads on GitHub.
@@ -198,7 +199,7 @@ A stack you made moves together.
 Wait for a merge to finish before moving a row ahead of it.
 
 A pull request with failed checks or requested changes keeps its place.
-Ready pull requests ahead of it can still merge.
+Ready pull requests ahead of it can still merge, including while an entry rebases after a re-order.
 The ones after it wait.
 Use **Fix checks** or **Address review** to ask the agent to help.
 The queue waits while the workspace has work that has not been pushed.

@@ -91,7 +91,7 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
     expect(
       (await f.messages(PARALLEL, second)).map(({ text }) => text),
     ).toEqual([
-      expect.stringContaining(`git rebase --onto origin/changes ${TRUNK_HEAD}`),
+      expect.stringContaining(`git rebase --onto ${HEAD_SHA} ${TRUNK_HEAD}`),
     ])
     await pushedFix(4, joinedParallel, PARALLEL, second)
     expect((await f.change('POST', OTHER_WORKSPACE)).status).toBe(204)
@@ -125,7 +125,7 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
       (await f.messages(OUTER_WORKSPACE, first)).map(({ text }) => text),
     ).toEqual([
       expect.stringContaining(
-        `git rebase --onto origin/parallel ${TRUNK_HEAD}`,
+        `git rebase --onto ${reorderedParallel} ${TRUNK_HEAD}`,
       ),
     ])
     expect(await f.messages(OTHER_WORKSPACE, third)).toEqual([])
@@ -134,7 +134,7 @@ it('joins three workspaces, re-orders their GitHub stack, and merges the ready l
       (await f.messages(OTHER_WORKSPACE, third)).map(({ text }) => text),
     ).toEqual([
       expect.stringContaining(
-        `git rebase --onto origin/changes ${joinedParallel}`,
+        `git rebase --onto ${reorderedChanges} ${joinedParallel}`,
       ),
     ])
     await pushedFix(3, reorderedTop, OTHER_WORKSPACE, third)

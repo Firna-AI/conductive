@@ -3,7 +3,7 @@ import type { BarAction } from '../ui/components/workspace/barModel'
 import { useWorkspaceStore } from '../app/workspace-store'
 import { BarActions } from './barActions'
 import type { BarActionsPorts } from './barPorts'
-import { promptOf } from './barPrompts'
+import { promptOf, resolveConflictsPrompt } from './barPrompts'
 import { barViewOf, type BarControls, type LocalWork } from './barView'
 import type { WorkspaceTarget } from './githubClient'
 import type { GitHubFeed } from './githubStore'
@@ -83,7 +83,11 @@ export function useBarControls(screen: BarScreen): BarControls | null {
       switch (action.kind) {
         case 'agent':
           void actions
-            .sendPrompt(promptOf(action.action, snapshot))
+            .sendPrompt(
+              action.action === 'resolve-conflicts'
+                ? (stored) => resolveConflictsPrompt(snapshot, stored)
+                : promptOf(action.action, snapshot),
+            )
             .then((result) => {
               if (result !== null && result !== 'sent') showChat()
             })

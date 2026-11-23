@@ -114,7 +114,7 @@ export async function liveMergePrefix(
     .prepare(
       `SELECT count(*) AS count FROM merge_queue_entries e
     JOIN merge_queues q ON q.id = e.queue_id AND q.trunk = ? AND q.github_stack_number IS ?
-      AND q.rebuild_stack = 0 AND q.reordering = 0
+      AND q.rebuild_stack = 0
     JOIN workspaces w ON w.id = e.workspace_id AND w.org_id = ?
       AND w.repository_id = ? AND w.branch = e.branch AND w.archived_at IS NULL AND w.state != 'archived'
     JOIN orgs o ON o.id = w.org_id AND o.suspended_at IS NULL AND o.deleted_at IS NULL

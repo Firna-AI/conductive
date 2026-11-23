@@ -1,4 +1,5 @@
 import type { User } from '../../src/shared/api'
+import type { MergeQueueBranchLabel } from '../../src/shared/generated/MergeQueueBranchLabel'
 import type { QueueFixRequest } from '../merge-queue/fix-contracts'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import { acceptQueueFix } from './queue-fix'
@@ -35,7 +36,11 @@ export class ChatOperation {
     return this.store.change(this.workspaceId, work, this.publish)
   }
 
-  acceptQueueFix(fix: QueueFixRequest, authorize: () => Promise<User>) {
-    return acceptQueueFix(this, fix, authorize, this.dependencies)
+  acceptQueueFix(
+    fix: QueueFixRequest,
+    authorize: () => Promise<User>,
+    baseLabel: () => Promise<MergeQueueBranchLabel>,
+  ) {
+    return acceptQueueFix(this, fix, authorize, baseLabel, this.dependencies)
   }
 }

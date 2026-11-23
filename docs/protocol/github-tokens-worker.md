@@ -135,7 +135,9 @@ merge queue. A decision number names a dated record, as
   token of the member who adds, as Ready for review does.
 - The workspace list reads saved queue facts. Its background refresh uses
   the viewer's GitHub token to check write access. It shares pull request
-  and branch rule facts within the org with viewers who have write access.
+  and branch rule facts within the org with viewers whose write access
+  GitHub confirmed in the last two minutes. Only a successful permission
+  check renews this access to the facts.
   Each queue write still checks current access.
 - At each step, the Worker checks that the queuer of the entry is still a
   member of the org with write access to the repository, and that the org

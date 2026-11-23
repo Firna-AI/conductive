@@ -196,7 +196,7 @@ marks a draft ready for review, continues, and archives.
 
 ## Agent actions
 
-- An agent action sends its fixed prompt at once, as a message of the
+- An agent action sends its fixed prompt as a message of the
   member who clicks, as
   [Messages from the bar](messages-and-attachments.md#messages-from-the-bar)
   says.
@@ -219,8 +219,8 @@ marks a draft ready for review, continues, and archives.
 - A workspace from an older org image can lack the GitHub CLI. The bar
   still offers the actions, and each prompt that needs the CLI says what
   the agent does without it.
-- While a workspace is in the merge queue, Resolve conflicts asks for a
-  rebase, not a merge, as
+- Resolve conflicts checks the stored queue state when clicked. On a
+  queued workspace it asks for a rebase, as
   [The prompts of a queued workspace](merge-queue-in-the-app.md#the-prompts-of-a-queued-workspace)
   says.
 - The mockups at `app/banner` give the words of each label, each message,

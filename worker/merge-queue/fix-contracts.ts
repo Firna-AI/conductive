@@ -1,7 +1,13 @@
-import type { RestackFacts } from '../../src/ui/components/workspace/barCopy'
 import type { QueueEntry, QueueScope } from './contracts'
 
-export type QueueRestack = Omit<RestackFacts, 'number'> & { id: string }
+export interface QueueRestack {
+  id: string
+  base: string
+  baseHead: string
+  oldBase: string
+  basePullNumber?: number | null
+  sync?: { head: string }
+}
 
 export type QueueFixEntry = Pick<
   QueueEntry,

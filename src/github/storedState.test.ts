@@ -5,7 +5,15 @@ import { FakeWorkspaceEvents } from '../test-support/fake-events'
 import { toolFixtures } from '../test-support/fixtures/tools'
 import type { FetchLike } from './githubClient'
 import { GitHubStore } from './githubStore'
-import { connect, githubEvent, shown, target } from './storeDoubles'
+import {
+  connect,
+  githubEvent,
+  heldReplies,
+  nextChange,
+  serveState,
+  shown,
+  target,
+} from './storeDoubles'
 
 const storedPath = githubPaths.stored(target.orgId, target.workspaceId)
 const bannerPath = githubPaths.banner(target.orgId, target.workspaceId)
@@ -149,4 +157,67 @@ it('reads no stored state when it connects again with a state that shows', async
   await store.load()
 
   expect([before, storedReads(), shown(store)]).toEqual([1, 1, 'merged'])
+})
+
+it('keeps the live banner and applies the queue from the in-flight bar read', async () => {
+  const server = new FakeApiServer({ banner: 'ready-to-merge' })
+  const events = new FakeWorkspaceEvents([])
+  const replies = heldReplies(server)
+  const store = new GitHubStore(target)
+  connect(store, replies.fetch, events)
+  const ready = nextChange(store)
+  await replies.release()
+  await ready
+
+  server.json('GET', bannerPath, {
+    ...toolFixtures('ready-to-merge').banner,
+    queue: {
+      place: 1,
+      count: 1,
+      belowPullNumber: null,
+      trunk: 'main',
+      state: 'queued',
+      wait: null,
+    },
+  })
+  const loading = store.load()
+  events.emit(githubEvent(1, 'checks-running'))
+  await replies.release()
+  await loading
+  expect(store.getSnapshot()).toMatchObject({
+    status: 'ready',
+    snapshot: { banner: { state: 'checks-running' }, queue: { place: 1 } },
+  })
+})
+
+it('keeps the live pull request queue when an in-flight reply has no pull request', async () => {
+  const server = new FakeApiServer({ banner: 'ready-to-merge' })
+  server.json('GET', bannerPath, {
+    ...toolFixtures('ready-to-merge').banner,
+    queue: {
+      place: 1,
+      count: 1,
+      belowPullNumber: null,
+      trunk: 'main',
+      state: 'queued',
+      wait: null,
+    },
+  })
+  const events = new FakeWorkspaceEvents([])
+  const replies = heldReplies(server)
+  const store = new GitHubStore(target)
+  connect(store, replies.fetch, events)
+  const ready = nextChange(store)
+  await replies.release()
+  await ready
+
+  serveState(server, 'none')
+  const loading = store.load()
+  events.emit(githubEvent(1, 'checks-running'))
+  await replies.release()
+  await loading
+  expect(store.getSnapshot()).toMatchObject({
+    status: 'ready',
+    snapshot: { banner: { state: 'checks-running' }, queue: { place: 1 } },
+  })
 })

@@ -34,6 +34,7 @@ type ReadyRefusal = 'ready-no-right' | 'ready-pull-changed' | 'ready-refused'
 
 /** An action of the app that the bar shows: a run, or how it ended. */
 export type BarOutcome =
+  | { kind: 'prompt-read-failed' }
   | { kind: 'merging' }
   | { kind: 'merge-refused'; reason: MergeRefusal }
   /** A merge that ended without a refusal of GitHub, with the app's words. */
@@ -194,6 +195,7 @@ function appActionOf(outcome: BarOutcome | null): BarFacts['appAction'] {
     case 'merge-failed':
     case 'ready-failed':
     case 'continue-waits':
+    case 'prompt-read-failed':
     case undefined:
       return 'none'
   }

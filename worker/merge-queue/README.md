@@ -52,18 +52,20 @@ The queue reads the trunk and each layer again before it selects a merge.
 It starts with the lowest layer that needs a restack. Commit comparisons
 check that the layer includes the newest base and drops commits from any
 old lower layer that the new base does not include. A restack sends the
-fixed prompt once for that base and head. If the turn leaves the commits
-out of order, the entry waits for a member.
+fixed prompt once for that base and head. Its Git commands use pull request
+refs and verified commits. The message shows the masked branch label.
+If the turn leaves the commits out of order, the entry waits for a member.
 
 The queue rechecks both refs before it changes a pull request's base.
 It records the intended edit before GitHub receives the write. A new
 stack starts with two pull requests. Further layers append in order.
 A leave or a re-order unstacks the old stack before the remaining layers
-join it again under a new number. A re-order holds merges until the
-stack is ready. If a stack creation loses its response, the next read
-can recover the new stack number from GitHub. An empty queue can keep its
-saved stack for cleanup. Another org can queue work in the repository and
-leaves that stack to the owning queue. The leave that marks the stack for
+join it again under a new number. After a re-order clears the old stack,
+the ready prefix can merge while a later layer restacks. If a stack
+creation loses its response, the next read can recover the new stack
+number from GitHub. An empty queue can keep its saved stack for cleanup.
+Another org can queue work in the repository and leaves that stack to
+the owning queue. The leave that marks the stack for
 cleanup saves its actor and workspace with the stack number. If the stack
 writer cannot act, cleanup tries the saved actor and then the workspace
 owner. Cleanup retries use a delay that doubles from 30 seconds up to 15
@@ -88,10 +90,13 @@ repository and an unavailable local read have separate waits. Their
 retries double from 30 seconds up to 15 minutes. The queue can wait 15
 minutes for the next layer's checks. A member's request to
 merge skips that wait. The coordinator verifies the live trunk and
-stack before it starts the async merge, then saves the result ID and
-the poll time. It reads the pull requests again at the end and records
-the layers that merged. A refused layer stays in its place with the
-refusal tied to the head of the saved merge job.
+stack before it starts the async merge. Each submission checks local work
+again and saves the sent mark before calling GitHub. A pending submission
+with a lost reply waits for clean workspaces before it can recover the job
+through GitHub's conflict response. The queue saves the result ID and poll
+time once GitHub supplies them. It reads the pull requests again at the
+end and records the layers that merged. A refused layer stays in its place
+with the refusal tied to the head of the saved merge job.
 
 A caller gives the queue an ID for one restack and the commits that the
 prompt needs. The coordinator saves the request and runs it on its alarm.

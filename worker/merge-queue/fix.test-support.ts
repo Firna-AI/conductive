@@ -12,12 +12,14 @@ import {
 import { requireFeatureResult } from '../features/result'
 import { readMergeWorkspace } from '../github/merge-access'
 import { queueId } from './contracts'
+import type { QueueRestack } from './fix-contracts'
 import { queueFixture } from './queue.test-support'
 import { queueBarState } from './read'
 
 const restack = {
   id: 'fix-this-restack',
   base: 'main',
+  basePullNumber: null,
   baseHead: '896a470385279ec0a99c30b956e1b90a64569b45',
   oldBase: 'b8ba8d107d6359017c2537c03d7a2ec48c94d1d9',
 }
@@ -37,9 +39,12 @@ export async function fixFixture(bundle: string) {
       .bind(OUTER_WORKSPACE)
       .run()
     const queue = f.actor(queueId(f.scope))
-    const start = async () =>
+    const start = async (input: Partial<QueueRestack> = {}) =>
       requireFeatureResult(
-        await queue.requestMergeQueueFix(f.scope, OUTER_WORKSPACE, restack),
+        await queue.requestMergeQueueFix(f.scope, OUTER_WORKSPACE, {
+          ...restack,
+          ...input,
+        }),
       )
     const post = (path: string, body: unknown) =>
       f.request(path, { method: 'POST', body: JSON.stringify(body) })

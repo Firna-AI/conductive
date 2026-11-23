@@ -3,9 +3,9 @@ import {
   type AgentAction,
   type PromptFacts,
 } from '../ui/components/workspace/barCopy'
-import type { GitHubCheck } from '../shared/github'
+import type { GitHubCheck, GitHubStoredResponse } from '../shared/github'
 import type { MergeQueueBarState } from '../shared/generated/MergeQueueBarState'
-import type { MergeQueueRebase } from '../shared/generated/MergeQueueRebase'
+import type { QueueRebaseTarget } from '../ui/components/workspace/queueRebaseCopy'
 import type { GitHubSnapshot } from './githubClient'
 
 /**
@@ -26,20 +26,16 @@ export function failingChecks(snapshot: GitHubSnapshot): string[] {
     .map((check) => check.name)
 }
 
-/** Old replies can still identify the bottom layer's intended branch. */
-export function queuedRebase(
-  queue: MergeQueueBarState,
-): MergeQueueRebase | null {
-  return (
-    queue.rebase ??
-    (queue.belowPullNumber === null
-      ? {
-          base: queue.trunk,
-          ...(queue.trunkLabel && { label: queue.trunkLabel }),
-          ...(queue.oldBase && { oldBase: queue.oldBase }),
-        }
-      : null)
-  )
+/** The queue position identifies a fetchable ref even on older replies. */
+export function queuedRebase(queue: MergeQueueBarState): QueueRebaseTarget {
+  return {
+    basePullNumber: queue.belowPullNumber,
+    baseHead: queue.rebase?.baseHead,
+    oldBase: queue.rebase?.oldBase ?? queue.oldBase,
+    label:
+      queue.rebase?.label ??
+      (queue.belowPullNumber === null ? queue.trunkLabel : undefined),
+  }
 }
 
 /** The facts of the pull request that the prompts name. */
@@ -76,4 +72,18 @@ export function promptOf(
   snapshot: GitHubSnapshot,
 ): string {
   return agentPrompt(action, factsOf(snapshot))
+}
+
+export function resolveConflictsPrompt(
+  shown: GitHubSnapshot,
+  stored: GitHubStoredResponse,
+): string {
+  const { banner } = stored.state ?? shown
+  return agentPrompt('resolve-conflicts', {
+    number: banner.pullRequest?.number ?? shown.banner.pullRequest?.number ?? 0,
+    base: banner.baseBranch,
+    failedChecks: [],
+    reviewers: [],
+    rebase: stored.queue && queuedRebase(stored.queue),
+  })
 }

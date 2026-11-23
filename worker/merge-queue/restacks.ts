@@ -11,7 +11,7 @@ import { reconcileMergePulls } from './merge-settle'
 import { saveQueueAlarm, saveQueueRetry } from './queue-alarm'
 import { queueReadToken, queueWorkspace } from './repository'
 import { finishQueueReorder, followWorkspaceBase } from './restack-data'
-import { QueueLayerRestack } from './restack-layer'
+import { QueueLayerRestack, type LayerBase } from './restack-layer'
 import { QueueStackChanges } from './stack-changes'
 import { followsQueueBase, openStackLayers, readOtherStack } from './stack-read'
 import { leaveQueue, type QueueRuntime } from './step'
@@ -151,7 +151,11 @@ export class QueueRestacks {
     }
     if (!trunk?.refHead) return null
 
-    let base = { branch: queue.trunk, head: trunk.refHead }
+    let base: LayerBase = {
+      branch: queue.trunk,
+      head: trunk.refHead,
+      pullNumber: null,
+    }
     let end = reads.length
     for (const [index, read] of reads.entries()) {
       if (index === end) break
@@ -199,7 +203,11 @@ export class QueueRestacks {
           other.kind === 'queueable',
         )
         if (step === 'ready') {
-          base = { branch: read.entry.branch, head: read.pull.headSha }
+          base = {
+            branch: read.entry.branch,
+            head: read.pull.headSha,
+            pullNumber: read.entry.pullNumber,
+          }
           continue
         }
         if (step === 'changed') {

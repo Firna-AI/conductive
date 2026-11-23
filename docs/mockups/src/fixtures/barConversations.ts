@@ -98,10 +98,13 @@ function ran(id: string, target: string, detail?: string): ChatItem {
  */
 const restackEnded: readonly ChatItem[] = [
   { kind: 'user', id: 'restack', text: restackPrompt(restackFacts) },
-  ran('restack-fetch', 'git fetch origin'),
+  ran(
+    'restack-fetch',
+    `git fetch origin refs/pull/${restackFacts.basePullNumber}/head`,
+  ),
   ran(
     'restack-rebase',
-    `git rebase --onto origin/${restackFacts.base} ${restackFacts.oldBase}`,
+    `git rebase --onto ${restackFacts.baseHead} ${restackFacts.oldBase}`,
     '1 conflict',
   ),
   {

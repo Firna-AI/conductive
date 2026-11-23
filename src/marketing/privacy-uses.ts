@@ -253,7 +253,7 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         place, member who added it, state, and the time of each step.
         The queue uses these records and GitHub events to run and show its
         progress to the org. For the workspace list, ${productName}
-        temporarily stores whether you have write access to a repository.
+        temporarily stores your write access and when GitHub checked it.
         It also stores open pull request bases, whether they come from
         forks, and whether the default branch needs GitHub's queue.`,
       text`Merge records: ${productName} keeps one record for each merged

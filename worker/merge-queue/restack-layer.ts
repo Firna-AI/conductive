@@ -26,7 +26,11 @@ import { leaveQueue, type QueueRuntime } from './step'
 
 type LayerStep =
   'ready' | 'changed' | 'fix' | { wait: MergeQueueWait; retry?: true }
-export type LayerBase = { branch: string; head: string }
+export type LayerBase = {
+  branch: string
+  head: string
+  pullNumber: number | null
+}
 const rebaseWait = { wait: 'rebase' } as const
 const retryRebase = { wait: 'rebase', retry: true } as const
 
@@ -110,7 +114,6 @@ export class QueueLayerRestack {
       if (result === 'retry') return retryRebase
       if (result === 'restack' && entry.syncFrom)
         return this.fix(queue, entry, base, entry.syncFrom, {
-          branch: entry.branch,
           head: headSha,
         })
     }
@@ -244,7 +247,7 @@ export class QueueLayerRestack {
     entry: QueueEntry,
     base: LayerBase,
     oldBase: string | undefined,
-    sync?: { branch: string; head: string },
+    sync?: { head: string },
   ): Promise<LayerStep> {
     if (!isGitCommitOid(oldBase)) return rebaseWait
     const id = JSON.stringify([
@@ -268,6 +271,7 @@ export class QueueLayerRestack {
       id,
       base: base.branch,
       baseHead: base.head,
+      basePullNumber: base.pullNumber,
       oldBase,
       ...(sync && { sync }),
     })

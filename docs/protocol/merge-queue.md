@@ -197,7 +197,11 @@ and the terms below. A decision number names a dated record, as
 - The queue also waits if it cannot check local work. It retries either
   wait after 30 seconds and doubles the delay up to 15 minutes. A check with
   no local work clears the wait. This also lets a local revert clear it.
-- No merge runs while the queue rebuilds the stack after a re-order.
+- The queue checks local work before each merge submission. If a reply is
+  lost, it waits for this check to pass before it can retry the submission
+  or recover the accepted job.
+- After a re-order, a merge waits for the old stack to clear. It can then
+  land the ready layers in the checked prefix while a higher layer restacks.
 - A stack merge can stop partway. After each merge, the queue reads each
   layer again before its next step.
 - Each merged layer leaves the queue and gets a merge record, as a merge

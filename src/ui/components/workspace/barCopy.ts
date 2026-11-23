@@ -1,7 +1,7 @@
-import type { MergeQueueRebase } from '../../../shared/generated/MergeQueueRebase'
 import {
   queueRebaseInstructions,
   queueSyncInstructions,
+  type QueueRebaseTarget,
 } from './queueRebaseCopy'
 
 /**
@@ -166,17 +166,17 @@ export type PromptFacts = {
    * history. So Resolve conflicts asks for a rebase onto `base`, the branch
    * of the pull request below it, in place of a merge.
    */
-  rebase?: MergeQueueRebase | null
+  rebase?: QueueRebaseTarget
 }
 
 /** The facts that the restack prompt of the merge queue names. */
-export type RestackFacts = Required<
-  Pick<MergeQueueRebase, 'base' | 'baseHead' | 'oldBase'>
-> & {
+export type RestackFacts = QueueRebaseTarget & {
+  baseHead: string
+  oldBase: string
   /** The number of the pull request that moves. */
   number: number
-  /** The GitHub branch and its new head after a rewrite. */
-  sync?: { branch: string; head: string }
+  /** The new GitHub head after a rewrite. */
+  sync?: { head: string }
 }
 
 /** A list in running text: "a", "a and b", or "a, b, and c". */
@@ -202,8 +202,8 @@ const commitAndPush =
  * branch below, so that the history stays linear, and a push that replaces
  * only the branch that the agent read.
  */
-function rebaseConflicts(facts: PromptFacts): string {
-  return `Resolve conflicts in pull request #${facts.number}, because the merge queue needs a linear history. ${queueRebaseInstructions(facts.rebase ?? null)}`
+function rebaseConflicts(number: number, target: QueueRebaseTarget): string {
+  return `Resolve conflicts in pull request #${number}, because the merge queue needs a linear history. ${queueRebaseInstructions(target)}`
 }
 
 /**
@@ -215,13 +215,10 @@ function rebaseConflicts(facts: PromptFacts): string {
  * after a squash merge below it.
  */
 export function restackPrompt(facts: RestackFacts): string {
-  const purpose = facts.sync
-    ? 'GitHub rewrote its branch. Carry the local work onto the new GitHub head.'
-    : `It must build on the newest \`${facts.base}\`.`
   const steps = facts.sync
-    ? queueSyncInstructions(facts.sync.branch, facts.sync.head, facts.oldBase)
+    ? `GitHub rewrote its branch. Carry the local work onto the new GitHub head. ${queueSyncInstructions(facts.number, facts.sync.head, facts.oldBase)}`
     : queueRebaseInstructions(facts)
-  return `Pull request #${facts.number} is in the merge queue. ${purpose} ${steps} Keep the branch history linear and keep the pull request open.`
+  return `Pull request #${facts.number} is in the merge queue. ${steps} Keep the branch history linear and keep the pull request open.`
 }
 
 /**
@@ -242,7 +239,7 @@ export function agentPrompt(action: AgentAction, facts: PromptFacts): string {
     case 'fix-checks':
       return `These checks failed on ${pr}: ${listText(facts.failedChecks)}. Find out why with \`gh pr checks ${facts.number}\`, and read the logs of failed GitHub Actions jobs with \`gh run view --log-failed\`. For a check from another service, read its details, or run it locally. Fix the cause, then commit and push. If \`gh\` is missing or fails, run the failed checks locally, and say that \`gh\` failed.`
     case 'resolve-conflicts':
-      if (facts.rebase !== undefined) return rebaseConflicts(facts)
+      if (facts.rebase) return rebaseConflicts(facts.number, facts.rebase)
       return `Pull request #${facts.number} has conflicts with \`${facts.base}\`. Fetch \`origin/${facts.base}\` and merge it into this branch. Resolve each conflict, run the tests, then commit and push.`
     case 'address-review':
       return `${requesters(facts.reviewers)} requested changes on ${pr}. Read the open review comments with \`gh\`, make the changes, then commit and push. Don't reply on GitHub. If \`gh\` is missing or fails, stop and say that \`gh\` failed.`

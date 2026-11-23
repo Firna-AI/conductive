@@ -112,11 +112,7 @@ export class QueueMerges {
     ahead: number,
   ) {
     if (await this.jobs.active()) throw queueMerging()
-    if (
-      target.place !== ahead + 1 ||
-      queue.reordering !== 0 ||
-      queue.trunk !== queue.defaultBranch
-    )
+    if (target.place !== ahead + 1 || queue.trunk !== queue.defaultBranch)
       throw queueMergeNotReady()
     const actor = await queueMergeAccess(this.runtime, queue, target, userId)
     if (actor.kind === 'lost') throw queueWriteRequired()
@@ -197,7 +193,6 @@ export class QueueMerges {
       dependencies.now(),
       held && JSON.stringify([held.workspaceId, held.queuedAt]),
     )
-    if (queue.reordering) return
     const target = read.automatic.at(-1)
     if (!target) {
       await this.storage.delete(CHECK_WAIT)
@@ -251,6 +246,7 @@ export class QueueMerges {
       ...(queue.githubStackNumber === null &&
         stackNumber !== null && { memberStackNumber: stackNumber }),
       stage: 'starting',
+      sent: false,
       nextAt: now,
     }
     const member = await prepareQueueMerge(this.runtime, job)
@@ -259,7 +255,6 @@ export class QueueMerges {
       await this.schedule(queue, now + MERGE_RETRY_MS)
       return false
     }
-    await this.jobs.start(job, member)
-    return true
+    return this.jobs.start(job, member)
   }
 }

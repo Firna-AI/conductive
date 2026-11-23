@@ -1,14 +1,11 @@
 import { beforeAll, expect, it } from 'vitest'
-import { readWorkspaceList } from '../../src/app/api/read-workspaces'
 import { workspacesPath } from '../../src/shared/workspaces'
-import { createApp } from '../application'
 import {
   OTHER_WORKSPACE,
   OUTER_ORG,
   OUTER_REPOSITORY,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
-import type { AppDependencies } from '../env'
 import { recordedPullRequest } from '../github/recorded-webhooks'
 import { orgEnvironmentContext } from '../lifecycle/settings-data'
 import { recordRunningEnvironment } from '../lifecycle/start-environment'
@@ -19,44 +16,16 @@ import {
   FOREIGN,
   MEMBER_TOKEN,
   PARALLEL,
-  type QueueFixture,
   queueBundle,
   queueFixture,
   queueWebhook,
 } from './queue.test-support'
+import { listReader } from './list-facts.test-support'
 
 let bundle: string
 beforeAll(async () => {
   bundle = await queueBundle()
 })
-
-function listReader(
-  f: QueueFixture,
-  fetch: AppDependencies['fetch'] = f.api.fetch,
-) {
-  let now = Date.now()
-  const app = createApp({ fetch, now: () => now })
-  return {
-    advance(milliseconds: number) {
-      now += milliseconds
-    },
-    async read(cookie = f.cookies.ownerCookie) {
-      const tasks: Promise<unknown>[] = []
-      const response = await app.fetch(
-        new Request(`${f.env.APP_ORIGIN}${workspacesPath(OUTER_ORG)}`, {
-          headers: { ...f.headers, Cookie: cookie },
-        }),
-        f.env,
-        { waitUntil: (task) => tasks.push(task) },
-      )
-      expect(response.status).toBe(200)
-      return {
-        body: readWorkspaceList(await response.json()),
-        refresh: Promise.all(tasks),
-      }
-    },
-  }
-}
 
 it('serves stored facts and refreshes one batched pull read per repository', async () => {
   const f = await queueFixture(bundle)

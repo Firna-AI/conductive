@@ -157,7 +157,8 @@ The store applies them in this way:
   stored state.
   `useGitHubState` connects the store and subscribes the views through
   `useWorkspaceStore` in `src/app/workspace-store.ts`.
-- A live GitHub event shows at once, and it cancels a read that runs.
+- A live GitHub event shows its banner and checks at once. An in-flight
+  read can still update the queue for the same pull request.
 - A history that comes before a read shows at once. The reply of the read
   then replaces it, because the read returns the current state.
 - A history that comes during a read, or after its reply shows, has no known
@@ -178,8 +179,8 @@ connected:
 
 - The store waits five minutes after a read ends, then reads again. The
   wait is a choice of the app, not a product limit.
-- A live event that cancels a read starts the wait too. A live event keeps
-  a wait that runs, so events never put off a backup read.
+- A live event starts the wait when no read or timer runs. A live event
+  keeps a wait that runs, so events never put off a backup read.
 - A backup read never overlaps another read, because each read stops the
   wait.
 - A backup read shows no loading. When it fails, the state or the error that
@@ -205,11 +206,11 @@ mounts it, and the production build leaves it out.
   a turn that runs, and `continue` how Continue ends. `branches` is
   `plain`, the default, `masked`, `masked-continue`, or
   `masked-repository`. `masked` gives the target branch a fake secret
-  value and its label, in the stored and fresh
-  replies, the live events, and the question of Continue. So the screens
-  show "[redacted]", and the prompts keep the real name. The workspace
-  branch stays plain, because the screen compares it with the workspace
-  record. The question of `masked` has no label of its own, as from an
+  value and its label in the stored and fresh replies, the live events,
+  and the question of Continue. The screens show "[redacted]".
+  Prompts outside the queue use the real name. The workspace branch
+  stays plain, because the screen compares it with the workspace record.
+  The question of `masked` has no label of its own, as from an
   older Worker, so the dialog takes the label of the bar.
   `masked-continue` also gives the value and its label to the workspace
   branch, to a changed file of the question, and to the new branch. It

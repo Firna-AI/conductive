@@ -3,7 +3,11 @@ import {
   type GitHubMergeRequest,
   type GitHubReadyRequest,
 } from '../shared/github'
-import type { FetchLike, WorkspaceTarget } from './githubClient'
+import {
+  loadStoredGitHubState,
+  type FetchLike,
+  type WorkspaceTarget,
+} from './githubClient'
 import type { RequestQueueMerge } from '../shared/generated/RequestQueueMerge'
 import { mergeQueuePaths } from '../shared/merge-queue'
 import {
@@ -55,6 +59,8 @@ export function createGitHubActions(fetch: FetchLike, target: WorkspaceTarget) {
     return parsed
   }
   return {
+    stored: (signal: AbortSignal) =>
+      loadStoredGitHubState(fetch, target, signal),
     capabilities: (signal?: AbortSignal) =>
       request(
         githubPaths.capabilities(orgId, workspaceId),

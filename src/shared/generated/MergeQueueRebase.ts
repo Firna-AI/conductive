@@ -6,7 +6,7 @@ import type { MergeQueueBranchLabel } from './MergeQueueBranchLabel.js'
  */
 export type MergeQueueRebase = {
   /**
-   * The raw ref for Git commands.
+   * The branch name used to build the filtered label.
    */
   base: string
   /**

@@ -30,7 +30,7 @@ it('restacks from the trunk upward after an outside merge and a lower push', asy
     expect(
       (await f.messages(OUTER_WORKSPACE, bottom)).map(({ text }) => text),
     ).toEqual([
-      expect.stringContaining(`git rebase --onto origin/main ${TRUNK_HEAD}`),
+      expect.stringContaining(`git rebase --onto ${trunk} ${TRUNK_HEAD}`),
     ])
     expect(await f.messages(PARALLEL, upper)).toEqual([])
     const githubPosts = f.api.requests.filter(
@@ -53,7 +53,7 @@ it('restacks from the trunk upward after an outside merge and a lower push', asy
     await f.queue.advanceStartAlarm()
     const messages = await f.messages(PARALLEL, upper)
     expect(messages.map(({ text }) => text)).toEqual([
-      expect.stringContaining(`git rebase --onto origin/changes ${HEAD_SHA}`),
+      expect.stringContaining(`git rebase --onto ${lower} ${HEAD_SHA}`),
     ])
     expect(messages[0].text).toContain(lower)
   } finally {
@@ -79,7 +79,7 @@ it('replaces an unsent upper turn when the trunk changes first', async () => {
     await f.queue.advanceStartAlarm()
     expect(
       (await f.messages(OUTER_WORKSPACE, bottom)).map(({ text }) => text),
-    ).toEqual([expect.stringContaining(`origin/main\` is at \`${outside}`)])
+    ).toEqual([expect.stringContaining(`\`FETCH_HEAD\` is at \`${outside}`)])
     expect(await f.entries()).toMatchObject([
       { state: 'restacking' },
       { wait: 'lower-layer' },
@@ -107,9 +107,7 @@ it('drops the removed layer’s commits before rebuilding the stack', async () =
     expect(
       (await f.messages(OTHER_WORKSPACE, session)).map(({ text }) => text),
     ).toEqual([
-      expect.stringContaining(
-        `git rebase --onto origin/changes ${PARALLEL_HEAD}`,
-      ),
+      expect.stringContaining(`git rebase --onto ${HEAD_SHA} ${PARALLEL_HEAD}`),
     ])
     expect(f.steps().map(({ url }) => new URL(url).pathname)).toEqual([
       '/repos/Codertocat/Hello-World/pulls/4',

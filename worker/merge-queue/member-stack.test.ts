@@ -62,7 +62,7 @@ it('merges the bottom of a stack made after Add and holds a separate unit until 
     expect(f.writes()).toHaveLength(1)
     const [restack] = await f.messages(PARALLEL, session)
     expect(restack?.text).toContain(
-      `git rebase --onto origin/main ${TRUNK_HEAD}`,
+      `git rebase --onto ${newTrunk} ${TRUNK_HEAD}`,
     )
 
     const newHead = '6'.repeat(40)

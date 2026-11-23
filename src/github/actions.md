@@ -83,10 +83,10 @@ adds what the app knows:
 
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
 shared `barCopy.ts` with the number, the target branch, the blocking
-checks in GitHub's order, and the reviewers. While the bar read names a
-queue state, Resolve conflicts uses `git rebase --onto` with the saved
-old base commit for that head. If the read lacks the commit, the prompt
-asks the agent to verify where the layer's own commits begin.
+checks in GitHub's order, and the reviewers. Resolve conflicts on a queued
+workspace uses `git rebase --onto` with the saved old base commit for that
+head. If the read lacks the commit, the prompt asks the agent to verify
+where the layer's own commits begin.
 
 ## The merge queue
 
@@ -119,8 +119,9 @@ of its line from the shared `queueCopy.ts`.
   queue. The Worker reads the clicker's token and preferred method. The
   bar shows the count while the queue can accept the merge and shows
   Merge busy while the merge runs.
-- Resolve conflicts and Merge latest use the intended base in the bar
-  read. Their queue prompts use `git rebase --onto` and a guarded push.
+- Resolve conflicts and Merge latest use the intended base from the
+  stored state when pressed. Their queue prompts use `git rebase --onto`
+  and a guarded push.
 
 ## Merge
 
@@ -157,6 +158,9 @@ of its line from the shared `queueCopy.ts`.
 
 ## Agent actions
 
+- Resolve conflicts and Merge latest read the stored workspace state when
+  pressed. They use its queue state to choose a prompt. A failed read
+  shows a message under the bar and sends no prompt.
 - A press sends the prompt through `sendPrompt` of the kept chat, to the
   session that the member saw last, as
   [the chat](../chat/loads-and-sends.md#fixed-prompts) says. A press while

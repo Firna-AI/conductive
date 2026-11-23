@@ -98,10 +98,11 @@ says.
     user for a push to a lower layer.
 - A rebase with no agent was left out, because a conflict needs a decision
   about the code.
-- The restack prompt names the new head of the branch below and the old
-  base commit of the layer. It asks the agent to move only the commits of
-  the layer with `git rebase --onto`, to resolve each conflict, to run the
-  tests, and to push with `git push --force-with-lease --force-if-includes`.
+- The restack prompt shows the branch with its masked label. It fetches
+  the pull request below by number, or GitHub's `HEAD` for the trunk.
+  It names the verified head and the old base commit. The agent moves only
+  the layer's commits with `git rebase --onto`. It resolves each conflict,
+  runs the tests, and pushes with `git push --force-with-lease --force-if-includes`.
   The prompt keeps the branch history linear and the pull request open.
   The agent stops and reports a moved base head or a refused push.
 - Reason: the cloud computers have no `gh stack` extension, and `--onto`
@@ -124,7 +125,8 @@ says.
 - The sync after GitHub rewrites the branch of a queued workspace can also
   send a restack turn, as
   [The base of a queued workspace](base-branches.md#the-base-of-a-queued-workspace)
-  says. The turn checks the new GitHub head. It rebases only the local work
+  says. The turn fetches the rewritten head by pull request number and
+  checks its commit. It rebases only the local work
   with `git rebase --onto`, using the old GitHub head as the cutoff. It then
   uses a plain push and stops if Git refuses it.
 

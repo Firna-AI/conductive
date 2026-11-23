@@ -49,12 +49,13 @@ it('carries local work onto the rewritten GitHub branch with the old GitHub head
     const messages = await f.messages(id, session)
     expect(messages).toMatchObject([{ sender: { id: 'member' } }])
     expect(messages[0].text).toContain(
-      `git rebase --onto origin/layer-two ${TOP_HEAD}`,
+      `git rebase --onto ${rewritten} ${TOP_HEAD}`,
     )
     expect(messages[0].text).toContain(
-      `check that \`origin/layer-two\` is at \`${rewritten}\``,
+      `Check that \`FETCH_HEAD\` is at \`${rewritten}\``,
     )
     expect(messages[0].text).toContain('run `git push`')
+    expect(messages[0].text).toContain('git fetch origin refs/pull/3/head')
     expect(messages[0].text).not.toContain('--force')
   } finally {
     await f.dispose()

@@ -1,4 +1,4 @@
-const FRESH_MS = 120_000
+export const LIST_FACTS_FRESH_MS = 120_000
 const RETRY_MS = 30_000
 const RETAIN_MS = 24 * 60 * 60_000
 
@@ -58,7 +58,7 @@ export function claimListFacts(
       key.viewerId,
       key.binding,
       now + RETRY_MS,
-      now + FRESH_MS,
+      now + LIST_FACTS_FRESH_MS,
       claimId,
       now + RETAIN_MS,
       now,
@@ -84,7 +84,7 @@ export function finishListFacts(
     .bind(
       generation,
       payload ?? null,
-      now + (payload === undefined ? RETRY_MS : FRESH_MS),
+      now + (payload === undefined ? RETRY_MS : LIST_FACTS_FRESH_MS),
       key.orgId,
       key.repositoryId,
       key.viewerId,
