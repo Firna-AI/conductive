@@ -178,9 +178,9 @@ question, reason, and prompt.
 
 ## Merge on a queued workspace
 
-- On a queued workspace, Merge shows only while the layer and each layer
-  below it are in the GitHub stack and ready to merge (decision 316). Who
-  sees Merge follows [Merge](github-banner-merge.md#merge).
+- On a queued workspace, Merge shows only while the layer and each entry
+  ahead of it are in the same GitHub stack and ready to merge (decision
+  316). Who sees Merge follows [Merge](github-banner-merge.md#merge).
 - Its label counts the layers ahead of it in the queue, which land with it,
   such as "Merge with 2 ahead". Merge of the bottom layer keeps the label of
   its merge method, such as "Squash and merge". Reason: no layer lands with

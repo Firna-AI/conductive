@@ -61,7 +61,7 @@ export interface MergeProjection {
 }
 
 export function layerWait(read: QueuePullRead): MergeQueueWait | null {
-  const { entry, snapshot, stacked, standalone, local } = read
+  const { entry, snapshot, stackNumber, standalone, local } = read
   if (entry.state === 'restacking') return 'rebase'
   if (read.restackWait) return read.restackWait
   if (
@@ -72,7 +72,7 @@ export function layerWait(read: QueuePullRead): MergeQueueWait | null {
     return entry.wait
   switch (snapshot?.banner.state) {
     case 'ready-to-merge':
-      if (!stacked && !standalone) return 'rebase'
+      if (stackNumber === null && !standalone) return 'rebase'
       if (local === 'clean') return null
       return local === 'dirty' ? 'push' : 'local-work'
     case 'checks-running':
@@ -95,11 +95,11 @@ export function mergeChoices(
   let blocking: number | null = null
   let manual = true
   const automatic: QueuePullRead[] = []
-  const projection = reads.map((read): MergeProjection => {
-    const { entry, snapshot, stacked } = read
+  const projection = reads.map((read, index): MergeProjection => {
+    const { entry, snapshot, stackNumber } = read
     const head = snapshot?.headSha ?? null
     const own = layerWait(read)
-    manual = manual && own === null && stacked
+    manual = manual && own === null && stackNumber !== null
     const actor = access.get(entry.queuerUserId)
     const refused = entry.refusedHead != null && entry.refusedHead === head
     const stopped =
@@ -110,9 +110,12 @@ export function mergeChoices(
           ? 'merge-refused'
           : null
     const wait = own ?? stopped ?? (blocking === null ? null : 'lower-layer')
-    const blockedBy = wait === 'lower-layer' ? blocking : null
+    const blockedBy =
+      wait === 'lower-layer'
+        ? (blocking ?? reads[index - 1]?.entry.pullNumber ?? null)
+        : null
     if (wait === null) automatic.push(read)
-    else blocking ??= entry.pullNumber
+    else blocking ??= blockedBy ?? entry.pullNumber
     return {
       workspaceId: entry.workspaceId,
       head: manual ? head : null,

@@ -21,6 +21,7 @@ import {
 } from './restack-data'
 import { tryGitHubServerRebase } from './server-rebase'
 import type { QueueStackChanges } from './stack-changes'
+import { openStackLayers } from './stack-read'
 import { leaveQueue, type QueueRuntime } from './step'
 
 type LayerStep =
@@ -55,6 +56,7 @@ export class QueueLayerRestack {
     read: QueuePullSnapshot,
     base: LayerBase,
     token: string,
+    needsDetach: boolean,
   ): Promise<LayerStep> {
     const { entry, pull } = read
     const { env, dependencies } = this.runtime
@@ -149,19 +151,22 @@ export class QueueLayerRestack {
       clearSync: Boolean(syncing),
     })
     const onStack =
-      stack?.layers.filter(({ state }) => state === 'open')[index]?.number ===
-      entry.pullNumber
+      stack && openStackLayers(stack)[index]?.number === entry.pullNumber
     if (onStack && baseBranch === base.branch) return 'ready'
+    if (stack && stack.number !== queue.githubStackNumber)
+      return { wait: 'rules', retry: true }
     const writer = await this.writer(queue, entries, entry)
     if ('step' in writer) return writer.step
-    const other = await this.stacks.detachOtherStack(
-      queue,
-      entries,
-      entry,
-      writer,
-    )
-    if (other === 'blocked') return rebaseWait
-    if (other === 'changed') return 'changed'
+    if (needsDetach || index > 0 || baseBranch !== base.branch) {
+      const other = await this.stacks.detachOtherStack(
+        queue,
+        entries,
+        entry,
+        writer,
+      )
+      if (other === 'blocked') return { wait: 'rules', retry: true }
+      if (other === 'changed') return 'changed'
+    }
     // Read both refs again as the writer. The pinned comparison above only
     // applies while GitHub still has those two heads.
     const live = await readQueuePull(

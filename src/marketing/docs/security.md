@@ -43,6 +43,7 @@ A wake that joins a running turn keeps that turn's sender.
 | GitHub CLI outside a turn | The workspace owner's GitHub account |
 | Merge from the pull request bar | The GitHub account of the member who selects Merge |
 | Automatic merge from the queue | The GitHub account of the member who added the last pull request that the queue asks GitHub to merge |
+| Cleanup of the queue's GitHub stack | The creator's GitHub account, then the member whose action caused the entry to leave, then the workspace owner |
 | Agent message sent by the merge queue | The member who added the pull request, under the session's login rules |
 | Ready for review from the pull request bar | The GitHub account of the member who selects Ready for review |
 | Mark a draft ready when adding it to the queue | The GitHub account of the member who adds it |
@@ -82,6 +83,7 @@ GitHub access can include repositories outside the Conductive org.
 It reaches repositories that both the GitHub account and the GitHub App can reach.
 
 GitHub checks the account that requests a merge and enforces the branch rules.
+Stack cleanup checks current org membership and GitHub write access before each attempt.
 GitHub also checks the clicking member's access for Ready for review.
 Every org member can Continue after a merge, but their GitHub account needs repository read access for its fetch.
 Every org member can also change a workspace's repository, and their GitHub account needs read access to the new repository for its fetch.

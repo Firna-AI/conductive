@@ -17,6 +17,8 @@ export interface QueueRecord extends QueueScope {
   trunkPullNumber: number | null
   githubStackNumber: number | null
   stackWriterUserId: string | null
+  stackCleanupWorkspaceId: string | null
+  stackCleanupActorUserId: string | null
   rebuildStack: number
   reordering: number
   defaultBranch: string
@@ -85,7 +87,7 @@ export type QueueLeave = (
       pullNumber?: number
       baseBranch?: string
     }
-) & { actorId?: string }
+) & { actorId?: string; memberStackMerge?: true }
 
 export function queueId(scope: QueueScope): string {
   return `merge-queue:${scope.orgId}:${scope.githubRepositoryId}`

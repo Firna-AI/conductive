@@ -1,9 +1,9 @@
 # Merge queue
 
 This doc holds the requirements and the decisions in force for the merge
-queue: one queue for each repository of an org, which merges its pull
-requests into the default branch as one GitHub stack. It covers who may
-join, member stacks, the leave, the merge, and the failures.
+queue. Each repository of an org has one queue that merges pull requests
+into the default branch. This page covers who may join, member stacks,
+the leave, the merge, and the failures.
 [Merge queue: the GitHub stack](merge-queue-stack.md) holds the stack, its
 restacks, the restack turns, and the re-order.
 [Merge queue in the app](merge-queue-in-the-app.md) holds the Merge queue
@@ -75,8 +75,8 @@ and the terms below. A decision number names a dated record, as
   Each org sees only its own entries.
 - In a suspended org, the Worker refuses each change of a queue, and every
   unit leaves.
-- The steps of one queue never run at the same time. Reason: each step
-  reads and changes the one GitHub stack of the queue.
+- The steps of one queue never run at the same time. Reason: the steps
+  read and change the same queue and pull requests.
 - The agent tools do not add to, remove from, or re-order a queue.
 
 ## Who may join
@@ -104,7 +104,7 @@ and the terms below. A decision number names a dated record, as
   cannot join, as [GitHub's own merge queue](#githubs-own-merge-queue)
   says.
 - An archived workspace and a workspace of a suspended org cannot join.
-- A new entry joins at the top of the GitHub stack, in the last place.
+- A new unit joins in the last place in the queue.
 - A workspace that cannot join gets no Add to merge queue, and the drop
   target of the group names the reason, as
   [Add to merge queue](merge-queue-in-the-app.md#add-to-merge-queue) says.
@@ -120,6 +120,13 @@ and the terms below. A decision number names a dated record, as
   queue (decisions 301 and 304).
 - Add on an upper workspace of a member stack also adds each lower pull
   request of the stack that is not queued yet, in stack order.
+- If a queued unit is the lowest part of a member's GitHub stack and the
+  upper pull requests are outside the queue, the queue merges from that
+  stack (decision 322). The merge can land only the queued layers. The
+  queue leaves the upper pull requests in the member's stack.
+- The same rule applies if the member creates the stack after Add. Other
+  units keep their queue order, as
+  [The GitHub stack](merge-queue-stack.md#the-github-stack) says.
 - A drag moves the whole unit, and a drop never splits a unit.
 - When a lower entry leaves for another cause than its merge, each entry
   above it in its unit leaves with it, in the same leave step. Reason: those
@@ -162,8 +169,8 @@ and the terms below. A decision number names a dated record, as
 ## The merge
 
 - The queue merges the highest layer whose bar state is ready to merge,
-  when each layer below it is ready to merge too. GitHub then merges each
-  layer below it in the same step.
+  when each entry ahead of it is in the same GitHub stack and ready to
+  merge. GitHub then merges each layer below it in the same step.
 - Reason: the bar state already reads the checks, the conflicts, the
   reviews, and the block of the rules of GitHub, such as unresolved
   threads, as [Banner states](github-banner.md#banner-states) says.

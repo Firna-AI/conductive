@@ -92,7 +92,7 @@ export async function queueBarState(
          CASE WHEN q.trunk != r.default_branch AND e.state != 'merging' THEN 'waiting' ELSE e.state END AS state,
          CASE WHEN q.trunk != r.default_branch AND e.state != 'merging' THEN 'trunk-change' ELSE e.wait_reason END AS wait,
          e.pull_number AS pullNumber, e.place AS savedPlace,
-         CASE WHEN q.trunk = r.default_branch AND q.github_stack_number IS NOT NULL
+         CASE WHEN q.trunk = r.default_branch
            AND q.rebuild_stack = 0 AND q.reordering = 0 THEN e.merge_head END AS mergeHead,
          e.blocking_pull_number AS blockedByPullNumber, e.old_base_sha AS oldBase,
          e.old_base_head AS oldBaseHead

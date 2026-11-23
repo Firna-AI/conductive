@@ -130,7 +130,9 @@ export async function saveQueueOrder(
     writeId: string
     writer?: QueueWriter
     notices?: readonly QueueLeaveNotice[]
+    leaveActorId?: string
     merged?: QueueEntry
+    syncUnitId?: string
     reordering?: true
   },
 ): Promise<boolean> {
@@ -142,37 +144,41 @@ export async function saveQueueOrder(
     writeId,
     writer,
     notices,
+    leaveActorId,
     merged,
+    syncUnitId,
     reordering,
   } = input
   const results = await db.batch([
     db
       .prepare(
-        `UPDATE merge_queues SET updated_at = ?, pending_write = ?,
-         rebuild_stack = CASE WHEN ? AND github_stack_number IS NOT NULL THEN 1 ELSE rebuild_stack END,
-         reordering = CASE WHEN ? THEN 1 ELSE reordering END,
-         stack_writer_user_id = COALESCE(stack_writer_user_id, ?)
-         WHERE id = ?
-         AND (? IS NULL OR EXISTS (
+        `UPDATE merge_queues SET updated_at = ?1, pending_write = ?2,
+         rebuild_stack = CASE WHEN (?3 OR ?4 IS NOT NULL) AND github_stack_number IS NOT NULL THEN 1 ELSE rebuild_stack END,
+         reordering = CASE WHEN ?3 THEN 1 ELSE reordering END,
+         stack_cleanup_workspace_id = CASE WHEN github_stack_number IS NOT NULL
+           THEN COALESCE(stack_cleanup_workspace_id, ?4) END,
+         stack_cleanup_actor_user_id = CASE WHEN github_stack_number IS NULL THEN NULL
+           WHEN stack_cleanup_workspace_id IS NULL THEN ?5 ELSE stack_cleanup_actor_user_id END
+         WHERE id = ?6
+         AND (?7 IS NULL OR EXISTS (
            SELECT 1 FROM workspaces w
            JOIN orgs o ON o.id = w.org_id AND o.deleted_at IS NULL AND o.suspended_at IS NULL
-           JOIN org_members m ON m.org_id = w.org_id AND m.user_id = ?
+           JOIN org_members m ON m.org_id = w.org_id AND m.user_id = ?7
            JOIN users u ON u.id = m.user_id AND u.suspended_at IS NULL
            JOIN repositories r ON r.id = w.repository_id AND r.org_id = w.org_id
            JOIN github_installations i ON i.id = r.installation_id AND i.suspended_at IS NULL
-           WHERE w.id = ? AND w.org_id = merge_queues.org_id
-             AND w.repository_id = merge_queues.repository_id AND w.branch = ?
-             AND r.installation_id = ? AND w.archived_at IS NULL AND w.state != 'archived'
+           WHERE w.id = ?8 AND w.org_id = merge_queues.org_id
+             AND w.repository_id = merge_queues.repository_id AND w.branch = ?9
+             AND r.installation_id = ?10 AND w.archived_at IS NULL AND w.state != 'archived'
          ))`,
       )
       .bind(
         now,
         writeId,
-        removed.length > 0 || reordering === true,
         reordering === true,
-        removed[0]?.queuerUserId ?? null,
+        removed[0]?.workspaceId ?? null,
+        leaveActorId ?? null,
         id,
-        writer?.memberId ?? null,
         writer?.memberId ?? null,
         writer?.workspace.id ?? null,
         writer?.workspace.branch ?? null,
@@ -187,9 +193,17 @@ export async function saveQueueOrder(
             .prepare(
               `UPDATE merge_queue_entries SET sync_from = COALESCE(sync_from, observed_head)
              WHERE queue_id = ? AND place > ?
+             AND (? IS NULL OR unit_id = ?)
              AND EXISTS (SELECT 1 FROM merge_queues WHERE id = ? AND pending_write = ?)`,
             )
-            .bind(id, merged.place, id, writeId),
+            .bind(
+              id,
+              merged.place,
+              syncUnitId ?? null,
+              syncUnitId ?? null,
+              id,
+              writeId,
+            ),
         ]
       : []),
     db

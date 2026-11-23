@@ -85,6 +85,11 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         change its target, rebase its branch, and merge it when ready.
         An automatic merge uses the stored GitHub token of the member who
         added the last pull request that the queue asks GitHub to merge.
+        If the creator of the queue's GitHub stack cannot remove it,
+        ${productName} can use the token of the member whose action caused
+        a queue entry to leave, or the workspace owner's token. The member
+        must still belong to the org and have GitHub write access to the
+        repository.
         The queue sends agent turns as the member who added the pull
         request. The turn uses the session's agent login.`,
       text`Each personal login has a setting that lets other members use

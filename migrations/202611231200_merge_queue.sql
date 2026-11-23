@@ -7,6 +7,8 @@ CREATE TABLE merge_queues (
   trunk_pull_number INTEGER,
   github_stack_number INTEGER,
   stack_writer_user_id TEXT,
+  stack_cleanup_workspace_id TEXT,
+  stack_cleanup_actor_user_id TEXT,
   rebuild_stack INTEGER NOT NULL DEFAULT 0,
   creating_stack INTEGER NOT NULL DEFAULT 0,
   reordering INTEGER NOT NULL DEFAULT 0,

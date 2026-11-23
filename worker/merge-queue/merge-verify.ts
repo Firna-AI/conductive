@@ -1,10 +1,17 @@
 import type { repositoryMemberGitHub } from '../github/member-github'
 import { readQueuePull } from '../github/queue-pulls'
+import type { GitHubStack } from '../github/stack-parsers'
 import type { QueueEntry, QueueRecord } from './contracts'
+import { readQueueEntries } from './data'
 import { liveMergePrefix } from './merge-data'
 import { queueWorkspace } from './repository'
 import { layerAncestry } from './restack-ancestry'
-import { hasOpenStack, matchesStack, readQueueStack } from './stack-read'
+import {
+  matchesStack,
+  openStackLayers,
+  readOtherStack,
+  readQueueStack,
+} from './stack-read'
 import type { QueueRuntime } from './step'
 
 export interface CheckedLayer {
@@ -18,6 +25,7 @@ export async function verifyMergePrefix(
   queue: QueueRecord,
   layers: readonly CheckedLayer[],
   member: Awaited<ReturnType<typeof repositoryMemberGitHub>>,
+  memberStackNumber?: number,
 ) {
   const bottom = layers[0]
   if (!bottom) return false
@@ -32,12 +40,34 @@ export async function verifyMergePrefix(
   )
   if (live.defaultBranch !== queue.trunk || live.fullName !== queue.fullName)
     return false
+  let stack: GitHubStack | null = null
   if (queue.githubStackNumber === null) {
-    if (
-      layers.length !== 1 ||
-      (await hasOpenStack(fetch, token, queue, bottom.entry.pullNumber))
+    const db = runtime.env.DB
+    const entries = await readQueueEntries(db, queue.id)
+    const other = await readOtherStack(
+      db,
+      queue,
+      entries,
+      bottom.entry,
+      fetch,
+      token,
     )
-      return false
+    if (memberStackNumber === undefined) {
+      if (layers.length !== 1 || other.kind !== 'none') return false
+    } else {
+      if (
+        other.kind !== 'member' ||
+        other.stack.number !== memberStackNumber ||
+        layers.length > other.count
+      )
+        return false
+      stack = other.stack
+    }
+  } else {
+    stack = await readQueueStack(queue, fetch, token)
+    if (!stack) return false
+  }
+  if (!stack) {
     if (
       live.kind !== 'open' ||
       live.pull.number !== bottom.entry.pullNumber ||
@@ -47,9 +77,8 @@ export async function verifyMergePrefix(
     )
       return false
   } else {
-    const stack = await readQueueStack(queue, fetch, token)
-    if (!stack?.open || stack.baseBranch !== queue.trunk) return false
-    const open = stack.layers.filter((layer) => layer.state === 'open')
+    if (!stack.open || stack.baseBranch !== queue.trunk) return false
+    const open = openStackLayers(stack)
     if (
       !layers.every(({ entry, headSha }, index) =>
         matchesStack(

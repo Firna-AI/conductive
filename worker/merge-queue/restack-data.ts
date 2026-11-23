@@ -93,6 +93,7 @@ export function saveQueueStack(
   return db
     .prepare(
       `UPDATE merge_queues SET github_stack_number = ?1, stack_writer_user_id = ?2,
+       stack_cleanup_workspace_id = NULL, stack_cleanup_actor_user_id = NULL,
        rebuild_stack = 0, creating_stack = 0
       WHERE id = ?3 AND github_stack_number IS ?4 AND (?1 IS NULL OR NOT EXISTS (
         SELECT 1 FROM merge_queues other WHERE other.id != ?3

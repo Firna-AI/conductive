@@ -35,6 +35,7 @@ export async function leaveQueue(
   if (!removed.length) return entries
   if (writer)
     await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)
+  const actorId = writer?.memberId ?? signal.actorId
   const { bases, notices } = await resetLeavingBases(
     runtime,
     queue,
@@ -42,7 +43,7 @@ export async function leaveQueue(
     removed,
     {
       ...signal,
-      actorId: writer?.memberId ?? signal.actorId,
+      actorId,
     },
   )
   if (signal.cause !== 'merged') {
@@ -64,7 +65,11 @@ export async function leaveQueue(
     writeId: runtime.dependencies.randomToken(),
     writer,
     notices,
-    ...(signal.cause === 'merged' && { merged: removed[0] }),
+    leaveActorId: actorId,
+    ...(signal.cause === 'merged' && {
+      merged: removed[0],
+      ...(signal.memberStackMerge && { syncUnitId: removed[0].unitId }),
+    }),
   })
   if (!saved && writer) {
     await authorizeMerge(runtime.env.DB, writer.workspace, writer.memberId)

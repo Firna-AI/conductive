@@ -23,7 +23,7 @@ async function resetBase(
 ): Promise<LeaveBase | null> {
   const { env, dependencies } = runtime
   const binding = queueWorkspace(queue, entry)
-  const owner = await leaveOwner(env.DB, queue, entry)
+  const owner = await leaveOwner(env.DB, queue, entry.workspaceId)
   const queuerCanAct =
     queue.suspendedAt === null &&
     signal.cause !== 'queuer-left' &&

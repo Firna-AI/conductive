@@ -3,9 +3,39 @@ import {
   getPullRequestStack,
   listPullRequestStacks,
 } from '../github/stack-client'
-import type { GitHubStackPullRequest } from '../github/stack-parsers'
+import type {
+  GitHubStack,
+  GitHubStackLayer,
+  GitHubStackPullRequest,
+} from '../github/stack-parsers'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
+import { stackOfAnotherQueue } from './data'
+
+type ListedStack = GitHubStack<GitHubStackLayer>
+
+export function openStackLayers<T extends GitHubStackLayer>(
+  stack: GitHubStack<T>,
+) {
+  return stack.layers.filter((layer) => layer.state === 'open')
+}
+
+function matchesEntry(entry: QueueEntry | undefined, layer: GitHubStackLayer) {
+  return entry?.pullNumber === layer.number && entry.branch === layer.headBranch
+}
+
+export function isQueueStackPrefix(
+  stack: ListedStack,
+  queue: QueueRecord,
+  entries: readonly QueueEntry[],
+) {
+  return (
+    stack.baseBranch === queue.trunk &&
+    openStackLayers(stack).every((layer, index) =>
+      matchesEntry(entries[index], layer),
+    )
+  )
+}
 
 export async function readQueueStack(
   queue: QueueRecord,
@@ -61,23 +91,63 @@ export function followsQueueBase(
   )
 }
 
-export async function hasOpenStack(
+type OtherStack =
+  | { kind: 'none' | 'blocked' }
+  | { kind: 'queueable'; stack: ListedStack }
+  | { kind: 'member'; stack: GitHubStack; count: number }
+
+/** A member stack can merge its queued unit from the trunk without changing the stack. */
+export async function readOtherStack(
+  db: D1Database,
+  queue: QueueRecord,
+  entries: readonly QueueEntry[],
+  entry: QueueEntry,
   fetch: HttpFetch,
   token: string,
-  queue: QueueRecord,
-  pullNumber: number,
-) {
-  const stacks = await listPullRequestStacks(
-    fetch,
-    token,
-    queue.fullName,
-    pullNumber,
-  )
-  return stacks.some(
+): Promise<OtherStack> {
+  const stacks = (
+    await listPullRequestStacks(fetch, token, queue.fullName, entry.pullNumber)
+  ).filter(
     (stack) =>
       stack.open &&
-      stack.layers.some(
-        (layer) => layer.number === pullNumber && layer.state === 'open',
-      ),
+      stack.number !== queue.githubStackNumber &&
+      openStackLayers(stack).some(({ number }) => number === entry.pullNumber),
   )
+  const stack = stacks[0]
+  if (!stack) return { kind: 'none' }
+  if (stacks.length > 1 || (await stackOfAnotherQueue(db, queue, stack.number)))
+    return { kind: 'blocked' }
+  const unit = entries.filter(({ unitId }) => unitId === entry.unitId)
+  const queued = new Set(entries.map(({ pullNumber }) => pullNumber))
+  const isMemberPrefix = (value: ListedStack) => {
+    const open = openStackLayers(value)
+    return (
+      value.open &&
+      value.baseBranch === queue.trunk &&
+      open.length > unit.length &&
+      unit[0]?.pullNumber === entry.pullNumber &&
+      unit.every((layer, index) => matchesEntry(layer, open[index])) &&
+      open.slice(unit.length).every(({ number }) => !queued.has(number))
+    )
+  }
+  if (isMemberPrefix(stack)) {
+    const live = await getPullRequestStack(
+      fetch,
+      token,
+      queue.fullName,
+      stack.number,
+    )
+    return live.number === stack.number && isMemberPrefix(live)
+      ? { kind: 'member', stack: live, count: unit.length }
+      : { kind: 'blocked' }
+  }
+  if (
+    (queue.githubStackNumber === null &&
+      isQueueStackPrefix(stack, queue, entries)) ||
+    openStackLayers(stack).every(({ number }) =>
+      unit.some(({ pullNumber }) => pullNumber === number),
+    )
+  )
+    return { kind: 'queueable', stack }
+  return { kind: 'blocked' }
 }

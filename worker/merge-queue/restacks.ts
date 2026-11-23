@@ -13,7 +13,7 @@ import { queueReadToken, queueWorkspace } from './repository'
 import { finishQueueReorder, followWorkspaceBase } from './restack-data'
 import { QueueLayerRestack } from './restack-layer'
 import { QueueStackChanges } from './stack-changes'
-import { followsQueueBase } from './stack-read'
+import { followsQueueBase, openStackLayers, readOtherStack } from './stack-read'
 import { leaveQueue, type QueueRuntime } from './step'
 
 export interface QueueRestackRead {
@@ -134,7 +134,7 @@ export class QueueRestacks {
         await this.schedule(scope, RESTACK_RETRY_MS)
         return null
       }
-      if (await this.followBases(queue, entries, reads)) return null
+      if (await this.checkBases(queue, entries, reads)) return null
     }
     const clean = await this.stacks
       .cleanup(queue, entries, stack)
@@ -152,8 +152,42 @@ export class QueueRestacks {
     if (!trunk?.refHead) return null
 
     let base = { branch: queue.trunk, head: trunk.refHead }
+    let end = reads.length
     for (const [index, read] of reads.entries()) {
+      if (index === end) break
       try {
+        const onStack =
+          stack &&
+          openStackLayers(stack)[index]?.number === read.entry.pullNumber
+        const other = onStack
+          ? ({ kind: 'none' } as const)
+          : await readOtherStack(
+              env.DB,
+              queue,
+              entries,
+              read.entry,
+              dependencies.fetch,
+              token,
+            )
+        if (other.kind === 'blocked')
+          return {
+            queue,
+            entries,
+            token,
+            reads,
+            stack,
+            readyCount: index,
+            wait: 'rules',
+          }
+        if (other.kind === 'member') {
+          if (index > 0) {
+            end = index
+            break
+          }
+          stack = other.stack
+          end = other.count
+        }
+        await followWorkspaceBase(this.runtime, queue, read.entry, base.branch)
         const step = await this.layer.move(
           queue,
           entries,
@@ -162,6 +196,7 @@ export class QueueRestacks {
           read,
           base,
           token,
+          other.kind === 'queueable',
         )
         if (step === 'ready') {
           base = { branch: read.entry.branch, head: read.pull.headSha }
@@ -201,7 +236,15 @@ export class QueueRestacks {
       await finishQueueReorder(env.DB, queue)
       queue.reordering = 0
     }
-    return { queue, entries, token, reads, stack, readyCount: reads.length }
+    return {
+      queue,
+      entries,
+      token,
+      reads,
+      stack,
+      readyCount: end,
+      ...(end < reads.length && { wait: 'lower-layer' as const }),
+    }
   }
 
   private retryCleanup(queue: QueueRecord, blocked: boolean) {
@@ -214,7 +257,7 @@ export class QueueRestacks {
     )
   }
 
-  private async followBases(
+  private async checkBases(
     queue: QueueRecord,
     entries: QueueEntry[],
     reads: QueuePullSnapshot[],
@@ -231,7 +274,6 @@ export class QueueRestacks {
         await this.schedule(queue)
         return true
       }
-      await followWorkspaceBase(this.runtime, queue, entry, base)
       base = entry.branch
     }
     return false

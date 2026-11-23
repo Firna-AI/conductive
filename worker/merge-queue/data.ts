@@ -25,7 +25,10 @@ export function readQueue(
        q.trunk_pull_number AS trunkPullNumber,
        r.full_name AS fullName, r.installation_id AS installationId,
        q.github_stack_number AS githubStackNumber, q.pending_write AS pendingWrite,
-       q.stack_writer_user_id AS stackWriterUserId, q.rebuild_stack AS rebuildStack,
+       q.stack_writer_user_id AS stackWriterUserId,
+       q.stack_cleanup_workspace_id AS stackCleanupWorkspaceId,
+       q.stack_cleanup_actor_user_id AS stackCleanupActorUserId,
+       q.rebuild_stack AS rebuildStack,
        q.reordering,
        r.default_branch AS defaultBranch, o.suspended_at AS suspendedAt
      FROM merge_queues q

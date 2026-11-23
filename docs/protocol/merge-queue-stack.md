@@ -9,14 +9,22 @@ says.
 
 ## The GitHub stack
 
-- Each queue keeps its entries as one GitHub stack (decision 313). The
-  bottom layer targets the trunk, and each layer above targets the branch
-  of the layer below it.
+- Each queue keeps its own GitHub stack (decision 313). The bottom layer
+  targets the trunk. Each layer above targets the branch of the layer
+  below it.
 - Reason: each queued pull request then fixes its conflicts with the work
   ahead of it once, while it waits. The waiting pull requests fix their
   conflicts in parallel, and one merge can land many of them.
 - A layer that cannot merge blocks each layer above it, and a re-order
   rebuilds the stack (decision 313).
+- A queued unit below unqueued pull requests in a member's GitHub stack
+  keeps that stack (decision 322). The queue merges its ready layers
+  directly from the member's stack when the unit reaches place 1. GitHub
+  keeps control of the unqueued pull requests above the unit.
+- The queue merges the units ahead of that unit first. The units after it
+  wait for it to merge. The next unit then restacks onto the trunk.
+- Breaking up the member's stack would remove GitHub's stack checks and
+  automatic rebases for its upper pull requests (decision 322).
 - Each queue owns its saved stack number. A later queue for the same
   repository leaves that stack to its owner, even when the owner has no
   entries. If cleanup fails, the owning queue retries with a delay that
@@ -30,9 +38,9 @@ says.
   for a rebase, not a merge, as
   [The prompts of a queued workspace](merge-queue-in-the-app.md#the-prompts-of-a-queued-workspace)
   says.
-- A new entry first restacks onto the branch of the layer below it. Its
-  pull request then takes that branch as its base on GitHub, and then
-  joins the GitHub stack.
+- An entry that joins the queue's stack first restacks onto the branch of
+  the layer below it. Its pull request then takes that branch as its base
+  on GitHub and joins the stack.
 - The queue never gives a pull request a base branch that already holds
   the head of that pull request. Reason: GitHub then shows the commits of
   the layer as removed.
@@ -61,6 +69,8 @@ says.
 - After each read of GitHub, the queue keeps one rule. From the lowest
   layer that does not hold the newest head of the layer below it, it
   restacks each layer upward, one after another.
+- The queue keeps each queued layer of a member's partial stack on its
+  existing GitHub base.
 - Every cause uses this rule: a join, a re-order, a leave, a push to a
   lower layer, and a merge into the trunk from outside the queue.
 - The queue first asks GitHub to rebase the layer on GitHub's servers
@@ -122,8 +132,9 @@ says.
 
 - A member with write access re-orders a queue with a drag in the group, as
   [Drags](merge-queue-in-the-app.md#drags) says.
-- A re-order rebuilds the whole GitHub stack, because GitHub cannot unstack
-  from a place inside a stack. No merge runs until the new stack exists.
+- A re-order rebuilds the queue's own GitHub stack, because GitHub cannot
+  unstack from a place inside a stack. A merge waits for the queue to
+  prepare the units that are first in the new order.
 - Each moved entry restacks first, from the bottom up, one after another.
   Its pull request then takes its new base on GitHub, and the layers join
   the stack again.

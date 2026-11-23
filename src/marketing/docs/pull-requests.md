@@ -151,9 +151,9 @@ For another refusal, use **Open on GitHub** to inspect the cause.
 ## Merge queue
 
 The merge queue merges pull requests in order into the repository's default branch, such as `main`.
-The first pull request builds on the default branch.
-Each pull request after the first builds on the one directly ahead of it.
-The queue can merge several ready pull requests together.
+The first pull request in a stack builds on the default branch.
+Each other pull request in that stack builds on the one directly ahead of it.
+The queue can merge several ready pull requests in the same GitHub stack together.
 
 ### Add a pull request
 
@@ -164,6 +164,10 @@ Pull requests from forks cannot join.
 A pull request that targets another branch, such as `develop`, cannot join on its own.
 If you already made a stack of pull requests, its first pull request must target the default branch.
 Adding a pull request from that stack also adds the earlier ones that are still outside the queue.
+You can queue the bottom part of your stack by adding a pull request in the middle.
+The queue merges those pull requests from your stack.
+The ones you left out stay open for you on GitHub.
+Later queue entries wait for those pull requests to merge, then rebase onto the default branch.
 The queue cannot accept pull requests if the default branch requires GitHub's own merge queue.
 It also cannot accept them while another org has entries or is creating its GitHub stack for the same repository.
 
@@ -215,7 +219,7 @@ If you remove a pull request from a stack you made, the later ones in that stack
 An automatic merge uses the GitHub account of the member who added the last pull request that the queue asks GitHub to merge.
 GitHub checks that account's access and the branch rules.
 
-The merge action appears when this pull request and all the ones ahead of it are in the stack and ready to merge.
+The merge action appears when this pull request and the ones ahead of it are ready to merge in the same GitHub stack.
 For example, **Merge with 2 ahead** asks the queue to merge this pull request and the two ahead of it as its next step.
 The first pull request's button names the merge method, such as **Squash and merge**.
 Selecting the action uses your GitHub account and merge method.

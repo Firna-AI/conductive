@@ -524,6 +524,9 @@ line names a decision. The options check corrected them on the same day.
   API: create, add, and unstack. Unstack removes every open layer. So each
   leave and each re-order ends with a new stack and a new stack number,
   which the queue saves.
+- A unit below unqueued layers of a member's GitHub stack keeps that
+  stack. It merges when it reaches the front of the queue. The units
+  after it then restack from the trunk (decision 322).
 - The queue keeps one rule after each read of GitHub: from the lowest layer
   that does not hold the newest head of the layer below it, it restacks
   each layer upward. Every cause uses this rule: a join, a re-order, a
@@ -643,6 +646,11 @@ and then moved the entry out of the stack as "Needs attention".
 - One Durable Object for each queue runs every step in order, with an
   alarm, as the image coordinator does on a named object of the `Workspace`
   class. Reason: two steps of one queue must never run at the same time.
+- Design call of 23 November 2026: save the first leave's workspace and
+  actor with the cleanup of the specific GitHub stack, in the same write
+  as the removal. This preserves the fallback across retries. Read the
+  workspace owner and check both candidates' current access on each try
+  (decision 323).
 - The member routes go through the queue object too.
 - Webhooks, the end of a fix turn, an archive, Continue, and a repository
   change wake the queue object. The object collects its wakes through its

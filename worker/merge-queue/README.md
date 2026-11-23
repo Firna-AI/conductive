@@ -27,6 +27,11 @@ member stack that GitHub records. A new unit joins at the end. An extension
 keeps the same unit and fills the places after its lower entries. A move
 uses a workspace in the next unit as its anchor, or null for the end.
 
+When a member's stack has unqueued layers above a queued unit, the queue
+uses that stack to merge the unit when it reaches the front. The queue
+checks the live stack before it sends the merge. Other units wait in order.
+After this unit merges, the next unit restacks onto the trunk.
+
 The leave step reads the lowest open pull request of each leaving unit
 and resets its base to the stored trunk. It uses the queuer's token when
 the queuer can act, then the member who caused the leave or the owner.
@@ -58,8 +63,11 @@ join it again under a new number. A re-order holds merges until the
 stack is ready. If a stack creation loses its response, the next read
 can recover the new stack number from GitHub. An empty queue can keep its
 saved stack for cleanup. Another org can queue work in the repository and
-leaves that stack to the owning queue. Cleanup retries use a delay that
-doubles from 30 seconds up to 15 minutes.
+leaves that stack to the owning queue. The leave that marks the stack for
+cleanup saves its actor and workspace with the stack number. If the stack
+writer cannot act, cleanup tries the saved actor and then the workspace
+owner. Cleanup retries use a delay that doubles from 30 seconds up to 15
+minutes.
 
 An edited webhook wakes the queue. The queue checks the current GitHub
 base against the saved base and the edit it requested. It also accepts

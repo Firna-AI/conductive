@@ -16,6 +16,7 @@ export async function reconcileMergePulls(
   queue: QueueRecord,
   entries: QueueEntry[],
   reads: readonly QueuePullSnapshot[],
+  job?: QueueMergeJob,
 ) {
   const { env, dependencies } = runtime
   let remaining = entries
@@ -51,11 +52,27 @@ export async function reconcileMergePulls(
           : pull.draft
             ? 'draft'
             : null
-    if (cause)
+    if (cause) {
+      const merge =
+        cause === 'merged' &&
+        job?.layers.some(
+          ({ entry: saved }) =>
+            saved.workspaceId === entry.workspaceId &&
+            saved.queuedAt === entry.queuedAt &&
+            saved.pullNumber === entry.pullNumber &&
+            saved.unitId === entry.unitId,
+        )
+          ? job
+          : undefined
       remaining = await leaveQueue(runtime, queue, remaining, {
         ...queueLeaveFor(entry),
         cause,
+        ...(merge && { actorId: merge.userId }),
+        ...(merge?.memberStackNumber !== undefined && {
+          memberStackMerge: true,
+        }),
       })
+    }
   }
   return remaining
 }
@@ -70,7 +87,13 @@ export async function settleMergeJob(
   const now = dependencies.now()
   const entries = await readQueueEntries(env.DB, queue.id)
   const reads = await readMergeSnapshots(runtime, queue, entries)
-  const remaining = await reconcileMergePulls(runtime, queue, entries, reads)
+  const remaining = await reconcileMergePulls(
+    runtime,
+    queue,
+    entries,
+    reads,
+    job.outcome === 'refresh' ? undefined : job,
+  )
   const target = reads.find(
     ({ entry }) => entry.workspaceId === job.target.workspaceId,
   )

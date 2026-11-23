@@ -10,13 +10,13 @@ export interface QueueLeaveNotice {
 export async function leaveOwner(
   db: D1Database,
   queue: QueueRecord,
-  entry: QueueEntry,
+  workspaceId: string,
 ) {
   return db
     .prepare(
       'SELECT owner_user_id AS id FROM workspaces WHERE id = ? AND org_id = ?',
     )
-    .bind(entry.workspaceId, queue.orgId)
+    .bind(workspaceId, queue.orgId)
     .first<{ id: string }>()
 }
 

@@ -115,7 +115,6 @@ export class QueueMerges {
     if (
       target.place !== ahead + 1 ||
       queue.reordering !== 0 ||
-      queue.githubStackNumber === null ||
       queue.trunk !== queue.defaultBranch
     )
       throw queueMergeNotReady()
@@ -128,7 +127,9 @@ export class QueueMerges {
     if (
       !prefix ||
       prefix.length !== ahead + 1 ||
-      prefix.some((layer) => !layer.stacked || layerWait(layer) !== null)
+      prefix.some(
+        (layer) => layer.stackNumber === null || layerWait(layer) !== null,
+      )
     ) {
       await this.schedule(queue, this.runtime.dependencies.now())
       throw queueMergeNotReady()
@@ -144,7 +145,11 @@ export class QueueMerges {
     upper: QueuePullRead | undefined,
     now: number,
   ) {
-    if (!upper?.stacked || upper.snapshot?.banner.state !== 'checks-running') {
+    if (
+      !upper ||
+      upper.stackNumber === null ||
+      upper.snapshot?.banner.state !== 'checks-running'
+    ) {
       await this.storage.delete(CHECK_WAIT)
       return false
     }
@@ -235,6 +240,7 @@ export class QueueMerges {
     }
     const last = layers.at(-1)
     if (!last) return false
+    const stackNumber = prefix[0].stackNumber
     const now = this.runtime.dependencies.now()
     const job: Extract<QueueMergeJob, { stage: 'starting' }> = {
       queue,
@@ -242,6 +248,8 @@ export class QueueMerges {
       layers,
       userId,
       input: { method, headSha: last.headSha },
+      ...(queue.githubStackNumber === null &&
+        stackNumber !== null && { memberStackNumber: stackNumber }),
       stage: 'starting',
       nextAt: now,
     }

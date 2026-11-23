@@ -20,6 +20,7 @@ export type QueueMergeJob = {
   target: QueueEntry
   userId: string
   input: GitHubMergeRequest
+  memberStackNumber?: number
   nextAt: number
 } & (
   | { stage: 'starting' }
@@ -129,7 +130,13 @@ export async function prepareQueueMerge(
       !access.capabilities.allowedMethods.includes(input.method)
     )
       return null
-    return (await verifyMergePrefix(runtime, queue, job.layers, access.member))
+    return (await verifyMergePrefix(
+      runtime,
+      queue,
+      job.layers,
+      access.member,
+      job.memberStackNumber,
+    ))
       ? access.member
       : null
   } catch (error) {

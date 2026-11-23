@@ -30,8 +30,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         message. A push sends the branch name to GitHub, and each reader of
         the repository sees it. The merge queue asks GitHub to change pull
         request targets, update stacks, rebase branches, and merge pull
-        requests. The Mac app also checks GitHub for updates and downloads
-        new versions. These requests send your network address to GitHub.`,
+        requests. For cleanup of its GitHub stack, the queue can use the
+        GitHub token of the member whose action caused an entry to leave.
+        It can also use the workspace owner's token. The Mac app checks
+        GitHub for updates and downloads new versions. These requests send
+        your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
         emails of ${productName}. An invitation gives it the invited email
         address, org name, inviter's name, and invitation link. An approval

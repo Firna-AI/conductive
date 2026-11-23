@@ -1,55 +1,26 @@
-import type { HttpFetch } from '../env'
 import {
   addPullRequestsToStack,
   createPullRequestStack,
   listPullRequestStacks,
   unstackPullRequests,
 } from '../github/stack-client'
-import type { GitHubStack, GitHubStackLayer } from '../github/stack-parsers'
+import type { GitHubStack } from '../github/stack-parsers'
 import { HttpError } from '../http'
 import type { QueueEntry, QueueRecord } from './contracts'
-import { stackOfAnotherQueue } from './data'
 import { queueChanged } from './errors'
-import { readQueueStack } from './stack-read'
+import { leaveOwner } from './leave-data'
+import {
+  isQueueStackPrefix,
+  openStackLayers,
+  readOtherStack,
+  readQueueStack,
+} from './stack-read'
 import { reserveStackCreation, saveQueueStack } from './restack-data'
 import { stackCleanupWriter, type StackWriter } from './stack-writer'
 import type { QueueRuntime } from './step'
 
 const CREATING = 'merge-queue:creating-stack'
 type Creation = { numbers: number[]; writerId: string }
-
-function openLayers<T extends GitHubStackLayer>(stack: GitHubStack<T>) {
-  return stack.layers.filter((layer) => layer.state === 'open')
-}
-
-function isPrefix<T extends GitHubStackLayer>(
-  stack: GitHubStack<T>,
-  queue: QueueRecord,
-  entries: readonly QueueEntry[],
-) {
-  return (
-    stack.baseBranch === queue.trunk &&
-    openLayers(stack).every(
-      ({ number, headBranch }, index) =>
-        entries[index]?.pullNumber === number &&
-        entries[index].branch === headBranch,
-    )
-  )
-}
-
-async function listedStacks(
-  fetch: HttpFetch,
-  token: string,
-  queue: QueueRecord,
-  number: number,
-) {
-  return (
-    await listPullRequestStacks(fetch, token, queue.fullName, number)
-  ).filter(
-    (stack) =>
-      stack.open && openLayers(stack).some((layer) => layer.number === number),
-  )
-}
 
 async function unstack(
   writer: StackWriter,
@@ -127,13 +98,22 @@ export class QueueStackChanges {
     stack: GitHubStack | null,
   ) {
     if (queue.githubStackNumber === null) return 'ready'
-    if (stack?.open && !queue.rebuildStack && isPrefix(stack, queue, entries))
+    if (
+      stack?.open &&
+      !queue.rebuildStack &&
+      isQueueStackPrefix(stack, queue, entries)
+    )
       return 'ready'
     if (stack?.open) {
-      const writers = new Set([
-        queue.stackWriterUserId,
-        ...entries.map((entry) => entry.queuerUserId),
-      ])
+      const workspaceId = queue.stackCleanupWorkspaceId
+      const fallback =
+        workspaceId === null
+          ? entries.map((entry) => entry.queuerUserId)
+          : [
+              queue.stackCleanupActorUserId,
+              (await leaveOwner(this.runtime.env.DB, queue, workspaceId))?.id,
+            ]
+      const writers = new Set([queue.stackWriterUserId, ...fallback])
       let removed = false
       for (const id of writers) {
         if (!id) continue
@@ -168,19 +148,21 @@ export class QueueStackChanges {
     entry: QueueEntry,
     writer: StackWriter,
   ) {
-    const stacks = await listedStacks(
+    const other = await readOtherStack(
+      this.runtime.env.DB,
+      queue,
+      entries,
+      entry,
       writer.fetch,
       writer.token,
-      queue,
-      entry.pullNumber,
     )
-    const stack = stacks.find(
-      ({ number }) => number !== queue.githubStackNumber,
-    )
-    if (!stack) return 'ready'
-    if (await stackOfAnotherQueue(this.runtime.env.DB, queue, stack.number))
-      return 'blocked'
-    if (queue.githubStackNumber === null && isPrefix(stack, queue, entries)) {
+    if (other.kind === 'none') return 'ready'
+    if (other.kind !== 'queueable') return 'blocked'
+    const { stack } = other
+    if (
+      queue.githubStackNumber === null &&
+      isQueueStackPrefix(stack, queue, entries)
+    ) {
       const adopted = await saveQueueStack(
         this.runtime.env.DB,
         queue,
@@ -189,13 +171,6 @@ export class QueueStackChanges {
       )
       return adopted.meta.changes === 1 ? 'changed' : 'blocked'
     }
-    const unit = new Set(
-      entries
-        .filter(({ unitId }) => unitId === entry.unitId)
-        .map(({ pullNumber }) => pullNumber),
-    )
-    if (openLayers(stack).some(({ number }) => !unit.has(number)))
-      return 'blocked'
     return (await unstack(writer, queue, stack.number)) ? 'changed' : 'blocked'
   }
 
@@ -207,7 +182,7 @@ export class QueueStackChanges {
     writer: StackWriter,
   ) {
     const entry = entries[index]
-    if (stack && openLayers(stack)[index]?.number === entry.pullNumber)
+    if (stack && openStackLayers(stack)[index]?.number === entry.pullNumber)
       return false
     if (index === 0) return false
     await writer.authorize()

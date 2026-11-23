@@ -157,6 +157,12 @@ merge queue. A decision number names a dated record, as
   the token of the workspace owner, as for a moved base. When that write
   fails too, the line under the bar names the branch that the pull request
   still targets.
+- When the queue removes its GitHub stack, it first uses the token of the
+  member who created it. If that member cannot act, the queue tries the
+  member whose action caused the leave, followed by the workspace owner
+  (decision 323). Each attempt checks that the member still belongs to
+  the org and has GitHub write access to the repository. The queue keeps
+  the leave actor and workspace with the saved stack for cleanup retries.
 - A GitHub close or draft event only asks the queue to read the pull
   request again. The event supplies no member for a base reset.
 - These ways were rejected (decision 314):

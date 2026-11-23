@@ -6,7 +6,12 @@ import type { QueueEntry, QueueRecord } from './contracts'
 import type { QueueLocalState } from './local-work'
 import { queueReader, queueReadToken, queueWorkspace } from './repository'
 import type { QueueRestackRead } from './restacks'
-import { hasOpenStack, matchesStack, readQueueStack } from './stack-read'
+import {
+  matchesStack,
+  openStackLayers,
+  readOtherStack,
+  readQueueStack,
+} from './stack-read'
 import type { QueueRuntime } from './step'
 import { rememberTrunkPull } from './step-data'
 
@@ -17,8 +22,8 @@ export type QueuePullSnapshot = Awaited<
 }
 
 export interface QueuePullRead extends QueuePullSnapshot {
-  /** Contiguous, checked membership in the saved GitHub stack. */
-  stacked: boolean
+  /** Contiguous, checked membership in the GitHub stack used for this merge. */
+  stackNumber: number | null
   standalone: boolean
   local: QueueLocalState
   restackWait?: MergeQueueWait
@@ -60,16 +65,31 @@ export async function readMergePulls(
     restack?.token ??
     (await queueReadToken(runtime, queueWorkspace(queue, bottom)))
   const fetch = runtime.dependencies.fetch
+  const other =
+    !restack && queue.githubStackNumber === null
+      ? await readOtherStack(
+          runtime.env.DB,
+          queue,
+          entries,
+          bottom,
+          fetch,
+          token,
+        )
+      : null
   const stack = restack
     ? restack.stack
-    : await readQueueStack(queue, fetch, token)
-  const open = stack?.layers.filter((layer) => layer.state === 'open') ?? []
+    : other?.kind === 'member'
+      ? other.stack
+      : await readQueueStack(queue, fetch, token)
+  const open = stack ? openStackLayers(stack) : []
+  const readyCount =
+    restack?.readyCount ?? (other?.kind === 'member' ? other.count : Infinity)
   const standalone =
     queue.rebuildStack === 0 &&
     (entries.length === 1 || restack !== undefined) &&
     queue.trunk === queue.defaultBranch &&
     queue.githubStackNumber === null &&
-    !(await hasOpenStack(fetch, token, queue, bottom.pullNumber))
+    (restack ? stack === null : other?.kind === 'none')
   const reads: QueuePullRead[] = []
   let prefix =
     !!stack &&
@@ -81,7 +101,7 @@ export async function readMergePulls(
   for (const read of restack?.reads ??
     (await readMergeSnapshots(runtime, queue, entries, token))) {
     const { entry, snapshot, pull } = read
-    const beforeRestack = !restack || reads.length < restack.readyCount
+    const beforeRestack = reads.length < readyCount
     const syncing =
       !restack && entry.syncFrom != null && entry.syncFrom !== pull.headSha
     prefix =
@@ -98,12 +118,12 @@ export async function readMergePulls(
       snapshot?.pullBaseBranch === queue.trunk
     reads.push({
       ...read,
-      stacked: prefix,
+      stackNumber: prefix && stack ? stack.number : null,
       standalone: single,
       restackWait:
         restack && reads.length === restack.readyCount
           ? restack.wait
-          : reads.length >= (restack?.readyCount ?? Infinity)
+          : !beforeRestack
             ? 'lower-layer'
             : syncing
               ? 'rebase'

@@ -25,7 +25,7 @@ export const PARALLEL_HEAD = '4'.repeat(40)
 
 export async function mergeFixture(
   bundle: string,
-  mode: 'stack' | 'units' | 'single' = 'stack',
+  mode: 'stack' | 'units' | 'single' | 'empty' = 'stack',
 ) {
   key ??= generateKeyPairSync('rsa', { modulusLength: 2048 })
     .privateKey.export({ type: 'pkcs1', format: 'pem' })
@@ -46,8 +46,9 @@ export async function mergeFixture(
       f.api.mergeBases.set(`${TRUNK_HEAD}...${head}`, TRUNK_HEAD)
       f.api.mergeBases.set(`${HEAD_SHA}...${head}`, HEAD_SHA)
     }
-    expect((await f.change('POST', OUTER_WORKSPACE)).status).toBe(204)
-    if (mode !== 'single') {
+    if (mode !== 'empty')
+      expect((await f.change('POST', OUTER_WORKSPACE)).status).toBe(204)
+    if (mode === 'stack' || mode === 'units') {
       expect(
         (await f.change('POST', top, { cookie: f.cookies.memberCookie }))
           .status,
@@ -60,7 +61,9 @@ export async function mergeFixture(
         [2, pullNumber],
       )
       await f.db
-        .prepare('UPDATE merge_queues SET github_stack_number = ? WHERE id = ?')
+        .prepare(
+          "UPDATE merge_queues SET github_stack_number = ?, stack_writer_user_id = 'owner' WHERE id = ?",
+        )
         .bind(stack.number, queueId(f.scope))
         .run()
       await f.db
