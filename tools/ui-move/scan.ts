@@ -1,5 +1,4 @@
 // Finds the paths in the text of a file and rewrites them for the move.
-import path from 'node:path'
 import type { Tree } from './tree.ts'
 
 /** The files whose text the move reads, by their ending. */
@@ -98,12 +97,15 @@ function rootPath(tree: Tree, value: string): string | undefined {
   return to.slice(0, to.length - target.suffix.length)
 }
 
-/** A path inside a folder that keeps some files and moves others. */
+/**
+ * A root path that no rule rewrites, but that can be stale: a path that
+ * names nothing, or a folder that kept some files and lost others.
+ */
 function touchesMove(tree: Tree, value: string): boolean {
-  const folder = value.replace(/\/$/, '')
-  return Object.keys(tree.map).some(
-    (file) =>
-      file.startsWith(`${folder}/`) ||
-      path.posix.dirname(file) === path.posix.dirname(folder),
+  const target = tree.resolve('.', `./${value}`)
+  if (!target) return true
+  if (!tree.folders.has(target.path)) return false
+  return Object.keys(tree.map).some((file) =>
+    file.startsWith(`${target.path}/`),
   )
 }
