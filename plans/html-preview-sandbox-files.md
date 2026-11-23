@@ -172,7 +172,9 @@ Date: 23 November 2026. Cal dropped it: "don't worry about it".
 - Each HTML reply loads that stylesheet first, with a `<link>` element that
   the file server adds to the start of the page. So a family that the page
   names, such as C059, loads from the cloud computer. The page's own
-  `@font-face` rules come later, so they win.
+  `@font-face` rules come later, so they win over a system face with the
+  same family, weight, width, and style. In each other case, the font
+  matching of the browser decides, as review finding 2 records.
 - An HTML reply gets no `<link>` when the stylesheet has no rule.
 
 ### The place of the `<link>`
@@ -417,7 +419,7 @@ Depends on: every other milestone
   Evidence: `.context/html-preview-sandbox-files/smoke/` and
   `.context/html-preview-sandbox-files/rust-verification.md`.
 - [x] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the
+- [x] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Report the findings,
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review

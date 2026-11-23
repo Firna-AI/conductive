@@ -1,6 +1,7 @@
 //! File response headers and seek-before-stream assembly.
 
 use std::io::SeekFrom;
+use std::path::PathBuf;
 use std::time::SystemTime;
 
 use hyper::header::{
@@ -88,8 +89,9 @@ pub(super) async fn file(
     media: &'static str,
     mut content: FileContent,
     files: &dyn Files,
+    repository: PathBuf,
 ) -> Result<Response<Body>> {
-    let document = ChangedDocument::prepare(media, files, request.headers()).await;
+    let document = ChangedDocument::prepare(media, files, request.headers(), repository).await;
     let (mut response, etag, date_validator) = match &document {
         Some(document) => (unranged(), document.etag(&content.etag), None),
         None => (

@@ -1,6 +1,6 @@
 //! HTTP method, origin, path, index, cache, and range policy.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -102,14 +102,14 @@ impl FilePolicy {
         let root = self.files.root();
         let trailing = request.uri().path().ends_with('/');
         if let Some(entry) = self.find(&root, path, trailing).await {
-            return entry.respond(request, self.files.as_ref()).await;
+            return entry.respond(request, self.files.as_ref(), root).await;
         }
         let absolute = Path::new("/").join(path);
         if let Some(mapped) = path::strip_folder(&absolute, &root).and_then(Path::to_str)
             && mapped != path
             && let Some(entry) = self.find(&root, mapped, trailing).await
         {
-            return entry.respond(request, self.files.as_ref()).await;
+            return entry.respond(request, self.files.as_ref(), root).await;
         }
         if !trailing {
             if absolute == Path::new(stylesheet::ADDRESS) {
@@ -121,6 +121,7 @@ impl FilePolicy {
                     media::content_type(path),
                     font,
                     self.files.as_ref(),
+                    root,
                 )
                 .await;
             }
@@ -130,10 +131,15 @@ impl FilePolicy {
 }
 
 impl RepositoryEntry {
-    async fn respond(self, request: &Request<()>, files: &dyn Files) -> Result<Response<Body>> {
+    async fn respond(
+        self,
+        request: &Request<()>,
+        files: &dyn Files,
+        root: PathBuf,
+    ) -> Result<Response<Body>> {
         match self {
             Self::File { path, content } => {
-                response::file(request, media::content_type(&path), content, files).await
+                response::file(request, media::content_type(&path), content, files, root).await
             }
             Self::Redirect { modified } => redirect(request, modified),
         }

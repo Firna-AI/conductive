@@ -1,5 +1,6 @@
 //! Bounded streaming bodies for whole files and byte ranges.
 
+use std::path::PathBuf;
 use std::{future, io};
 
 use base64::Engine;
@@ -41,6 +42,7 @@ pub(super) fn file(reader: Box<dyn FileReader>, length: u64) -> Body {
 pub(super) struct ChangedDocument {
     kind: ChangedKind,
     origin: Option<String>,
+    repository: PathBuf,
 }
 
 enum ChangedKind {
@@ -54,6 +56,7 @@ impl ChangedDocument {
         media: &str,
         files: &dyn Files,
         headers: &HeaderMap,
+        repository: PathBuf,
     ) -> Option<Self> {
         let kind = match media {
             HTML => ChangedKind::Html {
@@ -65,25 +68,22 @@ impl ChangedDocument {
         Some(Self {
             kind,
             origin: preview_origin(headers).map(str::to_owned),
+            repository,
         })
     }
 
     /// Combine the file validator with the version and inputs of the transformation.
     pub(super) fn etag(&self, file_tag: &str) -> String {
-        const VERSION: &[u8] = b"conductive-preview-rewrite-3";
+        const VERSION: &[u8] = b"conductive-preview-rewrite-4";
         let mut digest = Sha256::new();
         digest.update(VERSION);
-        match &self.origin {
-            Some(origin) => {
-                digest.update([1]);
-                digest.update(origin.as_bytes());
-            }
-            None => digest.update([0]),
-        }
         match self.kind {
-            ChangedKind::Html { stylesheet } => digest.update([u8::from(stylesheet)]),
-            ChangedKind::Text => {}
+            ChangedKind::Html { stylesheet } => digest.update([1, u8::from(stylesheet)]),
+            ChangedKind::Text => digest.update([0]),
         }
+        digest.update(self.origin.as_deref().unwrap_or_default().as_bytes());
+        digest.update([0]);
+        digest.update(self.repository.as_os_str().as_encoded_bytes());
         format!(
             "\"{}-{}\"",
             file_tag.trim_matches('"'),
@@ -93,10 +93,12 @@ impl ChangedDocument {
 
     /// Stream changed text and keep UTF-16 HTML bytes intact.
     pub(super) fn stream(self, reader: Box<dyn FileReader>, length: u64) -> Body {
+        if self.origin.is_none() && !matches!(self.kind, ChangedKind::Html { stylesheet: true }) {
+            return file(reader, length);
+        }
         let chunks = stream::once(async move {
             let mut reader = reader.take(length);
             let mut prefix = Vec::new();
-            let origin = self.origin.unwrap_or_default();
             if let ChangedKind::Html { stylesheet } = self.kind {
                 let limit = if stylesheet {
                     html::SCAN_LIMIT as u64
@@ -105,22 +107,23 @@ impl ChangedDocument {
                 };
                 (&mut reader).take(limit).read_to_end(&mut prefix).await?;
                 if stylesheet && !html::is_utf16(&prefix) {
-                    html::insert_link(&mut prefix, &origin);
+                    html::insert_link(&mut prefix, self.origin.as_deref().unwrap_or_default());
                 }
             }
-            let rewrite = !html::is_utf16(&prefix);
+            let mut addresses = self
+                .origin
+                .filter(|_| !html::is_utf16(&prefix))
+                .map(|origin| FileAddresses::new(origin, self.repository));
             let start = (!prefix.is_empty()).then(|| Ok(Bytes::from(prefix)));
             let chunks = stream::iter(start).chain(ReaderStream::new(reader));
-            let mut addresses = FileAddresses::new(origin);
             Ok::<_, io::Error>(
                 chunks
                     .map_ok(Some)
                     .chain(stream::iter([Ok(None)]))
                     .try_filter_map(move |chunk| {
-                        let output = if rewrite {
-                            addresses.transform(chunk)
-                        } else {
-                            chunk
+                        let output = match &mut addresses {
+                            Some(addresses) => addresses.transform(chunk),
+                            None => chunk,
                         };
                         future::ready(Ok(output))
                     }),

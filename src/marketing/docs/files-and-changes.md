@@ -101,7 +101,7 @@ A file whose path label hides a secret value shows only **Source**.
 The page loads other files of the repository by their addresses, such as `style.css`.
 An address that starts with `/` can name a file from the top of the repository.
 With current cloud computer software, the page can also load a file by its full path in the repository folder.
-The preview changes local `file:` addresses to addresses on the preview when it serves HTML, CSS, or SVG.
+The preview changes local `file:` addresses of files in the repository folder or the system font folders to addresses on the preview when it serves HTML, CSS, or SVG.
 If a script builds a local file address while the page runs, use a plain path.
 The page cannot load files whose names start with a dot, such as `.env`, or files in `.git`.
 

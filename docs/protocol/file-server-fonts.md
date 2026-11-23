@@ -75,7 +75,18 @@ files and fonts, as [Files of an HTML page](html-page-files.md) says.
   the font stylesheet alone without a preview origin.
   It loads the font stylesheet before each style of the page. So a family
   that the page names, such as C059, loads from the cloud computer.
-- The page's own `@font-face` rules come later, so they win.
+- The page's own `@font-face` rules come later. So a page face wins over a
+  system face with the same family, weight, width, and style, for each
+  character that the page face has.
+- In each other case, the font matching of the browser picks the face, and
+  it can pick a system face. Example: a page that defines only a regular
+  face of a family shows the system bold face of that family for bold
+  text. The cloud computer shows the regular page face made bold.
+- The system faces stay in the families that the page defines. Adding them
+  only to the families that the page does not define was not chosen.
+  Reason: the member chose to keep the font matching of the browser, and
+  the other way needs a script in each page that registers the fonts and
+  follows styles that load later.
 - The file server reads the start of the page as the HTML tokenizer does:
   - It skips a UTF-8 byte order mark, ASCII whitespace, and comments, with
     each comment end that the tokenizer accepts, such as `<!-->` and
@@ -97,4 +108,3 @@ files and fonts, as [Files of an HTML page](html-page-files.md) says.
     ASCII `<link>` breaks it.
 - Risk: the browser drops the attributes of the page's own `<head>`
   element. The font stylesheet becomes `document.styleSheets[0]`.
-

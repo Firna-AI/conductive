@@ -102,6 +102,10 @@ decision of the change that shows agent pages with their files and fonts.
     such as Helvetica. The cloud computer shows Helvetica as Nimbus Sans.
   - It shows an SVG document or an SVG picture. The SVG gets no system
     fonts.
+  - It defines a family that the cloud computer also has, and the browser
+    picks a system face of that family for some text, such as bold text.
+    [The font stylesheet link](file-server-fonts.md#the-font-stylesheet-link)
+    says when.
   - The file server adds no link to the font stylesheet, so the page gets
     no system fonts by family.
     [The font stylesheet link](file-server-fonts.md#the-font-stylesheet-link)

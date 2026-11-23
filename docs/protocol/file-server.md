@@ -120,9 +120,11 @@ says.
   origin, then the absolute path of the file. So the browser asks the files
   preview for that path, also on a page whose `<base>` names another site
   (sandbox files decision 2 B).
-- Without a preview origin, the file server changes the address to the
-  absolute path alone. Then a page whose `<base>` names another site asks
-  that site for the path.
+- Without a preview origin, the file server changes no `file:` address.
+  Reason: a path alone can reach another site, through a `<base>` of the
+  page or through text that the browser decodes into a second separator.
+  The browser then blocks each `file:` address, as it did before this
+  change.
 - A separator is `/` or `\`, because a browser reads `\` as `/` in a
   `file:` address.
 - A match is `file:` in any case, then two equal separators, an optional
@@ -132,17 +134,22 @@ says.
 - `file:` and one separator before a character that is not the same
   separator also becomes one `/`, with each separator after it. Reason:
   Java writes file addresses in this form, such as `file:/home/x`.
-- So the path of a changed address never starts with two separators, and
-  the browser never reads it as another host. For example, `file:/\evil.com/x` becomes
-  `/evil.com/x` on the files preview.
+- So the path of a changed address never starts with two separators.
 - A match needs the start of a word: the byte before `file:` is not an
   ASCII letter, an ASCII digit, `+`, `-`, or `.`.
 - A `file://` address with another host, such as `file://server/x`, does
   not change.
-- The change covers each local `file:` address, also outside the
-  repository folder. Reason: one rule also covers
-  `file:///usr/share/fonts/`, and the rules for each path still decide what
-  loads.
+- A match changes only when the path after its separators starts, by
+  whole segments, with a served folder: the repository folder of the
+  request, `/usr/share/fonts`, or `/usr/local/share/fonts`. A separator
+  run between the segments also counts, so a JSON-escaped address such as
+  `file:\/\/\/home\/user\/repo\/x` changes too. Each other `file:` text
+  keeps its bytes.
+- Reason: only a file in a served folder can load. Text such as the
+  JavaScript `{file:/[.]pdf$/}` or `/^file:/i` names no served folder, so
+  the file server keeps it, and the script still runs.
+- The `ETag` of a changed reply also covers the repository folder, because
+  the folder decides which addresses change.
 - The change covers the whole body: attributes, `srcset`, styles, inline
   scripts, comments, and text. Reason: one text rule covers each place of
   an address, with no parser of HTML or CSS.
@@ -213,8 +220,8 @@ says.
     own site then also loses the change.
   - The change in the Worker. The Worker then streams and changes each
     body, at a much larger cost.
-- An older Worker sends no header, and the file server then writes paths.
-  An older file server ignores the header.
+- An older Worker sends no header, and the file server then changes no
+  `file:` address. An older file server ignores the header.
 
 ## Changed replies
 

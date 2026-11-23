@@ -9,12 +9,14 @@ use std::time::UNIX_EPOCH;
 
 use http_body_util::BodyExt;
 use hyper::StatusCode;
+use hyper::header::ETAG;
 use tokio::sync::watch;
 use unimock::{MockFn, Unimock, matching};
 
 use crate::file_server::files::{Entry, FileContent, FilesMock};
 use crate::repository::error::Error;
 
+use super::origin_tests::{ORIGIN, origin_request};
 use super::policy_tests::{REPOSITORY, policy, request};
 use super::{FilePolicy, FileRequests};
 
@@ -90,7 +92,9 @@ async fn uses_whole_segments_and_applies_file_checks_to_mapped_paths() {
 }
 
 #[tokio::test]
-async fn maps_with_one_repository_snapshot_even_when_the_folder_moves() {
+async fn maps_and_rewrites_with_one_repository_snapshot_and_varies_the_etag() {
+    const ADDRESSES: &[u8] =
+        b"file:///home/user/code/ciproxy/a.png file:///home/user/code/replacement/a.png";
     let replacement = "/home/user/code/replacement";
     let (move_root, root) = watch::channel(PathBuf::from(REPOSITORY));
     let files = Unimock::new((
@@ -100,34 +104,36 @@ async fn maps_with_one_repository_snapshot_even_when_the_folder_moves() {
         FilesMock::open
             .each_call(matching!(_, _))
             .answers_arc(Arc::new(move |_, root, path| match path {
-                "home/user/code/ciproxy/report.txt" if root == Path::new(REPOSITORY) => {
+                "home/user/code/ciproxy/report.svg" if root == Path::new(REPOSITORY) => {
                     move_root.send_replace(PathBuf::from(replacement));
                     Err(Error::NotFound)
                 }
-                "report.txt" if root == Path::new(REPOSITORY) => Ok(file(b"before the move")),
-                "report.txt" if root == Path::new(replacement) => Ok(file(b"after the move")),
+                "report.svg" if root == Path::new(REPOSITORY) => Ok(file(ADDRESSES)),
+                "after.svg" if root == Path::new(replacement) => Ok(file(ADDRESSES)),
                 _ => Err(Error::NotFound),
             })),
     ));
     let policy = FilePolicy {
         files: Arc::new(files),
     };
-    let old = "/home/user/code/ciproxy/report.txt";
-    let new = "/home/user/code/replacement/report.txt";
-    let before = policy.respond(request(old)).await;
+    let old = "/home/user/code/ciproxy/report.svg";
+    let new = "/home/user/code/replacement/after.svg";
+    let before = policy.respond(origin_request(old, &[ORIGIN])).await;
     assert_eq!(before.status(), StatusCode::OK);
+    let old_tag = before.headers()[ETAG].clone();
     assert_eq!(
         before.into_body().collect().await.unwrap().to_bytes(),
-        "before the move"
+        format!("{ORIGIN}/home/user/code/ciproxy/a.png file:///home/user/code/replacement/a.png")
     );
     assert_eq!(
         policy.respond(request(old)).await.status(),
         StatusCode::NOT_FOUND
     );
-    let after = policy.respond(request(new)).await;
+    let after = policy.respond(origin_request(new, &[ORIGIN])).await;
     assert_eq!(after.status(), StatusCode::OK);
+    assert_ne!(after.headers()[ETAG], old_tag);
     assert_eq!(
         after.into_body().collect().await.unwrap().to_bytes(),
-        "after the move"
+        format!("file:///home/user/code/ciproxy/a.png {ORIGIN}/home/user/code/replacement/a.png")
     );
 }

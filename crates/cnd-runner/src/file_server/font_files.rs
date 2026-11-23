@@ -15,6 +15,9 @@ use super::files::{Entry, FileContent, Files, FontStylesheet};
 use super::path::strip_folder;
 use super::stylesheet::StylesheetCache;
 
+/// System font folders served by the runner in a sandbox.
+pub const SYSTEM_FONT_FOLDERS: [&str; 2] = ["/usr/share/fonts", "/usr/local/share/fonts"];
+
 /// Literal system font folders shared by the direct route and stylesheet.
 #[derive(Clone)]
 pub(super) struct FontFolders([PathBuf; 2]);

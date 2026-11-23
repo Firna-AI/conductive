@@ -135,9 +135,10 @@ The server shares descriptor checks with file reads. It streams files
 without the file-tab size limit and refuses dot files and links to dot files.
 It reads the runner's current repository folder once for each request, so a
 repository move points it at the new folder with no new bind.
-HTML, CSS, and SVG replies rewrite local `file:` addresses as they stream.
-They use the preview origin that the Worker sends, followed by the absolute
-file path. Without a preview origin, they use the path alone.
+HTML, CSS, and SVG replies rewrite local `file:` addresses whose paths start
+with the request's repository folder or a system font folder. They add the
+preview origin that the Worker sends before the absolute file path.
+Without an accepted preview origin, the replies keep all `file:` addresses.
 These replies carry no length and serve no byte ranges.
 A path that the repository refuses or lacks can still serve a repository file
 by its absolute path, or a font under `/usr/share/fonts` or `/usr/local/share/fonts`.

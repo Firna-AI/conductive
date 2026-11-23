@@ -18,18 +18,36 @@ fn stylesheet_link() -> String {
 async fn puts_the_font_link_and_local_file_address_on_the_preview_origin() {
     let h = Fixture::new();
     fs::write(h.system.join("font.ttf"), regular("Preview")).unwrap();
-    let page =
-        r#"<!doctype html><base href="https://cdn.example.invalid/"><img src="file:///asset.png">"#;
-    fs::write(h.repository.join("page.html"), page).unwrap();
+    let asset = h.repository.join("asset.png");
+    let asset = asset.display();
+    let page = format!(
+        r#"<!doctype html><base href="https://cdn.example.invalid/"><img src="file://{asset}">"#
+    );
+    fs::write(h.repository.join("page.html"), &page).unwrap();
     let origin = "https://0123456789abcdef0123456789abcdef.conductive.page";
     let reply = h
-        .request(Method::GET, "/page.html", &[(FILES_ORIGIN_HEADER, origin)])
+        .request(
+            Method::GET,
+            "/page.html",
+            &[("X-Conductive-Files-Origin", origin)],
+        )
         .await;
     assert_eq!(reply.status(), StatusCode::OK);
     assert_eq!(
         reply.into_body().collect().await.unwrap().to_bytes(),
         format!(
-            r#"<!doctype html><link rel="stylesheet" href="{origin}{STYLESHEET}"><base href="https://cdn.example.invalid/"><img src="{origin}/asset.png">"#
+            r#"<!doctype html><link rel="stylesheet" href="{origin}{STYLESHEET}"><base href="https://cdn.example.invalid/"><img src="{origin}{asset}">"#
+        )
+    );
+
+    let fallback = h.get(Path::new("/page.html")).await;
+    assert_eq!(fallback.status(), StatusCode::OK);
+    assert_eq!(
+        fallback.into_body().collect().await.unwrap().to_bytes(),
+        page.replacen(
+            "<!doctype html>",
+            &format!("<!doctype html>{}", stylesheet_link()),
+            1,
         )
     );
 }
@@ -64,19 +82,26 @@ async fn places_the_stylesheet_after_doctypes_or_at_the_start_after_the_bom() {
 async fn skips_long_or_unclassifiable_prefixes_and_keeps_all_utf16_bytes() {
     let h = Fixture::new();
     fs::write(h.system.join("font.ttf"), regular("Preview")).unwrap();
-    let long = format!("{}<!doctype html><p>file:///a", "<!-- skip -->".repeat(650));
-    let long_rewritten = format!("{}<!doctype html><p>/a", "<!-- skip -->".repeat(650));
-    let incomplete = b"<!-- incomplete file:///a";
-    let utf16_le = b"\xff\xfefile:///ab \0";
-    let utf16_be = b"\xfe\xfffile:///ab\0 ";
+    let origin = "https://preview.conductive.page";
+    let asset = h.repository.join("a").display().to_string();
+    let prefix = format!("{}<!doctype html><p>", "<!-- skip -->".repeat(650));
+    let long = format!("{prefix}file://{asset}");
+    let long_rewritten = format!("{prefix}{origin}{asset}");
+    let incomplete = format!("<!-- incomplete file://{asset}");
+    let incomplete_rewritten = format!("<!-- incomplete {origin}{asset}");
+    let address = format!("file://{asset}");
+    let utf16_le = [b"\xff\xfe", address.as_bytes()].concat();
+    let utf16_be = [b"\xfe\xff", address.as_bytes()].concat();
     for (input, expected) in [
         (long.as_bytes(), long_rewritten.as_bytes()),
-        (incomplete.as_slice(), b"<!-- incomplete /a".as_slice()),
+        (incomplete.as_bytes(), incomplete_rewritten.as_bytes()),
         (utf16_le.as_slice(), utf16_le.as_slice()),
         (utf16_be.as_slice(), utf16_be.as_slice()),
     ] {
         fs::write(h.repository.join("page.html"), input).unwrap();
-        let reply = h.get(Path::new("/page.html")).await;
+        let reply = h
+            .request(Method::GET, "/page.html", &[(FILES_ORIGIN_HEADER, origin)])
+            .await;
         assert_eq!(reply.status(), StatusCode::OK);
         assert_eq!(
             reply.into_body().collect().await.unwrap().to_bytes(),

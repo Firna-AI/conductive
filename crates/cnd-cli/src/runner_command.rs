@@ -14,7 +14,7 @@ use cnd_cli::update::presence::SDK_HELPER_PART;
 use cnd_cli::update::staging::NODE_PART;
 use cnd_runner::config::Configuration;
 use cnd_runner::file_server::files::RepositoryFiles;
-use cnd_runner::file_server::font_files::PreviewFiles;
+use cnd_runner::file_server::font_files::{PreviewFiles, SYSTEM_FONT_FOLDERS};
 use cnd_runner::file_server::listener::LoopbackListener;
 use cnd_runner::file_server::policy::FilePolicy;
 use cnd_runner::file_server::server::{FileServer, HttpFileServer};
@@ -104,7 +104,7 @@ pub(crate) async fn execute() -> Result<()> {
                 requests: Arc::new(FilePolicy {
                     files: Arc::new(PreviewFiles::new(
                         Arc::new(RepositoryFiles { root: served_root }),
-                        ["/usr/share/fonts", "/usr/local/share/fonts"].map(PathBuf::from),
+                        SYSTEM_FONT_FOLDERS.map(PathBuf::from),
                     )),
                 }),
             });
