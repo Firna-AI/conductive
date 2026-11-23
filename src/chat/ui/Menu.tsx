@@ -81,6 +81,11 @@ export type MenuSubmenu = {
   kind: 'submenu'
   key: string
   label: string
+  /**
+   * Muted words that follow the label in its line, such as the current
+   * effort after Effort.
+   */
+  muted?: string
   entries: readonly MenuRow[]
 }
 

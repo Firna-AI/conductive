@@ -46,7 +46,7 @@ function marked(): string[] {
 }
 
 describe('the favourites of the model menu of a session', () => {
-  it('list each favourite that the picker offers, as its model with its effort and Fast in the muted colour, then All models, the efforts, and Fast, and mark the favourite of the current choice', async () => {
+  it('list each favourite that the picker offers, as its model with its effort and Fast in the muted colour, then All models, Effort with the current effort, and Fast, and mark the favourite of the current choice', async () => {
     const view = await mount(
       <Session favourites={favourites} sent={[]} start={opus} />,
     )
@@ -58,11 +58,10 @@ describe('the favourites of the model menu of a session', () => {
         { role: 'menuitemradio', name: 'GPT-6.1 Sol High', on: 'false' },
         { role: 'menuitemradio', name: 'Sonnet 5.5 High', on: 'false' },
         { role: 'menuitem', name: 'All models', on: null },
-        { role: 'menuitemradio', name: 'Low', on: 'false' },
-        { role: 'menuitemradio', name: 'High', on: 'true' },
+        { role: 'menuitem', name: 'Effort High', on: null },
         { role: 'menuitemcheckbox', name: 'Fast', on: 'false' },
       ],
-      muted: ['High', 'Low Fast', 'High', 'High', null, null, null, null],
+      muted: ['High', 'Low Fast', 'High', 'High', null, 'High', null],
     })
   })
 
@@ -71,13 +70,14 @@ describe('the favourites of the model menu of a session', () => {
       <Session favourites={favourites} sent={[]} start={opus} />,
     )
     await press(triggerOf(view))
+    await press(byRole('menuitem', 'Effort High'))
     await press(byRole('menuitemradio', 'Low'))
     await press(triggerOf(view))
     const afterEffort = marked()
     await press(byRole('menuitemcheckbox', 'Fast'))
     expect({ afterEffort, afterFast: marked() }).toEqual({
-      afterEffort: ['Low'],
-      afterFast: ['Opus 5.5 Low Fast', 'Low'],
+      afterEffort: [],
+      afterFast: ['Opus 5.5 Low Fast'],
     })
   })
 
@@ -130,7 +130,7 @@ describe('the favourites of the model menu of a session', () => {
     })
   })
 
-  it('starts with All models, then the efforts and Fast, when it has no favourite to show', async () => {
+  it('starts with All models, then Effort and Fast, when it has no favourite to show', async () => {
     const shown = async (list: readonly AgentChoice[]) => {
       const view = await mount(
         <Session favourites={list} sent={[]} start={opus} />,
@@ -140,7 +140,7 @@ describe('the favourites of the model menu of a session', () => {
       await view.unmount()
       return names
     }
-    const short = ['All models', 'Low', 'High', 'Fast']
+    const short = ['All models', 'Effort High', 'Fast']
     expect({
       none: await shown([]),
       allHidden: await shown([fableLow]),

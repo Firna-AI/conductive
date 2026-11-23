@@ -63,7 +63,7 @@ export const defaultsSection = defineComponent({
       slug: 'fast-menu',
       title: 'Model menu',
       description:
-        'The menu of the model picker open below it, with fast mode on: the favourites of the viewer, All models, the efforts, and Fast.',
+        'The menu of the model picker open below it, with fast mode on: the favourites of the viewer, All models, Effort, and Fast.',
       props: { fastMenu: true, drawMenu: true },
     },
   ],

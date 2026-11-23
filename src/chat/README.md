@@ -184,8 +184,8 @@ check in the Mac app. Explain has its own [tests](explain/README.md#tests).
 The placement of the model menu needs a real browser. The Electron check
 [`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)
 builds the development page and opens the real Model and effort menu in a
-box that clips. It checks the choices outside the box, a pointer choice,
-the arrow keys, the submenu of All models beside the menu and level with
+box that clips. It checks the choices outside the box, a pointer choice
+of an effort in the submenu of Effort, the arrow keys, the submenu of All models beside the menu and level with
 its row, and the focus return after Escape. Run
 `npm --prefix desktop run test:electron -- tests/chat-menu-clipping.spec.ts`.
 

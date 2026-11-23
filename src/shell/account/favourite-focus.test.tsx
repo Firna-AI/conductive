@@ -82,6 +82,7 @@ describe('the focus of the Favourites section when a render takes away its focus
     held.holdAnswer('PUT', favouritesPath)
     const picker = pickerAt(view, 1)
     click(picker)
+    click(byRole('menuitem', 'Effort Max'))
     click(byRole('menuitemradio', 'High'))
     await settle()
     const saving = document.activeElement === picker
@@ -106,6 +107,7 @@ describe('the focus of the Favourites section when a render takes away its focus
     held.holdAnswer('PUT', favouritesPath)
     const picker = pickerAt(view, 1)
     click(picker)
+    click(byRole('menuitem', 'Effort Max'))
     click(byRole('menuitemradio', 'High'))
     await settle()
     // The person opens the menu of the copy again before the reply.
@@ -158,6 +160,7 @@ describe('the focus of the Favourites section when a render takes away its focus
     held.holdAnswer('PUT', favouritesPath)
     const picker = pickerAt(view, 1)
     click(picker)
+    click(byRole('menuitem', 'Effort Max'))
     click(byRole('menuitemradio', 'High'))
     await settle()
     const picked = document.activeElement === picker

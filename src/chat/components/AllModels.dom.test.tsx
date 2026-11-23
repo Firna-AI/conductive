@@ -57,10 +57,10 @@ describe('All models in the model menu of a session', () => {
       />,
     )
     await press(triggerOf(view))
-    // No favourite is Sonnet 5.5 High, so the marked effort takes the focus.
+    // No favourite is Sonnet 5.5 High, so the first row takes the focus.
     const start = focused()
-    await pressKey('ArrowUp')
-    await pressKey('ArrowUp')
+    await pressKey('ArrowDown')
+    await pressKey('ArrowDown')
     await pressKey('ArrowRight')
     const opened = { focus: focused(), rows: rows('All models') }
     await pressKey('ArrowDown')
@@ -85,7 +85,7 @@ describe('All models in the model menu of a session', () => {
       escaped,
       closed: queryByRole('menu', 'Model and effort'),
     }).toEqual({
-      start: 'High',
+      start: 'Opus 5.5 High',
       opened: {
         focus: 'Sonnet 5.5',
         rows: [
@@ -111,7 +111,7 @@ describe('All models in the model menu of a session', () => {
     const touched = submenuShows()
     await hover('All models', 'mouse')
     const hovered = { shows: submenuShows(), focus: focused() }
-    await hover('Low', 'mouse')
+    await hover('Fast', 'mouse')
     expect({ touched, hovered, left: submenuShows() }).toEqual({
       touched: false,
       hovered: { shows: true, focus: 'Opus 5.5 High' },

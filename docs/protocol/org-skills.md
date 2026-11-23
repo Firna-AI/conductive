@@ -189,6 +189,10 @@ does.
 - Claude and Codex both get the skills. Reason: the app offers both
   agents (decision 19).
 - New skills and changed skills reach each session at its next turn.
+- The list of `/` in the composer of a workspace chat shows the org
+  skills of each agent, as
+  [The sources of the skills](skill-mentions.md#the-sources-of-the-skills)
+  says. A new copy updates the list without a turn.
 - A cloud computer needs [sandbox software](../architecture.md#terms)
   that supports org skills. Sandbox software released before org skills
   gets no skills from the setting, and it applies no trust choice.

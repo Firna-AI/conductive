@@ -185,6 +185,8 @@ function openMenu(
 /**
  * The branch control directly right of the repository picker (decision
  * 309). It adds `→ main` while a picked branch targets the default branch.
+ * In the dialog it is compact: no chevron, and only the muted branch icon
+ * on the default branch.
  * On a computer the open dropdown hangs below it. A phone opens the
  * dropdown as a sheet instead, from `branchSheet`. A press on the closed
  * control opens the dropdown.
@@ -200,6 +202,8 @@ export function branchControl(props: {
   return (
     <BranchPicker
       branch={formBranch(state)}
+      compact={surface === 'dialog'}
+      defaultBranch={defaultBranch}
       expanded={expanded}
       open={
         expanded && !props.mobile
@@ -209,7 +213,6 @@ export function branchControl(props: {
       room={surface}
       target={targetsMain(state) ? defaultBranch : undefined}
       to={openScreen(state, surface)}
-      tone={surface === 'dialog' ? 'plain' : undefined}
     />
   )
 }

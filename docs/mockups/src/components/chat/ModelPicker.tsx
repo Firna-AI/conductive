@@ -15,13 +15,14 @@ import styles from '../../../../../src/ui/components/chat/ModelPicker.module.css
  * One picker for the model and the effort of the next message, such as
  * "Opus 5.5 High". The effort shows in a muted colour, and so does "Fast"
  * after it while fast mode is on. `open` draws its menu open: the
- * favourites first, then All models, then the efforts and the Fast switch,
- * as `FavouritesMenu` says.
+ * favourites first, then All models, then Effort and the Fast switch, as
+ * `FavouritesMenu` says.
  *
  * `favourites` holds the favourites of the menu, by default those of the
  * viewer. With none, the menu starts with All models, as the picker of a
  * Favourites row does, because the row sets one favourite.
- * `allModels` opens the submenu of every model. `sessionAgent` is the
+ * `allModels` opens the submenu of every model, and `effort` opens the
+ * submenu of the efforts. `sessionAgent` is the
  * agent of a session with messages, whose other agent's models and
  * favourites open a new session. `hiddenModels` holds the models that its
  * menu leaves out, with each favourite on one of them. `fastKey` marks the
@@ -38,6 +39,7 @@ export function ModelPicker(props: {
   fastKey?: boolean
   favourites?: readonly AgentChoice[]
   allModels?: boolean
+  effort?: boolean
   menu?: ReactNode
 }) {
   const control = useControlSizes()
@@ -72,6 +74,7 @@ export function ModelPicker(props: {
             <FavouritesMenu
               allModels={props.allModels}
               choice={choice}
+              effort={props.effort}
               fastKey={props.fastKey ? fastHint : undefined}
               favourites={props.favourites ?? savedFavourites}
               hiddenModels={props.hiddenModels}
