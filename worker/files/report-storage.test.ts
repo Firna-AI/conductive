@@ -7,10 +7,12 @@ import { file, snapshot } from '../chat/runner-fixtures.test-support'
 import {
   loadReportState,
   partKey,
+  reportPartUpdates,
   REPORT_KEY,
   storedReportKeys,
   type ReportProgress,
 } from './report-storage'
+import { storedReportPartKeys } from './report-storage.test-support'
 import { RunnerFileReports } from './runner-reports'
 import { FilesState } from './state'
 import type { FilesStorage } from './storage'
@@ -22,7 +24,8 @@ async function expectRemoved(storage: FilesStorage, keys: readonly string[]) {
 }
 
 it('reads old report parts and removes obsolete chunks on replacement, refusal, and a new stream', async () => {
-  const storage = chatFilesStorage((await nativeChatStore()).storage)
+  const { storage: nativeStorage } = await nativeChatStore()
+  const storage = chatFilesStorage(nativeStorage)
   const reports = new RunnerFileReports(storage)
   await reports.beginStream('old')
   const state = await loadReportState(storage)
@@ -58,7 +61,11 @@ it('reads old report parts and removes obsolete chunks on replacement, refusal, 
   })
   const grownKeys = await storedReportKeys(storage, 'tree', progress)
   expect(grownKeys.length).toBeGreaterThan(2)
-  await reports.accept(snapshot(3, 1, 2, ['replacement']))
+  const replacement = snapshot(3, 1, 2, ['replacement'])
+  await reports.accept(replacement)
+  expect(await storedReportPartKeys(nativeStorage)).toEqual(
+    Object.keys(reportPartUpdates('tree', 1, replacement)).sort(),
+  )
   const currentKeys = await storedReportKeys(storage, 'tree', {
     ...progress,
     revision: 3,
@@ -69,6 +76,7 @@ it('reads old report parts and removes obsolete chunks on replacement, refusal, 
   )
   await reports.refuse('files.snapshot')
   await expectRemoved(storage, currentKeys)
+  expect(await storedReportPartKeys(nativeStorage)).toEqual([])
   expect(await new FilesState(storage).tree()).toEqual(previousTree)
   await reports.accept({
     type: 'files.snapshot',
@@ -94,5 +102,6 @@ it('reads old report parts and removes obsolete chunks on replacement, refusal, 
   ]
   await reports.beginStream('new')
   await expectRemoved(storage, oldStreamKeys)
+  expect(await storedReportPartKeys(nativeStorage)).toEqual([])
   expect(await new FilesState(storage).tree()).toEqual(previousTree)
 })

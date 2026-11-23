@@ -223,6 +223,7 @@ it('refuses inconsistent changes metadata and empty multipart reports', async ()
             summary: { files: 0, added: 0, removed: 0 },
           })
     await fixture.receive(1, empty(1))
+    expect((await fixture.history()).events).toEqual([])
     await fixture.receive(2, empty(2))
     expect(
       (await fixture.history()).events.map(({ event }) => event.type),

@@ -1,3 +1,4 @@
+import type { RunnerChangesPart } from '../../src/shared/generated/RunnerChangesPart'
 import type { RunnerFileEvent } from '../../src/shared/generated/RunnerFileEvent'
 import { isRecord } from '../http'
 import { natural } from './parsers'
@@ -5,10 +6,17 @@ import { parseRunnerFileEvent } from './runner-input'
 import type { FilesStorage } from './storage'
 
 export type ReportKind = 'tree' | 'changes'
+export interface ChangesPartFields {
+  baseBranch: string
+  unpushedCommits?: number
+  uncommittedFileCount?: number
+  summary: RunnerChangesPart['summary']
+}
 export interface ReportProgress {
   revision: number
   partCount: number
   through: number
+  fields?: ChangesPartFields
 }
 export interface ReportSequence {
   appliedRevision: number
@@ -33,7 +41,50 @@ export const emptySequence = (): ReportSequence => ({
   report: null,
 })
 
-function sequence(value: unknown): ReportSequence {
+export function changesPartFields({
+  baseBranch,
+  unpushedCommits,
+  uncommittedFileCount,
+  summary,
+}: ChangesPartFields): ChangesPartFields {
+  return {
+    baseBranch,
+    ...(unpushedCommits === undefined ? {} : { unpushedCommits }),
+    ...(uncommittedFileCount === undefined ? {} : { uncommittedFileCount }),
+    summary: {
+      files: summary.files,
+      added: summary.added,
+      removed: summary.removed,
+    },
+  }
+}
+
+function parseChangesPartFields(value: unknown): ChangesPartFields | undefined {
+  if (!isRecord(value)) return undefined
+  const { baseBranch, unpushedCommits, uncommittedFileCount, summary } = value
+  if (
+    typeof baseBranch !== 'string' ||
+    (unpushedCommits !== undefined && !natural(unpushedCommits)) ||
+    (uncommittedFileCount !== undefined && !natural(uncommittedFileCount)) ||
+    !isRecord(summary) ||
+    !natural(summary.files) ||
+    !natural(summary.added) ||
+    !natural(summary.removed)
+  )
+    return undefined
+  return changesPartFields({
+    baseBranch,
+    unpushedCommits,
+    uncommittedFileCount,
+    summary: {
+      files: summary.files,
+      added: summary.added,
+      removed: summary.removed,
+    },
+  })
+}
+
+function sequence(value: unknown, kind: ReportKind): ReportSequence {
   if (
     !isRecord(value) ||
     !natural(value.appliedRevision) ||
@@ -54,10 +105,13 @@ function sequence(value: unknown): ReportSequence {
       report.through > report.partCount
     )
       throw new Error('Stored runner report progress is invalid.')
+    const fields =
+      kind === 'changes' ? parseChangesPartFields(report.fields) : undefined
     progress = {
       revision: report.revision,
       partCount: report.partCount,
       through: report.through,
+      ...(fields ? { fields } : {}),
     }
   }
   return {
@@ -76,8 +130,8 @@ export async function loadReportState(
     throw new Error('Stored runner stream is invalid.')
   return {
     streamId: value.streamId,
-    tree: sequence(value.tree),
-    changes: sequence(value.changes),
+    tree: sequence(value.tree, 'tree'),
+    changes: sequence(value.changes, 'changes'),
   }
 }
 
@@ -160,8 +214,14 @@ export async function storedParts(
   storage: FilesStorage,
   kind: ReportKind,
   report: ReportProgress,
+  firstPart?: RunnerFileEvent,
 ): Promise<RunnerFileEvent[]> {
   const keys = reportKeys(kind, report)
+  if (firstPart) keys.shift()
   const values = await storage.getMany(keys)
-  return Promise.all(keys.map((key) => readPart(storage, key, values.get(key))))
+  const parts = await Promise.all(
+    keys.map((key) => readPart(storage, key, values.get(key))),
+  )
+  if (firstPart) parts.unshift(firstPart)
+  return parts
 }

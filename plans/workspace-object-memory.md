@@ -743,30 +743,30 @@ Milestone 1 is committed here, so its protocol text comes first.
 - [ ] Check the numbers and the fields of each part when it arrives, as
       design call 16 says. Read no earlier part. Do not join the parts or
       check path uniqueness before the last part. Keep existing arrival
-      checks for path syntax and entry shape at the runner boundary.
+      checks for path syntax and entry shape at the runner boundary. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 - [ ] Keep the fields of part 1 in the open report of the assembly state.
-      Keep room for optional fields of the runner file report limits plan.
+      Keep room for optional fields of the runner file report limits plan. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 - [ ] At the last part, join the parts and check them, as design call 17
-      says.
+      says. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 - [ ] Keep the check of an identical repeated part and the refusal of a
       conflicting one. Keep the atomic publication. Keep the cleanup after
       a replacement, a refusal, or a new stream. Keep the restart and
-      resend behavior.
-- [ ] Add tests:
-  - [ ] A middle part reads no earlier stored part.
+      resend behavior. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+- [ ] Add tests: Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [ ] A middle part reads no earlier stored part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
   - [ ] A middle part with another base branch, count, or summary is
-        refused, as today.
+        refused, as today. Branch: `calummoore/memory-runner-part-checks-2hfc`.
   - [ ] A path in two parts is stored with its part and refuses the last
         part. The stored parts go, and the last complete report stays. A
-        repair request for the tree goes out.
-  - [ ] A state without the stored fields reads part 1 once.
-  - [ ] An empty report of more than one part is refused at its last part.
+        repair request for the tree goes out. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [ ] A state without the stored fields reads part 1 once. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [ ] An empty report of more than one part is refused at its last part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 - [ ] Update the [files README](../worker/files/README.md) for the time of
-      each check.
+      each check. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 - [ ] Run the targeted tests: `worker/files/report-storage.test.ts`,
       `worker/chat/runner-file-parts.test.ts`,
       `runner-files-durable.test.ts`, `runner-repair-parts.test.ts`,
-      `runner-receipt-crash.test.ts`, and `runner-grown-reports.test.ts`.
+      `runner-receipt-crash.test.ts`, and `runner-grown-reports.test.ts`. Branch: `calummoore/memory-runner-part-checks-2hfc`.
 
 ## Milestone 6: Bucketed projection writer
 
