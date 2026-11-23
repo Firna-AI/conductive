@@ -32,6 +32,16 @@ describe('WorkspaceMark', () => {
     expect(cells[4]).not.toContain(styles.litWhenStill)
   })
 
+  test.each([null, 'ready-to-merge'] as const)(
+    'runs a light around the ring while the cloud computer starts, with %s',
+    (github) => {
+      const cells = cellClasses(github, 'starting')
+      expect(count(cells, styles.chase)).toBe(8)
+      expect(cells[4]).not.toContain(styles.chase)
+      expect(cells[4]).toContain(styles.litWhenStill)
+    },
+  )
+
   test.each(['ready', 'unread', 'stopped'] as const)(
     'runs a light around the ring while the checks run and the agent is %s',
     (status) => {

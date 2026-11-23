@@ -26,7 +26,8 @@ This page belongs to [Workspace life](workspace-life.md).
 - The motion of the mark shows whether the agent works (list mark
   decision 1). A light runs around the outer ring of cells while the agent
   works. The whole mark pulses slowly while the agent needs input. In each
-  other state, the mark is still, unless the checks run.
+  other state, the mark is still, unless the workspace starts or the
+  checks run.
 - Reason: the pulse keeps needs input in the list, as decision 68 requires.
   A still middle column for needs input was rejected, because the user
   asked for a mark of one full colour.
@@ -43,11 +44,16 @@ This page belongs to [Workspace life](workspace-life.md).
   the light means that the workspace waits on something and the user does
   not need to act. While the agent needs input, the mark pulses, whatever
   the checks. An archived mark stays still.
+- The light also runs around the ring while the workspace is starting,
+  also while a message waits for the start (the user's decision of 23
+  November 2026). Reason: the start is activity, and a still mark made a
+  workspace with a queued message look idle. A still mark while the
+  workspace starts was rejected for the same reason.
 - With reduced motion, the ring stays lit while the agent works. The middle
   column stays lit in blue while the agent needs input. The other cells
   stay dim, so the state of the agent stays visible without motion. While
-  only the checks run, every cell stays lit, so the mark does not read as
-  an agent that works.
+  the workspace starts or only the checks run, every cell stays lit, so the
+  mark does not read as an agent that works.
 - Bold text alone marks unread output. A green mark for unread output was
   rejected, because green means a pull request that is ready to merge.
 - An archived workspace shows a fainter grey mark, whatever its GitHub

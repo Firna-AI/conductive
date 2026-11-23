@@ -143,7 +143,7 @@ The list mark shows the state of the pull request bar, in the colour of the bar:
 
 Archived workspaces keep a faint grey mark.
 
-A light runs around the mark while the agent works or the checks run.
+A light runs around the mark while the agent works, the workspace starts, or the checks run.
 The moving light means that you do not need to act.
 The mark turns blue and pulses when the agent needs input.
 The pull request bar still shows the state of the pull request.
