@@ -639,8 +639,10 @@ The primary orchestrator owns this milestone's plan edits and TODO ticks.
       `implementation-review` skill after the push. Apply its fix rule.
       Push and re-review required fixes before opening the pull request. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [x] Open the reader pull request into `main` after review and fixes. Branch: `calummoore/memory-projection-reader-release-jrq9`.
-- [ ] After the root coordinator merges it, record the merge commit and the time of the
+- [x] After the root coordinator merges it, record the merge commit and the time of the
       successful deploy run in `.context/workspace-object-memory/`.
+      Evidence: `.context/workspace-object-memory/reader-deploy.md`. The
+      writer may merge from 00:13:05 UTC on 24 November 2026.
 
 ## Milestone 3: History save path
 
@@ -793,7 +795,7 @@ behavior at the API stays: the revision checks, the unavailable mark, the
 check of the old connection, the last complete report while parts wait,
 the path labels, the list order, and the absent optional counts.
 
-- [ ] Merge `main` into this branch after Milestone 2 merges. Confirm that
+- [x] Merge `main` into this branch after Milestone 2 merges. Confirm that
       the layout module is the merged reader.
 - [ ] Give `FilesStorage` the transaction callback of design call 13. Move
       each consumer of `write`, then delete `write`. This includes the
