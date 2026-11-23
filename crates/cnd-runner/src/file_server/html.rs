@@ -11,9 +11,9 @@ pub(super) fn is_utf16(prefix: &[u8]) -> bool {
 }
 
 /// Add the link after the doctype or at the start after a UTF-8 byte order mark.
-pub(super) fn insert_link(prefix: &mut Vec<u8>) {
+pub(super) fn insert_link(prefix: &mut Vec<u8>, origin: &str) {
     if let Some(offset) = insertion_point(prefix) {
-        let link = format!("<link rel=\"stylesheet\" href=\"{ADDRESS}\">");
+        let link = format!("<link rel=\"stylesheet\" href=\"{origin}{ADDRESS}\">");
         prefix.splice(offset..offset, link.bytes());
     }
 }

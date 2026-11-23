@@ -19,10 +19,13 @@ says.
 - **Changed reply:** a reply with an HTML, CSS, or SVG file, by the table
   of content types. Its body can differ from the file, as
   [Local file addresses](#local-file-addresses) and
-  [The font stylesheet link](#the-font-stylesheet-link) say.
+  [The font stylesheet link](file-server-fonts.md#the-font-stylesheet-link) say.
 - **Font stylesheet:** the stylesheet at `/__conductive/system-fonts.css`,
   with the rules of the system fonts, as
-  [The font stylesheet](#the-font-stylesheet) says.
+  [The font stylesheet](file-server-fonts.md#the-font-stylesheet) says.
+- **Preview origin:** the origin of the files preview, such as
+  `https://<label>.conductive.page`, as
+  [The preview origin](#the-preview-origin) says.
 
 ## Requirements
 
@@ -58,8 +61,8 @@ says.
 - A path that the repository refuses or does not have gets 404. The
   exceptions are the paths that
   [The repository folder path](#the-repository-folder-path),
-  [System fonts](#system-fonts), and
-  [The font stylesheet](#the-font-stylesheet) serve.
+  [System fonts](file-server-fonts.md#system-fonts), and
+  [The font stylesheet](file-server-fonts.md#the-font-stylesheet) serve.
 - A folder path that ends with `/` serves the `index.html` of the folder.
   A folder path without the `/` redirects to the same path with it, so
   that relative addresses work. A folder without `index.html` gets 404. No
@@ -113,8 +116,13 @@ says.
 ## Local file addresses
 
 - In the body of each changed reply, the file server changes each local
-  `file:` address to a path from the top of the site. So the browser asks
-  the files preview for the absolute path of the file.
+  `file:` address to a full address on the preview origin: the preview
+  origin, then the absolute path of the file. So the browser asks the files
+  preview for that path, also on a page whose `<base>` names another site
+  (sandbox files decision 2 B).
+- Without a preview origin, the file server changes the address to the
+  absolute path alone. Then a page whose `<base>` names another site asks
+  that site for the path.
 - A separator is `/` or `\`, because a browser reads `\` as `/` in a
   `file:` address.
 - A match is `file:` in any case, then two equal separators, an optional
@@ -124,8 +132,8 @@ says.
 - `file:` and one separator before a character that is not the same
   separator also becomes one `/`, with each separator after it. Reason:
   Java writes file addresses in this form, such as `file:/home/x`.
-- So a changed address never starts with two separators, and the browser
-  never sends it to another host. For example, `file:/\evil.com/x` becomes
+- So the path of a changed address never starts with two separators, and
+  the browser never reads it as another host. For example, `file:/\evil.com/x` becomes
   `/evil.com/x` on the files preview.
 - A match needs the start of a word: the byte before `file:` is not an
   ASCII letter, an ASCII digit, `+`, `-`, or `.`.
@@ -172,91 +180,41 @@ says.
 
 ## System fonts
 
-- A request whose path the repository refuses or does not have, and whose
-  path starts with the segments `/usr/share/fonts/` or
-  `/usr/local/share/fonts/`, gets that system font.
-- The file must be a regular file with the extension `.ttf`, `.otf`,
-  `.woff`, or `.woff2`, in any case.
-- Its real path, after links, must start with the segments of one of the
-  two folders. The compare uses the two folder paths as written, not their
-  real paths. So a font folder that is a link into the home folder serves
-  nothing.
-- No segment of the path in the request can start with a dot. No segment
-  of the real path can start with a dot either.
-- The reply of a system font is not a changed reply. So it gets each rule
-  of a reply for a file, such as the rules of its `ETag`, its dates, and its
-  byte ranges.
+[File server fonts](file-server-fonts.md#system-fonts) gives these rules.
 
 ## The font stylesheet
 
-- `/__conductive/system-fonts.css` serves the font stylesheet. A
-  repository file at that path wins. Reason: a repository with that path is
-  unlikely, and its own file then loads.
-- The font stylesheet has `@font-face` rules for each `.ttf` and `.otf`
-  system font that the file server serves. A `.woff` or `.woff2` font loads
-  by its path, but it gets no rule.
-- Each face gets one rule for each of its distinct family names. These are
-  the typographic family and the family of the font file, in each language.
-  So a page that names "Lato Black" gets the face that the cloud computer
-  gives that name.
-- A rule gives the family, the weight, the style, the width, and the
-  address of the font. A variable font gives its weight and width ranges.
-- A broken font gets no rule, and the other rules stay. A font is broken
-  when it lacks a table that browsers require: `maxp`, `head`, `OS/2`,
-  `cmap`, `hhea`, `hmtx`, `name`, or `post`. It is also broken when it has
-  no glyph data: `glyf` with `loca`, `CFF `, `CFF2`, `CBDT` with `CBLC`,
-  or `EBDT` with `EBLC`.
-- The runner reads only the small tables `head`, `hhea`, `maxp`, `name`,
-  `OS/2`, and `fvar`. A font whose `head`, `hhea`, or `maxp` does not parse
-  gets no rule. So does a font whose `hmtx` or `loca` is too short for the
-  counts in those tables. A font whose `name`, `OS/2`, or `fvar` table
-  passes a fixed size also gets no rule.
-- The browser checks the contents of the large tables. Risk: a font with
-  bad glyph data can still get a rule, and the browser then uses the next
-  family.
-- A family name that is empty, or longer than a fixed length, gets no rule.
-- Each address percent-encodes each segment of the font path, so `#`, `?`,
-  `%`, and spaces keep their meaning. Each address and each family name is
-  a CSS string, as the
-  [serialize a string](https://drafts.csswg.org/cssom/#serialize-a-string)
-  steps of CSSOM write it.
-- Each request of the font stylesheet reads the system fonts as they are
-  then. So a font that a setup script installs shows at the next load of
-  the page.
-- The reply carries `text/css; charset=utf-8`, `Cache-Control: no-cache`,
-  and `Accept-Ranges: none`. It ignores `Range`, and it gives the whole
-  stylesheet with HTTP 200.
-- Its `ETag` is a digest of its text. It answers 304 only when
-  `If-None-Match` matches that `ETag`. A `HEAD` request gets the headers of
-  `GET`.
+[File server fonts](file-server-fonts.md#the-font-stylesheet) gives these rules.
 
 ## The font stylesheet link
 
-- The file server adds a `<link>` element to the start of each HTML reply.
-  It loads the font stylesheet before each style of the page. So a family
-  that the page names, such as C059, loads from the cloud computer.
-- The page's own `@font-face` rules come later, so they win.
-- The file server reads the start of the page as the HTML tokenizer does:
-  - It skips a UTF-8 byte order mark, ASCII whitespace, and comments, with
-    each comment end that the tokenizer accepts, such as `<!-->` and
-    `--!>`.
-  - It skips bogus comments, such as an `<?xml ...?>` line. A bogus comment
-    is `<?...>`, a `<!...>` that is not a doctype or a comment, or `</`
-    before a character that is not a letter.
-  - It matches the doctype keyword in any case. The doctype ends at its
-    first `>`.
-- The `<link>` goes after the doctype. When a tag or text comes before any
-  doctype, the `<link>` goes before it, after the byte order mark.
-- Reason: a tag before the doctype puts the page in quirks mode. A `Link`
-  header was not chosen, because only Firefox applies it.
-- The page gets no `<link>` in these cases:
-  - The font stylesheet has no rule.
-  - The scan reaches 8 KiB, or it meets an item that it cannot classify.
-  - The page starts with a UTF-16 byte order mark. Its text then does not
-    change at all. Reason: the browser reads such a page as UTF-16, and an
-    ASCII `<link>` breaks it.
-- Risk: the browser drops the attributes of the page's own `<head>`
-  element. The font stylesheet becomes `document.styleSheets[0]`.
+[File server fonts](file-server-fonts.md#the-font-stylesheet-link) gives these rules.
+
+## The preview origin
+
+- The Worker sends the preview origin in the header
+  `X-Conductive-Files-Origin` with each request of a files preview. It
+  never sends this header with a request of a port preview, and it never
+  forwards a value that a browser sends.
+- The file server accepts the header only when the request has one value
+  of the form `https://` and a non-empty lower-case host of ASCII letters,
+  digits, `-`, and `.`. The value has no port, path, query, fragment, user,
+  or trailing `/`.
+- Otherwise the file server uses no preview origin. The file server writes
+  no value of the header to a log.
+- Reason: the browser resolves a path against the `<base>` of the page.
+  A full address on the preview origin keeps each changed address on the
+  files preview. Only the Worker knows that origin, because the runner sees
+  only its loopback `Host`.
+- These options of sandbox files decision 2 were not chosen:
+  - No change of the `file:` addresses of a page with a `<base>` on
+    another site. Such a page then loses its local files.
+  - A stop of the change after a `<base` tag. A page with a `<base>` on its
+    own site then also loses the change.
+  - The change in the Worker. The Worker then streams and changes each
+    body, at a much larger cost.
+- An older Worker sends no header, and the file server then writes paths.
+  An older file server ignores the header.
 
 ## Changed replies
 
@@ -266,7 +224,8 @@ says.
   changed body with HTTP 200. A reply for a file of another type keeps its
   byte ranges.
 - The `ETag` of a changed reply joins the `ETag` of the file and a digest.
-  The digest covers the version of the rules that change the body. For an
+  The digest covers the version of the rules that change the body, and the
+  preview origin or its absence. For an
   HTML reply, it also covers whether the font stylesheet has a rule,
   because only an HTML body can get the `<link>`.
 - So that `ETag` changes when the file changes, and when a runner release

@@ -89,7 +89,7 @@ pub(super) async fn file(
     mut content: FileContent,
     files: &dyn Files,
 ) -> Result<Response<Body>> {
-    let document = ChangedDocument::prepare(media, files).await;
+    let document = ChangedDocument::prepare(media, files, request.headers()).await;
     let (mut response, etag, date_validator) = match &document {
         Some(document) => (unranged(), document.etag(&content.etag), None),
         None => (

@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::Path;
 
+use cnd_runner_interface::file_server::FILES_ORIGIN_HEADER;
 use http_body_util::BodyExt;
 use hyper::{Method, StatusCode};
 
@@ -11,6 +12,26 @@ use super::support::{Fixture, STYLESHEET};
 
 fn stylesheet_link() -> String {
     format!("<link rel=\"stylesheet\" href=\"{STYLESHEET}\">")
+}
+
+#[tokio::test]
+async fn puts_the_font_link_and_local_file_address_on_the_preview_origin() {
+    let h = Fixture::new();
+    fs::write(h.system.join("font.ttf"), regular("Preview")).unwrap();
+    let page =
+        r#"<!doctype html><base href="https://cdn.example.invalid/"><img src="file:///asset.png">"#;
+    fs::write(h.repository.join("page.html"), page).unwrap();
+    let origin = "https://0123456789abcdef0123456789abcdef.conductive.page";
+    let reply = h
+        .request(Method::GET, "/page.html", &[(FILES_ORIGIN_HEADER, origin)])
+        .await;
+    assert_eq!(reply.status(), StatusCode::OK);
+    assert_eq!(
+        reply.into_body().collect().await.unwrap().to_bytes(),
+        format!(
+            r#"<!doctype html><link rel="stylesheet" href="{origin}{STYLESHEET}"><base href="https://cdn.example.invalid/"><img src="{origin}/asset.png">"#
+        )
+    );
 }
 
 #[tokio::test]

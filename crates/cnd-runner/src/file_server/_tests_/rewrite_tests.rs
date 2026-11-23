@@ -8,7 +8,9 @@ use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::{Duration, UNIX_EPOCH};
 
+use cnd_runner_interface::file_server::FILES_ORIGIN_HEADER;
 use http_body_util::BodyExt;
+use hyper::header::HeaderValue;
 use hyper::{Method, StatusCode};
 use tokio::io::{AsyncRead, AsyncSeek, ReadBuf};
 use unimock::{Clause, MockFn, matching};
@@ -50,7 +52,8 @@ impl AsyncSeek for Chunks {
     }
 }
 
-fn open(bytes: &'static [u8], size: usize) -> impl Clause {
+/// Return the mock file in chunks of at most the given size.
+pub(super) fn open(bytes: &'static [u8], size: usize) -> impl Clause {
     FilesMock::open
         .each_call(matching!(_, _))
         .answers_arc(Arc::new(move |_, _, _| {
@@ -106,8 +109,14 @@ async fn rewrites_slash_and_backslash_prefixes_to_one_leading_slash() {
 #[tokio::test]
 async fn leaves_script_bytes_and_text_without_a_local_address_intact() {
     let script = policy(open(b"let url = 'file:///home/x';", 4));
-    let reply = script.respond(request("/file.js")).await;
+    let mut script_request = request("/file.js");
+    script_request.headers_mut().insert(
+        FILES_ORIGIN_HEADER,
+        HeaderValue::from_static("https://preview.conductive.page"),
+    );
+    let reply = script.respond(script_request).await;
     assert_eq!(reply.headers()["accept-ranges"], "bytes");
+    assert_eq!(reply.headers()["etag"], "\"disk-version\"");
     assert_eq!(
         reply.into_body().collect().await.unwrap().to_bytes(),
         "let url = 'file:///home/x';"

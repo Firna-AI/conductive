@@ -78,6 +78,38 @@ Date: 23 November 2026. Chosen by Cal: **D**.
   `.context/html-preview-sandbox-files/options-check.md`. It found no new
   user decision. Its fixes are in the design below.
 
+### Sandbox files decision 2: local addresses on a page with an external base
+
+Date: 23 November 2026. Chosen by Cal: **B**. From review finding 6.
+
+- **Root question:** How can each changed local address always load from
+  the files preview, and never from another site?
+- **Problem:** the file server changed `file:///home/x.png` to
+  `/home/x.png`. A page with `<base href="https://cdn.example.com/">` then
+  loads `/home/x.png` from that site. The local file does not load, and
+  the other site sees the path and its query.
+- **Options:**
+  - **A.** Find an external `<base>` before the reply, and then change no
+    `file:` address of that page.
+  - **B.** Write full addresses on the origin of the files preview. The
+    Worker sends that origin to the file server in a request header.
+  - **C.** Move the address change into the Worker.
+  - **D.** Stop the address change after a `<base` tag in an HTML page.
+- **Reason:** B keeps the page's `<base>`, and the local files still load
+  from the files preview. It prevents each form of the problem, also forms
+  that a future change of the address rules could add.
+- This decision widens the scope of the change: the Worker now sends one
+  more header for a files preview.
+
+### Review finding 2: system fonts and the page's own fonts
+
+Date: 23 November 2026. Cal dropped it: "don't worry about it".
+
+- A system face of a family that the page also defines can win the
+  browser's weight match. For example, a page with only a regular Lato
+  then shows the system Lato Bold for bold text.
+- No change. The protocol records the risk.
+
 ## Design
 
 ### Addresses
@@ -246,6 +278,10 @@ My calls, 23 November 2026, with the fixes of the options check:
   `html-file-preview.md` keeps a link. Reason: the new rules made the doc
   longer than the target of the `documentation` skill, and the old anchor
   keeps working.
+- The system fonts, the font stylesheet, and its link move to their own
+  protocol doc, `docs/protocol/file-server-fonts.md`. Their headings in
+  `file-server.md` keep a link. Reason: decision 2 made `file-server.md`
+  longer than the target of the `documentation` skill.
 - The stylesheet cache is in memory and has no copy on disk. Reason: its
   first build takes under 0.1 s here.
 
@@ -334,6 +370,36 @@ Depends on: 3, 4
       a byte order mark before it, an `<?xml ...?>` line, `<!-->` and
       `--!>` comments, no doctype, a UTF-16 page, and more than 8 KiB of
       comments.
+
+## Milestone 7: Full addresses on the files preview
+
+Depends on: 5
+
+Sandbox files decision 2 B.
+
+- [x] Add the request header `X-Conductive-Files-Origin` to the shared
+      constants: `PREVIEW_FILES_ORIGIN_HEADER` in `src/shared/previews.ts`
+      and `FILES_ORIGIN_HEADER` in
+      `crates/cnd-runner-interface/src/file_server.rs`.
+- [x] The Worker sets that header to the origin of the files preview, such
+      as `https://<label>.conductive.page`, on each request of a files
+      preview, and only there. It never forwards a value that a browser
+      sends. Test both, and that a port preview gets no such header.
+- [x] The file server writes `<origin>/` in place of `/` for each changed
+      `file:` address, and uses `<origin>/__conductive/system-fonts.css`
+      for the `<link>`. It accepts the header only when it has one value of
+      the form `https://` and a lower-case host of letters, digits, `-`,
+      and `.`, with no port, path, query, or user. Else it keeps the
+      root-relative form. The `ETag` digest of a changed reply also covers
+      the accepted origin, or its absence.
+- [x] Test: an accepted origin in each address form and in the `<link>`,
+      a refused value of each kind, two values, no header, and the
+      `ETag` with and without the origin.
+- [x] Update `docs/protocol/file-server.md`,
+      `docs/protocol/terminal-previews-and-desktop.md`,
+      `docs/protocol/html-file-preview.md`, `docs/protocol/html-page-files.md`,
+      the runner and Worker README files, and each public guide sentence
+      that restates the address change. Read the legal pages again.
 
 ## Milestone 6: Verification, commit, review, and pull request
 

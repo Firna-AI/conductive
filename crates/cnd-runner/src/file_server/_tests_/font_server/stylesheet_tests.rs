@@ -6,6 +6,7 @@ use std::os::unix::fs::symlink;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
+use cnd_runner_interface::file_server::FILES_ORIGIN_HEADER;
 use http_body_util::BodyExt;
 use hyper::{Method, StatusCode};
 
@@ -219,7 +220,14 @@ async fn validates_the_stylesheet_body_and_lets_a_repository_stylesheet_win() {
     assert_eq!(head.headers(), get.headers());
     assert_eq!(head.into_body().collect().await.unwrap().to_bytes(), "");
     let matching = h
-        .request(Method::GET, STYLESHEET, &[("If-None-Match", &etag)])
+        .request(
+            Method::GET,
+            STYLESHEET,
+            &[
+                ("If-None-Match", &etag),
+                (FILES_ORIGIN_HEADER, "https://preview.conductive.page"),
+            ],
+        )
         .await;
     assert_eq!(matching.status(), StatusCode::NOT_MODIFIED);
     assert_eq!(matching.headers()["etag"], etag);

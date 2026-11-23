@@ -7,12 +7,21 @@ use bytes::Bytes;
 /// Keeps an incomplete prefix and a slash run between output chunks.
 #[derive(Default)]
 pub(super) struct FileAddresses {
+    origin: String,
     pending: Vec<u8>,
     follows_scheme_byte: bool,
     skip_slashes: bool,
 }
 
 impl FileAddresses {
+    /// Use the validated preview origin, or an empty prefix for relative URLs.
+    pub(super) fn new(origin: String) -> Self {
+        Self {
+            origin,
+            ..Self::default()
+        }
+    }
+
     /// Rewrite a chunk or flush an incomplete prefix at the end of the stream.
     pub(super) fn transform(&mut self, chunk: Option<Bytes>) -> Option<Bytes> {
         let output = match chunk {
@@ -39,6 +48,7 @@ impl FileAddresses {
             } else if byte.eq_ignore_ascii_case(&b'f') && !self.follows_scheme_byte {
                 match local_prefix(input) {
                     Prefix::Local(length) => {
+                        output.extend_from_slice(self.origin.as_bytes());
                         output.push(b'/');
                         input = &input[length..];
                         self.skip_slashes = true;

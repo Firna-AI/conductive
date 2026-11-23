@@ -61,7 +61,7 @@ decision of the change that shows agent pages with their files and fonts.
 - Each HTML page loads a stylesheet of the system fonts, except in the
   cases below. So a page that names a font of the cloud computer by its
   family, such as C059, shows that font.
-  [The font stylesheet link](file-server.md#the-font-stylesheet-link) gives
+  [The font stylesheet link](file-server-fonts.md#the-font-stylesheet-link) gives
   the rules, and [Local file addresses](file-server.md#local-file-addresses)
   gives the rules of the addresses.
 - Reason: agents check a page in the browser of the cloud computer, from a
@@ -104,5 +104,5 @@ decision of the change that shows agent pages with their files and fonts.
     fonts.
   - The file server adds no link to the font stylesheet, so the page gets
     no system fonts by family.
-    [The font stylesheet link](file-server.md#the-font-stylesheet-link)
+    [The font stylesheet link](file-server-fonts.md#the-font-stylesheet-link)
     gives these pages.

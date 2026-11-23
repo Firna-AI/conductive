@@ -181,5 +181,9 @@ mod policy_tests;
 mod mapping_tests;
 
 #[cfg(test)]
+#[path = "_tests_/origin_tests.rs"]
+mod origin_tests;
+
+#[cfg(test)]
 #[path = "_tests_/rewrite_tests.rs"]
 mod rewrite_tests;

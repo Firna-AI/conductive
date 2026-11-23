@@ -135,16 +135,18 @@ The server shares descriptor checks with file reads. It streams files
 without the file-tab size limit and refuses dot files and links to dot files.
 It reads the runner's current repository folder once for each request, so a
 repository move points it at the new folder with no new bind.
-HTML, CSS, and SVG replies change local `file:` addresses to absolute paths
-as they stream, so they carry no length and serve no byte ranges.
+HTML, CSS, and SVG replies rewrite local `file:` addresses as they stream.
+They use the preview origin that the Worker sends, followed by the absolute
+file path. Without a preview origin, they use the path alone.
+These replies carry no length and serve no byte ranges.
 A path that the repository refuses or lacks can still serve a repository file
 by its absolute path, or a font under `/usr/share/fonts` or `/usr/local/share/fonts`.
 HTML replies link the generated `/__conductive/system-fonts.css` stylesheet
 of those fonts, except the pages that
-[the font stylesheet link](../../docs/protocol/file-server.md#the-font-stylesheet-link)
+[the font stylesheet link](../../docs/protocol/file-server-fonts.md#the-font-stylesheet-link)
 names. The protocol sections on
 [local file addresses](../../docs/protocol/file-server.md#local-file-addresses),
-[system fonts](../../docs/protocol/file-server.md#system-fonts), and
+[system fonts](../../docs/protocol/file-server-fonts.md#system-fonts), and
 [changed replies](../../docs/protocol/file-server.md#changed-replies) give the rules.
 
 The skills schedule runs its first copy without blocking startup and checks

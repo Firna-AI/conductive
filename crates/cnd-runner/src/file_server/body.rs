@@ -5,8 +5,10 @@ use std::{future, io};
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use bytes::Bytes;
+use cnd_runner_interface::file_server::FILES_ORIGIN_HEADER;
 use futures_util::{StreamExt, TryStreamExt, stream};
 use http_body_util::{BodyExt, StreamBody, combinators::UnsyncBoxBody};
+use hyper::HeaderMap;
 use hyper::body::Frame;
 use sha2::{Digest, Sha256};
 use tokio::io::AsyncReadExt;
@@ -36,36 +38,51 @@ pub(super) fn file(reader: Box<dyn FileReader>, length: u64) -> Body {
 }
 
 /// A document transformation and the request inputs that affect its bytes.
-pub(super) enum ChangedDocument {
-    /// Read the encoding and consider inserting the system font link.
-    Html {
-        /// Whether the system font stylesheet has a rule.
-        stylesheet: bool,
-    },
-    /// Stream only the address changes for CSS and SVG.
+pub(super) struct ChangedDocument {
+    kind: ChangedKind,
+    origin: Option<String>,
+}
+
+enum ChangedKind {
+    Html { stylesheet: bool },
     Text,
 }
 
 impl ChangedDocument {
     /// Select the transformation and load the inputs it needs for this request.
-    pub(super) async fn prepare(media: &str, files: &dyn Files) -> Option<Self> {
-        match media {
-            HTML => Some(Self::Html {
+    pub(super) async fn prepare(
+        media: &str,
+        files: &dyn Files,
+        headers: &HeaderMap,
+    ) -> Option<Self> {
+        let kind = match media {
+            HTML => ChangedKind::Html {
                 stylesheet: !files.font_stylesheet().await.text.is_empty(),
-            }),
-            CSS | SVG => Some(Self::Text),
-            _ => None,
-        }
+            },
+            CSS | SVG => ChangedKind::Text,
+            _ => return None,
+        };
+        Some(Self {
+            kind,
+            origin: preview_origin(headers).map(str::to_owned),
+        })
     }
 
     /// Combine the file validator with the version and inputs of the transformation.
     pub(super) fn etag(&self, file_tag: &str) -> String {
-        const VERSION: &[u8] = b"conductive-preview-rewrite-2";
+        const VERSION: &[u8] = b"conductive-preview-rewrite-3";
         let mut digest = Sha256::new();
         digest.update(VERSION);
-        match self {
-            Self::Html { stylesheet } => digest.update([u8::from(*stylesheet)]),
-            Self::Text => {}
+        match &self.origin {
+            Some(origin) => {
+                digest.update([1]);
+                digest.update(origin.as_bytes());
+            }
+            None => digest.update([0]),
+        }
+        match self.kind {
+            ChangedKind::Html { stylesheet } => digest.update([u8::from(stylesheet)]),
+            ChangedKind::Text => {}
         }
         format!(
             "\"{}-{}\"",
@@ -79,7 +96,8 @@ impl ChangedDocument {
         let chunks = stream::once(async move {
             let mut reader = reader.take(length);
             let mut prefix = Vec::new();
-            if let Self::Html { stylesheet } = self {
+            let origin = self.origin.unwrap_or_default();
+            if let ChangedKind::Html { stylesheet } = self.kind {
                 let limit = if stylesheet {
                     html::SCAN_LIMIT as u64
                 } else {
@@ -87,13 +105,13 @@ impl ChangedDocument {
                 };
                 (&mut reader).take(limit).read_to_end(&mut prefix).await?;
                 if stylesheet && !html::is_utf16(&prefix) {
-                    html::insert_link(&mut prefix);
+                    html::insert_link(&mut prefix, &origin);
                 }
             }
             let rewrite = !html::is_utf16(&prefix);
             let start = (!prefix.is_empty()).then(|| Ok(Bytes::from(prefix)));
             let chunks = stream::iter(start).chain(ReaderStream::new(reader));
-            let mut addresses = FileAddresses::default();
+            let mut addresses = FileAddresses::new(origin);
             Ok::<_, io::Error>(
                 chunks
                     .map_ok(Some)
@@ -111,4 +129,17 @@ impl ChangedDocument {
         .try_flatten();
         StreamBody::new(chunks.map_ok(Frame::data)).boxed_unsync()
     }
+}
+
+/// Accept a single HTTPS origin whose host can be inserted as text.
+fn preview_origin(headers: &HeaderMap) -> Option<&str> {
+    let mut values = headers.get_all(FILES_ORIGIN_HEADER).iter();
+    let origin = values.next()?.to_str().ok()?;
+    let host = origin.strip_prefix("https://")?;
+    if values.next().is_some() || host.is_empty() {
+        return None;
+    }
+    host.bytes()
+        .all(|byte| matches!(byte, b'a'..=b'z' | b'0'..=b'9' | b'-' | b'.'))
+        .then_some(origin)
 }

@@ -174,7 +174,8 @@ the tab at `app/files/html`, on desktop and on a phone.
   with the credential cookie and the access of its viewer, as
   [Port previews](terminal-previews-and-desktop.md#port-previews) says.
 - Each such request reaches the file server through the preview relay,
-  with the files mark. The cookie and header rules of a port preview apply
+  with the files mark and the
+  [preview origin](file-server.md#the-preview-origin). The cookie and header rules of a port preview apply
   to it. Each reply carries `X-Content-Type-Options: nosniff`.
 - The Worker refuses a WebSocket upgrade of a files preview with the 404
   of an unknown preview, before any call to the cloud computer.
