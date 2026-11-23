@@ -118,6 +118,8 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   one note at its place, with the member who changed the repository, the
   new repository, and the new branch. To that member it says "You". The
   note reaches no agent.
+- A change of the capabilities shows a change note in the sessions whose
+  facts it changes, as [In the chat](capabilities-agents.md#in-the-chat) says.
 - A wake of a watch shows as one line of the app at its place. It gives
   the end of the watched turn and the session chip of the watched session,
   as [The wake line](session-watches.md#the-wake-line) says. It shows no
@@ -185,6 +187,15 @@ view, the scroll after a send, and the place that each tab keeps.
   tools, is the name of that tool without its server, such as
   `get_window_state`. Its detail is the subject of the call, such as a
   query, a path, or an address.
+- A call to a tool of no known kind has the verb "Used". Its target is
+  the name of the tool, such as `WebFetch`. Its detail is the subject of
+  the call, or else its description, such as "Used `WebFetch`
+  https://example.com". The user chose this rule on 2026-11-23, over a
+  list of such tools in the runner.
+- The target of a call to the Claude `Skill` tool is `Skill`. Its detail
+  is the name of the skill, such as "Used `Skill` brainstorming". A call
+  that names no skill has no detail. Its other arguments never replace
+  the target or the detail.
 - Reason: a subject alone, such as `menu`, does not say which tool ran,
   and a full name, such as `mcp__computer__get_window_state`, is hard to
   read. Words of the app for each computer tool were rejected, because

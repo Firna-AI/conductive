@@ -19,13 +19,14 @@ says.
   repository at a later resume.
 - A new session gets the instructions with the current facts and wording.
   The parent and the depth are the exception, as
-  [The parent and the depth](agent-instructions.md#the-parent-and-the-depth) says.
+  [The parent and the depth](agent-instructions-changes.md#the-parent-and-the-depth)
+  says.
 - A session that started without agent instructions can get them once, at
   a later turn. It then keeps that text.
-- Apart from the branches, the repository folder, the parent, and the
-  depth, the instructions hold no fact that changes during the work, such
-  as the date, the Git state, or the pull request state. The agent reads
-  such facts with its tools.
+- Apart from the branches, the repository folder, the parent, the depth,
+  and the capabilities, the instructions hold no fact that changes during
+  the work, such as the date, the Git state, or the pull request state.
+  The agent reads such facts with its tools.
 - Reason: a change of the text rewrites the prompt cache of the
   conversation. An agent can also keep the first instructions of a session
   until it summarizes the conversation.
@@ -40,6 +41,11 @@ says.
   instructions keep the folder of the start of the session, and
   [the repository line](message-lines.md#the-repository-line) names the
   current folder.
+- The capabilities can change, as
+  [A change](capabilities-agents.md#a-change) says. The instructions keep
+  the capabilities of the start of the session, and a
+  [change note](capabilities-agents.md#the-change-note) tells the agent of
+  each later change.
 - A tool that returns facts that change, such as the pull request state,
   was rejected. It widens what the workspace token allows, and agents still
   need instructions to call it.

@@ -68,7 +68,8 @@ export const termsWorkSection: LegalDocument['sections'][number] = {
       The chat history keeps these messages and a
       note that names who used Continue and the branches. It also keeps
       a note that names who changed the repository of a workspace, the
-      new repository, and the new branch.`,
+      new repository, and the new branch. It also keeps a note that names
+      who changed the capabilities of a workspace, and what changed.`,
     paragraph`You keep any rights that you have in your repositories,
       files, messages, and other content. You give the operator
       permission to store, copy, process, and transmit that content as

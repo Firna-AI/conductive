@@ -95,6 +95,11 @@
   right: 16px;
 }
 
+/* The root of the popover and the menu, which draws no box of its own. */
+.layer {
+  display: contents;
+}
+
 /* The handle of the phone sheet takes a drag in a zone a finger can reach. */
 .drag {
   position: relative;

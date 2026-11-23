@@ -25,6 +25,11 @@ change in the same way, with its read from the stream and its copy.
 `components/NewSessionText.test.tsx` checks that the New session text names
 the branch of the chat's record by its real name when the host gives the
 GitHub state of another branch, or of that branch without a label.
+
+`components/CapabilityChangeNote.test.tsx` checks the note of a change of
+the capabilities in the same way. It also checks that the stream reader
+skips a note that it cannot read, such as one with a change of an unknown
+kind, and keeps its event number.
 `components/TryAgain.dom.test.tsx` mounts the chat and presses Try again.
 It checks the plain message of a refused retry in a tab that missed newer events.
 `state/linked-replies.test.tsx` drives replies of Send and Try again that

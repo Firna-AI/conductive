@@ -176,7 +176,8 @@ Try again replaces the failed first computer without accepting the stored messag
 Its optional acceptance callback saves a tool request in the message transaction.
 `tool-session-write.ts` owns tool request replay and atomic creation with an optional first message.
 `explain-session.ts` checks the selected message and saves the anchored session with its first message in one transaction.
-It reads member messages from their stored records and finished agent answers from paged session history.
+It reads member messages from their stored records and finished agent answers from paged session history, with `agent-message.ts`.
+`get_message` uses the same lookup of finished agent answers.
 `explain-prompt.ts` builds the prompt with the canonical parent session link.
 `ChatRecords` stores each `ToolSessionRequest` beside its accepted session and message.
 The workspace title request removes only the canonical final tool footer from its stored first-message input.

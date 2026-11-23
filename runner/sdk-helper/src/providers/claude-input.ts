@@ -6,7 +6,7 @@ import {
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
-import { senderLines, type FixedContext } from './message'
+import { contextLines, providerNotice, type FixedContext } from './message'
 
 /**
  * The text of one Claude message: the member's text, the read instruction
@@ -20,6 +20,8 @@ import { senderLines, type FixedContext } from './message'
  * Claude then runs no built-in command, such as `/clear`, whose effects
  * the app does not know. `orgSkills` holds the names of the org skills of
  * the session's view, which are also skills of the Claude list.
+ *
+ * A notice of a running turn has only its app text.
  */
 export async function claudeInput(
   command: ProviderInput,
@@ -27,7 +29,8 @@ export async function claudeInput(
   fixed: FixedContext = {},
   orgSkills: ReadonlySet<string> = new Set(),
 ): Promise<string> {
-  const lines = senderLines(command, fixed)
+  if (command.type === 'notice') return providerNotice(command.notices)
+  const lines = contextLines(command, fixed)
   const text = command.message.text
   const attached = command.attachments.map((item) =>
     attachmentDescription(command, item),

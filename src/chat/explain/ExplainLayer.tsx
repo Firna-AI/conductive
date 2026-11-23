@@ -4,7 +4,9 @@ import type { MenuEntry } from '../ui/Menu'
 import { PointMenu } from '../ui/PointMenu'
 import { waitsForMember, type Explanation } from './explanations'
 import { ExplainPopover } from './ExplainPopover'
+import styles from './explain.module.css'
 import { PopoverChat, type PopoverChatProps } from './PopoverChat'
+import { keepPopover } from './press-outside'
 import type { ExplainState, OpenPopover } from './useExplain'
 
 /**
@@ -63,6 +65,7 @@ function Popover(props: {
       anchor={state.anchor}
       mobile={chat.mobile}
       onClose={() => state.closePopover(true)}
+      onPressOutside={() => state.closePopover(false)}
       onExpand={() => {
         state.closePopover(false)
         show(shown)
@@ -91,7 +94,9 @@ function Popover(props: {
 /**
  * What Explain lays over the chat of the shown session tab: the popover of
  * the open explanation, and the menu of overlapping marks, at the press on
- * a computer and in a sheet on a phone.
+ * a computer and in a sheet on a phone. A press anywhere in this layer
+ * keeps the popover, also in the menu, which lies in a portal of its own,
+ * because React gives the press to the root of the layer first.
  */
 export function ExplainLayer(props: {
   state: ExplainState
@@ -104,7 +109,10 @@ export function ExplainLayer(props: {
     popover &&
     state.explanations.find((item) => item.id === popover.explanationId)
   return (
-    <>
+    <div
+      className={styles.layer}
+      onPointerDown={(event) => keepPopover(event.nativeEvent)}
+    >
       {popover && explanation ? (
         <Popover
           chat={props.chat}
@@ -130,6 +138,6 @@ export function ExplainLayer(props: {
           onClose={state.closeMenu}
         />
       ) : null}
-    </>
+    </div>
   )
 }

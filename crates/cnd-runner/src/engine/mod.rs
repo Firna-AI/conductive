@@ -9,9 +9,9 @@ pub mod handler;
 mod input;
 mod instructions;
 mod mailbox;
+mod notices;
 mod output;
 mod provider;
 mod results;
-mod types;
-
 mod routing;
+mod types;
