@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { thisMacWords } from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
+import { thisMacWords } from '../../ui/components/capabilities/capabilitiesCopy'
 import { useServices } from '../../app/services'
 import type { SettingsChange } from '../../chat/device/device-api'
 import {

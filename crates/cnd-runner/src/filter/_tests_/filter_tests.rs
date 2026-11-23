@@ -24,6 +24,7 @@ fn answer(text: &str) -> RunnerEvent {
         message_id: "a".into(),
         text: text.into(),
         user_message_ids: vec!["message-a".into()],
+        notice_ids: vec![],
     })
 }
 

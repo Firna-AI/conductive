@@ -1,5 +1,9 @@
 import { defineComponent } from '@mokly/mokly'
-import { Lockup, LogoTile, MacAppIcon } from '../../../components/brand/Logo'
+import {
+  Lockup,
+  LogoTile,
+  MacAppIcon,
+} from '../../../../../../src/ui/components/brand/Logo'
 
 /** A side of a mark, in px. */
 const sizeSchema = { type: 'number', minimum: 1 } as const

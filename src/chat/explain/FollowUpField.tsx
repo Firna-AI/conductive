@@ -8,8 +8,8 @@ import type { Draft } from '../state/chat-snapshot'
 import {
   followUpLabel,
   followUpPlaceholder,
-} from '../../../docs/mockups/src/components/explain/explainCopy'
-import styles from '../../../docs/mockups/src/components/explain/FollowUpField.module.css'
+} from '../../ui/components/explain/explainCopy'
+import styles from '../../ui/components/explain/FollowUpField.module.css'
 
 /**
  * The follow-up field at the foot of the popover: a message box of one

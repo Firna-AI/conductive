@@ -36,7 +36,7 @@ how a screen is built, and links to the other pages.
 | `app/restart`       | The menu of the header state with Restart, the question while an agent works, Starting after Restart, a failed update check, and a failed restart |
 | `app/archive`       | An archived workspace with Restore, the toast after Archive, the Archived group, the restored workspace, an archive whose unresolved create request can still hold a cloud computer, an archive after the delete of its cloud computer, and a workspace that left the list after its 14 days |
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
-| `app/capabilities`  | The Capabilities control of a workspace in a browser, with the approvals of the open session and its values, and no Mac access part |
+| `app/capabilities`  | The Capabilities control of a workspace in a browser, with the approvals of the open session and its values, no Mac access part, the menu of a phone, and the note of a change in the chat of a session |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
 | `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, a favourite that an own endpoint leaves out, no favourites, the favourites of a new account, and the Favourites section of Preferences with Add a favourite, no favourite, a hidden favourite, and a failed save |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
@@ -57,7 +57,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/new-workspace/start-branch`,
 `app/new-workspace/start-branch/missing`, `app/model-favourites`, `app/model-favourites/preferences`, `app/org-settings`,
-`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
+`app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/capabilities`, `app/capabilities/changed`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
 one screen. `app/org-settings/cloud-computer` and its building
@@ -69,7 +69,7 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
 `app/org-settings/cloud-computer/skills`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
-`app/composer`, `app/model-favourites`, `app/model-favourites/preferences`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
+`app/composer`, `app/capabilities`, `app/model-favourites`, `app/model-favourites/preferences`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -192,7 +192,10 @@ that sends feedback.
 `app/model-favourites` draws the model menu with favourites, which the user
 chose on 16 November 2026. The menu lists up to five favourites first, each
 as its model with its effort and Fast in the muted colour. All models opens
-a submenu with every model. The efforts and the Fast switch follow. Every
+a submenu with every model. Effort follows, with the current effort in the
+muted colour, and opens a submenu with the efforts, as the user chose on
+23 November 2026. The `effort` state of the model picker component shows
+that submenu. The Fast switch follows Effort. Every
 model picker shows this menu, so each page with an open picker shows it.
 [The model menu](design-model-menu.md) gives its design. On 20 November
 2026 the user chose that a new account starts with five favourites, that a
@@ -210,7 +213,7 @@ starts with All models. Its child pages:
   favourite.
 - `endpoint` leaves out Fable 5.1 Low, because the model list of Cal's
   proxy does not name Fable 5.1.
-- `no-favourites` starts with All models, then the efforts and Fast, with
+- `no-favourites` starts with All models, then Effort and Fast, with
   no favourite. Its `all-models` variant opens the submenu, level with the
   top of the menu on a computer.
 - `new-account` lists the starting favourites.
@@ -299,8 +302,9 @@ Capabilities control in a browser and in the Mac app, and the flow
 `user-flows/secret-request`.
 
 `components` holds the registered shared parts, in a folder named after
-their folder of `src/components/`, and `components/screens` for the
-registered helper parts of `src/screens/`. A shared part without a
+their folder of [`src/ui/components/`](../../src/ui/components/) or of
+`src/components/`, and `components/screens` for the registered helper
+parts of `src/screens/`. A shared part without a
 registration has no page there. Each part has its own page and at most four
 variants, such as `components/workspaces/workspace-mark`.
 [Registered parts](registered-parts.md) gives the rules.

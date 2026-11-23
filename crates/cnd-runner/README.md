@@ -166,7 +166,9 @@ Port scans inspect Linux socket tables and process metadata. They never read
 process environments. Reports require two successful scans for additions and
 removals. Complete labels stay cached for each socket identity.
 A separate SDK helper reads Claude skill folders and the Codex app-server
-list, with folder fallback. Rust filters whole skill sources, applies name,
+list, with folder fallback. It also lists the org skills of the current
+copy, which the scanner leases for each scan. The engine and the scanner
+share one `SkillsCopy`, and each new copy signals one more skills scan. Rust filters whole skill sources, applies name,
 count, and byte limits, and saves the report and refresh receipt together.
 The store retains the latest skill metadata without private paths.
 
@@ -323,7 +325,7 @@ and connection drops. It does not run the Worker.
 - [reporter.rs](src/ports/reporter.rs): `PortReporter` keeps stable bounded port lists.
 - [proc.rs](src/ports/proc.rs): `ProcPortScanner` captures Linux listeners and complete cached labels.
 - [reporter.rs](src/skills/reporter.rs): `SkillReporter` orders discovery and saves complete bounded skill reports.
-- [helper.rs](src/skills/helper.rs): `NodeSkillScanner` reads private metadata and `SkillHelpers` supplies current Codex paths.
+- [helper.rs](src/skills/helper.rs): `NodeSkillScanner` reads private metadata, with the leased org skills copy, and `SkillHelpers` supplies current Codex paths.
 - [service.rs](src/watcher/service.rs): `ReportWatchService` owns watch debounce, restore repair, and port timing.
 
 ### Related Docs

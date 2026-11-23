@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
-import styles from '../../../docs/mockups/src/screens/AutomationScreen.module.css'
+import { SuspendedOrgNotice } from '../../ui/components/orgs/SuspendedOrgNotice'
+import styles from '../../ui/screens/AutomationScreen.module.css'
 import { routes, type AutomationTab } from '../../app/router'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgAccess } from '../context'

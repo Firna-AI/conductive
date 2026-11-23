@@ -126,6 +126,33 @@ adds the list of skills, as
 - When the app server gives no answer, the Codex list holds each skill of
   `<repository>/.agents/skills` and `<repository>/.codex/skills`, and the
   runner warns.
+- Each list also holds the org skills that the agent of that list gets,
+  as [Org skills](org-skills.md#what-loads) says. They come after the
+  skills of the agent's own folders. The user chose this on 2026-11-23,
+  after members saw "This repository has no skills" in an org with a
+  skills repository.
+- Reason: the list then shows each skill that the agent loads, also when
+  the workspace's own repository has no skills.
+- These ways were rejected:
+  - No org skills in the list, with a doc note only. Members then think
+    that the org skills do not work, and a Codex message gets no skill
+    input for them.
+  - Org skills from the read of the skills repository on GitHub that the
+    Skills section uses. The list can then name a skill that the agent
+    does not get, such as before the first copy or after a name clash.
+- The runner reads the org skills from the current
+  [copy](org-skills-copy.md#the-copy) of the skills repository. It makes
+  the same choice as an agent start: a skill of the workspace's own
+  repository wins over an org skill with the same name, and of two org
+  skills with one name, the first in path order stays.
+- The name and the description of an org skill are those of the safe
+  view that the agent reads, by the rules below.
+- Without a copy, such as before the first copy ends, the lists hold no
+  org skills.
+- A Codex skill chip of an org skill gives Codex the skill in the view of
+  its own session. When that view does not hold the skill, such as a skill
+  of a newer copy, the message gets no skill input for it. Codex then
+  reads its skill text as text.
 - For a skill from a folder, the name and the description come from the
   front matter of its `SKILL.md`. Without a name, the name is the name of
   the folder, as the agent takes it.
@@ -176,7 +203,8 @@ adds the list of skills, as
   `runner.ready`, also when both lists are empty. Reason: the workspace
   can then tell a runner that sends no skills reports.
 - The runner reads the lists again after each change of the repository
-  that it sees. It sends a report when a list changes.
+  that it sees, and after each new copy of the skills repository. It sends
+  a report when a list changes.
 - Cost: a skill that only the Codex home gains shows after the next
   change of the repository or the next connect.
 - The runner answers a `report.refresh` of the kind `skills.updated` with

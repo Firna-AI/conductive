@@ -1,5 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
-import { productDomain, productName } from '../../brand'
+import { productDomain, productName } from '../../../../../src/shared/brand'
 import { MarketingScreen } from '../../screens/MarketingScreen'
 
 export const marketing = defineScreen({

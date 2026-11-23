@@ -5,7 +5,9 @@ Capabilities control of New workspace, of each workspace, and of an
 automation. It covers the control, its secrets part, and the control of an
 automation. [Mac access](mac-access.md) covers the Mac access part of the
 control in the Mac app. This doc belongs to [Secrets](secrets.md), which
-covers the secrets, their rights, and their grants. The
+covers the secrets, their rights, and their grants.
+[Capabilities: what agents learn](capabilities-agents.md) covers what
+agents learn of the capabilities. The
 [mockup catalogue](../mockups/catalogue-secrets.md) draws the control. The
 terms are those of [Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms).
@@ -122,3 +124,9 @@ automations, as [Automations](automations.md) says.
 the Mac app: its switch, the grant that it starts on this Mac, and the
 requests that agents can always send. It also states the risks of Mac
 access.
+
+## What agents learn
+
+[Capabilities: what agents learn](capabilities-agents.md) states the
+facts of a session that its agent learns. It also states the change note
+that tells the agent and the members of each later change.

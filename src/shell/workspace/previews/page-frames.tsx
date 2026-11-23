@@ -5,7 +5,7 @@ import {
   useLayoutEffect,
   useSyncExternalStore,
 } from 'react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
 import type { Preview } from '../../../shared/generated/Preview'
 import { OpenInNewTab, PreviewFrame } from '../../../previews/PreviewFrame'
 import type { WorkspaceContext } from '../features'

@@ -3,7 +3,7 @@ import type { SessionAnchor } from '../../shared/generated/SessionAnchor'
 import { nameLabel } from '../../shared/name-label'
 import { requestsOf } from '../device/device-snapshot'
 import { isRunning, type ChatSnapshot } from '../state/chat-snapshot'
-import type { ExplainMarkState } from '../../../docs/mockups/src/components/explain/explainCopy'
+import type { ExplainMarkState } from '../../ui/components/explain/explainCopy'
 
 /** An explanation that the chat of its parent session marks. */
 export interface Explanation {

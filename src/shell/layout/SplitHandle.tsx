@@ -4,9 +4,9 @@ import {
   type PointerEvent,
   type RefObject,
 } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/layout/ResizeHandle.module.css'
-import { filesShare } from '../../../docs/mockups/src/components/layout/ResizeHandle'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/layout/ResizeHandle.module.css'
+import { filesShare } from '../../ui/components/layout/ResizeHandle'
 import type { PanelDrag } from '../../app/panels'
 import { dividerKey } from '../../app/shortcuts/navigation'
 import { useStore } from '../../app/store'

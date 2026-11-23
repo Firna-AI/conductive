@@ -5,15 +5,15 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
-import { listMarkLabel } from '../../../docs/mockups/src/components/workspaces/status'
-import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
+import { classes } from '../../ui/components/common/classes'
+import { KeyChips } from '../../ui/components/common/KeyChips'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
+import { listMarkLabel } from '../../ui/components/workspaces/status'
+import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
-} from '../../../docs/mockups/src/components/workspaces/WorkspaceName'
+} from '../../ui/components/workspaces/WorkspaceName'
 import type { PaletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteRead } from '../../app/palette/palette-source'

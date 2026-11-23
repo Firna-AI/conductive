@@ -55,12 +55,12 @@ describe('the model picker of the shell', () => {
         { agent: 'claude', model: 'opus', effort: 'high', fast: true },
         { agent: 'claude', model: 'sonnet', effort: 'high', fast: false },
       ],
-      // All models, then the efforts, with no Fast row.
-      roles: ['menuitem', 'menuitemradio'],
+      // All models, then Effort, with no Fast row.
+      roles: ['menuitem'],
     })
   })
 
-  test('lists the favourites first, each as its model with its effort and Fast in the muted colour, then All models, the efforts, and Fast, marks only the favourite of the current choice, and a pick of a favourite sets its model, its effort, and its fast mode', async () => {
+  test('lists the favourites first, each as its model with its effort and Fast in the muted colour, then All models, Effort with the current effort, and Fast, marks only the favourite of the current choice, and a pick of a favourite sets its model, its effort, and its fast mode', async () => {
     const changes: AgentChoice[] = []
     const view = await mount(
       <Form changes={changes} favourites={[opus, opusLowFast, solHigh]} />,
@@ -80,15 +80,14 @@ describe('the model picker of the shell', () => {
           { role: 'menuitemradio', name: 'Opus 5.5 Low Fast', on: 'false' },
           { role: 'menuitemradio', name: 'GPT-6.1 Sol High', on: 'false' },
           { role: 'menuitem', name: 'All models', on: null },
-          { role: 'menuitemradio', name: 'Low', on: 'false' },
-          { role: 'menuitemradio', name: 'High', on: 'true' },
+          { role: 'menuitem', name: 'Effort High', on: null },
           { role: 'menuitemcheckbox', name: 'Fast', on: 'false' },
         ],
-        muted: ['High', 'Low Fast', 'High', null, null, null, null],
+        muted: ['High', 'Low Fast', 'High', null, 'High', null],
       },
       changes: [opusLowFast],
       trigger: 'Model and effort: Opus 5.5, Low, Fast',
-      marked: ['Opus 5.5 Low Fast', 'Low'],
+      marked: ['Opus 5.5 Low Fast'],
     })
   })
 })

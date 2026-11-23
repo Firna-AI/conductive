@@ -292,7 +292,7 @@ through them while the workspace loads.
   branch changed, keeps the view and selects no session, as
   [Agent actions](../../github/actions.md#agent-actions) says.
 - `ContinueDialog` asks the question of Continue, after its check found
-  local work. `LocalWorkList` of the mockups lists that work, as in the
+  local work. The shared `LocalWorkList` lists that work, as in the
   mockup of the question.
 - On a phone, the row sits under the header on every tab. It is one link to
   the Checks tab, whose top holds the actions, the line under the bar, and

@@ -8,7 +8,7 @@ import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
 import { searchField } from '../../entries/components/common/SearchField.mockup'
 import { instanceKey } from '../../instanceKey'
-import styles from './RepositoryList.module.css'
+import styles from '../../../../../src/ui/components/settings/RepositoryList.module.css'
 
 /**
  * The page of the GitHub App, which lists the person's GitHub accounts.

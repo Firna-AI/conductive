@@ -3,8 +3,8 @@ import { FileText } from 'lucide-react'
 import {
   ChipEndRemove,
   ChipIconCell,
-} from '../../../components/chat/ChipRemove'
-import { TouchScreen } from '../../../components/common/touch'
+} from '../../../../../../src/ui/components/chat/ChipRemove'
+import { TouchScreen } from '../../../../../../src/ui/components/common/touch'
 import { removalSchema } from './chipSchemas'
 
 /**

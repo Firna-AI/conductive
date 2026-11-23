@@ -5,10 +5,10 @@ import {
   checksByState,
   pullRequest,
   reviewByState,
-  type BannerState,
   type Check,
 } from '../../fixtures/pullRequests'
-import a11y from '../common/a11y.module.css'
+import { type BannerState } from '../../../../../src/ui/components/workspace/barModel'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import styles from './ChecksList.module.css'
 

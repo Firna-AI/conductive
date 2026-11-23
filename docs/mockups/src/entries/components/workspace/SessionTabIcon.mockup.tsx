@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { SessionTabIcon } from '../../../components/workspace/SessionTabIcon'
+import { SessionTabIcon } from '../../../../../../src/ui/components/workspace/SessionTabIcon'
 
 /** The icon of the tab of a session, registered with Mokly. */
 export const sessionTabIcon = defineComponent({

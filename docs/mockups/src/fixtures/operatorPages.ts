@@ -4,8 +4,11 @@
  * of a switch of the provider account in `operatorSwitch.ts`.
  */
 import type { AccountWorkspaces } from '../components/operator/AccountSection'
-import type { LastSwitch, OrgSwitch } from '../components/operator/switchCopy'
-import type { StateCounts } from './operator'
+import type {
+  LastSwitch,
+  OrgSwitch,
+} from '../../../../src/ui/components/operator/switchCopy'
+import type { StateCounts } from '../../../../src/ui/components/settings/statCounts'
 import type {
   OrgMember,
   SuspensionNote,

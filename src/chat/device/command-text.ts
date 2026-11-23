@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { deviceCommandSucceeded } from '../../shared/device'
 import { stateLabel } from '../../shared/transcript/command-words'
-import type { StatusTone } from '../../../docs/mockups/src/components/common/StatusText'
+import type { StatusTone } from '../../ui/components/common/StatusText'
 
 export interface StatePresentation {
   label: string

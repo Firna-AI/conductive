@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import skillListStyles from '../../../docs/mockups/src/components/settings/SkillList.module.css'
+import skillListStyles from '../../ui/components/settings/SkillList.module.css'
 import { ComputerModel } from '../../app/computer-model'
 import { ManualDelay } from '../../app/test-kit'
 import type { SkillsRepositoryLookupResponse } from '../../shared/org-settings'

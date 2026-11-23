@@ -1,14 +1,11 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, MonitorOff } from 'lucide-react'
 import type { ApiClient } from '../../app/api/client'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
-import { thisMacDescription } from '../../../docs/mockups/src/components/settings/thisMacCopy'
+import { Notice } from '../../ui/components/common/Notice'
+import { StatusText } from '../../ui/components/common/StatusText'
+import { TouchScreen } from '../../ui/components/common/touch'
+import { Section, SectionText } from '../../ui/components/settings/Section'
+import { thisMacDescription } from '../../ui/components/settings/thisMacCopy'
 import { ActionButton } from '../ui/actions'
 import { systemClock, useNow, type Clock } from '../ui/clock'
 import local from './device.module.css'

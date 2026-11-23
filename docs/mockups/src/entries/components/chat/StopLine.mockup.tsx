@@ -1,8 +1,8 @@
 import { defineComponent } from '@mokly/mokly'
-import { StopLine } from '../../../components/chat/StopLine'
-import { memberStopped } from '../../../components/chat/stopCopy'
-import { standardSpeedText } from '../../../components/chat/speedCopy'
-import { unlistedFiles } from '../../../components/chat/lostCopy'
+import { StopLine } from '../../../../../../src/ui/components/chat/StopLine'
+import { memberStopped } from '../../../../../../src/ui/components/chat/stopCopy'
+import { standardSpeedText } from '../../../../../../src/ui/components/chat/speedCopy'
+import { unlistedFiles } from '../../../../../../src/ui/components/chat/lostCopy'
 import { sessionChip } from './SessionChip.mockup'
 
 /**

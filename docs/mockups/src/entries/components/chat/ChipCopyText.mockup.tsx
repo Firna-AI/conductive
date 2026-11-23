@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { ChipCopyText } from '../../../components/chat/ChipCopyText'
+import { ChipCopyText } from '../../../../../../src/ui/components/chat/ChipCopyText'
 
 /**
  * The text that a copy of a chip gives, registered with Mokly. It shows

@@ -1,14 +1,14 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
-import styles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { Notice } from '../../ui/components/common/Notice'
+import { orgSuspendedReason } from '../../ui/components/orgs/suspension'
+import styles from '../../ui/components/workspace/SandboxNotice.module.css'
 import type {
   SandboxNoticeState,
   SandboxPanelState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 import { useServices } from '../../app/services'
 import { formatDay } from '../../app/time'

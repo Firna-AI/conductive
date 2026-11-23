@@ -1,11 +1,15 @@
 import { Ban, CircleCheck, KeyRound } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
-import { StatusText } from '../common/StatusText'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
 import { CommandLine } from './MacCommand'
-import { deniedNote, grantNote, secretRunWords } from './secretRunCopy'
-import card from './MacCommand.module.css'
-import styles from './SecretRun.module.css'
+import {
+  deniedNote,
+  grantNote,
+  secretRunWords,
+} from '../../../../../src/ui/components/chat/secretRunCopy'
+import card from '../../../../../src/ui/components/chat/MacCommand.module.css'
+import styles from '../../../../../src/ui/components/chat/SecretRun.module.css'
 
 /**
  * A member as the words of a run name them: `subject` starts a sentence,

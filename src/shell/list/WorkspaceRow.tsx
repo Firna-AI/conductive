@@ -10,9 +10,9 @@ import {
   type Ref,
 } from 'react'
 import { Archive, ArchiveRestore } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
-import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
+import { classes } from '../../ui/components/common/classes'
+import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
+import styles from '../../ui/components/workspaces/WorkspaceRow.module.css'
 import { routes } from '../../app/router'
 import { ownPress } from '../../app/pointer-drag'
 

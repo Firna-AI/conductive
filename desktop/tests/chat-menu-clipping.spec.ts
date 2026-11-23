@@ -81,15 +81,27 @@ app.on('window-all-closed', () => app.quit());
       name: 'Model and effort',
       exact: true,
     })
-    const low = menu.getByRole('menuitemradio', { name: 'Low', exact: true })
+    // Effort shows the current effort, and its submenu holds the efforts.
+    const effort = menu.getByRole('menuitem', {
+      name: 'Effort High',
+      exact: true,
+    })
     // Check the clip before a pointer action can scroll anything into view.
-    await expect(low).toBeInViewport({ ratio: 1 })
+    await expect(effort).toBeInViewport({ ratio: 1 })
     const triggerBox = await picker.boundingBox()
-    const choiceBox = await low.boundingBox()
+    const choiceBox = await effort.boundingBox()
     if (!triggerBox || !choiceBox) throw new Error('The picker has no box')
     expect(choiceBox.y + choiceBox.height).toBeLessThanOrEqual(triggerBox.y)
 
-    await low.click()
+    await effort.click()
+    const efforts = page.getByRole('menu', { name: 'Effort', exact: true })
+    await expect(efforts).toBeInViewport({ ratio: 1 })
+    await expect(
+      efforts.getByRole('menuitemradio', { name: 'High', exact: true }),
+    ).toBeFocused()
+    await efforts
+      .getByRole('menuitemradio', { name: 'Low', exact: true })
+      .click()
     await expect(menu).toHaveCount(0)
     await expect(picker).toHaveAccessibleName('Model and effort: Opus 5.5, Low')
     await picker.click()

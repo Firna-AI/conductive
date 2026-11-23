@@ -9,6 +9,7 @@ import {
   speedCauses,
   turnEndReasons,
 } from './chatKeys'
+import { capabilityChangedItemSchema } from './capabilityItemSchemas'
 import { lateAnswerItemSchema, secretRunItemSchema } from './secretItemSchemas'
 import { wakeItemSchema } from './wakeItemSchemas'
 
@@ -232,6 +233,7 @@ export const chatItemSchema = {
     linkedItem,
     continuedItem,
     repositoryChangedItem,
+    capabilityChangedItemSchema,
     secretRunItemSchema,
     lateAnswerItemSchema,
     wakeItemSchema,
@@ -252,6 +254,7 @@ export const singleItemSchema = {
     linkedItem,
     continuedItem,
     repositoryChangedItem,
+    capabilityChangedItemSchema,
     secretRunItemSchema,
     lateAnswerItemSchema,
     wakeItemSchema,

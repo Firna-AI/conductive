@@ -2,10 +2,10 @@ import type { ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, MessageSquarePlus } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import waitStyles from '../../../docs/mockups/src/components/workspace/SandboxNotice.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { Notice } from '../../ui/components/common/Notice'
+import itemStyles from '../../ui/components/chat/ChatItemView.module.css'
+import waitStyles from '../../ui/components/workspace/SandboxNotice.module.css'
 import {
   sessionState,
   type ChatSnapshot,

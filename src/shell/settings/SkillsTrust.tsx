@@ -1,11 +1,11 @@
 import { useId } from 'react'
 import { Switch } from '@firna/ui/switch'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/SkillsTrust.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/settings/SkillsTrust.module.css'
 import {
   skillsTrustCopy as copy,
   trustHint,
-} from '../../../docs/mockups/src/components/settings/skillsTrustCopy'
+} from '../../ui/components/settings/skillsTrustCopy'
 import { ExternalLink } from '../ui/links'
 
 /**

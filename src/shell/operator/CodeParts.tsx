@@ -1,11 +1,11 @@
 import { Ban, Copy, Link } from 'lucide-react'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { StatusText } from '../../ui/components/common/StatusText'
 import {
   codeStateLabels,
   copyLabels,
   referralCodeName,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
-import styles from '../../../docs/mockups/src/components/operator/codes.module.css'
+} from '../../ui/components/operator/codeCopy'
+import styles from '../../ui/components/operator/codes.module.css'
 import { useServices } from '../../app/services'
 import type { OperatorAccessCode } from '../../shared/operator-waitlist'
 import { joinPath } from '../../shared/waitlist'

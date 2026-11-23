@@ -1,3 +1,4 @@
+import { capabilityChangeText } from '../../src/shared/capability-change'
 import type { AgentLogin } from './login-kind'
 import { runnerSupportsLogin } from '../../src/shared/runner'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
@@ -10,7 +11,12 @@ import {
   type RepositoryMoves,
 } from './runner-repository-move'
 import type { ChatStore } from './store'
-import type { ActiveRunner, ChatDependencies, PreparedCommand } from './types'
+import type {
+  ActiveRunner,
+  ChatDependencies,
+  PreparedCommand,
+  ResolvedCommand,
+} from './types'
 import type { PendingCommand } from './pending-command'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 
@@ -40,6 +46,35 @@ export class RunnerCommandPreparation {
       commandDispatchState(view, command),
     )
     if (state !== 'send') return { state }
+    if (command.type === 'notice' && active.state.capabilityNotices !== true)
+      return { state: 'wait' }
+    if (command.type === 'notice') {
+      const waiting = await this.store.read(active.state.workspace.id, (view) =>
+        view.capabilityNotes.waiting(command.sessionId),
+      )
+      const notices = waiting
+        .filter(
+          (note) =>
+            command.noticeIds.includes(note.id) &&
+            note.sentTurnId === command.turnId,
+        )
+        .map((note) => ({
+          id: note.id,
+          text: capabilityChangeText(note.member, note.changes),
+        }))
+      return notices.length
+        ? {
+            state: 'send',
+            command: {
+              type: 'notice',
+              commandId: command.commandId,
+              sessionId: command.sessionId,
+              turnId: command.turnId,
+              notices,
+            },
+          }
+        : { state: 'skip' }
+    }
     if (command.type === 'interrupt' || command.type === 'model')
       return { state: 'send', command }
     const message = await this.store.read(active.state.workspace.id, (view) =>
@@ -133,6 +168,39 @@ export class RunnerCommandPreparation {
           : null,
       },
     }
+  }
+
+  async prepareCapabilities(
+    active: ActiveRunner,
+    command: Extract<ResolvedCommand, { type: 'turn' }>,
+  ): Promise<Extract<ResolvedCommand, { type: 'turn' }>> {
+    const capabilities = await this.dependencies.readCapabilities(
+      active.state.workspace.id,
+      command.sessionId,
+    )
+    if (!capabilities) throw new RunnerAccessDenied()
+    const notices = await this.store.change(
+      active.state.workspace.id,
+      async (view) => {
+        if (active.state.capabilityNotices !== true) return []
+        const steered = new Set(
+          (await view.pending()).flatMap((pending) =>
+            pending.type === 'notice' && pending.turnId === command.turnId
+              ? pending.noticeIds
+              : [],
+          ),
+        )
+        return (
+          await view.capabilityNotes.take(
+            command.sessionId,
+            command.turnId,
+            (await view.turn(command.turnId))?.state === 'queued',
+          )
+        ).filter((notice) => !steered.has(notice.id))
+      },
+      this.publish,
+    )
+    return { ...command, capabilities, ...(notices.length ? { notices } : {}) }
   }
 
   private unavailable(

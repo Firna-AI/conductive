@@ -1,7 +1,8 @@
 //! Typed command identities used by the session registry.
 
 use cnd_runner_interface::runner_commands::{
-    RunnerChangeModel, RunnerCommand, RunnerControlCommand, RunnerInterrupt, RunnerTurn,
+    RunnerChangeModel, RunnerCommand, RunnerControlCommand, RunnerInterrupt,
+    RunnerMessageDuringTurn, RunnerNotice, RunnerTurn,
 };
 
 pub(super) fn route(command: &RunnerCommand) -> Option<(&str, &str, Option<&str>)> {
@@ -12,13 +13,16 @@ pub(super) fn route(command: &RunnerCommand) -> Option<(&str, &str, Option<&str>
             turn_id,
             ..
         }) => Some((command_id, session_id, Some(turn_id))),
-        RunnerCommand::RunnerMessageDuringTurn(
-            cnd_runner_interface::runner_commands::RunnerMessageDuringTurn::Message {
-                command_id,
-                session_id,
-                ..
-            },
-        ) => Some((command_id, session_id, None)),
+        RunnerCommand::RunnerMessageDuringTurn(RunnerMessageDuringTurn::Message {
+            command_id,
+            session_id,
+            ..
+        }) => Some((command_id, session_id, None)),
+        RunnerCommand::RunnerNotice(RunnerNotice::Notice {
+            command_id,
+            session_id,
+            ..
+        }) => Some((command_id, session_id, None)),
         RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerInterrupt(
             RunnerInterrupt::Interrupt {
                 command_id,

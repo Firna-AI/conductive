@@ -11,9 +11,9 @@ import type { TreeLines } from '../../../../../src/shared/workspace-tree-lines'
 import {
   checkoutAutocomplete,
   workspaceList,
-  type ActivityStatus,
   type Workspace,
 } from '../../fixtures/workspaces'
+import { type ActivityStatus } from '../../../../../src/ui/components/workspaces/activityStatus'
 import { paths } from '../../paths'
 import type { RowIndent } from './trees'
 

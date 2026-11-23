@@ -1,13 +1,20 @@
-import { useContext, useRef, type MouseEvent, type ReactNode } from 'react'
+import {
+  useContext,
+  useRef,
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react'
 import { createPortal } from 'react-dom'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import marked from '../../../docs/mockups/src/components/explain/MarkedText.module.css'
+import { classes } from '../../ui/components/common/classes'
+import marked from '../../ui/components/explain/MarkedText.module.css'
 import { ExplainContext, type ExplainView } from './explain-context'
 import type { Explanation } from './explanations'
 import { FloatingExplain, type ExplainAlign } from './ExplainButton'
 import styles from './explain.module.css'
 import { AnchorBox, MarkButton, WholeMarks } from './MarkParts'
 import { uiAttribute } from './mark-layout'
+import { keepPopover } from './press-outside'
 import { messageAttributes } from './selection'
 import {
   markRegions,
@@ -51,6 +58,15 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
   const regions = markRegions(layout, props.folds ?? false)
   const hover = useMarkHover(regions)
   useMarkHighlights(layout, hover.hovered, view.open)
+  // A press on the text of a mark keeps the open popover, because its click
+  // opens the popover or the menu of the mark.
+  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const target = event.target instanceof Element ? event.target : null
+    if (regions.length === 0 || !target || target.closest(OWN_PRESS)) return
+    if (marksAt(regions, event.clientX, event.clientY).length > 0) {
+      keepPopover(event.nativeEvent)
+    }
+  }
   const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target instanceof Element ? event.target : null
     if (regions.length === 0 || !target || target.closest(OWN_PRESS)) return
@@ -92,6 +108,7 @@ function Marked(props: MarkedMessageProps & { view: ExplainView }) {
         hovered.length > 0 && styles.pointing,
       )}
       onClickCapture={onClickCapture}
+      onPointerDown={onPointerDown}
       onPointerLeave={hover.onPointerLeave}
       onPointerMove={hover.onPointerMove}
       ref={root}

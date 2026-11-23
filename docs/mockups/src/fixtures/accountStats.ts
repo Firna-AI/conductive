@@ -1,5 +1,5 @@
-import type { AccountStatsNumbers } from '../components/settings/StatsSections'
-import type { DailyCount } from './operator'
+import type { AccountStatsNumbers } from '../../../../src/ui/components/settings/StatsSections'
+import type { DailyCount } from '../../../../src/ui/components/settings/statCounts'
 
 const DAY = 24 * 60 * 60 * 1_000
 

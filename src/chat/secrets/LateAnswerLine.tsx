@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
 import { KeyRound } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/chat/LateAnswerLine.module.css'
-import lineStyles from '../../../docs/mockups/src/components/chat/LinkedLine.module.css'
+import styles from '../../ui/components/chat/LateAnswerLine.module.css'
+import lineStyles from '../../ui/components/chat/LinkedLine.module.css'
 import type { LateAnswerPart } from '../../shared/secret-late-answer'
 
 /**

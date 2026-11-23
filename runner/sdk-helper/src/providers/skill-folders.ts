@@ -4,7 +4,9 @@ import { basename, join } from 'node:path'
 import { findSkillFolders } from '../../../../src/shared/skill-folders'
 import type { ProviderOptions } from './types'
 
-export async function orgSkillFolders(options: ProviderOptions) {
+type FolderOptions = Pick<ProviderOptions, 'orgSkills' | 'warn'>
+
+export async function orgSkillFolders(options: FolderOptions) {
   const directory = options.orgSkills?.directory
   if (!directory) return []
   const paths: string[] = []

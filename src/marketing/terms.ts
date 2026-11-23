@@ -1,8 +1,4 @@
-import {
-  appDomain,
-  productDomain,
-  productName,
-} from '../../docs/mockups/src/brand'
+import { appDomain, productDomain, productName } from '../shared/brand'
 import {
   abuseAddress,
   legalAddress,
@@ -32,7 +28,7 @@ export const termsDocument: LegalDocument = {
   at ${appDomain}, and in the Mac app. You accept their current version
   each time that you continue with GitHub to sign in. ${productName} keeps
   the latest version that you accepted, and the time when you first
-  accepted it. Effective date: 22 November 2026.`,
+  accepted it. Effective date: 23 November 2026.`,
   sections: [
     {
       title: `Who runs ${productName}`,

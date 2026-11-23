@@ -11,8 +11,8 @@ import {
   Plus,
   Trash2,
 } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/workspaces/SectionList.module.css'
 import type { PointerDragProps } from '../../app/pointer-drag'
 import type { Section } from '../../shared/sections'
 import { IconButton } from '../ui/actions'

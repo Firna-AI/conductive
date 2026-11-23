@@ -15,9 +15,9 @@ import {
   closedWhen,
   mergedInto,
   reviewByState,
-  type BannerState,
 } from '../../fixtures/pullRequests'
-import type { ButtonTint } from '../common/tint'
+import { type BannerState } from '../../../../../src/ui/components/workspace/barModel'
+import type { ButtonTint } from '../../../../../src/ui/components/common/tint'
 
 type PrTone = 'neutral' | 'success' | 'warning' | 'danger' | 'merged'
 

@@ -41,6 +41,7 @@ export class FoldItems {
         return item.marker.turnId
       case 'continued':
       case 'repository-changed':
+      case 'capabilities-changed':
         return null
       default:
         return item.turnId

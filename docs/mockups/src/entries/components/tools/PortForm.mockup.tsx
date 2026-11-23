@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { PortMessage, ServerList } from '../../../components/tools/PortForm'
-import { portFormCopy } from '../../../components/tools/previewCopy'
+import { portFormCopy } from '../../../../../../src/ui/components/tools/previewCopy'
 import { detectedServers, openPort } from '../../../fixtures/previews'
 
 /** A server that the runner detects, as `ListeningPort`. */

@@ -3,10 +3,10 @@ import type { TurnEndReason } from '../../../../../src/shared/generated/TurnEndR
 import type { ChangedFile } from '../../fixtures/files'
 import { turnFileList } from '../../entries/components/chat/TurnFileList.mockup'
 import { endReasonLine } from '../../entries/components/chat/EndReasonLine.mockup'
-import { turnFilesUnavailable } from './lostCopy'
-import type { StandardSpeedCause } from './speedCopy'
+import { turnFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../../src/ui/components/chat/speedCopy'
 import { standardSpeedNote } from '../../entries/components/chat/StandardSpeedNote.mockup'
-import styles from './TurnEnd.module.css'
+import styles from '../../../../../src/ui/components/chat/TurnEnd.module.css'
 
 /**
  * The end of a finished turn: how long it ran, and the files it changed.

@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { ArrowLeftRight, CircleAlert, CircleStop } from 'lucide-react'
 import { SegmentedControl } from '@firna/ui/segmented'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { Notice } from '../../ui/components/common/Notice'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   endJobOffer,
   stopQuestion,
@@ -14,7 +14,7 @@ import {
   type JobWait,
   type OrgSwitch,
   type SwitchWait,
-} from '../../../docs/mockups/src/components/operator/switchCopy'
+} from '../../ui/components/operator/switchCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { CheckOption } from './CheckOption'

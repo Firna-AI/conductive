@@ -1,4 +1,4 @@
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import type { CodexRotation } from '../codex-auth/rotation'
 import type { CodexTokens } from '../codex-auth/tokens'
 import type { CodexTaskOwner } from '../codex-auth/tasks'

@@ -1,15 +1,13 @@
 import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/generated/UserMessage'
-import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
-import { RepositoryChangedLine } from '../../../docs/mockups/src/components/chat/RepositoryChangedLine'
-import {
-  StopLine,
-  type StopSource,
-} from '../../../docs/mockups/src/components/chat/StopLine'
-import { WakeLine } from '../../../docs/mockups/src/components/chat/WakeLine'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
+import { CapabilityChangeLine } from '../../ui/components/chat/CapabilityChangeLine'
+import { ContinuedLine } from '../../ui/components/chat/ContinuedLine'
+import { RepositoryChangedLine } from '../../ui/components/chat/RepositoryChangedLine'
+import { StopLine, type StopSource } from '../../ui/components/chat/StopLine'
+import { WakeLine } from '../../ui/components/chat/WakeLine'
+import { classes } from '../../ui/components/common/classes'
+import { Notice } from '../../ui/components/common/Notice'
+import styles from '../../ui/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
 import { ChatText, SessionLinkText, useChatParts } from '../links/LinkedText'
 import { agentMessageId } from '../../shared/transcript/item-keys'
@@ -147,6 +145,13 @@ export function ItemView(props: {
       )
     case 'lost':
       return <LostEventLine marker={item.marker} />
+    case 'capabilities-changed':
+      return (
+        <CapabilityChangeLine
+          changes={item.changes}
+          who={continuedBy(item.member, props.readers)}
+        />
+      )
     case 'continued':
       // Each branch shows by its label, or by its real name without one.
       return (

@@ -2,7 +2,7 @@ import { defineComponent } from '@mokly/mokly'
 import {
   StatusText,
   type StatusTone,
-} from '../../../components/common/StatusText'
+} from '../../../../../../src/ui/components/common/StatusText'
 import { iconKeys, icons } from './icons'
 
 /** The tones of a state, as `StatusTone` lists them. */

@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { RightColumn } from '../../../components/workspace/RightColumn'
+import { RightColumn } from '../../../../../../src/ui/components/workspace/RightColumn'
 
 /**
  * The column beside the chat, registered with Mokly. A screen supplies the

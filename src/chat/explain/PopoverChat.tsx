@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
-import { popoverChatLabel } from '../../../docs/mockups/src/components/explain/explainCopy'
+import { popoverChatLabel } from '../../ui/components/explain/explainCopy'
 import { modelLabel } from '../../shared/agents'
 import { turnCopy } from '../../shared/transcript/turn-words'
 import { ChatPane } from '../components/ChatPane'

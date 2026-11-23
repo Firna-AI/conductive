@@ -2,7 +2,7 @@ import { Square } from 'lucide-react'
 import {
   serviceControlCopy,
   servicesCopy,
-} from '../../../../../docs/mockups/src/components/tools/serviceCopy'
+} from '../../../../ui/components/tools/serviceCopy'
 import { ActionButton } from '../../../ui/actions'
 import { Dialog, DialogText } from '../../../ui/Dialog'
 

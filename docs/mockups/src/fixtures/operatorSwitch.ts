@@ -5,7 +5,10 @@
  * operator route.
  */
 import type { AccountWorkspaces } from '../components/operator/AccountSection'
-import type { LastSwitch, SwitchBuild } from '../components/operator/switchCopy'
+import type {
+  LastSwitch,
+  SwitchBuild,
+} from '../../../../src/ui/components/operator/switchCopy'
 import type { OrgMember } from './operatorDirectory'
 import type { OrgPage } from './operatorPages'
 import {

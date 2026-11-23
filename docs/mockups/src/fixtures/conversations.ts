@@ -6,8 +6,11 @@
 
 import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { LostReason, LostWhat } from '../components/chat/lostCopy'
-import type { StandardSpeedCause } from '../components/chat/speedCopy'
+import type {
+  LostReason,
+  LostWhat,
+} from '../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../src/ui/components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -25,6 +28,10 @@ import {
   type ContinuedItem,
   type RepositoryChangedItem,
 } from './barConversations'
+import {
+  capabilityConversations,
+  type CapabilitiesChangedItem,
+} from './capabilityConversations'
 import { chatLinkConversations } from './chatLinkConversations'
 import type { ChangedFile } from './files'
 import { formattingConversations } from './formattingConversations'
@@ -169,6 +176,7 @@ export type ChatItem =
     }
   | ContinuedItem
   | RepositoryChangedItem
+  | CapabilitiesChangedItem
   | SecretRunItem
   | LateAnswerItem
   | WakeItem
@@ -221,6 +229,7 @@ export const conversations: Readonly<
   ...macConversations(history),
   ...secretConversations(history),
   ...secretValueConversations(history),
+  ...capabilityConversations(history),
   ...lostConversations(history),
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),

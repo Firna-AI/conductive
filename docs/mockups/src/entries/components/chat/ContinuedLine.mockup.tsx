@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { ContinuedLine } from '../../../components/chat/ContinuedLine'
+import { ContinuedLine } from '../../../../../../src/ui/components/chat/ContinuedLine'
 import { continuedBranch, promptFacts } from '../../../fixtures/barActions'
 
 /**

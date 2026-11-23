@@ -1,5 +1,5 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { orgSuspendedReason } from '../../../docs/mockups/src/components/orgs/suspension'
+import { orgSuspendedReason } from '../../ui/components/orgs/suspension'
 import { orgPath } from '../../shared/api'
 import type { WorkspaceEvent } from '../../shared/events'
 import { leaveOrgPath } from '../../shared/orgs'

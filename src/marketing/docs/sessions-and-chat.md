@@ -204,9 +204,11 @@ Each row names those choices, such as **Opus 5.5 Max Fast**.
 
 1. Open the model menu in the message box.
 2. Choose a favourite, or open **All models** and choose another model.
-3. Adjust the effort or **Fast** in the menu if needed.
+3. Open **Effort** to change the effort if needed.
+   The **Effort** row shows the current effort.
+4. Turn **Fast** on or off if needed.
 
-On a phone, **All models** replaces the menu.
+On a phone, **All models** and **Effort** replace the menu.
 Select **Back** to return.
 With no favourites to show, the menu starts with **All models**.
 A favourite gets a mark only while all three settings match your current choice.
@@ -361,6 +363,7 @@ Ask a follow-up at the foot of the panel.
 A follow-up during a turn guides that turn.
 **Stop** ends the turn.
 Select **Expand** to open the session in its tab.
+On a computer, click outside the panel to close it.
 Closing the panel leaves the agent working.
 
 The text keeps a mark that every member sees.

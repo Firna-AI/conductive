@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import rowMenu from '../../../docs/mockups/src/components/workspaces/RowMenu.module.css'
+import { classes } from '../../ui/components/common/classes'
+import rowMenu from '../../ui/components/workspaces/RowMenu.module.css'
 import type { RowRename } from './row-menu'
 
 /**

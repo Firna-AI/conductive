@@ -1,13 +1,13 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { guideClasses } from '../../../docs/mockups/src/components/workspaces/guideLines'
-import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
+import { classes } from '../../ui/components/common/classes'
+import { guideClasses } from '../../ui/components/workspaces/guideLines'
+import { WorkspaceMark } from '../../ui/components/workspaces/WorkspaceMark'
 import {
   WorkspaceName,
   type EmphasisClasses,
-} from '../../../docs/mockups/src/components/workspaces/WorkspaceName'
-import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
-import { listMarkLabel } from '../../../docs/mockups/src/components/workspaces/status'
+} from '../../ui/components/workspaces/WorkspaceName'
+import styles from '../../ui/components/workspaces/WorkspaceRow.module.css'
+import { listMarkLabel } from '../../ui/components/workspaces/status'
 import { formatAgo } from '../../app/time'
 import { nameLabel } from '../../shared/name-label'
 import { MAX_WORKSPACE_DEPTH } from '../../shared/workspace-tree'

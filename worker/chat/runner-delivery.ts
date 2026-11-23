@@ -19,6 +19,7 @@ import type { PendingCommand } from './pending-command'
 import { AttachmentPreparation } from './attachment-delivery'
 import { RunnerCommandPreparation } from './runner-command-preparation'
 import type { RepositoryMoves } from './runner-repository-move'
+import { queueCapabilityNotices } from './capability-notices'
 
 export class RunnerDelivery {
   private readonly preparations: AttachmentPreparation
@@ -63,6 +64,13 @@ export class RunnerDelivery {
     detach: () => void,
   ): Promise<void> {
     if (!active.state.ready) return
+    if (active.state.capabilityNotices === true)
+      await this.store.change(
+        active.state.workspace.id,
+        (view) =>
+          queueCapabilityNotices(view, active, this.dependencies.randomId),
+        this.publish,
+      )
     while (await this.flushPending(active, isCurrent, detach)) {
       if (!isCurrent()) return
     }
@@ -122,7 +130,7 @@ export class RunnerDelivery {
       if (state !== 'send') return state
     }
     await this.store.reportTurnEnds()
-    const outbound: ResolvedCommand =
+    let outbound: ResolvedCommand =
       checked.type === 'turn' || checked.type === 'message'
         ? {
             ...checked,
@@ -164,6 +172,20 @@ export class RunnerDelivery {
           publish,
         )
       return 'skip'
+    }
+    if (outbound.type === 'turn') {
+      try {
+        outbound = await this.commands.prepareCapabilities(active, outbound)
+      } catch (error) {
+        await this.dependencies.turnDispatchFailed(
+          active.state.workspace.id,
+          outbound.turnId,
+          publish,
+        )
+        if (!(error instanceof RunnerAccessDenied)) throw error
+        detach()
+        return 'skip'
+      }
     }
     const beganTurn = await this.dispatch.begin(
       active.state.workspace.id,

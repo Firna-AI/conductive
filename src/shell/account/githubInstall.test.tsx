@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
+import { getStartedCopy } from '../../ui/screens/getStartedCopy'
 import { routes } from '../../app/router'
 import { Store } from '../../app/store'
 import { ManualFocus, requestLines } from '../../app/test-kit'

@@ -1,12 +1,10 @@
 import { defineComponent } from '@mokly/mokly'
 import {
-  MonoBlock,
   Section,
   SectionText,
-} from '../../../components/settings/Section'
-import { secretNote } from '../../../components/settings/envVarCopy'
-import { inviteCodeCopy } from '../../../components/settings/inviteCodeCopy'
-import { startupScript } from '../../../fixtures/computer'
+} from '../../../../../../src/ui/components/settings/Section'
+import { secretNote } from '../../../../../../src/ui/components/settings/envVarCopy'
+import { inviteCodeCopy } from '../../../../../../src/ui/components/settings/inviteCodeCopy'
 import { inviteLimit } from '../../../fixtures/waitlist'
 import { actionButton } from '../common/actions.mockup'
 
@@ -55,23 +53,6 @@ export const sectionText = defineComponent({
       slots: { children: secretNote },
     },
   ],
-})
-
-/** Preformatted text in a tinted block, registered with Mokly. */
-export const monoBlock = defineComponent({
-  slug: 'mono-block',
-  title: 'Mono block',
-  description:
-    'Preformatted text in a tinted block, such as a script that a member reads without an edit field. Its own page shows the startup script of Acme.',
-  relatedDocs: ['docs/mockups/design.md'],
-  propSchema: {
-    type: 'object',
-    additionalProperties: false,
-    required: ['text'],
-    properties: { text: { type: 'string' } },
-  } as const,
-  props: { text: startupScript },
-  render: (props) => <MonoBlock text={props.text} />,
 })
 
 /**

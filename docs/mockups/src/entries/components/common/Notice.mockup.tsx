@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { Notice } from '../../../components/common/Notice'
+import { Notice } from '../../../../../../src/ui/components/common/Notice'
 import { actionButton } from './actions.mockup'
 import { iconKeys, icons } from './icons'
 

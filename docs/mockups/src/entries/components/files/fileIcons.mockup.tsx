@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { EntryIcon } from '../../../components/files/fileIcons'
+import { EntryIcon } from '../../../../../../src/ui/components/files/fileIcons'
 
 /**
  * The icon of an entry of the tree, registered with Mokly. The app draws

@@ -1,16 +1,16 @@
 import { memo, useMemo } from 'react'
-import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
-import itemStyles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import headingStyles from '../../../docs/mockups/src/components/common/MarkdownHeadings.module.css'
-import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+import { AgentBlocks } from '../../ui/components/chat/AgentBlocks'
+import itemStyles from '../../ui/components/chat/ChatItemView.module.css'
+import { classes } from '../../ui/components/common/classes'
+import headingStyles from '../../ui/components/common/MarkdownHeadings.module.css'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
 import { agentBlocks } from '../markdown/agent-blocks'
 import { answerDrawing } from './answer-drawing'
 
 /**
  * An answer of the agent: paragraphs, headings, lists, code, quotes, rules,
  * and tables, as `agentBlocks` reads them with the shared Markdown parser,
- * drawn by the `AgentBlocks` of the mockups. A heading is `h1` to
+ * drawn by the shared `AgentBlocks`. A heading is `h1` to
  * `h6`, at the level that the agent wrote, and its look comes from the
  * heading style that the file preview shares. Quotes, rules, bold text,
  * emphasis, strikethrough, and task boxes take the look of the shared

@@ -5,13 +5,13 @@ import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
-import { MentionAnchor } from '../../../docs/mockups/src/components/chat/MentionList'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/chat/Composer.module.css'
+import { MentionAnchor } from '../../ui/components/chat/MentionList'
 import {
   SessionLoginLabel,
   type SessionLogin,
-} from '../../../docs/mockups/src/components/chat/SessionLogin'
+} from '../../ui/components/chat/SessionLogin'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { Draft, MentionRequest } from '../state/chat-snapshot'
 import { IconButton } from '../ui/actions'

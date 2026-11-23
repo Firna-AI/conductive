@@ -1,7 +1,7 @@
 import type { RefCallback } from 'react'
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { Plus } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/settings/FavouritesSection.module.css'
+import styles from '../../ui/components/settings/FavouritesSection.module.css'
 import { agentGroups } from '../../chat/components/model-rows'
 import { ActionButton } from '../ui/actions'
 import { MenuButton, type MenuEntry } from '../ui/Menu'

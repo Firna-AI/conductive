@@ -2,9 +2,9 @@
 
 import { act } from 'react'
 import { describe, expect, test } from 'vitest'
-import guideStyles from '../../../docs/mockups/src/components/workspaces/GuideLines.module.css'
-import sectionStyles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
-import rowStyles from '../../../docs/mockups/src/components/workspaces/WorkspaceRow.module.css'
+import guideStyles from '../../ui/components/workspaces/GuideLines.module.css'
+import sectionStyles from '../../ui/components/workspaces/SectionList.module.css'
+import rowStyles from '../../ui/components/workspaces/WorkspaceRow.module.css'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import { groupWorkspaces } from '../../app/sections'

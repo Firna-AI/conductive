@@ -6,8 +6,8 @@ parts Start from and Target, and the refusals of the branch check, as the
 app builds them.
 [Start from a branch](../../docs/protocol/start-from-a-branch.md) states
 the requirements, and the mockups under `app/new-workspace/start-branch`
-draw them. The words come from `branchCopy.ts` of the mockups, and the
-parts reuse their CSS modules.
+draw them. The words come from the shared `branchCopy.ts`, and the
+parts reuse the shared CSS modules.
 
 ## The branch of a draft
 
@@ -58,9 +58,10 @@ parts reuse their CSS modules.
   `branch-lists.ts`. While a read runs, the list loads, also for Try again
   after a failure. Only the answer of the newest read shows.
 - `BranchMenu` in `../shell/new-workspace/BranchMenu.tsx` draws the open
-  dropdown in two parts, with the CSS of `BranchMenu.module.css` of the
-  mockups: Start from, then Target for a picked branch that is not the
-  default branch. The label Start from shows also without Target.
+  dropdown in two parts, with the CSS of the shared
+  `BranchMenu.module.css`: Start from, then Target for a picked branch
+  that is not the default branch. The label Start from shows also without
+  Target.
 - A sign-out, or a sign-in of another person, forgets the lists, because
   GitHub shows each member only what that member may read.
 - `branchRows` in `branch-rows.ts` gives the rows and the line under them.
