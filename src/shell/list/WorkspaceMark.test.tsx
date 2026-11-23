@@ -38,6 +38,9 @@ describe('WorkspaceMark', () => {
       const cells = cellClasses(github, 'starting')
       expect(count(cells, styles.chase)).toBe(8)
       expect(cells[4]).not.toContain(styles.chase)
+      // Without motion, every cell stays lit, so the start does not read as
+      // an agent that works: the ring is lit and the centre lights when still.
+      expect(count(cells, styles.lit)).toBe(8)
       expect(cells[4]).toContain(styles.litWhenStill)
     },
   )

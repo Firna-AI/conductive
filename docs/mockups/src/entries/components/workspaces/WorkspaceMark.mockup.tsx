@@ -20,7 +20,7 @@ export const workspaceMark = defineComponent({
   slug: 'workspace-mark',
   title: 'Workspace mark',
   description:
-    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list.',
+    'The list mark of a workspace in the list, the command palette, and the workspace chips: the GitHub state of its pull request in the tone of its pull request bar, a light that runs around the ring while the agent works, the workspace starts, or the checks run, and a pulse while the agent needs input. Its own page shows a merged pull request of a stopped workspace, the mark of almost every list.',
   relatedDocs: ['docs/mockups/design-marks.md'],
   propSchema: {
     type: 'object',
