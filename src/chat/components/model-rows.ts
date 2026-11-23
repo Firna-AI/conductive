@@ -45,7 +45,7 @@ export type ModelRow =
  * `muted` follows the label in the muted colour, such as the current
  * effort after Effort.
  */
-export type ModelSubmenuRow = {
+type ModelSubmenuRow = {
   kind: 'submenu'
   key: 'all-models' | 'effort'
   label: string
