@@ -33,28 +33,25 @@ The brainstorm of 2026-11-23 gave these items. The user answered them on
   mostly pure renames and one simple rule, and C can still follow.
   The options check added **D**: move each pure part by kind, also the
   about 100 pure parts that nothing in the app uses, and start each new
-  part in `src/ui/`. Effort: Medium. The check kept A, because A keeps
-  `src/` to shipped code and the lint forces each later move.
-- **Decision 2, one move or a staged move: A.** One scripted move in
-  one pull request, after pull request #569 merges. The pull request
-  gives a map of old paths to new paths, so that each open branch can
-  fix its imports with the same script. The other option was B, one
-  folder for each pull request. Reason: Git follows pure renames, and one
-  path map fixes each branch in one step. The options check added two
-  options, which wait for the user:
-  - **C.** Start the move when the script is ready, without a wait for
-    #569. That branch then runs the script like each other branch. Cost:
-    one more merge pass on its 179 files. Effort: Small.
-  - **D.** Land the pull request with a rebase merge, so the rename
-    commit stays apart from the edits on `main`. The ruleset allows it,
-    but the repository usually squashes. Effort: Small.
-  The check kept A, with C when #569 stays open.
+  part in `src/ui/`. Effort: Medium. The user kept A on 2026-11-23,
+  because A keeps `src/` to shipped code and the lint forces each later
+  move.
+- **Decision 2, one move or a staged move: C.** One scripted move in
+  one pull request, started when the script is ready. Pull request #569
+  does not hold it. #569 and each other open branch run the same script
+  after they merge `main`, with the path map that the pull request
+  gives. The user first chose A on 2026-11-23, the same move after #569
+  merges. The options check then added C and D, and the user chose C on
+  2026-11-23. The other options were B, one folder for each pull
+  request, and D, a rebase merge that keeps the rename commit apart on
+  `main`. Reason: #569 has conflicts and can stay open for long, and the
+  path map makes its extra merge pass small.
 - **Decision 3, a lint that keeps the imports one way: B.** An ESLint
   `no-restricted-imports` rule blocks imports of `docs/mockups/` from
   `src/`, `worker/`, and `desktop/`. Development code and tests stay
   exempt. The other option was A, no lint. Reason: it is small and it
   keeps the result of decision 1. The options check added two options,
-  which wait for the user:
+  and the user kept B on 2026-11-23:
   - **C.** A gate step walks the run-time imports from each entry point
     and fails on `docs/mockups/`. It reuses the walker of Milestone 2.
     It also finds chains through exempt `dev/` and test files, dynamic
@@ -175,7 +172,7 @@ Depends on: none
 
 ## Milestone 3: The move
 
-Depends on: 1, 2. Waits for pull request #569 to merge (decision 2).
+Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
 
 - [ ] Merge `origin/main`. Run the script. Commit the pure renames apart
       from the edits. A squash merge joins the two commits, so keep the
