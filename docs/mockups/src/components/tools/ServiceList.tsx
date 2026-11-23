@@ -6,7 +6,6 @@ import {
   SquareTerminal,
 } from 'lucide-react'
 import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
-import { paths } from '../../paths'
 import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import { IconButton } from '../../../../../src/ui/components/common/actions'
 import { classes } from '../../../../../src/ui/components/common/classes'
@@ -20,6 +19,7 @@ import {
   serviceSourceText,
   type ServiceEntry,
 } from '../../../../../src/ui/components/tools/serviceCopy'
+import { usePreviewPage } from './previewLink'
 import { serviceMenu } from './serviceMenu'
 import {
   ServiceState,
@@ -54,13 +54,14 @@ function ServicePorts(props: {
   ports: readonly number[]
   current: number | null
 }) {
+  const preview = usePreviewPage()
   if (props.ports.length === 0) {
     return <span className={styles.noPort}>{servicesCopy.noPort}</span>
   }
   return (
     <>
       {props.ports.map((port) => (
-        <ScreenLink asChild key={port} to={paths.preview}>
+        <ScreenLink asChild key={port} to={preview}>
           <button
             aria-current={port === props.current ? 'page' : undefined}
             aria-label={serviceControlCopy.port(port)}

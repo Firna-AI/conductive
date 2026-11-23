@@ -19,9 +19,10 @@ const macLockup = 22
  * The header of the page. In the Mac app the window has no title bar, so
  * the header is the top bar of the window. It is as high as the top bars
  * of the app, it moves the window, and in a window it keeps the space of
- * the window buttons free. In full screen it gives that space back.
+ * the window buttons free. In full screen it gives that space back. The
+ * wordmark leads to the home page of the site, except in a phone app.
  */
-function Header() {
+function Header(props: { phoneApp: boolean }) {
   const mac = useMacApp()
   return (
     <header
@@ -34,9 +35,26 @@ function Header() {
       <Wordmark
         height={mac ? macLockup : undefined}
         place="sign-in"
-        to={paths.marketing}
+        to={props.phoneApp ? undefined : paths.marketing}
       />
     </header>
+  )
+}
+
+/**
+ * The foot of the page: the way back to the home page of the site, and
+ * the legal links. A phone app keeps only the legal links.
+ */
+function Foot(props: { phoneApp: boolean }) {
+  return (
+    <footer className={styles.footer}>
+      {props.phoneApp ? null : (
+        <ScreenLink className={styles.back} to={paths.marketing}>
+          {signInCopy.home}
+        </ScreenLink>
+      )}
+      <LegalLinks align="center" />
+    </footer>
   )
 }
 
@@ -45,7 +63,9 @@ function Header() {
  * middle, and the legal links at the foot. The sign-in, the sign-in of a
  * join link, and the waitlist share it. It stands alone, without the rail,
  * because the person has no org and no app access yet. A phone draws the
- * card without its outline.
+ * card without its outline. A phone app links to no page of the site
+ * except the legal pages, and the pages that stop a phone app, such as
+ * Update the app, have no foot.
  */
 export function SignInFrame(props: {
   /** The name of the card, for assistive technology. */
@@ -53,12 +73,20 @@ export function SignInFrame(props: {
   viewport: Viewport
   /** A wider card, for a list or a field with its button. */
   wide?: boolean
+  /**
+   * The page of a phone app: the wordmark is no link, and the foot has no
+   * way back to the home page of the site.
+   */
+  phoneApp?: boolean
+  /** A page without a foot, such as a page that stops a phone app. */
+  bare?: boolean
   children: ReactNode
 }) {
   const mobile = props.viewport === 'mobile'
+  const phoneApp = props.phoneApp ?? false
   const page = (
     <div className={classes(styles.page, mobile && styles.mobile)}>
-      <Header />
+      <Header phoneApp={phoneApp} />
       <div className={styles.body}>
         <section
           aria-label={props.label}
@@ -67,12 +95,7 @@ export function SignInFrame(props: {
           {props.children}
         </section>
       </div>
-      <footer className={styles.footer}>
-        <ScreenLink className={styles.back} to={paths.marketing}>
-          {signInCopy.home}
-        </ScreenLink>
-        <LegalLinks align="center" />
-      </footer>
+      {props.bare ? null : <Foot phoneApp={phoneApp} />}
     </div>
   )
   if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>

@@ -26,6 +26,7 @@ import { statsTab } from '../entries/components/screens/accountStats.mockup'
 import { resetShortcutsDialog } from '../entries/components/settings/ResetShortcutsDialog.mockup'
 import { shortcutsTab } from '../entries/components/settings/ShortcutsSections.mockup'
 import { thisMacSection } from '../entries/components/settings/ThisMacSection.mockup'
+import { NoticesSection } from '../components/phone/NoticesSection'
 import { workspaceSections } from '../components/workspaces/sections'
 import { sidebar as sidebarPart } from '../entries/components/workspaces/Sidebar.mockup'
 import { fastChoice } from '../fixtures/agents'
@@ -39,6 +40,7 @@ import { viewerMembership } from '../fixtures/members'
 import { paths } from '../paths'
 import type { AccountState, AccountView } from './accountState'
 import { agentsFor, hiddenModelsFor } from './accountAgents'
+import { deletionDialog, GeneralDeletion } from './accountDeletion'
 import { defined, plainData } from '../defined'
 
 const connectedRail: RailState = { orgs: orgList, current: 'account' }
@@ -49,7 +51,8 @@ const firstRunRail: RailState = { orgs: [], current: 'account', firstRun: true }
 /**
  * The General tab: the GitHub sign-in, the GitHub App that every org
  * shares, then the invite code of the user. The orgs that the user can
- * restore come last, only while one exists.
+ * restore follow, only while one exists. The request of an account
+ * deletion ends the tab.
  */
 function GeneralTab(props: { state: AccountState }) {
   return (
@@ -69,6 +72,7 @@ function GeneralTab(props: { state: AccountState }) {
         moklyInstance="deleted-orgs"
         state={props.state.deletedOrgs}
       />
+      <GeneralDeletion state={props.state.deletion} />
     </>
   )
 }
@@ -94,6 +98,9 @@ function TabContent(props: {
     case 'preferences':
       return (
         <>
+          {state.notices === undefined ? null : (
+            <NoticesSection setting={state.notices} />
+          )}
           <favouritesSection.Component
             favourites={state.favourites}
             hiddenModels={hiddenModelsFor({ ...state, tab: 'preferences' })}
@@ -133,11 +140,13 @@ function TabContent(props: {
 
 /**
  * The account, in tabs. General holds the GitHub sign-in, the GitHub App,
- * and the invite code of the user. Agents holds the logins of Claude and
- * Codex that every org shares, with the share setting of each login and
- * the host of an own endpoint. Preferences holds the favourites of the
- * model menu, then how new workspaces start: their model, and how New
- * workspace opens. Keyboard
+ * the invite code of the user, and Delete account. Agents holds the
+ * logins of Claude and Codex that every org shares, with the share
+ * setting of each login and the host of an own endpoint. Preferences
+ * holds the favourites of the model menu, then how new workspaces start:
+ * their model, and how New
+ * workspace opens. The phone apps start it with the Notices section of
+ * `state.notices`. Keyboard
  * shortcuts holds the keys of the host: the Mac app, or the browser and the
  * keyboard of `state.host`. Stats holds the person's own counts. The Mac
  * app adds This Mac, with the commands
@@ -183,7 +192,8 @@ export function AccountScreen(props: {
       />
     </pagePart.Component>
   )
-  // Reset all asks first: a dialog over the account, or a sheet on a phone.
+  // Reset all and the request of a deletion ask first: a dialog over the
+  // account, or a sheet on a phone.
   const dialog =
     state.tab === 'shortcuts' && state.keyChange === 'reset-all' ? (
       <resetShortcutsDialog.Component
@@ -192,7 +202,9 @@ export function AccountScreen(props: {
         moklyInstance="reset-shortcuts-dialog"
         viewport={props.viewport}
       />
-    ) : undefined
+    ) : (
+      deletionDialog(state, props.viewport)
+    )
   // The open menu of the default model lies above the page, at its picker.
   const modelMenu =
     state.tab === 'preferences' && state.modelMenu === 'open-fast' ? (

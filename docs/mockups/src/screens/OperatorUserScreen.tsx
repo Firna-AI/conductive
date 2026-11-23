@@ -8,6 +8,7 @@ import { OperatorPage } from '../components/operator/OperatorPage'
 import type { QuestionTarget } from '../../../../src/ui/components/operator/operatorCopy'
 import { SuspendDialog } from '../components/operator/SuspendDialog'
 import { UserDetails } from '../components/operator/UserDetails'
+import { deletionUserPages } from '../fixtures/deletionRequests'
 import { accessPages } from '../fixtures/operatorAccessPages'
 import { userPages, type UserPage } from '../fixtures/operatorUserPages'
 import { paths } from '../paths'
@@ -23,8 +24,9 @@ export const operatorUserSchema = {
      * the waitlist, approved with the email not sent yet, or sent; Kenji
      * Watanabe on the waitlist with no verified email; a user who came in
      * by an invite code, a referral code, an org invitation, or as an
-     * operator; the approval of Kenji, whose email never went; and a new
-     * sign-in and a person who waited, both let in by open sign-up.
+     * operator; the approval of Kenji, whose email never went; a new
+     * sign-in and a person who waited, both let in by open sign-up; and
+     * Dana Kim in use, after she requested the deletion of her account.
      */
     page: {
       enum: [
@@ -43,6 +45,7 @@ export const operatorUserSchema = {
         'emailNotSent',
         'openSignUp',
         'openSignUpWaited',
+        'deletion',
       ],
     },
     /**
@@ -60,6 +63,7 @@ type PageKey = OperatorUserState['page']
 const pages: Readonly<Record<PageKey, UserPage>> = {
   ...userPages,
   ...accessPages,
+  ...deletionUserPages,
 }
 
 /** The question of Suspend user, for the pages that draw it. */

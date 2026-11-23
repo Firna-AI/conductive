@@ -5,7 +5,7 @@ import { accountGeneral, accountSchema } from '../../../../screens/accountState'
 export const accountDeletedOrgs = defineScreen({
   title: 'Deleted orgs',
   description:
-    'Cal deleted Acme Labs, so the rail no longer shows it. The last section of the General tab, Deleted orgs, lists it with its faded tile, the day when everything is deleted, and Restore. Restore puts Acme Labs back in the rail, and the section goes away with its last org. The section shows only while the user has a deleted org, so app/account has none.',
+    'Cal deleted Acme Labs, so the rail no longer shows it. The Deleted orgs section of the General tab, just before Delete account, lists it with its faded tile, the day when everything is deleted, and Restore. Restore puts Acme Labs back in the rail, and the section goes away with its last org. The section shows only while the user has a deleted org, so app/account has none.',
   rationale:
     'On 12 November 2026 the user asked for deleted orgs to leave the rail, because the faded tiles stayed in the way after a delete, and for Restore to move to the Account page. This replaces the rail part of option D of decision 30. A deleted org is about the user, not about an open org, so it sits on the account, beside what spans all orgs. Only admins see a deleted org, as before. The address of a deleted org keeps its page with Restore, as app/orgs/deleted shows, so an old link still works.',
   relatedDocs: [],

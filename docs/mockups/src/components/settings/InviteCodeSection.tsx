@@ -56,9 +56,9 @@ function Share() {
 }
 
 /**
- * The invite code of the user, at the end of the account: the invite link
- * with Copy, the code, and how many of the invites are left. During the
- * pause the link stays, and a notice says when it works again. During open
+ * The invite code of the user, on the General tab of the account: the
+ * invite link with Copy, the code, and how many of the invites are left.
+ * During the pause the link stays, and a notice says when it works again. During open
  * sign-up the link stays too, and a notice says that anyone can sign up
  * now. The pause wins, so its notice shows when both are on. A code that
  * is used up or turned off shows no link, because it lets nobody in. A

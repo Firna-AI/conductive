@@ -14,7 +14,7 @@ export const secretRequests = defineScreen({
   relatedDocs: [],
   propSchema: workspaceStateSchema,
   props: { ...readyWorkspace, conversation: 'secret-waiting' },
-  useCasePaths: ['user-flows/secret-request'],
+  useCasePaths: ['user-flows/secret-request', 'user-flows/open-a-notice'],
   render: (props, context) => (
     <WorkspaceScreen state={props} viewport={context.viewport} />
   ),

@@ -7,8 +7,9 @@ endpoint form, and the pickers that hide the models that an endpoint does
 not list.
 
 `app/account` shows the General tab of the account: the sign-in, GitHub,
-and the invite code. Its five tabs are links, as the tabs of the org
-settings are. Its child pages:
+the invite code, and Delete account. Every page of General ends with
+Delete account, because every account can request its deletion. Its five
+tabs are links, as the tabs of the org settings are. Its child pages:
 
 - `app/account/agents` shows the Agents tab, with Claude connected by a
   subscription token and Codex by an API key. The user asked for this tab
@@ -21,7 +22,9 @@ settings are. Its child pages:
   effort, and the choice of how New workspace opens on a computer, the page
   or a dialog. Its `not-saved` variant shows a save of that choice that
   failed, which keeps the saved choice. Its `model-menu` variant shows the
-  menu of the picker open, with the favourites first and Fast on.
+  menu of the picker open, with the favourites first and Fast on. The phone
+  apps start the tab with the Notices section, as
+  [the phone apps](phone-app.md#notices) give.
 - `app/account/setup` shows General at the first run, with nothing
   connected. Its `agents` variant shows the Agents tab at the first run,
   with neither agent connected.
@@ -48,10 +51,24 @@ settings are. Its child pages:
 - `app/account/invites` has the invite code while sign-ups are paused.
   [The waitlist, suspensions, and the operator](catalogue-operator.md)
   gives its variants.
-- `app/account/deleted-orgs` has the Deleted orgs section at the end of
-  General, with Acme Labs and Restore. Its `suspended` variant
+- `app/account/deleted-orgs` has the Deleted orgs section of General, just
+  before Delete account, with Acme Labs and Restore. Its `suspended` variant
   has the org after a suspension, without Restore. Its `failed` variant
   has a Restore that failed, with the error under the row.
+- `app/account/deletion` has the request of an account deletion, from
+  decision 4 A of the universal Expo app plan. The Delete account section
+  ends General, after Deleted orgs, with Request account deletion. Its
+  canonical screen is General, as `app/account` shows it, and the page
+  holds the states of the request. Its `confirm` variant has the question: a
+  dialog on desktop, and a sheet on a phone. Its `sending` variant has the
+  question while the request runs, with a spinner in Request deletion and
+  Cancel off. Its `failed` variant has a request that did not reach the
+  server: the question stays open with the error. Its `requested` variant
+  has the section after the request, with Requested beside the title and
+  the day of the request in place of the button. The words name no time
+  until the deletion, no way to withdraw a request, nothing about orgs and
+  workspaces, nothing about the use of the account until the deletion,
+  and no email, because the plan has not decided them yet.
 - `app/account/shortcuts` shows the Keyboard shortcuts tab in a browser, as
   [the keyboard shortcuts page](catalogue-shortcuts.md) gives.
 - `app/account/stats` shows the Stats tab, after Keyboard shortcuts. The

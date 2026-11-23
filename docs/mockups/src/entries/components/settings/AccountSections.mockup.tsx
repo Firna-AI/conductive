@@ -1,9 +1,11 @@
 import { defineComponent } from '@mokly/mokly'
 import {
   AgentsSection,
+  DeletionSection,
   GitHubSection,
   SignInSection,
 } from '../../../components/settings/AccountSections'
+import { accountRequest } from '../../../fixtures/deletionRequests'
 import { accountLogins } from '../../../fixtures/logins'
 import { acmeLoginUse } from '../../../fixtures/orgLogins'
 import { agentListProperties, loginSharesSchema } from './loginSchemas'
@@ -91,6 +93,33 @@ export const agentsSection = defineComponent({
         logins: { codex: accountLogins.codex },
         orgLogins: acmeLoginUse(),
       },
+    },
+  ],
+})
+
+/** The request of an account deletion on General, registered with Mokly. */
+export const deletionSection = defineComponent({
+  slug: 'deletion-section',
+  title: 'Deletion section',
+  description:
+    'The request of an account deletion at the end of the General tab of the account: Delete account, with what the request asks, and Request account deletion, which asks first. After the request, the section says Requested beside its title and gives the day of the request in place of the button. Its own page shows the section before a request.',
+  relatedDocs: ['docs/mockups/catalogue-account.md'],
+  propSchema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      /** The day of the request. Without it, the section offers the request. */
+      requested: { type: 'string', minLength: 1 },
+    },
+  } as const,
+  render: (props) => <DeletionSection requested={props.requested} />,
+  variants: [
+    {
+      slug: 'requested',
+      title: 'Requested',
+      description:
+        'The section after the request: Requested beside the title, and the day of the request.',
+      props: { requested: accountRequest.day },
     },
   ],
 })

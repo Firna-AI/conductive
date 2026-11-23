@@ -2,18 +2,18 @@
 
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
-tabs, the tables, the long runs, the Waitlist tab, the codes, and the
-approval email of the operator section. It also gives Suspend, Lift, and
+tabs, the tables, the long runs, the Waitlist tab, the Deletions tab, the
+codes, and the approval email of the operator section. It also gives Suspend, Lift, and
 Approve, the daily chart, the notice of a pause, the waitlist switch, the
 Providers tab, the account of each org, the switch of that account, and
 the account choice of an operator on Create org.
 
 - The operator section has the tabs Overview, Orgs, Users, Waitlist,
-  Invite codes, Providers, and Settings, from `OperatorPage` in
-  `src/components/operator/`. On a phone the seven tabs keep one line while
+  Deletions, Invite codes, Providers, and Settings, from `OperatorPage` in
+  `src/components/operator/`. On a phone the eight tabs keep one line while
   they fit, with the `flow` mode of `LinkTabs`. When they do not fit, the
   last tabs move to a second line, so that every tab shows. A phone of
-  390 px puts Providers and Settings on the second line. The Stop time
+  390 px puts Invite codes, Providers, and Settings on the second line. The Stop time
   box of the Settings tab uses the segmented control of `@firna/ui`,
   which wraps its five choices on a phone. The overview uses
   the stat tiles, the line chart, the table, and the skeletons of
@@ -55,6 +55,15 @@ the account choice of an operator on Create org.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
   a new tab, with a small mark for it. After Approve, the row keeps its
   place with Approved and the state of its email, in plain words.
+- The Deletions tab lists the account deletion requests that wait, oldest
+  first, as the Waitlist tab lists the people who wait. Each row gives the
+  initials disc, the login as a link to the page of the user, the name,
+  and the day of the request. A phone keeps both columns. The rows show
+  no email address, as the rows of the Users and Waitlist tabs show none.
+  The page of the user gives the day of the request in a notice at the
+  top. Neither the tab nor the notice offers an action on a request. The
+  words live in `deletionCopy.ts` in `src/components/operator/`, because
+  only the mockups draw them so far.
 - A code shows in the monospace font, with Copy beside it. A code that
   still works also has Copy join link, for a link such as
   `https://app.conductive.build/join/<code>` on the domain of the app.

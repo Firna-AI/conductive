@@ -1,1 +1,3 @@
-{ "order": ["suspend", "suspended", "waiting", "access", "referral"] }
+{
+  "order": ["suspend", "suspended", "waiting", "access", "referral", "deletion"]
+}

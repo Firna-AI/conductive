@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 import { noop } from '../../../../../src/ui/noop'
-import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../../../../../src/ui/components/common/classes'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
@@ -13,6 +12,7 @@ import {
   serverDescription,
 } from '../../../../../src/ui/components/tools/previewCopy'
 import { servicesCopy } from '../../../../../src/ui/components/tools/serviceCopy'
+import { usePreviewPage } from './previewLink'
 import { ToolHeading } from './ServiceList'
 import styles from '../../../../../src/ui/components/tools/PortForm.module.css'
 
@@ -42,9 +42,10 @@ function PortField(props: { label: string; placeholder: string }) {
 function ServerRow(props: { server: ListeningPort; current: boolean }) {
   const { server } = props
   const description = serverDescription(server)
+  const preview = usePreviewPage()
   return (
     <li>
-      <ScreenLink asChild to={paths.preview}>
+      <ScreenLink asChild to={preview}>
         <button
           aria-current={props.current ? 'page' : undefined}
           aria-label={description}

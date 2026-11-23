@@ -19,6 +19,7 @@ export const appShell = defineScreen({
     'user-flows/open-workspace-from-palette',
     'user-flows/archive-from-list',
     'user-flows/create-org',
+    'user-flows/phone-sign-in',
   ],
   render: (props, context) => (
     <WorkspaceListScreen state={props} viewport={context.viewport} />

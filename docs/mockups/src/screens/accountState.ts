@@ -5,8 +5,10 @@ import { inviteStates } from '../../../../src/ui/components/settings/inviteCodeC
 import { shortcutSearches } from '../components/settings/shortcutSearch'
 import { keyChanges } from '../components/settings/ShortcutsSections'
 import { deletedOrgStates } from '../components/settings/DeletedOrgsSection'
+import { accountDeletionStates } from '../components/settings/AccountSections'
 import { browserHosts } from '../fixtures/shortcutHosts'
 import { favouriteSectionStates } from '../fixtures/favourites'
+import { noticeSettings } from '../components/phone/NoticesSection'
 
 export const accountSchema = {
   type: 'object',
@@ -33,6 +35,7 @@ export const accountSchema = {
     'favourites',
     'deletedOrgs',
     'stats',
+    'deletion',
   ],
   properties: {
     /**
@@ -166,6 +169,13 @@ export const accountSchema = {
      */
     favourites: { enum: favouriteSectionStates },
     /**
+     * The Notices section at the top of Preferences, which only the phone
+     * apps show: notices off in the settings of the phone after a denial,
+     * off after Not now, or on. A page without it is the web app or the Mac
+     * app, which get no push notices, so it shows no section.
+     */
+    notices: { enum: noticeSettings },
+    /**
      * The orgs that the user deleted and can still restore: none, so the
      * General tab has no Deleted orgs section, Acme Labs with Restore, Acme
      * Labs after the operator suspended it, or a Restore that failed.
@@ -176,6 +186,15 @@ export const accountSchema = {
      * to load, or shown for a new account with no workspace and no automation.
      */
     stats: { enum: ['ready', 'loading', 'failed', 'empty'] },
+    /**
+     * The request of an account deletion at the end of General, from
+     * decision 4 A of the universal Expo app plan: the section with Request
+     * account deletion, the question over General, the question while the
+     * request runs, the question after a request that failed, or the
+     * section after the request. Every account has the section, so each
+     * page of General shows it.
+     */
+    deletion: { enum: accountDeletionStates },
   },
 } as const
 
@@ -213,6 +232,7 @@ export const accountGeneral: AccountState = {
   favourites: 'saved',
   deletedOrgs: 'none',
   stats: 'ready',
+  deletion: 'ready',
 }
 
 /** The Agents tab of a connected account, in Chrome on a Mac. */

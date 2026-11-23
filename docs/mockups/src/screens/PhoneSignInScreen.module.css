@@ -1,0 +1,9 @@
+/*
+ * The title of the card while the app finishes the sign-in, after the
+ * spinner on the same line.
+ */
+.finishing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}

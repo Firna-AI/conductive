@@ -151,7 +151,7 @@ as [`src/ui/components/chat/`](../../src/ui/components/chat/).
 | `src/components/`         | Layout and parts that only the mockups use, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, and `src/servicePaths.ts` for the services of the Preview tool |
+| `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, `src/deletionPaths.ts` for the request of an account deletion, and `src/phonePaths.ts` for the states that only the phone apps have |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
 | `../../src/ui/`           | The shared UI: the parts that the app uses too, with the screen styles and words, the design tokens in `design/`, the theme in `theme.ts`, the global stylesheet `render.css`, and Inter with its licence in `fonts/`. Its [README](../../src/ui/README.md) gives the folders |
 | `../../src/shared/brand.ts` | The name "Conductive", its domains, its repository, and DMG names |
@@ -249,6 +249,12 @@ code on the Account page, and open sign-up.
 
 [The Mac app](mac-app.md) gives the screens of the Mac app: its window, the
 waitlist, the commands that an agent runs on the Mac, and This Mac.
+
+## The phone apps
+
+[The phone apps](phone-app.md) gives the states that only the iOS app and
+the Android app have: sign-in in the system browser, Update the app, the
+offline screen, notices, and the in-app browser.
 
 ## The marketing site
 
