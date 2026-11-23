@@ -5,26 +5,27 @@ import {
   copiedText,
   isSelectAll,
   selectAllIn,
-  type CopyLine,
+  type CopySource,
 } from './code-selection'
 import styles from './code.module.css'
 
 /**
  * The scroll box of a code or diff view. A press in the text gives it the
  * focus, so select all selects the content of the box only, and not the
- * whole app. With `lines`, a copy gives the source text of the selected
- * lines, with their empty lines and line ends, in place of the text that
- * the browser reads from the rows.
+ * whole app. With `source`, a copy gives the source text of the selected
+ * lines, with their empty lines, in place of the text that the browser
+ * reads from the rows. A copy with no source text, such as at a caret,
+ * stays the browser's, so the clipboard keeps what it holds.
  */
 export function CodeBox({
   ref,
   label,
-  lines,
+  source,
   children,
 }: {
   ref: Ref<HTMLDivElement>
   label: string
-  lines?: readonly CopyLine[]
+  source?: CopySource
   children: ReactNode
 }) {
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -34,12 +35,11 @@ export function CodeBox({
   }
   const onCopy = (event: ClipboardEvent<HTMLDivElement>) => {
     const selection = window.getSelection()
-    if (!lines || !selection || selection.rangeCount === 0) return
-    const range = selection.getRangeAt(0)
-    const box = event.currentTarget
-    if (!box.contains(range.commonAncestorContainer)) return
+    if (!source || !selection) return
+    const text = copiedText(selection, event.currentTarget, source)
+    if (!text) return
     event.preventDefault()
-    event.clipboardData.setData('text/plain', copiedText(range, box, lines))
+    event.clipboardData.setData('text/plain', text)
   }
   return (
     <div

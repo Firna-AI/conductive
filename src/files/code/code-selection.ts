@@ -1,29 +1,35 @@
 import type { KeyboardEvent } from 'react'
 import { splitLines } from '../model/file-text'
 
-/** One line of a code box, as a copy gives it: its text and its line end. */
-export interface CopyLine {
+/**
+ * The text that a copy from a code view takes its parts from: the lines of
+ * the view, each with a line feed, except a last line that the text does
+ * not end. `starts` holds the offset in `text` of the first character of
+ * each line.
+ */
+export interface CopySource {
+  lines: readonly string[]
   text: string
-  ending: string
+  starts: readonly number[]
 }
 
-/** The attribute of a row that names the index of its `CopyLine`. */
-const copyLineAttribute = 'data-copy-line'
+/** A row of a code view, with the index of its line in `data-copy-line`. */
+const rowSelector = '[data-copy-line]'
 
-/** The attribute of the cell that holds the text of a row. */
-const copyTextAttribute = 'data-copy-text'
+/** The cell that holds the text of a row. */
+const cellSelector = '[data-copy-text]'
 
-/**
- * The copy lines of a text, with the rows of `splitLines`. Each line ends
- * in a line feed, except a last line that the text does not end.
- */
-export function copyLines(text: string): CopyLine[] {
+/** The copy source of a text, with the lines of `splitLines`. */
+export function copySource(text: string): CopySource {
   const lines = splitLines(text)
-  const ended = /(\r\n|\n|\r)$/.test(text)
-  return lines.map((line, index) => ({
-    text: line,
-    ending: index < lines.length - 1 || ended ? '\n' : '',
-  }))
+  const ended = lines.length > 0 && /(\r\n|\n|\r)$/.test(text)
+  const starts: number[] = []
+  let start = 0
+  for (const line of lines) {
+    starts.push(start)
+    start += line.length + 1
+  }
+  return { lines, text: lines.join('\n') + (ended ? '\n' : ''), starts }
 }
 
 /** Cmd+A on a Mac, or Ctrl+A, with no other modifier key. */
@@ -59,34 +65,66 @@ function column(cell: Element, node: Node, offset: number, length: number) {
   return Math.min(probe.toString().length, length)
 }
 
-/** Whether the boundary point comes after the whole of `row`. */
-function isAfter(row: Element, node: Node, offset: number): boolean {
-  const probe = document.createRange()
-  probe.selectNodeContents(row)
-  return probe.comparePoint(node, offset) > 0
+/** The index of the line that `row` shows. */
+function lineIndex(row: Element): number {
+  return Number(row.getAttribute('data-copy-line'))
+}
+
+/** The offset in the source text of the start of a line. */
+function lineStart(index: number, source: CopySource): number {
+  return source.starts[index] ?? source.text.length
 }
 
 /**
- * The source text of the part of each row that `range` selects. A row that
- * the range passes gives its line end too. So an empty line stays in the
- * copy, and select all gives the exact text.
+ * The offset in the source text of a boundary point in `box`. A point in a
+ * row maps through the text cell of that row. A point between rows, such
+ * as the start or the end of the whole box after select all, maps to the
+ * start of the next row, or to the end of the text. Only the row of the
+ * point is read, so the cost does not grow with the length of the file.
+ */
+function sourceOffset(
+  box: Element,
+  node: Node,
+  offset: number,
+  source: CopySource,
+): number {
+  const element = node instanceof Element ? node : node.parentElement
+  const row = element?.closest(rowSelector)
+  if (row && box.contains(row)) {
+    const index = lineIndex(row)
+    const cell = row.querySelector(cellSelector)
+    const length = source.lines[index]?.length ?? 0
+    const start = lineStart(index, source)
+    return start + (cell ? column(cell, node, offset, length) : 0)
+  }
+  const next = node.childNodes[offset]
+  if (!(next instanceof Element)) return source.text.length
+  const nextRow = next.matches(rowSelector)
+    ? next
+    : next.querySelector(rowSelector)
+  return nextRow ? lineStart(lineIndex(nextRow), source) : source.text.length
+}
+
+/**
+ * The source text of each range of `selection`, in order. A browser can
+ * split one drag into several ranges, such as Firefox at each line number.
+ * A caret gives nothing. Null means that a range reaches out of `box`, so
+ * the copy is not the box's own.
  */
 export function copiedText(
-  range: Range,
+  selection: Selection,
   box: Element,
-  lines: readonly CopyLine[],
-): string {
+  source: CopySource,
+): string | null {
   let text = ''
-  for (const row of box.querySelectorAll(`[${copyLineAttribute}]`)) {
-    if (!range.intersectsNode(row)) continue
-    const line = lines[Number(row.getAttribute(copyLineAttribute))]
-    const cell = row.querySelector(`[${copyTextAttribute}]`)
-    if (!line || !cell) continue
-    const { length } = line.text
-    const start = column(cell, range.startContainer, range.startOffset, length)
-    const end = column(cell, range.endContainer, range.endOffset, length)
-    text += line.text.slice(start, end)
-    if (isAfter(row, range.endContainer, range.endOffset)) text += line.ending
+  for (let index = 0; index < selection.rangeCount; index += 1) {
+    const range = selection.getRangeAt(index)
+    if (range.collapsed) continue
+    if (!box.contains(range.commonAncestorContainer)) return null
+    const { startContainer, startOffset, endContainer, endOffset } = range
+    const start = sourceOffset(box, startContainer, startOffset, source)
+    const end = sourceOffset(box, endContainer, endOffset, source)
+    text += source.text.slice(start, end)
   }
   return text
 }

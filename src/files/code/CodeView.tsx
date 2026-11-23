@@ -4,7 +4,7 @@ import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
 import { useKeptScroll, type ScrollAim } from '../ui/kept-scroll'
 import { CodeBox } from './CodeBox'
-import { copyLines } from './code-selection'
+import { copySource } from './code-selection'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -94,14 +94,10 @@ export function CodeView(props: {
   marked?: MarkedLines | null
 }) {
   const box = useKeptScroll('code', lineAim(props.marked))
-  const copied = useMemo(() => copyLines(props.text), [props.text])
+  const source = useMemo(() => copySource(props.text), [props.text])
   const lines = useMemo(
-    () =>
-      highlightLines(
-        copied.map((line) => line.text),
-        languageOf(props.name),
-      ),
-    [copied, props.name],
+    () => highlightLines(source.lines, languageOf(props.name)),
+    [source, props.name],
   )
   const marked = shownLines(props.marked?.range, lines.length)
   const start = marked?.start ?? null
@@ -109,7 +105,7 @@ export function CodeView(props: {
   const isMarked = (number: number) =>
     start !== null && end !== null && number >= start && number <= end
   return (
-    <CodeBox ref={box} label="Code" lines={copied}>
+    <CodeBox label="Code" ref={box} source={source}>
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div
