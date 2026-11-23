@@ -98,6 +98,22 @@ An idle or ended reply sets no watch, so read the session at once.
 cargo run -p cnd-cli -- sessions watch --session session-id --workspace workspace-id --turn-id turn-id
 ```
 
+### Messages
+
+`messages get` and `get_message` read one message by its ID. The ID can
+name a member message or a finished message of the agent, such as the
+`Message:` ID of an Explain prompt. The typed reply names the `author`,
+`member` or `agent`. Each request sends `agentMessages=true`, so the
+Worker knows that this runner reads agent messages. An older runner sends
+no flag and gets HTTP 404 for an agent message. A reply with no `author`,
+from a Worker before agent messages, reads as a member message.
+[Get a message](../../docs/protocol/session-management.md#get-a-message)
+states the rules.
+
+```sh
+cargo run -p cnd-cli -- messages get --session session-id --message-id message-id
+```
+
 Set the watch, then end the reply when only that watched work remains.
 After a wake, use `read_session` for the result.
 A turn end does not mean the whole delegated task is complete.

@@ -687,7 +687,7 @@
   },
   {
     "name": "get_message",
-    "description": "Get one message's text, sender, state, turn, and time. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
+    "description": "Get one message of a member or of the agent by its ID, such as the Message: ID of an Explain prompt. Gives its author, text, turn, and time, and the sender and state of a member message. Needs only the workspace token. These calls reach workspaces in this org. An omitted workspaceId names the calling workspace. Use names and returned links in normal answers. Workspace and session links show as chips. A session link holds both IDs. A Sent by: line names the sending session. Do not reply only to confirm it.",
     "inputSchema": {
       "type": "object",
       "properties": {
