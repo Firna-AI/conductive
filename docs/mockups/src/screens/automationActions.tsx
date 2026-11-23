@@ -4,7 +4,7 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import type { Automation } from '../fixtures/automations'
 import type { AutomationAccess, SaveState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /** An action that opens a screen of the mockups, when they draw one. */
 function linked(button: ReactElement, to: string | undefined): ReactElement {

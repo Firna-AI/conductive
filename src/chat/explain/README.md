@@ -11,12 +11,12 @@ for the screens.
 
 ## Rules for this code
 
-- The parts reuse the pure parts of the mockups in
-  `docs/mockups/src/components/explain/`, as the rest of the chat does: the
+- The parts and the mockups both import the shared parts in
+  `src/ui/components/explain/`, as the rest of the chat does: the
   words of `explainCopy.ts`, `MarkGlyph`, and the CSS of `MarkedText`,
   `ExplainButton`, `ExplainPopover`, and `FollowUpField`. A word or a look
   that only the app needs, such as the spoken name of the follow-up field
-  or the whole-message mark of a bubble, goes into those mockup files too,
+  or the whole-message mark of a bubble, goes into those shared files too,
   so one source serves both. `explain.module.css` holds only what the app
   does: the highlights, the slots and the buttons of the states, the box of
   the open mark, and the places of Explain and of the popover.
@@ -144,7 +144,7 @@ for the screens.
 - `explanations.ts`: `explanationsOf`, the explanations of a session with
   the state of each mark. `quote-match.ts`: `findQuote`.
 - `MarkedMessage.tsx` and `MarkParts.tsx`: the text of a message with its
-  marks, the buttons of the states with the mockups' `MarkGlyph`, the
+  marks, the buttons of the states with the shared `MarkGlyph`, the
   whole-message mark, and the box of the open mark. `mark-layout.ts` and
   `useMarks.ts` lay the marks out, and `highlights.ts` draws their fill.
   `useMarks.ts` also gives `markRegions` and `marksAt`, where the press and

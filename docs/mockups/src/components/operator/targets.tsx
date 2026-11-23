@@ -6,7 +6,7 @@ import {
   initialsTile,
   personAvatar,
 } from '../../entries/components/orgs/OrgTile.mockup'
-import styles from './targets.module.css'
+import styles from '../../../../../src/ui/components/operator/targets.module.css'
 
 /** A user or an org of the operator pages, as a list row names it. */
 export type Target = { kind: 'user' | 'org'; name: string; initials: string }

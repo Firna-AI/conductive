@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { SandboxNoticeState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import type { SandboxNoticeState } from '../../ui/components/workspace/sandboxNoticeState'
 import { leftTheList, problemOf } from './notice-copy'
 
 /** The days of a workspace archived on 1 January, removed on 15 January. */

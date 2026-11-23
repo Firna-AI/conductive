@@ -3,8 +3,8 @@ import { Trash2 } from 'lucide-react'
 import {
   hasPullRequestTrigger,
   offersRunNow,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
-import styles from '../../../docs/mockups/src/screens/AutomationScreen.module.css'
+} from '../../ui/components/automations/triggerCopy'
+import styles from '../../ui/screens/AutomationScreen.module.css'
 import {
   draftFields,
   draftOf,

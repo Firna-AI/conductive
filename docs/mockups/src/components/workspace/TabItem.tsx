@@ -13,12 +13,12 @@ import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { renameField } from '../../entries/components/workspace/RenameField.mockup'
 import { sessionTabIcon } from '../../entries/components/workspace/SessionTabIcon.mockup'
-import tabDrag from './TabDrag.module.css'
-import styles from './WorkspaceTabs.module.css'
+import tabDrag from '../../../../../src/ui/components/workspace/TabDrag.module.css'
+import styles from '../../../../../src/ui/components/workspace/WorkspaceTabs.module.css'
 
 /**
  * The kind of a tab, which sets its icon: a session, or the icon that All

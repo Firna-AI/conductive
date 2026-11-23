@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import type { LinkOpener } from '../../../docs/mockups/src/components/common/TextLink'
+import type { LinkOpener } from '../../ui/components/common/TextLink'
 import {
   webLink,
   type WebLink,

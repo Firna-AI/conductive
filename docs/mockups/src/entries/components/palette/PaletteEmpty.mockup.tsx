@@ -1,5 +1,8 @@
 import { defineComponent } from '@mokly/mokly'
-import { EmptyTab, NoResults } from '../../../components/palette/PaletteEmpty'
+import {
+  EmptyTab,
+  NoResults,
+} from '../../../../../../src/ui/components/palette/PaletteEmpty'
 import { paletteContent } from '../../../components/palette/paletteContent'
 import { emptyLine, filters } from '../../../components/palette/paletteFilters'
 

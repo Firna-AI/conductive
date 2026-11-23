@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { PreviewActions } from './PortPreview'
-import { expandedPreviewCopy } from './previewCopy'
-import styles from './ExpandedPreview.module.css'
-import page from './PreviewPage.module.css'
+import { expandedPreviewCopy } from '../../../../../src/ui/components/tools/previewCopy'
+import styles from '../../../../../src/ui/components/tools/ExpandedPreview.module.css'
+import page from '../../../../../src/ui/components/tools/PreviewPage.module.css'
 
 /**
  * The page of a Preview tab or of an HTML file in a large window over the

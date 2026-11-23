@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom'
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+import styles from '../../ui/components/workspaces/SectionList.module.css'
 import ui from '../ui/ui.module.css'
 import type { SectionDragState } from './useSectionDrag'
 import list from './list.module.css'

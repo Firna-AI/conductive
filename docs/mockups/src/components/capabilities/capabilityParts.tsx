@@ -2,23 +2,29 @@ import type { ReactNode } from 'react'
 import type { PersonKey } from '../../fixtures/members'
 import type { WorkspaceGrants } from '../../fixtures/secretRequests'
 import type { OrgSecret } from '../../fixtures/secrets'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { ScreenLink } from '../common/ScreenLink'
 import { SearchField } from '../common/SearchField'
 import { whoOf } from '../chat/SecretRun'
-import { useMacApp } from '../mac/MacApp'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
 import {
   capabilitiesIntro,
   noSecretMatch,
   noSecrets,
   secretsPartWords,
-} from './capabilitiesCopy'
-import { CapabilitiesPanel, type CapabilityPart } from './CapabilitiesPanel'
+} from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
+import {
+  CapabilitiesPanel,
+  type CapabilityPart,
+} from '../../../../../src/ui/components/capabilities/CapabilitiesPanel'
 import { GrantList } from './GrantList'
 import { macAccessPart, type MacAccessView } from './MacAccessPart'
-import { matchingSecrets, needsSecretSearch } from './secretSearch'
-import { SecretOption } from './SecretOption'
-import styles from './Capabilities.module.css'
+import {
+  matchingSecrets,
+  needsSecretSearch,
+} from '../../../../../src/ui/components/capabilities/secretSearch'
+import { SecretOption } from '../../../../../src/ui/components/capabilities/SecretOption'
+import styles from '../../../../../src/ui/components/capabilities/Capabilities.module.css'
 
 /** Where the control shows: in the Mac app, or in a browser. */
 type Shell = 'mac-app' | 'browser'

@@ -1,6 +1,6 @@
 import { useId } from 'react'
-import { noop } from '../../noop'
-import styles from './CheckOption.module.css'
+import { noop } from '../../../../../src/ui/noop'
+import styles from '../../../../../src/ui/components/common/CheckOption.module.css'
 
 /**
  * A checkbox with its label and a muted hint, for an option of a form or

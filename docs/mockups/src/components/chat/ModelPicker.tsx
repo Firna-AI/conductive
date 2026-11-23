@@ -4,12 +4,12 @@ import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
 import { type AgentChoice, type AgentKey } from '../../fixtures/agents'
 import { favourites as savedFavourites } from '../../fixtures/favourites'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { useShortcutHint } from '../common/ShortcutTip'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { FavouritesMenu, type PickerPlacement } from './FavouritesMenu'
-import { pickerButtonStyle } from './pickerButton'
-import styles from './ModelPicker.module.css'
+import { pickerButtonStyle } from '../../../../../src/ui/components/chat/pickerButton'
+import styles from '../../../../../src/ui/components/chat/ModelPicker.module.css'
 
 /**
  * One picker for the model and the effort of the next message, such as

@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy as copy } from '../../ui/components/settings/chatGptSignInCopy'
 import { ManualDelay } from '../../app/test-kit'
 import { ACCOUNT_PATHS, codexDevicePath } from '../../shared/account'
 import { byRole, queryByRole } from '../../test-support/dom-queries'

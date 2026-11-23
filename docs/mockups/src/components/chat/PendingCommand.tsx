@@ -4,15 +4,15 @@ import { thisMac, type MacCommandRequest } from '../../fixtures/mac'
 import { people } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { checkoutAutocomplete } from '../../fixtures/workspaces'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { CommandActions } from '../mac/CommandActions'
-import { useMacApp } from '../mac/MacApp'
-import type { Detail } from '../settings/DetailList'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
+import type { Detail } from '../../../../../src/ui/components/settings/DetailList'
 import {
   commandLine,
   commandStatus,
 } from '../../entries/components/chat/MacCommand.mockup'
-import styles from './PendingCommand.module.css'
+import styles from '../../../../../src/ui/components/chat/PendingCommand.module.css'
 
 /** A command on the Mac that waits for its answer. */
 type PendingItem = Extract<ChatItem, { kind: 'mac-command' }> & {

@@ -8,13 +8,13 @@ import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { iconKeyOf, type IconKey } from '../../entries/components/common/icons'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { refusedIcon } from '../orgs/suspension'
-import styles from './SandboxNotice.module.css'
+import { refusedIcon } from '../../../../../src/ui/components/orgs/suspension'
+import styles from '../../../../../src/ui/components/workspace/SandboxNotice.module.css'
 import {
   archiveStage,
   type SandboxNoticeState,
   type SandboxProblem,
-} from './sandboxNoticeState'
+} from '../../../../../src/ui/components/workspace/sandboxNoticeState'
 
 type ArchivedNotice = Extract<SandboxNoticeState, { problem: 'archived' }>
 

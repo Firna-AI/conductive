@@ -1,8 +1,11 @@
 import { Button } from '@firna/ui/button'
 import { ArrowUp, Square } from 'lucide-react'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { noop } from '../../noop'
-import { useControlSizes, useTouch } from '../common/touch'
+import { noop } from '../../../../../src/ui/noop'
+import {
+  useControlSizes,
+  useTouch,
+} from '../../../../../src/ui/components/common/touch'
 
 /** Send, which is off while the box is empty or the message waits. */
 export function SendButton(props: { draft: string; blocked?: boolean }) {

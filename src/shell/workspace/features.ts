@@ -1,6 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import type { SandboxPanelState } from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+import type { SandboxPanelState } from '../../ui/components/workspace/sandboxNoticeState'
 import type { ArchiveAction } from '../../app/archive-model'
 import type { WorkspaceStream } from '../../app/events'
 import type { SkillsStore } from '../../chat/mentions/mention-skills'

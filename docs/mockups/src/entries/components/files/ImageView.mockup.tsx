@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { ImageView } from '../../../components/files/ImageView'
+import { ImageView } from '../../../../../../src/ui/components/files/ImageView'
 import { CheckoutPicture, screenshotSize } from '../../../fixtures/pictures'
 import { inPlace, placeHeightSchema } from '../common/ownPages'
 import { pictureZoomBar } from './PictureZoomBar.mockup'

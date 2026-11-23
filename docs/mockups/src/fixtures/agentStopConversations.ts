@@ -1,5 +1,5 @@
 import { sessionLink as appSessionLink } from '../../../../src/shared/session-link'
-import { appDomain } from '../brand'
+import { appDomain } from '../../../../src/shared/brand'
 import type { ChatItem } from './conversations'
 import { newWorkspaceConversations } from './newWorkspaceConversations'
 import { orgs } from './orgs'

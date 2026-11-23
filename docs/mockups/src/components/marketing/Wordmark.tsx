@@ -1,7 +1,7 @@
 import { lockup } from '../../entries/components/brand/Logo.mockup'
 import { defined } from '../../defined'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from './Wordmark.module.css'
+import styles from '../../../../../src/ui/components/marketing/Wordmark.module.css'
 
 /**
  * The lockup of the product: the tile and the name, in the version of the

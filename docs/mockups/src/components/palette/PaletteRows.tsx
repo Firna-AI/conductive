@@ -7,18 +7,18 @@ import {
 } from '../../fixtures/shortcutChanges'
 import type { ShortcutHost } from '../../fixtures/shortcutHosts'
 import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
-import type { Shortcut } from '../common/KeyChips'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { instanceKey } from '../../instanceKey'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { orgTile } from '../../entries/components/orgs/OrgTile.mockup'
-import { listMarkLabel } from '../workspaces/status'
+import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import {
   WorkspaceName,
   type EmphasisClasses,
-} from '../workspaces/WorkspaceName'
+} from '../../../../../src/ui/components/workspaces/WorkspaceName'
 import type { CommandLead } from './paletteCommands'
 import type { PaletteContent, PaletteRow } from './paletteContent'
 import {
@@ -27,7 +27,7 @@ import {
 } from '../../entries/components/palette/PaletteEmpty.mockup'
 import { paletteStatusPart } from '../../entries/components/palette/PaletteStatus.mockup'
 import { defined } from '../../defined'
-import styles from './CommandPalette.module.css'
+import styles from '../../../../../src/ui/components/palette/CommandPalette.module.css'
 
 /**
  * The look of the name of a workspace in each state, as in the list: the

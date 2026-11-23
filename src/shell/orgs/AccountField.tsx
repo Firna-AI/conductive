@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { AccountChoice } from '../../../docs/mockups/src/components/operator/AccountChoice'
-import { providerWords } from '../../../docs/mockups/src/components/operator/providerCopy'
+import { AccountChoice } from '../../ui/components/operator/AccountChoice'
+import { providerWords } from '../../ui/components/operator/providerCopy'
 import { OperatorProviders } from '../../app/operator-providers'
 import { useStore } from '../../app/store'
 import { useApp } from '../context'

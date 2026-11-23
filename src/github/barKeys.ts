@@ -3,8 +3,8 @@ import {
   agentActionLabels,
   barLabels,
   mergeLabels,
-} from '../../docs/mockups/src/components/workspace/barCopy'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
+} from '../ui/components/workspace/barCopy'
+import type { BarAction } from '../ui/components/workspace/barModel'
 import type { ShortcutCommandId } from '../shared/shortcut-commands'
 import type { CommandKey } from './ActionButton'
 import type { BarControls } from './barView'

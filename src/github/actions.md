@@ -29,8 +29,8 @@ The views draw only `BarControls`.
 ## The rules
 
 `barViewOf` in [barView.ts](barView.ts) gives the actions, the link, the
-message, the note, and the branches of a GitHub state. It applies
-`barModel` of the mockups, so the app and the mockups share one rule. It
+message, the note, and the branches of a GitHub state. It applies the
+shared `barModel`, so the app and the mockups share one rule. It
 adds what the app knows:
 
 - The member's access comes from the capability route. Until the first
@@ -58,7 +58,7 @@ adds what the app knows:
   file is not committed, `commits` when only unpushed commits are left, or
   `none`. On an open pull request, `changes` shows Commit and push and
   `commits` shows Push. Both buttons run the command `commit-and-push`,
-  through `agentActionCommand` of the mockup copy.
+  through `agentActionCommand` of the shared `barCopy.ts`.
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.
@@ -82,7 +82,7 @@ adds what the app knows:
   waits while a turn runs in any session, open or closed.
 
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
-mockups' `barCopy.ts` with the number, the target branch, the blocking
+shared `barCopy.ts` with the number, the target branch, the blocking
 checks in GitHub's order, and the reviewers.
 
 ## Merge

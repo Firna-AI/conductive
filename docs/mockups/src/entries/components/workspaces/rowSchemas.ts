@@ -1,5 +1,5 @@
 import { sectionKeys } from '../../../fixtures/sections'
-import type { Submenu } from '../../../components/workspaces/workspaceMenu'
+import type { Submenu } from '../../../../../../src/ui/components/workspaces/workspaceMenu'
 import { menuSchema } from '../common/menuEntries'
 
 /** The entries of a menu as JSON, as the registered menu takes them. */

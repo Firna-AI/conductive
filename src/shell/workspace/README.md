@@ -58,7 +58,8 @@ repository of the header as a button, on desktop and in the line under the
 name of a phone, as
 [The menu](../../../docs/protocol/repository-change.md#the-menu) says. The
 mockups are at `app/repository-change`. The button and the words come from
-the mockups' `RepositoryPicker` and `repositoryMoveCopy`.
+the shared `RepositoryButton`, `RepositoryPicker.module.css`, and
+`repositoryMoveCopy`.
 
 - Its menu lists the repositories of the org that the cloud computer
   holds, in the order of New workspace, with a check on the current one.
@@ -75,8 +76,8 @@ the mockups' `RepositoryPicker` and `repositoryMoveCopy`.
   button shows a spinner and the new repository. It ends when the stream
   shows the new repository.
 - Work that the workspace stops following ends the run with the question
-  of `RepositoryQuestion`. Its text is `RepositoryChangeText` of the
-  mockups. Change repository asks again with `allowWork`, and Cancel sends
+  of `RepositoryQuestion`. Its text is the shared `RepositoryChangeText`.
+  Change repository asks again with `allowWork`, and Cancel sends
   nothing. The question names each changed file of both lists by its
   label, or by its real path when the reply has no label. The requests
   keep the real names.
@@ -194,7 +195,7 @@ that show files read the same store.
 
 Place `<HeaderNoticeBars notices={notices} />` directly after the
 header. It draws `notices.shown` with the CSS module of the
-mockups' `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
+shared `LostUpdateBar` and the words of `lostCopy.ts`. Its Dismiss is the
 shell's `IconButton`. The ages use the clock of `AppServices`, and they
 move on every 30 seconds.
 

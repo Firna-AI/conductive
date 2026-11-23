@@ -1,5 +1,5 @@
 import { WebImagePart, type ImagePart } from '../chat/WebLinkText'
-import inline from '../common/InlineText.module.css'
+import inline from '../../../../../src/ui/components/common/InlineText.module.css'
 import { breakItems, keptBreaks } from '../common/markdownBreaks'
 import { markNodes, type MarkItem } from '../common/markdownMarks'
 import { MarkedNodes } from '../common/MarkedNodes'

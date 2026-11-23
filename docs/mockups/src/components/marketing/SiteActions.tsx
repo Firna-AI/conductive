@@ -1,10 +1,10 @@
 import { Button } from '@firna/ui/button'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { githubMark } from '../../entries/components/common/GitHubMark.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { siteIcons } from './siteIcons'
 import styles from './SiteActions.module.css'
 

@@ -1,7 +1,7 @@
 import { accountDeletedOrg, orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { deletedOrgList } from '../../entries/components/settings/DeletedOrgList.mockup'
-import { deletedOrgsCopy as copy } from './deletedOrgsCopy'
+import { deletedOrgsCopy as copy } from '../../../../../src/ui/components/settings/deletedOrgsCopy'
 
 /**
  * The states of the Deleted orgs section: no deleted org, so the section

@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { Check } from 'lucide-react'
-import { classes } from '../common/classes'
-import menu from '../common/Menu.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import menu from '../../../../../src/ui/components/common/Menu.module.css'
 import { ScreenLink } from '../common/ScreenLink'
 import { BranchList, type BranchOption } from './BranchPicker'
-import { branchCopy, targetCopy } from './branchCopy'
-import styles from './BranchMenu.module.css'
+import {
+  branchCopy,
+  targetCopy,
+} from '../../../../../src/ui/components/new-workspace/branchCopy'
+import styles from '../../../../../src/ui/components/new-workspace/BranchMenu.module.css'
 
 /** One of the two targets of a picked branch, as a row of the Target part. */
 type TargetOption = {

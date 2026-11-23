@@ -5,9 +5,9 @@ import { orgWithLogin } from '../../fixtures/orgLogins'
 import { orgs } from '../../fixtures/orgs'
 import type { SecretRunItem } from '../../fixtures/secretRequests'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
 import { asksValue } from './requests'
 import { whoOf } from './SecretRun'
 import {
@@ -17,7 +17,7 @@ import {
   reconnectNote,
   secretRunWords,
   type SessionLoginOwner,
-} from './secretRunCopy'
+} from '../../../../../src/ui/components/chat/secretRunCopy'
 
 /** Whether a request names a secret of the org too. */
 function namesStored(item: SecretRunItem): boolean {

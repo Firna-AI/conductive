@@ -1,5 +1,5 @@
-import { productName } from '../brand'
-import type { Shortcut } from '../components/common/KeyChips'
+import { productName } from '../../../../src/shared/brand'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
 
 /**
  * A fixed shortcut, which the app, the system, or the menus of the Mac app

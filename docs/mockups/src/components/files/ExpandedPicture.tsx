@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from '../tools/ExpandedPreview.module.css'
-import { pictureCopy } from './pictureCopy'
+import styles from '../../../../../src/ui/components/tools/ExpandedPreview.module.css'
+import { pictureCopy } from '../../../../../src/ui/components/files/pictureCopy'
 
 /**
  * The picture of an image file in a large window over the whole app, after

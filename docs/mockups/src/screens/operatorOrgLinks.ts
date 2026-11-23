@@ -1,7 +1,7 @@
 import {
   liftSwitchLine,
   type SwitchWait,
-} from '../components/operator/switchCopy'
+} from '../../../../src/ui/components/operator/switchCopy'
 import type { OrgPage } from '../fixtures/operatorPages'
 import { paths } from '../paths'
 

@@ -4,17 +4,17 @@ import { KeyRound, Plug, TriangleAlert, type LucideIcon } from 'lucide-react'
 import { effortLabels } from '../../../../../src/shared/agents'
 import type { AgentChoice } from '../../fixtures/agents'
 import { defined } from '../../defined'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import {
   CapabilitiesButton,
   type CapabilitiesControl,
 } from '../capabilities/CapabilitiesButton'
-import { runSecretsWords } from '../capabilities/capabilitiesCopy'
+import { runSecretsWords } from '../../../../../src/ui/components/capabilities/capabilitiesCopy'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
-import form from './form.module.css'
-import styles from './PromptBox.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/PromptBox.module.css'
 
 /**
  * Whose logins the runs use, in words: "Runs use your Claude login and

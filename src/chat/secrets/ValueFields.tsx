@@ -1,13 +1,10 @@
 import { Input } from '@firna/ui/input'
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
-import {
-  storedAlso,
-  valueLabel,
-} from '../../../docs/mockups/src/components/chat/secretRunCopy'
-import styles from '../../../docs/mockups/src/components/chat/SecretRequest.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { saveNeedsName } from '../../../docs/mockups/src/components/secrets/secretNameCopy'
+import { storedAlso, valueLabel } from '../../ui/components/chat/secretRunCopy'
+import styles from '../../ui/components/chat/SecretRequest.module.css'
+import { classes } from '../../ui/components/common/classes'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { saveNeedsName } from '../../ui/components/secrets/secretNameCopy'
 import type {
   SecretRequest,
   SecretValueLifetime,

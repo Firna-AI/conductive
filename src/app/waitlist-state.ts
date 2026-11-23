@@ -1,4 +1,4 @@
-import type { codeFailures } from '../../docs/mockups/src/screens/waitlistCopy'
+import type { codeFailures } from '../ui/screens/waitlistCopy'
 import type { PendingOrgInvite } from '../shared/members'
 import type { ApiError } from './api/client'
 import type { Loadable } from './store'

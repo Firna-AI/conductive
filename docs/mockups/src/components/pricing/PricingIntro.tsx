@@ -1,6 +1,6 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { pricingPageCopy } from '../../../../../src/marketing/pricing'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './PricingIntro.module.css'
 
 /**

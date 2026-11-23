@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from watched-turn wake mockups.
-- **Location:** `docs/mockups/src/components/chat/StopLine.tsx`, `WakeLine.tsx`, and `StopLine.module.css`.
+- **Location:** `src/ui/components/chat/StopLine.tsx`, `WakeLine.tsx`, and `StopLine.module.css`.
 - **Reason:** The existing system-line separator pattern needs one shared treatment beyond the watch line.
 
 - **Terms:**

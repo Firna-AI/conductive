@@ -1,6 +1,6 @@
 import { act } from 'react'
 import type { Agent } from '../../shared/generated/Agent'
-import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy as copy } from '../../ui/components/settings/chatGptSignInCopy'
 import type { AppModel } from '../../app/app-model'
 import type { ManualDelay } from '../../app/test-kit'
 import {

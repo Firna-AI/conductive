@@ -2,12 +2,12 @@ import { ImageIcon } from 'lucide-react'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { instanceKey } from '../../instanceKey'
-import { classes } from '../common/classes'
-import { useNoHover } from '../chat/ChipRemove'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useNoHover } from '../../../../../src/ui/components/chat/ChipRemove'
 import { chipIconCell } from '../../entries/components/chat/ChipRemove.mockup'
-import { formatSize } from '../chat/sizes'
-import styles from '../chat/AttachmentChips.module.css'
-import { screenshotsLabel } from './feedbackCopy'
+import { formatSize } from '../../../../../src/ui/components/chat/sizes'
+import styles from '../../../../../src/ui/components/chat/AttachmentChips.module.css'
+import { screenshotsLabel } from '../../../../../src/ui/components/feedback/feedbackCopy'
 
 /**
  * One screenshot of the draft: its name and its size, as the chip of an

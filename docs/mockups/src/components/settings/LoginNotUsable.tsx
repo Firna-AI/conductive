@@ -2,8 +2,8 @@ import type { AgentKey } from '../../fixtures/agents'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { chatGptSignInCopy as copy } from './chatGptSignInCopy'
-import styles from './LoginNotUsable.module.css'
+import { chatGptSignInCopy as copy } from '../../../../../src/ui/components/settings/chatGptSignInCopy'
+import styles from '../../../../../src/ui/components/settings/LoginNotUsable.module.css'
 
 /**
  * A connected login that the app can no longer use, such as a ChatGPT

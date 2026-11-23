@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { PersonKey } from '../../fixtures/members'
 import { orgs, suspendedOrg } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'

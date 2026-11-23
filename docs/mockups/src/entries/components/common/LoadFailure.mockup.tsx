@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { LoadFailure } from '../../../components/common/LoadFailure'
-import { skillsCopy } from '../../../components/settings/skillsCopy'
+import { skillsCopy } from '../../../../../../src/ui/components/settings/skillsCopy'
 import { paths } from '../../../paths'
 
 /**

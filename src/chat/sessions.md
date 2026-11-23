@@ -59,7 +59,7 @@ draft moves, the login of each session, and the linked sessions.
 - Without a login that serves the reader, the Connect notice shows in
   place of the notice of the new session, and Send is off. A login with an
   `unusableCause` of the account, such as a ChatGPT sign-in that OpenAI
-  did not renew, counts as none. `linkedCopy.ts` of the mockups holds the
+  did not renew, counts as none. The shared `linkedCopy.ts` holds the
   words of the notice.
 - The model picker of the composer follows the model list of the login
   that a message runs on: the list of the reader's own endpoint, or the

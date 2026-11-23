@@ -2,7 +2,7 @@
 import { act } from 'react'
 import { describe, expect, it } from 'vitest'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { TouchScreen } from '../../../docs/mockups/src/components/common/touch'
+import { TouchScreen } from '../../ui/components/common/touch'
 import {
   accessibleName,
   byRole,

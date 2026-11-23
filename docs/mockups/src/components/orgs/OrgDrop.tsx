@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import type { OrgKey } from '../../fixtures/orgs'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import styles from './OrgDrag.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import styles from '../../../../../src/ui/components/orgs/OrgDrag.module.css'
 
 /**
  * An org in the middle of a drag, on the rail or in the org switcher of a

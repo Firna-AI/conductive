@@ -1,6 +1,6 @@
 import type { EndpointEntry } from '../../../components/settings/EndpointFields'
-import type { LoginOwner } from '../../../components/settings/EndpointModels'
-import { signInSteps } from '../../../components/settings/chatGptSignInCopy'
+import type { LoginOwner } from '../../../../../../src/ui/components/settings/EndpointModels'
+import { signInSteps } from '../../../../../../src/ui/components/settings/chatGptSignInCopy'
 import { agentKeys } from '../../../fixtures/agents'
 import { loginKinds } from '../../../fixtures/logins'
 

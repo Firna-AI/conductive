@@ -11,9 +11,9 @@ import { people } from '../../fixtures/members'
 import { defined } from '../../defined'
 import type { IconKey } from '../../entries/components/common/icons'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import type { StatusTone } from '../common/StatusText'
+import type { StatusTone } from '../../../../../src/ui/components/common/StatusText'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import styles from './MacCommand.module.css'
+import styles from '../../../../../src/ui/components/chat/MacCommand.module.css'
 
 type StatePresentation = {
   label: string

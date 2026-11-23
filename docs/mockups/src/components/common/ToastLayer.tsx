@@ -1,6 +1,6 @@
 import { createToastItem, Toast, type ToastOptions } from '@firna/ui/toast'
-import { noop } from '../../noop'
-import { classes } from './classes'
+import { noop } from '../../../../../src/ui/noop'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './ToastLayer.module.css'
 
 /**

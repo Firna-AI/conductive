@@ -3,13 +3,10 @@ import { CircleAlert } from 'lucide-react'
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import type { Effort } from '../../shared/generated/Effort'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import styles from '../../../docs/mockups/src/components/settings/FavouritesSection.module.css'
-import order from '../../../docs/mockups/src/components/settings/RepositoryOrderList.module.css'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+import a11y from '../../ui/components/common/a11y.module.css'
+import styles from '../../ui/components/settings/FavouritesSection.module.css'
+import order from '../../ui/components/settings/RepositoryOrderList.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
 import { useStore } from '../../app/store'
 import { MODEL_FAVOURITES_LIMIT } from '../../shared/account'
 import { useApp, useOfferedModels } from '../context'

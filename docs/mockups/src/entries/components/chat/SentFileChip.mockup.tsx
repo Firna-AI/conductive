@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { SentFileChip } from '../../../components/chat/SentFileChip'
+import { SentFileChip } from '../../../../../../src/ui/components/chat/SentFileChip'
 import { paths } from '../../../paths'
 import { chipToSchema, openerTo } from './chipOpener'
 import { chipFileSchema } from './chipSchemas'
