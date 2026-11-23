@@ -40,6 +40,8 @@ Other plans:
 Contract owners:
 
 - [Chat and events](../docs/protocol/chat-and-events.md#events).
+- [Chat history](../docs/protocol/chat-history.md), split from Chat and
+  events by Milestone 1.
 - [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes).
 - [Lost workspace updates](../docs/protocol/lost-workspace-updates.md).
 - The [chat backend README](../worker/chat/README.md) and
@@ -535,37 +537,39 @@ covers the retention of file reports in the history and the time of the
 repeated-path check. The projection layout and the page limits change no
 requirement.
 
-- [ ] Read the current Terms page `src/marketing/terms.ts`, the Privacy
+- [x] Read the current Terms page `src/marketing/terms.ts`, the Privacy
       page `src/marketing/privacy.ts`, and each public guide in
       `src/marketing/docs/` in full. Upstream commits changed some of them
       on 20 November 2026. List each sentence that restates a fact that
       this milestone changes.
-- [ ] Update each listed sentence in this change, as `AGENTS.md` requires.
+- [x] Update each listed sentence in this change, as `AGENTS.md` requires.
       When an edit is outside the scope of this plan, add it here as a
       scope change, and tell Cal before the edit.
-- [ ] In [Chat and events](../docs/protocol/chat-and-events.md#events),
+- [x] In [Chat and events](../docs/protocol/chat-and-events.md#events),
       replace "stores every event". State that the chat remains durable.
       Keep the current compaction of answers and tool states. Keep each
       tree delta. State that it keeps the newest full
       tree and the newest changes list, and that it can drop each earlier
       one. Keep the reason that the chat survives a stop of the sandbox.
       Give the decision and its rejected options in one or two sentences.
-- [ ] Keep `chat-and-events.md` at about 250 lines. It has 250 lines now.
+- [x] Keep `chat-and-events.md` at about 250 lines. It has 250 lines now.
       When the edit passes the target, split the doc, as the
       `documentation` skill says.
-- [ ] In [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes),
+- [x] In [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes),
       state that the workspace checks that each path appears once when the
       last part of a report arrives. State that a repeated path refuses
       that last part. Keep the rules that a refused part discards the
       incomplete report and that the last complete report stays. Give the
       decision and the rejected path index in one sentence.
-- [ ] Read [Lost workspace updates](../docs/protocol/lost-workspace-updates.md).
+- [x] Read [Lost workspace updates](../docs/protocol/lost-workspace-updates.md).
       Confirm that its replacement and repair rules hold when the last part
       is refused. Change it only where a sentence contradicts the new rule.
-- [ ] Search `docs/` and each `README.md` for statements about history
+- [x] Search `docs/` and each `README.md` for statements about history
       retention and part checks. Fix each contradiction in a protocol doc or
       an architecture doc here. The code milestones update the READMEs.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Check each relative link of each changed Markdown file.
+Evidence: `.context/workspace-object-memory/m1-docs/`. No legal page or
+guide restates a changed fact.
 
 ## Milestone 2: Projection reader release
 
@@ -665,7 +669,6 @@ pages.
       `history-grown-delta.test.ts`, `history-order.test.ts`,
       `history-session-pages.test.ts`, `recorded-events.test.ts`,
       `runner-grown-reports.test.ts`, and the new tests.
-
 ## Milestone 4: Forward history pages
 
 Depends on: 1, 3, and the merge of PR #477 into `main`
@@ -728,7 +731,8 @@ This milestone changes when `RunnerFileReports.accept` checks a part, as
 M5 B says. It runs beside the history work in a nested workspace, from 23
 November 2026. It and the reader release change separate sections of the
 files README, so it does not wait for the reader release. The part code
-itself needs no reader change.
+itself needs no reader change. Its branch merges into this branch only after
+Milestone 1 is committed here, so its protocol text comes first.
 
 - [ ] Check the numbers and the fields of each part when it arrives, as
       design call 16 says. Read no earlier part. Do not join the parts or

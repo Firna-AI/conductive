@@ -175,6 +175,9 @@ decision of the change that reads Markdown with one parser, as
   Each changes part repeats the full report's base branch and summary.
 - The summary counts the complete list, rather than one part.
   The workspace joins entries in part order and uses the full report atomically.
+- The workspace checks the fields of each part when the part arrives.
+  It checks for a repeated path only when the last part arrives. A repeated path refuses that last part.
+- Reason: a check of each part against all earlier parts takes seconds for a large tree, and a stored index of their paths was rejected (Cal, 20 November 2026).
 - A report becomes complete only after every part is stored.
   The workspace keeps the last complete report while parts are pending.
 - Parts never join across streams, report kinds, or revisions.
