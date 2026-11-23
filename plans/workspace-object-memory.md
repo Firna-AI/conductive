@@ -42,6 +42,8 @@ Contract owners:
 - [Chat and events](../docs/protocol/chat-and-events.md#events).
 - [Chat history](../docs/protocol/chat-history.md), split from Chat and
   events by Milestone 1.
+- [File reports](../docs/protocol/file-reports.md), split from Files and
+  changes by Milestone 1. It now holds the part rules.
 - [Files and changes](../docs/protocol/workspace-tools.md#files-and-changes).
 - [Lost workspace updates](../docs/protocol/lost-workspace-updates.md).
 - The [chat backend README](../worker/chat/README.md) and

@@ -222,5 +222,6 @@ The D1 workspace schema holds the base branch.
 See the [shared contracts](../../src/shared/README.md),
 [backend fakes](../test-support/README.md),
 [runner event rules](../../docs/protocol/agent-runner.md#the-agent-runner),
-[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates), and
-[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes).
+[lost workspace updates](../../docs/protocol/agent-runner.md#lost-workspace-updates),
+[file requirements](../../docs/protocol/workspace-tools.md#files-and-changes), and
+[file report requirements](../../docs/protocol/file-reports.md).

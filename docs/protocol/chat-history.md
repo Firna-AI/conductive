@@ -10,7 +10,7 @@ calls, and file reports. The terms are those of the
   place of its first event, in its final form.
 - Reason: the final form holds the whole content. So a replay gets smaller,
   and the chat loses nothing.
-- Of the [file reports](workspace-tools.md#files-and-changes), the stored
+- Of the [file reports](file-reports.md), the stored
   history keeps each tree delta, the newest full tree, and the newest
   changes list. It can drop each earlier full tree and each earlier changes
   list.

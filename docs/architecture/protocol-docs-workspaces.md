@@ -91,6 +91,9 @@ protocol docs.
     workspace, and the files that a page can load.
     - [File server](../protocol/file-server.md): the file server of the
       agent runner, which serves the page and its files.
+  - [File reports](../protocol/file-reports.md): the limits, the parts,
+    the revisions, and the repairs of the runner's reports of the file
+    tree and the branch changes.
   - [Port previews](../protocol/port-previews.md): detected servers, manual
     opening, the open from a local address in the chat, preview tabs,
     and the relay requirement.

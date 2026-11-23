@@ -219,7 +219,8 @@ for, downloads, and applies an update.
 ### Files and changes
 
 - [Files and changes](workspace-tools.md#files-and-changes) states the
-  file lists of a workspace and the file reports of the runner.
+  file lists of a workspace. [File reports](file-reports.md) states the
+  file reports of the runner.
 
 ### Terminal
 
