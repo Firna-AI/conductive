@@ -145,3 +145,6 @@ export class Workspace extends ProductionWorkspace {
 
 /** @public Miniflare entry point. */
 export default createApp({ now: () => DEVICE_TEST_NOW })
+
+/** @public Miniflare loads this class by its export name. */
+export { Machine } from '../machines/machine'

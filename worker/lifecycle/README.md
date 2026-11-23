@@ -194,6 +194,15 @@ the rows of a purged org.
 
 ## The stop time
 
+Each workspace create and resume delivers a new machine token through the
+[machine client](../machines/README.md). A create pins it inside the existing
+encrypted allocation payload. Replays keep that payload and digest.
+Resume issues it immediately before the provider call. Org env values
+cannot override the machine token or origin. Each stop request attempts
+token revocation before it calls the provider. A failed revoke writes a
+fixed warning and lets the stop continue. The stopped hook attempts
+revocation again when the workspace object observes a stop.
+
 The operator saves the stop time of idle sandboxes on the Settings tab, as
 [Stop and resume](../../docs/protocol/stop-and-resume.md#the-stop) says.
 [`idle-stop.ts`](idle-stop.ts) reads it from the `idle_stop_settings` row.

@@ -1,3 +1,4 @@
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import { providerState } from './provider-state'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
@@ -14,6 +15,7 @@ import type { Sandbox, SandboxProvider } from '../sandbox/provider'
 import { ProviderError } from '../sandbox/errors'
 import { markTerminalRestoreEnded } from '../terminal/service'
 import { workspaceAutoStopSeconds } from './idle-stop'
+import { workspaceMachineOwner } from '../machines/client'
 
 export interface WorkspaceActionContext {
   env: AppEnv
@@ -71,6 +73,10 @@ export async function stopWorkspaceSandbox(
   context: WorkspaceActionContext,
 ): Promise<LifecycleStopResult> {
   const { provider, sandboxId } = await actionResources(context)
+  await revokeMachineTokenOnStop(
+    context.env,
+    workspaceMachineOwner(context.orgId, context.workspaceId),
+  )
   const sandbox = await replyOrCurrentState(provider, sandboxId, () =>
     provider.stop(sandboxId),
   )
@@ -92,6 +98,10 @@ export async function stopAccessDeniedWorkspaceSandbox(
   )
   let sandbox: Sandbox
   try {
+    await revokeMachineTokenOnStop(
+      context.env,
+      workspaceMachineOwner(context.orgId, context.workspaceId),
+    )
     sandbox = await replyOrCurrentState(provider, sandboxId, () =>
       provider.stop(sandboxId),
     )

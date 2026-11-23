@@ -142,3 +142,5 @@ export class Workspace extends ReviewWorkspace {
     )
   }
 }
+
+export { Machine } from '../../machines/machine'

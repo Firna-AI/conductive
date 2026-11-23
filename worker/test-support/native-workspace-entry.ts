@@ -293,3 +293,6 @@ export class NativeWorkspace extends Workspace {
 export default {
   fetch: nativeEntryFetch,
 }
+
+/** @public Miniflare loads this class by its export name. */
+export { Machine } from '../machines/machine'

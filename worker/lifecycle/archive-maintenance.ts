@@ -1,3 +1,4 @@
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import { WORKSPACE_RESTORE_MS } from '../../src/shared/workspaces'
 import type { SandboxProvider } from '../sandbox/provider'
 import { providerState } from './provider-state'
@@ -5,6 +6,8 @@ import type { ArchiveResource } from './archive-data'
 import { sameArchive, type WorkspaceArchiveState } from './archive-types'
 import { DISK_KEEPALIVE_MS } from './durable-types'
 import { WORKSPACE_START_TIME_LIMIT_MS } from './job-time-limit'
+import type { AppDependencies, AppEnv } from '../env'
+import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
 
 export async function advanceArchiveMaintenance(
   state: WorkspaceArchiveState,
@@ -14,6 +17,8 @@ export async function advanceArchiveMaintenance(
   save: (state: WorkspaceArchiveState) => Promise<void>,
   readCurrent: () => Promise<ArchiveResource | null>,
   requiresDiskRestart: boolean,
+  env: AppEnv,
+  dependencies: Pick<AppDependencies, 'randomToken'>,
 ): Promise<WorkspaceArchiveState> {
   const expiresAt = state.archivedAt + WORKSPACE_RESTORE_MS
   if (state.phase === 'retained') {
@@ -62,7 +67,15 @@ export async function advanceArchiveMaintenance(
     if (status === 'stopping') return state
     if (status === 'stopped') {
       // A maintenance start receives no workspace token or saved environment values.
-      await provider.resume(sandboxId, {}, 1_800)
+      await provider.resume(
+        sandboxId,
+        await machineEnvironment(
+          env,
+          workspaceMachineOwner(state.orgId, state.workspaceId),
+          dependencies.randomToken,
+        ),
+        1_800,
+      )
     }
     return { ...state, phase: 'wait' }
   }
@@ -78,6 +91,10 @@ export async function advanceArchiveMaintenance(
       state = { ...state, stopRequestedAt: now() }
       await save(state)
     }
+    await revokeMachineTokenOnStop(
+      env,
+      workspaceMachineOwner(state.orgId, state.workspaceId),
+    )
     status = providerState((await provider.stop(sandboxId)).state)
     if (status !== 'stopped') return state
   }

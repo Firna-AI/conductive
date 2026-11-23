@@ -273,3 +273,5 @@ export default {
     }
   },
 }
+
+export { Machine } from '../machines/machine'

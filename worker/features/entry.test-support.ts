@@ -223,3 +223,5 @@ export default {
     return app.fetch(request, env, execution)
   },
 }
+
+export { Machine } from '../machines/machine'

@@ -34,3 +34,5 @@ export class Workspace extends FeatureWorkspace {
 }
 
 export default app
+
+export { Machine } from '../machines/machine'

@@ -46,3 +46,6 @@ export class Workspace extends FeatureWorkspace {
     }
   }
 }
+
+/** @public Miniflare loads this class by its export name. */
+export { Machine } from '../machines/machine'

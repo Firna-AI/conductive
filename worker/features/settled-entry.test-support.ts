@@ -28,3 +28,5 @@ export default {
     return response
   },
 }
+
+export { Machine } from '../machines/machine'

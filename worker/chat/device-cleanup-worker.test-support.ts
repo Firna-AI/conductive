@@ -50,3 +50,5 @@ export class Workspace extends DeviceTestWorkspace {
     return Response.json({ lifecycle, requests })
   }
 }
+
+export { Machine } from '../machines/machine'

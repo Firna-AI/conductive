@@ -28,6 +28,7 @@ import {
   type RetentionCommandPort,
 } from './retention-command'
 import { stopRetention } from './retention-stop'
+import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
 
 /** The caller serializes this action with user starts in the workspace object. */
 export async function keepWorkspaceDisk(
@@ -122,7 +123,18 @@ export async function keepWorkspaceDisk(
         workspaceId,
         settings.envVarsCiphertext,
       )
-      await provider.resume(sandboxId, runtimeEnv, 1_800)
+      await provider.resume(
+        sandboxId,
+        {
+          ...runtimeEnv,
+          ...(await machineEnvironment(
+            env,
+            workspaceMachineOwner(orgId, workspaceId),
+            context.dependencies.randomToken,
+          )),
+        },
+        1_800,
+      )
     }
     await setRetention(env.DB, workspaceId, 'wait')
     return { done: false, error: null }

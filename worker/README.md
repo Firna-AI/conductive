@@ -123,7 +123,10 @@ Pull request runs keep their own branch and their workspace base branch.
 On the machine hostname, the Worker serves the Mac command routes, the git
 credential route, the image source credential route, the
 [software image deploy route](software-image/README.md#deploy-route), the
-[workspace tools](tools/README.md), GitHub webhooks, the model gateway, and the runner socket.
+[workspace tools](tools/README.md), GitHub webhooks, the model gateway, the runner socket,
+and `GET /v1/host`, the [machine host connection](machines/README.md).
+The host connection accepts only a machine bearer token. It refuses browser
+cookies and Origin headers. Other machine routes do not accept that token.
 The machine host also serves the one-use [attachment download](chat/attachments.md#dispatch).
 These handlers use their own machine credentials and skip the browser gate.
 The [secret tool routes](secrets/README.md#workspace-tool-routes) list metadata
@@ -177,6 +180,14 @@ the requirement.
   1 minute. It runs in `waitUntil` when the entry has an execution
   context. A failed write logs the `user_activity_failed` warning and
   never fails the request.
+
+## Machine objects
+
+The `MACHINES` binding selects one `Machine` Durable Object per workspace computer.
+It stores the machine token digest, its generation, owner, and last host hello.
+The [machine area](machines/README.md) owns the connection and its typed RPC client.
+The Wrangler migration `v2` adds this class and leaves `v1` unchanged.
+Cloudflare cannot roll back a Worker across this Durable Object migration.
 
 ## Workspace object connections
 
@@ -250,6 +261,7 @@ Call other parts of the app through a binding or an RPC method, not a global `fe
 - [configuration.ts](configuration.ts): `appFrameSources` reads extra frame origins. Release admission reads validated newest-release metadata.
 - [chat/router.ts](chat/router.ts) forwards the browser chat routes and the runner socket to the Durable Object of their workspace. It records the [last active time](#last-active-time) of a sent message.
 - [workspace.ts](workspace.ts) composes each workspace Durable Object. [workspace-lifecycle.ts](workspace-lifecycle.ts) exposes its lifecycle RPC methods and owns its [input activity](lifecycle/README.md#input-activity). Its constructor restores the native sockets, and it receives their message, close, and error events.
+- [workspace-view.ts](workspace-view.ts) exposes the workspace reply and metadata publication methods of that object.
 - [native-sockets.ts](native-sockets.ts): `WorkspaceSockets`, the trusted socket roles, the attachment check, the restore, and the dispatch of native socket events.
 - [model-gateway/README.md](model-gateway/README.md): the machine model routes, credential replacement, header rules, stream cancellation, and turn-token checks.
   Each runner `turn` command carries one of these tokens.

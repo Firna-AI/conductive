@@ -11,6 +11,9 @@ import { providerForAccount } from '../sandbox/client'
 import { record } from '../chat/inputs'
 import { readWorkspace } from './workspace-data'
 import { computerRecords } from './computer-ledger.test-support'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
+import { string } from '../chat/inputs'
 
 const fixtureForTest = setupBackendTests()
 const day = 86_400_000
@@ -27,11 +30,26 @@ it('bridges an old archived disk without secrets or startup and rearms a restore
     new URL(request.url).pathname.endsWith('/resume'),
   )
   if (!request) throw new Error('Missing archive maintenance resume')
-  expect(record(await request.clone().json()).env).toEqual({})
+  expect(record(await request.clone().json()).env).toEqual({
+    CONDUCTIVE_MACHINE_ORIGIN: 'https://machine.conductive.test',
+    CONDUCTIVE_MACHINE_TOKEN: expect.stringMatching(
+      /^cndm1\.[0-9a-f]{64}\.[A-Za-z0-9_-]{43}$/,
+    ),
+  })
   await saved.actor.restart()
   await fixture.advanceTo(TEST_TIME + 13 * day + 5_000, saved.id)
   expect(fixture.boat.commands).toHaveLength(commands)
   expect(fixture.boat.stopIds).toEqual([saved.sandboxId])
+  const token = string(
+    record(record(await request.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  expect(
+    await machineTokenStatus(
+      fixture.harness.env,
+      workspaceMachineOwner(fixture.org.id, saved.id),
+      token,
+    ),
+  ).toBe(401)
   const restored = requireFeatureResult(await saved.restore())
   expect(restored.workspace.state).toBe('stopped')
   expect(await saved.actor.storage.get('alarm:lifecycle')).toBe(

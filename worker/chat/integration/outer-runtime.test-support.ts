@@ -47,6 +47,7 @@ export async function createOuterRuntime(
     configuration?: OuterConfiguration
     persistencePath?: string
     handleStructuredLogs?: StructuredLogsHandler
+    machineProbe?: boolean
     outbound?: (
       request: Request,
       fallback: HttpFetch,
@@ -87,9 +88,28 @@ export async function createOuterRuntime(
               'enable_request_signal',
             ],
             exports: {
+              Machine: { type: 'durable-object', storage: 'sqlite' },
+              ...(options.machineProbe && {
+                MachineProbe: {
+                  type: 'durable-object' as const,
+                  storage: 'sqlite' as const,
+                },
+              }),
               Workspace: { type: 'durable-object', storage: 'sqlite' },
             },
             env: {
+              ...(options.machineProbe && {
+                MACHINE_PROBES: {
+                  type: 'durable-object' as const,
+                  worker: 'outer-chat-tests',
+                  exportName: 'MachineProbe',
+                },
+              }),
+              MACHINES: {
+                type: 'durable-object',
+                worker: 'outer-chat-tests',
+                exportName: 'Machine',
+              },
               DB: { type: 'd1', id: TEST_D1_ID },
               CHAT_ATTACHMENTS: { type: 'r2', name: 'outer-chat-attachments' },
               WORKSPACES: {

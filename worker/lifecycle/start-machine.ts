@@ -22,6 +22,7 @@ import type {
 } from './start-types'
 import type { StartCall } from './start-guard'
 import { workspaceAutoStopSeconds } from './idle-stop'
+import { machineEnvironment, workspaceMachineOwner } from '../machines/client'
 
 export async function advanceStartMachine(
   env: AppEnv,
@@ -87,7 +88,14 @@ export async function advanceStartMachine(
         async () => ({
           snapshotName: job.imageName ?? undefined,
           name: row.id,
-          env: runtimeEnv,
+          env: {
+            ...runtimeEnv,
+            ...(await machineEnvironment(
+              env,
+              workspaceMachineOwner(job.orgId, job.workspaceId),
+              dependencies.randomToken,
+            )),
+          },
           ttlSeconds: await workspaceAutoStopSeconds(env.DB),
           idempotencyKey: job.attempt,
           labels: {
@@ -118,7 +126,14 @@ export async function advanceStartMachine(
           await requireActiveStartUsers(env.DB, job)
           await provider.resume(
             sandboxId,
-            runtimeEnv,
+            {
+              ...runtimeEnv,
+              ...(await machineEnvironment(
+                env,
+                workspaceMachineOwner(job.orgId, job.workspaceId),
+                dependencies.randomToken,
+              )),
+            },
             await workspaceAutoStopSeconds(env.DB),
           )
         })

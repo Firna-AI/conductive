@@ -49,7 +49,7 @@ points of each part.
   A certified absence gives retained state without an allocation. An unknown result stays pending:
   the phase keeps the saved request and its retry alarm, also after the Restore window.
   `WorkspaceArchive` writes a recovered ID to the workspace row before it clears the request and releases the image lease.
-  [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with no env values or startup command.
+  [`archive-maintenance.ts`](archive-maintenance.ts) resumes archived disks with only the machine origin and a new machine token, without a startup command.
   It takes `requiresDiskRestart` for each advance and due time. An account of the kind `boat` keeps the disk restart. An `e2b` account gets only the expiry schedule.
   [`archive-data.ts`](archive-data.ts) fences disk writes and Restore by archive identity and provider account.
   [`archive-missing.ts`](archive-missing.ts) detaches a confirmed missing disk and keeps other provider failures pending.

@@ -31,3 +31,5 @@ export class Workspace extends ProductionWorkspace {
     return super.fetch(request)
   }
 }
+
+export { Machine } from '../../machines/machine'

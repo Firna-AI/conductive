@@ -1,4 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
+import { record, string } from '../chat/inputs'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
 
 import { orgPath } from '../../src/shared/api'
 import { deleteOrgPath } from '../../src/shared/orgs'
@@ -77,6 +80,9 @@ it('preserves existing stop dates and schedules genuine stops without an early r
 
 it('performs only due retention under a temporary lease capability and retries failed maintenance', async () => {
   const { org, admin, member, client } = await deletionFixture(harness)
+  let machineSequence = 0
+  client.dependencies.randomToken = () =>
+    `machine-${++machineSequence}`.padEnd(43, 'x')
   const lifecycle = lifecycleFixture(client)
   await stopWorkspace(harness, 'workspace-one', 13)
   await client.request(
@@ -132,11 +138,27 @@ it('performs only due retention under a temporary lease capability and retries f
     'POST /sandboxes/sandbox-workspace-one/resume',
     'POST /sandboxes/sandbox-workspace-one/stop',
   ])
-  expect(await harness.boat.requests[1].json()).toEqual({
+  expect(await harness.boat.requests[1].clone().json()).toEqual({
     noEnv: true,
-    env: {},
+    env: {
+      CONDUCTIVE_MACHINE_ORIGIN: harness.env.MACHINE_ORIGIN,
+      CONDUCTIVE_MACHINE_TOKEN: expect.stringMatching(
+        /^cndm1\.[0-9a-f]{64}\.[A-Za-z0-9_-]{43}$/,
+      ),
+    },
     ttlSeconds: 60,
   })
+  const token = string(
+    record(record(await harness.boat.requests[1].clone().json()).env)
+      .CONDUCTIVE_MACHINE_TOKEN,
+  )
+  expect(
+    await machineTokenStatus(
+      harness.env,
+      workspaceMachineOwner(org.id, 'workspace-one'),
+      token,
+    ),
+  ).toBe(401)
   expect(await readDisk(harness)).toEqual({
     stoppedAt: TEST_TIME + 23 * 3600000 + 300000,
     nextKeepaliveAt:

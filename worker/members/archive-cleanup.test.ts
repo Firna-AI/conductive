@@ -45,6 +45,8 @@ afterAll(async () => {
 it('continues expired deletes and disk retention after an Archive Delete fails, then recovers without dispatch after lease loss', async () => {
   const fixture = await archiveCleanupFixture(harness)
   const { org, client } = fixture
+  const randomToken = client.dependencies.randomToken
+  client.dependencies.randomToken = () => randomToken().padEnd(43, 'x')
   const expiresAt = TEST_TIME + DAY_MS / 2
   const failed = await fixture.seedArchive('expired-first', expiresAt)
   const healthy = await fixture.seedArchive('expired-second', expiresAt)
@@ -100,7 +102,12 @@ it('continues expired deletes and disk retention after an Archive Delete fails, 
   ])
   expect(await harness.boat.requests[1].json()).toEqual({
     noEnv: true,
-    env: {},
+    env: {
+      CONDUCTIVE_MACHINE_ORIGIN: harness.env.MACHINE_ORIGIN,
+      CONDUCTIVE_MACHINE_TOKEN: expect.stringMatching(
+        /^cndm1\.[0-9a-f]{64}\.[A-Za-z0-9_-]{43}$/,
+      ),
+    },
     ttlSeconds: 1_800,
   })
   expect(await fixture.archiveRecord(failed.workspaceId)).toMatchObject({

@@ -1,6 +1,7 @@
 import type { InvitationMailer } from './invitation-mailer'
 import type { ConnectionScheduler } from './security/connection-access'
 import type { Workspace } from './workspace'
+import type { Machine } from './machines/machine'
 
 export interface AppEnv {
   DB: D1Database
@@ -12,6 +13,7 @@ export interface AppEnv {
   CONDUCTIVE_FRAME_SOURCES?: string
   ASSETS?: { fetch(request: Request): Promise<Response> }
   WORKSPACES?: DurableObjectNamespace<Workspace>
+  MACHINES?: DurableObjectNamespace<Machine>
   AI?: Ai
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string

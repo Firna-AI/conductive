@@ -10,6 +10,7 @@ import { orgEnvironmentContext } from './settings-data'
 import { createCompletedWorkspace } from './completed-creation-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
 import { lifecycleCommandBody } from './command-test-support'
+import { record, string } from '../chat/inputs'
 
 const backendFixture = setupBackendTests()
 
@@ -157,6 +158,7 @@ it('resumes the same disk and retries a failed startup after stopping its old wo
         APP_SECRET: 'org-secret',
         CONDUCTIVE_USER_SETTING: 'keep-this',
         CONDUCTIVE_MACHINE_ORIGIN: 'https://evil.test',
+        CONDUCTIVE_MACHINE_TOKEN: 'org-must-not-set-this',
       }),
       orgEnvironmentContext(org.id),
       runtime.env.BOAT_KEY_ENCRYPTION_KEY,
@@ -173,6 +175,12 @@ it('resumes the same disk and retries a failed startup after stopping its old wo
       }),
     )
     const endpoint = runtime.workspace(created.workspace.id)
+    const createMachineToken = string(
+      record(boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
+    )
+    expect(createMachineToken).toMatch(
+      /^cndm1\.[0-9a-f]{64}\.[A-Za-z0-9_-]{43}$/,
+    )
     await endpoint.lifecycleStopped()
     boat.states.set('bx_1', 'archiving')
     let reads = 0
@@ -228,6 +236,21 @@ it('resumes the same disk and retries a failed startup after stopping its old wo
     expect(await endpoint.queueLifecycleStart(stale)).toBe(false)
     expect(boat.commands).toHaveLength(commandCount)
     expect(boat.resumeIds).toEqual(['bx_1', 'bx_1'])
+    const resumes = boat.server.requests.filter((request) =>
+      new URL(request.url).pathname.endsWith('/resume'),
+    )
+    const tokens: unknown[] = []
+    for (const request of resumes) {
+      const environment = record(record(await request.clone().json()).env)
+      expect(environment.CONDUCTIVE_MACHINE_ORIGIN).toBe(
+        'https://machine.conductive.test',
+      )
+      expect(environment.CONDUCTIVE_MACHINE_TOKEN).toMatch(
+        /^cndm1\.[0-9a-f]{64}\.[A-Za-z0-9_-]{43}$/,
+      )
+      tokens.push(environment.CONDUCTIVE_MACHINE_TOKEN)
+    }
+    expect(new Set([createMachineToken, ...tokens]).size).toBe(3)
     expect(boat.deletedIds).toEqual([])
     expect(
       boat.commands.every(

@@ -1,9 +1,11 @@
+import { revokeMachineTokenOnStop } from '../machines/revoke'
 import type { SandboxProvider } from '../sandbox/provider'
 import type { DiskRetentionResult } from './durable-types'
 import { providerState, type ProviderState } from './provider-state'
 import type { RetentionCommandPort } from './retention-command'
 import type { WorkspaceActionContext } from './workspace-actions'
 import { revokeWorkspacePreviews } from './workspace-data'
+import { workspaceMachineOwner } from '../machines/client'
 
 export async function stopRetention(
   context: WorkspaceActionContext,
@@ -22,6 +24,10 @@ export async function stopRetention(
           ...state,
           stopRequestedAt: context.dependencies.now(),
         })
+      await revokeMachineTokenOnStop(
+        context.env,
+        workspaceMachineOwner(context.orgId, context.workspaceId),
+      )
       if (providerState((await provider.stop(sandboxId)).state) !== 'stopped')
         return { done: false, error }
     }

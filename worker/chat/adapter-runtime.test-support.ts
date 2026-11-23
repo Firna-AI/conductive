@@ -13,6 +13,7 @@ import {
 import { agentLoginContext } from './queries'
 export async function createAdapterRuntime(entryPoint = 'worker/workspace.ts') {
   const code = await workerLibraryBundle(entryPoint)
+  const machine = await workerLibraryBundle('worker/machines/machine.ts')
   // The global teardown deletes this folder, because callers dispose only
   // the runtime.
   const storage = await migratedStorage()
@@ -30,8 +31,16 @@ export async function createAdapterRuntime(entryPoint = 'worker/workspace.ts') {
             'global_fetch_strictly_public',
             'enable_request_signal',
           ],
-          exports: { Workspace: { type: 'durable-object', storage: 'sqlite' } },
+          exports: {
+            Workspace: { type: 'durable-object', storage: 'sqlite' },
+            Machine: { type: 'durable-object', storage: 'sqlite' },
+          },
           env: {
+            MACHINES: {
+              type: 'durable-object',
+              worker: 'chat-adapter-tests',
+              exportName: 'Machine',
+            },
             DB: { type: 'd1', id: TEST_D1_ID },
             WORKSPACES: {
               type: 'durable-object',
@@ -50,10 +59,12 @@ export async function createAdapterRuntime(entryPoint = 'worker/workspace.ts') {
             mainModule: 'index.js',
             modules: {
               'workspace.js': { type: 'esm', contents: code },
+              'machine.js': { type: 'esm', contents: machine },
               'index.js': {
                 type: 'esm',
                 contents: `
           export { Workspace } from './workspace.js';
+          export { Machine } from './machine.js';
           export default { fetch(request, env) {
             return env.WORKSPACES.get(env.WORKSPACES.idFromName('${WORKSPACE_ID}')).fetch(request);
           } };`,
