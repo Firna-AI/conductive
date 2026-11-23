@@ -1,6 +1,6 @@
 # Workspace object memory
 
-Status: Active. On branch `calummoore/object-memory-history-and-files-state-14g5`, no pull request yet. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/object-memory-history-and-files-state-14g5`, no pull request yet. Cal approved the implementation on 23 November 2026. The reader release of Milestone 2 runs on its own branch, `calummoore/memory-projection-reader-release-jrq9`, with its own pull request into `main`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 The workspace Durable Object has 128 MB of memory. Production workspaces
 went over that limit when a tab replayed a long history and when the
@@ -21,9 +21,9 @@ Today the object loads and saves both lists whole for each file event. The
 history stores each event as one storage value, or as chunks above 1 MiB.
 A forward history page reads one storage list of 32 events.
 
-Decision 1 below is open. Under its recommended option C, the work ships in
-two pull requests. A small reader release merges first. The pull request of
-this branch merges after that release has been live for at least one hour.
+Decision 1 below chose option C. So the work ships in two pull requests. A
+small reader release merges first. The pull request of this branch merges
+after that release has been live for at least one hour.
 
 Other plans:
 
@@ -106,6 +106,25 @@ to workspace reads, indexed session reads, and legacy preparation.
   - Rejected A, a hash of each path in the assembly state. Rejected C, no
     change.
 
+### Plan approval of 23 November 2026
+
+- Cal approved the implementation of this plan on 23 November 2026 with
+  the message "Ok progress those plans and merge when go is green". The
+  approval includes the two adjacent files that this plan names:
+  `worker/chat/files-storage.ts` and `worker/chat/history-session-records.ts`.
+- The orchestrator applies the plan's recommendations under that approval:
+  1 C and 2 A. Cal did not type these option letters himself. The decisions
+  below record each outcome.
+- Cal also wrote: "don't need to run the full gate locally, we can just push
+  and use ci to test". So the agents run targeted tests, the typecheck, the
+  lint, and the format check locally. CI runs the complete gate on each pull
+  request.
+- Cal merges each pull request into `main` after its checks are green. His
+  authorization replaces `Agent merges: off` for this work, but no agent of
+  this plan merges a pull request into `main` itself.
+- The reader release starts at once, beside Milestone 1, at Cal's request.
+  It changes no requirement, so it needs no text of Milestone 1.
+
 ## Design calls
 
 These are my calls, made on 20 November 2026 under the existing
@@ -174,6 +193,27 @@ Projection, under option C of decision 1:
    Reason: one manifest keeps the connection fields in one place. The order
    text keeps the list order that the reload tests and the Changes panel
    need. The digests let a full report skip the buckets that did not change.
+
+   The exact contract, settled on 23 November 2026 before the reader work
+   started. The reader defines it, and the writer imports it unchanged:
+   - Manifest fields of the bucket layout: `layout: 'buckets'`,
+     `hash: 'fnv1a32'`, `bucketCount: 64`, `treeChunks: 0`,
+     `changesChunks: 0`, and `tree` and `changes`, each `null` or a list
+     record. A list record has `fields`, the list without its item array,
+     and `count`, `orderChunks`, and `buckets`. Each of the 64 buckets has
+     `count`, `chunks`, and `digest`.
+   - The bucket of an item is the FNV-1a 32-bit hash of the UTF-8 bytes of
+     its `path`, modulo 64.
+   - Keys: `files:state:v1:<kind>:bucket:<b>:<i>` and
+     `files:state:v1:<kind>:order:<i>`. An empty bucket has no key.
+   - The digest is the lowercase hex SHA-256 of the bucket's JSON text.
+   - Order symbol n is character n of the base64url alphabet, from `A`.
+   - Modules: `worker/files/bucket-layout.ts` for the constants, the types,
+     the hash, the digest, the keys, `parseBucketManifest`, and
+     `bucketListKeys`; `worker/files/bucket-read.ts` for `readBucketList`;
+     and `readFilesManifest` and `readFileList` in `storage.ts`.
+   - The prompt of the reader workspace gives the full text, with each
+     damaged case.
 9. The scalar fields of each list accept optional fields. The runner file
    report limits plan can then add an omitted entry count to the tree. It
    can add an omitted file count and line totals to the changes list. It
@@ -256,9 +296,11 @@ Release:
     the index is ready. Reason: the new helper owns both indexed read
     directions, so changing only `HistoryPages` would miss a forward path.
 
-## Open decisions
+## Decisions
 
-The options check is merged below. Its report is
+Both decisions were open on 20 November 2026. The plan approval of 23
+November 2026 resolved them with the recommended options. The options
+check is merged below. Its report is
 `.context/workspace-object-memory/options-check-report.md`.
 The options keep their recorded letters.
 
@@ -367,6 +409,9 @@ The options keep their recorded letters.
 - **Action:** ask the user, because the options have real trade-offs and
   option C makes the release two pull requests, which the M3 choice does
   not cover.
+- **Outcome:** C, under Cal's plan approval of 23 November 2026. The writer
+  of Milestone 6 merges only after the reader release deploy has succeeded
+  and has been live for at least one hour.
 
 ### 2. End of the old projection reader
 
@@ -421,6 +466,8 @@ The options keep their recorded letters.
   only after stored-data coverage and rollback targets permit removal.
 - **Action:** ask the user, because the `plans` skill gives the choice to
   keep a reader of stored data to the user.
+- **Outcome:** A, under Cal's plan approval of 23 November 2026. A
+  follow-up item records the conditions for its removal.
 
 ### Milestones under the other options of decision 1
 
@@ -519,7 +566,8 @@ requirement.
 
 ## Milestone 2: Projection reader release
 
-Depends on: 1 and decision 1 choosing C.
+Depends on: decision 1 choosing C. Cal asked on 23 November 2026 to start
+this milestone at once. It needs no text of Milestone 1.
 
 A small pull request into `main` teaches the Worker to read the bucket
 layout of design call 8. The Worker still writes the current layout. When
@@ -534,25 +582,25 @@ The reader workspace follows `finish-work`, because its pull request
 targets `main`. Its prompt must keep review and fixes before PR creation.
 The primary orchestrator owns this milestone's plan edits and TODO ticks.
 
-- [ ] Create a nested workspace for this milestone. Start its branch from
+- [x] Create a nested workspace for this milestone. Start its branch from
       `main`. Add its `Branch:` markers here. Include this milestone and
       its review order in the delegation prompt. Keep this plan off that branch.
 - [ ] Define the bucket layout in one module under `worker/files/`. Give
       its keys, marker, chunks, order text, counts, and digests in the doc
       comment of the module. Keep room for the optional scalar fields of
-      design call 9.
+      design call 9. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Read either layout through one function over a supplied
       `FilesStorage`. Use only `get` and `getMany`. Read one list without
-      the other.
+      the other. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Make each write path convert a bucket-layout projection back:
       `beginConnection`, `apply` for each file event type, and
       `markFilesMoved`. Each one writes the current layout and removes each
-      bucket key and order key in one transaction.
+      bucket key and order key in one transaction. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Treat a damaged bucket layout as damaged data, as today. A missing
       chunk, a count that does not match the order text, or an unknown
-      marker value gives the existing invalid file response.
+      marker value gives the existing invalid file response. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Add tests with records that a test builder writes in the documented
-      layout:
+      layout. Branch: `calummoore/memory-projection-reader-release-jrq9`.
   - [ ] A tree with the unavailable mark reads back exactly. So do a
         changes list with and without both optional counts, an empty list,
         a bucket of more than one chunk, and a list in an order that is not
@@ -562,13 +610,13 @@ The primary orchestrator owns this milestone's plan edits and TODO ticks.
         the old layout.
   - [ ] The existing tests of the old layout pass unchanged.
 - [ ] Update the storage section and Key Code of the
-      [files README](../worker/files/README.md).
-- [ ] Run the targeted tests, `npm run test -- worker/files`, and the
-      complete gate. Commit and push the branch.
+      [files README](../worker/files/README.md). Branch: `calummoore/memory-projection-reader-release-jrq9`.
+- [ ] Run the targeted tests, `npm run test -- worker/files`. CI runs the
+      complete gate on the pull request. Commit and push the branch. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] Review the complete local diff against `origin/main` with the
       `implementation-review` skill after the push. Apply its fix rule.
-      Push and re-review required fixes before opening the pull request.
-- [ ] Open the reader pull request into `main` after review and fixes.
+      Push and re-review required fixes before opening the pull request. Branch: `calummoore/memory-projection-reader-release-jrq9`.
+- [ ] Open the reader pull request into `main` after review and fixes. Branch: `calummoore/memory-projection-reader-release-jrq9`.
 - [ ] After Cal merges it, record the merge commit and the time of the
       successful deploy run in `.context/workspace-object-memory/`.
 
@@ -620,9 +668,9 @@ pages.
 Depends on: 1, 3, and the merge of PR #477 into `main`
 
 This milestone bounds each history page, as M2 A says. It builds on the
-`ReadScope` of PR #477. On 20 November 2026 it was open and conflicted with
-the updated `main`. Its owner resolves those conflicts while preserving
-the session index. Cal then merges it, because agent merges are off.
+`ReadScope` of PR #477. PR #477 merged into `main` on 22 November 2026 as
+`6408c95`, with the session index preserved. It sets the replay budget of
+8 MiB in `worker/chat/browser-subscription.ts`.
 
 - [ ] Merge `main` into this branch after PR #477 merges. Resolve
       `store.ts` and `history-pages.ts` with Milestone 3 and the session
@@ -766,9 +814,9 @@ the path labels, the list order, and the absent optional counts.
 
 Depends on: 2, 3, 4, 5, and 6
 
-- [ ] Merge `main`. Run `npm --prefix desktop ci` and
-      `npm ci --prefix runner` once. Then run the complete gate,
-      `npm run check`.
+- [ ] Merge `main`. CI runs the complete gate, `npm run check`, on the
+      pull request, as Cal asked on 23 November 2026. Run the typecheck,
+      the lint, and the format check locally.
 - [ ] Run the targeted tests of Milestones 3 to 6 on the combined tree.
 - [ ] From the orchestrator session, request a rerun of the measurement
       harness on this branch's tip with `send_message`. It runs in
