@@ -206,6 +206,7 @@ The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite 
 Its `evict` evicts the object, so that a test can check a reload.
 This module does not write the bucket layout.
 So the `bucket-*.test.ts` files write it with `writeBucketProjection` in `test-support/bucket-builder.ts`.
+`test-support/bucket-record.ts` holds one fixed record with literal keys, symbols, and manifest values, so a change of the stored format fails a test.
 `bucket-rollback.test.ts` checks that each write changes a stored bucket layout back to the old layout in one atomic write.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
