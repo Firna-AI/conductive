@@ -258,7 +258,7 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/model-rows.ts`: `modelMenuRows`, the rows of the model menu,
   as [Model favourites](../../docs/protocol/model-favourites.md#the-model-menu)
   gives them: the favourites that the picker offers, All models with the
-  models of each agent, the efforts, and Fast. With no favourite to show,
+  models of each agent, Effort with the efforts of the model, and Fast. With no favourite to show,
   the menu starts with All models. The rows name no menu component, so
   each model picker can draw them. `components/model-menu.ts` draws them as
   the entries of `ui/Menu.tsx` for the picker of a session, and
