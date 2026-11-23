@@ -24,7 +24,7 @@ import { workspaceSessions } from './sessions'
  * secret cannot add it.
  */
 /** A grant of the sample runs, by a sample member. */
-export type SecretGrant = AnySecretGrant<PersonKey>
+type SecretGrant = AnySecretGrant<PersonKey>
 
 /** A grant that a sample member gave. */
 export type MemberGrant = AnyMemberGrant<PersonKey>

@@ -28,7 +28,7 @@ export type Plan = {
 }
 
 /** The new path of a moved mockup module. */
-export function destination(file: string): string {
+function destination(file: string): string {
   if (file === `${MOCKUPS}brand.ts`) return 'src/shared/brand.ts'
   return `src/ui/${file.slice(MOCKUPS.length)}`
 }
