@@ -5,14 +5,16 @@ export const termsServiceSection: LegalDocument['sections'][number] = {
   title: 'The service',
   blocks: [
     paragraph`${productName} is a coding tool in the browser and in the
-      Mac app. Each workspace has its own cloud computer, where agents
-      powered by Claude and Codex work. A workspace can hold one task
-      after another, with one branch at a time.`,
+      Mac app. A workspace runs on a cloud computer or in a container
+      on an own computer. An own computer is a Linux server that your
+      org adds to ${productName}. Agents powered by Claude and Codex
+      work in the workspace. A workspace can hold one task after
+      another, with one branch at a time.`,
     paragraph`An org admin can choose one public GitHub repository of
       agent skills for every workspace of the org. Agents powered by
       Claude and Codex use its skill folders. Only an org admin changes
       this setting. Other members read it without changing it.
-      The cloud computer copies the repository at
+      The workspace copies the repository at
       start and checks for new commits every 5 minutes. A changed
       repository applies at the next start or resume of each workspace.`,
     paragraph`Each skills repository starts untrusted. Only an org admin
@@ -33,11 +35,11 @@ export const termsServiceSection: LegalDocument['sections'][number] = {
     paragraph`Trust covers one repository. Replacing or removing the
       repository clears trust unless an admin explicitly trusts the
       replacement.`,
-    paragraph`Each cloud computer takes the saved trust choice at its
+    paragraph`Each workspace takes the saved trust choice at its
       next start or resume. Saving does not change an active turn. A
-      running computer can keep its previous trust while the repository
+      running workspace can keep its previous trust while the repository
       copy gets new updates. Restart restarts software without refreshing
-      these settings. This choice needs updated cloud computer software.
+      these settings. This choice needs updated workspace software.
       Automatic software updates bring that support to existing workspaces.`,
     paragraph`This setting loads only skill folders. It loads no hooks,
       MCP servers, agents, rules files, separate custom slash commands, or

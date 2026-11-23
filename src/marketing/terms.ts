@@ -46,18 +46,7 @@ export const termsDocument: LegalDocument = {
           ${mailLink(legalAddress)}.`,
       ],
     },
-    {
-      ...termsServiceSection,
-      blocks: [
-        paragraph`${productName} is a coding tool in the browser and in the
-          Mac app. A workspace runs on a cloud computer or in a container
-          on an own computer. An own computer is a Linux server that your
-          org adds to ${productName}. Agents powered by Claude and Codex
-          work in the workspace. A workspace can hold one task after
-          another, with one branch at a time.`,
-        ...termsServiceSection.blocks.slice(1),
-      ],
-    },
+    termsServiceSection,
     {
       title: 'Your accounts',
       blocks: [
@@ -71,7 +60,7 @@ export const termsDocument: LegalDocument = {
           text`When an admin saves a skills repository, and when a member
             opens Skills, ${productName} reads its repository details and
             file tree on GitHub. The lookup uses that member's GitHub
-            sign-in. The cloud computer copies and updates the public
+            sign-in. The workspace copies and updates the public
             repository without a GitHub token.`,
           text`${productName} runs cloud computers in its own accounts with
             cloud computer providers. The operator can switch an org to

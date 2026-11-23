@@ -17,7 +17,7 @@ export const privacySkillsSection: LegalDocument['sections'][number] = {
       and file tree on GitHub. It uses the GitHub sign-in of the member
       who views the section. It shows the skill names or a notice.
       This lookup does not store the list it returns.`,
-    paragraph`The cloud computer copies and updates the public repository
+    paragraph`The workspace copies and updates the public repository
       without a GitHub token. GitHub receives the repository name and
       the network address with these requests. The copied skill folders
       guide agents powered by Claude and Codex in that workspace.`,
@@ -26,10 +26,10 @@ export const privacySkillsSection: LegalDocument['sections'][number] = {
       available credentials, and tools. This choice does not change
       Codex's behavior.`,
     paragraph`Changed repository and trust settings apply when each
-      cloud computer next starts or resumes. Saving does not change an
-      active turn. A running computer can keep its previous
+      workspace next starts or resumes. Saving does not change an
+      active turn. A running workspace can keep its previous
       trust while the repository copy gets new updates. After a
-      repository change, the computer removes the old copy at that
+      repository change, the workspace removes the old copy at that
       start or resume.`,
   ],
 }
