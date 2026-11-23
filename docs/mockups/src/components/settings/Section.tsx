@@ -33,11 +33,6 @@ export function Section(props: {
   )
 }
 
-/** Preformatted text, such as script output, in a tinted block. */
-export function MonoBlock(props: { text: string }) {
-  return <pre className={styles.mono}>{props.text}</pre>
-}
-
 /**
  * A line of body text in a section. A `status` line says what a change of
  * the section did, so a screen reader reads it out when it shows.

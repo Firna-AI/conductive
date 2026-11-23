@@ -15,6 +15,11 @@ The visual spec is the `app/files` page of the
 tab of an HTML file, and `app/chat/unavailable-files` for a tree that the
 cloud computer could not read.
 
+`code/CodeField.tsx` shares the line numbers and the syntax colours of a
+file tab with other screens. `CodeField` is a field for code, and
+`CodeBlock` shows code to read. The Cloud computer tab uses them for the
+install script and the startup script.
+
 The screens render data from the Worker only. The workspace screen of the
 app shell mounts them, as
 [the Files part](../shell/workspace/README.md#the-files-part) says. The

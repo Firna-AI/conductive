@@ -12,6 +12,7 @@ import {
   trustHint,
 } from '../../docs/mockups/src/components/settings/skillsTrustCopy'
 import { shownSkills } from '../app/skills-lookup'
+import { CodeBlock } from '../files/code/CodeField'
 import type {
   OrgSettings,
   SkillsRepositoryLookupResponse,
@@ -21,13 +22,13 @@ import type { Resource } from './useResource'
 import { InlineText } from './ui/InlineText'
 import { Loading, LoadFailure } from './ui/Loading'
 import { Notice } from './ui/Notice'
-import { MonoBlock, Section, SectionText } from './ui/Section'
+import { Section, SectionText } from './ui/Section'
 import { StatusText } from './ui/StatusText'
 import styles from './ComputerSections.module.css'
 
 /**
- * A script of the org as text, without a field or Save, for a member who
- * is not an admin (decision 57). `notice` shows under the script.
+ * A script of the org as code to read, without a field or Save, for a
+ * member who is not an admin (decision 57). `notice` shows under the script.
  */
 export function ScriptSection(props: {
   title: string
@@ -38,7 +39,7 @@ export function ScriptSection(props: {
   return (
     <Section description={props.description} title={props.title}>
       {props.script.trim() ? (
-        <MonoBlock label={props.title} text={props.script} />
+        <CodeBlock label={props.title} name="script.sh" value={props.script} />
       ) : (
         <SectionText muted>The script is empty.</SectionText>
       )}
