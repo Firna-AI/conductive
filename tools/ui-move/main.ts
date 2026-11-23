@@ -26,18 +26,26 @@ function tracked(): string[] {
   return out.split('\0').filter((file) => file && existsSync(file))
 }
 
-function runPlan() {
+function readMap(): PathMap {
+  return existsSync(MAP_FILE)
+    ? (JSON.parse(readFileSync(MAP_FILE, 'utf8')) as PathMap)
+    : {}
+}
+
+/**
+ * Adds the paths of a new plan to the map, and writes it. The map is the
+ * record of every move, so a later plan only adds to it. It returns the
+ * merged map, or nothing when the plan reaches mockup-only modules.
+ */
+function extendMap(known: PathMap): PathMap | undefined {
   const result = plan(tracked())
   if (result.blocked.length > 0) {
     console.error('The moved modules reach mockup-only modules:')
     for (const chain of result.blocked) console.error(`  ${chain.join(' -> ')}`)
+    console.error('Fix these imports by hand, then run the command again.')
     process.exitCode = 1
-    return
+    return undefined
   }
-  // The map is the record of every move, so a later plan only adds to it.
-  const known = existsSync(MAP_FILE)
-    ? (JSON.parse(readFileSync(MAP_FILE, 'utf8')) as PathMap)
-    : {}
   const merged = { ...known, ...result.map }
   const sorted = Object.fromEntries(Object.entries(merged).sort())
   writeFileSync(MAP_FILE, `${JSON.stringify(sorted, null, 2)}\n`)
@@ -45,10 +53,11 @@ function runPlan() {
   console.log(
     `Added ${added} paths. ${MAP_FILE} holds ${Object.keys(sorted).length}.`,
   )
+  return sorted
 }
 
-function runApply() {
-  const map = JSON.parse(readFileSync(MAP_FILE, 'utf8')) as PathMap
+/** Moves each file of the map that is still at its old path. */
+function moveFiles(map: PathMap): number {
   let moved = 0
   for (const [from, to] of Object.entries(map)) {
     if (!existsSync(from) || existsSync(to)) continue
@@ -56,9 +65,13 @@ function runApply() {
     execFileSync('git', ['mv', from, to])
     moved += 1
   }
+  return moved
+}
+
+/** Rewrites the paths of each text file, and collects the stale ones. */
+function rewriteFiles(map: PathMap, unsure: Map<string, Set<string>>) {
   const files = tracked()
   const tree = new Tree(files, map)
-  const unsure = new Map<string, Set<string>>()
   let changed = 0
   for (const file of files) {
     if (!TEXT_FILE.test(file) || KEEP.test(file)) continue
@@ -74,9 +87,33 @@ function runApply() {
       unsure.set(value, seen)
     }
   }
+  return changed
+}
+
+function runPlan() {
+  extendMap(readMap())
+}
+
+/**
+ * Applies the map, then plans again: a branch can add an import of a
+ * mockup module that the map does not know. The second pass moves those
+ * modules too, and adds them to the map.
+ */
+function runApply() {
+  let map = readMap()
+  const unsure = new Map<string, Set<string>>()
+  let moved = moveFiles(map)
+  let changed = rewriteFiles(map, unsure)
+  const known = Object.keys(map).length
+  const next = extendMap(map)
+  if (next && Object.keys(next).length > known) {
+    map = next
+    moved += moveFiles(map)
+    changed += rewriteFiles(map, unsure)
+  }
   console.log(`Moved ${moved} files. Rewrote ${changed} files.`)
   if (unsure.size > 0) {
-    console.log('Check these paths by hand. Their folders keep some files:')
+    console.log('Check these paths by hand. They name no file or folder:')
     for (const [value, where] of [...unsure].sort())
       console.log(`  ${value}: ${[...where].sort().join(', ')}`)
   }

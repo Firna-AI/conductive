@@ -15,20 +15,26 @@ after you merge `main`:
 
 1. Run `git merge origin/main`. Git follows the renames, so most edits of
    a moved file land in its new place.
-2. Run `node tools/ui-move/main.ts apply`. It moves each file that the
+2. Resolve each merge conflict, and commit the merge.
+3. Run `node tools/ui-move/main.ts apply`. It moves each file that the
    branch still has at an old path, and it rewrites each path that names
-   an old place.
-3. Run `npm run typecheck`, `npm run mockups:check`, and `npm run lint`.
-4. Check the paths that the script lists at the end by hand. They are in
-   folders that kept some files, so the script cannot choose.
+   an old place. Then it plans again. A branch can add an import of a
+   mockup module that the map does not name. `apply` then moves that
+   module too, adds it to `map.json`, and rewrites its paths.
+4. Run `npm run typecheck`, `npm run mockups:check`, and `npm run lint`.
+5. Check the paths that the script lists at the end by hand. They name no
+   file or folder.
 
-A second run of `apply` changes nothing.
+A second run of `apply` changes nothing. When the new plan reaches a
+fixture or another mockup-only module, `apply` names the chain and adds
+nothing to the map. Change that import by hand, then run `apply` again.
 
 ## What the script does
 
-- `plan` writes `map.json`. It starts from each relative import in
-  `src/`, `worker/`, and `desktop/` that names a file in
-  `docs/mockups/src/`. Development code and tests do not count. Then it
+- `plan` adds new paths to `map.json`. The map keeps each earlier path,
+  because it is the record of every move. The plan starts from each
+  relative import in `src/`, `worker/`, and `desktop/` that names a file
+  in `docs/mockups/src/`. Development code and tests do not count. Then it
   adds each file that a moved file imports, also by a type import or a
   CSS `url()`. A licence file moves with the files beside it. The plan
   stops when a moved file reaches a fixture, an entry, a catalogue path

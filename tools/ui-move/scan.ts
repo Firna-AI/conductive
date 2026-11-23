@@ -83,7 +83,7 @@ export function rewriteText(tree: Tree, file: string, text: string): Scan {
   next = next.replace(ROOT_PATH, (all, value: string) => {
     const moved = rootPath(tree, value)
     if (moved !== undefined) return all.replace(value, moved)
-    if (touchesMove(tree, value)) unsure.push(value)
+    if (namesNothing(tree, value)) unsure.push(value)
     return all
   })
   return { text: next, targets, unsure }
@@ -97,15 +97,7 @@ function rootPath(tree: Tree, value: string): string | undefined {
   return to.slice(0, to.length - target.suffix.length)
 }
 
-/**
- * A root path that no rule rewrites, but that can be stale: a path that
- * names nothing, or a folder that kept some files and lost others.
- */
-function touchesMove(tree: Tree, value: string): boolean {
-  const target = tree.resolve('.', `./${value}`)
-  if (!target) return true
-  if (!tree.folders.has(target.path)) return false
-  return Object.keys(tree.map).some((file) =>
-    file.startsWith(`${target.path}/`),
-  )
+/** A root path that no rule rewrites and that names no file or folder. */
+function namesNothing(tree: Tree, value: string): boolean {
+  return tree.resolve('.', `./${value}`) === undefined
 }
