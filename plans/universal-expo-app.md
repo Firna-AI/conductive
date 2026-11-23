@@ -270,7 +270,7 @@ Each call is mine, made on 23 November 2026.
 
 Depends on: none
 
-- [ ] Add the primary branch, `calummoore/expo-mobile-version-4fjt`, to
+- [x] Add the primary branch, `calummoore/expo-mobile-version-4fjt`, to
       the push trigger of `.github/workflows/ci.yml`, as decision 11 A
       says.
 - [ ] Merge `main` into the primary branch before each nested workspace

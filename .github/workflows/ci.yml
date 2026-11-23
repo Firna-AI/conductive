@@ -3,7 +3,12 @@ name: CI
 # CI runs on pull requests, and on pushes to main and the primary branch.
 on:
   push:
-    branches: [main, calummoore/conductor-alternative-architecture]
+    branches:
+      [
+        main,
+        calummoore/conductor-alternative-architecture,
+        calummoore/expo-mobile-version-4fjt,
+      ]
   pull_request:
 
 permissions:
