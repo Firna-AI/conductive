@@ -2,6 +2,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { record, string } from '../chat/inputs'
 import { workspaceMachineOwner } from '../machines/client'
 import { machineTokenStatus } from '../machines/token.test-support'
+import { failingMachineRevokes } from '../machines/revoke.test-support'
 
 import { orgPath } from '../../src/shared/api'
 import { deleteOrgPath } from '../../src/shared/orgs'
@@ -181,6 +182,49 @@ it('performs only due retention under a temporary lease capability and retries f
     code: 'org_cleanup_busy',
   })
   expect(providerRequests(harness)).toHaveLength(3)
+})
+
+it('keeps a failed observed retention revoke pending until the cleanup retry revokes it', async () => {
+  const { org, admin, client } = await deletionFixture(harness)
+  let sequence = 0
+  client.dependencies.randomToken = () => `revoke-${++sequence}`.padEnd(43, 'x')
+  lifecycleFixture(client)
+  await stopWorkspace(harness, 'workspace-one', 13)
+  const deleted = await client.request(
+    deleteOrgPath(org.id),
+    admin.session,
+    write({ name: org.name }),
+  )
+  expect(deleted.status).toBe(200)
+  client.setTime(TEST_TIME + 23 * 3600000)
+  harness.boat.requests = []
+  const unavailable = failingMachineRevokes(harness.env)
+  expect(
+    await cleanupDeletedOrgs(unavailable, client.dependencies, client.hooks),
+  ).toEqual({ purged: [], pending: [org.id] })
+  const resumed = harness.boat.requests.find((request) =>
+    new URL(request.url).pathname.endsWith('/resume'),
+  )
+  if (!resumed) throw new Error('Missing pending retention resume.')
+  const pendingToken = string(
+    record(record(await resumed.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  const owner = workspaceMachineOwner(org.id, 'workspace-one')
+  expect(await machineTokenStatus(harness.env, owner, pendingToken)).toBe(101)
+  expect(
+    await cleanupDeletedOrgs(unavailable, client.dependencies, client.hooks),
+  ).toEqual({ purged: [], pending: [org.id] })
+  expect(await machineTokenStatus(harness.env, owner, pendingToken)).toBe(101)
+  expect(
+    await cleanupDeletedOrgs(harness.env, client.dependencies, client.hooks),
+  ).toEqual({ purged: [], pending: [] })
+  expect(await machineTokenStatus(harness.env, owner, pendingToken)).toBe(401)
+  expect(providerRequests(harness)).toEqual([
+    'POST /sandboxes/sandbox-workspace-one/resume',
+    'POST /sandboxes/sandbox-workspace-one/stop',
+    'POST /sandboxes/sandbox-workspace-one/stop',
+    'POST /sandboxes/sandbox-workspace-one/stop',
+  ])
 })
 
 it('skips a suspended owner during deleted-org disk retention', async () => {

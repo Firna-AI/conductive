@@ -64,18 +64,22 @@ pub trait Socket: Send + Sync {
 
 /// TLS socket factory. Refused upgrades are ordinary connection failures.
 #[cfg_attr(test, unimock::unimock(api = ConnectorMock))]
-#[async_trait]
 pub trait Connector: Send + Sync {
     /// Open an authenticated outbound host connection.
-    async fn connect(&self, request: &ConnectionRequest) -> Result<Arc<dyn Socket>>;
+    fn connect<'a>(&'a self, request: &'a ConnectionRequest) -> SocketConnection<'a>;
 }
+
+/// Pending host connection, cancelled by the runtime's attempt deadline.
+pub type SocketConnection<'a> = Pin<Box<dyn Future<Output = Result<Arc<dyn Socket>>> + Send + 'a>>;
+
+/// Pending operation, which may be cancelled by its enclosing deadline.
+pub type OperationFuture<'a> = Pin<Box<dyn Future<Output = Result<HostResult>> + Send + 'a>>;
 
 /// Operations other than streams, which belong to one connection.
 #[cfg_attr(test, unimock::unimock(api = OperationsMock))]
-#[async_trait]
 pub trait Operations: Send + Sync {
     /// Validate and execute one command or file operation.
-    async fn execute(&self, operation: HostOperation) -> Result<HostResult>;
+    fn execute(&self, operation: HostOperation) -> OperationFuture<'_>;
 }
 
 /// Commands and their runtime records outlive an individual connection.

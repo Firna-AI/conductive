@@ -126,6 +126,10 @@ async fn started_commands_keep_private_records_and_utf8_safe_byte_offsets() -> T
             more: true
         }
     );
+    let recovered = support::commands(folder.path())
+        .status(process_id, 0, 0)
+        .await?;
+    assert_eq!(recovered, status);
     let next = commands
         .status(process_id, (first_chunk - 1) as u64, 2)
         .await?;

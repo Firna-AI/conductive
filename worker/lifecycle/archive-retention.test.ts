@@ -57,6 +57,23 @@ it('bridges an old archived disk without secrets or startup and rearms a restore
   )
   await fixture.advanceTo(TEST_TIME + 26 * day + 5_000, saved.id)
   expect(fixture.boat.resumeIds).toEqual([saved.sandboxId, saved.sandboxId])
+  const resumed = fixture.boat.server.requests.findLast((request) =>
+    new URL(request.url).pathname.endsWith('/resume'),
+  )
+  if (!resumed) throw new Error('Missing restored maintenance resume.')
+  const freshToken = string(
+    record(record(await resumed.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  const owner = workspaceMachineOwner(fixture.org.id, saved.id)
+  expect(await machineTokenStatus(fixture.harness.env, owner, freshToken)).toBe(
+    101,
+  )
+  fixture.boat.states.set(saved.sandboxId, 'archived')
+  await fixture.advanceTo(TEST_TIME + 26 * day + 10_000, saved.id)
+  expect(fixture.boat.stopIds).toEqual([saved.sandboxId])
+  expect(await machineTokenStatus(fixture.harness.env, owner, freshToken)).toBe(
+    401,
+  )
 })
 
 it('rechecks suspension after the provider read before an archived maintenance resume', async () => {

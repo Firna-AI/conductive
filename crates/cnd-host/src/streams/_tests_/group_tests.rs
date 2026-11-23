@@ -135,13 +135,16 @@ async fn credit_pauses_local_reads_and_handoff_precedes_credit_and_half_close() 
     let sent_eof = eof.clone();
     let effects = Arc::new(Unimock::new((
         LocalSocketMock::read.each_call(matching!(_)).answers_arc(Arc::new(move |_, maximum| {
+            let captured = captured.clone();
+            Box::pin(async move {
             let mut reads = captured.lock().unwrap(); reads.push(maximum);
             Ok(if reads.len() <= 4 { vec![7; maximum] } else { Vec::new() })
+            })
         })),
         SocketMock::data.each_call(matching!(1, _)).answers_arc(Arc::new(move |_, _, _| {
             let mut count = sent_count.lock().unwrap(); *count += 1; if *count == 4 { window_ready.notify_one(); } Ok(())
         })),
-        LocalSocketMock::write.next_call(matching!((bytes) if *bytes == [1, 2])).returns(Ok(())),
+        LocalSocketMock::write.next_call(matching!((bytes) if *bytes == [1, 2])).answers(&|_, _| Box::pin(async { Ok(()) })),
         SocketMock::send.next_call(matching!((message) if matches!(message, HostToWorker::StreamCredit { stream_id: 1, bytes: 2 }))).answers_arc(Arc::new(move |_, _| { credit_returned.notify_one(); Ok(()) })),
         LocalSocketMock::end.next_call(matching!()).answers_arc(Arc::new(move |_| { write_ended.notify_one(); Ok(()) })),
         SocketMock::send.next_call(matching!((message) if matches!(message, HostToWorker::StreamEnd { stream_id: 1 }))).answers_arc(Arc::new(move |_, _| { sent_eof.notify_one(); Ok(()) })),

@@ -63,15 +63,16 @@ function matches(operation: HostOperation, result: HostResult): boolean {
 
 export class PendingRequests {
   private readonly requests = new Map<number, PendingRequest>()
-  private nextId = 0
   private bytes = 0
+  private readonly allocateId: () => number
+
+  constructor(allocateId: () => number) {
+    this.allocateId = allocateId
+  }
 
   create(operation: HostOperation) {
     if (this.requests.size >= HOST_MAX_PENDING_REQUESTS) throw machineBusy()
-    do {
-      this.nextId = (this.nextId % 0xffff_ffff) + 1
-    } while (this.requests.has(this.nextId))
-    const id = this.nextId
+    const id = this.allocateId()
     const milliseconds =
       operation.kind === 'command.run'
         ? (operation.timeoutSeconds + 10) * 1_000

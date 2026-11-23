@@ -5,6 +5,31 @@ import { setupBackendTests } from './backend-test-hooks'
 import { heldOperation } from '../test-support/held-operation'
 import { retentionCommandFixture } from './retention-command-test-support'
 import { resumeCompletedWorkspace as resumeWorkspace } from './completed-resume-test-support'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
+import { record, string } from '../chat/inputs'
+
+it('revokes the retention token when the computer stops before the stop phase', async () => {
+  const fixture = await retentionCommandFixture(await backendFixture())
+  const { boat, platform } = fixture
+  const request = boat.server.requests.findLast((request) =>
+    new URL(request.url).pathname.endsWith('/resume'),
+  )
+  if (!request) throw new Error('Missing retention resume.')
+  const token = string(
+    record(record(await request.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  const owner = workspaceMachineOwner(fixture.org.id, fixture.id)
+  await platform.endpoint().advance()
+  await platform.endpoint().advance()
+  expect(await fixture.progress()).toEqual({ phase: 'stop', error: null })
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
+  boat.states.set('bx_1', 'archived')
+  await platform.endpoint().advance()
+  expect(await fixture.progress()).toBeNull()
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(401)
+  expect(boat.stopIds).toEqual([])
+})
 
 const backendFixture = setupBackendTests()
 const DEADLINE = TEST_TIME + 1_124_460_000

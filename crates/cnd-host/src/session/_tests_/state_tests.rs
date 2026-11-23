@@ -19,6 +19,7 @@ use crate::diagnostics::DiagnosticsMock;
 use crate::error::Error;
 use crate::ports::{Incoming, OperationsMock, SocketMock};
 use crate::streams::ports::StreamsMock;
+use crate::test_support::Time;
 
 use super::State;
 
@@ -38,8 +39,10 @@ async fn requests_need_welcome_and_only_sixty_four_can_await_replies() {
         OperationsMock::execute
             .each_call(matching!(_))
             .answers(&|_, _| {
-                Ok(HostResult::Error {
-                    code: HostErrorCode::Internal,
+                Box::pin(async {
+                    Ok(HostResult::Error {
+                        code: HostErrorCode::Internal,
+                    })
                 })
             }),
     ));
@@ -51,6 +54,7 @@ async fn requests_need_welcome_and_only_sixty_four_can_await_replies() {
         writes: JoinSet::new(),
         pending: BTreeSet::new(),
         welcomed: false,
+        clock: Time::new().clock,
         diagnostics: Arc::new(Unimock::new(
             DiagnosticsMock::welcomed
                 .some_call(matching!())
@@ -110,6 +114,7 @@ async fn stream_opened_is_written_before_local_reads_are_activated() {
         writes: JoinSet::new(),
         pending: BTreeSet::new(),
         welcomed: true,
+        clock: Arc::new(Unimock::new(())),
         diagnostics: Arc::new(Unimock::new(())),
     };
     state

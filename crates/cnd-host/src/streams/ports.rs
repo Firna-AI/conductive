@@ -16,12 +16,18 @@ use crate::ports::Socket;
 #[async_trait]
 pub trait LocalSocket: Send + Sync {
     /// Read at most the available credit. Empty means local EOF.
-    async fn read(&self, maximum: usize) -> Result<Vec<u8>>;
+    fn read(&self, maximum: usize) -> LocalRead<'_>;
     /// Hand received stream bytes to the local socket.
-    async fn write(&self, bytes: &[u8]) -> Result<()>;
+    fn write<'a>(&'a self, bytes: &'a [u8]) -> LocalWrite<'a>;
     /// Half-close the local socket's write direction.
     async fn end(&self) -> Result<()>;
 }
+
+/// Pending local read, preserving its cancellation boundary for stream tasks.
+pub type LocalRead<'a> = Pin<Box<dyn Future<Output = Result<Vec<u8>>> + Send + 'a>>;
+
+/// Pending local write, independent of the socket's read direction.
+pub type LocalWrite<'a> = Pin<Box<dyn Future<Output = Result<()>> + Send + 'a>>;
 
 /// Asynchronous result of opening one permitted local socket.
 pub type Connection<'a> = Pin<Box<dyn Future<Output = Result<Arc<dyn LocalSocket>>> + Send + 'a>>;

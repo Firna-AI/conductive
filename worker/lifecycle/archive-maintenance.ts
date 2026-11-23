@@ -53,6 +53,12 @@ export async function advanceArchiveMaintenance(
     state = { ...state, phase: 'stop' }
   let status = providerState((await provider.get(sandboxId)).state)
   if (state.phase === 'resume') {
+    if (status === 'stopped')
+      await revokeMachineTokenOnStop(
+        env,
+        workspaceMachineOwner(state.orgId, state.workspaceId),
+        'retry',
+      )
     const current = await readCurrent()
     if (
       !current ||
@@ -98,6 +104,11 @@ export async function advanceArchiveMaintenance(
     status = providerState((await provider.stop(sandboxId)).state)
     if (status !== 'stopped') return state
   }
+  await revokeMachineTokenOnStop(
+    env,
+    workspaceMachineOwner(state.orgId, state.workspaceId),
+    'retry',
+  )
   return {
     ...state,
     phase: 'retained',

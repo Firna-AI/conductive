@@ -2,6 +2,7 @@
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
+use std::time::Duration;
 
 use cnd_runner_interface::host::limits::{HOST_MAX_PENDING_REQUESTS, HOST_REPLY_MAX_BYTES};
 use cnd_runner_interface::host::messages::{HostToWorker, WorkerToHost};
@@ -11,7 +12,7 @@ use tokio::task::{JoinError, JoinSet};
 
 use crate::diagnostics::Diagnostics;
 use crate::error::{Error, ErrorResultExt, Result};
-use crate::ports::{Incoming, Operations, Socket};
+use crate::ports::{Clock, Incoming, Operations, Socket};
 use crate::replies;
 use crate::streams::ports::Streams;
 
@@ -24,6 +25,7 @@ pub(super) struct State {
     pub(super) pending: BTreeSet<u32>,
     pub(super) welcomed: bool,
     pub(super) diagnostics: Arc<dyn Diagnostics>,
+    pub(super) clock: Arc<dyn Clock>,
 }
 
 impl State {
@@ -76,13 +78,19 @@ impl State {
         self.pending.insert(request_id);
         let operations = self.operations.clone();
         let streams = self.streams.clone();
+        let clock = self.clock.clone();
         self.tasks.spawn(async move {
             let maximum = replies::budget(&operation);
             let result = match operation {
                 HostOperation::StreamOpen { stream_id, port } => {
                     streams.open(stream_id, port).await
                 }
-                operation => operations.execute(operation).await,
+                operation @ HostOperation::CommandRun { .. } => operations.execute(operation).await,
+                operation => tokio::select! {
+                    biased;
+                    result = operations.execute(operation) => result,
+                    _ = clock.wait(Duration::from_secs(30)) => Ok(HostResult::Error { code: HostErrorCode::Internal }),
+                },
             };
             (request_id, maximum, result)
         });
@@ -134,3 +142,7 @@ impl State {
 #[cfg(test)]
 #[path = "_tests_/state_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "_tests_/deadline_tests.rs"]
+mod deadline_tests;

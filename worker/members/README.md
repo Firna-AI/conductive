@@ -132,6 +132,9 @@ request. A failed revoke warns and lets the stop continue.
 The computer ledger maps a sandbox to its workspace. Build
 sandboxes have no machine token here. A deleted-org retention resume gets
 only the machine origin and a new machine token. Its stop attempts revocation.
+After the stop, retention must confirm revocation before it records completion.
+A failed revoke keeps the stop pending for the existing cleanup retry.
+That retry also confirms revocation before it marks a workspace resource stopped.
 Restore saves a durable intent bound to its current admin and original deadline.
 It finishes stops, plans disk dates, and completes the maintenance handoff.
 Retries by the same admin keep the same intent ID.

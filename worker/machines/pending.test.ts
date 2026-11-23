@@ -8,9 +8,14 @@ import { PendingRequests } from './pending'
 
 afterEach(() => vi.useRealTimers())
 
+function pendingRequests() {
+  let id = 0
+  return new PendingRequests(() => ++id)
+}
+
 it('times out commands, port opens, and other requests at their specified deadlines', async () => {
   vi.useFakeTimers()
-  const pending = new PendingRequests()
+  const pending = pendingRequests()
   const command = pending.create({
     kind: 'command.run',
     command: 'sleep 600',
@@ -46,7 +51,7 @@ it('times out commands, port opens, and other requests at their specified deadli
 })
 
 it('counts command bytes, file base64 budgets, and the smaller budget of error replies', async () => {
-  const pending = new PendingRequests()
+  const pending = pendingRequests()
   const command = pending.create({
     kind: 'command.run',
     command: 'true',
@@ -110,7 +115,7 @@ it('counts command bytes, file base64 budgets, and the smaller budget of error r
 })
 
 it('keeps incomplete replies below two command budgets and releases them on disconnect', async () => {
-  const pending = new PendingRequests()
+  const pending = pendingRequests()
   const first = pending.create({
     kind: 'command.run',
     command: 'one',

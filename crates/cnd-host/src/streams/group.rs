@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use cnd_runner_interface::host::literals::HostStreamPort;
 use cnd_runner_interface::host::messages::HostToWorker;
 use cnd_runner_interface::host::results::HostResult;
-use tokio::sync::{Mutex, mpsc, oneshot};
+use tokio::sync::{Mutex, mpsc, oneshot, watch};
 use tokio::task::JoinHandle;
 
 use crate::error::Result;
@@ -20,6 +20,8 @@ use super::relay::Input;
 pub(super) struct Entry {
     pub(super) allowance: Arc<AtomicUsize>,
     pub(super) sender: Option<mpsc::UnboundedSender<Input>>,
+    pub(super) credits: Option<mpsc::UnboundedSender<u32>>,
+    pub(super) cancel: Option<watch::Sender<bool>>,
     pub(super) activate: Option<oneshot::Sender<()>>,
     pub(super) task: Option<JoinHandle<()>>,
 }
@@ -86,7 +88,19 @@ impl Streams for StreamGroup {
     }
 
     async fn credit(&self, id: u32, bytes: u32) -> Result<()> {
-        self.control(id, Input::Credit(bytes)).await
+        let sender = self
+            .entries
+            .lock()
+            .await
+            .get(&id)
+            .and_then(|entry| entry.credits.clone());
+        if sender.is_some_and(|sender| sender.send(bytes).is_ok()) {
+            return Ok(());
+        }
+        self.close(id).await;
+        self.socket
+            .send(&HostToWorker::StreamClose { stream_id: id })
+            .await
     }
 
     async fn end(&self, id: u32) -> Result<()> {
@@ -95,17 +109,23 @@ impl Streams for StreamGroup {
 
     async fn close(&self, id: u32) {
         let entry = self.entries.lock().await.remove(&id);
-        if let Some(task) = entry.and_then(|entry| entry.task) {
-            task.abort();
-            let _ = task.await;
+        if let Some(entry) = entry {
+            if let Some(cancel) = entry.cancel {
+                cancel.send_replace(true);
+            }
+            if let Some(task) = entry.task {
+                let _ = task.await;
+            }
         }
     }
 
     async fn close_all(&self) {
         let entries = std::mem::take(&mut *self.entries.lock().await);
         for entry in entries.into_values() {
+            if let Some(cancel) = entry.cancel {
+                cancel.send_replace(true);
+            }
             if let Some(task) = entry.task {
-                task.abort();
                 let _ = task.await;
             }
         }
@@ -146,3 +166,7 @@ fn reserve(allowance: &AtomicUsize, size: usize) -> bool {
 #[cfg(test)]
 #[path = "_tests_/group_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "_tests_/blocked_write_tests.rs"]
+mod blocked_write_tests;

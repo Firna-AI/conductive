@@ -22,6 +22,9 @@ variables together. The build validates the version and the parts with
 variables uses `0.0.0-dev` and an empty parts list. This development version
 sorts below every release.
 
+At process start, every command installs `aws-lc-rs` as the Rustls crypto
+provider. The host and runner use this explicit process default for TLS.
+
 The commands are `host`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and

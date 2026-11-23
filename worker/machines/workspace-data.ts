@@ -16,14 +16,3 @@ export async function computerMachineOwner(
     .first<{ workspaceId: string }>()
   return row ? workspaceMachineOwner(orgId, row.workspaceId) : null
 }
-
-export async function workspaceMachineOwnerById(
-  db: D1Database,
-  workspaceId: string,
-): Promise<MachineOwner | null> {
-  const row = await db
-    .prepare('SELECT org_id AS orgId FROM workspaces WHERE id = ?')
-    .bind(workspaceId)
-    .first<{ orgId: string }>()
-  return row ? workspaceMachineOwner(row.orgId, workspaceId) : null
-}

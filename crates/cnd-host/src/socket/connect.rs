@@ -2,7 +2,6 @@
 
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use cnd_runner_interface::host::limits::HOST_PATH;
 use tokio_tungstenite::tungstenite;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
@@ -14,7 +13,7 @@ use url::Url;
 
 use crate::config::ConnectionRequest;
 use crate::error::{Error, ErrorResultExt, Result};
-use crate::ports::{Connector, Socket};
+use crate::ports::{Connector, Socket, SocketConnection};
 
 use super::transport::WebSocket;
 
@@ -40,16 +39,20 @@ pub fn upgrade(request: &ConnectionRequest) -> Result<Request<()>> {
     Ok(upgrade)
 }
 
-#[async_trait]
 impl Connector for WebSocketConnector {
-    async fn connect(&self, request: &ConnectionRequest) -> Result<Arc<dyn Socket>> {
-        match tokio_tungstenite::connect_async(upgrade(request)?).await {
-            Ok((socket, _)) => Ok(Arc::new(WebSocket::new(socket))),
-            Err(tungstenite::Error::Http(response)) => Err(Error::UpgradeRefused {
-                status: response.status().as_u16(),
-            }),
-            Err(_) => Err(Error::Unavailable),
-        }
+    fn connect<'a>(&'a self, request: &'a ConnectionRequest) -> SocketConnection<'a> {
+        Box::pin(async move {
+            match tokio_tungstenite::connect_async(upgrade(request)?).await {
+                Ok((socket, _)) => {
+                    let socket: Arc<dyn Socket> = Arc::new(WebSocket::new(socket));
+                    Ok(socket)
+                }
+                Err(tungstenite::Error::Http(response)) => Err(Error::UpgradeRefused {
+                    status: response.status().as_u16(),
+                }),
+                Err(_) => Err(Error::Unavailable),
+            }
+        })
     }
 }
 

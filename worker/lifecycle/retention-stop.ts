@@ -31,6 +31,10 @@ export async function stopRetention(
       if (providerState((await provider.stop(sandboxId)).state) !== 'stopped')
         return { done: false, error }
     }
+    await revokeMachineTokenOnStop(
+      context.env,
+      workspaceMachineOwner(context.orgId, context.workspaceId),
+    )
     await revokeWorkspacePreviews(
       context.env.DB,
       context.workspaceId,

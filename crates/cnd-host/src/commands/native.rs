@@ -1,30 +1,34 @@
 //! Native command boundary shared by every reconnect of the host program.
 
-use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::host::results::HostResult;
-use tokio::sync::Mutex;
 
 use crate::error::Result;
 use crate::ports::Commands;
+
+use super::records::NativeExitRecords;
+use super::registry::{Registry, SavedRegistry};
 
 /// Native commands and process identities for this host program start.
 pub struct NativeCommands {
     pub(super) root: PathBuf,
     pub(super) home: PathBuf,
-    pub(super) active: Arc<Mutex<BTreeSet<u64>>>,
+    pub(super) registry: Arc<dyn Registry>,
 }
 
 impl NativeCommands {
     /// Select runtime record and home folders, without reading either folder.
     pub fn new(root: PathBuf, home: PathBuf) -> Self {
+        let registry = Arc::new(SavedRegistry::new(Arc::new(NativeExitRecords {
+            root: root.clone(),
+        })));
         Self {
             root,
             home,
-            active: Arc::new(Mutex::new(BTreeSet::new())),
+            registry,
         }
     }
 }

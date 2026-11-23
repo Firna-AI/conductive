@@ -34,7 +34,7 @@ async fn refused_attempt_reports_http_status_through_diagnostics() {
     let connector = Arc::new(Unimock::new(
         ConnectorMock::connect
             .some_call(matching!(_))
-            .returns(Err(Error::UpgradeRefused { status: 401 })),
+            .answers(&|_, _| Box::pin(async { Err(Error::UpgradeRefused { status: 401 }) })),
     ));
     let clock = Arc::new(Unimock::new((
         ClockMock::jitter
@@ -43,8 +43,10 @@ async fn refused_attempt_reports_http_status_through_diagnostics() {
         ClockMock::wait
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| {
-                stop.send_replace(true);
-                Box::pin(async {})
+                let stop = stop.clone();
+                Box::pin(async move {
+                    stop.send_replace(true);
+                })
             })),
     )));
     let diagnostics = Arc::new(Unimock::new(
@@ -85,12 +87,16 @@ async fn missing_and_restored_settings_warn_once_per_transition() {
         ConnectorMock::connect
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| {
-                let mut count = attempts.lock().unwrap();
-                *count += 1;
-                if *count == 4 {
-                    stop.send_replace(true);
-                }
-                Err(Error::Unavailable)
+                let attempts = attempts.clone();
+                let stop = stop.clone();
+                Box::pin(async move {
+                    let mut count = attempts.lock().unwrap();
+                    *count += 1;
+                    if *count == 4 {
+                        stop.send_replace(true);
+                    }
+                    Err(Error::Unavailable)
+                })
             })),
     ));
     let clock = Arc::new(Unimock::new((

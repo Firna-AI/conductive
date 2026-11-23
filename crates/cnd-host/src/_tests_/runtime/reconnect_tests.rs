@@ -33,12 +33,15 @@ async fn refused_connections_reread_settings_and_back_off_with_capped_jitter() {
         ClockMock::wait
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, duration| {
-                let mut waits = waits.lock().unwrap();
-                waits.push(duration);
-                if waits.len() == 7 {
-                    stop.send_replace(true);
-                }
-                Box::pin(async {})
+                let waits = waits.clone();
+                let stop = stop.clone();
+                Box::pin(async move {
+                    let mut waits = waits.lock().unwrap();
+                    waits.push(duration);
+                    if waits.len() == 7 {
+                        stop.send_replace(true);
+                    }
+                })
             })),
     )));
     let reads = Arc::new(Mutex::new(0));
@@ -60,8 +63,12 @@ async fn refused_connections_reread_settings_and_back_off_with_capped_jitter() {
         ConnectorMock::connect
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, request| {
-                tokens.lock().unwrap().push(request.token.clone());
-                Err(Error::Unavailable)
+                let tokens = tokens.clone();
+                let token = request.token.clone();
+                Box::pin(async move {
+                    tokens.lock().unwrap().push(token);
+                    Err(Error::Unavailable)
+                })
             })),
     ));
     HostRuntime {
@@ -103,19 +110,25 @@ async fn a_welcome_resets_retry_and_version_4400_waits_sixty_seconds() {
         ClockMock::wait
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, duration| {
-                let mut waits = captured.lock().unwrap();
-                waits.push(duration);
-                if waits.len() == 4 {
-                    stop.send_replace(true);
-                }
-                Box::pin(async {})
+                let captured = captured.clone();
+                let stop = stop.clone();
+                Box::pin(async move {
+                    let mut waits = captured.lock().unwrap();
+                    waits.push(duration);
+                    if waits.len() == 4 {
+                        stop.send_replace(true);
+                    }
+                })
             })),
     )));
     let socket: Arc<dyn Socket> = Arc::new(Unimock::new(()));
     let connector = Arc::new(Unimock::new(
         ConnectorMock::connect
             .each_call(matching!(_))
-            .answers_arc(Arc::new(move |_, _| Ok(socket.clone()))),
+            .answers_arc(Arc::new(move |_, _| {
+                let socket = socket.clone();
+                Box::pin(async move { Ok(socket) })
+            })),
     ));
     let counter = Arc::new(Mutex::new(0));
     let session = Arc::new(Unimock::new(

@@ -9,7 +9,7 @@ use cnd_runner_interface::host::limits::{HOST_MAX_OPEN_STREAMS, HOST_STREAM_WIND
 use cnd_runner_interface::host::literals::HostStreamPort;
 use cnd_runner_interface::host::messages::HostToWorker;
 use cnd_runner_interface::host::results::{HostErrorCode, HostResult};
-use tokio::sync::{Mutex, mpsc, oneshot};
+use tokio::sync::{Mutex, mpsc, oneshot, watch};
 
 use crate::error::Result;
 
@@ -36,6 +36,8 @@ impl StreamGroup {
                 Entry {
                     allowance: allowance.clone(),
                     sender: None,
+                    credits: None,
+                    cancel: None,
                     activate: None,
                     task: None,
                 },
@@ -64,21 +66,33 @@ impl StreamGroup {
             });
         };
         let (sender, incoming) = mpsc::unbounded_channel();
+        let (credits, granted) = mpsc::unbounded_channel();
+        let (cancel, mut cancelled) = watch::channel(false);
         let (activate, started) = oneshot::channel();
-        let mut relay: Box<dyn Relay> = Box::new(StreamRelay {
+        let relay: Box<dyn Relay> = Box::new(StreamRelay {
             id,
             local,
             socket: self.socket.clone(),
             incoming,
+            credits: granted,
             allowance: allowance.clone(),
         });
         let weak: Weak<Mutex<BTreeMap<u32, Entry>>> = Arc::downgrade(&self.entries);
         let socket = self.socket.clone();
         let task = tokio::spawn(async move {
-            if started.await.is_ok() && relay.run().await.is_err() {
-                let _ = socket
-                    .send(&HostToWorker::StreamClose { stream_id: id })
-                    .await;
+            let waiting = !*cancelled.borrow();
+            let activated = waiting
+                && tokio::select! {
+                    biased;
+                    _ = cancelled.changed() => false,
+                    started = started => started.is_ok(),
+                };
+            if activated && relay.run(cancelled.clone()).await.is_err() && !*cancelled.borrow() {
+                let close = HostToWorker::StreamClose { stream_id: id };
+                tokio::select! {
+                    _ = cancelled.changed() => {},
+                    _ = socket.send(&close) => {},
+                }
             }
             if let Some(entries) = weak.upgrade() {
                 let mut entries = entries.lock().await;
@@ -91,6 +105,8 @@ impl StreamGroup {
             }
         });
         entry.sender = Some(sender);
+        entry.credits = Some(credits);
+        entry.cancel = Some(cancel);
         entry.activate = Some(activate);
         entry.task = Some(task);
         Ok(HostResult::StreamOpened { stream_id: id })

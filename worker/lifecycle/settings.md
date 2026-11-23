@@ -21,3 +21,5 @@ origin and a new machine token. It gets no org env value or workspace
 token, so it keeps the saved capture. Deleted-org disk retention uses the
 same machine-only env. Each stop attempts to revoke that token. A failed
 revoke warns and lets the stop continue.
+The token stays valid during maintenance. Observed physical stops revoke it again.
+Archive and deleted-org maintenance retry an observed-stop revoke failure before completion.

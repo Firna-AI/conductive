@@ -6,6 +6,7 @@ import {
 } from '../../src/shared/host'
 import { encodeHostFrame } from '../../src/shared/host-frames'
 import { setupMachines } from './host.test-support'
+import { number } from '../chat/inputs'
 
 const fixture = setupMachines()
 
@@ -66,13 +67,20 @@ it('opens each fixed port, enforces outbound credit, returns receive credit, and
   host.send({ type: 'stream.end', streamId: 1 })
   expect(await reader.read()).toEqual({ done: true, value: undefined })
   const relay = f.client.openStream(7682)
-  expect(await host.reply({ kind: 'stream.opened', streamId: 2 })).toEqual({
+  const request = await host.inbox.request()
+  const streamId = number(request.operation.streamId)
+  expect(request.operation).toEqual({
     kind: 'stream.open',
-    streamId: 2,
+    streamId,
     port: 7682,
   })
+  host.send({
+    type: 'reply',
+    requestId: request.requestId,
+    result: { kind: 'stream.opened', streamId },
+  })
   await (await relay).writable.abort()
-  expect(await host.inbox.next()).toEqual({ type: 'stream.close', streamId: 2 })
+  expect(await host.inbox.next()).toEqual({ type: 'stream.close', streamId })
   const namespace = f.env.MACHINES
   if (!namespace) throw new Error('No machine binding.')
   const stub = namespace.getByName(f.name)
@@ -117,7 +125,15 @@ it('fails both stream directions on a drop and bounds the open stream count', as
   const streams = []
   for (let index = 1; index <= 64; index++) {
     const call = f.client.openStream(7681)
-    await host.reply({ kind: 'stream.opened', streamId: index })
+    const request = await host.inbox.request()
+    host.send({
+      type: 'reply',
+      requestId: request.requestId,
+      result: {
+        kind: 'stream.opened',
+        streamId: number(request.operation.streamId),
+      },
+    })
     streams.push(await call)
   }
   await expect(f.client.openStream(7681)).rejects.toMatchObject({

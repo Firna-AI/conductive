@@ -28,10 +28,10 @@ import {
   readOwner,
   requireOwner,
   sameOwner,
-  socketIdentity,
   type MachineOwner,
   type MachineRecord,
 } from './identity'
+import { socketIdentity } from './socket-state'
 
 export class Machine extends DurableObject<AppEnv> {
   private record: MachineRecord | null = null
@@ -54,7 +54,7 @@ export class Machine extends DurableObject<AppEnv> {
           socket.readyState === WebSocket.OPEN
         ) {
           this.close(HOST_CLOSE_REPLACED)
-          this.channel = new MachineChannel(socket, state.ready)
+          this.channel = new MachineChannel(socket, state)
         } else
           socket.close(
             HOST_CLOSE_TOKEN_CHANGED,
@@ -203,12 +203,12 @@ export class Machine extends DurableObject<AppEnv> {
           return errorResponse(tokenRequired())
         this.close(HOST_CLOSE_REPLACED)
         const pair = new WebSocketPair()
-        pair[1].serializeAttachment({
+        this.channel = new MachineChannel(pair[1], {
           generation: this.record.generation,
           ready: false,
+          lastId: 0,
         })
         this.ctx.acceptWebSocket(pair[1])
-        this.channel = new MachineChannel(pair[1])
         return new Response(null, { status: 101, webSocket: pair[0] })
       })
     } catch (error) {
@@ -244,10 +244,6 @@ export class Machine extends DurableObject<AppEnv> {
           hostProtocolVersion: HOST_PROTOCOL_VERSION,
         })
         this.channel.welcomed()
-        socket.serializeAttachment({
-          generation: this.record.generation,
-          ready: true,
-        })
       })
     } catch {
       this.close(1008)

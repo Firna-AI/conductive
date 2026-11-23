@@ -173,6 +173,10 @@ async function reconcileReply(
 ): Promise<LifecycleReconciliation> {
   const status = providerState(sandbox.state)
   if (status === 'stopped') {
+    await revokeMachineTokenOnStop(
+      context.env,
+      workspaceMachineOwner(context.orgId, context.workspaceId),
+    )
     await revokeWorkspacePreviews(
       context.env.DB,
       context.workspaceId,

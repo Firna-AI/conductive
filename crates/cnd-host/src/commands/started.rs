@@ -13,6 +13,7 @@ use super::native::NativeCommands;
 use super::output;
 use super::process::{self, Group};
 use super::records::{self, Exit};
+use super::registry::State;
 
 impl NativeCommands {
     pub(super) async fn start_command(&self, text: &str) -> Result<HostResult> {
@@ -48,31 +49,29 @@ impl NativeCommands {
             .internal()?
             .into_std()
             .await;
-        let (mut child, mut group) = {
-            let mut identities = self.active.lock().await;
-            let child = process::shell(&self.home, text)
-                .stdout(Stdio::from(stdout))
-                .stderr(Stdio::from(stderr))
-                .spawn()
-                .internal()?;
-            let group = Group::child(&child)?;
-            identities.insert(process_id);
-            (child, group)
-        };
-        let active = self.active.clone();
+        let mut child = process::shell(&self.home, text)
+            .stdout(Stdio::from(stdout))
+            .stderr(Stdio::from(stderr))
+            .spawn()
+            .internal()?;
+        let mut group = Group::child(&child)?;
+        self.registry.started(process_id);
+        let registry = self.registry.clone();
         tokio::spawn(async move {
             if let Ok(status) = child.wait().await {
                 group.disarm();
-                let _ = records::finish(
-                    &folder,
-                    Exit {
-                        exit_code: process::exit_code(status),
-                        timed_out: None,
-                    },
-                )
-                .await;
+                let _ = registry
+                    .finished(
+                        process_id,
+                        Exit {
+                            exit_code: process::exit_code(status),
+                            timed_out: None,
+                        },
+                    )
+                    .await;
+            } else {
+                registry.lost(process_id);
             }
-            active.lock().await.remove(&process_id);
         });
         Ok(HostResult::CommandStarted { process_id })
     }
@@ -84,21 +83,10 @@ impl NativeCommands {
         stderr_offset: u64,
     ) -> Result<HostResult> {
         let folder = self.root.join(process_id.to_string());
-        let exit = match fs::read(folder.join("exit.json")).await {
-            Ok(bytes) => Some(serde_json::from_slice::<Exit>(&bytes).internal()?),
-            Err(error) if error.kind() == ErrorKind::NotFound => None,
-            other => {
-                other.internal()?;
-                None
-            }
-        };
-        let running = exit.is_none() && self.active.lock().await.contains(&process_id);
-        let state = if exit.is_some() {
-            HostCommandState::Exited
-        } else if running {
-            HostCommandState::Running
-        } else {
-            HostCommandState::Lost
+        let (state, running, exit) = match self.registry.snapshot(process_id).await? {
+            State::Running => (HostCommandState::Running, true, None),
+            State::Exited(exit) => (HostCommandState::Exited, false, Some(exit)),
+            State::Lost => (HostCommandState::Lost, false, None),
         };
         let (stdout, stdout_next_offset, out_more) =
             output::read(&folder.join("stdout"), stdout_offset, !running).await?;

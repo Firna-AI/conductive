@@ -7,6 +7,9 @@ import { recordSandboxCleanup, retrySandboxCleanup } from './cleanup'
 import { resumeWorkspace } from './workspace-resume'
 import { createWorkspace } from './workspaces'
 import { heldOperation } from '../test-support/held-operation'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
+import { record, string } from '../chat/inputs'
 
 const fixtureForTest = setupBackendTests()
 
@@ -58,6 +61,13 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
     (await createWorkspace(runtime, org.id, user, input)).workspace,
   ).toMatchObject({ id, state: 'error' })
   expect(boat.starts).toHaveLength(1)
+  const owner = workspaceMachineOwner(org.id, id)
+  const failedToken = string(
+    record(boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  expect(
+    await machineTokenStatus(fixture.harness.env, owner, failedToken),
+  ).toBe(401)
   await expect(
     authenticateWorkspaceToken(runtime.env, oldToken),
   ).rejects.toMatchObject({ code: 'workspace_token_refused' })
@@ -121,6 +131,12 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   expect(await start.wait()).toEqual({ ok: true })
   expect(boat.deletedIds).toEqual(['bx_1'])
   expect(boat.starts).toHaveLength(2)
+  const replacementToken = string(
+    record(boat.starts[1].env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  expect(
+    await machineTokenStatus(fixture.harness.env, owner, replacementToken),
+  ).toBe(101)
   const newToken = await readWorkspaceToken(runtime.env, id)
   expect(newToken).not.toBe(oldToken)
   expect(await authenticateWorkspaceToken(runtime.env, newToken)).toEqual({
@@ -132,6 +148,9 @@ it('keeps a retried create behind failed-computer cleanup and preserves the repl
   )
   expect(await readWorkspaceToken(runtime.env, id)).toBe(newToken)
   expect(boat.deletedIds).toEqual(['bx_1'])
+  expect(
+    await machineTokenStatus(fixture.harness.env, owner, replacementToken),
+  ).toBe(101)
   const repeated = await createWorkspace(runtime, org.id, user, input)
   expect(repeated.workspace).toMatchObject({
     id,

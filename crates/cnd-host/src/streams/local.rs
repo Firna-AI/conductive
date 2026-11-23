@@ -12,7 +12,7 @@ use tokio::sync::Mutex;
 
 use crate::error::{Error, ErrorResultExt, Result};
 
-use super::ports::{Connection, LocalSocket, Network};
+use super::ports::{Connection, LocalRead, LocalSocket, LocalWrite, Network};
 
 /// Native fixed-port connector. The stream group owns the ten-second deadline.
 pub struct LoopbackNetwork;
@@ -50,15 +50,17 @@ impl TcpLocal {
 
 #[async_trait]
 impl LocalSocket for TcpLocal {
-    async fn read(&self, maximum: usize) -> Result<Vec<u8>> {
-        let mut bytes = vec![0; maximum];
-        let count = self.read.lock().await.read(&mut bytes).await.internal()?;
-        bytes.truncate(count);
-        Ok(bytes)
+    fn read(&self, maximum: usize) -> LocalRead<'_> {
+        Box::pin(async move {
+            let mut bytes = vec![0; maximum];
+            let count = self.read.lock().await.read(&mut bytes).await.internal()?;
+            bytes.truncate(count);
+            Ok(bytes)
+        })
     }
 
-    async fn write(&self, bytes: &[u8]) -> Result<()> {
-        self.write.lock().await.write_all(bytes).await.internal()
+    fn write<'a>(&'a self, bytes: &'a [u8]) -> LocalWrite<'a> {
+        Box::pin(async move { self.write.lock().await.write_all(bytes).await.internal() })
     }
 
     async fn end(&self) -> Result<()> {

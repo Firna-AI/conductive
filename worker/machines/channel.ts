@@ -19,26 +19,36 @@ import { validateOperation } from './operations'
 import { PendingRequests } from './pending'
 import { readHostMessage } from './protocol-reader'
 import { HostStream, type MachineStream } from './stream'
+import {
+  SocketState,
+  type MachineSocket,
+  type SocketIdentity,
+} from './socket-state'
 
 const encoder = new TextEncoder()
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false })
 
 export class MachineChannel {
-  readonly socket: WebSocket
-  private readonly pending = new PendingRequests()
+  readonly socket: MachineSocket
+  private readonly pending: PendingRequests
+  private readonly state: SocketState
   private readonly streams = new Map<number, HostStream>()
-  private streamId = 0
-  private ready = false
+  private disconnected = false
 
-  constructor(socket: WebSocket, ready = false) {
+  constructor(socket: MachineSocket, identity: SocketIdentity) {
     this.socket = socket
-    this.ready = ready
+    this.state = new SocketState(socket, identity)
+    this.pending = new PendingRequests(() => this.state.allocateId())
   }
   welcomed(): void {
-    this.ready = true
+    this.state.welcomed()
   }
   connected(): boolean {
-    return this.ready && this.socket.readyState === WebSocket.OPEN
+    return (
+      !this.disconnected &&
+      this.state.ready &&
+      this.socket.readyState === WebSocket.OPEN
+    )
   }
   send(message: WorkerToHost | Uint8Array): void {
     try {
@@ -89,7 +99,7 @@ export class MachineChannel {
   async open(port: HostStreamPort): Promise<MachineStream> {
     if (!this.connected()) throw machineUnavailable()
     if (this.streams.size >= HOST_MAX_OPEN_STREAMS) throw machineBusy()
-    const id = (this.streamId = (this.streamId % 0xffff_ffff) + 1)
+    const id = this.state.allocateId()
     const stream = new HostStream(
       id,
       (message) => this.send(message),
@@ -113,7 +123,7 @@ export class MachineChannel {
       return this.message(value, bytes)
     }
     const frame = decodeHostFrame(new Uint8Array(value))
-    if (!this.ready) throw new Error('Host hello required.')
+    if (!this.state.ready) throw new Error('Host hello required.')
     if (frame.kind === 'streamData') {
       const stream = this.streams.get(frame.streamId)
       if (stream) stream.data(frame.data)
@@ -133,7 +143,7 @@ export class MachineChannel {
   }
 
   disconnect(): void {
-    this.ready = false
+    this.disconnected = true
     this.pending.disconnect()
     for (const stream of this.streams.values()) stream.close(false)
     this.streams.clear()
@@ -147,7 +157,7 @@ export class MachineChannel {
     const value: unknown = JSON.parse(text)
     const message = readHostMessage(value)
     if (!message) throw new Error('Invalid host message.')
-    if (!this.ready) {
+    if (!this.state.ready) {
       if (message.type !== 'hello') throw new Error('Host hello required.')
       return message
     }
@@ -159,6 +169,11 @@ export class MachineChannel {
       case 'reply':
         if (expectedId !== undefined && expectedId !== message.requestId)
           throw new Error('Mismatched host reply.')
+        if (
+          message.result.kind === 'stream.opened' &&
+          !this.streams.has(message.result.streamId)
+        )
+          this.send({ type: 'stream.close', streamId: message.result.streamId })
         this.pending.reply(message.requestId, message.result, bytes)
         break
       default: {

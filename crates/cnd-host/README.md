@@ -19,6 +19,9 @@ The host reads the machine origin and token from `/run/ascii-secrets/env.sh`
 through an isolated shell before each connection attempt. It waits while
 either value is missing. It connects to the host route with Rustls and
 public WebPKI roots. The bearer header is sensitive.
+Each connection attempt has a 60-second deadline, then takes the normal
+retry path. The command-line program installs the `aws-lc-rs` Rustls
+provider before it starts the host or runner.
 Tracing reports settings availability changes, connection failures, numeric
 HTTP or close codes, protocol errors, and each successful welcome.
 Diagnostics contain no token, Authorization header, command, or peer error text.
@@ -37,17 +40,24 @@ Detached output and atomic exit records live under
 Detached commands keep running across a socket drop. A new host program
 reads an unfinished record as lost. Systemd stops its children when the
 host service ends.
+One command registry keeps both running and exited states. A status read
+cannot lose a completed command between the exit-file and registry observations.
 
 File operations follow links. Reads open without blocking and accept only
 regular files. Directory reads return their separate error. Content uses
 base64. Complete reply budgets
 include the JSON envelope and escaped output. Command status returns raw
 byte offsets and cuts incomplete UTF-8 characters at chunk boundaries.
+Operations other than `command.run` and `stream.open` have a 30-second
+host deadline. Expiry returns `error internal` and releases the pending
+request slot when the reply is written.
 
 Each connection owns its stream tasks. They reach only loopback ports
 7681 and 7682. The file server port is absent from the port type.
 Credit bounds queued data in both directions. A half close preserves the
-other direction. A socket drop aborts and joins every stream task.
+other direction. Independent tasks own local reads and writes. A blocked
+write cannot stop local reads or peer credit. A socket drop cancels the
+stream and joins both tasks.
 
 ## Quick Start
 
@@ -91,6 +101,7 @@ requires TLS even though local transport fixtures use plain sockets.
 - [Reply budgets](src/replies.rs) counts complete JSON and bounds command output.
 - [Dispatcher](src/dispatch.rs) validates arguments before native operations.
 - [Commands](src/commands/native.rs) shares detached records across reconnects.
+- [Command registry](src/commands/registry.rs) gives status one consistent running or exited state and recovers persisted exits.
 - [Files](src/files.rs) reads metadata and bounded base64 contents.
 - [Streams](src/streams/group.rs) owns stream capacity and task lifetime.
 - [Stream relay](src/streams/relay.rs) applies credit and local half closes.

@@ -27,8 +27,10 @@ async fn missing_env_values_wait_one_second_before_reading_again() {
         ClockMock::wait
             .each_call(matching!(_))
             .answers_arc(Arc::new(move |_, duration| {
-                captured.lock().unwrap().push(duration);
-                Box::pin(async {})
+                let captured = captured.clone();
+                Box::pin(async move {
+                    captured.lock().unwrap().push(duration);
+                })
             })),
     ));
     let count = Arc::new(Mutex::new(0));
@@ -46,8 +48,11 @@ async fn missing_env_values_wait_one_second_before_reading_again() {
         ConnectorMock::connect
             .some_call(matching!(_))
             .answers_arc(Arc::new(move |_, _| {
-                stop.send_replace(true);
-                Err(Error::Unavailable)
+                let stop = stop.clone();
+                Box::pin(async move {
+                    stop.send_replace(true);
+                    Err(Error::Unavailable)
+                })
             })),
     ));
     HostRuntime {

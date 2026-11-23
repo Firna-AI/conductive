@@ -126,6 +126,11 @@ export function deletedOrgRetention(
         workspaceMachineOwner(orgId, workspaceId),
       )
       await ignoreAlreadyRemoved(() => provider.stop(disk.sandboxId))
+      await revokeMachineTokenOnStop(
+        env,
+        workspaceMachineOwner(orgId, workspaceId),
+        'retry',
+      )
       await ownership.renew()
       if (
         !(await markResourceStopped(

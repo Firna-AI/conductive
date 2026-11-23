@@ -10,9 +10,67 @@ import { ARCHIVE_STATE_KEY, type WorkspaceArchiveState } from './archive-types'
 import { repairLifecycleAlarms } from './repair'
 import { workspaceOwnerChangedHook } from './ownership-maintenance'
 import { readWorkspace } from './workspace-data'
+import { advanceArchiveMaintenance } from './archive-maintenance'
+import { readArchiveResource } from './archive-data'
+import { providerForAccount } from '../sandbox/client'
+import { workspaceMachineOwner } from '../machines/client'
+import { machineTokenStatus } from '../machines/token.test-support'
+import { failingMachineRevokes } from '../machines/revoke.test-support'
+import { record, string } from '../chat/inputs'
 
 const fixtureForTest = setupBackendTests()
 const day = 86_400_000
+
+it('retries an observed archive stop revoke before retaining a self-stopped computer', async () => {
+  const fixture = fixtureForTest()
+  const saved = await archiveFixture(fixture, true)
+  await fixture.setTime(TEST_TIME + day)
+  await saved.archive()
+  const restart = TEST_TIME + 13 * day
+  await fixture.advanceTo(restart, saved.id)
+  const request = fixture.boat.server.requests.findLast((request) =>
+    new URL(request.url).pathname.endsWith('/resume'),
+  )
+  if (!request) throw new Error('Missing archive maintenance resume.')
+  const token = string(
+    record(record(await request.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+  )
+  const owner = workspaceMachineOwner(fixture.org.id, saved.id)
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
+  fixture.boat.states.set(saved.sandboxId, 'archived')
+  const state =
+    await saved.actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY)
+  const row = await readArchiveResource(fixture.runtime.env.DB, saved.id)
+  if (!state || !row) throw new Error('Missing archive state.')
+  await expect(
+    advanceArchiveMaintenance(
+      state,
+      row,
+      providerForAccount(
+        fixture.runtime.env,
+        fixture.runtime.dependencies.fetch,
+        state.providerAccount,
+      ),
+      fixture.runtime.dependencies.now,
+      (next) => saved.actor.storage.put(ARCHIVE_STATE_KEY, next),
+      () => readArchiveResource(fixture.runtime.env.DB, saved.id),
+      true,
+      failingMachineRevokes(fixture.runtime.env),
+      fixture.runtime.dependencies,
+    ),
+  ).rejects.toThrow('Machine revoke unavailable.')
+  expect(
+    await saved.actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY),
+  ).toMatchObject({ phase: 'stop' })
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(101)
+  await fixture.advanceTo(restart + 5_000, saved.id)
+  expect(
+    await saved.actor.storage.get<WorkspaceArchiveState>(ARCHIVE_STATE_KEY),
+  ).toMatchObject({ phase: 'retained' })
+  expect(await machineTokenStatus(fixture.harness.env, owner, token)).toBe(401)
+  expect(fixture.boat.stopIds).toEqual([])
+  expect(fixture.boat.resumeIds).toEqual([saved.sandboxId])
+})
 
 it('waits longer after each refused archive restart, keeps Retry-After up to one hour, and holds the repair timer', async () => {
   const fixture = fixtureForTest()

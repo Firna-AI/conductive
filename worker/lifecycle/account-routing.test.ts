@@ -130,11 +130,12 @@ it('replays a lost allocation and resumes its disk through the stored secondary 
       }),
     ).resolves.toBe('stopped')
     expect(boat.stopIds).toEqual(['bx_1'])
-    expect(warn).toHaveBeenCalledExactlyOnceWith({
+    const warning = {
       kind: 'machine_token_revoke_failed',
       message:
         'The machine token could not be revoked. The stop will continue.',
-    })
+    }
+    expect(warn.mock.calls).toEqual([[warning], [warning]])
   } finally {
     warn.mockRestore()
   }

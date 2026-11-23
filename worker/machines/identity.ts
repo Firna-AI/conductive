@@ -95,15 +95,3 @@ export function requireOwner(
       'The cloud computer is not available.',
     )
 }
-
-export function socketIdentity(
-  value: unknown,
-): { generation: number; ready: boolean } | null {
-  return isRecord(value) &&
-    typeof value.generation === 'number' &&
-    Number.isSafeInteger(value.generation) &&
-    value.generation > 0 &&
-    typeof value.ready === 'boolean'
-    ? { generation: value.generation, ready: value.ready }
-    : null
-}

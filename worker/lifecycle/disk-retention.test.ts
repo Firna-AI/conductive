@@ -43,8 +43,18 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     }
     await actor.reportRunnerLifecycle({ type: 'runner.ready' })
     await actor.runnerLifecycleDisconnected()
+    const owner = workspaceMachineOwner(org.id, created.workspace.id)
+    const originalToken = string(
+      record(boat.starts[0].env).CONDUCTIVE_MACHINE_TOKEN,
+    )
+    expect(
+      await machineTokenStatus(fixture.harness.env, owner, originalToken),
+    ).toBe(101)
     boat.states.set('bx_1', 'archived')
     expect(await reconcileWorkspaceSandbox(context)).toBe('stopped')
+    expect(
+      await machineTokenStatus(fixture.harness.env, owner, originalToken),
+    ).toBe(401)
     await fixture.setTime(TEST_TIME)
     await actor.lifecycleStopped()
     await fixture.setTime(TEST_TIME + 1_123_200_000)
@@ -64,8 +74,17 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'wait' })
+    const firstToken = string(
+      record(record(await resume.clone().json()).env).CONDUCTIVE_MACHINE_TOKEN,
+    )
+    expect(
+      await machineTokenStatus(fixture.harness.env, owner, firstToken),
+    ).toBe(101)
     boat.states.set('bx_1', 'archived')
     await actor.advance()
+    expect(
+      await machineTokenStatus(fixture.harness.env, owner, firstToken),
+    ).toBe(401)
     expect(
       await readRetention(runtime.env.DB, created.workspace.id),
     ).toMatchObject({ phase: 'resume' })
@@ -74,6 +93,17 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
     )
     await actor.advance()
     await actor.advance()
+    const latestResume = boat.server.requests.findLast((request) =>
+      new URL(request.url).pathname.endsWith('/resume'),
+    )
+    if (!latestResume) throw new Error('Missing latest retention resume.')
+    const machineToken = string(
+      record(record(await latestResume.clone().json()).env)
+        .CONDUCTIVE_MACHINE_TOKEN,
+    )
+    expect(
+      await machineTokenStatus(fixture.harness.env, owner, machineToken),
+    ).toBe(101)
     boat.commandExitCode = 1
     await actor.advance()
     await actor.advance()
@@ -85,14 +115,6 @@ it('keeps a stopped disk through startup and stop failures without a stale stop 
       '/run/conductive/retention-startup.sh',
     )
     boat.failStop = true
-    const latestResume = boat.server.requests.findLast((request) =>
-      new URL(request.url).pathname.endsWith('/resume'),
-    )
-    if (!latestResume) throw new Error('Missing latest retention resume.')
-    const machineToken = string(
-      record(record(await latestResume.clone().json()).env)
-        .CONDUCTIVE_MACHINE_TOKEN,
-    )
     await actor.advance()
     expect(
       await machineTokenStatus(

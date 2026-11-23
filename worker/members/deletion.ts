@@ -126,6 +126,15 @@ export async function stopDeletedOrgResources(
         providerAccount: resource.providerAccount,
       })
       await ignoreAlreadyRemoved(() => provider.stop(resource.id))
+      await revokeComputerMachineToken(
+        env,
+        orgId,
+        {
+          sandboxId: resource.id,
+          providerAccount: resource.providerAccount,
+        },
+        'retry',
+      )
     } catch (error) {
       failures.push(error)
       continue

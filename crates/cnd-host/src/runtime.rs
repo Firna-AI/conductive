@@ -62,7 +62,12 @@ impl Host for HostRuntime {
                     continue;
                 }
             };
-            let connected = tokio::select! { _ = shutdown.changed() => break, connected = self.connector.connect(&request) => connected };
+            let connected = tokio::select! {
+                biased;
+                _ = shutdown.changed() => break,
+                connected = self.connector.connect(&request) => connected,
+                _ = self.clock.wait(Duration::from_secs(60)) => Err(Error::Unavailable),
+            };
             let exit = match connected {
                 Ok(socket) => {
                     self.session

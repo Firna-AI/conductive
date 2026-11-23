@@ -321,6 +321,7 @@ dependencies = [
  "flate2",
  "internal-error",
  "rustix",
+ "rustls",
  "serde",
  "serde_json",
  "tar",

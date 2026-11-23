@@ -24,7 +24,6 @@ import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 import { retryAutomationReport } from './chat/automation-run'
-import { revokeWorkspaceMachineToken } from './machines/revoke'
 
 export class Workspace extends WorkspaceView {
   private readonly features: WorkspaceFeatures
@@ -69,7 +68,6 @@ export class Workspace extends WorkspaceView {
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
     this.integration.onStopped(this.chat.runner.services.stoppedHook)
-    this.integration.onStopped((id) => revokeWorkspaceMachineToken(env, id))
     this.github = new WorkspaceGitHub(
       this.integration.storage,
       env,

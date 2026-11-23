@@ -47,6 +47,7 @@ impl Session for HostSession {
             pending: BTreeSet::new(),
             welcomed: false,
             diagnostics: self.diagnostics.clone(),
+            clock: self.clock.clone(),
         };
         let hello = HostToWorker::Hello {
             host_protocol_version: u32::from(HOST_PROTOCOL_VERSION),
