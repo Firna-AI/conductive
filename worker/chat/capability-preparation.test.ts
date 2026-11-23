@@ -6,6 +6,7 @@ import { createHarness, type TestHarness } from '../test-support/harness'
 import { attachmentFixture, held } from './attachment.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
 import { noticeFixture } from './capability-notices.test-support'
+import { capabilitySecret } from './capability-context.test-support'
 
 let harness: TestHarness
 beforeAll(async () => {
@@ -44,10 +45,14 @@ it('reads the first facts after a held file copy and gives the change only in th
     ).toBe(202)
     await entered.promise
     expect(runner.commands).toEqual([])
+    const secret = await capabilitySecret(f, 'DEPLOY_KEY')
     const response = await harness.request(
       workspaceCapabilitiesPath(f.org.id, WORKSPACE_ID),
       f.ownerCookie,
-      { method: 'PATCH', body: JSON.stringify({ macAccess: false }) },
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ preapprovedSecretIds: [secret.id] }),
+      },
     )
     expect(response.status).toBe(200)
     expect(
@@ -60,7 +65,7 @@ it('reads the first facts after a held file copy and gives the change only in th
     expect(runner.commands).toHaveLength(1)
     expect(runner.commands[0]).toMatchObject({
       type: 'turn',
-      capabilities: { secrets: [], macAccess: false },
+      capabilities: { secrets: ['DEPLOY_KEY'] },
     })
     expect(runner.commands[0]).not.toHaveProperty('notices')
   } finally {
@@ -73,7 +78,10 @@ it('keeps later notes unsent when a turn is resent before its start receipt', as
   const f = await noticeFixture(harness)
   const session = await f.createSession()
   await f.send(session.id, 'first')
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+  )
   const replacement = await f.connect(
     new FakeRunner({ workspaceId: WORKSPACE_ID, capabilityNotices: true }),
   )
@@ -97,6 +105,6 @@ it('keeps later notes unsent when a turn is resent before its start receipt', as
     type: 'notice',
     sessionId: session.id,
     turnId: turn.turnId,
-    notices: [{ text: 'Octocat turned Mac access off.' }],
+    notices: [{ text: 'Octocat removed the pre-approval of `DEPLOY_KEY`.' }],
   })
 })

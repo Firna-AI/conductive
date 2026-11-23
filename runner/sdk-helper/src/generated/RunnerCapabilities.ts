@@ -9,8 +9,4 @@ export type RunnerCapabilities = {
    * Names of the secrets that this session can use with no request.
    */
   secrets: ReadonlyVec<string>
-  /**
-   * Whether Mac access is on in this workspace.
-   */
-  macAccess: boolean
 }

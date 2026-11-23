@@ -27,9 +27,6 @@ afterAll(async () => {
 
 it('sends empty facts on turns only and refreshes them for the next turn', async () => {
   const f = await createChatFixture(harness)
-  await f.env.DB.prepare('UPDATE workspaces SET mac_access = 0 WHERE id = ?')
-    .bind(WORKSPACE_ID)
-    .run()
   const session = await f.createSession()
   const runner = await f.connect(new FakeRunner({ workspaceId: WORKSPACE_ID }))
   runner.emit({ type: 'runner.ready' })
@@ -38,9 +35,10 @@ it('sends empty facts on turns only and refreshes them for the next turn', async
   const first = runner.commands[0]
   expect(first).toMatchObject({
     type: 'turn',
-    capabilities: { secrets: [], macAccess: false },
+    capabilities: { secrets: [] },
   })
   if (first?.type !== 'turn') throw new Error('The first turn is missing.')
+  expect(first.capabilities).toEqual({ secrets: [] })
   await f.send(session.id, 'during')
   expect(runner.commands.at(-1)?.type).toBe('message')
   expect(runner.commands.at(-1)).not.toHaveProperty('capabilities')
@@ -55,13 +53,11 @@ it('sends empty facts on turns only and refreshes them for the next turn', async
     userMessageIds: ['first', 'during'],
   })
   await f.drain()
-  await f.env.DB.prepare('UPDATE workspaces SET mac_access = 1 WHERE id = ?')
-    .bind(WORKSPACE_ID)
-    .run()
+  await capabilitySecret(f, 'NEXT_KEY', true)
   await f.send(session.id, 'next')
   expect(runner.commands.at(-1)).toMatchObject({
     type: 'turn',
-    capabilities: { secrets: [], macAccess: true },
+    capabilities: { secrets: ['NEXT_KEY'] },
   })
 })
 
@@ -151,9 +147,6 @@ it('dispatches sorted unique names from this session grants and workspace values
     ),
     await capabilityValue(f, 'expired', 'E_EXPIRED', session.id, TEST_TIME),
   ]
-  await f.env.DB.prepare('UPDATE workspaces SET mac_access = 1 WHERE id = ?')
-    .bind(WORKSPACE_ID)
-    .run()
 
   const runner = await f.connect(new FakeRunner({ workspaceId: WORKSPACE_ID }))
   runner.emit({ type: 'runner.ready' })
@@ -169,7 +162,6 @@ it('dispatches sorted unique names from this session grants and workspace values
       'W_WORKSPACE_VALUE',
       'Z_ALL',
     ],
-    macAccess: true,
   })
   const serialized = JSON.stringify(turn)
   expect(serialized).not.toContain('ciphertext')
@@ -202,6 +194,5 @@ it('dispatches sorted unique names from this session grants and workspace values
       'W_WORKSPACE_VALUE',
       'Z_ALL',
     ],
-    macAccess: true,
   })
 })

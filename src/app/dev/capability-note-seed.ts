@@ -18,16 +18,10 @@ import { senderOf } from './secret-store'
  * The notes of a change of the capabilities that `capabilities=` puts into
  * the session of `checkout-autocomplete`, as the pages of
  * `app/capabilities/changed` in the mockups draw them. `changed` has the
- * pre-approval of VERCEL_TOKEN by Priya, `mac` has Mac access turned on,
- * `removed` has two writes of two members, and `several` has one write with
- * three changes.
+ * pre-approval of VERCEL_TOKEN by Priya, `removed` has two writes of two
+ * members, and `several` has one write with three changes.
  */
-export const CAPABILITY_SCENARIOS = [
-  'changed',
-  'mac',
-  'removed',
-  'several',
-] as const
+export const CAPABILITY_SCENARIOS = ['changed', 'removed', 'several'] as const
 
 export type CapabilityScenario = (typeof CAPABILITY_SCENARIOS)[number]
 
@@ -40,8 +34,6 @@ function writesOf(
   switch (scenario) {
     case 'changed':
       return [[priya, [{ kind: 'pre-approved', names: [vercelToken.name] }]]]
-    case 'mac':
-      return [[priya, [{ kind: 'mac-access', on: true }]]]
     case 'removed':
       return [
         [jonas, [{ kind: 'pre-approval-removed', names: [figmaToken.name] }]],
@@ -61,8 +53,8 @@ function writesOf(
           priya,
           [
             { kind: 'pre-approved', names: [vercelToken.name] },
+            { kind: 'pre-approval-removed', names: [figmaToken.name] },
             { kind: 'session-approval-removed', names: [replicaUrl.name] },
-            { kind: 'mac-access', on: false },
           ],
         ],
       ]

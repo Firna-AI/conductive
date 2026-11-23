@@ -37,11 +37,10 @@ agent the capabilities of its session, as
 ## The capabilities
 
 - The instructions of a session name its capabilities only when it uses a
-  secret with no request, or when Mac access is on (capability prompts
-  decision 1 A).
+  secret with no request (capability prompts decision 1 A).
   [The facts of a session](capabilities-agents.md#the-facts-of-a-session)
   states these facts.
-- A session with no such fact gets no capability text. Reason: the user
+- A session with no such secret gets no capability text. Reason: the user
   asked for this text only for a session that has capabilities.
 - The text names at most 10 secrets, sorted by name. When the session has
   more, the text then gives the count of the others, such as "and 3 more".
@@ -53,12 +52,6 @@ agent the capabilities of its session, as
   from the text around it.
 - The text says that `run_with_secrets` uses these secrets with no
   request.
-- It says whether Mac access is on. When Mac access is on, it gives the
-  rules of a Mac command that the
-  [change note](capabilities-agents.md#the-change-note) gives too. A
-  request goes to the Mac of the member whose message started the turn.
-  The Mac app asks before each command, unless a permission that its user
-  chose there covers it.
 - It ends by saying that members can change the capabilities, and that
   the app then tells the agent of each change.
 - A turn that brings no capabilities, such as a turn from an older Worker,

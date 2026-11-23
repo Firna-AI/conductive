@@ -19,7 +19,7 @@ pub(super) fn notice(session: &str, turn: &str, id: &str) -> RunnerCommand {
         turn_id: turn.into(),
         notices: vec![RunnerNoticeLine {
             id: id.into(),
-            text: "Mac access is on.".into(),
+            text: "Octocat pre-approved `DEPLOY_KEY`.".into(),
         }],
     })
 }

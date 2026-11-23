@@ -193,7 +193,7 @@ See [Secret variables](../docs/protocol/secret-variables.md) and
 ## Mac commands
 
 Use `mac run` or `run_mac_command` when the task needs the member's Mac.
-The call needs Mac access on in the Capabilities of the workspace.
+The call needs an active calling turn.
 The request goes to the Mac of the member whose message started the turn.
 The Mac app asks before each command, unless a permission that its user chose there covers it.
 

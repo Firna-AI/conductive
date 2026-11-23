@@ -1,37 +1,24 @@
 import type { CapabilityChange } from '../../../../../../src/ui/components/chat/capabilityChangeCopy'
 import { personKeys } from '../layout/railSchemas'
 
-/** The kinds of a change that names secrets, as `CapabilityChange` lists them. */
-const namedChangeKinds = [
+/** The kinds of a change, as `CapabilityChange` lists them. */
+const changeKinds = [
   'pre-approved',
   'pre-approval-removed',
   'session-approval-removed',
   'value-given',
   'value-removed',
-] as const satisfies readonly Exclude<CapabilityChange['kind'], 'mac-access'>[]
+] as const satisfies readonly CapabilityChange['kind'][]
 
 /** One change of the facts of a session, as `CapabilityChange`. */
 const capabilityChangeSchema = {
-  anyOf: [
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'names'],
-      properties: {
-        kind: { enum: namedChangeKinds },
-        names: { type: 'array', items: { type: 'string' } },
-      },
-    },
-    {
-      type: 'object',
-      additionalProperties: false,
-      required: ['kind', 'on'],
-      properties: {
-        kind: { const: 'mac-access' },
-        on: { type: 'boolean' },
-      },
-    },
-  ],
+  type: 'object',
+  additionalProperties: false,
+  required: ['kind', 'names'],
+  properties: {
+    kind: { enum: changeKinds },
+    names: { type: 'array', items: { type: 'string' } },
+  },
 } as const
 
 /**

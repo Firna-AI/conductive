@@ -23,7 +23,7 @@ fn turn() -> Value {
 fn notice_command_round_trips_without_a_member_message() -> Result<(), serde_json::Error> {
     let frame = json!({
         "type": "notice", "commandId": "command", "sessionId": "session", "turnId": "turn",
-        "notices": [{"id": "note-1", "text": "Mac access is on."}, {"id": "note-2", "text": "A secret is approved."}]
+        "notices": [{"id": "note-1", "text": "Octocat pre-approved `DEPLOY_KEY`."}, {"id": "note-2", "text": "A secret is approved."}]
     });
     let parsed: WorkspaceToRunner = serde_json::from_value(frame.clone())?;
     assert_eq!(serde_json::to_value(parsed)?, frame);

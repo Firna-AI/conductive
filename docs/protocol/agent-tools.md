@@ -111,8 +111,8 @@ says. A Mac access decision names a decision of the change that makes
   - that a write acts with the rights of the sender in the app, so only the
     workspace owner or an admin can archive a workspace
   - which links each reply gives
-  - when to use the secret calls and the Mac command call, and that the
-    Mac command call needs Mac access, as
+  - when to use the secret calls and the Mac command call, whose Mac gets
+    a Mac command, and when the Mac app asks first, as
     [The facts of a session](capabilities-agents.md#the-facts-of-a-session)
     says
 - [Tool descriptions](session-calls.md#tool-descriptions) states the

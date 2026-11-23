@@ -18,7 +18,6 @@ const order = [
   'session-approval-removed',
   'value-given',
   'value-removed',
-  'mac-access',
 ]
 
 export async function captureCapabilities(
@@ -64,11 +63,6 @@ function difference(
   for (const touch of touches) {
     if (touch.sessionId && touch.sessionId !== sessionId) continue
     const change = touch.change
-    if (change.kind === 'mac-access') {
-      if (before.macAccess !== after.macAccess)
-        changes.push({ kind: change.kind, on: after.macAccess })
-      continue
-    }
     const added =
       change.kind === 'pre-approved' || change.kind === 'value-given'
     const names = change.names.filter((name) =>
@@ -77,7 +71,7 @@ function difference(
         : before.secrets.includes(name) && !after.secrets.includes(name),
     )
     const existing = changes.find((entry) => entry.kind === change.kind)
-    if (existing && existing.kind !== 'mac-access') {
+    if (existing) {
       changes.splice(changes.indexOf(existing), 1, {
         ...existing,
         names: [...new Set([...existing.names, ...names])].sort(),

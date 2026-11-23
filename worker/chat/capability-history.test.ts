@@ -20,8 +20,14 @@ it('keeps note events through history compaction for later delivery', async () =
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
   await f.finish(first)
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: true }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+  )
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approved', names: ['DEPLOY_KEY'] }],
+  )
   const notes = await f.notes(session.id)
   expect(notes).toHaveLength(2)
   await f.changeWorkspace(WORKSPACE_ID, async (view) => {
@@ -63,8 +69,8 @@ it('keeps note events through history compaction for later delivery', async () =
   expect(f.runner.commands.at(-1)).toMatchObject({
     type: 'turn',
     notices: [
-      { text: 'Octocat turned Mac access off.' },
-      { text: expect.stringContaining('turned Mac access on.') },
+      { text: 'Octocat removed the pre-approval of `DEPLOY_KEY`.' },
+      { text: 'Octocat pre-approved `DEPLOY_KEY`.' },
     ],
   })
 })
@@ -75,8 +81,12 @@ it('receipts only notes read by the failed turn and retains gaps in read order a
   const other = await f.createSession()
   const first = await f.start(session.id, 'first')
   const otherTurn = await f.start(other.id, 'other')
-  for (const on of [false, true, false])
-    await f.seedNotes([session.id, other.id], [{ kind: 'mac-access', on }])
+  for (const kind of [
+    'pre-approval-removed',
+    'pre-approved',
+    'pre-approval-removed',
+  ] as const)
+    await f.seedNotes([session.id, other.id], [{ kind, names: ['DEPLOY_KEY'] }])
   const notes = await f.waitingNotes(session.id)
   const failed = (turn: typeof first, noticeIds: readonly string[]) => ({
     type: 'turn.failed' as const,
@@ -117,7 +127,10 @@ it('receipts only notes read by the failed turn and retains gaps in read order a
   expect(await f.waitingNotes(session.id)).toHaveLength(2)
   await f.finish(next, [notes[0].id, notes[2].id])
   expect(await f.waitingNotes(session.id)).toEqual([])
-  await f.seedNotes([session.id, other.id], [{ kind: 'mac-access', on: true }])
+  await f.seedNotes(
+    [session.id, other.id],
+    [{ kind: 'pre-approved', names: ['DEPLOY_KEY'] }],
+  )
   expect(await f.waitingNotes(session.id)).toHaveLength(1)
   expect(await f.notes(session.id)).toHaveLength(4)
 })

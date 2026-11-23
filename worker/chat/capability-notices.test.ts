@@ -74,7 +74,10 @@ it('keeps idle notes in order and retries unread notes before the next message',
   const first = await f.start(session.id, 'first')
   await f.finish(first)
   const count = f.runner.commands.length
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+  )
   await f.seedNotes(
     [session.id],
     [{ kind: 'pre-approved', names: ['NEXT_KEY'] }],
@@ -86,7 +89,10 @@ it('keeps idle notes in order and retries unread notes before the next message',
   const second = f.runner.commands.at(-1)
   if (second?.type !== 'turn') throw new Error('The next turn is missing.')
   expect(second.notices).toEqual([
-    { id: notes[0].id, text: 'Octocat turned Mac access off.' },
+    {
+      id: notes[0].id,
+      text: 'Octocat removed the pre-approval of `DEPLOY_KEY`.',
+    },
     { id: notes[1].id, text: 'Octocat pre-approved `NEXT_KEY`.' },
   ])
   await f.acknowledgeStart(second)
@@ -108,7 +114,10 @@ it('keeps notes across session close and object restart until a capable runner r
   const f = await noticeFixture(harness, false)
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+  )
   expect(f.runner.commands.some((command) => command.type === 'notice')).toBe(
     false,
   )
@@ -125,7 +134,10 @@ it('keeps notes across session close and object restart until a capable runner r
       })
     ).status,
   ).toBe(200)
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: true }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approved', names: ['DEPLOY_KEY'] }],
+  )
   expect(await f.waitingNotes(session.id)).toHaveLength(2)
   await f.restart()
   const current = await f.connect(
@@ -140,8 +152,8 @@ it('keeps notes across session close and object restart until a capable runner r
   expect(reopened).toMatchObject({
     type: 'turn',
     notices: [
-      { text: 'Octocat turned Mac access off.' },
-      { text: expect.stringContaining('turned Mac access on.') },
+      { text: 'Octocat removed the pre-approval of `DEPLOY_KEY`.' },
+      { text: 'Octocat pre-approved `DEPLOY_KEY`.' },
     ],
   })
   expect(await f.notes(session.id)).toHaveLength(2)
@@ -151,7 +163,10 @@ it('resends a pending notice after reconnect and returns it to waiting after a f
   const f = await noticeFixture(harness)
   const session = await f.createSession()
   const first = await f.start(session.id, 'first')
-  await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+  await f.seedNotes(
+    [session.id],
+    [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+  )
   const notice = f.runner.commands.at(-1)
   expect(notice?.type).toBe('notice')
   if (notice?.type !== 'notice') throw new Error('The notice is missing.')

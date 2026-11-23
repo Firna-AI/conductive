@@ -21,11 +21,11 @@ const notice: RunnerNotice = {
   turnId: 'turn-1',
   notices: [
     { id: 'change-1', text: 'Priya approved API_TOKEN.' },
-    { id: 'change-2', text: 'Priya turned Mac access on.' },
+    { id: 'change-2', text: 'Priya pre-approved `DEPLOY_KEY`.' },
   ],
 }
 const appText =
-  'Line of the app: no member wrote this text.\n\nPriya approved API_TOKEN.\nPriya turned Mac access on.'
+  'Line of the app: no member wrote this text.\n\nPriya approved API_TOKEN.\nPriya pre-approved `DEPLOY_KEY`.'
 
 it.each(['claude', 'codex'] as const)(
   'puts %s turn notes after the member text, sender, and current context',

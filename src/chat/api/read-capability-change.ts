@@ -1,6 +1,6 @@
 import type { CapabilityChange } from '../../ui/components/chat/capabilityChangeCopy'
 import type { CapabilityChangeNote } from '../../shared/capability-change'
-import { flag, list, oneOf, record, text } from './json'
+import { list, oneOf, record, text } from './json'
 import { readMember } from './read-continued'
 
 const readKind = oneOf<CapabilityChange['kind']>({
@@ -9,16 +9,13 @@ const readKind = oneOf<CapabilityChange['kind']>({
   'session-approval-removed': true,
   'value-given': true,
   'value-removed': true,
-  'mac-access': true,
 })
 
-/** One change of the facts of a session: the names of secrets, or Mac access. */
+/** One change of the secrets that a session can use with no request. */
 function readChange(value: unknown): CapabilityChange {
   const source = record(value, 'change')
   const kind = readKind(source.kind)
-  return kind === 'mac-access'
-    ? { kind, on: flag(source.on) }
-    : { kind, names: list(text)(source.names) }
+  return { kind, names: list(text)(source.names) }
 }
 
 /**

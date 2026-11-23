@@ -133,7 +133,6 @@ async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configur
         });
         *capabilities = Some(RunnerCapabilities {
             secrets: vec!["API_TOKEN".into()],
-            mac_access: true,
         });
     }
     h.command(command).await?;
@@ -151,7 +150,7 @@ async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configur
     );
     assert!(first.instructions.contains("Target branch: \"develop\""));
     assert!(first.instructions.contains(
-        "Use run_with_secrets to use these secrets with no request: \"API_TOKEN\". Mac access is on."
+        "Use run_with_secrets to use these secrets with no request: \"API_TOKEN\". Members can change these capabilities."
     ));
     assert_eq!(first.instruction_folder.as_deref(), Some("/repo"));
     h.latest()?.result(&[]);
@@ -160,7 +159,6 @@ async fn keeps_exact_instructions_and_legacy_branches_and_folder_across_configur
     if let RunnerCommand::RunnerTurn(RunnerTurn::Turn { capabilities, .. }) = &mut next_command {
         *capabilities = Some(RunnerCapabilities {
             secrets: vec!["OTHER_TOKEN".into()],
-            mac_access: false,
         });
     }
     h.command(next_command).await?;

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { FakeRunner } from '../test-support/fake-runner'
 import { createHarness, type TestHarness } from '../test-support/harness'
 import { noticeFixture } from './capability-notices.test-support'
+import { capabilitySecret } from './capability-context.test-support'
 import { WORKSPACE_ID } from './harness.test-support'
 import { chatKey } from './storage-keys'
 
@@ -49,13 +50,16 @@ it.each(['running', 'finished'] as const)(
       session.activeTurnId = state === 'running' ? 'legacy-turn' : null
       await view.saveSession(session)
     })
-    await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+    await f.seedNotes(
+      [session.id],
+      [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+    )
     expect(await f.notes(session.id)).toHaveLength(1)
     if (state === 'finished') await f.send(session.id, 'next')
     expect(f.runner.commands.at(-1)).toMatchObject({
       type: state === 'running' ? 'notice' : 'turn',
       sessionId: session.id,
-      notices: [{ text: 'Octocat turned Mac access off.' }],
+      notices: [{ text: 'Octocat removed the pre-approval of `DEPLOY_KEY`.' }],
     })
   },
 )
@@ -69,7 +73,8 @@ it('refreshes first-turn facts without a note after a failed first send', async 
     view.turn((await view.session(session.id))?.activeTurnId ?? ''),
   )
   expect(turn).toMatchObject({ state: 'queued', started: false })
-  await f.patch({ macAccess: false })
+  const secret = await capabilitySecret(f, 'DEPLOY_KEY')
+  await f.patch({ preapprovedSecretIds: [secret.id] })
   expect(await f.notes(session.id)).toEqual([])
   expect(await f.waitingNotes(session.id)).toEqual([])
   await f.setSendRule(null)
@@ -85,7 +90,7 @@ it('refreshes first-turn facts without a note after a failed first send', async 
   expect(runner.commands).toHaveLength(1)
   expect(runner.commands[0]).toMatchObject({
     type: 'turn',
-    capabilities: { secrets: [], macAccess: false },
+    capabilities: { secrets: ['DEPLOY_KEY'] },
   })
   expect(runner.commands[0]).not.toHaveProperty('notices')
 })
@@ -96,7 +101,10 @@ it.each(['ended', 'missing'] as const)(
     const f = await noticeFixture(harness)
     const session = await f.createSession()
     const first = await f.start(session.id, 'first')
-    await f.seedNotes([session.id], [{ kind: 'mac-access', on: false }])
+    await f.seedNotes(
+      [session.id],
+      [{ kind: 'pre-approval-removed', names: ['DEPLOY_KEY'] }],
+    )
     const notice = f.runner.commands.at(-1)
     if (notice?.type !== 'notice') throw new Error('The notice is missing.')
     const turn = await f.chat.readWorkspace(WORKSPACE_ID, (view) =>

@@ -217,24 +217,28 @@ one.
 
 ## A change of the capabilities in the chat
 
-- The facts of a session are the secrets that it uses with no approval,
-  and whether Mac access is on. A write that changes the facts of a session
-  gives that session a note in its chat, and its agent gets the same words
-  (capability prompts decision 4 B). The changes are a pre-approval added
-  or removed, an approval of the session removed, a value for this
-  workspace given or removed, and Mac access turned on or off.
-- `CapabilityChangeLine` in `src/components/chat/` draws the note, centred
-  and muted as the note of Continue, with the Capabilities icon. It shows
-  at the time of the change and belongs to no turn, so it does not fold
-  with the work of a turn. It takes no fixtures, so the app can use it too.
+- The facts of a session are the secrets that it uses with no approval. A
+  write that changes the facts of a session gives that session a note in
+  its chat, and its agent gets the same words (capability prompts decision
+  4 B). The changes are a pre-approval added or removed, an approval of the
+  session removed, and a value for this workspace given or removed.
+- Mac access is not a fact, so no note names it, as
+  [The facts of a session](../protocol/capabilities-agents.md#the-facts-of-a-session)
+  says.
+- `CapabilityChangeLine` in
+  [`src/ui/components/chat/`](../../src/ui/components/chat/) draws the
+  note, centred and muted as the note of Continue, with the Capabilities
+  icon. It shows at the time of the change and belongs to no turn, so it
+  does not fold with the work of a turn. It takes no fixtures, so the app
+  can use it too.
 - The note names the member, "You" for the viewer who made the change,
   then each change of one write in one sentence, such as "Priya Raman
-  pre-approved VERCEL_TOKEN, removed the approval of PROD_DATABASE_URL for
-  this session, and turned Mac access off." Each secret is in the
-  monospace font. No note holds a value.
-- The changes keep a fixed order, with Mac access last. Mac access on adds
-  the rules of a Mac command: "Agents can ask to run commands on the Mac
-  of the member whose message started the turn. The Mac app asks before
-  each command, unless a permission that its user chose there covers it."
-- `capabilityChangeCopy.ts` holds the words, as pieces of text and names
-  of secrets. The agent gets the same words, with the name of the member.
+  pre-approved VERCEL_TOKEN, removed the pre-approval of FIGMA_TOKEN, and
+  removed the approval of PROD_DATABASE_URL for this session." Each secret
+  is in the monospace font. No note holds a value.
+- The changes keep a fixed order: pre-approvals added, pre-approvals
+  removed, approvals of the session removed, values given, then values
+  removed.
+- [capabilityChangeCopy.ts](../../src/ui/components/chat/capabilityChangeCopy.ts)
+  holds the words, as pieces of text and names of secrets. The agent gets
+  the same words, with the name of the member.

@@ -34,50 +34,29 @@ fn check(capabilities: Option<RunnerCapabilities>, expected: &[&str]) -> Result<
 #[test]
 fn omits_capability_text_when_facts_are_missing_or_empty() -> Result<()> {
     check(None, &[])?;
-    check(
-        Some(RunnerCapabilities {
-            secrets: vec![],
-            mac_access: false,
-        }),
-        &[],
-    )
+    check(Some(RunnerCapabilities { secrets: vec![] }), &[])
 }
 
 #[test]
-fn names_secrets_as_json_and_explains_mac_access_is_off() -> Result<()> {
+fn names_secrets_as_json_and_keeps_change_notice() -> Result<()> {
     check(
         Some(RunnerCapabilities {
             secrets: vec!["API \"token\"\n".into()],
-            mac_access: false,
         }),
         &[
-            r#"Use run_with_secrets to use these secrets with no request: "API \"token\"\n". Mac access is off. The app refuses run_mac_command until a member turns Mac access on in the Capabilities of the workspace. Members can change these capabilities. The app then tells you in a line of the app."#,
+            r#"Use run_with_secrets to use these secrets with no request: "API \"token\"\n". Members can change these capabilities. The app then tells you in a line of the app."#,
         ],
     )
 }
 
 #[test]
-fn explains_mac_access_without_naming_any_secrets() -> Result<()> {
-    check(
-        Some(RunnerCapabilities {
-            secrets: vec![],
-            mac_access: true,
-        }),
-        &[
-            "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it. Members can change these capabilities. The app then tells you in a line of the app.",
-        ],
-    )
-}
-
-#[test]
-fn names_secrets_and_explains_mac_access_together() -> Result<()> {
+fn names_a_single_secret_and_keeps_change_notice() -> Result<()> {
     check(
         Some(RunnerCapabilities {
             secrets: vec!["DEPLOY_KEY".into()],
-            mac_access: true,
         }),
         &[
-            r#"Use run_with_secrets to use these secrets with no request: "DEPLOY_KEY". Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it. Members can change these capabilities. The app then tells you in a line of the app."#,
+            r#"Use run_with_secrets to use these secrets with no request: "DEPLOY_KEY". Members can change these capabilities. The app then tells you in a line of the app."#,
         ],
     )
 }
@@ -89,10 +68,9 @@ fn sorts_and_deduplicates_secret_names() -> Result<()> {
             secrets: ["Z_TOKEN", "A_TOKEN", "Z_TOKEN", "A_TOKEN", "M_TOKEN"]
                 .map(String::from)
                 .to_vec(),
-            mac_access: false,
         }),
         &[
-            r#"Use run_with_secrets to use these secrets with no request: "A_TOKEN", "M_TOKEN", "Z_TOKEN". Mac access is off. The app refuses run_mac_command until a member turns Mac access on in the Capabilities of the workspace. Members can change these capabilities. The app then tells you in a line of the app."#,
+            r#"Use run_with_secrets to use these secrets with no request: "A_TOKEN", "M_TOKEN", "Z_TOKEN". Members can change these capabilities. The app then tells you in a line of the app."#,
         ],
     )
 }
@@ -106,10 +84,9 @@ fn limits_secret_names_to_ten_and_counts_other_unique_names() -> Result<()> {
             ]
             .map(String::from)
             .to_vec(),
-            mac_access: false,
         }),
         &[
-            r#"Use run_with_secrets to use these secrets with no request: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" and 4 more. Mac access is off. The app refuses run_mac_command until a member turns Mac access on in the Capabilities of the workspace. Members can change these capabilities. The app then tells you in a line of the app."#,
+            r#"Use run_with_secrets to use these secrets with no request: "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" and 4 more. Members can change these capabilities. The app then tells you in a line of the app."#,
         ],
     )
 }

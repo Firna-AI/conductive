@@ -83,8 +83,6 @@ pub struct RunnerCapabilities {
     /// Names of the secrets that this session can use with no request.
     #[ts(as = "ReadonlyVec<String>")]
     pub secrets: Vec<String>,
-    /// Whether Mac access is on in this workspace.
-    pub mac_access: bool,
 }
 
 /// One line of the app, with its delivery identity.

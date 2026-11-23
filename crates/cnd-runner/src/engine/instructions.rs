@@ -11,37 +11,24 @@ fn quoted(value: &str) -> Result<String> {
 }
 
 fn capability_text(capabilities: &RunnerCapabilities) -> Result<Option<String>> {
-    if capabilities.secrets.is_empty() && !capabilities.mac_access {
+    if capabilities.secrets.is_empty() {
         return Ok(None);
     }
     let mut names = capabilities.secrets.iter().collect::<Vec<_>>();
     names.sort_unstable();
     names.dedup();
-    let mut sentences = Vec::new();
-    if !names.is_empty() {
-        let mut listed = names
-            .iter()
-            .take(10)
-            .map(|name| quoted(name))
-            .collect::<Result<Vec<_>>>()?
-            .join(", ");
-        if names.len() > 10 {
-            listed.push_str(&format!(" and {} more", names.len() - 10));
-        }
-        sentences.push(format!(
-            "Use run_with_secrets to use these secrets with no request: {listed}."
-        ));
+    let mut listed = names
+        .iter()
+        .take(10)
+        .map(|name| quoted(name))
+        .collect::<Result<Vec<_>>>()?
+        .join(", ");
+    if names.len() > 10 {
+        listed.push_str(&format!(" and {} more", names.len() - 10));
     }
-    sentences.push(if capabilities.mac_access {
-        "Mac access is on. Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.".into()
-    } else {
-        "Mac access is off. The app refuses run_mac_command until a member turns Mac access on in the Capabilities of the workspace.".into()
-    });
-    sentences.push(
-        "Members can change these capabilities. The app then tells you in a line of the app."
-            .into(),
-    );
-    Ok(Some(sentences.join(" ")))
+    Ok(Some(format!(
+        "Use run_with_secrets to use these secrets with no request: {listed}. Members can change these capabilities. The app then tells you in a line of the app."
+    )))
 }
 
 pub(super) fn build(

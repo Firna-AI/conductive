@@ -56,8 +56,6 @@ access part. Its child pages:
   then runs the deploy with no question. Its child pages:
   - `idle` has the note at the time of the change in an idle session, the
     next message of Cal after it, and the agent that uses the secret.
-  - `mac` has Mac access turned on after a refused Mac command, with the
-    rules of a Mac command in the note.
   - `removed` has a removed pre-approval and a removed value for this
     workspace: two writes, so two notes, each with its own member.
   - `several` has one edit with three changes in one note. The other

@@ -65,10 +65,7 @@ export async function writeWorkspaceCapabilities(
       )
       const touches: CapabilityTouch[] = writes.map((write) => ({
         ...(write.sessionId ? { sessionId: write.sessionId } : {}),
-        change:
-          write.kind === 'mac-access'
-            ? { kind: write.kind, on: write.on === true }
-            : { kind: write.kind, names: write.names },
+        change: { kind: write.kind, names: write.names },
       }))
       try {
         if (before.size && touches.length)

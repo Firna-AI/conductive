@@ -4,10 +4,10 @@ use cnd_runner_interface::runner_handshake::WorkspaceToRunner;
 use serde_json::json;
 
 #[test]
-fn turn_preserves_capability_names_and_mac_access() -> Result<(), serde_json::Error> {
+fn turn_preserves_capability_names() -> Result<(), serde_json::Error> {
     for capabilities in [
-        json!({"secrets": ["API_TOKEN", "DEPLOY_KEY"], "macAccess": true}),
-        json!({"secrets": [], "macAccess": false}),
+        json!({"secrets": ["API_TOKEN", "DEPLOY_KEY"]}),
+        json!({"secrets": []}),
     ] {
         let command = json!({
             "type": "turn",

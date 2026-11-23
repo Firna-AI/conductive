@@ -1,11 +1,10 @@
 /**
- * The words of the note of a change of the capabilities of a workspace
- * (capability prompts decision 4 B). The note shows in the chat of each
- * session whose facts the change touched, and the agent of that session
- * gets the same words. The facts of a session are the secrets that it uses
- * with no approval, and whether Mac access is on. The note names the
- * member who made the change and each change. It names secrets only, never
- * a value. The app and the mockups take the words from here.
+ * The words of the note of a change of the capabilities of a workspace.
+ * The note shows in the chat of each session whose facts the change touched.
+ * The agent of that session gets the same words. The facts of a session
+ * are the secrets that it uses with no approval. The note names the member
+ * who made the change and each change. It names secrets only, never a value.
+ * The app and the mockups take the words from here.
  */
 
 /**
@@ -20,29 +19,18 @@ export type CapabilityChange =
   /** Values for each session of the workspace, from an answer. */
   | { kind: 'value-given'; names: readonly string[] }
   | { kind: 'value-removed'; names: readonly string[] }
-  | { kind: 'mac-access'; on: boolean }
 
 /** A piece of a note: words, or the name of a secret, in code style. */
 export type NotePiece = string | { name: string }
 
-/** The order of the changes in a note. Mac access is last, before its rules. */
+/** The order of the secret changes in a note. */
 const changeOrder: readonly CapabilityChange['kind'][] = [
   'pre-approved',
   'pre-approval-removed',
   'session-approval-removed',
   'value-given',
   'value-removed',
-  'mac-access',
 ]
-
-/**
- * The rules that follow Mac access on, as the instructions of a new
- * session give them: whose Mac a command goes to, and when the Mac app
- * asks (decision 62). The words name no single permission, so that they
- * stay true for each permission of the Mac app.
- */
-const macAccessRules =
-  'Agents can ask to run commands on the Mac of the member whose message started the turn. The Mac app asks before each command, unless a permission that its user chose there covers it.'
 
 /** Items as one list, as English writes it: "A", "A and B", "A, B, and C". */
 function inList(items: readonly (readonly NotePiece[])[]): NotePiece[] {
@@ -87,18 +75,15 @@ function clause(change: CapabilityChange): NotePiece[] {
         ...names(change.names),
         ' for this workspace',
       ]
-    case 'mac-access':
-      return [change.on ? 'turned Mac access on' : 'turned Mac access off']
   }
 }
 
 /**
  * The note of one write, which is also the text that the agent gets: the
- * member, then each change in one sentence, then the rules of Mac access
- * when the write turned it on. `who` starts the sentence: "You" for the
- * viewer who made the change, and the name of the member for the others
- * and for the agent. A write that changed no fact of a session gives that
- * session no note.
+ * member, then each secret change in one sentence. `who` starts the
+ * sentence: "You" for the viewer who made the change, and the name of the
+ * member for the others and for the agent. A write that changed no fact
+ * of a session gives that session no note.
  */
 export function capabilityChangeWords(
   who: string,
@@ -107,9 +92,5 @@ export function capabilityChangeWords(
   const sorted = changeOrder.flatMap((kind) =>
     changes.filter((change) => change.kind === kind),
   )
-  const sentence = [`${who} `, ...inList(sorted.map(clause)), '.']
-  const macOn = sorted.some(
-    (change) => change.kind === 'mac-access' && change.on,
-  )
-  return macOn ? [...sentence, ` ${macAccessRules}`] : sentence
+  return [`${who} `, ...inList(sorted.map(clause)), '.']
 }

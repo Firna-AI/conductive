@@ -85,26 +85,51 @@ it('diffs each session, ignores covered removals, and emits nothing for an uncha
     removeSessionApprovals: [{ sessionId: first.id, secretId: shared.id }],
   })
   expect(await f.notes(first.id)).toEqual([])
-  await f.patch({ preapprovedSecretIds: [] })
+  await f.patch({ preapprovedSecretIds: [], macAccess: false })
   expect(await f.waitingNotes(first.id)).toMatchObject([
     { changes: [{ kind: 'pre-approval-removed', names: ['SHARED'] }] },
   ])
+  const notesBeforeMacWrite = await f.notes(first.id)
+  for (const macAccess of [false, true]) {
+    const response = await f.patch({ macAccess })
+    expect(await response.json()).toMatchObject({ capabilities: { macAccess } })
+    expect(await f.notes(first.id)).toEqual(notesBeforeMacWrite)
+  }
 })
 
 it('attributes concurrent edits to their members and publishes and replays each event once', async () => {
   const f = await noticeFixture(harness)
   const session = await f.createSession()
-  await f.start(session.id, 'first')
   const secret = await capabilitySecret(f, 'DEPLOY_KEY')
+  const approved = await capabilitySecret(f, 'SESSION_ONLY')
+  await f.env.DB.batch([
+    sessionApproval(f.env.DB, {
+      orgId: f.org.id,
+      workspaceId: WORKSPACE_ID,
+      sessionId: session.id,
+      secretId: approved.id,
+      userId: f.owner.id,
+      now: TEST_TIME,
+    }),
+  ])
+  await f.start(session.id, 'first')
   const tab = await f.tab()
   await Promise.all([
-    f.patch({ macAccess: false }, f.ownerCookie),
+    f.patch(
+      {
+        removeSessionApprovals: [
+          { sessionId: session.id, secretId: approved.id },
+        ],
+      },
+      f.ownerCookie,
+    ),
     f.patch({ preapprovedSecretIds: [secret.id] }, f.memberCookie),
   ])
   const notes = await f.waitingNotes(session.id)
   expect(notes).toHaveLength(2)
   expect(
-    notes.find((note) => note.changes[0].kind === 'mac-access')?.member,
+    notes.find((note) => note.changes[0].kind === 'session-approval-removed')
+      ?.member,
   ).toMatchObject({ id: f.owner.id, displayName: 'Octocat' })
   expect(
     notes.find((note) => note.changes[0].kind === 'pre-approved')?.member,
@@ -135,7 +160,9 @@ it('attributes concurrent edits to their members and publishes and replays each 
   )
   expect(response.status).toBe(200)
   const copy: { markdown: string } = await response.json()
-  expect(copy.markdown).toContain('Octocat turned Mac access off.')
+  expect(copy.markdown).toContain(
+    'Octocat removed the approval of `SESSION_ONLY` for this session.',
+  )
   expect(copy.markdown).toContain('Teammate pre-approved `DEPLOY_KEY`.')
   expect(copy.markdown).not.toContain('You ')
 })
@@ -144,6 +171,7 @@ it('returns saved capabilities when note storage fails after the D1 write', asyn
   const f = await noticeFixture(harness)
   const session = await f.createSession()
   await f.start(session.id, 'first')
+  const secret = await capabilitySecret(f, 'DEPLOY_KEY')
   await f.actor.api.controls.captureWarnings(true)
   await f.setStorageHooks({
     beforeCommit: async (commit) => {
@@ -155,9 +183,9 @@ it('returns saved capabilities when note storage fails after the D1 write', asyn
         throw new Error('Note storage failed.')
     },
   })
-  const response = await f.patch({ macAccess: false })
+  const response = await f.patch({ preapprovedSecretIds: [secret.id] })
   expect(await response.json()).toMatchObject({
-    capabilities: { macAccess: false },
+    capabilities: { preapprovedSecretIds: [secret.id] },
   })
   expect(await f.notes(session.id)).toEqual([])
   expect((await f.actor.api.controls.warningCalls()).flat()).toContainEqual(

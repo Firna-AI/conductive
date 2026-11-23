@@ -10,10 +10,9 @@ export async function readSessionCapabilities(
 ): Promise<RunnerCapabilities | null> {
   const workspace = await secretWorkspaceState(db, workspaceId)
   if (!workspace) return null
-  const [grants, workspaceNames, macAccess] = await Promise.all([
+  const [grants, workspaceNames] = await Promise.all([
     secretGrants(db, workspace.orgId, workspaceId, sessionId),
     records.workspaceValueNames(),
-    workspaceMacAccess(db, workspaceId),
   ])
   return {
     secrets: [
@@ -24,17 +23,5 @@ export async function readSessionCapabilities(
         ...workspaceNames,
       ]),
     ].sort(),
-    macAccess,
   }
-}
-
-async function workspaceMacAccess(
-  db: D1Database,
-  workspaceId: string,
-): Promise<boolean> {
-  const row = await db
-    .prepare('SELECT mac_access AS macAccess FROM workspaces WHERE id = ?')
-    .bind(workspaceId)
-    .first<{ macAccess: number }>()
-  return row?.macAccess === 1
 }

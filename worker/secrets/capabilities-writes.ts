@@ -2,14 +2,9 @@ import type { UpdateWorkspaceCapabilitiesRequest } from '../../src/shared/secret
 import { secretMemberPredicate } from './access'
 
 export interface CapabilityWrite {
-  kind:
-    | 'pre-approved'
-    | 'pre-approval-removed'
-    | 'session-approval-removed'
-    | 'mac-access'
+  kind: 'pre-approved' | 'pre-approval-removed' | 'session-approval-removed'
   names: string[]
   sessionId?: string
-  on?: boolean
 }
 
 export function creationPreapprovals(
@@ -51,23 +46,16 @@ export async function updateWorkspaceCapabilities(
 ): Promise<CapabilityWrite[]> {
   const { orgId, workspaceId, userId, now, change } = input
   const statements: D1PreparedStatement[] = []
-  const kinds: CapabilityWrite['kind'][] = []
+  const kinds: (CapabilityWrite['kind'] | null)[] = []
   if (change.macAccess !== undefined) {
-    kinds.push('mac-access')
+    kinds.push(null)
     statements.push(
       db
         .prepare(
-          `UPDATE workspaces SET mac_access = ? WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}
-           AND mac_access != ? RETURNING mac_access AS macAccess`,
+          `UPDATE workspaces SET mac_access = ?
+           WHERE org_id = ? AND id = ? AND ${secretMemberPredicate}`,
         )
-        .bind(
-          Number(change.macAccess),
-          orgId,
-          workspaceId,
-          orgId,
-          userId,
-          Number(change.macAccess),
-        ),
+        .bind(Number(change.macAccess), orgId, workspaceId, orgId, userId),
     )
   }
   if (change.preapprovedSecretIds !== undefined) {
@@ -132,14 +120,14 @@ export async function updateWorkspaceCapabilities(
   const results = await db.batch<{
     name: string
     sessionId?: string
-    macAccess?: number
   }>(statements)
-  return results.flatMap((result, index) =>
-    result.results.map((row) => ({
-      kind: kinds[index],
+  return results.flatMap((result, index) => {
+    const kind = kinds[index]
+    if (!kind) return []
+    return result.results.map((row) => ({
+      kind,
       names: row.name ? [row.name] : [],
       ...(row.sessionId ? { sessionId: row.sessionId } : {}),
-      ...(row.macAccess === undefined ? {} : { on: row.macAccess === 1 }),
-    })),
-  )
+    }))
+  })
 }

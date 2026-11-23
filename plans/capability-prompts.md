@@ -3,12 +3,11 @@
 Status: Active. [PR #660](https://github.com/Firna-AI/conductive/pull/660) is open. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 A workspace can start with capabilities: secrets that its sessions use with
-no approval, and Mac access. Members choose them in New workspace or in the
-Capabilities control of the workspace. The owner of an automation chooses
-the secrets of each run workspace. Today no text tells the agent about
-them. It learns of a grant only from `list_secrets` or a run result, and of
-Mac access only from a refused Mac command. So agents ask members for keys
-that they already have. The agent instructions also omit `list_secrets`
+no approval. Members choose them in New workspace or in the Capabilities
+control of the workspace. The owner of an automation chooses the secrets of
+each run workspace. Today no text tells the agent about them. It learns of
+a grant only from `list_secrets` or a run result. So agents ask members for
+keys that they already have. The agent instructions also omit `list_secrets`
 and `run_with_secrets`, although
 [Agent instructions](../docs/protocol/agent-instructions.md#what-the-instructions-hold)
 says that they name them.
@@ -56,27 +55,24 @@ below. Decision 1 is Large, not Medium, because the change lines need a
 new runner command, a waiting store, and a chat note.
 
 - **The facts.** The facts of a session are the secrets that it can use
-  with no approval, and whether Mac access is on. The secrets come from
-  each secret for all agents, each pre-approval, each session approval of
-  that session, and each value for this workspace. A value for 15 minutes
-  is not a capability, because it ends by itself. The facts name secrets
-  only, never a value or a description. Names are unique and sorted.
+  with no approval. The secrets come from each secret for all agents, each
+  pre-approval, each session approval of that session, and each value for
+  this workspace. A value for 15 minutes is not a capability, because it
+  ends by itself. The facts name secrets only, never a value or a
+  description. Names are unique and sorted. Mac access is not a fact, as
+  the design call of 2026-11-23 below says.
 - **The wire.** A new type `RunnerCapabilities` in
-  `crates/cnd-runner-interface/src/runner_commands.rs` holds `secrets` and
-  `macAccess`. The optional field `capabilities` goes on `RunnerTurn` only,
+  `crates/cnd-runner-interface/src/runner_commands.rs` holds `secrets`.
+  The optional field `capabilities` goes on `RunnerTurn` only,
   because the runner builds the instructions only from a turn. Older
   runners drop the field. An older Worker sends none, and the runner then
   adds no capability text.
 - **The instructions.** At the first turn of a session, the runner adds one
-  paragraph after the tool paragraph when the facts are not empty. It names
-  at most 10 secrets as JSON, then "and N more". It says that
-  `run_with_secrets` uses them with no request, and whether Mac access is
-  on. For Mac access, it says that a request goes to the Mac of the member
-  whose message started the turn. It also says this: "The Mac app asks
-  before each command, unless a permission that its user chose there
-  covers it." It ends with this: members can
-  change the capabilities, and the app then tells the agent in a line of
-  the app.
+  paragraph after the tool paragraph when the session has secrets. It
+  names at most 10 secrets as JSON, then "and N more". It says that
+  `run_with_secrets` uses them with no request. It ends with this: members
+  can change the capabilities, and the app then tells the agent in a line
+  of the app.
 - **A change.** A change is a difference in the facts of a session. The
   Worker takes the facts of each session before and after a write, and
   sends each session only its own difference. So a removed pre-approval
@@ -91,10 +87,9 @@ new runner command, a waiting store, and a chat note.
   `RETURNING`, so two edits at the same time each name their own member.
 - **The words.** One shared function in `src/shared/` writes the words for
   the chat and for the agent from the member and the structured changes,
-  as the late-answer line does. The chat writes "You" for the viewer. A
-  Mac access line gives the same rules as the instructions. The mockups
-  hold the words in
-  [capabilityChangeCopy.ts](../docs/mockups/src/components/chat/capabilityChangeCopy.ts),
+  as the late-answer line does. The chat writes "You" for the viewer. The
+  shared UI holds the words in
+  [capabilityChangeCopy.ts](../src/ui/components/chat/capabilityChangeCopy.ts),
   as pieces of text and names of secrets, with no fixtures.
 - **The waiting store.** The chat Durable Object keeps the waiting lines of
   each session in order, also of a closed session, because a closed session
@@ -120,15 +115,14 @@ new runner command, a waiting store, and a chat note.
   hello, as it announces `fileServer`. The Worker sends `notice` only to such
   a runner. For an older runner, the lines stay in the waiting store and in
   the chat. The agent does not get them until the runner updates. This
-  fails safe, because the Worker checks each grant and Mac access at run
-  time.
+  fails safe, because the Worker checks each grant at run time.
 - **The chat.** A new note `capabilities.changed` in the transcript of each
   session holds the member and the structured changes, as
   `workspace.continued` does. The chat places it by its time, not by a
   turn. So it does not fold with the work of a turn that it falls in. The
   session copy and `read_session` show it too. An older tab and
   an older copy of the Mac app skip the unknown event and keep the cursor.
-  `CapabilityChangeLine` in `docs/mockups/src/components/chat/` draws it,
+  `CapabilityChangeLine` in `src/ui/components/chat/` draws it,
   as [app/capabilities/changed](../docs/mockups/catalogue-secrets.md)
   shows.
 - **Failures.** The capability write is in D1, and the line goes to the
@@ -242,6 +236,24 @@ Design call from the merge of `main`, by Claude on 2026-11-21:
   now puts the member's text first, so that a skill at the start of the
   text starts the prompt (#358). Notes first would stop a Claude skill.
   The agent still reads the notes before it acts.
+
+Design call from the merge of `main` with Mac access decision 7, by Claude
+on 2026-11-23:
+
+- Mac access is not a fact of a session, and a change of Mac access gives
+  no change note. The capabilities of a session are its secrets only.
+  Reason: Mac access decision 7 of 21 November 2026, which merged to
+  `main` with #614, makes the stored Mac access value gate no request.
+  Agents can always ask, and the switch of the Mac app acts only on the
+  Mac of the member who uses it. A fact or a note that Mac access is off
+  would tell the agent wrongly that it cannot ask.
+- This call replaces the Mac parts of the design calls of 2026-11-20
+  above. The text of the Mac command call no longer says that the call
+  needs Mac access, and a note no longer ends with Mac access and its
+  rules. The tool text keeps whose Mac gets the request, and when the Mac
+  app asks first. The mockup page `app/capabilities/changed/mac` is gone.
+  The `several` page has a removed pre-approval of `FIGMA_TOKEN` as its
+  third change.
 
 Contract owners:
 
@@ -414,4 +426,5 @@ Depends on: 1, 2, 3, 4, 5, 6, 7
 
 - [ ] In the deployed app, create a workspace with a pre-approved secret.
       Check that the agent uses it with no request and no reminder. Then
-      turn Mac access on during a turn, and check the line and the steer.
+      pre-approve another secret during a turn, and check the line and the
+      steer.

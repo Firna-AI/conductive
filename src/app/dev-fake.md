@@ -289,8 +289,8 @@ watch, as the mockups draw them at `app/chat/wakes`.
   into the session of `checkout-autocomplete`, from
   `dev/capability-note-seed.ts`, as the pages of `app/capabilities/changed`
   of the mockups draw them. `changed` has the pre-approval of VERCEL_TOKEN
-  by Priya, `mac` has Mac access turned on, `removed` has two notes of two
-  members, and `several` has one note with three changes. The notes follow
+  by Priya, `removed` has two notes of two members, and `several` has one
+  note with the changes of one edit. The notes follow
   the recorded chat: in its running turn with `conversation=running`, and
   after its end otherwise. With `role=member`, the reader is Priya, so her
   notes say "You". The notes change no capability of the workspace, so the

@@ -73,7 +73,7 @@ tells each agent the capabilities of its session, as
     link of its parent.
   - The [deepest depth](sub-workspaces.md#the-depth-limit) of a sub-workspace.
   - The capabilities of the session, when it has some: the secrets that it
-    uses with no request, and whether Mac access is on, as
+    uses with no request, as
     [The capabilities](agent-instructions-changes.md#the-capabilities)
     says.
 - The instructions also give this guidance:

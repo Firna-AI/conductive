@@ -18,7 +18,7 @@ fn attached_turn() -> std::result::Result<RunnerCommand, Box<dyn std::error::Err
     };
     notices.push(RunnerNoticeLine {
         id: "attached".into(),
-        text: "Mac access is on.".into(),
+        text: "Octocat pre-approved `DEPLOY_KEY`.".into(),
     });
     Ok(command)
 }

@@ -16,12 +16,17 @@ A decision number names a dated record, as
 prompts decision number, such as capability prompts decision 1, names the
 dated record of one decision of the change that tells each agent the
 capabilities of its session. Its plan keeps these records while the change
-is open. Its pull request keeps them after the merge.
+is open. Its pull request keeps them after the merge. A Mac access decision
+names a decision of the change that makes Mac access allow all commands, as
+[Mac access](mac-access.md) says.
 
 ## The facts of a session
 
-- The facts of a session are the secrets that it uses with no request, and
-  whether Mac access is on in its workspace.
+- The facts of a session are the secrets that it uses with no request.
+- Mac access is not a fact (Mac access decision 7).
+- Reason: agents can always ask for a command on a Mac, and the stored Mac
+  access value of a workspace allows and refuses no request, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says.
 - The secrets come from the mark for all agents, the pre-approvals of the
   workspace, the session approvals of the session, and the values for this
   workspace. A value for 15 minutes is not a fact, because it ends by
@@ -33,8 +38,7 @@ is open. Its pull request keeps them after the merge.
   says. A [change note](#the-change-note) gives each later change of the
   facts (capability prompts decision 1 A).
 - Reason: an agent that does not know its facts asks the members for keys
-  that it can use already. It also learns whether Mac access is on only
-  when it asks for a Mac command.
+  that it can use already.
 - These ways were rejected (capability prompts decision 1):
   - A line with the facts in each message. It costs tokens in each message.
   - New instructions after each change. They make each session read its
@@ -45,12 +49,13 @@ is open. Its pull request keeps them after the merge.
     prompt cache, and each turn needs a call to the Worker.
 - The help of the CLI and the descriptions of the MCP tools say when to
   use the secret calls and the Mac command call. The text of the Mac
-  command call also says that the call needs Mac access.
+  command call also says whose Mac gets the request, and that the Mac app
+  asks first unless a choice of its user covers the command, as
+  [The choices](desktop-commands.md#the-choices) says.
 - Reason: a session keeps the instructions of its start, and a subagent of
   a Claude agent gets no instructions. The tool text reaches both.
-- A fact that is out of date fails safe. The Worker checks each grant and
-  Mac access at each use, as [Grants](secrets.md#grants) and
-  [Who gets a request](agent-tools.md#who-gets-a-request) say.
+- A fact that is out of date fails safe. The Worker checks each grant at
+  each use, as [Grants](secrets.md#grants) says.
 - Risk: when an agent summarizes a long conversation, the summary can drop
   a change note. The agent then knows only the facts of its instructions,
   and they can be out of date.
@@ -99,16 +104,11 @@ is open. Its pull request keeps them after the merge.
   the write, in one sentence (capability prompts decision 4 B). An example
   is "Priya Raman pre-approved `VERCEL_TOKEN`."
 - The changes keep this order: pre-approvals added, pre-approvals removed,
-  session approvals removed, values given, values removed, then Mac
-  access. An example is "Priya Raman pre-approved `VERCEL_TOKEN`, removed
-  the approval of `PROD_DATABASE_URL` for this session, and turned Mac
-  access off."
-- When the write turns Mac access on, the note gives the rules of a Mac
-  command after its sentence: "Agents can ask to run commands on the Mac
-  of the member whose message started the turn. The Mac app asks before
-  each command, unless a permission that its user chose there covers it."
-- Reason: one sentence keeps the note short, and the rules follow the
-  change that they explain.
+  session approvals removed, values given, then values removed. An example
+  is "Priya Raman pre-approved `VERCEL_TOKEN`, removed the pre-approval of
+  `FIGMA_TOKEN`, and removed the approval of `PROD_DATABASE_URL` for this
+  session."
+- Reason: one sentence keeps the note short.
 - A change note names secrets only. It never holds a value.
 - The agent gets the words of the chat, with the name of the member. To
   the member who made the change, the chat says "You", such as "You
@@ -176,5 +176,5 @@ is open. Its pull request keeps them after the merge.
   chat shows them. The agent gets them after the runner of its cloud
   computer updates.
 - Risk: until that update, an agent can act on facts that are out of
-  date. Such a fact fails safe, because the Worker checks each grant and
-  Mac access at each use.
+  date. Such a fact fails safe, because the Worker checks each grant at
+  each use.

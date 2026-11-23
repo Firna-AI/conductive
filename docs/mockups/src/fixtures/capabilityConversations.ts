@@ -3,13 +3,14 @@
  * address autocomplete (capability prompts decisions 1, 3, and 4). The
  * open session is Address autocomplete. Its facts are FIGMA_TOKEN, which
  * the workspace pre-approves, SENTRY_AUTH_TOKEN, which is for all agents,
- * its approval of PROD_DATABASE_URL, the value of MAPBOX_TOKEN for the
- * workspace, and Mac access. Each note names only changes of those facts.
+ * its approval of PROD_DATABASE_URL, and the value of MAPBOX_TOKEN for the
+ * workspace. Unlike the control of `app/capabilities`, it has no approval
+ * of FIGMA_TOKEN of its own, so a removed pre-approval of FIGMA_TOKEN
+ * changes its facts. Each note names only changes of those facts.
  */
 
 import type { CapabilityChange } from '../../../../src/ui/components/chat/capabilityChangeCopy'
 import type { ChatItem } from './conversations'
-import { macConversations } from './macConversations'
 import type { PersonKey } from './members'
 import { agent, call, run, working } from './secretChatParts'
 import { autocompleteGrants, type SecretRequest } from './secretRequests'
@@ -32,7 +33,6 @@ export type CapabilitiesChangedItem = {
 export const capabilityConversationKeys = [
   'capabilities-changed',
   'capabilities-changed-idle',
-  'capabilities-changed-mac',
   'capabilities-changed-removed',
   'capabilities-changed-several',
 ] as const
@@ -105,9 +105,8 @@ const testsAgain: readonly ChatItem[] = [
 
 /**
  * The chats of a change, after the finished turn of `history`: in a
- * running turn, in an idle session before the next message, Mac access
- * turned on after a refused Mac command, two removals, and one edit with
- * three changes.
+ * running turn, in an idle session before the next message, two removals,
+ * and one edit with three changes.
  */
 export function capabilityConversations(
   history: readonly ChatItem[],
@@ -135,13 +134,6 @@ export function capabilityConversations(
         '9s',
       ),
     ],
-    // The workspace refused the Safari test, because Mac access was off.
-    // Priya turned it on after that turn, and no turn starts for it.
-    'capabilities-changed-mac': [
-      ...macConversations(history)['mac-access-off'],
-      { kind: 'turn-end', id: 'turn-end-safari', duration: '26s', files: [] },
-      changed('priya', [{ kind: 'mac-access', on: true }]),
-    ],
     // Two writes, so two notes, each with its own member.
     'capabilities-changed-removed': [
       ...history,
@@ -160,8 +152,8 @@ export function capabilityConversations(
       ...history,
       changed('priya', [
         { kind: 'pre-approved', names: [vercelToken.name] },
+        { kind: 'pre-approval-removed', names: [figmaToken.name] },
         { kind: 'session-approval-removed', names: [replicaUrl.name] },
-        { kind: 'mac-access', on: false },
       ]),
     ],
   }

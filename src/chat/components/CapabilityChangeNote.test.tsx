@@ -43,14 +43,16 @@ describe('the note of a change of the capabilities', () => {
       { kind: 'session-approval-removed', names: ['PROD_DATABASE_URL'] },
       { kind: 'value-given', names: ['MAPBOX_TOKEN'] },
       { kind: 'value-removed', names: ['PLACES_KEY'] },
-      { kind: 'mac-access', on: true },
     ])
     const unreadable: readonly unknown[] = [
       { ...every, changes: [{ kind: 'all-agents-marked', names: ['A'] }] },
       { ...every, changes: [{ kind: 'pre-approved', names: 'VERCEL_TOKEN' }] },
       { ...every, changes: [{ kind: 'pre-approved', names: [7] }] },
-      { ...every, changes: [{ kind: 'mac-access', on: 'true' }] },
-      { ...every, changes: { kind: 'mac-access', on: true } },
+      {
+        ...every,
+        changes: [...every.changes, { kind: 'mac-access', on: true }],
+      },
+      { ...every, changes: { kind: 'pre-approved', names: ['VERCEL_TOKEN'] } },
       { ...every, noteId: undefined },
       { ...every, sessionId: null },
       { ...every, member: { ...priya, githubLogin: undefined } },
