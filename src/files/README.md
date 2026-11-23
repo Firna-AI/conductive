@@ -144,15 +144,20 @@ workspace screen.
 
 ### Select all in a file
 
-The scroll box of `CodeView` and of `DiffView` is a focusable region, so
-a press in the text gives it the focus. Its key handler,
-`selectAllInBox` of `code/select-all.ts`, turns Cmd+A or Ctrl+A into a
-selection of the box only. The browser would otherwise select the whole
-app. The line numbers cannot be selected, so a copy leaves them out.
-`LineText` of `code/CodeView.tsx` draws the text of each line of both
-views. It puts a line break in an empty line, because the browser leaves
-a line with no text out of a copy. `code/CodeView.dom.test.tsx` tests
-the handler and the empty lines.
+`CodeView` and `DiffView` draw their rows in `CodeBox` of
+`code/CodeBox.tsx`, a focusable region, so a press in the text gives it
+the focus. Its key handler turns Cmd+A or Ctrl+A into a selection of the
+box only. The browser would otherwise select the whole app. The line
+numbers cannot be selected, so a copy leaves them out.
+
+`CodeView` gives `CodeBox` the lines of its text, with `copyLines` of
+`code/code-selection.ts`. Each row and its text cell carry the
+`data-copy-line` and `data-copy-text` attributes. A copy then gives
+`copiedText`: the source text of the selected part of each row, and the
+line end of each row that the selection passes. So a copy keeps the
+empty lines, which the browser leaves out, and select all gives the exact
+text. The diff gives no lines, so its copy stays the copy of the browser.
+`code/CodeBox.dom.test.tsx` tests select all and the copy.
 
 ## Labels of paths
 

@@ -3,8 +3,7 @@ import { digitStyle, LineText } from '../code/CodeView'
 import { languageOf } from '../code/languages'
 import { classes } from '../ui/classes'
 import { useKeptScroll } from '../ui/kept-scroll'
-import { focusClass } from '../ui/layout'
-import { selectAllInBox } from '../code/select-all'
+import { CodeBox } from '../code/CodeBox'
 import styles from '../code/code.module.css'
 import { highlightDiff } from './highlight-diff'
 import type { DiffRow } from './parse-patch'
@@ -46,14 +45,7 @@ export function DiffView(props: {
     [rows, name, oldContent, newContent],
   )
   return (
-    <div
-      aria-label="Diff"
-      className={classes(styles.scroll, focusClass)}
-      onKeyDown={selectAllInBox}
-      ref={box}
-      role="region"
-      tabIndex={0}
-    >
+    <CodeBox ref={box} label="Diff">
       <pre className={styles.code} style={style}>
         {rows.map((row, index) => {
           if (row.kind === 'hunk' || row.kind === 'note') {
@@ -79,6 +71,6 @@ export function DiffView(props: {
           )
         })}
       </pre>
-    </div>
+    </CodeBox>
   )
 }

@@ -1,12 +1,10 @@
 import { useMemo, type CSSProperties } from 'react'
 import type { LineRange } from '../../shared/line-target'
-import { splitLines } from '../model/file-text'
 import { highlightLines, type Token, type TokenKind } from './highlight'
 import { languageOf } from './languages'
-import { classes } from '../ui/classes'
 import { useKeptScroll, type ScrollAim } from '../ui/kept-scroll'
-import { focusClass } from '../ui/layout'
-import { selectAllInBox } from './select-all'
+import { CodeBox } from './CodeBox'
+import { copyLines } from './code-selection'
 import styles from './code.module.css'
 
 const tokenClass: Readonly<Record<TokenKind, string | undefined>> = {
@@ -25,22 +23,15 @@ export function digitStyle(lastLine: number): DigitStyle {
   return { '--number-digits': String(String(lastLine).length) }
 }
 
-/**
- * The coloured tokens of one line. An empty line holds a line break,
- * because a copy of a selection leaves out a line with no text. The line
- * break keeps the height of the line.
- */
+/** The cell of the coloured tokens of one line. */
 export function LineText(props: { tokens: readonly Token[] }) {
-  const empty = props.tokens.every((token) => token.text === '')
   return (
-    <span className={styles.text}>
-      {empty
-        ? '\n'
-        : props.tokens.map((token, index) => (
-            <span className={tokenClass[token.kind]} key={index}>
-              {token.text}
-            </span>
-          ))}
+    <span className={styles.text} data-copy-text="">
+      {props.tokens.map((token, index) => (
+        <span className={tokenClass[token.kind]} key={index}>
+          {token.text}
+        </span>
+      ))}
     </span>
   )
 }
@@ -103,9 +94,14 @@ export function CodeView(props: {
   marked?: MarkedLines | null
 }) {
   const box = useKeptScroll('code', lineAim(props.marked))
+  const copied = useMemo(() => copyLines(props.text), [props.text])
   const lines = useMemo(
-    () => highlightLines(splitLines(props.text), languageOf(props.name)),
-    [props.text, props.name],
+    () =>
+      highlightLines(
+        copied.map((line) => line.text),
+        languageOf(props.name),
+      ),
+    [copied, props.name],
   )
   const marked = shownLines(props.marked?.range, lines.length)
   const start = marked?.start ?? null
@@ -113,14 +109,7 @@ export function CodeView(props: {
   const isMarked = (number: number) =>
     start !== null && end !== null && number >= start && number <= end
   return (
-    <div
-      aria-label="Code"
-      className={classes(styles.scroll, focusClass)}
-      onKeyDown={selectAllInBox}
-      ref={box}
-      role="region"
-      tabIndex={0}
-    >
+    <CodeBox ref={box} label="Code" lines={copied}>
       <pre className={styles.code} style={digitStyle(lines.length)}>
         {lines.map((tokens, index) => (
           <div
@@ -131,12 +120,13 @@ export function CodeView(props: {
             }
             data-marked={isMarked(index + 1) ? '' : undefined}
             key={index}
+            data-copy-line={index}
           >
             <span className={styles.number}>{index + 1}</span>
             <LineText tokens={tokens} />
           </div>
         ))}
       </pre>
-    </div>
+    </CodeBox>
   )
 }
