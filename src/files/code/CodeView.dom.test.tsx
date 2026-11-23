@@ -2,6 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '../../test-support/mount'
+import { DiffView } from '../diff/DiffView'
 import { CodeView } from './CodeView'
 import styles from './code.module.css'
 
@@ -113,5 +114,34 @@ describe('CodeView select all', () => {
       press(box, { key: 'c', metaKey: true }),
       press(box, { key: 'a', metaKey: true, shiftKey: true }),
     ]).toEqual([false, false, false])
+  })
+})
+
+describe('Empty lines', () => {
+  /** The text of each line, as a copy of a selection reads it. */
+  function lineTexts(root: Element): string[] {
+    return Array.from(
+      root.querySelectorAll(`.${styles.text}`),
+      (text) => text.textContent ?? '',
+    )
+  }
+
+  it('keeps a line break in an empty line of a file and of a diff', async () => {
+    const code = await mount(<CodeView name="a.ts" text={'one\n\ntwo'} />)
+    const diff = await mount(
+      <DiffView
+        name="a.ts"
+        newContent={null}
+        oldContent={null}
+        rows={[
+          { kind: 'added', text: 'one', oldLine: null, newLine: 1 },
+          { kind: 'added', text: '', oldLine: null, newLine: 2 },
+        ]}
+      />,
+    )
+    expect({
+      code: lineTexts(code.container),
+      diff: lineTexts(diff.container),
+    }).toEqual({ code: ['one', '\n', 'two'], diff: ['one', '\n'] })
   })
 })

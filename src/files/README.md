@@ -149,7 +149,10 @@ a press in the text gives it the focus. Its key handler,
 `selectAllInBox` of `code/select-all.ts`, turns Cmd+A or Ctrl+A into a
 selection of the box only. The browser would otherwise select the whole
 app. The line numbers cannot be selected, so a copy leaves them out.
-`code/CodeView.dom.test.tsx` tests the handler.
+`LineText` of `code/CodeView.tsx` draws the text of each line of both
+views. It puts a line break in an empty line, because the browser leaves
+a line with no text out of a copy. `code/CodeView.dom.test.tsx` tests
+the handler and the empty lines.
 
 ## Labels of paths
 

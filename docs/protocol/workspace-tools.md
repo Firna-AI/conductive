@@ -81,7 +81,7 @@ decision of the change that reads Markdown with one parser, as
 - The header of a file tab can copy and download the file.
 - Select all, Cmd+A on a Mac or Ctrl+A, in the text or the diff of a file
   tab selects only that text, without the line numbers. A press in the
-  text gives it the focus. Reason: Cal asked on 23 November 2026, because
+  text gives it the focus. A copy of a selection keeps the empty lines. Reason: Cal asked on 23 November 2026, because
   select all selected the whole app, with its lists and tabs.
 - Reading a file has a size limit of 5 MiB, or 5,242,880 bytes.
   Reason: Boat's file read stops at 5 MiB, so a file read that falls back

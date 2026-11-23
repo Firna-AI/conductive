@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { digitStyle, TokenSpans } from '../code/CodeView'
+import { digitStyle, LineText } from '../code/CodeView'
 import { languageOf } from '../code/languages'
 import { classes } from '../ui/classes'
 import { useKeptScroll } from '../ui/kept-scroll'
@@ -72,13 +72,9 @@ export function DiffView(props: {
               <span className={styles.number}>{row.oldLine ?? ''}</span>
               <span className={styles.number}>{row.newLine ?? ''}</span>
               <span className={styles.sign}>{signs[row.kind]}</span>
-              <span className={styles.text}>
-                {tokens?.[index] ? (
-                  <TokenSpans tokens={tokens[index]} />
-                ) : (
-                  row.text
-                )}
-              </span>
+              <LineText
+                tokens={tokens?.[index] ?? [{ kind: 'plain', text: row.text }]}
+              />
             </div>
           )
         })}

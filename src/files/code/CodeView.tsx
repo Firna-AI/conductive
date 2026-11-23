@@ -25,13 +25,24 @@ export function digitStyle(lastLine: number): DigitStyle {
   return { '--number-digits': String(String(lastLine).length) }
 }
 
-/** The coloured tokens of one line. */
-export function TokenSpans(props: { tokens: readonly Token[] }) {
-  return props.tokens.map((token, index) => (
-    <span className={tokenClass[token.kind]} key={index}>
-      {token.text}
+/**
+ * The coloured tokens of one line. An empty line holds a line break,
+ * because a copy of a selection leaves out a line with no text. The line
+ * break keeps the height of the line.
+ */
+export function LineText(props: { tokens: readonly Token[] }) {
+  const empty = props.tokens.every((token) => token.text === '')
+  return (
+    <span className={styles.text}>
+      {empty
+        ? '\n'
+        : props.tokens.map((token, index) => (
+            <span className={tokenClass[token.kind]} key={index}>
+              {token.text}
+            </span>
+          ))}
     </span>
-  ))
+  )
 }
 
 /**
@@ -122,9 +133,7 @@ export function CodeView(props: {
             key={index}
           >
             <span className={styles.number}>{index + 1}</span>
-            <span className={styles.text}>
-              <TokenSpans tokens={tokens} />
-            </span>
+            <LineText tokens={tokens} />
           </div>
         ))}
       </pre>
