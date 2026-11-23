@@ -1,6 +1,8 @@
 //! HTTP method, origin, path, index, cache, and range policy.
 
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use std::time::SystemTime;
 
 use async_trait::async_trait;
 use cnd_runner_interface::file_server::{FILE_SERVER_PORT, FILES_HEADER};
@@ -10,8 +12,8 @@ use hyper::{Method, Request, Response, StatusCode};
 use crate::error::{ErrorResultExt, Result};
 
 use super::body::Body;
-use super::files::{Entry, Files};
-use super::{path, response};
+use super::files::{Entry, FileContent, Files};
+use super::{media, path, response, stylesheet};
 
 /// Request boundary shared by the server and policy tests.
 #[cfg_attr(test, unimock::unimock(api = FileRequestsMock))]
@@ -25,6 +27,11 @@ pub trait FileRequests: Send + Sync {
 pub struct FilePolicy {
     /// Safe repository access.
     pub files: Arc<dyn Files>,
+}
+
+enum RepositoryEntry {
+    File { path: String, content: FileContent },
+    Redirect { modified: SystemTime },
 }
 
 fn allowed_host(request: &Request<()>) -> bool {
@@ -41,46 +48,100 @@ fn allowed_host(request: &Request<()>) -> bool {
         })
 }
 
+fn index_path(path: &str) -> String {
+    if path.is_empty() {
+        "index.html".into()
+    } else {
+        format!("{path}/index.html")
+    }
+}
+
+fn redirect(request: &Request<()>, modified: SystemTime) -> Result<Response<Body>> {
+    let mut location = format!("{}/", request.uri().path().replace('\\', "%5C"));
+    if let Some(query) = request.uri().query() {
+        location.push('?');
+        location.push_str(query);
+    }
+    let mut response = response::empty(StatusCode::FOUND);
+    response
+        .headers_mut()
+        .insert(LOCATION, location.parse().internal()?);
+    response.headers_mut().insert(
+        LAST_MODIFIED,
+        httpdate::fmt_http_date(modified).parse().internal()?,
+    );
+    Ok(response)
+}
+
 impl FilePolicy {
-    async fn read(&self, request: &Request<()>, path: String) -> Result<Response<Body>> {
-        let trailing = request.uri().path().ends_with('/');
+    async fn find(&self, root: &Path, path: &str, trailing: bool) -> Option<RepositoryEntry> {
         let file_path = if trailing {
-            if path.is_empty() {
-                "index.html".into()
-            } else {
-                format!("{path}/index.html")
-            }
+            index_path(path)
         } else {
-            path
+            path.into()
         };
-        let entry = match self.files.open(file_path.clone()).await {
-            Ok(entry) => entry,
-            Err(_) => return Ok(response::empty(StatusCode::NOT_FOUND)),
-        };
+        let entry = self.files.open(root, &file_path).await.ok()?;
         match entry {
-            Entry::File(content) => response::file(request, &file_path, content).await,
+            Entry::File(content) => Some(RepositoryEntry::File {
+                path: file_path,
+                content,
+            }),
             Entry::Directory if !trailing => {
-                let Ok(Entry::File(index)) =
-                    self.files.open(format!("{file_path}/index.html")).await
-                else {
-                    return Ok(response::empty(StatusCode::NOT_FOUND));
+                let Ok(Entry::File(index)) = self.files.open(root, &index_path(path)).await else {
+                    return None;
                 };
-                let mut location = format!("{}/", request.uri().path().replace('\\', "%5C"));
-                if let Some(query) = request.uri().query() {
-                    location.push('?');
-                    location.push_str(query);
-                }
-                let mut redirect = response::empty(StatusCode::FOUND);
-                redirect
-                    .headers_mut()
-                    .insert(LOCATION, location.parse().internal()?);
-                redirect.headers_mut().insert(
-                    LAST_MODIFIED,
-                    httpdate::fmt_http_date(index.modified).parse().internal()?,
-                );
-                Ok(redirect)
+                Some(RepositoryEntry::Redirect {
+                    modified: index.modified,
+                })
             }
-            Entry::Directory => Ok(response::empty(StatusCode::NOT_FOUND)),
+            Entry::Directory => None,
+        }
+    }
+
+    async fn read(&self, request: &Request<()>, path: &str) -> Result<Response<Body>> {
+        let root = self.files.root();
+        let trailing = request.uri().path().ends_with('/');
+        if let Some(entry) = self.find(&root, path, trailing).await {
+            return entry.respond(request, self.files.as_ref(), root).await;
+        }
+        let absolute = Path::new("/").join(path);
+        if let Some(mapped) = path::strip_folder(&absolute, &root).and_then(Path::to_str)
+            && mapped != path
+            && let Some(entry) = self.find(&root, mapped, trailing).await
+        {
+            return entry.respond(request, self.files.as_ref(), root).await;
+        }
+        if !trailing {
+            if absolute == Path::new(stylesheet::ADDRESS) {
+                return response::stylesheet(request, self.files.font_stylesheet().await);
+            }
+            if let Some(font) = self.files.open_font(&absolute).await {
+                return response::file(
+                    request,
+                    media::content_type(path),
+                    font,
+                    self.files.as_ref(),
+                    root,
+                )
+                .await;
+            }
+        }
+        Ok(response::empty(StatusCode::NOT_FOUND))
+    }
+}
+
+impl RepositoryEntry {
+    async fn respond(
+        self,
+        request: &Request<()>,
+        files: &dyn Files,
+        root: PathBuf,
+    ) -> Result<Response<Body>> {
+        match self {
+            Self::File { path, content } => {
+                response::file(request, media::content_type(&path), content, files, root).await
+            }
+            Self::Redirect { modified } => redirect(request, modified),
         }
     }
 }
@@ -110,7 +171,7 @@ impl FileRequests for FilePolicy {
         let Some(path) = path::decode(request.uri().path()) else {
             return response::empty(StatusCode::NOT_FOUND);
         };
-        match self.read(&request, path).await {
+        match self.read(&request, &path).await {
             Ok(response) => response,
             Err(_) => response::empty(StatusCode::INTERNAL_SERVER_ERROR),
         }
@@ -120,3 +181,15 @@ impl FileRequests for FilePolicy {
 #[cfg(test)]
 #[path = "_tests_/policy_tests.rs"]
 mod policy_tests;
+
+#[cfg(test)]
+#[path = "_tests_/mapping_tests.rs"]
+mod mapping_tests;
+
+#[cfg(test)]
+#[path = "_tests_/origin_tests.rs"]
+mod origin_tests;
+
+#[cfg(test)]
+#[path = "_tests_/rewrite_tests.rs"]
+mod rewrite_tests;

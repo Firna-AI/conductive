@@ -236,10 +236,12 @@ The path and query stay, except for reserved port credentials.
 The Worker sets `X-Conductive-Preview-Port` to the previewed port.
 The header allowlist drops any value that the browser sends for this header.
 For a files preview, the target port is `PREVIEW_FILE_SERVER_PORT`, 7683.
-The proxy adds `X-Conductive-Files: 1` after the browser header allowlist.
-That allowlist never includes the files mark, even for a port preview of
-7683. Origin and redirect rewrites use 7683 too. A files WebSocket upgrade
-gets the unknown-preview 404 before any relay or sandbox call.
+The proxy adds `X-Conductive-Files: 1` and sets `X-Conductive-Files-Origin`
+to the validated request URL's origin after it applies the request header
+allowlist. The allowlist drops browser values for both headers, including
+on a port preview of 7683. Origin and redirect rewrites use 7683 too.
+A files WebSocket upgrade gets the unknown-preview 404 before any relay or
+sandbox call.
 The relay sends the previewed server `Host: localhost:<port>`.
 A server with a local Host check needs no change to its repository.
 
