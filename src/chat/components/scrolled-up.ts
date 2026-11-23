@@ -4,7 +4,7 @@ import { useLayoutEffect, useState, type RefObject } from 'react'
  * The distance from the bottom of the chat, in pixels, from which the reader
  * counts as scrolled up. A small nudge, such as a line, shows no button.
  */
-export const scrolledUpFrom = 80
+const scrolledUpFrom = 80
 
 /**
  * Whether the reader of the chat in `scroller` reads higher up, at least
