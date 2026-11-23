@@ -116,7 +116,13 @@ impl FilePolicy {
                 return response::stylesheet(request, self.files.font_stylesheet().await);
             }
             if let Some(font) = self.files.open_font(&absolute).await {
-                return response::file(request, media::content_type(path), font, false).await;
+                return response::file(
+                    request,
+                    media::content_type(path),
+                    font,
+                    self.files.as_ref(),
+                )
+                .await;
             }
         }
         Ok(response::empty(StatusCode::NOT_FOUND))
@@ -127,10 +133,7 @@ impl RepositoryEntry {
     async fn respond(self, request: &Request<()>, files: &dyn Files) -> Result<Response<Body>> {
         match self {
             Self::File { path, content } => {
-                let media = media::content_type(&path);
-                let stylesheet_has_rules =
-                    media::changes(media) && !files.font_stylesheet().await.text.is_empty();
-                response::file(request, media, content, stylesheet_has_rules).await
+                response::file(request, media::content_type(&path), content, files).await
             }
             Self::Redirect { modified } => redirect(request, modified),
         }

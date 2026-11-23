@@ -11,7 +11,7 @@ names a dated record, as
 [Decision numbers](../architecture.md#decision-numbers) says. A sandbox
 files decision number names a decision of the change that shows agent
 pages with their files and fonts, as
-[HTML file preview](html-page-files.md)
+[Files of an HTML page](html-page-files.md)
 says.
 
 ## Terms
@@ -194,8 +194,19 @@ says.
   gives that name.
 - A rule gives the family, the weight, the style, the width, and the
   address of the font. A variable font gives its weight and width ranges.
-- A broken font gets no rule, and the other rules stay. A font whose
-  `name`, `OS/2`, or `fvar` table passes a fixed size also gets no rule.
+- A broken font gets no rule, and the other rules stay. A font is broken
+  when it lacks a table that browsers require: `maxp`, `head`, `OS/2`,
+  `cmap`, `hhea`, `hmtx`, `name`, or `post`. It is also broken when it has
+  no glyph data: `glyf` with `loca`, `CFF `, `CFF2`, `CBDT` with `CBLC`,
+  or `EBDT` with `EBLC`.
+- The runner reads only the small tables `head`, `hhea`, `maxp`, `name`,
+  `OS/2`, and `fvar`. A font whose `head`, `hhea`, or `maxp` does not parse
+  gets no rule. So does a font whose `hmtx` or `loca` is too short for the
+  counts in those tables. A font whose `name`, `OS/2`, or `fvar` table
+  passes a fixed size also gets no rule.
+- The browser checks the contents of the large tables. Risk: a font with
+  bad glyph data can still get a rule, and the browser then uses the next
+  family.
 - A family name that is empty, or longer than a fixed length, gets no rule.
 - Each address percent-encodes each segment of the font path, so `#`, `?`,
   `%`, and spaces keep their meaning. Each address and each family name is
@@ -248,11 +259,15 @@ says.
   changed body with HTTP 200. A reply for a file of another type keeps its
   byte ranges.
 - The `ETag` of a changed reply joins the `ETag` of the file and a digest.
-  The digest covers the version of the rules that change the body, and
-  whether the font stylesheet has a rule.
+  The digest covers the version of the rules that change the body. For an
+  HTML reply, it also covers whether the font stylesheet has a rule,
+  because only an HTML body can get the `<link>`.
 - So that `ETag` changes when the file changes, and when a runner release
-  changes these rules. It also changes when the font stylesheet gets its
-  first rule or loses its last one.
+  changes these rules. The `ETag` of an HTML reply also changes when the
+  font stylesheet gets its first rule or loses its last one.
+- A CSS or SVG reply, also its `HEAD` reply and its 304, does not read the
+  system fonts. Reason: their bodies never depend on the fonts, and a page
+  can load many such files.
 - A digest of whether the page gets the `<link>` was not chosen, because
   each `HEAD` request and each 304 would then read the file.
 - A changed reply answers 304 only when `If-None-Match` matches that

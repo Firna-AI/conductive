@@ -65,7 +65,7 @@ async fn skips_long_or_unclassifiable_prefixes_and_keeps_all_utf16_bytes() {
 }
 
 #[tokio::test]
-async fn changes_the_html_etag_when_the_first_font_adds_the_link() {
+async fn the_first_font_changes_the_html_etag_and_keeps_css_and_svg_etags() {
     let h = Fixture::new();
     let html = b"<!doctype html><p>page";
     fs::write(h.repository.join("page.html"), html).unwrap();
@@ -76,6 +76,16 @@ async fn changes_the_html_etag_when_the_first_font_adds_the_link() {
         first.into_body().collect().await.unwrap().to_bytes(),
         html.as_slice()
     );
+    let mut assets = Vec::new();
+    for (path, body) in [
+        ("/asset.css", "p { color: blue; }"),
+        ("/asset.svg", "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"),
+    ] {
+        fs::write(h.repository.join(path.trim_start_matches('/')), body).unwrap();
+        let reply = h.get(Path::new(path)).await;
+        assert_eq!(reply.status(), StatusCode::OK, "{path}");
+        assets.push((path, reply.headers()["etag"].to_str().unwrap().to_owned()));
+    }
 
     let font = h.system.join("font.ttf");
     fs::write(&font, regular("Preview")).unwrap();
@@ -89,6 +99,13 @@ async fn changes_the_html_etag_when_the_first_font_adds_the_link() {
         changed.into_body().collect().await.unwrap().to_bytes(),
         format!("<!doctype html>{}<p>page", stylesheet_link())
     );
+    for (path, asset_tag) in assets {
+        let cached = h
+            .request(Method::GET, path, &[("If-None-Match", &asset_tag)])
+            .await;
+        assert_eq!(cached.status(), StatusCode::NOT_MODIFIED, "{path}");
+        assert_eq!(cached.headers()["etag"], asset_tag, "{path}");
+    }
 
     fs::write(&font, regular("New font with different metadata")).unwrap();
     let same = h

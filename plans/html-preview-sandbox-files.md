@@ -172,8 +172,11 @@ Date: 23 November 2026. Chosen by Cal: **D**.
   carry `Accept-Ranges: none`. A changed reply ignores `Range` and
   `If-Range`, and it gives the whole changed body with HTTP 200.
 - Its `ETag` joins the `ETag` of the file and a digest of the version of
-  the change and whether the stylesheet has a rule. So `HEAD` and 304 need
-  no read of the file.
+  the change. For HTML, the digest also covers whether the stylesheet has
+  a rule. So `HEAD` and 304 need no read of the file, and CSS and SVG
+  replies never read the system fonts. My call, 23 November 2026, from
+  review finding 3: an earlier version of this design gave CSS and SVG
+  the same input, so each such request walked the font folders.
 - A changed reply answers 304 only when `If-None-Match` matches that
   `ETag`. It ignores `If-Modified-Since`, because the body can change while
   the date of the file stays the same. `Last-Modified` stays the date of

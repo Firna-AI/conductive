@@ -58,10 +58,12 @@ decision of the change that shows agent pages with their files and fonts.
 - A page can also load a file of the repository folder by its absolute
   path. A local `file:` address in an HTML, CSS, or SVG file loads it too.
   The page can also load the system fonts (sandbox files decision 1 D).
-- Each HTML page loads a stylesheet of the system fonts. So a page that
-  names a font of the cloud computer by its family, such as C059, shows
-  that font. [File server](file-server.md#local-file-addresses) gives the
-  rules.
+- Each HTML page loads a stylesheet of the system fonts, except in the
+  cases below. So a page that names a font of the cloud computer by its
+  family, such as C059, shows that font.
+  [The font stylesheet link](file-server.md#the-font-stylesheet-link) gives
+  the rules, and [Local file addresses](file-server.md#local-file-addresses)
+  gives the rules of the addresses.
 - Reason: agents check a page in the browser of the cloud computer, from a
   `file://` address. The member's browser loads no `file://` address from
   the files preview, and the member's computer lacks the fonts of the cloud
@@ -100,3 +102,7 @@ decision of the change that shows agent pages with their files and fonts.
     such as Helvetica. The cloud computer shows Helvetica as Nimbus Sans.
   - It shows an SVG document or an SVG picture. The SVG gets no system
     fonts.
+  - The file server adds no link to the font stylesheet, so the page gets
+    no system fonts by family.
+    [The font stylesheet link](file-server.md#the-font-stylesheet-link)
+    gives these pages.

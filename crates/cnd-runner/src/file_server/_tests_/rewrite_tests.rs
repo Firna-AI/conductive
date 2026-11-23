@@ -13,7 +13,7 @@ use hyper::{Method, StatusCode};
 use tokio::io::{AsyncRead, AsyncSeek, ReadBuf};
 use unimock::{Clause, MockFn, matching};
 
-use crate::file_server::files::{Entry, FileContent, FilesMock};
+use crate::file_server::files::{Entry, FileContent, FilesMock, FontStylesheet};
 
 use super::FileRequests;
 use super::policy_tests::{policy, request};
@@ -133,6 +133,38 @@ async fn a_lone_modification_date_does_not_validate_a_changed_body() {
         "Thu, 01 Jan 1970 00:16:40 GMT"
     );
     assert_eq!(reply.into_body().collect().await.unwrap().to_bytes(), "/x");
+}
+
+#[tokio::test]
+async fn css_and_svg_get_head_and_304_skip_the_font_stylesheet() {
+    let policy = policy((
+        open(b"file:///x", 3),
+        FilesMock::font_stylesheet
+            .each_call(matching!())
+            .returns(FontStylesheet::new("@font-face {}".into()))
+            .once(),
+    ));
+    let html = policy.respond(request("/file.html")).await;
+    assert_eq!(html.status(), StatusCode::OK);
+    let html = html.into_body().collect().await.unwrap().to_bytes();
+    assert!(html.starts_with(b"<link rel=\"stylesheet\""));
+
+    for path in ["/file.css", "/file.svg"] {
+        let get = policy.respond(request(path)).await;
+        assert_eq!(get.status(), StatusCode::OK, "{path}");
+        let tag = get.headers()["etag"].clone();
+
+        let mut head = request(path);
+        *head.method_mut() = Method::HEAD;
+        let head = policy.respond(head).await;
+        assert_eq!(head.status(), StatusCode::OK, "{path}");
+        assert_eq!(head.headers()["etag"], tag, "{path}");
+
+        let mut conditional = request(path);
+        conditional.headers_mut().insert("If-None-Match", tag);
+        let unchanged = policy.respond(conditional).await;
+        assert_eq!(unchanged.status(), StatusCode::NOT_MODIFIED, "{path}");
+    }
 }
 
 #[tokio::test]

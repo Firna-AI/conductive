@@ -7,11 +7,6 @@ pub(super) const CSS: &str = "text/css; charset=utf-8";
 /// Media type for changed SVG documents.
 pub(super) const SVG: &str = "image/svg+xml; charset=utf-8";
 
-/// Whether the response for this media type rewrites local file addresses.
-pub(super) fn changes(media: &str) -> bool {
-    matches!(media, HTML | CSS | SVG)
-}
-
 /// Find the media type for the requested file extension.
 pub(super) fn content_type(path: &str) -> &'static str {
     let extension = path

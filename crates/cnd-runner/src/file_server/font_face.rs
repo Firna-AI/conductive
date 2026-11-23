@@ -26,20 +26,15 @@ impl FontFace {
         if families.is_empty() {
             return None;
         }
+        let metrics = os2::Table::parse(&tables.metrics)?;
+        let weight = f32::from(metrics.weight().to_number().clamp(1, 1000));
+        let width = width_percent(metrics.width());
         let mut face = Self {
             families,
-            weight: (400.0, 400.0),
-            width: (100.0, 100.0),
-            style: Style::Normal,
+            weight: (weight, weight),
+            width: (width, width),
+            style: metrics.style(),
         };
-        if let Some(bytes) = tables.metrics.as_deref() {
-            let metrics = os2::Table::parse(bytes)?;
-            let weight = f32::from(metrics.weight().to_number().clamp(1, 1000));
-            let width = width_percent(metrics.width());
-            face.weight = (weight, weight);
-            face.width = (width, width);
-            face.style = metrics.style();
-        }
         if let Some(bytes) = tables.variations.as_deref() {
             for axis in fvar::Table::parse(bytes)?.axes {
                 match &axis.tag.to_bytes() {

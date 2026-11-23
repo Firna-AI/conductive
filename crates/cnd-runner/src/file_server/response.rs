@@ -3,21 +3,18 @@
 use std::io::SeekFrom;
 use std::time::SystemTime;
 
-use base64::Engine;
-use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use hyper::header::{
     ACCEPT_RANGES, CACHE_CONTROL, CONTENT_LENGTH, CONTENT_RANGE, CONTENT_TYPE, ETAG, HeaderValue,
     IF_MODIFIED_SINCE, IF_NONE_MATCH, LAST_MODIFIED,
 };
 use hyper::{Method, Request, Response, StatusCode};
-use sha2::{Digest, Sha256};
 use tokio::io::AsyncSeekExt;
 
 use crate::error::{ErrorResultExt, Result};
 
 use super::body::{self, Body, ChangedDocument};
-use super::files::{FileContent, FontStylesheet};
-use super::media::{self, CSS, HTML};
+use super::files::{FileContent, Files, FontStylesheet};
+use super::media::CSS;
 use super::range::{self, Selection};
 
 /// Make an empty reply with the default file server headers.
@@ -90,21 +87,16 @@ pub(super) async fn file(
     request: &Request<()>,
     media: &'static str,
     mut content: FileContent,
-    stylesheet_has_rules: bool,
+    files: &dyn Files,
 ) -> Result<Response<Body>> {
-    let changed = media::changes(media);
-    let (mut response, etag, date_validator) = if changed {
-        (
-            unranged(),
-            changed_tag(&content.etag, stylesheet_has_rules),
-            None,
-        )
-    } else {
-        (
+    let document = ChangedDocument::prepare(media, files).await;
+    let (mut response, etag, date_validator) = match &document {
+        Some(document) => (unranged(), document.etag(&content.etag), None),
+        None => (
             empty(StatusCode::OK),
             content.etag.clone(),
             Some(content.modified),
-        )
+        ),
     };
     response
         .headers_mut()
@@ -123,16 +115,9 @@ pub(super) async fn file(
         response.headers_mut().remove(CONTENT_LENGTH);
         return Ok(response);
     }
-    if changed {
+    if let Some(document) = document {
         if request.method() != Method::HEAD {
-            let document = if media == HTML {
-                ChangedDocument::Html {
-                    stylesheet: stylesheet_has_rules,
-                }
-            } else {
-                ChangedDocument::Text
-            };
-            *response.body_mut() = body::changed(content.reader, content.size, document);
+            *response.body_mut() = document.stream(content.reader, content.size);
         }
         return Ok(response);
     }
@@ -191,16 +176,4 @@ pub(super) fn stylesheet(request: &Request<()>, content: FontStylesheet) -> Resu
         }
     }
     Ok(response)
-}
-
-fn changed_tag(file_tag: &str, stylesheet_has_rules: bool) -> String {
-    const VERSION: &[u8] = b"conductive-preview-rewrite-1";
-    let mut digest = Sha256::new();
-    digest.update(VERSION);
-    digest.update([u8::from(stylesheet_has_rules)]);
-    format!(
-        "\"{}-{}\"",
-        file_tag.trim_matches('"'),
-        URL_SAFE_NO_PAD.encode(digest.finalize())
-    )
 }

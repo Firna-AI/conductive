@@ -9,7 +9,7 @@ use std::time::UNIX_EPOCH;
 use http_body_util::BodyExt;
 use hyper::{Method, StatusCode};
 
-use super::font_fixture::{font, names, regular, sfnt};
+use super::font_fixture::{font, regular, regular_tables, sfnt};
 use super::support::{Fixture, STYLESHEET};
 
 async fn stylesheet(h: &Fixture) -> String {
@@ -124,9 +124,10 @@ async fn escapes_names_and_font_urls_and_keeps_only_usable_family_names() {
 async fn omits_broken_oversized_hidden_and_non_utf8_fonts_and_never_walks_folder_links() {
     let h = Fixture::new();
     fs::write(h.system.join("broken.ttf"), b"malformed").unwrap();
-    let mut big = names(&[(1, "Too large")]);
-    big.resize(256 * 1024 + 1, 0);
-    fs::write(h.system.join("big.ttf"), sfnt(vec![(*b"name", big)])).unwrap();
+    let mut big = regular_tables("Too large");
+    let (_, name) = big.iter_mut().find(|(tag, _)| tag == b"name").unwrap();
+    name.resize(256 * 1024 + 1, 0);
+    fs::write(h.system.join("big.ttf"), sfnt(big)).unwrap();
     fs::write(h.system.join(".hidden.ttf"), regular("Hidden")).unwrap();
     fs::write(
         h.system.join(std::ffi::OsStr::from_bytes(b"name\xff.ttf")),
@@ -149,6 +150,30 @@ async fn omits_broken_oversized_hidden_and_non_utf8_fonts_and_never_walks_folder
     assert!(sheet.contains("/real/font.ttf"));
     assert!(sheet.contains("/alias.ttf"));
     assert!(!sheet.contains("/alias/font.ttf"));
+}
+
+#[tokio::test]
+async fn omits_a_font_with_valid_names_and_a_missing_required_table() {
+    let h = Fixture::new();
+    let mut font = regular_tables("Missing post");
+    font.retain(|(tag, _)| tag != b"post");
+    fs::write(h.system.join("missing.ttf"), sfnt(font)).unwrap();
+    assert_eq!(stylesheet(&h).await, "");
+}
+
+#[tokio::test]
+async fn omits_fonts_when_hmtx_or_loca_cannot_hold_the_declared_records() {
+    let h = Fixture::new();
+    for (tag, family, filename) in [
+        (b"hmtx", "Short metrics", "metrics.ttf"),
+        (b"loca", "Short offsets", "offsets.ttf"),
+    ] {
+        let mut font = regular_tables(family);
+        let (_, data) = font.iter_mut().find(|(table, _)| table == tag).unwrap();
+        data.pop().unwrap();
+        fs::write(h.system.join(filename), sfnt(font)).unwrap();
+    }
+    assert_eq!(stylesheet(&h).await, "");
 }
 
 #[tokio::test]

@@ -140,7 +140,9 @@ as they stream, so they carry no length and serve no byte ranges.
 A path that the repository refuses or lacks can still serve a repository file
 by its absolute path, or a font under `/usr/share/fonts` or `/usr/local/share/fonts`.
 HTML replies link the generated `/__conductive/system-fonts.css` stylesheet
-of those fonts. The protocol sections on
+of those fonts, except the pages that
+[the font stylesheet link](../../docs/protocol/file-server.md#the-font-stylesheet-link)
+names. The protocol sections on
 [local file addresses](../../docs/protocol/file-server.md#local-file-addresses),
 [system fonts](../../docs/protocol/file-server.md#system-fonts), and
 [changed replies](../../docs/protocol/file-server.md#changed-replies) give the rules.
