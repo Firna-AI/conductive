@@ -7,7 +7,7 @@
  * workspace, and Mac access. Each note names only changes of those facts.
  */
 
-import type { CapabilityChange } from '../components/chat/capabilityChangeCopy'
+import type { CapabilityChange } from '../../../../src/ui/components/chat/capabilityChangeCopy'
 import type { ChatItem } from './conversations'
 import { macConversations } from './macConversations'
 import type { PersonKey } from './members'

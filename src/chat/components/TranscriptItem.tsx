@@ -1,6 +1,6 @@
 import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/generated/UserMessage'
-import { CapabilityChangeLine } from '../../../docs/mockups/src/components/chat/CapabilityChangeLine'
+import { CapabilityChangeLine } from '../../ui/components/chat/CapabilityChangeLine'
 import { ContinuedLine } from '../../ui/components/chat/ContinuedLine'
 import { RepositoryChangedLine } from '../../ui/components/chat/RepositoryChangedLine'
 import { StopLine, type StopSource } from '../../ui/components/chat/StopLine'

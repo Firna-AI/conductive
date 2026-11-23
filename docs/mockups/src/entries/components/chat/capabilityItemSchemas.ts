@@ -1,4 +1,4 @@
-import type { CapabilityChange } from '../../../components/chat/capabilityChangeCopy'
+import type { CapabilityChange } from '../../../../../../src/ui/components/chat/capabilityChangeCopy'
 import { personKeys } from '../layout/railSchemas'
 
 /** The kinds of a change that names secrets, as `CapabilityChange` lists them. */

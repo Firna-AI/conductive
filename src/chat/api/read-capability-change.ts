@@ -1,4 +1,4 @@
-import type { CapabilityChange } from '../../../docs/mockups/src/components/chat/capabilityChangeCopy'
+import type { CapabilityChange } from '../../ui/components/chat/capabilityChangeCopy'
 import type { CapabilityChangeNote } from '../../shared/capability-change'
 import { flag, list, oneOf, record, text } from './json'
 import { readMember } from './read-continued'

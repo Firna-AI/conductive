@@ -127,12 +127,8 @@ export class WorkspaceChat {
     this.binding = new ChatWorkspaceBinding(
       overrides.matchesObject ?? (() => true),
     )
-    this.dependencies = chatDependencies(
-      env,
-      () => this.binding.id,
-      storage,
-      overrides,
-    )
+    const workspaceId = () => this.binding.id
+    this.dependencies = chatDependencies(env, workspaceId, storage, overrides)
     this.store = createWorkspaceChatStore(
       storage,
       env,

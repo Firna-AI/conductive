@@ -1,7 +1,7 @@
 import { readChatWorkspaceResponse } from './chat/workspace-response'
 import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
 import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
-import { AgentSessionWorkspace } from './tools/workspace'
+import { CapabilityWorkspace } from './secrets/capability-workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'
 import { WorkspaceFeatures } from './features/workspace'
@@ -26,17 +26,8 @@ import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 import { retryAutomationReport } from './chat/automation-run'
-import {
-  writeWorkspaceCapabilities,
-  type WorkspaceCapabilitiesWrite,
-} from './secrets/workspace-capabilities-write'
 
-export class Workspace extends AgentSessionWorkspace {
-  changeCapabilities(input: WorkspaceCapabilitiesWrite) {
-    return featureResult(() =>
-      writeWorkspaceCapabilities(this.chat, this.env, input),
-    )
-  }
+export class Workspace extends CapabilityWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver

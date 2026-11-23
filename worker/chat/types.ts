@@ -104,10 +104,7 @@ export type PreparedMessageCommand = (
 ) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
 export type PreparedCommand =
-  | PreparedMessageCommand
-  | RunnerInterrupt
-  | RunnerChangeModel
-  | RunnerNotice
+  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel | RunnerNotice
 
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }

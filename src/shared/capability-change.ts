@@ -1,7 +1,7 @@
 import {
   capabilityChangeWords,
   type CapabilityChange,
-} from '../../docs/mockups/src/components/chat/capabilityChangeCopy'
+} from '../ui/components/chat/capabilityChangeCopy'
 import type { MessageSender } from './generated/MessageSender'
 import { inlineCode, plainText } from './transcript/markdown-code'
 
