@@ -81,7 +81,8 @@ const results: Partial<Record<MacChange, BarResult>> = {
  * you stop in place of the time left, with no Keep or Extend. Keep turns
  * the running 15 minutes into a grant until Stop (Mac until-stop decision
  * 2). After a Stop or a Keep, the bar names its result until the next
- * change of the grant, also when the Stop ended it. A change that failed
+ * change of the grant, also when the Stop ended it. The app takes away a
+ * Stop that the Mac made and saved after 5 seconds. A change that failed
  * keeps the grant and its controls, so the user can act again. A Stop
  * that the Mac made but did not save offers Try again, which saves it.
  */

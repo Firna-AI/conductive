@@ -3,6 +3,7 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { ApiError, type ApiClient } from '../../app/api/client'
 import type { DeviceSettingsResponse } from '../../shared/device'
 import { messageOf } from '../state/context'
+import { systemClock, type Clock } from '../ui/clock'
 import {
   createDeviceApi,
   type DeviceApi,
@@ -44,6 +45,7 @@ const unavailable = (error: unknown) =>
  */
 export class MacSettingsController {
   private readonly api: DeviceApi
+  private readonly clock: Clock
   private readonly listeners = new Set<() => void>()
   private readonly controls = new SettingsControls()
   private view: MacSettingsView = { kind: 'loading' }
@@ -56,8 +58,9 @@ export class MacSettingsController {
   private queue: Promise<void> = Promise.resolve()
   private alive = false
 
-  constructor(api: DeviceApi) {
+  constructor(api: DeviceApi, clock: Clock = systemClock) {
     this.api = api
+    this.clock = clock
   }
 
   readonly get = (): MacSettingsState => this.state
@@ -199,11 +202,12 @@ export class MacSettingsController {
   }
 
   /**
-   * Ends a change with its result, and shows the settings, also those of
-   * the reply of a change that the page took back, which keeps no result.
+   * Ends a change with its result, which gets the time of now, and shows
+   * the settings, also those of the reply of a change that the page took
+   * back, which keeps no result.
    */
-  private finish(hold: Hold, result: ChangeResult): void {
-    this.controls.finish(hold, result)
+  private finish(hold: Hold, result: Omit<ChangeResult, 'at'>): void {
+    this.controls.finish(hold, { ...result, at: this.clock.now() })
     this.publish()
   }
 
@@ -247,15 +251,19 @@ export class MacSettingsController {
 
 /**
  * The settings controller of this window, and its state. A new `client`
- * makes a new controller, so pass a stable one, such as the app's.
+ * or `clock` makes a new controller, so pass stable ones, such as the
+ * app's.
  */
-export function useMacSettings(client: ApiClient): {
+export function useMacSettings(
+  client: ApiClient,
+  clock: Clock = systemClock,
+): {
   controller: MacSettingsController
   state: MacSettingsState
 } {
   const controller = useMemo(
-    () => new MacSettingsController(createDeviceApi(client)),
-    [client],
+    () => new MacSettingsController(createDeviceApi(client), clock),
+    [client, clock],
   )
   useEffect(() => {
     void controller.start()

@@ -214,6 +214,12 @@ workspace can ask, as
 - This Mac shows the result of each control. The bar shows the result of
   Stop even when the grant no longer runs. It shows the result of a Keep
   that failed while the grant runs.
+- The bar shows a Stop that the Mac made and saved for 5 seconds. Then
+  that result goes, and the bar goes when no grant runs. A new Stop shows
+  its result again.
+- Reason: the user asked on 23 November 2026 that this notice go away
+  after some time. A done Stop needs no action, and the grant is gone. A
+  failure stays, as the next rules say, because it needs the user.
 - Stop and Extend are separate controls of the bar. While a change of one
   waits, the user can still press the other.
 - Reason: a waiting Extend must not keep the user from Stop.
