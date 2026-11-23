@@ -4,31 +4,53 @@ import type { Timestamp } from './Timestamp.js'
 import type { UserMessageState } from './UserMessageState.js'
 
 /**
- * The message fields returned by the workspace tool.
+ * The message fields returned by the workspace tool, by the author of the
+ * message.
  */
-export type AgentMessageSummary = {
-  /**
-   * id.
-   */
-  id: string
-  /**
-   * session id.
-   */
-  sessionId: string
-  /**
-   * sender.
-   */
-  sender: MessageSender
-  /**
-   * text.
-   */
-  text: string
-  /**
-   * state.
-   */
-  state: UserMessageState
-  /**
-   * created at.
-   */
-  createdAt: Timestamp
-}
+export type AgentMessageSummary =
+  | {
+      author: 'member'
+      /**
+       * id.
+       */
+      id: string
+      /**
+       * session id.
+       */
+      sessionId: string
+      /**
+       * sender.
+       */
+      sender: MessageSender
+      /**
+       * The stored text.
+       */
+      text: string
+      /**
+       * state.
+       */
+      state: UserMessageState
+      /**
+       * The time when the workspace accepted the message.
+       */
+      createdAt: Timestamp
+    }
+  | {
+      author: 'agent'
+      /**
+       * id.
+       */
+      id: string
+      /**
+       * session id.
+       */
+      sessionId: string
+      /**
+       * The finished text, as the chat shows it.
+       */
+      text: string
+      /**
+       * The time of the finished message.
+       */
+      createdAt: Timestamp
+    }

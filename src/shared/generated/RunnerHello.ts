@@ -45,6 +45,10 @@ export type RunnerHello = {
    */
   fileServer?: boolean
   /**
+   * This runner can deliver app notes and acknowledge the lines read.
+   */
+  capabilityNotices?: boolean
+  /**
    * Offer independent service traffic. Absent means no service support.
    */
   services?: boolean

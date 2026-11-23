@@ -16,6 +16,9 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  capability_notes_failed: 'Capability notes could not be kept.',
+  capability_notes_unavailable:
+    'The workspace object is unavailable. The capability route uses the direct save path.',
   starting_favourite_skipped:
     'An entry of CONDUCTIVE_STARTING_FAVOURITES was skipped.',
   saved_favourites_unreadable:

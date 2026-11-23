@@ -28,6 +28,7 @@ import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
 import { SecretRequestRecords } from '../secrets/request-records'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
+import { CapabilityNoteRecords } from './capability-note-records'
 import { SessionWatchRecords } from './session-watch-records'
 import {
   WorkspaceEventLabelPreparation,
@@ -47,6 +48,7 @@ export class ChatTransaction extends ChatRecords {
   readonly terminals: TerminalList
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
+  readonly capabilityNotes: CapabilityNoteRecords
   readonly watches: SessionWatchRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
@@ -68,6 +70,7 @@ export class ChatTransaction extends ChatRecords {
     this.prepareSession = prepareSession
     this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
+    this.capabilityNotes = new CapabilityNoteRecords(data)
     this.watches = new SessionWatchRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)

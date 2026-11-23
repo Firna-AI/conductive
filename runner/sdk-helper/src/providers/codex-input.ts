@@ -3,7 +3,7 @@ import {
   attachmentDescription,
   attachmentReadInstruction,
 } from './attachment-description'
-import { senderLines, type FixedContext } from './message'
+import { contextLines, providerNotice, type FixedContext } from './message'
 import { codexSkillInputs, type SkillSource } from './skill-input'
 import type { ProviderInput } from '../generated/ProviderInput'
 
@@ -12,13 +12,22 @@ import type { ProviderInput } from '../generated/ProviderInput'
  * one skill input for each skill of the text, the read instruction and one
  * line for each attached file, each image of up to
  * `ATTACHMENT_IMAGE_MAX_BYTES` right after its line, and last the sender
- * lines. A larger image gets only its file line.
+ * lines, with the change notes of a turn after them. A larger image gets
+ * only its file line. A notice of a running turn has only its app text.
  */
 export function codexInput(
   command: ProviderInput,
   skills: SkillSource,
   fixed: FixedContext = {},
 ) {
+  if (command.type === 'notice')
+    return [
+      {
+        type: 'text',
+        text: providerNotice(command.notices),
+        text_elements: [],
+      },
+    ]
   const images = command.attachments.filter((attachment) => {
     const metadata = command.message.attachments.find(
       (item) => item.id === attachment.attachmentId,
@@ -56,7 +65,7 @@ export function codexInput(
     }),
     {
       type: 'text',
-      text: senderLines(command, fixed),
+      text: contextLines(command, fixed),
       text_elements: [],
     },
   ]

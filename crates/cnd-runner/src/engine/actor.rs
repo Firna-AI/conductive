@@ -143,6 +143,7 @@ impl Session {
                 self.input(ProviderInput::Message(message), control, received_at)
                     .await
             }
+            RunnerCommand::RunnerNotice(notice) => self.notice(notice, received_at).await,
             RunnerCommand::RunnerControlCommand(RunnerControlCommand::RunnerChangeModel(
                 RunnerChangeModel::Model { choice, .. },
             )) => {
@@ -228,6 +229,7 @@ impl Session {
                     error: failure(error),
                     retry_message_id: message.id,
                     duration_ms: 0,
+                    notice_ids: vec![],
                 }])
                 .await;
         }

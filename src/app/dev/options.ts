@@ -9,6 +9,10 @@ import type { RecordedChatScenario } from '../../test-support/recorded-chat'
 import { getStartedOrder } from '../get-started'
 import type { DevUploadMode } from './attachment-routes'
 import {
+  CAPABILITY_SCENARIOS,
+  type CapabilityScenario,
+} from './capability-note-seed'
+import {
   DEV_BRANCH_CHECKS,
   DEV_BRANCH_LISTS,
   type DevBranchCheck,
@@ -149,6 +153,8 @@ export interface DevOptions {
   switchSaveFails: boolean
   /** The state of the secret requests of `checkout-autocomplete`, or null. */
   secrets: SecretScenario | null
+  /** The notes of capability changes in `checkout-autocomplete`, or null. */
+  capabilities: CapabilityScenario | null
 }
 
 /** The value of `key` when it is one of `values`. */
@@ -215,6 +221,7 @@ export function readDevOptions(search: string): DevOptions {
     switches: params.get('switches') === '1',
     switchSaveFails: params.get('switchSave') === 'fail',
     secrets: pick(params, 'secrets', SECRET_SCENARIOS) ?? null,
+    capabilities: pick(params, 'capabilities', CAPABILITY_SCENARIOS) ?? null,
   }
 }
 

@@ -176,6 +176,7 @@ impl RunnerLink for SavedRunnerLink {
             ]),
             repository_folder: self.repository_folder.clone(),
             complete_tool_details: Some(true),
+            capability_notices: Some(true),
             services: self.services_offered.then_some(true),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {

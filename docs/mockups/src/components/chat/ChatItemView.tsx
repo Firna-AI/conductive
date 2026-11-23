@@ -15,9 +15,8 @@ import { MarkedText } from '../explain/MarkedText'
 import { WholeMark } from '../explain/WholeMark'
 import { AgentBlocks } from '../../../../../src/ui/components/chat/AgentBlocks'
 import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
-import { continuedLine } from '../../entries/components/chat/ContinuedLine.mockup'
-import { RepositoryChangedLine } from '../../../../../src/ui/components/chat/RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
+import { ChangeNoteView } from './ChangeNoteView'
 import { linkedLine } from '../../entries/components/chat/LinkedLine.mockup'
 import { lostLine } from '../../entries/components/chat/LostLine.mockup'
 import {
@@ -236,22 +235,9 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         />
       )
     case 'continued':
-      return (
-        <continuedLine.Component
-          base={item.base}
-          branch={item.branch}
-          moklyInstance="continued-line"
-          who={item.by === viewer ? 'You' : people[item.by].name}
-        />
-      )
     case 'repository-changed':
-      return (
-        <RepositoryChangedLine
-          branch={item.branch}
-          repository={item.repository}
-          who={item.by === viewer ? 'You' : people[item.by].name}
-        />
-      )
+    case 'capabilities-changed':
+      return <ChangeNoteView item={item} viewer={viewer} />
     case 'stopped': {
       const source = stopSource(item, viewer)
       return source.kind === 'words' ? (

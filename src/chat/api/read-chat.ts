@@ -13,6 +13,7 @@ import type { MessageDraft } from '../../shared/messages'
 import { readTurnSpeed } from '../../shared/chat-events'
 import { readAnchor } from './read-anchor'
 import { readStopRequester } from './read-stop'
+import { readCapabilityChangeNote } from './read-capability-change'
 import { readChangedFile } from './read-changed-file'
 import { readContinued, readRepositoryChanged } from './read-continued'
 import { readWatchNotice } from './read-watch-notice'
@@ -195,6 +196,8 @@ export function readChatEvent(source: Record<string, unknown>): ChatEvent {
       return readContinued(source)
     case 'workspace.repository-changed':
       return readRepositoryChanged(source)
+    case 'capabilities.changed':
+      return readCapabilityChangeNote(source)
     case 'session.watch-notice':
       return readWatchNotice(source)
     case 'message.accepted':

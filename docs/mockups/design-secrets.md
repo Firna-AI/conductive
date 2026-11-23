@@ -3,9 +3,11 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the
 Secrets tab of the org settings, the Capabilities control of New workspace,
-of a workspace, and of an automation, and the requests and results of the
-secrets in the chat. They come from the secrets decisions of 13 November
-2026, and the automation capabilities decisions of 18 November 2026.
+of a workspace, and of an automation, the requests and results of the
+secrets in the chat, and the note of a change of the capabilities. They
+come from the secrets decisions of 13 November 2026, the automation
+capabilities decisions of 18 November 2026, and the capability prompts
+decisions of 20 November 2026.
 [Secrets and Capabilities](catalogue-secrets.md) lists their pages.
 
 A secret is a named value of an org: its name, its description, its
@@ -212,3 +214,31 @@ one.
   before agents could always ask (Mac access decision 7), keeps its card
   with "Mac access off" and the reason.
 - `secretRunCopy.ts` holds the words of the requests and the results.
+
+## A change of the capabilities in the chat
+
+- The facts of a session are the secrets that it uses with no approval. A
+  write that changes the facts of a session gives that session a note in
+  its chat, and its agent gets the same words (capability prompts decision
+  4 B). The changes are a pre-approval added or removed, an approval of the
+  session removed, and a value for this workspace given or removed.
+- Mac access is not a fact, so no note names it, as
+  [The facts of a session](../protocol/capabilities-agents.md#the-facts-of-a-session)
+  says.
+- `CapabilityChangeLine` in
+  [`src/ui/components/chat/`](../../src/ui/components/chat/) draws the
+  note, centred and muted as the note of Continue, with the Capabilities
+  icon. It shows at the time of the change and belongs to no turn, so it
+  does not fold with the work of a turn. It takes no fixtures, so the app
+  can use it too.
+- The note names the member, "You" for the viewer who made the change,
+  then each change of one write in one sentence, such as "Priya Raman
+  pre-approved VERCEL_TOKEN, removed the pre-approval of FIGMA_TOKEN, and
+  removed the approval of PROD_DATABASE_URL for this session." Each secret
+  is in the monospace font. No note holds a value.
+- The changes keep a fixed order: pre-approvals added, pre-approvals
+  removed, approvals of the session removed, values given, then values
+  removed.
+- [capabilityChangeCopy.ts](../../src/ui/components/chat/capabilityChangeCopy.ts)
+  holds the words, as pieces of text and names of secrets. The agent gets
+  the same words, with the name of the member.
