@@ -12,6 +12,7 @@ import {
   REPORT_KEY,
 } from './report-storage'
 import { InvalidRunnerReport, RunnerFileReports } from './runner-reports'
+import { FilesState } from './state'
 import type { FilesStorage } from './storage'
 
 function changesPart(
@@ -188,6 +189,19 @@ it('loads part one once when fields are malformed on arrival of the last part', 
   expect(reads.filter((key) => firstKeys.includes(key))).toEqual(firstKeys)
 })
 
+it('refuses a different base branch when resuming a previous Worker report', async () => {
+  const { reports, storage } = await trackedReports()
+  await seedChanges(storage, changesPart(1, 3))
+  const middle = changesPart(2, 3, { baseBranch: 'other' })
+  await expect(reports.accept(middle)).rejects.toBeInstanceOf(
+    InvalidRunnerReport,
+  )
+
+  const keys = Object.keys(reportPartUpdates('changes', 2, middle))
+  const stored = await storage.getMany(keys)
+  expect(keys.map((key) => stored.get(key))).toEqual(keys.map(() => undefined))
+})
+
 it('joins a tree report with empty first and last parts', async () => {
   const { reports } = await trackedReports()
   await expect(reports.accept(snapshot(1, 1, 3, []))).resolves.toBeNull()
@@ -228,4 +242,24 @@ it('joins a changes report with empty first and last parts', async () => {
       ],
     },
   })
+})
+
+it('clears saved changes with a newer empty one-part report', async () => {
+  const { reports, storage } = await trackedReports()
+  const projection = new FilesState(storage)
+  await reports.accept(changesPart(1, 1))
+  expect((await projection.changes())?.files.map(({ path }) => path)).toEqual([
+    'file-1',
+  ])
+
+  const empty = {
+    baseBranch: 'main',
+    unpushedCommits: 3,
+    summary: { files: 0, added: 0, removed: 0 },
+    files: [],
+  }
+  await expect(
+    reports.accept(changesPart(1, 1, { ...empty, revision: 2 })),
+  ).resolves.toEqual({ type: 'changes.updated', changes: empty })
+  expect(await projection.changes()).toEqual(empty)
 })
