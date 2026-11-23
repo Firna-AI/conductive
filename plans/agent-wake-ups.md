@@ -1,6 +1,6 @@
 # Agent wake-ups that survive a stop
 
-Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Cal chose 1 D, 4 B, and 5 B on 23 November 2026, and asked for the implementation. Wake-up decisions 6 and 7, from the mockups, wait for Cal. They block only the Stop and Close rules. [PR #627](https://github.com/Firna-AI/conductive/pull/627) merged into `main` on 22 November 2026, and the branch took `main` at `c5616c6bf`. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Cal chose 1 D, 4 B, and 5 B on 23 November 2026, and asked for the implementation. Milestones 1 to 6 are complete, and two review rounds ran. Review finding 7 waits for Cal too. The findings file is `.context/reviews/calummoore/agent-scheduling-wake-future-nlp0/findings.md`. Wake-up decisions 6 and 7, from the mockups, wait for Cal. They block only the Stop and Close rules. [PR #627](https://github.com/Firna-AI/conductive/pull/627) merged into `main` on 22 November 2026, and the branch took `main` at `c5616c6bf`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 An agent can ask to continue its work later only with the built-in cron
 tools of the Claude agent program. Those wake-ups live in the agent
@@ -341,13 +341,14 @@ The report is `.context/agent-wake/reports/m6-runner.md`. The SDK probe evidence
 
 Depends on: every other milestone
 
-- [ ] Run a smoke test: set a wake-up past the stop time, let the computer stop, and check that the wake-up starts it and a turn.
-- [ ] Run the targeted tests, the complete gate, and the Rust checks named in `AGENTS.md`.
-- [ ] Commit with Conventional Commits and push the branch.
-- [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
+- [x] Run the targeted tests, the complete gate, and the Rust checks named in `AGENTS.md`. The gate passed on `331e33b70`. The doctests could not run here, because the sandbox has no `rustdoc`. CI runs them.
+- [x] Commit with Conventional Commits and push the branch.
+- [x] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, the follow-up items that the change adds, and two breaking changes: the removal of the cron tools and bundled `/loop` for agents, and the durable jobs that older runs left in `.claude/scheduled_tasks.json`, which never fire.
 
 ## Post-merge follow-up (non-blocking)
+
+- [ ] Run a smoke test on a deployed Worker: set a wake-up past the stop time, let the computer stop, and check that the wake-up starts it and a turn. It moved here on 23 November 2026, because a branch Worker is not deployed. The Worker tests cover this path with a fake clock.
 
 - [ ] On the production deployment, set a wake-up for one hour later, and check that it fires after the idle stop.
