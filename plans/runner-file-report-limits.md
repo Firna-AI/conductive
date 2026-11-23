@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 waits for Cal's next stage message. Milestone 4 waits for the memory plan's pull request. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is complete. Milestone 2 waits for the memory plan's final pull request to merge into `main`, then for Cal's next stage message. Milestone 4 also waits for that pull request. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -340,7 +340,9 @@ Review round 4 confirmed findings 11, 13, and 14, and its check removed finding 
 
 ## Milestone 2: Documentation and protocol
 
-Depends on: Milestone 1.
+Depends on: Milestone 1, and the memory plan's final pull request merged into `main`.
+
+- **Orchestrator call, 23 November 2026, at Cal's instruction:** The memory plan also edits `runner/file-reports.md`, `docs/protocol/workspace-tools.md`, and `worker/files/README.md`. So Milestone 2 starts only after that pull request merges and this branch merges `main`.
 
 State the chosen limits, omitted totals, selection, mention coverage, and compatible report rules before the implementation starts.
 
