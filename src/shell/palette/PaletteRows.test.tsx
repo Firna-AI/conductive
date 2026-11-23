@@ -136,6 +136,7 @@ describe('the rows of the command palette', () => {
     const server = new FakeApiServer({ workspaceState: 'archived' })
     await openPaletteTab(routes.org(org), { server })
     pressCommand('command-palette', 'other', document.body)
+    await settle()
     typeText(searchField(), '39')
     const number = {
       groups: groupLabels(),

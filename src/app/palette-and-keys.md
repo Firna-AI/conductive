@@ -78,12 +78,11 @@ state what they do.
   the page, so a field that the action opens can take the focus, and a
   question shows alone. `useRowAction` gives the action of a row, for a
   row and for the key of its command.
-- The palette reads the list and the repositories of its org through
-  `OrgModel.watch` while it is open, and shares those reads with the list
-  of the page. So the list and the palette show the same failure, and Try
-  again in either one reads the list again. The palette has no copy of
-  its own. Its Try again reads again each part that failed, through
-  `OrgModel.reload`.
+- The palette watches the workspace list through `OrgModel.watch`.
+  It shares that read and its failures with the page. The org page gets
+  repository metadata from the list. The open palette also watches the
+  separate org repositories read for search and the repository filter.
+  Try again in the palette calls `OrgModel.reload` for each part that failed.
 - `AppModel.lastOrg` keeps the org that the tab opened last, in memory
   only. The Account sidebar of the Mac app and the palette on a page
   without an org read it through `keptOrg`.
