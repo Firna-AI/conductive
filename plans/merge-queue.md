@@ -829,10 +829,10 @@ State the requirements and the decisions of the queue.
       step of the queue, with the clicker's merge method.
 - [ ] Update `docs/protocol/sub-workspaces.md`: a queued workspace leaves
       its tree, and its sub-workspaces move up a level (decision 318).
-- [ ] Read the Terms page and the Privacy page in full. Update each
+- [x] Read the Terms page and the Privacy page in full. Update each
       sentence that restates a changed fact, such as the token of a merge.
       Set the effective date of the Terms when its text changes.
-- [ ] Read each public guide in full. Update each sentence that restates a
+- [x] Read each public guide in full. Update each sentence that restates a
       changed fact, mostly in `pull-requests.md` and `workspaces.md`. Add a
       merge queue section to `pull-requests.md`.
 - [ ] Check each relative link of each changed Markdown file.
@@ -844,13 +844,13 @@ Depends on: 2
 A client for the GitHub routes that the queue uses, with fakes for the
 tests.
 
-- [ ] Add a client for the stacks routes: list, get, create, add, and
+- [x] Add a client for the stacks routes: list, get, create, add, and
       unstack, with the API version `2026-03-10`, the shared timeout, and
       the shared body budget.
-- [ ] Add a client call that changes the base of a pull request.
-- [ ] Reuse the async merge client for a layer merge.
-- [ ] Parse the `stack` object of `pull_request` webhook payloads.
-- [ ] Add the stacks routes and the base change to the fake GitHub server
+- [x] Add a client call that changes the base of a pull request.
+- [x] Reuse the async merge client for a layer merge.
+- [x] Parse the `stack` object of `pull_request` webhook payloads.
+- [x] Add the stacks routes and the base change to the fake GitHub server
       of the tests.
 - [ ] Check these against a scratch repository of Cal's org, record the
       results under `.context/merge-queue/`, and update this plan:
@@ -863,7 +863,7 @@ tests.
         after a squash merge below it (decision 319).
   - [ ] Which GitHub App permission the stacks routes need.
   - [ ] That a stack and its bases survive a rename of the default branch.
-- [ ] Unit tests for each route, each refusal, and each parse.
+- [x] Unit tests for each route, each refusal, and each parse.
 
 ## Milestone 4: Queue storage and routes
 
@@ -883,6 +883,8 @@ The tables, the coordinator object, and the member routes.
 - [ ] Add the member stack unit rule (decision 315).
 - [ ] Carry the viewer's write access to each repository in the list read,
       for the row menu and the drag.
+- [ ] Carry the GitHub base of each open pull request beside its bar state
+      in the list read, for the rule that shows Add to merge queue.
 - [ ] Add the queue entries to the list read and the queue state to the bar
       read.
 - [ ] Tests for each route, each refusal, and each isolation rule: a member
@@ -897,8 +899,8 @@ browser.
 
 - [ ] Add a Durable Object entry point that sends a queue message as the
       queuer, to the newest open session, without the agent tool footer.
-- [ ] Wait while any session of the workspace runs a turn, up to 30
-      minutes. Resume a stopped cloud computer.
+- [ ] Wait while any session of the workspace runs a turn. Resume a
+      stopped cloud computer.
 - [ ] Check at each step that the queuer is still a member with write
       access, in an org that is not suspended.
 - [ ] Report the end of each queue turn to the queue object, with a saved
