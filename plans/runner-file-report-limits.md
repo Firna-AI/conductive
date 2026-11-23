@@ -1,6 +1,6 @@
 # Runner file report limits
 
-Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal must approve this plan before implementation starts. The pull request that completes the work deletes this plan.
+Status: Active. On branch `calummoore/object-memory-runner-report-limits-0m1g`, no pull request yet. Cal approved implementation on 23 November 2026. Milestone 1 is in progress. Milestone 4 waits for the memory plan's pull request. The pull request that completes the work deletes this plan.
 
 Conductive keeps the latest file tree and branch changes in each workspace's Durable Object.
 One object has a 128 MB memory limit.
@@ -51,10 +51,24 @@ Cal also requires compatibility with older runners, older Mac apps, and a rolled
 The plan uses additive optional metadata and keeps the meaning of existing fields.
 It adds no protocol version or required reader upgrade.
 
-## New decisions for Cal
+## Approval and execution choices
 
-These choices remain open.
-Recommendations below are proposals, not approved requirements.
+Cal wrote on **23 November 2026**: "Ok progress those plans and merge when go is green".
+That message approves implementation of this plan.
+Cal's stage instruction of the same date records the recommended options as execution choices under that approval:
+
+- **Item 1 = F:** Retained Changes files and their ancestors come first. Then normal and context entries fill the rest, with up to 5,000 remaining slots for context entries. Each group lends unused capacity to the other.
+- **Item 2 = B:** Uncommitted changes come first, then committed changes. Path order applies inside each group.
+- **Item 3 = A:** Existing tree-based mentions use the one retained inventory. The panels state the omitted coverage. Direct path reads and attachment metadata stay usable.
+- The approved caps stay: 50,000 tree entries and 1,000 changed files, with complete omitted totals.
+
+These are execution choices under the approved recommendations, not separately typed option answers.
+Milestone 1 started on 23 November 2026 with mockups only. Cal sends the next stage.
+
+## Decisions settled by the approval
+
+The three items below keep their option analysis.
+The section above records the chosen option of each.
 All three decisions use the report limits that Cal selected.
 They preserve direct path reads and existing access checks.
 
@@ -148,8 +162,7 @@ The compatible path below therefore keeps both legacy lists complete until the r
 
 ## Design
 
-The design below assumes the recommendations until Cal answers.
-Record each answer with its date before dependent work starts.
+The design below uses items 1 F, 2 B, and 3 A, as approved on 23 November 2026.
 
 ### Report contract and compatibility
 
@@ -286,7 +299,7 @@ They have no removal date until Cal approves a separate end of support for older
 
 Tags: mockup
 
-Depends on: Cal approves the plan and answers items 1 to 3.
+Depends on: Cal approves the plan and answers items 1 to 3. Both done on 23 November 2026.
 
 Draw the limited All files and Changes panels on desktop and phone.
 Use the current workspace layout, shared components, and existing notice patterns.
