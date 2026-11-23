@@ -6,8 +6,8 @@ import type {
 import type { SharedSize } from '../../fixtures/terminals'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { instanceKey } from '../../instanceKey'
-import { useTouchScreen } from '../common/touch'
-import styles from './TerminalView.module.css'
+import { useTouchScreen } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/tools/TerminalView.module.css'
 
 const toneClass: Readonly<Record<TerminalTone, string>> = {
   prompt: styles.prompt,

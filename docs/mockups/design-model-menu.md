@@ -39,9 +39,14 @@ runs.
     `app/new-workspace/all-models` shows in New workspace. A pick keeps the
     effort when the model offers it, and otherwise takes the nearest lower
     effort.
-  - The efforts of the current model under the Effort label, then the Fast
-    switch of a model that offers fast mode. They change the current
-    choice, and the menu stays the same.
+  - A line, then Effort, which shows the current effort in the muted
+    colour, such as "Effort High", and ends with an arrow. Its submenu
+    opens as the submenu of All models does, and lists the efforts of the
+    current model, with the current effort marked, as the `effort` state
+    of the model picker component shows. The Fast switch of a model that
+    offers fast mode follows Effort. They change the current choice. A
+    pick of an effort closes the menu. Fast keeps the menu open. The user
+    asked for the Effort submenu on 23 November 2026.
 - On a phone, every model picker opens its menu beside the picker, as on a
   computer, and not in a sheet: a session, New workspace, the default of
   new workspaces, an automation, and each Favourites row, from decision
@@ -55,8 +60,8 @@ runs.
   org endpoint. The menu then leaves out each favourite on such a model,
   and All models leaves out the model, as `app/model-favourites/endpoint`
   shows. The favourite stays saved.
-- With no favourite to show, the menu starts with All models, then the
-  efforts and Fast, from decision 6. More models will come, and a flat
+- With no favourite to show, the menu starts with All models, then
+  Effort and Fast, from decision 6. More models will come, and a flat
   list of every model does not scale. So the menu keeps the same short
   shape with and without favourites, as `app/model-favourites/no-favourites`
   shows. The submenu then starts level with the top of the menu. The

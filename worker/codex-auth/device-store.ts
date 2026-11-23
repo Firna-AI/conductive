@@ -1,5 +1,5 @@
 import { defaultAgentLoginNoReuse } from '../../src/shared/account'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 
 const CURRENT_LOGIN_DATE = `(SELECT updated_at FROM agent_logins
   WHERE user_id = codex_devices.user_id AND agent = 'codex')`

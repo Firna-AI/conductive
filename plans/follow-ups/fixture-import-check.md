@@ -1,34 +1,34 @@
-# No check stops app code from importing fixtures
+# The import lint misses indirect mockup imports
 
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
-- **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 3, the wider fix of finding 5.
-- **Location:** `src/chat/README.md:80` and `src/app/README.md:264`, which state the rule. The gate is the `check` script of `package.json`.
-- **Reason:** The user deferred this check on 2026-11-09, and a new gate step still needs approval before work starts.
+- **Added:** 2026-11-09, from branch `calummoore/claude-login-notice-removal`, pull request #75, review round 3, the wider fix of finding 5. Narrowed on 2026-11-23 by branch `calummoore/components-location-misunderstood-d7lu`, which added the import lint.
+- **Location:** `eslint.config.js`, the `mockupImports` pattern. The gate is the `check` script of `package.json`.
+- **Reason:** The user chose the lint on 2026-11-23 and deferred a walk of the import graph on 2026-11-09, and a new gate step still needs approval.
 
 - **Source:** Review.
 - **Category:** Repository rule.
 - **Terms:**
   - **Fixture:** sample data for the mockups, under `docs/mockups/src/fixtures/`, such as the model list in `agents.ts`.
-  - **Pure mockup module:** a module under `docs/mockups/src/` that imports no fixture, so that the app can reuse it.
+  - **Shared UI:** the parts, styles, tokens, and text modules that the app and the mockups both use. They live in `src/ui/`.
+  - **Import lint:** the ESLint `no-restricted-imports` rule in `eslint.config.js`. It fails a direct import of `docs/mockups/` from `src/`, `worker/`, or `desktop/`. Code under `dev/`, tests, and test-support files are exempt.
 - **Background:**
-  - On 2026-11-09 the user asked to keep this work as a follow-up. The user did not choose a check option.
-  - The app reuses mockup parts and CSS modules, so that the app and the mockups look the same.
-  - `src/chat/README.md` says: "Reusable code imports no fixture data and no fake." It also says that the app reuses only the mockup parts that are pure.
-  - Review round 3 of pull request #75 found a break of this rule. The app's two model pickers imported a style helper from the mockup picker module. That module imports `fixtures/agents.ts` and a menu built from the fixtures. So the chat page loaded the fixtures in development. The production build kept none of the fixture model names.
-  - The fix moved the helper into the pure module `docs/mockups/src/components/chat/pickerButton.ts`.
-  - The rule lives only in README text, and the break passed the gate.
-  - A finding check wrote an import walk that follows only the imports that run in the browser. It took 0.6 seconds. It found the two chains above and none on `main` before that branch.
-- **Problem:** Nothing fails when a production module under `src/` reaches a fixture through its imports. Only a reviewer can see it.
-- **Impact if no action:** The next break of the rule can pass the gate again. Fixture data can then reach the app's module graph, and a later change can make it reach the production bundle.
-- **Root question:** How does the project notice that app code reaches mockup sample data through its imports?
+  - The app reuses the shared UI, so that the app and the mockups look the same. Since 2026-11-23 the shared UI lives in `src/ui/`, and the mockups import it from there.
+  - Review round 3 of pull request #75 found an app module that reached the fixtures through one mockup module. The fix moved the helper into a pure module. The rule then lived only in README text.
+  - The import lint now fails each direct import of `docs/mockups/` from shipped code. Nothing under `src/ui/` imports `docs/mockups/`, so a chain from shipped code to a fixture must start with a direct import.
+  - The lint reads only `import` and `export` declarations of TypeScript files. It does not read `import()` calls, CSS `@import` and `url()`, or the imports of an exempt file.
+  - `src/main.tsx` loads the development fake behind `import.meta.env.DEV`, through `dev/` files that import fixtures. The lint exempts those files, so it cannot see whether a shipped file imports them.
+- **Problem:** A shipped module can still reach the fixtures through a `dev/` or test-support module that it imports, through `import()`, or through CSS. Only a reviewer can see it.
+- **Impact if no action:** Such a chain can bring fixture data into the module graph of the app, and a later change can bring it into the production bundle.
+- **Root question:** How does the project notice shipped code that reaches mockup-only code through other modules?
 - **Options:**
-  - **A.** Add no check. Keep the README rule, and rely on review. Effort: Small.
-  - **B.** Add a check to `npm run check`. A script under `tools/` walks the run-time imports of each production module under `src/`, with the TypeScript parser that the repository already has. It fails when a walk reaches `docs/mockups/src/fixtures/`. Code under `dev/` and the tests is exempt. It needs a test on one allowed and one refused import tree, and one sentence in each README. Effort: Medium.
+  - **A.** Keep the import lint alone, and rely on review for the other chains. Effort: Small.
+  - **B.** Add a gate step. A script walks the run-time imports from each entry point of the app, the Worker, and the Mac app, with the TypeScript parser that the repository has. It skips the `import()` calls behind `import.meta.env.DEV`. It fails when the walk reaches `docs/mockups/`. The walk of `tools/ui-move/plan.ts` is a start. It needs one sentence in `src/ui/README.md`. Effort: Medium.
+  - **C.** Add a second lint rule: shipped code imports no `dev/`, test, or test-support module. About 78 helper files need one name pattern first. Effort: Medium.
 - **Left out:**
-  - An ESLint `no-restricted-imports` pattern for the fixture paths: it sees only direct imports, and here the fixture was one module further away.
-  - A TypeScript project boundary around each reused mockup module: it catches no case that B misses, and it must move or list about 100 modules that 110 app files import.
-- **Wider fix:** B. It prevents the whole class, whatever module brings the fixture in.
+  - A check of the built bundle: the break of pull request #75 never reached the bundle, so the check misses it.
+  - A TypeScript project boundary around `src/ui/`: it misses CSS, and it needs the same split of the test code.
+- **Wider fix:** B. It finds every chain, whatever module starts it.
 - **Previous examples:** Finding 5 of review round 3 of pull request #75: `pickerButtonStyle` in `docs/mockups/src/components/chat/ModelPicker.tsx`, imported by `src/chat/components/ModelPicker.tsx` and `src/shell/ui/ModelPicker.tsx`.
-- **Recommendation:** B. The README rule did not stop the break, and the walk is fast.
-- **Action:** ask the user before adding B in a later branch, because B adds a gate step. The user deferred this work.
+- **Recommendation:** A for now. The lint blocks the break on record. Today the one indirect chain is the development fake behind `import.meta.env.DEV`, which the production build drops. B stays the wider fix.
+- **Action:** ask the user, because B and C add a gate step or a lint.

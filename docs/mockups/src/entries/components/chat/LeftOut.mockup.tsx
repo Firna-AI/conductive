@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { LeftOut } from '../../../components/chat/LeftOut'
-import { leftOutOfCall } from '../../../components/chat/lostCopy'
+import { LeftOut } from '../../../../../../src/ui/components/chat/LeftOut'
+import { leftOutOfCall } from '../../../../../../src/ui/components/chat/lostCopy'
 
 /**
  * The output that the runner left out of a tool, registered with Mokly.

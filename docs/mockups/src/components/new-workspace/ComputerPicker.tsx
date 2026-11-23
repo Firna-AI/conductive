@@ -1,6 +1,12 @@
 import { ChevronDown, Cloud, Server } from 'lucide-react'
-import { ActionButton, type ActionTone } from '../common/actions'
-import { Menu, type MenuEntry } from '../common/Menu'
+import {
+  ActionButton,
+  type ActionTone,
+} from '../../../../../src/ui/components/common/actions'
+import {
+  Menu,
+  type MenuEntry,
+} from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import { computerChoiceWords } from '../own-computers/computerChoiceCopy'
 import styles from './ComputerPicker.module.css'

@@ -1,5 +1,8 @@
 import { CircleAlert, Hourglass, TimerOff, type LucideIcon } from 'lucide-react'
-import { StatusText, type StatusTone } from '../common/StatusText'
+import {
+  StatusText,
+  type StatusTone,
+} from '../../../../../src/ui/components/common/StatusText'
 import { stateLabels } from './ownComputerCopy'
 import {
   computerState,

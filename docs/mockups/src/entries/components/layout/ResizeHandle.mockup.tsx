@@ -4,7 +4,7 @@ import {
   ResizeHandle,
   rightColumnWidth,
   sidebarWidth,
-} from '../../../components/layout/ResizeHandle'
+} from '../../../../../../src/ui/components/layout/ResizeHandle'
 
 /**
  * The handle on the inner edge of a panel that the person can resize,

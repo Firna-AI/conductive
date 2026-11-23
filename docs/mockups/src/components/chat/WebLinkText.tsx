@@ -6,9 +6,12 @@ import {
 } from '../../../../../src/markdown/web-links'
 import { openPort } from '../../fixtures/previews'
 import { paths } from '../../paths'
-import inline from '../common/InlineText.module.css'
+import inline from '../../../../../src/ui/components/common/InlineText.module.css'
 import { ScreenLink, useOutsideHref } from '../common/ScreenLink'
-import { TextLink, type LinkOpener } from '../common/TextLink'
+import {
+  TextLink,
+  type LinkOpener,
+} from '../../../../../src/ui/components/common/TextLink'
 import { useChatWorkspaces } from './chatWorkspaces'
 import { linkPage, linkTarget, webLinkOf } from './workspaceLinks'
 

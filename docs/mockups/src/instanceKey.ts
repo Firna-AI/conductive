@@ -1,4 +1,4 @@
-import type { Shortcut } from './components/common/KeyChips'
+import type { Shortcut } from '../../../src/ui/components/common/KeyChips'
 
 /**
  * A Mokly instance name from a stable key of a fixture that is not in

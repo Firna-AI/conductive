@@ -2,13 +2,13 @@ import { useId } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { CircleAlert, Users, X } from 'lucide-react'
 import { acmeMembers, people, type Person } from '../../fixtures/members'
-import { noop } from '../../noop'
-import { classes } from '../common/classes'
+import { noop } from '../../../../../src/ui/noop'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
-import { useControlSizes } from '../common/touch'
-import form from './form.module.css'
-import styles from './LoginField.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/LoginField.module.css'
 
 /** The entry that stands for every member, and whether the list holds it. */
 type Group = { label: string; listed: boolean }

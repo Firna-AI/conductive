@@ -46,6 +46,8 @@ Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
+When you read an earlier part of the chat, a round arrow button shows above the right end of the message box.
+Select it to go to the newest messages.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
 If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 
@@ -203,9 +205,11 @@ Each row names those choices, such as **Opus 5.5 Max Fast**.
 
 1. Open the model menu in the message box.
 2. Choose a favourite, or open **All models** and choose another model.
-3. Adjust the effort or **Fast** in the menu if needed.
+3. Open **Effort** to change the effort if needed.
+   The **Effort** row shows the current effort.
+4. Turn **Fast** on or off if needed.
 
-On a phone, **All models** replaces the menu.
+On a phone, **All models** and **Effort** replace the menu.
 Select **Back** to return.
 With no favourites to show, the menu starts with **All models**.
 A favourite gets a mark only while all three settings match your current choice.

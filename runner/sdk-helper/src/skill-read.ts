@@ -4,6 +4,9 @@ import { readFile } from 'node:fs/promises'
 import { readFrontMatter, type FrontMatterValue } from './skill-front-matter'
 import type { SkillFile } from './skill-files'
 
+/** The path of one `SKILL.md`, and the name of the folder that the agent sees. */
+type SkillPlace = Pick<SkillFile, 'path' | 'folder'>
+
 /** A larger `SKILL.md` warns and leaves out its skill. */
 const SKILL_FILE_MAX_BYTES = 1_048_576
 
@@ -18,8 +21,16 @@ export async function readClaudeSkill(
   file: SkillFile,
   warn: (message: string) => void,
 ): Promise<SkillEntry | null> {
-  const source = await read(file, warn)
-  if (source === null) return null
+  const source = await readSkillFile(file.path, warn)
+  return source === null ? null : claudeSkill(source, file, warn)
+}
+
+/** The Claude entry of the text of one `SKILL.md`, as `readClaudeSkill` says. */
+export function claudeSkill(
+  source: string,
+  file: SkillPlace,
+  warn: (message: string) => void,
+): SkillEntry | null {
   const front = readFrontMatter(source)
   if (front.invalid)
     warn(
@@ -46,8 +57,16 @@ export async function readCodexSkill(
   file: SkillFile,
   warn: (message: string) => void,
 ): Promise<SkillEntry | null> {
-  const source = await read(file, warn)
-  if (source === null) return null
+  const source = await readSkillFile(file.path, warn)
+  return source === null ? null : codexSkill(source, file, warn)
+}
+
+/** The Codex entry of the text of one `SKILL.md`, as `readCodexSkill` says. */
+export function codexSkill(
+  source: string,
+  file: SkillPlace,
+  warn: (message: string) => void,
+): SkillEntry | null {
   const front = readFrontMatter(source)
   const description = text(front.fields?.get('description'))
   if (!front.fields || front.invalid || !description) {
@@ -63,17 +82,18 @@ export async function readCodexSkill(
   }
 }
 
-async function read(
-  file: SkillFile,
+/** The text of one `SKILL.md`. A failed read or a larger file warns and gives null. */
+export async function readSkillFile(
+  path: string,
   warn: (message: string) => void,
 ): Promise<string | null> {
   try {
-    const bytes = await readFile(file.path)
+    const bytes = await readFile(path)
     if (bytes.length > SKILL_FILE_MAX_BYTES) throw new Error('Too large.')
     return bytes.toString('utf8')
   } catch {
     warn(
-      `The skill file ${file.path} could not be read. The list leaves out its skill.`,
+      `The skill file ${path} could not be read. The list leaves out its skill.`,
     )
     return null
   }

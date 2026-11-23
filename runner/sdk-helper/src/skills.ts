@@ -1,4 +1,5 @@
 import type { HelperSkillLists } from './generated/HelperSkillLists'
+import type { OrgSkills } from './generated/OrgSkills'
 import type { SkillEntry } from './generated/SkillEntry'
 import { startProcess, type StartProcess } from './providers/process'
 import { CODEX_SKILLS_TIMEOUT_MS, listCodexSkills } from './skill-codex'
@@ -7,6 +8,7 @@ import {
   codexSkillFiles,
   type SkillFiles,
 } from './skill-files'
+import { listOrgSkills } from './skill-org'
 import { readClaudeSkill, readCodexSkill } from './skill-read'
 
 const CODEX_SKILLS_REASK_MS = 30_000
@@ -30,6 +32,10 @@ export class SkillScanner {
     fingerprint: null,
     found: [],
   }
+  private org: { claude: SkillEntry[]; codex: SkillEntry[] } = {
+    claude: [],
+    codex: [],
+  }
   private codexAskedAt: number | null = null
   private codexFallback = false
   private warned = new Set<string>()
@@ -40,15 +46,46 @@ export class SkillScanner {
     this.context = context
   }
 
-  async scan(reload = false): Promise<HelperSkillLists> {
+  /**
+   * Each list holds the skills of the repository and the Codex home first,
+   * then the org skills. The runner keeps the first skill of each name.
+   */
+  async scan(
+    reload = false,
+    orgSkills: OrgSkills | null = null,
+  ): Promise<HelperSkillLists> {
     const warnings: string[] = []
     const warn = (message: string) => warnings.push(message)
     await this.scanClaude(warn)
     await this.scanCodex(reload, warn)
+    await this.scanOrg(orgSkills, warn)
     for (const message of warnings)
       if (!this.warned.has(message)) this.context.warn(message)
     this.warned = new Set(warnings)
-    return { claude: this.claude.found, codex: this.codex.found }
+    return {
+      claude: [...this.claude.found, ...this.org.claude],
+      codex: [...this.codex.found, ...this.org.codex],
+    }
+  }
+
+  /**
+   * A failed read also fails the agent starts, which then load no org
+   * skills. So the lists then hold no org skills either.
+   */
+  private async scanOrg(
+    orgSkills: OrgSkills | null,
+    warn: (message: string) => void,
+  ): Promise<void> {
+    const request = { repository: this.context.repository, orgSkills, warn }
+    try {
+      this.org = {
+        claude: await listOrgSkills({ ...request, agent: 'claude' }),
+        codex: await listOrgSkills({ ...request, agent: 'codex' }),
+      }
+    } catch {
+      this.org = { claude: [], codex: [] }
+      warn('The org skills could not be listed. The list holds no org skills.')
+    }
   }
 
   private async scanClaude(warn: (message: string) => void): Promise<void> {

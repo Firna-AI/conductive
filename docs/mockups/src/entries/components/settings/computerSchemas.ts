@@ -3,7 +3,7 @@ import type {
   OrgBuilds,
 } from '../../../components/settings/BuildSection'
 import type { OrgComputer } from '../../../components/settings/ComputerTab'
-import type { ReadOnlyCause } from '../../../components/settings/OrgSections'
+import type { ReadOnlyCause } from '../../../../../../src/ui/components/settings/readOnlyCause'
 import {
   buildHistory,
   changedInstallScript,

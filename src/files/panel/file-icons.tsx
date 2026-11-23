@@ -1,9 +1,9 @@
 import { FileDiff } from 'lucide-react'
-import { EntryIcon } from '../../../docs/mockups/src/components/files/fileIcons'
+import { EntryIcon } from '../../ui/components/files/fileIcons'
 
 /**
  * The icon of a file or of its diff. A file takes the icon of the one icon
- * map, `EntryIcon` of the mockups, from the name at the end of its path:
+ * map, the shared `EntryIcon`, from the name at the end of its path:
  * Markdown, code, or another file.
  */
 export function FileIcon(props: {

@@ -3,17 +3,17 @@ import type { Viewport } from '@mokly/mokly'
 import { RotateCcw } from 'lucide-react'
 import { nameLabel } from '../../../../src/shared/name-label'
 import { ChatPane } from '../components/chat/ChatPane'
-import { Menu } from '../components/common/Menu'
-import { Notice } from '../components/common/Notice'
-import { Sheet } from '../components/common/Sheet'
+import { Menu } from '../../../../src/ui/components/common/Menu'
+import { Notice } from '../../../../src/ui/components/common/Notice'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import {
   markMenuTitle,
   reopenBody,
   reopenTitle,
-} from '../components/explain/explainCopy'
+} from '../../../../src/ui/components/explain/explainCopy'
 import { ExplainPopover } from '../components/explain/ExplainPopover'
 import { FollowUpField } from '../components/explain/FollowUpField'
-import { replacesComposer } from '../components/workspace/sandboxNoticeState'
+import { replacesComposer } from '../../../../src/ui/components/workspace/sandboxNoticeState'
 import {
   explanationChats,
   promptId,

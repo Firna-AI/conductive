@@ -8,18 +8,18 @@
 
 - **Source:** Review. **Category:** Code structure.
 - **Terms:**
-  - **Mockups:** the visual spec of the app under `docs/mockups/`. The app imports their pure parts, but not parts that import catalogue links (`ScreenLink`, `paths.ts`), as `src/app/README.md` says.
+  - **Shared UI:** the parts, styles, and words that the app and the mockups both use, in `src/ui/`. Since the user's decision of 2026-11-23, a module that the app uses lives there, and the mockups import it. A lint rejects an import of `docs/mockups/` in shipped code. `src/ui/README.md` gives the rules.
 - **Background:**
   - The mockup module `docs/mockups/src/components/new-workspace/notices.tsx` holds the words of the notice that asks for repositories first, and it also imports `ScreenLink` and `paths.ts`.
-  - The app may not import that module, so `repositoriesFirst` in `src/shell/new-workspace/notices.tsx` copies those words.
+  - The app may not import that module, because it imports catalogue links and lives in `docs/mockups/`. So `repositoriesFirst` in `src/shell/new-workspace/notices.tsx` copies those words.
 - **Problem:** A change of the words in the mockups does not reach the app.
 - **Impact if no action:** The app and the spec can drift apart at the next change of the words.
 - **Root question:** How do the app and the mockups share the words of the Choose repositories notice?
 - **Options:**
-  - **A.** Move the words into a pure copy module beside the mockup notices, and import it in both. Effort: Small.
-  - **B.** Move the catalogue parts (`ChooseRepositoriesButton`, `ChooseRepositoriesNotice`) out of the mockup `notices.tsx` into their own module, so that the app can import the rest. Effort: Small.
+  - **A.** Move the words into a copy module in `src/ui/components/new-workspace/`, and import it in the app and in the mockup notices. Effort: Small.
+  - **B.** Split the mockup `notices.tsx`. Move its words and the parts without catalogue imports into `src/ui/components/new-workspace/`, where the app imports them. Keep `ChooseRepositoriesButton` and `ChooseRepositoriesNotice`, which import `ScreenLink` and `paths.ts`, in the mockups. Effort: Small.
 - **Left out:** A third approach is not real: the words live either in a module that the app can import or in two places.
-- **Wider fix:** B. The mockup module that the app reads then holds no catalogue import, so later words in it are shared too.
+- **Wider fix:** B. The shared module then holds the notice words and parts, so later words in it are shared too.
 - **Previous examples:** The waiting repository notice of New workspace had the same copy until finding 3 of the same review moved it into a shared module.
 - **Recommendation:** B. It removes the cause for every later word in that module.
 - **Action:** fix after merge, apply B, because the copy is outside the change that found it.

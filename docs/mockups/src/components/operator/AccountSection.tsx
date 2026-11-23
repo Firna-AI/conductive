@@ -4,14 +4,20 @@ import {
   CircleStop,
   Hourglass,
 } from 'lucide-react'
-import { ActionButton } from '../common/actions'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
-import { DetailList, type Detail } from '../settings/DetailList'
-import { Section, SectionText } from '../settings/Section'
+import { StatusText } from '../../../../../src/ui/components/common/StatusText'
+import {
+  DetailList,
+  type Detail,
+} from '../../../../../src/ui/components/settings/DetailList'
+import {
+  Section,
+  SectionText,
+} from '../../../../../src/ui/components/settings/Section'
 import { StateWithReason } from './AccessSections'
 import { AccountId } from './directory'
-import { orgAccountWords } from './providerCopy'
+import { orgAccountWords } from '../../../../../src/ui/components/operator/providerCopy'
 import {
   lastSwitchLine,
   switchBuildWords,
@@ -19,8 +25,8 @@ import {
   switchWords,
   type LastSwitch,
   type OrgSwitch,
-} from './switchCopy'
-import countStyles from './AccountCounts.module.css'
+} from '../../../../../src/ui/components/operator/switchCopy'
+import countStyles from '../../../../../src/ui/components/operator/AccountCounts.module.css'
 
 /** A provider account by its ID, and the workspaces of the org on it. */
 export type AccountWorkspaces = { id: string; workspaces: number }

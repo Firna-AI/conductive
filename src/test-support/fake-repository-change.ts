@@ -1,7 +1,7 @@
 import type { MessageSender } from '../shared/generated/MessageSender'
 import type { Session } from '../shared/generated/Session'
 import type { Workspace } from '../shared/generated/Workspace'
-import { repositoryFailure } from '../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { repositoryFailure } from '../ui/components/workspace/repositoryMoveCopy'
 import { movedBranch } from '../../docs/mockups/src/fixtures/repositoryMove'
 import type { FetchLike } from '../app/api/client'
 import { readOrderedWorkspaceResponse } from '../app/api/read-workspaces'

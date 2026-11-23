@@ -4,7 +4,7 @@ import { AnswerText } from '../../../components/chat/AnswerText'
 import { MessageText, useSentParts } from '../../../components/chat/MessageText'
 import { CodeText, NewTabAnchor } from '../../../components/chat/WebLinkText'
 import { webLinkOf } from '../../../components/chat/workspaceLinks'
-import textLinkStyles from '../../../components/common/TextLink.module.css'
+import textLinkStyles from '../../../../../../src/ui/components/common/TextLink.module.css'
 import { inline, link } from '../../../fixtures/agentText'
 
 /** The docs of the places API, which the answers of the chat link. */

@@ -2,7 +2,7 @@ import {
   rightColumnWidth,
   sidebarWidth,
   type PanelWidth,
-} from '../../docs/mockups/src/components/layout/ResizeHandle'
+} from '../ui/components/layout/ResizeHandle'
 import { ColumnSplit } from './column-split'
 import { panelDrag, type PanelDrag, type PanelMove } from './panel-drag'
 import type { KeyValueStorage } from './services'

@@ -3,7 +3,7 @@ import {
   replacesList,
   replacesShownFile,
   type SandboxPanelState,
-} from '../../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../../ui/components/workspace/sandboxNoticeState'
 import { useServices } from '../../../app/services'
 import type { WorkspaceFiles } from '../../../files/model/files-store'
 import type {

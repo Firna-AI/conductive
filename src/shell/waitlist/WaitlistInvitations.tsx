@@ -1,11 +1,11 @@
 import { CircleAlert, CirclePause } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   PendingInviteList,
   type PendingInviteRow,
-} from '../../../docs/mockups/src/components/members/PendingInvites'
-import styles from '../../../docs/mockups/src/screens/WaitlistScreen.module.css'
-import { waitlistCopy as copy } from '../../../docs/mockups/src/screens/waitlistCopy'
+} from '../../ui/components/members/PendingInvites'
+import styles from '../../ui/screens/WaitlistScreen.module.css'
+import { waitlistCopy as copy } from '../../ui/screens/waitlistCopy'
 import type { Opener, Waitlist } from '../../app/waitlist-state'
 import type { PendingOrgInvite } from '../../shared/members'
 import { useApp } from '../context'

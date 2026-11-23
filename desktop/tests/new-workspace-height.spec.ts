@@ -141,9 +141,15 @@ test('at the minimum window height a tall New workspace keeps its pickers and Cr
           name: 'Model and effort',
           exact: true,
         })
+        // Effort opens the efforts of the model in its submenu.
         await pointerClick(
           page,
-          models.getByRole('menuitemradio', { name: 'Low', exact: true }),
+          models.getByRole('menuitem', { name: /^Effort / }),
+        )
+        const efforts = page.getByRole('menu', { name: 'Effort', exact: true })
+        await pointerClick(
+          page,
+          efforts.getByRole('menuitemradio', { name: 'Low', exact: true }),
         )
         await expect(models).toHaveCount(0)
         await pointerClick(page, capabilities)

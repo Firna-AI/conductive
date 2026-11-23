@@ -11,7 +11,7 @@ import {
 import { answerShot } from '../fixtures/answerFiles'
 import { screenshotCopy } from '../fixtures/attachments'
 import { detectedServers, openPort, openPorts } from '../fixtures/previews'
-import { previewTabLabel } from '../components/tools/previewCopy'
+import { previewTabLabel } from '../../../../src/ui/components/tools/previewCopy'
 import { branchPictures, splitPath } from '../fixtures/files'
 import { maskedDiffPath } from '../fixtures/maskedFiles'
 import type { Workspace } from '../fixtures/workspaces'

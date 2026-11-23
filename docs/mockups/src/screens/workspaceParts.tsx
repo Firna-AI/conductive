@@ -9,7 +9,7 @@ import { sandboxPanel } from '../entries/components/workspace/SandboxNotice.mock
 import {
   replacesList,
   replacesShownFile,
-} from '../components/workspace/sandboxNoticeState'
+} from '../../../../src/ui/components/workspace/sandboxNoticeState'
 import { defined, plainData } from '../defined'
 import { unpushedWork } from '../fixtures/barActions'
 import {

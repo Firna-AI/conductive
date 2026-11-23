@@ -5,9 +5,9 @@ import { menu } from '../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { chooseRepositoriesFirst } from '../components/new-workspace/notices'
 import { chooseRepositoriesButton } from '../entries/components/new-workspace/notices.mockup'
-import { formWait } from '../components/new-workspace/waitingRepository'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
 import type { PageOrg } from './newWorkspacePageParts'
-import styles from './NewWorkspaceScreen.module.css'
+import styles from '../../../../src/ui/screens/NewWorkspaceScreen.module.css'
 
 /**
  * The repository of the new workspace, as a compact picker. `menu` draws

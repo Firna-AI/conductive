@@ -1,10 +1,10 @@
 import type { KeyboardEvent, ReactNode } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { KeyChips } from '../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../docs/mockups/src/components/common/Menu.module.css'
-import { SwitchPicture } from '../../../docs/mockups/src/components/common/SwitchPicture'
+import a11y from '../../ui/components/common/a11y.module.css'
+import { classes } from '../../ui/components/common/classes'
+import { KeyChips } from '../../ui/components/common/KeyChips'
+import styles from '../../ui/components/common/Menu.module.css'
+import { SwitchPicture } from '../../ui/components/common/SwitchPicture'
 import controls from './controls.module.css'
 import type { MenuEntry, MenuItem, MenuSubmenu, MenuSwitch } from './Menu'
 
@@ -146,7 +146,8 @@ function SwitchItem(props: { entry: MenuSwitch }) {
 }
 
 /**
- * An item that shows its submenu, with an arrow at its end. A press, Enter,
+ * An item that shows its submenu, with its muted words and an arrow at its
+ * end. A press, Enter,
  * Space, and the right arrow show it and move the focus into it. Its open
  * submenu keeps it highlighted.
  */
@@ -169,7 +170,12 @@ function SubmenuItem(props: { entry: MenuSubmenu; submenu?: SubmenuControl }) {
       tabIndex={-1}
       type="button"
     >
-      <span className={styles.label}>{entry.label}</span>
+      <span className={styles.label}>
+        {entry.label}
+        {entry.muted ? (
+          <span className={styles.muted}> {entry.muted}</span>
+        ) : null}
+      </span>
       <ChevronRight aria-hidden className={styles.icon} size={14} />
     </button>
   )

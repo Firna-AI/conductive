@@ -8,8 +8,8 @@ import {
   replyLine,
   replyLoadingLine,
   replyNotLoadedTitle,
-} from './feedbackCopy'
-import styles from './FeedbackDialog.module.css'
+} from '../../../../../src/ui/components/feedback/feedbackCopy'
+import styles from '../../../../../src/ui/components/feedback/FeedbackDialog.module.css'
 
 /**
  * The read of the reply address, which Send waits for: it runs, it failed,

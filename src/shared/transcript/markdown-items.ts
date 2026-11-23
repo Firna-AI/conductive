@@ -4,7 +4,7 @@ import type { ChangedFile } from '../generated/ChangedFile'
 import type { UserMessage } from '../generated/UserMessage'
 import { sessionLink } from '../session-link'
 
-import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
+import { endReasonText } from '../../ui/components/chat/endReasonCopy'
 import {
   attachmentForMention,
   textWithAttachmentNames,
@@ -16,13 +16,10 @@ import {
   lostText,
   moreFiles,
   turnFilesUnavailable,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
-import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
-import { repositoryChangedNote } from '../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
-import {
-  wakeText,
-  wakeWords,
-} from '../../../docs/mockups/src/components/chat/wakeCopy'
+} from '../../ui/components/chat/lostCopy'
+import { continuedNote } from '../../ui/components/workspace/barCopy'
+import { repositoryChangedNote } from '../../ui/components/workspace/repositoryMoveCopy'
+import { wakeText, wakeWords } from '../../ui/components/chat/wakeCopy'
 import {
   commandCopy,
   commandRan,

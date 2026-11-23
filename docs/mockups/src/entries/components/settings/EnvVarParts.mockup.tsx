@@ -3,8 +3,8 @@ import {
   SecretMark,
   SecretSwitch,
   ValueDots,
-} from '../../../components/settings/EnvVarParts'
-import { noop } from '../../../noop'
+} from '../../../../../../src/ui/components/settings/EnvVarParts'
+import { noop } from '../../../../../../src/ui/noop'
 
 /**
  * The Secret mark of a variable as a switch, registered with Mokly. A

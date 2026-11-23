@@ -5,14 +5,17 @@ import type {
   SecretRequest as Request,
   SecretRunItem,
 } from '../../fixtures/secretRequests'
-import { useTouch } from '../common/touch'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
 import { Answers, endLine, LateEnd, PhoneAnswers } from './RequestActions'
 import { asksValue } from './requests'
 import { ClaimedCommand, runNames } from './SecretRun'
-import { notInOrg, secretRunWords } from './secretRunCopy'
+import {
+  notInOrg,
+  secretRunWords,
+} from '../../../../../src/ui/components/chat/secretRunCopy'
 import { ValueAnswer } from './ValueAnswer'
-import styles from './SecretRequest.module.css'
-import names from './SecretRun.module.css'
+import styles from '../../../../../src/ui/components/chat/SecretRequest.module.css'
+import names from '../../../../../src/ui/components/chat/SecretRun.module.css'
 
 /** The org of the workspaces that the chat mockups draw. */
 const org = orgs.acme.name

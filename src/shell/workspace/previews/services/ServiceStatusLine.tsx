@@ -1,15 +1,15 @@
 import { CircleAlert } from 'lucide-react'
 import type { ServiceControlAction } from '../../../../shared/generated/ServiceControlAction'
 import type { ServiceStatus } from '../../../../shared/generated/ServiceStatus'
-import { StatusText } from '../../../../../docs/mockups/src/components/common/StatusText'
+import { StatusText } from '../../../../ui/components/common/StatusText'
 import {
   serviceEndedText,
   serviceStartedText,
   serviceStateLabels,
   type ServiceShownState,
-} from '../../../../../docs/mockups/src/components/tools/serviceCopy'
-import { serviceStatusOf } from '../../../../../docs/mockups/src/components/tools/ServiceState'
-import stateStyles from '../../../../../docs/mockups/src/components/tools/ServiceState.module.css'
+} from '../../../../ui/components/tools/serviceCopy'
+import { serviceStatusOf } from '../../../../ui/components/tools/ServiceState'
+import stateStyles from '../../../../ui/components/tools/ServiceState.module.css'
 import { formatAgo } from '../../../../chat/state/format'
 
 /** The state that a row shows: a control that runs, or the state of the run. */

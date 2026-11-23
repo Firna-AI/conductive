@@ -3,7 +3,7 @@ import { page } from '../entries/components/layout/Page.mockup'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { DeleteAutomationDialog } from '../components/automations/DeleteAutomationDialog'
 import { RunsPanel } from '../components/automations/RunsPanel'
-import { offersRunNow } from '../components/automations/triggerCopy'
+import { offersRunNow } from '../../../../src/ui/components/automations/triggerCopy'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { editsOf } from '../fixtures/automationTriggers'
 import type { Automation } from '../fixtures/automations'
@@ -35,7 +35,7 @@ import {
 } from './automationState'
 import { AutomationTabs } from './automationTabs'
 import { defined } from '../defined'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /**
  * The screens that the actions open: Save of a new automation and Run now of

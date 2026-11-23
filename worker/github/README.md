@@ -278,7 +278,7 @@ The snapshot keeps the marker until the cloud move completes.
 
 The public banner's optional `baseMoved` field names the deleted branch, and `filterGitHubBanner` adds its masked label `displayBaseMoved`.
 The Worker keeps it across reads and object rebuilds until a pull request opens.
-The app can use it with `barMessageText` and the `baseMoved` fact of the mockup bar model.
+The app can use it with `barMessageText` and the `baseMoved` fact of the shared bar model.
 The banner names the default branch and compares commits with it.
 A pull request keeps its real GitHub base separately in the private `pullBaseBranch` snapshot field for Continue.
 

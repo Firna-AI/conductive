@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { useLongPress } from '../../app/long-press'
 
 import { opensMenu } from '../../shell/ui/menu-keys'

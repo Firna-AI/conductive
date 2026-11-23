@@ -5,8 +5,11 @@
  */
 import type { AccountWorkspaces } from '../components/operator/AccountSection'
 import type { OrgComputerCounts } from '../components/operator/OwnComputerCounts'
-import type { LastSwitch, OrgSwitch } from '../components/operator/switchCopy'
-import type { StateCounts } from './operator'
+import type {
+  LastSwitch,
+  OrgSwitch,
+} from '../../../../src/ui/components/operator/switchCopy'
+import type { StateCounts } from '../../../../src/ui/components/settings/statCounts'
 import type {
   OrgMember,
   SuspensionNote,

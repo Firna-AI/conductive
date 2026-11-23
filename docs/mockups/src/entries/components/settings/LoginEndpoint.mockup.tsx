@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { LoginEndpoint } from '../../../components/settings/LoginEndpoint'
-import { loginLabels } from '../../../components/settings/agentConnectCopy'
+import { LoginEndpoint } from '../../../../../../src/ui/components/settings/LoginEndpoint'
+import { loginLabels } from '../../../../../../src/ui/components/settings/agentConnectCopy'
 import { endpointHost } from '../../../fixtures/logins'
 
 /**

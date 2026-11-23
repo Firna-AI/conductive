@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.35.0](https://github.com/Firna-AI/conductive/compare/v0.34.0...v0.35.0) (2026-11-23)
+
+
+### Features
+
+* **chat:** move the efforts of the model menu into an Effort submenu ([#657](https://github.com/Firna-AI/conductive/issues/657)) ([b31d2ea](https://github.com/Firna-AI/conductive/commit/b31d2ea7319449169030951e50b4fb8c40d9b6da))
+* **chat:** show a button to the bottom while the reader is scrolled up ([#653](https://github.com/Firna-AI/conductive/issues/653)) ([0c8fbc8](https://github.com/Firna-AI/conductive/commit/0c8fbc806b6afa8a1b83666d85d99f099ea4352b))
+* **new-workspace:** simplify the header of the New workspace dialog ([#656](https://github.com/Firna-AI/conductive/issues/656)) ([edb0ab2](https://github.com/Firna-AI/conductive/commit/edb0ab22c995cafeecc0f7835acbe862ad7327fc))
+
+
+### Bug Fixes
+
+* **mac:** hide the Stopped notice of the workspace bar after 5 seconds ([#654](https://github.com/Firna-AI/conductive/issues/654)) ([a977146](https://github.com/Firna-AI/conductive/commit/a97714653e96c9f8b2a1634c7d55515d42c2a1da))
+* **skills:** show org skills in the / skill list ([#659](https://github.com/Firna-AI/conductive/issues/659)) ([29e64a9](https://github.com/Firna-AI/conductive/commit/29e64a957a5a7916763c313f5f80b5a264de4f5e))
+
+## [0.34.0](https://github.com/Firna-AI/conductive/compare/v0.33.0...v0.34.0) (2026-11-23)
+
+
+### Features
+
+* **models:** list model favourites first in every model picker ([#652](https://github.com/Firna-AI/conductive/issues/652)) ([302f963](https://github.com/Firna-AI/conductive/commit/302f96384628c69ceb8d04e7d4d74aaa3e5927b0))
+
+
+### Bug Fixes
+
+* **app:** keep the phone layout above the on-screen keyboard ([#645](https://github.com/Firna-AI/conductive/issues/645)) ([51b2467](https://github.com/Firna-AI/conductive/commit/51b2467d5029a90993e8e0677b6757246058a053))
+* **app:** stop the iOS edge blur over the header of the Home Screen app ([#650](https://github.com/Firna-AI/conductive/issues/650)) ([c5616c6](https://github.com/Firna-AI/conductive/commit/c5616c6bf60139709dfa0656ebfd834f8360190e))
+* **chat:** keep the follow-up field inside the Explain popover ([#651](https://github.com/Firna-AI/conductive/issues/651)) ([42c238a](https://github.com/Firna-AI/conductive/commit/42c238a0cb6a7641a48693490e9b8266bcb9ff57))
+
 ## [0.33.0](https://github.com/Firna-AI/conductive/compare/v0.32.0...v0.33.0) (2026-11-22)
 
 

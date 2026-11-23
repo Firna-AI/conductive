@@ -1,8 +1,8 @@
 import styles from './InlineText.module.css'
 
 /**
- * Text with each part in backticks as inline code, as `InlineText` of the
- * mockups draws it.
+ * Text with each part in backticks as inline code, as the shared
+ * `InlineText` draws it.
  */
 export function InlineText(props: { text: string }) {
   const parts = props.text.split('`')

@@ -8,11 +8,11 @@ import {
   SquareTerminal,
   type LucideIcon,
 } from 'lucide-react'
-import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import tabs from '../../../docs/mockups/src/components/workspace/MobileTabBar.module.css'
-import column from '../../../docs/mockups/src/components/workspace/RightColumn.module.css'
-import { splitStyles } from '../../../docs/mockups/src/components/workspace/RightColumn'
+import chat from '../../ui/components/chat/ChatPane.module.css'
+import { classes } from '../../ui/components/common/classes'
+import tabs from '../../ui/components/workspace/MobileTabBar.module.css'
+import column from '../../ui/components/workspace/RightColumn.module.css'
+import { splitStyles } from '../../ui/components/workspace/RightColumn'
 import { routes } from '../../app/router'
 import { useStore } from '../../app/store'
 import { ResizeHandle } from '../layout/ResizeHandle'

@@ -9,9 +9,9 @@ import {
   Pencil,
   X,
 } from 'lucide-react'
-import { copyPathItem } from '../../../docs/mockups/src/components/files/rowMenuCopy'
-import { linkItem } from '../../../docs/mockups/src/components/workspace/linkCopy'
-import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
+import { copyPathItem } from '../../ui/components/files/rowMenuCopy'
+import { linkItem } from '../../ui/components/workspace/linkCopy'
+import { transcriptItems } from '../../ui/components/workspace/transcriptCopy'
 import type { MenuEntry } from '../ui/Menu'
 import type { RowTab } from './tab-row'
 

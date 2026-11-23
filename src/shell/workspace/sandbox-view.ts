@@ -5,7 +5,7 @@ import {
   type ArchiveRestore,
   type SandboxNoticeState,
   type SandboxPanelState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import type { ApiError } from '../../app/api/client'
 
 import type { SandboxState, WorkspaceContext } from './features'

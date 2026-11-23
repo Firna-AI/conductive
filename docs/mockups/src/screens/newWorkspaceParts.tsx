@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
-import type { SessionLogin } from '../components/chat/SessionLogin'
+import type { SessionLogin } from '../../../../src/ui/components/chat/SessionLogin'
 import { fileMark, withoutMarks } from '../../../../src/app/draft-marks'
 import { createFailedNotice } from '../entries/components/new-workspace/notices.mockup'
-import { repositoryWaits } from '../components/settings/repositoryChangeCopy'
+import { repositoryWaits } from '../../../../src/ui/components/settings/repositoryChangeCopy'
 import {
   firstMessageBeforeDrop,
   firstMessageDraft,

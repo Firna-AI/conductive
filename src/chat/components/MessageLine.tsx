@@ -1,17 +1,17 @@
 import { useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
-import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
+import { AgentBlocks } from '../../ui/components/chat/AgentBlocks'
 import {
   holdsTable,
   LineBlocks,
   type LineState,
-} from '../../../docs/mockups/src/components/chat/LineBlocks'
-import blockStyles from '../../../docs/mockups/src/components/chat/LineBlocks.module.css'
-import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+} from '../../ui/components/chat/LineBlocks'
+import blockStyles from '../../ui/components/chat/LineBlocks.module.css'
+import line from '../../ui/components/chat/MessageLine.module.css'
+import styles from '../../ui/components/chat/ToolGroup.module.css'
+import a11y from '../../ui/components/common/a11y.module.css'
+import { classes } from '../../ui/components/common/classes'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
 import { MarkedMessage } from '../explain/MarkedMessage'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
@@ -35,8 +35,8 @@ const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
  * and code of the message, and the line keeps its place. Another click cuts
  * it again. Closed, the line shows each line break as a space.
  *
- * The line draws its blocks with the `LineBlocks` of the mockups, and the
- * blocks under it with their `AgentBlocks`. A `<summary>` holds no
+ * The line draws its blocks with the shared `LineBlocks`, and the blocks
+ * under it with the shared `AgentBlocks`. A `<summary>` holds no
  * table. So the open line keeps the blocks before the first table, or
  * before the list or the quote that holds it, as `holdsTable` says. That
  * block and the blocks after it open under the line. When the line shows no

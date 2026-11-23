@@ -98,7 +98,7 @@ Copy uses their `copy`, and Download reads the route with the `fetch` of
 the app's `ApiClient`, so the Mac app reads the file from its own Worker.
 
 The shell supplies the design tokens as `--ui-*` CSS variables and the
-`@firna/ui` theme provider, as `docs/mockups/src/theme.ts` builds them.
+`@firna/ui` theme provider, as `src/ui/theme.ts` builds them.
 
 The links of the Markdown preview open through the link opener of the app
 shell, `useTextLinks` of `../shell/ui/text-links.tsx`, which the chat uses

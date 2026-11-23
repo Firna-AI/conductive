@@ -1,17 +1,21 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { DropdownSelector } from '@firna/ui/dropdown'
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { eventLabels, hasSchedule, scheduleLabels } from './triggerCopy'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  eventLabels,
+  hasSchedule,
+  scheduleLabels,
+} from '../../../../../src/ui/components/automations/triggerCopy'
 import { TriggerFact, TriggerRow } from './TriggerRow'
-import form from './form.module.css'
-import styles from './TriggerList.module.css'
+import form from '../../../../../src/ui/components/automations/form.module.css'
+import styles from '../../../../../src/ui/components/automations/TriggerList.module.css'
 
 /**
  * The Add trigger menu: one flat menu with two labelled groups, because

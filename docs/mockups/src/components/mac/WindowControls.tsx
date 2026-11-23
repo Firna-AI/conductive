@@ -1,7 +1,7 @@
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import type { WindowMode } from './MacApp'
-import styles from './WindowControls.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import type { WindowMode } from '../../../../../src/ui/components/mac/MacApp'
+import styles from '../../../../../src/ui/components/mac/WindowControls.module.css'
 
 /**
  * The native close, minimize, and zoom buttons. macOS draws them over the

@@ -29,7 +29,7 @@ export const preferences = defineScreen({
       slug: 'model-menu',
       title: 'Model menu',
       description:
-        'The menu of Model and effort is open, with Fast on. It lists the favourites first, then All models, the efforts, and the Fast switch, as every model picker does. No favourite is marked, because none is Opus 5.5 High with Fast on. The picker sits low on the page, so the menu opens above it. New workspaces then start with fast mode on, and the trigger reads "Opus 5.5 High Fast". The Fast row shows no key here.',
+        'The menu of Model and effort is open, with Fast on. It lists the favourites first, then All models, Effort, and the Fast switch, as every model picker does. No favourite is marked, because none is Opus 5.5 High with Fast on. The picker sits low on the page, so the menu opens above it. New workspaces then start with fast mode on, and the trigger reads "Opus 5.5 High Fast". The Fast row shows no key here.',
       rationale:
         'The saved default is the choice of the same picker, so it carries fast mode too (fast mode decision 255). The key of Fast mode runs only where a session tab is shown (fast mode decision 258), so the row shows no key. The default of new workspaces shows the favourites menu as each model picker does, from the design calls of 16 November 2026 of the model favourites, so a pick of a favourite sets the whole default. A menu opens on the side of its picker with more room, as app/chat/menu-placement says.',
       props: { modelMenu: 'open-fast' },

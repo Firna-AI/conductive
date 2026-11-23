@@ -16,7 +16,7 @@ import {
   eventLabels,
   hasPullRequestTrigger,
   hasSchedule,
-} from '../components/automations/triggerCopy'
+} from '../../../../src/ui/components/automations/triggerCopy'
 import type { CapabilitiesControl } from '../components/capabilities/CapabilitiesButton'
 import { agents } from '../fixtures/agents'
 import { unlistedLabels } from '../fixtures/endpointModels'
@@ -28,7 +28,7 @@ import { paths } from '../paths'
 import type { AutomationComputer } from './automationComputer'
 import { AutomationNote } from './automationNote'
 import type { AutomationAccess, AutomationState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /**
  * The screens of the run workspaces that the mockups draw, by run: a run

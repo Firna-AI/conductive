@@ -1,4 +1,4 @@
-import { productDomain } from '../../brand'
+import { productDomain } from '../../../../../src/shared/brand'
 import type { ComputerResources } from './ownComputer'
 
 /**

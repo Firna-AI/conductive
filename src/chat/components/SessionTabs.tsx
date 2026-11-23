@@ -1,9 +1,9 @@
 import type { TranscriptDetail } from '../../shared/generated/TranscriptDetail'
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react'
 import { History, Plus } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import tabScroll from '../../../docs/mockups/src/components/workspace/TabScroll.module.css'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { classes } from '../../ui/components/common/classes'
+import tabScroll from '../../ui/components/workspace/TabScroll.module.css'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { ownPress } from '../../app/pointer-drag'
 import { useSidewaysWheel } from '../../app/sideways-wheel'
 

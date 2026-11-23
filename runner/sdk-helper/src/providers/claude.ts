@@ -73,7 +73,8 @@ export function createClaudeFactory(
       ),
     )
     const credentials = await preparation
-    const skillsDiscovery = await prepareClaudeSkills(options, lifetime)
+    const orgView = await prepareClaudeSkills(options, lifetime)
+    const skillsDiscovery = orgView.directory
     const skillSettings = claudeSkillSettings(options.orgSkills)
     const env = providerEnvironment(
       options.home,
@@ -245,7 +246,12 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const content = await claudeInput(command, options.cwd, options)
+        const content = await claudeInput(
+          command,
+          options.cwd,
+          options,
+          orgView.names,
+        )
         input.push(command.message.id, {
           type: 'user',
           uuid,

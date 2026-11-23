@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
-import { TextLink } from '../../../docs/mockups/src/components/common/TextLink'
+import inline from '../../ui/components/common/InlineText.module.css'
+import { TextLink } from '../../ui/components/common/TextLink'
 import type { WebLink } from '../../markdown/web-links'
 import { useTextLinks } from '../../shell/ui/text-links'
 import type { CodePart, LinkPart } from './link-parts'

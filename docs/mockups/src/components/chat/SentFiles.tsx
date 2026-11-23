@@ -1,10 +1,10 @@
 import type { Attachment } from '../../fixtures/attachments'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { kindIcon } from '../../entries/components/chat/attachedFileParts.mockup'
 import { instanceKey } from '../../instanceKey'
-import { formatSize } from './sizes'
-import styles from './AttachmentChips.module.css'
-import states from './AttachmentStates.module.css'
+import { formatSize } from '../../../../../src/ui/components/chat/sizes'
+import styles from '../../../../../src/ui/components/chat/AttachmentChips.module.css'
+import states from '../../../../../src/ui/components/chat/AttachmentStates.module.css'
 
 /**
  * The files of a sent message that its text does not show, under its

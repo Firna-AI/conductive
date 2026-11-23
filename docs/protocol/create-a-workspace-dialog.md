@@ -21,10 +21,17 @@ says.
   choice stands in the dropdown of the branch control, not on a line under
   the header. [Start from a branch](start-from-a-branch.md) states the
   branch control, its dropdown, and the target choice.
-- The dialog always names the org and the section of the new workspace,
-  also General.
-- The org and the section are a menu of the sections of the org, in the
-  order of the list, with the current section checked. A pick puts the
+- The header of the dialog is plain: its repository picker, its branch
+  control, and its section menu show no chevrons. The branch control
+  stands close to the repository picker. While the default branch is
+  picked, the branch control shows only a faded branch icon, and a screen
+  reader still hears the branch. A picked branch shows its name. The user
+  asked for this look on 23 November 2026.
+- The dialog always names the section of the new workspace, also General.
+  It does not name the org, because the user asked for a shorter header
+  on 23 November 2026.
+- The section is a menu of the sections of the org, in the order of the
+  list, with the current section checked. A pick puts the
   new workspace in that section. The menu has no Archived item, because
   Archived is a group of the list and not a section. The user asked for
   the menu on 12 November 2026.

@@ -6,15 +6,15 @@ import {
   type Person,
   type PersonKey,
 } from '../../fixtures/members'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { useControlSizes } from '../common/touch'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
-import styles from './OwnerPicker.module.css'
+import styles from '../../../../../src/ui/components/workspace/OwnerPicker.module.css'
 
 /**
  * The members whom an admin can make the owner of a workspace, with the

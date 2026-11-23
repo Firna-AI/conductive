@@ -1,9 +1,9 @@
 import { CircleAlert, DoorClosed, DoorOpen } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   waitlistOffTitle,
   waitlistWords,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
+} from '../../ui/components/operator/codeCopy'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { ActionButton } from '../ui/actions'

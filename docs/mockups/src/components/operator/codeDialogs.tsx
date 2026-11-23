@@ -1,7 +1,7 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
 import { newCode } from '../../fixtures/operatorCodes'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
@@ -10,8 +10,11 @@ import {
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { inlineText } from '../../entries/components/common/InlineText.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { disableCodeWords, newCodeWords } from './codeCopy'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  disableCodeWords,
+  newCodeWords,
+} from '../../../../../src/ui/components/operator/codeCopy'
 
 /**
  * New code: the operator gives a label and a use limit, and the app makes

@@ -7,7 +7,7 @@
 - **Reason:** The review found it after the last fix round of the branch, and it shows only while a phone page stays zoomed.
 
 - **Terms:**
-  - **Screen height token:** the CSS variable `--ui-screen-height`. It is `100dvh` by default, from `docs/mockups/src/design/metrics.ts`, and the phone frame uses it as its height.
+  - **Screen height token:** the CSS variable `--ui-screen-height`. It is `100dvh` by default, from `src/ui/design/metrics.ts`, and the phone frame uses it as its height.
   - **Visual viewport:** `window.visualViewport`, the visible part of the page, with its `height`, `offsetTop`, and zoom `scale`.
 - **Background:** Safari on iOS keeps the page at its full height under the on-screen keyboard. `followKeyboard` in `src/app/keyboard-viewport.ts` sets the screen height token to the visual viewport height while a keyboard shows, and keeps the page at its top. While the zoom scale is not 1, it returns early and changes nothing, so a pinch zoom keeps the behaviour of the browser.
 - **Problem:** The user zooms while the keyboard shows, then closes the keyboard and stays zoomed. The `resize` event arrives while zoomed, so the hook ignores it. The token stays at the keyboard height, for example 450px, until the zoom goes back to scale 1.

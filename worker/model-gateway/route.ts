@@ -1,6 +1,6 @@
 import { readEndpointAddress } from '../../src/shared/endpoint-address'
 import type { AppDependencies } from '../env'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import { scheduleConnectionCheck } from '../security/connection-access'
 import type { CodexTokens } from '../codex-auth/tokens'
 import type { CodexRotation } from '../codex-auth/rotation'

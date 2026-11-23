@@ -9,13 +9,13 @@ import { shownShortcut } from '../../fixtures/shortcutChanges'
 import { orgCommand } from '../../fixtures/shortcutCommands'
 import { pageHost, type ShortcutHost } from '../../fixtures/shortcutHosts'
 import { paths } from '../../paths'
-import type { Shortcut } from '../common/KeyChips'
-import { classes } from '../common/classes'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { logoTile } from '../../entries/components/brand/Logo.mockup'
-import { useMacApp } from '../mac/MacApp'
+import { useMacApp } from '../../../../../src/ui/components/mac/MacApp'
 import { placeAfterDrop, type OrgDrag } from '../orgs/OrgDrop'
 import { orgDrop } from '../../entries/components/orgs/OrgDrop.mockup'
-import { tileMenuItems } from '../orgs/orgTileMenu'
+import { tileMenuItems } from '../../../../../src/ui/components/orgs/orgTileMenu'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import type { OrgState } from './RailItems'
 import {
@@ -23,7 +23,7 @@ import {
   railLink,
   railTile,
 } from '../../entries/components/layout/RailItems.mockup'
-import styles from './OrgRail.module.css'
+import styles from '../../../../../src/ui/components/layout/OrgRail.module.css'
 
 export type RailState = {
   orgs: readonly Org[]
