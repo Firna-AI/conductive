@@ -3,7 +3,7 @@ import {
   entryName,
 } from '../../../../../src/ui/components/chat/entryPaths'
 import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
-import { limitedMentionEntries } from '../../fixtures/limitedFiles'
+import { retainedEntries } from '../../fixtures/limitedFiles'
 import { omittedMentionLine } from '../files/listNoticeCopy'
 import { mentionRows } from './fileMentions'
 import { mentionList } from '../../entries/components/chat/MentionList.mockup'
@@ -20,7 +20,7 @@ export type MentionTree = 'latest' | 'limited' | 'loading' | 'unavailable'
 function rowsOf(props: { query: string; tree: MentionTree }) {
   if (props.tree === 'latest') return mentionRows(props.query)
   if (props.tree === 'limited') {
-    return mentionRows(props.query, limitedMentionEntries)
+    return mentionRows(props.query, retainedEntries)
   }
   return []
 }
@@ -31,8 +31,7 @@ function rowsOf(props: { query: string; tree: MentionTree }) {
  * first row highlighted. One line takes the place of the rows while the
  * tree loads, when no tree is available, and when nothing matches. In a
  * limited tree, the line of no match also says that some files are not
- * listed, and what the member can do (item 3 A of runner file report
- * limits).
+ * listed, and what the member can do.
  */
 export function FileMentionList(props: { query: string; tree: MentionTree }) {
   const entries = rowsOf(props)

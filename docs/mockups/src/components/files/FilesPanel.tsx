@@ -158,7 +158,6 @@ export function FilesPanel(props: {
       <FileTabs
         banner={props.banner}
         changes={totals ? wholeChange(totals).files : changes.length}
-        lists={props.lists ?? 'complete'}
         view={view}
       />
       {view === 'checks' ? props.checksTop : null}

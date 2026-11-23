@@ -335,6 +335,7 @@ Use the current workspace layout, shared components, and existing notice pattern
 
 The implementor report is `.context/runner-file-report-limits/m1-implementor-report.md`.
 The screenshots are in `.context/runner-file-report-limits/screenshots/`.
+Review round 3 confirmed five mockup findings, 6 to 10. The fix round applied all five. The review folder of the branch holds the reports.
 
 ## Milestone 2: Documentation and protocol
 
@@ -409,7 +410,7 @@ Render the approved mockups with real retained lists and omitted totals.
 - [ ] Keep file and diff reads usable when their paths are outside the retained lists. Check refresh after omitted-content changes.
 - [ ] Verify the approved mention behavior, answer links and pictures, Add to chat, and attached-file chips. Add no second tree under item 3 A.
 - [ ] Show the limited-coverage words in the no-match line of the `@` list while the tree is limited, as `app/file-mentions/list/limited` draws.
-- [ ] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`.
+- [ ] Format the counts of the Changes tab, the Changes summary, and both `DiffStat` copies with one shared count formatter in `src/ui/`. Move the mockup copies of the format in `docs/mockups/src/components/files/listNoticeCopy.ts` and `docs/mockups/src/components/common/LinkTabs.tsx` to that formatter.
 - [ ] Extend existing parser, tree, synchronization, and panel tests at the lowest level that protects each changed requirement.
 - [ ] Run `npm run test -- src/files` and only the affected mention or row-menu tests.
 - [ ] Smoke-test the real panels against controlled reports on desktop and phone. Save PNG screenshots under `.context/runner-file-report-limits/`.

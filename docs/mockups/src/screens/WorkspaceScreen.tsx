@@ -27,6 +27,7 @@ import { composerFor, isRunning } from './composerFor'
 import { composerNotice } from './composerNotice'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
+import { resizedColumns } from './layoutState'
 import { chatWorkspacesOf } from './orgWorkspaces'
 import { chatMarksOf } from './explainMarks'
 import { headerMenusOf } from './workspaceBar'
@@ -46,13 +47,8 @@ import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, noMessages, tabsFor } from './workspaceTabs'
+import { WorkspaceLinks } from './workspaceLinks'
 import styles from '../../../../src/ui/screens/WorkspaceScreen.module.css'
-
-/** The right column in the middle of a drag that widens it, in px. */
-const widenedRight = 560
-
-/** The share of the file lists in the middle of a drag that raises the split. */
-const raisedSplit = 35
 
 /**
  * An open workspace: its header, its tabs of sessions and files, the pull
@@ -231,67 +227,73 @@ export function WorkspaceScreen(props: {
       tool,
     }
     return (
-      <WorkspaceMobile
-        archived={archived}
-        bar={bar}
-        header={header}
-        overlay={overlay}
-        selected={state.focus === 'tool' ? state.tool : state.focus}
-        toast={toast}
-        body={
-          <div className={styles.mobileBody}>
-            {archived ? views.chat : views[state.focus]}
-          </div>
-        }
-      />
+      <WorkspaceLinks lists={state.lists}>
+        <WorkspaceMobile
+          archived={archived}
+          bar={bar}
+          header={header}
+          overlay={overlay}
+          selected={state.focus === 'tool' ? state.tool : state.focus}
+          toast={toast}
+          body={
+            <div className={styles.mobileBody}>
+              {archived ? views.chat : views[state.focus]}
+            </div>
+          }
+        />
+      </WorkspaceLinks>
     )
   }
   return (
-    <appFrame.Component
-      overlay={
-        <>
-          {palette ?? overlay}
-          {toast}
-        </>
-      }
-      rail={{
-        ...acmeRail,
-        ...(suspended ? { suspended: suspendedOrg } : {}),
-        ...(admin ? {} : { person: people[memberViewer] }),
-      }}
-      sidebarView={state.sidebar}
-      sidebar={workspaceSidebar({
-        state,
-        workspace,
-        status,
-        viewer: membership,
-        shortcuts: props.shortcuts,
-      })}
-    >
-      <workspaceBody.Component
-        center={centreOf(state, chat)}
-        files={files}
-        header={header}
-        moklyInstance="workspace-body"
-        pullRequest={
-          <pullRequestBar.Component
-            bar={plainData(bar)}
-            moklyInstance="pull-request-bar"
-            workspace={workspace}
-          />
+    <WorkspaceLinks lists={state.lists}>
+      <appFrame.Component
+        overlay={
+          <>
+            {palette ?? overlay}
+            {toast}
+          </>
         }
-        rightHidden={rightHidden}
-        tabs={tabRow}
-        {...defined({
-          filesShare: state.resize === 'split' ? raisedSplit : undefined,
-          rightWidth: state.resize === 'right' ? widenedRight : undefined,
-          tools: archived ? undefined : (
-            <toolsPanel.Component moklyInstance="tools-panel" tool={state.tool}>
-              {tool}
-            </toolsPanel.Component>
-          ),
+        rail={{
+          ...acmeRail,
+          ...(suspended ? { suspended: suspendedOrg } : {}),
+          ...(admin ? {} : { person: people[memberViewer] }),
+        }}
+        sidebarView={state.sidebar}
+        sidebar={workspaceSidebar({
+          state,
+          workspace,
+          status,
+          viewer: membership,
+          shortcuts: props.shortcuts,
         })}
-      />
-    </appFrame.Component>
+      >
+        <workspaceBody.Component
+          center={centreOf(state, chat)}
+          files={files}
+          header={header}
+          moklyInstance="workspace-body"
+          pullRequest={
+            <pullRequestBar.Component
+              bar={plainData(bar)}
+              moklyInstance="pull-request-bar"
+              workspace={workspace}
+            />
+          }
+          rightHidden={rightHidden}
+          tabs={tabRow}
+          {...defined({
+            ...resizedColumns(state.resize),
+            tools: archived ? undefined : (
+              <toolsPanel.Component
+                moklyInstance="tools-panel"
+                tool={state.tool}
+              >
+                {tool}
+              </toolsPanel.Component>
+            ),
+          })}
+        />
+      </appFrame.Component>
+    </WorkspaceLinks>
   )
 }

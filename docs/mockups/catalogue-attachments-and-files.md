@@ -158,10 +158,18 @@ branch of Checkout address autocomplete recorded the address answers of
 its tests again. So it holds 68,412 files and folders, and it changes
 2,243 files. Each limited list shows its notice in a quiet row: at the top
 of All files, and under the summary of Changes. The row stays in view
-while the rows scroll. Each count comes from the list, not from the limit,
-and shows with thousands separators. Items 1 F and 2 B show only in which
-rows appear, with no group and no label. A link to a file that a list
-leaves out still opens the file.
+while the rows scroll. Each count comes from the list, not from the limit.
+The file counts of the Changes tab and of the summary, and the counts in
+the notices, show with thousands separators. Items 1 F and 2 B show only
+in which rows appear, with no group and no label. A link to a file that a
+list leaves out still opens the file.
+
+Each file link of a limited screen opens the limited page of its file or
+list, from the table of `src/limitedListPaths.ts`: the rows and the tabs of
+the lists, the back links and the Files tab of a phone, the file tabs, and
+the file chips of the chat. So the reader keeps the lists of the large
+branch. The Checks tab and the other views of the workspace keep their
+standard pages.
 
 - `app/files/limited` has All files with 50,000 entries. Its row says
   "18,412 files and folders are not listed. Find them in the terminal, or
@@ -182,6 +190,12 @@ leaves out still opens the file.
   variant has the saved list after a failed repair. The totals and the row
   stay, and the amber notice "The latest list of changes is unavailable"
   stays under the lists, with its time.
+- `app/files/diff/limited`, `app/files/code/limited`, and
+  `app/files/markdown/limited` are the `limited` variants of the file pages.
+  They have the diff of AddressForm.tsx, the code file
+  useAddressAutocomplete.ts, and README.md open beside the limited lists,
+  with the row of the open file marked. On a phone, the back link of each
+  file page opens its limited list.
 
 `app/file-mentions/list/limited` has the list of `@` of the same branch, as
 [workspace links, file and skill mentions, and tools](catalogue-workspace-tools.md)

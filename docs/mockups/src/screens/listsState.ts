@@ -1,10 +1,9 @@
 import { listStates } from '../fixtures/limitedFiles'
 
 /**
- * The part of the workspace state that limits the file lists, from runner
- * file report limits: Cal's decision M4 = F of 20 November 2026, and items
- * 1 F, 2 B, and 3 A of 23 November 2026. `workspaceState.ts` adds it to the
- * state of the screen as an optional property.
+ * The part of the workspace state that limits the file lists, as the
+ * runner limits the reports of a large branch. `workspaceState.ts` adds it
+ * to the state of the screen as an optional property.
  */
 export const listsStateProperties = {
   /**

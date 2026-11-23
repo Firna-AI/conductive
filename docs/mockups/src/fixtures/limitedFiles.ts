@@ -1,11 +1,7 @@
+import { entryName } from '../../../../src/ui/components/chat/entryPaths'
 import type { MentionEntry } from '../../../../src/ui/components/chat/mentionEntry'
 import { mentionEntries } from './fileMentions'
-import {
-  changedFiles,
-  fileTree,
-  type ChangedFile,
-  type TreeEntry,
-} from './files'
+import { changedFiles, type ChangedFile, type TreeEntry } from './files'
 
 /**
  * The lists of All files and Changes: complete, or limited, as the lists of
@@ -83,42 +79,109 @@ const listedChanges: readonly ChangedFile[] = [
   fixtureChange('be/9000', 24, 8),
 ]
 
-/**
- * The tree of All files that the limited list keeps: the tree of the
- * branch with the folder of the recorded answers, which holds most of the
- * entries. The list keeps the changed files and their folders first, then
- * the other entries in path order, so the entries that come last, such as
- * the end of that folder and tsconfig.json, stay out.
- */
-const listedTree: readonly TreeEntry[] = fileTree.flatMap((entry) => {
-  if (entry.depth === 0 && entry.name === omittedRootFile) return []
-  if (entry.depth === 2 && entry.name === 'address.test.ts') {
-    return [entry, { name: 'fixtures', depth: 1, folder: true }]
-  }
-  return [entry]
-})
+/** The folders that hold a path, from the root down, such as `tests`. */
+function foldersOf(path: string): string[] {
+  const parts = path.split('/').slice(0, -1)
+  return parts.map((_, end) => parts.slice(0, end + 1).join('/'))
+}
+
+/** The entries with each path once: the first entry of each path. */
+function uniqueEntries(entries: readonly MentionEntry[]): MentionEntry[] {
+  const seen = new Set<string>()
+  return entries.filter((entry) => {
+    if (seen.has(entry.path)) return false
+    seen.add(entry.path)
+    return true
+  })
+}
 
 /**
- * The files and folders that the list of `@` finds in the limited tree. The
- * list reads the same tree as All files, so it finds no tsconfig.json.
+ * The files and folders that the limited tree keeps, by their paths from the
+ * root of the repository. The tree keeps the changed files that Changes
+ * lists, with their folders, then the other entries in path order. So it
+ * holds each recorded answer that Changes lists, and it leaves out the
+ * entries that come last, such as the end of the folder of the recorded
+ * answers and tsconfig.json. A deleted file has no entry. All files draws
+ * its rows from this one list, and the list of `@` searches it.
  */
-export const limitedMentionEntries: readonly MentionEntry[] = [
+export const retainedEntries: readonly MentionEntry[] = uniqueEntries([
   ...mentionEntries.filter((entry) => entry.path !== omittedRootFile),
-  { path: 'tests/fixtures', folder: true },
-  { path: fixtureFolder, folder: true },
-]
+  ...listedChanges
+    .filter((file) => file.change !== 'deleted')
+    .flatMap((file) => [
+      ...foldersOf(file.path).map((path) => ({ path, folder: true })),
+      { path: file.path, folder: false },
+    ]),
+])
+
+/** The folders that All files shows open in the limited tree. */
+const openFolders: ReadonlySet<string> = new Set([
+  'src',
+  'src/app',
+  'src/app/checkout',
+  'tests',
+  'tests/checkout',
+])
+
+/** The mark of each changed file, by its path. */
+const changeOf = new Map(listedChanges.map((file) => [file.path, file.change]))
+
+/** The folder that holds a path, or '' at the root. */
+function parentOf(path: string): string {
+  const slash = path.lastIndexOf('/')
+  return slash < 0 ? '' : path.slice(0, slash)
+}
+
+/** Folders before files, then each in the order of their names. */
+function compareEntries(a: MentionEntry, b: MentionEntry): number {
+  if (a.folder !== b.folder) return a.folder ? -1 : 1
+  const left = entryName(a).toLowerCase()
+  const right = entryName(b).toLowerCase()
+  return left < right ? -1 : left > right ? 1 : 0
+}
+
+/** The row of All files of a kept entry, with its mark and its tab. */
+function rowOf(entry: MentionEntry, depth: number, open: boolean): TreeEntry {
+  const change = changeOf.get(entry.path)
+  const preview =
+    entry.preview === 'code' || entry.preview === 'markdown'
+      ? entry.preview
+      : undefined
+  return {
+    name: entryName(entry),
+    depth,
+    folder: entry.folder,
+    ...(open ? { open } : {}),
+    ...(change ? { change } : {}),
+    ...(preview ? { preview } : {}),
+  }
+}
 
 /**
- * The lists of Checkout address autocomplete after its branch recorded the
- * address answers of its tests again, from runner file report limits
- * (decision M4 = F of 20 November 2026). The branch has 68,412 files and
- * folders and changes 2,243 files. All files keeps 50,000 entries and
- * leaves out 18,412. Changes keeps 1,000 files and leaves out 1,243, which
- * add 31,004 lines and remove 9,877. The counts come from the lists, not
- * from the limits.
+ * The rows of All files under the folder `parent`: each kept entry of the
+ * folder, with the rows of each open folder under its own row.
+ */
+function treeRows(parent: string, depth: number): TreeEntry[] {
+  return retainedEntries
+    .filter((entry) => parentOf(entry.path) === parent)
+    .sort(compareEntries)
+    .flatMap((entry) => {
+      const open = entry.folder && openFolders.has(entry.path)
+      const row = rowOf(entry, depth, open)
+      return open ? [row, ...treeRows(entry.path, depth + 1)] : [row]
+    })
+}
+
+/**
+ * The limited lists of Checkout address autocomplete after its branch
+ * recorded the address answers of its tests again. The branch has 68,412
+ * files and folders and changes 2,243 files. All files keeps 50,000 entries
+ * and leaves out 18,412. Changes keeps 1,000 files and leaves out 1,243,
+ * which add 31,004 lines and remove 9,877. The counts come from the lists,
+ * not from the limits.
  */
 export const limitedLists = {
-  tree: listedTree,
+  tree: treeRows('', 0),
   changes: listedChanges,
   /** The files and folders that All files leaves out. */
   omittedEntries: 18_412,

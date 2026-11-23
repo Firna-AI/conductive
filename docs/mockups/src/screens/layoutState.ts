@@ -28,3 +28,25 @@ export const layoutStateDefaults = {
   rightColumn: 'shown',
   sidebar: 'shown',
 } as const
+
+/** The right column in the middle of a drag that widens it, in px. */
+const widenedRight = 560
+
+/** The share of the file lists in the middle of a drag that raises the split. */
+const raisedSplit = 35
+
+type Resize = (typeof layoutStateProperties.resize.enum)[number]
+
+/**
+ * The sizes of the desktop columns in the middle of the drag of `resize`:
+ * the share of the file lists, and the width of the right column.
+ */
+export function resizedColumns(resize: Resize): {
+  filesShare: number | undefined
+  rightWidth: number | undefined
+} {
+  return {
+    filesShare: resize === 'split' ? raisedSplit : undefined,
+    rightWidth: resize === 'right' ? widenedRight : undefined,
+  }
+}

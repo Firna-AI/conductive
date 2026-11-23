@@ -99,9 +99,12 @@ link, and the bars of the cloud computer.
   in the terminal, or through the agent. The amber notice of a list that is
   not the latest one keeps its place under the lists, so a saved limited
   list shows both. `listNoticeCopy.ts` beside it holds the words, also the
-  line of the list of `@` when nothing in a limited tree matches.
-  `FileTabs.tsx` beside it links the tabs of limited lists to the limited
-  pages. Counts show with thousands separators, such as 2,243.
+  line of the list of `@` when nothing in a limited tree matches. The file
+  counts of the Changes tab and of the summary, and the counts in the
+  notices, show with thousands separators, such as 2,243. Each file link of
+  a limited screen opens the limited page of its file or list, from the
+  table of `src/limitedListPaths.ts`, which `ScreenLink` reads. The Checks
+  tab and the other views of the workspace keep their standard pages.
 - The tab of an HTML file shows its page in a frame, from HTML preview
   decision 1 A, as `app/files/html` shows. `PageFrame` in
   [`src/ui/components/files/`](../../src/ui/components/files/) holds the

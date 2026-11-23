@@ -1,10 +1,9 @@
 /**
- * The words of the file lists that leave out entries, from runner file
- * report limits (decision M4 = F): the notices of All files and Changes,
- * and the line of the list of `@` when nothing that it lists matches. The
- * words name the files that the list does not show and where the member
- * finds them. They use the counts of the lists, never the limits, and they
- * hold no fixture, so the app can take them over.
+ * The words of the file lists that leave out entries: the notices of All
+ * files and Changes, and the line of the list of `@` when nothing that it
+ * lists matches. The words name the files that the list does not show and
+ * where the member finds them. They use the counts of the lists, never the
+ * limits, and they hold no fixture, so the app can take them over.
  */
 
 /** The lists that can leave out entries. */
