@@ -18,7 +18,7 @@ import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
-import { noSkills, type SkillSource } from './skill-input'
+import { noSkills, withOrgSkillPaths, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
 
 /**
@@ -78,6 +78,7 @@ export function createCodexFactory(
       throw error
     }
     const orgSkills = await prepareCodexSkills(options, lifetime)
+    const inputs = withOrgSkillPaths(skills, options.home, orgSkills.inputs)
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
@@ -190,7 +191,7 @@ export function createCodexFactory(
                 threadId: thread,
                 expectedTurnId: activeTurn,
                 clientUserMessageId: command.message.id,
-                input: codexInput(command, skills, options),
+                input: codexInput(command, inputs, options),
               })
             } catch (error) {
               userIds = before
@@ -204,7 +205,7 @@ export function createCodexFactory(
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: codexInput(command, skills, options),
+                input: codexInput(command, inputs, options),
                 clientUserMessageId: command.message.id,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,

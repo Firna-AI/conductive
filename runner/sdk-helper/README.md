@@ -110,6 +110,15 @@ requirements, and
 [Repository trust](../../docs/protocol/org-skills-trust.md#what-claude-and-codex-get)
 gives the requirements of each trust policy.
 
+The skills scanner lists the same org skills. Each `skills` request can
+carry the `orgSkills` value with the leased current copy. The scanner makes
+the choice of an agent start, reads each chosen `SKILL.md` of the copy, and
+takes the name and the description from its safe view. It adds these skills
+after the skills of each agent's own folders. A failed read keeps the last
+org skills and warns. Each listed path is the `SKILL.md` of the copy. A
+Codex start gives an org skill of a message the path of the skill in its
+own view, by name, and leaves out an org skill that its view lacks.
+
 ## Development
 
 Run from the repository root with Node 24:
@@ -155,7 +164,8 @@ The Rust runner drives the helper directly. The release contains no separate run
 - [read-request.ts](src/read-request.ts) and [read-output.ts](src/read-output.ts) validate boundary data.
 - [claude.ts](src/providers/claude.ts) and [codex.ts](src/providers/codex.ts) start the two adapters.
 - [skills.ts](src/skills.ts) caches skill discovery from Claude folders and the Codex app server or fallback folders.
-- [skill-input.ts](src/providers/skill-input.ts) selects explicit Codex skill input from each message.
+- [skill-org.ts](src/skill-org.ts) lists the org skills of the copy for each agent.
+- [skill-input.ts](src/providers/skill-input.ts) selects explicit Codex skill input from each message and maps org skills to the view of the start.
 - [lifetime.ts](src/providers/lifetime.ts) waits for agent exit and removes credentials.
 - [skill-view.ts](src/providers/skill-view.ts) exports and removes the safe org skills view.
 - [skill-metadata.ts](src/providers/skill-metadata.ts) reads names and limits exported metadata.

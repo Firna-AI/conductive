@@ -164,7 +164,10 @@ text.
   item `{ "type": "skill", "name": "<name>", "path": "<path>" }` for each
   distinct skill of the text that the current Codex list holds, in the
   order of the text. `path` is the absolute path of the `SKILL.md` from
-  that list, from `skills/list` or from the scan of the Codex folders. The
+  that list, from `skills/list` or from the scan of the Codex folders. An
+  org skill of the list takes the path of the skill in the org skills view
+  of the session, by name. When that view does not hold the skill, the
+  input gets no item for it. The
   read instruction and the lines of the attached files follow, and the
   sender line comes last.
 - `turn/start` and `turn/steer` get the same items, so a message during a
