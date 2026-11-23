@@ -3,6 +3,8 @@ import type { FileTreeResponse } from '../../src/shared/generated/FileTreeRespon
 import { parseFileEvent } from './parsers'
 import {
   loadFiles,
+  readFileList,
+  readFilesManifest,
   saveFiles,
   type FilesStorage,
   type StoredFiles,
@@ -83,11 +85,19 @@ export class FilesState {
   }
 
   tree(): Promise<FileTreeResponse | null> {
-    return this.serialize(async () => (await this.load()).tree)
+    return this.serialize(async () =>
+      readFileList(this.storage, await readFilesManifest(this.storage), 'tree'),
+    )
   }
 
   changes(): Promise<ChangesResponse | null> {
-    return this.serialize(async () => (await this.load()).changes)
+    return this.serialize(async () =>
+      readFileList(
+        this.storage,
+        await readFilesManifest(this.storage),
+        'changes',
+      ),
+    )
   }
 
   private serialize<T>(operation: () => Promise<T>): Promise<T> {
