@@ -11,12 +11,12 @@ for the screens.
 
 ## Rules for this code
 
-- The parts reuse the pure parts of the mockups in
-  `docs/mockups/src/components/explain/`, as the rest of the chat does: the
+- The parts and the mockups both import the shared parts in
+  `src/ui/components/explain/`, as the rest of the chat does: the
   words of `explainCopy.ts`, `MarkGlyph`, and the CSS of `MarkedText`,
   `ExplainButton`, `ExplainPopover`, and `FollowUpField`. A word or a look
   that only the app needs, such as the spoken name of the follow-up field
-  or the whole-message mark of a bubble, goes into those mockup files too,
+  or the whole-message mark of a bubble, goes into those shared files too,
   so one source serves both. `explain.module.css` holds only what the app
   does: the highlights, the slots and the buttons of the states, the box of
   the open mark, and the places of Explain and of the popover.
@@ -82,7 +82,14 @@ for the screens.
   turn failed, and the icon of Explain otherwise. A read-only workspace
   shows only an ended turn or a failure.
 - At most one popover is open, and a change of the shown session closes
-  it. The popover lies in the layer of the app frame, as a dialog does. On
+  it. On a computer, a press outside the popover closes it, and the focus
+  goes where the press puts it. A press counts as the pointer goes down.
+  `keepPopover` of `press-outside.ts` keeps the popover at a press in the
+  Explain layer, the popover and the menu of overlapping marks, also in a
+  part that lies in a portal. It also keeps it at a press on a mark, whose
+  click opens its own popover or menu. The shell's `usePressOutside`
+  reads that mark. A sheet on a phone stays open. The popover lies in the
+  layer of the app frame, as a dialog does. On
   a computer, CSS anchor positioning keeps it at the box of the open mark,
   and a browser without it gets the same place from `placePanel`. On a
   phone it is a sheet, which stops at the top of the chat at full height.
@@ -123,6 +130,12 @@ for the screens.
   written prompt, gives the focus back on Escape, steers and stops a turn,
   reopens a closed explanation for a follow-up and for Expand, shows a
   read-only popover, and follows a linked session.
+- `PopoverDismiss.dom.test.tsx` closes the popover at a press outside it
+  on a computer, with no move of the focus, and keeps it at a press in it
+  and on its mark. A press on the text of overlapping marks keeps it while
+  their menu opens, and a press on a row of the menu keeps it until the
+  row opens its own popover. On a
+  phone, the sheet stays open.
 - `PopoverChat.dom.test.tsx` shows the bar of a stopped cloud computer in
   place of the follow-up field, and moves the time of a running
   explanation on with a fake clock while its parent session is idle.
@@ -144,7 +157,7 @@ for the screens.
 - `explanations.ts`: `explanationsOf`, the explanations of a session with
   the state of each mark. `quote-match.ts`: `findQuote`.
 - `MarkedMessage.tsx` and `MarkParts.tsx`: the text of a message with its
-  marks, the buttons of the states with the mockups' `MarkGlyph`, the
+  marks, the buttons of the states with the shared `MarkGlyph`, the
   whole-message mark, and the box of the open mark. `mark-layout.ts` and
   `useMarks.ts` lay the marks out, and `highlights.ts` draws their fill.
   `useMarks.ts` also gives `markRegions` and `marksAt`, where the press and
@@ -152,7 +165,8 @@ for the screens.
 - `ExplainButton.tsx`: Explain by the selection and above a phone composer.
 - `ExplainLayer.tsx`, `ExplainPopover.tsx`, `PopoverChat.tsx`,
   `PopoverParts.tsx`, `FollowUpField.tsx`: the menu, the popover, its chat,
-  its header and handle, and its field. `popover-place.ts` places it.
+  its header and handle, and its field. `popover-place.ts` places it, and
+  `press-outside.ts` marks the presses that keep it open.
 - `explain.module.css`: only the rules of the app, such as the highlights,
   the slots, and the places.
 - `../state/explain-actions.ts`: `explainQuote` and `sendFollowUp`.

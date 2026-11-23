@@ -7,10 +7,10 @@ import {
 } from 'lucide-react'
 import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import { paths } from '../../paths'
-import a11y from '../common/a11y.module.css'
-import { IconButton } from '../common/actions'
-import { classes } from '../common/classes'
-import { Menu } from '../common/Menu'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { Menu } from '../../../../../src/ui/components/common/Menu'
 import { ScreenLink } from '../common/ScreenLink'
 import {
   serviceControlCopy,
@@ -19,10 +19,13 @@ import {
   serviceSourceLabel,
   serviceSourceText,
   type ServiceEntry,
-} from './serviceCopy'
+} from '../../../../../src/ui/components/tools/serviceCopy'
 import { serviceMenu } from './serviceMenu'
-import { ServiceState, serviceStatusOf } from './ServiceState'
-import styles from './ServiceList.module.css'
+import {
+  ServiceState,
+  serviceStatusOf,
+} from '../../../../../src/ui/components/tools/ServiceState'
+import styles from '../../../../../src/ui/components/tools/ServiceList.module.css'
 
 /**
  * The screens that the controls of a row lead to, where the mockups draw

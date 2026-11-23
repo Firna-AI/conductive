@@ -3,14 +3,14 @@
 - **Severity:** Medium. **Effort:** Small. **Confidence:** High. **Harder later:** Yes.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-11, from branch `calummoore/composer-file-drag-and-drop`, as Composer drops decision 1 of its plan, after the second-pass options check of 11 November 2026.
-- **Location:** `docs/mockups/src/components/chat/ChipRemove.module.css:67-89`, `docs/mockups/src/components/chat/AttachedFileChip.module.css:41-62`, `docs/mockups/src/components/chat/InlineChip.module.css:8-16`, `docs/mockups/src/components/chat/ChipTextField.module.css:7-29`, and `docs/protocol/file-mentions.md:112-115`.
+- **Location:** `src/ui/components/chat/ChipRemove.module.css:67-89`, `src/ui/components/chat/AttachedFileChip.module.css:41-62`, `src/ui/components/chat/InlineChip.module.css:8-16`, `src/ui/components/chat/ChipTextField.module.css:7-29`, and `docs/protocol/file-mentions.md:112-115`.
 - **Reason:** The options trade larger touch targets against taps on nearby text, and option A drops a protocol rule, so only the user can choose.
 
 - **Source:** Implementation. **Category:** Mockup.
 - **Terms:**
   - **Chip:** a small rounded pill in a line of text that stands for one thing, such as a file. It is one unit of the text.
-  - **Message field:** the text area of each composer, `ChipTextField`. The app imports its styles from `docs/mockups/src/components/chat/ChipTextField.module.css`.
-  - **End ×:** the Remove button at the end of a chip where no pointer hovers, as on a phone. `ChipEndRemove` in `docs/mockups/src/components/chat/ChipRemove.tsx` draws it.
+  - **Message field:** the text area of each composer, `ChipTextField`. The app imports its styles from `src/ui/components/chat/ChipTextField.module.css`.
+  - **End ×:** the Remove button at the end of a chip where no pointer hovers, as on a phone. `ChipEndRemove` in `src/ui/components/chat/ChipRemove.tsx` draws it.
   - **Touch area:** the part of the screen that takes a tap for a control. It can be larger than the control that the screen draws.
 - **Background:**
   - The composer file drops change puts each attached file into the text of the message box as a chip. The user chose this on 10 November 2026, as decision 263 A. A file from the paperclip goes into the text at the caret, as a dropped file does. The row of files above the text goes away.
@@ -54,8 +54,8 @@
   - A sheet on a long press, a × in place of each icon, or Backspace alone. Each of these breaks decision 217 D of 9 November 2026, which keeps a × at the end of each chip.
 - **Wider fix:** B. Shared controls use one touch rule. It prevents the class when its rule is one shared style that each control in a line of text uses. Today `RunningText.module.css`, `ParityIntro.module.css`, and `parityRows.module.css` each repeat such a rule.
 - **Previous examples:** The workspace header and marketing text enlarge small controls over static text. An editable field has different tap behaviour, because a tap places its caret.
-  - `docs/mockups/src/components/workspace/CopyLinkButton.tsx:18-27` draws the label of a phone header 21 px high, with a touch area of 44 px "over no other control". `docs/mockups/design.md:190-193` states it.
-  - The links of the marketing text use an `::after` area of 44 px, in `docs/mockups/src/components/marketing/RunningText.module.css:10-19`, `docs/mockups/src/components/parity/ParityIntro.module.css:60-68`, and `docs/mockups/src/components/parity/parityRows.module.css:128-136`.
+  - `src/ui/components/workspace/CopyLinkButton.tsx:18-27` draws the label of a phone header 21 px high, with a touch area of 44 px "over no other control". `docs/mockups/design.md:190-193` states it.
+  - The links of the marketing text use an `::after` area of 44 px, in `src/ui/components/marketing/RunningText.module.css:10-19`, `docs/mockups/src/components/parity/ParityIntro.module.css:60-68`, and `docs/mockups/src/components/parity/parityRows.module.css:128-136`.
 - **Related:** `plans/follow-ups/composer-mixed-refused-items.md` holds the other open question of the composer file drops work. That work waits for both answers, but neither answer depends on the other.
 - **Recommendation:** B, kept by the options check. It keeps the existing attachment touch rule and gives inline controls one shared rule.
 - **Action:** ask the user, because the options trade larger targets against taps on adjacent text, and A changes a protocol requirement.

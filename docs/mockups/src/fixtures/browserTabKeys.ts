@@ -1,4 +1,4 @@
-import type { Shortcut } from '../components/common/KeyChips'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
 
 const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9'] as const
 

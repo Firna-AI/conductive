@@ -8,16 +8,22 @@ import {
   thisMac,
   untilStop,
 } from '../../fixtures/mac'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { ChangeOutcome, type ChangeStatus } from '../mac/ChangeOutcome'
-import { useMacApp, type MacChange } from '../mac/MacApp'
+import {
+  ChangeOutcome,
+  type ChangeStatus,
+} from '../../../../../src/ui/components/mac/ChangeOutcome'
+import {
+  useMacApp,
+  type MacChange,
+} from '../../../../../src/ui/components/mac/MacApp'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
-import { thisMacDescription } from './thisMacCopy'
-import styles from './ThisMacSection.module.css'
+import { thisMacDescription } from '../../../../../src/ui/components/settings/thisMacCopy'
+import styles from '../../../../../src/ui/components/settings/ThisMacSection.module.css'
 
 /** The result of Remove of `npm run lint`, in each state that shows one. */
 const removals: Partial<

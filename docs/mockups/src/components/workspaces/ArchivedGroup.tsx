@@ -4,7 +4,7 @@ import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.m
 import { instanceKey } from '../../instanceKey'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import styles from './SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 /** The one row whose menu, field, or hover a view draws, with what it draws. */
 export type DrawnRow = { workspace: string; controls: RowControls }

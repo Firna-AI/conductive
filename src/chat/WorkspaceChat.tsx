@@ -8,7 +8,7 @@ import {
 import type { Agent } from '../shared/generated/Agent'
 import type { WorkspaceView } from '../shared/workspace-view'
 
-import { TouchScreen } from '../../docs/mockups/src/components/common/touch'
+import { TouchScreen } from '../ui/components/common/touch'
 import { useFollowTabs } from '../app/tab-places'
 import {
   ChatDropAreaProvider,

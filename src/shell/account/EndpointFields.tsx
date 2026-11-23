@@ -1,8 +1,8 @@
 import { Input } from '@firna/ui/input'
 import type { Agent } from '../../shared/generated/Agent'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { agentConnectCopy } from '../../../docs/mockups/src/components/settings/agentConnectCopy'
-import styles from '../../../docs/mockups/src/components/settings/AgentConnectForm.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { agentConnectCopy } from '../../ui/components/settings/agentConnectCopy'
+import styles from '../../ui/components/settings/AgentConnectForm.module.css'
 import type { SecretForm } from '../../app/secret-form'
 import { useStore } from '../../app/store'
 import {

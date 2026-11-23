@@ -1,8 +1,8 @@
 import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
 import { instanceKey } from '../../instanceKey'
-import a11y from '../common/a11y.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import type { WorkspaceRow } from './sections'
-import styles from './SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 /**
  * The sub-workspaces that move with a tree, in the words that a screen

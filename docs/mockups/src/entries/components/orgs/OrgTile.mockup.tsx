@@ -5,7 +5,7 @@ import {
   OrgTile,
   PersonAvatar,
 } from '../../../components/orgs/OrgTile'
-import { ORG_COLORS } from '../../../design/orgColors'
+import { ORG_COLORS } from '../../../../../../src/ui/design/orgColors'
 import { orgs } from '../../../fixtures/orgs'
 import { people } from '../../../fixtures/members'
 import { orgSchema } from '../layout/railSchemas'

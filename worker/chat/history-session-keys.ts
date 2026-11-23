@@ -5,3 +5,7 @@ export const historySessionPrefix = (sessionId: string) =>
   `${chatKey('history-session', sessionId)}:`
 export const historySessionKey = (sessionId: string, eventNumber: number) =>
   `${historySessionPrefix(sessionId)}${String(eventNumber).padStart(20, '0')}`
+export const capabilityHistoryPrefix = (sessionId: string) =>
+  `${chatKey('history-capability-note', sessionId)}:`
+export const capabilityHistoryKey = (sessionId: string, eventNumber: number) =>
+  `${capabilityHistoryPrefix(sessionId)}${String(eventNumber).padStart(20, '0')}`

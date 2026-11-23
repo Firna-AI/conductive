@@ -11,13 +11,10 @@ import type { AnswerReading } from '../../../../../src/chat/markdown/answer-part
 import type { Attachment as AppAttachment } from '../../../../../src/shared/generated/Attachment'
 import type { FileEntry } from '../../../../../src/shared/generated/FileEntry'
 import type { Attachment } from '../../fixtures/attachments'
-import {
-  mentionEntries,
-  repositoryFolder,
-  type MentionEntry,
-} from '../../fixtures/fileMentions'
+import { mentionEntries, repositoryFolder } from '../../fixtures/fileMentions'
+import { type MentionEntry } from '../../../../../src/ui/components/chat/mentionEntry'
 import { skills } from '../../fixtures/skills'
-import { entryName } from './entryPaths'
+import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
 import { webLinkOf, type RowLinks } from './workspaceLinks'
 
 /** The key of an entry of the tree: whether it is a folder, and its path. */

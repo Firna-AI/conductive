@@ -1,17 +1,20 @@
 import { InputFrame } from '@firna/ui/input'
 import { inviteLimit, joinLink, ownInvite } from '../../fixtures/waitlist'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { inlineText } from '../../entries/components/common/InlineText.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
-import { useControlSizes } from '../common/touch'
-import { inviteCodeCopy as copy, type InviteState } from './inviteCodeCopy'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import {
+  inviteCodeCopy as copy,
+  type InviteState,
+} from '../../../../../src/ui/components/settings/inviteCodeCopy'
 import {
   section,
   sectionText,
 } from '../../entries/components/settings/Section.mockup'
-import styles from './InviteCodeSection.module.css'
+import styles from '../../../../../src/ui/components/settings/InviteCodeSection.module.css'
 
 /** How many of the invites are left, beside the title. */
 function Count(props: { left: number }) {

@@ -7,7 +7,7 @@ import {
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
-import { useMacApp } from '../components/mac/MacApp'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
 import { ChatMarks } from '../components/explain/chatMarks'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
@@ -46,7 +46,7 @@ import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, noMessages, tabsFor } from './workspaceTabs'
-import styles from './WorkspaceScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
 const widenedRight = 560

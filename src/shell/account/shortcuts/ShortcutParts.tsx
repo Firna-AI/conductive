@@ -7,12 +7,12 @@ import {
   type Ref,
 } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
-import { classes } from '../../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../../ui/components/common/classes'
 import {
   KeyChips,
   spokenShortcut,
-} from '../../../../docs/mockups/src/components/common/KeyChips'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+} from '../../../ui/components/common/KeyChips'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import { useServices } from '../../../app/services'
 import {
   restoreLayoutModifiers,
@@ -63,7 +63,7 @@ export function spokenKey(
   return spokenShortcut(shortcutTokens(key, keyboard))
 }
 
-/** A key as its keyboard prints it, in the key chips of the mockups. */
+/** A key as its keyboard prints it, in the shared `KeyChips`. */
 export function Keys(props: {
   shortcut: ShortcutKeyText
   keyboard: ShortcutKeyboard

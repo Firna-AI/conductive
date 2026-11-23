@@ -2,7 +2,7 @@ import {
   agentPrompt,
   type AgentAction,
   type PromptFacts,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+} from '../ui/components/workspace/barCopy'
 import type { GitHubCheck } from '../shared/github'
 import type { GitHubSnapshot } from './githubClient'
 
@@ -47,7 +47,7 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
 
 /**
  * The fixed prompt of an agent action, with the facts of the state that the
- * bar shows. The words come from the copy module of the mockups.
+ * bar shows. The words come from the shared copy module `barCopy`.
  */
 export function promptOf(
   action: AgentAction,

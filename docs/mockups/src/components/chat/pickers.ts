@@ -10,7 +10,7 @@ import {
   type AgentKey,
 } from '../../fixtures/agents'
 import { sameChoice } from '../../fixtures/favourites'
-import type { Shortcut } from '../common/KeyChips'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
 
 export const divider: MenuEntryData = { kind: 'divider' }
 

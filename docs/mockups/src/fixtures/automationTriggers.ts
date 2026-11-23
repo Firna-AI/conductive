@@ -4,7 +4,10 @@
  * schedules and of the author filter.
  */
 
-import type { AuthorFilter, Trigger } from './automations'
+import type {
+  AuthorFilter,
+  Trigger,
+} from '../../../../src/ui/components/automations/triggers'
 
 /** A trigger in the form of the owner, with the state of its editor. */
 export type TriggerEdit = {

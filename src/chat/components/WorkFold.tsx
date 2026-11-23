@@ -1,5 +1,5 @@
 import { memo, useState, type ReactNode } from 'react'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
+import styles from '../../ui/components/chat/ToolGroup.module.css'
 import { LostEventLine } from './LostEventLine'
 import { MessageLine } from './MessageLine'
 import { CallLine, FoldLine } from './ToolGroup'

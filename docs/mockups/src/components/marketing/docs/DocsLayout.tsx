@@ -1,5 +1,5 @@
-import type { Viewport } from '@mokly/mokly'
-import { classes } from '../../common/classes'
+import type { Viewport } from '../../../../../../src/ui/components/common/viewport'
+import { classes } from '../../../../../../src/ui/components/common/classes'
 import { guideWithNeighbours } from './docsGuides'
 import type { DocsPage } from './docsPage'
 import { DocsContents } from './DocsContents'

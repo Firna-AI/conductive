@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react'
 import { useToast } from '@firna/ui/toast'
-import type { QuestionTarget } from '../../../docs/mockups/src/components/operator/operatorCopy'
+import type { QuestionTarget } from '../../ui/components/operator/operatorCopy'
 import { readOperatorUser } from '../../app/api/read-operator-pages'
 import { approveUser, disableCode } from '../../app/operator-access'
 import { OperatorTarget } from '../../app/operator-target'

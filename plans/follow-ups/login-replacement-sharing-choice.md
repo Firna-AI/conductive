@@ -51,7 +51,7 @@
     - Cost: a new Terms revision, with a new `TERMS_VERSION` and a new effective date at `src/marketing/terms.ts:30-31`. Each user accepts it at the next sign-in. Cal approves the Terms wording and the changed requirement.
     - Risk: words alone keep nothing. Each rotation still resets the setting, and the owner must set it again by hand.
     - Effort: Small.
-  - **B.** Warn at the share switch, together with A. Add one line to the share setting in Account: "Remove clears this choice. A new login starts with the default of its kind." The text lives in the shared part `docs/mockups/src/components/settings/LoginShare.tsx`, which the app and the mockups both render.
+  - **B.** Warn at the share switch, together with A. Add one line to the share setting in Account: "Remove clears this choice. A new login starts with the default of its kind." The text lives in the shared part `src/ui/components/settings/LoginShare.tsx`, which the app and the mockups both render.
     - Cost: the work of A, because the Terms sentence stays false. Also the copy change, a protocol line for the new text, and a check of the copy and the mockup by hand. Cal approves the new product text and A.
     - Tests: keep the existing tests of the sharing behaviour, such as `src/shell/account/LoginShareSetting.test.tsx`. Update the row text that `src/shell/account/AccountScreen.test.tsx:129-131` expects. Add no test of the new sentence. Only a new copy decision could make such a test fail, so under the `testing` skill it protects nothing.
     - Risk: one more line under each connected login. A warning keeps nothing.

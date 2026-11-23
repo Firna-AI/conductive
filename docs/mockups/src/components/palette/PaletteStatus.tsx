@@ -7,7 +7,7 @@ import {
   type PaletteStatus,
   type PaletteTab,
 } from './paletteViews'
-import styles from './CommandPalette.module.css'
+import styles from '../../../../../src/ui/components/palette/CommandPalette.module.css'
 
 /** The notice of each read that failed: it names what did not load. */
 const failures = {

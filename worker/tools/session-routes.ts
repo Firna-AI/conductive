@@ -1,4 +1,5 @@
 import type { AgentReadSessionRequest } from '../../src/shared/generated/AgentReadSessionRequest'
+import type { AgentGetMessageRequest } from '../../src/shared/generated/AgentGetMessageRequest'
 import { MACHINE_PATHS } from '../../src/shared/agent-tools'
 
 import { sessionTitleFrom } from '../../src/shared/session-title'
@@ -97,6 +98,11 @@ function readOptions(query: URLSearchParams): AgentReadSessionRequest {
   }
 }
 
+/** Older runners send no query, so they get no agent message. */
+function messageOptions(query: URLSearchParams): AgentGetMessageRequest {
+  return { agentMessages: query.get('agentMessages') === 'true' }
+}
+
 export async function readSessionsFromTool(
   url: URL,
   db: D1Database,
@@ -130,6 +136,7 @@ export async function readSessionsFromTool(
       workspaceId,
       sessionId,
       decode(match.messageId),
+      messageOptions(url.searchParams),
     )
   return services.readSession(
     caller.orgId,

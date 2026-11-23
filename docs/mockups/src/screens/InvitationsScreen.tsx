@@ -16,7 +16,7 @@ import { account, orgs } from '../fixtures/orgs'
 import { paths } from '../paths'
 import { inviteRows } from './inviteRows'
 import { defined } from '../defined'
-import styles from './InvitationsScreen.module.css'
+import styles from '../../../../src/ui/screens/InvitationsScreen.module.css'
 
 export const invitationsSchema = {
   type: 'object',

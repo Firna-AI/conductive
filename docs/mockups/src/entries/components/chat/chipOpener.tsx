@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ChipOpener } from '../../../components/chat/WorkspaceChip'
+import type { ChipOpener } from '../../../../../../src/ui/components/chat/WorkspaceChip'
 import { ScreenLink } from '../../../components/common/ScreenLink'
 
 /** The screen that a press on a chip opens, when the mockups draw it. */

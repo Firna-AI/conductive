@@ -4,23 +4,25 @@ import { people, type PersonKey } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import headingStyles from '../common/MarkdownHeadings.module.css'
-import prose from '../common/MarkdownProse.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import headingStyles from '../../../../../src/ui/components/common/MarkdownHeadings.module.css'
+import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { useMessageMarks, type MessageMarks } from '../explain/chatMarks'
 import { markedDrawing } from '../explain/markedDrawing'
 import { MarkedText } from '../explain/MarkedText'
 import { WholeMark } from '../explain/WholeMark'
-import { AgentBlocks } from './AgentBlocks'
+import { AgentBlocks } from '../../../../../src/ui/components/chat/AgentBlocks'
 import { agentBlocks } from '../../entries/components/chat/AgentBlocks.mockup'
-import { continuedLine } from '../../entries/components/chat/ContinuedLine.mockup'
-import { RepositoryChangedLine } from './RepositoryChangedLine'
 import type { SingleItem } from './groupItems'
+import { ChangeNoteView } from './ChangeNoteView'
 import { linkedLine } from '../../entries/components/chat/LinkedLine.mockup'
 import { lostLine } from '../../entries/components/chat/LostLine.mockup'
-import { turnFilesUnavailable, unlistedFiles } from './lostCopy'
+import {
+  turnFilesUnavailable,
+  unlistedFiles,
+} from '../../../../../src/ui/components/chat/lostCopy'
 import { macCommand } from '../../entries/components/chat/MacCommand.mockup'
 import { filesWithoutPlace, MessageText, useSentParts } from './MessageText'
 import {
@@ -32,14 +34,17 @@ import { isLateRequest } from './requests'
 import { SecretRequest } from './SecretRequest'
 import { SecretRun } from './SecretRun'
 import { sentFiles } from '../../entries/components/chat/SentFiles.mockup'
-import { standardSpeedText } from './speedCopy'
-import type { StopSource } from './StopLine'
+import { standardSpeedText } from '../../../../../src/ui/components/chat/speedCopy'
+import type { StopSource } from '../../../../../src/ui/components/chat/StopLine'
 import { stopLine } from '../../entries/components/chat/StopLine.mockup'
-import { memberStopped, stoppedUnnamed } from './stopCopy'
-import { WakeLine } from './WakeLine'
+import {
+  memberStopped,
+  stoppedUnnamed,
+} from '../../../../../src/ui/components/chat/stopCopy'
+import { WakeLine } from '../../../../../src/ui/components/chat/WakeLine'
 import { turnEnd } from '../../entries/components/chat/TurnEnd.mockup'
 import { defined } from '../../defined'
-import styles from './ChatItemView.module.css'
+import styles from '../../../../../src/ui/components/chat/ChatItemView.module.css'
 
 type StoppedItem = Extract<SingleItem, { kind: 'stopped' }>
 
@@ -230,22 +235,9 @@ export function ChatItemView(props: { item: SingleItem; viewer: PersonKey }) {
         />
       )
     case 'continued':
-      return (
-        <continuedLine.Component
-          base={item.base}
-          branch={item.branch}
-          moklyInstance="continued-line"
-          who={item.by === viewer ? 'You' : people[item.by].name}
-        />
-      )
     case 'repository-changed':
-      return (
-        <RepositoryChangedLine
-          branch={item.branch}
-          repository={item.repository}
-          who={item.by === viewer ? 'You' : people[item.by].name}
-        />
-      )
+    case 'capabilities-changed':
+      return <ChangeNoteView item={item} viewer={viewer} />
     case 'stopped': {
       const source = stopSource(item, viewer)
       return source.kind === 'words' ? (

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { COPYING_CLASS } from '../../../docs/mockups/src/components/chat/ChipCopyText'
+import { COPYING_CLASS } from '../../ui/components/chat/ChipCopyText'
 
 /**
  * The mark of a file chip, or of the chip of an attached file, in a sent

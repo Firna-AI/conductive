@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { ToastLayer } from '../../../components/common/ToastLayer'
-import { noop } from '../../../noop'
+import { noop } from '../../../../../../src/ui/noop'
 
 /**
  * The parts of a Firna toast that the screens give, as JSON. The action of

@@ -8,7 +8,7 @@
 
 - **Terms:**
   - **Pull request bar:** the strip at the top of the right column of a workspace. It shows the GitHub state of the workspace branch and one main action.
-  - **Tint:** the green, amber, red, or merged purple fill of the main action, which matches the state of the bar. `TintedTheme` in `docs/mockups/src/components/common/tint.tsx` applies it, from the `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill` tokens of `docs/mockups/src/design/palette.ts`.
+  - **Tint:** the green, amber, red, or merged purple fill of the main action, which matches the state of the bar. `TintedTheme` in `src/ui/components/common/tint.tsx` applies it, from the `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill` tokens of `src/ui/design/palette.ts`.
   - **Outline tone:** the `secondary` tone of the Firna button, with a border and no fill. Archive uses it.
 - **Background:**
   - On 10 and 11 November 2026 the user asked for two fills in the bar. The main action of a tinted bar takes the tint of the bar. On a bar without a tint, the main action takes the outline tone: Create PR and Commit and push on a neutral bar. A later request on 11 November gives the merged bar and Continue a purple tint. `docs/mockups/design-bar.md` states both.

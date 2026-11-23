@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { WorkspaceMark } from '../../../components/workspaces/WorkspaceMark'
+import { WorkspaceMark } from '../../../../../../src/ui/components/workspaces/WorkspaceMark'
 import { activityStatuses, githubSchema } from './workspaceSchemas'
 
 /**

@@ -35,7 +35,7 @@ interface Outcome {
 }
 
 /**
- * The picture of an image file, with the layout of the mockups'
+ * The picture of an image file, with the layout of the shared
  * `ImageView`: in the middle of the page, at its own size or smaller, so
  * that it fits the page, over its zoom bar. The page shows the picture once
  * the browser knows its size, and a new address keeps the last picture on

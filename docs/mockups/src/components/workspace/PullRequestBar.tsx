@@ -2,14 +2,17 @@ import { ChevronRight, GitBranch, GitPullRequest } from 'lucide-react'
 import { pullRequest } from '../../fixtures/pullRequests'
 import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import {
   barButtons,
   barMessage,
 } from '../../entries/components/workspace/BarActions.mockup'
-import { agentActionLabels, barLabels } from './barCopy'
-import type { BarModel } from './barModel'
+import {
+  agentActionLabels,
+  barLabels,
+} from '../../../../../src/ui/components/workspace/barCopy'
+import type { BarModel } from '../../../../../src/ui/components/workspace/barModel'
 import {
   branches,
   pullRequestNumber,

@@ -1,18 +1,21 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { CircleAlert } from 'lucide-react'
 import type { IdleStopMinutes } from '../../../../src/shared/operator-idle-stop'
-import { ActionButton } from '../components/common/actions'
+import { ActionButton } from '../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { OperatorPage } from '../components/operator/OperatorPage'
-import { StopTimeChoice } from '../components/operator/StopTimeChoice'
+import { StopTimeChoice } from '../../../../src/ui/components/operator/StopTimeChoice'
 import {
   stopTimeChangedLine,
   stopTimeWords,
-} from '../components/operator/stopTimeCopy'
-import { Section, SectionText } from '../components/settings/Section'
+} from '../../../../src/ui/components/operator/stopTimeCopy'
+import {
+  Section,
+  SectionText,
+} from '../../../../src/ui/components/settings/Section'
 import { account } from '../fixtures/orgs'
 import { paths } from '../paths'
-import styles from './OperatorProvidersScreen.module.css'
+import styles from '../../../../src/ui/screens/OperatorProvidersScreen.module.css'
 
 export const operatorSettingsSchema = {
   type: 'object',

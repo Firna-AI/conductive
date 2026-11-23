@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import type { Build } from '../../fixtures/computer'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { instanceKey } from '../../instanceKey'
-import styles from './BuildSection.module.css'
+import styles from '../../../../../src/ui/components/settings/BuildSection.module.css'
 
 /**
  * A build as the data of its result: its time, its result, and its length,

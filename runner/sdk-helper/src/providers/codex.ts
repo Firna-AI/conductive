@@ -16,9 +16,10 @@ import { readComputerServer } from './computer-mcp'
 import { prepareProviderHome } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { InputReceipts } from './input-receipts'
 import { startProcess, type StartProcess } from './process'
 import { JsonRpc } from './rpc'
-import { noSkills, type SkillSource } from './skill-input'
+import { noSkills, withOrgSkillPaths, type SkillSource } from './skill-input'
 import type { ProviderFactory } from './types'
 
 /**
@@ -78,9 +79,11 @@ export function createCodexFactory(
       throw error
     }
     const orgSkills = await prepareCodexSkills(options, lifetime)
+    const inputs = withOrgSkillPaths(skills, options.home, orgSkills.inputs)
     let threadId: string | null = null
     let activeTurn: string | null = null
     let userIds: string[] = []
+    const receipts = new InputReceipts(options.event, 'input')
     let choice = options.choice
     let activeChoice = choice
     let closed = false
@@ -113,20 +116,28 @@ export function createCodexFactory(
           if (otherThread(params, threadId)) return
           if (method === 'turn/started')
             activeTurn = string(object(object(params).turn).id)
-          codexNotification(method, params, userIds, options.event)
+          if (method === 'item/completed') {
+            const item = object(object(params).item)
+            if (
+              item.type === 'userMessage' &&
+              typeof item.clientId === 'string'
+            )
+              receipts.read([item.clientId])
+          }
+          codexNotification(method, params, userIds, receipts.emit)
           if (method === 'turn/completed') activeTurn = null
         },
         () => {
           void lifetime.close().then(
             () => {
               if (!closed)
-                options.event({
+                receipts.emit({
                   type: 'failed',
                   code: 'agent_exited',
                   message: 'The agent process ended.',
                 })
             },
-            (error: unknown) => options.event(failureCause(error)),
+            (error: unknown) => receipts.emit(failureCause(error)),
           )
         },
       )
@@ -144,7 +155,7 @@ export function createCodexFactory(
       return closing
     }
     const abort = () => {
-      void close().catch((error: unknown) => options.event(failureCause(error)))
+      void close().catch((error: unknown) => receipts.emit(failureCause(error)))
     }
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()
@@ -182,30 +193,34 @@ export function createCodexFactory(
       options.event({ type: 'conversation', id: thread })
       return {
         send: async (command) => {
+          if (command.type === 'notice' && !activeTurn) return
+          if (!activeTurn) receipts.reset()
+          const inputId = receipts.add(command)
           if (activeTurn) {
             const before = [...userIds]
-            userIds.push(command.message.id)
+            if (command.type !== 'notice') userIds.push(inputId)
             try {
               await rpc.request('turn/steer', {
                 threadId: thread,
                 expectedTurnId: activeTurn,
-                clientUserMessageId: command.message.id,
-                input: codexInput(command, skills, options),
+                clientUserMessageId: inputId,
+                input: codexInput(command, inputs, options),
               })
             } catch (error) {
               userIds = before
+              receipts.discard(inputId)
               throw error
             }
           } else {
-            userIds = [command.message.id]
+            userIds = [inputId]
             activeChoice = choice
             if (choice.fast)
               options.event({ type: 'speed', speed: { state: 'fast' } })
             const result = object(
               await rpc.request('turn/start', {
                 threadId: thread,
-                input: codexInput(command, skills, options),
-                clientUserMessageId: command.message.id,
+                input: codexInput(command, inputs, options),
+                clientUserMessageId: inputId,
                 model: choice.model,
                 effort: choice.effort === 'none' ? 'none' : choice.effort,
                 serviceTierForTurn: choice.fast ? 'priority' : 'default',

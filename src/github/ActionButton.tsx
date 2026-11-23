@@ -1,12 +1,9 @@
 import { useCallback } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '@firna/ui/button'
-import {
-  TintedTheme,
-  type ButtonTint,
-} from '../../docs/mockups/src/components/common/tint'
-import { actionStyle } from '../../docs/mockups/src/components/common/outlineTone'
-import { control, touchControl } from '../../docs/mockups/src/design/metrics'
+import { TintedTheme, type ButtonTint } from '../ui/components/common/tint'
+import { actionStyle } from '../ui/components/common/outlineTone'
+import { control, touchControl } from '../ui/design/metrics'
 import styles from './ActionButton.module.css'
 
 /**

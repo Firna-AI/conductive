@@ -1,11 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { CircleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   PendingInviteList,
   type PendingInviteRow,
-} from '../../../docs/mockups/src/components/members/PendingInvites'
-import styles from '../../../docs/mockups/src/screens/InvitationsScreen.module.css'
+} from '../../ui/components/members/PendingInvites'
+import styles from '../../ui/screens/InvitationsScreen.module.css'
 import type { Invitations } from '../../app/invitations-model'
 import { useNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'

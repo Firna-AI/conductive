@@ -162,7 +162,11 @@ export class SessionMarkdown {
         // The note of a Continue or of a repository change belongs to no
         // turn, so it has no heading.
         const { kind } = entry.item
-        if (kind !== 'continued' && kind !== 'repository-changed') {
+        if (
+          kind !== 'continued' &&
+          kind !== 'repository-changed' &&
+          kind !== 'capabilities-changed'
+        ) {
           heading(turnOf(transcript, entry.item))
         }
         blocks.push(

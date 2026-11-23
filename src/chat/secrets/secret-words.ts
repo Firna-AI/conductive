@@ -10,7 +10,7 @@ import {
   lifetimeHint,
   lifetimeLabels,
   type SessionLoginOwner,
-} from '../../../docs/mockups/src/components/chat/secretRunCopy'
+} from '../../ui/components/chat/secretRunCopy'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import {
@@ -51,7 +51,7 @@ function whoOf(
   return whoNamed(person?.id ?? null, name, viewerId)
 }
 
-/** The names of the mockup words for each lifetime of a value. */
+/** The names of the shared words for each lifetime of a value. */
 const mockupLifetimes = {
   '15-minutes': 'minutes',
   workspace: 'workspace',
@@ -74,8 +74,8 @@ export function lifetimeLine(
 
 /**
  * What a member's Allow gave, as the end of an answered request shows it.
- * The words are those of `lateAllowedLabel` of the mockups, which takes a
- * grant of the mockup people.
+ * The words are those of the shared `lateAllowedLabel`, which takes the
+ * generic `SecretGrant` from `src/ui/components/chat/secretGrant.ts`.
  */
 export function allowedLabel(lifetime: SecretValueLifetime | null): string {
   switch (lifetime) {
@@ -91,9 +91,9 @@ export function allowedLabel(lifetime: SecretValueLifetime | null): string {
 }
 
 /**
- * What ended a request with no answer. The mockups give the words of an
- * Archive and of a suspension of the org. A suspension of the owner and a
- * close of the session follow their pattern.
+ * What ended a request with no answer. The shared `endedLine` gives the
+ * words of an Archive and of a suspension of the org. A suspension of the
+ * owner and a close of the session follow their pattern.
  */
 function endedWords(cause: SecretRequestEnd, org: string): string {
   switch (cause) {

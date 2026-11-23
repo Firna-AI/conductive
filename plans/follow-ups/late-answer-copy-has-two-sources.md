@@ -3,7 +3,7 @@
 - **Severity:** Low. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-20, from UI research on `calummoore/wake-a-session-when-a-turn-ends-b5kh`.
-- **Location:** `src/shared/secret-late-answer.ts`, `src/chat/secrets/LateAnswerLine.tsx`, `docs/mockups/src/components/chat/secretRunCopy.ts`, and `docs/mockups/src/components/chat/LateAnswerLine.tsx`.
+- **Location:** `src/shared/secret-late-answer.ts`, `src/chat/secrets/LateAnswerLine.tsx`, `src/ui/components/chat/secretRunCopy.ts`, and `docs/mockups/src/components/chat/LateAnswerLine.tsx`.
 - **Reason:** The watch call can use one word builder without refactoring the existing secret-answer mockups and app components.
 
 - **Terms:**

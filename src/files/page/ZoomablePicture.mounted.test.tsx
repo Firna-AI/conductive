@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { beforeEach, expect, it } from 'vitest'
-import imageStyles from '../../../docs/mockups/src/components/files/ImageView.module.css'
+import imageStyles from '../../ui/components/files/ImageView.module.css'
 import { OverlayHost } from '../../shell/ui/Overlay'
 import { accessibleName } from '../../test-support/dom-queries'
 import { layOut } from '../../test-support/layout'

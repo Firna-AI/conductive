@@ -102,7 +102,7 @@ order: 20
   HTML of its own. A link inside a sentence keeps the height of the text.
 - Link to another guide by its address, such as `/docs/get-started`.
 - Write the product name as text. Markdown cannot read
-  `docs/mockups/src/brand.ts`, so a rename of the product changes the
+  `src/shared/brand.ts`, so a rename of the product changes the
   guides too.
 
 A guide action can link to the overview:

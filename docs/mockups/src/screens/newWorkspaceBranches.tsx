@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { GitBranch, Lock, RotateCw, TriangleAlert } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
-import { Notice } from '../components/common/Notice'
+import { ActionButton } from '../../../../src/ui/components/common/actions'
+import { Notice } from '../../../../src/ui/components/common/Notice'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { Sheet } from '../components/common/Sheet'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import {
   BranchMenu,
   type BranchTargets,
@@ -17,7 +17,7 @@ import {
   branchCopy,
   branchRefusalCopy,
   targetCopy,
-} from '../components/new-workspace/branchCopy'
+} from '../../../../src/ui/components/new-workspace/branchCopy'
 import { CreateRefusedNotice } from '../components/new-workspace/notices'
 import {
   branchSearches,

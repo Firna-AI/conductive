@@ -41,7 +41,7 @@ import {
 } from './shortcutSearch'
 import { instanceKey } from '../../instanceKey'
 import { defined, plainData } from '../../defined'
-import styles from './ShortcutsSections.module.css'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * The change of a shortcut on the tab, in progress or last: none, a row

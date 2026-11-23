@@ -8,6 +8,7 @@ import type { AgentSessionWriteResponse } from '../../src/shared/generated/Agent
 import type { AgentSessionResponse } from '../../src/shared/generated/AgentSessionResponse'
 import type { AgentStopSessionResponse } from '../../src/shared/generated/AgentStopSessionResponse'
 import type { AgentGetMessageResponse } from '../../src/shared/generated/AgentGetMessageResponse'
+import type { AgentGetMessageRequest } from '../../src/shared/generated/AgentGetMessageRequest'
 import type { AgentListSessionsRequest } from '../../src/shared/generated/AgentListSessionsRequest'
 import type { AgentRenameSessionRequest } from '../../src/shared/generated/AgentRenameSessionRequest'
 import type { AgentCloseSessionRequest } from '../../src/shared/generated/AgentCloseSessionRequest'
@@ -152,6 +153,7 @@ export interface AgentToolServices {
     workspaceId: string,
     sessionId: string,
     messageId: string,
+    input: AgentGetMessageRequest,
   ): Promise<AgentGetMessageResponse>
   writeSession(input: ToolSessionWrite): Promise<AgentSessionWriteResponse>
   listSessions(

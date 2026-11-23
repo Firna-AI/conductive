@@ -9,9 +9,16 @@ import type { StopSessionReference } from '../session-stop'
 import type { ChatEvent, RunnerEventRefused } from '../chat-events'
 import type { KnownTurn } from './known-turns'
 import { TranscriptBatch } from './transcript-batch'
+import type { CapabilityChangeNote } from '../capability-change'
 
 /** One part of a chat transcript, in the order that the chat shows it. */
 export type TranscriptItem =
+  | {
+      kind: 'capabilities-changed'
+      id: string
+      member: MessageSender
+      changes: CapabilityChangeNote['changes']
+    }
   | { kind: 'user'; id: string; message: UserMessage }
   | {
       kind: 'agent'

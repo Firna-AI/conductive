@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
-import { TextLink } from '../../../docs/mockups/src/components/common/TextLink'
+import { TextLink } from '../../ui/components/common/TextLink'
 import type { WebLink } from '../../markdown/web-links'
 import { useTextLinks } from '../../shell/ui/text-links'
 import type { MdInline } from './markdown-document'

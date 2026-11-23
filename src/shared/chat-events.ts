@@ -5,6 +5,7 @@ import type { UserMessage } from './generated/UserMessage'
 import type { RunnerEvent } from './generated/RunnerEvent'
 import type { AgentChatEvent } from './generated/AgentChatEvent'
 import type { TurnStopRequester } from './session-stop'
+import type { CapabilityChangeNote } from './capability-change'
 import type { SessionWatchNotice } from './generated/SessionWatchNotice'
 
 /**
@@ -63,6 +64,7 @@ export interface RunnerEventRefused {
 
 export type ChatEvent =
   | AgentChatEvent
+  | CapabilityChangeNote
   | SessionWatchNotice
   | {
       type: 'workspace.continued'

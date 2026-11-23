@@ -11,10 +11,12 @@ import {
   usePanelPlace,
   useSheetTop,
 } from './popover-place'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import popover from '../../../docs/mockups/src/components/explain/ExplainPopover.module.css'
+import { classes } from '../../ui/components/common/classes'
+import popover from '../../ui/components/explain/ExplainPopover.module.css'
+import { usePressOutside } from '../../shell/ui/press-outside'
 import styles from './explain.module.css'
 import { PopoverHeader, SheetHandle } from './PopoverParts'
+import { keepsPopover } from './press-outside'
 
 /**
  * The popover of an explanation. On a computer it is a panel 400 px wide by
@@ -27,7 +29,9 @@ import { PopoverHeader, SheetHandle } from './PopoverParts'
  * while a request waits for a member, and the chat scrolls its mark into
  * view above it. The parent chat stays live, so no dim lies over the app.
  * The popover takes the focus when it opens, and Escape or Close closes it
- * and gives the focus back to its mark.
+ * and gives the focus back to its mark. On a computer, a press outside it
+ * closes it too, and the focus goes where the press puts it. A press in
+ * the Explain layer or on a mark keeps it, as `keepPopover` says.
  */
 export function ExplainPopover(props: {
   /** The title of the explanation, which names the popover. */
@@ -42,6 +46,8 @@ export function ExplainPopover(props: {
   stopAt: HTMLElement | null
   onExpand: () => void
   onClose: () => void
+  /** Closes the popover at a press outside it, and moves no focus. */
+  onPressOutside: () => void
   children: ReactNode
 }) {
   const ref = useRef<HTMLElement>(null)
@@ -53,6 +59,9 @@ export function ExplainPopover(props: {
   usePanelPlace(ref, props.anchor, !props.mobile && !anchorsInCss())
   useMarkAboveSheet(ref, props.anchor, props.mobile)
   useSheetTop(ref, props.stopAt, props.mobile && full)
+  usePressOutside(!props.mobile, ref, props.onPressOutside, {
+    keep: keepsPopover,
+  })
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape' || event.defaultPrevented) return
     event.preventDefault()

@@ -1,6 +1,6 @@
 import { FolderGit2 } from 'lucide-react'
-import { RepositoryChangeText } from '../../../../docs/mockups/src/components/workspace/RepositoryChangeText'
-import { repositoryQuestion } from '../../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { RepositoryChangeText } from '../../../ui/components/workspace/RepositoryChangeText'
+import { repositoryQuestion } from '../../../ui/components/workspace/repositoryMoveCopy'
 import { ActionButton } from '../../ui/actions'
 import { Dialog } from '../../ui/Dialog'
 import type {

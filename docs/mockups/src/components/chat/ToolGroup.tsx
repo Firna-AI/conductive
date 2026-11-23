@@ -10,11 +10,14 @@ import {
   SquareTerminal,
 } from 'lucide-react'
 import type { ToolCallItem, ToolKind } from '../../fixtures/conversations'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { leftOut as leftOutPart } from '../../entries/components/chat/LeftOut.mockup'
 import { instanceKey } from '../../instanceKey'
-import { leftOutOfCall, leftOutOfRun } from './lostCopy'
-import styles from './ToolGroup.module.css'
+import {
+  leftOutOfCall,
+  leftOutOfRun,
+} from '../../../../../src/ui/components/chat/lostCopy'
+import styles from '../../../../../src/ui/components/chat/ToolGroup.module.css'
 
 const tools: Readonly<
   Record<ToolKind, { icon: LucideIcon; done: string; running: string }>

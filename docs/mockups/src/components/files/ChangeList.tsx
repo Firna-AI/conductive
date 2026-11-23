@@ -6,7 +6,7 @@ import { diffStat } from '../../entries/components/files/DiffStat.mockup'
 import { instanceKey } from '../../instanceKey'
 import { RowMenuItem, type FileRowMenu } from './FileRowMenu'
 import { paths } from '../../paths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import styles from './ChangeList.module.css'
 
 /**

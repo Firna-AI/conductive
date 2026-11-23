@@ -1,10 +1,10 @@
 import { MessageSquareQuote } from 'lucide-react'
-import { ActionButton } from '../common/actions'
-import { classes } from '../common/classes'
+import { ActionButton } from '../../../../../src/ui/components/common/actions'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { Linked } from '../common/ScreenLink'
-import { useTouch } from '../common/touch'
-import { explainLabel } from './explainCopy'
-import styles from './ExplainButton.module.css'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
+import { explainLabel } from '../../../../../src/ui/components/explain/explainCopy'
+import styles from '../../../../../src/ui/components/explain/ExplainButton.module.css'
 
 /**
  * Where the button by a selection lines up: `middle` over the middle of

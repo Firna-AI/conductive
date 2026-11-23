@@ -12,7 +12,8 @@ use super::support::{Fixture, TestResult};
 
 const LIMIT: Duration = Duration::from_secs(30 * 24 * 60 * 60);
 
-async fn wait(h: &Fixture) -> TestResult {
+/// A reply with live work leaves the turn waiting.
+pub(super) async fn wait(h: &Fixture) -> TestResult {
     let helper = h.latest()?;
     helper.event(ProviderEvent::Background {
         live: true,
@@ -178,7 +179,7 @@ async fn resets_the_wait_from_receipt_even_when_the_session_queue_is_held() -> T
 }
 
 /// Work that ends before the reply leaves a wait for the idle state.
-async fn ended_work_wait(h: &Fixture) -> TestResult {
+pub(super) async fn ended_work_wait(h: &Fixture) -> TestResult {
     h.command(turn("session", "first")?).await?;
     let helper = h.latest()?;
     helper.event(ProviderEvent::Background {
@@ -226,5 +227,44 @@ async fn applies_the_limit_to_a_wait_for_idle_after_work_ended() -> TestResult {
     let end = serde_json::to_value(h.events().await)?;
     assert_eq!(end[1]["endReason"], "background_work_limit");
     assert!(h.latest()?.closed.load(Ordering::SeqCst));
+    h.close().await
+}
+
+#[tokio::test(start_paused = true)]
+async fn deferred_member_input_restarts_the_wait_limit_from_receipt() -> TestResult {
+    let h = Fixture::new().await?;
+    h.command(turn("session", "first")?).await?;
+    wait(&h).await?;
+    h.advance(Duration::from_secs(1)).await;
+    let first = h.latest()?;
+    first.deferred.store(true, Ordering::SeqCst);
+    first.model_gate.hold();
+    h.engine.command(message("session", "first", "next")?)?;
+    first.model_gate.entered.notified().await;
+    h.advance(Duration::from_secs(1)).await;
+    first.model_gate.release();
+    h.engine.idle().await?;
+    assert!(first.closed.load(Ordering::SeqCst));
+    let helper = h.latest()?;
+    helper.event(ProviderEvent::Background {
+        live: true,
+        idle: false,
+    });
+    h.advance(LIMIT - Duration::from_secs(2)).await;
+    helper.result(&["message-next"]);
+    helper.event(ProviderEvent::Activity { idle: true });
+    h.engine.idle().await?;
+    assert_eq!(h.events().await.len(), 1);
+    h.advance(Duration::from_secs(1)).await;
+    helper.result(&["message-next"]);
+    h.engine.idle().await?;
+    let events = serde_json::to_value(h.events().await)?;
+    assert_eq!(events.as_array().ok_or("No events")?.len(), 2);
+    assert_eq!(events[1]["endReason"], "background_work_limit");
+    assert_eq!(events[1]["durationMs"], LIMIT.as_millis() as u64 + 1000);
+    assert_eq!(
+        events[1]["userMessageIds"],
+        json!(["message-first", "message-next"])
+    );
     h.close().await
 }

@@ -1,5 +1,5 @@
 import type { Agent } from '../../shared/generated/Agent'
-import { productName } from '../../../docs/mockups/src/brand'
+import { productName } from '../../shared/brand'
 import type { AppModel } from '../../app/app-model'
 import type { OrgAgentLoginStatus } from '../../shared/org-agent-logins'
 import { orgSettingsPaths } from '../../shared/org-settings'

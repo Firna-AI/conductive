@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { QuestionTarget } from '../../../docs/mockups/src/components/operator/operatorCopy'
-import { liftSwitchLine } from '../../../docs/mockups/src/components/operator/switchCopy'
+import type { QuestionTarget } from '../../ui/components/operator/operatorCopy'
+import { liftSwitchLine } from '../../ui/components/operator/switchCopy'
 import { readOperatorOrg } from '../../app/api/read-operator-pages'
 import { OperatorOrgSwitch } from '../../app/operator-org-switch'
 import { OperatorProviders } from '../../app/operator-providers'

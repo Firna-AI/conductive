@@ -94,6 +94,10 @@ This page lists each protocol doc and what it covers.
         - [Mac access](../protocol/mac-access.md): the requests that agents
           can always send to a Mac, the Mac access switch of the Mac app,
           the grant that it starts on this Mac, and the risks.
+        - [Capabilities: what agents learn](../protocol/capabilities-agents.md):
+          the facts of a session that its agent learns, the change note of
+          each change, where the note goes, what the chat shows, and older
+          runners.
       - [Secret variables](../protocol/secret-variables.md): the names of
         new secrets, the variable name of each secret, the command
         environment, conflicting variable names, and older tools.
@@ -260,8 +264,12 @@ This page lists each protocol doc and what it covers.
   - [Session instructions](../protocol/session-instructions.md): the same
     instructions for the life of a session, and how each agent gets them.
   - [Message lines](../protocol/message-lines.md): the sender line, the
-    repository line, and the branch line of each message, and the access
-    of a turn, which does not depend on the sender line.
+    repository line, and the branch line of each message, the app header
+    of a change note, and the access of a turn, which does not depend on
+    the sender line.
+  - [Agent instructions: facts that change](../protocol/agent-instructions-changes.md):
+    the parent, the depth, and the capabilities, which can change during a
+    session.
   - [Base prompts](../protocol/base-prompts.md): the base prompt of Claude
     agents and the base instructions of Codex agents.
   - [Agent instructions: how each agent gets them](../protocol/agent-instructions-delivery.md):

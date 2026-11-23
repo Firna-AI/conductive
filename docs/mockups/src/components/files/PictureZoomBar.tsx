@@ -1,7 +1,10 @@
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { pictureCopy, zoomPercent } from './pictureCopy'
-import styles from './PictureZoomBar.module.css'
+import {
+  pictureCopy,
+  zoomPercent,
+} from '../../../../../src/ui/components/files/pictureCopy'
+import styles from '../../../../../src/ui/components/files/PictureZoomBar.module.css'
 
 /**
  * The zoom bar under the picture of an image file: Zoom out, the zoom as a

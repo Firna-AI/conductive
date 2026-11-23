@@ -1,14 +1,14 @@
 import { agents, type AgentKey } from '../../fixtures/agents'
 import type { EndpointLogin } from '../../fixtures/logins'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { loginLabels } from './agentConnectCopy'
-import type { LoginOwner } from './EndpointModels'
+import { loginLabels } from '../../../../../src/ui/components/settings/agentConnectCopy'
+import type { LoginOwner } from '../../../../../src/ui/components/settings/EndpointModels'
 import { endpointModels } from '../../entries/components/settings/EndpointModels.mockup'
 import {
   endpointAddressNote,
   endpointReadFailed,
 } from '../../entries/components/settings/EndpointRead.mockup'
-import { endpointReadCopy as copy } from './endpointReadCopy'
+import { endpointReadCopy as copy } from '../../../../../src/ui/components/settings/endpointReadCopy'
 import { loginEndpoint } from '../../entries/components/settings/LoginEndpoint.mockup'
 import { defined } from '../../defined'
 

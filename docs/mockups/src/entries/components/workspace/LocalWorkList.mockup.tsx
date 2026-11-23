@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { LocalWorkList } from '../../../components/workspace/LocalWorkList'
+import { LocalWorkList } from '../../../../../../src/ui/components/workspace/LocalWorkList'
 import { unpushedWork } from '../../../fixtures/barActions'
 
 /** The local work that the question of Continue lists, registered with Mokly. */

@@ -1,11 +1,14 @@
 import { defineComponent } from '@mokly/mokly'
-import { entryFolder, entryName } from '../../../components/chat/entryPaths'
+import {
+  entryFolder,
+  entryName,
+} from '../../../../../../src/ui/components/chat/entryPaths'
 import { mentionRows } from '../../../components/chat/fileMentions'
 import {
   MentionAnchor,
   MentionList,
-} from '../../../components/chat/MentionList'
-import { SkillIcon } from '../../../components/chat/SkillChip'
+} from '../../../../../../src/ui/components/chat/MentionList'
+import { SkillIcon } from '../../../../../../src/ui/components/chat/SkillChip'
 import { instanceKey } from '../../../instanceKey'
 import { entryIcon } from '../files/fileIcons.mockup'
 import { roomAboveSchema, withRoomAbove } from '../common/ownPages'

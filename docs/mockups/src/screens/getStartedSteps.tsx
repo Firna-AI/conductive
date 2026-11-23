@@ -24,8 +24,8 @@ import { paths } from '../paths'
 import { orgBuildActions } from './getStartedBuild'
 import { orgBuild } from '../entries/components/screens/getStartedBuild.mockup'
 import { defined } from '../defined'
-import { getStartedCopy as copy } from './getStartedCopy'
-import styles from './GetStartedScreen.module.css'
+import { getStartedCopy as copy } from '../../../../src/ui/screens/getStartedCopy'
+import styles from '../../../../src/ui/screens/GetStartedScreen.module.css'
 
 /**
  * The GitHub App step and the org step in their order, then `done` after

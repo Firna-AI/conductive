@@ -1,13 +1,13 @@
 import { Input } from '@firna/ui/input'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import type { IconKey } from '../../entries/components/common/icons'
 import { inlineText } from '../../entries/components/common/InlineText.mockup'
 import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
-import type { ReadOnlyCause } from './OrgSections'
+import type { ReadOnlyCause } from '../../../../../src/ui/components/settings/readOnlyCause'
 import {
   section,
   sectionText,
@@ -19,7 +19,7 @@ import {
   skillsCopy as copy,
   skillsNoticeText,
   type SkillsViewer,
-} from './skillsCopy'
+} from '../../../../../src/ui/components/settings/skillsCopy'
 import {
   savedTrustHint,
   trustSwitch,

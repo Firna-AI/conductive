@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import prose from '../../docs/mockups/src/components/common/MarkdownProse.module.css'
-import { TaskBox } from '../../docs/mockups/src/components/common/TaskBox'
+import prose from '../ui/components/common/MarkdownProse.module.css'
+import { TaskBox } from '../ui/components/common/TaskBox'
 import type { ListItem } from './task-boxes'
 
 /**

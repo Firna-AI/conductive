@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { GitHubMark } from '../../../components/common/GitHubMark'
+import { GitHubMark } from '../../../../../../src/ui/components/common/GitHubMark'
 
 /**
  * The GitHub mark, registered with Mokly. A call can place it with a class

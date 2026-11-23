@@ -2,10 +2,10 @@ import { ChevronDown } from 'lucide-react'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { defined } from '../defined'
-import a11y from '../components/common/a11y.module.css'
+import a11y from '../../../../src/ui/components/common/a11y.module.css'
 import { emptyState } from '../entries/components/common/EmptyState.mockup'
 import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
-import responsive from '../components/layout/responsive.module.css'
+import responsive from '../../../../src/ui/components/layout/responsive.module.css'
 import { orgTile } from '../entries/components/orgs/OrgTile.mockup'
 import {
   suspendedOrgAbove,
@@ -31,7 +31,7 @@ import { deletedOrg, orgs, suspendedOrg, type Org } from '../fixtures/orgs'
 import type { Membership } from '../fixtures/members'
 import { paletteShortcut } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
-import styles from './WorkspaceListScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceListScreen.module.css'
 
 /**
  * The action that starts a new workspace, in an empty main area. `to` is

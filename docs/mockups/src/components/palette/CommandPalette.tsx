@@ -1,9 +1,9 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { InputFrame } from '@firna/ui/input'
 import { ChevronDown, Search } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'
 import { pageHost } from '../../fixtures/shortcutHosts'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
@@ -26,7 +26,7 @@ import {
   paletteTabs,
   type OpenPaletteView,
 } from './paletteViews'
-import styles from './CommandPalette.module.css'
+import styles from '../../../../../src/ui/components/palette/CommandPalette.module.css'
 
 const chevron = <ChevronDown aria-hidden className={styles.chevron} size={13} />
 

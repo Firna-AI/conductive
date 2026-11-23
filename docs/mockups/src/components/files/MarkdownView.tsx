@@ -1,12 +1,12 @@
 import type { MarkdownBlock } from '../../fixtures/fileContents'
-import { classes } from '../common/classes'
-import headingStyles from '../common/MarkdownHeadings.module.css'
-import prose from '../common/MarkdownProse.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import headingStyles from '../../../../../src/ui/components/common/MarkdownHeadings.module.css'
+import prose from '../../../../../src/ui/components/common/MarkdownProse.module.css'
 import { markdownTable } from '../../entries/components/common/MarkdownTable.mockup'
 import { taskText } from '../common/markdownTasks'
-import { TaskBox } from '../common/TaskBox'
+import { TaskBox } from '../../../../../src/ui/components/common/TaskBox'
 import { PreviewText } from './PreviewText'
-import styles from './MarkdownView.module.css'
+import styles from '../../../../../src/ui/components/files/MarkdownView.module.css'
 
 /**
  * An item of a list. A task item shows its fixed check box in the place of

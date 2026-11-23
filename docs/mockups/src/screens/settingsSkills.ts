@@ -1,4 +1,4 @@
-import type { SkillsLookup } from '../components/settings/skillsCopy'
+import type { SkillsLookup } from '../../../../src/ui/components/settings/skillsCopy'
 import type { SkillsTrust } from '../components/settings/SkillsTrust'
 import {
   agentSkills,

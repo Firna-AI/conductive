@@ -1,7 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
-import { LoginShare } from '../../../components/settings/LoginShare'
+import { LoginShare } from '../../../../../../src/ui/components/settings/LoginShare'
 import { shareNotSavedCause } from '../../../fixtures/logins'
-import { noop } from '../../../noop'
+import { noop } from '../../../../../../src/ui/noop'
 
 /**
  * The share setting of a connected login, registered with Mokly. Its

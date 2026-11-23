@@ -272,6 +272,8 @@ export function shown(controller: ChatController, sessionId: string): string[] {
         return `failed: ${item.error.message}`
       case 'lost':
         return `lost: ${item.marker.runnerEventType} ${item.marker.reason}`
+      case 'capabilities-changed':
+        return `capabilities changed by ${item.member.githubLogin}: ${item.changes.map((change) => change.kind).join(', ')}`
       case 'continued':
         return `continued by ${item.member.githubLogin}: ${item.branch} from ${item.baseBranch}`
       case 'repository-changed':

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Table, type TableColumn } from '@firna/ui/table'
 import type { TargetStatus } from '../../fixtures/operatorDirectory'
 import type { UserStatus } from '../../fixtures/operatorUsers'
@@ -7,7 +7,7 @@ import { actionButton } from '../../entries/components/common/actions.mockup'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
-import styles from './directory.module.css'
+import styles from '../../../../../src/ui/components/operator/directory.module.css'
 
 /**
  * The state of a suspended or deleted target, or of a user who waits on

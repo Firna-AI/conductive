@@ -3,7 +3,7 @@ import { defineComponent } from '@mokly/mokly'
 // of the diff stat of the chip before those of the list, as it did when the
 // end of a turn drew the chip itself.
 import { turnFileChip } from './TurnFileChip.mockup'
-import { TurnFileList } from '../../../components/chat/TurnFileList'
+import { TurnFileList } from '../../../../../../src/ui/components/chat/TurnFileList'
 import { changedFiles } from '../../../fixtures/files'
 import { instanceKey } from '../../../instanceKey'
 import { changedFileSchema } from '../files/fileSchemas'

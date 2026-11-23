@@ -87,6 +87,15 @@ export class TranscriptBatch {
           notice: event,
         })
         return
+      case 'capabilities.changed':
+        this.changed = true
+        this.items.put({
+          kind: 'capabilities-changed',
+          id: `capabilities-changed:${event.noteId}`,
+          member: event.member,
+          changes: event.changes,
+        })
+        return
       case 'workspace.continued': {
         this.changed = true
         const { displayBranch, displayBaseBranch } = event

@@ -22,6 +22,7 @@ import {
 } from './environment'
 import { failureCause } from './failure'
 import { ProviderLifetime } from './lifetime'
+import { InputReceipts } from './input-receipts'
 import type { ProviderFactory } from './types'
 
 export interface ClaudeQuery extends AsyncIterable<unknown> {
@@ -73,7 +74,8 @@ export function createClaudeFactory(
       ),
     )
     const credentials = await preparation
-    const skillsDiscovery = await prepareClaudeSkills(options, lifetime)
+    const orgView = await prepareClaudeSkills(options, lifetime)
+    const skillsDiscovery = orgView.directory
     const skillSettings = claudeSkillSettings(options.orgSkills)
     const env = providerEnvironment(
       options.home,
@@ -92,6 +94,7 @@ export function createClaudeFactory(
       env.ANTHROPIC_PROFILE = credentials.name
     } else env.ANTHROPIC_BASE_URL = options.endpoint
     const input = new ClaudeInputWindow()
+    const receipts = new InputReceipts(options.event)
     const background = new ClaudeBackground(options.event)
     const note = new ClaudeBackgroundNote(
       (id) => background.isAmbient(id),
@@ -100,7 +103,7 @@ export function createClaudeFactory(
     env.CLAUDE_CODE_EMIT_SESSION_STATE_EVENTS = '1'
     const mapper = new ClaudeEvents(
       input.ids,
-      options.event,
+      receipts.emit,
       (uuid) => input.hasOutstanding(uuid),
       background,
       options.choice.fast,
@@ -123,6 +126,7 @@ export function createClaudeFactory(
         )
         return uuid
       },
+      receipts.read,
     )
     let closed = false
     let stream: ClaudeQuery
@@ -211,13 +215,13 @@ export function createClaudeFactory(
           }
         }
         if (!closed)
-          options.event({
+          receipts.emit({
             type: 'failed',
             code: 'agent_exited',
             message: 'The agent process ended.',
           })
       } catch (error) {
-        if (!closed) options.event(failureCause(error))
+        if (!closed) receipts.emit(failureCause(error))
       }
     })()
     let closing: Promise<void> | null = null
@@ -237,7 +241,7 @@ export function createClaudeFactory(
       return closing
     }
     const abort = () => {
-      void close().catch((error: unknown) => options.event(failureCause(error)))
+      void close().catch((error: unknown) => receipts.emit(failureCause(error)))
     }
     options.signal?.addEventListener('abort', abort, { once: true })
     if (options.signal?.aborted) abort()
@@ -245,8 +249,13 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const content = await claudeInput(command, options.cwd, options)
-        input.push(command.message.id, {
+        const content = await claudeInput(
+          command,
+          options.cwd,
+          options,
+          orgView.names,
+        )
+        input.push(receipts.add(command), {
           type: 'user',
           uuid,
           session_id: options.conversationId ?? '',

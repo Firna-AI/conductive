@@ -61,9 +61,9 @@ the workspace screen draws, as
 - After a failed repair of the list, a notice under the form gives the age
   of the failure, and the last list stays. A newer report, also a null one,
   ends it. The notice never shows over a preview in its frame.
-- The words, the tab label, and the row styles are those of the mockups:
+- The words, the tab label, and the row styles are shared with the mockups:
   `previewCopy.ts`, `PreviewTabs.module.css`, and `PortForm.module.css` in
-  `docs/mockups/src/components/tools/`, and `LostUpdateRow` for the notice.
+  `src/ui/components/tools/`, and `LostUpdateRow` for the notice.
 - Each preview has a tab. Tabs are links, so each preview has an address in
   the browser history. A plain click goes to the address in the page. Ctrl,
   Shift, and middle clicks keep the browser's own action.
@@ -129,10 +129,11 @@ shell draws the part in `src/shell/workspace/previews/services/`, as
 - The form takes the part in a fixed slot above the servers, so a part
   that shows or goes keeps the port field, its text, its focus, and its
   selection.
-- The part takes the words, the rows, and the log view of the mockups:
-  `serviceCopy.ts`, `ServiceState.tsx`, `ServiceList.module.css`, and
-  `ServiceLog.module.css` in `docs/mockups/src/components/tools/`. It never
-  imports `ServiceList.tsx`, which draws registered Mokly parts. Each name,
+- The part takes the words, the rows, and the log view that it shares
+  with the mockups: `serviceCopy.ts`, `ServiceState.tsx`,
+  `ServiceList.module.css`, and `ServiceLog.module.css` in
+  `src/ui/components/tools/`. It never imports the mockups'
+  `ServiceList.tsx`, which draws registered Mokly parts. Each name,
   label, title, and log line shows as plain text.
 - The close of a preview stops no service, and no control of a service
   ends a preview.

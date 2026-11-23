@@ -4,9 +4,11 @@ import type { AgentChoice } from '../../src/shared/generated/AgentChoice'
 import type { CommitAuthor } from '../../src/shared/generated/CommitAuthor'
 import type { Attachment } from '../../src/shared/generated/Attachment'
 import type { RunnerAttachment } from '../../src/shared/generated/RunnerAttachment'
+import type { RunnerCapabilities } from '../../src/shared/generated/RunnerCapabilities'
 import type { RunnerChangeModel } from '../../src/shared/generated/RunnerChangeModel'
 import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { RunnerInterrupt } from '../../src/shared/generated/RunnerInterrupt'
+import type { RunnerNotice } from '../../src/shared/generated/RunnerNotice'
 import type { WorkspaceToRunner } from '../../src/shared/generated/WorkspaceToRunner'
 import type { RunnerEventEnvelope } from '../../src/shared/generated/RunnerEventEnvelope'
 import type { TurnEndReason } from '../../src/shared/generated/TurnEndReason'
@@ -102,7 +104,7 @@ export type PreparedMessageCommand = (
 ) & { attachments: readonly StoredAttachment[]; login: AgentLogin }
 
 export type PreparedCommand =
-  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel
+  PreparedMessageCommand | RunnerInterrupt | RunnerChangeModel | RunnerNotice
 
 type ResolveCommand<Command> = Command extends PreparedMessageCommand
   ? Omit<Command, 'attachments'> & { attachments: readonly RunnerAttachment[] }
@@ -145,6 +147,10 @@ export interface ChatDependencies {
   ): Promise<
     import('../../src/shared/generated/RunnerBranches').RunnerBranches | null
   >
+  readCapabilities(
+    workspaceId: string,
+    sessionId: string,
+  ): Promise<RunnerCapabilities | null>
   /** The record repository and the stored folders, or null without them. */
   readRepository(workspaceId: string): Promise<RunnerRepositoryRecord | null>
   readCommitAuthor: (userId: string) => Promise<CommitAuthor | null>

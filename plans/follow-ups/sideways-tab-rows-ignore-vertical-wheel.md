@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** Medium. **Harder later:** No.
 - **Kind:** Outside the scope.
 - **Added:** 2026-11-08, from the second options check of the plan `plans/move-tabs-by-drag.md`, branch `calummoore/tab-drag-and-drop`.
-- **Location:** `docs/mockups/src/components/common/LinkTabs.module.css:6`, which `src/shell/ui/links.tsx` and `src/shell/workspace/tools/ToolsPart.tsx` use. `src/files/ui/LinkTabs.module.css:6`. `src/previews/PreviewToolbar.module.css:18`.
+- **Location:** `src/ui/components/common/LinkTabs.module.css:6`, which `src/shell/ui/links.tsx` and `src/shell/workspace/tools/ToolsPart.tsx` use. `src/files/ui/LinkTabs.module.css:6`. `src/previews/PreviewToolbar.module.css:18`.
 - **Reason:** These rows overflow only in a narrow panel or with many previews, and the change that found it does not touch them.
 
 - **Background:**
