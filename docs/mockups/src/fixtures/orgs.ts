@@ -1,4 +1,4 @@
-import type { OrgColor } from '../design/orgColors'
+import type { OrgColor } from '../../../../src/ui/design/orgColors'
 
 /**
  * The orgs of the user, and the account that every org shares: the GitHub

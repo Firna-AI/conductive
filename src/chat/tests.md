@@ -13,15 +13,19 @@ login, a linked session, and the client ID of a second try in the same and
 in another session. After the second try sends, the next send of the same
 prompt gets a new client ID. While one prompt waits, another prompt sends
 nothing, also in another session, and a send from the composer still goes.
-`components/ContinuedNote.test.tsx` folds the note of
-Continue once at its place, also after a repeat and in a new tab, in the
-history of a closed session, and draws "You" or the name of the member.
+`components/ContinuedNote.test.tsx` folds the note of Continue once at its
+place, also after a repeat, in a new tab, and in a closed session. It draws
+"You" or the member, and each branch by its label, also in a copy.
 `state/repository-folder.test.ts` checks that a record of another
 repository reads the view again for the folder of the new repository, that
 a record of the same repository does not, and that a failed read or a late
 reply leaves no wrong folder.
 `components/RepositoryChangedNote.test.tsx` checks the note of a repository
 change in the same way, with its read from the stream and its copy.
+`components/NewSessionText.test.tsx` checks that the New session text names
+the branch of the chat's record by its real name when the host gives the
+GitHub state of another branch, or of that branch without a label.
+
 `components/CapabilityChangeNote.test.tsx` checks the note of a change of
 the capabilities in the same way. It also checks that the stream reader
 skips a note that it cannot read, such as one with a change of an unknown
@@ -42,13 +46,24 @@ when a read names a login that serves and at the unmount, and a notice that
 shows again starts a new one. `components/ComposerModels.dom.test.tsx` opens the
 model picker of a reader whose own endpoint list leaves models out, in the
 reader's own session, in the session of another member, and before a
-message that starts a linked session. In an empty session of another
+message that starts a linked session. It reads the models in All models,
+and in the reader's own session the favourites of the account, without the
+favourite on a model that the list leaves out. In an empty session of another
 member, it checks that the label and the picker follow the default login
 that the record names, the org login. `components/ModelPicker.dom.test.tsx`
-checks the New session mark of each model of the other agent, and the Fast
-row of the model picker: the keys reach it, a change of it sends a choice
-that differs only in fast and keeps the menu open, the trigger names Fast,
-and a model without fast mode has no row and turns fast off. `components/SourceLink.dom.test.tsx` presses the link
+checks the New session mark of each model of the other agent in All
+models, and the Fast row of the model picker: the keys reach it, a change
+of it sends a choice that differs only in fast and keeps the menu open, the
+trigger names Fast, and a model without fast mode has no row and turns fast
+off. `components/ModelFavourites.dom.test.tsx` checks the favourites of the
+menu: their rows with the muted words, a favourite on a model that the
+picker does not offer, the mark of an exact match only, a pick, a favourite
+of the other agent, and the menu with no favourite to show, which starts
+with All models.
+`components/AllModels.dom.test.tsx` checks the submenu of All models: its
+keys, a hover, a pick, and its form in the phone layout, with Back.
+`components/model-picker-test-kit.tsx` holds the models, the session, and
+the readers of the menu that these picker tests share. `components/SourceLink.dom.test.tsx` presses the link
 of a linked session to its open and its closed source. In an archived
 workspace, it opens a linked session that closed before the archive from the
 session history. Its source link writes nothing.
@@ -184,6 +199,45 @@ tab during the close, the tab shows again with the notice
 user chose during the close stays selected. With the Preview tab, the
 failed close also keeps the session of the chat. In both cases, the notice
 goes to the chat, with no session.
+`state/replay-navigation.test.ts` sends pages of the stored history of the
+stream. Pages that close the shown session and then open it again keep the
+saved order and the shown tab. A later save and a new start keep them too.
+A dropped connection keeps the tabs until the next final page. An empty
+final page then closes the tab of a session that stays closed. A close and
+a reopen of the user apply at once. A failed close puts its tab back, keeps
+the tab that the user chose, and shows its notice.
+`state/replay-history.test.ts` checks history loads, a model change, and a
+read-only chat during a replay. While the history of a selected session
+loads beside the pages, its newer title and model show at once, and Send
+sends that model. A failed earlier page of the first history load lets the
+later session list set the tabs. The new session of a model change shows
+from its first page, and its draft moves once. A read-only chat keeps its
+local tabs and writes nothing.
+`state/replay-completion.test.ts` checks the end of a replay after a
+failed history load, and the hold of the first load. A selected session
+whose newest page holds its close, and whose earlier page fails, closes
+its tab when the load ends. The other session shows, and the closed list
+holds the session. A page of the stream and live copies of the same events
+then keep the tabs, and each message shows once and in order. While the
+stored history of the stream still loads, a failed load, a successful Try
+again, and a page with the same close keep the tabs. The empty final page
+then closes the tab, and each message shows once and in order. When the
+history of the first load ends before the second read of the session
+list, the saved tabs stay, and that list sets them. When that read fails,
+the hold still ends: the session whose newest record is closed leaves the
+row, and the next tab shows.
+`state/replay-read-only.test.ts` checks the open and the closed lists of a
+read-only chat with local tabs. In each case, a replay closes a session,
+reopens one, or brings a new one, with the Archive or a suspension. The
+reader also closes, reopens, or chooses a tab. The local tabs, the shown
+session, and the view stay, and nothing writes. The lists follow the
+newest records, so a closed session leaves the open list. The session
+history lists a new or a reopened session that has no tab. A suspended
+chat with local tabs updates the lists at each page. After a dropped
+connection and a local choice, the empty final page settles them. After a
+Restore, the stored open sessions show as tabs in the saved view.
+`state/replay-test-kit.ts` gives the replay tests a chat with two open
+sessions, their saved view, and pages of session records and messages.
 `components/TranscriptCopy.dom.test.tsx` copies the transcript of a tab
 that never showed, through the real controller, client, and menu, with
 the copy of the app's test services. Copy full transcript asks for the

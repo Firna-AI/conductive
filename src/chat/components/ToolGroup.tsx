@@ -18,13 +18,10 @@ import {
   toolEnding,
   toolVerb,
 } from '../../shared/transcript/tool-words'
-import { LeftOut } from '../../../docs/mockups/src/components/chat/LeftOut'
-import {
-  leftOutOfCall,
-  leftOutOfRun,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { LeftOut } from '../../ui/components/chat/LeftOut'
+import { leftOutOfCall, leftOutOfRun } from '../../ui/components/chat/lostCopy'
+import styles from '../../ui/components/chat/ToolGroup.module.css'
+import { classes } from '../../ui/components/common/classes'
 import { useFold, type Fold } from './useFold'
 
 const icons: Readonly<Record<ToolCall['kind'], LucideIcon>> = {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type {
   ApprovalEmailNote,
   AppAccess,
@@ -8,7 +9,10 @@ import { codeState } from '../../fixtures/operatorCodes'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { DetailList, type Detail } from '../settings/DetailList'
+import {
+  DetailList,
+  type Detail,
+} from '../../../../../src/ui/components/settings/DetailList'
 import {
   section,
   sectionText,
@@ -18,12 +22,12 @@ import {
   approvalEmailWords,
   referralWords,
   wayInWords,
-} from './accessCopy'
-import { disableCodeWords } from './codeCopy'
+} from '../../../../../src/ui/components/operator/accessCopy'
+import { disableCodeWords } from '../../../../../src/ui/components/operator/codeCopy'
 import { CodeStateText, CopyableCode } from './codes'
 import { InlineLink, TargetList, TargetRow } from './targets'
 import { defined } from '../../defined'
-import styles from './AccessSections.module.css'
+import styles from '../../../../../src/ui/components/operator/AccessSections.module.css'
 
 /**
  * How the user got app access, with a link to the code or its owner. An
@@ -67,8 +71,11 @@ function WayInText(props: { way: WayIn }) {
   }
 }
 
-/** A state, with a short muted line under it that says why. */
-function StateWithReason(props: { state: string; reason: string }) {
+/**
+ * A state, with a short muted line under it that says why. The state can be
+ * a word or a part, such as `StatusText` or an account ID.
+ */
+export function StateWithReason(props: { state: ReactNode; reason: string }) {
   return (
     <span className={styles.lines}>
       {props.state}

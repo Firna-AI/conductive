@@ -18,6 +18,12 @@ export interface RowKeeper {
   settle(): void
 }
 
+/** The keeper of the chat, as `ChatPane` holds it. */
+export interface PlaceKeeper extends RowKeeper {
+  /** Shows the bottom of the chat, such as for the button to the bottom. */
+  bottom(): void
+}
+
 /** The keeper of the chat, which `ChatPane` gives. Outside a chat, nothing moves. */
 export const ChatKeeper = createContext<RowKeeper>({
   keep: () => {},
@@ -161,7 +167,7 @@ export function useReadingPlace(
   shown: boolean,
   sent: readonly string[],
   memory: PlaceMemory | null = null,
-): RowKeeper {
+): PlaceKeeper {
   const place = useRef<ReadingPlace | null>(null)
   const seen = useRef<ReadonlySet<string>>(new Set(sent))
   const seenMemory = useRef(memory)
@@ -193,6 +199,7 @@ export function useReadingPlace(
     () => ({
       keep: (row: Element) => place.current?.keep(row),
       settle: () => place.current?.settle(),
+      bottom: () => place.current?.bottom(),
     }),
     [],
   )

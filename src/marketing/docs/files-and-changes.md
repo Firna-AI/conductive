@@ -56,6 +56,10 @@ Markdown offers **Preview** for its rendered content and **Source** for its text
 An HTML file opens as a page, as [Preview an HTML file](#preview-an-html-file) says.
 PNG, JPEG, GIF, and WebP files show as pictures up to the 5 MiB read limit.
 A picture keeps its proportions and fits the view.
+To zoom, use the wheel, pinch, or use the zoom bar under the picture.
+Drag a zoomed picture to move it.
+Double-click the picture to zoom in, and double-click it again to fit it.
+On desktop, select **Expand** to show the picture in a large window.
 SVG files show their source as text.
 
 Other binary files offer **Download** so you can open them with another application.
@@ -184,11 +188,16 @@ Use a double-click to keep a temporary tab there.
 The diff shows syntax colours, as a file does.
 
 The base branch is the branch that the workspace's work targets.
-A workspace you create uses the repository's default branch.
+A workspace you create targets the branch you select in **New workspace**.
+You can choose the default branch as the target instead.
 A run for an opened or pushed pull request uses that pull request's head branch.
 A run for a merged pull request uses that pull request's base branch.
-After **Continue**, the workspace's base branch is the repository's latest default branch.
-After a repository change, it is the latest default branch of the new repository.
+After **Continue**, the base is the branch that the pull request merged into, if it still exists.
+Otherwise, the base is the repository's default branch.
+After a repository change, the base is the latest default branch of the new repository.
+A base that follows the default also follows a later rename of that default branch.
+If GitHub deletes the base branch, Conductive fetches the default branch into the cloud computer.
+The cloud computer uses the new base only after that fetch succeeds.
 The comparison starts at the common commit of the workspace branch and its base branch.
 Newer commits on the base branch therefore stay out of **Changes**.
 

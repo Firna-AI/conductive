@@ -1,5 +1,9 @@
 import { defineComponent } from '@mokly/mokly'
-import { cells, MarkGrid, ring } from '../../../components/workspaces/MarkGrid'
+import {
+  cells,
+  MarkGrid,
+  ring,
+} from '../../../../../../src/ui/components/workspaces/MarkGrid'
 
 /** A cell of the grid, row by row from the top left. */
 const cellSchema = { type: 'integer', minimum: 0, maximum: 8 } as const

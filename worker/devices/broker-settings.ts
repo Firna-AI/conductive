@@ -1,11 +1,11 @@
-import type { DeviceSettingsAction } from '../../src/shared/device'
+import type { DeviceSettingsOperation } from '../../src/shared/device'
 import { HttpError } from '../http'
 import type { DeviceConnection, SettingsWaiter } from './broker-types'
 
 export function relayDeviceSettings(
   settings: Map<string, SettingsWaiter>,
   connection: DeviceConnection,
-  operation: DeviceSettingsAction,
+  operation: DeviceSettingsOperation,
 ) {
   const operationId = crypto.randomUUID()
   return new Promise<import('../../src/shared/device').DeviceSettingsResponse>(

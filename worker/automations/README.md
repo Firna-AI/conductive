@@ -36,7 +36,7 @@ A create without it stores an empty list.
 An update without it keeps the stored list, so an older app tab keeps the choices.
 A save drops each ID that names no secret of the org and stores the rest.
 A `capabilities` value without a list of string IDs returns `invalid_input`, as other bad fields do.
-The shape has no `macAccess`, because each run workspace keeps Mac access off.
+The shape has no `macAccess`, because the Mac access switch acts only on the Mac of the member who uses it in the Mac app, and no person uses it for a run.
 [Chosen secrets](../../docs/protocol/automations.md#chosen-secrets) gives the rules.
 
 Each detail, create, or update reply also includes `AutomationResponse.chosenSecrets`.
@@ -111,7 +111,7 @@ The dispatch stores a queued run before the webhook reply.
 The minute scan recovers it if the background task did not start it.
 Opened and pushed runs pass the head branch and event commit to the internal create.
 Merged runs pass the pull request base branch.
-Both use the published org image of the org's fixed provider account, through the shared create path.
+Both use the published org image of the org's provider account, through the shared create path.
 
 Failed checks, starts, and first turns update the run and the consecutive failure count in one D1 batch.
 Each terminal outcome counts once.

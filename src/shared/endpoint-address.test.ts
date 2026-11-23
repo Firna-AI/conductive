@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 
-import { productDomain } from '../../docs/mockups/src/brand'
+import { productDomain } from './brand'
 
 import { readEndpointAddress } from './endpoint-address'
 

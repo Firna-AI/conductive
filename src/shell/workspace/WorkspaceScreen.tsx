@@ -2,10 +2,10 @@ import { useCallback, useState, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { SuspendedOrgNotice } from '../../../docs/mockups/src/components/orgs/SuspendedOrgNotice'
-import body from '../../../docs/mockups/src/components/workspace/WorkspaceBody.module.css'
-import page from '../../../docs/mockups/src/screens/WorkspaceScreen.module.css'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { SuspendedOrgNotice } from '../../ui/components/orgs/SuspendedOrgNotice'
+import body from '../../ui/components/workspace/WorkspaceBody.module.css'
+import page from '../../ui/screens/WorkspaceScreen.module.css'
 import { mayArchive, mayRestore } from '../../app/permissions'
 import { useStore } from '../../app/store'
 import {
@@ -146,6 +146,7 @@ export function WorkspaceScreen(props: {
     savedError: error?.message ?? null,
     firstStart: failedFirstStart(workspace, start),
     restore: archivedRestore(workspace, suspended, restoreEnded),
+    computer: workspace.archivedComputer?.state,
     removed,
     opened,
   })

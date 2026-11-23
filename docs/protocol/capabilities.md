@@ -2,11 +2,12 @@
 
 This doc holds the requirements and the decisions in force for the
 Capabilities control of New workspace, of each workspace, and of an
-automation. It covers the control, its secrets part, the control of an
-automation, and Mac access. It belongs to
-[Secrets](secrets.md), which covers the secrets, their rights, and their
-grants. [Capabilities: what agents learn](capabilities-agents.md) covers
-what agents learn of the capabilities. The
+automation. It covers the control, its secrets part, and the control of an
+automation. [Mac access](mac-access.md) covers the Mac access part of the
+control in the Mac app. This doc belongs to [Secrets](secrets.md), which
+covers the secrets, their rights, and their grants.
+[Capabilities: what agents learn](capabilities-agents.md) covers what
+agents learn of the capabilities. The
 [mockup catalogue](../mockups/catalogue-secrets.md) draws the control. The
 terms are those of [Secrets](secrets.md#terms) and of the
 [architecture doc](../architecture.md#terms).
@@ -22,16 +23,21 @@ automations, as [Automations](automations.md) says.
 
 - New workspace has a small Capabilities icon, with its label on hover
   (secrets decision 6 G). It opens a control with two parts for now: the
-  secrets to pre-approve, and Mac access.
+  secrets to pre-approve, and, in the Mac app, Mac access.
 - Reason: the icon keeps the page and the dialog plain, and later
   features, such as MCP servers, add their parts to the same control. A
   separate picker of secrets in New workspace was rejected for that
   reason.
-- The create takes the choices of the control, as
-  [The create](create-a-workspace.md#the-create) says.
+- The create takes the secrets that the control pre-approves, as
+  [The create](create-a-workspace.md#the-create) says. It does not take
+  the Mac access switch, which starts a grant on this Mac after the create,
+  as [Mac access](mac-access.md) says.
 - Each workspace shows the same icon beside its message box
   (secrets decision 8 B). Every member can see and change the
-  pre-approvals and Mac access there.
+  pre-approvals there.
+- In the Mac app, the Mac access part has one switch for this Mac, as
+  [The switch](mac-access.md#the-switch) says. Each member sees and changes
+  only the state of their own Mac. A browser shows no Mac access part.
 - In a workspace, the control opens from the message box of one session.
   Under "This session", it lists each session approval of that session,
   with the member who allowed it and the time. It lists each value for
@@ -98,61 +104,26 @@ automations, as [Automations](automations.md) says.
   agents".
 - A check changes the form of the automation, so Save turns on. Save
   stores the chosen secrets with the other fields.
-- The control differs from the control of New workspace: it has no Mac
-  access part. Reason: each run workspace keeps Mac access off
-  (automation capabilities decision 2 A).
+- The control differs from the control of New workspace in the Mac app:
+  it has no Mac access part (automation capabilities decision 2 A). So a
+  run workspace starts with no grant on any Mac. Its agents can still ask
+  for a command on a Mac, as
+  [Agents can always ask](mac-access.md#agents-can-always-ask) says.
+- Reason: no person watches the Mac of the owner during a run. A Mac
+  access switch on the automation would start a grant on that Mac for each
+  run workspace. So text that steers the agent of a run could run every
+  command there with no question.
 - As in New workspace, the control lists no session approval and no value
   for this workspace.
-- A Mac access switch on the automation was rejected. No person watches
-  the Mac of the owner during a run, so text that steers the agent could
-  run each command that the owner always allowed.
-- A switch that turns on Mac access in each run workspace was rejected
-  too, because each later member who sends a message there would expose
-  their own Mac.
 - Every other member reads the chosen secrets in a line under the prompt,
   as [The automation pages](automations.md#the-automation-pages) says.
 
 ## Mac access
 
-- Mac access is off in each new workspace, also in a workspace that an
-  agent or an automation creates (secrets decision 18 A). A member turns
-  it on in the Capabilities of the workspace, or in the Capabilities of
-  New workspace before the create.
-- Reason: agents can reach a Mac only after a member chooses it for the
-  workspace. So text that steers an agent cannot reach a Mac through a
-  new workspace or through an automation run.
-- Mac access was turned off one time in each workspace that existed
-  before this rule, also where a member had turned it on (secrets
-  decision 19 B). Reason: the switch was new, so few members had chosen
-  its value themselves.
-- Keeping Mac access on in the workspaces that existed then was rejected,
-  because they kept a default that no member chose.
-- While Mac access is off, the Worker refuses each Mac command request of
-  the workspace, as [Mac commands](agent-tools.md#mac-commands) says.
-- While it is on, the Mac app asks before each command, unless a
-  permission that its user chose there covers it, as
-  [The choices](desktop-commands.md#the-choices) says.
-- Mac access that starts on in each new workspace was rejected, because
-  agents could then reach a Mac before a member chooses it. Mac access
-  that is on for workspaces that members create, and off only for
-  workspaces that agents and automations create, was rejected. Reason: one rule for every new
-  workspace is simpler, and the risk of a steered agent is the same.
-- Mac access that a new workspace copies from the workspace that creates
-  it was rejected, because a workspace that an agent creates could then
-  reach a Mac with no member's choice.
-- A Mac access switch that each member keeps for each workspace was
-  rejected, because one control would then have a shared part and a
-  personal part.
-- Risk: any member can turn Mac access on again after another member
-  turned it off.
-- Risk: an automation that needs a Mac cannot use it in the first turn of
-  a run. A member must turn Mac access on in the run workspace, then send
-  a message.
-- Risk: when a member turns Mac access on in a run workspace, text that
-  steers the agent of the run can ask for a command on the Mac of the
-  sender of the next turn. A command that the sender always allowed then
-  runs with no question, as
-  [The choices](desktop-commands.md#the-choices) says.
+[Mac access](mac-access.md) states the Mac access part of the control in
+the Mac app: its switch, the grant that it starts on this Mac, and the
+requests that agents can always send. It also states the risks of Mac
+access.
 
 ## What agents learn
 

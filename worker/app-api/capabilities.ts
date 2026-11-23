@@ -3,7 +3,6 @@ import {
   type WorkspaceCapabilitiesResponse,
 } from '../../src/shared/secrets'
 import type { AppDependencies, AppEnv } from '../env'
-import { deviceCall } from '../devices/internal'
 import { requireActiveOrg } from '../data/user-access'
 import { requireOrgMember } from '../members/permissions'
 import {
@@ -69,15 +68,6 @@ export async function capabilitiesRoute(
     }
     await requireOrgMember(env.DB, orgId, userId)
     await requireActiveOrg(env.DB, orgId)
-    if (change.macAccess === false) {
-      try {
-        await deviceCall(env, workspaceId, {
-          type: 'workspace.mac-access-changed',
-        })
-      } catch {
-        warnWorker({ kind: 'capability_mac_access_cleanup_failed' })
-      }
-    }
   }
   return Response.json({
     capabilities,

@@ -5,10 +5,10 @@ import { accountAvatar } from '../../entries/components/orgs/OrgTile.mockup'
 import { agentList } from '../../entries/components/settings/AgentList.mockup'
 import { Connected, type LoginShares, type OpenAgentForm } from './AgentList'
 import type { UnusableLogin } from './LoginNotUsable'
-import type { OrgLoginUse } from './OrgLoginLines'
+import type { OrgLoginUse } from '../../../../../src/ui/components/settings/OrgLoginLines'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { defined } from '../../defined'
-import styles from './AccountSections.module.css'
+import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 
 /** The person signed in, with GitHub, and the way to sign out. */
 export function SignInSection() {

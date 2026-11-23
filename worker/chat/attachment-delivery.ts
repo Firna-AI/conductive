@@ -11,8 +11,12 @@ import { commandDispatchState, type DispatchState } from './ordered-dispatch'
 import { hash } from '../security/crypto'
 import type { ChatStore } from './store'
 import { TurnCompletion } from './turn-completion'
-import type { ActiveRunner, ChatDependencies } from './types'
-import type { PendingCommand, PreparedMessageCommand } from './command-types'
+import type {
+  ActiveRunner,
+  ChatDependencies,
+  PreparedMessageCommand,
+} from './types'
+import type { PendingCommand } from './pending-command'
 
 type MessageCommand = PreparedMessageCommand
 interface Preparation {
@@ -60,7 +64,7 @@ export class AttachmentPreparation {
   ): Promise<DispatchState> {
     if (command.attachments.length === 0) return 'send'
     const sandboxId = await this.dependencies.attachmentSandboxId(
-      active.workspace.id,
+      active.state.workspace.id,
       command.message.sender.id,
     )
     const key = await attachmentCopyKey(command.message.id, sandboxId)
@@ -74,7 +78,7 @@ export class AttachmentPreparation {
     if (
       sandboxId !== null &&
       (await hasCurrentPaths(command)) &&
-      (await this.store.read(active.workspace.id, (view) =>
+      (await this.store.read(active.state.workspace.id, (view) =>
         view.attachmentCopy(command.message.id, sandboxId),
       ))
     )
@@ -99,7 +103,7 @@ export class AttachmentPreparation {
             transfer = Promise.resolve()
               .then(() =>
                 this.dependencies.prepareAttachments(
-                  active.workspace.id,
+                  active.state.workspace.id,
                   command.message.sender.id,
                   command.message.id,
                   [attachment],
@@ -133,7 +137,7 @@ export class AttachmentPreparation {
               if (this.pending.get(key) !== preparation) return false
               if (sandboxId !== null)
                 await this.store.change(
-                  active.workspace.id,
+                  active.state.workspace.id,
                   (view) =>
                     view.saveAttachmentCopy(command.message.id, sandboxId),
                   this.publish,
@@ -145,19 +149,19 @@ export class AttachmentPreparation {
             .then(async (saved) => {
               if (saved)
                 await this.dependencies.completeAttachments(
-                  active.workspace.id,
+                  active.state.workspace.id,
                   command.attachments,
                   sandboxId,
                 )
             }),
         (error: unknown) => {
-          warnAttachmentCopyFailed(active.workspace.id, error)
+          warnAttachmentCopyFailed(active.state.workspace.id, error)
           return this.store.run(async () => {
             if (this.pending.get(key) !== preparation) return
             this.pending.delete(key)
             const current = await this.currentCommand(preparation, command)
             if (current)
-              await this.failTurn(active.workspace.id, current, error)
+              await this.failTurn(active.state.workspace.id, current, error)
             await this.resume()
           })
         },
@@ -185,17 +189,17 @@ export class AttachmentPreparation {
       !isCurrent() ||
       sandboxId !==
         (await this.dependencies.attachmentSandboxId(
-          runner.workspace.id,
+          runner.state.workspace.id,
           original.message.sender.id,
         ))
     )
       return undefined
-    return this.store.read(runner.workspace.id, async (view) => {
+    return this.store.read(runner.state.workspace.id, async (view) => {
       for (const command of await view.pending())
         if (
           (command.type === 'turn' || command.type === 'message') &&
           command.messageId === original.message.id &&
-          !(await view.commandDelivered(command.commandId, runner.id)) &&
+          !(await view.commandDelivered(command.commandId, runner.state.id)) &&
           (await commandDispatchState(view, command)) === 'send'
         )
           return command

@@ -3,20 +3,24 @@ import { Blocks } from 'lucide-react'
 import {
   capabilitiesIntro,
   capabilitiesLabel,
-} from '../../../docs/mockups/src/components/capabilities/capabilitiesCopy'
-import { CapabilitiesPanel } from '../../../docs/mockups/src/components/capabilities/CapabilitiesPanel'
+} from '../../ui/components/capabilities/capabilitiesCopy'
+import { CapabilitiesPanel } from '../../ui/components/capabilities/CapabilitiesPanel'
 import type { NewWorkspaceModel } from '../../app/new-workspace-model'
 import { useStore } from '../../app/store'
 import type { ComposerTool } from '../../chat/components/ComposerTools'
 import type { OrgSummary } from '../../shared/orgs'
 import { useOrgModel } from '../context'
+import { useThisMac } from '../mac/this-mac'
 import { capabilityParts } from './capability-parts'
 
 /**
  * The open control of New workspace: the secrets of the org that the new
- * workspace pre-approves, and its Mac access, as the draft holds them. The
- * secrets read again each time that the control opens. While the create
- * runs, the choices take no change.
+ * workspace pre-approves, as the draft holds them. The secrets read again
+ * each time that the control opens. While the create runs, the choices
+ * take no change. In the Mac app, the control also has the switch of Mac
+ * access, a choice of the draft that starts off: the page starts the grant
+ * until Stop of the new workspace on this Mac after the create, only while
+ * the switch is on. A browser shows no Mac access part.
  */
 function DraftCapabilitiesPanel(props: {
   org: OrgSummary
@@ -26,8 +30,9 @@ function DraftCapabilitiesPanel(props: {
   const { org, model } = props
   const secrets = useOrgModel(org.id).secrets
   const list = useStore(secrets.list.store)
-  const { capabilities } = useStore(model.draft)
+  const { capabilities, allowThisMac } = useStore(model.draft)
   const sending = useStore(model.create).state === 'sending'
+  const onMac = useThisMac() !== null
   useEffect(() => {
     void secrets.read()
   }, [secrets])
@@ -37,8 +42,15 @@ function DraftCapabilitiesPanel(props: {
     retry: () => secrets.read(),
     preapproved: capabilities.preapprovedSecretIds,
     setPreapproved: (secretId, on) => model.setPreapproved(secretId, on),
-    macAccess: capabilities.macAccess,
-    setMacAccess: (on) => model.setMacAccess(on),
+    macAccess: onMac
+      ? {
+          on: allowThisMac,
+          disabled: sending,
+          note: null,
+          result: null,
+          change: (on) => model.setAllowThisMac(on),
+        }
+      : null,
     disabled: sending,
   })
   return (
@@ -54,7 +66,8 @@ function DraftCapabilitiesPanel(props: {
  * The Capabilities tool of New workspace, on the page and in the dialog
  * (secrets decision 6 G): a small icon with its label on hover, whose
  * control chooses what the agents of the new workspace can use. The create
- * sends the choices with the first message.
+ * sends the pre-approved secrets with the first message. The Mac access
+ * switch is not sent: after the create, it starts a grant on this Mac.
  */
 export function draftCapabilities(
   org: OrgSummary,

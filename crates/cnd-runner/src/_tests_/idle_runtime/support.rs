@@ -8,14 +8,16 @@ use async_trait::async_trait;
 use cnd_runner_interface::runner::RunnerEvent;
 use cnd_runner_interface::runner_commands::{RunnerCommand, RunnerControlCommand, RunnerInterrupt};
 use cnd_runner_interface::runner_handshake::RunnerToWorkspace;
+use cnd_runner_interface::services::transport::RunnerServiceMessage;
 use futures_util::future::BoxFuture;
 use tokio::sync::{self, Notify, mpsc, watch};
 use unimock::{MockFn, Unimock, matching};
 
 use crate::clock::ClockMock;
 use crate::error::Result;
-use crate::link::ports::{LinkUpdate, RunnerLink, RunnerLinkMock};
+use crate::link::ports::{LinkUpdate, RunnerLink, RunnerLinkMock, ServiceConnection};
 use crate::runtime::{CommandHandlerMock, RunExit, Runner, RunnerCore};
+use crate::services::ports::ServiceEffects;
 use crate::state::store::EventStoreMock;
 use crate::update::{ReleaseReadinessMock, ReleaseStatus};
 
@@ -24,27 +26,42 @@ trait Steps: Send + Sync {
     fn next(&self) -> BoxFuture<'static, Result<LinkUpdate>>;
 }
 
-struct Link(Unimock);
+struct Link {
+    effects: Unimock,
+    output: mpsc::UnboundedSender<RunnerServiceMessage>,
+}
 
 #[async_trait]
 impl RunnerLink for Link {
     async fn connect(&self) -> Result<()> {
-        RunnerLink::connect(&self.0).await
+        RunnerLink::connect(&self.effects).await
     }
     async fn step(&self) -> Result<LinkUpdate> {
-        Steps::next(&self.0).await
+        Steps::next(&self.effects).await
     }
     async fn emit(&self, event: RunnerEvent, id: Option<String>) -> Result<()> {
-        RunnerLink::emit(&self.0, event, id).await
+        RunnerLink::emit(&self.effects, event, id).await
     }
     async fn persist(&self) -> Result<()> {
-        RunnerLink::persist(&self.0).await
+        RunnerLink::persist(&self.effects).await
     }
     async fn reply(&self, response: RunnerToWorkspace) -> Result<()> {
-        RunnerLink::reply(&self.0, response).await
+        RunnerLink::reply(&self.effects, response).await
     }
     async fn close(&self) -> Result<()> {
-        RunnerLink::close(&self.0).await
+        RunnerLink::close(&self.effects).await
+    }
+    async fn service_connection(&self) -> Option<ServiceConnection> {
+        Some(ServiceConnection { generation: 1 })
+    }
+    async fn service_reply(
+        &self,
+        connection: ServiceConnection,
+        message: RunnerServiceMessage,
+    ) -> Result<bool> {
+        assert_eq!(connection, ServiceConnection { generation: 1 });
+        let _ = self.output.send(message);
+        Ok(true)
     }
 }
 
@@ -56,10 +73,18 @@ pub(super) struct Fixture {
     pub(super) commands: Arc<Notify>,
     pub(super) order: Arc<Mutex<Vec<&'static str>>>,
     checked: Arc<Notify>,
+    pub(super) services: mpsc::UnboundedReceiver<RunnerServiceMessage>,
 }
 
 impl Fixture {
     pub(super) async fn new(release: ReleaseStatus) -> Self {
+        Self::configured(release, None).await
+    }
+
+    pub(super) async fn configured(
+        release: ReleaseStatus,
+        services: Option<Arc<dyn ServiceEffects>>,
+    ) -> Self {
         let checked = Arc::new(Notify::new());
         let check = checked.clone();
         let busy = Arc::new(AtomicBool::new(false));
@@ -71,6 +96,7 @@ impl Fixture {
         let commands = Arc::new(Notify::new());
         let command = commands.clone();
         let (input, received) = mpsc::unbounded_channel();
+        let (output, private) = mpsc::unbounded_channel();
         let received = Arc::new(sync::Mutex::new(received));
         let (stop, shutdown) = watch::channel(false);
         let effects = Unimock::new((
@@ -127,13 +153,19 @@ impl Fixture {
                     Ok(())
                 })),
         ));
-        let core = RunnerCore::new(
-            Arc::new(Link(effects.clone())),
+        let mut core = RunnerCore::new(
+            Arc::new(Link {
+                effects: effects.clone(),
+                output,
+            }),
             Arc::new(effects.clone()),
             Arc::new(effects.clone()),
             Arc::new(effects.clone()),
             Arc::new(effects),
         );
+        if let Some(services) = services {
+            core = core.with_services(services);
+        }
         input.send(LinkUpdate::Connected).unwrap();
         input
             .send(LinkUpdate::Command(Box::new(
@@ -156,6 +188,7 @@ impl Fixture {
             commands,
             order,
             checked,
+            services: private,
         }
     }
 

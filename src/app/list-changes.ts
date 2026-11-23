@@ -89,18 +89,27 @@ export function workspaceReassigned(
 
 /**
  * A confirmed Archive or Restore changes only its own fields, so a newer
- * name, owner, or section stays. Each one raises `updatedAt`, so it changes
- * nothing over a record that is not older, such as a later Restore that a
- * read brought. An Archive also gives its place to the rows under it, as
- * `replaceWorkspace` says.
+ * name, owner, or section stays. Its fields include the state of the cloud
+ * computer, which a reply without it clears. Each one raises `updatedAt`, so
+ * it changes nothing over a record that is not older, such as a later
+ * Restore that a read brought. An Archive also gives its place to the rows
+ * under it, as `replaceWorkspace` says.
  */
 export function workspaceLifecycle(workspace: Workspace): ListChange {
-  const { state, archivedAt, restoreUntil, updatedAt } = workspace
+  const { state, archivedAt, restoreUntil, archivedComputer, updatedAt } =
+    workspace
   return (list) => ({
     ...list,
     workspaces: replaceWorkspace(list.workspaces, workspace.id, (current) =>
       current.updatedAt < updatedAt
-        ? { ...current, state, archivedAt, restoreUntil, updatedAt }
+        ? {
+            ...current,
+            state,
+            archivedAt,
+            restoreUntil,
+            archivedComputer,
+            updatedAt,
+          }
         : current,
     ),
   })

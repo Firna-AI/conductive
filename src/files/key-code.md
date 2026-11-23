@@ -42,7 +42,7 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   file reads, limits them to two at once, and keeps each path's result.
   Its unit tests cover queue order, cached results, failures, and aborts.
 - `page/FileBody.tsx`: `FileContent`, the body of a file page. It draws
-  a picture through the mockups' `ImageView`, named by the file name of
+  a picture through the shared `ImageView`, named by the file name of
   the label of its path. `page/decode-picture.ts` gives `decodePicture`,
   which loads a picture apart from the page to learn its size, or finds
   that the browser cannot draw it.
@@ -50,7 +50,7 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   drawing at a point or in a sheet. `panel/row-menu.ts` gives the types of
   the `rowMenu` prop and the groups of its entries.
 - `panel/UnavailableLists.tsx`: the notices of the failed repairs under
-  the lists, with the mockups' `LostUpdateRow` and their ages, and the
+  the lists, with the shared `LostUpdateRow` and their ages, and the
   notice of a saved tree that the cloud computer could not read.
 - `markdown/markdown-document.ts`: `MarkdownDocument`, a parsed Markdown
   file: its blocks, their inline content, and the task box of each list
@@ -77,23 +77,23 @@ first. Each path is relative to `src/files/`, the folder of this guide.
   worker that runs the parse, and its start from the view, which ends it.
 - `markdown/MarkdownView.tsx`: the safe renderer of a parsed document.
   `parser` replaces the worker for a static render. It draws each table
-  through the shared `MarkdownTable` of the mockups, with the margin of
+  through the shared `MarkdownTable`, with the margin of
   its `.table` class. Its headings take their look from the shared
-  `MarkdownHeadings.module.css` of the mockups, and its quotes, rules,
+  `MarkdownHeadings.module.css`, and its quotes, rules,
   bold text, emphasis, strikethrough, and task boxes from the shared
   `MarkdownProse.module.css`. Chat answers use both modules too. Its own
   CSS sets only their margins. It draws each list item with `MarkdownItem`
   of `../markdown/MarkdownItem.tsx`, which chat answers share.
 - `markdown/inline-render.tsx`: `inlineNodes`, the inline content of a
-  block as React elements. It draws each link with the mockups' `TextLink`
+  block as React elements. It draws each link with the shared `TextLink`
   through the link opener of the app shell.
 - `code/`: the syntax colours and the code view. `code/file-kind.ts` gives
   `fileKind`, the kind of a file by its name: Markdown, code, or another
   file. A file is code when the code view gives it syntax colours. It also
   gives `isMarkdown` and `isHtml`, the files whose tab has a Preview. An
   HTML file keeps the kind and the icon of code.
-  `panel/file-icons.tsx` draws the icon of each kind through `EntryIcon` of
-  the mockups, the one icon map of All files, the tabs, the list of `@`,
+  `panel/file-icons.tsx` draws the icon of each kind through the shared
+  `EntryIcon`, the one icon map of All files, the tabs, the list of `@`,
   and the file chips.
 - `page/html-preview.ts` and `page/HtmlPagePreview.tsx`: the
   `htmlPreview` prop of `FilePage`, and the drawing of its views and of

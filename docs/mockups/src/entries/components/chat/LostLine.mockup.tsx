@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { LostLine } from '../../../components/chat/LostLine'
+import { LostLine } from '../../../../../../src/ui/components/chat/LostLine'
 import { lostReasons, lostWhats } from './chatKeys'
 
 /**

@@ -1,9 +1,6 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import type { RunnerFileCommand } from '../../src/shared/generated/RunnerFileCommand'
-import {
-  type WorkspaceEvent,
-  type WorkspaceEventEnvelope,
-} from './workspace-events'
+import type { WorkspaceEvent, WorkspaceEventEnvelope } from './workspace-events'
 import type {
   ToolSessionAccess,
   ToolSessionWrite,
@@ -99,8 +96,12 @@ export class WorkspaceChat {
     return this.operations.accept(first)
   }
 
-  async stopWorkspace(workspaceId: string): Promise<void> {
-    await this.operations.stop(workspaceId)
+  stopWorkspace(...input: Parameters<WorkspaceOperations['stop']>) {
+    return this.operations.stop(...input)
+  }
+
+  stopTurnsForRestart(workspaceId: string): Promise<void> {
+    return this.operations.stopTurnsForRestart(workspaceId)
   }
 
   commitWorkspaceEvent(
@@ -137,7 +138,7 @@ export class WorkspaceChat {
       env,
       this.dependencies,
       this.publish,
-      () => this.runner.connections.current,
+      () => this.runner.connections.current?.state ?? null,
     )
     this.authorizedWorkspaceOperation = workspaceOperationRunner(
       this.store,
@@ -169,7 +170,7 @@ export class WorkspaceChat {
       (events) => this.publish(events),
       (id, turnId, kind) => this.turnTokens.forRunningTurn(id, turnId, kind),
       (id) => this.binding.bind(id),
-      native,
+      { native, env, storage },
     )
     this.operations = new WorkspaceOperations({
       env,
@@ -178,7 +179,8 @@ export class WorkspaceChat {
       workspaceId: () => this.binding.id,
       bind: (id) => this.binding.bind(id),
       publish: (events) => this.publish(events),
-      closeRunner: () => this.runner.close(),
+      closeRunner: (id) => this.runner.stop(id),
+      closeRunnerAfterRestartFailure: () => this.closeRunner(),
       flushRunner: () => this.runner.flush(),
     })
   }
@@ -279,11 +281,13 @@ export class WorkspaceChat {
     after: number,
     peer: BrowserPeer,
     socket?: WebSocket,
+    registered?: () => void,
   ): Promise<() => void> {
-    return this.browsers.subscribe(access, after, peer, socket)
+    return this.browsers.subscribe(access, after, peer, socket, registered)
   }
 
-  private operation(workspaceId: string): ChatOperation {
+  operation(workspaceId: string): ChatOperation {
+    this.binding.bind(workspaceId)
     return new ChatOperation(
       this.store,
       workspaceId,

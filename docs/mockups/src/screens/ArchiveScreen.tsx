@@ -11,10 +11,12 @@ export const archiveSchema = {
     /**
      * The archived workspace with Restore on its bar, the same workspace
      * just after Archive with its toast, the list with its Archived group
-     * open, the workspace back in its section after Restore, or the
-     * archived workspace without a kept cloud computer. Or a removed
-     * workspace, whose 14 days ended, which a chip opens: after the app
-     * deleted its cloud computer, or while that delete still tries again.
+     * open, the workspace back in its section after Restore, the archived
+     * workspace while an unresolved create request can still hold a cloud
+     * computer that the workspace does not name, or the archived workspace
+     * after the app deleted its cloud computer. Or a removed workspace,
+     * whose 14 days ended, which a chip opens: after the app deleted its
+     * cloud computer, or while that delete still tries again.
      */
     view: {
       enum: [
@@ -22,6 +24,7 @@ export const archiveSchema = {
         'just-archived',
         'group',
         'restored',
+        'pending',
         'no-computer',
         'removed',
         'removed-deleting',
@@ -59,6 +62,7 @@ const workspaceStates: Readonly<Record<WorkspaceView, WorkspaceState>> = {
   archived,
   'just-archived': { ...archived, toast: 'archived' },
   restored: { ...archived, sandbox: 'stopped' },
+  pending: { ...archived, archive: 'pending' },
   'no-computer': { ...archived, archive: 'none' },
   removed,
   'removed-deleting': { ...removed, archive: 'removed-deleting' },

@@ -16,7 +16,7 @@ const options = new URLSearchParams({
   clock: 'frozen',
 })
 
-test('the model menu reaches choices outside a clipping box and returns focus after Escape', async () => {
+test('the model menu reaches choices outside a clipping box, opens All models beside it, and returns focus after Escape', async () => {
   await mkdir(evidence, { recursive: true })
   const directory = await mkdtemp(resolve(evidence, 'm-'))
   const site = resolve(directory, 'site')
@@ -81,26 +81,74 @@ app.on('window-all-closed', () => app.quit());
       name: 'Model and effort',
       exact: true,
     })
-    const low = menu.getByRole('menuitemradio', { name: 'Low', exact: true })
+    // Effort shows the current effort, and its submenu holds the efforts.
+    const effort = menu.getByRole('menuitem', {
+      name: 'Effort High',
+      exact: true,
+    })
     // Check the clip before a pointer action can scroll anything into view.
-    await expect(low).toBeInViewport({ ratio: 1 })
+    await expect(effort).toBeInViewport({ ratio: 1 })
     const triggerBox = await picker.boundingBox()
-    const choiceBox = await low.boundingBox()
+    const choiceBox = await effort.boundingBox()
     if (!triggerBox || !choiceBox) throw new Error('The picker has no box')
     expect(choiceBox.y + choiceBox.height).toBeLessThanOrEqual(triggerBox.y)
 
-    await low.click()
+    await effort.click()
+    const efforts = page.getByRole('menu', { name: 'Effort', exact: true })
+    await expect(efforts).toBeInViewport({ ratio: 1 })
+    await expect(
+      efforts.getByRole('menuitemradio', { name: 'High', exact: true }),
+    ).toBeFocused()
+    await efforts
+      .getByRole('menuitemradio', { name: 'Low', exact: true })
+      .click()
     await expect(menu).toHaveCount(0)
     await expect(picker).toHaveAccessibleName('Model and effort: Opus 5.5, Low')
     await picker.click()
+    // The menu lists the starting favourites of the account first.
     await page.keyboard.press('Home')
     await expect(
-      menu.getByRole('menuitemradio', { name: 'Opus 5.5', exact: true }),
+      menu.getByRole('menuitemradio', { name: 'Opus 5.5 High', exact: true }),
     ).toBeFocused()
     await page.keyboard.press('ArrowDown')
     await expect(
-      menu.getByRole('menuitemradio', { name: 'Sonnet 5.5', exact: true }),
+      menu.getByRole('menuitemradio', { name: 'Opus 5.5 Max', exact: true }),
     ).toBeFocused()
+
+    // All models opens its submenu beside the menu, level with its row, in
+    // the top layer, so the clip of the box does not cut it either.
+    const allModels = menu.getByRole('menuitem', {
+      name: 'All models',
+      exact: true,
+    })
+    for (let step = 0; step < 4; step += 1) {
+      await page.keyboard.press('ArrowDown')
+    }
+    await expect(allModels).toBeFocused()
+    await page.keyboard.press('ArrowRight')
+    const submenu = page.getByRole('menu', { name: 'All models', exact: true })
+    const current = submenu.getByRole('menuitemradio', {
+      name: 'Opus 5.5',
+      exact: true,
+    })
+    await expect(current).toBeFocused()
+    await expect(submenu).toBeInViewport({ ratio: 1 })
+    const menuBox = await menu.boundingBox()
+    const rowBox = await allModels.boundingBox()
+    const submenuBox = await submenu.boundingBox()
+    const firstBox = await submenu
+      .getByRole('menuitemradio')
+      .first()
+      .boundingBox()
+    if (!menuBox || !rowBox || !submenuBox || !firstBox) {
+      throw new Error('All models has no box')
+    }
+    expect(submenuBox.x).toBeGreaterThanOrEqual(menuBox.x + menuBox.width)
+    expect(Math.abs(firstBox.y - rowBox.y)).toBeLessThanOrEqual(1)
+    await page.keyboard.press('ArrowLeft')
+    await expect(submenu).toHaveCount(0)
+    await expect(allModels).toBeFocused()
+
     await page.keyboard.press('Escape')
     await expect(menu).toHaveCount(0)
     await expect(picker).toBeFocused()

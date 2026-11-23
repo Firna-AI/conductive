@@ -1,5 +1,5 @@
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import tabDrag from '../../../docs/mockups/src/components/workspace/TabDrag.module.css'
+import { classes } from '../../ui/components/common/classes'
+import tabDrag from '../../ui/components/workspace/TabDrag.module.css'
 import { usePointerDrag } from '../../app/pointer-drag'
 import type { TabPlace } from '../state/tab-order'
 import type { TabNodes } from './tab-nodes'

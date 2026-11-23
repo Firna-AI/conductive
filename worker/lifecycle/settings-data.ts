@@ -10,6 +10,8 @@ export interface ImageSettings {
   orgId: string
   installScript: SavedScript
   startupScript: SavedScript
+  skillsRepository: string
+  trustedSkillsRepository: string
   envVarsCiphertext: string | null
   revision: number
 }
@@ -48,7 +50,9 @@ export async function readImageSettings(
   const row = await db
     .prepare(
       `SELECT org_id AS orgId, install_script AS installScript,
-       startup_script AS startupScript, env_vars_ciphertext AS envVarsCiphertext, revision
+       startup_script AS startupScript, skills_repository AS skillsRepository,
+       trusted_skills_repository AS trustedSkillsRepository,
+       env_vars_ciphertext AS envVarsCiphertext, revision
      FROM settings WHERE org_id = ?`,
     )
     .bind(orgId)

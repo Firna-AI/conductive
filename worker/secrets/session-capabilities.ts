@@ -1,5 +1,4 @@
 import type { RunnerCapabilities } from '../../src/shared/generated/RunnerCapabilities'
-import { workspaceMacAccess } from './capabilities-data'
 import { secretGrants, secretWorkspaceState } from './grant-data'
 import type { SecretRequestRecords } from './request-records'
 
@@ -27,4 +26,15 @@ export async function readSessionCapabilities(
     ].sort(),
     macAccess,
   }
+}
+
+async function workspaceMacAccess(
+  db: D1Database,
+  workspaceId: string,
+): Promise<boolean> {
+  const row = await db
+    .prepare('SELECT mac_access AS macAccess FROM workspaces WHERE id = ?')
+    .bind(workspaceId)
+    .first<{ macAccess: number }>()
+  return row?.macAccess === 1
 }

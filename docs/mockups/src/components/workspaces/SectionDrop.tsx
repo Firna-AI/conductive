@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
-import a11y from '../common/a11y.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import type { SidebarSection } from './sections'
-import styles from './SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 /**
  * The header of a dragged section, lifted under the pointer. It shows the

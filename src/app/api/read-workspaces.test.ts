@@ -83,6 +83,41 @@ it('reads older shell, chat, and member replies without a GitHub summary or a pa
   expect(parseWorkspace(workspace).parentId).toBeNull()
 })
 
+it('keeps archived computer evidence and accepts absent or unknown optional values in every browser reader', () => {
+  const { detail } = workspaceFixtures()
+  const archivedComputer = {
+    state: 'may-exist',
+    restoreUntil: 1_801_209_600_000,
+  }
+  const archived = {
+    ...detail.workspace,
+    state: 'archived',
+    archivedAt: 1_800_000_000_000,
+    restoreUntil: null,
+  }
+  const readers = [
+    readWorkspace,
+    (value: unknown) =>
+      readChatWorkspace({ ...detail, workspace: value }).workspace,
+    parseWorkspace,
+  ]
+  for (const read of readers) {
+    expect(read({ ...archived, archivedComputer })).toMatchObject({
+      archivedComputer,
+    })
+    for (const optional of [
+      undefined,
+      null,
+      'deleted',
+      { state: 'future-state', restoreUntil: 1_801_209_600_000 },
+      { state: 'deleted', restoreUntil: 'unknown' },
+    ])
+      expect(
+        read({ ...archived, archivedComputer: optional }),
+      ).not.toHaveProperty('archivedComputer')
+  }
+})
+
 it('keeps the response fields used by shell creation, chat streams, and the Members list', () => {
   const { created } = workspaceFixtures()
   const workspace = {

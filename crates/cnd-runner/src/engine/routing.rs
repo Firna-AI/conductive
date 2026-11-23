@@ -1,4 +1,4 @@
-//! Command identities for ordered session routing.
+//! Typed command identities used by the session registry.
 
 use cnd_runner_interface::runner_commands::{
     RunnerChangeModel, RunnerCommand, RunnerControlCommand, RunnerInterrupt,

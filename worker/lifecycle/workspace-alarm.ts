@@ -16,6 +16,7 @@ import type { ComputerStopTask } from './computer-stop-task'
 import type { QueueTurn } from '../chat/queue-turn'
 import { StartSuperseded } from './start-guard'
 import type { StartJobRecords } from './start-job-records'
+import { restartDeadline } from './durable-restart'
 import { providerRetryPending } from './provider-retry'
 
 const START_PHASE_ORDER = {
@@ -46,6 +47,7 @@ export async function runWorkspaceAlarm(input: {
   archive: WorkspaceArchive
   computerStops: ComputerStopTask
   runs?: Pick<StartJobRecords, 'begin'>
+  restart?: () => Promise<void>
 }): Promise<void> {
   const { storage, env, dependencies, alarms, lifecycle } = input
   const startedAt = dependencies.now()
@@ -212,16 +214,20 @@ export async function runWorkspaceAlarm(input: {
     else if (!remainingCleanup) await input.cleanupStorage.deleteAlarm()
     if (requested('lifecycle') || state?.startStop === 'pending') {
       try {
-        await lifecycle.alarm()
+        if (await lifecycle.alarm()) await input.restart?.()
         if (!state) await alarms.set('lifecycle', null)
       } catch {
-        const deadlineAt = (await lifecycle.read())?.diskRetentionDeadlineAt
+        const current = await lifecycle.read()
         const now = dependencies.now()
+        const disk = current?.diskRetentionDeadlineAt ?? 0
+        const restart = current && restartDeadline(current)
         await alarms.set(
           'lifecycle',
-          deadlineAt !== undefined && deadlineAt > now
-            ? Math.min(now + 30_000, deadlineAt)
-            : now + 30_000,
+          Math.min(
+            now + 30_000,
+            disk > now ? disk : Infinity,
+            restart && restart > now ? restart : Infinity,
+          ),
         )
       }
     }

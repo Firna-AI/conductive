@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react'
-import styles from '../../../../docs/mockups/src/components/settings/ShortcutsSections.module.css'
+import styles from '../../../ui/components/settings/ShortcutsSections.module.css'
 import { defaultShortcutKeys } from '../../../app/shortcuts/defaults'
 import type { ShortcutKeyText } from '../../../shared/shortcut-key'
 import { SHORTCUT_KEYS_LIMIT } from '../../../shared/shortcuts'

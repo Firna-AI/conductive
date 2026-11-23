@@ -1,6 +1,6 @@
 import { expect } from 'vitest'
 
-import { macDmgNames } from '../../docs/mockups/src/brand'
+import { macDmgNames } from '../../src/shared/brand'
 import { macAppSection } from '../../src/marketing/features'
 import { sitePaths, sourceRepositoryHref } from '../../src/marketing/links'
 import { pricingPageCopy } from '../../src/marketing/pricing'

@@ -1,23 +1,23 @@
 import { CircleAlert } from 'lucide-react'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { CapabilityChangeLine } from '../../../docs/mockups/src/components/chat/CapabilityChangeLine'
-import { ContinuedLine } from '../../../docs/mockups/src/components/chat/ContinuedLine'
-import { RepositoryChangedLine } from '../../../docs/mockups/src/components/chat/RepositoryChangedLine'
-import {
-  StopLine,
-  type StopSource,
-} from '../../../docs/mockups/src/components/chat/StopLine'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
+import { ContinuedLine } from '../../ui/components/chat/ContinuedLine'
+import { RepositoryChangedLine } from '../../ui/components/chat/RepositoryChangedLine'
+import { StopLine, type StopSource } from '../../ui/components/chat/StopLine'
+import { WakeLine } from '../../ui/components/chat/WakeLine'
+import { classes } from '../../ui/components/common/classes'
+import { Notice } from '../../ui/components/common/Notice'
+import styles from '../../ui/components/chat/ChatItemView.module.css'
 import { filesWithoutChip } from '../links/chat-parts'
 import { ChatText, SessionLinkText, useChatParts } from '../links/LinkedText'
+import { agentMessageId } from '../../shared/transcript/item-keys'
 import type { SingleItem } from '../../shared/transcript/transcript-entries'
 import {
   continuedBy,
   turnCopy,
   type ChatReaders,
 } from '../../shared/transcript/turn-words'
+import { MarkedMessage } from '../explain/MarkedMessage'
 import { ActionButton } from '../ui/actions'
 import controls from '../ui/controls.module.css'
 import { AgentText } from './AgentText'
@@ -35,7 +35,9 @@ import type { StopFacts } from './turn-facts'
  * the message.
  */
 export function UserBubble(props: {
-  message: Pick<UserMessage, 'text' | 'attachments' | 'state'>
+  message: Pick<UserMessage, 'id' | 'text' | 'attachments' | 'state'>
+  /** The message is in the transcript, so Explain can mark its text. */
+  accepted?: boolean
 }) {
   const { message } = props
   const parts = useChatParts(message.text, {
@@ -44,10 +46,17 @@ export function UserBubble(props: {
     attachments: message.attachments,
   })
   const listed = filesWithoutChip(parts, message.attachments)
+  const text = <ChatText opens={message.state === 'sent'} parts={parts} />
   return (
     <div className={styles.user}>
       <div className={classes(styles.bubble, controls.lines)}>
-        <ChatText opens={message.state === 'sent'} parts={parts} />
+        {props.accepted ? (
+          <MarkedMessage align="end" bubble done messageId={message.id}>
+            {text}
+          </MarkedMessage>
+        ) : (
+          text
+        )}
       </div>
       {listed.length > 0 ? <SentFiles attachments={listed} /> : null}
     </div>
@@ -104,9 +113,17 @@ export function ItemView(props: {
   const { item, actions } = props
   switch (item.kind) {
     case 'user':
-      return <UserBubble message={item.message} />
+      return <UserBubble accepted message={item.message} />
     case 'agent':
-      return <AgentText id={item.id} live={props.live} text={item.text} />
+      return (
+        <MarkedMessage
+          align="middle"
+          done={item.complete === true}
+          messageId={agentMessageId(item)}
+        >
+          <AgentText id={item.id} live={props.live} text={item.text} />
+        </MarkedMessage>
+      )
     case 'failed':
       return (
         <Notice
@@ -136,20 +153,39 @@ export function ItemView(props: {
         />
       )
     case 'continued':
+      // Each branch shows by its label, or by its real name without one.
       return (
         <ContinuedLine
-          base={item.baseBranch}
-          branch={item.branch}
+          base={item.displayBaseBranch ?? item.baseBranch}
+          branch={item.displayBranch ?? item.branch}
           who={continuedBy(item.member, props.readers)}
         />
       )
     case 'repository-changed':
+      // The new branch shows by its label, or by its real name without one.
       return (
         <RepositoryChangedLine
-          branch={item.branch}
+          branch={item.displayBranch ?? item.branch}
           repository={item.repository.fullName}
           who={continuedBy(item.member, props.readers)}
         />
       )
+    case 'wake': {
+      // The chip of the watched session, as the line of a stop from a
+      // session shows it. The chip names its workspace too.
+      const { notice } = item
+      return (
+        <WakeLine
+          end={notice.state}
+          reason={notice.reason ?? undefined}
+          session={
+            <SessionLinkText
+              sessionId={notice.watchedSession.id}
+              workspaceId={notice.watchedWorkspaceId}
+            />
+          }
+        />
+      )
+    }
   }
 }

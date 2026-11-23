@@ -4,8 +4,9 @@ The chat of a workspace: the session tabs with the session history, and the
 chat of the open session with its composer. It shows messages, folded runs
 of tool calls, the folded work of each ended turn above its answer, the
 running turn, steer, Stop, failures with Try again, the start steps of the
-sandbox, the Mac commands of each turn, and the bar that takes the
-composer's place while the sandbox does not run. After a failed first start
+sandbox, the Mac commands of each turn, Explain with the marks and the
+popover of each explanation, and the bar that takes the composer's place
+while the sandbox does not run. After a failed first start
 of a new workspace, that bar sits above the composer, which stays. The workspace screen
 of the app shell mounts it by default, as
 [the workspace screen](../shell/workspace/README.md#the-chat-of-the-workspace)
@@ -137,16 +138,20 @@ code that draws them.
   their answers, and the settings of the Mac.
 - [The secret requests](secrets/README.md) hold the rules of the requests
   for secrets, their answers, the runs, and the line of a late answer.
+- [Explain](explain/README.md) holds the rules of Explain by a selection,
+  its key, the marks of explanations, their menu, and the popover with its
+  follow-up field.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
-- The parts reuse the mockup CSS modules and the mockup parts that are pure,
-  so the app and the mockups look the same. The shared CSS also limits a
+- The parts reuse the shared parts and CSS Modules of the
+  [shared UI](../ui/README.md) in `src/ui/`, which the mockups draw too. So
+  the app and the mockups look the same. The shared CSS also limits a
   long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
-- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the mockups'
-  `src/components/chat/sizes.ts`. The attached files, the left-out output,
-  the mockups, and the composer of a new workspace share it. The chat keeps
-  no size formatter of its own.
+- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the shared
+  `src/ui/components/chat/sizes.ts`. The attached files, the left-out
+  output, the mockups, and the composer of a new workspace share it. The
+  chat keeps no size formatter of its own.
 - User-facing text follows the
   [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.
@@ -174,13 +179,14 @@ chat in the whole app.
 [Chat tests](tests.md) says what each test file checks.
 
 The Mac commands have their own [tests](device/README.md#tests), and a
-check in the Mac app.
+check in the Mac app. Explain has its own [tests](explain/README.md#tests).
 
 The placement of the model menu needs a real browser. The Electron check
 [`chat-menu-clipping.spec.ts`](../../desktop/tests/chat-menu-clipping.spec.ts)
 builds the development page and opens the real Model and effort menu in a
-box that clips. It checks the choices outside the box, a pointer choice,
-the arrow keys, and the focus return after Escape. Run
+box that clips. It checks the choices outside the box, a pointer choice
+of an effort in the submenu of Effort, the arrow keys, the submenu of All models beside the menu and level with
+its row, and the focus return after Escape. Run
 `npm --prefix desktop run test:electron -- tests/chat-menu-clipping.spec.ts`.
 
 ### Key code

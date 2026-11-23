@@ -5,7 +5,7 @@ import {
 } from '../lifecycle/workspace-runtime'
 import { chatFilesStorage } from './files-storage'
 import { saveHistoryEvent } from './history-storage'
-import { HistoryPages, type SessionPage } from './history-pages'
+import { HistoryPages, type ReadScope } from './history-pages'
 import { prepareSessionHistory } from './history-session-preparation'
 import { ChatRecords } from './chat-records'
 import type { FilesStorage } from '../files/storage'
@@ -22,13 +22,18 @@ import {
   chatEventKey as eventKey,
 } from './storage-keys'
 import type { ChatData, ChatStorage, StoredTurn } from './types'
-import type { PendingCommand } from './command-types'
+import type { PendingCommand } from './pending-command'
 import { TurnEndReports, type TurnEndReport } from './turn-end-reports'
 import { ChatQueue, type QueueTurn } from './queue-turn'
 import { readChatMetadata, type ChatMetadata } from './store-metadata'
 import { SecretRequestRecords } from '../secrets/request-records'
 import type { RunnerDiagnosticIdentity } from './runner-diagnostics'
 import { CapabilityNoteRecords } from './capability-note-records'
+import { SessionWatchRecords } from './session-watch-records'
+import {
+  WorkspaceEventLabelPreparation,
+  WorkspaceEventLabels,
+} from './workspace-event-labels'
 
 export class ChatTransaction extends ChatRecords {
   readonly workspaceId: string
@@ -44,8 +49,10 @@ export class ChatTransaction extends ChatRecords {
   readonly output: RunnerOutputState
   readonly secrets: SecretRequestRecords
   readonly capabilityNotes: CapabilityNoteRecords
+  readonly watches: SessionWatchRecords
   private readonly summary: WorkspaceSummaryProjection
   private readonly pages: HistoryPages
+  private readonly labels: WorkspaceEventLabelPreparation | undefined
   private readonly prepareSession:
     ((through: number) => Promise<void>) | undefined
   private through: number
@@ -56,12 +63,15 @@ export class ChatTransaction extends ChatRecords {
     metadata: ChatMetadata,
     now: number,
     prepareSession?: (through: number) => Promise<void>,
+    labels?: WorkspaceEventLabelPreparation,
   ) {
     super(data)
+    this.labels = labels
     this.prepareSession = prepareSession
     this.pages = new HistoryPages(data, prepareSession)
     this.secrets = new SecretRequestRecords(data)
     this.capabilityNotes = new CapabilityNoteRecords(data)
+    this.watches = new SessionWatchRecords(data)
     this.output = new RunnerOutputState(data)
     this.files = chatFilesStorage(data)
     this.github = {
@@ -123,11 +133,11 @@ export class ChatTransaction extends ChatRecords {
       order: ++this.commandThrough,
     })
   }
-  history(after: number, through = this.through, session?: SessionPage) {
+  history(after: number, through = this.through, scope?: ReadScope) {
     return this.pages.read(
       after,
       Math.min(through, this.through),
-      session,
+      scope,
       this.prepareSession !== undefined,
     )
   }
@@ -141,12 +151,13 @@ export class ChatTransaction extends ChatRecords {
     occurredAt = this.now,
     late?: true,
   ): Promise<WorkspaceEventEnvelope> {
+    const labeled = this.labels ? await this.labels.event(event) : event
     await this.pages.prepare(this.through)
     const envelope: WorkspaceEventEnvelope = {
       workspaceId: this.workspaceId,
       eventNumber: ++this.through,
       occurredAt,
-      event: structuredClone(event),
+      event: structuredClone(labeled),
       ...(late ? { late } : {}),
     }
     await this.summary.event(envelope)
@@ -172,6 +183,9 @@ export class ChatStore {
   private readonly now: () => number
   private readonly changed: (workspaceId: string) => Promise<void>
   private readonly turnEnds: TurnEndReports
+  private readonly readLabels: (
+    workspaceId: string,
+  ) => Promise<WorkspaceEventLabels>
 
   constructor(
     storage: ChatStorage,
@@ -180,7 +194,12 @@ export class ChatStore {
       undefined,
     changed: (workspaceId: string) => Promise<void> = async () => undefined,
     runner: () => RunnerDiagnosticIdentity | null = () => null,
+    readLabels: (
+      workspaceId: string,
+    ) => Promise<WorkspaceEventLabels> = async () =>
+      new WorkspaceEventLabels((value) => value),
   ) {
+    this.readLabels = readLabels
     this.storage = storage
     this.now = now
     this.turnEnds = new TurnEndReports(turnEnded, runner)
@@ -211,6 +230,12 @@ export class ChatStore {
     return this.turnEnds.flush()
   }
 
+  eventLabels(workspaceId: string): WorkspaceEventLabelPreparation {
+    return new WorkspaceEventLabelPreparation(() =>
+      this.readLabels(workspaceId),
+    )
+  }
+
   async workspaceId(): Promise<string | undefined> {
     return (await this.storage.get<ChatMetadata>(META))?.workspaceId
   }
@@ -234,6 +259,7 @@ export class ChatStore {
     workspaceId: string,
     work: (transaction: ChatTransaction) => Promise<T>,
     committed: (events: readonly WorkspaceEventEnvelope[]) => void,
+    labels = this.eventLabels(workspaceId),
   ): Promise<T> {
     const { result, events, endedTurns } = await this.storage.transaction(
       async (data) => {
@@ -241,6 +267,8 @@ export class ChatStore {
           data,
           await readChatMetadata(data, workspaceId),
           this.now(),
+          undefined,
+          labels,
         )
         const result = await work(transaction)
         await transaction.finish()

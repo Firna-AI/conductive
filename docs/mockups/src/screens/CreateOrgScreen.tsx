@@ -3,7 +3,7 @@ import { ScreenLink } from '../components/common/ScreenLink'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { AccountChoice } from '../components/operator/AccountChoice'
+import { AccountChoice } from '../../../../src/ui/components/operator/AccountChoice'
 import { orgNameFields } from '../entries/components/settings/OrgSections.mockup'
 import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { createAccounts } from '../fixtures/operatorProviders'
@@ -14,7 +14,7 @@ import {
 } from '../fixtures/repositories'
 import { paths } from '../paths'
 import { defined } from '../defined'
-import styles from './forms.module.css'
+import styles from '../../../../src/ui/screens/forms.module.css'
 
 export const createOrgSchema = {
   type: 'object',
@@ -63,9 +63,9 @@ function listOf(
  * workspaces use. The page stands alone, without the rail, until the org
  * exists. Create org needs at least one repository, because Create org
  * starts the first build of the cloud computer of the org. An operator
- * also chooses the provider account of the org, which it keeps for its
- * whole life: By weights, the default, or an account by its ID. Nobody
- * else sees the choice.
+ * also chooses the provider account of the org: By weights, the default,
+ * or an account by its ID. An operator can switch the account later, on
+ * the page of the org. Nobody else sees the choice.
  */
 export function CreateOrgScreen(props: {
   state: CreateOrgState

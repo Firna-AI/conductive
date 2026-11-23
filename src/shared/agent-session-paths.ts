@@ -27,6 +27,8 @@ export function agentSessionPath(
 }
 
 export const agentSessionPaths = {
+  watch: (workspaceId: string | undefined, sessionId: string) =>
+    `${agentSessionPath(workspaceId, sessionId)}/watch`,
   rename: (workspaceId: string | undefined, sessionId: string) =>
     `${agentSessionPath(workspaceId, sessionId)}/rename`,
   close: (workspaceId: string | undefined, sessionId: string) =>

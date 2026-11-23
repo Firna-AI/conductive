@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { DetailList } from '../../../docs/mockups/src/components/settings/DetailList'
+import { DetailList } from '../../ui/components/settings/DetailList'
 import {
   OrgColorField,
   OrgColorValue,
-} from '../../../docs/mockups/src/components/settings/OrgColorField'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/settings/OrgColorField'
+import { Section } from '../../ui/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'

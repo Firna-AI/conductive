@@ -4,7 +4,7 @@ import type { Role } from '../../../fixtures/members'
 import { agentKeys, type EffortKey } from '../../../fixtures/agents'
 import type { RepositoryKey } from '../../../fixtures/repositories'
 import { sectionKeys } from '../../../fixtures/sections'
-import type { ActivityStatus } from '../../../fixtures/workspaces'
+import type { ActivityStatus } from '../../../../../../src/ui/components/workspaces/activityStatus'
 import { personKeys } from '../layout/railSchemas'
 
 /**
@@ -106,6 +106,8 @@ export const workspaceSchema = {
     updated: { type: 'string' },
     owner: { enum: personKeys },
     baseBranch: { type: 'string' },
+    /** The stored base that GitHub deleted, which the default replaced. */
+    movedBase: { type: 'string' },
   },
 } as const
 

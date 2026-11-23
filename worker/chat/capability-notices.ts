@@ -7,7 +7,7 @@ export async function queueCapabilityNotices(
   active: ActiveRunner,
   randomId: () => string,
 ): Promise<void> {
-  if (active.capabilityNotices !== true) return
+  if (active.state.capabilityNotices !== true) return
   for (const session of await view.sessions()) {
     if (session.closedAt !== null || !session.activeTurnId) continue
     const turn = await view.turn(session.activeTurnId)

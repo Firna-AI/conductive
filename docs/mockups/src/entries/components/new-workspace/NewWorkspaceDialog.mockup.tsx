@@ -7,7 +7,6 @@ import {
   firstMessageDraft,
   firstMessageDrafts,
 } from '../../../fixtures/attachments'
-import { orgs } from '../../../fixtures/orgs'
 import { repositories } from '../../../fixtures/repositories'
 import { sections } from '../../../fixtures/sections'
 import { withPanel } from '../chat/capabilitiesSlot'
@@ -54,19 +53,19 @@ const repositoryMenu: readonly MenuEntryData[] = Object.values(
 
 /**
  * The New workspace dialog, drawn open, registered with Mokly. The page
- * supplies its notices and the open Capabilities control in slots.
+ * supplies its notices, the open Capabilities control, and the branch
+ * control right of the repository picker in slots.
  */
 export const newWorkspaceDialog = defineComponent({
   slug: 'new-workspace-dialog',
   title: 'New workspace dialog',
   description:
-    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker at the top left, the org and the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
+    'New workspace as a wide, compact dialog over the dimmed app, for a computer: the repository picker and the branch control close right of it at the top left, with no chevrons and only a muted branch icon on the default branch, the section at the top right, the message in the middle with a chip for each of its files, and the model picker, the label of the org login when the first message runs on it, the Capabilities icon, the attach button, and Create at the bottom. The whole card takes a drop of files. The page supplies its notices, which show above the footer. Its own page shows the dialog as it opens.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
     additionalProperties: false,
     required: [
-      'place',
       'section',
       'text',
       'attachments',
@@ -79,7 +78,6 @@ export const newWorkspaceDialog = defineComponent({
       repository: { type: 'string' },
       repositoryMenu: menuSchema.properties.entries,
       /** The org and the section that the new workspace joins. */
-      place: { type: 'string' },
       section: { type: 'string' },
       sectionMenu: menuSchema.properties.entries,
       /** The message, with a chip for each of its files at its place. */
@@ -99,10 +97,9 @@ export const newWorkspaceDialog = defineComponent({
       capabilities: capabilitiesSchema,
     },
   } as const,
-  slots: ['notices', 'capabilitiesPanel'],
+  slots: ['notices', 'capabilitiesPanel', 'branch'],
   props: {
     repository: repositories.storefront.name,
-    place: `${orgs.acme.name} · ${sections.general.name}`,
     section: sections.general.name,
     text: '',
     attachments: [],
@@ -113,13 +110,13 @@ export const newWorkspaceDialog = defineComponent({
   render: (props) => (
     <NewWorkspaceDialog
       attachments={props.attachments}
+      branch={props.branch}
       capabilities={withPanel(props.capabilities, props.capabilitiesPanel)}
       caret={props.caret}
       choice={props.choice}
       drop={props.drop}
       login={props.login}
       notices={props.notices}
-      place={props.place}
       placeholder={props.placeholder}
       ready={props.ready}
       repository={props.repository}

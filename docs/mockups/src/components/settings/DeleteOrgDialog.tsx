@@ -1,7 +1,7 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
 import { deletedOrg, orgs } from '../../fixtures/orgs'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
@@ -9,7 +9,7 @@ import {
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 
 /**
  * An admin confirms Delete org by typing the name of the org. The dialog

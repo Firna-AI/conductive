@@ -1,8 +1,8 @@
 # Sandbox software
 
 This page describes the app's own software in each sandbox: its programs
-and parts, its releases and updates, its message types, and the software
-image. It uses the terms of the
+and parts, its releases and updates, its message types, the services that
+it runs, and the software image. It uses the terms of the
 [architecture doc](../architecture.md#terms).
 [Sandbox software](../protocol/sandbox-software.md) in the protocol docs
 states the rules of the releases and the updates. A decision number names
@@ -18,10 +18,10 @@ while the workspace is idle.
 The sandbox software includes these programs:
 
 - `conductive`, one Rust program. Its subcommands run the agent runner,
-  the preview relay, the agent tools, the git credential helper, and the
-  updater. The runner runs as an always-on service. The relay listens on a
-  private port. The runner also holds the file server, which listens only
-  on a loopback port.
+  the preview relay, the agent tools, the git credential helper, the
+  updater, and the helper of each service. The runner runs as an always-on
+  service. The relay listens on a private port. The runner also holds the
+  file server, which listens only on a loopback port.
 - The SDK helper, a Node program. It runs the Claude Agent SDK and the
   Codex SDK for the runner, because these SDKs exist only in TypeScript
   and Python. The runner starts it as a child process. The two programs
@@ -40,8 +40,11 @@ published stable API.
 The agent tools are an MCP server and a CLI. They manage the workspaces,
 the sessions, the sections, and the port previews of the org, and they ask
 for Mac commands and run commands with the secrets of the org.
-[Agent tools](../protocol/agent-tools.md) states their calls. The git
-credential helper gets a fresh GitHub token for each git operation.
+[Agent tools](../protocol/agent-tools.md) states their calls. They also
+control the services of their own sandbox through the service manager,
+with no Worker call, as [Service calls](../protocol/service-calls.md)
+says. The git credential helper gets a fresh GitHub token for each git
+operation.
 
 The program also installs the other parts of the software:
 
@@ -82,7 +85,10 @@ says.
    that an agent started. Otherwise, the next start of the runner applies
    the release (sandbox software decision 5). The preview relay and the
    terminal run a new release from their next start.
-6. Each build of an org image or of the software image installs the newest
+6. Before the runner starts a release, the updater downloads again each
+   part of that release that is missing from the disk, as
+   [Updates](../protocol/sandbox-software.md#updates) says.
+7. Each build of an org image or of the software image installs the newest
    release through the same program. When the image already holds the
    program, the build uses its updater, which downloads only the parts
    that changed.
@@ -114,6 +120,24 @@ against a change in how the agent program reads its credential and its
 model address. It runs Codex through the Codex SDK or the Codex App Server
 (decision 36).
 
+The Rust runner owns the public org skills copy and its five-minute
+background checks. It removes escaping and dangling links before it
+publishes complete commit folders outside the workspace repository.
+Each SDK helper leases its captured folder. The background job reclaims
+retired folders after their last helper closes. Its startup sweep removes
+crash leftovers and prunes unreachable Git objects.
+The helper uses the shared folder rule and each agent's displayed names.
+It exports a safe view without executable metadata. The view keeps inline
+shell commands inert, except in Claude's view of a trusted repository.
+The Worker gives the runner the configured and trusted repository names at
+each start and resume. The runner passes both to each helper start. For an
+untrusted repository, the helper also turns on Claude's own inline shell
+restriction for the whole session. Claude gets links in an additional
+directory. Codex gets extra skill roots.
+[Org skills](../protocol/org-skills.md) states what loads and when a
+session gets an update. [Repository trust](../protocol/org-skills-trust.md)
+states the trust choice.
+
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 
@@ -126,6 +150,34 @@ says. A sandbox runs an older runner until an update applies, as
 [Updates](../protocol/sandbox-software.md#updates) says. The workspace
 refuses a runner of an unsupported protocol version, as
 [Runner versions](../protocol/version-pins.md#runner-versions) says.
+
+## Services
+
+[Services](../protocol/services.md) are programs of a workspace that run
+outside every turn, each in a transient unit of the system manager of the
+sandbox.
+
+- The runner process holds one service manager. It owns the definitions,
+  the request receipts, and the identity of each run. The agent tools
+  reach it through a local socket that only the sandbox user can open.
+  The Worker reaches it through the runner connection.
+- The system manager owns each unit, outside the unit of the runner. So
+  services keep running while the runner restarts, as
+  [Lifetime](../protocol/services.md#lifetime) says.
+- In each unit, the helper of the service starts its command, owns its
+  output, and keeps its rotating log. So the output does not depend on
+  the runner.
+- The definitions, the receipts, and the logs live only in runtime storage,
+  in the memory of the sandbox. No disk, saved snapshot, or org image
+  holds them. A stop of the sandbox ends each unit and discards this data.
+- The runner reports the services, and it links each listening port to
+  its service, as
+  [Ports of services](../protocol/listening-ports.md#ports-of-services)
+  says.
+- The runner and the Worker exchange service messages of their own on the
+  runner connection, only after both accept them in the hello and the
+  welcome. These messages are not numbered runner events, as
+  [Service reports](../protocol/service-reports.md) says.
 
 ## Previews and commits
 

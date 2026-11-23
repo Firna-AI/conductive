@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import { toastLayer } from '../entries/components/common/ToastLayer.mockup'
-import { pathResults } from '../components/files/rowMenuCopy'
+import { pathResults } from '../../../../src/ui/components/files/rowMenuCopy'
 import { archivedToast } from '../entries/components/workspace/ArchivedToast.mockup'
-import { transcriptToasts } from '../components/workspace/transcriptCopy'
+import { transcriptToasts } from '../../../../src/ui/components/workspace/transcriptCopy'
 import type { Workspace } from '../fixtures/workspaces'
 import type { WorkspaceState } from './workspaceState'
 

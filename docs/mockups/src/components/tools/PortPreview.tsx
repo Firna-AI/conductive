@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import type { ListeningPort } from '../../../../../src/shared/generated/ListeningPort'
 import {
   detectedServers,
   openPort,
@@ -6,7 +8,7 @@ import {
   serversUnavailable,
 } from '../../fixtures/previews'
 import { paths } from '../../paths'
-import { plainData } from '../../defined'
+import { defined, plainData } from '../../defined'
 import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { externalLink } from '../../entries/components/common/ExternalLink.mockup'
@@ -21,7 +23,7 @@ import {
   portFormCopy,
   previewTabLabel,
   serverDescription,
-} from './previewCopy'
+} from '../../../../../src/ui/components/tools/previewCopy'
 import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './PortPreview.module.css'
 
@@ -44,6 +46,18 @@ export const previewStates = [
 ] as const
 
 export type PreviewState = (typeof previewStates)[number]
+
+/**
+ * The services of the report, above the servers, and the servers that the
+ * list shows beside them: each server that no service holds, in place of
+ * every detected server. Without `servers`, the list shows the servers that
+ * it shows with no services. The section is React content, so a registered
+ * part takes it in a slot, and the servers as data.
+ */
+export type PreviewServices = {
+  section: ReactNode
+  servers?: readonly ListeningPort[]
+}
 
 /**
  * A tab for each open preview: the port and the cut name of its server.
@@ -104,8 +118,8 @@ export function PreviewActions(props: { href?: string; expandTo?: string }) {
  * label. After "+", no tab is current, and the port form lists the servers
  * that have no preview yet.
  */
-function PhonePreview(props: { adding: boolean }) {
-  const { adding } = props
+function PhonePreview(props: { adding: boolean; services?: PreviewServices }) {
+  const { adding, services } = props
   return (
     <div className={styles.preview}>
       <div className={styles.toolbar}>
@@ -137,7 +151,8 @@ function PhonePreview(props: { adding: boolean }) {
       {adding ? (
         <serverList.Component
           moklyInstance="server-list"
-          servers={unopened()}
+          servers={services?.servers ?? unopened()}
+          {...defined({ services: services?.section })}
         />
       ) : (
         <div className={styles.frame}>
@@ -157,13 +172,17 @@ function PhonePreview(props: { adding: boolean }) {
  * preview: it ends by itself when the cloud computer stops (decisions 292
  * and 294).
  */
-function PanelPreview(props: { shown: number | null }) {
+function PanelPreview(props: {
+  shown: number | null
+  services?: PreviewServices
+}) {
   return (
     <div className={styles.preview}>
       <serverList.Component
         current={props.shown}
         moklyInstance="server-list"
-        servers={detectedServers}
+        servers={props.services?.servers ?? detectedServers}
+        {...defined({ services: props.services?.section })}
       />
     </div>
   )
@@ -178,32 +197,44 @@ function unopened() {
  * The Preview tool in one of its states. `frame` draws the page in the
  * tool, as a phone does. Without it, the page shows in the Preview tab of
  * its port in the centre row. On desktop, "+" and its `adding` state do not exist, so
- * `adding` draws the open previews.
+ * `adding` draws the open previews. Each list shows `services` above its
+ * servers, also when the runner reports no server, because a service can
+ * listen on no port.
  */
 export function PreviewTool(props: {
   state: PreviewState
   frame: boolean
   /** The port of the Preview tab that shows on desktop, or null. */
   shownPort: number | null
+  services?: PreviewServices
 }) {
+  const { services } = props
   const open = props.frame ? (
-    <PhonePreview adding={props.state === 'adding'} />
+    <PhonePreview adding={props.state === 'adding'} services={services} />
   ) : (
-    <PanelPreview shown={props.shownPort} />
+    <PanelPreview services={services} shown={props.shownPort} />
+  )
+  const list = (
+    <serverList.Component
+      moklyInstance="server-list"
+      servers={services?.servers ?? detectedServers}
+      {...defined({ services: services?.section })}
+    />
   )
   switch (props.state) {
     case 'open':
     case 'adding':
       return open
     case 'detected':
-      return (
+      return list
+    case 'no-servers':
+      return services ? (
         <serverList.Component
           moklyInstance="server-list"
-          servers={detectedServers}
+          servers={[]}
+          {...defined({ services: services.section })}
         />
-      )
-    case 'no-servers':
-      return (
+      ) : (
         <portMessage.Component
           body={portFormCopy.noServers}
           moklyInstance="port-message"
@@ -221,10 +252,7 @@ export function PreviewTool(props: {
       // file lists. The last list and the field stay usable.
       return (
         <>
-          <serverList.Component
-            moklyInstance="server-list"
-            servers={detectedServers}
-          />
+          {list}
           <lostUpdateRow.Component
             moklyInstance="lost-servers"
             repair={serversUnavailable}

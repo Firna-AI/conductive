@@ -7,6 +7,11 @@
 
 import { nameLabel } from '../../../../src/shared/name-label'
 import type { AgentKey } from './agents'
+import type {
+  MemberGrant as AnyMemberGrant,
+  SecretGrant as AnySecretGrant,
+  ValueLifetime,
+} from '../../../../src/ui/components/chat/secretGrant'
 import type { PersonKey } from './members'
 import { figmaToken, replicaUrl, vercelToken } from './secrets'
 import { workspaceSessions } from './sessions'
@@ -36,23 +41,8 @@ export type SecretRequest = {
   command: string
 }
 
-/**
- * How long the value of a temporary request lasts: 15 minutes in the
- * session that asked, each session of the workspace until Archive, or as
- * a new secret of the org.
- */
-export type ValueLifetime = 'minutes' | 'workspace' | 'saved'
-
-/**
- * What lets a run use its secrets: the mark for all agents, a
- * pre-approval of the workspace, an approval of the session, or a value
- * that a member gave.
- */
-export type SecretGrant =
-  | { kind: 'all-agents' }
-  | { kind: 'pre-approved' }
-  | { kind: 'session'; by: PersonKey }
-  | { kind: 'value'; lifetime: ValueLifetime; by: PersonKey }
+/** A grant of the sample runs, by a sample member. */
+type SecretGrant = AnySecretGrant<PersonKey>
 
 /**
  * A run as the chat shows it. `waiting` waits above the composer, while
@@ -73,8 +63,8 @@ type SecretRunState =
   | 'late-denied'
   | 'not-answered'
 
-/** A grant that a member gave: an approval of the session, or a value. */
-export type MemberGrant = Extract<SecretGrant, { by: PersonKey }>
+/** A grant that a sample member gave. */
+export type MemberGrant = AnyMemberGrant<PersonKey>
 
 /**
  * The login that a session keeps: the personal login of its starter, or

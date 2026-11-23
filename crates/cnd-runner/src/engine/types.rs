@@ -15,6 +15,8 @@ use tokio::task::JoinHandle;
 use crate::error::Result;
 use crate::helper::boundary::Helper;
 use crate::repository::service::Checkpoint;
+use crate::skills::boundary::OrgSkills;
+use crate::skills::lease::SkillsLease;
 use crate::state::records::SavedSession;
 
 use super::background::Background;
@@ -41,6 +43,7 @@ pub(super) struct ActiveTurn {
     pub(super) read_notice_ids: BTreeSet<String>,
     pub(super) waiting: VecDeque<ProviderInput>,
     pub(super) helper: Option<Arc<dyn Helper>>,
+    pub(super) skills_lease: Option<SkillsLease>,
     pub(super) baseline: Option<Checkpoint>,
     pub(super) output: TurnOutput,
     pub(super) background: Option<Background>,
@@ -51,6 +54,7 @@ pub(super) struct ActiveTurn {
 pub(super) struct Session {
     pub(super) id: String,
     pub(super) dependencies: Arc<EngineDependencies>,
+    pub(super) skills: Arc<dyn OrgSkills>,
     pub(super) saved: Option<SavedSession>,
     pub(super) choice: Option<AgentChoice>,
     pub(super) active: Option<ActiveTurn>,

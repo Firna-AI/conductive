@@ -7,7 +7,8 @@ import {
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { acmeRail } from '../components/layout/OrgRail'
-import { useMacApp } from '../components/mac/MacApp'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { ChatMarks } from '../components/explain/chatMarks'
 import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { checksActions } from '../entries/components/workspace/BarActions.mockup'
 import { WorkspaceMobile } from './workspaceMobile'
@@ -27,6 +28,7 @@ import { composerNotice } from './composerNotice'
 import { centreOf } from './workspaceCentre'
 import { placeLostUpdate } from './lostUpdates'
 import { chatWorkspacesOf } from './orgWorkspaces'
+import { chatMarksOf } from './explainMarks'
 import { headerMenusOf } from './workspaceBar'
 import { headerMenuOf } from './workspaceHeaderMenu'
 import { workspaceOpen } from './workspaceOpen'
@@ -44,7 +46,7 @@ import { sandboxNotice } from './workspaceSandbox'
 import type { WorkspaceState } from './workspaceState'
 import { tabRowOf } from './workspaceTabRow'
 import { historyFor, noMessages, tabsFor } from './workspaceTabs'
-import styles from './WorkspaceScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceScreen.module.css'
 
 /** The right column in the middle of a drag that widens it, in px. */
 const widenedRight = 560
@@ -60,7 +62,8 @@ const raisedSplit = 35
  * no new session, no rename, no owner change, no Archive, and no Restore.
  * `overlay` lies over the workspace in place of the overlay of its state,
  * such as a dialog that another screen opens over it. The chat and the
- * overlay find the workspaces of their chips in the list of the screen.
+ * overlay find the workspaces of their chips in the list of the screen,
+ * and the chat draws the marks of explanations over its messages.
  * The toast of the state lies over everything. `shortcuts` holds the
  * person's changes to the shortcuts. With them, the palette rows show their
  * keys, and the Search row shows the person's key of the palette.
@@ -94,29 +97,33 @@ export function WorkspaceScreen(props: {
   const empty = noMessages(state)
   const rightHidden = state.rightColumn === 'hidden'
   const rows = chatWorkspacesOf(state, { workspace, status })
-  const chat = workspaceChat({
-    rows,
-    workspace,
-    items: empty ? [] : chatItemsFor(open.items, state.paths),
-    composer: { ...composerFor(state, workspace, viewport), pickerPart },
-    // An archived workspace keeps its archived bar, so the notice of a
-    // suspended org shows above it.
-    notice:
-      archived && suspended ? (
-        <suspendedOrgNotice.Component
-          moklyInstance="suspended-org-notice"
-          org={{ name: orgs[suspendedOrg].name }}
-        />
-      ) : (
-        composerNotice(state, workspace)
-      ),
-    pictures: state.sandbox === 'ready' ? state.pictures : undefined,
-    problem,
-    starting: startingLogFor(state),
-    fold: state.fold,
-    viewer,
-    viewport,
-  })
+  const chat = (
+    <ChatMarks marks={chatMarksOf(state)}>
+      {workspaceChat({
+        rows,
+        workspace,
+        items: empty ? [] : chatItemsFor(open.items, state.paths),
+        composer: { ...composerFor(state, workspace, viewport), pickerPart },
+        // An archived workspace keeps its archived bar, so the notice of a
+        // suspended org shows above it.
+        notice:
+          archived && suspended ? (
+            <suspendedOrgNotice.Component
+              moklyInstance="suspended-org-notice"
+              org={{ name: orgs[suspendedOrg].name }}
+            />
+          ) : (
+            composerNotice(state, workspace)
+          ),
+        pictures: state.sandbox === 'ready' ? state.pictures : undefined,
+        problem,
+        starting: startingLogFor(state),
+        fold: state.fold,
+        viewer,
+        viewport,
+      })}
+    </ChatMarks>
+  )
   const headerBar = (
     <workspaceHeader.Component
       canReassign={admin && !readOnly}

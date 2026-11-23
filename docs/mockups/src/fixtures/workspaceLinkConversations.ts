@@ -1,5 +1,5 @@
 import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
-import { workspaceLabel } from '../components/workspaces/label'
+import { workspaceLabel } from '../../../../src/ui/components/workspaces/label'
 import { code, link, p } from './agentText'
 import { postcodeLookup } from './archivedWorkspaces'
 import type { ChatItem } from './conversations'

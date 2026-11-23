@@ -5,7 +5,8 @@ of an org. A secret is a named value that agents use in one command at a
 time, after a member allows it. This doc covers the secrets and their
 storage, the Secrets tab, the rights of each role, Reveal, the mark for all
 agents, the grants, automation runs, and the risks that stay.
-[Capabilities](capabilities.md) covers the control with Mac access.
+[Capabilities](capabilities.md) covers the control, and
+[Mac access](mac-access.md) covers its Mac access part.
 [Secret variables](secret-variables.md) covers the names of new secrets
 and the environment of the command. [Secret requests](secret-requests.md)
 covers the two calls of the workspace tools, the requests and their time
@@ -213,8 +214,11 @@ each workspace, and of an automation, with its secrets part.
 
 ### Mac access
 
-[Mac access](capabilities.md#mac-access) states the switch of each
-workspace and its risks.
+[Mac access](mac-access.md) states the requests that agents can always
+send to a Mac, the Mac access switch of the Mac app, the stored value that
+older pages show, and the risks. Secrets decisions 18 A and 19 B set only
+that stored value, as
+[The stored value](mac-access.md#the-stored-value) says.
 
 ## Turns that no person started
 

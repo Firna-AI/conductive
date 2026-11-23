@@ -272,8 +272,8 @@ The ledger migration runs after `202611092100_provider_accounts.sql` and
 the table. This order puts the ledger triggers on the rebuilt tables, so
 they stay.
 
-`202611101100_org_provider_assignment.sql` adds the fixed provider account
-of each org. Existing rows receive `boat`. New production writes name the
+`202611101100_org_provider_assignment.sql` adds the provider account of
+each org. Existing rows receive `boat`. New production writes name the
 selected account explicitly. The migration also creates the singleton
 assignment weights setting, with `boat` at 100%, and its change events.
 Each setting change can retain its operator and time. Operator references
@@ -334,6 +334,10 @@ Existing runs keep null because their original choice is not known.
 `202611101500_workspace_base_branches.sql` adds the nullable workspace base branch and the creation plan base branch and start commit.
 A null base branch uses the repository default branch.
 Existing rows keep that fallback.
+
+`202611131528_workspace_start_branch.sql` adds the nullable creation plan
+`start_branch` beside the existing base branch. Old plans fall back to
+their base branch, then their captured default branch.
 
 `202611101600_agent_login_endpoints.sql` rebuilds `agent_logins` to accept
 the `endpoint` kind for both agents. The nullable `endpoint_origin` column
@@ -510,10 +514,22 @@ workspaces, automations, and automation runs. The
 records of one person, and these indexes keep each read to that person's
 rows.
 
+`202611170100_org_skills_repository.sql` adds `settings.skills_repository`.
+Existing orgs and new orgs without a choice get empty text.
+
 `202611171100_org_color.sql` adds the nullable `orgs.color` column. It keeps
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181130_org_skills_repository_trust.sql` adds
+`settings.trusted_skills_repository` with an empty default. Existing orgs
+gain no trust. Its guarded `settings_clear_replaced_skills_trust` trigger
+clears stale trust when a previous Worker changes or removes the source
+without a new matching grant. Restoring the old source cannot restore its
+old trust. A change of letter case keeps the same identity. The settings
+writer saves a replacement and its new named grant together.
+[Repository trust](../docs/protocol/org-skills-trust.md#save) gives the contract.
 
 `202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
 24-hour epoch of the delivery key of one feedback email of one user. It
@@ -569,3 +585,39 @@ org purge deletes the rows of the org, and the 15-minute cron deletes rows
 after 90 days. The migration changes no existing table, so the previous
 Worker keeps working. The [lifecycle README](../worker/lifecycle/README.md#job-step-records)
 gives the writers.
+
+`202611201600_org_provider_switches.sql` adds `org_provider_switches`.
+It stores each org's switch request, accounts, operator, time, job stop
+choice, wait, build identity and times, failure cause, account-change time,
+and stop operator and time. A partial unique index allows one waiting or
+building switch per org. Org purge deletes its records. User deletion
+clears the actor references. Build deletion clears the job references.
+The migration also adds three nullable columns to `image_builds`:
+`operator_switch_id` identifies each hidden switch build attempt,
+`waiting_for_switch_id` identifies a member build that waits for a switch,
+and `execution_started_at` can hold when that build actually starts.
+These fields let the build code retain every switch attempt and keep a
+waiting member build's execution time separate from its request time.
+Existing rows and previous Worker inserts get null in all three columns.
+The migration changes no existing value, column rule, or write default.
+The previous Worker therefore keeps working on this schema.
+The [operator backend](../worker/operator/README.md#provider-account-switches)
+owns the new records.
+
+`202611201700_waiting_image_builds.sql` recreates `image_builds_running`
+with `waiting_for_switch_id IS NULL` in its condition. It permits waiting
+member builds beside one executing build. Existing values and columns
+stay unchanged. The previous Worker omits the waiting link, so its
+inserts still get null and retain the same one-running-build rule.
+The previous schema and write shapes therefore keep working. Its old
+`runningBuild` query does not understand waits and can select a waiting
+row. The new reader explicitly excludes those rows. The
+[provider switch guide](../worker/lifecycle/provider-switches.md) gives
+the atomic transition into execution and the separate execution deadline.
+
+`202611221800_model_favourites.sql` adds the nullable text column
+`user_preferences.model_favourites`. It holds the saved JSON list of
+one account. Existing rows keep null. The migration changes no existing
+column, default, or constraint, so the previous Worker keeps working.
+[Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
+gives the rules for an account without a saved list.

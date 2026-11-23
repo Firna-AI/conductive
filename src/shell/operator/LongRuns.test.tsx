@@ -1,13 +1,14 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { formatRunLength } from '../../../docs/mockups/src/components/operator/longRunsCopy'
+import { formatRunLength } from '../../ui/components/operator/longRunsCopy'
 import { routes } from '../../app/router'
 import {
   operatorOrgPath,
   operatorOverviewPath,
   operatorUserPath,
 } from '../../shared/operator'
+import { operatorProvidersPath } from '../../shared/operator-providers'
 import {
   accessibleName,
   byRole,
@@ -96,6 +97,7 @@ describe('the Long runs of the operator Overview', () => {
     expect(await operatorRequests(server)).toEqual([
       `GET ${operatorOverviewPath()}`,
       `GET ${operatorOrgPath(SAMPLE_IDS.deletedOrg)}`,
+      `GET ${operatorProvidersPath()}`,
     ])
   })
 

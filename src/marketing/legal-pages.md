@@ -20,12 +20,15 @@ which sends the emails, from
 
 The words of the legal pages, of the page for an unknown address, and of
 the sign-in agreement are text without markup. `terms.ts` with
-`terms-work.ts` and `terms-org.ts`, `privacy.ts` with `privacy-uses.ts`
-and `privacy-recipients.ts`, and `legal-text.ts` hold them. `terms.ts`
-takes its "Your work" section from `terms-work.ts`, and its "Working in
-an org" section from `terms-org.ts`. `privacy.ts` takes
+`terms-service.ts`, `terms-work.ts`, and `terms-org.ts`, `privacy.ts` with
+`privacy-uses.ts`, `privacy-recipients.ts`, and `privacy-skills.ts`, and
+`legal-text.ts` hold them.
+`terms.ts` takes its "The service" section from `terms-service.ts`, its
+"Your work" section from `terms-work.ts`, and its "Working in an org"
+section from `terms-org.ts`. `privacy.ts` takes
 its "What Conductive uses, and why" section from `privacy-uses.ts`, and
-its "Who gets your data" section from `privacy-recipients.ts`.
+its "Who gets your data" section from `privacy-recipients.ts`. It takes
+its "Org skills repositories" section from `privacy-skills.ts`.
 `layouts/LegalPage.astro` and `components/RunningText.astro` build their
 HTML for the site. The mockups and the sign-in screen of the app render the
 same text with React. So every surface shows the same words.
@@ -64,8 +67,8 @@ Sources for the review:
 - [E2B's terms](https://e2b.dev/terms) identify its contracting company as
   FoundryLabs, Inc., a Delaware corporation. They require written consent
   to give others access to its service and to build an application that
-  interacts with it. The operator requests authorization for Conductive's
-  hosted use before any real org runs there.
+  interacts with it. The user reported on 20 November 2026 that E2B gave
+  that consent for Conductive's hosted use.
 - [E2B's privacy policy](https://e2b.dev/privacy) identifies the same US
   company and describes possible processing in the United States. It
   does not establish that all account, support, or other operations stay
@@ -101,8 +104,8 @@ page does not promise that every provider operation stays in the EU. It
 makes no claim that Firna has signed E2B's data processing addendum,
 standard contractual clauses, or UK transfer terms. The
 [deployment guide](../../docs/deployment.md) gives the operator's setup
-steps. Keep the E2B weight at zero until its required authorization and
-processing terms are confirmed.
+steps. Keep the E2B weight at zero until its processing terms are
+confirmed.
 
 Each sign-in accepts the current revision of the Terms. The agreement sits
 beside Continue with GitHub, as

@@ -10,12 +10,13 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/favourites`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
 | `shellRoute` in [`shell.ts`](shell.ts) | `GET` of the sections, the repositories, the members, and the workspace list of an org. `GET` and `PUT` of the view of a workspace, and `PUT` of its read mark |
-| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; repository choices and moves; section writes; workspace names and moves |
+| `branchesRoute` in [`branches.ts`](branches.ts) | `GET /api/orgs/:orgId/repositories/:repositoryId/branches` reads live branches with the member's fresh GitHub user token |
+| `featureShellRoute` in [`feature-shell.ts`](feature-shell.ts) | GitHub installations and available repositories of the account; Create org with initials and repositories; settings reads and writes; `GET /api/orgs/:orgId/settings/skills`; repository choices and moves; section writes; workspace names and moves |
 | `archiveRoute` in [`archive.ts`](archive.ts) | `POST` of a workspace’s `archive` and `restore` |
 | `chatLifecycleRoute` in [`lifecycle.ts`](lifecycle.ts) | `POST` of the workspace list, which creates a workspace. `GET` of a workspace, `POST` of its `resume` and `activity`, and image build, refresh, and log routes |
 | `feedbackRoute` in [`feedback.ts`](feedback.ts) | `GET` and `POST` of `/api/feedback`. [Feedback routes](feedback.md) gives their checks, their errors, and the email |
@@ -58,6 +59,11 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- [Model favourites](../../docs/protocol/model-favourites-account.md#the-account-routes)
+  gives the account favourites contract. `accountFavourites` and
+  `saveAccountFavourites` in [`account-data.ts`](account-data.ts) read and
+  save its JSON list. `configuredStartingFavourites` in [`models.ts`](models.ts)
+  reads the deployment setting for an account without a saved list.
 - Account and org-login reads include additive `defaultLogins` entries for
   each current org and agent. [`default-agent-logins.ts`](default-agent-logins.ts)
   uses the common login access query and default order from `worker/chat/`.
@@ -177,8 +183,8 @@ View writes cannot change this branch.
 - Create org requires at least one repository. `createShellOrg` starts its
   first image build after it saves the org, its admin, and its repositories.
   The [assignment service](../provider-assignment/README.md) selects and saves
-  the fixed provider account before that build. Only an operator can supply
-  a configured account choice. Other users get a draw from the weights.
+  the provider account of the org before that build. Only an operator can
+  supply a configured account choice. Other users get a draw from the weights.
   A failed build start writes one fixed warning through `warnWorker`.
   The org stays, and the request still answers 201.
 - A save that adds a repository starts an image build for the admin who
@@ -186,7 +192,11 @@ View writes cannot change this branch.
   `build: false`. The app sends that body, so that Done of the
   Repositories tab starts one build for every add of an edit. A request
   without the field, from an older copy of the app, still builds at the
-  add. A repeated save and a removal start no build. A running job takes the request without starting another job.
+  add. A repeated save and a removal start no build. An ordinary running
+  job takes the request without starting another job. During a hidden
+  switch build, the add records a member build that waits.
+  [Provider switches](../lifecycle/provider-switches.md) gives its first
+  log line and its execution deadline.
   A failed start writes one fixed warning through `warnWorker`. The saved
   choice stays, and the reply keeps the repository list and HTTP 200.
 - `PUT` and `DELETE` on `repositoryPath` add and remove a repository, for
@@ -197,6 +207,13 @@ View writes cannot change this branch.
   change before it saves. A removal by an admin without a saved GitHub
   connection reads nothing from GitHub. Its reply holds the stored
   repositories only.
+- Each repository of the repository list and of these replies gives
+  `imageReady` and `ready`. `imageReady` says whether the org has a
+  published image: the image that a create checks, on the current
+  provider account of the org. `ready` says whether that image holds the
+  repository, so it is false without an image. It does not follow
+  `selected`, so a removed repository stays ready until an image without
+  it publishes.
 - `REPOSITORY_ORDER` in [`repository-order.ts`](../data/repository-order.ts)
   gives the repository order of an org. The chosen repositories come
   first, by `position`, then a chosen row without a position, then the
@@ -231,6 +248,22 @@ View writes cannot change this branch.
   warning through `warnWorker`. The account and Get started still load. The
   installation list of the account shows its own error.
 - A repository without a GitHub installation is not in the list.
+- Settings reads and saves return `skillsRepository` and
+  `trustedSkillsRepository`. Admins save them through
+  `PATCH /api/orgs/:orgId/settings`. A GitHub link becomes `owner/name`.
+  Empty text removes it. Other text stays as typed.
+  `savedSkillsRepositorySettings` resolves the pair on every retry.
+  A grant must match the resulting valid source without letter case.
+  A replacement without a matching grant clears trust. Unrelated saves
+  keep the pair. The SQL compare-and-swap checks both names and the current
+  active-admin guard. A trust change starts no image build.
+  [Repository trust](../../docs/protocol/org-skills-trust.md#save) states
+  the save contract.
+- `GET /api/orgs/:orgId/settings/skills` reads the saved repository for any
+  org member. Call it when the Skills section loads and after Save.
+  It returns `SkillsRepositoryLookupResponse` from the shared settings types.
+  It stores no list. GitHub failures leave settings reads and saves available.
+  An expired GitHub sign-in keeps the existing sign-in error.
 - Each member has a view of their own. A read mark only moves forward, and
   it stops at the last event number of the workspace.
 - The list and the lifecycle replies give each reader one state.
@@ -274,12 +307,16 @@ The capability reply gives `macAccess`, `preapprovedSecretIds`, and
 `sessionApprovals`, including the approver and date.
 A patch can replace the pre-approved IDs, change Mac access, and remove
 named session approvals. A secret ID must belong to the workspace's org.
-Turning Mac access off also asks the workspace object to settle its waiting
-Mac requests. Running commands continue.
+The stored `macAccess` stays for older pages of older Mac apps. It gates no
+Mac request, and a change of it ends no waiting request, as
+[Mac access](../../docs/protocol/mac-access.md) says.
 
 The workspace responses give an org-local number and a canonical web link.
-They give `restoreUntil` while the archived cloud computer exists, including while an expired delete retries.
+They give `restoreUntil` while the workspace row names its archived cloud computer, including while an expired delete retries.
 Restore refuses an expired window even when the cloud computer remains.
+Each archived workspace with a known Archive date also gets `archivedComputer`: the state of its cloud computer and the original Restore cutoff.
+The list and the lifecycle reads take both from [`archived-computer.ts`](../data/archived-computer.ts), in their own query.
+So a null `restoreUntil` does not mean that the cloud computer is deleted.
 The request's effective app origin reaches each response constructor explicitly.
 Durable Object reads, Archive, and Restore receive that origin through their RPC arguments.
 The machine tools use the configured app origin instead.
@@ -393,6 +430,8 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
 - [`feature-shell.ts`](feature-shell.ts): shell write dispatch after the
   request gate. [`feature-settings.ts`](feature-settings.ts) encrypts env
   values and their secret marks. Replies return names and marks only.
+  [`feature-settings-data.ts`](feature-settings-data.ts) reads and saves
+  scripts, the skills source and trust, and encrypted env values.
   [`feature-sections.ts`](feature-sections.ts)
   and [`feature-workspaces.ts`](feature-workspaces.ts) save list changes and
   publish workspace metadata through the workspace object.
@@ -431,8 +470,14 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   [image lifecycle](../lifecycle/image-builds.md).
   [`feature-repositories.ts`](feature-repositories.ts) merges
   the org's saved choices with repositories that its reader can access,
-  and starts a build after an add without `build: false`.
+  gives each its `imageReady` and `ready` from
+  `currentImageRepositoryReadiness` of the
+  [published image data](../lifecycle/published-image-data.ts), and
+  starts a build after an add without `build: false`.
   Their `*-data.ts` files keep queries and guarded writes.
+- [`feature-skills.ts`](feature-skills.ts) checks membership and the saved
+  name. [`skills-github.ts`](skills-github.ts) reads only the repository
+  record and recursive default-branch tree, with the viewer's fresh user token.
 - [`feedback.ts`](feedback.ts), [`feedback-input.ts`](feedback-input.ts),
   [`feedback-data.ts`](feedback-data.ts),
   [`feedback-mail.ts`](feedback-mail.ts), and
@@ -440,6 +485,17 @@ local D1, Durable Objects, and WebSockets, with fake Boat and GitHub.
   the checked body, the reply email and reachable IDs, the email, and the
   send limit.
   [Feedback routes](feedback.md#key-code) gives each entry point.
+
+### Branch lists
+
+The branch list uses [the shared branch contract](../../src/shared/branches.ts).
+It returns only branches that GitHub lists, newest commit first.
+It follows all GitHub pages. An empty repository returns an empty list.
+The browser adds its default row from the saved repository record and filters the list for search.
+The route checks org membership and the org's repository before and after the read.
+It stores no branch list and returns no GitHub token or upstream error text.
+Missing GitHub access returns `github_access_required`; a failed read returns `github_unavailable`.
+[`branch-query.ts`](../github/branch-query.ts) checks repository identity and maps those errors.
 
 ### Related docs
 

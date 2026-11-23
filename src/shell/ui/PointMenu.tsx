@@ -8,10 +8,12 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { useMenuLayer } from './layers'
+import { focusLost, useLostFocus } from './lost-focus'
 import type { MenuEntry } from './Menu'
 import { MenuList } from './MenuList'
 import { placeChoices, placeMenu, type MenuAnchor } from './menu-place'
 import { useEscapeLayer } from './Overlay'
+import { choiceToFocus } from './submenu'
 import ui from './ui.module.css'
 
 /** The open choices of an item of a menu at a point. */
@@ -22,15 +24,6 @@ export interface PointChoices {
   focus: boolean
   /** The choices in their own menu box. */
   content: ReactNode
-}
-
-/** The item that takes the focus in a list of choices: the checked one, else the first. */
-function choiceToFocus(layer: HTMLElement): HTMLElement | null {
-  return (
-    layer.querySelector<HTMLElement>(
-      '[role^="menuitem"][aria-checked="true"]:not(:disabled)',
-    ) ?? layer.querySelector<HTMLElement>('[role^="menuitem"]:not(:disabled)')
-  )
 }
 
 /**
@@ -45,29 +38,6 @@ export function useChoiceFocus(
   useLayoutEffect(() => {
     const node = layer.current
     if (!active || !node || node.contains(document.activeElement)) return
-    choiceToFocus(node)?.focus()
-  })
-}
-
-/** The focus fell to the page, as when its element left the page. */
-function focusLost(): boolean {
-  const active = document.activeElement
-  return active === null || active === document.body
-}
-
-/**
- * Gives a lost focus back to the items of `layer` after each render, while
- * `active`: to the checked item, else the first, as when the layer opened.
- * A render loses the focus when it takes away the item that has it, such
- * as an action that a change of the access drops. A focus elsewhere stays.
- */
-export function useLostFocus(
-  layer: RefObject<HTMLElement | null>,
-  active = true,
-): void {
-  useLayoutEffect(() => {
-    const node = layer.current
-    if (!active || !node || !focusLost()) return
     choiceToFocus(node)?.focus()
   })
 }
@@ -181,8 +151,9 @@ export function PointMenu(props: {
   // Choices that open by a key or a press take the focus.
   useChoiceFocus(choices, open?.focus ?? false)
   // A render that takes away the item with the focus, or its choices, gives
-  // the focus back to the menu. Choices that take the focus got it above.
-  useLostFocus(menu)
+  // the focus back to the menu, to the item that it focuses as it opens.
+  // Choices that take the focus got it above.
+  useLostFocus(menu, choiceToFocus)
 
   useEffect(() => {
     const onPointer = (event: PointerEvent) => {

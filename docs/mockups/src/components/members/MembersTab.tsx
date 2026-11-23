@@ -2,12 +2,12 @@ import { InputFrame } from '@firna/ui/input'
 import { Mail } from 'lucide-react'
 import type { Invite, Membership, PersonKey } from '../../fixtures/members'
 import type { Workspace } from '../../fixtures/workspaces'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { section } from '../../entries/components/settings/Section.mockup'
 import { memberList } from '../../entries/components/members/MemberList.mockup'
-import styles from './Members.module.css'
+import styles from '../../../../../src/ui/components/members/Members.module.css'
 
 /**
  * The invite of an admin, by email. The person joins with a GitHub account

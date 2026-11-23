@@ -1,3 +1,10 @@
 {
-  "order": ["just-archived", "group", "restored", "no-computer", "removed"]
+  "order": [
+    "just-archived",
+    "group",
+    "restored",
+    "pending",
+    "no-computer",
+    "removed"
+  ]
 }

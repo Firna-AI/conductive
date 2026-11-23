@@ -1,8 +1,4 @@
-import {
-  macDmgNames,
-  sourceRepository,
-  type MacChip,
-} from '../../docs/mockups/src/brand'
+import { macDmgNames, sourceRepository, type MacChip } from '../shared/brand'
 
 /** The GitHub page of the source repository, which holds the releases. */
 export const sourceRepositoryHref = `https://github.com/${sourceRepository.owner}/${sourceRepository.name}`

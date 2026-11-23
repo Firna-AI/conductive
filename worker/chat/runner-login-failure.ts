@@ -2,7 +2,7 @@ import { unavailableLoginMessage } from './session-login'
 import type { ChatStore } from './store'
 import { TurnLifecycle } from './turn-lifecycle'
 import type { ChatDependencies } from './types'
-import type { PendingCommand } from './command-types'
+import type { PendingCommand } from './pending-command'
 import type { WorkspaceEventEnvelope } from './workspace-events'
 
 /**

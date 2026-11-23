@@ -14,6 +14,8 @@ use tokio::sync::oneshot;
 
 use crate::error::{Error, Result};
 use crate::runtime::CommandHandler;
+use crate::skills::boundary::OrgSkills;
+use crate::skills::service::SkillsCopy;
 use crate::state::records::{RunnerState, SavedTurn};
 
 use super::actor::run;
@@ -41,18 +43,30 @@ pub struct AgentEngine {
     registry: Mutex<Registry>,
     closed: AtomicBool,
     welcomed: AtomicBool,
+    skills: Arc<dyn OrgSkills>,
 }
 
 impl AgentEngine {
     /// Compose from loaded state. RunnerCore recovers unfinished turns before start.
     pub fn new(dependencies: EngineDependencies, loaded: RunnerState) -> Self {
+        let skills: Arc<dyn OrgSkills> = Arc::new(SkillsCopy::on_disk(
+            dependencies.configuration.skills_repository.clone(),
+            dependencies.configuration.home.clone(),
+        ));
         Self {
+            skills,
             dependencies: Arc::new(dependencies),
             loaded,
             registry: Mutex::new(Registry::default()),
             closed: AtomicBool::new(false),
             welcomed: AtomicBool::new(false),
         }
+    }
+
+    /// Supply a different skills lifecycle before starting the engine or any session.
+    pub fn with_skills(mut self, skills: Arc<dyn OrgSkills>) -> Self {
+        self.skills = skills;
+        self
     }
 
     /// Wait for queued commands and flush each session's streaming text.
@@ -99,6 +113,7 @@ impl CommandHandler for AgentEngine {
     }
 
     async fn start(&self) -> Result<()> {
+        self.skills.start().await;
         self.dependencies.startup.prepare().await
     }
     fn connected(&self) -> BoxFuture<'static, Result<()>> {
@@ -160,6 +175,7 @@ impl CommandHandler for AgentEngine {
             let session = Session {
                 id: session_id.clone(),
                 dependencies: self.dependencies.clone(),
+                skills: self.skills.clone(),
                 saved: self
                     .loaded
                     .sessions
@@ -232,6 +248,7 @@ impl CommandHandler for AgentEngine {
             .or(Err(Error::Canceled))
     }
     async fn shutdown(&self) -> Result<()> {
+        self.skills.close().await;
         self.closed.store(true, Ordering::Release);
         let receivers = {
             let registry = self.registry.lock().or(Err(Error::InvalidCommand))?;

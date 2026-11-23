@@ -2,6 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
+import type { Workspace } from '../../shared/generated/Workspace'
 import { routes } from '../../app/router'
 import { ManualDelay, requestLines } from '../../app/test-kit'
 import {
@@ -40,8 +41,13 @@ const open = routes.workspace(org, workspace)
  * The fake API of Priya Raman, a member who neither owns the archived open
  * workspace nor is an admin. Restore of the workspace ends at `restoreUntil`,
  * 14 days after its Archive, and the workspace then leaves the list.
+ * `fields` change the archived record, such as its state of the cloud
+ * computer.
  */
-function memberServer(restoreUntil: number): FakeApiServer {
+function memberServer(
+  restoreUntil: number,
+  fields: Partial<Workspace> = {},
+): FakeApiServer {
   const server = new FakeApiServer({
     workspaceState: 'archived',
     role: 'member',
@@ -51,6 +57,7 @@ function memberServer(restoreUntil: number): FakeApiServer {
     ...fixtures.detail.workspace,
     archivedAt: restoreUntil - WORKSPACE_RESTORE_MS,
     restoreUntil,
+    ...fields,
   }
   server.json('GET', workspacesPath(org), {
     workspaces: fixtures.workspaces.workspaces.map((item) =>
@@ -135,6 +142,45 @@ describe('Restore of an archived workspace', () => {
       },
       // A failed delete of the cloud computer can still try again, so the
       // bar claims no delete.
+      ended: {
+        bar: [
+          'Removed on 15 January',
+          'It left the list. Its cloud computer is being deleted, and the chat is read-only.',
+        ],
+        controls: { bar: null, listed: false, row: false, palette: false },
+      },
+    })
+  })
+
+  test('keeps Restore unavailable for an unresolved computer and updates its notice at expiry', async () => {
+    holdAnimationFrames()
+    let now = FAKE_TIME
+    const timers = new ManualDelay()
+    const end = FAKE_TIME + 60_000
+    const { view } = await openPaletteTab(open, {
+      server: memberServer(end, {
+        restoreUntil: null,
+        archivedComputer: { state: 'may-exist', restoreUntil: end },
+      }),
+      clock: { now: () => now, delay: timers.delay },
+    })
+    const pending = { bar: archivedBar(view), controls: restoreControls(view) }
+    now = end
+    await act(async () => {
+      await timers.runAll()
+    })
+    await settle()
+    expect({
+      pending,
+      ended: { bar: archivedBar(view), controls: restoreControls(view) },
+    }).toEqual({
+      pending: {
+        bar: [
+          'Archived on 1 January',
+          'Your chat history is available. It leaves the list on 15 January.',
+        ],
+        controls: { bar: null, listed: true, row: false, palette: false },
+      },
       ended: {
         bar: [
           'Removed on 15 January',

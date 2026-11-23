@@ -5,9 +5,9 @@ tree of every file. Changes lists the files that the branch changes
 against the base branch, under the totals of the change. A file opens as a
 page with rendered Markdown or text with line numbers and syntax colours.
 An image file, which is a PNG, JPEG, GIF, or WebP file, opens as a
-picture. An HTML file opens its page in a frame from the files preview of
-the workspace. A changed file opens its unified diff, with the same syntax
-colours. The requirements are in
+picture, which zooms and expands. An HTML file opens its page in a frame
+from the files preview of the workspace. A changed file opens its unified
+diff, with the same syntax colours. The requirements are in
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)
 and [HTML file preview](../../docs/protocol/html-file-preview.md).
 The visual spec is the `app/files` page of the
@@ -166,7 +166,7 @@ the text stays text. Quotes and lists nest at most 16 levels deep, and
 deeper content shows as text. The parse runs in the worker, off the thread
 of the page, so a long or crafted file cannot stop the page.
 
-Each link of the preview has the look of the mockups' `TextLink`, and its
+Each link of the preview has the look of the shared `TextLink`, and its
 title gives its whole address. The link opener of the app shell opens
 it, as
 [Files and changes](../../docs/protocol/workspace-tools.md#files-and-changes)

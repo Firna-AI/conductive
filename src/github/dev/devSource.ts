@@ -3,6 +3,7 @@ import { browserDelay } from '../../app/events'
 import { githubPaths, type BannerState } from '../../shared/github'
 import { FakeApiServer } from '../../test-support/fake-api'
 import { scenarioFetch } from '../../test-support/fake-bar-dev'
+import { bannerWith } from '../../test-support/fake-branch-names'
 import { FAKE_IDS, FAKE_TIME } from '../../test-support/fixtures/core'
 import type { FetchLike } from '../githubClient'
 import type { GitHubSource } from '../githubSource'
@@ -101,7 +102,7 @@ export function createDevSource(
         occurredAt: FAKE_TIME,
         event: {
           type: 'github.updated',
-          banner: data.banner.banner,
+          banner: bannerWith(options.scenario.branches, data.banner.banner),
           checks: data.checks,
         },
       })

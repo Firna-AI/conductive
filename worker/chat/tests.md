@@ -86,6 +86,7 @@ npm run typecheck
 - `native-store.test-support.ts` gives direct storage tests the native records of a production object.
   Pure storage owners can run locally over that native storage.
   `history-session-pages.test.ts` reads session pages of `HistoryPages` there with small limits, and checks where each limit ends a page.
+  `browser-subscription.test.ts` replays a tab there with a small budget of multibyte events. Its two cases use up the UTF-8 byte budget inside the short second page and at the last event of the full first page. Each checks the pages, one close, and that a tab after the last event gets the rest. A refused tab gets no page, one close, and no unhandled rejection.
 - `outputFixture` in `runner-output.test-support.ts` seeds an encrypted environment capture in D1 and starts a turn.
   `runner-output-durability.test.ts` fails the native commit of held text.
   It retries on the live object, then checks eviction, replay, and a gap.
@@ -142,6 +143,9 @@ npm run typecheck
   and `legacy-sessions.test.ts` test starters, linked sessions, and old data.
   `login-observation.test.ts` tests that an observed change stays after a
   refused Send, and that a repeated message ID observes nothing.
+  `explain-session.test.ts` checks anchored session creation, prompt admission, titles, model defaults, runner dispatch, and older stored sessions.
+  `explain-session-access.test.ts` checks selection limits, parent and message identity, finished answers, login checks, and read-only access.
+  `explain-prompt.test.ts` checks the prompt text and its quoted context lines.
   `linked-retry.test.ts` also restarts after a crash at the acceptance of a
   linked Retry. It checks each stored record, and a stale Retry gets 409.
 - `org-logins.test.ts` covers first-message selection, current-member access
@@ -203,6 +207,14 @@ npm run typecheck
   `runner-native.test-support.ts` drive them. Their
   `hibernate` helpers evict with `webSockets: 'hibernate'`, and they check
   the instance marker, as [Wake tests](../README.md#wake-tests) says.
+- `browser-native-replay.test.ts` holds or fails the second history page
+  of a real tab socket with `holdHistoryLists` from
+  `history-hold.test-support.ts`. The entry counts each answered socket
+  upgrade and captures warnings. The cases check that the object answers
+  the upgrade and sends the first page while the second page waits, and
+  that a failed second page closes the socket, removes the tab, and logs
+  one `unexpected_error`. A third case checks that an invalid cursor gets
+  `400 invalid_input`.
 - `browser-native-access.test.ts` checks the tab access clocks through
   member fences and a wake, expiry while access and lifecycle work wait,
   and expiry with failed lifecycle reads and writes. `closeBrowserPeers`
@@ -231,6 +243,17 @@ npm run typecheck
   revives no replaced runner. The stored state holds no login after the
   wake. A `message` command then carries no credential, and each `turn`
   command carries a turn token and no login.
+- `runner-move-wake.test.ts` sends a `repository.move` from the hello,
+  from the repository check, or from delivery. Then it wakes the object
+  with the original runner socket. A later repository check and a later
+  message send no second move, no second `welcome`, and no `turn`. The
+  saved state keeps each field, and the file channel keeps its connection
+  ID.
+- Its refused case wakes the object after a `repository.move.refused`
+  reply. The saved move stays refused. So a later message fails its turn
+  once with `workspace_repository_unavailable`, with no second move.
+  `runner-move-wake.test-support.ts` seeds the two repository folders and
+  moves the workspace record to the second repository.
 - `runner-version.test.ts` checks the version refusal of a `hello`. A
   version below `RUNNER_PROTOCOL_VERSION` closes before any command and
   fails each waiting turn once with `runner_protocol_unsupported`, with an

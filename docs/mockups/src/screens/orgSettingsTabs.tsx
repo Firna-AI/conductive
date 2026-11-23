@@ -10,14 +10,12 @@ import {
   leaveOrgSection,
   orgDetailsSection,
 } from '../entries/components/settings/OrgSections.mockup'
-import {
-  OrgColorSection,
-  type ReadOnlyCause,
-} from '../components/settings/OrgSections'
+import { OrgColorSection } from '../components/settings/OrgSections'
+import { type ReadOnlyCause } from '../../../../src/ui/components/settings/readOnlyCause'
 import { RepositoryEditToggle } from '../components/settings/RepositoryList'
 import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'
-import { EditRepositoryNotice } from '../components/settings/RepositoryNotice'
+import { EditRepositoryNotice } from '../../../../src/ui/components/settings/RepositoryNotice'
 import { section } from '../entries/components/settings/Section.mockup'
 import {
   memberViewer,
@@ -31,6 +29,7 @@ import { orgAgentsFor } from './orgAgentsState'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
+import { skillsDraft, skillsTrust } from './settingsSkills'
 import { defined, plainData } from '../defined'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
@@ -185,6 +184,8 @@ export function TabBody(props: {
             readOnly,
             repositoryNotice:
               settingsRepositoryNotice(state, settings) ?? undefined,
+            skillsDraft: skillsDraft(state),
+            skillsTrust: skillsTrust(state, readOnly !== undefined),
           })}
         />
       )

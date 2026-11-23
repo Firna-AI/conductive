@@ -87,8 +87,24 @@ Rules for the bar:
 - The bar names the branch of the workspace and its base branch, as
   [Base branches](base-branches.md) says (decision 507 G). A narrow column
   cuts each name with an ellipsis, and the full name shows as a tooltip.
-- Reason: one layout of the bar serves every workspace, also a pull request
-  run whose base branch is not the default branch.
+- Reason: one layout of the bar serves every workspace. This includes a
+  workspace whose base branch is not the default branch, such as a stack or
+  a pull request run.
+- On a phone, the top of the Checks tab names them while the branch has
+  no pull request (decision 306).
+  [The branch and its base on a phone](github-banner-layouts.md#the-branch-and-its-base-on-a-phone)
+  gives the rules.
+- The Worker moves a base branch that GitHub deleted to the default branch,
+  as [A base branch that GitHub deleted](base-branches.md#a-base-branch-that-github-deleted)
+  says. A message under the bar then says so (decision 304). It names the
+  default branch as the new target, and the branch that GitHub no longer
+  has.
+- That message is a status, not a refusal. It shows until a pull request
+  opens. Reason: a pull request names its own base branch on GitHub.
+- On a phone, that message shows at the top of the Checks tab, as
+  [Layouts](github-banner-layouts.md#layouts) says. The `base-moved`
+  variant of the mockup `app/new-workspace/start-branch/stacked` gives its
+  words.
 - The bar offers "Create PR" for commits of the branch that its
   base branch does not have, and for local work, as [Actions](#actions)
   says. Create PR opens a pull request into the base branch.
@@ -231,9 +247,11 @@ marks a draft ready for review, continues, and archives.
   refusal, the message says that GitHub refused the merge, with Open on
   GitHub.
 - No GitHub error text reaches the browser.
-- Merge queues, stacked pull requests, auto-merge, and a bypass of the
-  rules of the branch are not part of the bar. A direct merge into a branch
-  that needs a merge queue gets the refusal of GitHub.
+- Merge queues, auto-merge, a bypass of branch rules, and actions on a
+  whole stack of pull requests are not part of the bar. A direct merge into
+  a branch that needs a merge queue gets the refusal of GitHub.
+- A workspace that stacks on another branch shows the bar of its own pull
+  request only.
 
 ## Ready for review
 
@@ -279,21 +297,6 @@ marks a draft ready for review, continues, and archives.
   available.
 - A Continue that stopped names its reason in a message under the bar.
 
-## Checks
-
-- The Checks tab lists each check that GitHub reports for the pull
-  request, in GitHub's order, with its state.
-- A finished check shows how long it ran.
-- While the branch has no pull request, the Checks tab shows that it waits
-  for one.
-- For the bar and the GitHub state, a failed, cancelled, timed-out, or
-  action-required check is a failure. A queued or running check runs. Each
-  other check counts as passed.
-- The list mark of the workspace shows its
-  [GitHub state](#the-github-state), the state of the bar, in the colour of
-  the bar, as [The list mark](workspace-life.md#the-list-mark) says. While
-  the agent needs input, the mark is blue instead.
-
 ## The GitHub state
 
 [The GitHub state](github-summary.md) gives the requirements and their reasons.
@@ -310,16 +313,8 @@ marks a draft ready for review, continues, and archives.
   events do not reach an archived workspace, and a pull request can merge
   on GitHub after its workspace is archived.
 
-## Layouts
+## Checks and layouts
 
-- On desktop, the pull request bar sits at the top of the right column,
-  above the All files, Changes, and Checks lists. A message of the bar
-  shows under it.
-- On a phone, a compact pull request row at the top of the workspace shows
-  the state. The row opens the Checks tab, also for a branch without a pull
-  request when the bar has an action or a link.
-- On a phone, the actions of the bar, its message, and its links to GitHub
-  show at the top of the Checks tab.
-- Reason: a button cannot sit inside the link of the row, and two states
-  have two actions.
-- A row of a branch without commits and without local work is not a link.
+[Checks and layouts](github-banner-layouts.md) gives the Checks tab, and
+where the bar, its message, and its actions show on desktop and on a
+phone.

@@ -4,8 +4,9 @@ import {
   actionButton,
   iconButton,
 } from '../../entries/components/common/actions.mockup'
-import type { Shortcut } from '../common/KeyChips'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
+import { Linked } from '../common/ScreenLink'
 import {
   cancelButton,
   conflictActions,
@@ -15,15 +16,11 @@ import {
   rowLayout,
   rowMessage,
 } from '../../entries/components/settings/ShortcutParts.mockup'
-import {
-  Linked,
-  type HeldShortcut,
-  type RefusedShortcut,
-} from './ShortcutParts'
+import { type HeldShortcut, type RefusedShortcut } from './ShortcutParts'
 import { keyOf, recordingKeys, resetKeys } from './shortcutRowKeys'
 import { instanceKey, shortcutKey } from '../../instanceKey'
 import { defined } from '../../defined'
-import styles from './ShortcutsSections.module.css'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * The state of the row of a command. A row shows its shortcuts, with Reset

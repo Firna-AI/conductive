@@ -3,7 +3,7 @@ import type {
   OrgBuilds,
 } from '../../../components/settings/BuildSection'
 import type { OrgComputer } from '../../../components/settings/ComputerTab'
-import type { ReadOnlyCause } from '../../../components/settings/OrgSections'
+import type { ReadOnlyCause } from '../../../../../../src/ui/components/settings/readOnlyCause'
 import {
   buildHistory,
   changedInstallScript,
@@ -16,20 +16,26 @@ import {
 } from '../../../fixtures/computer'
 import {
   buildLog,
+  endedBuildLog,
+  endedFirstBuildLog,
   failedBuildLog,
   failedFirstBuildLog,
   firstBuildLog,
   timedOutBuildLog,
   timedOutFirstBuildLog,
+  waitingBuildLog,
 } from '../../../fixtures/terminal'
 import { terminalLineSchema } from '../tools/terminalSchemas'
+import { skillsLookupSchema } from './skillsSchemas'
 
 /** The states of the cloud computer, as `BuildState` lists them. */
 const buildStates = [
   'ready',
   'building',
+  'waiting',
   'failed',
   'time-limit',
+  'ended',
   'none',
 ] as const satisfies readonly BuildState[]
 
@@ -72,11 +78,13 @@ const orgBuildsProperties = {
   logs: {
     type: 'object',
     additionalProperties: false,
-    required: ['building', 'failed', 'time-limit'],
+    required: ['building', 'waiting', 'failed', 'time-limit', 'ended'],
     properties: {
       building: logSchema,
+      waiting: logSchema,
       failed: logSchema,
       'time-limit': logSchema,
+      ended: logSchema,
     },
   },
 } as const
@@ -116,6 +124,9 @@ export const orgComputerSchema = {
     changedInstallScript: { type: 'string' },
     startupScript: { type: 'string' },
     envVars: { type: 'array', items: envVarSchema },
+    /** The GitHub repository of skills, as owner/name, when the org has one. */
+    skillsRepository: { type: 'string' },
+    skillsLookup: skillsLookupSchema,
   },
 } as const
 
@@ -125,8 +136,10 @@ export const acmeBuilds = {
   history: buildHistory,
   logs: {
     building: buildLog,
+    waiting: waitingBuildLog,
     failed: failedBuildLog,
     'time-limit': timedOutBuildLog,
+    ended: endedBuildLog,
   },
 } satisfies OrgBuilds
 
@@ -135,8 +148,10 @@ export const newOrgBuilds = {
   history: [],
   logs: {
     building: firstBuildLog,
+    waiting: waitingBuildLog,
     failed: failedFirstBuildLog,
     'time-limit': timedOutFirstBuildLog,
+    ended: endedFirstBuildLog,
   },
 } satisfies OrgBuilds
 

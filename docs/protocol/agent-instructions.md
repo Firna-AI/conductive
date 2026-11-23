@@ -40,8 +40,9 @@ tells each agent the capabilities of its session, as
   merge, and a [repository change](repository-change.md) changes it too.
 - **Target branch:** the base branch of the workspace, as
   [The base branch of a workspace](base-branches.md#the-base-branch-of-a-workspace)
-  says. For a workspace that a member creates, it is the default branch of
-  the repository.
+  says. For a workspace that a member creates, it is the target that New
+  workspace gives, as
+  [The target choice](start-from-a-branch.md#the-target-choice) says.
 - **Repository folder:** the folder of the workspace's repository in the
   sandbox, as [Repository folders](repository-folders.md) says. A
   repository change moves the workspace to the folder of another
@@ -97,6 +98,10 @@ tells each agent the capabilities of its session, as
     of that service ends each running turn of each session.
   - `sudo journalctl -u conductive-runner.service` shows the cause of a
     stop of that service.
+  - A server that a member needs after the reply runs as a
+    [service](services.md), outside `conductive-runner.service`. The agent
+    ends each temporary check server before its reply, as
+    [Agent guidance](services.md#agent-guidance) says.
   - The workspace tools create, list, get, rename, move, and archive the
     workspaces of the org. In each workspace of the org, they also start,
     list, get, rename, close, and stop sessions, send and get messages,
@@ -124,6 +129,9 @@ tells each agent the capabilities of its session, as
     `get_workspace` gives the current ones.
   - A message that ends with a `Sent by:` line comes from an agent of the
     session that the line links to, through the workspace tools.
+  - The workspace tools also watch one turn of a session of the org. The
+    instructions give the guidance of
+    [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance).
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as

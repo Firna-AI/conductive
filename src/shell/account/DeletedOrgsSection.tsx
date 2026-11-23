@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { ArchiveRestore, CircleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   DeletedOrgList,
   type DeletedOrgRow,
-} from '../../../docs/mockups/src/components/settings/DeletedOrgList'
-import { deletedOrgsCopy as copy } from '../../../docs/mockups/src/components/settings/deletedOrgsCopy'
+} from '../../ui/components/settings/DeletedOrgList'
+import { deletedOrgsCopy as copy } from '../../ui/components/settings/deletedOrgsCopy'
 import { isSuspended } from '../../app/permissions'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'

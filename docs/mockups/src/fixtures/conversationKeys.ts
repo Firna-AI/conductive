@@ -2,6 +2,8 @@ import { barConversationKeys } from './barConversations'
 import { capabilityConversationKeys } from './capabilityConversations'
 import { secretConversationKeys } from './secretConversations'
 import { secretValueConversationKeys } from './secretValueConversations'
+import { explanationConversationKeys } from './explanationChats'
+import { wakeConversationKeys } from './wakeConversations'
 
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
@@ -86,4 +88,6 @@ export const conversationKeys = [
   ...secretConversationKeys,
   ...secretValueConversationKeys,
   ...capabilityConversationKeys,
+  ...explanationConversationKeys,
+  ...wakeConversationKeys,
 ] as const

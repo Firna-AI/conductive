@@ -4,17 +4,6 @@ import type {
 } from '../../src/shared/secrets'
 import { HttpError } from '../http'
 
-export async function workspaceMacAccess(
-  db: D1Database,
-  workspaceId: string,
-): Promise<boolean> {
-  const row = await db
-    .prepare('SELECT mac_access AS macAccess FROM workspaces WHERE id = ?')
-    .bind(workspaceId)
-    .first<{ macAccess: number }>()
-  return row?.macAccess === 1
-}
-
 export async function readWorkspaceCapabilities(
   db: D1Database,
   orgId: string,

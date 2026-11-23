@@ -43,6 +43,8 @@ const propSchema = {
     viewport: { enum: viewports },
     /** The reads of the pictures of the answers, while the computer runs. */
     pictures: { enum: pictureReads },
+    /** The reader reads higher up, so the button to the bottom shows. */
+    scrolledUp: { type: 'boolean' },
   },
 } as const
 
@@ -82,6 +84,7 @@ export const chatPane = defineComponent<typeof propSchema, typeof slots, Props>(
         notice={props.notice}
         pictures={props.pictures}
         problem={props.problem}
+        scrolledUp={props.scrolledUp}
         starting={props.starting}
         viewer={props.viewer}
         viewport={props.viewport ?? context.viewport}
@@ -97,6 +100,13 @@ export const chatPane = defineComponent<typeof propSchema, typeof slots, Props>(
           items: plainData(conversations.running),
           composer: { ...composer, running: true },
         },
+      },
+      {
+        slug: 'scrolled-up',
+        title: 'Read higher up',
+        description:
+          'The reader reads an earlier part of the chat: a round button above the right end of the composer shows the bottom of the chat.',
+        props: { scrolledUp: true },
       },
       {
         slug: 'empty',

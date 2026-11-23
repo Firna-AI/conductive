@@ -1,0 +1,10 @@
+/*
+ * The drag surface of a favourite row, as the rows of the workspace list
+ * have it. A press that moves the row selects no text, a long press opens
+ * no menu of the browser, and a finger still scrolls the page.
+ */
+.dragSurface {
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  user-select: none;
+}

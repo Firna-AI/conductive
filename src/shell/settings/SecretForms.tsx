@@ -2,17 +2,17 @@ import { useState } from 'react'
 import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
 import { Plus } from 'lucide-react'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   addNameHint,
   refusedNameError,
-} from '../../../docs/mockups/src/components/secrets/secretNameCopy'
+} from '../../ui/components/secrets/secretNameCopy'
 import {
   allAgentsHint,
   secretsWords,
-} from '../../../docs/mockups/src/components/secrets/secretsCopy'
-import styles from '../../../docs/mockups/src/components/secrets/SecretsTab.module.css'
-import sections from '../../../docs/mockups/src/components/settings/Section.module.css'
+} from '../../ui/components/secrets/secretsCopy'
+import styles from '../../ui/components/secrets/SecretsTab.module.css'
+import sections from '../../ui/components/settings/Section.module.css'
 import type { ApiError } from '../../app/api/client'
 import type { SecretsModel } from '../../app/secrets-model'
 import type { OrgSummary } from '../../shared/orgs'

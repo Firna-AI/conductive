@@ -2,8 +2,8 @@ import type { SchemaProps } from '@mokly/mokly'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { logoTile } from '../entries/components/brand/Logo.mockup'
-import { previewOpeningCopy } from '../components/tools/previewCopy'
-import styles from './PreviewOpeningScreen.module.css'
+import { previewOpeningCopy } from '../../../../src/ui/components/tools/previewCopy'
+import styles from '../../../../src/ui/screens/PreviewOpeningScreen.module.css'
 
 export const previewOpeningSchema = {
   type: 'object',

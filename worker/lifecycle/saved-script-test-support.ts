@@ -125,11 +125,22 @@ export async function localSavedScriptFixture(
           'sudo -n git config --system ',
           `git config --file ${shellQuote(systemGitConfig)} `,
         )
+        // The base step before the startup script runs as an isolated
+        // source command, whose home and Git ceiling are the user's home.
+        .replaceAll('HOME=/home/user ', `HOME=${shellQuote(directory)} `)
+        .replaceAll(
+          'GIT_CEILING_DIRECTORIES=/home/user ',
+          `GIT_CEILING_DIRECTORIES=${shellQuote(directory)} `,
+        )
       mapped = mapCommandPaths(mapped)
       const unmapped = mapped.replaceAll(directory, '<isolated-sandbox>')
       if (/\/(?:run|opt|home\/user|tmp|\.git)(?:\/|\b)/.test(unmapped))
         throw new Error('A script command keeps a production path')
-      if (mapped.includes(scriptPaths.install) || mapped.includes('sudo '))
+      if (
+        mapped.includes(scriptPaths.install) ||
+        mapped.includes('sudo ') ||
+        /\bsystemctl\b/.test(mapped)
+      )
         throw new Error('A script command keeps an unmapped operation')
       return new Promise((resolve, reject) => {
         const child = execFile(

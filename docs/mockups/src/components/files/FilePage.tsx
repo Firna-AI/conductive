@@ -2,11 +2,11 @@ import type { ReactNode } from 'react'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { ChevronLeft, Code, Eye } from 'lucide-react'
 import { splitPath } from '../../fixtures/files'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import type { BackLink } from '../layout/Page'
 import { PreviewActions } from '../tools/PortPreview'
 import { specFor } from './fileSpecs'
@@ -44,7 +44,8 @@ function isDiff(view: FileTabView): boolean {
  * such as a picture, keeps Download, and its Copy is off. A Markdown or an
  * HTML file has the switch between Preview and Source at the end. The page
  * of an HTML file in a frame adds Reload, Expand on desktop, and Open
- * before Copy, as the bar of a Preview tab has them. A narrow page, such as a phone, moves them to
+ * before Copy, as the bar of a Preview tab has them. A picture has its
+ * zoom bar under it, with Expand on desktop. A narrow page, such as a phone, moves them to
  * a second line of the header, so the path keeps its room.
  *
  * `placeholder` shows in place of the content, such as the state of a
@@ -57,12 +58,12 @@ export function FilePage(props: {
   back?: BackLink
   placeholder?: ReactNode
   /**
-   * The screen of the page of an HTML file in its large window, which
-   * Expand shows. Only the centre of the desktop gives it.
+   * The screen of the page of an HTML file or of a picture in its large
+   * window, which Expand shows. Only the centre of the desktop gives it.
    */
   expandTo?: string
 }) {
-  const spec = specFor(props.view)
+  const spec = specFor(props.view, props.expandTo)
   const { folder, name } = splitPath(spec.path)
   const Icon = spec.icon
   const waiting = props.placeholder !== undefined

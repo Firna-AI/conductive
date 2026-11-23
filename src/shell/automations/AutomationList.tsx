@@ -1,10 +1,10 @@
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../ui/components/common/classes'
 import {
   StatusText,
   type StatusTone,
-} from '../../../docs/mockups/src/components/common/StatusText'
-import styles from '../../../docs/mockups/src/components/automations/AutomationList.module.css'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
+} from '../../ui/components/common/StatusText'
+import styles from '../../ui/components/automations/AutomationList.module.css'
+import { StatusGlyph } from '../../ui/components/workspaces/StatusGlyph'
 import type { ListedAutomation } from '../../app/api/read-automations'
 import { personName } from '../../app/people'
 import { routes } from '../../app/router'

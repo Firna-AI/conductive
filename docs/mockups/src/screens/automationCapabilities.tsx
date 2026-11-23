@@ -4,10 +4,10 @@ import type { CapabilitiesControl } from '../components/capabilities/Capabilitie
 import {
   capabilitiesIntro,
   capabilitiesLabel,
-} from '../components/capabilities/capabilitiesCopy'
-import { CapabilitiesPanel } from '../components/capabilities/CapabilitiesPanel'
+} from '../../../../src/ui/components/capabilities/capabilitiesCopy'
+import { CapabilitiesPanel } from '../../../../src/ui/components/capabilities/CapabilitiesPanel'
 import { automationCapabilityParts } from '../components/capabilities/capabilityParts'
-import { Sheet } from '../components/common/Sheet'
+import { Sheet } from '../../../../src/ui/components/common/Sheet'
 import type { Automation } from '../fixtures/automations'
 import { orgs } from '../fixtures/orgs'
 import { acmeSecrets } from '../fixtures/secrets'
@@ -17,8 +17,8 @@ import type { AutomationState } from './automationState'
 /**
  * The control of an automation: the secrets of Acme, with the secrets that
  * each run workspace pre-approves checked. It has only the secrets part,
- * because run workspaces keep Mac access off (automation capabilities
- * decision 2 A).
+ * because no person watches the Mac of the owner during a run (automation
+ * capabilities decision 2 A).
  */
 function panelOf(automation: Automation, sheet: boolean) {
   const parts = automationCapabilityParts({

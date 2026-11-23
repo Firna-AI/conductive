@@ -54,6 +54,19 @@ it('keeps other errors and login failures immediate while allowing a later proce
   ])
 })
 
+it('keeps the fixed usage limit cause of Claude without a reset time', async () => {
+  const h = await continueFixture()
+  await h.drop({ errors: ['Usage limit reached. Try again at 5:00 PM.'] })
+  expect(h.ends()).toEqual([
+    {
+      type: 'failed',
+      code: 'agent_usage_limit',
+      message:
+        'The agent account reached its usage limit. Check your agent account.',
+    },
+  ])
+})
+
 it('keeps Stop before a drop and during the continue answer as stopped', async () => {
   const before = await continueFixture()
   await before.provider.interrupt()

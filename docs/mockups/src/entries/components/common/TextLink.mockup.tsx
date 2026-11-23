@@ -1,7 +1,10 @@
 import { defineComponent } from '@mokly/mokly'
 import { newTabAnchor } from '../chat/WebLinkText.mockup'
 import { ScreenLink } from '../../../components/common/ScreenLink'
-import { TextLink, type LinkOpener } from '../../../components/common/TextLink'
+import {
+  TextLink,
+  type LinkOpener,
+} from '../../../../../../src/ui/components/common/TextLink'
 import { paths } from '../../../paths'
 
 /**

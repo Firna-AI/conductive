@@ -1,5 +1,5 @@
 import type { SchemaProps } from '@mokly/mokly'
-import { ORG_COLORS } from '../design/orgColors'
+import { ORG_COLORS } from '../../../../src/ui/design/orgColors'
 import { repositoryOrderStates } from '../components/settings/RepositoryOrderList'
 import { repositoryChanges } from '../fixtures/repositories'
 import {
@@ -7,6 +7,7 @@ import {
   orgAgentsKeys,
   orgAgentsProperties,
 } from './orgAgentsState'
+import { skillsDefaults, skillsKeys, skillsProperties } from './settingsSkills'
 
 export const orgSettingsSchema = {
   type: 'object',
@@ -19,6 +20,7 @@ export const orgSettingsSchema = {
     'repositoryView',
     'repositoryOrder',
     'envForm',
+    ...skillsKeys,
     'secrets',
     'dialog',
     'viewer',
@@ -41,8 +43,22 @@ export const orgSettingsSchema = {
      * The builds of the cloud computer, which its tab shows. `time-limit` is
      * a build that the app stopped at its 60-minute limit. `none` is an org
      * with no build yet, such as a new org whose first build did not start.
+     * `waiting` is a build of an admin that waits for another update of the
+     * cloud computer, which members do not see, and that the tab shows as a
+     * build that runs. `ended` is a build that an operator ended for such an
+     * update, which the tab shows as a failed build.
      */
-    build: { enum: ['ready', 'building', 'failed', 'time-limit', 'none'] },
+    build: {
+      enum: [
+        'ready',
+        'building',
+        'waiting',
+        'failed',
+        'time-limit',
+        'ended',
+        'none',
+      ],
+    },
     /**
      * The install script: the one that the newest build started with, or
      * one that an admin changed and saved after that start, which a later
@@ -78,6 +94,7 @@ export const orgSettingsSchema = {
      * DATABASE_URL.
      */
     envForm: { enum: ['none', 'add', 'change'] },
+    ...skillsProperties,
     /**
      * The Secrets tab: the list, the value of PROD_DATABASE_URL that an
      * admin just revealed, the Add secret form, that form after it refused
@@ -146,6 +163,7 @@ export const acmeSettings: OrgSettingsState = {
   repositoryView: 'list',
   repositoryOrder: 'list',
   envForm: 'none',
+  ...skillsDefaults,
   secrets: 'list',
   dialog: 'none',
   viewer: 'admin',

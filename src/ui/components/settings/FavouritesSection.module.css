@@ -1,0 +1,78 @@
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  list-style: none;
+}
+
+.list > li + li {
+  border-top: 1px solid var(--ui-border);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 2px 4px 2px 8px;
+}
+
+/* The handle of a drag that moves the row. */
+.handle {
+  flex-shrink: 0;
+  color: var(--ui-faint);
+  cursor: grab;
+}
+
+/* The picker of the favourite, and the line under it when the menu hides it. */
+.choice {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.picker {
+  display: flex;
+  max-width: 100%;
+}
+
+/*
+ * A favourite that the menu leaves out: its picker shows at half strength,
+ * as an item that is off does, and it still works. The line under it keeps
+ * the muted colour, so that the reason stays readable.
+ */
+.off {
+  opacity: 0.5;
+}
+
+.why {
+  padding: 0 8px 6px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* Add a favourite, with its list of models open below it on a computer. */
+.add {
+  display: flex;
+  position: relative;
+}
+
+/* A change that the app did not save: its error, until the next change. */
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--ui-rose);
+  font-size: var(--ui-text-sm);
+  line-height: 1.45;
+}
+
+/* The icon centres on the first line of the text. */
+.icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

@@ -44,6 +44,14 @@ The last reveal in metadata joins the secret's current value version.
 Replace increments that version only when it replaces the value.
 Description and all-agents changes keep the version and last reveal.
 
+## Workspace capabilities
+
+`capabilities-writes.ts` saves the workspace Mac access field with the member
+and org checks. The capabilities API and workspace create keep this field
+for older pages. The field does not gate Mac commands or grant starts.
+The [device broker](../devices/README.md#permission-policy-and-limits)
+relays requests to the Mac, which applies its local permissions.
+
 ## Workspace tool routes
 
 The two fixed machine routes use a workspace bearer token on the machine

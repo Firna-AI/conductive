@@ -1,12 +1,13 @@
+import type { ReactNode } from 'react'
 import { ChevronDown, Sparkles } from 'lucide-react'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { menu } from '../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { chooseRepositoriesFirst } from '../components/new-workspace/notices'
 import { chooseRepositoriesButton } from '../entries/components/new-workspace/notices.mockup'
-import { formWait } from '../components/new-workspace/waitingRepository'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
 import type { PageOrg } from './newWorkspacePageParts'
-import styles from './NewWorkspaceScreen.module.css'
+import styles from '../../../../src/ui/screens/NewWorkspaceScreen.module.css'
 
 /**
  * The repository of the new workspace, as a compact picker. `menu` draws
@@ -43,11 +44,13 @@ function RepositoryPicker(props: {
 }
 
 /**
- * The start of an empty chat, with the repository of the new workspace.
- * The note names the build that the workspace starts from. Before the
- * first good build there is none, and the notice over the composer says
- * why. While the repository of the form waits for its build, the notice
- * over the composer says when it is ready, so the note gives way.
+ * The start of an empty chat, with the repository of the new workspace and
+ * the branch control directly right of it. The target of a picked branch
+ * lives in the dropdown of the branch control (decision 309). The note
+ * names the build that the workspace starts from. Before the first good
+ * build there is none, and the notice over the composer says why. While
+ * the repository of the form waits for its build, the notice over the
+ * composer says when it is ready, so the note gives way.
  */
 export function Start(props: {
   page: PageOrg
@@ -55,6 +58,8 @@ export function Start(props: {
   admin: boolean
   /** The open repository menu, on a computer. */
   menu?: readonly MenuEntryData[]
+  /** The branch control, with its dropdown open below it on a computer. */
+  branch?: ReactNode
 }) {
   const { page } = props
   const ready = formWait(page) === undefined
@@ -70,7 +75,13 @@ export function Start(props: {
             : `An admin of ${page.org.name} chooses its repositories first.`}
       </p>
       {props.chosen ? (
-        <RepositoryPicker menu={props.menu} repository={page.repository.name} />
+        <div className={styles.pickers}>
+          <RepositoryPicker
+            menu={props.menu}
+            repository={page.repository.name}
+          />
+          {props.branch}
+        </div>
       ) : props.admin ? (
         <chooseRepositoriesButton.Component />
       ) : null}

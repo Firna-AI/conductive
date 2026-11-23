@@ -1,35 +1,23 @@
 import type { RunnerEventRefused } from '../chat-events'
-import { endsTurn, isRunning } from './known-turns'
-import type { Transcript, TranscriptItem } from './transcript'
-import { replaceAt } from './turn-events'
+import { endsTurn } from './known-turns'
+import type { TranscriptBatch } from './transcript-batch'
 import { endShownTurn } from './turn-records'
 
-/**
- * Applies a refusal marker of a session. The marker shows once, as a line at
- * its place among the other events. A refused end of the running turn still
- * ends that turn. A marker starts no turn and never changes the newest turn:
- * a marker of an ended turn, of a turn that never started, or without a turn
- * ends nothing.
- */
+/** A refusal is a line. Only the refused end of the newest running turn ends work. */
 export function foldRefused(
-  transcript: Transcript,
+  fold: TranscriptBatch,
   event: RunnerEventRefused,
-): Transcript {
-  const ended =
+): void {
+  if (
     endsTurn(event) &&
     event.turnId !== null &&
-    isRunning(transcript, event.turnId)
-      ? endShownTurn(transcript, event.turnId)
-      : transcript
-  const item: TranscriptItem = {
+    fold.turns.running(event.turnId)
+  ) {
+    endShownTurn(fold, event.turnId)
+  }
+  fold.items.put({
     kind: 'lost',
     id: `lost:${event.streamId}:${event.runnerEventNumber}`,
     marker: event,
-  }
-  const index = ended.items.findIndex((entry) => entry.id === item.id)
-  return {
-    ...ended,
-    items:
-      index < 0 ? [...ended.items, item] : replaceAt(ended.items, index, item),
-  }
+  })
 }

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { actionButton } from '../entries/components/common/actions.mockup'
-import type { BuildState } from '../components/settings/BuildSection'
-import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
+import { buildRuns, type BuildState } from '../components/settings/BuildSection'
+import type { RepositoryWait } from '../../../../src/ui/components/settings/repositoryChangeCopy'
 import { repositoryNotice } from '../entries/components/settings/RepositoryNotice.mockup'
 import { changedNames } from '../fixtures/repositories'
 import type { OrgSettingsState } from './orgSettingsState'
@@ -17,8 +17,10 @@ function waitOf(build: BuildState, added: boolean): RepositoryWait {
   switch (build) {
     case 'failed':
     case 'time-limit':
+    case 'ended':
       return 'failed'
     case 'building':
+    case 'waiting':
       return added ? 'building' : 'waiting'
     case 'ready':
     case 'none':
@@ -46,7 +48,7 @@ function adminAction(wait: RepositoryWait, build: BuildState): ReactNode {
     case 'waiting':
       return (
         <actionButton.Component
-          disabled={build === 'building'}
+          disabled={buildRuns(build)}
           icon="hammer"
           moklyInstance="repository-build-computer"
           tone="primary"

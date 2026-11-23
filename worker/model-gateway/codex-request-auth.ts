@@ -1,4 +1,4 @@
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import type { GatewayRuntime } from './route'
 import { codexGatewayAuth } from './codex-auth'
 import { GatewayRequestError } from './errors'

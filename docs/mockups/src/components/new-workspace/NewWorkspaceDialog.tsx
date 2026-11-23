@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ChevronDown, CornerDownLeft } from 'lucide-react'
+import { CornerDownLeft } from 'lucide-react'
 import type { AgentChoice } from '../../fixtures/agents'
 import type { Attachment } from '../../fixtures/attachments'
 import {
@@ -8,22 +8,23 @@ import {
 } from '../capabilities/CapabilitiesButton'
 import { messageField } from '../../entries/components/chat/MessageField.mockup'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
-import type { SessionLogin } from '../chat/SessionLogin'
+import type { SessionLogin } from '../../../../../src/ui/components/chat/SessionLogin'
 import { sessionLoginLabel } from '../../entries/components/chat/SessionLogin.mockup'
 import { defined } from '../../defined'
 import {
   actionButton,
   iconButton,
 } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import dialog from '../common/ConfirmDialog.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import dialog from '../../../../../src/ui/components/common/ConfirmDialog.module.css'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
-import styles from './NewWorkspaceDialog.module.css'
+import card from '../../../../../src/ui/components/common/ModalCard.module.css'
+import styles from '../../../../../src/ui/components/new-workspace/NewWorkspaceDialog.module.css'
 
 /**
- * The repository of the new workspace, as a compact picker. `menu` draws
- * its menu open below it.
+ * The repository of the new workspace, as a compact picker with no
+ * chevron. `menu` draws its menu open below it.
  */
 function RepositoryPicker(props: {
   name: string
@@ -38,9 +39,6 @@ function RepositoryPicker(props: {
         menu
         moklyInstance="repository"
         tone="plain"
-        trailing={
-          <ChevronDown aria-hidden className={styles.chevron} size={13} />
-        }
       >
         {props.name}
       </actionButton.Component>
@@ -57,11 +55,11 @@ function RepositoryPicker(props: {
 }
 
 /**
- * The org and the section of the new workspace, as a compact picker at the
- * end of the header. `menu` draws its menu of the sections open below it.
+ * The section of the new workspace, as a compact picker with no chevron at
+ * the end of the header. `menu` draws its menu of the sections open below
+ * it.
  */
 function SectionPicker(props: {
-  place: string
   section: string
   menu?: readonly MenuEntryData[]
 }) {
@@ -73,11 +71,8 @@ function SectionPicker(props: {
         menu
         moklyInstance="section"
         tone="plain"
-        trailing={
-          <ChevronDown aria-hidden className={styles.chevron} size={13} />
-        }
       >
-        {props.place}
+        {props.section}
       </actionButton.Component>
       {props.menu ? (
         <menu.Component
@@ -123,8 +118,11 @@ export type NewWorkspaceDialogProps = {
    * one off with its note, as on the New workspace page.
    */
   repositoryMenu?: readonly MenuEntryData[]
-  /** The org and the section that the new workspace joins. */
-  place: string
+  /**
+   * The branch control close right of the repository picker, with its
+   * dropdown drawn open below it, as on the New workspace page.
+   */
+  branch?: ReactNode
   /** The section that the new workspace joins, such as General. */
   section: string
   /**
@@ -175,18 +173,23 @@ export type NewWorkspaceDialogProps = {
 
 /**
  * New workspace as a wide, compact dialog over the dimmed app, drawn open,
- * for a computer. The repository picker sits at the top left, and the org
- * and the section of the new workspace at the top right, as a picker of the
- * section. The message fills
- * the middle, with a chip for each of its files at its place, and a pasted
- * link to a workspace of the org shows as a chip, as in the composer. The
- * attach button, the Capabilities icon, and the model picker sit at the
- * bottom left, with the label of the org login after the model picker when
- * the first message runs on it. Create sits at the bottom right. The attach
+ * for a computer. The repository picker and the branch control close
+ * right of it sit at the top left, and the section of the new workspace at
+ * the top right, as a picker of the section. The pickers show no chevrons.
+ * On the default branch the branch control is only a muted icon. The
+ * target of a picked branch lives in the dropdown of the branch control, so no line
+ * follows the header (decision 309). The message fills the middle, with a
+ * chip for each of its files at its place, and a pasted link to a
+ * workspace of the org shows as a chip, as in the composer. The attach
+ * button, the Capabilities icon, and the model picker sit at the bottom
+ * left, with the label of the org login after the model picker when the
+ * first message runs on it. Create sits at the bottom right. The attach
  * button puts each picked file at the caret. The whole card takes a drop
  * of files, and its full border shows the drop state while they hover over
  * it. A phone always opens the page instead. The files show the chips of
- * every composer, and Create waits for their uploads, as Send does.
+ * every composer, and Create waits for their uploads, as Send does. A
+ * dialog taller than the room of the window keeps its header and its
+ * footer, and the message and the notices scroll between them.
  */
 export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
   const uploads = props.attachments.some((file) => file.state !== undefined)
@@ -196,37 +199,42 @@ export function NewWorkspaceDialog(props: NewWorkspaceDialogProps) {
       <section
         aria-label="New workspace"
         aria-modal
-        className={classes(styles.dialog, props.drop && styles.dropping)}
+        className={classes(
+          styles.dialog,
+          card.card,
+          props.drop && styles.dropping,
+        )}
         role="dialog"
       >
-        <div className={styles.header}>
+        <div className={classes(styles.header, card.head)}>
           {props.repository ? (
-            <RepositoryPicker
-              menu={props.repositoryMenu}
-              name={props.repository}
-            />
+            <span className={styles.source}>
+              <RepositoryPicker
+                menu={props.repositoryMenu}
+                name={props.repository}
+              />
+              {props.branch}
+            </span>
           ) : null}
-          <SectionPicker
-            menu={props.sectionMenu}
-            place={props.place}
-            section={props.section}
-          />
+          <SectionPicker menu={props.sectionMenu} section={props.section} />
         </div>
-        <div className={styles.body}>
-          <messageField.Component
-            files={props.attachments}
-            lines={7}
-            maxLines={14}
-            moklyInstance="message-field"
-            placeholder={props.placeholder}
-            text={props.text}
-            {...defined({ caret: props.caret })}
-          />
+        <div className={card.body}>
+          <div className={styles.body}>
+            <messageField.Component
+              files={props.attachments}
+              lines={7}
+              maxLines={14}
+              moklyInstance="message-field"
+              placeholder={props.placeholder}
+              text={props.text}
+              {...defined({ caret: props.caret })}
+            />
+          </div>
+          {props.notices === undefined ? null : (
+            <div className={styles.notices}>{props.notices}</div>
+          )}
         </div>
-        {props.notices === undefined ? null : (
-          <div className={styles.notices}>{props.notices}</div>
-        )}
-        <div className={styles.footer}>
+        <div className={classes(styles.footer, card.foot)}>
           <iconButton.Component
             icon="paperclip"
             label="Attach files"

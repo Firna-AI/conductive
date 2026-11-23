@@ -3,7 +3,7 @@ import { operatorTotals, type WeeklyCount } from '../../fixtures/operator'
 import { waitlistTotal } from '../../fixtures/operatorWaitlist'
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
-import styles from './OperatorTiles.module.css'
+import styles from '../../../../../src/ui/components/operator/OperatorTiles.module.css'
 
 /** Each tile shares the width of the row, so a phone shows two in a line. */
 const tileStyle = { flex: 1 }

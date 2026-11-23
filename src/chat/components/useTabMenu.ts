@@ -1,20 +1,14 @@
 import { useCallback, useState } from 'react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/workspace/WorkspaceTabs.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/workspace/WorkspaceTabs.module.css'
 import { useLongPress } from '../../app/long-press'
 
 import { opensMenu } from '../../shell/ui/menu-keys'
 import type { MenuEntry, MenuPoint } from '../ui/Menu'
+import type { OpenMenu } from '../ui/PointMenu'
 import { tabMenuEntries, type TabMenuActions } from './tab-menu-items'
 import { rowKey, type RowTab, type TabItemProps } from './tab-row'
 import local from './tabs.module.css'
-
-/** The open menu of a tab: its title, where it opens, and its items. */
-export interface OpenTabMenu {
-  title: string
-  at: MenuPoint
-  entries: MenuEntry[]
-}
 
 /** The menu opens this far below a tab, as the mockups draw it. */
 const below = 4
@@ -65,7 +59,7 @@ export function useTabMenu(
   // file tab without Copy path when the workspace turns read-only, closes its
   // menu, so the menu does not open again when the tab comes back.
   if (open && entries.length === 0) setOpen(null)
-  const menu: OpenTabMenu | null =
+  const menu: OpenMenu | null =
     open && entries.length > 0
       ? { title: tabs[openIndex].title, at: open.at, entries }
       : null

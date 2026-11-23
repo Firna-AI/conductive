@@ -169,8 +169,10 @@ describe('the read-only settings of a member', () => {
         }}
         log={log}
         now={now}
+        onRetrySkills={() => undefined}
         org={{ id: 'acme', name: 'Acme', role: 'member' }}
         settings={shown}
+        skills={{ status: 'loading' }}
         timeZone="UTC"
         viewport="desktop"
       />

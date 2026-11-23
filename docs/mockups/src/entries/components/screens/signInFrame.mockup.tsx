@@ -1,7 +1,7 @@
 import { defineComponent } from '@mokly/mokly'
 import { SignInFrame } from '../../../screens/signInFrame'
-import { signInCopy } from '../../../screens/signInCopy'
-import { waitlistCopy } from '../../../screens/waitlistCopy'
+import { signInCopy } from '../../../../../../src/ui/screens/signInCopy'
+import { waitlistCopy } from '../../../../../../src/ui/screens/waitlistCopy'
 import { viewports } from '../common/viewports'
 
 /**

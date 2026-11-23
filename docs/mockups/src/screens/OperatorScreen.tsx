@@ -1,6 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { actionButton } from '../entries/components/common/actions.mockup'
-import { DailyChart } from '../components/operator/DailyChart'
+import { DailyChart } from '../../../../src/ui/components/operator/DailyChart'
 import { LargestOrgs } from '../components/operator/LargestOrgs'
 import { LongRuns } from '../components/operator/LongRuns'
 import { OperatorPage } from '../components/operator/OperatorPage'
@@ -9,7 +9,7 @@ import {
   OperatorLoading,
 } from '../components/operator/OperatorStates'
 import { OperatorTiles } from '../components/operator/OperatorTiles'
-import { WorkspaceStates } from '../components/operator/WorkspaceStates'
+import { WorkspaceStates } from '../../../../src/ui/components/operator/WorkspaceStates'
 import {
   newUsersByDay,
   newWorkspacesByDay,

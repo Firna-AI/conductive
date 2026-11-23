@@ -1,4 +1,5 @@
-import type { ArchiveRestore } from '../../../components/workspace/sandboxNoticeState'
+import { ARCHIVED_COMPUTER_STATES } from '../../../../../../src/shared/archived-computer-read'
+import type { ArchiveRestore } from '../../../../../../src/ui/components/workspace/sandboxNoticeState'
 
 /** What an archived workspace can get back, as `ArchiveRestore`. */
 const archiveRestores = [
@@ -37,8 +38,16 @@ const noticeStates = [
     required: ['problem', 'days'],
     properties: {
       problem: { const: 'archived' },
-      /** Without it, the cloud computer is gone, and nothing comes back. */
+      /**
+       * What it can get back. Without it, nothing offers Restore. Restore
+       * alone does not say whether the cloud computer still exists.
+       */
       restore: { enum: archiveRestores },
+      /**
+       * What the app knows of its cloud computer, as `ArchivedComputerState`.
+       * Without it, as from an older Worker, the notice reads `restore` alone.
+       */
+      computer: { enum: ARCHIVED_COMPUTER_STATES },
       /** Its 14 days ended, so it left the list. */
       removed: { type: 'boolean' },
       /** The day of the Archive, and the day when it leaves the list. */

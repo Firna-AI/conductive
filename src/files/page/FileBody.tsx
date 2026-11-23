@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { File, FileBox } from 'lucide-react'
-import { ImageView } from '../../../docs/mockups/src/components/files/ImageView'
 import { CodeView, type MarkedLines } from '../code/CodeView'
 import type { MarkdownParser } from '../markdown/markdown-document'
 import { MarkdownView } from '../markdown/MarkdownView'
@@ -11,7 +10,7 @@ import { EmptyState } from '../ui/EmptyState'
 import { LoadingFile } from '../ui/FileStates'
 import { decodePicture, type DecodedPicture } from './decode-picture'
 import type { FileView } from './file-view'
-import styles from './FilePage.module.css'
+import { PictureInTab } from './ZoomablePicture'
 
 /** A file that the page does not show, with its download. */
 function DownloadToOpen(props: { onDownload?: () => void }) {
@@ -36,11 +35,12 @@ interface Outcome {
 }
 
 /**
- * The picture of an image file, with the layout of the mockups'
+ * The picture of an image file, with the layout of the shared
  * `ImageView`: in the middle of the page, at its own size or smaller, so
- * that it fits the page. The page shows the picture once the browser knows
- * its size, and a new address keeps the last picture on screen until then.
- * Bytes that the browser cannot draw show the download of the file.
+ * that it fits the page, over its zoom bar. The page shows the picture once
+ * the browser knows its size, and a new address keeps the last picture on
+ * screen until then. Bytes that the browser cannot draw show the download
+ * of the file.
  */
 function Picture(props: {
   address: string
@@ -55,13 +55,13 @@ function Picture(props: {
   )
   if (outcome?.decoded.status === 'drawn') {
     return (
-      <ImageView size={outcome.decoded.size}>
-        <img
-          alt={props.name}
-          className={styles.picture}
-          src={outcome.address}
-        />
-      </ImageView>
+      <PictureInTab
+        picture={{
+          address: outcome.address,
+          name: props.name,
+          size: outcome.decoded.size,
+        }}
+      />
     )
   }
   if (outcome?.address !== address) return <LoadingFile />

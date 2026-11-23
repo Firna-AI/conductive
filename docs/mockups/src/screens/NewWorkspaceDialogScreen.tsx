@@ -3,7 +3,7 @@ import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { defined } from '../defined'
 import { newWorkspaceDialog } from '../entries/components/new-workspace/NewWorkspaceDialog.mockup'
 import { chooseRepositoriesNotice } from '../entries/components/new-workspace/notices.mockup'
-import { formWait } from '../components/new-workspace/waitingRepository'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { paths } from '../paths'
@@ -31,6 +31,7 @@ import {
   taskPlaceholder,
   waits,
 } from './newWorkspaceParts'
+import { branchControl, branchRefusal } from './newWorkspaceBranches'
 import { repositoryMenu, waitingNotice } from './newWorkspaceRepositories'
 import { WorkspaceScreen } from './WorkspaceScreen'
 import { readyWorkspace, type WorkspaceState } from './workspaceState'
@@ -44,6 +45,9 @@ export const newWorkspaceDialogSchema = {
     'login',
     'repositories',
     'repositoryMenu',
+    'branch',
+    'target',
+    'branchMenu',
     'sectionMenu',
     'waitingBuild',
     'capabilities',
@@ -65,11 +69,12 @@ export const newWorkspaceDialogSchema = {
      */
     viewer: newWorkspaceSchema.properties.viewer,
     /**
-     * The form, or a create request that did not reach the server. The
-     * dialog closes when the create succeeds, so the message of a failed
-     * start stays in its workspace instead.
+     * The form, a create request that did not reach the server, or a create
+     * that the branch check refused. The dialog closes when the create
+     * succeeds, so the message of a failed start stays in its workspace
+     * instead.
      */
-    result: { enum: ['form', 'error'] },
+    result: newWorkspaceSchema.properties.result,
   },
 } as const
 
@@ -84,6 +89,9 @@ export const emptyDialog: NewWorkspaceDialogState = {
   login: 'connected',
   repositories: 'chosen',
   repositoryMenu: 'closed',
+  branch: 'default',
+  target: 'picked',
+  branchMenu: 'closed',
   sectionMenu: 'closed',
   waitingBuild: 'building',
   capabilities: 'closed',
@@ -148,6 +156,7 @@ export function NewWorkspaceDialogScreen(props: {
   const chosen = state.repositories !== 'none'
   const waiting = formWait(page) !== undefined
   const failed = state.result === 'error'
+  const refused = !failed && state.result !== 'form'
   const draft = newWorkspaceDraft(state)
   const notices = formNotices(state, failed, !building && !waiting)
   if (state.org === 'new' && state.firstBuild !== 'succeeded') {
@@ -168,6 +177,9 @@ export function NewWorkspaceDialogScreen(props: {
     admin,
   })
   if (repositoryWait) notices.splice(failed ? 1 : 0, 0, repositoryWait)
+  if (refused) {
+    notices.unshift(branchRefusal(state.result, page.repository.name, 'dialog'))
+  }
   if (!chosen) {
     notices.push(
       <chooseRepositoriesNotice.Component
@@ -185,7 +197,6 @@ export function NewWorkspaceDialogScreen(props: {
       choice={page.choice}
       drop={state.files === 'drop-over'}
       moklyInstance="new-workspace-dialog"
-      place={`${org.name} · ${sections[defaultSection].name}`}
       section={sections[defaultSection].name}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}
@@ -199,6 +210,14 @@ export function NewWorkspaceDialogScreen(props: {
         ),
       )}
       {...defined({
+        branch: chosen
+          ? branchControl({
+              state,
+              repository: page.repository.name,
+              surface: 'dialog',
+              mobile: false,
+            })
+          : undefined,
         caret: ownDraft ? undefined : draft.caret,
         login: formLoginLabel(state),
         notices: notices.length > 0 ? notices : undefined,

@@ -3,11 +3,13 @@
 This page belongs to [the design](design.md), which gives the style, the
 layouts, the design tokens, and the shared parts. This page gives the pull
 request bar: its one main action in each state, the line under the bar,
-the actions on top of the Checks tab of a phone, and Continue.
+the branches and the actions on top of the Checks tab of a phone, and
+Continue.
 
 - The pull request bar shows one main action in each state, beside its
   links to GitHub, from decisions 220 to 228. `barModel.ts` in
-  `src/components/workspace/` holds the rule: the action of each state, with
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+  holds the rule: the action of each state, with
   the local work, the GitHub access of the viewer, and an action of the app
   that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
   the labels, the messages under the bar, and the fixed prompts of the agent
@@ -21,10 +23,12 @@ the actions on top of the Checks tab of a phone, and Continue.
     a bar without a tint, such as the bar without a pull request, the main
     action takes the outline tone of Archive, so the bar shows no primary
     fill. The user chose this on 10 and 11 November 2026. `TintedTheme` in
-    `src/components/common/tint.tsx` gives the primary tone of Firna the
+    [`src/ui/components/common/tint.tsx`](../../src/ui/components/common/tint.tsx)
+    gives the primary tone of Firna the
     fill of the tint, a deeper fill on hover, and a white label, from the
     `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill`
-    tokens. `barTint` in `prStatus.ts` gives the tint of each state.
+    tokens. `barTint` in `src/components/workspace/prStatus.ts` gives the
+    tint of each state.
   - An agent action sends its fixed prompt, so the chat shows it as a
     message of the member who clicked. Merge names its method, such as
     "Squash and merge", and a spinner shows while the merge or Continue
@@ -35,20 +39,42 @@ the actions on top of the Checks tab of a phone, and Continue.
     from decision 199. A busy or disabled button and a phone show no key.
     `ShortcutTip` in `src/components/common/` gives the tooltip.
   - The number of a pull request opens it on GitHub, with an arrow after a
-    divider. `PullRequestNumber` in `barParts.tsx` draws it, so the bar of a
+    divider. `PullRequestNumber` in `src/components/workspace/barParts.tsx`
+    draws it, so the bar of a
     pull request has no other link to it. The row of a phone is one link to
     the Checks tab, so its number stays plain, and the top of that tab keeps
     Open on GitHub.
-  - A refusal of GitHub, a Continue that stopped, and the wait of Continue
-    for a turn show as one line under the bar. The line takes the tint of
-    its state, and its bottom border stays neutral.
+  - A refusal of GitHub, a Continue that stopped, the wait of Continue for
+    a turn, and a base that moved to the default branch show as one line
+    under the bar. The line takes the tint of its state, and its bottom
+    border stays neutral.
+  - When GitHub no longer has the stored base of a workspace, the Worker
+    moves the base to the default branch (decision 304). The bar then names
+    the default branch, and its line says which branch GitHub no longer
+    has. That line is a status in the neutral tone, with the info icon, and
+    it shows until a pull request opens. The fact `baseMoved` of
+    `barModel.ts` chooses it, and `barCopy.ts` gives its words. On a phone
+    it stands at the top of the Checks tab, above the branch and its base.
   - On a phone the row opens the Checks tab. `ChecksActions` in
-    `BarActions.tsx` draws the actions, the line, and the link to GitHub at
-    the top of that tab, at touch size.
+    `src/components/workspace/BarActions.tsx` draws the actions, the line,
+    and the link to GitHub at the top of that tab, at touch size.
+  - While the branch has no pull request, the top of the Checks tab of a
+    phone names the branch and its base, where Create PR stands. The user
+    chose this as decision 306 on 16 November 2026. `ChecksBranches` in
+    `ChecksBranches.tsx`, beside `BarActions.tsx`, draws them with the
+    parts of the desktop bar: the
+    branch icon, the branch, an arrow, and the base, in the same font and
+    colours. The names wrap, because a phone has no tooltip. When the two
+    names do not fit on one line, the base moves to a line of its own with
+    its arrow. A name that is longer than the line breaks. Create PR stands
+    under them, in the same group. They show in each state without a pull
+    request, also without an action, such as for a branch without commits.
+    The compact row does not change.
   - `ContinueDialog` asks before Continue when the sandbox has local work.
-    `LocalWorkList` in `src/components/workspace/` lists that work for the
-    app and the mockups: each changed file that is not committed, and the
-    commits that no remote branch holds. `ContinuedLine` in
-    `src/components/chat/` draws the note of Continue in each session,
-    centred and muted, as the first line of a linked session. It takes no
-    fixtures.
+    `LocalWorkList` in
+    [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+    lists that work for the app and the mockups: each changed file that is
+    not committed, and the commits that no remote branch holds.
+    `ContinuedLine` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+    draws the note of Continue in each session, centred and muted, as the
+    first line of a linked session. It takes no fixtures.

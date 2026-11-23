@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { waitlistSwitch } from '../../fixtures/operatorCodes'
 import { waitlistTotal } from '../../fixtures/operatorWaitlist'
 import { paths } from '../../paths'
@@ -9,7 +9,10 @@ import {
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { waitlistOffTitle, waitlistWords } from './codeCopy'
+import {
+  waitlistOffTitle,
+  waitlistWords,
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { codesTabLinks } from './signUpLinks'
 import { instanceKey } from '../../instanceKey'
 

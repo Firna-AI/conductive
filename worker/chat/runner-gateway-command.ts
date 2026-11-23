@@ -2,11 +2,11 @@ import type { RunnerCommand } from '../../src/shared/generated/RunnerCommand'
 import type { RunnerMessageDuringTurn } from '../../src/shared/generated/RunnerMessageDuringTurn'
 import type { RunnerTurnCredential } from '../../src/shared/generated/RunnerTurnCredential'
 import type { RunnerTurn } from '../../src/shared/generated/RunnerTurn'
-import { chatGptSignInCopy } from '../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../src/ui/components/settings/chatGptSignInCopy'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
 import type { AgentLogin } from './login-kind'
 import { parseCodexTokens, parseCodexIdentity } from '../codex-auth/tokens'
-import type { ResolvedCommand } from './command-types'
+import type { ResolvedCommand } from './types'
 
 export function compatibilityFailure(login: AgentLogin): string {
   if (login.agent === 'codex' && login.kind === 'token')

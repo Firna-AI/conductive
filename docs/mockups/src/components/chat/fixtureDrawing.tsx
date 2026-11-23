@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { InlineText } from '../../../../../src/chat/markdown/agent-inline'
 import { answerShowsWords } from '../../../../../src/chat/markdown/answer-parts'
-import type { AgentDrawing } from './agentDrawing'
+import type { AgentDrawing } from '../../../../../src/ui/components/chat/agentDrawing'
 import { AnswerText } from './AnswerText'
 import { answerReading } from './chatReading'
 import { useChatWorkspaces } from './chatWorkspaces'

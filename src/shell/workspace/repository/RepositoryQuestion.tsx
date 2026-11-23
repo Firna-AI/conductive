@@ -1,6 +1,6 @@
 import { FolderGit2 } from 'lucide-react'
-import { RepositoryChangeText } from '../../../../docs/mockups/src/components/workspace/RepositoryChangeText'
-import { repositoryQuestion } from '../../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+import { RepositoryChangeText } from '../../../ui/components/workspace/RepositoryChangeText'
+import { repositoryQuestion } from '../../../ui/components/workspace/repositoryMoveCopy'
 import { ActionButton } from '../../ui/actions'
 import { Dialog } from '../../ui/Dialog'
 import type {
@@ -43,11 +43,13 @@ export function RepositoryQuestion(props: {
         work={{
           left: {
             files: localWork.uncommittedFiles,
+            displayFiles: localWork.displayUncommittedFiles,
             commits: localWork.unpushedCommits,
           },
           pullRequest: question.work.pullRequest?.number ?? null,
           pushedCommits: question.work.pushedCommits,
           carriedFiles: question.work.carriedFiles,
+          displayCarriedFiles: question.work.displayCarriedFiles,
         }}
       />
     </Dialog>

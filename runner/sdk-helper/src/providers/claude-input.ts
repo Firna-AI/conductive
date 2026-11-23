@@ -18,7 +18,8 @@ import { contextLines, providerNotice, type FixedContext } from './message'
  * the text starts with a `/word` that names no skill of the Claude list,
  * the sender lines come first, an empty line follows, and then the rest.
  * Claude then runs no built-in command, such as `/clear`, whose effects
- * the app does not know.
+ * the app does not know. `orgSkills` holds the names of the org skills of
+ * the session's view, which are also skills of the Claude list.
  *
  * A notice of a running turn has only its app text.
  */
@@ -26,6 +27,7 @@ export async function claudeInput(
   command: ProviderInput,
   repository: string,
   fixed: FixedContext = {},
+  orgSkills: ReadonlySet<string> = new Set(),
 ): Promise<string> {
   if (command.type === 'notice') return providerNotice(command.notices)
   const lines = contextLines(command, fixed)
@@ -41,7 +43,9 @@ export async function claudeInput(
     .join('\n')
   const start = skillTextAt(text, 0)
   const header =
-    start !== null && !(await claudeSkillNames(repository)).has(start.name)
+    start !== null &&
+    !orgSkills.has(start.name) &&
+    !(await claudeSkillNames(repository)).has(start.name)
   return header ? `${lines}\n\n${body}` : `${body}\n\n${lines}`
 }
 

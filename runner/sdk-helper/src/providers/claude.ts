@@ -1,21 +1,18 @@
 import { randomUUID } from 'node:crypto'
 
-import { query } from '@anthropic-ai/claude-agent-sdk'
+import { query, type Query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
 import { claudeBinary } from './binaries'
 import { ClaudeEvents } from './claude-events'
 import { ClaudeBackground } from './claude-background'
 import { ClaudeBackgroundNote } from './claude-background-note'
-import {
-  claudeEffortSettings,
-  claudeStart,
-  type ClaudeEffortSettings,
-} from './claude-effort'
+import { claudeEffortSettings, claudeStart } from './claude-effort'
 import { claudeInput } from './claude-input'
 import { ClaudeInputWindow } from './claude-input-window'
 import { spawnClaudeProcess } from './claude-process'
 import { writeClaudeProfile } from './claude-profile'
+import { claudeSkillSettings, prepareClaudeSkills } from './claude-skills'
 import { moveClaudeTranscript } from './claude-transcript'
 import { readComputerServer } from './computer-mcp'
 import {
@@ -33,7 +30,7 @@ export interface ClaudeQuery extends AsyncIterable<unknown> {
   setModel(model?: string): Promise<void>
   setMaxThinkingTokens(tokens: number | null): Promise<void>
   applyFlagSettings(
-    settings: ClaudeEffortSettings & { fastMode: boolean },
+    settings: Parameters<Query['applyFlagSettings']>[0],
   ): Promise<void>
   close(): void
 }
@@ -77,6 +74,9 @@ export function createClaudeFactory(
       ),
     )
     const credentials = await preparation
+    const orgView = await prepareClaudeSkills(options, lifetime)
+    const skillsDiscovery = orgView.directory
+    const skillSettings = claudeSkillSettings(options.orgSkills)
     const env = providerEnvironment(
       options.home,
       options.tools,
@@ -170,13 +170,16 @@ export function createClaudeFactory(
           },
           pathToClaudeCodeExecutable: binary(),
           model: options.choice.model,
-          ...claudeStart(options.choice),
+          ...claudeStart(options.choice, skillSettings),
           ...(options.conversationId ? { resume: options.conversationId } : {}),
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
           includePartialMessages: true,
           persistSession: true,
           settingSources: ['project'],
+          ...(skillsDiscovery
+            ? { additionalDirectories: [skillsDiscovery] }
+            : {}),
           mcpServers: {
             conductive: {
               command: WORKSPACE_TOOLS_MCP.command,
@@ -246,7 +249,12 @@ export function createClaudeFactory(
       send: async (command) => {
         background.input()
         const uuid = randomUUID()
-        const content = await claudeInput(command, options.cwd, options)
+        const content = await claudeInput(
+          command,
+          options.cwd,
+          options,
+          orgView.names,
+        )
         input.push(receipts.add(command), {
           type: 'user',
           uuid,
@@ -261,6 +269,7 @@ export function createClaudeFactory(
         await stream.applyFlagSettings({
           ...claudeEffortSettings(choice.effort),
           fastMode: choice.fast,
+          ...skillSettings,
         })
         mapper.speed.mode(choice.fast)
         await stream.setMaxThinkingTokens(choice.effort === 'none' ? 0 : null)

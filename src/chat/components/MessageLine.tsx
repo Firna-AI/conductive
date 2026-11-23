@@ -1,17 +1,18 @@
 import { useMemo, useState } from 'react'
 import { MessageSquareText } from 'lucide-react'
-import { AgentBlocks } from '../../../docs/mockups/src/components/chat/AgentBlocks'
+import { AgentBlocks } from '../../ui/components/chat/AgentBlocks'
 import {
   holdsTable,
   LineBlocks,
   type LineState,
-} from '../../../docs/mockups/src/components/chat/LineBlocks'
-import blockStyles from '../../../docs/mockups/src/components/chat/LineBlocks.module.css'
-import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+} from '../../ui/components/chat/LineBlocks'
+import blockStyles from '../../ui/components/chat/LineBlocks.module.css'
+import line from '../../ui/components/chat/MessageLine.module.css'
+import styles from '../../ui/components/chat/ToolGroup.module.css'
+import a11y from '../../ui/components/common/a11y.module.css'
+import { classes } from '../../ui/components/common/classes'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
+import { MarkedMessage } from '../explain/MarkedMessage'
 import { PlainLinks } from '../../shell/ui/text-links'
 import { LinksProvider, type ChatLinks } from '../links/LinksContext'
 import { agentBlocks } from '../markdown/agent-blocks'
@@ -34,8 +35,8 @@ const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
  * and code of the message, and the line keeps its place. Another click cuts
  * it again. Closed, the line shows each line break as a space.
  *
- * The line draws its blocks with the `LineBlocks` of the mockups, and the
- * blocks under it with their `AgentBlocks`. A `<summary>` holds no
+ * The line draws its blocks with the shared `LineBlocks`, and the blocks
+ * under it with the shared `AgentBlocks`. A `<summary>` holds no
  * table. So the open line keeps the blocks before the first table, or
  * before the list or the quote that holds it, as `holdsTable` says. That
  * block and the blocks after it open under the line. When the line shows no
@@ -54,8 +55,20 @@ const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
  * the message with the ID `id`, the ID of its item in the transcript. A
  * press on the picture opens the file, and the line stays open. The line
  * parses the text again only when the text changes, not when it opens.
+ *
+ * The open line shows the marks of the explanations of the message, and
+ * Explain by a selection in its text. A press on the text of a mark that
+ * covers the whole message still opens or closes the line, and the state
+ * of the mark opens its explanation.
  */
-export function MessageLine(props: { id: string; text: string }) {
+export function MessageLine(props: {
+  id: string
+  text: string
+  /** The ID of the message, whose open text shows Explain and its marks. */
+  messageId?: string
+  /** The agent finished the message, so a selection in it shows Explain. */
+  done?: boolean
+}) {
   const [open, setOpen] = useState(false)
   const fold = useFold(open, setOpen)
   const { id, text } = props
@@ -74,40 +87,48 @@ export function MessageLine(props: { id: string; text: string }) {
   const unnamed = split && !lead.some((block) => blockShowsText(block, reading))
   const state: LineState = { open, drawing }
   return (
-    <details
-      className={classes(
-        styles.message,
-        blockStyles.message,
-        line.message,
-        prose.prose,
-      )}
-      {...fold.details}
+    <MarkedMessage
+      align="middle"
+      done={props.done ?? false}
+      folds
+      messageId={props.messageId ?? ''}
+      shown={open && props.messageId !== undefined}
     >
-      <summary className={styles.messageLine} {...fold.line}>
-        <MessageSquareText aria-hidden className={styles.icon} size={13} />
-        <span className={styles.messageText}>
-          <LineBlocks blocks={lead} state={state} />
-          {unnamed ? (
-            <span className={a11y.hidden}>
-              <LinksProvider value={plainLinks}>
-                <PlainLinks>
-                  <MentionsProvider value={null}>
-                    <LineBlocks
-                      blocks={body}
-                      state={{ open: false, drawing }}
-                    />
-                  </MentionsProvider>
-                </PlainLinks>
-              </LinksProvider>
-            </span>
-          ) : null}
-        </span>
-      </summary>
-      {split ? (
-        <div className={classes(styles.messageBody, blockStyles.messageBody)}>
-          <AgentBlocks blocks={body} drawing={drawing} />
-        </div>
-      ) : null}
-    </details>
+      <details
+        className={classes(
+          styles.message,
+          blockStyles.message,
+          line.message,
+          prose.prose,
+        )}
+        {...fold.details}
+      >
+        <summary className={styles.messageLine} {...fold.line}>
+          <MessageSquareText aria-hidden className={styles.icon} size={13} />
+          <span className={styles.messageText}>
+            <LineBlocks blocks={lead} state={state} />
+            {unnamed ? (
+              <span className={a11y.hidden} data-explain-skip>
+                <LinksProvider value={plainLinks}>
+                  <PlainLinks>
+                    <MentionsProvider value={null}>
+                      <LineBlocks
+                        blocks={body}
+                        state={{ open: false, drawing }}
+                      />
+                    </MentionsProvider>
+                  </PlainLinks>
+                </LinksProvider>
+              </span>
+            ) : null}
+          </span>
+        </summary>
+        {split ? (
+          <div className={classes(styles.messageBody, blockStyles.messageBody)}>
+            <AgentBlocks blocks={body} drawing={drawing} />
+          </div>
+        ) : null}
+      </details>
+    </MarkedMessage>
   )
 }

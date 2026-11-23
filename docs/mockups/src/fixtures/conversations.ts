@@ -6,8 +6,11 @@
 
 import type { TextBlock } from '../../../../src/chat/markdown/agent-blocks'
 import type { TurnEndReason } from '../../../../src/shared/generated/TurnEndReason'
-import type { LostReason, LostWhat } from '../components/chat/lostCopy'
-import type { StandardSpeedCause } from '../components/chat/speedCopy'
+import type {
+  LostReason,
+  LostWhat,
+} from '../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../src/ui/components/chat/speedCopy'
 import { agentStopConversations } from './agentStopConversations'
 import { attachmentConversations } from './attachmentConversations'
 import type { Attachment } from './attachments'
@@ -45,10 +48,12 @@ import { postcodeHistory } from './postcodeConversation'
 import { secretConversations } from './secretConversations'
 import type { LateAnswerItem, SecretRunItem } from './secretRequests'
 import { secretValueConversations } from './secretValueConversations'
+import { explanationConversations } from './explanationChats'
 import { speedConversations } from './speedConversations'
 import { tableConversations } from './tableConversations'
 import { taskListConversations } from './taskListConversations'
 import { unavailableConversations } from './unavailableConversations'
+import { wakeConversations, type WakeItem } from './wakeConversations'
 import { workConversations } from './workConversations'
 import { conversationKeys } from './conversationKeys'
 import { answerFileConversations } from './answerFiles'
@@ -174,6 +179,7 @@ export type ChatItem =
   | CapabilitiesChangedItem
   | SecretRunItem
   | LateAnswerItem
+  | WakeItem
 
 /** One tool call of an agent turn. */
 export type ToolCallItem = Extract<ChatItem, { kind: 'tool' }>
@@ -228,6 +234,7 @@ export const conversations: Readonly<
   ...unavailableConversations({ history, cutOff: cutOffTurn }),
   ...speedConversations({ history, cutOff: cutOffTurn }),
   ...agentStopConversations(cutOffTurn),
+  ...wakeConversations(history),
   ...backgroundConversations,
   ...linkedConversations,
   ...attachmentConversations(history),
@@ -250,4 +257,5 @@ export const conversations: Readonly<
   /** The chat of the removed workspace that a chip opens. */
   'postcode-history': postcodeHistory,
   ...chatLinkConversations(history),
+  ...explanationConversations,
 }
