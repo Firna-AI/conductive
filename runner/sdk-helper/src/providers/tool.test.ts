@@ -96,8 +96,33 @@ it.each([
   })
 })
 
-it('keeps the subject as the target of a tool outside the named list', () => {
+it.each([
+  [
+    'an address',
+    'WebFetch',
+    { url: 'https://a.test', skill: 'x' },
+    'https://a.test',
+  ],
+  [
+    'a description',
+    'Agent',
+    { description: 'Find tests', prompt: 'p' },
+    'Find tests',
+  ],
+  ['no subject', 'ExitPlanMode', { plan: 'p' }, null],
+])(
+  'shows a tool of the kind other by its name, with %s as the detail',
+  (_, name, input, detail) => {
+    expect(mapTool('call', name, input, 'done')).toMatchObject({
+      kind: 'other',
+      target: name,
+      detail,
+    })
+  },
+)
+
+it('keeps the subject as the target of a tool whose verb names its kind', () => {
   expect(
-    mapTool('call', 'Other', { skill: 'brainstorming', path: 'a.ts' }, 'done'),
-  ).toMatchObject({ target: 'a.ts', detail: null })
+    mapTool('call', 'Read', { file_path: 'a.ts', description: 'd' }, 'done'),
+  ).toMatchObject({ kind: 'read', target: 'a.ts', detail: 'd' })
 })

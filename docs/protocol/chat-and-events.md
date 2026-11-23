@@ -185,6 +185,11 @@ view, the scroll after a send, and the place that each tab keeps.
   tools, is the name of that tool without its server, such as
   `get_window_state`. Its detail is the subject of the call, such as a
   query, a path, or an address.
+- A call to a tool of no known kind has the verb "Used". Its target is
+  the name of the tool, such as `WebFetch`. Its detail is the subject of
+  the call, or else its description, such as "Used `WebFetch`
+  https://example.com". The user chose this rule on 2026-11-23, over a
+  list of such tools in the runner.
 - The target of a call to the Claude `Skill` tool is `Skill`. Its detail
   is the name of the skill, such as "Used `Skill` brainstorming". A call
   that names no skill has no detail. Its other arguments never replace
