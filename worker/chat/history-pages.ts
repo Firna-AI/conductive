@@ -3,9 +3,17 @@ import type {
   NewestChatHistoryResponse,
   WorkspaceEventEnvelope,
 } from './workspace-events'
-import { jsonBytes } from '../../src/shared/event-limits'
 import { HistoryCompaction } from './history-compaction'
+import {
+  HISTORY_BATCH_SIZE,
+  HISTORY_PAGE_LIMITS,
+  readForwardHistory,
+} from './history-forward-pages'
 import { readNewestHistory } from './history-newest-pages'
+import {
+  loadChunkedPageEvent,
+  type HistoryPageEvent,
+} from './history-page-event'
 import { historySessionOf, SessionHistoryIndex } from './history-session-index'
 import { readSessionHistory } from './history-session-records'
 import {
@@ -22,8 +30,6 @@ import {
 import type { ChatMetadata } from './store-metadata'
 import type { ChatData } from './types'
 
-/** One storage list reads at most this many stored events. */
-const PAGE_SIZE = 32
 const INDEX_THROUGH = chatKey('history-index', 'through')
 const POSITION_THROUGH = chatKey('history-index', 'positions-through')
 const NEWEST_TREE = chatKey('history-index', 'tree')
@@ -37,17 +43,6 @@ export interface PageLimits {
   scan: number
   /** The JSON bytes of shown events that end the page. */
   bytes: number
-}
-
-/**
- * A page of one session for a history request of the browser. Each page
- * costs the browser a round trip. The scan limit bounds the index reads
- * in the serial chat queue. The byte limit bounds the reply, which still
- * holds one event.
- */
-const BROWSER_PAGE_LIMITS: PageLimits = {
-  scan: 2_048,
-  bytes: 4_194_304,
 }
 
 /** The session whose events the page shows. */
@@ -130,18 +125,12 @@ export class HistoryPages {
     )
     if (after >= through) return
     while (after < through) {
-      const records = await this.data.list<StoredWorkspaceEvent>({
-        prefix: CHAT_EVENT_PREFIX,
-        startAfter: chatEventKey(after),
-        end: `${chatEventKey(through)}\u0000`,
-        limit: PAGE_SIZE,
-      })
-      if (records.size === 0) break
+      const records = await this.list(after, through, HISTORY_BATCH_SIZE)
       const previous = after
-      for (const stored of records.values()) {
-        if (stored.eventNumber > through) break
+      for (const { eventNumber, stored } of records) {
+        if (eventNumber > through) break
         await this.indexCompaction(await loadHistoryEvent(this.data, stored))
-        after = stored.eventNumber
+        after = eventNumber
       }
       if (after === previous) break
     }
@@ -157,14 +146,14 @@ export class HistoryPages {
     )
     let after = Math.min(compacted, await this.sessions.through())
     if (after >= through) return true
-    const records = await this.list(after, through)
-    for (const stored of records) {
-      if (stored.eventNumber > compacted)
+    const records = await this.list(after, through, HISTORY_BATCH_SIZE)
+    for (const { eventNumber, stored } of records) {
+      if (eventNumber > compacted)
         await this.indexCompaction(await loadHistoryEvent(this.data, stored))
       if ('event' in stored) await this.sessions.add(stored)
-      after = stored.eventNumber
+      after = eventNumber
     }
-    const done = records.length < PAGE_SIZE || after >= through
+    const done = records.length < HISTORY_BATCH_SIZE || after >= through
     if (done) after = through
     await this.sessions.advance(after)
     if (after > compacted) {
@@ -202,18 +191,12 @@ export class HistoryPages {
       session.sessionId,
       before,
       through,
-      session.limits ?? BROWSER_PAGE_LIMITS,
+      session.limits ?? HISTORY_PAGE_LIMITS,
       (stored) => this.shown(stored, through),
     )
   }
 
-  /**
-   * Reads one storage list after `after`, through `through`. The events
-   * socket, workspace summary, Continue, and transcript copy use this read.
-   * A session filter reads the session index instead of the workspace list.
-   * A budget ends a page of the workspace list after the shown event that
-   * uses it up. The replay of a tab, which spends a budget, has no filter.
-   */
+  /** Reads a bounded page through the cutoff, using the session index when ready. */
   async read(
     after: number,
     through: number,
@@ -233,49 +216,31 @@ export class HistoryPages {
         after,
         through,
         (stored) => this.shown(stored, through),
+        scope.budget,
       )
     }
     await this.prepare(through)
-    const events: WorkspaceEventEnvelope[] = []
-    const records = await this.list(after, through)
-    let last = after
-    let more = records.length === PAGE_SIZE
-    for (const [index, stored] of records.entries()) {
-      if (stored.eventNumber > through) {
-        more = false
-        break
-      }
-      last = stored.eventNumber
-      const envelope = await this.shown(stored, through, sessionId)
-      if (!envelope) continue
-      events.push(envelope)
-      if (!scope.budget) continue
-      scope.budget.bytes -= jsonBytes(envelope)
-      if (scope.budget.bytes > 0) continue
-      more ||= index < records.length - 1
-      break
-    }
-    if (!more || last >= through) return { events, throughEventNumber: through }
-    return {
-      events,
-      throughEventNumber: through,
-      hasMore: true,
-      nextAfterEventNumber: last,
-    }
+    return readForwardHistory(
+      after,
+      through,
+      (last, limit) => this.list(last, through, limit),
+      (stored) => this.shown(stored, through, sessionId),
+      scope.budget,
+    )
   }
 
   /** The next stored events after `after`, through `through`, in order. */
-  private async list(
-    after: number,
-    through: number,
-  ): Promise<StoredWorkspaceEvent[]> {
+  private async list(after: number, through: number, limit: number) {
     const records = await this.data.list<StoredWorkspaceEvent>({
       prefix: CHAT_EVENT_PREFIX,
       startAfter: chatEventKey(after),
       end: `${chatEventKey(through)}\u0000`,
-      limit: PAGE_SIZE,
+      limit,
     })
-    return [...records.values()]
+    return [...records.values()].map((stored) => ({
+      eventNumber: stored.eventNumber,
+      stored,
+    }))
   }
 
   /** The envelope that a page shows for a stored event, or null. */
@@ -283,15 +248,17 @@ export class HistoryPages {
     stored: StoredWorkspaceEvent,
     through: number,
     sessionId?: string,
-  ): Promise<WorkspaceEventEnvelope | null> {
-    if (
-      sessionId !== undefined &&
-      (!('event' in stored) || historySessionOf(stored.event) !== sessionId)
-    )
+  ): Promise<HistoryPageEvent | null> {
+    if (!('event' in stored))
+      return sessionId === undefined
+        ? loadChunkedPageEvent(this.data, stored)
+        : null
+    if (sessionId !== undefined && historySessionOf(stored.event) !== sessionId)
       return null
-    return this.compaction.project(
+    const envelope = await this.compaction.project(
       await loadHistoryEvent(this.data, stored),
       through,
     )
+    return envelope === null ? null : { envelope }
   }
 }

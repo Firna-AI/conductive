@@ -167,28 +167,36 @@ cutoff. The response holds its events in ascending event order.
 `HistoryPages.readNewest` first prepares the session index and the
 compaction index through the cutoff, as
 [The session index](#the-session-index) says.
-[`history-newest-pages.ts`](history-newest-pages.ts) lists the keys of the
-session with `reverse: true`, 32 at a time, and reads the events of each
-list at the same time. So a page reads no event of another session. It
-projects session events through the fixed cutoff before it counts their
+[`history-newest-pages.ts`](history-newest-pages.ts) lists up to four
+session keys at a time with `reverse: true`. It reads the event bodies
+of each list at the same time. Each page reads only the requested session.
+It projects session events through the fixed cutoff before it counts their
 JSON bytes. Each page takes at least one key, also when its event exceeds
 the byte budget. The cursor is the event number of the last key, also when
 the page has no shown events. A one-row lookahead checks for an earlier
 key of the session before the response sets `hasMore`. This check avoids
 an extra page after the oldest event of the session. It projects no event.
 
-The route uses `BROWSER_PAGE_LIMITS`: 2,048 session events or 4 MiB of shown
-events. `ChatTransaction.newestHistory` takes the session ID, an optional
+The route ends the page after 2,048 session keys or 4 MiB of shown events.
+`ChatTransaction.newestHistory` takes the session ID, an optional
 `before` cursor, and an optional cutoff. It clamps that cutoff to the
 workspace's current event number.
 
 `ChatTransaction.history` and `HistoryPages.read` read forward after a
-numeric cursor. Each page reads one storage list of 32 events. A session
-read with the [session index](#the-session-index) lists 32 keys. The events
-socket, workspace summary, Continue, and transcript copy use that read.
-The transcript copy also uses its session filter. The events socket also
-gives the byte budget of its connection, which can end a page early. The
-browser's scan limit applies only to the newest-first read.
+numeric cursor. Each storage list reads at most four workspace records or
+four keys of the [session index](#the-session-index). An indexed list loads
+up to four event bodies at the same time. The events socket, workspace
+summary, Continue, repository change, the first stop requester lookup,
+and transcript copy use this read. The stop lookup and transcript copy
+filter by session.
+
+A forward page ends at the cutoff, after 2,048 stored steps, after 4 MiB
+of shown events, or when it uses up the connection's remaining budget.
+It includes the event that reaches a byte limit. The 4 MiB count starts
+again on each page. The connection budget spends the same bytes across
+pages. A shown chunked event counts its stored UTF-8 JSON text and its
+envelope. When more records can remain, `nextAfterEventNumber` is the
+last stored event or session key visited, even when the page shows no events.
 
 [`readNewestStoredEvents`](../../src/chat/api/read-workspace.ts) reads the
 reverse response. `ChatHistoryResponse` and `readStoredEvents` keep the
@@ -215,7 +223,7 @@ events, also after newer events with keys.
 The browser history route and the transcript copy read through
 `ChatStore.read`. Before such a session read, `prepareSessionHistory`
 brings the session index and the compaction index up to the cutoff of the
-read. Each batch reads at most 32 stored records. It commits their keys
+read. Each batch reads at most four stored records. It commits their keys
 and the new frontier in one storage transaction. When the compaction index
 covers a file stub, the batch uses its event number without loading its
 chunks. Between batches, the read gives the queue up with `outside` of its
@@ -225,7 +233,8 @@ after the last committed batch.
 
 A session read in a write transaction cannot give the queue up. The stop
 request lookup of an older turn record is one. It uses the index only when
-the index has reached its cutoff. Otherwise it lists the stored events of
-the workspace, 32 in each page. Reads without a session, such as the
-events socket, the workspace summary, and Continue, list the stored events
-of the workspace and build no session index.
+the index has reached its cutoff. Otherwise it reads the workspace history
+with the session filter and the forward page limits. Reads without a
+session, such as the events socket, the workspace summary, and Continue,
+list the stored events of the workspace and build no session index.
+Workspace compaction preparation also reads up to four records per list.

@@ -5,7 +5,7 @@ import { ChatStore } from './store'
 import { saveHistoryEvent } from './history-storage'
 import { CHAT_EVENT_PREFIX, CHAT_META, chatEventKey } from './storage-keys'
 import { WorkspaceSummaryProjection } from './workspace-summary'
-it('reads bounded history pages and advances through all stored state', async () => {
+it('reads small events through the cutoff in one page of four-record storage lists', async () => {
   const { storage, setStorageHooks } = await nativeChatStore()
   const store = new ChatStore(storage, () => 25)
   await store.change(
@@ -22,38 +22,17 @@ it('reads bounded history pages and advances through all stored state', async ()
       lists.push(options)
     },
   })
-  const first = await store.read('workspace', (view) => view.history(0))
-  expect(first).toMatchObject({
-    throughEventNumber: 70,
-    hasMore: true,
-    nextAfterEventNumber: 32,
-  })
-  expect(first.events).toHaveLength(32)
-  const second = await store.read('workspace', (view) =>
-    view.history(first.nextAfterEventNumber ?? 0, first.throughEventNumber),
+  const page = await store.read('workspace', (view) => view.history(0))
+  expect(page.throughEventNumber).toBe(70)
+  expect(page).not.toHaveProperty('hasMore')
+  expect(page.events.map((envelope) => envelope.eventNumber)).toEqual(
+    Array.from({ length: 70 }, (_, index) => index + 1),
   )
-  expect(second).toMatchObject({
-    throughEventNumber: 70,
-    hasMore: true,
-    nextAfterEventNumber: 64,
-  })
-  expect(second.events).toHaveLength(32)
-  const last = await store.read('workspace', (view) =>
-    view.history(second.nextAfterEventNumber ?? 0, second.throughEventNumber),
-  )
-  expect(last.throughEventNumber).toBe(70)
-  expect(last).not.toHaveProperty('hasMore')
-  expect(last.events).toHaveLength(6)
-  expect(
-    [...first.events, ...second.events, ...last.events].map(
-      (envelope) => envelope.eventNumber,
-    ),
-  ).toEqual(Array.from({ length: 70 }, (_, index) => index + 1))
   expect(
     lists
       .filter((options) => options.prefix === CHAT_EVENT_PREFIX)
       .map((options) => options.limit),
-  ).toEqual([32, 32, 32])
+  ).toEqual(Array.from({ length: 18 }, () => 4))
 })
 it('indexes legacy history before an append and removes replaced tree chunks', async () => {
   const { storage } = await nativeChatStore()

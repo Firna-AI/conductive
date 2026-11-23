@@ -38,10 +38,7 @@ it('keeps live item order and first times in compacted pages and old or new cach
   expect(itemRows(live)).toEqual(expected)
 
   const pages = await historyPages(fixture)
-  expect(pages.map((page) => page.nextAfterEventNumber ?? null)).toEqual([
-    32,
-    null,
-  ])
+  expect(pages.map((page) => page.nextAfterEventNumber ?? null)).toEqual([null])
   const replay = new SessionLog()
   for (const page of pages) mergeHistory(replay, page)
   expect(itemRows(replay)).toEqual(expected)

@@ -2,9 +2,11 @@ import { expect, it } from 'vitest'
 import { HttpError } from '../http'
 import { BrowserTabs } from './browser-tabs'
 import { subscribeBrowser } from './browser-subscription'
-import { nativeChatStore } from './native-store.test-support'
+import { historyMemory } from './history-memory.test-support'
+import { legacyHistory } from './history-session-index.test-support'
 import { ChatStore } from './store'
 import type {
+  WorkspaceEvent,
   WorkspaceEventEnvelope,
   WorkspaceSocketMessage,
 } from './workspace-events'
@@ -15,26 +17,20 @@ const access = {
 }
 
 /**
- * A store with 40 events. Each event names 1,000 emoji. An emoji takes four
- * UTF-8 bytes and two UTF-16 code units. So an event takes 4,104 bytes of
- * JSON, or 4,105 from event 10, and the first page of 32 events takes
- * 131,351 bytes.
+ * Each event names 1,000 emoji. The first page reaches 4 MiB at event 1,022,
+ * after 4,196,247 UTF-8 bytes. The final list contains three more events.
  */
 async function storedWorkspace() {
-  const { storage } = await nativeChatStore()
-  const store = new ChatStore(storage, () => 25)
-  await store.change(
-    'workspace',
-    async (transaction) => {
-      for (let index = 1; index <= 40; index++)
-        await transaction.emit({
-          type: 'workspace.title',
-          name: '🙂'.repeat(1_000),
-        })
-    },
-    () => undefined,
+  const { storage } = historyMemory()
+  const name = '🙂'.repeat(1_000)
+  await legacyHistory(
+    storage,
+    Array.from({ length: 1_025 }, (): WorkspaceEvent => ({
+      type: 'workspace.title',
+      name,
+    })),
   )
-  return store
+  return new ChatStore(storage, () => 25)
 }
 
 function grants(deadline = 60_000) {
@@ -75,7 +71,7 @@ const range = (first: number, last: number) =>
 
 const live: WorkspaceEventEnvelope = {
   workspaceId: 'workspace',
-  eventNumber: 41,
+  eventNumber: 1_026,
   occurredAt: 25,
   event: { type: 'workspace.title', name: 'live' },
 }
@@ -85,23 +81,21 @@ const logins = { logins: { refresh: async () => undefined } }
 const budgetCases = [
   {
     end: 'inside the short second page',
-    // After the first page, 10,649 bytes are left, and event 35 uses them
-    // up. A count of UTF-16 code units, or a fresh budget for each page,
-    // would send all 40 events on this connection.
-    budget: 142_000,
+    // The first page leaves 3,753 bytes. Event 1,023 uses the rest.
+    budget: 4_200_000,
     first: [
-      { numbers: range(1, 32), through: 40, next: 32 },
-      { numbers: [33, 34, 35], through: 40, next: 35 },
+      { numbers: range(1, 1_022), through: 1_025, next: 1_022 },
+      { numbers: [1_023], through: 1_025, next: 1_023 },
     ],
-    rest: [{ numbers: range(36, 40), through: 40, next: null }],
+    rest: [{ numbers: [1_024, 1_025], through: 1_025, next: null }],
   },
   {
-    end: 'at the last event of the full first page',
+    end: 'at the last event of a full storage list',
     // Event 32 uses up the budget with 1,351 bytes over it. The page still
     // has more events after it, because its storage list was full.
     budget: 130_000,
-    first: [{ numbers: range(1, 32), through: 40, next: 32 }],
-    rest: [{ numbers: range(33, 40), through: 40, next: null }],
+    first: [{ numbers: range(1, 32), through: 1_025, next: 32 }],
+    rest: [{ numbers: range(33, 1_025), through: 1_025, next: null }],
   },
 ]
 
@@ -134,7 +128,7 @@ it.each(budgetCases)(
       peer: resumed.peer,
     })
     browsers.publish([live])
-    expect(pages(resumed.state.messages)).toEqual([...rest, { live: 41 }])
+    expect(pages(resumed.state.messages)).toEqual([...rest, { live: 1_026 }])
     expect(resumed.state.closed).toBe(0)
   },
 )
