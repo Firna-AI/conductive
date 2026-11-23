@@ -32,6 +32,7 @@ import { OwnComputersBody } from './ownComputersTab'
 import type { OrgSettingsState } from './orgSettingsState'
 import { settingsOrg } from './settingsOrgs'
 import { settingsRepositoryNotice } from './settingsRepositoryNotice'
+import { skillsDraft, skillsTrust } from './settingsSkills'
 import { defined, plainData } from '../defined'
 
 /** The person signed in: Cal, an admin, or Priya, a member who is not. */
@@ -187,6 +188,8 @@ export function TabBody(props: {
             repositoryNotice:
               settingsRepositoryNotice(state, settings) ?? undefined,
             ownComputers: state.ownComputers === 'none' ? undefined : true,
+            skillsDraft: skillsDraft(state),
+            skillsTrust: skillsTrust(state, readOnly !== undefined),
           })}
         />
       )

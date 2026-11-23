@@ -202,8 +202,8 @@ If you accepted an org invitation, your org is already open.
 3. Keep the default branch, or choose another starting branch.
 4. If you choose another branch, open the branch control again and choose its target under **Target**.
 5. If your org has an own computer, choose where the workspace runs. **Cloud computer** is the default.
-6. Choose a model for an agent available to you.
-7. Choose the effort in the same model menu.
+6. Choose a favourite or a model in **All models** for an agent available to you.
+7. Adjust the effort and **Fast** in the same menu if needed.
 8. Describe your task in the message box.
 9. Select **Create** in the dialog, or **Send** on the page.
 
@@ -212,6 +212,11 @@ The starting branch is the target unless you choose the default branch instead.
 
 - [Choose a starting branch and target](/docs/workspaces#start-from-another-branch)
 - [Choose an own computer](/docs/own-computers#choose-a-computer-for-your-work)
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Set your model favourites](/docs/sessions-and-chat#set-your-favourites)
 
 For a first task, you can use this message:
 

@@ -213,6 +213,8 @@ A successful **Refresh**, a new save, **Remove**, or a page reload clears the wa
 A failed background read shows no warning.
 
 Your model pickers hide app models that the last successful list does not name.
+This also hides favourites for those models from the menu.
+The favourites stay saved in **Account**, under **Preferences**.
 A failed read keeps the last successful list.
 Before the first successful read, your pickers show all app models for the agent.
 They also show all app models for that agent when the list names none of them.
@@ -222,6 +224,8 @@ In a session on an org endpoint, every member's picker follows that endpoint's m
 This includes new workspaces, sessions, and automations that use the org login.
 Only an admin sees the org endpoint's model list and **Refresh** on the org's **Agents** tab.
 Your choices remain the models that Conductive offers.
+
+- [Manage model favourites](/docs/sessions-and-chat#set-your-favourites)
 
 ## Choose who can use your login
 

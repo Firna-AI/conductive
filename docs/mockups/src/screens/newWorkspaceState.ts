@@ -43,8 +43,12 @@ export const newWorkspaceSchema = {
     firstBuild: { enum: firstBuildStates },
     /** Only an admin gets the link to the Cloud computer tab. */
     viewer: { enum: ['admin', 'member'] },
-    /** The menu of the model picker: closed, or open with fast mode on. */
-    modelMenu: { enum: ['closed', 'open-fast'] },
+    /**
+     * The menu of the model picker: closed, open with fast mode on, or open
+     * with the submenu of All models, which a phone shows in place of the
+     * menu.
+     */
+    modelMenu: { enum: ['closed', 'open-fast', 'all-models'] },
   },
 } as const
 

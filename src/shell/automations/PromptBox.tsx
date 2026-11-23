@@ -65,6 +65,8 @@ export function PromptEditor(
     prompt: string
     choice: AgentChoice
     models: readonly AgentModel[]
+    /** The favourites of the account, which the model menu lists first. */
+    favourites: readonly AgentChoice[]
     login: string
     tool: ReactNode
     changePrompt: (prompt: string) => void
@@ -96,6 +98,7 @@ export function PromptEditor(
           <ModelPicker
             change={props.changeChoice}
             choice={props.choice}
+            favourites={props.favourites}
             models={props.models}
           />
         </div>

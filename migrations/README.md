@@ -514,10 +514,22 @@ workspaces, automations, and automation runs. The
 records of one person, and these indexes keep each read to that person's
 rows.
 
+`202611170100_org_skills_repository.sql` adds `settings.skills_repository`.
+Existing orgs and new orgs without a choice get empty text.
+
 `202611171100_org_color.sql` adds the nullable `orgs.color` column. It keeps
 the preset colour that an admin picks for the tile of the open org, as
 [Orgs and members](../docs/protocol/orgs-and-members.md) says. Existing orgs
 get null, which the app shows as Blue.
+
+`202611181130_org_skills_repository_trust.sql` adds
+`settings.trusted_skills_repository` with an empty default. Existing orgs
+gain no trust. Its guarded `settings_clear_replaced_skills_trust` trigger
+clears stale trust when a previous Worker changes or removes the source
+without a new matching grant. Restoring the old source cannot restore its
+old trust. A change of letter case keeps the same identity. The settings
+writer saves a replacement and its new named grant together.
+[Repository trust](../docs/protocol/org-skills-trust.md#save) gives the contract.
 
 `202611181200_feedback_sends.sql` adds `feedback_sends`. Each row holds one
 24-hour epoch of the delivery key of one feedback email of one user. It
@@ -602,3 +614,10 @@ The previous schema and write shapes therefore keep working. Its old
 row. The new reader explicitly excludes those rows. The
 [provider switch guide](../worker/lifecycle/provider-switches.md) gives
 the atomic transition into execution and the separate execution deadline.
+
+`202611221800_model_favourites.sql` adds the nullable text column
+`user_preferences.model_favourites`. It holds the saved JSON list of
+one account. Existing rows keep null. The migration changes no existing
+column, default, or constraint, so the previous Worker keeps working.
+[Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
+gives the rules for an account without a saved list.

@@ -113,7 +113,10 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
       ? cloudSend
       : computerSendTo(state)
   const fastMenu = state.modelMenu === 'open-fast'
+  const allModels = state.modelMenu === 'all-models'
   const box = composerData({
+    // Only an open submenu is named, so the props of the other states stay.
+    allModels: allModels ? true : undefined,
     attachments: draft.files,
     capabilities: newWorkspaceCapabilities(
       state,
@@ -137,7 +140,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     draft: text,
     // A phone shows a pick at the caret in place of the drag.
     drop: state.files === 'drop-over' && props.viewport === 'desktop',
-    picker: fastMenu,
+    picker: fastMenu || allModels,
     placeholder: taskPlaceholder,
     running: false,
     sendTo:

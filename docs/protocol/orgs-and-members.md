@@ -164,6 +164,9 @@ as [Host connection](host-connection.md) says.
 - Only an admin changes the repositories, the install script, the startup
   script, and the env vars (decision 57). Other members see them
   read-only.
+- Only an admin changes the skills repository, as
+  [The Skills section](org-skills.md#the-skills-section) says. Other
+  members see it read-only.
 - Only an admin adds an own computer, sets its limit, and removes it (own
   computer decision 2 A). Other members see the own computers read-only.
 - Only an admin changes the org's name, initials, and colour. Other

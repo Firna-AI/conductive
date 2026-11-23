@@ -134,7 +134,7 @@ One test compares the TypeScript runtime limits with their Rust constants.
 - [File results](src/runner_files.rs) defines read commands and their results.
 - [Skill reports](src/skills.rs) defines public metadata and private discovery/input records.
 - [Helper messages](src/sdk_helper.rs) defines JSON line requests and outputs.
-- [Helper options](src/sdk_helper_options.rs) defines private start options and input.
+- [Helper options](src/sdk_helper_options.rs) defines private start options, the optional `OrgSkills` value, and input.
 - [Provider events](src/provider_events.rs) defines adapter results and background state.
 - [Workspace tools](src/tools/mod.rs) defines tool payloads and the records that their replies use.
 - [Session writes](src/tools/sessions.rs) defines the session create and send requests, the accepted message and turn, the resume states, and the write replies.

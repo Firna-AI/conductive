@@ -15,6 +15,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { termsOrgSection } from './terms-org'
+import { termsServiceSection } from './terms-service'
 import { termsWorkSection } from './terms-work'
 
 /**
@@ -46,7 +47,7 @@ export const termsDocument: LegalDocument = {
       ],
     },
     {
-      title: 'The service',
+      ...termsServiceSection,
       blocks: [
         paragraph`${productName} is a coding tool in the browser and in the
           Mac app. A workspace runs on a cloud computer or in a container
@@ -54,8 +55,7 @@ export const termsDocument: LegalDocument = {
           org adds to ${productName}. Agents powered by Claude and Codex
           work in the workspace. A workspace can hold one task after
           another, with one branch at a time.`,
-        paragraph`${productName} is free until billing starts. Nobody pays
-          until they choose a plan.`,
+        ...termsServiceSection.blocks.slice(1),
       ],
     },
     {
@@ -68,6 +68,11 @@ export const termsDocument: LegalDocument = {
             rights and merge method from GitHub. It shows Merge only when
             your GitHub rights let you merge. It shows Ready for review on a
             draft pull request only when you have write access or more.`,
+          text`When an admin saves a skills repository, and when a member
+            opens Skills, ${productName} reads its repository details and
+            file tree on GitHub. The lookup uses that member's GitHub
+            sign-in. The cloud computer copies and updates the public
+            repository without a GitHub token.`,
           text`${productName} runs cloud computers in its own accounts with
             cloud computer providers. The operator can switch an org to
             another account by building its cloud

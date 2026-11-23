@@ -33,9 +33,15 @@ If you joined an org, its admin manages the repositories and shared setup.
 4. Keep the default branch, or choose another starting branch.
 5. If you choose another branch, open the branch control again and choose its target under **Target**.
 6. If your org has an own computer, use the computer choice after the branch control. **Cloud computer** is the default.
-7. Choose a model and effort.
-8. Describe the task in the message box.
-9. Select **Send** on the page, or **Create** in the dialog.
+7. Choose a favourite or a model in **All models**.
+8. Adjust the effort and **Fast** if needed.
+9. Describe the task in the message box.
+10. Select **Send** on the page, or **Create** in the dialog.
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Choose models and set favourites](/docs/sessions-and-chat#choose-a-model)
 
 For example:
 

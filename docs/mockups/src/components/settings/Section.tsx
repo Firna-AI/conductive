@@ -38,10 +38,20 @@ export function MonoBlock(props: { text: string }) {
   return <pre className={styles.mono}>{props.text}</pre>
 }
 
-/** A line of body text in a section. */
-export function SectionText(props: { children: ReactNode; muted?: boolean }) {
+/**
+ * A line of body text in a section. A `status` line says what a change of
+ * the section did, so a screen reader reads it out when it shows.
+ */
+export function SectionText(props: {
+  children: ReactNode
+  muted?: boolean
+  status?: boolean
+}) {
   return (
-    <p className={props.muted ? `${styles.text} ${styles.muted}` : styles.text}>
+    <p
+      className={props.muted ? `${styles.text} ${styles.muted}` : styles.text}
+      role={props.status ? 'status' : undefined}
+    >
       {props.children}
     </p>
   )

@@ -45,6 +45,8 @@ export interface AccountSummary {
   /** The signed-in user, who reads the chat. */
   user: Pick<User, 'id'>
   defaultChoice: AgentChoice
+  /** The model favourites of the reader, in the order of the model menu. */
+  favourites: readonly AgentChoice[]
   agentLogins: readonly AgentLogin[]
   /**
    * The login that a new session of the reader takes, for each org and
@@ -140,12 +142,17 @@ function readDefaultLogin(value: unknown): DefaultLoginEntry {
   }
 }
 
+/**
+ * The account of the reader. An older reply without favourites reads as an
+ * account with none, as the reader of the app reads it.
+ */
 export function readAccount(value: unknown): AccountSummary {
   const source = record(value, 'account')
   const defaultLogins = optional(list(readDefaultLogin))(source.defaultLogins)
   return {
     user: { id: text(record(source.user, 'user').id) },
     defaultChoice: readChoice(source.defaultChoice),
+    favourites: optional(list(readChoice))(source.favourites) ?? [],
     ...(defaultLogins ? { defaultLogins } : {}),
     agentLogins: list((item): AgentLogin => {
       const login = record(item, 'agent login')

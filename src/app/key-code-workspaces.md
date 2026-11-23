@@ -64,14 +64,24 @@ rules of Archive and Restore.
   [Workspace menu](../../docs/protocol/workspace-menu.md) states the menu
   of a workspace row.
 - `../shell/ui/Menu.tsx`: `MenuButton`, the menu of the shell, a sheet on
-  a phone. On desktop it opens on `PopoverSurface.tsx`, in the top layer,
-  which places it beside its button with the dropdown placement of
-  `@firna/ui`, and flips it when it does not fit. The member menus use the
-  same surface. `MenuList.tsx` draws the items, also a switch row, such as
-  Fast in the model menu, which keeps the menu open, and an item that shows
-  choices. While the owner of a `MenuButton` saves a change, its `busy`
-  state turns off the trigger and the items and switches of the open menu.
+  a phone. With `besideOnPhone`, as each model picker gives it, a phone
+  opens it beside its button too. `OpenMenu.tsx` draws the open menu on
+  `PopoverSurface.tsx`, in the top layer, which places it beside its button
+  with the dropdown placement of `@firna/ui`, and flips it when it does not
+  fit. The member menus use the same surface. `OpenMenu` also shows the
+  choices of an item with a submenu, such as All models: beside the menu,
+  or in its place with Back in the phone layout and in a sheet.
+  `submenu.tsx` holds the open submenu, its focus, and its layer beside the
+  menu, which the menu of the chat shares. `MenuList.tsx` draws the rows of
+  `menu-items.tsx`, also a switch row, such as Fast in the model menu,
+  which keeps the menu open, and an item that shows choices. While the
+  owner of a `MenuButton` saves a change, its `busy` state turns off the
+  trigger and the items, switches, and submenu items of the open menu.
   These rows keep the focus, and the menu stays open.
+- `../shell/ui/ModelPicker.tsx`: the model picker of New workspace, of the
+  default of new workspaces, of an automation, and of each Favourites row.
+  It draws the rows of `modelMenuRows` of the chat, with the favourites
+  that its owner gives, as `MenuButton` entries.
   `PointMenu.tsx` draws a menu at a point above the page, with its
   choices beside it, and `menu-place.ts` keeps both inside the window.
   `menu-keys.ts`: `opensMenu`, the menu keys of a row and of a tab.

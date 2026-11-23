@@ -65,8 +65,10 @@ function view(builds: ImageBuild[], log: BuildLogEvent[]) {
       }}
       log={log}
       now={now}
+      onRetrySkills={() => undefined}
       org={{ id: 'acme', name: 'Acme', role: 'member' }}
       settings={settings}
+      skills={{ status: 'loading' }}
       timeZone="UTC"
       viewport="desktop"
     />

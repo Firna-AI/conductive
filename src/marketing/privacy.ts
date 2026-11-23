@@ -10,6 +10,7 @@ import {
   type LegalDocument,
 } from './legal-text'
 import { privacyRecipientsSection } from './privacy-recipients'
+import { privacySkillsSection } from './privacy-skills'
 import { privacyUsesSection } from './privacy-uses'
 
 /**
@@ -42,6 +43,7 @@ export const privacyDocument: LegalDocument = {
     },
     privacyUsesSection,
     privacyRecipientsSection,
+    privacySkillsSection,
     {
       title: 'Transfers to other countries',
       blocks: [

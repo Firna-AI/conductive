@@ -24,7 +24,8 @@ list of Acme. Send feedback comes last among its actions. Its child pages:
   settings of Acme lists its seven tabs, with Own computers, Agents, and
   Secrets after Cloud computer. Cloud computer has the cloud icon, and Own
   computers the server icon of the computer choice.
-  Its Account group ends with Keyboard shortcuts, which opens
+  Its Account group has Favourites before New workspaces, as the
+  Preferences tab has them, and ends with Keyboard shortcuts, which opens
   `app/account/shortcuts`.
 - `app/command-palette/search` has a search that finds a workspace and an
   archived one. Its states are child pages, which kept the paths of its

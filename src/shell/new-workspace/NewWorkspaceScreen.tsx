@@ -166,6 +166,7 @@ export function NewWorkspaceScreen(props: {
               <OrgLinks orgId={org.id}>
                 <Composer
                   choice={form.choice}
+                  favourites={form.favourites}
                   field={message}
                   login={form.login}
                   model={model}

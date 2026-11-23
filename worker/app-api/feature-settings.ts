@@ -1,4 +1,5 @@
 import type { UpdateOrgSettingsRequest } from '../../src/shared/org-settings'
+import { savedSkillsRepositorySettings } from '../../src/shared/skills-repository-settings'
 import type { AppDependencies, AppEnv } from '../env'
 import { isRecord, requiredString } from '../http'
 import {
@@ -54,6 +55,10 @@ export async function featureSettings(
   if (write) {
     const installScript = optionalShellString(context.body?.installScript)
     const startupScript = optionalShellString(context.body?.startupScript)
+    const skillsRepository = optionalShellString(context.body?.skillsRepository)
+    const trustedSkillsRepository = optionalShellString(
+      context.body?.trustedSkillsRepository,
+    )
     const changes = environmentChanges(context.body?.envVars)
     for (;;) {
       await assertCanChangeSharedSettings(env.DB, orgId, userId)
@@ -101,6 +106,10 @@ export async function featureSettings(
         before,
         installScript,
         startupScript,
+        ...savedSkillsRepositorySettings(before, {
+          skillsRepository,
+          trustedSkillsRepository,
+        }),
         envVarsCiphertext,
         now: dependencies.now(),
       })

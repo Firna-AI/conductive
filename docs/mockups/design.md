@@ -60,10 +60,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `src/components/common/touch.tsx`, and local controls read the
   `--ui-touch-min` variable, which is 0 on desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent ends with the
-  external link icon, because it opens a new session with the draft, from
-  decision 51. A screen reader says "New session" for the icon.
+  in every composer, such as "Opus 5.5 High". It names no agent brand.
+  [The model menu](design-model-menu.md) gives its menu, with the
+  favourites first.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
@@ -214,7 +213,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the operator, and Keyboard shortcuts.
 - `LoadFailure` in `src/components/common/` draws data that did not load,
   as the lists of the app show it: what failed, the message of the server,
-  and Try again.
+  and Try again. When the server answered but a service behind it did not,
+  such as GitHub for the list of skills, its message names that service.
 - `ConfirmDialog` in `src/components/common/` asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.

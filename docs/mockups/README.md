@@ -55,6 +55,7 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the model menu](design-model-menu.md),
 of [the operator section](design-operator.md), of
 [the pull request bar](design-bar.md), of
 [New workspace](design-new-workspace.md), and of
@@ -176,7 +177,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   skills, attached files, drops, the chip of Add to chat, and the
   Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
-  with the login of the open session and the model of the next message.
+  with the login of the open session, the model of the next message, and
+  the favourites and All models of an open model menu.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/explainState.ts` holds the marks of
@@ -231,6 +233,20 @@ and `envVarCopy.ts` beside it gives the note under the list. The app shares
 both.
 `app/org-settings/cloud-computer`, its `add-variable` and `change-value`
 pages, and its `member` page show them.
+
+The Skills section of the Cloud computer tab names the public GitHub
+repository whose skills the agents of every workspace use. An admin edits
+it in a field, and a member sees it as text. Under it, the section lists
+the skills that a lookup on GitHub finds, or it shows a notice in place of
+the list. `src/components/settings/SkillsSection.tsx` draws the section,
+and `SkillList.tsx` beside it draws the list. `skillsCopy.ts` beside them
+holds the words and the result of the lookup, so that the app can share
+them. Under the field, an admin sets the switch "Trust this skills
+repository", which starts off for each repository, and a member sees the
+saved choice as text. The choice exists only while the field names a
+repository as owner/name. `SkillsTrust.tsx` draws the switch and the
+read-only choice, and `skillsTrustCopy.ts` holds their words and the
+address of the guide. [The catalogue](catalogue.md) gives its pages.
 
 A secret of an org differs from an env var. An env var reaches every cloud
 computer at each start. A secret reaches only one command that an agent

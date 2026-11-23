@@ -146,6 +146,24 @@ against a change in how the agent program reads its credential and its
 model address. It runs Codex through the Codex SDK or the Codex App Server
 (decision 36).
 
+The Rust runner owns the public org skills copy and its five-minute
+background checks. It removes escaping and dangling links before it
+publishes complete commit folders outside the workspace repository.
+Each SDK helper leases its captured folder. The background job reclaims
+retired folders after their last helper closes. Its startup sweep removes
+crash leftovers and prunes unreachable Git objects.
+The helper uses the shared folder rule and each agent's displayed names.
+It exports a safe view without executable metadata. The view keeps inline
+shell commands inert, except in Claude's view of a trusted repository.
+The Worker gives the runner the configured and trusted repository names at
+each start and resume. The runner passes both to each helper start. For an
+untrusted repository, the helper also turns on Claude's own inline shell
+restriction for the whole session. Claude gets links in an additional
+directory. Codex gets extra skill roots.
+[Org skills](../protocol/org-skills.md) states what loads and when a
+session gets an update. [Repository trust](../protocol/org-skills-trust.md)
+states the trust choice.
+
 The runner finds the listening ports in the sandbox itself, with no Boat
 call (decision 220).
 

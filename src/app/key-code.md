@@ -142,9 +142,15 @@ Each path is relative to `src/app/`, the folder of this page.
 - `repository-changes.ts`: the repository changes and their readiness, in
   [Key code: the workspace list and the workspace models](key-code-workspaces.md).
 - `account-model.ts`: the agent logins with their share setting, the
-  default model, the New workspace view, the shortcut changes of each
-  keyboard, the GitHub App installations, and the repositories that
-  Create org offers. `saveShortcuts` saves one batch of changes for one
+  default model, the model favourites, the New workspace view, the shortcut
+  changes of each keyboard, the GitHub App installations, and the
+  repositories that Create org offers. `account-preference-writes.ts`:
+  `AccountPreferenceWrites`, the saves of the preferences. Each save shows
+  the value of its reply, and a failed save keeps the saved value and fails
+  with its error. `setFavourites` saves the whole list of the favourites,
+  and the account then holds the list that the Worker kept, as
+  [The account routes](../../docs/protocol/model-favourites-account.md#the-account-routes)
+  says. `saveShortcuts` saves one batch of changes for one
   keyboard and keeps the confirmed changes of the reply. A screen watches the
   installations: they read at once, and again with the steps of Get started
   each time that the user comes back to the page. It also reads the
@@ -187,10 +193,30 @@ Each path is relative to `src/app/`, the folder of this page.
   client that reports its refusals, also the replies of its fetch, and the
   rules of what a person may change.
 - `computer-model.ts`: the scripts, the env vars with their Secret marks,
-  the builds, and the log. `classifyEnvVar` changes only the mark of a
-  variable, and sends no value. `replaceEnvVar` changes only the value,
-  and sends no mark, so the Worker keeps the stored mark. `setEnvVar`
-  sends a value and a mark, for Add variable.
+  the skills repository, the builds, and the log. `classifyEnvVar` changes
+  only the mark of a variable, and sends no value. `replaceEnvVar` changes
+  only the value, and sends no mark, so the Worker keeps the stored mark.
+  `setEnvVar` sends a value and a mark, for Add variable.
+  `saveSkillsRepository` saves the text of the Skills field and its trust
+  choice in one write, with a grant that names that same text, and then
+  looks up the skills again. `loadSkills` is Try again of the lookup.
+- `skills-lookup.ts`: `SkillsLookup`, the reads of the lookup of the
+  skills repository, of which only the newest answer shows, and
+  `shownSkills`, the list or the notice that the Skills section shows for
+  an answer. The tab of an admin and the read-only tab of the members UI
+  share it.
+- `skills-trust.ts`: `SkillsChoice`, the skills repository and its trust
+  choice as one value. `sameSkillsChoice` is the equality of the draft of
+  the Skills section, so a newer saved value never pairs the trust of one
+  repository with the text of another. `savedSkillsChoice` and
+  `savedSkillsTrust` read the saved choice of the settings, and
+  `namesSkillsRepository` says whether the text of the field has a trust
+  choice. The tab of an admin and the read-only tab of the members UI
+  share it.
+- `../shell/settings/SkillsSection.tsx`: the Skills section of an admin,
+  with the field, the trust switch of `SkillsTrust.tsx`, Save repository,
+  and the list or its notices, from the pure parts and the words of the
+  mockups.
 - `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
   `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
   row saves its mark at once, and Add variable starts secret. A new value
@@ -230,14 +256,17 @@ Each path is relative to `src/app/`, the folder of this page.
   `../shell/list/drop-target.ts`: `DropLayout`, the boxes of the sections,
   the rows, and the trees that a drop measures.
 - `../shell/ui/useListDrag.ts`: the drag of an item in a vertical list,
-  such as an org in the rail and in the org switcher of a phone, or a
-  chosen repository of an org, on `usePointerDrag`.
+  such as an org in the rail and in the org switcher of a phone, a chosen
+  repository of an org, or a model favourite, on `usePointerDrag`.
   `../shell/ui/useListMoves.ts`: the moves of such an item by a menu and by
   Alt and Up or Down. `../shell/orgs/useOrgMove.ts`: the move of an org with
   the toast of a failed save. `../shell/layout/useRailOrder.ts`: the drag,
   the tile menu (`useTileMenu.tsx`), and the moves of the org tiles.
   `../shell/settings/RepositoryOrder.tsx`: the same moves of the chosen
-  repositories, with their row menu. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
+  repositories, with their row menu. `../shell/account/FavouritesSection.tsx`:
+  the same moves of the favourites of Preferences, which save one at a
+  time, with the rows of `FavouriteParts.tsx` and the row IDs of
+  `favourite-rows.ts`. `../shell/list/OrgSwitcherSheet.tsx`: the org switcher, where
   a long press lifts an org.
 - `sideways-wheel.ts`: `useSidewaysWheel`, which turns a
   vertical wheel turn over a row that scrolls sideways into a sideways

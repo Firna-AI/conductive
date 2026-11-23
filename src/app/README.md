@@ -62,6 +62,24 @@ hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
 A drag of text or of a link keeps the action of the browser.
 
+`App` also mounts `useKeyboardViewport` of `keyboard-viewport.ts`. Safari
+on iOS keeps the page at its full height under an on-screen keyboard, and
+scrolls the page up to show the focused field. While the keyboard shows,
+the hook sets `--ui-screen-height` to the height of the visible part and
+keeps the page at its top. So the header stays in view, and the app ends
+at the keyboard. While the page is zoomed, the hook changes nothing, so a
+pinch zoom keeps the behaviour of the browser. On
+Android, the viewport tag of `index.html` asks Chrome to resize the page
+for the keyboard, with `interactive-widget=resizes-content`.
+
+On iOS 26 and later, a Home Screen web app gets a blur over the top edge
+of the page, and the blur reaches the header. WebKit skips the blur when
+a fixed box with a solid background covers the top edge. So `index.html`
+holds the band `.top-edge`, only in a Home Screen app on iOS. The band is
+12px tall, full width, and in the colour of `--ui-bar`. It paints nothing,
+because `background-clip: text` clips its background to its text, and it
+has no text. It takes no taps.
+
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
 until its last day. The real chat fills the
@@ -97,7 +115,7 @@ The org settings mount the members UI of `../members/`: `MembersSettings`
 for the Members tab, Delete org in the General tab of an admin, the restore
 page at the address of a deleted org, and the read-only Repositories and Cloud computer
 tabs of a member. The Cloud computer tab of a member gets the live builds,
-log, and settings of `ComputerModel`. The Repositories tab of a member gets
+log, settings, and skills lookup of `ComputerModel`. The Repositories tab of a member gets
 the live builds of `OrgModel`, for its repository notice.
 `useMembersApi(orgId)` in
 `../shell/settings/members-api.ts` gives one members client for each org,

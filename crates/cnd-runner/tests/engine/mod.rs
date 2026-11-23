@@ -17,3 +17,6 @@ mod memory;
 
 mod held_store;
 mod pending_tests;
+
+mod skills;
+mod skills_tests;

@@ -18,7 +18,7 @@ export const sectionText = defineComponent({
   slug: 'section-text',
   title: 'Section text',
   description:
-    'A line of body text in a settings section, such as the message of a failed build, or a muted note under a list. A screen supplies the text, so its own page shows an empty line.',
+    'A line of body text in a settings section, such as the message of a failed build, or a muted note under a list. A status line says what a change of the section did, so a screen reader reads it out when it shows. A screen supplies the text, so its own page shows an empty line.',
   relatedDocs: ['docs/mockups/design.md'],
   propSchema: {
     type: 'object',
@@ -26,11 +26,15 @@ export const sectionText = defineComponent({
     properties: {
       /** The quieter tone of a note or a hint. */
       muted: { type: 'boolean' },
+      /** A line that says what a change did, which a screen reader reads. */
+      status: { type: 'boolean' },
     },
   } as const,
   slots: ['children'],
   render: (props) => (
-    <SectionText muted={props.muted}>{props.children}</SectionText>
+    <SectionText muted={props.muted} status={props.status}>
+      {props.children}
+    </SectionText>
   ),
   variants: [
     {

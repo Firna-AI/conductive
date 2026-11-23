@@ -10,6 +10,7 @@ import {
   readOnlyCauseSchema,
 } from './computerSchemas'
 import { repositoryNotice } from './RepositoryNotice.mockup'
+import { skillsTrustSchema } from './skillsSchemas'
 
 /**
  * The Cloud computer tab of the org settings, registered with Mokly. A
@@ -20,7 +21,7 @@ export const computerTab = defineComponent({
   slug: 'computer-tab',
   title: 'Computer tab',
   description:
-    'The Cloud computer tab of the org settings: its intro, the builds of the cloud computer, the install script and the startup script, and the env vars. A member who is not an admin, and everyone in a suspended org, reads them without edit fields and actions. While a repository change waits for a build, its notice shows under the intro. Its own page shows the tab of Acme for an admin.',
+    'The Cloud computer tab of the org settings: its intro, the builds of the cloud computer, the install script and the startup script, the env vars, and the skills repository. A member who is not an admin, and everyone in a suspended org, reads them without edit fields and actions. While a repository change waits for a build, its notice shows under the intro. Its own page shows the tab of Acme for an admin, before an admin chose a skills repository.',
   relatedDocs: ['docs/mockups/catalogue.md'],
   propSchema: {
     type: 'object',
@@ -38,6 +39,10 @@ export const computerTab = defineComponent({
       envForm: { enum: ['none', 'add', 'change'] },
       /** The org has own computers, which build the same setup. */
       ownComputers: { type: 'boolean' },
+      /** The text of the Skills field, when an admin changed it and has not saved. */
+      skillsDraft: { type: 'string' },
+      /** The trust choice, while the Skills section names a repository. */
+      skillsTrust: skillsTrustSchema,
     },
   } as const,
   slots: ['repositoryNotice'],
@@ -57,6 +62,8 @@ export const computerTab = defineComponent({
       readOnly={props.readOnly}
       repositoryNotice={props.repositoryNotice}
       script={props.script}
+      skillsDraft={props.skillsDraft}
+      skillsTrust={props.skillsTrust}
     />
   ),
   variants: [

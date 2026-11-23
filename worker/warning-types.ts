@@ -16,6 +16,12 @@ import type { GatewayRefusal } from './model-gateway/errors'
 import type { UnexpectedErrorFields } from './unexpected-error'
 
 export const SIMPLE_WARNINGS = {
+  starting_favourite_skipped:
+    'An entry of CONDUCTIVE_STARTING_FAVOURITES was skipped.',
+  saved_favourites_unreadable:
+    'The saved model favourites of an account could not be read. The account uses the starting favourites.',
+  starting_favourites_fallback:
+    'CONDUCTIVE_STARTING_FAVOURITES has no usable entries. Starting favourites use the app default when available.',
   runner_service_message_invalid:
     'A private service transfer was discarded. The runner connection stays open.',
   runner_service_negotiation_unavailable:
