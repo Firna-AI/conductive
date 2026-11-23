@@ -2,12 +2,21 @@
 import { act } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  byLabel,
   byRole,
+  queryAllByRole,
   queryByRole,
   queryByText,
 } from '../../test-support/dom-queries'
 import { MOUNTED_TEST_TIMEOUT, waitFor } from '../../test-support/mount'
-import { answer, mountChat } from './explain-test-kit'
+import {
+  anchorOf,
+  answer,
+  explanation,
+  mountChat,
+  recordEvent,
+  textNodeWith,
+} from './explain-test-kit'
 import { explained, explanationAnswer, openFromMark } from './popover-test-kit'
 import { messageAttributes } from './selection'
 
@@ -15,10 +24,15 @@ vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
 const title = 'Explain "Manual entry still works"'
 
-/** Presses the pointer on `target`, as a mouse does before a click. */
-async function pointerDown(target: EventTarget): Promise<void> {
+/** Presses the pointer on `target` at a point, as a mouse does. */
+async function pointerDown(
+  target: EventTarget,
+  at = { clientX: 0, clientY: 0 },
+): Promise<void> {
   await act(async () => {
-    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    target.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true, ...at }),
+    )
   })
 }
 
@@ -48,6 +62,40 @@ describe('a press outside the popover of an explanation', () => {
       kept: true,
       closed: null,
     })
+  })
+
+  it('keeps the popover at a press on the text of overlapping marks while their menu opens', async () => {
+    const { events, record } = explained(
+      'explain-1',
+      'Manual entry still works',
+    )
+    const inside = explanation('explain-inside', anchorOf('entry still'), {
+      createdAt: record.createdAt + 1_000,
+    })
+    await mountChat({ stored: [...events, recordEvent(inside)] })
+    const popover = await openFromMark(title, 'Ready')
+    // The browser lays the line of the answer out over the press.
+    const lines = vi
+      .spyOn(Range.prototype, 'getClientRects')
+      .mockReturnValue([
+        DOMRect.fromRect({ x: 0, y: 0, width: 800, height: 20 }),
+      ] as unknown as DOMRectList)
+    const text = textNodeWith(byLabel('Chat'), 'entry still').parentElement
+    if (!text) throw new Error('The answer has no text of the marks.')
+    const at = { clientX: 40, clientY: 10 }
+    await pointerDown(text, at)
+    const pressed = queryByRole('dialog', title) === popover
+    act(() => {
+      text.dispatchEvent(new MouseEvent('click', { bubbles: true, ...at }))
+    })
+    await waitFor(
+      () => queryAllByRole('menuitem', 'Explain "entry still"').length > 0,
+      'the menu of the overlapping marks',
+    )
+    expect({ pressed, menu: queryByRole('dialog', title) === popover }).toEqual(
+      { pressed: true, menu: true },
+    )
+    lines.mockRestore()
   })
 
   it('keeps the sheet of the popover on a phone', async () => {

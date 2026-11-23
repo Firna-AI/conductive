@@ -271,8 +271,10 @@ in the design of the chat gives the look of each part.
 
 ### Keys and focus
 
-- At most one popover is open. A press on another mark or on Explain closes
-  the open popover first.
+- At most one popover is open. The popover of another mark replaces the
+  open popover when it opens, from a press on the mark or from a row of
+  the menu. The open popover stays while the menu of overlapping marks
+  shows. A press on Explain closes the open popover first.
 - The popover takes the focus when it opens. Escape closes it, and the
   focus returns to its mark.
 - A follow-up from a member who cannot use the login of the explanation

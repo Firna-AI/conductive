@@ -13,9 +13,10 @@ import {
 } from './popover-place'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import popover from '../../../docs/mockups/src/components/explain/ExplainPopover.module.css'
+import { usePressOutside } from '../../shell/ui/press-outside'
 import styles from './explain.module.css'
 import { PopoverHeader, SheetHandle } from './PopoverParts'
-import { keepPopover, usePressOutside } from './press-outside'
+import { keepPopover, keepsPopover } from './press-outside'
 
 /**
  * The popover of an explanation. On a computer it is a panel 400 px wide by
@@ -58,7 +59,9 @@ export function ExplainPopover(props: {
   usePanelPlace(ref, props.anchor, !props.mobile && !anchorsInCss())
   useMarkAboveSheet(ref, props.anchor, props.mobile)
   useSheetTop(ref, props.stopAt, props.mobile && full)
-  usePressOutside(!props.mobile, props.onPressOutside)
+  usePressOutside(!props.mobile, ref, props.onPressOutside, {
+    keep: keepsPopover,
+  })
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key !== 'Escape' || event.defaultPrevented) return
     event.preventDefault()
