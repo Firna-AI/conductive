@@ -8,6 +8,7 @@ import type { MenuPlacement } from '../common/Menu'
 import { useTouch } from '../common/touch'
 import {
   divider,
+  effortChoices,
   favouritesMenu,
   modelEntries,
   shownFavourites,
@@ -19,9 +20,10 @@ export type PickerPlacement = Exclude<MenuPlacement, 'sheet'>
 
 /**
  * The model menu of a picker, drawn open beside it, with the rows of
- * `favouritesMenu`. `allModels` opens the submenu of every model: beside
- * the menu on a computer, level with its row, and in place of the menu on
- * a phone, with Back at its top. A menu with no favourite to show starts
+ * `favouritesMenu`. `allModels` opens the submenu of every model, and
+ * `effort` opens the submenu of the efforts. A submenu shows beside the
+ * menu on a computer, level with its row, and in place of the menu on a
+ * phone, with Back at its top. A menu with no favourite to show starts
  * with All models, so its submenu starts level with the top of the menu.
  */
 export function FavouritesMenu(props: {
@@ -29,18 +31,20 @@ export function FavouritesMenu(props: {
   favourites: readonly AgentChoice[]
   placement: PickerPlacement
   allModels?: boolean
+  effort?: boolean
   sessionAgent?: AgentKey
   hiddenModels?: readonly string[]
   fastKey?: Shortcut
 }) {
   const phone = useTouch()
   const rows = shownFavourites(props.favourites, props.hiddenModels).length
-  const submenu = props.allModels === true
-  const models = modelEntries(
-    props.choice,
-    props.sessionAgent,
-    props.hiddenModels,
-  )
+  const efforts = props.effort === true
+  const submenu = props.allModels === true || efforts
+  const label = efforts ? 'Effort' : 'All models'
+  const instance = efforts ? 'effort' : 'all-models'
+  const choices = efforts
+    ? effortChoices(props.choice)
+    : modelEntries(props.choice, props.sessionAgent, props.hiddenModels)
   if (submenu && phone) {
     const back: MenuEntryData = {
       kind: 'item',
@@ -49,9 +53,9 @@ export function FavouritesMenu(props: {
     }
     return (
       <menu.Component
-        entries={[back, divider, ...models]}
-        label="All models"
-        moklyInstance="all-models"
+        entries={[back, divider, ...choices]}
+        label={label}
+        moklyInstance={instance}
         placement={props.placement}
       />
     )
@@ -61,7 +65,8 @@ export function FavouritesMenu(props: {
     sessionAgent: props.sessionAgent,
     hiddenModels: props.hiddenModels,
     fastKey: props.fastKey,
-    allModels: submenu,
+    allModels: props.allModels === true && !efforts,
+    effort: efforts,
   })
   if (!submenu) {
     return (
@@ -78,8 +83,8 @@ export function FavouritesMenu(props: {
       className={classes(styles.pair, styles[props.placement])}
       style={
         {
-          '--favourite-rows': rows,
-          '--favourite-line': rows > 0 ? '7px' : '0px',
+          '--submenu-rows': rows + (efforts ? 1 : 0),
+          '--submenu-lines': (rows > 0 ? 1 : 0) + (efforts ? 1 : 0),
         } as CSSProperties
       }
     >
@@ -91,9 +96,9 @@ export function FavouritesMenu(props: {
       />
       <div className={styles.submenu}>
         <menu.Component
-          entries={models}
-          label="All models"
-          moklyInstance="all-models"
+          entries={choices}
+          label={label}
+          moklyInstance={instance}
           placement="point"
         />
       </div>

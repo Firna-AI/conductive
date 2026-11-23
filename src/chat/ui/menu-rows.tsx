@@ -146,7 +146,8 @@ function SwitchItem(props: { entry: MenuSwitch }) {
 }
 
 /**
- * An item that shows its submenu, with an arrow at its end. A press, Enter,
+ * An item that shows its submenu, with its muted words and an arrow at its
+ * end. A press, Enter,
  * Space, and the right arrow show it and move the focus into it. Its open
  * submenu keeps it highlighted.
  */
@@ -169,7 +170,12 @@ function SubmenuItem(props: { entry: MenuSubmenu; submenu?: SubmenuControl }) {
       tabIndex={-1}
       type="button"
     >
-      <span className={styles.label}>{entry.label}</span>
+      <span className={styles.label}>
+        {entry.label}
+        {entry.muted ? (
+          <span className={styles.muted}> {entry.muted}</span>
+        ) : null}
+      </span>
       <ChevronRight aria-hidden className={styles.icon} size={14} />
     </button>
   )

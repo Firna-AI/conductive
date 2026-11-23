@@ -96,11 +96,11 @@ describe('All models in the model menu of the shell', () => {
     const touched = submenuShows()
     await hover('All models', 'mouse')
     const hovered = { shows: submenuShows(), focus: focused() }
-    await hover('Low', 'mouse')
+    await hover('Fast', 'mouse')
     const left = { shows: submenuShows(), focus: focused() }
     await press(byRole('menuitem', 'All models'))
     const inside = focused()
-    await hover('High', 'mouse')
+    await hover('Fast', 'mouse')
     expect({
       touched,
       hovered,
@@ -112,7 +112,7 @@ describe('All models in the model menu of the shell', () => {
       hovered: { shows: true, focus: 'GPT-6.1 Sol High' },
       left: { shows: false, focus: 'GPT-6.1 Sol High' },
       inside: 'Opus 5.5',
-      moved: { shows: false, focus: 'High' },
+      moved: { shows: false, focus: 'Fast' },
     })
   })
 
