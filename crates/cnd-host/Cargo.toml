@@ -1,0 +1,34 @@
+[package]
+name = "cnd-host"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+description = "Outbound machine host connection for Conductive"
+publish = false
+
+[dependencies]
+async-trait = "0.1.92"
+base64 = "0.23.1"
+cnd-runner-interface = { workspace = true }
+futures-util = "0.3.34"
+internal-error = { workspace = true }
+rand = "0.10.4"
+rustix = { version = "1.1.6", features = ["fs", "process"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tempfile = "3.27.0"
+thiserror = "2.0.21"
+tokio = { version = "1.54.1", features = ["fs", "io-util", "net", "sync", "time", "rt", "macros", "process", "signal"] }
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+tracing = "0.1.44"
+unimock = "0.6.8"
+url = "2.5.9"
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tokio = { version = "1.54.1", features = ["test-util", "rt-multi-thread"] }
+tracing-subscriber = "0.3.23"

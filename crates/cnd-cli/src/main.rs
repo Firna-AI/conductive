@@ -9,6 +9,7 @@ use crate::cli::Cli;
 mod cli;
 mod command;
 mod error;
+mod host_command;
 mod release;
 mod runner_command;
 mod runner_round;

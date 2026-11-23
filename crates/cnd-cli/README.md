@@ -6,7 +6,7 @@ also exposes the update engine through a library API.
 
 ## Responsibilities
 
-Provide one command entry point for the agent runner, preview relay, MCP
+Provide one command entry point for the host program, agent runner, preview relay, MCP
 server, Git credential helper, software updates, and workspace tools.
 
 ## What This Crate Does
@@ -22,7 +22,7 @@ variables together. The build validates the version and the parts with
 variables uses `0.0.0-dev` and an empty parts list. This development version
 sorts below every release.
 
-The commands are `runner`, `relay`, `mcp`, `git-credential`, `update`,
+The commands are `host`, `runner`, `relay`, `mcp`, `git-credential`, `update`,
 `workspaces`, `sessions`, `messages`, `sections`, `repositories`, `models`,
 `previews`, `mac`, `secrets`, and `services`. The workspace commands and
 `mcp` run 27 Worker calls and five local service calls in
@@ -38,6 +38,11 @@ Workspace tools and Git credentials use one native saved-settings reader. It rea
 `WORKSPACE_TOKEN` and supplies each crate's `Environment` boundary.
 Workspace tools keep explicit runtime values ahead of saved values.
 The credential helper keeps the caller's turn ID even when the file has another turn.
+`host` runs the [machine host program](../cnd-host/README.md). It reads its
+machine origin and token from the saved env file before each connection.
+It waits for missing values and reconnects after each drop or refusal.
+Its command children receive a clean environment. The system service runs
+it as `user`, independently of agent turns and the runner connection.
 `runner` starts the full [Rust runner](../cnd-runner/README.md). It uses the
 [runner configuration](../../runner/configuration.md), plus optional
 `CONDUCTIVE_NODE` and `CONDUCTIVE_SDK_HELPER` path overrides. Installed builds
@@ -192,6 +197,7 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [update/disk.rs](src/update/disk.rs) stores complete versions and locks.
 - [update_tests.rs](tests/update_tests.rs) checks real files and local HTTP downloads.
 - [runner_command.rs](src/runner_command.rs) makes one `RunnerStart` before its reconstruction loop, and composes the full runner and graceful shutdown.
+- [host_command.rs](src/host_command.rs) composes the host runtime, native effects, and graceful service shutdown.
 - [runner_round.rs](src/runner_round.rs) composes each runner round, negotiates its private service transport, and updates display context without blocking a move on native work.
 - [runner_services.rs](src/runner_services.rs) composes the one native manager and private socket.
 - [service_command.rs](src/service_command.rs) runs the unit-owned execution and output helper.
@@ -204,12 +210,13 @@ The musl build needs a C compiler for musl. On Ubuntu, install the
 - [tool_command.rs](src/tool_command.rs) composes the workspace CLI and MCP runtime.
 - [environment.rs](src/environment.rs) reads saved shell settings for tools and credentials.
 - [relay_start_tests.rs](tests/relay_start_tests.rs) executes the relay start script with a fake program.
-- [system_install_tests.rs](tests/system_install_tests.rs) executes the system installer with stub commands and checks the relay restart.
+- [system_install_tests.rs](tests/system_install_tests.rs) checks the relay restart, host start, and warning-only install failures with stub commands.
 - [cli_tests.rs](src/_tests_/cli_tests.rs) checks relay argument parsing.
 - [secret_command_tests.rs](tests/secret_command_tests.rs) checks the native secret routes, turn header, and filtered CLI streams.
 
 ### Related Docs
 
+- [Host connection](../../docs/protocol/host-connection.md) defines the machine connection and its fixed operations.
 - [Architecture](../../docs/architecture.md) describes the system components.
 - [Agent runner](../../docs/protocol/agent-runner.md) defines the runner contract.
 - [Runner warnings](../../docs/protocol/runner-warnings.md) defines the process-start ID.

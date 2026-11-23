@@ -15,5 +15,4 @@ export const HOST_MAX_OPEN_STREAMS = 64
 export const HOST_CLOSE_REPLACED = 4001
 export const HOST_CLOSE_TOKEN_CHANGED = 4003
 export const HOST_CLOSE_UNSUPPORTED_VERSION = 4400
-export const HOST_PING_SECONDS = 25
 export const HOST_STREAM_PORTS: readonly HostStreamPort[] = [7681, 7682]

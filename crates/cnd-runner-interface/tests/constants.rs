@@ -155,7 +155,6 @@ fn typescript_and_rust_share_host_constants() {
             "HOST_CLOSE_UNSUPPORTED_VERSION",
             u64::from(limits::HOST_CLOSE_UNSUPPORTED_VERSION),
         ),
-        ("HOST_PING_SECONDS", limits::HOST_PING_SECONDS),
     ];
     for (name, expected) in constants {
         let value = constant_value(host, name).replace('_', "");

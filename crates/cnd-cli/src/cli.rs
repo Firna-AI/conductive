@@ -4,6 +4,7 @@ use clap::Parser;
 
 use crate::command::Command;
 use crate::error::{Error, Result};
+use crate::host_command;
 use crate::release;
 use crate::runner_command;
 use crate::sandbox_command;
@@ -27,6 +28,9 @@ impl Cli {
     /// Run supported commands and report unavailable command families.
     pub(crate) async fn execute(self) -> Result<()> {
         let _parts = release::parts()?;
+        if let Command::Host = self.command {
+            return host_command::execute().await;
+        }
         if let Command::Update(arguments) = self.command {
             return update_command::execute(arguments).await;
         }

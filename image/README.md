@@ -21,7 +21,7 @@ packaging, a real-sandbox live check, and the E2B template builder.
   reuse it when the image already holds it.
 - Install the newest release through the installed program, or through a
   verified bootstrap program when the image has none.
-- Install and enable the systemd services of the agent runner and preview relay.
+- Install and enable the systemd services of the host program, agent runner, and preview relay.
 - Install and enable the preview relay's socket unit.
 - Install the udev rule that stops disk flushes at each boot, as
   [Disk flushes](install.md#disk-flushes) says.
@@ -29,7 +29,7 @@ packaging, a real-sandbox live check, and the E2B template builder.
 - Install the GitHub CLI and its wrapper, which gets a fresh token for each command.
 - Start no runner in a build sandbox. The service runs it only in a
   workspace sandbox.
-- Start no service during installation.
+- Start the host service during installation when it does not run.
 - Package the system part on a developer machine or in the deploy workflow.
 - Check the chat path and time the first agent start in a real sandbox.
 
@@ -39,7 +39,8 @@ The build calls `terminalPackagesCommand()` for `ttyd` and `tmux` when the
 image lacks a package, when the ttyd service is not masked, or when the apt
 part changed.
 The release installer owns the installed scripts and units.
-It enables services and starts none.
+It enables services and starts the host program when it does not run.
+A running host program keeps its process and release until its next start.
 
 ## Conductive release files
 
@@ -102,7 +103,8 @@ runs `update apply` through `sudo -n`, then executes the new
 restart. [Release installation](install.md#release-installation) says when
 a changed runner unit applies. A runner without this step applies a release
 only at its next start.
-The relay and terminal processes keep their release until they start again.
+The host and terminal processes keep their release until they start again.
+An install restarts a running relay and starts a stopped host program.
 A new terminal connection runs the bridge from `current` under the command
 line of the running terminal service. So the bridge keeps its command-line
 arguments compatible across releases.
@@ -193,7 +195,8 @@ A build, a disk retention restart, and an unfinished start launch no runner.
 ### Key Code
 
 - [`package-system.sh`](package-system.sh): packages the scripts and release units as a digest-named archive.
-- [`install-system.sh`](install-system.sh): installs the active release system files without starting a unit.
+- [`install-system.sh`](install-system.sh): installs the active system files and starts the host program when it does not run.
+- [`conductive-host.service`](release/conductive-host.service): runs the outbound machine host program as `user` with private runtime records.
 - [Update engine](../crates/cnd-cli/README.md): stages downloads and applies or restores releases.
 - [`runner-start.sh`](runner-start.sh) and
   [`conductive-runner.service`](release/conductive-runner.service): start the Rust runner and map its environment.

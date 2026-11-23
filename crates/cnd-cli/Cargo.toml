@@ -13,6 +13,7 @@ name = "conductive"
 path = "src/main.rs"
 
 [dependencies]
+cnd-host = { workspace = true }
 cnd-runner = { workspace = true }
 cnd-services = { workspace = true }
 cnd-runner-interface = { workspace = true }
