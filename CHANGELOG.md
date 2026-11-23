@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.35.0](https://github.com/Firna-AI/conductive/compare/v0.34.0...v0.35.0) (2026-11-23)
+
+
+### Features
+
+* **chat:** move the efforts of the model menu into an Effort submenu ([#657](https://github.com/Firna-AI/conductive/issues/657)) ([b31d2ea](https://github.com/Firna-AI/conductive/commit/b31d2ea7319449169030951e50b4fb8c40d9b6da))
+* **chat:** show a button to the bottom while the reader is scrolled up ([#653](https://github.com/Firna-AI/conductive/issues/653)) ([0c8fbc8](https://github.com/Firna-AI/conductive/commit/0c8fbc806b6afa8a1b83666d85d99f099ea4352b))
+* **new-workspace:** simplify the header of the New workspace dialog ([#656](https://github.com/Firna-AI/conductive/issues/656)) ([edb0ab2](https://github.com/Firna-AI/conductive/commit/edb0ab22c995cafeecc0f7835acbe862ad7327fc))
+
+
+### Bug Fixes
+
+* **mac:** hide the Stopped notice of the workspace bar after 5 seconds ([#654](https://github.com/Firna-AI/conductive/issues/654)) ([a977146](https://github.com/Firna-AI/conductive/commit/a97714653e96c9f8b2a1634c7d55515d42c2a1da))
+* **skills:** show org skills in the / skill list ([#659](https://github.com/Firna-AI/conductive/issues/659)) ([29e64a9](https://github.com/Firna-AI/conductive/commit/29e64a957a5a7916763c313f5f80b5a264de4f5e))
+
 ## [0.34.0](https://github.com/Firna-AI/conductive/compare/v0.33.0...v0.34.0) (2026-11-23)
 
 
