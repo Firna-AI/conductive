@@ -176,6 +176,7 @@ An org has two roles: **Admin** and **Member**.
 | Continue after a merge | All workspaces in the org | All workspaces in the org |
 | Change the repository of a workspace | All workspaces in the org | All workspaces in the org |
 | Merge from the pull request bar | With GitHub write access or more | With GitHub write access or more |
+| Add, remove, or re-order pull requests in the merge queue | With GitHub write access or more | With GitHub write access or more |
 | Mark a draft ready for review from the pull request bar | With GitHub write access or more | With GitHub write access or more |
 | Manage members and org settings, except secrets | Yes | Read-only |
 | Add a secret | Yes | Yes |
@@ -203,13 +204,16 @@ The workspace counts in **Members** leave out removed workspaces.
 Continue uses the GitHub account of the member who selects it for its branch fetch.
 That account needs read access to the repository.
 A repository change uses the GitHub account of the member who changes it in the same way, for the new repository.
-Merge uses the clicking member's GitHub account, and GitHub checks its branch rules.
+Selecting a merge action uses your GitHub account, including for a queued pull request.
+An automatic merge uses the GitHub account of the member who added the last pull request that the queue asks GitHub to merge.
+GitHub checks that the account has access and that the merge meets the branch rules.
 **Ready for review** also uses the clicking member's GitHub account.
 An org role does not add GitHub access.
 
 - [Continue after a merge](/docs/workspaces#continue-after-a-merge)
 - [Change the repository](/docs/workspaces#change-the-repository)
 - [Merge a pull request](/docs/pull-requests#merge-the-pull-request)
+- [Use the merge queue](/docs/pull-requests#merge-queue)
 
 To reassign a workspace, select its owner in the workspace header.
 Choose the member who will take responsibility for it.
@@ -236,6 +240,7 @@ An admin can remove another member from **Members**.
 That member loses ordinary access to the org.
 Their workspaces stay in the org and move to the admin who removed them.
 This includes removed workspaces, although the member's workspace count leaves them out.
+Pull requests that the member added to the merge queue leave it.
 
 If you need to leave an active org, ask another admin to remove your membership.
 The last active admin must arrange another active admin or delete the org.

@@ -1,4 +1,5 @@
 import { recordedPullRequest } from './recorded-webhooks'
+import type { RepositoryGitHub } from './fake-repository'
 
 export const HEAD_SHA = recordedPullRequest.pull_request.head.sha
 
@@ -55,5 +56,32 @@ export function repositoryPull(
     potentialMergeCommit: null,
     reviews: [],
     ...fields,
+  }
+}
+
+export function restPull(pull: RepositoryPull, api: RepositoryGitHub) {
+  const url = `https://api.github.com/repos/${api.fullName}`
+  const repo = { id: api.repositoryId, name: api.fullName.split('/')[1], url }
+  return {
+    id: 20_000 + pull.number,
+    number: pull.number,
+    node_id: `PR_${pull.number}`,
+    title: pull.title,
+    url: `${url}/pulls/${pull.number}`,
+    html_url: pull.url,
+    state: pull.state === 'OPEN' ? 'open' : 'closed',
+    draft: pull.isDraft,
+    merged_at: pull.mergedAt,
+    user: null,
+    base: {
+      ref: pull.baseRefName,
+      sha: api.branches.get(`refs/heads/${pull.baseRefName}`) ?? '',
+      repo,
+    },
+    head: {
+      ref: pull.headRefName,
+      sha: pull.headRefOid,
+      repo: { ...repo, id: pull.headRepository.databaseId },
+    },
   }
 }

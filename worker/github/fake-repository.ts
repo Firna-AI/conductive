@@ -8,6 +8,12 @@ import {
   type RepositoryPull,
 } from './fake-pull'
 import { RepositoryMerges } from './fake-merges'
+import {
+  changeFakePullBase,
+  rebaseFakePull,
+  repositoryToken,
+} from './fake-pull-writes'
+import { RepositoryStacks } from './fake-stacks'
 
 export class RepositoryGitHub {
   requests: Request[] = []
@@ -25,6 +31,7 @@ export class RepositoryGitHub {
   commitDates = new Map<string, string>()
   deniedTokens = new Set<string>()
   readonly merges = new RepositoryMerges()
+  readonly stacks = new RepositoryStacks(this)
   failure: Response | null = null
   /** GitHub refuses Ready for review, such as for a rule of the branch. */
   readyRefused = false
@@ -80,10 +87,7 @@ export class RepositoryGitHub {
 
   /** Ready for review, which needs write access, as on GitHub. */
   private markReady(request: Request, variables: Record<string, unknown>) {
-    const token = (request.headers.get('Authorization') ?? '').replace(
-      /^Bearer /,
-      '',
-    )
+    const token = repositoryToken(request)
     const permission = this.merges.capabilities(token).viewerPermission
     const pull = Object.values(this.pulls).find(
       (pull) => `PR_${pull.number}` === variables.id,
@@ -123,6 +127,31 @@ export class RepositoryGitHub {
       await this.onRequest?.(merge[4] ? 'MergeResult' : 'MergeStart')
       return this.merges.fetch(request, this.pulls[Number(merge[3])], merge[4])
     }
+    const stack = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/stacks(?:\/(\d+)(?:\/(add|unstack))?)?$/,
+    )
+    const base =
+      request.method === 'PATCH' &&
+      url.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/)
+    const rest = stack || base
+    if (rest) {
+      if (
+        `${decodeURIComponent(rest[1])}/${decodeURIComponent(rest[2])}` !==
+          this.fullName ||
+        this.deniedTokens.has(repositoryToken(request))
+      )
+        return Response.json(
+          { message: 'Missing repository.' },
+          { status: 404 },
+        )
+      if (stack) {
+        await this.onRequest?.('Stacks')
+        const number = stack[3] === undefined ? undefined : Number(stack[3])
+        return this.stacks.fetch(request, number, stack[4])
+      }
+      await this.onRequest?.('ChangePullBase')
+      return changeFakePullBase(this, request, Number(rest[3]))
+    }
     const body: unknown = await request.json()
     if (
       !isRecord(body) ||
@@ -135,11 +164,9 @@ export class RepositoryGitHub {
     await this.onRequest?.(operation)
     const variables = body.variables
     if (operation === 'MarkReady') return this.markReady(request, variables)
-    if (
-      this.deniedTokens.has(
-        (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
-      )
-    )
+    if (operation === 'RebasePull')
+      return rebaseFakePull(this, request, variables.input)
+    if (this.deniedTokens.has(repositoryToken(request)))
       return Response.json({
         data: { repository: null },
         errors: [{ type: 'NOT_FOUND', message: 'Private GitHub detail' }],
@@ -170,9 +197,7 @@ export class RepositoryGitHub {
     } else if (operation === 'MergeCapabilities') {
       Object.assign(
         repository,
-        this.merges.capabilities(
-          (request.headers.get('Authorization') ?? '').replace(/^Bearer /, ''),
-        ),
+        this.merges.capabilities(repositoryToken(request)),
       )
     } else if (operation === 'BannerLookup') {
       const tip = this.branches.get(String(variables.ref))

@@ -28,9 +28,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         GitHub login of the workspace owner. It can also hold a short form
         of the workspace name, which can come from the text of the first
         message. A push sends the branch name to GitHub, and each reader of
-        the repository sees it. The Mac app also checks
-        GitHub for updates and downloads new versions. These requests
-        send your network address to GitHub.`,
+        the repository sees it. The merge queue asks GitHub to change pull
+        request targets, update stacks, rebase branches, and merge pull
+        requests. The Mac app also checks GitHub for updates and downloads
+        new versions. These requests send your network address to GitHub.`,
       text`Resend sends the org invitations, approval emails, and feedback
         emails of ${productName}. An invitation gives it the invited email
         address, org name, inviter's name, and invitation link. An approval
@@ -95,7 +96,8 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         login cannot be used. The app refuses the message when no usable
         login serves its sender. The terms of that provider or endpoint apply.`,
       text`The members of your orgs see the workspaces of the org,
-        their chats, and each Mac command request and result. They can read
+        their chats, and each Mac command request and result.
+        Members also see the org's merge queues. They can read
         the service lists and logs with workspace read access. They also
         see the automations of the org, with their prompts, chosen secret names, and
         their runs. Only the automation's owner changes its chosen secrets.
@@ -107,10 +109,11 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         the GitHub token of a turn that runs there. They can also read the
         value of a secret while a command runs with it there. During Continue
         or a repository change, they can also read the GitHub token of the
-        member who started it, while the branch fetch runs. Outside an agent turn,
-        the GitHub CLI uses the workspace owner's account. Each member with
-        a terminal can get that owner's GitHub token without a running
-        turn.`,
+        member who started it, while the branch fetch runs. They can read
+        the workspace owner's GitHub token during a merge queue base fetch.
+        Outside an agent turn, the GitHub CLI uses the workspace owner's
+        account. Each member with a terminal can get that owner's GitHub
+        token without a running turn.`,
       text`A member with a terminal or a program in a cloud computer can
         read the temporary credential of a turn that runs there. Through
         ${productName}, that credential can use the session's personal or

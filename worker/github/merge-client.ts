@@ -7,6 +7,7 @@ import { readBoundedJson } from '../http/bounded-body'
 import { choice, githubFailure, object, text } from './parsers'
 import {
   GITHUB_API_BODY_BYTES,
+  githubRepositoryPath,
   githubRequest,
   withGitHubResponse,
 } from './transport'
@@ -61,8 +62,7 @@ export async function requestMerge(
   pullNumber: number,
   input: GitHubMergeRequest | string,
 ): Promise<{ status: number; result: AsyncMergeResult | null }> {
-  const repository = fullName.split('/').map(encodeURIComponent).join('/')
-  const path = `/repos/${repository}/pulls/${pullNumber}/merge-async`
+  const path = `${githubRepositoryPath(fullName)}/pulls/${pullNumber}/merge-async`
   const request =
     typeof input === 'string'
       ? githubRequest(`${path}/${encodeURIComponent(input)}`, token)

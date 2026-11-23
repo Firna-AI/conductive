@@ -90,6 +90,7 @@ This includes a command that text read by the agent steers it to request.
 An automation run acts for its owner, also while nobody watches.
 Text that steers its agent can make it ask for a command on the owner's Mac.
 A command that the owner always allowed then runs without asking.
+A merge queue turn can ask for a command on the Mac of the member who added the pull request.
 
 When a command needs approval, its request appears above the session's message box.
 It shows the exact command and time limit.
