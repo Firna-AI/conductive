@@ -31,10 +31,10 @@
 }
 
 /*
- * The repository picker and the branch control at the start, and the place
- * of the workspace at the end. The texts of the header, the message, and
- * the footer start on one line, and the boxes of the notices and the
- * buttons on another.
+ * The repository picker and the branch control at the start, and the
+ * section of the workspace at the end. The texts of the header, the
+ * message, and the footer start on one line, and the boxes of the notices
+ * and the buttons on another.
  */
 .header {
   display: flex;
@@ -46,9 +46,14 @@
   box-sizing: border-box;
 }
 
-.chevron {
-  flex-shrink: 0;
-  color: var(--ui-muted);
+/*
+ * The repository picker and the branch control close right of it. The
+ * plain buttons have their own padding, so they need no gap.
+ */
+.source {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 /* The repository picker, which its open menu hangs from. */
@@ -58,23 +63,9 @@
   min-width: 0;
 }
 
-/*
- * The menu of the org and the section that the new workspace joins, at the
- * end of the header.
- */
+/* The menu of the section that the new workspace joins, at the end. */
 .placeMenu {
   margin-left: auto;
-}
-
-/* The org alone, as plain text, while the sections load. */
-.place {
-  overflow: hidden;
-  min-width: 0;
-  margin-left: auto;
-  color: var(--ui-muted);
-  font-size: var(--ui-text-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* The message, with a chip for each of its files in its text. */

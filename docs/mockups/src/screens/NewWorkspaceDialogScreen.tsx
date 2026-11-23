@@ -197,7 +197,6 @@ export function NewWorkspaceDialogScreen(props: {
       choice={page.choice}
       drop={state.files === 'drop-over'}
       moklyInstance="new-workspace-dialog"
-      place={`${org.name} · ${sections[defaultSection].name}`}
       section={sections[defaultSection].name}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}

@@ -109,7 +109,8 @@ function TargetPart(props: {
  * the labels, the search field, and the Target part stay in view.
  *
  * As the dropdown beside its control opens, the search field takes the
- * focus, and as it closes, the focus goes back to the control. A phone
+ * focus, and as it closes, `returnFocus` gives the focus back to the
+ * control, also when a pick replaced the button of the control. A phone
  * sheet holds the focus itself.
  */
 export function BranchMenu(props: {
@@ -122,9 +123,15 @@ export function BranchMenu(props: {
   /** Reads the list again, after a failed read. */
   retry: () => void
   sheet: boolean
+  /** Gives the focus back to the control as the dropdown closes. */
+  returnFocus?: () => void
 }) {
   const group = useRef<HTMLDivElement>(null)
-  useLayerFocus(group, { modal: false, enabled: !props.sheet })
+  useLayerFocus(group, {
+    modal: false,
+    enabled: !props.sheet,
+    returnFocus: props.returnFocus,
+  })
   const { target } = props.branch
   return (
     <div
