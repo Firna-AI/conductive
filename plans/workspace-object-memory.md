@@ -215,6 +215,10 @@ Projection, under option C of decision 1:
      `files:state:v1:<kind>:order:<i>`. An empty bucket has no key.
    - The digest is the lowercase hex SHA-256 of the bucket's JSON text.
    - Order symbol n is character n of the base64url alphabet, from `A`.
+   - The writer writes no chunk for an empty bucket or list, and no chunk
+     above 65,536 characters. The reader does not reject such records,
+     because they still read back the declared list. This is my ruling of
+     23 November 2026 on the reader review.
    - Modules: `worker/files/bucket-layout.ts` for the constants, the types,
      the hash, the digest, the keys, `parseBucketManifest`, and
      `bucketListKeys`; `worker/files/bucket-read.ts` for `readBucketList`;
