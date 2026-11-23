@@ -41,7 +41,11 @@ decision number names a decision of the change that adds
 - When a turn of that session runs at the time of the answer, the line
   joins that turn, as a message does. That turn keeps its sender.
 - The [wake](session-watches.md#delivery) of a watch follows these rules
-  for its turn, its sender, and its login.
+  for its turn, its sender, and its login. So does a
+  [wake-up](wake-ups-delivery.md#delivery). A wake-up that can start no
+  turn leaves a line, as
+  [A wake-up that can start no turn](wake-ups-delivery.md#a-wake-up-that-can-start-no-turn)
+  says.
 - When the line can start no turn, the app sends nothing. Examples are a
   starter who does not share the login with that sender, a login that is
   gone, and a sender who left the org.
@@ -57,6 +61,10 @@ decision number names a decision of the change that adds
   org again, such as "The agent learns of it when an admin connects Acme's
   Claude login again." Only an admin connects an org login, as
   [The Agents tab](org-logins.md#the-agents-tab) says.
+- The line of a wake-up that could not start names the same action in the
+  same cases, as
+  [The line of a wake-up that could not start](wake-ups-chat.md#the-line-of-a-wake-up-that-could-not-start)
+  says.
 - Reason: a message of another member then opens a new session, as
   [Messages](messages-and-attachments.md#messages) says, so the next
   message does not reach this agent.

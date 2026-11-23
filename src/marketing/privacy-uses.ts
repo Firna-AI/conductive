@@ -162,6 +162,11 @@ export const privacyUsesSection: LegalDocument['sections'][number] = {
         A stop through agent tools also records the sending session.
         This includes a close that stops a running turn. The chat and
         copied transcripts name that session with Stopped from and its link.
+        ${productName} keeps each pending wake-up that an agent sets, with
+        its text, its time, and the member whose turn set it. The chat
+        history keeps the line of each wake-up at its time. It also keeps
+        who cancelled a wake-up, or the sending session of a cancel through
+        agent tools, and the cause when a wake-up could not start.
         The chat history also records
         who used Continue, the new branch, and the branch it starts from.
         It also records who changed the repository of a workspace, the new

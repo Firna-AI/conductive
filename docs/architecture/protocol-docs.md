@@ -41,8 +41,8 @@ This page lists each protocol doc and what it covers.
     the background work of Claude turns with its note and its time limit,
     its port reports, its skills report, and the repair of lost workspace updates.
     - [Background work of Claude turns](../protocol/background-work.md):
-      the wait of a Claude turn for background work, its note, and its time
-      limit.
+      the wait of a Claude turn for background work, its note, its time
+      limit, and the wake-ups of the agent program, which are off.
     - [Listening ports](../protocol/listening-ports.md): the scanner's
       eligibility, labels, limits, and full reports.
     - [Lost workspace updates](../protocol/lost-workspace-updates.md): the
@@ -150,6 +150,13 @@ This page lists each protocol doc and what it covers.
       session of its end.
     - [The `Sent by:` line](../protocol/sent-by-line.md): the line that ends
       the text of each tool message.
+  - [Wake-ups](../protocol/wake-ups.md): the calls that set, list, and
+    cancel a wake-up of a session, and the boundary of a wake-up.
+    - [Wake-ups: delivery and ends](../protocol/wake-ups-delivery.md): the
+      turn that a wake-up starts at its time, a wake-up that can start no
+      turn, and what a Stop, a close, and an Archive do to it.
+    - [Wake-ups: the chat](../protocol/wake-ups-chat.md): the pending
+      wake-ups, their times, the wake-up line, and the end lines.
   - [Section and preview calls](../protocol/section-and-preview-calls.md):
     the calls that create and delete sections, and list, open, and close
     port previews.

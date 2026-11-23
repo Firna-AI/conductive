@@ -35,6 +35,10 @@ A watch can wake the session that set it when a chosen turn ends.
 When a wake starts a new turn, that turn acts for the sender of the turn that set the watch.
 A wake that joins a running turn keeps that turn's sender.
 
+A wake-up lets an agent continue the work of its own session at a later time.
+When a wake-up starts a new turn, that turn acts for the sender of the turn that set the wake-up.
+A wake-up that joins a running turn keeps that turn's sender.
+
 | Action | Account or person it uses |
 | --- | --- |
 | Agent model use | The session's personal or org login, including a chosen endpoint |
@@ -97,7 +101,7 @@ Review the work and resulting workspaces as part of the task you give it.
 
 The workspace tools can list workspaces and usable repositories, sections, and models.
 They list repositories in the org's order.
-They can also list sessions and previews.
+They can also list sessions, previews, and the pending wake-ups of a session.
 They can read details of a workspace, session, or message, and read transcripts across the org.
 This includes workspaces that members created themselves.
 They can also list each org secret's name, description, and environment variable name, without its value.
@@ -122,6 +126,7 @@ The tools can:
 - Create, rename, stop, and close sessions.
 - Send messages to sessions.
 - Watch one turn of a session and wake the session that set the watch when it ends.
+- Set a wake-up that continues the calling session later, and cancel a pending wake-up of a session.
 - Create and delete sections.
 - Open and close private previews.
 - Run a command with a secret that the session may use, or ask members to allow it.
@@ -131,13 +136,14 @@ Tool messages follow the receiving session's login rules.
 These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
-A wake follows current membership and session login rules.
+A wake or a wake-up follows current membership and session login rules.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
-Conductive sets no limit on the number of sessions or messages that agents create.
+Conductive sets no limit on the number of sessions, messages, or wake-ups that agents create.
 Agents that keep replying to each other can spend logins and keep computers running.
 Use **Stop** in each affected session to end its turn.
+Select **Cancel** on a pending wake-up to end it.
 
 - [Follow work sent by another agent](/docs/sessions-and-chat#delegate-work-to-another-session)
 

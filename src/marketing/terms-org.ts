@@ -20,9 +20,9 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         the next task in that workspace. Every member can also move a
         workspace to another repository of the org.`,
       text`The workspace tools let agents read workspace, session, and
-        message details, list sessions and previews, and read chats across
-        the org. They also list each org secret's name, description, and
-        environment variable name.
+        message details, list sessions, previews, and the pending wake-ups
+        of a session, and read chats across the org. They also list each
+        org secret's name, description, and environment variable name.
         Agents can read removed workspaces and their sessions by ID.
         Workspace lists leave out removed workspaces unless the agent asks
         for them.
@@ -34,8 +34,10 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
       text`During a running turn in the calling workspace, the tools can
         also create, rename, move, and archive workspaces across the org.
         They can create, rename, stop, and close sessions, send messages,
-        and watch one turn of a session. They can create and delete
-        sections, and open and close private previews.
+        and watch one turn of a session. They can set a wake-up for the
+        session of that turn, and cancel a pending wake-up of a session.
+        They can create and delete sections, and open and close private
+        previews.
         These actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
@@ -47,6 +49,16 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         A wake that joins a running turn keeps that turn's sender.
         Current membership and session login rules apply at delivery.
         An automatic idle stop keeps the watch.`,
+      text`A wake-up lets an agent continue the work of its session at a
+        time that the agent chose. The cloud computer can stop while the
+        wake-up waits, and the wake-up then starts it again. At that time,
+        the wake-up starts one new turn, or it joins the turn that runs. A
+        new turn acts for the member whose turn set the wake-up, with that
+        member's GitHub token and Mac. A turn that the wake-up joins keeps
+        its sender. Current membership and session login rules apply at
+        that time. Every member sees each pending wake-up in its session
+        and can cancel it. An automatic idle stop keeps each pending
+        wake-up.`,
       text`Only the workspace owner or an org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. The actions ask no separate approval. Previews that agents
@@ -180,14 +192,15 @@ export const termsOrgSection: LegalDocument['sections'][number] = {
         the org, with that member's workspace tool rights.
         Messages follow the same session login rules.`,
       text`A tool message, an accepted late answer to a secret request,
-        or an accepted watch wake can start a stopped workspace's cloud
-        computer.
+        an accepted watch wake, or an accepted wake-up can start a stopped
+        workspace's cloud computer.
         The start follows the same checks as opening the workspace. ${productName}
-        sets no limit on how many sessions or messages agents create.
+        sets no limit on how many sessions, messages, or wake-ups agents
+        create.
         Repeated replies can spend agent logins and keep computers running.
         Use Stop in each affected session to end its turn.
         Stop also drops earlier watch wakes that the session has not
-        accepted yet.`,
+        accepted yet. Cancel ends a pending wake-up.`,
       text`Admins manage the members, repositories, scripts, env vars, and
         agent logins of the org.`,
       text`Every member can add secrets, and replace or delete the secrets

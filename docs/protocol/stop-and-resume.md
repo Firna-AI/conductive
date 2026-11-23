@@ -43,6 +43,9 @@ says. A services decision number names a decision of the change that adds
 - A [service](services.md) is not activity either (services decision 1 B).
   Its processes, its output, its reports, and the reads of its log never
   keep a sandbox running, as [Activity](services.md#activity) says.
+- A pending [wake-up](wake-ups.md) holds no turn. So it never keeps a
+  sandbox running. The idle stop keeps each pending wake-up, as
+  [Stop](wake-ups-delivery.md#stop) says.
 - A stop ends every process in the sandbox. Its files and its agent
   sessions stay. The stop also ends each service, with its definition and
   its log.
@@ -92,6 +95,9 @@ says. A services decision number names a decision of the change that adds
 - An accepted wake of a watch also starts the sandbox of the calling
   session in the same cases, with the same checks. The wake starts or joins
   a turn there, as [Delivery](session-watches.md#delivery) says.
+- An accepted wake-up also starts the sandbox of its session in the same
+  cases, with the same checks. The wake-up starts or joins a turn there,
+  as [Delivery](wake-ups-delivery.md#delivery) says.
 - A failed first start keeps waiting for Try again, as
   [A failed first start](create-a-workspace.md#a-failed-first-start)
   says. An empty session from the agent tools starts nothing.

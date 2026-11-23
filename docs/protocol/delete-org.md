@@ -59,6 +59,9 @@ says.
   once for the schedule times that it missed, as
   [Suspensions and deleted orgs](automations.md#suspensions-and-deleted-orgs)
   says.
+- The wake-ups of a deleted org wait. After a Restore, their delivery
+  follows the current access checks, as
+  [Delivery](wake-ups-delivery.md#delivery) says.
 - An unfinished create continues when its workspace opens after Restore.
   It then gets a new start limit of 20 minutes, the limit of each start in
   [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts).

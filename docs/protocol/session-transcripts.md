@@ -102,9 +102,13 @@ at `app/tabs` and `app/transcripts`.
 - Both copies hold the items of the chat in the order of the chat.
   [What the chat shows](chat-and-events.md#what-the-chat-shows) states
   these items.
+- So both copies end with the pending wake-ups of the session, the
+  soonest first, each with its time in UTC and its text, as
+  [The pending wake-ups](wake-ups-chat.md#the-pending-wake-ups) says.
+  Reason: the chat shows them at the end, in its footer.
 - Their lines use the words of the chat, such as the fold lines, the tool
-  verbs, and the lines of turn ends, end reasons, stops, failures, and lost
-  data.
+  verbs, and the lines of turn ends, end reasons, stops, wake-ups,
+  failures, and lost data.
 - A turn end with an end reason gives the line of that reason before its
   duration and its files, in the order of the chat. An example is
   "Background work stopped at the time limit", as
@@ -147,8 +151,8 @@ at `app/tabs` and `app/transcripts`.
   says.
 - Each message of a member starts with a heading of level 2 that holds the
   display name of its sender, else the GitHub login of the sender.
-- The text never says "You", also not in a stop line. Reason: a pasted
-  copy has no reader whom "you" can name.
+- The text never says "You", also not in a stop line or in the line of a
+  cancel. Reason: a pasted copy has no reader whom "you" can name.
 - In each part of a turn, the work and the answer of the agent start with
   a heading of level 2. It holds "Agent", the model, and the effort, as the
   model picker names them, such as "Agent · Opus 5.5 Max".
@@ -180,6 +184,12 @@ at `app/tabs` and `app/transcripts`.
   states that stop.
 - That link stays whole when the text shows as Markdown, also when an ID
   in it holds `_`.
+- A wake-up line gives the lead and the text of the agent, with no heading
+  of a sender. The line of a cancel and the line of a wake-up that could
+  not start give the time of the wake-up in UTC. A cancel through the
+  workspace tools gives "Cancelled from" and the session link of the
+  sending session, as a stop through the tools does.
+  [Wake-ups: the chat](wake-ups-chat.md) states these lines.
 - A running turn copies as far as it got. A line then says that the agent
   is still working.
 - In the full copy, each tool call is one line of a list. The line gives

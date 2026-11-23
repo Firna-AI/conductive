@@ -280,6 +280,7 @@ Older cloud computers get sub-workspace tools when an automatic software update 
 The computer stops after a set time without user activity and without a running agent turn.
 An open tab alone does not keep it running.
 Using a port preview or the preview of an HTML file does not keep it running either.
+A pending wake-up of an agent does not keep it running.
 A normal stop keeps its files, sessions, and chat history.
 Services do not count as activity and never keep the computer running.
 The stop ends every service and discards its saved command, settings, and logs.
@@ -307,11 +308,15 @@ An accepted watch wake can also start the computer.
 It returns to the session that set the watch.
 The start follows the same checks as opening the workspace.
 
+An accepted [wake-up](/docs/sessions-and-chat#let-an-agent-continue-later) can also start the computer.
+It continues the work of the session that set it.
+The start follows the same checks as opening the workspace.
+
 **Stop** in chat interrupts an agent turn.
 Services keep running after this Stop.
 It is separate from the computer's automatic stop.
 It also drops that session's earlier pending watch wakes.
-An automatic idle stop keeps those watches.
+An automatic idle stop keeps those watches and the pending wake-ups.
 
 ## Restart the software
 
@@ -473,6 +478,7 @@ Archive works while the computer is running, stopped, starting, or has an error.
 Archive does not check for uncommitted files or unpushed commits.
 It asks no confirmation question.
 Archive stops the computer and its agent work at once.
+Pending wake-ups stay, but one whose time comes while the workspace is archived does not start.
 
 Sub-workspaces that are not archived keep working when you archive their parent.
 They take the archived row's place in the list.

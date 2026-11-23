@@ -143,17 +143,20 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         tool rights. Messages follow the same session login rules.`,
       text`A workspace token is a credential for the workspace tools.
         Any program with that token can read workspace, session, and
-        message details, list sessions and previews, and read chats across
-        its org. It can also list each secret's name, description, and
-        environment variable name. These reads need no running turn.
+        message details, list sessions, previews, and the pending wake-ups
+        of a session, and read chats across its org. It can also list each
+        secret's name, description, and environment variable name. These
+        reads need no running turn.
         A copied token keeps this access after the person who copied it
         leaves the org. This access lasts while the token remains valid
         and the org remains active.`,
       text`During a turn in the calling workspace, the tools can also
         create, rename, move, and archive workspaces across the org.
         They can create, rename, stop, and close sessions, send messages,
-        and watch one turn of a session. They can create and delete
-        sections, and open and close private previews.
+        and watch one turn of a session. They can set a wake-up for the
+        session of that turn, and cancel a pending wake-up of a session.
+        They can create and delete sections, and open and close private
+        previews.
         The actions use that turn's sender, who must
         still belong to the org. Each action follows that member's rights
         in the app. The tools can also run a command with each secret that
@@ -164,6 +167,14 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         whose turn set the watch, with that member's GitHub token and Mac.
         A wake that joins a running turn keeps that turn's sender.
         Current membership and session login rules apply at delivery.`,
+      text`A wake-up lets an agent continue the work of its session at a
+        time that the agent chose. At that time, the wake-up starts one new
+        turn, or it joins the turn that runs. A new turn acts for the member
+        whose turn set the wake-up, with that member's GitHub token and Mac.
+        A turn that the wake-up joins keeps its sender. Current membership
+        and session login rules apply at that time. The members of the org
+        see each pending wake-up, with its time and its text, and can cancel
+        it.`,
       text`Only a workspace owner or org admin can archive it.
         An agent can archive the workspace where it runs, which ends its
         turn. Previews that agents open need sign-in and workspace access.

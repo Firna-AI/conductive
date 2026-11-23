@@ -122,6 +122,16 @@ holds how an agent action of the pull request bar sends its fixed prompt.
   the end of the watched turn and the session chip of the watched session,
   as [The wake line](session-watches.md#the-wake-line) says. It shows no
   message of a member.
+- Each pending wake-up of a session shows as a card at the top of the
+  footer of its chat, the soonest first, with Cancel, as
+  [The pending wake-ups](wake-ups-chat.md#the-pending-wake-ups) says.
+- A wake-up that fires shows as one line of the app at its place: "Wake-up:"
+  and the text that the agent set, as
+  [The wake-up line](wake-ups-chat.md#the-wake-up-line) says. It shows no
+  message of a member.
+- A pending wake-up that ends with no turn shows one line of the app at its
+  place. It is the line of a cancel, or the line of a wake-up that could
+  not start, as [End lines](wake-ups-chat.md#end-lines) says.
 - The chat hides the messages that the SDK adds on its own, such as
   "[Request interrupted by user]".
 - Each result of the agent shows with the messages that it answers. One
@@ -162,8 +172,8 @@ view, the scroll after a send, and the place that each tab keeps.
   [Late requests](secret-requests.md#late-requests) says.
 - A message that a member sends during a turn stays in view. It starts a
   new part of the turn, with its own answer and its own fold.
-- A wake line stays in view too, and it never folds. It starts a new part
-  of its turn, as such a message does.
+- A wake line and a wake-up line stay in view too, and they never fold.
+  Each starts a new part of its turn, as such a message does.
 - The answer of a part is its last agent message, with the agent messages
   directly before it. A part with no agent message has no fold.
 - The answer and the work after it stay in view, such as the tool calls

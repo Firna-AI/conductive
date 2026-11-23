@@ -136,6 +136,9 @@ The [marketing site page](marketing-site.md) gives the responsibilities and boun
   temporary value, encrypted, for its time. It hides each exact copy of
   each value that a run used, as
   [Secret requests](../protocol/secret-requests.md) says.
+- It holds the pending wake-ups of the sessions of its workspace, and it
+  delivers each one at its time, as [Wake-ups](../protocol/wake-ups.md)
+  says.
 - It gives each turn its turn token. For each model request, it tells the
   model gateway whether the token still works and which login the turn
   uses.

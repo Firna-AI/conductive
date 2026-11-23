@@ -278,18 +278,20 @@ When your message uses the session's available login, it joins the running turn.
 A turn is one period of work by the agent.
 
 An agent powered by Claude can leave work running in the background, such as a command that watches pull request checks.
-After its reply, the turn stays open while background tasks or scheduled wake-ups remain.
+After its reply, the turn stays open while background tasks remain.
 The chat shows **Working**, and **Stop** stays available.
-When a task ends or a wake-up arrives, the agent continues in the same turn.
-The turn ends when the agent finishes and no background work remains.
+When a task ends, the agent continues in the same turn.
+The turn ends when the agent finishes and no background task remains.
 
 The time limit is 30 days from the start of the first wait.
 The agent's work after a notification also counts toward that limit.
-A message that joins the turn during a wait starts the count again from that message.
+A member's message that joins the turn during a wait starts the count again from that message.
+With current cloud computer software, a wake-up that joins the turn does not.
 If the limit passes during a reply, that reply finishes before the turn ends.
 At that limit, the turn ends with **Background work stopped at the time limit** above its duration and changed files.
 The cloud computer keeps running while the turn waits.
 Ask the agent to stop background work that it does not need, such as a dev server.
+To continue later without a wait, the agent sets a [wake-up](#let-an-agent-continue-later) instead.
 
 For a server that you need after the reply, ask the agent to start a service.
 Services run outside the turn and never keep the cloud computer running.
@@ -310,6 +312,44 @@ A close through the tools that stops a turn uses the same stop line.
 The agent's earlier work folds into a line when a turn ends.
 Select that line to inspect its messages and tool calls.
 The answer stays visible beside it.
+
+## Let an agent continue later
+
+An agent can set a wake-up to continue its work in the same session later.
+For example, it can check a deploy in an hour, or look at a pull request again tomorrow morning.
+The agent sets the wake-up with its workspace tools, then ends its reply.
+Its turn ends, and the cloud computer can stop while the wake-up waits.
+
+Each pending wake-up shows as a card above the message box, the soonest first.
+The card shows its time in your local time, such as **Wake-up tomorrow at 09:00**, and the start of the agent's text.
+Select the card to read the whole text.
+A pending wake-up does not mark the workspace as needing input.
+
+At its time, the wake-up starts the cloud computer if it is stopped.
+The chat shows **Wake-up:** with the agent's text, and the agent continues in a new turn.
+If the agent is already working in that session, the wake-up joins the running turn.
+The turn uses the session's current model, effort, and **Fast** setting.
+
+A wake-up never repeats.
+The agent can set another wake-up during its turn to continue again.
+An automatic idle stop of the cloud computer keeps the pending wake-ups.
+Archive keeps them too.
+A wake-up still starts if you restore the workspace before its time.
+
+Any member can select **Cancel** on a pending wake-up.
+It asks no question.
+The chat then shows who cancelled the wake-up and its time, such as **Priya Raman cancelled the wake-up for tomorrow at 09:00**.
+When an agent cancels a wake-up through its tools, the line shows **Cancelled from** and a link to the sending session.
+An archived or other read-only workspace shows its pending wake-ups without **Cancel**.
+
+A wake-up does not start when the person whose turn set it left the org, or can no longer use the session's login.
+It also does not start when the session's login is gone, or when the workspace is still archived at its time.
+The chat then says that the wake-up could not start, and what lets the agent go on.
+For example: **The agent can go on after Cal connects Claude again.**
+The agent continues after that action and a new message.
+
+Agents can list and cancel the pending wake-ups of any session in the org.
+An older cloud computer gets the wake-up tools when an [automatic software update](/docs/cloud-computer#apply-setup-changes) applies.
 
 ## Read replies and tables
 
@@ -427,6 +467,8 @@ Agents can read the same transcript text through their workspace tools.
 The read uses the concise text by default and can request the full text.
 A long read returns part of the transcript, with its line range and a way to read earlier lines.
 For a stop through an agent's tools, the transcript gives **Stopped from** and the sending session's link.
+The line of a cancelled wake-up, or of one that could not start, gives its time in UTC.
+The transcript ends with the pending wake-ups, the soonest first, each with its time in UTC and the agent's text.
 
 You can copy another tab's conversation without changing the selected tab.
 Both options work in archived and removed workspaces, and in other read-only workspaces.
@@ -475,6 +517,10 @@ Another member's message during a turn does not change its GitHub account, commi
 When a watch wake starts a new turn, its GitHub operations and Mac requests follow the person whose turn set the watch.
 Its commits name that person.
 A wake that joins a running turn keeps that turn's GitHub account, commit author, and receiving Mac.
+
+When a wake-up starts a new turn, its GitHub operations and Mac requests follow the person whose turn set the wake-up.
+Its commits name that person.
+A wake-up that joins a running turn keeps that turn's GitHub account, commit author, and receiving Mac.
 
 An agent tool creates a session or sends a message as the sender of its calling turn.
 That sender must still belong to the org.

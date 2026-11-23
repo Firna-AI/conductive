@@ -25,7 +25,7 @@ export const privacyDocument: LegalDocument = {
   title: legalTitles.privacy,
   description: `The privacy notice of ${productName}.`,
   lead: text`This notice says which personal data ${productName} uses, why
-  it uses it, and who gets it. Effective date: 22 November 2026.`,
+  it uses it, and who gets it. Effective date: 23 November 2026.`,
   sections: [
     {
       title: 'Who is responsible',
@@ -107,6 +107,10 @@ export const privacyDocument: LegalDocument = {
         paragraph`Removing a workspace from the list keeps its chat history
           until the org is deleted. A direct link or a chat link still opens
           its read-only chat.`,
+        paragraph`A pending wake-up stays until it fires, or until it ends
+          earlier, such as by a cancel. It waits while its org is suspended
+          or deleted. It goes with the other data of a deleted org. The chat
+          history keeps each line that a wake-up leaves.`,
         paragraph`${productName} keeps each attached file until the cloud
           computer of its workspace has it and its first start succeeds.
           It then deletes its own copy. The file stays in the cloud computer.

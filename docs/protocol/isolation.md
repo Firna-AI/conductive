@@ -137,8 +137,8 @@ requirements.
 - Risk: every process in a sandbox can read its workspace token, and so can
   every member with a terminal there. With the token, such a process can
   read every chat of the org at any time, also between turns. It can also
-  read each workspace, session, and message of the org, and list the
-  previews of each workspace.
+  read each workspace, session, and message of the org, list the previews
+  of each workspace, and list the pending wake-ups of each session.
 - Risk: a copy of the token keeps these reads after the member who copied
   it leaves the org or is suspended. The copy works until the token stops
   working, as
@@ -153,9 +153,12 @@ requirements.
   does not run, as an open does. Each start counts toward the starts that
   the orgs of its provider account share.
 - Risk: while a turn of its workspace runs, such a process can also
-  rename, move, and archive workspaces, close and stop sessions, change the
-  sections, and open and close previews in the whole org. It acts with the
-  rights of the sender of the turn.
+  rename, move, and archive workspaces, close and stop sessions, cancel
+  wake-ups, change the sections, and open and close previews in the whole
+  org. It acts with the rights of the sender of the turn.
+- Risk: such a process can also set a wake-up for the session of that
+  turn. The wake-up can start a turn for that sender days later, as
+  [The boundary of a wake-up](wake-ups.md#the-boundary-of-a-wake-up) says.
 - So with a turn of an admin, such a process can archive each workspace of
   the org. Archive deletes the cloud computer of a workspace 14 days later.
   Until then, a member can restore the workspace, as

@@ -18,7 +18,9 @@ decision number names a decision of the change that adds
   that a late answer to a secret request starts has the sender of the turn
   that asked, as [Late answers](secret-requests.md#late-answers) says. A
   turn that a wake starts has the sender of the turn that set its watch,
-  as [Delivery](session-watches.md#delivery) says.
+  as [Delivery](session-watches.md#delivery) says. A turn that a wake-up
+  starts has the sender of the turn that set the wake-up, as
+  [Delivery](wake-ups-delivery.md#delivery) says.
 - **Read:** a call that changes nothing: a list, the read of a session, or
   the get of one workspace, session, or message.
 - **Write:** each other call of the workspace tools, except a Mac command
@@ -54,6 +56,11 @@ decision number names a decision of the change that adds
   `run_with_secrets` names no workspace and no session. It uses only the
   grants of the session of the calling turn, as
   [Secret requests](secret-requests.md) says.
+- `schedule_wake_up` names no workspace and no session either. Its wake-up
+  belongs to the session of the calling turn, as
+  [Set a wake-up](wake-ups.md#set-a-wake-up) says. `list_wake_ups` and
+  `cancel_wake_up` name a workspace and a session, and reach each session
+  of the org.
 - [What the workspace tools reach](isolation.md#what-the-workspace-tools-reach)
   states the risks of this reach.
 
@@ -74,6 +81,8 @@ decision number names a decision of the change that adds
 - A write without such a turn gets HTTP 403 with the error code
   `calling_turn_required`. Reason: the Worker takes the sender of a write
   from its record of the calling turn.
+- `schedule_wake_up` and `cancel_wake_up` are writes. `list_wake_ups` is a
+  read, as [Wake-ups](wake-ups.md#the-calls) says.
 - A Mac command request also names its turn, as
   [Who gets a request](agent-tools.md#who-gets-a-request) says.
 
@@ -90,6 +99,8 @@ decision number names a decision of the change that adds
   the member who answered.
 - The record of a turn that a wake starts names the sender of the turn that
   set its watch, as [Delivery](session-watches.md#delivery) says.
+- The record of a turn that a wake-up starts names the sender of the turn
+  that set the wake-up, as [Delivery](wake-ups-delivery.md#delivery) says.
 - At each write, the Worker checks that the sender is still a member of
   the org and is not suspended. Otherwise the write gets HTTP 403 with the
   error code `membership_required`.
@@ -107,6 +118,9 @@ decision number names a decision of the change that adds
 - So every member can rename and move a workspace, rename, close, and stop
   a session, create and delete sections, and open and close previews, as
   in the app.
+- A cancel of a wake-up has the rights of a Stop of its session, as
+  [Cancel a wake-up](wake-ups.md#cancel-a-wake-up) says. So every member
+  can cancel each wake-up, as with Cancel in the app.
 - Every member uses each secret of the org (secrets decision 3 B). So each
   sender can make a run call. Its values still need a grant, as
   [Grants](secrets.md#grants) says.

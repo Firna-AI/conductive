@@ -200,6 +200,9 @@ All are orchestrator calls of 22 November 2026, from the options report, not use
 - The tool text and the agent instructions say: set the wake-up, then end the reply. They say that background tasks and dev servers end when the computer stops. Reason: the computer can stop only after the turn ends.
 - Turn the cron tools off with `disallowedTools` and the environment variable together. Reason: `disallowedTools` is documented, and only the variable stops a durable job from an older run. The options check found that `CronList` and `CronDelete` stay on while that file holds jobs, unless `disallowedTools` removes them.
 - Turn off the bundled `/loop` skill with `skillOverrides`. Reason: without the cron tools, `/loop` fails. The SDK documents this option.
+- A copy and `read_session` end with the pending wake-ups of the session, soonest first, each with its time in UTC and its text. Orchestrator call of 23 November 2026, from docs item 3. Reason: a copy holds the items of the chat in the order of the chat, as `docs/protocol/session-transcripts.md` says, and the chat shows the pending cards.
+- A cancel of an unknown wake-up, or of a wake-up of another session, gets HTTP 404 with the error code `wake_up_not_found`. A cancel of a wake-up that already fired or ended gives a reply that says so, with no error. Orchestrator call of 23 November 2026, from docs item 4. Reason: the other calls answer an unknown ID with a 404 code, and `stop_session` answers a session with no running turn with a reply.
+- Delivery pauses while the org is deleted, as for an org suspension. After a Restore, the current access checks apply. When the app deletes the data of the org, its wake-ups go with it. Orchestrator call of 23 November 2026, from docs item 5. Reason: `docs/protocol/delete-org.md` says that a Restore brings the org back as it was, and each automation runs once after a Restore for the times that it missed.
 
 ## Milestone 1: Mockups
 
@@ -224,13 +227,22 @@ Depends on: 1
 
 Use the `docs implementor` action. State the requirements and the decisions above. Keep the mechanics in this plan.
 
-- [ ] Write `docs/protocol/wake-ups.md`: the calls, the time input, delivery, Stop, Cancel, the chat, and the boundary that a running turn sets each wake-up and only the Worker fires it.
-- [ ] Update `docs/protocol/background-work.md`: wake-ups of the agent program are off and are no live work. Keep the rejected rule and say why a wake-up keeps it.
-- [ ] Update `stop-and-resume.md`, `agent-tools.md`, `agent-tool-access.md`, `agent-instructions.md`, and `chat-and-events.md`.
-- [ ] Add the new doc to `docs/architecture/protocol-docs.md`. In `docs/architecture.md`, add the terms, and change the term "Background work", which today names the wake-ups of the agent program.
-- [ ] Update the wait text of `src/marketing/docs/sessions-and-chat.md`. Read each other public guide in full, and update each sentence that restates a changed fact.
-- [ ] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full. Update each sentence that restates a changed fact. A Terms change sets the effective date.
-- [ ] Check each relative link of each changed Markdown file.
+- [x] Write `docs/protocol/wake-ups.md`: the calls, the time input, delivery, Stop, Cancel, the chat, and the boundary that a running turn sets each wake-up and only the Worker fires it.
+- [x] Update `docs/protocol/background-work.md`: wake-ups of the agent program are off and are no live work. Keep the rejected rule and say why a wake-up keeps it.
+- [x] Update `stop-and-resume.md`, `agent-tools.md`, `agent-tool-access.md`, `agent-instructions.md`, and `chat-and-events.md`.
+- [x] Add the new doc to `docs/architecture/protocol-docs.md`. In `docs/architecture.md`, add the terms, and change the term "Background work", which today names the wake-ups of the agent program.
+- [x] Update the wait text of `src/marketing/docs/sessions-and-chat.md`. Read each other public guide in full, and update each sentence that restates a changed fact.
+- [x] Read `src/marketing/terms.ts` and `src/marketing/privacy.ts` in full. Update each sentence that restates a changed fact. A Terms change sets the effective date.
+- [x] Check each relative link of each changed Markdown file.
+
+The linked page `docs/protocol/wake-ups-delivery.md` states decisions 6 and 7 as open, and it links their headings in this plan. Replace those links with the chosen rules before the pull request deletes this plan. The report is `.context/agent-wake/reports/m2-docs.md`. The docs made these calls on 23 November 2026. Each is a docs call, not a user decision:
+
+- The delivery part and the chat part of the new doc are the linked pages `docs/protocol/wake-ups-delivery.md` and `docs/protocol/wake-ups-chat.md`. Reason: the length target of a protocol doc.
+- The line of a cancel through the tools also names the wake-up by its time. Reason: a session can have several wake-ups, as for the line of a member.
+- An archived workspace refuses a cancel through the tools, as it refuses a Stop. Reason: a cancel has the rights of a Stop.
+- `list_wake_ups` gives the ID, the time in Unix milliseconds and in UTC, and the text of each pending wake-up. Reason: the reply of a schedule gives the same fields, and the agent needs the text to tell its wake-ups apart.
+- The public guide leaves a closed session out of the cases where a wake-up could not start. Reason: decision 7 can change that case.
+- The Privacy page also takes the effective date of 23 November 2026. Reason: the page says that each change updates its date.
 
 ## Milestone 3: Worker wake-ups and shared contracts
 

@@ -69,7 +69,9 @@ each feature.
   of the turn that asked, as
   [Late answers](protocol/secret-requests.md#late-answers) says. A turn
   that the wake of a watch starts has the sender of the turn that set the
-  watch, as [Delivery](protocol/session-watches.md#delivery) says.
+  watch, as [Delivery](protocol/session-watches.md#delivery) says. A turn
+  that a wake-up starts has the sender of the turn that set the wake-up,
+  as [Delivery](protocol/wake-ups-delivery.md#delivery) says.
 - **Starter:** the member who started a session. The starter of a session
   never changes.
 - **Agent login:** the key, the token, the sign-in, or the own endpoint
@@ -129,8 +131,15 @@ each feature.
   while its background work runs, up to a time limit, as
   [Background work](protocol/agent-runner.md#background-work) says.
 - **Background work:** the tasks that a Claude agent runs in the
-  background, such as a command or a subagent, and the wake-ups that it
-  schedules. A wake-up is a prompt for the agent at a later time.
+  background, such as a command or a subagent. It holds no wake-up, as
+  [Wake-ups of the agent program](protocol/background-work.md#wake-ups-of-the-agent-program)
+  says.
+- **Wake-up:** the record of the Worker that asks to start one turn in one
+  session at a later time. A running turn of that session sets it through
+  the workspace tools. The cloud computer can stop while it waits.
+  [Wake-ups](protocol/wake-ups.md) states the wake-ups.
+- **Wake-up line:** the line of the app that a wake-up adds to its session
+  at its time. It starts or joins a turn there.
 - **Workspace token:** a secret of one workspace. Its sandbox uses the
   token to call the Worker.
 - **Secret:** a named value of an org that agents use in one command at a

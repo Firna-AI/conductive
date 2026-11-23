@@ -25,6 +25,7 @@ and the separate preview domain.
 | The values of the secrets | The Worker's storage, encrypted |
 | The names and descriptions of the secrets, their grants, and their reveals | D1 |
 | The secret requests that wait, and the temporary values | The workspace Durable Object, with each value encrypted |
+| The pending wake-ups of the sessions | The workspace Durable Object |
 | The host of each own endpoint login | D1 |
 | The Boat key, the E2B key, and the other keys of the Worker | Worker secrets |
 | Chat history and banner state                                                | The workspace Durable Object             |

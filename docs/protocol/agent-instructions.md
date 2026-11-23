@@ -121,6 +121,10 @@ of agents as pictures in their answers, as
   - The workspace tools also watch one turn of a session of the org. The
     instructions give the guidance of
     [Tool descriptions and guidance](session-watches.md#tool-descriptions-and-guidance).
+  - The workspace tools also set a wake-up that continues the work of the
+    session at a later time, and list and cancel the wake-ups of a session
+    of the org. The instructions give the guidance of
+    [Tool descriptions and guidance](wake-ups.md#tool-descriptions-and-guidance).
   - The agent names a file or a folder of the repository in a chat reply
     as `@` and its path inside the repository, such as `@src/app.ts` or
     `@src/app.ts:42`. The chat shows each one as a file chip, as

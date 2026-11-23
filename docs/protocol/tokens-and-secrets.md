@@ -32,12 +32,13 @@ that doc says.
   - make the reads of the agent tools in its org, at any time: list and get
     the workspaces, list the repositories of its org image, the sections
     of its org, and the models of the app, list, read, and get the
-    sessions, get the messages, and list the previews (decisions 257 and
-    277)
+    sessions, get the messages, list the wake-ups of a session, and list
+    the previews (decisions 257 and 277)
   - make the writes of the agent tools in its org while a turn of its
     workspace runs: create, rename, move, and archive workspaces, start,
-    rename, close, stop, and watch sessions, send messages, create and
-    delete sections, and open and close previews (decision 277)
+    rename, close, stop, and watch sessions, send messages, set a wake-up
+    for the session of that turn, cancel wake-ups, create and delete
+    sections, and open and close previews (decision 277)
   - ask for a command on the Mac of the sender of a turn that runs now,
     through the agent tools
   - list the secrets of its org at any time, and run a command with the
