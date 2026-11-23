@@ -1,6 +1,7 @@
 //! Workspace tool requests, replies, and their dependent wire records.
 
 pub mod device;
+pub mod merge_queue;
 pub mod previews;
 pub mod resources;
 pub mod secret_results;

@@ -108,6 +108,8 @@ and the publication of the events. It also gives the creates and resumes.
 when the next run comes, and when the start sets the provider auto-stop.
 [Turn recovery and the shown state](recovery-and-shown-state.md) gives the
 turn repair from the committed chat and the one writer of the shown state.
+Archive, Continue, and repository change use the prior workspace binding
+to remove its [merge queue entry](../merge-queue/README.md).
 
 ### Continue
 

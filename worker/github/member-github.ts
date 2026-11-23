@@ -1,4 +1,4 @@
-import type { AppEnv } from '../env'
+import type { AppDependencies, AppEnv } from '../env'
 import { freshGitHubUserToken } from '../security/github-tokens'
 import { GitHubReader } from './client'
 import type { GitHubWorkspace } from './contracts'
@@ -6,15 +6,10 @@ import { authorizeMerge } from './merge-access'
 import { readMergeCapabilities } from './merge-capabilities'
 import type { GitHubMergeDependencies } from './merge-handler'
 
-/**
- * The GitHub access of one member to the repository of a workspace, for the
- * writes of the bar, such as Merge and Ready for review. Each GitHub
- * request checks again that the member may still reach the workspace and
- * that its repository and branch did not change.
- */
-export async function memberGitHub(
+/** Check the workspace binding around each use of the member's token. */
+export async function repositoryMemberGitHub(
   env: AppEnv,
-  dependencies: GitHubMergeDependencies,
+  dependencies: AppDependencies,
   workspace: GitHubWorkspace,
   userId: string,
 ) {
@@ -32,13 +27,29 @@ export async function memberGitHub(
       await authorize()
     }
   }
+  const capabilities = () =>
+    checked(() => readMergeCapabilities(fetch, token, workspace))
+  return { authorize, token, fetch, checked, capabilities }
+}
+
+export async function memberGitHub(
+  env: AppEnv,
+  dependencies: GitHubMergeDependencies,
+  workspace: GitHubWorkspace,
+  userId: string,
+) {
+  const access = await repositoryMemberGitHub(
+    env,
+    dependencies,
+    workspace,
+    userId,
+  )
+  const { authorize, token, fetch, checked } = access
   const reader = new GitHubReader(
     { ...dependencies, fetch, token: async () => token },
     workspace,
     token,
   )
-  const capabilities = () =>
-    checked(() => readMergeCapabilities(fetch, token, workspace))
   const branches = () => checked(() => reader.dependenciesForBranch())
   /**
    * Reads the GitHub state of the branch with the app's token, and pushes
@@ -49,5 +60,5 @@ export async function memberGitHub(
     await dependencies.refresh(workspace, { userId, requireWritable: true })
     await authorize()
   }
-  return { authorize, token, fetch, checked, capabilities, branches, refresh }
+  return { ...access, branches, refresh }
 }

@@ -119,6 +119,7 @@ Send `POST /api/operator/orgs/<orgId>/suspension` with `{}` through the same gat
 `orgSuspensionPath` builds the encoded path.
 The reply is `OrgSuspensionResponse`, with `orgId` and the other fields of a user suspension.
 The action covers every owner and starter in the org.
+It also empties the org's [merge queues](../merge-queue/README.md).
 [Org suspension](suspension-actions.md#suspend-an-org) gives the checks and cleanup.
 
 ## Lift a suspension

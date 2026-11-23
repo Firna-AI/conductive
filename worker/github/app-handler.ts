@@ -6,6 +6,7 @@ import {
 import type { AppEnv } from '../env'
 import { errorResponse, HttpError, privateResponse } from '../http'
 import { gate } from '../security/gate'
+import { queueBarState } from '../merge-queue/read'
 import type {
   GitHubRefreshWorkspace,
   GitHubSnapshot,
@@ -44,13 +45,27 @@ async function readBody(
   userId: string,
   dependencies: GitHubAppDependencies,
 ) {
-  if (route === '/stored')
-    return storedBody(env, workspace, await dependencies.stored(workspace))
+  if (route === '/stored') {
+    const [stored, queue] = await Promise.all([
+      dependencies.stored(workspace),
+      queueBarState(env.DB, workspace),
+    ])
+    return {
+      ...(await storedBody(env, workspace, stored)),
+      ...(queue ? { queue } : {}),
+    }
+  }
   const snapshot = await dependencies.refresh(workspace, { userId })
   if (snapshot === null) throw githubFailure()
   if (route === '/checks') return snapshot.checks satisfies GitHubChecksResponse
-  const labels = await githubBranchLabels(env, workspace)
-  return { banner: labels(snapshot.banner) } satisfies GitHubBannerResponse
+  const [labels, queue] = await Promise.all([
+    githubBranchLabels(env, workspace),
+    queueBarState(env.DB, workspace),
+  ])
+  return {
+    banner: labels(snapshot.banner),
+    ...(queue ? { queue } : {}),
+  } satisfies GitHubBannerResponse
 }
 
 /** App endpoint. This handler owns its gate. Do not gate the same request twice. */

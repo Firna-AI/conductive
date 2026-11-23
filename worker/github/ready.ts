@@ -2,7 +2,7 @@ import type {
   GitHubReadyRequest,
   GitHubReadyResponse,
 } from '../../src/shared/github'
-import type { AppEnv } from '../env'
+import type { AppEnv, HttpFetch } from '../env'
 import { HttpError } from '../http'
 import type { GitHubWorkspace } from './contracts'
 import { memberGitHub } from './member-github'
@@ -42,6 +42,23 @@ const readyRefused = () =>
     'Not marked ready: GitHub refused the change.',
   )
 
+export async function markPullRequestReady(
+  fetch: HttpFetch,
+  token: string,
+  id: string,
+): Promise<void> {
+  const reply = object(
+    await githubJson(
+      fetch,
+      githubRequest('/graphql', token, {
+        method: 'POST',
+        body: JSON.stringify({ query: MARK_READY, variables: { id } }),
+      }),
+    ),
+  )
+  if (reply.errors !== undefined) throw readyRefused()
+}
+
 /**
  * Marks the draft pull request of the workspace branch ready for review, as
  * the member, with the member's own GitHub token. It needs write access,
@@ -75,24 +92,8 @@ export async function markReady(
     throw githubFailure()
   const pull = object(repository.pullRequest)
   if (text(pull.state) !== 'OPEN') throw readyRefused()
-  if (pull.isDraft === true) {
-    const reply = object(
-      await checked(() =>
-        githubJson(
-          fetch,
-          githubRequest('/graphql', token, {
-            method: 'POST',
-            body: JSON.stringify({
-              query: MARK_READY,
-              variables: { id: text(pull.id) },
-            }),
-          }),
-        ),
-      ),
-    )
-    // GitHub names the reason in its errors, which stay on the server.
-    if (reply.errors !== undefined) throw readyRefused()
-  }
+  if (pull.isDraft === true)
+    await checked(() => markPullRequestReady(fetch, token, text(pull.id)))
   await member.refresh()
   return { state: 'ready' }
 }

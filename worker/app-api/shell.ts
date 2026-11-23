@@ -21,6 +21,7 @@ import {
   shellWorkspaces,
 } from './shell-data'
 import { workspaceChildId } from './workspace-path'
+import { listMergeQueueFields } from './list-merge-queue'
 import {
   requireWritableWorkspace,
   workspaceBinding,
@@ -56,16 +57,24 @@ export async function shellRoute(
       return Response.json(await listMembers(env.DB, orgId, userId))
     if (path === workspacesPath(orgId)) {
       const rows = await shellWorkspaces(env.DB, orgId, userId)
+      const fields = await listMergeQueueFields(
+        env,
+        dependencies,
+        orgId,
+        userId,
+        rows,
+      )
       return Response.json({
         workspaces: await Promise.all(
-          rows.map((row) =>
-            workspaceForViewer(
+          rows.map(async (row) => ({
+            ...(await workspaceForViewer(
               env,
               userId,
               workspaceView(row, env.APP_ORIGIN),
               row.readThroughEventNumber,
-            ),
-          ),
+            )),
+            ...(await fields(row)),
+          })),
         ),
       })
     }

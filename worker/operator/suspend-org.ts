@@ -5,6 +5,7 @@ import { imageRuntime } from '../lifecycle/runtime'
 import type { WorkspaceRuntime } from '../lifecycle/workspace-runtime'
 import { orgBuilds, orgWorkspaces, recordOrgSuspension } from './org-data'
 import { stopRecordedComputers } from './stop-computers'
+import { leaveOrgQueues } from '../merge-queue/wake'
 
 export async function suspendOrg(
   runtime: WorkspaceRuntime,
@@ -56,5 +57,6 @@ export async function suspendOrg(
     pendingWorkspaceIds,
     pendingBuildIds,
   )
+  await leaveOrgQueues(env, orgId)
   return { ...org, pendingWorkspaceIds, pendingBuildIds }
 }

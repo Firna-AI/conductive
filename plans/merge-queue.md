@@ -887,24 +887,26 @@ Depends on: 3
 
 The tables, the coordinator object, and the member routes.
 
-- [ ] Add a migration range to `migrations/README.md`, and a migration
+- [x] Add a migration range to `migrations/README.md`, and a migration
       with the queue and entry tables.
-- [ ] Add the queue Durable Object name and its alarm on the `Workspace`
+- [x] Add the queue Durable Object name and its alarm on the `Workspace`
       class, as the image coordinator does.
-- [ ] Add the routes: add, remove, and re-order, through the queue object,
+- [x] Add the routes: add, remove, and re-order, through the queue object,
       with the access check of write access, the org, the suspension, and
       the archive rules.
-- [ ] Add one leave step for every cause that the design names, and wake
+- [x] Add one leave step for every cause that the design names, and wake
       the queue object from an archive, Continue, and a repository change.
-- [ ] Add the member stack unit rule (decision 315).
-- [ ] Carry the viewer's write access to each repository in the list read,
+- [x] Add the member stack unit rule (decision 315).
+- [x] Carry the viewer's write access to each repository in the list read,
       for the row menu and the drag.
-- [ ] Carry the GitHub base of each open pull request beside its bar state
+- [x] Carry the GitHub base of each open pull request beside its bar state
       in the list read, for the rule that shows Add to merge queue.
-- [ ] Add the queue entries to the list read and the queue state to the bar
+- [x] Add the queue entries to the list read and the queue state to the bar
       read.
-- [ ] Tests for each route, each refusal, and each isolation rule: a member
+- [x] Tests for each route, each refusal, and each isolation rule: a member
       reaches only the queues of the org's repositories.
+
+Verification logs are listed in `.context/merge-queue/m4-checks.md`.
 
 ## Milestone 5: Fix turns as the queuer
 

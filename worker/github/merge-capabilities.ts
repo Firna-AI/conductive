@@ -32,7 +32,7 @@ interface RepositoryMergeCapabilities extends GitHubCapabilities {
 export async function readMergeCapabilities(
   fetch: HttpFetch,
   token: string,
-  workspace: GitHubWorkspace,
+  workspace: Pick<GitHubWorkspace, 'repositoryId' | 'fullName'>,
 ): Promise<RepositoryMergeCapabilities> {
   const [owner, name] = workspace.fullName.split('/')
   const result = await graphql(fetch, token, CAPABILITIES, { owner, name })

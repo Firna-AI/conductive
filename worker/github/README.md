@@ -344,6 +344,8 @@ The GitHub tests that store state run on the production workspace object in Mini
 - [output.ts](output.ts) adds the masked labels `displayBranch`, `displayBaseBranch`, and `displayBaseMoved` to the banner of the fresh and stored replies of `app-handler.ts`, with the secret values of the last start of the sandbox. The chat backend labels each `github.updated` event, as [Branch and path labels](../chat/integration/README.md#branch-and-path-labels) says. Snapshots and receipts keep the real names.
 - [refresh.ts](refresh.ts) checks dependencies and schedules bounded fresh reads.
 - [client.ts](client.ts) reads current GitHub state and follows pagination. Its `defaultBranch` reads the current default branch for Continue. Its `aheadBy` counts the commits of a head that a base branch does not hold.
+- [queue-pulls.ts](queue-pulls.ts) reads open pull requests, their GitHub bases, and the rules of the queue's trunk with a member token.
+  The banner and stored reads include the [merge queue state](../merge-queue/README.md) for a queued workspace.
 - [stack-client.ts](stack-client.ts) lists stacks for one pull request and reads, creates, extends, and unstacks them.
   [stack-parsers.ts](stack-parsers.ts) reads layers from REST responses and stack membership from webhooks.
   An unstack returns the remaining stack or null when GitHub dissolves it.

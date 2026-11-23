@@ -100,6 +100,7 @@ UI and wiring milestones normally need no migration. Their ranges stay reserved.
 | Agent workspace calls | `202611111200`–`202611111259` |
 | Parallel image sources | `202611161200`–`202611161259` |
 | Sub-workspaces | `202611161700`–`202611161759` |
+| Merge queue storage and routes | `202611231200`–`202611231259` |
 
 ## Key code
 
@@ -614,3 +615,10 @@ The previous schema and write shapes therefore keep working. Its old
 row. The new reader explicitly excludes those rows. The
 [provider switch guide](../worker/lifecycle/provider-switches.md) gives
 the atomic transition into execution and the separate execution deadline.
+
+`202611231200_merge_queue.sql` adds `merge_queues` and
+`merge_queue_entries`. The tables store the repository trunk, stack number,
+entry places, units, queuers, states, and step times. Their foreign keys
+remove entries when their workspaces or queues are deleted. The previous
+Worker can keep writing the existing tables. The
+[merge queue backend](../worker/merge-queue/README.md) owns the new tables.

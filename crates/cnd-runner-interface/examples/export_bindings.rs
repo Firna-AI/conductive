@@ -139,6 +139,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     tools::session_reads::AgentReadSessionResponse::export_all(&cfg)?;
     tools::session_reads::AgentTranscriptWindow::export_all(&cfg)?;
     tools::workspaces::AgentCreateWorkspaceRequest::export_all(&cfg)?;
+    tools::merge_queue::MergeQueueBarState::export_all(&cfg)?;
+    tools::merge_queue::ReorderMergeQueue::export_all(&cfg)?;
     tools::workspaces::AgentCreateWorkspaceResponse::export_all(&cfg)?;
     tools::workspaces::AgentListWorkspacesRequest::export_all(&cfg)?;
     tools::workspaces::AgentListWorkspacesResponse::export_all(&cfg)?;

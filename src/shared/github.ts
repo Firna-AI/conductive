@@ -1,4 +1,5 @@
 import type { GitHubSummary } from './generated/GitHubSummary'
+import type { MergeQueueBarState } from './generated/MergeQueueBarState'
 import type { Timestamp } from './generated/Timestamp'
 import { workspacePath } from './workspaces'
 
@@ -136,6 +137,7 @@ export function githubSummary(banner: GitHubBanner): GitHubSummary | null {
 
 export interface GitHubBannerResponse {
   banner: GitHubBanner
+  queue?: MergeQueueBarState
 }
 export interface GitHubChecksResponse {
   state: 'waiting-for-pull-request' | 'available'
@@ -148,4 +150,5 @@ export interface GitHubChecksResponse {
  */
 export interface GitHubStoredResponse {
   state: { banner: GitHubBanner; checks: GitHubChecksResponse } | null
+  queue?: MergeQueueBarState
 }

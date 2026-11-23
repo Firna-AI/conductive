@@ -30,6 +30,7 @@ export class RepositoryGitHub {
   pageSize = 100
   commitDates = new Map<string, string>()
   deniedTokens = new Set<string>()
+  branchRules = new Map<string, readonly { type: string }[]>()
   readonly merges = new RepositoryMerges()
   readonly stacks = new RepositoryStacks(this)
   failure: Response | null = null
@@ -80,6 +81,7 @@ export class RepositoryGitHub {
   private pullPage(pull: RepositoryPull) {
     return {
       ...pull,
+      id: `PR_${pull.number}`,
       ...this.pullChecks(pull, null, null),
       latestOpinionatedReviews: this.page(pull.reviews, null),
     }
@@ -133,7 +135,10 @@ export class RepositoryGitHub {
     const base =
       request.method === 'PATCH' &&
       url.pathname.match(/^\/repos\/([^/]+)\/([^/]+)\/pulls\/(\d+)$/)
-    const rest = stack || base
+    const rules = url.pathname.match(
+      /^\/repos\/([^/]+)\/([^/]+)\/rules\/branches\/([^/]+)$/,
+    )
+    const rest = stack || base || rules
     if (rest) {
       if (
         `${decodeURIComponent(rest[1])}/${decodeURIComponent(rest[2])}` !==
@@ -148,6 +153,12 @@ export class RepositoryGitHub {
         await this.onRequest?.('Stacks')
         const number = stack[3] === undefined ? undefined : Number(stack[3])
         return this.stacks.fetch(request, number, stack[4])
+      }
+      if (rules) {
+        await this.onRequest?.('BranchRules')
+        return Response.json(
+          this.branchRules.get(decodeURIComponent(rules[3])) ?? [],
+        )
       }
       await this.onRequest?.('ChangePullBase')
       return changeFakePullBase(this, request, Number(rest[3]))
@@ -199,9 +210,14 @@ export class RepositoryGitHub {
         repository,
         this.merges.capabilities(repositoryToken(request)),
       )
-    } else if (operation === 'BannerLookup') {
+    } else if (operation === 'BannerLookup' || operation === 'QueuePull') {
       const tip = this.branches.get(String(variables.ref))
-      const states = Array.isArray(variables.states) ? variables.states : []
+      const states =
+        operation === 'QueuePull'
+          ? ['OPEN']
+          : Array.isArray(variables.states)
+            ? variables.states
+            : []
       const pulls = Object.values(this.pulls)
         .filter(
           (pull) =>

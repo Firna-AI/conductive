@@ -2,6 +2,7 @@
 import type { AgentChoice } from './AgentChoice.js'
 import type { ArchivedComputer } from './ArchivedComputer.js'
 import type { GitHubSummary } from './GitHubSummary.js'
+import type { MergeQueueEntry } from './MergeQueueEntry.js'
 import type { MessageSender } from './MessageSender.js'
 import type { Timestamp } from './Timestamp.js'
 import type { WorkspaceState } from './WorkspaceState.js'
@@ -62,6 +63,18 @@ export type Workspace = {
    * github.
    */
   github: GitHubSummary | null
+  /**
+   * The entry when this workspace is in the merge queue.
+   */
+  mergeQueue?: MergeQueueEntry
+  /**
+   * Whether the viewing member can write to the repository on GitHub.
+   */
+  githubCanWrite?: boolean
+  /**
+   * The base branch of the open pull request on GitHub.
+   */
+  githubPullBase?: string
   /**
    * created at.
    */
