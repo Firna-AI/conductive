@@ -1,8 +1,7 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
-import { Plus } from 'lucide-react'
-import { ActionButton } from '../components/common/actions'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { SearchField } from '../components/common/SearchField'
+import { searchField } from '../entries/components/common/SearchField.mockup'
 import {
   DisableCodeDialog,
   NewCodeDialog,
@@ -151,9 +150,13 @@ export function OperatorCodesScreen(props: {
     <OperatorPage
       actions={
         <ScreenLink asChild to={paths.operatorCodesNew}>
-          <ActionButton icon={Plus} tone="primary">
+          <actionButton.Component
+            icon="plus"
+            moklyInstance="new-code"
+            tone="primary"
+          >
             New code
-          </ActionButton>
+          </actionButton.Component>
         </ScreenLink>
       }
       dialog={
@@ -170,8 +173,9 @@ export function OperatorCodesScreen(props: {
       waitlist={waitlist}
     >
       {signUps === 'open' ? <SignUpsSection waitlist={waitlist} /> : null}
-      <SearchField
+      <searchField.Component
         label="Search codes"
+        moklyInstance="search-codes"
         placeholder="Code, label, or GitHub login"
         query={found.query}
       />

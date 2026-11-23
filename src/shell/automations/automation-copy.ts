@@ -2,8 +2,8 @@ import {
   eventLabels,
   scheduleLabels,
   triggersSummary,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
+} from '../../ui/components/automations/triggerCopy'
+import { activityPresentation } from '../../ui/components/workspaces/status'
 import type { CronProblem } from '../../app/automation-cron'
 import type {
   AutomationRun,
@@ -35,7 +35,7 @@ export function runStateLabel(state: AutomationRun['state']): string {
 }
 
 /**
- * The triggers of an automation in the words of the mockups, such as "Weekly on
+ * The triggers of an automation in the shared words, such as "Weekly on
  * Monday at 08:00, PR opened". The words name no author filter, so the
  * words of a pull request trigger read only its event.
  */

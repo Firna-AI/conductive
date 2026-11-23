@@ -2,7 +2,7 @@
 
 import { act } from 'react'
 import { describe, expect, test, vi } from 'vitest'
-import { productName } from '../../../docs/mockups/src/brand'
+import { productName } from '../../shared/brand'
 import { HeldRequests, ManualDelay } from '../../app/test-kit'
 import { codexDevicePath } from '../../shared/account'
 import { byRole } from '../../test-support/dom-queries'

@@ -1,11 +1,12 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
 import {
   previewTabLabel,
   serverDescription,
-} from '../../../../docs/mockups/src/components/tools/previewCopy'
+} from '../../../ui/components/tools/previewCopy'
 import { useNavigation } from '../../../app/navigation'
 import type { RenderedTab } from '../../../chat/components/tab-row'
+import { OpenInNewTab } from '../../../previews/PreviewFrame'
 import { previewOfPort, visiblePreviews } from '../../../previews/previewsState'
 import type { WorkspaceContext } from '../features'
 import { SandboxPanel } from '../SandboxNotice'
@@ -43,6 +44,8 @@ export interface PreviewCentre {
  * another tab shows, until its tab closes or the sandbox stops. Reload
  * loads the page of the shown tab again, or asks for a new open after a
  * failure. While the sandbox does not run, the shown tab holds its state.
+ * Expand shows the page of the shown tab in its large window. The window
+ * closes at Close, and when another tab shows or the page goes.
  */
 export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
   const navigation = useNavigation()
@@ -56,6 +59,7 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
   const [reloads, setReloads] = useState<ReadonlyMap<number, number>>(
     () => new Map(),
   )
+  const [expanded, setExpanded] = useState<number | null>(null)
   if (port !== null && !mounted.includes(port)) setMounted([...mounted, port])
 
   useEffect(() => {
@@ -94,6 +98,11 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
         })
     : []
 
+  const shownFrame = frames.find((each) => each.port === port) ?? null
+  if (expanded !== null && (!desktop || shownFrame?.port !== expanded)) {
+    setExpanded(null)
+  }
+
   const reload = () => {
     if (port === null) return
     if (shown.preview === null) {
@@ -119,6 +128,9 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
       <PreviewTabPage
         error={shown.error}
         listFailed={shown.listFailed}
+        onExpand={
+          desktop && shownFrame ? () => setExpanded(shownFrame.port) : null
+        }
         onReload={reload}
         port={port}
         preview={shown.preview}
@@ -126,9 +138,24 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
     )
   }
 
+  const labelOf = (each: number) =>
+    previewTabLabel(
+      each,
+      state.ports?.find((server) => server.port === each),
+    )
+  const expandedFrame =
+    shownFrame && expanded === shownFrame.port
+      ? {
+          title: labelOf(shownFrame.port),
+          open: <OpenInNewTab preview={shownFrame.preview} />,
+          reload,
+          close: () => setExpanded(null),
+        }
+      : null
+
   const renderTab = (tab: SavedPreviewTab): RenderedTab => {
     const server = state.ports?.find((each) => each.port === tab.port)
-    const label = previewTabLabel(tab.port, server)
+    const label = labelOf(tab.port)
     const description = server ? serverDescription(server) : undefined
     return {
       title: label,
@@ -156,6 +183,12 @@ export function usePreviewCentre(context: WorkspaceContext): PreviewCentre {
   return {
     renderTab,
     content,
-    kept: desktop ? <KeptPreviewFrames frames={frames} shown={port} /> : null,
+    kept: desktop ? (
+      <KeptPreviewFrames
+        expanded={expandedFrame}
+        frames={frames}
+        shown={port}
+      />
+    ) : null,
   }
 }

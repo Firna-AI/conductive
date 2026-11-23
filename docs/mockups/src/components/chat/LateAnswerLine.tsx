@@ -1,8 +1,8 @@
 import { KeyRound } from 'lucide-react'
 import type { MemberGrant } from '../../fixtures/secretRequests'
-import { lateAnswerWords } from './secretRunCopy'
-import lineStyles from './LinkedLine.module.css'
-import styles from './LateAnswerLine.module.css'
+import { lateAnswerWords } from '../../../../../src/ui/components/chat/secretRunCopy'
+import lineStyles from '../../../../../src/ui/components/chat/LinkedLine.module.css'
+import styles from '../../../../../src/ui/components/chat/LateAnswerLine.module.css'
 
 /**
  * The line of a late Allow, at the place where its turn starts (secrets

@@ -23,6 +23,31 @@ export const publishedRepositorySource = `${publishedImageSource}
     AND json_extract(repository.value, '$.orgId') = s.org_id
     AND ${activeOrgIdPredicate('s.org_id')}`
 
+export async function currentImageRepositoryReadiness(
+  db: D1Database,
+  orgId: string,
+): Promise<{ imageReady: boolean; repositoryIds: Set<string> }> {
+  const image = await db
+    .prepare(
+      `SELECT j.repositories_json AS repositoriesJson ${publishedImageSource}
+       JOIN orgs o ON o.id = s.org_id AND o.provider_account = i.provider_account
+       WHERE s.org_id = ?`,
+    )
+    .bind(orgId)
+    .first<{ repositoriesJson: string }>()
+  const repositories = image
+    ? readRepositories(JSON.parse(image.repositoriesJson))
+    : []
+  return {
+    imageReady: image !== null,
+    repositoryIds: new Set(
+      repositories
+        .filter((repository) => repository.orgId === orgId)
+        .map((repository) => repository.id),
+    ),
+  }
+}
+
 export type ImageAdmissionFailure = 'image_required' | 'repository_not_found'
 
 export async function imageAdmissionError(

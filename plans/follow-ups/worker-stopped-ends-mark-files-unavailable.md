@@ -1,0 +1,36 @@
+# Worker stopped ends report unknown files as none
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, review finding 6, with a test problem that the check of that finding found.
+- **Location:** `worker/chat/turn-completion.ts:84` (`TurnCompletion.stopped`), `worker/chat/workspace-stop.ts` (`stopDispatchedTurns`), `worker/lifecycle/automatic-restart.ts` (the call of `chat.stopTurnsForRestart`), `worker/lifecycle/automatic-restart.test.ts` (the replacement runner in the test of a waiting message beside a running turn), `docs/protocol/agent-runner.md:101-106`, `docs/protocol/chat-and-events.md:98-104`.
+- **Reason:** A Medium product bug with the likelihood Rare waits for a later branch under the fix rule. The shared fix reaches each stop path of the Worker, beyond the purpose of the branch.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Stopped end:** the `turn.completed` event with the state `stopped` that closes a turn in the chat history.
+  - **`filesUnavailable` mark:** the field of a `turn.completed` event that marks the changed files of the turn as unknown, so that the chat shows "Changed files unavailable".
+  - **Started turn:** a turn that the Worker sent to the runner and marked `started` at the send (`worker/chat/delivery-state.ts`).
+  - **Automatic restart:** the restart that the Worker starts by itself when the runner stays away while a message waits ("Automatic restart" in `docs/protocol/restart-the-software.md`).
+- **Background:**
+  - `docs/protocol/agent-runner.md:101-106`: a `turn.completed` event carries `filesUnavailable: true` when the runner cannot tell which files the turn changed. A restart that ends a started turn is an example. With the mark, an empty file list means an unknown list. Without it, the same list means that the turn changed no files.
+  - `docs/protocol/chat-and-events.md:98-104`: the chat never says that such a turn changed no files. An empty list was rejected, because it says that the turn changed no files.
+  - The Worker writes its own stopped end in `TurnCompletion.stopped` (`worker/chat/turn-completion.ts:84`). `stopDispatchedTurns` uses it at a workspace stop, at a lifecycle error, and before the automatic restart sends its restart command. `TurnLifecycle.stop` and the close of a session use it for a queued turn.
+  - A restarted runner sends its own stopped end for each turn that it accepted before the restart. That end carries `filesUnavailable: true` when the turn had started (`recovered_end` in `crates/cnd-runner/src/state/turns.rs:98-112`). The Worker keeps that later end as late data, because the turn already ended.
+  - In `worker/lifecycle/automatic-restart.test.ts`, one test restarts while a waiting message shares a running turn. Its replacement runner first sent a stopped end without the mark. The review fix of the branch changed that test. The replacement now sends `filesUnavailable: true`, so the test models a real runner.
+- **Problem:** The stopped end that the Worker writes for a started turn has an empty file list and no `filesUnavailable` mark. The Worker cannot know which files that turn changed. So the chat says that the turn changed no files.
+- **Impact if no action:** The transcript leaves out the "Changed files unavailable" notice. It can stay that way when the runner never sends its own end.
+- **Root question:** How does a stopped turn show that its changed files are unknown?
+- **Options:**
+  - **A.** Set `filesUnavailable` on the stopped ends that the Worker writes for started turns during the automatic restart only. Assert the mark in the restart test. Effort: Small.
+  - **B.** Make the shared completion code mark the files unavailable each time that it ends a started turn without a file result. Add one sentence to `docs/protocol/agent-runner.md` and one to `docs/protocol/chat-and-events.md`: a stopped end that the Worker writes for a started turn also carries the mark. Effort: Small.
+  - **C.** Wait for the saved end of the runner, and publish an unavailable result when readiness or the time limit comes first. Effort: Medium.
+- **Left out:** A read of the current branch diff, because it cannot show which files changed during that turn.
+- **Wider fix:** B. Each stopped end that the Worker writes then uses the same rule for unknown files.
+- **Previous examples:** Commit `727357140` fixed the changed-file list of stopped turns. Commit `277cd4488` added the unavailable result for failed file reads.
+- **Related:**
+  - `plans/follow-ups/failed-restart-keeps-running-sessions.md`: the same code, the stopped ends that a failed restart writes.
+  - `plans/follow-ups/restart-hold-delivery-after-submission.md`: the same code, the stopped ends that `stopTurnsForRestart` writes.
+  - `plans/follow-ups/runner-readiness-per-process.md`: only option C here waits for it, because C needs a fresh readiness signal.
+- **Recommendation:** B. It prevents the same wrong file result in each stop path.
+- **Action:** fix after merge, apply B, because a Medium product bug with the likelihood Rare gets fix after merge.

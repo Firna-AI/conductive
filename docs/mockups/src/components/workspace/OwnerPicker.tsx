@@ -6,14 +6,15 @@ import {
   type Person,
   type PersonKey,
 } from '../../fixtures/members'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { Menu, type MenuEntry } from '../common/Menu'
+import { menu } from '../../entries/components/common/Menu.mockup'
+import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { ScreenLink } from '../common/ScreenLink'
-import a11y from '../common/a11y.module.css'
-import { useControlSizes } from '../common/touch'
-import { PersonAvatar } from '../orgs/OrgTile'
-import styles from './OwnerPicker.module.css'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
+import styles from '../../../../../src/ui/components/workspace/OwnerPicker.module.css'
 
 /**
  * The members whom an admin can make the owner of a workspace, with the
@@ -22,15 +23,13 @@ import styles from './OwnerPicker.module.css'
  * cloud computer keeps running. One exception: a workspace whose stop for
  * a suspended owner has not finished still stops.
  */
-export function reassignMenu(owner: PersonKey): MenuEntry[] {
+export function reassignMenu(owner: PersonKey): MenuEntryData[] {
   return [
     { kind: 'label', label: 'Owner' },
-    ...acmeMembers.map((membership): MenuEntry => ({
+    ...acmeMembers.map((membership): MenuEntryData => ({
       kind: 'item',
       label: people[membership.person].name,
-      mark: (
-        <PersonAvatar initials={people[membership.person].initials} size={18} />
-      ),
+      mark: { kind: 'person', initials: people[membership.person].initials },
       checked: membership.person === owner,
     })),
     { kind: 'divider' },
@@ -56,12 +55,12 @@ export function OwnerPicker(props: {
 }) {
   const control = useControlSizes()
   const { owner } = props
-  const avatar = <PersonAvatar initials={owner.initials} size={18} />
+  const avatar = <personAvatar.Component initials={owner.initials} size={18} />
   if (props.readOnly) {
     return (
       <span className={styles.plain} title={`Owner: ${owner.name}`}>
         {props.compact ? (
-          <PersonAvatar initials={owner.initials} size={24} />
+          <personAvatar.Component initials={owner.initials} size={24} />
         ) : (
           avatar
         )}
@@ -73,7 +72,7 @@ export function OwnerPicker(props: {
     )
   }
   const content = props.compact ? (
-    <PersonAvatar initials={owner.initials} size={24} />
+    <personAvatar.Component initials={owner.initials} size={24} />
   ) : (
     <span className={styles.trigger} style={{ fontSize: control.labelSize }}>
       {avatar}
@@ -109,9 +108,10 @@ export function OwnerPicker(props: {
         </ScreenLink>
       )}
       {props.open && !props.compact ? (
-        <Menu
+        <menu.Component
           entries={reassignMenu(owner.key)}
           label="Owner"
+          moklyInstance="owner-menu"
           placement="below-end"
           wide
         />

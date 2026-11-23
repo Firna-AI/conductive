@@ -2,19 +2,16 @@ import { useEffect } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { InputFrame } from '@firna/ui/input'
 import { CirclePause, Copy, DoorOpen } from 'lucide-react'
-import { InlineText } from '../../../docs/mockups/src/components/common/InlineText'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import { InlineText } from '../../ui/components/common/InlineText'
+import { Notice } from '../../ui/components/common/Notice'
+import { StatusText } from '../../ui/components/common/StatusText'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   inviteCodeCopy as copy,
   type InviteState,
-} from '../../../docs/mockups/src/components/settings/inviteCodeCopy'
-import styles from '../../../docs/mockups/src/components/settings/InviteCodeSection.module.css'
-import {
-  Section,
-  SectionText,
-} from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/settings/inviteCodeCopy'
+import styles from '../../ui/components/settings/InviteCodeSection.module.css'
+import { Section, SectionText } from '../../ui/components/settings/Section'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import { joinPath, type WaitlistStateResponse } from '../../shared/waitlist'

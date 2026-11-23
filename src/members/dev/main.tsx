@@ -1,8 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
-import '../../../docs/mockups/src/render.css'
+import { themeFor, tokensCss } from '../../ui/theme'
+import '../../ui/render.css'
 import { DevHost } from './DevHost'
 import { readDevOptions } from './devOptions'
 

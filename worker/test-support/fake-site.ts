@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { githubSetupCopy } from '../../docs/mockups/src/screens/githubSetupCopy'
+import { githubSetupCopy } from '../../src/ui/screens/githubSetupCopy'
 import {
   GITHUB_SETUP_PAGES,
   SITE_FILE_LIST,

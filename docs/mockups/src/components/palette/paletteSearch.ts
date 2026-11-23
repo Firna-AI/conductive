@@ -1,5 +1,5 @@
 import { repositories } from '../../fixtures/repositories'
-import { workspaceLabel } from '../workspaces/label'
+import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
 import type { WorkspaceRow } from '../workspaces/sections'
 import type { PaletteRow } from './paletteContent'
 

@@ -28,6 +28,7 @@ export const accountRows = [
   'Sign-in',
   'GitHub',
   'Agents',
+  'Favourites',
   'New workspaces',
   'Keyboard shortcuts',
 ]

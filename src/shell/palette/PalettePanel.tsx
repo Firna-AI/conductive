@@ -1,12 +1,13 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
-import styles from '../../../docs/mockups/src/components/palette/CommandPalette.module.css'
+import { useId, useRef, useState, type KeyboardEvent } from 'react'
+import styles from '../../ui/components/palette/CommandPalette.module.css'
 import type { PaletteController } from '../../app/palette/controller'
 import { paletteResults } from '../../app/palette/palette-results'
 import type { PaletteRow } from '../../app/palette/palette-rows'
 import type { PaletteQuery } from '../../app/palette/palette-source'
 import { useNow } from '../../app/time'
 import { ActionButton } from '../ui/actions'
-import { Overlay, useLayerFocus, usePressOutside } from '../ui/Overlay'
+import { Overlay, useLayerFocus } from '../ui/Overlay'
+import { usePressOutside } from '../ui/press-outside'
 import { trapTab } from '../ui/Sheet'
 import { useViewport } from '../ui/viewport'
 import local from './palette.module.css'
@@ -45,16 +46,12 @@ export function PalettePanel(props: { controller: PaletteController }) {
   const id = useId()
   const close = () => controller.close()
   // The dialog of the palette does not hold the palette key: the key closes it.
-  useLayerFocus(panel, { modal: true, owner: controller })
+  // The field takes the focus as the dialog opens, and back from a control
+  // that goes away, such as a filter after a change of the tab, because the
+  // keys of the palette work only there.
+  useLayerFocus(panel, { modal: true, owner: controller, initial: fieldRef })
   usePressOutside(!phone, panel, close)
   const focusField = () => fieldRef.current?.focus()
-  // A control that goes away, such as a filter after a change of the tab,
-  // takes the focus with it. The field takes the lost focus back, so the
-  // keys of the palette still work.
-  useEffect(() => {
-    const active = document.activeElement
-    if (active === null || active === document.body) focusField()
-  })
   const results = paletteResults(query, source)
   const rows = results.groups.flatMap((group) => group.rows)
   const active = rows.length === 0 ? -1 : Math.min(highlight, rows.length - 1)

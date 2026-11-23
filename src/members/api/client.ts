@@ -20,6 +20,7 @@ import {
   type BuildsResponse,
   type OrgSettings,
   type RepositoriesResponse,
+  type SkillsRepositoryLookupResponse,
 } from '../../shared/org-settings'
 import {
   deleteOrgPath,
@@ -47,6 +48,7 @@ import {
   parseBuilds,
   parseRepositories,
   parseSettings,
+  parseSkillsLookup,
 } from './parseSettings'
 
 /** The browser's `fetch`, or a fake with the same shape. */
@@ -95,6 +97,8 @@ export interface MembersApi {
   restoreOrg(orgId: string): Promise<OrgSummary>
   repositories(orgId: string): Promise<RepositoriesResponse>
   settings(orgId: string): Promise<OrgSettings>
+  /** What the lookup of the saved skills repository finds on GitHub now. */
+  skills(orgId: string): Promise<SkillsRepositoryLookupResponse>
   builds(orgId: string): Promise<BuildsResponse>
   build(orgId: string, buildId: string): Promise<BuildResponse>
 }
@@ -203,6 +207,7 @@ export function createMembersApi(fetch: FetchLike): MembersApi {
     repositories: (orgId) =>
       get(orgSettingsPaths.repositories(orgId), parseRepositories),
     settings: (orgId) => get(orgSettingsPaths.settings(orgId), parseSettings),
+    skills: (orgId) => get(orgSettingsPaths.skills(orgId), parseSkillsLookup),
     builds: (orgId) => get(orgSettingsPaths.builds(orgId), parseBuilds),
     build: (orgId, buildId) => get(buildPath(orgId, buildId), parseBuild),
   }

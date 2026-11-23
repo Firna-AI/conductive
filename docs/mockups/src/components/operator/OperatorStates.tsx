@@ -1,16 +1,16 @@
-import type { Viewport } from '@mokly/mokly'
-import { CircleAlert, RotateCw } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { StatTileRow } from '@firna/ui/chart'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Table } from '@firna/ui/table'
-import { ActionButton } from '../common/actions'
-import { Notice } from '../common/Notice'
-import { Section } from '../settings/Section'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { instanceKey } from '../../instanceKey'
 import { orgColumns, orgTableSize } from './LargestOrgs'
 import { longRunColumns } from './LongRuns'
-import { longRunsWords } from './longRunsCopy'
-import tiles from './OperatorTiles.module.css'
-import list from './WorkspaceStates.module.css'
+import { longRunsWords } from '../../../../../src/ui/components/operator/longRunsCopy'
+import tiles from '../../../../../src/ui/components/operator/OperatorTiles.module.css'
+import list from '../../../../../src/ui/components/operator/WorkspaceStates.module.css'
 
 /** A placeholder tile takes the least width of a real tile. */
 const tileStyle = { flex: 1, minWidth: 120 }
@@ -49,7 +49,7 @@ export function OperatorLoading(props: { viewport: Viewport }) {
   return (
     <>
       <TilePlaceholders />
-      <Section title="Workspaces">
+      <section.Component moklyInstance="workspaces-section" title="Workspaces">
         <ul aria-hidden className={list.list}>
           {stateKeys.map((key) => (
             <li className={list.row} key={key}>
@@ -60,8 +60,11 @@ export function OperatorLoading(props: { viewport: Viewport }) {
             </li>
           ))}
         </ul>
-      </Section>
-      <Section title={longRunsWords.title}>
+      </section.Component>
+      <section.Component
+        moklyInstance="long-runs-section"
+        title={longRunsWords.title}
+      >
         <Table
           accessibilityLabel={longRunsWords.title}
           cell={() => null}
@@ -72,13 +75,20 @@ export function OperatorLoading(props: { viewport: Viewport }) {
           rows={[]}
           size={orgTableSize[props.viewport]}
         />
-      </Section>
+      </section.Component>
       {chartTitles.map((title) => (
-        <Section key={title} title={title}>
+        <section.Component
+          key={title}
+          moklyInstance={`${instanceKey(title)}-section`}
+          title={title}
+        >
           <SkeletonBar height={180} radius="md" />
-        </Section>
+        </section.Component>
       ))}
-      <Section title="Largest orgs">
+      <section.Component
+        moklyInstance="largest-orgs-section"
+        title="Largest orgs"
+      >
         <Table
           accessibilityLabel="Largest orgs"
           cell={() => null}
@@ -89,7 +99,7 @@ export function OperatorLoading(props: { viewport: Viewport }) {
           rows={[]}
           size={orgTableSize[props.viewport]}
         />
-      </Section>
+      </section.Component>
     </>
   )
 }
@@ -97,9 +107,14 @@ export function OperatorLoading(props: { viewport: Viewport }) {
 /** The numbers could not load. Try again reads them again. */
 export function OperatorError() {
   return (
-    <Notice
-      action={<ActionButton icon={RotateCw}>Try again</ActionButton>}
-      icon={CircleAlert}
+    <notice.Component
+      action={
+        <actionButton.Component icon="rotate-cw" moklyInstance="retry-numbers">
+          Try again
+        </actionButton.Component>
+      }
+      icon="circle-alert"
+      moklyInstance="numbers-error"
       title="The numbers could not load"
       tone="danger"
     />

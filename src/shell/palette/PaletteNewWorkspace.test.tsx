@@ -47,6 +47,6 @@ test('New workspace in the palette opens the saved dialog over the current page,
   }).toEqual({
     address: routes.createOrg(),
     palette: false,
-    place: 'Acme · General',
+    place: 'General',
   })
 })

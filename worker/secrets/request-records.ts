@@ -89,6 +89,25 @@ export class SecretRequestRecords {
     )
   }
 
+  async workspaceValueNames(): Promise<string[]> {
+    const names: string[] = []
+    for (const key of await this.keys(`${ROOT}value:`)) {
+      const item = record(await readSecretRecord(this.data, key))
+      if (item.sessionId === null && item.expiresAt === null)
+        names.push(string(item.name))
+    }
+    return names
+  }
+
+  async workspaceValueName(id: string): Promise<string | null> {
+    const value = await readSecretRecord(this.data, `${ROOT}value:${id}`)
+    if (value === undefined) return null
+    const item = record(value)
+    return item.sessionId === null && item.expiresAt === null
+      ? string(item.name)
+      : null
+  }
+
   async values(): Promise<TemporarySecret[]> {
     const values: TemporarySecret[] = []
     for (const key of await this.keys(`${ROOT}value:`)) {

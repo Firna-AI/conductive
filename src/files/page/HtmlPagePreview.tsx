@@ -1,14 +1,15 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { CircleAlert, RotateCw } from 'lucide-react'
-import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
-import { htmlPreviewCopy } from '../../../docs/mockups/src/components/files/htmlPreviewCopy'
-import { PageFrame } from '../../../docs/mockups/src/components/files/PageFrame'
+import { CircleAlert, Maximize2, RotateCw } from 'lucide-react'
+import { LogoTile } from '../../ui/components/brand/Logo'
+import { htmlPreviewCopy } from '../../ui/components/files/htmlPreviewCopy'
+import { PageFrame } from '../../ui/components/files/PageFrame'
 import {
+  expandedPreviewCopy,
   previewOpenFailedCopy,
   previewOpeningCopy,
-} from '../../../docs/mockups/src/components/tools/previewCopy'
-import opening from '../../../docs/mockups/src/screens/PreviewOpeningScreen.module.css'
+} from '../../ui/components/tools/previewCopy'
+import opening from '../../ui/screens/PreviewOpeningScreen.module.css'
 import { ActionButton, IconButton } from '../ui/actions'
 import { EmptyState } from '../ui/EmptyState'
 import type { HtmlPreview } from './html-preview'
@@ -83,11 +84,12 @@ export function HtmlPageBody(props: { preview: HtmlPreview }) {
 }
 
 /**
- * Reload and Open of the page in the header, while the page opens or
- * shows, as the bar of a Preview tab has them. Open waits for the files
- * preview.
+ * Reload, Expand, and Open of the page in the header, while the page opens
+ * or shows, as the bar of a Preview tab has them. Open waits for the files
+ * preview. Expand shows only on desktop, while the page shows.
  */
 export function HtmlPageActions(props: { preview: HtmlPreview }) {
+  const { expand } = props.preview
   return (
     <>
       <IconButton
@@ -95,6 +97,13 @@ export function HtmlPageActions(props: { preview: HtmlPreview }) {
         label="Reload"
         onPress={props.preview.reload}
       />
+      {expand ? (
+        <IconButton
+          icon={Maximize2}
+          label={expandedPreviewCopy.expand}
+          onPress={expand}
+        />
+      ) : null}
       {props.preview.open}
     </>
   )

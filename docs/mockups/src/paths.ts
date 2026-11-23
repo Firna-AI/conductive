@@ -92,6 +92,19 @@ export const paths = {
   operatorOrgDeletedSuspend: 'app/operator/org/deleted/suspend',
   operatorOrgDeletedSuspended: 'app/operator/org/deleted/suspended',
   operatorOrgDeletedLift: 'app/operator/org/deleted/lift',
+  operatorOrgSwitch: 'app/operator/org/switch',
+  operatorOrgSwitchRunningBuild: 'app/operator/org/switch/running-build',
+  operatorOrgSwitchThreeAccounts: 'app/operator/org/switch/three-accounts',
+  operatorOrgSwitchSuspended: 'app/operator/org/switch/suspended',
+  operatorOrgSwitchWaiting: 'app/operator/org/switch-waiting',
+  operatorOrgSwitchWaitingSuspended:
+    'app/operator/org/switch-waiting/suspended',
+  operatorOrgSwitchWaitingLift: 'app/operator/org/switch-waiting/lift',
+  operatorOrgSwitchWaitingAdmin: 'app/operator/org/switch-waiting/no-admin',
+  operatorOrgSwitchBuild: 'app/operator/org/switch-build',
+  operatorOrgSwitchBuildStop: 'app/operator/org/switch-build/stop',
+  operatorOrgSwitchFailed: 'app/operator/org/switch-build/failed',
+  operatorOrgSwitched: 'app/operator/org/switched',
   operatorUsers: 'app/operator/users',
   operatorUsersSearch: 'app/operator/users/search',
   operatorUsersNone: 'app/operator/users/none',
@@ -128,6 +141,8 @@ export const paths = {
   operatorCodesWaitlistOffPaused: 'app/operator/codes/waitlist-off/paused',
   operatorProviders: 'app/operator/providers',
   operatorProvidersSaved: 'app/operator/providers/saved',
+  operatorSettings: 'app/operator/settings',
+  operatorSettingsSaved: 'app/operator/settings/saved',
   newWorkspace: 'app/new-workspace',
   firstBuildWorkspace: 'app/new-workspace/first-build',
   newWorkspaceFiles: 'app/new-workspace/files',
@@ -229,6 +244,7 @@ export const paths = {
   image: 'app/files/image',
   imageNotDrawn: 'app/files/image/cannot-draw',
   imageFromAnswer: 'app/files/image/from-answer',
+  imageExpanded: 'app/files/image/expanded',
   html: 'app/files/html',
   htmlSource: 'app/files/html/source',
   htmlOpening: 'app/files/html/opening',
@@ -243,6 +259,8 @@ export const paths = {
   closeTerminal: 'app/tools/terminals/close',
   preview: 'app/tools/preview',
   previewAnotherPort: 'app/tools/preview/another-port',
+  previewExpanded: 'app/tools/preview-expanded',
+  htmlExpanded: 'app/tools/preview-expanded/html',
   desktop: 'app/tools/desktop',
   macPrompt: 'mac-app/commands',
   macAllowAll: 'mac-app/commands/allow-all',
@@ -274,3 +292,4 @@ export const paths = {
 } as const
 
 export { barPaths, checksPaths } from './bannerPaths.ts'
+export { branchPaths } from './branchPaths.ts'

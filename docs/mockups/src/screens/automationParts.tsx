@@ -1,7 +1,7 @@
 import type { Viewport } from '@mokly/mokly'
-import { Menu } from '../components/common/Menu'
-import { Sheet } from '../components/common/Sheet'
-import { ActionButton } from '../components/common/actions'
+import { menu } from '../entries/components/common/Menu.mockup'
+import { sheet } from '../entries/components/common/Sheet.mockup'
+import { actionButton } from '../entries/components/common/actions.mockup'
 import { AuthorFilter } from '../components/automations/AuthorFilter'
 import { PromptBox } from '../components/automations/PromptBox'
 import {
@@ -16,7 +16,7 @@ import {
   eventLabels,
   hasPullRequestTrigger,
   hasSchedule,
-} from '../components/automations/triggerCopy'
+} from '../../../../src/ui/components/automations/triggerCopy'
 import type { CapabilitiesControl } from '../components/capabilities/CapabilitiesButton'
 import { agents } from '../fixtures/agents'
 import { unlistedLabels } from '../fixtures/endpointModels'
@@ -27,7 +27,7 @@ import type { Automation } from '../fixtures/automations'
 import { paths } from '../paths'
 import { AutomationNote } from './automationNote'
 import type { AutomationAccess, AutomationState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /**
  * The screens of the run workspaces that the mockups draw, by run: a run
@@ -151,23 +151,29 @@ export function PhoneSheet(props: {
 }) {
   if (props.menu) {
     return (
-      <Sheet title="Add trigger">
-        <Menu
+      <sheet.Component moklyInstance="add-trigger-sheet" title="Add trigger">
+        <menu.Component
           entries={addTriggerEntries}
           label="Add trigger"
+          moklyInstance="add-trigger-menu"
           placement="sheet"
         />
-      </Sheet>
+      </sheet.Component>
     )
   }
   const edit = props.edits.find((item) => item.filterOpen)
   if (!edit || edit.trigger.kind !== 'pull-request') return null
   return (
-    <Sheet title={`Authors for ${eventLabels[edit.trigger.event]}`}>
+    <sheet.Component
+      moklyInstance="authors-sheet"
+      title={`Authors for ${eventLabels[edit.trigger.event]}`}
+    >
       <div className={styles.sheetBody}>
         <AuthorFilter edit={edit} />
-        <ActionButton tone="primary">Done</ActionButton>
+        <actionButton.Component moklyInstance="done" tone="primary">
+          Done
+        </actionButton.Component>
       </div>
-    </Sheet>
+    </sheet.Component>
   )
 }

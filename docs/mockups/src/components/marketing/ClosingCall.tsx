@@ -1,5 +1,5 @@
-import type { Viewport } from '@mokly/mokly'
-import { classes } from '../common/classes'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { SiteActions } from './SiteActions'
 import styles from './ClosingCall.module.css'
 
@@ -15,7 +15,7 @@ export function ClosingCall(props: {
     <section className={classes(styles.call, mobile && styles.mobile)}>
       <h2 className={styles.title}>{props.title}</h2>
       <p className={styles.text}>{props.text}</p>
-      <SiteActions stack={mobile} to={props.signIn} />
+      <SiteActions place="closing" stack={mobile} to={props.signIn} />
     </section>
   )
 }

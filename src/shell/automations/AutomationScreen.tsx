@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { SearchX } from 'lucide-react'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
+import { EmptyState } from '../../ui/components/common/EmptyState'
 import { newAutomationDraft } from '../../app/automation-draft'
 import { automationModel } from '../../app/automation-model'
 import { routes, type AutomationTab } from '../../app/router'
@@ -67,6 +67,7 @@ function SavedAutomation(props: {
   const model = automationModel(orgModel, props.automationId)
   const automation = useStore(model.automation)
   const runLogin = useStore(model.runLogin)
+  const chosenSecrets = useStore(model.chosenSecrets)
   const runs = useStore(model.runs.shown)
   const repositories = useStore(orgModel.repositories)
   const sections = useStore(orgModel.sections)
@@ -99,6 +100,7 @@ function SavedAutomation(props: {
   const shared = {
     repositories: repositories.state === 'ready' ? repositories.value : [],
     sections: sections.state === 'ready' ? sections.value : [],
+    chosenSecrets: valueOf(chosenSecrets) ?? null,
     tab: props.tab,
     runs: {
       runs,

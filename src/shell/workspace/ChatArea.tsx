@@ -3,15 +3,16 @@ import type { WorkspaceStart } from '../../shared/generated/WorkspaceStart'
 import {
   replacesComposer,
   type SandboxNoticeState,
-} from '../../../docs/mockups/src/components/workspace/sandboxNoticeState'
+} from '../../ui/components/workspace/sandboxNoticeState'
 import { routes } from '../../app/router'
 import { useServices } from '../../app/services'
 import { useStore } from '../../app/store'
 import type { ComposerFocus } from '../../chat/components/composer-requests'
-import type { ChatHost } from '../../chat/components/SessionChat'
+import type { ChatHost } from '../../chat/components/session-parts'
 import type { ChatController } from '../../chat/state/controller'
 import type { RenderTab } from '../../chat/components/tab-row'
 import { WorkspaceChatView } from '../../chat/WorkspaceChat'
+import { useStartFailedNotice } from '../capabilities/StartFailedNotice'
 import {
   usePreloadedCapabilities,
   workspaceCapabilities,
@@ -21,6 +22,7 @@ import { useGo } from '../ui/AppLink'
 import type { Action } from '../ui/useAction'
 import { useFeatures, type WorkspaceContext } from './features'
 import { useChatFiles } from './files/chat-files'
+import { useGitHubFeed } from './github/WorkspaceGitHub'
 import {
   KeptPageFrames,
   PageFrames,
@@ -128,9 +130,12 @@ function KeptChat(props: {
  * read-only workspace shows its chat read-only. The chat shows the open
  * file tabs, and on desktop the file or diff tab of the address in place of
  * the chat of its session. The composer of the chat gets the Capabilities
- * tool of the workspace. A host that gives the `tabs`, `transcript`, or
- * `composer` slot gets the shell's own column with those slots instead. A
- * `center` part of the host takes the place of the chat.
+ * tool of the workspace. The Mac app shows a notice over the composer
+ * if a grant of this Mac did not start after the create.
+ * A host that gives the `tabs`, `transcript`, or `composer` slot gets the
+ * shell's own column with those slots. A `center` part of the host takes
+ * the place of the chat. The chat gets the GitHub state of the workspace
+ * branch while it shows, so the New session text can use its label.
  */
 export function ChatArea(props: {
   context: WorkspaceContext
@@ -144,6 +149,9 @@ export function ChatArea(props: {
   const { context, notice } = props
   const { sandbox, workspace } = context
   const phone = context.viewport === 'phone'
+  const startNotice = useStartFailedNotice(workspace.id)
+  const github = useGitHubFeed()?.state
+  const banner = github?.status === 'ready' ? github.snapshot.banner : null
   const starting =
     sandbox === 'starting' && props.start ? (
       <StartingCard start={props.start} />
@@ -200,6 +208,8 @@ export function ChatArea(props: {
           starting,
           sandboxBar,
           keepsComposer,
+          notice: startNotice,
+          github: banner,
           tools: [
             workspaceCapabilities({
               org: context.org,

@@ -1,6 +1,6 @@
 import { Avatar } from '@firna/ui/avatar'
 import { useSharedUiTheme } from '@firna/ui/theme'
-import { orgTileTint } from '../../../docs/mockups/src/design/orgColors'
+import { orgTileTint } from '../../ui/design/orgColors'
 import { orgColorOf } from '../../shared/org-colors'
 import type { MessageSender } from '../../shared/generated/MessageSender'
 import { orgInitials, personInitials } from '../../app/people'

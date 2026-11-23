@@ -4,7 +4,7 @@ import {
   type FileRowMenu,
 } from '../components/files/FileRowMenu'
 import type { FileList } from '../components/files/FilesPanel'
-import { replacesComposer } from '../components/workspace/sandboxNoticeState'
+import { replacesComposer } from '../../../../src/ui/components/workspace/sandboxNoticeState'
 import { mentionEntries } from '../fixtures/fileMentions'
 import { splitPath } from '../fixtures/files'
 import { listsShow, sandboxNotice } from './workspaceSandbox'

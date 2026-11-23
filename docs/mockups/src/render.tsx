@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import type { RenderInput } from '@mokly/mokly'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
-import { themeFor, tokensCss } from './theme'
-import './render.css'
+import { themeFor, tokensCss } from '../../../src/ui/theme'
+import '../../../src/ui/render.css'
 
 /** Wraps each screen in the Firna theme and the tokens of its scheme. */
 export default function render(input: RenderInput): ReactNode {

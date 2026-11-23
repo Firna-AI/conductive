@@ -39,6 +39,7 @@ beforeEach(async () => {
   await harness.reset()
   harness.env.CONDUCTIVE_MODELS = JSON.stringify(operatorModels)
   harness.env.CONDUCTIVE_DEFAULT_CHOICE = JSON.stringify(choice)
+  harness.env.CONDUCTIVE_STARTING_FAVOURITES = JSON.stringify([choice])
 })
 afterAll(async () => harness.dispose())
 
@@ -50,6 +51,7 @@ it('boots from operator models and persists account preferences and encrypted se
   const initial = readAccount(await account.json())
   expect(initial).toMatchObject({
     defaultChoice: choice,
+    favourites: [choice],
     newWorkspaceView: 'dialog',
     agentLogins: [
       { agent: 'claude', connected: false },

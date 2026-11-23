@@ -1,5 +1,5 @@
 import type { Agent } from '../../shared/generated/Agent'
-import styles from '../../../docs/mockups/src/components/chat/AgentMark.module.css'
+import styles from '../../ui/components/chat/AgentMark.module.css'
 
 /** The names of the agents, for marks, notices, and screen readers. */
 export const agentNames: Readonly<Record<Agent, string>> = {

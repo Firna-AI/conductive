@@ -72,12 +72,28 @@ export function warningTurnEndState(
   return TURN_END_STATES.find((state) => state === value) ?? 'unknown'
 }
 
+/**
+ * Fixed provider codes that may appear in logs. The codes after
+ * `delete_confirmation_required` are the Boat codes that say why a create,
+ * a resume, or a fork failed.
+ */
 const PROVIDER_CODES = [
   'invalid_path',
   'invalid_name',
   'not_found',
   'save_in_progress',
   'delete_confirmation_required',
+  'resume_failed',
+  'sandbox_stopping',
+  'snapshot_data_expired',
+  'type_too_small',
+  'no_ready_machine',
+  'rate_limited',
+  'limit_reached',
+  'member_limit_reached',
+  'machine_class_plan_required',
+  'environment_forbidden',
+  'unknown_environment',
 ] as const
 
 const HTTP_CODES = [

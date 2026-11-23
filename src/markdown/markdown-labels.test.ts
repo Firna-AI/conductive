@@ -62,21 +62,13 @@ const readers = [
     name: 'chatParts',
     read: (text: string) =>
       chatParts(text, links, {
-        strong: false,
         web: () => ({ kind: 'web', url: new URL(href) }),
       }),
-    plain: (text: string): ChatPart[] => [
-      { kind: 'text', text, strong: false },
-    ],
+    plain: (text: string): ChatPart[] => [{ kind: 'text', text }],
     expected: (prefix: string): ChatPart[] => [
-      { kind: 'text', text: prefix + '[docs](', strong: false },
-      {
-        kind: 'link',
-        link: { kind: 'web', url: new URL(href) },
-        words: [{ kind: 'text', text: href, strong: false }],
-        strong: false,
-      },
-      { kind: 'text', text: ')', strong: false },
+      { kind: 'text', text: prefix + '[docs](' },
+      { kind: 'link', link: { kind: 'web', url: new URL(href) }, text: href },
+      { kind: 'text', text: ')' },
     ],
   },
   {

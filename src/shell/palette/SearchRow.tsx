@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import links from '../../../docs/mockups/src/components/workspaces/SidebarLinks.module.css'
+import { classes } from '../../ui/components/common/classes'
+import links from '../../ui/components/workspaces/SidebarLinks.module.css'
 import { ariaShortcut, shortcutTokens } from '../../app/shortcuts/keys'
 import { useServices, type Platform } from '../../app/services'
 import type { ShortcutKeyText } from '../../shared/shortcut-key'

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { CircleSlash } from 'lucide-react'
 import {
   splitPath,
   withContextOpen,
@@ -7,17 +6,18 @@ import {
   type TreeEntry,
 } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
-import type { BannerState } from '../../fixtures/pullRequests'
+import type { BannerState } from '../../../../../src/ui/components/workspace/barModel'
 import { checksPaths, paths } from '../../paths'
-import { allFilesUnavailable } from '../chat/lostCopy'
-import { LostUpdateRow } from '../chat/LostUpdate'
-import { EmptyState } from '../common/EmptyState'
-import { LinkTabs } from '../common/LinkTabs'
-import { PanelBar } from '../workspace/PanelBar'
-import { ChangeList } from './ChangeList'
-import { ChecksList } from './ChecksList'
+import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
+import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
+import { emptyState } from '../../entries/components/common/EmptyState.mockup'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
+import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
+import { changeList } from '../../entries/components/files/ChangeList.mockup'
+import { checksList } from '../../entries/components/files/ChecksList.mockup'
 import type { FileRowMenu } from './FileRowMenu'
-import { FileTree } from './FileTree'
+import { fileTree } from '../../entries/components/files/FileTree.mockup'
+import { defined } from '../../defined'
 import styles from './FilesPanel.module.css'
 
 /** The lists of the files panel. */
@@ -109,9 +109,10 @@ function FileTabs(props: {
   banner: BannerState
 }) {
   return (
-    <PanelBar>
-      <LinkTabs
+    <panelBar.Component moklyInstance="files-bar">
+      <linkTabs.Component
         label="Files"
+        moklyInstance="files-tabs"
         tabs={[
           {
             label: 'All files',
@@ -121,7 +122,7 @@ function FileTabs(props: {
           {
             label: 'Changes',
             to: paths.filesChanges,
-            count: props.changes > 0 ? props.changes : undefined,
+            ...(props.changes > 0 ? { count: props.changes } : {}),
             selected: props.view === 'changes',
           },
           {
@@ -131,7 +132,7 @@ function FileTabs(props: {
           },
         ]}
       />
-    </PanelBar>
+    </panelBar.Component>
   )
 }
 
@@ -179,30 +180,44 @@ export function FilesPanel(props: {
     <div className={styles.files}>
       <FileTabs banner={props.banner} changes={changes.length} view={view} />
       {view === 'checks' ? props.checksTop : null}
-      {view === 'checks' ? <ChecksList state={props.banner} /> : null}
+      {view === 'checks' ? (
+        <checksList.Component
+          moklyInstance="checks-list"
+          state={props.banner}
+        />
+      ) : null}
       {view !== 'checks' && props.placeholder ? props.placeholder : null}
       {view === 'all' && lists && props.tree === 'none' ? (
-        <EmptyState
+        <emptyState.Component
           body={allFilesUnavailable.body}
-          icon={CircleSlash}
+          icon="circle-slash"
+          moklyInstance="all-files-empty"
           title={allFilesUnavailable.title}
         />
       ) : null}
       {view === 'all' && lists && props.tree !== 'none' ? (
         <div className={styles.scroll} data-mokly-scroll="file-tree">
-          <FileTree entries={tree} menu={props.menu} open={treeOpen} />
+          <fileTree.Component
+            entries={tree}
+            moklyInstance="file-tree"
+            {...defined({ menu: props.menu, open: treeOpen })}
+          />
         </div>
       ) : null}
       {view === 'changes' && lists ? (
-        <ChangeList
+        <changeList.Component
           diffOpen={open === 'diff' || open === 'masked-diff'}
           diffTo={masked ? paths.maskedPaths : paths.diff}
           files={changes}
-          menu={props.menu}
+          moklyInstance="change-list"
+          {...defined({ menu: props.menu })}
         />
       ) : null}
       {props.tree === 'saved' ? (
-        <LostUpdateRow repair={{ data: 'all-files' }} />
+        <lostUpdateRow.Component
+          moklyInstance="lost-files"
+          repair={{ data: 'all-files' }}
+        />
       ) : null}
     </div>
   )

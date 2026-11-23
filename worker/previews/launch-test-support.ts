@@ -11,10 +11,11 @@ export function launchForm(html: string) {
   const document = new window.DOMParser().parseFromString(html, 'text/html')
   const form = document.querySelector('form')
   const action = form?.getAttribute('action')
-  const fields = [...(form?.querySelectorAll('input') ?? [])].map((field) => [
-    field.name,
-    field.value,
-  ])
+  const fields = [...(form?.querySelectorAll('input') ?? [])].map((field) =>
+    [field.name, field.value].map((value) =>
+      value.replace(/\r\n|\r|\n/g, '\r\n'),
+    ),
+  )
   window.close()
   if (!action || (fields.length !== 2 && fields.length !== 3))
     throw new Error('Missing preview launch form')

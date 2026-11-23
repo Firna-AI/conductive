@@ -1,12 +1,13 @@
-import { memo, type ReactNode } from 'react'
+import { memo, useContext, type ReactNode } from 'react'
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import type { ToolCall } from '../../shared/generated/ToolCall'
-import styles from '../../../docs/mockups/src/components/chat/ChatItemView.module.css'
+import styles from '../../ui/components/chat/ChatItemView.module.css'
 import { formatDuration } from '../../shared/transcript/duration'
 import type { WorkStep } from '../../shared/transcript/transcript-entries'
 import { turnCopy, type ChatReaders } from '../../shared/transcript/turn-words'
 import type { PendingMessage } from '../state/chat-snapshot'
+import { ChatClock, useNow } from '../ui/clock'
 import { rowKeyAttribute } from './chat-place'
 import local from './chat.module.css'
 import { sameData } from './same-data'
@@ -78,17 +79,22 @@ export const WorkRow = memo(function WorkRow(props: {
   )
 }, sameData)
 
-/** A message, an answer, a failure, a lost event, or a note. */
+/**
+ * A message, an answer, a failure, a lost event, or a note. `live` marks
+ * the agent message that the agent writes now.
+ */
 export const ItemRow = memo(function ItemRow(props: {
   item: PlainItem
   actions: ItemActions
   readers: ChatReaders
+  live?: boolean
 }) {
   return (
     <Row id={`item:${props.item.id}`}>
       <ItemView
         actions={props.actions}
         item={props.item}
+        live={props.live}
         readers={props.readers}
       />
     </Row>
@@ -140,20 +146,25 @@ export const PendingRow = memo(function PendingRow(props: {
   )
 }, sameData)
 
-/** The running turn: thinking until the agent writes, and the time since it started. */
+/**
+ * The running turn: thinking until the agent writes, and the time since it
+ * started. The row keeps its own tick from the clock of the chat while it
+ * shows, so the time moves on in each chat that shows the turn, such as the
+ * popover of an explanation over an idle session.
+ */
 export const WorkingRow = memo(function WorkingRow(props: {
   thinking: boolean
   startedAt: number
-  now: number
 }) {
   const theme = useSharedUiTheme()
+  const now = useNow(useContext(ChatClock), true)
   return (
     <Row id="working">
       <div className={styles.working}>
         <Spinner color={theme.colors.primary} size={12} />
         {props.thinking ? turnCopy.thinking : turnCopy.working}
         <span className={styles.elapsed}>
-          {formatDuration(props.now - props.startedAt)}
+          {formatDuration(now - props.startedAt)}
         </span>
       </div>
     </Row>

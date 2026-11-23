@@ -1,12 +1,11 @@
-import type { Viewport } from '@mokly/mokly'
-import { CircleAlert, FolderPlus } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
-import { noop } from '../../noop'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog } from '../common/ConfirmDialog'
-import { Notice } from '../common/Notice'
-import { useControlSizes } from '../common/touch'
-import { newSectionWords } from './sectionCopy'
+import { noop } from '../../../../../src/ui/noop'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import { confirmDialog } from '../../entries/components/common/ConfirmDialog.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { newSectionWords } from '../../../../../src/ui/components/workspaces/sectionCopy'
 
 /**
  * New section, drawn open: a dialog that asks for the name of the section.
@@ -24,17 +23,20 @@ export function NewSectionDialog(props: {
   const { field } = useControlSizes()
   const name = props.name ?? ''
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
-          <ActionButton>Cancel</ActionButton>
-          <ActionButton
+          <actionButton.Component moklyInstance="dialog-cancel">
+            Cancel
+          </actionButton.Component>
+          <actionButton.Component
             disabled={name.trim() === ''}
-            icon={FolderPlus}
+            icon="folder-plus"
+            moklyInstance="dialog-create-section"
             tone="primary"
           >
             {newSectionWords.create}
-          </ActionButton>
+          </actionButton.Component>
         </>
       }
       title={newSectionWords.title}
@@ -48,13 +50,14 @@ export function NewSectionDialog(props: {
         value={name}
       />
       {props.failed === undefined ? null : (
-        <Notice
+        <notice.Component
           body={props.failed}
-          icon={CircleAlert}
+          icon="circle-alert"
+          moklyInstance="create-failed"
           title={newSectionWords.failed}
           tone="danger"
         />
       )}
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

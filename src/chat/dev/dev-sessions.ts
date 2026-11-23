@@ -1,4 +1,5 @@
 import type { Session } from '../../shared/generated/Session'
+import type { SessionAnchor } from '../../shared/generated/SessionAnchor'
 import type { UserMessage } from '../../shared/generated/UserMessage'
 import { chatHistoryPath } from '../../shared/events'
 import { sessionTitleFrom } from '../../shared/session-title'
@@ -95,14 +96,15 @@ export function titleFromMessage(
 /**
  * A new session that the reader of the page starts, as its starter. `id` is
  * the ID that the chat chose, and `source` the session that a linked session
- * points to. Its record takes the reader's login of its agent, as the Worker
+ * points to, and `anchor` the selection of an explanation. Its record
+ * takes the reader's login of its agent, as the Worker
  * records it: available while connected, and shared unless the reader keeps
  * it private. Without a connected login, it is neither.
  */
 export function newSession(
   backend: DevBackend,
   choice: Session['choice'],
-  options: { id?: string; source?: string } = {},
+  options: { id?: string; source?: string; anchor?: SessionAnchor } = {},
 ): Session {
   const login = backend.logins.find((item) => item.agent === choice.agent)
   backend.count += 1
@@ -121,6 +123,7 @@ export function newSession(
     sourceSessionId: options.source ?? null,
     loginAvailable: login?.connected ?? false,
     loginShared: login?.connected === true && !login.noReuse,
+    ...(options.anchor ? { anchor: options.anchor } : {}),
   }
   backend.server.json('GET', chatHistoryPath(orgId, workspaceId, session.id), {
     events: [],

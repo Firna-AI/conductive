@@ -1,20 +1,22 @@
 import {
   ACCOUNT_PATHS,
   codexDevicePath,
+  firstFavourites,
   type AccountResponse,
   type GitHubInstallationsResponse,
   type StartCodexDeviceResponse,
   type PollCodexDeviceResponse,
   type SetDefaultModelResponse,
+  type SetFavouritesResponse,
   type SetNewWorkspaceViewResponse,
 } from '../../shared/account'
-import { chatGptSignInCopy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy } from '../../ui/components/settings/chatGptSignInCopy'
 import {
   GET_STARTED_PATH,
   type GetStartedResponse,
 } from '../../shared/onboarding'
 import { coreFixtures } from '../../test-support/fixtures/core'
-import { nested, record } from '../api/parse'
+import { items, nested, ParseError, record } from '../api/parse'
 import { AGENTS, readChoice, readNewWorkspaceView } from '../api/read-core'
 import { devAccountStats } from './account-stats'
 import { devDefaultLogins } from './default-logins'
@@ -135,6 +137,32 @@ export function accountRoutes(backend: DevBackend): Route[] {
         const saved = nested(record(body), 'choice', readChoice)
         state.account = { ...state.account, defaultChoice: saved }
         return json({ choice: saved } satisfies SetDefaultModelResponse)
+      },
+    },
+    {
+      method: 'PUT',
+      path: ACCOUNT_PATHS.favourites,
+      answer: ({ body }) => {
+        const choices = items(record(body), 'favourites', readChoice)
+        const models = coreFixtures().models.models
+        const favourites = firstFavourites(
+          choices.map((choice) => {
+            if (!choice.model) throw new ParseError('model is empty.')
+            return {
+              ...choice,
+              fast:
+                choice.fast &&
+                models.some(
+                  (model) =>
+                    model.agent === choice.agent &&
+                    model.model === choice.model &&
+                    model.fast === true,
+                ),
+            }
+          }),
+        )
+        state.account = { ...state.account, favourites }
+        return json({ favourites } satisfies SetFavouritesResponse)
       },
     },
     {

@@ -12,21 +12,25 @@ temporary tab in the saved view, as
 
 - `FileTabItem` is the closable tab of a file or a diff, as a list item
   for the tab row of the centre column on desktop. `onClose` asks the
-  shell to close the tab. It takes the tab styles of the mockups'
-  `WorkspaceTabs`, as the session tabs do. `item` takes more props of its
-  list item, and `close` props of the wrapper of its Close button, such as
-  the handlers, the classes, and the ref of the drag and of the tab menu of
-  the row. `link` takes the ref of its link, which the row uses to give
-  the tab the focus back after a move from the tab menu. `FilesLink` takes
-  that `ref`. They are plain element props, so the Files code imports
-  nothing from the chat.
+  shell to close the tab. It takes the tab styles of the shared
+  `WorkspaceTabs.module.css`, as the session tabs do. `item` takes more
+  props of its list item, and `close` props of the wrapper of its Close
+  button, such as the handlers, the classes, and the ref of the drag and
+  of the tab menu of the row. `link` takes the ref of its link, which the
+  row uses to give the tab the focus back after a move from the tab menu.
+  `FilesLink` takes that `ref`. They are plain element props, so the Files
+  code imports nothing from the chat.
 - With `temporary`, the tab is the temporary tab. Its title shows in
-  italics, with `.temporary` of the mockups' `WorkspaceTabs`. Nothing else
-  on the tab changes. The `aria-label` of its link gives its name, then
-  "temporary", as in "README.md, temporary". This holds for a file tab and
-  for a diff tab, so a screen reader hears the state. Keep the label:
-  Chrome puts a space between the title and a hidden text after it, as in
-  "README.md , temporary".
+  italics, with `.temporary` of the shared `WorkspaceTabs.module.css`.
+  Nothing else on the tab changes. The `aria-label` of its link gives its
+  name, then "temporary", as in "README.md, temporary". This holds for a
+  file tab and for a diff tab, so a screen reader hears the state. Keep
+  the label: Chrome puts a space between the title and a hidden text after
+  it, as in "README.md , temporary".
+- While the temporary tab shows, Escape closes it, as its Close does. The
+  shell offers that close with `usePageEscape` of the
+  [shortcut layer](../shell/shortcuts/README.md#escape-on-the-page).
+  `FileTabItem` hears no key for it.
 - The tab row also keeps the temporary tab: Keep open in its tab menu
   calls `keep` of the navigation, and a move to another place drops the
   mark, as [The tab row](../chat/tab-row.md) says. `FileTabItem` draws

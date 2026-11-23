@@ -1,6 +1,7 @@
 import { defineScreen } from '@mokly/mokly'
-import { NewSectionDialog } from '../../../../components/workspaces/NewSectionDialog'
+import { newSectionDialog } from '../../../components/workspaces/NewSectionDialog.mockup'
 import { WorkspaceListScreen } from '../../../../screens/WorkspaceListScreen'
+import { defined } from '../../../../defined'
 
 const newSectionSchema = {
   type: 'object',
@@ -28,16 +29,21 @@ export const sectionsNew = defineScreen({
     <WorkspaceListScreen
       overlay={
         props.from === 'palette' ? (
-          <NewSectionDialog viewport={context.viewport} />
+          <newSectionDialog.Component
+            moklyInstance="new-section-dialog"
+            viewport={context.viewport}
+          />
         ) : (
-          <NewSectionDialog
-            failed={
-              props.from === 'failed'
-                ? "The app can't reach the server. Check the connection, then try again."
-                : undefined
-            }
+          <newSectionDialog.Component
+            moklyInstance="new-section-dialog"
             name="Payments"
             viewport={context.viewport}
+            {...defined({
+              failed:
+                props.from === 'failed'
+                  ? "The app can't reach the server. Check the connection, then try again."
+                  : undefined,
+            })}
           />
         )
       }

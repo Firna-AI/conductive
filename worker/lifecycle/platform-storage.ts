@@ -11,6 +11,7 @@ import { assertReceiverActive } from '../members/receiver-fence'
 import type { ReceiverStorage } from '../members/receiver-storage'
 import type { WorkspaceArchiveState } from './archive-types'
 import type { ComputerStopTaskState } from './computer-stop-task'
+import type { StartRecordEntry, StartRecordMeta } from './start-record-buffer'
 
 export interface WorkspaceValues {
   archive: WorkspaceArchiveState
@@ -25,6 +26,8 @@ export interface WorkspaceValues {
   number: number
   text: string
   computerStops: ComputerStopTaskState
+  startRecord: StartRecordEntry
+  startRecordMeta: StartRecordMeta
 }
 
 export interface WorkspaceTransaction {

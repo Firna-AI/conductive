@@ -3,12 +3,13 @@
 The operator section is the part of the web app where an operator sees
 the whole app, acts on one org or one user, and runs the waitlist. It
 lives at `/operator`. It has the tabs Overview, Orgs, Users, Waitlist,
-Invite codes, and Providers, a page for each org and each user, Suspend and
-Lift on those pages, Approve for a person who waits, the codes, the pause of
-sign-ups, the waitlist switch, and the weights that give each new org its
-provider account. The Mac app shows the same pages, because it shows the
-web app.
+Invite codes, Providers, and Settings, a page for each org and each user,
+Suspend and Lift on those pages, Switch account on the page of an org,
+Approve for a person who waits, the codes, the pause of sign-ups, the
+waitlist switch, and the weights that give each new org its provider
+account. The Mac app shows the same pages, because it shows the web app.
 [Operator section](../../../docs/protocol/operator-section.md),
+[Switch account](../../../docs/protocol/switch-account.md),
 [Operator section: the Overview](../../../docs/protocol/operator-overview.md),
 [Operator actions](../../../docs/protocol/operator-actions.md),
 [Waitlist](../../../docs/protocol/waitlist.md), and
@@ -41,6 +42,7 @@ visual spec is the `app/operator` page of the
 | Waitlist | `/operator/waitlist?q=<search>` | `routes.operatorWaitlist(search)` |
 | Invite codes | `/operator/codes?q=<search>` | `routes.operatorCodes(search)` |
 | Providers | `/operator/providers` | `routes.operatorProviders()` |
+| Settings | `/operator/settings` | `routes.operatorSettings()` |
 
 The search lives in `q`, so Back and a link bring it back. A pause of
 300 ms in the typing, or Enter, puts the text in the address in place of
@@ -77,6 +79,10 @@ with the search of its invite code.
 - Suspend sends `POST` and Lift sends `DELETE` to the suspension path of
   the target, each with the body `{}`, as the gate of the app asks. After
   either, the page reads the target again.
+- Switch account sends `POST` to the switch path of the org, from
+  `operatorOrgSwitchPath`, with `providerAccount` and `endRunningJob`.
+  Stop switch sends `DELETE` to the same path with `{}`. After either, the
+  page reads the org again.
 - Approve sends `POST` with `{}` to the approval path of the person. On the
   Waitlist tab, the row then shows Approved and the state of the email of
   the reply until the list loads again, and the count leaves the row out.
@@ -155,46 +161,45 @@ with the search of its invite code.
 - While the numbers load, the box keeps its place with 10 placeholder
   rows.
 
-## Provider accounts
+## Stop time
 
-- The Providers tab reads `GET /api/operator/providers` when it opens. The
-  reply lists every configured account in ID order, with its weight for new
-  orgs and its orgs, and the last change with its operator. A failed read
-  shows Try again and no weight, because a weight that did not load is not
-  the default.
-- Two accounts share one slider. One account gets a line that it gets every
-  new org, and no control. Three or more accounts get a whole-percent field
-  each, and a line with the total. The tab names each account by its ID.
-- Save weights sends `PUT` with `{weights}`, a whole percent for every
-  account. It is on only while the weights differ from the saved ones and
-  add up to 100%, and it ignores presses while the save runs. The reply
-  shows at once, with "Changed on" and its operator. A failed save keeps the
-  weights that the operator chose and shows that they were not saved.
-- The Orgs tab gives the account of each org in an Account column, and a
-  phone gives it in a second line under the name. The page of an org gives
-  it in Details. Each shows the ID that the reply gives, also an ID that
-  the settings no longer hold.
-- Create org of an operator reads the same accounts for its Provider account
-  choice: By weights, the default, and every configured ID. Only an
-  operator's screen sends that read, and only a chosen account goes into
-  the create as `providerAccount`. The create does not wait for the read.
-  While it runs, a spinner takes the place of the choice, and a failed read
-  shows Try again.
-- `operator_required` on any of these reads or writes takes the section and
-  the choice away, as on the other tabs.
+- The Settings tab reads `GET /api/operator/idle-stop` when it opens. The
+  reply gives the stop time of idle cloud computers and its last change
+  with its operator. A failed read shows Try again and no choice, because a
+  time that did not load is not the default.
+- The Stop time box offers 15 min, 30 min, 1 hour, 1.5 hours, and 2 hours
+  as one segmented control, `StopTimeChoice`.
+- Save stop time sends `PUT` with `{minutes}`. It is on only while the
+  choice differs from the saved time, and not while the save runs. The
+  reply shows at once, with "Changed on" and its operator. A failed save
+  keeps the chosen time and shows that it was not saved.
+
+## Provider accounts and Switch account
+
+[Provider accounts and Switch account](provider-accounts.md) gives the
+Providers tab, the account choice of Create org, and the Provider account
+box of the page of an org with Switch account and Stop switch.
+The page offers Switch account only when its org detail gives
+`switchAvailable: true`. A false or absent value keeps the account details
+and Stop switch, with no new-switch action or question.
 
 ## Parts shared with the mockups
 
-The section reuses the parts of the mockups that import no fixture:
+The section and the mockups both import the shared parts in `src/ui/`:
 `WorkspaceStates`, `DailyChart`, `InlineText`, `StatusGlyph`,
 `WeightSlider`, `WeightFields`, `AccountCounts`, `AccountChoice`, the words
 of `operatorCopy.ts`, `accessCopy.ts`, `codeCopy.ts`, `longRunsCopy.ts`
-with its run length format, and `providerCopy.ts`, the state words of
+with its run length format, `providerCopy.ts`, `switchCopy.ts`, and `stopTimeCopy.ts`, the state words of
 `status.ts`, the workspace label of `label.ts`, and the CSS modules of
-`docs/mockups/src/components/operator/`, of `CheckOption`, and of the
+`src/ui/components/operator/`, of `CheckOption`, and of the
 Providers screen. So the app and the mockups keep the same words, dates,
-and look. On a phone, the six tabs use the `flow` mode of `LinkTabs`, as
+and look. `StopTimeChoice` comes from there too. On a phone, the seven tabs use the `flow` mode of `LinkTabs`, as
 the mockups do.
+
+`AccountSection` and `SwitchDialogs` of the mockups import the fixtures of
+`AccessSections.tsx` and the links of the catalogue. So the app draws the
+Provider account box and its questions in `AccountBox.tsx` and
+`AccountSwitchDialogs.tsx`, with the same words, CSS modules, and states.
 
 Each text of an org in `operatorCopy.ts` takes its deletion, with the day
 when everything of it is deleted. So the questions and the notices of a
@@ -233,6 +238,13 @@ year than the last day has its year there.
   Overview, and the counts of the Providers tab, with the account that the
   operator chose or a draw from the weights. Long runs list only the runs
   of the samples.
+- Switch account and Stop switch change the switch of an org until the
+  page loads again. A switch waits for the build of Northwind, for Lift of
+  Hexwave, for an admin of Dana's Lab, or for Restore of Pinecrest, and else
+  its build runs until Stop switch. Lift starts a switch build that waits
+  for Lift. `?switches=1` gives sample orgs each state: Blue Harbor builds,
+  Orbit Studio failed, Kestrel Labs switched, and Northwind, Hexwave, Dana's
+  Lab, and Pinecrest wait. `?switchSave=fail` fails each switch and stop.
 - `npm run test -- src/shell/operator` runs the tests of the section.
   They mount the shell in happy-dom over the fake API, with the samples of
   `src/test-support/operator.ts`. `operator-test-kit.tsx` mounts the
@@ -242,7 +254,11 @@ year than the last day has its year there.
   `waitlist-test-kit.ts` and `codes-test-kit.ts` give the replies and the
   rows of the samples that the tests of those two tabs share, and
   `providers-test-kit.ts` gives the replies and the controls of the tests
-  of the Providers tab.
+  of the Providers tab, and `switch-test-kit.ts` the page of an org with a
+  switch. `OrgSwitchStates.test.tsx` checks each state of the Provider
+  account box, `OrgSwitch.test.tsx` checks Switch account, the account
+  choice, the offer to end a job, and the line of Lift, and
+  `OrgSwitchStop.test.tsx` checks Stop switch and a failed write.
   `WaitlistSwitch.test.tsx` checks the question and the turn-off,
   the notice and Turn on the waitlist, the order of the two notices, and a
   switch that did not load. `UserAccess.test.tsx` checks the source of an
@@ -259,6 +275,7 @@ functions of the operator section that a reader opens first.
 ### Related Docs
 
 - [Operator section](../../../docs/protocol/operator-section.md)
+- [Switch account](../../../docs/protocol/switch-account.md)
 - [Operator section: the Overview](../../../docs/protocol/operator-overview.md)
 - [Operator actions](../../../docs/protocol/operator-actions.md)
 - [Waitlist](../../../docs/protocol/waitlist.md)

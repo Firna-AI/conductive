@@ -9,6 +9,7 @@ use cnd_runner_interface::runner_credentials::{LoginKind, RunnerLoginKind};
 use cnd_runner_interface::runner_handshake::{
     RunnerEventEnvelope, RunnerHello, RunnerProtocolVersion, RunnerToWorkspace,
 };
+use cnd_runner_interface::services::transport::RunnerServiceMessage;
 use tokio::sync::Mutex;
 
 use crate::clock::Clock;
@@ -17,7 +18,7 @@ use crate::error::Result;
 use crate::socket::{Connector, Socket};
 use crate::state::store::EventStore;
 
-use super::ports::{LinkUpdate, RunnerLink};
+use super::ports::{LinkUpdate, RunnerLink, ServiceConnection};
 use super::tool_detail::prepare;
 
 pub(super) struct Connection {
@@ -25,6 +26,7 @@ pub(super) struct Connection {
     pub(super) socket: Option<Arc<dyn Socket>>,
     pub(super) welcomed: bool,
     pub(super) complete_tool_details: bool,
+    pub(super) services: bool,
 }
 
 /// Configured transport and state dependencies. Tokens stay in memory only.
@@ -41,6 +43,7 @@ pub struct SavedRunnerLink {
     pub(super) messages: Mutex<()>,
     emitting: Mutex<()>,
     repository_folder: Option<String>,
+    pub(super) services_offered: bool,
 }
 
 impl SavedRunnerLink {
@@ -67,17 +70,25 @@ impl SavedRunnerLink {
                 socket: None,
                 welcomed: false,
                 complete_tool_details: false,
+                services: false,
             }),
             connecting: Mutex::new(()),
             messages: Mutex::new(()),
             emitting: Mutex::new(()),
             repository_folder: None,
+            services_offered: false,
         }
     }
 
     /// Name the repository folder in hello. The Worker then may send repository.move.
     pub fn with_repository_folder(mut self, folder: &Path) -> Self {
         self.repository_folder = Some(folder.to_string_lossy().into_owned());
+        self
+    }
+
+    /// Offer private services only when the composition also supplies their effects.
+    pub fn with_services(mut self) -> Self {
+        self.services_offered = true;
         self
     }
 
@@ -89,6 +100,7 @@ impl SavedRunnerLink {
             }
             active.generation += 1;
             active.welcomed = false;
+            active.services = false;
             active.socket.take()
         };
         if let Some(socket) = socket {
@@ -97,6 +109,9 @@ impl SavedRunnerLink {
     }
 
     pub(super) async fn send(&self, message: RunnerToWorkspace) {
+        if matches!(message, RunnerToWorkspace::RunnerServiceMessage(_)) {
+            return;
+        }
         let current = {
             let active = self.connection.lock().await;
             if !active.welcomed {
@@ -161,6 +176,8 @@ impl RunnerLink for SavedRunnerLink {
             ]),
             repository_folder: self.repository_folder.clone(),
             complete_tool_details: Some(true),
+            capability_notices: Some(true),
+            services: self.services_offered.then_some(true),
         };
         if let Err(error) = socket.send(&RunnerToWorkspace::RunnerHello(hello)).await {
             self.disconnect(generation).await;
@@ -204,6 +221,18 @@ impl RunnerLink for SavedRunnerLink {
     async fn reply(&self, response: RunnerToWorkspace) -> Result<()> {
         self.send(response).await;
         Ok(())
+    }
+
+    async fn service_connection(&self) -> Option<ServiceConnection> {
+        self.accepted_services().await
+    }
+
+    async fn service_reply(
+        &self,
+        connection: ServiceConnection,
+        message: RunnerServiceMessage,
+    ) -> Result<bool> {
+        self.send_service(connection, message).await
     }
 
     async fn close(&self) -> Result<()> {

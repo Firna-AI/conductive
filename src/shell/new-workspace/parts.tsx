@@ -1,5 +1,5 @@
 import { ChevronDown, FolderGit2 } from 'lucide-react'
-import { menuNotes } from '../../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import { menuNotes } from '../../ui/components/settings/repositoryChangeCopy'
 import type { WaitingRepositories } from '../../app/repository-changes'
 import type { Repository } from '../../shared/org-settings'
 import type { Section } from '../../shared/sections'
@@ -21,8 +21,11 @@ export function RepositoryMenu(props: {
   waiting: WaitingRepositories
   /** The look of the button. The page uses the default, the dialog `plain`. */
   tone?: ActionTone
-  /** The class of the chevron, from the CSS of the page or of the dialog. */
-  chevron: string
+  /**
+   * The class of the chevron, from the CSS of the page. The dialog shows no
+   * chevron, so it gives none.
+   */
+  chevron?: string
 }) {
   const { chosen, waiting } = props
   return (
@@ -49,7 +52,9 @@ export function RepositoryMenu(props: {
           onPress={toggle}
           tone={props.tone}
           trailing={
-            <ChevronDown aria-hidden className={props.chevron} size={13} />
+            props.chevron === undefined ? undefined : (
+              <ChevronDown aria-hidden className={props.chevron} size={13} />
+            )
           }
         >
           {chosen.fullName}
@@ -60,18 +65,16 @@ export function RepositoryMenu(props: {
 }
 
 /**
- * The org and the section of the new workspace, as a menu of the sections
- * of the org in the order of the list. The Archived group of the list is
- * not a section, so the menu never offers it.
+ * The section of the new workspace, as a menu of the sections of the org
+ * in the order of the list. The button names only the section, with no
+ * chevron. The Archived group of the list is not a section, so the menu
+ * never offers it.
  */
 export function SectionMenu(props: {
-  org: string
   sections: readonly Section[]
   chosen: Section
   choose: (id: string) => void
   disabled: boolean
-  /** The class of the chevron, from the CSS of the dialog. */
-  chevron: string
   /** The class of the box that the open menu hangs from. */
   className: string
 }) {
@@ -96,11 +99,8 @@ export function SectionMenu(props: {
           menu
           onPress={toggle}
           tone="plain"
-          trailing={
-            <ChevronDown aria-hidden className={props.chevron} size={13} />
-          }
         >
-          {`${props.org} · ${chosen.name}`}
+          {chosen.name}
         </ActionButton>
       )}
     />

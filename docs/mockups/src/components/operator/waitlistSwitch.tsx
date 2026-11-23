@@ -1,14 +1,20 @@
-import type { Viewport } from '@mokly/mokly'
-import { DoorClosed, DoorOpen } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { waitlistSwitch } from '../../fixtures/operatorCodes'
 import { waitlistTotal } from '../../fixtures/operatorWaitlist'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { waitlistOffTitle, waitlistWords } from './codeCopy'
+import {
+  waitlistOffTitle,
+  waitlistWords,
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { codesTabLinks } from './signUpLinks'
+import { instanceKey } from '../../instanceKey'
 
 /** New people wait, or an operator turned the waitlist off. */
 export type WaitlistState = 'on' | 'off'
@@ -20,7 +26,12 @@ export type WaitlistState = 'on' | 'off'
 export function TurnOffWaitlistButton() {
   return (
     <ScreenLink asChild to={paths.operatorCodesWaitlistOff}>
-      <ActionButton icon={DoorOpen}>{waitlistWords.turnOff}</ActionButton>
+      <actionButton.Component
+        icon="door-open"
+        moklyInstance="turn-off-waitlist"
+      >
+        {waitlistWords.turnOff}
+      </actionButton.Component>
     </ScreenLink>
   )
 }
@@ -35,16 +46,22 @@ export function TurnOffWaitlistButton() {
 export function WaitlistOffNotice(props: { paused: boolean }) {
   const on = codesTabLinks.on[props.paused ? 'paused' : 'open']
   return (
-    <Notice
+    <notice.Component
       action={
         <ScreenLink asChild to={on}>
-          <ActionButton icon={DoorClosed}>{waitlistWords.turnOn}</ActionButton>
+          <actionButton.Component
+            icon="door-closed"
+            moklyInstance="turn-on-waitlist"
+          >
+            {waitlistWords.turnOn}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={
         props.paused ? waitlistWords.noticeBodyPaused : waitlistWords.noticeBody
       }
-      icon={DoorOpen}
+      icon="door-open"
+      moklyInstance="waitlist-off-notice"
       title={waitlistOffTitle(waitlistSwitch.since, waitlistSwitch.by)}
     />
   )
@@ -57,25 +74,34 @@ export function WaitlistOffNotice(props: { paused: boolean }) {
  */
 export function TurnOffWaitlistDialog(props: { viewport: Viewport }) {
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={paths.operatorCodes}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={paths.operatorCodesWaitlistTurnedOff}>
-            <ActionButton icon={DoorOpen} tone="primary">
+            <actionButton.Component
+              icon="door-open"
+              moklyInstance="dialog-turn-off-waitlist"
+              tone="primary"
+            >
               {waitlistWords.confirmOff}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="turn-off-waitlist-dialog"
       title={waitlistWords.question}
       viewport={props.viewport}
     >
       {waitlistWords.questionText(waitlistTotal).map((text) => (
-        <DialogText key={text}>{text}</DialogText>
+        <dialogText.Component key={text} moklyInstance={instanceKey(text)}>
+          {text}
+        </dialogText.Component>
       ))}
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

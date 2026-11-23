@@ -2,7 +2,8 @@ import { useMemo, useSyncExternalStore } from 'react'
 import {
   mergeLatestLabel,
   mergeLatestPrompt,
-} from '../../../../docs/mockups/src/components/workspace/mergeLatestCopy'
+} from '../../../ui/components/workspace/mergeLatestCopy'
+import { baseBranchLabel } from '../../../github/bannerStatus'
 import type { BarActions } from '../../../github/barActions'
 import { offersAgentActions } from '../../../github/barView'
 import type { GitHubFeed } from '../../../github/githubStore'
@@ -11,7 +12,7 @@ import { useShowChat } from './bar-controls'
 
 /** Merge latest of the open workspace: the label of its row, and its run. */
 export interface MergeLatest {
-  /** Names the target branch, such as "Merge latest main". */
+  /** Names the label of the target branch, such as "Merge latest main". */
   readonly label: string
   readonly run: () => void
 }
@@ -43,7 +44,9 @@ export function useMergeLatest(
     if (!offersAgentActions(shown.capabilities)) return null
     const base = banner.baseBranch
     return {
-      label: mergeLatestLabel(base),
+      // The row shows the label, which hides each secret value. The prompt
+      // keeps the real name, which Git needs.
+      label: mergeLatestLabel(baseBranchLabel(banner)),
       run: () => {
         void actions.sendPrompt(mergeLatestPrompt(base)).then((result) => {
           if (result !== null && result !== 'sent') showChat()

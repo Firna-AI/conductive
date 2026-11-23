@@ -1,0 +1,32 @@
+# New workspace shows branch names without a label
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
+- **Kind:** Needs decision.
+- **Added:** 2026-11-22, from the merge of `origin/main` at `bad6521f1` into the branch `calummoore/delft-39rk` (workspace starts from another branch).
+- **Location:** `worker/app-api/branches.ts`, `src/shell/new-workspace/BranchList.tsx`, `src/shell/new-workspace/BranchPicker.tsx`, `src/shell/new-workspace/create-failure.tsx`.
+- **Reason:** No requirement says which secret values a name hides before a workspace has a cloud computer, so the choice waits for the user.
+
+- **Source:** Implementation.
+- **Category:** Security.
+- **Terms:**
+  - **Label:** the text that a screen shows for a path or a branch name. It hides each exact copy of a secret value, as `docs/protocol/tokens-and-secrets.md` says.
+  - **Running secrets:** the values of the secret env vars of the org that the cloud computer of a workspace got at its last start. `runningOutputSecrets` in `worker/lifecycle/output-secrets.ts` reads them.
+  - **Branch control:** the control of New workspace that picks the branch that a new workspace starts from, with the list of the branches of the repository.
+- **Background:**
+  - `docs/protocol/tokens-and-secrets.md` says: "Screens show a separate label of each path and branch name. The label hides each exact copy of a secret value."
+  - `main` builds these labels from the running secrets of one workspace: in the pull request bar, in the notes of Continue and of a repository change, and in Changes (pull requests #621, #629, and #637).
+  - New workspace has no workspace yet, so it has no cloud computer and no running secrets.
+  - The branch list, the closed branch control, its Target rows, and the refusal "The branch `<name>` is no longer on GitHub." show the real branch names. The Worker reads the list from GitHub with the member's own GitHub token.
+- **Problem:** A branch name that holds a secret value of the org shows that value in New workspace. No requirement says which secret values New workspace must hide.
+- **Impact if no action:** A secret value in a branch name shows on the screen of each member who opens the branch control. The same member can read the same name on GitHub.
+- **Root question:** Which secret values must the names in New workspace hide, before a workspace has a cloud computer?
+- **Options:**
+  - **A.** None. New workspace shows the real names, because no cloud computer has started, and the names are those that GitHub shows to the member. State this in `docs/protocol/start-from-a-branch.md`. Effort: Small.
+  - **B.** The current secret env vars of the org, which a new workspace starts with. The branch route adds a label to each branch, and the app shows the labels in the list, in the control, and in the refusal. Cost: each read of the list also reads the secret values of the org. Effort: Medium.
+  - **C.** As B, but the list leaves out each branch whose name holds a secret value, as the skill list leaves out a skill whose name holds one. Cost: a member cannot start from such a branch. Effort: Medium.
+- **Left out:** A label from the running secrets of another workspace, because the values of one workspace do not apply to another.
+- **Wider fix:** None, because the label rule is in force, and this item only asks where it applies.
+- **Previous examples:** `docs/protocol/skill-mentions.md` leaves out a skill whose name holds a hidden value.
+- **Related:** `plans/follow-ups/start-step-branch-labels-unmasked.md`: the start step of a new workspace names its start branch without a label.
+- **Recommendation:** A. A label in New workspace hides nothing that the member cannot read on GitHub, and B adds a read of the secret values to each read of the list.
+- **Action:** ask the user, because no requirement says which secret values apply before a workspace has a cloud computer, and the user reviews each new requirement.

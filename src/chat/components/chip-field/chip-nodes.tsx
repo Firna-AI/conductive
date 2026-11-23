@@ -11,8 +11,8 @@ import {
   type LexicalNode,
   type NodeKey,
 } from 'lexical'
-import { SessionChip } from '../../../../docs/mockups/src/components/chat/SessionChip'
-import { WorkspaceChip } from '../../../../docs/mockups/src/components/chat/WorkspaceChip'
+import { SessionChip } from '../../../ui/components/chat/SessionChip'
+import { WorkspaceChip } from '../../../ui/components/chat/WorkspaceChip'
 import { chipOf, useChatLinks } from '../../links/LinksContext'
 import { sessionChipOf, useLinkedSession } from '../../links/session-links'
 import { linkTarget } from '../../links/workspace-links'
@@ -33,7 +33,7 @@ const linkStates = [
 ] as const
 
 /**
- * The chip in the field: the pure chip of the mockups, with the current
+ * The chip in the field: the shared pure `WorkspaceChip`, with the current
  * name, state, and GitHub state of its workspace, or the session chip of a
  * known session. It opens nothing. The × of its mark removes it as one step of
  * undo, while the field takes changes. Until the field turns a chip whose

@@ -5,6 +5,7 @@ import { parseRunnerFileEvent } from '../files/runner-input'
 import { array } from './agent-events'
 import { identifier, invalidInput, number, record, string } from './inputs'
 import { parsePortReport } from './port-reports'
+import { parseSkillReport } from './skill-reports'
 
 function startStep(value: unknown): StartStep {
   const input = record(value)
@@ -33,6 +34,8 @@ export function parseOtherEvent(value: unknown): RunnerEvent | null {
       return { type: input.type, name: string(input.name) }
     case 'ports.updated':
       return parsePortReport(input)
+    case 'skills.updated':
+      return parseSkillReport(input)
     case 'start.updated': {
       const start = record(input.start)
       if (start.kind !== 'create' && start.kind !== 'resume')

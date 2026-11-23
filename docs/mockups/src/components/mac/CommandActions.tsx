@@ -1,14 +1,14 @@
 import { useId } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
-import { ActionButton } from '../common/actions'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import styles from './CommandActions.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/mac/CommandActions.module.css'
 
 /**
  * The other ways to allow a command, each with what it covers (decision
@@ -92,13 +92,19 @@ export function DrawnChoices() {
  * draws the arrow open, and the chat draws the choices with
  * `DrawnChoices`.
  */
-export function CommandActions(props: { choicesOpen?: boolean }) {
+export function CommandActions(props: {
+  /** The id of the chat item of the command, which names its buttons. */
+  id: string
+  choicesOpen?: boolean
+}) {
   const menu = `more-ways-${useId()}`
   const open = props.choicesOpen === true
   return (
     <>
       <ScreenLink asChild to={paths.macDenied}>
-        <ActionButton>Deny</ActionButton>
+        <actionButton.Component moklyInstance={`deny-${props.id}`}>
+          Deny
+        </actionButton.Component>
       </ScreenLink>
       <span className={styles.split}>
         <ScreenLink asChild to={paths.macDone}>

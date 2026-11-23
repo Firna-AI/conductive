@@ -1,6 +1,6 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { TableCell, type TableColumn } from '@firna/ui/table'
-import { SearchField } from '../components/common/SearchField'
+import { searchField } from '../entries/components/common/SearchField.mockup'
 import {
   DirectoryTable,
   NameCell,
@@ -16,6 +16,7 @@ import {
   type UserRow,
 } from '../fixtures/operatorUsers'
 import { paths } from '../paths'
+import { instanceKey } from '../instanceKey'
 
 export const operatorUsersSchema = {
   type: 'object',
@@ -48,7 +49,9 @@ const columns: Readonly<Record<Viewport, TableColumn[]>> = {
  * who waits, or the name.
  */
 function detailOf(row: UserRow) {
-  if (row.status !== 'active') return <TargetState status={row.status} />
+  if (row.status !== 'active') {
+    return <TargetState id={instanceKey(row.login)} status={row.status} />
+  }
   return row.name
 }
 
@@ -125,8 +128,9 @@ export function OperatorUsersScreen(props: {
   const found = results(props.state.search)
   return (
     <OperatorPage tab="users" title="Operator" viewport={props.viewport}>
-      <SearchField
+      <searchField.Component
         label="Search users"
+        moklyInstance="search-users"
         placeholder="GitHub login, name, or GitHub ID"
         query={found.query}
       />

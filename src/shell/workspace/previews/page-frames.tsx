@@ -1,15 +1,17 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useLayoutEffect,
   useSyncExternalStore,
 } from 'react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
 import type { Preview } from '../../../shared/generated/Preview'
-import { PreviewFrame } from '../../../previews/PreviewFrame'
+import { OpenInNewTab, PreviewFrame } from '../../../previews/PreviewFrame'
 import type { WorkspaceContext } from '../features'
 import { filesTabsOf } from '../files/view-tabs'
 import { useSavedView, useViewKnown } from '../saved-view'
+import { ExpandableFrames } from './ExpandableFrames'
 import { useFilesPreviewState } from './kept-files-preview'
 
 /** The page of an HTML file that a tab shows in its frame. */
@@ -34,6 +36,8 @@ interface PageFramesSnapshot {
   pages: readonly KeptPage[]
   /** The path whose page shows, or null. */
   shown: string | null
+  /** The path whose page shows in its large window, or null. */
+  expanded: string | null
 }
 
 /** Whether two pages load the same thing: the same file, preview, and version. */
@@ -55,7 +59,11 @@ export function samePage(left: FramedPage, right: FramedPage): boolean {
  * has its own.
  */
 export class PageFrames {
-  private snapshot: PageFramesSnapshot = { pages: [], shown: null }
+  private snapshot: PageFramesSnapshot = {
+    pages: [],
+    shown: null,
+    expanded: null,
+  }
   private readonly listeners = new Set<() => void>()
 
   readonly subscribe = (listener: () => void): (() => void) => {
@@ -82,12 +90,28 @@ export class PageFrames {
             each === kept ? { ...shown, reloads: each.reloads } : each,
           )
     }
-    this.set({ pages: next, shown: shown.path })
+    const expanded = this.snapshot.expanded === shown.path ? shown.path : null
+    this.set({ pages: next, shown: shown.path, expanded })
+    // The end of a show keeps the window, because the show of a new
+    // version of the same page ends the show of the old one first.
+    // `KeptPageFrames` closes the window when its page no longer shows.
     return () => {
       if (this.snapshot.shown === shown.path) {
         this.set({ ...this.snapshot, shown: null })
       }
     }
+  }
+
+  /** Shows the page of `path` in its large window, while it shows. */
+  expand(path: string): void {
+    if (this.snapshot.shown === path) {
+      this.set({ ...this.snapshot, expanded: path })
+    }
+  }
+
+  /** Closes the large window. */
+  collapse(): void {
+    this.set({ ...this.snapshot, expanded: null })
   }
 
   /** Loads the page of `path` again, as Reload does. */
@@ -99,8 +123,14 @@ export class PageFrames {
   }
 
   private set(next: PageFramesSnapshot): void {
-    const { pages, shown } = this.snapshot
-    if (next.pages === pages && next.shown === shown) return
+    const { pages, shown, expanded } = this.snapshot
+    if (
+      next.pages === pages &&
+      next.shown === shown &&
+      next.expanded === expanded
+    ) {
+      return
+    }
     this.snapshot = next
     for (const listener of [...this.listeners]) listener()
   }
@@ -142,13 +172,18 @@ export function usePageFrames(): PageFrames | null {
  * shows, until its tab closes or its files preview ends. The page that
  * shows stays while its files preview ends, as when the cloud computer
  * stops, because its tab keeps the page that it already shows.
+ *
+ * Expand shows the page that shows in its large window, while its files
+ * preview lives. The window closes at Close, when another tab shows, and
+ * when the files preview ends, because Reload and Open then need a new
+ * files preview, which only the tab opens.
  */
 export function KeptPageFrames(props: {
   context: WorkspaceContext
   frames: PageFrames
 }) {
   const { context, frames } = props
-  const { pages, shown } = useSyncExternalStore(
+  const { pages, shown, expanded } = useSyncExternalStore(
     frames.subscribe,
     frames.getSnapshot,
     frames.getSnapshot,
@@ -167,11 +202,31 @@ export function KeptPageFrames(props: {
       each.path === shown ||
       ((!known || open.has(each.path)) && each.preview.id === live),
   )
+  const shownPage = kept.find((each) => each.path === shown) ?? null
+  const expandedPage =
+    shownPage && shownPage.path === expanded && shownPage.preview.id === live
+      ? shownPage
+      : null
+  useEffect(() => {
+    if (expanded !== null && expandedPage === null) frames.collapse()
+  }, [frames, expanded, expandedPage])
   if (kept.length === 0) return null
   return (
-    <div
-      className={page.page}
-      hidden={!kept.some((each) => each.path === shown)}
+    <ExpandableFrames
+      expanded={
+        expandedPage && {
+          title: expandedPage.name,
+          open: (
+            <OpenInNewTab
+              path={expandedPage.path}
+              preview={expandedPage.preview}
+            />
+          ),
+          reload: () => frames.reload(expandedPage.path),
+          close: () => frames.collapse(),
+        }
+      }
+      visible={shownPage !== null}
     >
       {kept.map((each) => (
         <div
@@ -186,6 +241,6 @@ export function KeptPageFrames(props: {
           />
         </div>
       ))}
-    </div>
+    </ExpandableFrames>
   )
 }

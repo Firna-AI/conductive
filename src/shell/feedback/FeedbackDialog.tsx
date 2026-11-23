@@ -1,8 +1,8 @@
 import { useRef, type ClipboardEvent } from 'react'
 import { useToast } from '@firna/ui/toast'
 import { CircleAlert, CornerDownLeft, ImagePlus } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { classes } from '../../ui/components/common/classes'
+import { Notice } from '../../ui/components/common/Notice'
 import {
   addScreenshotsLabel,
   feedbackPlaceholder,
@@ -15,8 +15,8 @@ import {
   sendLabel,
   sendLimitBody,
   sentToastTitle,
-} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
-import styles from '../../../docs/mockups/src/components/feedback/FeedbackDialog.module.css'
+} from '../../ui/components/feedback/feedbackCopy'
+import styles from '../../ui/components/feedback/FeedbackDialog.module.css'
 import type { ApiError } from '../../app/api/client'
 import {
   screenshotIntake,

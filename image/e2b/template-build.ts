@@ -95,7 +95,7 @@ export async function buildTemplate(
 ): Promise<void> {
   if (arguments_.includes('--help')) {
     process.stdout.write(
-      'Usage: node image/e2b/build-template.mjs [--name conductive-base] [--prepare]\nBuilds an Ubuntu 24.04 template with 4 CPUs and 8192 MiB.\nSet E2B_API_KEY and the selected EU E2B_DOMAIN for a real build.\n--prepare stages public build inputs without installing a CLI or calling E2B.\nA real build uses @e2b/cli@2.23.0 through npm exec.\nStdout contains the actual template ID after a real build.\n',
+      'Usage: node image/e2b/build-template.mjs [--name conductive-base] [--prepare]\nBuilds an Ubuntu 24.04 template with 4 CPUs and 8192 MiB.\nSet E2B_API_KEY and the E2B_DOMAIN of the project for a real build.\n--prepare stages public build inputs without installing a CLI or calling E2B.\nA real build uses @e2b/cli@2.23.0 through npm exec.\nStdout contains the actual template ID after a real build.\n',
     )
     return
   }

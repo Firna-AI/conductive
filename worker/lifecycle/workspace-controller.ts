@@ -2,7 +2,6 @@ import type { StartStep } from '../../src/shared/generated/StartStep'
 import type { WorkspaceStart } from '../../src/shared/generated/WorkspaceStart'
 import type { AppDependencies, AppEnv } from '../env'
 import { HttpError } from '../http'
-import { requireWorkspaceOrg } from './access'
 import { runWorkspaceAlarm } from './workspace-alarm'
 import { WorkspaceEventJournal } from './durable-journal'
 import type { DurableLifecycleState } from './durable-types'
@@ -12,7 +11,8 @@ import { TurnScopes } from './turns'
 import { applyRunnerLifecycle, registerTrustedTurn } from './runner-lifecycle'
 import { WorkspaceStartCoordinator } from './start-coordinator'
 import type { WorkspaceStartIntent, WorkspaceStartJob } from './start-types'
-import { durableStartStorage, START_JOB_KEY } from './start-storage'
+import { START_JOB_KEY } from './start-storage'
+import { startJobStorage } from './start-record-storage'
 import { readStartLog } from './start-log-storage'
 import { FIRST_MESSAGE_ADMISSION_KEY } from './workspace-runtime'
 import { workspaceActionContext } from './workspace-actions'
@@ -33,6 +33,7 @@ import {
 } from './workspace-task-alarms'
 import { ComputerStopTask } from './computer-stop-task'
 import { startGuard } from './start-guard'
+import { preparingCredentialSender } from './preparing-credential-sender'
 
 export function createWorkspaceController(
   env: AppEnv & { GITHUB_APP_PRIVATE_KEY?: string },
@@ -48,7 +49,7 @@ export function createWorkspaceController(
   const journal = new WorkspaceEventJournal(platform.storage, platform.publish)
   const alarms = workspaceTaskAlarms(platform.storage)
   const startStorage = taskWorkspaceStorage(platform.storage, 'lifecycle:start')
-  const startJobs = durableStartStorage(platform.storage, dependencies.now, env)
+  const startJobs = startJobStorage(platform, dependencies.now, env)
   const cleanupStorage = taskWorkspaceStorage(
     platform.storage,
     'lifecycle:cleanup',
@@ -80,6 +81,8 @@ export function createWorkspaceController(
     alarms,
   }))
   const controller: WorkspaceController = {
+    prepareWorkspaceBase: async () =>
+      (await platform.baseChanges?.resume()) ?? false,
     archiveLifecycle: (id) => archive.begin(id),
     reserveArchive: (id) => archive.reserve(id),
     restoreWorkspace: (orgId, id, userId, origin) =>
@@ -214,27 +217,15 @@ export function createWorkspaceController(
       const turn = await turns.remove(turnId)
       if (turn) await lifecycle.turn(turn.sessionId, false, publish)
     },
-    async credentialSender(turnId: string): Promise<string | null> {
-      const state = await lifecycle.read()
-      if (!state || state.state === 'stopped' || state.state === 'archived')
-        return null
-      await requireWorkspaceOrg(env.DB, state.orgId, state.workspaceId)
-      const job = await platform.storage.get('job', START_JOB_KEY)
-      return job?.kind === 'create' &&
-        (job.phase === 'fetch' || job.phase === 'branch') &&
-        !job.cancelled &&
-        !job.failure &&
-        job.turnId === turnId
-        ? job.admission.first.sender.id
-        : null
-    },
+    credentialSender: (turnId) =>
+      preparingCredentialSender(env, platform, lifecycle, turnId),
     async reportRunnerLifecycle(event, publish): Promise<void> {
       const apply = () => applyRunnerLifecycle(lifecycle, turns, event, publish)
       if (event.type === 'runner.ready') await starts.reportRunnerReady(apply)
       else await apply()
     },
-    async runnerLifecycleDisconnected(publish): Promise<void> {
-      await lifecycle.runnerDisconnected(publish)
+    async runnerLifecycleDisconnected(publish, at): Promise<void> {
+      await lifecycle.runnerDisconnected(publish, at)
     },
     runnerProtocolUnsupported: (reason) => starts.runnerUnsupported(reason),
     async scheduleImage(state: ImageCoordinatorState): Promise<void> {
@@ -252,15 +243,15 @@ export function createWorkspaceController(
         lifecycle,
       )
     },
-    async alarm(turn): Promise<void> {
+    async alarm(turn, restart): Promise<void> {
       await runWorkspaceAlarm({
         turn,
         storage: platform.storage,
-        env: env,
-        dependencies: dependencies,
-        images: images,
-        starts: starts,
-        lifecycle: lifecycle,
+        env,
+        dependencies,
+        images,
+        starts,
+        lifecycle,
         accessStop,
         alarms,
         startStorage,
@@ -268,6 +259,8 @@ export function createWorkspaceController(
         cleanupStorage,
         archive,
         computerStops,
+        runs: platform.startRecords,
+        restart,
       })
     },
   }

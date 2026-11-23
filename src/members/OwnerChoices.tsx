@@ -1,10 +1,9 @@
 import type { Workspace } from '../shared/generated/Workspace'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { OrgMember } from '../shared/members'
 
 import { errorMessage, type MembersApi } from './api/client'
 import { personName } from './people'
-import { useMountedRef } from './useMounted'
 import styles from './ui/ChoiceMenu.module.css'
 import { MenuPanel, type MenuChoice } from './ui/MenuPanel'
 import { PersonAvatar } from './ui/PersonAvatar'
@@ -57,6 +56,11 @@ export interface OwnerChoicesState {
  * the reply: the answer goes to `onReassigned` and the menu closes, or the
  * error shows in the menu. A new owner changes no login and does not
  * restart the cloud computer.
+ *
+ * The state keeps to `scope`, as a key keeps the state of a component. A
+ * new scope drops the members, the change that runs, and its error. The
+ * answers of the requests of an older scope then change nothing and call
+ * no callback, also when that scope comes back.
  */
 export function useOwnerChoices(props: {
   api: MembersApi
@@ -65,13 +69,35 @@ export function useOwnerChoices(props: {
   onReassigned: (workspace: Workspace) => void
   /** Closes the menu of the choices. */
   close: () => void
+  /** The scope of the state, such as the access that offers the choices. */
+  scope?: string
 }): OwnerChoicesState {
   const { api, workspace } = props
-  const mounted = useMountedRef()
   const loads = useRef(0)
   const [members, setMembers] = useState<Members>({ status: 'loading' })
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Each scope gets a new object, so a scope that comes back is a new one.
+  const [scope, setScope] = useState(() => ({ key: props.scope }))
+  if (scope.key !== props.scope) {
+    setScope({ key: props.scope })
+    setMembers({ status: 'loading' })
+    setBusy(null)
+    setError(null)
+  }
+  // The scope that shows, or null after the owner unmounts.
+  const shown = useRef<object | null>(null)
+  useLayoutEffect(() => {
+    shown.current = scope
+    return () => {
+      shown.current = null
+    }
+  }, [scope])
+  /** Notes the scope as a request starts. The check says that it still shows. */
+  const startScope = useCallback(() => {
+    const start = shown.current
+    return () => start !== null && shown.current === start
+  }, [])
 
   const open = useCallback(() => {
     setError(null)
@@ -79,7 +105,8 @@ export function useOwnerChoices(props: {
       current.status === 'failed' ? { status: 'loading' } : current,
     )
     const load = ++loads.current
-    const newest = () => mounted.current && load === loads.current
+    const live = startScope()
+    const newest = () => live() && load === loads.current
     api.members(workspace.orgId).then(
       (response) => {
         if (newest()) setMembers({ status: 'ready', members: response.members })
@@ -89,13 +116,14 @@ export function useOwnerChoices(props: {
           setMembers({ status: 'failed', message: errorMessage(reason) })
       },
     )
-  }, [api, workspace.orgId, mounted])
+  }, [api, workspace.orgId, startScope])
 
   async function select(userId: string) {
     if (userId === workspace.owner.id) {
       props.close()
       return
     }
+    const live = startScope()
     setBusy(userId)
     setError(null)
     try {
@@ -104,15 +132,13 @@ export function useOwnerChoices(props: {
         workspace.id,
         { userId },
       )
-      if (!mounted.current) return
+      if (!live()) return
       props.close()
       props.onReassigned(updated)
     } catch (reason) {
-      if (mounted.current) {
-        setError(`The owner did not change. ${errorMessage(reason)}`)
-      }
+      if (live()) setError(`The owner did not change. ${errorMessage(reason)}`)
     } finally {
-      if (mounted.current) setBusy(null)
+      if (live()) setBusy(null)
     }
   }
 

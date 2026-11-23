@@ -32,6 +32,8 @@ Terminal tool, as [Terminal](terminal.md) says.
   - **Workspace label:** where the header of a workspace shows the label
     of its number, which is the Copy link button.
   - **Session tab:** where the shown tab of a workspace is a session.
+  - **Selection:** where a selection in the chat shows Explain, as
+    [The selection and Explain](explain.md#the-selection-and-explain) says.
   - **Mac app:** only the Mac app has the command.
 - A dash means that the command has no default key.
 - Switch to org 1 to 9 and Open workspace 1 to 9 stand for nine commands
@@ -90,11 +92,23 @@ Terminal tool, as [Terminal](terminal.md) says.
 | Chat | Stop the agent | ⌃⌘⌫ | Alt+Shift+S | Workspace |
 | Chat | Copy concise transcript | ⌥⌘C | Alt+Shift+C | Session tab |
 | Chat | Copy full transcript | – | – | Session tab |
+| Chat | Explain the selection | ⌥⌘E | Alt+Shift+E | Selection |
 
 - Fast mode has ⇧⌘E, the key of the Fast row of Conductor, and its twin
   Ctrl+Shift+E (fast mode decision 258). Reason: members who move from
   Conductor press that key. No key, a row of the palette, and a key that
   opens the model menu were rejected for that reason.
+- Explain the selection has ⌥⌘E and its twin Alt+Shift+E. Conductor has no
+  such command, but the user chose a keyboard start for Explain on
+  17 November 2026, as [The keyboard start](explain.md#the-keyboard-start)
+  says. Reason: E names Explain, and Fast mode has ⇧⌘E. Chrome, Edge, and
+  the Mac app have no action on these keys.
+- ⌘E and Ctrl+E were rejected. On a Mac, Chrome and Safari use the
+  selection for Find on ⌘E. On Windows and Linux, Chrome searches from its
+  address bar on Ctrl+E.
+- Risk: Firefox opens its Network Monitor on ⌥⌘E, and Safari empties its
+  caches on ⌥⌘E while its Develop menu shows. Where Explain shows, the app
+  takes the key.
 - New terminal has no default key. Reason: Conductor opens a terminal tab
   on ⌘T while its terminal has the focus, but ⌘T runs New session in this
   app. On Windows and Linux, no key reaches the app while the terminal has

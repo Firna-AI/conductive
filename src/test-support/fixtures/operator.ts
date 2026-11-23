@@ -32,6 +32,7 @@ import {
   type SampleOrg,
   type SampleUser,
 } from './operator-samples'
+import { withSampleSwitch } from './operator-switch'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -89,13 +90,13 @@ function sampleUser(login: string): SampleUser {
   return user
 }
 
-/** The page of a sample org, with its records. */
+/** The page of a sample org, with its records and its switch fields. */
 export function sampleOrgDetail(
   org: SampleOrg,
   records: OperatorRecords,
   now = FAKE_TIME,
 ): OperatorOrgDetail {
-  return {
+  const detail: OperatorOrgDetail = {
     id: org.id,
     providerAccount: 'boat',
     name: org.name,
@@ -112,6 +113,7 @@ export function sampleOrgDetail(
     suspension: records.orgSuspensions.get(org.id) ?? null,
     deletion: records.orgDeletions.get(org.id) ?? null,
   }
+  return withSampleSwitch(detail, now)
 }
 
 /** The page of a sample user, with their orgs and their record. */

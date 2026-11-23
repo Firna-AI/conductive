@@ -1,15 +1,14 @@
 import type { Viewport } from '@mokly/mokly'
-import { SearchX } from 'lucide-react'
-import { EmptyState } from '../components/common/EmptyState'
-import { LoadFailure } from '../components/common/LoadFailure'
+import { emptyState } from '../entries/components/common/EmptyState.mockup'
+import { loadFailure } from '../entries/components/common/LoadFailure.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
-import { Page } from '../components/layout/Page'
-import { SuspendedOrgNotice } from '../components/orgs/SuspendedOrgNotice'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { page } from '../entries/components/layout/Page.mockup'
+import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotice.mockup'
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { paths } from '../paths'
 import type { AutomationState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /** A read of a saved automation that shows no automation. */
 type NotShown = Exclude<AutomationState['read'], 'ready'>
@@ -25,20 +24,27 @@ type Pages = { automation: string; automations: string }
 function Content(props: { read: NotShown; pages: Pages }) {
   if (props.read === 'failed') {
     return (
-      <LoadFailure
+      <loadFailure.Component
+        moklyInstance="automation-load-failure"
         title="The automation didn't load"
         to={props.pages.automation}
       />
     )
   }
   return (
-    <EmptyState
+    <emptyState.Component
       action={
         <ScreenLink asChild to={props.pages.automations}>
-          <ActionButton tone="primary">Open Automations</ActionButton>
+          <actionButton.Component
+            moklyInstance="open-automations"
+            tone="primary"
+          >
+            Open Automations
+          </actionButton.Component>
         </ScreenLink>
       }
-      icon={SearchX}
+      icon="search-x"
+      moklyInstance="automation-not-available"
       title="This automation is not available"
     />
   )
@@ -65,12 +71,17 @@ export function AutomationNotShown(props: {
     : { automation: paths.automation, automations: paths.automations }
   const content = (
     <>
-      {props.suspended ? <SuspendedOrgNotice org={orgs[suspendedOrg]} /> : null}
+      {props.suspended ? (
+        <suspendedOrgNotice.Component
+          moklyInstance="suspended-org-notice"
+          org={{ name: orgs[suspendedOrg].name }}
+        />
+      ) : null}
       <Content pages={pages} read={props.read} />
     </>
   )
   return (
-    <Page
+    <page.Component
       back={{ label: 'Automations', to: pages.automations }}
       fill
       title="Automation"
@@ -87,6 +98,6 @@ export function AutomationNotShown(props: {
           </div>
         </div>
       )}
-    </Page>
+    </page.Component>
   )
 }

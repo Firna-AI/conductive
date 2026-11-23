@@ -29,12 +29,10 @@ those of the [architecture doc](../architecture.md#terms).
 - That risk ends for a sandbox when its runner and its workspace both
   support complete tool details. The runner gets that support through an
   update, as [Updates](sandbox-software.md#updates) says.
-- The program checks for an update at each runner start and every 10
-  minutes. It downloads the update in the background. A running sandbox
-  installs a complete download after 2 idle minutes.
-- A start runs the older runner when no complete download is there,
-  because a start never waits for a download. A new sandbox from an org
-  image of an earlier build also starts with an older runner.
+- A sandbox keeps an older runner until an update applies, by the rules of
+  [Updates](sandbox-software.md#updates) and
+  [Installs at idle](sandbox-software.md#installs-at-idle). A new sandbox
+  from an org image of an earlier build also starts with an older runner.
 - So the risk has no time limit. A long turn, a turn that waits for
   background work, a failed check, download, install, or start, or a
   stopped sandbox can keep an older runner.

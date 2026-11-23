@@ -1,15 +1,22 @@
-import type { Viewport } from '@mokly/mokly'
-import { CirclePause, Pause, Play } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { signUpPause } from '../../fixtures/operatorCodes'
-import { ActionButton } from '../common/actions'
-import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'
-import { Notice } from '../common/Notice'
+import { actionButton } from '../../entries/components/common/actions.mockup'
+import {
+  confirmDialog,
+  dialogText,
+} from '../../entries/components/common/ConfirmDialog.mockup'
+import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { StatusText } from '../common/StatusText'
-import { Section } from '../settings/Section'
-import { pausedTitle, pauseWords, waitlistWords } from './codeCopy'
+import { statusText } from '../../entries/components/common/StatusText.mockup'
+import { section } from '../../entries/components/settings/Section.mockup'
+import {
+  pausedTitle,
+  pauseWords,
+  waitlistWords,
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { codesTabLinks, pauseQuestionLinks } from './signUpLinks'
 import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
+import { instanceKey } from '../../instanceKey'
 
 /**
  * The notice at the top of each tab while sign-ups are paused: who paused
@@ -19,14 +26,17 @@ import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
  */
 export function PauseNotice(props: { waitlist: WaitlistState }) {
   return (
-    <Notice
+    <notice.Component
       action={
         <ScreenLink asChild to={codesTabLinks[props.waitlist].open}>
-          <ActionButton icon={Play}>{pauseWords.resume}</ActionButton>
+          <actionButton.Component icon="play" moklyInstance="resume-sign-ups">
+            {pauseWords.resume}
+          </actionButton.Component>
         </ScreenLink>
       }
       body={pauseWords.noticeBody}
-      icon={CirclePause}
+      icon="circle-pause"
+      moklyInstance="pause-notice"
       title={pausedTitle(signUpPause.since, signUpPause.by)}
     />
   )
@@ -43,20 +53,29 @@ export function PauseNotice(props: { waitlist: WaitlistState }) {
 export function SignUpsSection(props: { waitlist: WaitlistState }) {
   const pause = (
     <ScreenLink asChild to={pauseQuestionLinks[props.waitlist]}>
-      <ActionButton icon={Pause}>{pauseWords.pause}</ActionButton>
+      <actionButton.Component icon="pause" moklyInstance="pause-sign-ups">
+        {pauseWords.pause}
+      </actionButton.Component>
     </ScreenLink>
   )
   if (props.waitlist === 'off') {
     return (
-      <Section
+      <section.Component
         actions={pause}
-        status={<StatusText label={pauseWords.open} tone="success" />}
+        moklyInstance="sign-ups-section"
+        status={
+          <statusText.Component
+            label={pauseWords.open}
+            moklyInstance="sign-ups-state"
+            tone="success"
+          />
+        }
         title={pauseWords.box}
       />
     )
   }
   return (
-    <Section
+    <section.Component
       actions={
         <>
           <TurnOffWaitlistButton />
@@ -64,7 +83,14 @@ export function SignUpsSection(props: { waitlist: WaitlistState }) {
         </>
       }
       description={pauseWords.openLine}
-      status={<StatusText label={waitlistWords.on} tone="neutral" />}
+      moklyInstance="sign-ups-section"
+      status={
+        <statusText.Component
+          label={waitlistWords.on}
+          moklyInstance="sign-ups-state"
+          tone="neutral"
+        />
+      }
       title={pauseWords.box}
     />
   )
@@ -82,25 +108,34 @@ export function PauseDialog(props: {
 }) {
   const tab = codesTabLinks[props.waitlist]
   return (
-    <ConfirmDialog
+    <confirmDialog.Component
       actions={
         <>
           <ScreenLink asChild to={tab.open}>
-            <ActionButton>Cancel</ActionButton>
+            <actionButton.Component moklyInstance="dialog-cancel">
+              Cancel
+            </actionButton.Component>
           </ScreenLink>
           <ScreenLink asChild to={tab.paused}>
-            <ActionButton icon={Pause} tone="danger">
+            <actionButton.Component
+              icon="pause"
+              moklyInstance="dialog-pause-sign-ups"
+              tone="danger"
+            >
               {pauseWords.pause}
-            </ActionButton>
+            </actionButton.Component>
           </ScreenLink>
         </>
       }
+      moklyInstance="pause-dialog"
       title={pauseWords.question}
       viewport={props.viewport}
     >
       {pauseWords.questionText.map((text) => (
-        <DialogText key={text}>{text}</DialogText>
+        <dialogText.Component key={text} moklyInstance={instanceKey(text)}>
+          {text}
+        </dialogText.Component>
       ))}
-    </ConfirmDialog>
+    </confirmDialog.Component>
   )
 }

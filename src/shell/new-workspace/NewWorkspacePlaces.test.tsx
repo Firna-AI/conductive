@@ -47,9 +47,9 @@ describe('the places of New workspace', () => {
       view: 'dialog',
       opens: 'the dialog over the screen',
       expected: {
-        row: { dialog: 'Acme · General', address: routes.org(org) },
-        button: { dialog: 'Acme · General', address: routes.org(org) },
-        menu: { dialog: 'Acme · Checkout', address: routes.org(org) },
+        row: { dialog: 'General', address: routes.org(org) },
+        button: { dialog: 'General', address: routes.org(org) },
+        menu: { dialog: 'Checkout', address: routes.org(org) },
       },
     },
     {
@@ -169,7 +169,7 @@ describe('the places of New workspace', () => {
     const [sent] = await bodiesOf(server, 'POST', workspacesPath(org), 0)
     expect({ offered, picked, page, sent }).toEqual({
       offered: ['General', 'Checkout', 'Infra'],
-      picked: 'Acme · Checkout',
+      picked: 'Checkout',
       page: { dialog: null, subtitle: true },
       sent: expect.objectContaining({ sectionId: 'checkout' }),
     })

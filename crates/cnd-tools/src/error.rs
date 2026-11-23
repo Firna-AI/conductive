@@ -6,6 +6,9 @@ use thiserror::Error;
 /// A tool failed before a valid reply was available.
 #[derive(Debug, Error, internal_error::ErrorContract)]
 pub enum Error {
+    /// A local service request did not return a valid reply.
+    #[error("[cnd-tools/services] local service request failed")]
+    Services,
     /// Invalid local input.
     #[error("[cnd-tools/input] {0}")]
     Input(InputError),
@@ -61,6 +64,9 @@ impl Error {
     /// Return only the documented public message, with no transport diagnostics.
     pub fn message(&self) -> String {
         match self {
+            Self::Services => {
+                "The service request failed. Check the service list and try again.".into()
+            }
             Self::Input(value) => value.to_string(),
             Self::Command => "The command could not run. Check the command and try again.".into(),
             Self::SecretEnvironmentConflict {
@@ -92,6 +98,9 @@ fn subject(mac: bool) -> &'static str {
 /// A checked user input error.
 #[derive(Debug, Clone, Copy, Error)]
 pub enum InputError {
+    /// Choose a local service command and its options.
+    #[error("Use services start, list, stop, restart, or logs. Use --help for options.")]
+    ServiceOptions,
     /// Supply names and a command for a run, or use secrets list.
     #[error("Use secrets list or secrets run --secret NAME [--reason TEXT] -- <command>.")]
     Secrets,
@@ -119,6 +128,9 @@ pub enum InputError {
     /// Use a nonempty request ID.
     #[error("Use a nonempty request ID.")]
     RequestId,
+    /// Use a Git branch name for each branch.
+    #[error("Use a Git branch name for each branch.")]
+    Branch,
     /// Use a whole, nonnegative transcript position.
     #[error("Use a whole, nonnegative transcript position.")]
     Position,
@@ -159,7 +171,7 @@ pub enum InputError {
     #[error("Use workspaces list, get, create, rename, move, or archive.")]
     WorkspaceCommand,
     /// Choose one of the session commands.
-    #[error("Use sessions list, get, read, create, send, rename, close, or stop.")]
+    #[error("Use sessions list, get, read, create, send, rename, close, stop, or watch.")]
     SessionCommand,
     /// Supply a Mac command, folder, and reason.
     #[error("Use mac run with a command, folder, and reason.")]

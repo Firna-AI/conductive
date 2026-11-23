@@ -2,7 +2,7 @@ import { Power, Trash2 } from 'lucide-react'
 import {
   hasPullRequestTrigger,
   hasSchedule,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
+} from '../../ui/components/automations/triggerCopy'
 import { loginOwnerName } from '../../app/login-owner'
 import { personName } from '../../app/people'
 import { turnOffAutomation } from '../../app/automation-actions'
@@ -24,7 +24,7 @@ import { AutomationFacts } from './AutomationFields'
 import { AutomationFrame } from './AutomationFrame'
 import { AutomationNote, type AutomationAccess } from './AutomationNote'
 import { RunsPanel, type RunsSource } from './RunsPanel'
-import { useChosenSecretNames } from './RunSecrets'
+import { useChosenSecretNames, type NamedSecret } from './RunSecrets'
 import { TriggerFacts } from './TriggerList'
 
 /**
@@ -55,7 +55,8 @@ function readerLogins(
  * of runs and no hint shows, because no run starts. `user` is the person
  * signed in, who reads the causes of their own failed runs as their owner.
  * `runLogin` is the login of the runs that the server names, or null when
- * no login serves the owner.
+ * no login serves the owner. `chosenSecrets` names the chosen secrets, as
+ * the same answer gives them, or is null when that answer names none.
  */
 export function AutomationReader(props: {
   access: Exclude<AutomationAccess, 'owner'>
@@ -63,6 +64,7 @@ export function AutomationReader(props: {
   user: User
   automation: Automation
   runLogin: SessionLogin | null
+  chosenSecrets: readonly NamedSecret[] | null
   repositories: readonly Repository[]
   sections: readonly Section[]
   runs: RunsSource
@@ -75,6 +77,8 @@ export function AutomationReader(props: {
   const secretNames = useChosenSecretNames(
     org.id,
     automation.capabilities.preapprovedSecretIds,
+    automation,
+    props.chosenSecrets,
   )
   const repositoryName =
     props.repositories.find((item) => item.id === automation.repositoryId)

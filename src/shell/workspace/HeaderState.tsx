@@ -3,14 +3,11 @@ import { useState } from 'react'
 import { ChevronDown, RotateCw } from 'lucide-react'
 import { Button } from '@firna/ui/button'
 import { useToast } from '@firna/ui/toast'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/workspace/HeaderState.module.css'
-import {
-  restartableStates,
-  restartCopy,
-} from '../../../docs/mockups/src/components/workspace/restartCopy'
-import { StatusGlyph } from '../../../docs/mockups/src/components/workspaces/StatusGlyph'
-import { activityPresentation } from '../../../docs/mockups/src/components/workspaces/status'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/workspace/HeaderState.module.css'
+import { restartCopy } from '../../ui/components/workspace/restartCopy'
+import { StatusGlyph } from '../../ui/components/workspaces/StatusGlyph'
+import { activityPresentation } from '../../ui/components/workspaces/status'
 import { errorMessage } from '../../app/api/client'
 import { readRestartWorkspaceResponse } from '../../app/api/read-workspaces'
 import { useServices } from '../../app/services'
@@ -20,6 +17,7 @@ import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import { MenuButton, type MenuEntry } from '../ui/Menu'
 import type { WorkspaceContext } from './features'
+import { mayRestartSoftware } from './restart-access'
 
 function StateText(props: { state: WorkspaceState }) {
   return (
@@ -50,7 +48,7 @@ export function HeaderState(props: {
   const [pending, setPending] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const shown: WorkspaceState = pending ? 'starting' : props.state
-  if (readOnly || !restartableStates.has(shown))
+  if (!mayRestartSoftware(readOnly, shown))
     return (
       <span className={styles.state}>
         <StateText state={shown} />

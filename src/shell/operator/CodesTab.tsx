@@ -5,8 +5,8 @@ import {
   disableLabel,
   newCodeWords,
   referralCodeLabel,
-} from '../../../docs/mockups/src/components/operator/codeCopy'
-import styles from '../../../docs/mockups/src/components/operator/codes.module.css'
+} from '../../ui/components/operator/codeCopy'
+import styles from '../../ui/components/operator/codes.module.css'
 import { readCodesPage } from '../../app/api/read-operator-waitlist'
 import { useNavigation } from '../../app/navigation'
 import { disableCode, makeInviteCode } from '../../app/operator-access'

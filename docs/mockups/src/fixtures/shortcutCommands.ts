@@ -1,11 +1,11 @@
-import type { Shortcut } from '../components/common/KeyChips'
-import { sendFeedbackLabel } from '../components/feedback/feedbackCopy'
+import type { Shortcut } from '../../../../src/ui/components/common/KeyChips'
+import { sendFeedbackLabel } from '../../../../src/ui/components/feedback/feedbackCopy'
 import {
   agentActionLabels,
   type CommandAgentAction,
-} from '../components/workspace/barCopy'
-import { mergeLatestCommandLabel } from '../components/workspace/mergeLatestCopy'
-import { transcriptItems } from '../components/workspace/transcriptCopy'
+} from '../../../../src/ui/components/workspace/barCopy'
+import { mergeLatestCommandLabel } from '../../../../src/ui/components/workspace/mergeLatestCopy'
+import { transcriptItems } from '../../../../src/ui/components/workspace/transcriptCopy'
 import {
   fixed,
   fixedGroups,
@@ -213,6 +213,10 @@ export const shortcutSpecs: readonly GroupSpec[] = [
       command('repositories-settings', 'Repositories settings', [
         ['⌥', '⌘', 'A'],
       ]),
+      {
+        ...fixed('Close the temporary tab', [['Esc']]),
+        words: ['italic', 'file'],
+      },
       tabMenuKeys,
     ],
   },

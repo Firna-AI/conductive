@@ -1,0 +1,65 @@
+/*
+ * The start of the empty chat fills the width of the chat and never grows
+ * past it. A branch name does not wrap, so without `min-width: 0` a long
+ * name would widen the start past a phone screen, in place of its ellipsis.
+ */
+.start {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.icon {
+  margin-bottom: 4px;
+  color: var(--ui-faint);
+}
+
+.title {
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-heading);
+  letter-spacing: var(--ui-tracking-heading);
+}
+
+.body {
+  max-width: 340px;
+  margin: 0 0 8px;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-md);
+  line-height: 1.5;
+}
+
+.chevron {
+  color: var(--ui-muted);
+}
+
+/* The repository picker, which its open menu hangs from. */
+.anchor {
+  display: inline-flex;
+  position: relative;
+}
+
+/*
+ * The repository picker and the branch control beside it. A narrow page
+ * puts the branch control on a line of its own.
+ */
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.note {
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-text-sm);
+}

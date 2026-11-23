@@ -55,14 +55,17 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - Every picture is a real screen of the catalogue, not a drawing of one.
   `ScreenFrame` lays the screen out at its own size, 1440 × 900 for a
   desktop screen and 390 × 800 for a phone screen, then scales it and
-  crops it to one part. `src/screens/marketingPictureList.ts` is the one
-  list of the pictures. It gives the frame of each picture. For each
-  layout, it gives the label, the screen, the part in px of the screen, and
-  the scale. The site and the capture command read the same list, and the
-  list imports nothing. `src/screens/marketingPictureCaptures.ts` gives the
-  capture page and the files of each picture, and it imports only the
-  list. `src/screens/marketingPictures.tsx` chooses the screen and its
-  state. When a layout of the app changes, look at the pictures again.
+  crops it to one part.
+  [`src/ui/screens/marketingPictureList.ts`](../../src/ui/screens/marketingPictureList.ts)
+  is the one list of the pictures. It gives the frame of each picture. For
+  each layout, it gives the label, the screen, the part in px of the
+  screen, and the scale. The site and the capture command read the same
+  list, and the list imports nothing.
+  [`src/ui/screens/marketingPictureCaptures.ts`](../../src/ui/screens/marketingPictureCaptures.ts)
+  gives the capture page and the files of each picture, and it imports
+  only the list. `src/screens/marketingPictures.tsx` chooses the screen
+  and its state. When a layout of the app changes, look at the pictures
+  again.
 - Each picture has a capture page at `marketing/pictures/<picture>`.
   `PictureCapture` in `src/screens/marketingPictures.tsx` draws the part of
   the screen of one layout at its own size, at scale 1 and without a frame,
@@ -89,10 +92,10 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   as Beta.
 - Each download is the file with a fixed name in the latest release of the
   public repository on GitHub, so its address always gives the newest DMG.
-  `src/brand.ts` derives the names from the product name, and
-  [`links.ts`](../../src/marketing/links.ts) of the site builds the
-  addresses. The words of the section come from `macAppSection` in
-  [`features.ts`](../../src/marketing/features.ts).
+  [`src/shared/brand.ts`](../../src/shared/brand.ts) derives the names from
+  the product name, and [`links.ts`](../../src/marketing/links.ts) of the
+  site builds the addresses. The words of the section come from
+  `macAppSection` in [`features.ts`](../../src/marketing/features.ts).
 - The hero sentence and the footer tagline name the Mac app beside the
   browser. The description of the home page, which a search result can
   show, is the hero sentence.
@@ -100,8 +103,8 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
   asks for no other account, because the app runs every cloud computer in
   its own account.
 - The product is "Conductive", on `conductive.build`.
-  `src/brand.ts` holds the name and the domains, so that one change renames
-  the product.
+  [`src/shared/brand.ts`](../../src/shared/brand.ts) holds the name and the
+  domains, so that one change renames the product.
 - The footer and the sign-in page link to `marketing/terms` and
   `marketing/privacy` through `LegalLinks`. The agreement of the sign-in
   page links to the same pages in its text.
@@ -126,9 +129,9 @@ Changes to those screens require recapture with the [capture steps](../../src/ma
 - `app/sign-in/terms` draws the page that the Worker shows before GitHub
   when a sign-in starts without the agreement, such as the browser sign-in
   of the Mac app. It has the words of the sign-in page from
-  `src/screens/signInCopy.ts`, and the agreement with its links. It runs
-  no script, so it has the look of the site, with only the wordmark in its
-  header and no footer.
+  [`src/ui/screens/signInCopy.ts`](../../src/ui/screens/signInCopy.ts), and
+  the agreement with its links. It runs no script, so it has the look of
+  the site, with only the wordmark in its header and no footer.
   Astro builds the agreement page with the same layouts and styles as the
   site. The Worker fills its Continue address and its links to the site.
 
@@ -218,7 +221,7 @@ the page.
 - How cloud hours count follows, with `SectionIntro`: the size of each
   cloud computer, then four rules under neutral hairlines, in two columns
   on a desktop. The rules give one pool for the org, every minute of every
-  cloud computer, the stop after 30 minutes without activity, and the
+  cloud computer, the stop after a set time without activity, and the
   extra hours.
 - The last call to action has the sentence and the two actions of the
   home page, through `ClosingCall`.

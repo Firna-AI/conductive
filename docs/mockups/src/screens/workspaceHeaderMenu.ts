@@ -1,5 +1,5 @@
-import type { MenuEntry } from '../components/common/Menu'
-import { workspaceMenuOf } from '../components/workspaces/workspaceMenu'
+import { workspaceMenuOf } from '../components/workspaces/rowControls'
+import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import type { PersonKey } from '../fixtures/members'
 import { viewerOf } from './sessionStarter'
 import type { WorkspaceState } from './workspaceState'
@@ -12,7 +12,7 @@ import type { WorkspaceState } from './workspaceState'
 export function headerMenuOf(
   state: WorkspaceState,
   owner: PersonKey,
-): MenuEntry[] {
+): MenuEntryData[] {
   return workspaceMenuOf({
     admin: state.viewer === 'admin',
     owner: viewerOf(state) === owner,

@@ -7,6 +7,7 @@ import { BROWSER_TEST_NOW } from './browser-clock.test-support'
 import { NativeCloseProbe } from '../test-support/native-close.test-support'
 import { RunnerConnectionStore } from './runner-connection-store'
 import { nativeWarningObservation } from '../test-support/native-warnings'
+import { RUNNER_WORK_MARK_KEY } from './runner-work-watch'
 
 const CLOCK = '__test:runner-clock'
 
@@ -53,6 +54,11 @@ export class Workspace extends ProductionWorkspace {
         (context.storage.kv.get<number>(key) ?? 0) + 1,
       )
     }
+    const put = context.storage.put.bind(context.storage)
+    context.storage.put = async (...args: unknown[]) => {
+      if (args[0] === RUNNER_WORK_MARK_KEY) await count('__test:runner-marks')
+      return Reflect.apply(put, context.storage, args)
+    }
     super(context, env, () => clock.now, {
       readRunnerAccess: async (workspaceId, tokenHash) => {
         await count('__test:runner-access-reads')
@@ -72,9 +78,9 @@ export class Workspace extends ProductionWorkspace {
       this.integration.files.runner,
     )
     this.integration.files.runner.attach = (id, send) => {
-      this.fileBinding = id
       this.fileAttached.push(id)
       attach(id, send)
+      this.fileBinding = id
     }
     const detach = this.integration.files.runner.detach.bind(
       this.integration.files.runner,
@@ -152,6 +158,8 @@ export class Workspace extends ProductionWorkspace {
       await this.settledAlarms()
     } else if (action === 'drain') {
       await this.chat.store.settled()
+    } else if (action === 'check-repository') {
+      await this.chat.store.run(() => this.chat.runner.checkRepository())
     } else if (action === 'alarm') {
       await this.alarm()
       await this.settledAlarms()
@@ -193,6 +201,7 @@ export class Workspace extends ProductionWorkspace {
       ready: this.ctx.storage.kv.get('__test:runner-ready') ?? 0,
       detached: this.ctx.storage.kv.get('__test:runner-detached') ?? 0,
       reads: this.ctx.storage.kv.get('__test:runner-access-reads') ?? 0,
+      marks: this.ctx.storage.kv.get('__test:runner-marks') ?? 0,
       warnings: await this.warnings.warningCalls(),
       autoResponse: this.ctx.getWebSocketAutoResponse()?.request ?? null,
       sockets: this.ctx.getWebSockets().map((socket) => ({

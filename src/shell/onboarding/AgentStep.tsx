@@ -1,5 +1,5 @@
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
-import { getStartedCopy } from '../../../docs/mockups/src/screens/getStartedCopy'
+import { Section } from '../../ui/components/settings/Section'
+import { getStartedCopy } from '../../ui/screens/getStartedCopy'
 import { inOrgs, orgLoginOnly } from '../../app/default-logins'
 import type { StepState } from '../../app/get-started'
 import { useStore } from '../../app/store'

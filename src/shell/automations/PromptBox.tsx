@@ -3,9 +3,9 @@ import { useId, type ReactNode } from 'react'
 import { InputFrame } from '@firna/ui/input'
 import { Plug } from 'lucide-react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import form from '../../../docs/mockups/src/components/automations/form.module.css'
-import styles from '../../../docs/mockups/src/components/automations/PromptBox.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import form from '../../ui/components/automations/form.module.css'
+import styles from '../../ui/components/automations/PromptBox.module.css'
 import { effortLabels, modelLabel } from '../../shared/agents'
 import { agentNames } from '../account/labels'
 import { ModelPicker } from '../ui/ModelPicker'
@@ -65,6 +65,8 @@ export function PromptEditor(
     prompt: string
     choice: AgentChoice
     models: readonly AgentModel[]
+    /** The favourites of the account, which the model menu lists first. */
+    favourites: readonly AgentChoice[]
     login: string
     tool: ReactNode
     changePrompt: (prompt: string) => void
@@ -96,6 +98,7 @@ export function PromptEditor(
           <ModelPicker
             change={props.changeChoice}
             choice={props.choice}
+            favourites={props.favourites}
             models={props.models}
           />
         </div>

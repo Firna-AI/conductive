@@ -18,6 +18,7 @@ import {
   previewPath,
   previewsPath,
 } from '../shared/previews'
+import { servicePaths } from '../shared/services'
 import type { FakeRouteWriter } from './fake-api-routes'
 import { FAKE_IDS } from './fixtures/core'
 import {
@@ -208,6 +209,8 @@ export function fakeToolRoutes(
   routes.json('POST', previewsPath(org, id), data.preview, 201)
   fakeFilesPreview(routes, 'open')
   routes.empty('DELETE', previewPath(org, id, FAKE_IDS.preview))
+  // Software without services, as before, unless a test serves a list.
+  routes.json('GET', servicePaths.catalogue(org, id), { state: 'unsupported' })
   routes.json('GET', desktopPath(org, id), data.desktop)
   fakeGitHub(routes, id, banner)
 }

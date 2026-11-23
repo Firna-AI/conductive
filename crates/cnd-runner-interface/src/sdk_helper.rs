@@ -5,10 +5,11 @@ use ts_rs::TS;
 
 use crate::agents::AgentChoice;
 use crate::provider_events::ProviderEvent;
-use crate::sdk_helper_options::{HelperOptions, ProviderInput};
+use crate::sdk_helper_options::{HelperOptions, OrgSkills, ProviderInput};
+use crate::skills::{HelperSkillLists, SkillInput};
 use crate::wire::ReadonlyVec;
 
-/// One runner request. Each request receives one response or error.
+/// One runner request. Scans receive a skills result; other requests receive a response or error.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(
     tag = "type",
@@ -29,6 +30,10 @@ pub enum HelperRequest {
         request_id: String,
         /// Agent input.
         input: Box<ProviderInput>,
+        /// Current private Codex paths. Absent for measurement clients.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(as = "Option<ReadonlyVec<SkillInput>>", optional)]
+        skills: Option<Vec<SkillInput>>,
     },
     /// Change the selected model or defer the change.
     Model {
@@ -52,6 +57,21 @@ pub enum HelperRequest {
         /// Request identity.
         request_id: String,
     },
+    /// Scan agent skills without starting a model session.
+    Skills {
+        /// Request identity.
+        request_id: String,
+        /// Repository whose agent skills are listed.
+        repository: String,
+        /// Shared agent home, including the shared Codex home.
+        home: String,
+        /// Force a new Codex app-server list after a connect or refresh.
+        reload: bool,
+        /// Org source, trust, and leased copy. Its selected skills join both lists.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[ts(optional = nullable)]
+        org_skills: Option<OrgSkills>,
+    },
 }
 
 /// Result of a model change.
@@ -68,6 +88,14 @@ pub enum HelperModelResult {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, TS)]
 #[serde(tag = "type", rename_all_fields = "camelCase")]
 pub enum HelperOutput {
+    /// Private scanner reply, before filtering and report bounds.
+    #[serde(rename = "skills")]
+    Skills {
+        /// Matching scanner request identity.
+        request_id: String,
+        /// Full discovered lists, including private paths.
+        skills: HelperSkillLists,
+    },
     /// A request finished.
     #[serde(rename = "response")]
     Response {

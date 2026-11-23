@@ -82,8 +82,9 @@ describe('the restart of the software', () => {
       () => 20,
     )
     expect(ended).toMatchObject({ state: 'starting', runningSessions: [] })
-    expect(readyLifecycle(ended)).toMatchObject({ state: 'ready' })
-    expect(readyLifecycle(ended).softwareRestartAt).toBeUndefined()
+    const resumed = readyLifecycle(ended, 20)
+    expect(resumed).toMatchObject({ state: 'ready' })
+    expect(resumed.softwareRestartAt).toBeUndefined()
   })
 
   it('fails at the time limit, and only while it starts', () => {
@@ -98,5 +99,24 @@ describe('the restart of the software', () => {
     expect(restartDeadline(ready)).toBeNull()
     const stopped = { ...restarting, state: 'stopped' as const }
     expect(expiredRestartLifecycle(stopped, deadline)).toBe(stopped)
+  })
+
+  it('checks the automatic restart deadline when the runner reports ready', () => {
+    const restarting = {
+      ...restartingLifecycle(ready, 'ws_1', 10),
+      automaticRestartAt: 10,
+      runnerDisconnectedAt: 0,
+      runnerConnected: false,
+    }
+    expect(readyLifecycle(restarting, 180_009)).toMatchObject({
+      state: 'ready',
+      runnerConnected: true,
+      automaticRestartAt: undefined,
+      runnerDisconnectedAt: undefined,
+    })
+    expect(readyLifecycle(restarting, 180_010)).toMatchObject({
+      state: 'error',
+      error: { code: 'restart_failed' },
+    })
   })
 })

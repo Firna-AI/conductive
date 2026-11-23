@@ -1,6 +1,9 @@
 import { barConversationKeys } from './barConversations'
+import { capabilityConversationKeys } from './capabilityConversations'
 import { secretConversationKeys } from './secretConversations'
 import { secretValueConversationKeys } from './secretValueConversations'
+import { explanationConversationKeys } from './explanationChats'
+import { wakeConversationKeys } from './wakeConversations'
 
 /**
  * The keys of the chat transcripts of `conversations.ts`, one for each
@@ -14,6 +17,7 @@ export const conversationKeys = [
   'sandbox-stopped',
   'stopped-from',
   'stopped-from-other',
+  'stopped-from-unknown',
   'failed',
   'model-not-served',
   'queued',
@@ -54,6 +58,7 @@ export const conversationKeys = [
   'steered',
   'mac-in-work',
   'mention-answer',
+  'skill-answer',
   'file-answer',
   'file-answer-in-work',
   'table-resources',
@@ -61,11 +66,18 @@ export const conversationKeys = [
   'table-rows',
   'table-short-row',
   'table-wide',
+  'table-line-breaks',
   'tables-in-work',
   'nested-lists',
   'nested-lists-in-work',
+  'task-lists',
   'headings',
   'headings-in-work',
+  'formatting',
+  'formatting-writing',
+  'formatting-in-work',
+  'marks-as-typed',
+  'web-images',
   'postcode-history',
   'chat-links',
   'chat-link-labels',
@@ -75,4 +87,7 @@ export const conversationKeys = [
   ...barConversationKeys,
   ...secretConversationKeys,
   ...secretValueConversationKeys,
+  ...capabilityConversationKeys,
+  ...explanationConversationKeys,
+  ...wakeConversationKeys,
 ] as const

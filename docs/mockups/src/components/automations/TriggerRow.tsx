@@ -1,10 +1,13 @@
-import type { Viewport } from '@mokly/mokly'
-import { ChevronDown, ChevronUp, Clock, GitPullRequest, X } from 'lucide-react'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
+import { ChevronDown, ChevronUp, Clock, GitPullRequest } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
-import type { Trigger } from '../../fixtures/automations'
+import type { Trigger } from '../../../../../src/ui/components/automations/triggers'
 import { paths } from '../../paths'
-import { ActionButton, IconButton } from '../common/actions'
+import {
+  actionButton,
+  iconButton,
+} from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { AuthorFilter } from './AuthorFilter'
 import { CronField, ScheduleControls } from './ScheduleControls'
@@ -13,8 +16,9 @@ import {
   eventLabels,
   scheduleLabels,
   triggerSummary,
-} from './triggerCopy'
-import styles from './TriggerRow.module.css'
+} from '../../../../../src/ui/components/automations/triggerCopy'
+import { instanceKey } from '../../instanceKey'
+import styles from '../../../../../src/ui/components/automations/TriggerRow.module.css'
 
 /** The mark of a trigger: a clock for a schedule, or a pull request. */
 function TriggerIcon(props: { trigger: Trigger }) {
@@ -44,16 +48,20 @@ function FilterSummary(props: { trigger: Trigger }) {
   )
 }
 
-/** Opens and closes the author filter of a pull request trigger. */
-function AuthorsToggle(props: { open: boolean }) {
+/**
+ * Opens and closes the author filter of a pull request trigger. `name` is
+ * the label of the trigger, which names the toggle for Mokly.
+ */
+function AuthorsToggle(props: { open: boolean; name: string }) {
   const Chevron = props.open ? ChevronUp : ChevronDown
   const button = (
-    <ActionButton
+    <actionButton.Component
+      moklyInstance={`authors-${instanceKey(props.name)}`}
       tone="plain"
       trailing={<Chevron aria-hidden className={styles.chevron} size={13} />}
     >
       Authors
-    </ActionButton>
+    </actionButton.Component>
   )
   if (props.open) return button
   return (
@@ -93,8 +101,15 @@ export function TriggerRow(props: { edit: TriggerEdit; viewport: Viewport }) {
         ) : null}
       </div>
       <span className={styles.end}>
-        {trigger.kind === 'pull-request' ? <AuthorsToggle open={open} /> : null}
-        <IconButton icon={X} label={`Remove ${name}`} quiet />
+        {trigger.kind === 'pull-request' ? (
+          <AuthorsToggle name={name} open={open} />
+        ) : null}
+        <iconButton.Component
+          icon="x"
+          label={`Remove ${name}`}
+          moklyInstance={`remove-${instanceKey(name)}`}
+          quiet
+        />
       </span>
     </li>
   )

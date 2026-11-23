@@ -1,11 +1,11 @@
 import type { SchemaProps, Viewport } from '@mokly/mokly'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { ActionButton } from '../components/common/actions'
-import { MobileFrame } from '../components/layout/AppFrame'
-import { Page } from '../components/layout/Page'
-import { AccountChoice } from '../components/operator/AccountChoice'
-import { OrgNameFields } from '../components/settings/OrgSections'
-import { RepositoryList } from '../components/settings/RepositoryList'
+import { actionButton } from '../entries/components/common/actions.mockup'
+import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'
+import { page as pagePart } from '../entries/components/layout/Page.mockup'
+import { AccountChoice } from '../../../../src/ui/components/operator/AccountChoice'
+import { orgNameFields } from '../entries/components/settings/OrgSections.mockup'
+import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { createAccounts } from '../fixtures/operatorProviders'
 import {
   anotherOrg,
@@ -13,7 +13,8 @@ import {
   type ReachableRepository,
 } from '../fixtures/repositories'
 import { paths } from '../paths'
-import styles from './forms.module.css'
+import { defined } from '../defined'
+import styles from '../../../../src/ui/screens/forms.module.css'
 
 export const createOrgSchema = {
   type: 'object',
@@ -62,9 +63,9 @@ function listOf(
  * workspaces use. The page stands alone, without the rail, until the org
  * exists. Create org needs at least one repository, because Create org
  * starts the first build of the cloud computer of the org. An operator
- * also chooses the provider account of the org, which it keeps for its
- * whole life: By weights, the default, or an account by its ID. Nobody
- * else sees the choice.
+ * also chooses the provider account of the org: By weights, the default,
+ * or an account by its ID. An operator can switch the account later, on
+ * the page of the org. Nobody else sees the choice.
  */
 export function CreateOrgScreen(props: {
   state: CreateOrgState
@@ -78,14 +79,20 @@ export function CreateOrgScreen(props: {
   const cancelTo = first ? paths.getStartedInstalled : paths.shell
   const createdTo = first ? paths.getStartedOrgCreated : paths.anotherNewOrg
   const create = (
-    <ActionButton disabled={!ready} tone="primary">
+    <actionButton.Component
+      disabled={!ready}
+      moklyInstance="create-org"
+      tone="primary"
+    >
       Create org
-    </ActionButton>
+    </actionButton.Component>
   )
   const actions = (
     <>
       <ScreenLink asChild to={cancelTo}>
-        <ActionButton>Cancel</ActionButton>
+        <actionButton.Component moklyInstance="cancel-create-org">
+          Cancel
+        </actionButton.Component>
       </ScreenLink>
       {ready ? (
         <ScreenLink asChild to={createdTo}>
@@ -98,21 +105,31 @@ export function CreateOrgScreen(props: {
   )
   const mobile = props.viewport === 'mobile'
   const page = (
-    <Page
-      actions={mobile ? actions : undefined}
-      back={mobile ? { label: 'Cancel', to: cancelTo } : undefined}
+    <pagePart.Component
       title="Create an org"
+      {...defined({
+        actions: mobile ? actions : undefined,
+        back: mobile ? { label: 'Cancel', to: cancelTo } : undefined,
+      })}
       viewport={props.viewport}
     >
       <div className={styles.form}>
-        <OrgNameFields initials={form.initials} name={form.name} />
+        <orgNameFields.Component
+          initials={form.initials}
+          moklyInstance="org-name"
+          name={form.name}
+        />
         <div className={styles.field}>
           <span className={styles.fieldLabel}>Repositories</span>
           <span className={styles.fieldHint}>
             The cloud computer of the org holds these repositories, and its
             workspaces start in them. Add at least one.
           </span>
-          <RepositoryList repositories={repositories} search={form.search} />
+          <repositoryList.Component
+            moklyInstance="repositories"
+            repositories={repositories}
+            search={form.search}
+          />
         </div>
         {account === 'hidden' ? null : (
           <AccountChoice
@@ -122,8 +139,8 @@ export function CreateOrgScreen(props: {
         )}
         {mobile ? null : <div className={styles.actions}>{actions}</div>}
       </div>
-    </Page>
+    </pagePart.Component>
   )
-  if (mobile) return <MobileFrame>{page}</MobileFrame>
+  if (mobile) return <mobileFrame.Component>{page}</mobileFrame.Component>
   return <div className={styles.standalone}>{page}</div>
 }

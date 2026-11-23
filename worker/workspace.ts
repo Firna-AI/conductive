@@ -1,9 +1,7 @@
 import { readChatWorkspaceResponse } from './chat/workspace-response'
-import type {
-  WorkspaceCompositionEnv,
-  WorkspaceChatResolvers,
-} from './chat/workspace-integration'
-import { AgentSessionWorkspace } from './tools/workspace'
+import type { WorkspaceCompositionEnv } from './chat/workspace-integration'
+import type { WorkspaceChatResolvers } from './chat/workspace-resolvers'
+import { CapabilityWorkspace } from './secrets/capability-workspace'
 import { lifecycleDependencies } from './lifecycle/runtime'
 import type { ToolPreviewCall } from './tools/services'
 import { WorkspaceFeatures } from './features/workspace'
@@ -23,12 +21,13 @@ import type { WorkspaceContinue } from './lifecycle/continue'
 import type { WorkspaceRepositoryChange } from './lifecycle/repository-change'
 import { WorkspaceJobs } from './lifecycle/workspace-jobs'
 import { changeRestart, type RestartStep } from './lifecycle/software-restart'
+import { createAutomaticRestart } from './lifecycle/automatic-restart'
 import { resumeCreationCheckpoint } from './members/creation-checkpoint'
 import type { ConnectionScheduler } from './security/connection-access'
 import { WorkspaceAlarmRunner } from './features/workspace-alarm'
 import { retryAutomationReport } from './chat/automation-run'
 
-export class Workspace extends AgentSessionWorkspace {
+export class Workspace extends CapabilityWorkspace {
   private readonly features: WorkspaceFeatures
   private readonly github: WorkspaceGitHub
   private readonly members: WorkspaceMembersReceiver
@@ -70,6 +69,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
     )
     this.integration.onStopped((id) => this.features.revokeWorkspace(id, true))
+    this.integration.onStopped(this.chat.runner.services.stoppedHook)
     this.github = new WorkspaceGitHub(
       this.integration.storage,
       env,
@@ -77,6 +77,7 @@ export class Workspace extends AgentSessionWorkspace {
       this.chat,
       matches,
       this.integration.alarms,
+      this.integration.baseChanges,
     )
     this.members = new WorkspaceMembersReceiver(
       context.storage,
@@ -92,6 +93,13 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       run: (operation) => this.run(operation),
     })
+    const restart = createAutomaticRestart({
+      ...this.integration,
+      env,
+      dependencies,
+      run: (work) => this.run(work),
+      refreshTerminal: (target) => this.features.refreshTerminal(target),
+    })
     this.alarmRunner = new WorkspaceAlarmRunner({
       context,
       env,
@@ -106,9 +114,11 @@ export class Workspace extends AgentSessionWorkspace {
       github: this.github,
       jobs: this.jobs,
       features: this.features,
-      lifecycle: () => this.alarmLifecycle(),
+      lifecycle: (dispatch) =>
+        this.alarmLifecycle(dispatch && (() => restart(dispatch))),
       automationReport: () =>
         retryAutomationReport(env.DB, this.chat.store, now),
+      sessionWatches: () => this.sessionWatches.alarm(),
     })
   }
 

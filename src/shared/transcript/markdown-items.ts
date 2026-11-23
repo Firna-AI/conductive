@@ -3,8 +3,9 @@ import type { ToolCall } from '../generated/ToolCall'
 import type { ChangedFile } from '../generated/ChangedFile'
 import type { UserMessage } from '../generated/UserMessage'
 import { sessionLink } from '../session-link'
+import { capabilityChangeText } from '../capability-change'
 
-import { endReasonText } from '../../../docs/mockups/src/components/chat/endReasonCopy'
+import { endReasonText } from '../../ui/components/chat/endReasonCopy'
 import {
   attachmentForMention,
   textWithAttachmentNames,
@@ -16,9 +17,10 @@ import {
   lostText,
   moreFiles,
   turnFilesUnavailable,
-} from '../../../docs/mockups/src/components/chat/lostCopy'
-import { continuedNote } from '../../../docs/mockups/src/components/workspace/barCopy'
-import { repositoryChangedNote } from '../../../docs/mockups/src/components/workspace/repositoryMoveCopy'
+} from '../../ui/components/chat/lostCopy'
+import { continuedNote } from '../../ui/components/workspace/barCopy'
+import { repositoryChangedNote } from '../../ui/components/workspace/repositoryMoveCopy'
+import { wakeText, wakeWords } from '../../ui/components/chat/wakeCopy'
 import {
   commandCopy,
   commandRan,
@@ -104,6 +106,8 @@ export function itemMarkdown(
   links: { origin: string; orgId: string },
 ): string {
   switch (item.kind) {
+    case 'capabilities-changed':
+      return note(capabilityChangeText(item.member, item.changes, true))
     case 'user':
       return userMarkdown(item.message)
     case 'agent':
@@ -155,20 +159,36 @@ export function itemMarkdown(
         lostText(lostData[item.marker.runnerEventType], item.marker.reason),
       )
     case 'continued': {
-      // The words of the note of the chat, with each branch as code.
+      // The words of the note of the chat, with each branch as code, by its
+      // label, or by its real name without one.
       const words = continuedNote(
         plainText(continuedBy(item.member, readers)),
-        inlineCode(item.baseBranch),
+        inlineCode(item.displayBaseBranch ?? item.baseBranch),
       )
-      return note(`${words.before}${inlineCode(item.branch)}${words.after}`)
+      const branch = inlineCode(item.displayBranch ?? item.branch)
+      return note(`${words.before}${branch}${words.after}`)
     }
     case 'repository-changed': {
-      // The words of the note of the chat, with the names as code.
+      // The words of the note of the chat, with the names as code, and the
+      // new branch by its label, or by its real name without one.
       const words = repositoryChangedNote(
         plainText(continuedBy(item.member, readers)),
       )
+      const branch = inlineCode(item.displayBranch ?? item.branch)
       return note(
-        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${inlineCode(item.branch)}`,
+        `${words.before}${inlineCode(item.repository.fullName)}${words.between}${branch}`,
+      )
+    }
+    case 'wake': {
+      // The words of the line of the chat, with the link that the agent got
+      // in place of the chip. The angle brackets keep the link whole.
+      const { notice } = item
+      const words = wakeWords(notice.state, notice.reason ?? undefined)
+      return note(
+        wakeText(
+          { ...words, notes: words.notes.map(plainText) },
+          `<${notice.watchedSession.link}>`,
+        ),
       )
     }
   }

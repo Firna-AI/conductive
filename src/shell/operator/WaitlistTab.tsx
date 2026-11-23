@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Check, Hourglass } from 'lucide-react'
 import { TableCell, type TableColumn } from '@firna/ui/table'
-import { EmptyState } from '../../../docs/mockups/src/components/common/EmptyState'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
+import { EmptyState } from '../../ui/components/common/EmptyState'
+import { StatusText } from '../../ui/components/common/StatusText'
 import {
   approvedEmailLines,
   approvedLabel,
   emptyWaitlist,
-} from '../../../docs/mockups/src/components/operator/accessCopy'
-import styles from '../../../docs/mockups/src/components/operator/waitlist.module.css'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+} from '../../ui/components/operator/accessCopy'
+import styles from '../../ui/components/operator/waitlist.module.css'
+import { Section } from '../../ui/components/settings/Section'
 import { readWaitlistPage } from '../../app/api/read-operator-waitlist'
 import { approveUser } from '../../app/operator-access'
 import {

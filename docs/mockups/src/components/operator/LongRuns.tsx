@@ -1,24 +1,25 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Copy } from 'lucide-react'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import type { LongRun, RunOwner } from '../../fixtures/operatorRuns'
-import { IconButton } from '../common/actions'
-import a11y from '../common/a11y.module.css'
-import { Section } from '../settings/Section'
-import { workspaceLabel } from '../workspaces/label'
-import { activityPresentation } from '../workspaces/status'
-import { StatusGlyph } from '../workspaces/StatusGlyph'
+import { instanceKey } from '../../instanceKey'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { section } from '../../entries/components/settings/Section.mockup'
+import { workspaceLabel } from '../../../../../src/ui/components/workspaces/label'
+import { activityPresentation } from '../../../../../src/ui/components/workspaces/status'
+import { StatusGlyph } from '../../../../../src/ui/components/workspaces/StatusGlyph'
 import { NameCell, TargetState } from './directory'
-import directory from './directory.module.css'
+import directory from '../../../../../src/ui/components/operator/directory.module.css'
 import { orgTableSize } from './LargestOrgs'
 import {
   copyComputerLabel,
   formatRunLength,
   longRunsWords,
-} from './longRunsCopy'
+} from '../../../../../src/ui/components/operator/longRunsCopy'
 import { orgPagePaths, userPagePath } from './targetPages'
 import { InlineLink, NameLink } from './targets'
-import styles from './LongRuns.module.css'
+import styles from '../../../../../src/ui/components/operator/LongRuns.module.css'
 
 /**
  * The fixed columns fit their longest text: a login such as @calummoore,
@@ -88,13 +89,13 @@ function RunCell(props: { run: LongRun }) {
  * because a phone leaves out the owner. The login keeps the mark from
  * reading as a mark of the org.
  */
-function SuspendedOwnerLine(props: { owner: RunOwner }) {
+function SuspendedOwnerLine(props: { owner: RunOwner; id: string }) {
   const { login, status } = props.owner
   return (
     <>
       <InlineLink to={userPagePath(login, status)}>@{login}</InlineLink>
       {' · '}
-      <TargetState status="suspended" />
+      <TargetState id={props.id} status="suspended" />
     </>
   )
 }
@@ -105,17 +106,23 @@ function SuspendedOwnerLine(props: { owner: RunOwner }) {
  * and that state keep their room in a narrow window.
  */
 function OrgCell(props: { run: LongRun; viewport: Viewport }) {
-  const { org, owner } = props.run
+  const { org, owner, number } = props.run
   const ownerLine =
     props.viewport === 'mobile' && owner.status === 'suspended' ? (
-      <SuspendedOwnerLine owner={owner} />
+      <SuspendedOwnerLine
+        id={`owner-line-${instanceKey(owner.login)}-${number}`}
+        owner={owner}
+      />
     ) : undefined
   return (
     <span className={styles.text}>
       <NameCell
         detail={
           org.status === 'active' ? undefined : (
-            <TargetState status={org.status} />
+            <TargetState
+              id={`org-${instanceKey(org.name)}-${number}`}
+              status={org.status}
+            />
           )
         }
         mark={null}
@@ -140,7 +147,16 @@ function OwnerCell(props: { run: LongRun }) {
   return (
     <span className={styles.text}>
       <NameCell
-        detail={suspended ? <TargetState status="suspended" /> : number}
+        detail={
+          suspended ? (
+            <TargetState
+              id={`owner-${instanceKey(owner.login)}-${props.run.number}`}
+              status="suspended"
+            />
+          ) : (
+            number
+          )
+        }
         mark={null}
         more={suspended ? number : undefined}
         name={
@@ -184,7 +200,10 @@ export function LongRuns(props: {
   viewport: Viewport
 }) {
   return (
-    <Section title={longRunsWords.title}>
+    <section.Component
+      moklyInstance="long-runs-section"
+      title={longRunsWords.title}
+    >
       {props.runs.length === 0 ? (
         <p className={directory.empty}>{longRunsWords.empty}</p>
       ) : (
@@ -197,6 +216,6 @@ export function LongRuns(props: {
           size={orgTableSize[props.viewport]}
         />
       )}
-    </Section>
+    </section.Component>
   )
 }

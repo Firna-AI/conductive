@@ -4,7 +4,7 @@
  * when a start fails.
  */
 
-import { restartCopy } from '../components/workspace/restartCopy'
+import { restartCopy } from '../../../../src/ui/components/workspace/restartCopy'
 import { savedCarts } from './workspaces'
 
 export type StartingLog = {

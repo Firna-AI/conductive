@@ -2,8 +2,8 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
-import toolGroup from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
+import toolGroup from '../../ui/components/chat/ToolGroup.module.css'
+import a11y from '../../ui/components/common/a11y.module.css'
 import { accessibleName } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'
 import { chatFiles } from '../chat-files-test-kit'
@@ -11,6 +11,7 @@ import {
   MentionsProvider,
   type ChatMentions,
 } from '../mentions/MentionsContext'
+import { FakeSkills } from '../mentions/skills-test-kit'
 import { MessageLine } from './MessageLine'
 
 /** The text of a node, with each run of white space as one space. */
@@ -41,6 +42,7 @@ it('shows each heading of a closed message line as text of the line in the headi
         '### Then',
         'Run the checkout tests.',
         '## ',
+        '## ![](x)',
       ].join('\n')}
     />,
   )
@@ -59,15 +61,21 @@ it('shows each heading of a closed message line as text of the line in the headi
   })
 })
 
-it('keeps the closed text as the name of an open line only when the blocks before its table show no text: empty headings, formatting marks alone, an empty code block, or bullets of such items', async () => {
+it('keeps the closed text as the name of an open line only when the blocks before its table show no text: empty headings, headings of white-space code, or an empty code block, and shows a mark without its pair as typed in the line', async () => {
   const table = ['| Workers | Time |', '| ---: | ---: |', '| 4 | 3m 10s |']
   // Each lead opens in a line of its own, so each case fails on its own.
   const leads = {
+    empty: ['## ', '## ` `'],
+    emptyCode: ['```', '```'],
+    // An image with no alt text that opens nothing shows no words.
+    image: ['![](x)'],
+    imageHeading: ['## ![](x)'],
     headings: ['## ', '## **', '### `', '**', '---'],
     boldMarks: ['**'],
-    emptyCode: ['```', '```'],
-    bullets: ['- **'],
-    numbers: ['1. **'],
+    // A blank line ends each list, because a table line right under an
+    // item continues the text of the item, as CommonMark reads it.
+    bullets: ['- **', ''],
+    numbers: ['1. **', ''],
     codeMarks: ['```', '**', '```'],
   }
   const names: Record<string, string> = {}
@@ -77,18 +85,22 @@ it('keeps the closed text as the name of an open line only when the blocks befor
     names[lead] = accessibleName(line)
   }
   expect(names).toEqual({
-    headings: 'Workers · Time · 4 · 3m 10s',
-    boldMarks: 'Workers · Time · 4 · 3m 10s',
+    empty: 'Workers · Time · 4 · 3m 10s',
     emptyCode: 'Workers · Time · 4 · 3m 10s',
-    bullets: 'Workers · Time · 4 · 3m 10s',
-    // The line writes the number of each item, which names the line.
-    numbers: '1.',
+    image: 'Workers · Time · 4 · 3m 10s',
+    imageHeading: 'Workers · Time · 4 · 3m 10s',
+    // A mark without its pair is text, so these leads name the line.
+    headings: '** ` **',
+    boldMarks: '**',
+    bullets: '**',
+    // The line writes the number of each item, which names the line too.
+    numbers: '1. **',
     // A code block shows its text as the agent wrote it.
     codeMarks: '**',
   })
 })
 
-it('shows file chips in the open line, and nothing that takes focus in its hidden copy, after an empty heading, bold marks alone, or an empty code block', async () => {
+it('shows file chips in the open line, and nothing that takes focus in its hidden copy, after an empty heading or an empty code block, and no hidden copy after a mark as typed', async () => {
   const entry = {
     path: 'src/app.ts',
     name: 'app.ts',
@@ -98,6 +110,7 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
   const { files } = await chatFiles([entry])
   const mentions: ChatMentions = {
     files,
+    skills: new FakeSkills({ claude: [], codex: [] }),
     openFile: () => undefined,
     showFolder: () => undefined,
     href: (item) => `/files/${item.path}`,
@@ -107,6 +120,8 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
     heading: ['## '],
     boldMarks: ['**'],
     emptyCode: ['```', '```'],
+    image: ['![](x)'],
+    imageHeading: ['## ![](x)'],
   }
   const copies: Record<string, unknown> = {}
   for (const [lead, lines] of Object.entries(leads)) {
@@ -127,5 +142,14 @@ it('shows file chips in the open line, and nothing that takes focus in its hidde
     hiddenText: 'File · Note · @src/app.ts:4 · Read',
     shown: 1,
   }
-  expect(copies).toEqual({ heading: copy, boldMarks: copy, emptyCode: copy })
+  // A mark without its pair shows as typed, so it names the line, which
+  // then needs no hidden copy.
+  const named = { hidden: undefined, hiddenText: '', shown: 1 }
+  expect(copies).toEqual({
+    heading: copy,
+    boldMarks: named,
+    emptyCode: copy,
+    image: copy,
+    imageHeading: copy,
+  })
 })

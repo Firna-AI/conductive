@@ -2,6 +2,7 @@ import type { Repository } from '../../src/shared/org-settings'
 import type { Section } from '../../src/shared/sections'
 import type { WorkspaceRow } from '../lifecycle/workspace-row'
 import { activeOrgIdPredicate } from '../data/org-access'
+import { archivedComputerColumn } from '../data/archived-computer'
 import { REPOSITORY_ORDER } from '../data/repository-order'
 import { requireActiveOrg } from '../data/user-access'
 import { workspaceNameColumn } from '../data/workspace-name'
@@ -66,6 +67,7 @@ export async function shellWorkspaces(
      ${workspaceNameColumn('w')}, w.branch, w.sandbox_id AS sandboxId,
      w.provider_account AS providerAccount, w.state, w.github_summary AS github,
      w.created_at AS createdAt, w.updated_at AS updatedAt, w.archived_at AS archivedAt,
+     ${archivedComputerColumn('w')},
      w.stopped_at AS stoppedAt, w.next_disk_keepalive_at AS nextDiskKeepaliveAt,
      r.agent, r.model, r.effort, r.session_id AS sessionId, r.first_turn_id AS firstTurnId,
      COALESCE(m.through_event_number, 0) AS readThroughEventNumber

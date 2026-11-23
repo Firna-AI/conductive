@@ -22,5 +22,6 @@
 - **Left out:** None.
 - **Wider fix:** D. It removes the case, while B and C only limit it.
 - **Previous examples:** None found.
+- **Related:** `plans/follow-ups/agent-tool-text-skips-secret-mask.md` asks whether the agent-tool paths, such as `rename_workspace`, must hide secret values in names and messages. A `workspace.title` event of this item already passes the runner output filter. The two items ask different questions, so they stay apart.
 - **Recommendation:** D. No sandbox code can then set the name at all, because the Worker owns each title. C is the smaller change if the runner path must stay.
 - **Action:** ask the user, because D removes functionality that is on `origin/main`, and B and C add a stricter check of runner input, and the always-on rules give each of these choices to the user.

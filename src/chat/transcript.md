@@ -4,8 +4,9 @@ This guide belongs to [the chat](README.md). It gives the rules of the
 stream cursor, the session logs, the transcript items and their counts,
 the end reason of a finished turn, the standard speed of a fast turn, the
 lost lines, the turns, the open run
-of tool calls of a running turn, the work fold of each ended turn, and Try
-again. Its [key code](#key-code) names the shared transcript modules and
+of tool calls of a running turn, the work fold of each ended turn, the
+wake lines, and Try again. Its [key code](#key-code) names the shared
+transcript modules and
 the parts of the chat that draw the transcript.
 
 - The stream cursor spans the whole workspace: every session, file, and
@@ -14,6 +15,15 @@ the parts of the chat that draw the transcript.
 - Each session keeps its own event log. A session that opens later loads its
   full stored history, whose numbers can be older than the stream's cursor,
   so a history never goes through the stream's duplicate check.
+- The transcript fold turns the events and records of a session into its
+  transcript. It never changes a published transcript, one of its items, or
+  its map of first times. That map gives the time of the first event of each
+  item. So `sameData` never hides a change, and `transcriptLookups` can keep
+  the indexes of each published transcript.
+- The fold finds each turn, message, and item through an index, so its work
+  grows about linearly with the length of the session. A new step of the
+  fold uses an index, not a scan of the items. `batch-work.test.ts` counts
+  this work.
 - Browser readers preserve the required tool-detail and turn-file omission counts.
   These new counts are non-negative safe integers. Missing counts make an event unreadable.
 - Tool transcript items keep `tool.omittedDetailBytes`.
@@ -48,6 +58,7 @@ the parts of the chat that draw the transcript.
 - `Transcript.turns` lists the turns that accepted events named, in the order of their first event, and whether each one ended.
   The last one is the newest turn. A turn ends with its completion or failure, with a refused end while it runs, or when a newer turn starts.
 - Each item stays with its turn: before any request or item of a later turn, and before a message that no turn has taken yet.
+- An agent item keeps `complete` once its `assistant.completed` event came, so Explain reads only finished text. `agentMessageId` gives the message ID that its key holds.
 - While a turn runs, only the run that holds the newest tool call of the turn shows its calls, as
   [The work of a turn](../../docs/protocol/chat-and-events.md#the-work-of-a-turn) says.
   It stays open between two calls, after a message or an insert that follows it, and while a message waits for the turn.
@@ -83,17 +94,39 @@ the parts of the chat that draw the transcript.
 - The Worker refuses an old Try again, such as from a second tab that missed newer events, with `409 retry_not_available`.
   The chat then shows the notice "The turn didn't restart" with the Worker's plain message.
 - Each `workspace.continued` event of a session becomes one `continued` item at its place among the events.
-  The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with `ContinuedLine` of the mockups.
-  The item takes its ID from the new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
+  The line names the member who pressed Continue, "You" to that member, the new branch, and its base, with the shared `ContinuedLine`.
+  Each branch shows by its label, which hides each secret value. A note without labels, such as a note of an older Worker, shows the real names.
+  The item takes its ID from the real new branch, so a repeat of the note replaces it. It belongs to no turn, so it never folds into work.
   A closed session gets the note in its stored history, so a session that opens later shows it.
 - Each `workspace.repository-changed` event of a session becomes one `repository-changed` item in the same way.
-  The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with `RepositoryChangedLine` of the mockups.
-  The item takes its ID from the new repository and the new branch. A copy of the session gives the note with no heading.
+  The line names the member who changed the repository, "You" to that member, the new repository, and the new branch, with the shared `RepositoryChangedLine`.
+  The new branch shows by its label, also in a copy. A note without a label, such as a note of an older Worker, shows the real name.
+  The item takes its ID from the new repository and the real new branch. A copy of the session gives the note with no heading.
+- Each `capabilities.changed` event of a session becomes one `capabilities-changed` item in the same way, as [Capabilities: what agents learn](../../docs/protocol/capabilities-agents.md#in-the-chat) says.
+  The line names the member who changed the capabilities, "You" to that member, and each change of the write, with the shared `CapabilityChangeLine`.
+  The item takes its ID from the note, so a repeat of the note replaces it. It shows at its place also inside a running turn, and it never folds into work.
+  The reader makes a note with a change of an unknown kind unreadable, so the chat skips the whole note and its cursor still moves.
+- Each `session.watch-notice` event of a session becomes one `wake` item at its place among the events.
+  It is the line that wakes the session when a turn that it watched ends, as [The wake line](../../docs/protocol/session-watches.md#the-wake-line) says.
+  The shared `WakeLine` draws it with the words of `wakeCopy.ts` and the chip that `SessionLinkText` gives the watched session.
+  The item takes its ID from the watch, so a repeat of the notice replaces it.
+  The notice reader keeps only a known end reason, and an unknown one reads as none, so the line still shows. A notice with an unknown end is unreadable.
+- A `wake` item belongs to the turn that takes its hidden message, as a message does: the turn that the message starts, the turn that it joins, or a continuation that takes it.
+  The turn that the notice names gives no place, because a continuation can take the message.
+  While no turn has taken the message, the items of the turn that runs go before the line, as before a message that waits.
+  The line starts a new part of its turn and never folds. An answer to its hidden message moves after the line, as after a message.
+  A copy gives the same words, with the link of the notice in place of the chip, under the heading of the turn of the line and with no heading of a sender.
 - Ordered history folding preserves these fields and lines across completion and failure events.
 
 ## Key code
 
-- [`transcript.ts`](../shared/transcript/transcript.ts): how chat events become the parts of a transcript.
+- [`transcript.ts`](../shared/transcript/transcript.ts): the items and the
+  other parts of a transcript. `foldEvent` folds one event as a batch of
+  one.
+- [`transcript-batch.ts`](../shared/transcript/transcript-batch.ts):
+  `TranscriptBatch`, the private working copy of one fold. It applies each
+  event and record of a batch. Its `finish` publishes the transcript and its
+  map of first times.
 - [`duration.ts`](../shared/transcript/duration.ts),
   [`tool-words.ts`](../shared/transcript/tool-words.ts), and
   [`turn-words.ts`](../shared/transcript/turn-words.ts): the pure format,
@@ -105,9 +138,28 @@ the parts of the chat that draw the transcript.
   events from stored Worker envelopes or parsed browser envelopes.
 - [`session-log.ts`](../shared/transcript/session-log.ts): the event log of each session, with its records
   in event order and its newest record. The record owner keeps the logs private.
+  While the entries arrive in order, each `merge` or `offer` folds its new
+  entries as one `TranscriptBatch`. An entry before the end of the log makes
+  the next read of `transcript` or `times` fold the whole log again, as one
+  batch.
+- [`fold-items.ts`](../shared/transcript/fold-items.ts),
+  [`fold-turns.ts`](../shared/transcript/fold-turns.ts), and
+  [`item-order.ts`](../shared/transcript/item-order.ts): the indexes of a
+  batch. `FoldItems` finds each item by its ID and by its turn, and
+  `FoldItems.place` puts an item of a turn at its place, also a late one.
+  `FoldTurns` gives the order of the turns and the turn of each message.
+  `ItemOrder` keeps the order of the items.
+- [`transcript-lookups.ts`](../shared/transcript/transcript-lookups.ts):
+  `transcriptLookups`, the indexes of one published transcript: its turns
+  and their order, the turn of each message, its items by ID, and the first
+  message of each turn.
 - [`known-turns.ts`](../shared/transcript/known-turns.ts): the known turns, their order, their ends, and
-  `retryItemId`, the one failed item that offers Try again.
-- [`item-placement.ts`](../shared/transcript/item-placement.ts): where an item goes in its turn, also a late one.
+  `retryItemId`, the one failed item that offers Try again. `hasEnded` and
+  `turnOf` read them through `transcriptLookups`. `turnOf` finds the turn of a
+  message or a wake line through the message ID.
+- [`item-placement.ts`](../shared/transcript/item-placement.ts): `TurnItem`,
+  the kinds of item of one turn, and `isEnd`, which finds the row where a
+  turn ended.
 - [`late-events.ts`](../shared/transcript/late-events.ts): accepted events of a turn that has ended.
 - [`item-keys.ts`](../shared/transcript/item-keys.ts): the item IDs that later events of an item reuse.
 - [`refused-events.ts`](../shared/transcript/refused-events.ts): how a refusal marker becomes a line, and how a
@@ -128,8 +180,14 @@ the parts of the chat that draw the transcript.
   `readers`, draws each row that uses it again. `components/same-data.ts`
   also holds `KeptParts` and `sameElement`. They keep each card of
   `sessionCommands` and `sessionSecrets` while its data stays the same.
+  Its `samePlainData` compares the blocks and the text of an answer at
+  each depth, as [Agent text](agent-text.md#drawing) says. `TranscriptRows`
+  also names the agent message that the agent writes now, whose row gets
+  `live`.
 - `components/turn-facts.ts`: `endFacts` gives what the end of a finished
   turn shows from the rest of the transcript, such as its end reason.
   `stopFacts` gives the notes of a stopped turn and who stopped it.
 - `stream/workspace-stream.ts`: the cursor, the duplicate check, the gaps,
-  the reconnect, and the `hold` and `release` of the workspace stream.
+  the reconnect, and the `hold` and `release` of the workspace stream. It
+  tells the chat when a replay of its stored history starts and ends, as
+  [Record order](loads-and-sends.md#record-order) says.

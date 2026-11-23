@@ -1,5 +1,5 @@
 import { memo, useState, type ReactNode } from 'react'
-import styles from '../../../docs/mockups/src/components/chat/ToolGroup.module.css'
+import styles from '../../ui/components/chat/ToolGroup.module.css'
 import { LostEventLine } from './LostEventLine'
 import { MessageLine } from './MessageLine'
 import { CallLine, FoldLine } from './ToolGroup'
@@ -7,6 +7,7 @@ import {
   workSummary,
   type WorkStep,
 } from '../../shared/transcript/transcript-entries'
+import { agentMessageId } from '../../shared/transcript/item-keys'
 import { sameData } from './same-data'
 import { useFold } from './useFold'
 
@@ -32,7 +33,12 @@ const Step = memo(function Step(props: { step: WorkStep<ReactNode> }) {
     case 'agent':
       return (
         <li>
-          <MessageLine id={item.id} text={item.text} />
+          <MessageLine
+            done={item.complete === true}
+            id={item.id}
+            messageId={agentMessageId(item)}
+            text={item.text}
+          />
         </li>
       )
     case 'lost':

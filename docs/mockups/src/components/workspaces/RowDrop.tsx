@@ -1,7 +1,8 @@
-import a11y from '../common/a11y.module.css'
+import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
+import { instanceKey } from '../../instanceKey'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
 import type { WorkspaceRow } from './sections'
-import { WorkspaceRowView } from './WorkspaceRow'
-import styles from './SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 /**
  * The sub-workspaces that move with a tree, in the words that a screen
@@ -31,9 +32,10 @@ export function RowDrop(props: {
         <span className={styles.lineEnd} />
       </span>
       <span aria-hidden className={styles.lifted}>
-        <WorkspaceRowView
+        <workspaceRow.Component
           carried={props.carried}
           drag="lifted"
+          moklyInstance={`${instanceKey(props.row.workspace.key)}-lifted`}
           row={props.row}
           variant={props.variant}
         />

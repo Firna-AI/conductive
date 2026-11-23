@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { LinkTabs } from '../common/LinkTabs'
-import { PanelBar } from './PanelBar'
+import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
+import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { toolTabs, type ToolKey } from './tools'
-import styles from './ToolsPanel.module.css'
+import styles from '../../../../../src/ui/components/workspace/ToolsPanel.module.css'
 
 /**
  * The desktop panel of the tools, with a tab for each tool that the app
@@ -16,9 +16,13 @@ export function ToolsPanel(props: { tool: ToolKey; children: ReactNode }) {
   }))
   return (
     <section aria-label="Tools" className={styles.panel}>
-      <PanelBar>
-        <LinkTabs label="Tools" tabs={tabs} />
-      </PanelBar>
+      <panelBar.Component>
+        <linkTabs.Component
+          label="Tools"
+          moklyInstance="tools-tabs"
+          tabs={tabs}
+        />
+      </panelBar.Component>
       <div className={styles.body}>{props.children}</div>
     </section>
   )

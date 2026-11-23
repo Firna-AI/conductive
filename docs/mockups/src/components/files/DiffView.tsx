@@ -12,7 +12,10 @@ const lineClass = {
   removed: styles.removed,
 } as const
 
-/** A unified diff with old and new line numbers and syntax colours. */
+/**
+ * A unified diff with old and new line numbers and syntax colours. Lines of
+ * code repeat and have no key, so each line keeps the plain `CodeTokens`.
+ */
 export function DiffView(props: { hunks: readonly Hunk[] }) {
   const rows = props.hunks.flatMap((hunk) => {
     let oldLine = hunk.start.old

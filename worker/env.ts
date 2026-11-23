@@ -16,6 +16,7 @@ export interface AppEnv {
   CONDUCTIVE_TITLE_MODEL?: string
   CONDUCTIVE_MODELS?: string
   CONDUCTIVE_DEFAULT_CHOICE?: string
+  CONDUCTIVE_STARTING_FAVOURITES?: string
   CONDUCTIVE_SYMBOLIC_ANSWER_STATE?: string
   CONDUCTIVE_RELEASE_SERVER?: string
   CF_VERSION_METADATA?: WorkerVersionMetadata
@@ -29,6 +30,7 @@ export interface AppEnv {
   BOAT_API_KEY: string
   BOAT_ORG_ID: string
   SANDBOX_PROVIDER_ACCOUNTS?: string
+  PROVIDER_SWITCH?: string
   BOAT_KEY_ENCRYPTION_KEY: string
   RESEND_API_KEY?: string
   FEEDBACK_EMAIL?: string

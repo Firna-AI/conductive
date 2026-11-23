@@ -56,6 +56,7 @@ pub(crate) fn ended(id: &str) -> RunnerEvent {
         files_unavailable: None,
         omitted_file_count: 0,
         user_message_ids: vec![format!("message-{id}")],
+        notice_ids: vec![],
     })
 }
 

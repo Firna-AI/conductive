@@ -1,0 +1,39 @@
+# Hash reuse misses writes through a memory mapping
+
+- **Severity:** Medium. **Likelihood:** Rare. **Effort:** Medium. **Confidence:** High. **Harder later:** No.
+- **Kind:** Fix after merge.
+- **Added:** 2026-11-21, from branch `calummoore/no-response-issue-l1pn`, review finding 4.
+- **Location:** `crates/cnd-runner/src/repository/io.rs:198-239` (`identity`), `crates/cnd-runner/src/repository/identity_cache.rs:31-37` (`reusable`), `crates/cnd-runner/src/repository/snapshot.rs:40-71` (`read_identities`), `crates/cnd-runner/src/reports/updates.rs:48-56`, `crates/cnd-runner/src/reports/files.rs:265-267` (`request`, the answer to tab reads), `crates/cnd-runner/tests/repository/hash_reuse_tests.rs`.
+- **Reason:** A Medium product bug with the likelihood Rare waits for a later branch under the fix rule, and its fix costs no more after the merge.
+
+- **Source:** Review. **Category:** Product bug.
+- **Terms:**
+  - **Hash reuse:** a scan of the runner reuses the stored hash of a file when its file fingerprint did not change (`identity_cache.rs`).
+  - **File fingerprint:** the device, the inode, the size, the modification time, and the change time of a file, read from its opened descriptor.
+  - **Memory-mapped write:** a program changes the bytes of a file through a shared memory mapping, not through a write call.
+  - **Tab read:** the answer of the runner to a file read of an open file tab (`request` in `crates/cnd-runner/src/reports/files.rs:265`).
+- **Background:**
+  - The runner keeps the hash of each scanned file in memory, with its file fingerprint. A later scan reuses the hash when the fingerprint is equal. The change time must also be at least 2 seconds before the start of the scan that stored the hash.
+  - On 20 November 2026, Cal chose to stop hashing unchanged files again. The same choice bounded the scan queue and added the automatic restart of the Worker. Before that, each scan hashed every file of the repository folder. In workspace W-153, `.context/` held 6.3 GB in 87,856 files, so one scan took 25 to 30 seconds.
+  - The file reporter sends a file as changed when its hash changed since the last scan (`updates.rs:48-56`). The app reloads an open file tab at such a change (`syncDelta` in `src/files/model/files-sync.ts:115`).
+  - Ignored files in `.context/` have no Git change record, so their hash is their only change signal (`context_files` in `crates/cnd-runner/src/repository/context.rs:17`).
+  - Linux updates the times of a file at the first write fault on a clean mapped page. A later write to a page that is still dirty changes no time. Inotify reports no write through a memory mapping, so such a write starts no scan by itself.
+- **Problem:** A Linux probe changed bytes on an already dirty mapped page after the 2-second cutoff. All five fingerprint values stayed equal. So each later scan reuses the old hash and leaves the file out of its updates.
+- **Impact if no action:** An open file tab of such a file keeps the old bytes through later successful scans, until the member opens the tab again.
+- **Root question:** How does an open file tab learn of new bytes when the file metadata stayed the same, without a read of each unchanged file?
+- **Options:**
+  - **A.** Hash the files that can change on each scan. Reuse a hash only when the file system can prove that the bytes stayed fixed. This restores most of the read cost that the hash reuse removed. Effort: Small.
+  - **B.** Use the existing full-tree reports to make the app drop its cached file reads after each scan. This avoids the hash work and sends larger reports. Effort: Medium.
+  - **C.** Separate the tree changes from the refresh of file content. Send a compact refresh signal so that open tabs read their files again, and keep older clients working. Effort: Large.
+  - **D.** Reuse a hash only when the change time is older than the writeback time of the kernel, about 60 seconds, in place of 2 seconds. A later write then usually meets a clean page and changes the times. It reads each recent file for longer, and it depends on kernel settings. Effort: Small.
+  - **E.** Let the app read the shown file tab again every 30 seconds and when the window gets focus. It adds a sentence to the protocol and more reads. Effort: Medium.
+  - **F.** In the runner, keep the paths that tab reads return, in a bounded set with its own lock. Keep the set in the repository instance that holds the hash cache, because `files.rs:266` answers tab reads with that instance. Each scan hashes those files and never reuses their hashes. No message changes, and each other file keeps the hash reuse that Cal chose. Test it with the observed repository in `crates/cnd-runner/tests/repository/hash_reuse_tests.rs`. Effort: Medium.
+  - **G.** Let the app send the paths of its open tabs to the runner, and hash those files at each scan. It needs a new runner command and a compatible rollout. Effort: Large.
+- **Left out:** A cache expiry, because a file tab can still show old bytes between two expiries.
+- **Wider fix:** C. It removes the need to infer that the bytes of a file changed from its metadata.
+- **Previous examples:** Commit `908da17da` fixed stale file previews after rewrites in the same second, with more descriptor metadata in the tag of the file server. A memory-mapped write leaves even those values unchanged.
+- **Related:**
+  - `plans/follow-ups/scan-shutdown-cancel-active-hash.md`: the same code, `identity` in `io.rs`. Land this fix with that one, or after it. Its option D conflicts with option A here for files above 5 MiB.
+  - `plans/follow-ups/file-server-tag-misses-mapped-writes.md`: the same cause. The HTML file server builds its cache tag from the file metadata, so a memory-mapped write keeps the old page after Reload. No option of this item fixes that tag.
+- **Recommendation:** F, in place of the review's C. It keeps open tabs current with no message change, and every file that no tab reads keeps the hash reuse. C best protects the codebase.
+- **Action:** fix after merge, apply F, because a Medium product bug with the likelihood Rare gets fix after merge. The review proposed to ask the user. But F changes no message and adds no requirement, and each other file keeps the hash reuse. So no condition of the decision test holds.

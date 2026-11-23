@@ -13,8 +13,11 @@ a pull request opens it on GitHub. The agent gets a fixed prompt for each
 step that changes code, and the app merges, marks a draft ready for
 review, continues, and archives. On a
 phone the row opens the Checks tab, whose top holds the actions, and the
-link to GitHub of a pull request. The `localWork`, `access`, `appAction`, and `branch`
-states of the workspace screen draw them. The child pages:
+link to GitHub of a pull request. While the branch has no pull request,
+that top also names the branch and its base above Create PR, from
+decision 306. Here they are calummoore/checkout-autocomplete → main. The
+`localWork`, `access`, `appAction`, and `branch` states of the workspace
+screen draw them. The child pages:
 
 - `app/banner/checks` has the running, failed, and passed checks and the
   merge, which moved from `app/banner/checks-running`, `checks-failed`,
@@ -29,9 +32,10 @@ states of the workspace screen draw them. The child pages:
   a merge, and Blocked. A conflict, requested changes, and Blocked
   tint the bar amber.
 - `app/banner/no-commits` has a branch without commits, whose bar offers no
-  Create PR, as in `app/new-workspace/creating` and `first-turn`.
+  Create PR, as in `app/new-workspace/creating` and `first-turn`. On a
+  phone the top of the Checks tab names the branch and its base alone.
   Its `local-work` variant has changed files that are not committed, so
-  the bar offers Create PR.
+  the bar offers Create PR, and a phone shows it under the branches.
 - `app/banner/merge` has the merge that runs, a refusal for new commits, a
   refusal for a missing right, another refusal with Open on GitHub, and
   Ready to merge for a member with read access, without Merge.
@@ -58,3 +62,10 @@ merge, show the dim mark.
 
 The flow `user-flows/merge-and-continue` goes from Ready to merge through
 the merge and Continue to the next task.
+
+`app/new-workspace/start-branch/stacked` has the bar of a workspace that
+stacks on a branch, which names that base. Its `create-pr` variant has the
+top of the Checks tab of a phone, which names that base above Create PR,
+from decision 306. Its `base-moved` variant has the line under the bar
+after GitHub deleted that base, from decision 304, as
+[New workspace](catalogue-new-workspace.md) gives.

@@ -18,16 +18,18 @@ export async function readBuildSnapshot(
       .prepare(
         `SELECT id, org_id AS orgId, kind, state, started_at AS startedAt, completed_at AS completedAt,
      CASE WHEN completed_at IS NULL THEN NULL ELSE completed_at - started_at END AS durationMs,
-     error FROM image_builds WHERE org_id = ? AND id = ?`,
+     error FROM image_builds WHERE org_id = ? AND id = ? AND operator_switch_id IS NULL`,
       )
       .bind(orgId, buildId),
     db
       .prepare(
-        `SELECT event_number AS eventNumber, occurred_at AS occurredAt, text
-        FROM image_build_logs WHERE build_id = ? AND event_number > ?
-        ORDER BY event_number LIMIT ?`,
+        `SELECT l.event_number AS eventNumber, l.occurred_at AS occurredAt, l.text
+        FROM image_build_logs l CROSS JOIN image_builds b
+        WHERE l.build_id = ? AND l.event_number > ? AND b.id = l.build_id
+          AND b.org_id = ? AND b.operator_switch_id IS NULL
+        ORDER BY l.event_number LIMIT ?`,
       )
-      .bind(buildId, after, limit),
+      .bind(buildId, after, orgId, limit),
   ])
   const build = header.results[0]
   if (!build || !('state' in build))

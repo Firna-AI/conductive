@@ -16,6 +16,18 @@ export function buttonsOf(html: string): RenderedButton[] {
   )
 }
 
+/**
+ * The section of a mounted tab with this title, such as New workspaces,
+ * for a control whose name another section of the tab also has.
+ */
+export function sectionTitled(root: ParentNode, title: string): HTMLElement {
+  const section = Array.from(root.querySelectorAll('section')).find(
+    (item) => item.querySelector('h2')?.textContent === title,
+  )
+  if (!section) throw new Error(`No section is titled ${title}.`)
+  return section
+}
+
 /** The HTML of each item of the list with this accessibility label. */
 export function listItems(html: string, label: string): string[] {
   const list = new RegExp(`<ul aria-label="${label}"[^>]*>([\\s\\S]*?)</ul>`)

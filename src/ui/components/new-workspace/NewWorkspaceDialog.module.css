@@ -1,0 +1,111 @@
+/*
+ * New workspace as a dialog: a wide, compact card with the full hairline
+ * outline of every card of the app. It lies in the layer and over the scrim
+ * of `ConfirmDialog.module.css`. The parts of `ModalCard.module.css` keep
+ * it inside that layer: the header and the footer stay, with their menus,
+ * and the message and the notices scroll between them.
+ */
+.dialog {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  border: 1px solid var(--ui-border2);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-composer);
+  box-shadow: 0 24px 60px -24px var(--ui-shadow);
+  box-sizing: border-box;
+}
+
+/*
+ * While files hover over the dialog, a full border in the accent colour
+ * shows that a drop anywhere on the card attaches them. The card is the
+ * message box of the dialog, and it keeps its fill and its shadow.
+ */
+.dropping {
+  border-color: var(--ui-primary);
+  box-shadow:
+    0 0 0 1px var(--ui-primary),
+    0 24px 60px -24px var(--ui-shadow);
+}
+
+/*
+ * The repository picker and the branch control at the start, and the
+ * section of the workspace at the end. The texts of the header, the
+ * message, and the footer start on one line, and the boxes of the notices
+ * and the buttons on another.
+ */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 6px 10px 6px 8px;
+  border-bottom: 1px solid var(--ui-border);
+  box-sizing: border-box;
+}
+
+/*
+ * The repository picker and the branch control close right of it. The
+ * plain buttons have their own padding, so they need no gap.
+ */
+.source {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+/* The repository picker, which its open menu hangs from. */
+.anchor {
+  display: flex;
+  position: relative;
+  min-width: 0;
+}
+
+/* The menu of the section that the new workspace joins, at the end. */
+.placeMenu {
+  margin-left: auto;
+}
+
+/* The message, with a chip for each of its files in its text. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 18px 0;
+}
+
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 10px 0;
+}
+
+/*
+ * The attach button, the Capabilities icon, and the model picker at the
+ * start, as in the bar of the composer, then Create at the end.
+ */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px 10px;
+}
+
+.spacer {
+  flex: 1;
+  min-width: 4px;
+}
+
+/* The key of Create, in the colour of its label. */
+.key {
+  flex-shrink: 0;
+  color: var(--ui-ink);
+}
+
+.keyOnSolid {
+  color: var(--ui-on-solid);
+}
