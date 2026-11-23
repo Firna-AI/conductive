@@ -266,6 +266,31 @@ Each call is mine, made on 23 November 2026.
   accounts, the publisher name, and a GitHub account with app access for
   App Review. Milestone 22 waits for them.
 
+The orchestrator of the Milestone 27 workspace made the calls below on
+23 November 2026, for the style converter. Milestone 9 may change them.
+
+- **The draft shape.** For each `Name.module.css`, the converter writes
+  `Name.styles.ts`. It exports `nameStyles(t)`, which takes the tokens of
+  the current colour scheme and returns one style object for each class. A
+  token lookup is the `--ui-*` name without `--ui-`, in camel case, such as
+  `t.textSm`. A local `Tokens` type lists the tokens that the draft reads.
+  Reason: it is the simplest shape that reads each token at run time.
+- **A unitless `line-height` stays work by hand.** The report lists it, and
+  the draft leaves it out. Reason: React Native reads `lineHeight` in
+  pixels, and the converter lists `em` in the same way.
+- **No fixed colour in a draft.** The report lists each fixed colour, and
+  only `transparent` stays in a draft. Reason: the tokens change with the
+  colour scheme, so a draft must read each colour from the tokens.
+- **One `boxShadow` string.** A `box-shadow` becomes one `boxShadow`
+  string, with the token lookups in a template literal. Reason: React
+  Native 0.76 and later read the CSS syntax, also for `inset` and for more
+  than one shadow.
+- **A list of React Native style names and values.** The converter checks
+  each value against the list and reports each other value. Reason: a
+  draft never holds a value that React Native reads differently.
+- **A new or empty output folder.** `--out` must name a new or empty
+  folder. Reason: a run never overwrites a draft that a person edited.
+
 ## Milestone 0: The flow to main
 
 Depends on: none

@@ -157,12 +157,14 @@ The list of React Native style names can miss newer names.
 
 ```sh
 npm run test -- tools/style-converter
-npx tsc -p tools/style-converter/tsconfig.json
 npm run typecheck
 npm run lint
 npm run format:check
 npm run exports:check
 ```
+
+`npm run typecheck` checks the tool and its tests through the root
+[tsconfig.node.json](../../tsconfig.node.json).
 
 ### Key Code
 
@@ -182,7 +184,6 @@ npm run exports:check
 - The class join scan finds join expressions in TSX. [class-joins.ts](class-joins.ts)
 - The reason table gives the report labels and actions. [reasons.ts](reasons.ts)
 - The report writer counts the results and writes the Markdown. [report.ts](report.ts)
-- The typecheck uses the repository's TypeScript options. [tsconfig.json](tsconfig.json)
 - The conversion tests check the draft shape and converted styles. [convert-css.test.ts](convert-css.test.ts)
 - The rule tests check the reasons and source lines for omissions. [listed-rules.test.ts](listed-rules.test.ts)
 - The join tests check class joins in TSX text. [class-joins.test.ts](class-joins.test.ts)

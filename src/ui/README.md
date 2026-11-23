@@ -100,4 +100,7 @@ gives them.
 - [The shared UI move](../../tools/ui-move/README.md): the old path of
   each moved file, and the steps for a branch that started before the
   move.
+- [The style converter](../../tools/style-converter/README.md): the
+  development tool that drafts React Native styles from the CSS Modules of
+  one area, and lists the rules that it cannot convert.
 - [Web app](../app/README.md): the rules of the app shell.

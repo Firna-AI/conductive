@@ -9,6 +9,7 @@
     "vitest.config.ts",
     "astro.config.ts",
     "tools/chatgpt-egress",
+    "tools/style-converter",
     "tools/ui-move"
   ]
 }
