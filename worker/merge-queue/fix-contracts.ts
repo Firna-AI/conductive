@@ -1,4 +1,4 @@
-import type { RestackFacts } from '../../docs/mockups/src/components/workspace/barCopy'
+import type { RestackFacts } from '../../src/ui/components/workspace/barCopy'
 import type { QueueEntry, QueueScope } from './contracts'
 
 export type QueueRestack = Omit<RestackFacts, 'number'> & { id: string }

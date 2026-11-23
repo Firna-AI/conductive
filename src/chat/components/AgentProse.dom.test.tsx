@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { renderToStaticMarkup } from 'react-dom/server'
 import { expect, it } from 'vitest'
-import line from '../../../docs/mockups/src/components/chat/MessageLine.module.css'
-import prose from '../../../docs/mockups/src/components/common/MarkdownProse.module.css'
+import line from '../../ui/components/chat/MessageLine.module.css'
+import prose from '../../ui/components/common/MarkdownProse.module.css'
 import { mount, press } from '../../test-support/mount'
 import { AgentText } from './AgentText'
 import { MessageLine } from './MessageLine'

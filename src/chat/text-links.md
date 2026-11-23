@@ -149,7 +149,7 @@ text. These parts read and draw them:
   tab. Where no server runs, such as in a read-only workspace, a local
   address stays text, so a Markdown link to it shows as typed.
 - `ChatWebLink`, `WebLinkText`, and `CodeText` in `links/WebLinkText.tsx`
-  draw the links with the mockups' `TextLink` and the `opener` of
+  draw the links with the shared `TextLink` and the `opener` of
   `useTextLinks`. A link of the app is an `AppLink` of
   `src/shell/ui/AppLink.tsx`: a plain click opens its page in the same
   window, and replaces the address when that page already shows. A local
@@ -187,7 +187,7 @@ text. These parts read and draw them:
   says. The chip opens the page that the router read, with its tab path,
   query, and hash. `LinkChip` in `links/LinkedText.tsx` draws it.
 - A link whose path names a session that the reader knows shows as the
-  session chip of the mockups instead: `useLinkedSession` in
+  shared session chip instead: `useLinkedSession` in
   `links/session-links.ts` finds a live session of the chat's workspace,
   or a session from the one read of another workspace for the load of the
   chat. Its mark follows the workspace list, as a workspace chip does.

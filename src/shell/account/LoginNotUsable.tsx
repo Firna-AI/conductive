@@ -1,7 +1,7 @@
 import { CircleAlert } from 'lucide-react'
-import { StatusText } from '../../../docs/mockups/src/components/common/StatusText'
-import styles from '../../../docs/mockups/src/components/settings/LoginNotUsable.module.css'
-import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { StatusText } from '../../ui/components/common/StatusText'
+import styles from '../../ui/components/settings/LoginNotUsable.module.css'
+import { chatGptSignInCopy as copy } from '../../ui/components/settings/chatGptSignInCopy'
 import type { AgentLoginStatus } from '../../shared/account'
 import { ActionButton } from '../ui/actions'
 

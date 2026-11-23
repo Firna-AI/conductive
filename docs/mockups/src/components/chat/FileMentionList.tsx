@@ -1,5 +1,8 @@
-import { entryFolder, entryName } from './entryPaths'
-import { allFilesUnavailable } from './lostCopy'
+import {
+  entryFolder,
+  entryName,
+} from '../../../../../src/ui/components/chat/entryPaths'
+import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
 import { mentionRows } from './fileMentions'
 import { mentionList } from '../../entries/components/chat/MentionList.mockup'
 

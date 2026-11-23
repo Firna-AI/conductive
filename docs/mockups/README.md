@@ -54,6 +54,7 @@ Use the expand control of the frame to see the full desktop layout.
 desktop and the phone, the design tokens, and the parts that the screens
 share. Its linked pages give the parts of
 [the workspace](design-workspace.md), of [the chat](design-chat.md),
+of [the model menu](design-model-menu.md),
 of [the operator section](design-operator.md), of
 [the pull request bar](design-bar.md), and of
 [New workspace](design-new-workspace.md). They also give [the marks](design-marks.md),
@@ -121,33 +122,40 @@ the work of a turn.
 new workspace, before the workspace exists. `app/new-workspace/dialog/files`
 shows them in the New workspace dialog.
 
-`DraftFileChip` in `src/components/chat/` draws the chip of an attached
-file in the text of a message box, in each state of its upload.
+`DraftFileChip` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+draws the chip of an attached file in the text of a message box, in each
+state of its upload.
 `SentFileChip` beside it draws the chip of an attached file at its place in
 a sent message. `AnswerPicture` beside them draws a Markdown image of an
 answer to a picture file: its picture, the box of its label while it
-loads, or its link. `ImageView` in `src/components/files/` draws the
-picture of an image file in its tab. These four parts take no fixtures, so
-the app can draw them too. [attachmentCopy.ts](src/components/chat/attachmentCopy.ts)
+loads, or its link. `ImageView` in
+[`src/ui/components/files/`](../../src/ui/components/files/) draws the
+picture of an image file in its tab. The app draws these four parts too,
+so they live in the shared UI. [attachmentCopy.ts](../../src/ui/components/chat/attachmentCopy.ts)
 holds the words of the chips, and of the notices for a file over 1 GB and
 a dropped folder that the browser cannot read. The app shares these words.
 [The chat](design-chat.md) gives the design of each part.
 
 ## Folder layout
 
+The app owns the UI that it shares with the mockups, in
+[`src/ui/`](../../src/ui/README.md) at the repository root. The mockups
+import it from there. The paths in this table start at `docs/mockups/`.
+The other docs of this folder write mockup paths in the same way, such as
+`src/components/chat/`. They name each file of the app with a link, such
+as [`src/ui/components/chat/`](../../src/ui/components/chat/).
+
 | Folder or file            | Contents                                                            |
 | ------------------------- | ------------------------------------------------------------------- |
 | `src/entries/`            | The Mokly root: entry modules, folder records, the flows, and Markdown documents, which Mokly shows as pages of notes. `src/entries/components/` holds the registrations of shared parts |
 | `src/screens/`            | One React component for each app screen, for both viewports         |
-| `src/components/`         | Layout and parts that the screens share, where `@firna/ui` has none |
+| `src/components/`         | Layout and parts that only the mockups use, where `@firna/ui` has none |
 | `src/fixtures/`           | The sample orgs, members, workspaces, agents, chats, and files, and the drawn screenshots of the image files |
-| `src/design/`             | The design tokens: colours, type, density, sizes, radii, and fonts  |
 | `src/render.tsx`          | The renderer: the Firna theme and the tokens of the colour scheme   |
-| `src/theme.ts`            | The Firna theme of each scheme, and the tokens as CSS variables     |
 | `src/paths.ts`            | The catalogue paths that screens link to, with `src/bannerPaths.ts` for the pull request bar, `src/branchPaths.ts` for a start from another branch, `src/servicePaths.ts` for the services of the Preview tool, and `src/queuePaths.ts` for the merge queue |
-| `src/brand.ts`            | The name "Conductive", its domains, its repository, and DMG names   |
 | `src/defined.ts`, `src/instanceKey.ts` | Helpers for the wrappers of registered parts: props without undefined values, and instance names |
-| `src/fonts/`              | Inter, which the Firna theme names first, with its licence          |
+| `../../src/ui/`           | The shared UI: the parts that the app uses too, with the screen styles and words, the design tokens in `design/`, the theme in `theme.ts`, the global stylesheet `render.css`, and Inter with its licence in `fonts/`. Its [README](../../src/ui/README.md) gives the folders |
+| `../../src/shared/brand.ts` | The name "Conductive", its domains, its repository, and DMG names |
 | `../../mokly.config.json` | The Mokly configuration: the root, the renderer, and the schemes    |
 
 ## How a screen is built
@@ -170,7 +178,8 @@ a dropped folder that the browser cannot read. The app shares these words.
   skills, attached files, drops, the chip of Add to chat, and the
   Capabilities control.
   `src/screens/composerState.ts` adds that composer to the workspace state,
-  with the login of the open session and the model of the next message.
+  with the login of the open session, the model of the next message, and
+  the favourites and All models of an open model menu.
   `src/screens/rowMenuState.ts` holds the open menu of a row of All files
   or Changes, which `src/screens/workspaceRowMenu.ts` draws, and the toast
   after Copy path. `src/screens/explainState.ts` holds the marks of
@@ -192,22 +201,30 @@ a dropped folder that the browser cannot read. The app shares these words.
   becomes a link through `ScreenLink asChild`. Tabs are links, so each view
   has its own path. A link to a page outside the app reads its address from
   `useOutsideHref`.
+- A screen takes a part that the app uses too from
+  [`src/ui/`](../../src/ui/README.md). A part that only the mockups use
+  lives in `src/components/`. When the app starts to use such a part, the
+  part moves to `src/ui/`, into the folder of the same name.
 - Layout styles are CSS Modules beside their component. They read the design
   tokens through the `--ui-*` variables that the renderer writes.
 - `ConfirmDialog` and `NewWorkspaceDialog` lay out their cards with the
-  parts of [ModalCard.module.css](src/components/common/ModalCard.module.css).
+  parts of [ModalCard.module.css](../../src/ui/components/common/ModalCard.module.css).
   A card taller than the window keeps its head and its foot, and only its
   body scrolls. The dialogs of the app import the same parts.
 - Controls come from `@firna/ui`. A control without a handler renders as
-  disabled, so the screens pass `noop` from `src/noop.ts`.
-- A shared part can have a Mokly registration under
+  disabled, so the screens pass `noop` from
+  [`src/ui/noop.ts`](../../src/ui/noop.ts).
+- A shared part, in
+  [`src/ui/components/`](../../src/ui/components/) or in
+  `src/components/`, can have a Mokly registration under
   `src/entries/components/`, so that the Changes view lists an edit to the
   part under the part, not under each screen. The `components` folder of the catalogue lists each
   registered part. A screen renders its wrapper, and a file that the app
   reaches renders the plain part.
   [Registered parts](registered-parts.md) gives the rules.
 - A switch at the end of a menu row, such as Fast in the model menu, is a
-  picture, not a control. `SwitchPicture` in `src/components/common/` draws
+  picture, not a control. `SwitchPicture` in
+  [`src/ui/components/common/`](../../src/ui/components/common/) draws
   it with the switch styles of `@firna/ui`, and the row owns the
   `menuitemcheckbox` role.
 
@@ -216,45 +233,9 @@ a dropped folder that the browser cannot read. The app shares these words.
 [Orgs and members](orgs-and-logins.md#orgs-and-members) gives what the
 screens show of orgs and members: the roles, the logins of the sessions,
 the owners of the workspaces, the menu of a workspace row, Archive and
-Restore, and Delete org.
-
-No screen shows the value of an env var. Each env var of an org has a
-Secret mark: an admin switches it in the row, and a new variable starts
-secret. A member sees the mark as a word, without a control.
-`src/components/settings/EnvVarParts.tsx` gives the switch and the mark,
-and `envVarCopy.ts` beside it gives the note under the list. The app shares
-both.
-`app/org-settings/cloud-computer`, its `add-variable` and `change-value`
-pages, and its `member` page show them.
-
-The Skills section of the Cloud computer tab names the public GitHub
-repository whose skills the agents of every workspace use. An admin edits
-it in a field, and a member sees it as text. Under it, the section lists
-the skills that a lookup on GitHub finds, or it shows a notice in place of
-the list. `src/components/settings/SkillsSection.tsx` draws the section,
-and `SkillList.tsx` beside it draws the list. `skillsCopy.ts` beside them
-holds the words and the result of the lookup, so that the app can share
-them. Under the field, an admin sets the switch "Trust this skills
-repository", which starts off for each repository, and a member sees the
-saved choice as text. The choice exists only while the field names a
-repository as owner/name. `SkillsTrust.tsx` draws the switch and the
-read-only choice, and `skillsTrustCopy.ts` holds their words and the
-address of the guide. [The catalogue](catalogue.md) gives its pages.
-
-A secret of an org differs from an env var. An env var reaches every cloud
-computer at each start. A secret reaches only one command that an agent
-runs after a member allows it. The agent gets its name and its variable
-name, never its value. Every
-member adds secrets on the Secrets tab, and only an admin reveals a value,
-one at a time, as `app/org-settings/secrets` shows.
-[Secrets and Capabilities](design-secrets.md) gives the tab, the
-Capabilities control, and the requests in the chat.
-
-A file path can hold a secret value. The lists, the tabs, the page
-headers, and the files of a finished turn then show "[redacted]" in place
-of the value, and each file still opens by its real path. A tab whose file
-name the app does not know shows "File". The `paths` state of the
-workspace screen draws them, as `app/chat/masked-paths` shows.
+Restore, and Delete org. It also gives the env vars and the Skills section
+of the Cloud computer tab, the secrets of an org, and the file paths that
+hold a secret value.
 
 ## Logins
 
@@ -280,7 +261,8 @@ pictures, the header and the footer, [the docs pages](marketing-site.md#the-docs
 and [the pricing page](marketing-site.md#the-pricing-page).
 It also gives the Terms, Privacy, and not-found pages, and the page before
 GitHub. The pricing page reads its plans, its prices, and its words from
-`src/marketing/pricing.ts`, the module that the site also reads. The
+[`src/marketing/pricing.ts`](../../src/marketing/pricing.ts), the module
+that the site also reads. The
 pictures are captures of
 real screens, such as the workspace
 screen with its chat and composer. A change to a screen or a shared part

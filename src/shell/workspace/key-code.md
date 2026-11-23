@@ -183,7 +183,7 @@ this guide.
   page there. [The tabs of HTML files](html-tabs.md) gives the rules, and
   the `previews/HtmlTab*.test.tsx` files check them over the fake API.
 - `ContinueDialog.tsx`: the question of Continue with the local work, which
-  `LocalWorkList` of the mockups lists.
+  the shared `LocalWorkList` lists.
 - `repository/RepositoryControl.tsx`: the repository of the header, its
   menu, its progress, and its failure toast. `repository/use-repository-change.ts`
   gives `repositoryChoices`, the rows of the menu, and the store of the
@@ -294,8 +294,8 @@ this guide.
   of an archived workspace offers Restore until its last day, and gives
   the day when the workspace leaves the list, also without Restore. After
   that day it has the title "Removed on" and the day, and its panels have
-  the title Removed. `notice-copy.ts` takes each stage from `archiveStage`
-  of the mockups, which reads the `computer`, `restore`, and `removed` marks
+  the title Removed. `notice-copy.ts` takes each stage from the shared
+  `archiveStage`, which reads the `computer`, `restore`, and `removed` marks
   of the notice. A missing or `unknown` `computer` keeps the reading from
   Restore alone. `notice-copy.test.ts` checks the words of each stage, also
   for each computer state. `useArchiveActions.ts` runs Archive and Restore for

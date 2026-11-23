@@ -1,6 +1,6 @@
 import type { Workspace } from '../shared/generated/Workspace'
 import { describe, expect, test } from 'vitest'
-import { joinRefusalText } from '../../docs/mockups/src/components/workspace/queueCopy'
+import { joinRefusalText } from '../ui/components/workspace/queueCopy'
 import {
   billingQueue,
   releaseBase,

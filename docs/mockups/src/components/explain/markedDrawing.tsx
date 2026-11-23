@@ -2,7 +2,7 @@ import type {
   InlineNode,
   InlineText,
 } from '../../../../../src/chat/markdown/agent-inline'
-import type { AgentDrawing } from '../chat/agentDrawing'
+import type { AgentDrawing } from '../../../../../src/ui/components/chat/agentDrawing'
 import { fixtureDrawing } from '../chat/fixtureDrawing'
 import type { MessageMarks } from './chatMarks'
 import { MarkedText } from './MarkedText'

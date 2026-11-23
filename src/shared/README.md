@@ -147,7 +147,7 @@ Each form has plain, percent-encoded, and JSON-escaped variants, including escap
 Shorter parts match only inside a whole address form.
 `endpoint-host.ts` owns its public host check.
 It accepts only public host names and refuses every IPv4 and IPv6 address.
-It reads the product domain from `productDomain` in `docs/mockups/src/brand.ts`.
+It reads the product domain from `productDomain` in `src/shared/brand.ts`.
 Worker callers also pass `env.PREVIEW_DOMAIN` as an extra refused domain.
 The form and fake API use the same builder without preview configuration.
 The builder preserves queries, removes fragments and trailing slashes, and removes a final `/v1` for Claude.

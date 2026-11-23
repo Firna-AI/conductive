@@ -1,5 +1,5 @@
 import type { WorkspaceState } from '../../shared/generated/WorkspaceState'
-import { restartableStates } from '../../../docs/mockups/src/components/workspace/restartCopy'
+import { restartableStates } from '../../ui/components/workspace/restartCopy'
 
 /**
  * Whether the viewer may restart the software of the workspace, as Restart

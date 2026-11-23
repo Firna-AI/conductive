@@ -2,6 +2,7 @@ import {
   agents,
   defaultChoice,
 } from '../../../docs/mockups/src/fixtures/agents'
+import { favouriteLists } from '../../../docs/mockups/src/fixtures/favourites'
 import {
   agentSkills,
   envVars,
@@ -65,6 +66,10 @@ export function coreFixtures(role: OrgRole = 'admin') {
   const account: AccountResponse = {
     user: role === 'member' ? fakeUsers[1] : fakeUser,
     defaultChoice: { ...defaultChoice, fast: defaultChoice.fast ?? false },
+    favourites: favouriteLists.starting.map((choice) => ({
+      ...choice,
+      fast: choice.fast === true,
+    })),
     newWorkspaceView: 'page',
     shortcuts: { mac: [], other: [] },
     agentLogins: [

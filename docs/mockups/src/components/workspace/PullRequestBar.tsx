@@ -3,14 +3,17 @@ import { bannerSummary, pullRequest } from '../../fixtures/pullRequests'
 import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
 import { barPaths, checksPaths } from '../../paths'
 import { queuePaths } from '../../queuePaths'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import {
   barButtons,
   barMessage,
 } from '../../entries/components/workspace/BarActions.mockup'
-import { agentActionLabels, barLabels } from './barCopy'
-import type { BarModel } from './barModel'
+import {
+  agentActionLabels,
+  barLabels,
+} from '../../../../../src/ui/components/workspace/barCopy'
+import type { BarModel } from '../../../../../src/ui/components/workspace/barModel'
 import {
   branches,
   pullRequestNumber,
@@ -19,7 +22,7 @@ import {
 import { prStatusData } from '../../entries/components/workspace/barSchemas'
 import { queueLine } from '../../entries/components/workspace/QueueBarParts.mockup'
 import { hasPullRequest, prStatus } from './prStatus'
-import { queueRowText } from './queueCopy'
+import { queueRowText } from '../../../../../src/ui/components/workspace/queueCopy'
 import styles from './PullRequestBar.module.css'
 
 /**

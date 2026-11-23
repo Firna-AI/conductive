@@ -3,8 +3,8 @@ import { ListPlus, ListX, type LucideIcon } from 'lucide-react'
 import {
   queueLabels,
   type LeavingLayer,
-} from '../../../docs/mockups/src/components/workspace/queueCopy'
-import type { WorkspaceMenuItem } from '../../../docs/mockups/src/components/workspaces/workspaceMenu'
+} from '../../ui/components/workspace/queueCopy'
+import type { WorkspaceMenuItem } from '../../ui/components/workspaces/workspaceMenu'
 import {
   byPlace,
   isQueued,

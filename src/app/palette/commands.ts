@@ -1,12 +1,12 @@
 import {
   sendFeedbackLabel,
   sendFeedbackWords,
-} from '../../../docs/mockups/src/components/feedback/feedbackCopy'
+} from '../../ui/components/feedback/feedbackCopy'
 import {
   mergeLatestCommandLabel,
   mergeLatestWords,
-} from '../../../docs/mockups/src/components/workspace/mergeLatestCopy'
-import { queueLabels } from '../../../docs/mockups/src/components/workspace/queueCopy'
+} from '../../ui/components/workspace/mergeLatestCopy'
+import { queueLabels } from '../../ui/components/workspace/queueCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,
@@ -160,14 +160,16 @@ export const orgSettings: readonly (CommandText & { tab: SettingsTab })[] = [
 /**
  * The rows of the Account group of the Settings tab, in the order of the
  * Account page: tab by tab, and in each tab in the order of its sections.
- * So the Keyboard shortcuts tab follows New workspaces, and the This Mac
- * tab, which only the Mac app shows, ends the list. A section that the page
- * adds or moves takes the same place here.
+ * So Favourites comes before New workspaces, as on the Preferences tab, the
+ * Keyboard shortcuts tab follows New workspaces, and the This Mac tab,
+ * which only the Mac app shows, ends the list. A section that the page adds
+ * or moves takes the same place here.
  */
 export const accountSettingIds = [
   'sign-in',
   'github',
   'agents',
+  'favourites',
   'new-workspaces',
   'keyboard-shortcuts',
   'this-mac',
@@ -184,6 +186,7 @@ export const accountSettings: Readonly<Record<AccountSettingId, CommandText>> =
       label: 'Agents',
       words: ['claude', 'codex', 'login', 'api key', 'token'],
     },
+    favourites: { label: 'Favourites', words: ['favorites', 'model menu'] },
     'new-workspaces': {
       label: 'New workspaces',
       words: ['model', 'effort', 'default'],

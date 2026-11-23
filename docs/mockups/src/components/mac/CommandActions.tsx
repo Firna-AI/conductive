@@ -1,14 +1,14 @@
 import { useId } from 'react'
 import { Button } from '@firna/ui/button'
 import { ChevronDown } from 'lucide-react'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { paths } from '../../paths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import styles from './CommandActions.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import styles from '../../../../../src/ui/components/mac/CommandActions.module.css'
 
 /**
  * The other ways to allow a command, each with what it covers (decision

@@ -1,7 +1,7 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { createPortal } from 'react-dom'
-import styles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
 import type { PointerDrag } from '../../app/pointer-drag'
+import styles from '../../ui/components/workspaces/SectionList.module.css'
 import ui from '../ui/ui.module.css'
 import { WorkspaceRow, type RowVariant } from './WorkspaceRow'
 import list from './list.module.css'

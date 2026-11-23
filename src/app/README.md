@@ -62,6 +62,24 @@ hears each drag last, on the window. It leaves each drag that a part took,
 such as a message box or the Feedback dialog, and it never stops an event.
 A drag of text or of a link keeps the action of the browser.
 
+`App` also mounts `useKeyboardViewport` of `keyboard-viewport.ts`. Safari
+on iOS keeps the page at its full height under an on-screen keyboard, and
+scrolls the page up to show the focused field. While the keyboard shows,
+the hook sets `--ui-screen-height` to the height of the visible part and
+keeps the page at its top. So the header stays in view, and the app ends
+at the keyboard. While the page is zoomed, the hook changes nothing, so a
+pinch zoom keeps the behaviour of the browser. On
+Android, the viewport tag of `index.html` asks Chrome to resize the page
+for the keyboard, with `interactive-widget=resizes-content`.
+
+On iOS 26 and later, a Home Screen web app gets a blur over the top edge
+of the page, and the blur reaches the header. WebKit skips the blur when
+a fixed box with a solid background covers the top edge. So `index.html`
+holds the band `.top-edge`, only in a Home Screen app on iOS. The band is
+12px tall, full width, and in the colour of `--ui-bar`. It paints nothing,
+because `background-clip: text` clips its background to its text, and it
+has no text. It takes no taps.
+
 The workspace screen draws the frame, the header, the start steps, and the
 states of the sandbox, with Restore on the bar of an archived workspace
 until its last day. The real chat fills the
@@ -233,9 +251,12 @@ the Help row of the palette opens.
   chat text and the file preview to a page of the app at this origin are
   [links of the app](../../docs/protocol/chat-links.md#links).
   Each opens its page in the same window.
-- The shell reuses the design tokens, the pure parts, and the CSS modules of
-  the [mockups](../../docs/mockups/README.md). It never imports a mockup
-  screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
+- The shell reuses the design tokens, the parts, and the CSS Modules of
+  the [shared UI](../ui/README.md) in `src/ui/`. The
+  [mockups](../../docs/mockups/README.md) draw the same parts. The shell
+  imports nothing from `docs/mockups/`: no mockup screen, no fixture, no
+  `paths.ts`, and no `ScreenLink`. A lint rule rejects such an import
+  outside development code and tests. The shell never imports Mokly.
 - Components give refs and callbacks to their owners. Product code does
   not find an element that another component owns by a selector. The focus
   helpers of a menu, a sheet, and a dialog look only inside their own layer.

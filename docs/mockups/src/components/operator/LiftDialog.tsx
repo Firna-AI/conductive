@@ -1,11 +1,14 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
   confirmDialog,
   dialogText,
 } from '../../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../common/ScreenLink'
-import { liftQuestion, type QuestionTarget } from './operatorCopy'
+import {
+  liftQuestion,
+  type QuestionTarget,
+} from '../../../../../src/ui/components/operator/operatorCopy'
 import { instanceKey } from '../../instanceKey'
 
 /**

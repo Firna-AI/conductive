@@ -1,15 +1,15 @@
 import { useMemo } from 'react'
 import { DropdownSelector } from '@firna/ui/dropdown'
 import { Input } from '@firna/ui/input'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import form from '../../../docs/mockups/src/components/automations/form.module.css'
-import styles from '../../../docs/mockups/src/components/automations/ScheduleControls.module.css'
-import list from '../../../docs/mockups/src/components/automations/TriggerList.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import form from '../../ui/components/automations/form.module.css'
+import styles from '../../ui/components/automations/ScheduleControls.module.css'
+import list from '../../ui/components/automations/TriggerList.module.css'
 import {
   twoDigits,
   weekdayLabels,
-} from '../../../docs/mockups/src/components/automations/triggerCopy'
-import { fonts } from '../../../docs/mockups/src/design/metrics'
+} from '../../ui/components/automations/triggerCopy'
+import { fonts } from '../../ui/design/metrics'
 import { cronProblem } from '../../app/automation-cron'
 import type {
   AutomationSchedule,

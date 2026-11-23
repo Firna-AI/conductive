@@ -616,6 +616,13 @@ row. The new reader explicitly excludes those rows. The
 [provider switch guide](../worker/lifecycle/provider-switches.md) gives
 the atomic transition into execution and the separate execution deadline.
 
+`202611221800_model_favourites.sql` adds the nullable text column
+`user_preferences.model_favourites`. It holds the saved JSON list of
+one account. Existing rows keep null. The migration changes no existing
+column, default, or constraint, so the previous Worker keeps working.
+[Model favourites](../docs/protocol/model-favourites-account.md#the-starting-favourites)
+gives the rules for an account without a saved list.
+
 `202611231200_merge_queue.sql` adds the queue, entry, and leave notice
 tables. They store the trunk, stack number, order, queuers, step times,
 and commits for restacks, syncs, and merges. A leave notice records the

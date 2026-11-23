@@ -33,7 +33,7 @@ mount the chat.
   [Workspace and session names](../../docs/protocol/agents-and-sessions.md#workspace-and-session-names)
   says. "New session" names only the action of +: its label, the heading
   of the empty chat, and the spoken name of the icon that marks each model
-  of the other agent in the model picker.
+  and each favourite of the other agent in the model picker.
 - Each tab shows the `title` of its session record. The backend provides
   the titles that the mockups show. The title from the first message names
   the workspace and its first session, as
@@ -176,7 +176,7 @@ mount the chat.
   the `ToastProvider` of the host, such as the one of the app's
   `ThemeRoot`, else through its own, at the bottom right of the window.
 - Render the chat inside the Firna theme provider and the Graphite token CSS
-  of `docs/mockups/src/theme.ts`, as `dev/main.tsx` does.
+  of `src/ui/theme.ts`, as `dev/main.tsx` does.
 - The chat sets no CSS position, except on the message box of a composer,
   so the list of `@` lies just above the box, and on the text of a message
   that Explain reads, which holds the states of its marks and Explain by a

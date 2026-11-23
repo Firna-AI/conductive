@@ -1,5 +1,5 @@
 import type { Workspace } from '../shared/generated/Workspace'
-import type { JoinRefusal } from '../../docs/mockups/src/components/workspace/queueCopy'
+import type { JoinRefusal } from '../ui/components/workspace/queueCopy'
 import type { QueueFacts, QueueMenuAction } from './merge-queue'
 
 /*

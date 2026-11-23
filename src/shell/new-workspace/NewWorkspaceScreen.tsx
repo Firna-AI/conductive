@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { FolderGit2, Sparkles } from 'lucide-react'
-import chat from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/screens/NewWorkspaceScreen.module.css'
+import chat from '../../ui/components/chat/ChatPane.module.css'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/screens/NewWorkspaceScreen.module.css'
 import { currentBuild } from '../../app/current-build'
 import { routes } from '../../app/router'
 import { useStore, valueOf } from '../../app/store'
@@ -166,6 +166,7 @@ export function NewWorkspaceScreen(props: {
               <OrgLinks orgId={org.id}>
                 <Composer
                   choice={form.choice}
+                  favourites={form.favourites}
                   field={message}
                   login={form.login}
                   model={model}

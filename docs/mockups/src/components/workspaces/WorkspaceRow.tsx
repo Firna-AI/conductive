@@ -4,17 +4,20 @@ import { workspaceMark } from '../../entries/components/workspaces/WorkspaceMark
 import { paths } from '../../paths'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
-import { guideClasses } from './guideLines'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { guideClasses } from '../../../../../src/ui/components/workspaces/guideLines'
 import { rowPointMenu } from '../../entries/components/workspaces/RowMenu.mockup'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
-import { listMarkLabel } from './status'
+import { listMarkLabel } from '../../../../../src/ui/components/workspaces/status'
 import type { RowIndent } from './trees'
-import { WorkspaceName, type EmphasisClasses } from './WorkspaceName'
-import rowMenu from './RowMenu.module.css'
-import styles from './WorkspaceRow.module.css'
+import {
+  WorkspaceName,
+  type EmphasisClasses,
+} from '../../../../../src/ui/components/workspaces/WorkspaceName'
+import rowMenu from '../../../../../src/ui/components/workspaces/RowMenu.module.css'
+import styles from '../../../../../src/ui/components/workspaces/WorkspaceRow.module.css'
 
 /** How a drag shows a row: lifted under the pointer, or left behind. */
 export type RowDrag = 'lifted' | 'placeholder'

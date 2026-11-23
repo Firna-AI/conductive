@@ -16,16 +16,18 @@ watched ends. [The Markdown of replies](design-markdown.md) gives the
 tables, the headings, the quotes, the rules, the marks, and the line
 breaks of a reply and of a file preview. [Explain](#explain) gives the
 marks of explanations, the Explain button, and the popover of an
-explanation.
+explanation. [The model menu](design-model-menu.md) gives the model
+picker of the composer, its favourites, and the Favourites section of
+Preferences.
 
 - A session tab shows a muted spinner in place of its chat icon while its
   agent works. The spinner keeps the icon's size and stays visible on
   background tabs and while the user drags a tab. An idle tab shows the
   chat icon.
-- `DraftFileChip` in `src/components/chat/` draws each attached file of a
-  draft as a chip at its place in the text of the message box. It is one
-  unit of the text, as a file chip is, with the size of a file chip, from
-  decisions 262 and 263.
+- `DraftFileChip` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+  draws each attached file of a draft as a chip at its place in the text
+  of the message box. It is one unit of the text, as a file chip is, with
+  the size of a file chip, from decisions 262 and 263.
   - Its icon cell shows the kind of the file, or its upload: a ring with the
     share of the file that the browser sent, such as "64%". Before the first
     measurement, the spinner of a working agent and "Uploading" show, so no
@@ -78,13 +80,15 @@ explanation.
   again in a new message, as `app/attachments/missing` shows. Only the
   newest failed turn of a session offers Try again. The `older` mark of an
   `error` item in `conversations.ts` draws an older failed turn without it.
-- Both chips of an attached file take no fixtures, so the app can use them.
+- The app uses both chips of an attached file too, so they live in
+  [`src/ui/components/chat/`](../../src/ui/components/chat/).
   The New workspace page and dialog use the same chips before the
   workspace exists, as `app/new-workspace/files` and
   `app/new-workspace/dialog/files` show. In the dialog, the notice of a
   file over 1 GB sits with its other notices, under the message.
-- `ImageView` in `src/components/files/` draws the picture of a PNG, JPEG,
-  GIF, or WebP file in its tab, from decision 265 B. The picture keeps its
+- `ImageView` in [`src/ui/components/files/`](../../src/ui/components/files/)
+  draws the picture of a PNG, JPEG, GIF, or WebP file in its tab, from
+  decision 265 B. The picture keeps its
   proportions, in the middle of the tab, at its own size or smaller, so
   that it fits the width and the height of the tab. The header keeps
   Download, and Copy is off. An image that the browser cannot draw shows
@@ -133,8 +137,9 @@ explanation.
     also opens the last message line of each. A view runs no script, so a
     chat with open folds starts at its top.
 - Data that the chat does not have shows in plain words, from decision 76.
-  `lostCopy.ts` in `src/components/chat/` holds the words. A tool call whose
-  output the runner shortened shows the size that it left out, such as "1.2 MB left out", and
+  `lostCopy.ts` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+  holds the words. A tool call whose output the runner shortened shows the
+  size that it left out, such as "1.2 MB left out", and
   the line of its fold shows the total. A turn with more than 200 files ends its
   list with plain text, such as "47 more files". A stopped turn shows no
   file list, so its line ends with the count, such as
@@ -157,9 +162,12 @@ the lists of `@` and `/`.
 ## Explain
 
 `app/chat/explain` draws the parts of Explain. They live in
-`src/components/explain/` and take no fixtures, so the app can use them
-too. `explainCopy.ts` beside them holds their words. The docs call the
-panel by the mark a popover, because "preview" names port previews.
+`src/components/explain/`. The app uses `MarkGlyph`, the words in
+`explainCopy.ts`, and the styles of `MarkedText`, `ExplainButton`,
+`ExplainPopover`, and `FollowUpField` too. These files live in
+[`src/ui/components/explain/`](../../src/ui/components/explain/). The
+docs call the panel by the mark a popover, because "preview" names port
+previews.
 
 - `MarkedText` draws a text of a message with the marks of its
   explanations and the selection of the member. `ChatMarks` gives the chat

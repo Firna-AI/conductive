@@ -1,14 +1,21 @@
 import { Eye, Pencil, Trash2, type LucideIcon } from 'lucide-react'
 import { people, type PersonKey } from '../../fixtures/members'
 import { revealedValue, type OrgSecret } from '../../fixtures/secrets'
-import { IconButton } from '../common/actions'
+import { IconButton } from '../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../common/ScreenLink'
-import { ValueDots } from '../settings/EnvVarParts'
+import { ValueDots } from '../../../../../src/ui/components/settings/EnvVarParts'
 import { ReplaceForm } from './SecretForms'
-import { AllAgentsMark, AllAgentsSwitch, RevealedValue } from './SecretParts'
+import {
+  AllAgentsMark,
+  AllAgentsSwitch,
+  RevealedValue,
+} from '../../../../../src/ui/components/secrets/SecretParts'
 import type { SecretRights } from './secretRights'
-import { addedBy, revealedBy } from './secretsCopy'
-import styles from './SecretsTab.module.css'
+import {
+  addedBy,
+  revealedBy,
+} from '../../../../../src/ui/components/secrets/secretsCopy'
+import styles from '../../../../../src/ui/components/secrets/SecretsTab.module.css'
 
 /**
  * How a row shows its secret: with its value hidden, with the value that

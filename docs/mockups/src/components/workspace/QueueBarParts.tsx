@@ -8,17 +8,23 @@ import { githubLink } from '../../entries/components/workspace/barParts.mockup'
 import { pullRequest } from '../../fixtures/pullRequests'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { queuePaths } from '../../queuePaths'
-import { outlineFill } from '../common/outlineTone'
+import { outlineFill } from '../../../../../src/ui/components/common/outlineTone'
 import { ScreenLink } from '../common/ScreenLink'
-import { useControlSizes } from '../common/touch'
-import { barLabels } from './barCopy'
-import { queueLabels, queueLineText } from './queueCopy'
-import type { QueueLine, QueueStep } from './queueModel'
-import actionStyles from '../common/actions.module.css'
-import barStyles from './BarActions.module.css'
-import styles from './QueueBar.module.css'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { barLabels } from '../../../../../src/ui/components/workspace/barCopy'
+import {
+  queueLabels,
+  queueLineText,
+} from '../../../../../src/ui/components/workspace/queueCopy'
+import type {
+  QueueLine,
+  QueueStep,
+} from '../../../../../src/ui/components/workspace/queueModel'
+import actionStyles from '../../../../../src/ui/components/common/actions.module.css'
+import barStyles from '../../../../../src/ui/components/workspace/BarActions.module.css'
+import styles from '../../../../../src/ui/components/workspace/QueueBar.module.css'
 
 /**
  * Add to merge queue with only its icon, in the outline tone, for a narrow

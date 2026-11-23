@@ -1,6 +1,6 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { FeatureItem } from '../../../../../src/marketing/features'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { SectionIntro } from './SectionIntro'
 import { siteIcons } from './siteIcons'
 import styles from './FeatureGrid.module.css'

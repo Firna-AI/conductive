@@ -10,7 +10,7 @@ Each handler returns `null` for a path that it does not own. The
 
 | Handler | Routes |
 | --- | --- |
-| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
+| `bootRoute` in [`boot.ts`](boot.ts) | `GET /api/account`, `GET /api/account/stats`, `GET /api/models`, `GET /api/get-started`, `PUT /api/account/default-model`, `PUT /api/account/favourites`, `PUT /api/account/new-workspace-view`, `PUT /api/account/shortcuts`, and `PUT`, `PATCH`, and `DELETE` of `/api/account/agent-logins/:agent` |
 | `endpointModelsRoute` in [`endpoint-models.ts`](endpoint-models.ts) | `POST /api/account/agent-logins/:agent/models/refresh` |
 | `orgAgentLoginsRoute` in [`org-agent-logins.ts`](org-agent-logins.ts) | `GET /api/orgs/:orgId/agent-logins`; admin `PUT`, `PATCH`, and `DELETE` of `/:agent`; admin `POST` of `/:agent/models/refresh` |
 | `codexDeviceRoute` in [`codex-device.ts`](codex-device.ts) | `POST /api/account/agent-logins/codex/device` starts a ChatGPT sign-in. `POST` of its `/:handle` polls and exchanges it |
@@ -72,6 +72,11 @@ View writes cannot change this branch.
   so a screen links to that page without a GitHub read. A login write
   encrypts the secret with `agentLoginContext(userId, agent)` and
   `BOAT_KEY_ENCRYPTION_KEY`. No reply holds a stored secret.
+- [Model favourites](../../docs/protocol/model-favourites-account.md#the-account-routes)
+  gives the account favourites contract. `accountFavourites` and
+  `saveAccountFavourites` in [`account-data.ts`](account-data.ts) read and
+  save its JSON list. `configuredStartingFavourites` in [`models.ts`](models.ts)
+  reads the deployment setting for an account without a saved list.
 - Account and org-login reads include additive `defaultLogins` entries for
   each current org and agent. [`default-agent-logins.ts`](default-agent-logins.ts)
   uses the common login access query and default order from `worker/chat/`.

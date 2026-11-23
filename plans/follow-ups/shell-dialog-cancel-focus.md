@@ -51,7 +51,7 @@
     - A Cancel with the focus then stays a native button that looks off and ignores a press. Its wrapper says `aria-disabled` until the focus leaves.
     - A Cancel without the focus is natively disabled at once, as now. So the proven paths do not change, and the check at `src/shell/settings/LeaveOrg.test.tsx:91` still holds.
     - The wrapper is a `span` with `display: contents`. `.keepFocus > * { flex: inherit }` gives the button the `flex: 1` of `.sheetActions > *`, so the phone row keeps two equal buttons.
-    - Those rules are in `src/shell/ui/ui.module.css:22-33` and `docs/mockups/src/components/common/ConfirmDialog.module.css:80-82`.
+    - Those rules are in `src/shell/ui/ui.module.css:22-33` and `src/ui/components/common/ConfirmDialog.module.css:80-82`.
   - **C.** When `busy` turns on while Cancel has the focus, `Dialog` moves the focus to the question box, the `section` of the dialog or the sheet. Cancel stays natively disabled. Effort: Small.
     - It needs new focus code in `Dialog`, `DialogBox`, and `Sheet`, because `action` is a `ReactNode` without a ref.
     - It moves the focus without an action of the user.

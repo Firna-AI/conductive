@@ -15,7 +15,7 @@ pub(super) fn build(
     branches: Option<&RunnerBranches>,
     agent: &Agent,
 ) -> Result<(String, Option<RunnerBranches>)> {
-    let product = include_str!("../../../../docs/mockups/src/brand.ts")
+    let product = include_str!("../../../../src/shared/brand.ts")
         .lines()
         .find_map(|line| {
             line.strip_prefix("export const productName = '")

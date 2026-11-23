@@ -10,7 +10,7 @@ import { resolve } from 'node:path'
 import { expect, test } from '@playwright/test'
 import type { ElectronApplication } from '@playwright/test'
 
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 import {
   DESKTOP_ORIGIN,
   DESKTOP_SESSION_COOKIE,

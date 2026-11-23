@@ -3,7 +3,7 @@
 - **Severity:** Low. **Likelihood:** Rare. **Effort:** Small. **Confidence:** High. **Harder later:** No.
 - **Kind:** Needs decision.
 - **Added:** 2026-11-22, from branch `calummoore/image-zoom-j6zh`, review item 7.
-- **Location:** `src/files/page/use-picture-zoom.ts` and the stage in `docs/mockups/src/components/files/ImageView.tsx`.
+- **Location:** `src/files/page/use-picture-zoom.ts` and the stage in `src/ui/components/files/ImageView.tsx`.
 - **Reason:** keys on the picture are a new requirement, which the user reviews, and the zoom change shipped without them.
 
 - **Source:** Review. **Category:** Product bug.

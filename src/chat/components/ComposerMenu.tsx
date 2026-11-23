@@ -1,12 +1,9 @@
 import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@firna/ui/button'
 import { Paperclip, Plus } from 'lucide-react'
-import styles from '../../../docs/mockups/src/components/chat/ComposerMenu.module.css'
-import actions from '../../../docs/mockups/src/components/common/actions.module.css'
-import {
-  useControlSizes,
-  useTouch,
-} from '../../../docs/mockups/src/components/common/touch'
+import styles from '../../ui/components/chat/ComposerMenu.module.css'
+import actions from '../../ui/components/common/actions.module.css'
+import { useControlSizes, useTouch } from '../../ui/components/common/touch'
 import { useMenuLayer } from '../../shell/ui/layers'
 import type { MenuEntry } from '../../shell/ui/Menu'
 import { MenuList } from '../../shell/ui/MenuList'

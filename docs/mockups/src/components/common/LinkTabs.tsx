@@ -1,7 +1,7 @@
-import tabScroll from '../workspace/TabScroll.module.css'
+import tabScroll from '../../../../../src/ui/components/workspace/TabScroll.module.css'
 import { ScreenLink } from './ScreenLink'
-import { classes } from './classes'
-import styles from './LinkTabs.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import styles from '../../../../../src/ui/components/common/LinkTabs.module.css'
 
 export type LinkTab = {
   label: string

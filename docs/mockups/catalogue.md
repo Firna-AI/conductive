@@ -22,10 +22,10 @@ how a screen is built, and links to the other pages.
 | `app/command-palette` | The command palette over the list, with the keys of a browser tab: the All tab, then the other tabs with the Help group, searches and their states, and a search by number |
 | `app/feedback`      | The Feedback dialog that Send feedback opens over the list, then its states, the toast after a send, a send over the limit, and the files that it does not add |
 | `app/orgs`          | The org switcher of a phone, Create org with the account choice of an operator, the first org, new orgs, deleted, suspended, and the order of the orgs |
-| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
+| `app/account`       | General with the GitHub sign-in, the GitHub App, and the invite code, then Agents with the agent logins, own endpoints, and the lines of an org login, Preferences with the favourites, the model, its menu with Fast on, and how New workspace opens, Keyboard shortcuts in a browser, Stats with the person's own counts, the first run, the Connect forms with the ChatGPT sign-in of Codex, Codex on a ChatGPT plan and its sign-in that stopped working, and a share not saved |
 | `app/operator`      | The operator's Overview with the long runs of cloud computers, the Orgs, Users, Waitlist, Invite codes, Providers, and Settings tabs, the page of an org and of a user with Suspend, Lift, and Approve, the switch of the provider account of an org, the pause of sign-ups, the waitlist switch, and where an operator opens the section |
 | `app/banner`        | The pull request bar and Checks: no pull request, its other states, Merge, local work, the agent actions in the chat, Continue, and the merge queue |
-| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on, the dialog, a start from another branch, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
+| `app/new-workspace` | An empty chat, the first build of a new org, a repository that waits for its build, its error, files on the first message, the Capabilities control, the model menu with Fast on and with All models open, the dialog, a start from another branch, a pasted workspace link, the start, a queued second message, the first turn, a failed start, Try again |
 | `app/automations` | The automations of the org, an automation with the Capabilities of its runs, its triggers, its runs, and a run workspace |
 | `app/org-settings`  | General with Delete org, the colour of the org in the rail, then Repositories and Cloud computer with the notice of a repository change, the first build of a new org, a build that waits for another update and a build that it stopped, the skills repository with its trust switch, list, and notices, Agents with the org logins, Secrets with Reveal for an admin and the view of a member, and Members |
 | `app/chat`          | A finished turn with its work folded, then running turns, turns that an agent stopped, wakes from watched turns, open work, tables in replies, lists and task lists in replies, headings in replies, quotes, rules, and emphasis in replies, links in chat text, Explain on chat text, lost data, lost updates, unread files, the time limit of background work, a fast turn at standard speed, and menus that show whole over a box that scrolls |
@@ -39,7 +39,7 @@ how a screen is built, and links to the other pages.
 | `app/composer`      | Two uploaded files in a sentence, then the picker, a missing agent, another member's login, a login that is not shared, and the org login |
 | `app/capabilities`  | The Capabilities control of a workspace in a browser, with the approvals of the open session and its values, and no Mac access part |
 | `app/fast-mode`     | The Fast switch of the model menu on and off, with its key, the trigger with Fast, and a model without fast mode |
-| `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, and the favourites in Preferences |
+| `app/model-favourites` | The model menu with five favourites, its All models submenu, a changed effort, a favourite that an own endpoint leaves out, no favourites, the favourites of a new account, and the Favourites section of Preferences with Add a favourite, no favourite, a hidden favourite, and a failed save |
 | `app/attachments`   | A file that uploads in the text, then a drop, a failed upload, a file over 1 GB, sent files, the file tab of a sent screenshot, a first message with files, and a file that is no longer in the cloud computer |
 | `app/workspace-links` | Chips in a message and an answer, then Copy link and its failure, a pasted link, a link of another org, session chips, and messages that an agent sent |
 | `app/file-mentions` | The list of `@` with a query, then the list without one, its other states, the file chips of the composer and of a sent message, and the file chips and the screenshot picture of an answer |
@@ -57,7 +57,7 @@ with child folders shows only its canonical screen, as `marketing`, `marketing/d
 `app/sign-in`, `app/sign-in/get-started`, `app/sign-in/waitlist`, `app/sign-in/join`, `app/shell`, `app/workspace-menu`, `app/sub-workspaces`, `app/merge-queue`, `app/command-palette`, `app/command-palette/search`, `app/feedback`, `app/orgs`,
 `app/orgs/new`, `app/orgs/suspended`, `app/account`, `app/account/connect-codex`, `app/composer`, `app/new-workspace`,
 `app/new-workspace/dialog`, `app/new-workspace/start-branch`,
-`app/new-workspace/start-branch/missing`, `app/org-settings`,
+`app/new-workspace/start-branch/missing`, `app/model-favourites`, `app/model-favourites/preferences`, `app/org-settings`,
 `app/org-settings/cloud-computer`, `app/org-settings/cloud-computer/skills`, `app/org-settings/agents`, `app/org-settings/secrets`, `app/secret-requests`, `app/secret-requests/temporary`, `app/secret-requests/late`, `app/operator`, `app/operator/org`, `app/operator/user`, `app/operator/user/access`, `app/operator/codes`, `app/operator/providers`, `app/banner`, `app/banner/merge-queue`, `app/chat`, `app/chat/tables`, `app/chat/explain`, `app/chat/explain/popover`, `app/archive`, `app/workspace-links`, `app/automations`, `app/automations/automation`,
 `app/automations/triggers`, `app/orgs/suspended/automations`, `app/orgs/suspended/settings`, `app/file-mentions`, `app/file-mentions/answers`, `app/skill-mentions`, `app/attachments`, `app/files`, `app/files/menu`, `app/tools`, `app/tools/services`, `app/account/shortcuts`, `mac-app/capabilities`, and `mac-app/shortcuts` do. `marketing/pictures` has no screen of its own. Each picture's capture
 page is its own entry at `marketing/pictures/<picture>`, so each page shows
@@ -70,7 +70,7 @@ from `app/archive/deleted`, and its `deleting` variant moved from
 `app/new-workspace/dialog`, `app/org-settings/cloud-computer`,
 `app/org-settings/cloud-computer/skills`,
 `app/operator/user/access`, `app/archive`, `app/command-palette/search`, `app/attachments`,
-`app/composer`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
+`app/composer`, `app/model-favourites`, `app/model-favourites/preferences`, `app/files`, and `app/chat/tables` moved into their own folders and kept their paths. Each page
 shows only its canonical screen. `app/sign-in/get-started` moved into its
 own folder and
 kept its path. Its saved states `installed`, `org-created`, `connected`,
@@ -194,13 +194,43 @@ that sends feedback.
 `app/model-favourites` draws the model menu with favourites, which the user
 chose on 16 November 2026. The menu lists up to five favourites first, each
 as its model with its effort and Fast in the muted colour. All models opens
-a submenu with every model. The efforts and the Fast switch follow. Its
-`all-models` variant opens the submenu, its `changed` variant shows the menu
-after a change of the effort, and its `preferences` variant shows the
-Favourites section of Preferences. The page draws its menu through the
-`picker` prop of `WorkspaceScreen` and its section through the `content`
-prop of `AccountScreen`. The other pages of the model picker still show
-the menu of today.
+a submenu with every model. Effort follows, with the current effort in the
+muted colour, and opens a submenu with the efforts, as the user chose on
+23 November 2026. The `effort` state of the model picker component shows
+that submenu. The Fast switch follows Effort. Every
+model picker shows this menu, so each page with an open picker shows it.
+[The model menu](design-model-menu.md) gives its design. On 20 November
+2026 the user chose that a new account starts with five favourites, that a
+member adds a favourite only in Preferences, and that the deployment
+setting `CONDUCTIVE_STARTING_FAVOURITES` gives the starting favourites. On
+22 November 2026 the user chose model favourites decisions 4 D, 5 B, and
+6: Add a favourite opens the list of every model, on a phone each model
+picker opens its menu beside the picker, and a menu with no favourite
+starts with All models. Its child pages:
+
+- `all-models` opens the submenu: beside the menu on a computer, and in
+  place of the menu on a phone, with Back. `app/new-workspace/all-models`
+  shows the same submenu in the picker of New workspace.
+- `changed` has the menu after a change of the effort, which marks no
+  favourite.
+- `endpoint` leaves out Fable 5.1 Low, because the model list of Cal's
+  proxy does not name Fable 5.1.
+- `no-favourites` starts with All models, then Effort and Fast, with
+  no favourite. Its `all-models` variant opens the submenu, level with the
+  top of the menu on a computer.
+- `new-account` lists the starting favourites.
+- `preferences` has the Favourites section of Preferences, with five
+  favourites. Its child pages:
+  - `add` has four favourites and the open list of Add a favourite: below
+    the button on a computer, and in a sheet on a phone. Its `added`
+    variant has the list after a pick of Opus 5.5, with Opus 5.5 Medium at
+    its end. Its `no-free-effort` variant has a pick of Fable 5.1 that
+    added nothing, because the list holds Fable 5.1 at each effort, with
+    the line under the list that says so.
+  - `empty` has no favourite. A muted line takes the place of the list,
+    and Add a favourite is on.
+  - `hidden` greys Fable 5.1 Low, with the line that says why.
+  - `not-saved` has a failed save, which keeps the saved list.
 
 [Keyboard shortcuts](catalogue-shortcuts.md) gives the Keyboard shortcuts
 tab of the account in a browser, `app/account/shortcuts`, and in the Mac
@@ -274,8 +304,9 @@ Capabilities control in a browser and in the Mac app, and the flow
 `user-flows/secret-request`.
 
 `components` holds the registered shared parts, in a folder named after
-their folder of `src/components/`, and `components/screens` for the
-registered helper parts of `src/screens/`. A shared part without a
+their folder of [`src/ui/components/`](../../src/ui/components/) or of
+`src/components/`, and `components/screens` for the registered helper
+parts of `src/screens/`. A shared part without a
 registration has no page there. Each part has its own page and at most four
 variants, such as `components/workspaces/workspace-mark`.
 [Registered parts](registered-parts.md) gives the rules.

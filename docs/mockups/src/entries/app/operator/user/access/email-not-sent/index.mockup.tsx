@@ -1,5 +1,5 @@
 import { defineScreen } from '@mokly/mokly'
-import { productName } from '../../../../../../brand'
+import { productName } from '../../../../../../../../../src/shared/brand'
 import {
   OperatorUserScreen,
   operatorUserSchema,

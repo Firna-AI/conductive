@@ -1,5 +1,5 @@
-import styles from '../../../docs/mockups/src/components/automations/AuthorFilter.module.css'
-import { membersEntry } from '../../../docs/mockups/src/components/automations/triggerCopy'
+import styles from '../../ui/components/automations/AuthorFilter.module.css'
+import { membersEntry } from '../../ui/components/automations/triggerCopy'
 import {
   addAuthor,
   removeAuthor,

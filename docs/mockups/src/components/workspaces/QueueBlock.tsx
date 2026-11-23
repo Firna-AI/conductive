@@ -8,9 +8,9 @@ import {
   queueLabels,
   queueMoveStatus,
   queueRefusedStatus,
-} from '../workspace/queueCopy'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+} from '../../../../../src/ui/components/workspace/queueCopy'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import type { DrawnRow } from './ArchivedGroup'
 import {
   queueUnits,
@@ -19,8 +19,8 @@ import {
   type QueueEntry,
 } from './queue'
 import type { WorkspaceRow } from './sections'
-import sectionStyles from './SectionList.module.css'
-import styles from './MergeQueue.module.css'
+import sectionStyles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/MergeQueue.module.css'
 
 type Variant = 'sidebar' | 'page'
 

@@ -4,7 +4,10 @@ import { menu as menuPart } from '../../entries/components/common/Menu.mockup'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import { sheet } from '../../entries/components/common/Sheet.mockup'
 import { PointMenu } from '../common/PointMenu'
-import { addToChatItem, copyPathItem } from './rowMenuCopy'
+import {
+  addToChatItem,
+  copyPathItem,
+} from '../../../../../src/ui/components/files/rowMenuCopy'
 import styles from './FileRowMenu.module.css'
 
 /**

@@ -1,4 +1,4 @@
-import type { SessionLogin } from '../components/chat/SessionLogin'
+import type { SessionLogin } from '../../../../src/ui/components/chat/SessionLogin'
 import { memberViewer, people, you, type PersonKey } from '../fixtures/members'
 import { orgWithLogin } from '../fixtures/orgLogins'
 import {

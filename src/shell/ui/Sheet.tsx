@@ -4,7 +4,7 @@ import {
   type ReactNode,
   type RefObject,
 } from 'react'
-import styles from '../../../docs/mockups/src/components/common/Sheet.module.css'
+import styles from '../../ui/components/common/Sheet.module.css'
 import { Overlay, useModalLayer, type Focusable } from './Overlay'
 import { controlsOf, keepTabInside, tabWithScrollingBody } from './tab-stops'
 

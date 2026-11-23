@@ -10,7 +10,7 @@ requirements, and the mockups draw them at `app/chat/work`,
 - `MessageLine` in `components/MessageLine.tsx` reads the text of the
   message with `agentBlocks`, once for each text, as `AgentText` does.
   `LineBlocks` draws its blocks in the line. The app and the mockups share
-  `LineBlocks`, in `docs/mockups/src/components/chat/LineBlocks.tsx`, with
+  `LineBlocks`, in `src/ui/components/chat/LineBlocks.tsx`, with
   the drawing of each view, as [Drawing](agent-text.md#drawing) says.
 - A `<summary>` holds only phrasing content and headings, and no
   paragraph, list, quote, rule, or table. So `LineBlocks` draws each block
@@ -22,7 +22,7 @@ requirements, and the mockups draw them at `app/chat/work`,
   role of a summary also hides a heading from the heading list of a screen
   reader. [Heading parts](agent-text.md#heading-parts) gives the look of
   the span. It also says when a heading draws nothing.
-- A quote is a span with the `quote` classes of the mockups'
+- A quote is a span with the `quote` classes of the shared
   `MessageLine.module.css` and `MarkdownProse.module.css`, around the spans
   of its blocks. A rule is an empty span with their `rule` classes. The
   `<details>` of the line has the `message` class of

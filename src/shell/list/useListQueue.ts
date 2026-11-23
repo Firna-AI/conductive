@@ -1,6 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { useToast } from '@firna/ui/toast'
-import { joinRefusalText } from '../../../docs/mockups/src/components/workspace/queueCopy'
+import { joinRefusalText } from '../../ui/components/workspace/queueCopy'
 import { errorMessage } from '../../app/api/client'
 import { queueBlocks, type QueueFacts } from '../../app/merge-queue'
 import {

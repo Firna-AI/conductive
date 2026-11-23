@@ -3,8 +3,8 @@ import type {
   PictureScale,
   ScreenCrop,
   ScreenSize,
-} from '../../screens/marketingPictureList'
-import { classes } from '../common/classes'
+} from '../../../../../src/ui/screens/marketingPictureList'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { StillLinks } from '../common/ScreenLink'
 import styles from './ScreenFrame.module.css'
 

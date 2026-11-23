@@ -1,16 +1,13 @@
 import type { ChangesResponse } from '../shared/generated/ChangesResponse'
-import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
-import {
-  barLabels,
-  type MergeMethod,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+import type { ButtonTint } from '../ui/components/common/tint'
+import { barLabels, type MergeMethod } from '../ui/components/workspace/barCopy'
 import {
   barModel,
   type BarAction,
   type BarFacts,
   type BarModel,
   type LocalWorkKind,
-} from '../../docs/mockups/src/components/workspace/barModel'
+} from '../ui/components/workspace/barModel'
 import type { GitHubBanner, GitHubCapabilities } from '../shared/github'
 import { bannerStatus, baseBranchLabel, branchLabel } from './bannerStatus'
 import { messageOf } from './barMessage'

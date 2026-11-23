@@ -5,7 +5,7 @@ import { iconKeyOf } from '../../entries/components/common/icons'
 import type { MenuEntryData } from '../../entries/components/common/menuEntries'
 import type { OpenSubmenu } from '../common/PointMenu'
 import { reassignMenu } from '../workspace/OwnerPicker'
-import { queueLabels } from '../workspace/queueCopy'
+import { queueLabels } from '../../../../../src/ui/components/workspace/queueCopy'
 import type { RowControls } from './RowMenu'
 import type { WorkspaceRow } from './sections'
 import { isNested } from './trees'
@@ -14,7 +14,7 @@ import {
   workspaceMenuItems,
   type RowAccess,
   type Submenu,
-} from './workspaceMenu'
+} from '../../../../../src/ui/components/workspaces/workspaceMenu'
 
 /**
  * What a view draws on one row: the menu that a right click or the menu

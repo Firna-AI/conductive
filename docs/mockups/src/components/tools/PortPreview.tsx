@@ -23,7 +23,7 @@ import {
   portFormCopy,
   previewTabLabel,
   serverDescription,
-} from './previewCopy'
+} from '../../../../../src/ui/components/tools/previewCopy'
 import { storefrontPage } from '../../entries/components/tools/StorefrontPage.mockup'
 import styles from './PortPreview.module.css'
 

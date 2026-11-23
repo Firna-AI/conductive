@@ -2,7 +2,7 @@ import type { ServiceSource } from '../../../../src/shared/generated/ServiceSour
 import type {
   ServiceEntry,
   ServicePhase,
-} from '../components/tools/serviceCopy'
+} from '../../../../src/ui/components/tools/serviceCopy'
 import { workspaceSessions } from './sessions'
 
 /**

@@ -4,14 +4,14 @@ import {
   queueLineText,
   queueRowText,
   resetBaseFailedText,
-} from '../../docs/mockups/src/components/workspace/queueCopy'
+} from '../ui/components/workspace/queueCopy'
 import type {
   BarQueue,
   MergeProblem,
   QueueFacts,
   QueueStep,
   TurnWait,
-} from '../../docs/mockups/src/components/workspace/queueModel'
+} from '../ui/components/workspace/queueModel'
 import { githubSummary } from '../shared/github'
 import { baseBranchLabel } from './bannerStatus'
 import type { GitHubSnapshot } from './githubClient'

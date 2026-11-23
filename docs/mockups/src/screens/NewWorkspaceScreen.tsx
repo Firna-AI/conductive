@@ -7,9 +7,9 @@ import {
   mobileFrame,
 } from '../entries/components/layout/AppFrame.mockup'
 import { page as pagePart } from '../entries/components/layout/Page.mockup'
-import { useMacApp } from '../components/mac/MacApp'
-import { formWait } from '../components/new-workspace/waitingRepository'
-import { orgSuspendedReason } from '../components/orgs/suspension'
+import { useMacApp } from '../../../../src/ui/components/mac/MacApp'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
+import { orgSuspendedReason } from '../../../../src/ui/components/orgs/suspension'
 import { memberViewer, you } from '../fixtures/members'
 import type { ShortcutChanges } from '../fixtures/shortcutChanges'
 import { paths } from '../paths'
@@ -99,7 +99,10 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     branchSendTo(state) ??
     (state.files === 'ready' ? paths.attachmentsQueued : paths.creating)
   const fastMenu = state.modelMenu === 'open-fast'
+  const allModels = state.modelMenu === 'all-models'
   const box = composerData({
+    // Only an open submenu is named, so the props of the other states stay.
+    allModels: allModels ? true : undefined,
     attachments: draft.files,
     capabilities: newWorkspaceCapabilities(
       state,
@@ -123,7 +126,7 @@ function NewChat(props: { state: NewWorkspaceState; viewport: Viewport }) {
     draft: text,
     // A phone shows a pick at the caret in place of the drag.
     drop: state.files === 'drop-over' && props.viewport === 'desktop',
-    picker: fastMenu,
+    picker: fastMenu || allModels,
     placeholder: taskPlaceholder,
     running: false,
     sendTo:

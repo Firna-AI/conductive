@@ -2,12 +2,15 @@ import type { ReactNode } from 'react'
 import { CircleAlert, Info, TriangleAlert } from 'lucide-react'
 import type { TabBrowser } from '../../fixtures/shortcutHosts'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import { spokenShortcut, type Shortcut } from '../common/KeyChips'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import {
+  spokenShortcut,
+  type Shortcut,
+} from '../../../../../src/ui/components/common/KeyChips'
 import { keyChips } from '../../entries/components/common/KeyChips.mockup'
 import { Linked, ScreenLink } from '../common/ScreenLink'
 import { instanceKey, shortcutKey } from '../../instanceKey'
-import styles from './ShortcutsSections.module.css'
+import styles from '../../../../../src/ui/components/settings/ShortcutsSections.module.css'
 
 /**
  * A shortcut that another command holds, which a recorded shortcut or a

@@ -5,7 +5,7 @@ import type {
   SwitchBuild,
   SwitchFailure,
   SwitchWait,
-} from '../../../docs/mockups/src/components/operator/switchCopy'
+} from '../../ui/components/operator/switchCopy'
 import { formatDuration, formatElapsed, whenOf } from '../../app/time'
 import type { OperatorOrgDetail } from '../../shared/operator'
 import type {

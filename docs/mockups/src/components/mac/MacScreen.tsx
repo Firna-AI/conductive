@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
-import { classes } from '../common/classes'
-import { MacApp, type MacChange, type WindowMode } from './MacApp'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import {
+  MacApp,
+  type MacChange,
+  type WindowMode,
+} from '../../../../../src/ui/components/mac/MacApp'
 import { WindowButtons } from './WindowControls'
 import styles from './MacScreen.module.css'
 

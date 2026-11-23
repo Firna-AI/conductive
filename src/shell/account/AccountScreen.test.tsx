@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test } from 'vitest'
-import { chatGptSignInCopy as copy } from '../../../docs/mockups/src/components/settings/chatGptSignInCopy'
+import { chatGptSignInCopy as copy } from '../../ui/components/settings/chatGptSignInCopy'
 import { AppModel } from '../../app/app-model'
 import { memoryNavigation, NavigationContext } from '../../app/navigation'
 import { routes } from '../../app/router'
@@ -193,7 +193,7 @@ describe('AccountScreen', () => {
       address: routes.accountTab('preferences'),
       preferences: {
         current: ['Preferences'],
-        sections: ['New workspaces'],
+        sections: ['Favourites', 'New workspaces'],
         model: true,
         choice: ['Dialog'],
       },

@@ -101,7 +101,7 @@ const controls = useBarControls({ github, actions, localWork, turnRuns, readOnly
 The app shell provides the rest of the design:
 
 - the `--ui-*` design tokens and the Firna theme of the colour scheme, as
-  `docs/mockups/src/theme.ts` makes them
+  `src/ui/theme.ts` makes them
 - a right column that is a size container (`container-type: inline-size`), so
   that a narrow column drops the detail and the link labels of the bar
 - `--ui-touch-min: 40px` on a phone, as the mockups set it. The phone row is

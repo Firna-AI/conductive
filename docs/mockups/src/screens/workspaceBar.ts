@@ -1,4 +1,7 @@
-import { barModel, type BarModel } from '../components/workspace/barModel'
+import {
+  barModel,
+  type BarModel,
+} from '../../../../src/ui/components/workspace/barModel'
 import { defined } from '../defined'
 import { continuedBranch, viewerMergeMethod } from '../fixtures/barActions'
 import { pickedBranch } from '../fixtures/branches'

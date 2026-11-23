@@ -5,7 +5,7 @@ import {
   dialogText,
 } from '../entries/components/common/ConfirmDialog.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
-import { removeQuestion } from '../components/workspace/queueCopy'
+import { removeQuestion } from '../../../../src/ui/components/workspace/queueCopy'
 import { pullRequestOf, queuedWorkspace } from '../fixtures/mergeQueue'
 import { pullRequest } from '../fixtures/pullRequests'
 import { repositories } from '../fixtures/repositories'

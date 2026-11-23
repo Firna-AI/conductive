@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { BarModel } from '../components/workspace/barModel'
+import type { BarModel } from '../../../../src/ui/components/workspace/barModel'
 import type { MobileTabKey } from '../components/workspace/tools'
 import { plainData } from '../defined'
 import { mobileFrame } from '../entries/components/layout/AppFrame.mockup'

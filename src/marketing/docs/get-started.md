@@ -201,8 +201,8 @@ If you accepted an org invitation, your org is already open.
 2. Choose the repository for your task.
 3. Keep the default branch, or choose another starting branch.
 4. If you choose another branch, open the branch control again and choose its target under **Target**.
-5. Choose a model for an agent available to you.
-6. Choose the effort in the same model menu.
+5. Choose a favourite or a model in **All models** for an agent available to you.
+6. Adjust the effort and **Fast** in the same menu if needed.
 7. Describe your task in the message box.
 8. Select **Create** in the dialog, or **Send** on the page.
 
@@ -210,6 +210,11 @@ The target is the branch where your work will merge.
 The starting branch is the target unless you choose the default branch instead.
 
 - [Choose a starting branch and target](/docs/workspaces#start-from-another-branch)
+
+A favourite sets the model, effort, and **Fast** together.
+With no favourites to show, choose a model in **All models**.
+
+- [Set your model favourites](/docs/sessions-and-chat#set-your-favourites)
 
 For a first task, you can use this message:
 

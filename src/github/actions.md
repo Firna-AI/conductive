@@ -29,8 +29,8 @@ The views draw only `BarControls`.
 ## The rules
 
 `barViewOf` in [barView.ts](barView.ts) gives the actions, the link, the
-message, the note, and the branches of a GitHub state. It applies
-`barModel` of the mockups, so the app and the mockups share one rule. It
+message, the note, and the branches of a GitHub state. It applies the
+shared `barModel`, so the app and the mockups share one rule. It
 adds what the app knows:
 
 - The member's access comes from the capability route. Until the first
@@ -58,7 +58,7 @@ adds what the app knows:
   file is not committed, `commits` when only unpushed commits are left, or
   `none`. On an open pull request, `changes` shows Commit and push and
   `commits` shows Push. Both buttons run the command `commit-and-push`,
-  through `agentActionCommand` of the mockup copy.
+  through `agentActionCommand` of the shared `barCopy.ts`.
 - Fix checks shows only while the checks name a check that blocks the
   merge: failed, timed out, cancelled, or one that needs an action. Its
   prompt lists them.
@@ -82,7 +82,7 @@ adds what the app knows:
   waits while a turn runs in any session, open or closed.
 
 `promptOf` in [barPrompts.ts](barPrompts.ts) fills `agentPrompt` of the
-mockups' `barCopy.ts` with the number, the target branch, the blocking
+shared `barCopy.ts` with the number, the target branch, the blocking
 checks in GitHub's order, and the reviewers. While the bar read names a
 queue state, Resolve conflicts uses `git rebase --onto` with the saved
 old base commit for that head. If the read lacks the commit, the prompt
@@ -92,8 +92,8 @@ asks the agent to verify where the layer's own commits begin.
 
 [Merge queue in the app](../../docs/protocol/merge-queue-in-the-app.md)
 states the requirements. `queueFactsOf` in [queueView.ts](queueView.ts)
-gives `barModel` the queue facts of the bar, and `queueViewOf` the words
-of its line from the mockups' `queueCopy.ts`.
+gives `barModel` the queue facts of the bar. `queueViewOf` gets the words
+of its line from the shared `queueCopy.ts`.
 
 - The bar read and the stored read carry the queue state of a queued
   workspace. A GitHub event carries none, so the store keeps the state of

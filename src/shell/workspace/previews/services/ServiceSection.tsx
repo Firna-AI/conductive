@@ -4,8 +4,8 @@ import type { ServiceCatalogueSnapshot } from '../../../../shared/generated/Serv
 import type { ServiceControlAction } from '../../../../shared/generated/ServiceControlAction'
 import type { ServiceRow } from '../../../../shared/generated/ServiceRow'
 import type { ServiceTarget } from '../../../../shared/generated/ServiceTarget'
-import { servicesCopy } from '../../../../../docs/mockups/src/components/tools/serviceCopy'
-import styles from '../../../../../docs/mockups/src/components/tools/ServiceList.module.css'
+import { servicesCopy } from '../../../../ui/components/tools/serviceCopy'
+import styles from '../../../../ui/components/tools/ServiceList.module.css'
 import { useNow } from '../../../../app/time'
 import type { ServicePorts } from '../../../../previews/services/servicesPart'
 import {

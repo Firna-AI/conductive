@@ -95,7 +95,7 @@ React.
   order, and the open body of `MessageLine` shares it.
 - The app and the mockups share one renderer of the blocks, as they share
   `MarkdownTable`. `AgentBlocks` and `LineBlocks` live in
-  `docs/mockups/src/components/chat/`, typed with `TextBlock`. The mockup
+  `src/ui/components/chat/`, typed with `TextBlock`. The mockup
   fixtures write the same blocks and inline trees with the builders of
   `docs/mockups/src/fixtures/agentText.ts`. No builder reads Markdown, so
   the fixtures copy no bug of the chat adapter.
@@ -122,12 +122,12 @@ React.
 - `MarkdownItem` of `src/markdown/MarkdownItem.tsx` draws each list item,
   in an answer and in the file preview. An item of one paragraph draws its
   text alone. Another item draws its blocks. A task item draws the fixed
-  check box of the mockups' `TaskBox` at the start of its first paragraph,
+  check box of the shared `TaskBox` at the start of its first paragraph,
   so a task with sub-tasks keeps its box on the line of its words. The box
   is a disabled check box in the look of the design, from the `taskBox`
   class of `MarkdownProse.module.css`, so a press changes nothing.
 - A quote is a `blockquote` with its own blocks, and a rule is an `hr`.
-  The `prose` class of the mockups' `MarkdownProse.module.css` gives them
+  The `prose` class of the shared `MarkdownProse.module.css` gives them
   their look, and the look of bold text, emphasis, strikethrough, and task
   items. `AgentText` adds the class to the element around the blocks,
   beside the `agent` class of `ChatItemView.module.css`, which sets the
@@ -234,22 +234,22 @@ has. These parts read and draw the headings:
   text through `AnswerText`. It draws nothing for a heading whose parts
   show no words, so a screen reader meets no empty heading.
 - `MessageLine` draws a heading as a span with the `heading` class of the
-  mockups' `ToolGroup.module.css`. That class gives the heading weight,
+  shared `ToolGroup.module.css`. That class gives the heading weight,
   closed and open. Open, the span shows on its own line. Under an open
   line, a heading after the first table draws through `AgentBlocks` as a
   heading element. The `.messageBody` rules of `ToolGroup.module.css` give
   it the look of a heading of the open line. `LineBlocks` draws nothing
   for a heading whose parts show no words, also no space.
-- `MarkdownHeadings.module.css`, in `docs/mockups/src/components/common/`,
+- `MarkdownHeadings.module.css`, in `src/ui/components/common/`,
   gives the headings of an answer and of the file preview one look, under
   its `headings` class. It sets the size of each level, the weight, the
   colour, the letter spacing, the line height, and the line under `h1`.
   `AgentText` and the `MarkdownView` of the file preview add the class to
   the element around their blocks.
-- Each view sets the space around its headings. The mockups'
+- Each view sets the space around its headings. The shared
   `ChatItemView.module.css` sets it for an answer, also for a heading in a
   list item or a quote. `src/files/markdown/MarkdownView.module.css` sets
-  it for the file preview. The mockups' `ToolGroup.module.css` sets it for
+  it for the file preview. The shared `ToolGroup.module.css` sets it for
   a heading of a message line after a paragraph, a list, or a heading.
   `LineBlocks.module.css` beside it sets it after a code block, and for a
   heading in a list item under an open line.
@@ -277,7 +277,7 @@ mockups:
 - `table-rows.ts` imports no React. The mockup fixtures import its types,
   and the worker tests compile those fixtures without JSX. A fixture that
   imports a `.tsx` module fails `npm run typecheck` with TS6142.
-- `MarkdownTable`, in `docs/mockups/src/components/common/`, draws a table
+- `MarkdownTable`, in `src/ui/components/common/`, draws a table
   as a native table. The chat and the file preview draw their tables
   through it. Each caller draws the content of its cells. Cells
   past the width of the header do not show. The last cell of a short row

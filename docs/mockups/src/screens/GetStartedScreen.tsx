@@ -12,7 +12,7 @@ import { people } from '../fixtures/members'
 import { orgs } from '../fixtures/orgs'
 import { type FirstBuildState, firstBuildStates } from '../fixtures/computer'
 import { paths } from '../paths'
-import { getStartedCopy as copy } from './getStartedCopy'
+import { getStartedCopy as copy } from '../../../../src/ui/screens/getStartedCopy'
 import {
   agentStates,
   getStartedPeople,
@@ -26,7 +26,7 @@ import {
   installStep,
   orgStep,
 } from '../entries/components/screens/getStartedSteps.mockup'
-import styles from './GetStartedScreen.module.css'
+import styles from '../../../../src/ui/screens/GetStartedScreen.module.css'
 
 export const getStartedSchema = {
   type: 'object',

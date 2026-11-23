@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { TreeEntry } from '../../fixtures/files'
 import { ScreenLink } from '../common/ScreenLink'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { changeIcon } from '../../entries/components/files/ChangeIcon.mockup'
 import { entryIcon } from '../../entries/components/files/fileIcons.mockup'
 import { defined } from '../../defined'

@@ -1,11 +1,11 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Input } from '@firna/ui/input'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import { confirmDialog } from '../../entries/components/common/ConfirmDialog.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
-import { useControlSizes } from '../common/touch'
-import { newSectionWords } from './sectionCopy'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
+import { newSectionWords } from '../../../../../src/ui/components/workspaces/sectionCopy'
 
 /**
  * New section, drawn open: a dialog that asks for the name of the section.

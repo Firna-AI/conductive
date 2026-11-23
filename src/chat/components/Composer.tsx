@@ -5,13 +5,13 @@ import type { Agent } from '../../shared/generated/Agent'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
 import { filesWait, type IntakeRefusals } from '../../app/draft-files'
 
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import styles from '../../../docs/mockups/src/components/chat/Composer.module.css'
-import { MentionAnchor } from '../../../docs/mockups/src/components/chat/MentionList'
+import { classes } from '../../ui/components/common/classes'
+import styles from '../../ui/components/chat/Composer.module.css'
+import { MentionAnchor } from '../../ui/components/chat/MentionList'
 import {
   SessionLoginLabel,
   type SessionLogin,
-} from '../../../docs/mockups/src/components/chat/SessionLogin'
+} from '../../ui/components/chat/SessionLogin'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import type { Draft, MentionRequest } from '../state/chat-snapshot'
 import { IconButton } from '../ui/actions'
@@ -44,6 +44,8 @@ export interface ComposerProps {
   /** The model and the effort of the session. */
   choice: AgentChoice
   models: readonly AgentModel[]
+  /** The favourites of the reader, which the model menu lists first. */
+  favourites?: readonly AgentChoice[]
   /** The agent of a session with messages (decision 51). */
   sessionAgent?: Agent
   /** A turn runs, so a message steers it, and Stop ends it. */
@@ -226,6 +228,7 @@ export function Composer(props: ComposerProps) {
               />
               <ModelPicker
                 choice={props.choice}
+                favourites={props.favourites}
                 models={props.models}
                 onChoose={props.onChooseModel}
                 sessionAgent={props.sessionAgent}

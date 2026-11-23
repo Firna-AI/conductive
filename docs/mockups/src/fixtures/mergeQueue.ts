@@ -1,4 +1,7 @@
-import type { PromptFacts, RestackFacts } from '../components/workspace/barCopy'
+import type {
+  PromptFacts,
+  RestackFacts,
+} from '../../../../src/ui/components/workspace/barCopy'
 import { promptFacts } from './barActions'
 import { pullRequest } from './pullRequests'
 import { subWorkspaceList } from './subWorkspaces'

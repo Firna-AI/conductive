@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react'
 import { defined } from '../../defined'
 import type { Membership } from '../../fixtures/members'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { menu } from '../../entries/components/common/Menu.mockup'
 import { instanceKey } from '../../instanceKey'
 import { archivedGroup } from '../../entries/components/workspaces/ArchivedGroup.mockup'
@@ -30,7 +30,7 @@ import type {
 } from './sections'
 import { isNested, treeOf } from './trees'
 import { workspaceRow } from '../../entries/components/workspaces/WorkspaceRow.mockup'
-import styles from './SectionList.module.css'
+import styles from '../../../../../src/ui/components/workspaces/SectionList.module.css'
 
 type Variant = 'sidebar' | 'page'
 

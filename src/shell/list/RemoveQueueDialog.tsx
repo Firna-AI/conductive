@@ -1,5 +1,5 @@
 import { ListX } from 'lucide-react'
-import { removeQuestion } from '../../../docs/mockups/src/components/workspace/queueCopy'
+import { removeQuestion } from '../../ui/components/workspace/queueCopy'
 import { ActionButton } from '../ui/actions'
 import { Dialog, DialogText } from '../ui/Dialog'
 import type { RemoveQuestion } from './row-queue'

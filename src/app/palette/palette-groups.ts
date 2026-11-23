@@ -1,6 +1,6 @@
 import type { Workspace } from '../../shared/generated/Workspace'
-import { helpGroupLabel } from '../../../docs/mockups/src/components/feedback/feedbackCopy'
-import { queueLabels } from '../../../docs/mockups/src/components/workspace/queueCopy'
+import { helpGroupLabel } from '../../ui/components/feedback/feedbackCopy'
+import { queueLabels } from '../../ui/components/workspace/queueCopy'
 
 import { queueBlocks } from '../merge-queue'
 import { routes } from '../router'

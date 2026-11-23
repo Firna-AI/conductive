@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@firna/ui/toast'
-import { EditRepositoryNotice } from '../../../docs/mockups/src/components/settings/RepositoryNotice'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { EditRepositoryNotice } from '../../ui/components/settings/RepositoryNotice'
+import { Section } from '../../ui/components/settings/Section'
 import { mayChangeSettings } from '../../app/permissions'
 import {
   addedRepositoryNames,

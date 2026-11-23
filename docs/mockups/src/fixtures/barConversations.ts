@@ -2,7 +2,7 @@ import {
   agentPrompt,
   restackPrompt,
   type AgentAction,
-} from '../components/workspace/barCopy'
+} from '../../../../src/ui/components/workspace/barCopy'
 import { code, p } from './agentText'
 import { continuedBranch, promptFacts } from './barActions'
 import type { ChatItem } from './conversations'

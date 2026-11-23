@@ -4,7 +4,8 @@ import {
   type MergeProblem,
   type QueueFacts,
   type QueueStep,
-} from '../components/workspace/queueModel'
+} from '../../../../src/ui/components/workspace/queueModel'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 import type {
   MergeQueueList,
   QueueEntry,
@@ -18,7 +19,6 @@ import type {
 import { defined } from '../defined'
 import { pullRequestOf, queuedWorkspace } from '../fixtures/mergeQueue'
 import { repositories, type RepositoryKey } from '../fixtures/repositories'
-import type { ActivityStatus } from '../fixtures/workspaces'
 
 /** How a queued workspace looks in a state: its GitHub state and status. */
 type RowSpec = {

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/AccountSections.module.css'
-import { Section } from '../../../docs/mockups/src/components/settings/Section'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/settings/AccountSections.module.css'
+import { Section } from '../../ui/components/settings/Section'
 import { useStore } from '../../app/store'
 import type { NewWorkspaceView } from '../../shared/account'
 import { useApp, useOfferedModels } from '../context'
@@ -80,6 +80,7 @@ export function DefaultsSection() {
           change={change}
           choice={saving ?? account.defaultChoice}
           disabled={save.pending}
+          favourites={account.favourites}
           models={models}
           placement="below-start"
         />

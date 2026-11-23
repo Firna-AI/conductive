@@ -7,8 +7,8 @@ import {
 } from '../capabilities/CapabilitiesButton'
 import { ScreenLink } from '../common/ScreenLink'
 import { iconButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import { useTouch } from '../common/touch'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
 import { SendButton, StopButton } from './ComposerButtons'
 import { ComposerMenu, type ComposerMenuState } from './ComposerMenu'
 import type { MentionTree } from './FileMentionList'
@@ -16,11 +16,11 @@ import { fileMentionList } from '../../entries/components/chat/FileMentionList.m
 import { mentionAnchor } from '../../entries/components/chat/MentionList.mockup'
 import { messageField } from '../../entries/components/chat/MessageField.mockup'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
-import type { SessionLogin } from './SessionLogin'
+import type { SessionLogin } from '../../../../../src/ui/components/chat/SessionLogin'
 import { sessionLoginLabel } from '../../entries/components/chat/SessionLogin.mockup'
 import { SkillMentionList, type SkillSource } from './SkillMentionList'
 import { defined } from '../../defined'
-import styles from './Composer.module.css'
+import styles from '../../../../../src/ui/components/chat/Composer.module.css'
 
 export type ComposerState = {
   /** The model and the effort of the next message. */
@@ -60,6 +60,13 @@ export type ComposerState = {
   attachTo?: string
   /** The model picker is open. */
   picker?: boolean
+  /**
+   * The favourites of the model menu, by default those of the viewer. With
+   * none, the menu starts with All models.
+   */
+  favourites?: readonly AgentChoice[]
+  /** The submenu of All models of the open model menu is open. */
+  allModels?: boolean
   /**
    * The agent of the session, once it has messages. A model of the other
    * agent opens a new session with the draft (decision 51).
@@ -104,8 +111,9 @@ export type ComposerState = {
    */
   pointer?: boolean
   /**
-   * A picker in place of the model picker, for a page that draws another
-   * menu of the model, such as `app/model-favourites`.
+   * A picker in place of the model picker, for a page that draws the model
+   * menu in another place, such as above the page in
+   * `app/chat/menu-placement`.
    */
   pickerPart?: ReactNode
   /**
@@ -221,7 +229,9 @@ export function Composer(props: ComposerState & { lines?: number }) {
                 choice={props.choice}
                 moklyInstance="model-picker"
                 {...defined({
+                  allModels: props.allModels,
                   fastKey: props.fastKey,
+                  favourites: props.favourites,
                   hiddenModels: props.hiddenModels,
                   open: props.picker,
                   sessionAgent: props.sessionAgent,

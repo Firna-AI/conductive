@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { signUpPause } from '../../fixtures/operatorCodes'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
@@ -9,7 +9,11 @@ import { notice } from '../../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { statusText } from '../../entries/components/common/StatusText.mockup'
 import { section } from '../../entries/components/settings/Section.mockup'
-import { pausedTitle, pauseWords, waitlistWords } from './codeCopy'
+import {
+  pausedTitle,
+  pauseWords,
+  waitlistWords,
+} from '../../../../../src/ui/components/operator/codeCopy'
 import { codesTabLinks, pauseQuestionLinks } from './signUpLinks'
 import { TurnOffWaitlistButton, type WaitlistState } from './waitlistSwitch'
 import { instanceKey } from '../../instanceKey'

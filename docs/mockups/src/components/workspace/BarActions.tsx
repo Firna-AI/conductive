@@ -6,10 +6,13 @@ import type { Workspace } from '../../fixtures/workspaces'
 import { barPaths, paths } from '../../paths'
 import { queuePaths } from '../../queuePaths'
 import { actionButton } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
 import { shortcutTip } from '../../entries/components/common/ShortcutTip.mockup'
-import { TintedTheme, type ButtonTint } from '../common/tint'
+import {
+  TintedTheme,
+  type ButtonTint,
+} from '../../../../../src/ui/components/common/tint'
 import {
   agentActionCommand,
   agentActionLabels,
@@ -17,15 +20,18 @@ import {
   barMessageText,
   type AgentAction,
   type BarMessageKind,
-} from './barCopy'
-import { agentIcons } from './barIcons'
-import type { BarAction, BarModel } from './barModel'
-import { queuedMergeLabel } from './queueCopy'
+} from '../../../../../src/ui/components/workspace/barCopy'
+import { agentIcons } from '../../../../../src/ui/components/workspace/barIcons'
+import type {
+  BarAction,
+  BarModel,
+} from '../../../../../src/ui/components/workspace/barModel'
+import { queuedMergeLabel } from '../../../../../src/ui/components/workspace/queueCopy'
 import { QueueAddButton } from './QueueBarParts'
 import { githubLink } from '../../entries/components/workspace/barParts.mockup'
 import { barTint } from './prStatus'
 import { iconKeyOf } from '../../entries/components/common/icons'
-import styles from './BarActions.module.css'
+import styles from '../../../../../src/ui/components/workspace/BarActions.module.css'
 
 /**
  * One button of the bar. An agent action sends its fixed prompt, Merge

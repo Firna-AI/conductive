@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { RepositoryNotice } from '../../../components/settings/RepositoryNotice'
-import { repositoryWaits } from '../../../components/settings/repositoryChangeCopy'
+import { RepositoryNotice } from '../../../../../../src/ui/components/settings/RepositoryNotice'
+import { repositoryWaits } from '../../../../../../src/ui/components/settings/repositoryChangeCopy'
 import { changedNames } from '../../../fixtures/repositories'
 import { actionButton } from '../common/actions.mockup'
 

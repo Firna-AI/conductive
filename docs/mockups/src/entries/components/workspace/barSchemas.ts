@@ -3,14 +3,14 @@ import type {
   AgentAction,
   BarMessageKind,
   MergeMethod,
-} from '../../../components/workspace/barCopy'
+} from '../../../../../../src/ui/components/workspace/barCopy'
 import type { PrStatus } from '../../../components/workspace/prStatus'
+import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
 import {
   mergeProblems,
   queueSteps,
   turnWaits,
-} from '../../../components/workspace/queueModel'
-import { bannerStates } from '../../../fixtures/pullRequests'
+} from '../../../../../../src/ui/components/workspace/queueModel'
 import { iconKeyOf, iconKeys, type IconKey } from '../common/icons'
 
 /** The agent actions of the bar, as `AgentAction` lists them. */

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { buildRuns, type BuildState } from '../components/settings/BuildSection'
-import type { RepositoryWait } from '../components/settings/repositoryChangeCopy'
+import type { RepositoryWait } from '../../../../src/ui/components/settings/repositoryChangeCopy'
 import { repositoryNotice } from '../entries/components/settings/RepositoryNotice.mockup'
 import { changedNames } from '../fixtures/repositories'
 import type { OrgSettingsState } from './orgSettingsState'

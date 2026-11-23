@@ -1,4 +1,4 @@
-import type { PictureSize } from '../../../docs/mockups/src/components/files/ImageView'
+import type { PictureSize } from '../../ui/components/files/ImageView'
 
 /**
  * The zoom of a picture in its view. `fit` shows the whole picture at its
@@ -24,7 +24,7 @@ export interface ViewPoint {
 
 export const fitZoom: PictureZoom = { kind: 'fit' }
 
-/** The room around a fitted picture, as the view of the mockups gives it. */
+/** The room around a fitted picture, as the shared `ImageView` gives it. */
 const viewPadding = 16
 
 /** The largest scale: eight times the own size of the picture. */

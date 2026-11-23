@@ -1,4 +1,4 @@
-import type { RepositoryWait } from '../../docs/mockups/src/components/settings/repositoryChangeCopy'
+import type { RepositoryWait } from '../ui/components/settings/repositoryChangeCopy'
 import type { BuildsResponse, Repository } from '../shared/org-settings'
 import { latestBuild } from './latest-build'
 

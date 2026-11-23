@@ -81,6 +81,13 @@ export const composerStateProperties = {
   attachTo: { type: 'string', minLength: 1 },
   /** The model picker is open. */
   picker: { type: 'boolean' },
+  /**
+   * The favourites of the model menu, by default those of the viewer. With
+   * none, the menu starts with All models.
+   */
+  favourites: { type: 'array', items: agentChoiceSchema },
+  /** The submenu of All models of the open model menu is open. */
+  allModels: { type: 'boolean' },
   /** The agent of the session, once it has messages. */
   sessionAgent: { enum: agentKeys },
   /** The picker of a session tab, whose Fast row shows its key. */

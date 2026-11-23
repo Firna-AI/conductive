@@ -1,4 +1,4 @@
-import { ORG_COLORS } from '../../../design/orgColors'
+import { ORG_COLORS } from '../../../../../../src/ui/design/orgColors'
 import type { PersonKey } from '../../../fixtures/members'
 import type { OrgKey } from '../../../fixtures/orgs'
 

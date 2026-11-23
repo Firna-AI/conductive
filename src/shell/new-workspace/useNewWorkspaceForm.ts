@@ -1,7 +1,7 @@
 import type { AgentModel } from '../../shared/generated/AgentModel'
 import { useEffect, type ReactNode, type RefObject } from 'react'
 import type { AgentChoice } from '../../shared/generated/AgentChoice'
-import type { SessionLogin } from '../../../docs/mockups/src/components/chat/SessionLogin'
+import type { SessionLogin } from '../../ui/components/chat/SessionLogin'
 import { newSessionLogin } from '../../app/default-logins'
 import {
   formBranch,
@@ -70,6 +70,8 @@ export interface NewWorkspaceForm {
    * of the form kept.
    */
   models: readonly AgentModel[]
+  /** The favourites of the account, which the model menu lists first. */
+  favourites: readonly AgentChoice[]
   /**
    * The notice of a failed create, or `null`. It offers Try again, or Start
    * from and the default branch for a picked branch that GitHub no longer
@@ -210,6 +212,7 @@ export function useNewWorkspaceForm(
     choice,
     login,
     models: offered,
+    favourites: account?.favourites ?? [],
     failure: createFailure(create, {
       ready: defaults !== null,
       retry: send,

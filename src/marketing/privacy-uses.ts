@@ -1,4 +1,4 @@
-import { productName } from '../../docs/mockups/src/brand'
+import { productName } from '../shared/brand'
 import { list, paragraph, text, type LegalDocument } from './legal-text'
 
 /**

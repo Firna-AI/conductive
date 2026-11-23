@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { AgentDrawing } from '../../../docs/mockups/src/components/chat/agentDrawing'
+import type { AgentDrawing } from '../../ui/components/chat/agentDrawing'
 import type { InlineText } from '../markdown/agent-inline'
 import { useShowsWords } from '../markdown/answer-reading'
 import { AnswerText } from '../markdown/AnswerText'

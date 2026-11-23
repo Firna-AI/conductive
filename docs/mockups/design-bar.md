@@ -8,7 +8,8 @@ Continue, and the merge queue.
 
 - The pull request bar shows one main action in each state, beside its
   links to GitHub, from decisions 220 to 228. `barModel.ts` in
-  `src/components/workspace/` holds the rule: the action of each state, with
+  [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+  holds the rule: the action of each state, with
   the local work, the GitHub access of the viewer, and an action of the app
   that runs, and Merge needs a merge method. `barCopy.ts` beside it holds
   the labels, the messages under the bar, and the fixed prompts of the agent
@@ -22,10 +23,12 @@ Continue, and the merge queue.
     a bar without a tint, such as the bar without a pull request, the main
     action takes the outline tone of Archive, so the bar shows no primary
     fill. The user chose this on 10 and 11 November 2026. `TintedTheme` in
-    `src/components/common/tint.tsx` gives the primary tone of Firna the
+    [`src/ui/components/common/tint.tsx`](../../src/ui/components/common/tint.tsx)
+    gives the primary tone of Firna the
     fill of the tint, a deeper fill on hover, and a white label, from the
     `successFill`, `warningFill`, `dangerFill`, `mergedFill`, and `onFill`
-    tokens. `barTint` in `prStatus.ts` gives the tint of each state.
+    tokens. `barTint` in `src/components/workspace/prStatus.ts` gives the
+    tint of each state.
   - An agent action sends its fixed prompt, so the chat shows it as a
     message of the member who clicked. Merge names its method, such as
     "Squash and merge", and a spinner shows while the merge or Continue
@@ -36,7 +39,8 @@ Continue, and the merge queue.
     from decision 199. A busy or disabled button and a phone show no key.
     `ShortcutTip` in `src/components/common/` gives the tooltip.
   - The number of a pull request opens it on GitHub, with an arrow after a
-    divider. `PullRequestNumber` in `barParts.tsx` draws it, so the bar of a
+    divider. `PullRequestNumber` in `src/components/workspace/barParts.tsx`
+    draws it, so the bar of a
     pull request has no other link to it. The row of a phone is one link to
     the Checks tab, so its number stays plain, and the top of that tab keeps
     Open on GitHub.
@@ -52,12 +56,13 @@ Continue, and the merge queue.
     `barModel.ts` chooses it, and `barCopy.ts` gives its words. On a phone
     it stands at the top of the Checks tab, above the branch and its base.
   - On a phone the row opens the Checks tab. `ChecksActions` in
-    `BarActions.tsx` draws the actions, the line, and the link to GitHub at
-    the top of that tab, at touch size.
+    `src/components/workspace/ChecksActions.tsx` draws the actions, the line,
+    and the link to GitHub at the top of that tab, at touch size.
   - While the branch has no pull request, the top of the Checks tab of a
     phone names the branch and its base, where Create PR stands. The user
     chose this as decision 306 on 16 November 2026. `ChecksBranches` in
-    `BarActions.tsx` draws them with the parts of the desktop bar: the
+    `ChecksBranches.tsx`, beside `ChecksActions.tsx`, draws them with the
+    parts of the desktop bar: the
     branch icon, the branch, an arrow, and the base, in the same font and
     colours. The names wrap, because a phone has no tooltip. When the two
     names do not fit on one line, the base moves to a line of its own with
@@ -66,21 +71,23 @@ Continue, and the merge queue.
     request, also without an action, such as for a branch without commits.
     The compact row does not change.
   - `ContinueDialog` asks before Continue when the sandbox has local work.
-    `LocalWorkList` in `src/components/workspace/` lists that work for the
-    app and the mockups: each changed file that is not committed, and the
-    commits that no remote branch holds. `ContinuedLine` in
-    `src/components/chat/` draws the note of Continue in each session,
-    centred and muted, as the first line of a linked session. It takes no
-    fixtures.
+    `LocalWorkList` in
+    [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+    lists that work for the app and the mockups: each changed file that is
+    not committed, and the commits that no remote branch holds.
+    `ContinuedLine` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+    draws the note of Continue in each session, centred and muted, as the
+    first line of a linked session. It takes no fixtures.
 
 ## The merge queue
 
 The plan `plans/merge-queue.md` adds a merge queue for each repository,
 which lands its pull requests into the default branch as one GitHub
 stack (decisions 313 and 320). The bar shows the queue in two parts.
-`queueModel.ts` in `src/components/workspace/` holds the rule, and
-`queueCopy.ts` beside it holds the words. Both import no fixture, so the
-app can use them too. `barModel` reads the queue from the optional fact
+`queueModel.ts` in
+[`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+holds the rule, and `queueCopy.ts` beside it holds the words.
+`barModel` reads the queue from the optional fact
 `queue`, so a bar without it shows no part of the queue.
 
 - Add to merge queue is an outline button after the main action, or alone
@@ -150,4 +157,3 @@ app can use them too. `barModel` reads the queue from the optional fact
 - On a phone the compact row names the place, such as Queue 3 of 3, also
   for an entry that cannot merge. The line stands at the top of the Checks
   tab, above the buttons.
-

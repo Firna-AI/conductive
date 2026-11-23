@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from 'react'
-import { markLabel } from '../../../docs/mockups/src/components/explain/explainCopy'
-import { MarkGlyph } from '../../../docs/mockups/src/components/explain/MarkGlyph'
-import marked from '../../../docs/mockups/src/components/explain/MarkedText.module.css'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { markLabel } from '../../ui/components/explain/explainCopy'
+import { MarkGlyph } from '../../ui/components/explain/MarkGlyph'
+import marked from '../../ui/components/explain/MarkedText.module.css'
+import { classes } from '../../ui/components/common/classes'
 import controls from '../ui/controls.module.css'
 import type { ExplainView } from './explain-context'
 import type { Explanation } from './explanations'
@@ -12,7 +12,7 @@ import { uiAttribute } from './mark-layout'
 const ui = { [uiAttribute]: '' }
 
 /**
- * The state of a mark, the mockups' `MarkGlyph`, as a button that opens the
+ * The state of a mark, the shared `MarkGlyph`, as a button that opens the
  * popover of its explanation, so Tab reaches each mark. It stands at the end
  * of its mark, or in the box at the top right of a message that the mark
  * covers whole, as the mockups' `WholeMark` draws it. Screen readers hear

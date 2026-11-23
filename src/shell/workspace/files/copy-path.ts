@@ -3,7 +3,7 @@ import { useToast } from '@firna/ui/toast'
 import {
   copyPathItem,
   pathResults,
-} from '../../../../docs/mockups/src/components/files/rowMenuCopy'
+} from '../../../ui/components/files/rowMenuCopy'
 import type { RowMenuItems } from '../../../files/panel/row-menu'
 import { useOrgServices } from '../../context'
 import type { WorkspaceContext } from '../features'

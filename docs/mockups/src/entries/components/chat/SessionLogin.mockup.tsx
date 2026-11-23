@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { SessionLoginLabel } from '../../../components/chat/SessionLogin'
+import { SessionLoginLabel } from '../../../../../../src/ui/components/chat/SessionLogin'
 
 /**
  * The label of the login of another member, or of the org login, in the

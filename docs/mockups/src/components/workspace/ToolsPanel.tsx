@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'
 import { panelBar } from '../../entries/components/workspace/PanelBar.mockup'
 import { toolTabs, type ToolKey } from './tools'
-import styles from './ToolsPanel.module.css'
+import styles from '../../../../../src/ui/components/workspace/ToolsPanel.module.css'
 
 /**
  * The desktop panel of the tools, with a tab for each tool that the app

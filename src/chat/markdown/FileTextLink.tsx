@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import inline from '../../../docs/mockups/src/components/common/InlineText.module.css'
+import inline from '../../ui/components/common/InlineText.module.css'
 import { useChatMentions } from '../mentions/MentionsContext'
 import { fileOpener, fileTitle } from '../links/file-opener'
 import type { FileTarget } from '../links/file-targets'

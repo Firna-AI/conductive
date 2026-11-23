@@ -3,7 +3,7 @@ import type { ServiceControlAction } from '../../../../shared/generated/ServiceC
 import {
   serviceControlCopy,
   servicesCopy,
-} from '../../../../../docs/mockups/src/components/tools/serviceCopy'
+} from '../../../../ui/components/tools/serviceCopy'
 import type { ServiceAnswer } from '../../../../previews/services/serviceAnswer'
 
 type Toast = ReturnType<typeof useToast>['toast']

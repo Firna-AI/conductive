@@ -13,6 +13,7 @@ export interface SessionResponse {
 export const ACCOUNT_PATHS = {
   account: '/api/account',
   defaultModel: '/api/account/default-model',
+  favourites: '/api/account/favourites',
   newWorkspaceView: '/api/account/new-workspace-view',
   shortcuts: '/api/account/shortcuts',
   agentLogins: '/api/account/agent-logins',
@@ -165,6 +166,7 @@ export interface AccountResponse {
   user: User
   operator: boolean
   defaultChoice: AgentChoice
+  favourites: readonly AgentChoice[]
   newWorkspaceView: NewWorkspaceView
   shortcuts: ShortcutPreferences
   agentLogins: readonly AgentLoginStatus[]
@@ -198,6 +200,10 @@ export interface SetDefaultModelRequest {
   choice: AgentChoice
 }
 export type SetDefaultModelResponse = SetDefaultModelRequest
+export interface SetFavouritesRequest {
+  favourites: readonly AgentChoice[]
+}
+export type SetFavouritesResponse = SetFavouritesRequest
 export interface SetNewWorkspaceViewRequest {
   view: NewWorkspaceView
 }
@@ -208,4 +214,31 @@ export interface GitHubInstallationsResponse {
 }
 export interface GitHubRepositoriesResponse {
   repositories: readonly GitHubRepository[]
+}
+
+/** The most favourites that an account keeps, and that the model menu shows. */
+export const MODEL_FAVOURITES_LIMIT = 5
+
+export function firstFavourites(
+  choices: readonly AgentChoice[],
+  onSkipped?: () => void,
+): AgentChoice[] {
+  const favourites: AgentChoice[] = []
+  for (const selected of choices) {
+    if (
+      favourites.length === MODEL_FAVOURITES_LIMIT ||
+      favourites.some(
+        (saved) =>
+          saved.agent === selected.agent &&
+          saved.model === selected.model &&
+          saved.effort === selected.effort &&
+          saved.fast === selected.fast,
+      )
+    ) {
+      onSkipped?.()
+      continue
+    }
+    favourites.push(selected)
+  }
+  return favourites
 }

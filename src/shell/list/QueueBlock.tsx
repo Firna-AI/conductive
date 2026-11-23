@@ -1,15 +1,15 @@
 import type { Workspace } from '../../shared/generated/Workspace'
 import { Fragment, type ReactNode } from 'react'
 import { FolderGit2 } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
+import { classes } from '../../ui/components/common/classes'
 import {
   queueAddStatus,
   queueLabels,
   queueMoveStatus,
   queueRefusedStatus,
-} from '../../../docs/mockups/src/components/workspace/queueCopy'
-import styles from '../../../docs/mockups/src/components/workspaces/MergeQueue.module.css'
-import sectionStyles from '../../../docs/mockups/src/components/workspaces/SectionList.module.css'
+} from '../../ui/components/workspace/queueCopy'
+import styles from '../../ui/components/workspaces/MergeQueue.module.css'
+import sectionStyles from '../../ui/components/workspaces/SectionList.module.css'
 import { queueUnits, type QueueBlock } from '../../app/merge-queue'
 import { nameLabel } from '../../shared/name-label'
 import ui from '../ui/ui.module.css'

@@ -1,19 +1,47 @@
 /*
- * The menu above its trigger, and an open submenu beside it. A view runs
- * no script, so the submenu starts level with the row of All models: below
- * the five favourites and their line.
+ * The menu beside its picker, and the open submenu of All models or of
+ * Effort beside the menu, as the placements of `Menu.module.css` place a menu.
  */
 .pair {
   display: flex;
   position: absolute;
   z-index: 20;
-  bottom: calc(100% + 6px);
-  left: 0;
   align-items: flex-start;
   gap: 4px;
   width: max-content;
 }
 
+.above-start,
+.above-end {
+  bottom: calc(100% + 6px);
+}
+
+.below-start,
+.below-end {
+  top: calc(100% + 4px);
+}
+
+.above-start,
+.below-start {
+  left: 0;
+}
+
+.above-end,
+.below-end {
+  right: 0;
+}
+
+/*
+ * A view runs no script, so the submenu starts level with its row: below
+ * the rows and the lines above that row. Each row takes its height and the
+ * gap of 1 px after it, and each line takes 7 px with its gap. The submenu
+ * of All models starts below the favourites and their line, so a menu with
+ * no favourite has no line, and that submenu starts at its top. The
+ * submenu of Effort also starts below All models and its line.
+ */
 .submenu {
-  margin-top: calc(var(--ui-row-height) * 5 + 12px);
+  margin-top: calc(
+    (var(--ui-row-height) + 1px) * var(--submenu-rows, 5) + 7px *
+      var(--submenu-lines, 1)
+  );
 }

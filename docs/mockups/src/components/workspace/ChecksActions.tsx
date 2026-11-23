@@ -1,34 +1,12 @@
-import { ArrowRight, GitBranch } from 'lucide-react'
 import { bannerSummary } from '../../fixtures/pullRequests'
-import { baseBranchOf, type Workspace } from '../../fixtures/workspaces'
+import type { Workspace } from '../../fixtures/workspaces'
 import { barGitHubLink } from '../../entries/components/workspace/barParts.mockup'
 import { queueLine } from '../../entries/components/workspace/QueueBarParts.mockup'
+import type { BarModel } from '../../../../../src/ui/components/workspace/barModel'
+import styles from '../../../../../src/ui/components/workspace/BarActions.module.css'
 import { BarButtons, BarMessage } from './BarActions'
-import type { BarModel } from './barModel'
+import { ChecksBranches } from './ChecksBranches'
 import { hasPullRequest } from './prStatus'
-import styles from './BarActions.module.css'
-
-/**
- * The branch and its base at the top of the Checks tab of a phone, where
- * Create PR stands (decision 306). They take the parts of the desktop bar.
- * The names wrap, and the base keeps its arrow on a line of its own, so
- * each name shows in full: a phone has no tooltip.
- */
-function ChecksBranches(props: { workspace: Workspace }) {
-  const { workspace } = props
-  return (
-    <div className={styles.branches}>
-      <GitBranch className={styles.branchIcon} size={13} />
-      <span className={styles.names}>
-        <span className={styles.branch}>{workspace.branch}</span>
-        <span className={styles.base}>
-          <ArrowRight className={styles.branchIcon} size={12} />
-          <span className={styles.baseName}>{baseBranchOf(workspace)}</span>
-        </span>
-      </span>
-    </div>
-  )
-}
 
 /**
  * The top of the Checks tab of a phone: the message of the bar, the line of

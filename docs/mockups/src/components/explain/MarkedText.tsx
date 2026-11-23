@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react'
-import a11y from '../common/a11y.module.css'
-import { classes } from '../common/classes'
+import a11y from '../../../../../src/ui/components/common/a11y.module.css'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { ScreenLink } from '../common/ScreenLink'
-import { useTouch } from '../common/touch'
-import { MarkGlyph } from './MarkGlyph'
+import { useTouch } from '../../../../../src/ui/components/common/touch'
+import { MarkGlyph } from '../../../../../src/ui/components/explain/MarkGlyph'
 import { PhoneSelectionEnd, PhoneSelectionStart } from './PhoneSelection'
 import type { MessageMarks, TextMark, TextSpan } from './chatMarks'
-import { markLabel } from './explainCopy'
-import styles from './MarkedText.module.css'
+import { markLabel } from '../../../../../src/ui/components/explain/explainCopy'
+import styles from '../../../../../src/ui/components/explain/MarkedText.module.css'
 
 type Placed = { span: TextSpan; start: number; end: number }
 

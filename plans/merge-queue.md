@@ -1022,6 +1022,7 @@ Depends on: every other milestone
       and the follow-up items that the change adds.
 
 The smoke test results are in `.context/merge-queue/smoke/results.md`.
+The main integration resolutions are in `.context/merge-queue/merge-main/resolutions.md`.
 
 ## Post-merge follow-up (non-blocking)
 

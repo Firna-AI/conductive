@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 
 import { describe, expect, test, vi } from 'vitest'
-import { barLabels } from '../../../../docs/mockups/src/components/workspace/barCopy'
+import { barLabels } from '../../../ui/components/workspace/barCopy'
 import { routes } from '../../../app/router'
 import { requestLines } from '../../../app/test-kit'
 import { githubPaths, type BannerState } from '../../../shared/github'

@@ -1,4 +1,4 @@
-import { restackPrompt } from '../../docs/mockups/src/components/workspace/barCopy'
+import { restackPrompt } from '../../src/ui/components/workspace/barCopy'
 import type { User } from '../../src/shared/api'
 import { queueId } from '../merge-queue/contracts'
 import { queueChanged } from '../merge-queue/errors'

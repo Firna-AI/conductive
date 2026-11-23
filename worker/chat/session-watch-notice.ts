@@ -1,9 +1,6 @@
 import type { UserMessage } from '../../src/shared/generated/UserMessage'
 import { sessionLink } from '../../src/shared/session-link'
-import {
-  wakeText,
-  wakeWords,
-} from '../../docs/mockups/src/components/chat/wakeCopy'
+import { wakeText, wakeWords } from '../../src/ui/components/chat/wakeCopy'
 import type { AppEnv } from '../env'
 import type { ChatOperation } from './operation'
 import type { ChatDependencies } from './types'

@@ -39,31 +39,33 @@ then New workspace, Automations, and Search. It shows the
 workspace with its number under its name, a compact pull request row, the
 sessions as tabs above the chat, and four tabs at the bottom.
 
-- The tokens live in `src/design/`: the colours of each scheme in
-  `palette.ts`, and the type, density, sizes, radii, and fonts in
-  `metrics.ts`. The renderer writes them as `--ui-*` CSS variables, and gives
-  `@firna/ui` the same colours through its theme.
+- The tokens live in [`src/ui/design/`](../../src/ui/design/): the
+  colours of each scheme in `palette.ts`, and the type, density, sizes,
+  radii, and fonts in `metrics.ts`. The renderer writes them as `--ui-*`
+  CSS variables, and gives `@firna/ui` the same colours through its theme.
 - The logo comes from the masters in `docs/brand/`, which
-  `src/components/brand/Logo.module.css` reads and only scales. The tile
+  [`src/ui/components/brand/Logo.module.css`](../../src/ui/components/brand/Logo.module.css)
+  reads and only scales. The tile
   of the app icon stands alone at the top of the org rail. The lockup,
   with dark or light text for the scheme, names the product on the
   marketing site and the sign-in page. The macOS app icon shows in the
   notifications of the Mac app.
-- `ActionButton` and `IconButton` in `src/components/common/actions.tsx` give
-  the Firna button the dense size and a lighter label. The `outline` tone of
+- `ActionButton` and `IconButton` in
+  [`src/ui/components/common/actions.tsx`](../../src/ui/components/common/actions.tsx)
+  give the Firna button the dense size and a lighter label. The `outline` tone of
   `ActionButton` keeps the border of the secondary tone without its fill, so
   the tint of a bar shows through, as on Stop of the 15 minutes bar and on
   Archive of the pull request bar.
 - On a phone every touch target is at least 40 px high, as the user chose
   on 13 November 2026 for a thinner tab row. `MobileFrame` gives
   the Firna controls the touch sizes through `useControlSizes` in
-  `src/components/common/touch.tsx`, and local controls read the
-  `--ui-touch-min` variable, which is 0 on desktop.
+  [`src/ui/components/common/touch.tsx`](../../src/ui/components/common/touch.tsx),
+  and local controls read the `--ui-touch-min` variable, which is 0 on
+  desktop.
 - One `ModelPicker` in `src/components/chat/` sets the model and the effort
-  in every composer, such as "Opus 5.5 High". It names no agent brand. In a
-  session with messages, each model of the other agent ends with the
-  external link icon, because it opens a new session with the draft, from
-  decision 51. A screen reader says "New session" for the icon.
+  in every composer, such as "Opus 5.5 High". It names no agent brand.
+  [The model menu](design-model-menu.md) gives its menu, with the
+  favourites first.
 - A workspace or a session that has no name yet shows "Untitled", in the
   style of a name, from decisions 182 and 185. The list, the header, the
   session tabs, and the session history show it, as
@@ -72,10 +74,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   +, the heading of the empty chat that + opens, and the spoken name of
   the icon on each model of the other agent say it.
 - A view runs no script, so a screen draws an open menu in place: `Menu` in
-  `src/components/common/` beside its button or its tab, at the pointer of
-  a right click, or in a `Sheet` on a phone. `PointMenu` beside it draws
-  the menu of a right click on a row at the pointer, with an open submenu
-  beside it, for a workspace row and a row of All files or Changes.
+  [`src/ui/components/common/`](../../src/ui/components/common/) beside its
+  button or its tab, at the pointer of a right click, or in a `Sheet` on a
+  phone. `PointMenu` in `src/components/common/` draws the menu of a right
+  click on a row at the pointer, with an open submenu beside it, for a
+  workspace row and a row of All files or Changes.
   Firna's own menu rows are taller than the dense design. A row can lead with a mark, such as an
   avatar, and end with a muted detail and an icon. An item that is off
   keeps its place, greyed, and its detail keeps the muted colour, so that
@@ -118,10 +121,11 @@ sessions as tabs above the chat, and four tabs at the bottom.
   accent edge. They lie over the fill of a hover or a selection, and the
   fill still spans the whole row. The faint tree of a drag keeps its
   guides, and the lifted card shows none. A tree has no collapse control.
-  `.nested` and `.indent1` to `.indent3` of `WorkspaceRow.module.css` draw
-  the indent. `GuideLines.module.css` beside it draws the guides, and
-  `guideClasses` in `src/components/workspaces/guideLines.ts` gives their
-  classes. The app shares all three.
+  `.nested` and `.indent1` to `.indent3` of `WorkspaceRow.module.css` in
+  [`src/ui/components/workspaces/`](../../src/ui/components/workspaces/)
+  draw the indent. `GuideLines.module.css` beside it draws the guides, and
+  `guideClasses` in `guideLines.ts` beside them gives their classes. The
+  app shares all three.
 - Only a top-level row drags, and its whole tree moves with it. The lifted
   row stands for the tree: in place of its time it shows the count of the
   nested rows that move with it, such as +2, over the edge of a second
@@ -132,13 +136,14 @@ sessions as tabs above the chat, and four tabs at the bottom.
 - The menu of a workspace row has Move to section, Reassign to, Rename,
   Copy link, a line, then Archive, as `app/workspace-menu` shows. It lists
   only the actions that the person can use, from `workspaceMenu.ts` in
-  `src/components/workspaces/`. A nested row has no Move to section,
-  because it moves only with its tree. Every row offers Copy link, so every row
-  has a menu. `linkCopy.ts` in `src/components/workspace/` gives the words
-  of Copy link and of its result. The app
+  [`src/ui/components/workspaces/`](../../src/ui/components/workspaces/).
+  A nested row has no Move to section, because it moves only with its
+  tree. Every row offers Copy link, so every row has a menu. `linkCopy.ts`
+  in [`src/ui/components/workspace/`](../../src/ui/components/workspace/)
+  gives the words of Copy link and of its result. The app
   reads the same list, so `workspaceMenu.ts` imports no fixture. A right
-  click opens the menu at the pointer, from `RowMenu.tsx` beside it, which
-  draws it with `PointMenu`.
+  click opens the menu at the pointer, from `RowMenu.tsx` in
+  `src/components/workspaces/`, which draws it with `PointMenu`.
   Shift+F10 and the Menu key on a focused row open it below the row. No
   row has a button for the menu. The row under the pointer keeps its
   hover, with Archive over the time when the person can archive the
@@ -147,9 +152,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   menu and its choices in a sheet. A
   long press on a phone still lifts the row for a drag, and opens no menu.
   Rename puts a field in place of the name and the time, with the name
-  selected. `RowMenu.module.css` styles the field, and
-  `PointMenu.module.css` in `src/components/common/` styles the menu at
-  the pointer.
+  selected. `RowMenu.module.css` beside `workspaceMenu.ts` styles the
+  field, and `PointMenu.module.css` in `src/components/common/` styles the
+  menu at the pointer.
 - The Merge queue group stands at the top of the list, above the
   sections, while a queue has entries, as `app/merge-queue` shows. It is
   the app's own group, as Archived is: it has no menu, and it collapses
@@ -180,7 +185,9 @@ sessions as tabs above the chat, and four tabs at the bottom.
   has entries, the group shows as a zone with a dashed outline, which
   shows the reason in place of its words for a row that cannot join.
   `MergeQueueGroup.tsx` and `QueueBlock.tsx` in `src/components/workspaces/`
-  draw it, with `MergeQueue.module.css`. A queued workspace leaves its
+  draw it, with the shared
+  [`MergeQueue.module.css`](../../src/ui/components/workspaces/MergeQueue.module.css).
+  A queued workspace leaves its
   section, and `withTrees` places its sub-workspaces with the rule of an
   archived parent (decision 318 D). The menu of a row whose pull request
   can join adds Add to merge queue after the line of the menu, before
@@ -193,18 +200,20 @@ sessions as tabs above the chat, and four tabs at the bottom.
   and a line in the accent colour marks where it lands. The line takes no
   space, and the rail names no org during a drag. A right click on a tile
   opens its menu at the pointer: Move up and Move down, from
-  `orgTileMenu.ts` in `src/components/orgs/`. Shift+F10 and the Menu key
-  open it beside the tile. A move that the place of the tile rules out
-  keeps its place, greyed. Create org, Operator, and the account have no
-  menu. On a phone, a long press lifts an org in the org switcher with the
-  same look, and opens no menu. `OrgDrop` and `OrgDrag.module.css` beside
+  `orgTileMenu.ts` in [`src/ui/components/orgs/`](../../src/ui/components/orgs/).
+  Shift+F10 and the Menu key open it beside the tile. A move that the
+  place of the tile rules out keeps its place, greyed. Create org,
+  Operator, and the account have no menu. On a phone, a long press lifts
+  an org in the org switcher with the same look, and opens no menu.
+  `OrgDrop` in `src/components/orgs/` and `OrgDrag.module.css` beside
   `orgTileMenu.ts` draw the drag on the rail and in the org switcher.
 - `OrgTile` in `src/components/orgs/` draws the initials and the outline
   of the open org in the colour of the org, as `app/org-settings/colour`
-  shows. `src/design/orgColors.ts` gives the eight presets, each with its
-  own ink and outline for the light and the dark scheme. Blue takes the
-  accent. `OrgColorField` in `src/components/settings/` draws the presets
-  as round radio swatches, and a ring marks the chosen one.
+  shows. [`src/ui/design/orgColors.ts`](../../src/ui/design/orgColors.ts)
+  gives the eight presets, each with its own ink and outline for the light
+  and the dark scheme. Blue takes the accent. `OrgColorField` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/) draws
+  the presets as round radio swatches, and a ring marks the chosen one.
 - `FailureToast` in `src/components/common/` draws the toast that names a
   change of the list that failed, with the message of the server, in the
   `ToastLayer` beside it, as `app/workspace-menu/rename/failed` shows.
@@ -229,8 +238,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   the workspace screens own it as their `palette` state. The Search row
   under New workspace opens it, and on desktop that row shows ⌘K.
   `paletteSearch.ts` beside it holds the rule of a search, which the
-  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` holds the empty
-  state, which also answers a search of that tab without a match. A search
+  Keyboard shortcuts tab also uses. `PaletteEmpty.tsx` in
+  [`src/ui/components/palette/`](../../src/ui/components/palette/) holds
+  the empty state, which also answers a search of that tab without a
+  match. A search
   also finds a workspace by the label of its number, such as `W-395` or
   `39`. A workspace row then shows the label before the name, as a chip
   does. On desktop, each command row ends with the first key of its
@@ -239,7 +250,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   normal Chrome tab on a Mac, which keeps ⌘N, so New workspace shows ⌥⌘N.
   A workspace row shows no key, and a phone shows no keys. In the Mac app
   the Search row shows the person's key of the palette, such as ⇧⌘P.
-- `KeyChips` in `src/components/common/` draws a shortcut as small key
+- `KeyChips` in [`src/ui/components/common/`](../../src/ui/components/common/)
+  draws a shortcut as small key
   chips, one for each key: ⌘ then K on a Mac, and Ctrl then K on Windows,
   whose modifiers show as words. The chips use the sans font, which draws
   ⌘, ⌥, ⇧, ⌃, ⌫, and ⌦ on every system. A dimmed shortcut, which does not
@@ -252,7 +264,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   as the lists of the app show it: what failed, the message of the server,
   and Try again. When the server answered but a service behind it did not,
   such as GitHub for the list of skills, its message names that service.
-- `ConfirmDialog` in `src/components/common/` asks before an action that a
+- `ConfirmDialog` in [`src/ui/components/common/`](../../src/ui/components/common/)
+  asks before an action that a
   user cannot simply undo: a dialog over the dimmed app on desktop, and a
   sheet on a phone. The desktop dialog lies in the `overlay` of `AppFrame`.
   A question that runs its own action stays open while the action runs. A
@@ -354,7 +367,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
   gives the workspace links, the session links, file mentions, the list of
   `@`, skill chips, the list of `/`, and chip removal.
   [Links in text](design-links.md) gives the other links and `TextLink`.
-- The parts of automations live in `src/components/automations/`. The automation
+- The parts of automations live in `src/components/automations/`. Their
+  styles and the types and words of the triggers live in
+  [`src/ui/components/automations/`](../../src/ui/components/automations/),
+  because the app uses them too. The automation
   page puts its form beside the Runs column on desktop. A phone shows a
   saved automation in two tabs, Automation and Runs. The Runs list holds the
   newest 50 runs, and Show older runs ends it when older runs exist. A
@@ -383,8 +399,10 @@ sessions as tabs above the chat, and four tabs at the bottom.
     that the org no longer has shows the empty state "This automation is not
     available" with Open Automations. A read that failed shows `LoadFailure`.
     `app/automations/automation/unavailable` and `not-loaded` show them.
-- `SuspendedOrgNotice` in `src/components/orgs/` draws the notice of a
-  suspended org, with the mark of a refused start. It names the org and
+- `SuspendedOrgNotice` in
+  [`src/ui/components/orgs/`](../../src/ui/components/orgs/) draws the
+  notice of a suspended org, with the mark of a refused start. It names
+  the org and
   the abuse address, and it offers no action. It is a box at the top of
   the list, of each settings tab, and of each view of an automation page, and
   above the bar of an archived workspace. A phone shows it above either
@@ -418,15 +436,17 @@ sessions as tabs above the chat, and four tabs at the bottom.
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such
   as that build, shows a spinner in place of its icon: `Notice` in
-  `src/components/common/` takes `busy`.
+  [`src/ui/components/common/`](../../src/ui/components/common/) takes
+  `busy`.
 - A chosen repository that the cloud computer does not hold yet waits for
   its build, from decisions 240 and 241. The repository menu of New
   workspace keeps it in place, off, with the note of when it is ready as
   the muted detail of its row. A form whose repository waits keeps Send
   off under a notice. `WaitingRepositoryNotice` in
-  `src/components/new-workspace/waitingRepository.tsx` draws that notice,
-  and `formWait` beside it says what the form waits for. The app shares
-  that module. `RepositoryNotice` in `src/components/settings/`
+  [`src/ui/components/new-workspace/waitingRepository.tsx`](../../src/ui/components/new-workspace/waitingRepository.tsx)
+  draws that notice, and `formWait` beside it says what the form waits
+  for. The app shares that module. `RepositoryNotice` in
+  [`src/ui/components/settings/`](../../src/ui/components/settings/)
   draws the notice of the Repositories and Cloud computer tabs, with a
   spinner while the build of an added repository runs. An admin gets its
   Try again or Build computer on the Repositories tab only, because the
@@ -435,7 +455,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   app shares, as `app/new-workspace/waiting-repository` and
   `app/org-settings/repositories` show.
 - On desktop the sidebar and the right column resize from `ResizeHandle` in
-  `src/components/layout/`, a hairline on their inner edge. On hover and
+  [`src/ui/components/layout/`](../../src/ui/components/layout/), a
+  hairline on their inner edge. On hover and
   during a drag a short grip in the accent colour shows in its middle, so no
   panel gets an accent edge. The same handle lies across the top edge of the
   tools panel, and moves the split between the file lists and the tools, as
@@ -448,7 +469,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `mac-app/window/sidebar-popover` shows.
 - A state tints a whole bar or box, and its edges stay neutral. No box has
   an accent strip on any edge.
-- `sizes.ts` in `src/components/chat/` holds the one size formatter.
+- `sizes.ts` in [`src/ui/components/chat/`](../../src/ui/components/chat/)
+  holds the one size formatter.
   The mockups, chat, and composer of a new workspace share it.
   The attachment fixtures hold byte counts.
   The formatter shows sizes such as "12 KB" and "1.2 MB".

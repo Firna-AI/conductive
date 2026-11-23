@@ -1,7 +1,7 @@
 import type {
   MergeProblem,
   QueueFacts,
-} from '../components/workspace/queueModel'
+} from '../../../../src/ui/components/workspace/queueModel'
 import type { QueueMenuAction } from '../components/workspaces/rowControls'
 import { queuedWorkspace } from '../fixtures/mergeQueue'
 import { queuePaths } from '../queuePaths'

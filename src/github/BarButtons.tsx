@@ -10,16 +10,16 @@ import {
   Info,
   type LucideIcon,
 } from 'lucide-react'
-import styles from '../../docs/mockups/src/components/workspace/BarActions.module.css'
+import styles from '../ui/components/workspace/BarActions.module.css'
 import {
   agentActionLabels,
   barLabels,
   mergeLabels,
-} from '../../docs/mockups/src/components/workspace/barCopy'
-import { agentIcons } from '../../docs/mockups/src/components/workspace/barIcons'
-import type { BarAction } from '../../docs/mockups/src/components/workspace/barModel'
-import { queuedMergeLabel } from '../../docs/mockups/src/components/workspace/queueCopy'
-import type { ButtonTint } from '../../docs/mockups/src/components/common/tint'
+} from '../ui/components/workspace/barCopy'
+import { agentIcons } from '../ui/components/workspace/barIcons'
+import type { BarAction } from '../ui/components/workspace/barModel'
+import { queuedMergeLabel } from '../ui/components/workspace/queueCopy'
+import type { ButtonTint } from '../ui/components/common/tint'
 import { ActionButton } from './ActionButton'
 import { classes, GitHubLink } from './bannerParts'
 import { buttonKey, type CommandKeyOf } from './barKeys'

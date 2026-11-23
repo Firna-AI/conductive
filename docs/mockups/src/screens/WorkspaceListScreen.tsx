@@ -4,7 +4,7 @@ import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { paletteViews } from '../components/palette/paletteViews'
 import { acmeRail, type RailState } from '../components/layout/OrgRail'
 import { defined, plainData } from '../defined'
-import responsive from '../components/layout/responsive.module.css'
+import responsive from '../../../../src/ui/components/layout/responsive.module.css'
 import {
   newOrgSections,
   suspendedSections,
@@ -37,7 +37,7 @@ import {
   sectionsOf,
   stateView,
 } from './listViews'
-import styles from './WorkspaceListScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceListScreen.module.css'
 
 export const workspaceListSchema = {
   type: 'object',

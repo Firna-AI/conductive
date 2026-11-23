@@ -1,5 +1,5 @@
-import menuStyles from '../../../docs/mockups/src/components/common/Menu.module.css'
-import noticeStyles from '../../../docs/mockups/src/components/common/Notice.module.css'
+import menuStyles from '../../ui/components/common/Menu.module.css'
+import noticeStyles from '../../ui/components/common/Notice.module.css'
 import { memoryNavigation } from '../../app/navigation'
 import { routes } from '../../app/router'
 import type { ManualDelay } from '../../app/test-kit'

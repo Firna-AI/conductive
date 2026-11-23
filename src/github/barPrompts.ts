@@ -2,7 +2,7 @@ import {
   agentPrompt,
   type AgentAction,
   type PromptFacts,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+} from '../ui/components/workspace/barCopy'
 import type { GitHubCheck } from '../shared/github'
 import type { GitHubSnapshot } from './githubClient'
 
@@ -54,8 +54,8 @@ function factsOf(snapshot: GitHubSnapshot): PromptFacts {
 
 /**
  * The fixed prompt of an agent action, with the facts of the state that the
- * bar shows. The words come from the copy module of the mockups. While the
- * workspace is queued, Resolve conflicts asks for a rebase.
+ * bar shows. The shared `barCopy` asks for a rebase when Resolve
+ * conflicts runs on a queued workspace.
  */
 export function promptOf(
   action: AgentAction,

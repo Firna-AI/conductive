@@ -2,7 +2,7 @@ import {
   appActions,
   gitHubAccesses,
   localWorkKinds,
-} from '../components/workspace/barModel'
+} from '../../../../src/ui/components/workspace/barModel'
 import { workspaceQueueStates } from './queueBarStates'
 
 /**

@@ -1,8 +1,5 @@
-import { previewOpeningCopy } from '../../docs/mockups/src/components/tools/previewCopy'
-import {
-  darkPalette,
-  lightPalette,
-} from '../../docs/mockups/src/design/palette'
+import { previewOpeningCopy } from '../../src/ui/components/tools/previewCopy'
+import { darkPalette, lightPalette } from '../../src/ui/design/palette'
 
 /*
  * The page that shows while a preview opens, as `app/tools/preview-opening`

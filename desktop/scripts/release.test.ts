@@ -12,7 +12,7 @@ vi.mock('node:fs/promises', () => ({
   writeFile: vi.fn(),
 }))
 
-vi.mock('../../docs/mockups/src/brand.ts', () => ({
+vi.mock('../../src/shared/brand.ts', () => ({
   productName: 'Renamed',
   macDmgNames: {
     arm64: 'Renamed-download-arm64.dmg',

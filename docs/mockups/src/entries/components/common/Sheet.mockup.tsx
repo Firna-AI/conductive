@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { Sheet } from '../../../components/common/Sheet'
+import { Sheet } from '../../../../../../src/ui/components/common/Sheet'
 
 /**
  * The sheet that rises from the bottom of a phone screen, registered with

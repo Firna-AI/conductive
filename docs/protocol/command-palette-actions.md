@@ -170,9 +170,16 @@ actions at `app/command-palette/actions`, and the settings at
   of the org settings: General, Repositories, Cloud computer, Agents,
   Secrets, and Members. Its label is the name of the org and "settings",
   such as "Acme settings".
-- The second group, Account, holds four sections of the Account page:
-  Sign-in, GitHub, Agents, and New workspaces. It also holds Keyboard
-  shortcuts, the fourth tab of the Account page.
+- The second group, Account, holds five sections of the Account page:
+  Sign-in, GitHub, Agents, Favourites, and New workspaces. It also holds
+  Keyboard shortcuts, the fourth tab of the Account page.
+- Favourites opens the Preferences tab, which holds the
+  [Favourites section](model-favourites.md#the-favourites-section) above
+  New workspaces. Its search words hold "favorites", the American
+  spelling, and "model menu".
+- A Favourites row that opens the model menu was rejected, because the
+  menu adds no favourite, as
+  [The model menu](model-favourites.md#the-model-menu) says.
 - In the Mac app, the Account group also holds
   [This Mac](desktop-commands.md#saved-choices), the sixth tab, which only
   the Account page of the Mac app has.
@@ -183,8 +190,8 @@ actions at `app/command-palette/actions`, and the settings at
   deleted org as absent.
 - The Account group lists its rows in the order of the Account page
   (decision 198). It goes tab by tab, and in each tab in the order of its
-  sections. So Keyboard shortcuts follows New workspaces, and in the Mac
-  app This Mac ends the group.
+  sections. So Favourites comes before New workspaces, Keyboard shortcuts
+  follows New workspaces, and in the Mac app This Mac ends the group.
 - Reason: the person already knows the order of the page, and a later row
   then has one clear place. A row in another place was rejected, because
   the group then leaves the order of the page.

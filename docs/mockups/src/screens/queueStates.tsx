@@ -4,7 +4,7 @@ import { acmeRail } from '../components/layout/OrgRail'
 import {
   joinRefusalText,
   type JoinRefusal,
-} from '../components/workspace/queueCopy'
+} from '../../../../src/ui/components/workspace/queueCopy'
 import { queueEntries, type QueueDrag } from '../components/workspaces/queue'
 import {
   queueActionsOf,

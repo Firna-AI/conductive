@@ -10,7 +10,7 @@ import {
   type MarketingPictureKey,
   type PictureLayout,
   type ScreenViewport,
-} from './marketingPictureList'
+} from '../../../../src/ui/screens/marketingPictureList'
 import { MacAppScreen } from './MacAppScreen'
 import type { MacAppState } from './macAppState'
 import { OrgSettingsScreen } from './OrgSettingsScreen'
@@ -28,8 +28,17 @@ const creating: WorkspaceState = {
   banner: 'no-commits',
 }
 
-/** The open picker of the model and the effort, over two attached files. */
-const picker: WorkspaceState = { ...readyWorkspace, composer: 'picker' }
+/**
+ * The open picker of the model and the effort, over two attached files. It
+ * lists four favourites, so the whole menu fits the part of the desktop
+ * screen that the picture shows, and the height limit of a menu on the
+ * phone screen of the picture, 70% of 800 px.
+ */
+const picker: WorkspaceState = {
+  ...readyWorkspace,
+  composer: 'picker',
+  favourites: 'four',
+}
 
 /** A command that waits for Allow in the window of the Mac app. */
 const waitingCommand: MacAppState = {

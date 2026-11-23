@@ -1,6 +1,6 @@
 import { Input } from '@firna/ui/input'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import styles from '../../../docs/mockups/src/components/settings/OrgSections.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import styles from '../../ui/components/settings/OrgSections.module.css'
 import { orgInitials } from '../../app/people'
 import type { RenameOrgRequest } from '../../shared/orgs'
 

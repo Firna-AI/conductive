@@ -18,7 +18,7 @@ import {
 } from '../../entries/components/settings/BuildHistory.mockup'
 import { buildOf } from './BuildHistory'
 import { sectionText } from '../../entries/components/settings/Section.mockup'
-import styles from './BuildSection.module.css'
+import styles from '../../../../../src/ui/components/settings/BuildSection.module.css'
 
 /**
  * The state of the cloud computer: built, building, failed, stopped at the
