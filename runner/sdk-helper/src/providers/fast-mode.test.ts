@@ -46,7 +46,6 @@ it('starts and changes Claude fast mode through flag settings without bypassing 
   onTestFinished(() => provider.close())
   expect(sdk.parameters?.options?.settings).toEqual({
     fastMode: true,
-    skillOverrides: { loop: 'off' },
   })
   expect(sdk.parameters?.options?.env).not.toHaveProperty(
     'CLAUDE_CODE_SKIP_FAST_MODE_ORG_CHECK',
@@ -56,14 +55,12 @@ it('starts and changes Claude fast mode through flag settings without bypassing 
     effortLevel: 'high',
     ultracode: false,
     fastMode: false,
-    skillOverrides: { loop: 'off' },
   })
   await provider.model(input.choice)
   expect(sdk.efforts.at(-1)).toEqual({
     effortLevel: 'high',
     ultracode: false,
     fastMode: true,
-    skillOverrides: { loop: 'off' },
   })
   await provider.close()
   const standard = new FakeClaudeQuery()
@@ -75,7 +72,6 @@ it('starts and changes Claude fast mode through flag settings without bypassing 
   onTestFinished(() => next.close())
   expect(standard.parameters?.options?.settings).toEqual({
     fastMode: false,
-    skillOverrides: { loop: 'off' },
   })
 })
 

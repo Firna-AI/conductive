@@ -20,17 +20,24 @@ import { cancelWakeUp } from './session-wake-up-cancel'
 import { deliverWakeUp, wakeUpOrgActive } from './session-wake-up-delivery'
 import {
   SessionWakeUpRecords,
+  type PendingWakeUp,
   type WakeUpResume,
 } from './session-wake-up-records'
+import { authorizeWakeUpResume } from './session-wake-up-resume'
 import { sessionFor } from './session-record'
-import { admitWake } from './wake-admission'
 import { resumeWakeDelivery } from './wake-resume'
 import type { createWorkspaceIntegration } from './workspace-integration'
 
 const RETRY_MS = 30_000
 type WakeIntegration = Pick<
   ReturnType<typeof createWorkspaceIntegration>,
-  'chat' | 'controller' | 'alarms' | 'storage' | 'now' | 'withGeneration'
+  | 'chat'
+  | 'controller'
+  | 'alarms'
+  | 'storage'
+  | 'now'
+  | 'withGeneration'
+  | 'secrets'
 >
 
 interface ToolWakeTarget {
@@ -62,6 +69,7 @@ export class SessionWakeUps {
     workspaceId: string,
     turnId: string,
     input: AgentScheduleWakeUpRequest,
+    receivedAt: number,
     authorize: (senderId: string) => Promise<ToolSessionAccess>,
   ): Promise<AgentScheduleWakeUpResponse> {
     const { chat, alarms, now } = this.integration
@@ -85,30 +93,25 @@ export class SessionWakeUps {
         view.wakeUps.repeated(repeat),
       )
       if (existing) return { workspace, session, wakeUp: existing.wakeUp }
-      const receivedAt = now()
       const at =
         'at' in input
           ? input.at
           : receivedAt + Math.round(input.delaySeconds * 1_000)
       if (!Number.isSafeInteger(at)) return invalidInput()
-      const wakeUp = {
-        id: crypto.randomUUID(),
+      const record = await this.pendingRecord(operation, {
+        orgId,
+        sessionId: session.id,
+        senderUserId: turn.senderId,
+        repeat,
         at,
-        atUtc: wakeUpTimeUtc(at),
         text: input.text,
-      }
+      })
+      const { wakeUp } = record
       await this.records.assertActive()
-      await alarms.set('session-wake-ups', Math.max(receivedAt, at), true)
+      await alarms.set('session-wake-ups', Math.max(now(), at), true)
       await operation.change(async (view) => {
         await view.wakeUps.assertActive()
-        await view.wakeUps.save({
-          stage: 'pending',
-          orgId,
-          sessionId: session.id,
-          senderUserId: turn.senderId,
-          repeat,
-          wakeUp,
-        })
+        await view.wakeUps.save(record)
         await view.emit({
           type: 'session.wake-up-scheduled',
           sessionId: session.id,
@@ -117,6 +120,32 @@ export class SessionWakeUps {
       })
       return { workspace, session, wakeUp }
     })
+  }
+
+  private async pendingRecord(
+    operation: ChatOperation,
+    input: Omit<PendingWakeUp, 'stage' | 'wakeUp'> & {
+      at: number
+      text: string
+    },
+  ): Promise<PendingWakeUp> {
+    const { at, text, ...origin } = input
+    const filter = await operation.read((view) =>
+      this.integration.secrets.filter(view, {
+        id: operation.workspaceId,
+        orgId: origin.orgId,
+      }),
+    )
+    return {
+      ...origin,
+      stage: 'pending',
+      wakeUp: {
+        id: crypto.randomUUID(),
+        at,
+        atUtc: wakeUpTimeUtc(at),
+        text: filter(text),
+      },
+    }
   }
 
   list(
@@ -227,9 +256,8 @@ export class SessionWakeUps {
       chat,
       operation,
       receipt,
-      async (turn) =>
-        (await admitWake(operation, receipt, this.env, turn)).kind ===
-        'admitted',
+      (turn) =>
+        authorizeWakeUpResume(operation, receipt, turn, this.env, generation),
       this.env,
       controller,
       now,

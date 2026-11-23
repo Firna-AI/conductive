@@ -11,6 +11,7 @@ export type PendingCommand =
       turnId: string
       messageId: string
       sessionWatchId?: string
+      scheduledWakeUpId?: string
       wakeUp?: true
       attachments: readonly StoredAttachment[]
     }

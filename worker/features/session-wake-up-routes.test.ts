@@ -14,6 +14,9 @@ import {
   OUTER_ORG,
   OUTER_WORKSPACE,
 } from '../chat/integration/outer-seed.test-support'
+import { orgEnvironmentContext } from '../lifecycle/settings-data'
+import { recordRunningEnvironment } from '../lifecycle/start-environment'
+import { encrypt } from '../security/crypto'
 import {
   agentWriteFixture,
   type AgentWriteFixture,
@@ -36,7 +39,7 @@ afterEach(async () => {
   fixture = undefined
 })
 
-it('coalesces only pending repeats and reopens the intent after cancellation', async () => {
+it('uses the HTTP receipt time for delays, including new wake-ups after cancellation', async () => {
   const active = (fixture = await agentWriteFixture(bundle))
   const request = { text: 'Check the build', delaySeconds: 120 }
   const scheduled = await scheduleWakeUp(active, request)
@@ -62,7 +65,7 @@ it('coalesces only pending repeats and reopens the intent after cancellation', a
   })
   const again = await scheduleWakeUp(active, request)
   expect(again.wakeUp.id).not.toBe(scheduled.wakeUp.id)
-  expect(again.wakeUp.at).toBe(DEVICE_TEST_NOW + 120_001)
+  expect(again.wakeUp.at).toBe(DEVICE_TEST_NOW + 120_000)
   expect(await wakeUpEvents(active)).toMatchObject([
     { type: 'session.wake-up-scheduled', wakeUp: { id: scheduled.wakeUp.id } },
     {
@@ -79,6 +82,66 @@ it('coalesces only pending repeats and reopens the intent after cancellation', a
     },
     { type: 'session.wake-up-scheduled', wakeUp: { id: again.wakeUp.id } },
   ])
+})
+
+it('filters a known secret from the reply, pending event, lists, fired line, runner input, and copies', async () => {
+  const active = (fixture = await agentWriteFixture(bundle))
+  const secret = 'wake-up-fixture-secret'
+  await recordRunningEnvironment(
+    active.env.DB,
+    OUTER_WORKSPACE,
+    await encrypt(
+      JSON.stringify({ TOKEN: { value: secret, secret: true } }),
+      orgEnvironmentContext(OUTER_ORG),
+      active.env.BOAT_KEY_ENCRYPTION_KEY,
+    ),
+  )
+  const at = DEVICE_TEST_NOW + 60_000
+  const masked = 'Check [redacted].'
+  const { wakeUp } = await scheduleWakeUp(active, {
+    at,
+    text: `Check ${secret}.`,
+  })
+  expect(wakeUp.text).toBe(masked)
+  const sessionId = active.sourceSessionId
+  const scheduled = { type: 'session.wake-up-scheduled', sessionId, wakeUp }
+  expect(await wakeUpEvents(active)).toEqual([scheduled])
+  const list = await active.request(
+    sessionWakeUpPaths.list(OUTER_ORG, OUTER_WORKSPACE, sessionId),
+  )
+  expect(list.status).toBe(200)
+  expect(await list.json()).toMatchObject({ wakeUps: [wakeUp] })
+  const toolList = await getTool(
+    active,
+    agentWakeUpPaths.list(undefined, sessionId),
+  )
+  expect(toolList.status).toBe(200)
+  expect(await toolList.json()).toMatchObject({ wakeUps: [wakeUp] })
+  const pendingCopy = await wakeUpTranscript(active)
+  expect(pendingCopy).toContain(masked)
+  expect(pendingCopy).not.toContain(secret)
+
+  await (await active.actor()).advanceStartAlarm(at)
+  expect(await wakeUpEvents(active)).toMatchObject([
+    scheduled,
+    { type: 'session.wake-up-fired', wakeUpId: wakeUp.id, text: masked },
+  ])
+  expect(await active.sourceRunner.inbox.next()).toMatchObject({
+    type: 'message',
+    message: { text: 'Wake-up:\n\nCheck [redacted].' },
+  })
+  const toolRead = await getTool(
+    active,
+    agentSessionTranscriptPath(undefined, sessionId),
+  )
+  expect(toolRead.status).toBe(200)
+  for (const copy of [
+    await wakeUpTranscript(active),
+    string(record(await toolRead.json()).markdown),
+  ]) {
+    expect(copy).toContain('Wake-up:\n\nCheck [redacted].')
+    expect(copy).not.toContain(secret)
+  }
 })
 
 it('shows the app snapshot and tool transcript in time order and records the member cancel', async () => {

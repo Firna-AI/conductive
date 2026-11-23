@@ -87,11 +87,11 @@ export function productionAgentTools(
             .getByName(input.workspaceId)
             .watchAgentSession(input),
         ),
-      scheduleWakeUp: async (orgId, id, turnId, input) =>
+      scheduleWakeUp: async (orgId, id, turnId, input, receivedAt) =>
         requireFeatureResult(
           await workspaceBinding(env)
             .getByName(id)
-            .scheduleAgentWakeUp(orgId, id, turnId, input),
+            .scheduleAgentWakeUp(orgId, id, turnId, input, receivedAt),
         ),
       listWakeUps: async (orgId, id, sessionId) => {
         await toolSessionWorkspace(env.DB, orgId, id, env.APP_ORIGIN)

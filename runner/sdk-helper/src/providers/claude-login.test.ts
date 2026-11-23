@@ -95,7 +95,6 @@ it('starts Claude with profile selectors and no gateway settings or credential d
   expect(options?.settingSources).toEqual(['project'])
   expect(options?.settings).toEqual({
     fastMode: false,
-    skillOverrides: { loop: 'off' },
   })
   expect(
     Object.keys(options?.env ?? {}).filter((key) =>

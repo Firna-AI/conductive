@@ -6,7 +6,7 @@ import type { ChatTransaction } from './store'
 export async function saveWakeMessage(
   view: ChatTransaction,
   admission: AdmittedNotice,
-  input: { text: string; watchId?: string },
+  input: { text: string; watchId?: string; scheduledWakeUpId?: string },
   randomId: () => string,
 ): Promise<{ messageId: string; turnId: string }> {
   const { session, user } = admission
@@ -42,6 +42,9 @@ export async function saveWakeMessage(
     messageId: message.id,
     wakeUp: true,
     ...(input.watchId === undefined ? {} : { sessionWatchId: input.watchId }),
+    ...(input.scheduledWakeUpId === undefined
+      ? {}
+      : { scheduledWakeUpId: input.scheduledWakeUpId }),
     attachments: [],
   })
   return { messageId, turnId: turn.id }

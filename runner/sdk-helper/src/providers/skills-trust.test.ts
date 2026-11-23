@@ -47,7 +47,6 @@ it('keeps untrusted Claude skill restrictions without an available or selected c
       ultracode: true,
       fastMode: true,
       disableSkillShellExecution: true,
-      skillOverrides: { loop: 'off' },
     })
     expect(await h.paths()).toEqual([])
     expect(h.sdk()?.parameters?.options?.disallowedTools).toEqual([
@@ -70,7 +69,6 @@ it('keeps untrusted Claude skill restrictions without an available or selected c
         ultracode: false,
         fastMode: false,
         disableSkillShellExecution: true,
-        skillOverrides: { loop: 'off' },
       },
     ])
     await provider.close()
@@ -124,7 +122,6 @@ it('keeps trusted Claude skill bodies and isolates repository controls from disc
   expect(await realpath(path)).not.toBe(join(h.copy, 'skills', 'shared'))
   expect(h.sdk()?.parameters?.options?.settings).toEqual({
     fastMode: false,
-    skillOverrides: { loop: 'off' },
   })
   await provider.model({
     agent: 'claude',
@@ -137,7 +134,6 @@ it('keeps trusted Claude skill bodies and isolates repository controls from disc
       effortLevel: 'max',
       ultracode: true,
       fastMode: true,
-      skillOverrides: { loop: 'off' },
     },
   ])
   expect(h.warnings).toEqual([])
@@ -156,7 +152,6 @@ it('keeps native Claude settings for released helper requests without an org sou
     onTestFinished(() => provider.close())
     expect(h.sdk()?.parameters?.options?.settings).toEqual({
       fastMode: false,
-      skillOverrides: { loop: 'off' },
     })
     expect(await h.paths()).toEqual([])
     expect(h.warnings).toEqual([])
@@ -171,7 +166,6 @@ it('keeps native Claude settings for released helper requests without an org sou
         effortLevel: 'high',
         ultracode: false,
         fastMode: true,
-        skillOverrides: { loop: 'off' },
       },
     ])
     await provider.close()

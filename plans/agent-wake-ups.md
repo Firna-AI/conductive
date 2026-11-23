@@ -175,7 +175,7 @@ The mockups made these calls on 23 November 2026. Each is a mockup call, not a u
 ### The Claude adapter
 
 - The adapter sets `disallowedTools` for the four cron tools. It also sets `CLAUDE_CODE_DISABLE_CRON=1`, which stops the scheduler. A real SDK run checks both, because the SDK does not document the variable.
-- The adapter sets `skillOverrides: { loop: 'off' }`, so that neither the model nor a member gets `/loop`.
+- The pinned Claude Agent SDK enables the bundled `/loop` skill only when `CLAUDE_CODE_DISABLE_CRON` is unset. Repository skills named `loop` follow the usual skill rules.
 - The Stop hook and its note stay for background tasks. The hook passes the current `session_crons` directly to the note as the guard of decision 1 D. The note names each in-process wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for such a wake-up.
 - Stored data: an older run can have left durable jobs in `.claude/scheduled_tasks.json` in the repository folder. The switches stop these jobs, and the program never fires them. The pull request names this as a breaking change.
 
@@ -199,7 +199,7 @@ All are orchestrator calls of 22 November 2026, from the options report, not use
 - The woken turn uses the current model, effort, and fast mode of the session. Reason: a late answer does the same.
 - The tool text and the agent instructions say: set the wake-up, then end the reply. They say that background tasks and dev servers end when the computer stops. Reason: the computer can stop only after the turn ends.
 - Turn the cron tools off with `disallowedTools` and the environment variable together. Reason: `disallowedTools` is documented, and only the variable stops a durable job from an older run. The options check found that `CronList` and `CronDelete` stay on while that file holds jobs, unless `disallowedTools` removes them.
-- Turn off the bundled `/loop` skill with `skillOverrides`. Reason: without the cron tools, `/loop` fails. The SDK documents this option.
+- Use the scheduler switch to turn off Claude's bundled `/loop` skill and preserve repository skills named `loop`. The review confirmed this choice on 23 November 2026.
 - A copy and `read_session` end with the pending wake-ups of the session, soonest first, each with its time in UTC and its text. Orchestrator call of 23 November 2026, from docs item 3. Reason: a copy holds the items of the chat in the order of the chat, as `docs/protocol/session-transcripts.md` says, and the chat shows the pending cards.
 - A cancel of an unknown wake-up, or of a wake-up of another session, gets HTTP 404 with the error code `wake_up_not_found`. A cancel of a wake-up that already fired or ended gives a reply that says so, with no error. Orchestrator call of 23 November 2026, from docs item 4. Reason: the other calls answer an unknown ID with a 404 code, and `stop_session` answers a session with no running turn with a reply.
 - Delivery pauses while the org is deleted, as for an org suspension. After a Restore, the current access checks apply. When the app deletes the data of the org, its wake-ups go with it. Orchestrator call of 23 November 2026, from docs item 5. Reason: `docs/protocol/delete-org.md` says that a Restore brings the org back as it was, and each automation runs once after a Restore for the times that it missed.
@@ -328,7 +328,7 @@ Depends on: 4
 Use the `non-ui implementor` action.
 
 - [x] Set `disallowedTools` and `CLAUDE_CODE_DISABLE_CRON=1` in `runner/sdk-helper/src/providers/claude.ts`.
-- [x] Set `skillOverrides: { loop: 'off' }`. Check in the SDK run that neither the model nor `/loop` gets the skill.
+- [x] Check with the pinned SDK that the scheduler switch hides the bundled `/loop` and a repository skill named `loop` runs.
 - [x] Keep the cron set and the `session_crons` read as the guard of decision 1 D: change the note text, log a warning, and wait for no such wake-up. Update their tests. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
 - [x] Keep the deadline of a waiting turn when the input carries the wake-up field, for a wake-up and a watch wake, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
 - [x] Check with a real SDK run that the model sees no cron tool and that `session_crons` stays empty. Start the run with a durable job in `.claude/scheduled_tasks.json`, and check that it never fires. Save the result in `.context/agent-wake/`.
@@ -346,7 +346,7 @@ Depends on: every other milestone
 - [ ] Commit with Conventional Commits and push the branch.
 - [ ] Review the complete local diff against `origin/main` with the `implementation-review` skill after the push. Report the findings, then apply the fix rule: fix the `fix now` findings, record follow-up items under `plans/follow-ups/` for the rest, re-review once, and report.
 - [ ] Delete this plan when the `plans` skill says, under "Deleting the plan".
-- [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, the follow-up items that the change adds, and two breaking changes: the removal of the cron tools and `/loop` for agents, and the durable jobs that older runs left in `.claude/scheduled_tasks.json`, which never fire.
+- [ ] Open the pull request. Its description gives the decisions and the design calls of this plan with their dates, a permalink to this plan, the follow-up items that the change adds, and two breaking changes: the removal of the cron tools and bundled `/loop` for agents, and the durable jobs that older runs left in `.claude/scheduled_tasks.json`, which never fire.
 
 ## Post-merge follow-up (non-blocking)
 

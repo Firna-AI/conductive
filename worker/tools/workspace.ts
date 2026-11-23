@@ -61,6 +61,7 @@ export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
     workspaceId: string,
     turnId: string,
     input: AgentScheduleWakeUpRequest,
+    receivedAt: number,
   ) {
     return featureResult(() =>
       this.sessionWakeUps.schedule(
@@ -68,6 +69,7 @@ export class AgentSessionWorkspace extends AgentSessionReadWorkspace {
         workspaceId,
         turnId,
         input,
+        receivedAt,
         (senderUserId) =>
           this.writeAccess({ orgId, workspaceId, senderUserId }),
       ),

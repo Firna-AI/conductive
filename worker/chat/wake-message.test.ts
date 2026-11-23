@@ -28,6 +28,7 @@ async function schedule() {
       WORKSPACE_ID,
       f.calling.turnId,
       { at: f.clock.now(), text: 'Check the result' },
+      f.clock.now(),
     ),
   ).wakeUp.id
 }

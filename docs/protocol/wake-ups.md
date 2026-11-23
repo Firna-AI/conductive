@@ -71,6 +71,8 @@ The [mockup catalogue](../mockups/catalogue.md) draws the wake-ups at
 - The text follows the rules of the text of a tool message, as
   [Send a message](session-calls.md#send-a-message) says. So it must hold
   more than white space. Reason: it reaches the agent as a message.
+- The Worker hides each exact copy of a secret value in the wake-up text,
+  as for other text that reaches the chat.
 - A time in the past fires at once. The app sets no minimum delay. Reason:
   a refusal adds a rejection, and a short wake-up does not stop the cloud
   computer.

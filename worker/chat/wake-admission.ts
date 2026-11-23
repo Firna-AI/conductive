@@ -1,4 +1,5 @@
 import type { WakeUpFailure } from '../../src/shared/generated/WakeUpFailure'
+import type { Session } from '../../src/shared/generated/Session'
 import { readUser } from '../data/users'
 import type { AppEnv } from '../env'
 import { memberSender } from '../tools/store'
@@ -19,13 +20,22 @@ interface WakeOrigin {
 }
 
 type WakeAdmission = ({ kind: 'admitted' } & AdmittedNotice) | WakeUpFailure
+type SenderAccess =
+  | ({ kind: 'admitted' } & Pick<AdmittedNotice, 'session' | 'user'>)
+  | WakeUpFailure
 
 /** The caller holds the chat queue. A running turn keeps its sender. */
 export async function admitWake(
   operation: ChatOperation,
   origin: WakeOrigin,
   env: AppEnv,
-  retryTurn?: Pick<StoredTurn, 'id' | 'senderId'>,
+  {
+    retryTurn,
+    requireSetter,
+  }: {
+    retryTurn?: Pick<StoredTurn, 'id' | 'senderId'>
+    requireSetter?: true
+  } = {},
 ): Promise<WakeAdmission> {
   const workspace = await findChatWorkspace(
     env.DB,
@@ -40,8 +50,35 @@ export async function admitWake(
     : await operation.read((view) =>
         resolveNoticeDestination(view, source, origin.senderUserId),
       )
-  const member = await memberSender(env.DB, origin.orgId, destination.senderId)
-  const user = member ? await readUser(env.DB, destination.senderId) : null
+  if (requireSetter && origin.senderUserId !== destination.senderId) {
+    const setter = await wakeSenderAccess(
+      operation,
+      env,
+      origin.orgId,
+      source,
+      origin.senderUserId,
+    )
+    if (setter.kind !== 'admitted') return setter
+  }
+  const receiver = await wakeSenderAccess(
+    operation,
+    env,
+    origin.orgId,
+    source,
+    destination.senderId,
+  )
+  return receiver.kind === 'admitted' ? { ...receiver, destination } : receiver
+}
+
+async function wakeSenderAccess(
+  operation: ChatOperation,
+  env: AppEnv,
+  orgId: string,
+  source: Session,
+  senderId: string,
+): Promise<SenderAccess> {
+  const member = await memberSender(env.DB, orgId, senderId)
+  const user = member ? await readUser(env.DB, senderId) : null
   if (!user) return { kind: 'sender-unavailable' }
   try {
     const observed = await operation.logins.observe(
@@ -50,7 +87,7 @@ export async function admitWake(
       user.id,
     )
     if (observed.login)
-      return { kind: 'admitted', session: observed.session, user, destination }
+      return { kind: 'admitted', session: observed.session, user }
     if (observed.session.loginAvailable && !observed.session.loginShared)
       return { kind: 'login-not-shared' }
     return {

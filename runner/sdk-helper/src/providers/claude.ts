@@ -1,10 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import {
-  query,
-  type Query,
-  type Settings,
-} from '@anthropic-ai/claude-agent-sdk'
+import { query, type Query } from '@anthropic-ai/claude-agent-sdk'
 
 import { WORKSPACE_TOOLS_MCP } from '../../../../src/shared/agent-tools'
 import { claudeBinary } from './binaries'
@@ -78,10 +74,7 @@ export function createClaudeFactory(
     )
     const credentials = await preparation
     const skillsDiscovery = await prepareClaudeSkills(options, lifetime)
-    const skillSettings = {
-      ...claudeSkillSettings(options.orgSkills),
-      skillOverrides: { loop: 'off' },
-    } satisfies Settings
+    const skillSettings = claudeSkillSettings(options.orgSkills)
     const env = providerEnvironment(
       options.home,
       options.tools,

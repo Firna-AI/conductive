@@ -323,6 +323,7 @@ Its turn ends, and the cloud computer can stop while the wake-up waits.
 Each pending wake-up shows as a card above the message box, the soonest first.
 The card shows its time in your local time, such as **Wake-up tomorrow at 09:00**, and the start of the agent's text.
 Select the card to read the whole text.
+Conductive hides each exact copy of a known secret value in the wake-up text.
 A pending wake-up does not mark the workspace as needing input.
 
 At its time, the wake-up starts the cloud computer if it is stopped.
@@ -343,6 +344,7 @@ When an agent cancels a wake-up through its tools, the line shows **Cancelled fr
 An archived or other read-only workspace shows its pending wake-ups without **Cancel**.
 
 A wake-up does not start when the person whose turn set it left the org, or can no longer use the session's login.
+The same checks apply to the sender of a running turn that receives the wake-up.
 It also does not start when the session's login is gone, or when the workspace is still archived at its time.
 The chat then says that the wake-up could not start, and what lets the agent go on.
 For example: **The agent can go on after Cal connects Claude again.**

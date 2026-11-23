@@ -79,6 +79,7 @@ export class RunnerChannel {
     )
     this.delivery = new RunnerDelivery(
       store,
+      env,
       dependencies,
       publish,
       () => this.flush(),

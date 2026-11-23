@@ -187,8 +187,9 @@ export const privacyDocument: LegalDocument = {
             hide a changed or encoded value, or a value in a picture that an
             agent answer shows.`,
           text`An env var is secret until an admin clears its mark. Before
-            ${productName} puts the text of agent output in the chat history
-            or on a screen, it hides each exact copy of a secret value in it.
+            ${productName} puts agent output or wake-up text in the chat
+            history or on a screen, it hides each exact copy of a secret
+            value in the text.
             It also hides such a copy in each start log that it shows, in
             the server and service details that it lists, in service logs,
             and in the names and descriptions of the skills that it lists. It does not

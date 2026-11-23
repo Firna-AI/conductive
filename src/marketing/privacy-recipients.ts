@@ -171,8 +171,10 @@ export const privacyRecipientsSection: LegalDocument['sections'][number] = {
         time that the agent chose. At that time, the wake-up starts one new
         turn, or it joins the turn that runs. A new turn acts for the member
         whose turn set the wake-up, with that member's GitHub token and Mac.
-        A turn that the wake-up joins keeps its sender. Current membership
-        and session login rules apply at that time. The members of the org
+        A turn that the wake-up joins keeps its sender. Before delivery, the
+        app checks the current membership and session login access of the
+        member whose turn set the wake-up. If the wake-up joins a running
+        turn, the app also checks that turn's sender. The members of the org
         see each pending wake-up, with its time and its text, and can cancel
         it.`,
       text`Only a workspace owner or org admin can archive it.

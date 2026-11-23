@@ -23,6 +23,8 @@ the wake-up calls, as [Wake-ups](wake-ups.md) says.
 - In these rules, the sender is the sender of the turn that set the
   wake-up. When a wake-up joins a running turn, that turn keeps its
   sender, as for a message.
+  The membership and session login checks also apply to the member who
+  set the wake-up when it joins a turn.
 - Delivery also pauses while the org is deleted, as during an org
   suspension. After a Restore, delivery follows the current access checks,
   so a wake-up can fire late. When the app deletes the data of the org, its

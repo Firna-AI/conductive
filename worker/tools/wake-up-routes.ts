@@ -53,6 +53,7 @@ export async function wakeUpFromTool(
   db: D1Database,
   caller: CallingWorkspace,
   services: AgentToolServices,
+  receivedAt: number,
 ): Promise<Response | null> {
   if (url.pathname === MACHINE_PATHS.wakeUps) {
     const { turn } = await requireCallingToolTurn(
@@ -67,6 +68,7 @@ export async function wakeUpFromTool(
         caller.workspaceId,
         turn.turnId,
         input(await readJsonObject(request)),
+        receivedAt,
       ),
     )
   }

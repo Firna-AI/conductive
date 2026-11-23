@@ -21,7 +21,7 @@ export async function watchAdmission(
     operation,
     { ...watch.caller, orgId: watch.orgId },
     env,
-    retryTurn,
+    { retryTurn },
   )
   return admission.kind === 'admitted' ? admission : null
 }

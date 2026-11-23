@@ -119,10 +119,10 @@ adds the list of skills, as
 - The skills that come with the Claude agent program, such as `dataviz`,
   stay out of the list. Reason: a read of the skill folders cannot find
   them. A member can still name them in the text.
-- The `loop` skill of the Claude agent program is off, also when a member
-  names it, as
+- Claude's bundled `loop` skill is off, as
   [Wake-ups of the agent program](background-work.md#wake-ups-of-the-agent-program)
-  says.
+  says. A repository skill named `loop` follows the usual rules for
+  repository skills.
 - The Codex list holds the skills that the app server of Codex lists for
   the repository folder, with the shared Codex home of the cloud computer.
   Reason: the list then follows the rules of Codex, and it gives the path

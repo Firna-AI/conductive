@@ -65,6 +65,7 @@ export function createAgentToolsHandler(
           ),
         )
       }
+      const receivedAt = now()
       const authorization = request.headers.get('Authorization')
       const bearer = authorization?.match(/^Bearer ([^\s]+)$/i)?.[1]
       const caller = bearer ? await callingWorkspace(env.DB, bearer) : null
@@ -81,6 +82,7 @@ export function createAgentToolsHandler(
         env.DB,
         caller,
         services,
+        receivedAt,
       )
       if (wakeUp) return privateResponse(wakeUp)
       if (request.method === 'GET') {

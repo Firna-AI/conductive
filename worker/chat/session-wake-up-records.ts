@@ -38,6 +38,7 @@ export interface WakeUpResume {
   sessionId: string
   senderUserId: string
   messageId: string
+  at?: number
 }
 
 export class SessionWakeUpRecords {
@@ -120,6 +121,28 @@ export class SessionWakeUpRecords {
     return this.data.put(`${resumePrefix}${receipt.id}`, receipt)
   }
 
+  async resumeForMessage(
+    messageId: string,
+    wakeUpId?: string,
+  ): Promise<WakeUpResume | undefined> {
+    if (wakeUpId !== undefined)
+      return this.data.get<WakeUpResume>(`${resumePrefix}${wakeUpId}`)
+    // Older scheduled commands carry only the message ID.
+    let startAfter: string | undefined
+    for (;;) {
+      const page = await this.data.list<WakeUpResume>({
+        prefix: resumePrefix,
+        startAfter,
+        limit: 64,
+      })
+      if (!page.size) return undefined
+      for (const [key, receipt] of page) {
+        if (receipt.messageId === messageId) return receipt
+        startAfter = key
+      }
+    }
+  }
+
   async resumes(): Promise<WakeUpResume[]> {
     return [
       ...(
@@ -134,5 +157,13 @@ export class SessionWakeUpRecords {
 
   async finishResume(id: string): Promise<void> {
     await this.data.delete(`${resumePrefix}${id}`)
+  }
+
+  async endResume(receipt: WakeUpResume): Promise<void> {
+    await this.data.put(recordKey(receipt.id), {
+      stage: 'ended',
+      sessionId: receipt.sessionId,
+    } satisfies SettledWakeUp)
+    await this.finishResume(receipt.id)
   }
 }

@@ -25,7 +25,9 @@ export async function deliverWakeUp(
 ): Promise<boolean> {
   const { sessionId, orgId, senderUserId, wakeUp } = record
   if (!(await wakeUpOrgActive(env.DB, orgId))) return false
-  const admission = await admitWake(operation, record, env)
+  const admission = await admitWake(operation, record, env, {
+    requireSetter: true,
+  })
   if (!(await wakeUpOrgActive(env.DB, orgId))) return false
   await operation.change(async (view) => {
     await view.wakeUps.assertActive(generation)
@@ -44,7 +46,7 @@ export async function deliverWakeUp(
     const { messageId, turnId } = await saveWakeMessage(
       view,
       admission,
-      { text: wakeUpText(wakeUp.text) },
+      { text: wakeUpText(wakeUp.text), scheduledWakeUpId: wakeUp.id },
       () => crypto.randomUUID(),
     )
     await view.emit({
@@ -64,6 +66,7 @@ export async function deliverWakeUp(
       sessionId,
       senderUserId,
       messageId,
+      at: wakeUp.at,
     })
   })
   return true

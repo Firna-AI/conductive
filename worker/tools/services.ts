@@ -134,6 +134,7 @@ export interface AgentToolServices {
     workspaceId: string,
     turnId: string,
     input: AgentScheduleWakeUpRequest,
+    receivedAt: number,
   ): Promise<AgentScheduleWakeUpResponse>
   listWakeUps(
     orgId: string,

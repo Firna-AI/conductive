@@ -1,10 +1,12 @@
 import type { AgentLogin } from './login-kind'
 import { runnerSupportsLogin } from '../../src/shared/runner'
+import type { AppEnv } from '../env'
 import { RunnerAccessDenied, SenderAccessDenied } from './login-access'
 import { ChatOperation } from './operation'
 import { commandDispatchState, type DispatchResult } from './ordered-dispatch'
 import { compatibilityFailure } from './runner-gateway-command'
 import { failCommandLogin } from './runner-login-failure'
+import { authorizeWakeUpResume } from './session-wake-up-resume'
 import {
   failRepositoryTurn,
   type RepositoryMoves,
@@ -16,17 +18,20 @@ import type { WorkspaceEventEnvelope } from './workspace-events'
 
 export class RunnerCommandPreparation {
   private readonly store: ChatStore
+  private readonly env: AppEnv
   private readonly dependencies: ChatDependencies
   private readonly publish: (events: readonly WorkspaceEventEnvelope[]) => void
   private readonly moves: RepositoryMoves
 
   constructor(
     store: ChatStore,
+    env: AppEnv,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     moves: RepositoryMoves,
   ) {
     this.store = store
+    this.env = env
     this.dependencies = dependencies
     this.publish = publish
     this.moves = moves
@@ -46,6 +51,36 @@ export class RunnerCommandPreparation {
       view.message(command.messageId),
     )
     if (!message) return { state: 'skip' }
+    const operation = new ChatOperation(
+      this.store,
+      active.state.workspace.id,
+      this.dependencies,
+      this.publish,
+    )
+    if (
+      command.wakeUp &&
+      command.sessionWatchId === undefined &&
+      message.state === 'queued'
+    ) {
+      const pending = await operation.read(async (view) => {
+        const receipt = await view.wakeUps.resumeForMessage(
+          command.messageId,
+          command.scheduledWakeUpId,
+        )
+        const turn = receipt && (await view.turn(command.turnId))
+        return receipt && turn ? { receipt, turn } : null
+      })
+      if (
+        pending &&
+        !(await authorizeWakeUpResume(
+          operation,
+          pending.receipt,
+          pending.turn,
+          this.env,
+        ))
+      )
+        return { state: 'skip' }
+    }
     const folder = await this.moves.check(active)
     if (folder.state === 'wait') return { state: 'wait' }
     if (folder.state === 'refused') {
@@ -59,12 +94,6 @@ export class RunnerCommandPreparation {
     }
     let login: AgentLogin | null
     try {
-      const operation = new ChatOperation(
-        this.store,
-        active.state.workspace.id,
-        this.dependencies,
-        this.publish,
-      )
       const observed = await operation.logins.observe(
         command.sessionId,
         active.state.workspace.tokenHash,

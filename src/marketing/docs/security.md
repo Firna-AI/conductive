@@ -137,6 +137,7 @@ These workspace actions need no separate approval screen.
 Previews that agents open need sign-in and workspace access.
 
 A wake or a wake-up follows current membership and session login rules.
+When a wake-up joins a running turn, those checks apply to that turn's sender and the member whose turn set it.
 
 An automation can start agent work from a pull request.
 Comments and reviews on that pull request can steer these reads and changes across the org, with the automation owner's rights.
@@ -260,7 +261,7 @@ An `author` or `committer` setting in the repository or in the global Git settin
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, wake-up text, and start logs.
 It also hides them in server and service details and service logs in **Preview**.
 The same rule covers skill names and descriptions in the message box.
 It starts on for a new variable.

@@ -23,13 +23,14 @@
   - `agentToolMessage` in `worker/tools/message-text.ts:3-8` only adds the footer. `worker/chat/tool-session-write.ts:104` and `worker/tools/create.ts:104` store that text.
   - Each tool name passes only the name rule, `sessionTitleFrom`, at `worker/tools/workspace-routes.ts:82`, `worker/tools/session-routes.ts:179`, `worker/tools/create.ts:79`, `worker/chat/tool-session-write.ts:154`, and `worker/chat/first-message.ts:152`.
   - None of these paths calls a secret filter. So the same text is masked in an agent answer, and shown exactly in a tool message or a tool name.
+  - `schedule_wake_up` already uses the workspace's exact-copy filter before the Worker stores its text. The pending card, the delivered message, and transcript copies use the filtered text.
   - A workspace name shows in the workspace list, in the header, and in the first line of each transcript copy. The new branch of Continue takes a slug of the workspace name, which keeps lowercase letters, digits, and hyphens.
   - The automatic title from the runner is a runner event, so the runner output filter masks it at receipt.
   - Sandbox code can make these calls during a turn of its workspace, as "The workspace token" in `docs/protocol/tokens-and-secrets.md` says.
   - The agents and each member with a terminal can read each env var value, as `src/marketing/privacy.ts:195-196` says. So the actor already knows the value, and sandbox code can also send it out over the network.
   - The harm is the display: a screenshot, a screen share, or copied text that leaves the org. An agent can also show a value by mistake.
   - Members type their own messages and names. The app masks neither.
-- **Problem:** Text that sandbox code writes through the agent tools reaches the chat, the workspace list, and the transcript copies without the secret filter. The same text in an agent answer is masked. The protocol requires the exact text of a tool message, while the Privacy page promises a mask for agent output.
+- **Problem:** Tool messages and tool names reach the chat, the workspace list, and transcript copies without the secret filter. The same text in an agent answer is masked. The protocol requires the exact text of a tool message, while the Privacy page promises a mask for agent output.
 - **Impact if no action:** An agent can put a secret value on the screen of each member through a tool message or a tool name. The Privacy page and the protocol stay in tension about such text.
 - **Root question:** Must the text that sandbox code writes through the agent tools hide each secret value before screens show it?
 - **Options:**

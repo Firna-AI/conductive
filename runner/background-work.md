@@ -49,8 +49,10 @@ states the line of the chat at the limit. An automatic update gives existing wor
   `CronCreate`, `CronDelete`, `CronList`, and `ScheduleWakeup`.
   Older jobs stay in `.claude/scheduled_tasks.json` on disk. The disabled
   scheduler cannot fire them.
-- The adapter sets `skillOverrides: { loop: 'off' }` at startup and
-  keeps it on model changes. This disables the bundled `/loop` skill.
+- In `claude` 2.1.318, the bundled `/loop` skill requires
+  `CLAUDE_CODE_DISABLE_CRON` to be unset. Claude Agent SDK 0.3.318 installs
+  that program. Check again at each update of the SDK that the bundled
+  `/loop` is absent and a repository skill named `loop` runs.
 - The root Stop hook passes the current `session_crons` directly to the
   note. Only tasks count as live work.
 - Both agents use `schedule_wake_up` to continue later.

@@ -185,7 +185,7 @@ An older workspace gets the turn sender as commit author when an automatic softw
 A Git command can still set its own author, for example with `--author`.
 The author of a commit does not prove who made it.
 
-The **Secret** mark hides exact copies of a value in displayed agent output and start logs.
+The **Secret** mark hides exact copies of a value in displayed agent output, wake-up text, and start logs.
 It also hides them in server and service details and service logs in **Preview**.
 The same rule covers skill names and descriptions in the message box.
 It does not hide values in file content, pictures in agent replies, diffs, or Terminal.

@@ -1,5 +1,6 @@
 import type { WorkspaceEventEnvelope } from './workspace-events'
 import type { WorkspaceTurnTokens } from '../model-gateway/workspace'
+import type { AppEnv } from '../env'
 import { DeliveryState } from './delivery-state'
 import { RunnerAccessDenied } from './login-access'
 import {
@@ -31,6 +32,7 @@ export class RunnerDelivery {
 
   constructor(
     store: ChatStore,
+    env: AppEnv,
     dependencies: ChatDependencies,
     publish: (events: readonly WorkspaceEventEnvelope[]) => void,
     resume: () => Promise<void>,
@@ -39,6 +41,7 @@ export class RunnerDelivery {
   ) {
     this.commands = new RunnerCommandPreparation(
       store,
+      env,
       dependencies,
       publish,
       moves,
