@@ -23,10 +23,7 @@ export function providerNotice(notices: readonly RunnerNoticeLine[]): string {
  * earlier repository folder, then the branch line when they name other
  * branches. Each input builder places these lines around its message body.
  */
-export function senderLines(
-  command: MemberInput,
-  fixed: FixedContext = {},
-): string {
+function senderLines(command: MemberInput, fixed: FixedContext = {}): string {
   const { message, branches: current, repository } = command
   const branches = fixed.instructionBranches
   const login = message.sender.githubLogin.replace(/\s+/gu, ' ').trim()
