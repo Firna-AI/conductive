@@ -4,6 +4,7 @@ import {
   storedPart,
   storedReportKeys,
 } from '../files/report-storage'
+import { storedReportPartKeys } from '../files/report-storage.test-support'
 import { FakeRunner } from '../test-support/fake-runner'
 import { FilesState } from '../files/state'
 import { createHarness, type TestHarness } from '../test-support/harness'
@@ -32,13 +33,20 @@ it('stores a repeated tree path until the last part refuses the report and reque
   const runner = await fixture.connect()
   const storage = chatFilesStorage(fixture.storage)
   runner.emit(snapshot(1, 1, 1, ['old']))
-  runner.emit(snapshot(2, 1, 3, ['same']))
+  const first = snapshot(2, 1, 3, ['same'])
+  runner.emit(first)
   const middle = snapshot(2, 2, 3, ['same'])
   runner.emit(middle)
   await fixture.drain()
   expect(await refusedEvents(fixture)).toEqual([])
   expect(refreshCommands(runner)).toEqual([])
   expect(await storedPart(storage, 'tree', 2)).toEqual(middle)
+  expect(await storedReportPartKeys(fixture.storage)).toEqual(
+    [
+      ...Object.keys(reportPartUpdates('tree', 1, first)),
+      ...Object.keys(reportPartUpdates('tree', 2, middle)),
+    ].sort(),
+  )
   const pendingKeys = await storedReportKeys(storage, 'tree', {
     revision: 2,
     partCount: 3,
@@ -67,6 +75,7 @@ it('stores a repeated tree path until the last part refuses the report and reque
   expect(keys.map((key) => remaining.get(key))).toEqual(
     keys.map(() => undefined),
   )
+  expect(await storedReportPartKeys(fixture.storage)).toEqual([])
   expect(await new FilesState(storage).tree()).toEqual({
     revision: 1,
     entries: [file('old')],

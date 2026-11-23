@@ -3,7 +3,7 @@ import { expect, it } from 'vitest'
 import type { RunnerChangesPart } from '../../src/shared/generated/RunnerChangesPart'
 import { chatFilesStorage } from '../chat/files-storage'
 import { nativeChatStore } from '../chat/native-store.test-support'
-import { snapshot } from '../chat/runner-fixtures.test-support'
+import { file, snapshot } from '../chat/runner-fixtures.test-support'
 import {
   emptySequence,
   loadReportState,
@@ -63,6 +63,7 @@ async function seedChanges(
   first: ReturnType<typeof changesPart>,
   fields?: unknown,
 ) {
+  const updates = reportPartUpdates('changes', 1, first)
   await storage.write(
     {
       [REPORT_KEY]: {
@@ -79,10 +80,11 @@ async function seedChanges(
           },
         },
       },
-      [partKey('changes', 1)]: first,
+      ...updates,
     },
     [],
   )
+  return Object.keys(updates)
 }
 
 it('reads only assembly state for a middle tree or changes part', async () => {
@@ -120,11 +122,14 @@ it.each([
 
 it('reads part one once to restore comparison fields in a previous Worker state', async () => {
   const { reports, reads, storage } = await trackedReports()
-  await seedChanges(storage, changesPart(1, 4, { displayBaseBranch: 'first' }))
+  const firstKeys = await seedChanges(
+    storage,
+    changesPart(1, 4, { displayBaseBranch: 'first' }),
+  )
   const middle = changesPart(2, 4, { displayBaseBranch: 'second' })
   reads.length = 0
-  expect(await reports.accept(middle)).toBeNull()
-  expect(reads).toEqual([REPORT_KEY, partKey('changes', 1)])
+  await expect(reports.accept(middle)).resolves.toBeNull()
+  expect(reads).toEqual([REPORT_KEY, ...firstKeys])
   expect((await loadReportState(storage))?.changes.report).toStrictEqual({
     revision: 1,
     partCount: 4,
@@ -142,7 +147,7 @@ it('reads part one once to restore comparison fields in a previous Worker state'
   expect(reads).toEqual([REPORT_KEY])
 
   const earlierKeys = [
-    partKey('changes', 1),
+    ...firstKeys,
     ...Object.keys(reportPartUpdates('changes', 2, middle)),
     ...Object.keys(reportPartUpdates('changes', 3, third)),
   ].sort()
@@ -168,7 +173,7 @@ it('reads part one once to restore comparison fields in a previous Worker state'
 
 it('loads part one once when fields are malformed on arrival of the last part', async () => {
   const { reports, reads, storage } = await trackedReports()
-  await seedChanges(storage, changesPart(1, 2), {
+  const firstKeys = await seedChanges(storage, changesPart(1, 2), {
     baseBranch: 'other',
     summary: { files: 2, added: -1, removed: 0 },
   })
@@ -180,6 +185,47 @@ it('loads part one once when fields are malformed on arrival of the last part', 
       summary: { files: 2, added: 2, removed: 0 },
     },
   })
-  const firstKey = partKey('changes', 1)
-  expect(reads.filter((key) => key === firstKey)).toEqual([firstKey])
+  expect(reads.filter((key) => firstKeys.includes(key))).toEqual(firstKeys)
+})
+
+it('joins a tree report with empty first and last parts', async () => {
+  const { reports } = await trackedReports()
+  await expect(reports.accept(snapshot(1, 1, 3, []))).resolves.toBeNull()
+  await expect(
+    reports.accept(snapshot(1, 2, 3, ['middle'])),
+  ).resolves.toBeNull()
+  await expect(reports.accept(snapshot(1, 3, 3, []))).resolves.toEqual({
+    type: 'files.snapshot',
+    tree: { revision: 1, entries: [file('middle')] },
+  })
+})
+
+it('joins a changes report with empty first and last parts', async () => {
+  const { reports } = await trackedReports()
+  const summary = { files: 1, added: 1, removed: 0 }
+  await expect(
+    reports.accept(changesPart(1, 3, { files: [], summary })),
+  ).resolves.toBeNull()
+  await expect(
+    reports.accept(changesPart(2, 3, { summary })),
+  ).resolves.toBeNull()
+  await expect(
+    reports.accept(changesPart(3, 3, { files: [], summary })),
+  ).resolves.toEqual({
+    type: 'changes.updated',
+    changes: {
+      baseBranch: 'main',
+      unpushedCommits: 3,
+      summary,
+      files: [
+        {
+          path: 'file-2',
+          change: 'modified',
+          added: 1,
+          removed: 0,
+          uncommitted: true,
+        },
+      ],
+    },
+  })
 })
