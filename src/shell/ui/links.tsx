@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
 import { ExternalLink as ExternalLinkIcon } from 'lucide-react'
-import { classes } from '../../../docs/mockups/src/components/common/classes'
-import external from '../../../docs/mockups/src/components/common/ExternalLink.module.css'
-import tabs from '../../../docs/mockups/src/components/common/LinkTabs.module.css'
+import { classes } from '../../ui/components/common/classes'
+import external from '../../ui/components/common/ExternalLink.module.css'
+import tabs from '../../ui/components/common/LinkTabs.module.css'
 import { AppLink } from './AppLink'
 
 export interface LinkTab {

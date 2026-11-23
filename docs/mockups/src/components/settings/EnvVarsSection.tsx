@@ -1,27 +1,27 @@
 import { Input } from '@firna/ui/input'
-import { productName } from '../../brand'
+import { productName } from '../../../../../src/shared/brand'
 import { envVars, newEnvVar, type EnvVar } from '../../fixtures/computer'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import {
   actionButton,
   iconButton,
 } from '../../entries/components/common/actions.mockup'
-import { classes } from '../common/classes'
-import { useControlSizes } from '../common/touch'
+import { classes } from '../../../../../src/ui/components/common/classes'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import {
   secretMark,
   secretSwitch,
   valueDots,
 } from '../../entries/components/settings/EnvVarParts.mockup'
-import { secretNote } from './envVarCopy'
+import { secretNote } from '../../../../../src/ui/components/settings/envVarCopy'
 import {
   section,
   sectionText,
 } from '../../entries/components/settings/Section.mockup'
 import { instanceKey } from '../../instanceKey'
 import { defined } from '../../defined'
-import styles from './EnvironmentSections.module.css'
-import sections from './Section.module.css'
+import styles from '../../../../../src/ui/components/settings/EnvironmentSections.module.css'
+import sections from '../../../../../src/ui/components/settings/Section.module.css'
 
 /**
  * The form of the env vars that is open: none, Add variable, or the new

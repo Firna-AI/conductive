@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Viewport } from '@mokly/mokly'
 import type { ListeningPort } from '../../../../src/shared/generated/ListeningPort'
 import type { PreviewServices } from '../components/tools/PortPreview'
-import type { ServiceEntry } from '../components/tools/serviceCopy'
+import type { ServiceEntry } from '../../../../src/ui/components/tools/serviceCopy'
 import {
   ServiceLogView,
   type ServiceLogRead,

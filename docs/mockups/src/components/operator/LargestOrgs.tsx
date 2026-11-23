@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import type { OrgCounts } from '../../fixtures/operator'
 import { paths } from '../../paths'

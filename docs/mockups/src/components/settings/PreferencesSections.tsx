@@ -1,11 +1,11 @@
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
 import { defaultChoice, fastChoice } from '../../fixtures/agents'
-import { noop } from '../../noop'
+import { noop } from '../../../../../src/ui/noop'
 import { modelPicker } from '../../entries/components/chat/ModelPicker.mockup'
 import { placedModelAnchor } from '../../entries/components/chat/PlacedModelMenu.mockup'
-import { useControlSizes } from '../common/touch'
+import { useControlSizes } from '../../../../../src/ui/components/common/touch'
 import { section } from '../../entries/components/settings/Section.mockup'
-import styles from './AccountSections.module.css'
+import styles from '../../../../../src/ui/components/settings/AccountSections.module.css'
 
 /**
  * How New workspace opens on a computer: as the page, or as a dialog over

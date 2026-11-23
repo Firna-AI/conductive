@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { CircleAlert, Maximize2, RotateCw } from 'lucide-react'
-import page from '../../../../docs/mockups/src/components/tools/PreviewPage.module.css'
-import { expandedPreviewCopy } from '../../../../docs/mockups/src/components/tools/previewCopy'
+import page from '../../../ui/components/tools/PreviewPage.module.css'
+import { expandedPreviewCopy } from '../../../ui/components/tools/previewCopy'
 import type { Preview } from '../../../shared/generated/Preview'
 import { OpenInNewTab, PreviewFrame } from '../../../previews/PreviewFrame'
 import {

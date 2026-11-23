@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { EndReasonLine } from '../../../components/chat/EndReasonLine'
+import { EndReasonLine } from '../../../../../../src/ui/components/chat/EndReasonLine'
 import { turnEndReasons } from './chatKeys'
 
 /**

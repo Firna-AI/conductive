@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { domBackendCss } from '@firna/ui'
 import { SharedUiThemeProvider } from '@firna/ui/theme'
 import { OverlayHost } from '../../shell/ui/Overlay'
-import { themeFor, tokensCss } from '../../../docs/mockups/src/theme'
+import { themeFor, tokensCss } from '../../ui/theme'
 import {
   useWorkspaceStore,
   type WorkspaceIdentity,

@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { expect, it } from 'vitest'
-import a11y from '../../../docs/mockups/src/components/common/a11y.module.css'
+import a11y from '../../ui/components/common/a11y.module.css'
 import type { FileEntry } from '../../shared/generated/FileEntry'
 import { accessibleName } from '../../test-support/dom-queries'
 import { mount, press } from '../../test-support/mount'

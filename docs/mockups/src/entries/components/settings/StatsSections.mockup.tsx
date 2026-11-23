@@ -3,7 +3,7 @@ import {
   StatsFailed,
   StatsLoading,
   StatsNumbers,
-} from '../../../components/settings/StatsSections'
+} from '../../../../../../src/ui/components/settings/StatsSections'
 import { accountStats, emptyAccountStats } from '../../../fixtures/accountStats'
 import { actionButton } from '../common/actions.mockup'
 

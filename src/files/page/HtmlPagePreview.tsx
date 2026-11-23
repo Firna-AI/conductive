@@ -1,15 +1,15 @@
 import { Spinner } from '@firna/ui/spinner'
 import { useSharedUiTheme } from '@firna/ui/theme'
 import { CircleAlert, Maximize2, RotateCw } from 'lucide-react'
-import { LogoTile } from '../../../docs/mockups/src/components/brand/Logo'
-import { htmlPreviewCopy } from '../../../docs/mockups/src/components/files/htmlPreviewCopy'
-import { PageFrame } from '../../../docs/mockups/src/components/files/PageFrame'
+import { LogoTile } from '../../ui/components/brand/Logo'
+import { htmlPreviewCopy } from '../../ui/components/files/htmlPreviewCopy'
+import { PageFrame } from '../../ui/components/files/PageFrame'
 import {
   expandedPreviewCopy,
   previewOpenFailedCopy,
   previewOpeningCopy,
-} from '../../../docs/mockups/src/components/tools/previewCopy'
-import opening from '../../../docs/mockups/src/screens/PreviewOpeningScreen.module.css'
+} from '../../ui/components/tools/previewCopy'
+import opening from '../../ui/screens/PreviewOpeningScreen.module.css'
 import { ActionButton, IconButton } from '../ui/actions'
 import { EmptyState } from '../ui/EmptyState'
 import type { HtmlPreview } from './html-preview'

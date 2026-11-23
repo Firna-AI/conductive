@@ -5,7 +5,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react'
-import type { WindowMode } from '../../../docs/mockups/src/components/mac/MacApp'
+import type { WindowMode } from '../../ui/components/mac/MacApp'
 import { keptOrg } from '../../app/kept-org'
 import { useStore, type Readable } from '../../app/store'
 import type { OrgSummary } from '../../shared/orgs'

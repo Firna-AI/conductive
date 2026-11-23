@@ -3,7 +3,7 @@ import {
   SuspendedOrgAbove,
   SuspendedOrgNotice,
   SuspendedOrgPanel,
-} from '../../../components/orgs/SuspendedOrgNotice'
+} from '../../../../../../src/ui/components/orgs/SuspendedOrgNotice'
 import { orgs, suspendedOrg } from '../../../fixtures/orgs'
 
 /** The org of a notice. The notice needs only its name. */

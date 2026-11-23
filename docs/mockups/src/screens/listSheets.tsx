@@ -1,10 +1,10 @@
 import { Fragment, type ReactNode } from 'react'
 import { Check, Gauge, Plus } from 'lucide-react'
-import { classes } from '../components/common/classes'
+import { classes } from '../../../../src/ui/components/common/classes'
 import { menu as menuPart } from '../entries/components/common/Menu.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { sheet } from '../entries/components/common/Sheet.mockup'
-import orgDrag from '../components/orgs/OrgDrag.module.css'
+import orgDrag from '../../../../src/ui/components/orgs/OrgDrag.module.css'
 import { placeAfterDrop, type OrgDrag } from '../components/orgs/OrgDrop'
 import { orgDrop } from '../entries/components/orgs/OrgDrop.mockup'
 import { orgLinks } from '../components/orgs/orgLinks'
@@ -17,7 +17,7 @@ import type { RowMenuOpen } from '../components/workspaces/RowMenu'
 import { orgList, type Org, type OrgKey } from '../fixtures/orgs'
 import { menuSection, sectionKeys, sections } from '../fixtures/sections'
 import { paths } from '../paths'
-import styles from './WorkspaceListScreen.module.css'
+import styles from '../../../../src/ui/screens/WorkspaceListScreen.module.css'
 
 /** A row of a sheet. Without `to` it links nowhere, as a faint copy. */
 function SheetRow(props: {

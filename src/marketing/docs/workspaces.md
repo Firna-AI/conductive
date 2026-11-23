@@ -68,6 +68,7 @@ The send button stays off while the selected repository waits for its build.
 
 **New workspace** selects the repository's default branch at first.
 The branch control sits beside the repository on the page and in the dialog.
+In the dialog, it shows only a branch icon while the default branch is selected.
 Open it to search the branches that your GitHub account can read.
 The default branch appears first.
 Conductive creates its own branch from the latest commit of the branch you select.
@@ -104,7 +105,7 @@ The setting saves at once.
 The dialog uses **Create** for its send button.
 A phone always opens the page.
 
-The dialog shows the org and section at the top right.
+The dialog shows the section at the top right.
 Select it to put the new workspace in another section.
 The page and dialog share the draft for the same org and section.
 Closing the dialog keeps that draft and its section.

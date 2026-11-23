@@ -9,10 +9,10 @@ import {
   runningComputers,
   workspaceStates,
   type OrgCounts,
-  type StateCounts,
 } from './operator'
+import { type StateCounts } from '../../../../src/ui/components/settings/statCounts'
 import type { TargetStatus } from './operatorDirectory'
-import type { ActivityStatus } from './workspaces'
+import type { ActivityStatus } from '../../../../src/ui/components/workspaces/activityStatus'
 
 /** The states of a workspace whose cloud computer runs. */
 type RunningState = Extract<

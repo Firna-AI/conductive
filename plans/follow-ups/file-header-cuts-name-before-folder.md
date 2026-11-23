@@ -34,7 +34,7 @@
 - **Options:**
   - **A.** Stop the name from shrinking until the folder is at its minimum of 16 px. For example, give the name `flex-shrink: 0` and a `max-width` of the chip less 16 px. Change both CSS files in the same way. The two copies of the rule stay. Effort: Small.
   - **B.** On a page 480 px wide or narrower, show only the file name, without the folder. The folder then never takes room from the name. A member on a phone no longer sees the folder of the file. Effort: Small.
-  - **C.** As A, in one copy of the path chip that both headers use. This can be a shared part in `docs/mockups/src/components/files/`. It can also be one CSS module of chip rules that the app imports, as it imports other mockup styles. The rule then cannot drift between the mockups and the app. Effort: Medium.
+  - **C.** As A, in one copy of the path chip that both headers use. This can be a shared part in `src/ui/components/files/`. It can also be one CSS module of chip rules there, which the app and the mockups import. Since the user's decision of 2026-11-23, shared UI that the app uses lives in `src/ui/`, as `src/ui/README.md` says. The rule then cannot drift between the mockups and the app. Effort: Medium.
 - **Left out:**
   - Change nothing: it fails the goal, because the name loses its end while the folder still has room, against the rule that the comment states.
   - An ellipsis at the start of the folder, so that the end of the folder shows: it does not fix the order of the cut. It changes only which part of the folder shows, and it can join A or C later.

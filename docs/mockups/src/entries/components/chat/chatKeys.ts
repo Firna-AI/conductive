@@ -1,6 +1,9 @@
 import type { TurnEndReason } from '../../../../../../src/shared/generated/TurnEndReason'
-import type { LostReason, LostWhat } from '../../../components/chat/lostCopy'
-import type { StandardSpeedCause } from '../../../components/chat/speedCopy'
+import type {
+  LostReason,
+  LostWhat,
+} from '../../../../../../src/ui/components/chat/lostCopy'
+import type { StandardSpeedCause } from '../../../../../../src/ui/components/chat/speedCopy'
 import type { MacCommandState } from '../../../fixtures/mac'
 
 /** The data that a refused event carried, as `LostWhat` lists them. */

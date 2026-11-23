@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { act } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { toBottomLabel } from '../../../docs/mockups/src/components/chat/ToBottomButton'
+import { toBottomLabel } from '../../ui/components/chat/ToBottomButton'
 import { byLabel, byRole, queryByRole } from '../../test-support/dom-queries'
 import { MOUNTED_TEST_TIMEOUT, press } from '../../test-support/mount'
 import { layOutChat, mountLongTurn, older } from './reading-place-test-kit'

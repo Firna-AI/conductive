@@ -1,17 +1,17 @@
 import type { ReactNode } from 'react'
 import { nameLabel } from '../../../../src/shared/name-label'
-import { Menu, type MenuEntry } from '../components/common/Menu'
+import { Menu, type MenuEntry } from '../../../../src/ui/components/common/Menu'
 import type {
   MessageMarks,
   TextMark,
   TextSpan,
 } from '../components/explain/chatMarks'
-import { markMenuTitle } from '../components/explain/explainCopy'
+import { markMenuTitle } from '../../../../src/ui/components/explain/explainCopy'
 import {
   ExplainButton,
   PhoneExplainButton,
 } from '../components/explain/ExplainButton'
-import { MarkGlyph } from '../components/explain/MarkGlyph'
+import { MarkGlyph } from '../../../../src/ui/components/explain/MarkGlyph'
 import {
   explanations,
   selectedInMessage,

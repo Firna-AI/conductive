@@ -10,9 +10,9 @@ import {
   modelLabel,
   sameChoice,
 } from '../../shared/agents'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
-import { pickerButtonStyle } from '../../../docs/mockups/src/components/chat/pickerButton'
-import styles from '../../../docs/mockups/src/components/chat/ModelPicker.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
+import { pickerButtonStyle } from '../../ui/components/chat/pickerButton'
+import styles from '../../ui/components/chat/ModelPicker.module.css'
 import { stepShortcutItem } from '../../app/shortcuts/navigation'
 import { useShortcutOffer } from '../../shell/shortcuts/shortcut-context'
 import {
@@ -30,7 +30,7 @@ import { effortsOf, modelMenuRows } from './model-rows'
  * One picker for the model and the effort of the session, such as
  * "Opus 5.5 High", with the effort in a muted colour, and "Fast" after it
  * while fast mode is on. Its menu lists the favourites first, then All
- * models, then the efforts and the Fast switch, as `modelMenuRows` says.
+ * models, then Effort with its submenu and the Fast switch, as `modelMenuRows` says.
  * A pick of a favourite sets its model, its effort, and its fast mode.
  * `sessionAgent` is the agent of a session with messages, whose other
  * agent's models and favourites open a new session. The key of Model

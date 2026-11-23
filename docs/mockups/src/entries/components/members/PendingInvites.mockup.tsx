@@ -1,10 +1,10 @@
 import { defineComponent, type SchemaProps } from '@mokly/mokly'
-import type { ActionTone } from '../../../components/common/actions'
+import type { ActionTone } from '../../../../../../src/ui/components/common/actions'
 import { ScreenLink } from '../../../components/common/ScreenLink'
 import {
   PendingInviteList,
   type PendingInviteRow,
-} from '../../../components/members/PendingInvites'
+} from '../../../../../../src/ui/components/members/PendingInvites'
 import { pendingInvites } from '../../../fixtures/members'
 import { waitingInvites } from '../../../fixtures/waitlist'
 import { inviteRows } from '../../../screens/inviteRows'

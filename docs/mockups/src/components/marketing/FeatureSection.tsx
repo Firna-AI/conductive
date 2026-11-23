@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import type { Feature } from '../../../../../src/marketing/features'
 import { screenFrame } from '../../entries/components/marketing/ScreenFrame.mockup'
 import { marketingPicture } from '../../screens/marketingPictures'
-import { classes } from '../common/classes'
+import { classes } from '../../../../../src/ui/components/common/classes'
 import { SectionIntro } from './SectionIntro'
 import styles from './FeatureSection.module.css'
 

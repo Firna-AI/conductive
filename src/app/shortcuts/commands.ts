@@ -1,5 +1,5 @@
-import { agentActionLabels } from '../../../docs/mockups/src/components/workspace/barCopy'
-import { transcriptItems } from '../../../docs/mockups/src/components/workspace/transcriptCopy'
+import { agentActionLabels } from '../../ui/components/workspace/barCopy'
+import { transcriptItems } from '../../ui/components/workspace/transcriptCopy'
 import {
   shortcutDigits,
   type ShortcutCommandId,

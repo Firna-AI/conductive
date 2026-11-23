@@ -18,9 +18,17 @@ import {
   pickBranch,
   picked,
   reads,
+  rowOf,
   serveBranches,
 } from './branch-test-kit'
-import { mainOf, openTab, serverWith } from './dialog-test-kit'
+import {
+  mainOf,
+  newWorkspaceRow,
+  openDialog,
+  openTab,
+  serverWith,
+  sidebarOf,
+} from './dialog-test-kit'
 
 vi.setConfig({ testTimeout: MOUNTED_TEST_TIMEOUT })
 
@@ -163,6 +171,31 @@ describe('the branch picker on a computer', () => {
       wrapped: picked,
       up: { focus: 'main', picker: true },
       chosen: { focus: `Branch: ${picked}, target main`, picker: false },
+    })
+  })
+  test('in the dialog gives the focus back to the control after a pick swaps its icon for the named button, and back', async () => {
+    const server = serverWith('dialog')
+    serveBranches(server)
+    const tab = await openTab(server, { at: routes.org(org) })
+    click(newWorkspaceRow(sidebarOf(tab.view)))
+    await settle()
+    const dialog = openDialog(tab.view)
+    const icon = byRole('button', 'Branch: main', dialog)
+    act(() => icon.focus())
+    click(icon)
+    await settle()
+    click(rowOf(dialog, picked))
+    await settle()
+    const toPicked = focusName()
+    const named = byRole('button', `Branch: ${picked}`, dialog)
+    act(() => named.focus())
+    click(named)
+    await settle()
+    click(rowOf(dialog, 'main'))
+    await settle()
+    expect({ toPicked, toMain: focusName() }).toEqual({
+      toPicked: `Branch: ${picked}`,
+      toMain: 'Branch: main',
     })
   })
 })

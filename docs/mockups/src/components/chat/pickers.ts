@@ -10,7 +10,7 @@ import {
   type AgentKey,
 } from '../../fixtures/agents'
 import { sameChoice } from '../../fixtures/favourites'
-import type { Shortcut } from '../common/KeyChips'
+import type { Shortcut } from '../../../../../src/ui/components/common/KeyChips'
 
 export const divider: MenuEntryData = { kind: 'divider' }
 
@@ -84,18 +84,20 @@ export function addFavouriteEntries(
 }
 
 /**
- * The effort levels of the chosen model under a line, with the current
- * effort marked, then the Fast switch of a model that offers fast mode.
- * `fastKey` is the key of Fast mode, which the Fast row shows before its
- * switch where the key runs (fast mode decision 258).
+ * A line, then Effort, with the current effort after it in the muted
+ * colour. Its submenu holds the efforts of the chosen model, with the
+ * current effort marked, as `effortChoices` gives them. The Fast switch of
+ * a model that offers fast mode follows it. `fastKey` is the key of Fast
+ * mode, which the Fast row shows before its switch where the key runs
+ * (fast mode decision 258). `open` draws the submenu of Effort open.
  */
 function effortEntries(
   choice: AgentChoice,
   fastKey?: Shortcut,
+  open?: boolean,
 ): MenuEntryData[] {
   const fast: MenuEntryData[] = offersFast(choice)
     ? [
-        divider,
         {
           kind: 'switch',
           label: 'Fast',
@@ -106,14 +108,26 @@ function effortEntries(
     : []
   return [
     divider,
-    { kind: 'label', label: 'Effort' },
-    ...effortsFor(choice).map((effort): MenuEntryData => ({
+    {
       kind: 'item',
-      label: effortLabels[effort],
-      checked: effort === choice.effort,
-    })),
+      label: 'Effort',
+      muted: effortLabels[choice.effort],
+      submenu: open ? 'open' : 'closed',
+    },
     ...fast,
   ]
+}
+
+/**
+ * The efforts of the chosen model, with the current effort marked: the
+ * rows of the submenu of Effort.
+ */
+export function effortChoices(choice: AgentChoice): MenuEntryData[] {
+  return effortsFor(choice).map((effort): MenuEntryData => ({
+    kind: 'item',
+    label: effortLabels[effort],
+    checked: effort === choice.effort,
+  }))
 }
 
 /** What the model menu with favourites shows besides the current choice. */
@@ -128,6 +142,8 @@ type FavouritesMenuOptions = {
   fastKey?: Shortcut
   /** The submenu of All models is open. */
   allModels?: boolean
+  /** The submenu of Effort is open. */
+  effort?: boolean
 }
 
 /**
@@ -154,9 +170,9 @@ function favouriteWords(choice: AgentChoice): string {
  * its effort and Fast in the muted colour, and the menu marks the one that
  * is the current choice exactly. A favourite of the other agent opens a new
  * session, as a model of that agent does. A line follows, then All models,
- * whose submenu holds the rows of `modelEntries`, then the efforts of the
- * current model and the Fast switch. With no favourite to show, the menu
- * starts with All models (model favourites decision 6), so it stays short
+ * whose submenu holds the rows of `modelEntries`, then Effort, whose
+ * submenu holds the efforts of the current model, and the Fast switch.
+ * With no favourite to show, the menu starts with All models (model favourites decision 6), so it stays short
  * however many models the app offers.
  */
 export function favouritesMenu(
@@ -183,6 +199,6 @@ export function favouritesMenu(
       label: 'All models',
       submenu: options.allModels ? 'open' : 'closed',
     },
-    ...effortEntries(choice, options.fastKey),
+    ...effortEntries(choice, options.fastKey, options.effort),
   ]
 }

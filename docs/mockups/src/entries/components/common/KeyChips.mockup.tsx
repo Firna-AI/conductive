@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { KeyChips } from '../../../components/common/KeyChips'
+import { KeyChips } from '../../../../../../src/ui/components/common/KeyChips'
 import { shortcutSchema } from './shortcutSchemas'
 
 /**

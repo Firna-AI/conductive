@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use cnd_runner_interface::sdk_helper::{HelperOutput, HelperRequest};
+use cnd_runner_interface::sdk_helper_options::OrgSkills as HelperOrgSkills;
 use cnd_runner_interface::skills::HelperSkillLists;
 use tokio::sync::{Mutex, watch};
 
@@ -12,7 +13,17 @@ use crate::filter::service::Credentials;
 use crate::helper::boundary::{Helper, HelperEvents, HelperFactory, HelperPort, HelperPorts};
 use crate::helper::driver::HelperConnection;
 
-use super::boundary::{SkillInputs, SkillScanner};
+use super::boundary::{OrgSkills, SkillInputs, SkillScanner};
+
+/// Configured org source whose current copy joins each scan.
+pub struct ScannedOrgSkills {
+    /// Copy lifecycle shared with agent starts.
+    pub copy: Arc<dyn OrgSkills>,
+    /// Valid public GitHub source identity as owner/name.
+    pub repository: String,
+    /// Trusted repository identity, absent when no matching grant exists.
+    pub trusted_repository: Option<String>,
+}
 
 /// Scanner keeps SDK caches in one credential-free helper process.
 pub struct NodeSkillScanner {
@@ -20,6 +31,7 @@ pub struct NodeSkillScanner {
     credentials: Arc<dyn Credentials>,
     repository: String,
     home: String,
+    org: Option<ScannedOrgSkills>,
     port: Mutex<Option<Arc<dyn HelperPort>>>,
     stopped: watch::Sender<bool>,
 }
@@ -37,9 +49,16 @@ impl NodeSkillScanner {
             credentials,
             repository,
             home,
+            org: None,
             port: Mutex::new(None),
             stopped: watch::channel(false).0,
         }
+    }
+
+    /// List the skills of the org copy too, as agent starts load them.
+    pub fn with_org_skills(mut self, org: ScannedOrgSkills) -> Self {
+        self.org = Some(org);
+        self
     }
 
     async fn receive(&self, port: &dyn HelperPort) -> Result<HelperSkillLists> {
@@ -77,12 +96,22 @@ impl SkillScanner for NodeSkillScanner {
                 port
             }
         };
+        // The lease keeps the copy on disk until the helper has read it.
+        let lease = self.org.as_ref().and_then(|org| org.copy.current());
+        let org_skills = self.org.as_ref().map(|org| HelperOrgSkills {
+            repository: org.repository.clone(),
+            trusted_repository: org.trusted_repository.clone(),
+            directory: lease
+                .as_ref()
+                .map(|lease| lease.path().to_string_lossy().into_owned()),
+        });
         let request = async {
             port.write(HelperRequest::Skills {
                 request_id: "skills".into(),
                 repository: self.repository.clone(),
                 home: self.home.clone(),
                 reload,
+                org_skills,
             })
             .await?;
             self.receive(port.as_ref()).await
@@ -96,6 +125,7 @@ impl SkillScanner for NodeSkillScanner {
             let _ = port.terminate().await;
             *state = None;
         }
+        drop(lease);
         result
     }
 
@@ -122,3 +152,7 @@ impl HelperFactory for SkillHelpers {
         ))
     }
 }
+
+#[cfg(test)]
+#[path = "_tests_/helper_tests.rs"]
+mod helper_tests;

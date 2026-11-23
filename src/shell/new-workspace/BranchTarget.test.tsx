@@ -96,7 +96,7 @@ describe('the Target part of the branch dropdown', () => {
     })
   })
 
-  test('chooses the target in the dropdown of the dialog, which shares the branch of the draft, and a change of repository puts the control back on its default branch without a target', async () => {
+  test('chooses the target in the dropdown of the dialog, which shares the branch of the draft, and a change of repository puts the control back on its default branch without a target, as a muted icon with no text', async () => {
     const server = serverWith('dialog')
     serveBranches(server)
     const tab = await openTab(server, { at: routes.newWorkspace(org) })
@@ -130,7 +130,7 @@ describe('the Target part of the branch dropdown', () => {
     }).toEqual({
       shared: [`${picked} ✓`, 'main'],
       targeted: { dropdown: null, text: `${picked}→ main` },
-      changed: 'main',
+      changed: '',
     })
   })
 

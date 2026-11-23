@@ -2,7 +2,7 @@
  * The rules of Explain that only the app has: the highlights that draw the
  * marks, the slots and the buttons of their states, the box of the open
  * mark, and the places of Explain and of the popover. The look comes from
- * the mockups' `MarkedText`, `ExplainButton`, `ExplainPopover`, and
+ * the shared `MarkedText`, `ExplainButton`, `ExplainPopover`, and
  * `FollowUpField` modules.
  */
 
@@ -21,7 +21,7 @@
 }
 
 /*
- * The mark of an explanation, with the fills of the mockups' `.mark`: its
+ * The mark of an explanation, with the fills of the shared `.mark`: its
  * quote on the soft amber fill, deeper under the pointer, while its popover
  * is open, and where two marks overlap. The text keeps its colour.
  */

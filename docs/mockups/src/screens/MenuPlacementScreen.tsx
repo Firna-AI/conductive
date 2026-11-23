@@ -4,8 +4,8 @@ import {
   placedModelAnchor,
   placedModelMenu,
 } from '../entries/components/chat/PlacedModelMenu.mockup'
-import { classes } from '../components/common/classes'
-import { Menu } from '../components/common/Menu'
+import { classes } from '../../../../src/ui/components/common/classes'
+import { Menu } from '../../../../src/ui/components/common/Menu'
 import { plainEntry } from '../entries/components/common/menuEntries'
 import { HistoryAnchor } from '../components/workspace/WorkspaceTabs'
 import { checkoutAutocomplete } from '../fixtures/workspaces'

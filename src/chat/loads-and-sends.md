@@ -149,7 +149,7 @@ The session history stays open. The tab keeps its old name, and the sandbox bar 
   [Stops by the workspace tools](../../docs/protocol/messages-and-attachments.md#stops-by-the-workspace-tools)
   says. The line shows "Stopped from" and the chip of that session, then
   the notes of the turn. `components/TranscriptItem.tsx` draws each stop
-  line with the mockups' `StopLine`, and `SessionLinkText` of
+  line with the shared `StopLine`, and `SessionLinkText` of
   `links/LinkedText.tsx` draws the chip.
 - That chip finds its session and opens its page as the chip of a session
   link in a message does, as [Workspace chips](text-links.md#workspace-chips)

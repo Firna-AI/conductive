@@ -6,6 +6,7 @@ mod support;
 
 use std::sync::atomic::Ordering;
 
+use crate::skills::lease::SkillsLease;
 use crate::watcher::service::ReportWatches;
 
 use support::{Fixture, advance, count, settle};
@@ -91,4 +92,33 @@ async fn shutdown_prevents_marker_repair_and_debounce_and_cannot_restart() {
     assert_eq!(count(&h.ports), 0);
     assert_eq!(count(&h.checks), 1);
     assert_eq!(count(&h.closes), 1);
+}
+
+#[tokio::test(start_paused = true)]
+async fn each_new_org_skills_copy_rescans_the_skills_until_shutdown() {
+    let mut h = Fixture::new(true, true);
+    let (copies, changes) = tokio::sync::watch::channel(None);
+    h.service = h.service.with_org_skills(changes);
+    h.service.start().await.unwrap();
+    settle().await;
+    assert_eq!(count(&h.skills), 0);
+    let released = std::sync::Arc::new(tokio::sync::Notify::new());
+    let copy = |name: &str| Some(SkillsLease::new(name.into(), released.clone()));
+    copies.send_replace(copy("/skills/one"));
+    settle().await;
+    assert_eq!(count(&h.skills), 1);
+    assert_eq!(count(&h.files), 0);
+    copies.send_replace(copy("/skills/two"));
+    settle().await;
+    assert_eq!(count(&h.skills), 2);
+    h.events.send(()).unwrap();
+    settle().await;
+    advance(100).await;
+    assert_eq!((count(&h.files), count(&h.skills)), (1, 3));
+    advance(2000).await;
+    assert_eq!((count(&h.ports), count(&h.skills)), (1, 3));
+    h.service.close().await;
+    copies.send_replace(None);
+    settle().await;
+    assert_eq!(count(&h.skills), 3);
 }

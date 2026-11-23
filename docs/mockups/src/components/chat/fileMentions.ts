@@ -1,5 +1,6 @@
-import { mentionEntries, type MentionEntry } from '../../fixtures/fileMentions'
-import { entryName } from './entryPaths'
+import { mentionEntries } from '../../fixtures/fileMentions'
+import { type MentionEntry } from '../../../../../src/ui/components/chat/mentionEntry'
+import { entryName } from '../../../../../src/ui/components/chat/entryPaths'
 
 /** The most rows that the list shows. A longer query narrows it. */
 const mentionRowLimit = 100

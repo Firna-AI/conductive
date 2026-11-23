@@ -21,8 +21,9 @@ use cnd_runner::reports::handler::{ReportCommandHandler, ReportDependencies};
 use cnd_runner::repository::git::{Cancellation, ChildGit};
 use cnd_runner::repository::io::LocalRepositoryIo;
 use cnd_runner::runtime::{RunExit, Runner, RunnerCore};
-use cnd_runner::skills::helper::{NodeSkillScanner, SkillHelpers};
+use cnd_runner::skills::helper::{NodeSkillScanner, ScannedOrgSkills, SkillHelpers};
 use cnd_runner::skills::reporter::SkillReporter;
+use cnd_runner::skills::service::SkillsCopy;
 use cnd_runner::socket::WebSocketConnector;
 use cnd_runner::startup_log::StartupLog;
 use cnd_runner::state::store::{DurableStore, EventStore};
@@ -116,13 +117,26 @@ pub(crate) async fn run_once(
         saving.clone(),
         filter.clone(),
     ));
+    // The agent starts and the skill lists share one org skills copy.
+    let org_skills = Arc::new(SkillsCopy::on_disk(
+        configuration.skills_repository.clone(),
+        configuration.home.clone(),
+    ));
+    let mut scanner = NodeSkillScanner::new(
+        helpers.clone(),
+        filter.clone(),
+        configuration.cwd.to_string_lossy().into_owned(),
+        configuration.home.to_string_lossy().into_owned(),
+    );
+    if let Some(repository) = &configuration.skills_repository {
+        scanner = scanner.with_org_skills(ScannedOrgSkills {
+            copy: org_skills.clone(),
+            repository: repository.clone(),
+            trusted_repository: configuration.trusted_skills_repository.clone(),
+        });
+    }
     let skills = Arc::new(SkillReporter::new(
-        Arc::new(NodeSkillScanner::new(
-            helpers.clone(),
-            filter.clone(),
-            configuration.cwd.to_string_lossy().into_owned(),
-            configuration.home.to_string_lossy().into_owned(),
-        )),
+        Arc::new(scanner),
         saving.clone(),
         filter.clone(),
     ));
@@ -138,26 +152,30 @@ pub(crate) async fn run_once(
             configuration.cwd.clone(),
             PathBuf::from("/run/conductive-terminal/restore-ended"),
         )
-        .with_skills(skills.clone()),
+        .with_skills(skills.clone())
+        .with_org_skills(org_skills.changes()),
     );
     let startup = Arc::new(RunnerStartup {
         home: configuration.home.clone(),
         executable,
     });
-    let engine = Arc::new(AgentEngine::new(
-        EngineDependencies {
-            configuration,
-            store: store.clone(),
-            emitter: chat,
-            credentials: filter.clone(),
-            helpers: agent_helpers,
-            repositories,
-            clock: clock.clone(),
-            startup,
-            background_limit: Duration::from_secs(30 * 24 * 60 * 60),
-        },
-        loaded.clone(),
-    ));
+    let engine = Arc::new(
+        AgentEngine::new(
+            EngineDependencies {
+                configuration,
+                store: store.clone(),
+                emitter: chat,
+                credentials: filter.clone(),
+                helpers: agent_helpers,
+                repositories,
+                clock: clock.clone(),
+                startup,
+                background_limit: Duration::from_secs(30 * 24 * 60 * 60),
+            },
+            loaded.clone(),
+        )
+        .with_skills(org_skills),
+    );
     let handler = Arc::new(
         ReportCommandHandler::new(
             ReportDependencies {

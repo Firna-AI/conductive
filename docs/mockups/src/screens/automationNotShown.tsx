@@ -8,7 +8,7 @@ import { suspendedOrgNotice } from '../entries/components/orgs/SuspendedOrgNotic
 import { orgs, suspendedOrg } from '../fixtures/orgs'
 import { paths } from '../paths'
 import type { AutomationState } from './automationState'
-import styles from './AutomationScreen.module.css'
+import styles from '../../../../src/ui/screens/AutomationScreen.module.css'
 
 /** A read of a saved automation that shows no automation. */
 type NotShown = Exclude<AutomationState['read'], 'ready'>

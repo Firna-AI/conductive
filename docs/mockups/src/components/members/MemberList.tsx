@@ -17,7 +17,7 @@ import {
 } from '../../entries/components/common/actions.mockup'
 import { ScreenLink } from '../common/ScreenLink'
 import { personAvatar } from '../../entries/components/orgs/OrgTile.mockup'
-import styles from './Members.module.css'
+import styles from '../../../../../src/ui/components/members/Members.module.css'
 
 /** How many workspaces of the org a member owns. */
 function owned(

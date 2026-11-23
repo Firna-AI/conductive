@@ -51,8 +51,8 @@ function rowEntry(
 
 /**
  * The entries of the menu of the model picker of a session, from the rows
- * of `modelMenuRows`. All models opens its rows in a submenu. The Fast row
- * changes fast mode through `fast`, and the menu stays open.
+ * of `modelMenuRows`. All models and Effort open their rows in a submenu.
+ * The Fast row changes fast mode through `fast`, and the menu stays open.
  */
 export function modelMenu(
   rows: readonly ModelMenuRow[],
@@ -60,11 +60,12 @@ export function modelMenu(
   fast: FastRow,
 ): MenuEntry[] {
   return rows.map((row): MenuEntry => {
-    if (row.kind !== 'all-models') return rowEntry(row, choose, fast)
+    if (row.kind !== 'submenu') return rowEntry(row, choose, fast)
     return {
       kind: 'submenu',
-      key: 'all-models',
+      key: row.key,
       label: row.label,
+      muted: row.muted,
       entries: row.rows.map((item) => rowEntry(item, choose, fast)),
     }
   })

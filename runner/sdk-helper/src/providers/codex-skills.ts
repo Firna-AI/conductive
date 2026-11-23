@@ -33,13 +33,19 @@ export async function prepareCodexSkills(
 ) {
   try {
     const view = await prepareSkillView(options, 'codex', lifetime)
-    if (!view) return { extraRoots: [], args: [] }
+    if (!view) return { extraRoots: [], args: [], inputs: new Map() }
     const selected = view.skills
     const disabled = (
       await Promise.all(selected.map((skill) => nestedSkills(skill.path)))
     ).flat()
     return {
       extraRoots: selected.map((skill) => skill.path),
+      inputs: new Map(
+        selected.map((skill) => [
+          skill.shownName,
+          join(skill.path, 'SKILL.md'),
+        ]),
+      ),
       args: disabled.length
         ? [
             '-c',
@@ -51,6 +57,6 @@ export async function prepareCodexSkills(
     options.warn(
       'The org skills could not be prepared. The turn will continue.',
     )
-    return { extraRoots: [], args: [] }
+    return { extraRoots: [], args: [], inputs: new Map() }
   }
 }

@@ -146,7 +146,7 @@ agent login forms, and model lists in the web app.
 - Under each agent, the account and Get started name each org whose org
   login the new sessions of the person take, such as "Your new sessions in
   Acme use Acme's login.", also under an own login. The words come from
-  `OrgLoginLines.tsx` of the mockups. With only an org login, the agent
+  the shared `OrgLoginLines.tsx`. With only an org login, the agent
   step of Get started says Ready, with the words of `getStartedCopy.ts`
   that name the org login.
 - After each change of a login of an agent, an own login or an org login,
@@ -162,7 +162,7 @@ agent login forms, and model lists in the web app.
   [The Agents tab](../../docs/protocol/org-logins.md#the-agents-tab)
   says. It reads the logins while it shows, again at each return to the
   page, and once a minute while an org endpoint is connected. Its words
-  come from `orgAgentsCopy.ts` of the mockups.
+  come from the shared `orgAgentsCopy.ts`.
 - An admin uses the parts of the account. `AgentConnectForm` with `org`
   offers only API key and Own endpoint, and its words ask for a key of
   the account of the org. Replace opens that form under the login, on the

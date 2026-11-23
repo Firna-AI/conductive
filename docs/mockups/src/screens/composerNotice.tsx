@@ -5,13 +5,13 @@ import {
   notAttachedTitle,
   smallerFileLabel,
   tooLargeBody,
-} from '../components/chat/attachmentCopy'
+} from '../../../../src/ui/components/chat/attachmentCopy'
 import { connectAgentNotice } from '../entries/components/chat/ConnectAgentNotice.mockup'
 import {
   linkedReasonText,
   linkedTitle,
   type LinkedReason,
-} from '../components/chat/linkedCopy'
+} from '../../../../src/ui/components/chat/linkedCopy'
 import { actionButton } from '../entries/components/common/actions.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'

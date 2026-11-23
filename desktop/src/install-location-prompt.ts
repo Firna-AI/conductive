@@ -1,5 +1,5 @@
 import { app, dialog } from 'electron'
-import { productName } from '../../docs/mockups/src/brand.js'
+import { productName } from '../../src/shared/brand.js'
 
 import { offerApplicationsMove } from './install-location.js'
 

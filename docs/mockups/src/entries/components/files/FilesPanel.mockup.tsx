@@ -5,7 +5,7 @@ import {
   treeStates,
 } from '../../../components/files/FilesPanel'
 import { pathStates } from '../../../fixtures/maskedFiles'
-import { bannerStates } from '../../../fixtures/pullRequests'
+import { bannerStates } from '../../../../../../src/ui/components/workspace/barModel'
 import { fileTabViews } from './fileSchemas'
 import { fileRowMenuSchema } from './rowMenuSchemas'
 

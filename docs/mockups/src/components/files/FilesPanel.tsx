@@ -6,9 +6,9 @@ import {
   type TreeEntry,
 } from '../../fixtures/files'
 import { filesFor, type PathState } from '../../fixtures/maskedFiles'
-import type { BannerState } from '../../fixtures/pullRequests'
+import type { BannerState } from '../../../../../src/ui/components/workspace/barModel'
 import { checksPaths, paths } from '../../paths'
-import { allFilesUnavailable } from '../chat/lostCopy'
+import { allFilesUnavailable } from '../../../../../src/ui/components/chat/lostCopy'
 import { lostUpdateRow } from '../../entries/components/chat/LostUpdate.mockup'
 import { emptyState } from '../../entries/components/common/EmptyState.mockup'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'

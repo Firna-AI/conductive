@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
-import { EndpointModels } from '../../../components/settings/EndpointModels'
-import { endpointReadCopy as copy } from '../../../components/settings/endpointReadCopy'
+import { EndpointModels } from '../../../../../../src/ui/components/settings/EndpointModels'
+import { endpointReadCopy as copy } from '../../../../../../src/ui/components/settings/endpointReadCopy'
 import { agents } from '../../../fixtures/agents'
 import { proxyModelCheck } from '../../../fixtures/endpointModels'
 import { actionButton } from '../common/actions.mockup'

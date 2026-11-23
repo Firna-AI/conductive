@@ -1,8 +1,8 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { ChevronDown, ChevronUp, Clock, GitPullRequest } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
-import type { Trigger } from '../../fixtures/automations'
+import type { Trigger } from '../../../../../src/ui/components/automations/triggers'
 import { paths } from '../../paths'
 import {
   actionButton,
@@ -16,9 +16,9 @@ import {
   eventLabels,
   scheduleLabels,
   triggerSummary,
-} from './triggerCopy'
+} from '../../../../../src/ui/components/automations/triggerCopy'
 import { instanceKey } from '../../instanceKey'
-import styles from './TriggerRow.module.css'
+import styles from '../../../../../src/ui/components/automations/TriggerRow.module.css'
 
 /** The mark of a trigger: a clock for a schedule, or a pull request. */
 function TriggerIcon(props: { trigger: Trigger }) {

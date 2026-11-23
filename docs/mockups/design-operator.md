@@ -49,8 +49,9 @@ the account choice of an operator on Create org.
   the lengths of the chat do. A run under an hour gives its minutes, and
   a run under a minute its seconds. The last activity uses the words of
   the app for a past time: 3 minutes ago, Yesterday, or 5 Nov. The words
-  and the format live in `longRunsCopy.ts`, which imports no fixture, so
-  the app uses it too.
+  and the format live in
+  [`src/ui/components/operator/longRunsCopy.ts`](../../src/ui/components/operator/longRunsCopy.ts),
+  which the app and the mockups both import.
 - The Waitlist tab shows no picture. Each login opens the GitHub profile in
   a new tab, with a small mark for it. After Approve, the row keeps its
   place with Approved and the state of its email, in plain words.
@@ -67,12 +68,12 @@ the account choice of an operator on Create org.
   asks first, with `ConfirmDialog`. The words of the questions and the
   notices live in `operatorCopy.ts`, and those of the waitlist, the app
   access, the codes, the pause, and the waitlist switch in `accessCopy.ts`
-  and `codeCopy.ts`.
-  These modules import no fixture, so the app uses them too. So do
-  `WorkspaceStates` and `DailyChart`. Each text of an
-  org takes its deletion, so the questions and the notices of a deleted
-  org promise nothing that its members cannot open, and nothing that a
-  lift does not give back. The Suspend question of a user offers to
+  and `codeCopy.ts`. The app and the mockups both import these modules
+  from [`src/ui/components/operator/`](../../src/ui/components/operator/).
+  They also import `WorkspaceStates` and `DailyChart` from there. Each
+  text of an org takes its deletion, so the questions and the notices of
+  a deleted org promise nothing that its members cannot open, and nothing
+  that a lift does not give back. The Suspend question of a user offers to
   disable their referral code with `CheckOption` from
   `src/components/common/`, the checkbox of the browser in the accent
   colour, because `@firna/ui` has no checkbox.
@@ -145,9 +146,9 @@ the account choice of an operator on Create org.
   waits or builds, Stop switch takes its place, and asks first with
   `StopSwitchDialog`. While a switch waits for Lift, the question of Lift
   adds that Lift starts the switch build. The words live in
-  `switchCopy.ts`, which imports no fixture, so the app uses it too. A
-  sentence names an account by its ID in plain text, as the questions of
-  Suspend and Lift do.
+  [`src/ui/components/operator/switchCopy.ts`](../../src/ui/components/operator/switchCopy.ts),
+  which the app and the mockups both import. A sentence names an account
+  by its ID in plain text, as the questions of Suspend and Lift do.
 - Create org of an operator has Provider account under the repositories:
   a segmented control of By weights, the default, and each configured
   account by its ID, from `AccountChoice`. Its hint says that only
@@ -157,6 +158,7 @@ the account choice of an operator on Create org.
   form. Nobody else sees the choice.
 - Operator screens name an account only by its ID, such as `boat`, from
   e2b decision 221. An e2b decision is a decision of the change that adds E2B as the second sandbox provider. The words of the tab, the account of an org, and the
-  choice live in `providerCopy.ts`. It imports no fixture, so the app uses
-  it too, as it can use `WeightSlider`, `WeightFields`, `AccountCounts`,
-  and `AccountChoice`.
+  choice live in
+  [`src/ui/components/operator/providerCopy.ts`](../../src/ui/components/operator/providerCopy.ts).
+  The app and the mockups both import it, as they import `WeightSlider`,
+  `WeightFields`, `AccountCounts`, and `AccountChoice` beside it.

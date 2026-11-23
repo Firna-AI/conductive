@@ -1,5 +1,5 @@
 import { defineComponent } from '@mokly/mokly'
-import { DraftFileChip } from '../../../components/chat/DraftFileChip'
+import { DraftFileChip } from '../../../../../../src/ui/components/chat/DraftFileChip'
 import { chipFileSchema, removalSchema } from './chipSchemas'
 
 /** The upload of a file of a draft, as `ChipUpload`. */

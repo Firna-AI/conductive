@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { providerWords } from '../../../docs/mockups/src/components/operator/providerCopy'
-import { stopTimeWords } from '../../../docs/mockups/src/components/operator/stopTimeCopy'
+import { providerWords } from '../../ui/components/operator/providerCopy'
+import { stopTimeWords } from '../../ui/components/operator/stopTimeCopy'
 import { routes } from '../../app/router'
 import { Page, type BackLink } from '../layout/Page'
 import { LinkTabs } from '../ui/links'

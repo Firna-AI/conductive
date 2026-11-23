@@ -4,7 +4,7 @@ import type {
   CellAlign,
   TableCells,
 } from '../../../../../../src/markdown/table-rows'
-import { MarkdownTable } from '../../../components/common/MarkdownTable'
+import { MarkdownTable } from '../../../../../../src/ui/components/common/MarkdownTable'
 import { AnswerText } from '../../../components/chat/AnswerText'
 import { PreviewText } from '../../../components/files/PreviewText'
 import { inline } from '../../../fixtures/agentText'

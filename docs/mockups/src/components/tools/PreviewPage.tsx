@@ -3,7 +3,7 @@ import { openPort } from '../../fixtures/previews'
 import { paths } from '../../paths'
 import { PreviewActions } from './PortPreview'
 import { StorefrontPage } from './StorefrontPage'
-import styles from './PreviewPage.module.css'
+import styles from '../../../../../src/ui/components/tools/PreviewPage.module.css'
 
 /**
  * The page of the open preview, in the one Preview tab of the centre row

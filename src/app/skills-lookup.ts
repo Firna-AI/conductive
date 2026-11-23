@@ -1,4 +1,4 @@
-import type { NoSkillsCause } from '../../docs/mockups/src/components/settings/skillsCopy'
+import type { NoSkillsCause } from '../ui/components/settings/skillsCopy'
 import {
   orgSettingsPaths,
   type OrgSettings,

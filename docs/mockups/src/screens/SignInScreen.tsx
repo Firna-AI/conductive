@@ -5,13 +5,13 @@ import { githubMark } from '../entries/components/common/GitHubMark.mockup'
 import { notice } from '../entries/components/common/Notice.mockup'
 import { ScreenLink } from '../components/common/ScreenLink'
 import { CatalogueText } from '../components/marketing/CatalogueText'
-import { noop } from '../noop'
+import { noop } from '../../../../src/ui/noop'
 import { paths } from '../paths'
 import { signInFrame } from '../entries/components/screens/signInFrame.mockup'
-import { signInCopy } from './signInCopy'
-import { waitlistCopy } from './waitlistCopy'
-import frame from './signInFrame.module.css'
-import styles from './SignInScreen.module.css'
+import { signInCopy } from '../../../../src/ui/screens/signInCopy'
+import { waitlistCopy } from '../../../../src/ui/screens/waitlistCopy'
+import frame from '../../../../src/ui/screens/signInFrame.module.css'
+import styles from '../../../../src/ui/screens/SignInScreen.module.css'
 
 /**
  * The invite code that a join link carries. The page names no owner of

@@ -13,6 +13,7 @@ use crate::error::Result;
 use crate::ports::reporter::PortReports;
 use crate::reports::files::FileReports;
 use crate::skills::boundary::SkillReports;
+use crate::skills::lease::SkillsLease;
 
 use super::boundary::{RepositoryWatch, WatchDriver};
 
@@ -35,6 +36,7 @@ pub struct ReportWatchService {
     files: Arc<dyn FileReports>,
     ports: Option<Arc<dyn PortReports>>,
     skills: Option<Arc<dyn SkillReports>>,
+    org_skills: Option<watch::Receiver<Option<SkillsLease>>>,
     root: PathBuf,
     marker: PathBuf,
     stopped: watch::Sender<bool>,
@@ -55,6 +57,7 @@ impl ReportWatchService {
             files,
             ports,
             skills: None,
+            org_skills: None,
             root,
             marker,
             stopped: watch::channel(false).0,
@@ -64,6 +67,12 @@ impl ReportWatchService {
     /// Rescan skills after each debounced repository change and restore.
     pub fn with_skills(mut self, skills: Arc<dyn SkillReports>) -> Self {
         self.skills = Some(skills);
+        self
+    }
+
+    /// Rescan skills after each new org skills copy. Needs `with_skills`.
+    pub fn with_org_skills(mut self, changes: watch::Receiver<Option<SkillsLease>>) -> Self {
+        self.org_skills = Some(changes);
         self
     }
 }
@@ -147,6 +156,26 @@ async fn monitor(
     scans.shutdown().await;
 }
 
+/// A copy that the connect report already holds gives one more scan, and no new report.
+async fn org_copies(
+    skills: Arc<dyn SkillReports>,
+    mut changes: watch::Receiver<Option<SkillsLease>>,
+    mut stopped: watch::Receiver<bool>,
+) {
+    loop {
+        tokio::select! {
+            biased;
+            _ = async { let _ = stopped.wait_for(|value| *value).await; } => break,
+            changed = changes.changed() => {
+                if changed.is_err() { break; }
+                if skills.refresh(false, None).await.is_err() {
+                    tracing::warn!("The skill lists could not update after a new org skills copy.");
+                }
+            },
+        }
+    }
+}
+
 #[async_trait]
 impl ReportWatches for ReportWatchService {
     async fn start(&self) -> Result<()> {
@@ -190,6 +219,13 @@ impl ReportWatches for ReportWatchService {
                 }
                 while scans.join_next().await.is_some() {}
             }));
+        }
+        if let (Some(skills), Some(changes)) = (&self.skills, &self.org_skills) {
+            tasks.push(tokio::spawn(org_copies(
+                skills.clone(),
+                changes.clone(),
+                self.stopped.subscribe(),
+            )));
         }
         *jobs = Some(tasks);
         Ok(())

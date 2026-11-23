@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@firna/ui/button'
-import actions from '../../../docs/mockups/src/components/common/actions.module.css'
-import { useControlSizes } from '../../../docs/mockups/src/components/common/touch'
+import actions from '../../ui/components/common/actions.module.css'
+import { useControlSizes } from '../../ui/components/common/touch'
 import {
   ToolButton,
   type ComposerTool,

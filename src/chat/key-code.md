@@ -149,7 +149,7 @@ is relative to `src/chat/`, the folder of this guide.
   `FolderNotice`. `SentFiles` lists under a sent message the files without
   a chip in its text. `OversizeNotice` is the notice of the files of a pick
   or a drop over the size limit, also a zip of a folder. `FolderNotice` is
-  the notice of the one unreadable folder that `noticedFolder` gives. Both use the words of the mockups'
+  the notice of the one unreadable folder that `noticedFolder` gives. Both use the words of the shared
   `attachmentCopy.ts`. A file of a draft is a chip in the message field,
   which `components/chip-field/attached-file-chip.tsx` draws.
 - `state/archive-view.ts`: the tabs and the session history of a
@@ -190,14 +190,14 @@ is relative to `src/chat/`, the folder of this guide.
   source.
 - `components/TranscriptItem.tsx` and `components/LostEventLine.tsx`: each
   part of the chat, with the left-out counts and the plain words of a lost
-  event from the mockups' `lostCopy.ts`. The line of a stopped turn uses
-  the mockups' `StopLine`: the words of a member's Stop or of a stop
+  event from the shared `lostCopy.ts`. The line of a stopped turn uses
+  the shared `StopLine`: the words of a member's Stop or of a stop
   without one, or "Stopped from" and the chip of the stopping session,
   then the notes of the turn. `components/TurnEnd.tsx` draws the
-  end of a finished turn: the line of its end reason, from the mockups'
+  end of a finished turn: the line of its end reason, from the shared
   `EndReasonLine.tsx`, above its duration and its files, and the note of a
-  fast turn at standard speed, from the mockups' `StandardSpeedNote.tsx`,
-  beside its duration. The mockups' `TurnFileList.tsx` limits the files
+  fast turn at standard speed, from the shared `StandardSpeedNote.tsx`,
+  beside its duration. The shared `TurnFileList.tsx` limits the files
   that show before its Show more button, with the app's chips. `UserBubble`
   reads
   the parts of a sent message once, with `useChatParts`. It draws them with
@@ -218,7 +218,7 @@ is relative to `src/chat/`, the folder of this guide.
   place that the session kept.
 - `components/scrolled-up.ts`: `useScrolledUp` says whether the reader
   reads at least `scrolledUpFrom` above the bottom. While they do,
-  `ChatPane` shows the mockups' `ToBottomButton` above the footer, and a
+  `ChatPane` shows the shared `ToBottomButton` above the footer, and a
   press calls `bottom` of the keeper.
 - `components/chat-place.ts`: the place of a session tab, at the bottom or
   at a row by its `data-row` key, which `components/transcript-rows.tsx`
@@ -262,8 +262,8 @@ is relative to `src/chat/`, the folder of this guide.
 - `components/model-rows.ts`: `modelMenuRows`, the rows of the model menu,
   as [Model favourites](../../docs/protocol/model-favourites.md#the-model-menu)
   gives them: the favourites that the picker offers, All models with the
-  models of each agent, the efforts, and Fast. With no favourite to show,
-  the menu starts with All models. The rows name no menu component, so
+  models of each agent, Effort with the efforts of the model, and Fast.
+  With no favourite to show, the menu starts with All models. The rows name no menu component, so
   each model picker can draw them. `components/model-menu.ts` draws them as
   the entries of `ui/Menu.tsx` for the picker of a session, and
   `../shell/ui/ModelPicker.tsx` as the entries of the shell menu.

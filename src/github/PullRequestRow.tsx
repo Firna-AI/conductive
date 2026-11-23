@@ -8,7 +8,7 @@ import {
 import {
   agentActionLabels,
   barLabels,
-} from '../../docs/mockups/src/components/workspace/barCopy'
+} from '../ui/components/workspace/barCopy'
 import { ActionButton } from './ActionButton'
 import {
   classes,

@@ -4,7 +4,7 @@ import { successToast } from '../entries/components/common/SuccessToast.mockup'
 import {
   sendLimitBody,
   sentToastTitle,
-} from '../components/feedback/feedbackCopy'
+} from '../../../../src/ui/components/feedback/feedbackCopy'
 import { feedbackDialog } from '../entries/components/feedback/FeedbackDialog.mockup'
 import type { FeedbackProblem } from '../components/feedback/FeedbackDialog'
 import type { FeedbackReply } from '../components/feedback/FeedbackReply'

@@ -1,6 +1,6 @@
 import { API_PATHS } from '../../src/shared/api'
 import { INVITE_CODE_PARAMETER } from '../../src/shared/waitlist'
-import { productDomain } from '../../docs/mockups/src/brand'
+import { productDomain } from '../../src/shared/brand'
 import { termsConsentResponse } from '../marketing/consent'
 import {
   TERMS_VERSION,

@@ -3,7 +3,7 @@ import { appFrame } from '../entries/components/layout/AppFrame.mockup'
 import { defined } from '../defined'
 import { newWorkspaceDialog } from '../entries/components/new-workspace/NewWorkspaceDialog.mockup'
 import { chooseRepositoriesNotice } from '../entries/components/new-workspace/notices.mockup'
-import { formWait } from '../components/new-workspace/waitingRepository'
+import { formWait } from '../../../../src/ui/components/new-workspace/waitingRepository'
 import { newOrg } from '../fixtures/repositories'
 import type { MenuEntryData } from '../entries/components/common/menuEntries'
 import { paths } from '../paths'
@@ -197,7 +197,6 @@ export function NewWorkspaceDialogScreen(props: {
       choice={page.choice}
       drop={state.files === 'drop-over'}
       moklyInstance="new-workspace-dialog"
-      place={`${org.name} · ${sections[defaultSection].name}`}
       section={sections[defaultSection].name}
       placeholder={taskPlaceholder}
       ready={hasWords(draft.text) && !waits(state) && !building && !waiting}

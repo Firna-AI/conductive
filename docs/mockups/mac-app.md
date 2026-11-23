@@ -5,6 +5,8 @@ how a screen is built, and links to the other pages.
 
 The Mac app is the web app in a window of macOS, from decision 62. Its
 screens live under `mac-app`, and their parts in `src/components/mac/`.
+The parts and styles that the app shares live in
+[`src/ui/components/mac/`](../../src/ui/components/mac/).
 
 - `MacScreen` lays the screen of a Mac out at 1440 × 900 and scales it to
   the width of its box in steps of `--mac-scale`, because a view runs no
@@ -63,11 +65,13 @@ screens live under `mac-app`, and their parts in `src/components/mac/`.
   region keeps its bound.
 - Each change of the Mac's settings shows its result until the next change
   of the same control: done, done but not saved, or failed, from
-  `ChangeOutcome` in `src/components/mac/`. This Mac lists the results of
-  Remove under its list, and the bar of the 15 minutes names the result of
-  Stop, also after the 15 minutes end. A change that the Mac made but did
-  not save took its row or its 15 minutes away, so its result offers Try
-  again. `mac-app/this-mac` and `mac-app/stop` draw them.
+  `ChangeOutcome` in
+  [`src/ui/components/mac/`](../../src/ui/components/mac/). This Mac lists
+  the results of Remove under its list, and the bar of the 15 minutes
+  names the result of Stop, also after the 15 minutes end. A change that
+  the Mac made but did not save took its row or its 15 minutes away, so
+  its result offers Try again. `mac-app/this-mac` and `mac-app/stop` draw
+  them.
 - An Extend is done or failed, never done but not saved, because the Mac
   saves the new end first. A done Extend shows no result, because the
   time left shows the change. A failed Extend shows Not extended and its

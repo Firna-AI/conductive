@@ -1,5 +1,5 @@
 import { RotateCw, TriangleAlert } from 'lucide-react'
-import { Notice } from '../../../docs/mockups/src/components/common/Notice'
+import { Notice } from '../../ui/components/common/Notice'
 import type { ApiError } from '../../app/api/client'
 import { ActionButton } from './actions'
 import { useAction } from './useAction'

@@ -59,8 +59,8 @@ const api = createMembersApi((input, init) => fetch(input, init))
 ```
 
 The host gives the components `SharedUiThemeProvider` from `@firna/ui/theme`
-and the `--ui-*` design tokens, as `dev/main.tsx` does with `themeFor` and
-`tokensCss` of the mockups. Each component takes `viewport: 'desktop' |
+and the `--ui-*` design tokens, as `dev/main.tsx` does with the shared
+`themeFor` and `tokensCss`. Each component takes `viewport: 'desktop' |
 'mobile'`. The phone layout uses 40 px controls and opens menus and
 questions as sheets. Each component shows its own loading and error states,
 with the message of the API.
@@ -158,7 +158,7 @@ of `settings` as text, without a field or Save, as
 says. Under it, `skills` gives what the lookup of that repository found:
 `loading`, `failed` with the message of the API, or `ready` with the
 lookup answer. The section lists the skills, or it shows the notice in
-place of the list, with the words of `skillsCopy` in the mockups. A
+place of the list, with the words of the shared `skillsCopy`. A
 member reads that an admin can act, and a suspended org names no action.
 A failed request, such as an expired GitHub sign-in, and a lookup that
 GitHub did not answer show "The list of skills did not load" with Try
@@ -177,15 +177,15 @@ says. The row reads Trusted only while `settings.trustedSkillsRepository`
 names the saved repository, without regard to letter case. A reply
 without it, such as one of an older Worker, reads Not trusted. Saved text
 that names no repository has no Trust row and no hint. The words come
-from `skillsTrustCopy.ts` of the mockups, and the rule from
+from the shared `skillsTrustCopy.ts`, and the rule from
 `savedSkillsTrust` in `../app/skills-trust.ts`, whose saved choice the
 tab of an admin also uses.
 
 The repository notice shows under the intro of the view, and above the
 list of `MemberRepositoriesTab` when its caller gives `builds`. It names
 the repositories that the org image lacks or still holds, from
-`repositoryChangesOf` in `../app/repository-changes.ts`, with the words of
-the mockups, as
+`repositoryChangesOf` in `../app/repository-changes.ts`, with the shared
+words of `repositoryChangeCopy.ts`, as
 [The repository notice](../../docs/protocol/org-image.md#the-repository-notice)
 says. It has no button. A member of an org in use reads who can act, and
 in a suspended org it names no admin. The history of the card stays closed
@@ -293,7 +293,7 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `ComputerSections.tsx`: the read-only sections of the Cloud computer tab:
   the scripts, the env vars, and the Skills section with its Trust row,
   its list, and its notices. It takes the words of the Skills section from
-  `skillsCopy.ts` and `skillsTrustCopy.ts` of the mockups, and the choice
+  the shared `skillsCopy.ts` and `skillsTrustCopy.ts`, and the choice
   of a notice from `shownSkills` in `../app/skills-lookup.ts`, as the tab
   of an admin does.
 - `membersStore.ts`: the state of the Members tab and each change.
@@ -309,10 +309,11 @@ callbacks and `FakeApiServer`. The other test files run in Node.
 - `useMounted.ts`: the ref that drops the answers of an old scope.
 - `ui/`: the local dense controls of the design, such as `ChoiceMenu`,
   `ConfirmDialog`, and `Sheet`, where `@firna/ui` has none. They copy the
-  local parts of the mockups, because the app has no shared UI folder yet.
+  look of shared parts, such as `ConfirmDialog` and `Sheet` in
+  `src/ui/components/common/`. They add the behaviour that the app needs.
   `ConfirmDialog` copies the look of its card, but it imports the shared
   card parts of
-  [ModalCard.module.css](../../docs/mockups/src/components/common/ModalCard.module.css).
+  [ModalCard.module.css](../ui/components/common/ModalCard.module.css).
   So a desktop question taller than the window keeps its title and its
   actions, and only its content scrolls. While that content is text
   without a control, Tab stops on it too, in each browser, through

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../../../../src/ui/components/common/viewport'
 import { Unplug } from 'lucide-react'
 import type { TerminalLine } from '../../fixtures/terminal'
 import type { SharedSize } from '../../fixtures/terminals'
