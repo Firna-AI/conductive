@@ -46,6 +46,8 @@ Use **Shift+Enter** to add a line.
 On a phone, **Enter** adds a line.
 Your message appears in the chat at once.
 The chat scrolls down to it, also when you read an earlier part of the chat.
+When you read an earlier part of the chat, a round arrow button shows above the right end of the message box.
+Select it to go to the newest messages.
 If it cannot send, it goes back to the message box, and the chat shows the cause.
 If the message arrives later, the chat removes the cause and clears the message box, unless you changed the text.
 

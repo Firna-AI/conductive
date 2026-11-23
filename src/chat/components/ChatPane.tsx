@@ -1,9 +1,11 @@
 import { useRef, type ReactNode, type Ref } from 'react'
 import { classes } from '../../../docs/mockups/src/components/common/classes'
 import styles from '../../../docs/mockups/src/components/chat/ChatPane.module.css'
+import { ToBottomButton } from '../../../docs/mockups/src/components/chat/ToBottomButton'
 import { NearViewRoot } from '../ui/near-view'
 import type { PlaceMemory } from './chat-place'
 import { ChatKeeper, useReadingPlace } from './reading-place'
+import { useScrolledUp } from './scrolled-up'
 
 /**
  * The chat column: the transcript, which keeps the newest message in view,
@@ -15,7 +17,8 @@ import { ChatKeeper, useReadingPlace } from './reading-place'
  * Each new ID in `sent`, a message that the user sent from this chat, shows
  * the bottom of the chat. A message of another member does not move it.
  * `place` keeps the reader's place in the shown session while another tab
- * shows, and gives it back when the session shows again.
+ * shows, and gives it back when the session shows again. While the reader
+ * reads higher up, a round button above the footer shows the bottom.
  */
 export function ChatPane({
   ref,
@@ -48,6 +51,7 @@ export function ChatPane({
     props.sent,
     props.place,
   )
+  const scrolledUp = useScrolledUp(scroller, !props.empty)
   return (
     <section
       aria-label={props.label ?? 'Chat'}
@@ -71,7 +75,10 @@ export function ChatPane({
           </ChatKeeper.Provider>
         </div>
       )}
-      <div className={styles.footer}>{props.footer}</div>
+      <div className={styles.footer}>
+        {scrolledUp ? <ToBottomButton onPress={keeper.bottom} /> : null}
+        {props.footer}
+      </div>
     </section>
   )
 }

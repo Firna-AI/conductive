@@ -1,8 +1,9 @@
 # The scroll of the chat
 
 This page holds the requirements and the decisions in force for the
-scroll of a workspace chat: the row that stays in view, the scroll after
-a send, and the place that each session tab keeps. It belongs to
+scroll of a workspace chat: the row that stays in view, the button to the
+bottom, the scroll after a send, and the place that each session tab
+keeps. It belongs to
 [Chat and events](chat-and-events.md), which states what the chat shows.
 The terms are those of the [architecture doc](../architecture.md#terms).
 
@@ -12,6 +13,13 @@ The terms are those of the [architecture doc](../architecture.md#terms).
 - While the user reads higher up, the row that they read keeps its place.
   A message of another member, the output of an agent, and a fold that
   closes do not move it.
+- While the user reads higher up, a small round button shows above the
+  right end of the composer. A press shows the bottom of the chat, with
+  the newest message. The button hides at the bottom and near it, so a
+  small scroll shows no button. It stays clear of Explain, which a phone
+  shows above the middle of the composer.
+- Reason: on a phone, a long chat takes many swipes to get back to the
+  newest message. The user asked for the button on 23 November 2026.
 - A message that the user sends from the chat goes to the bottom of the
   chat, also while the user reads higher up. This applies to the composer
   and to the fixed prompts of the pull request bar, such as Create PR.
