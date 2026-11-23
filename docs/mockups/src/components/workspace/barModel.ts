@@ -1,5 +1,26 @@
-import type { BannerState } from '../../fixtures/pullRequests'
 import type { AgentAction, BarMessageKind, MergeMethod } from './barCopy'
+
+/**
+ * The states of the pull request bar (decisions 18 and 64). `none` is a
+ * branch without a pull request, and `no-commits` is one without a commit,
+ * which has nothing to open a pull request with. `blocked` is a pull
+ * request that GitHub blocks for a reason that no other state names.
+ */
+export const bannerStates = [
+  'none',
+  'no-commits',
+  'checks-running',
+  'checks-failed',
+  'ready-to-merge',
+  'merged',
+  'conflict',
+  'changes-requested',
+  'draft',
+  'closed',
+  'blocked',
+] as const
+
+export type BannerState = (typeof bannerStates)[number]
 
 /**
  * The GitHub access of the viewer to the repository, which the Worker reads

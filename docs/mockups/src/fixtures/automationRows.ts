@@ -4,7 +4,8 @@
  */
 
 import { defaultChoice } from './agents'
-import { stateAfterSuspension, type RunState } from './automationRuns'
+import { stateAfterSuspension } from './automationRuns'
+import { type RunState } from '../components/workspaces/activityStatus'
 import { automations, london, type Automation } from './automations'
 import { people } from './members'
 

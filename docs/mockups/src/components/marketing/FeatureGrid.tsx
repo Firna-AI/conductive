@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { FeatureItem } from '../../../../../src/marketing/features'
 import { classes } from '../common/classes'
 import { SectionIntro } from './SectionIntro'

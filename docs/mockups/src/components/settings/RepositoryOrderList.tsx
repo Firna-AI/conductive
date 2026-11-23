@@ -1,5 +1,5 @@
 import { FolderGit2, GripVertical, MoreHorizontal } from 'lucide-react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { ReachableRepository } from '../../fixtures/repositories'
 import { IconButton } from '../common/actions'
 import a11y from '../common/a11y.module.css'

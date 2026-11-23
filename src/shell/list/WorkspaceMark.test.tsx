@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest'
 import { WorkspaceMark } from '../../../docs/mockups/src/components/workspaces/WorkspaceMark'
 import styles from '../../../docs/mockups/src/components/workspaces/WorkspaceMark.module.css'
 import type { GitHubSummary } from '../../shared/generated/GitHubSummary'
-import type { ActivityStatus } from '../../../docs/mockups/src/fixtures/workspaces'
+import type { ActivityStatus } from '../../../docs/mockups/src/components/workspaces/activityStatus'
 
 /** The classes of the nine cells of a mark, row by row from the top left. */
 function cellClasses(

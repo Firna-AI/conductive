@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { actionButton } from '../../entries/components/common/actions.mockup'
 import {
   confirmDialog,

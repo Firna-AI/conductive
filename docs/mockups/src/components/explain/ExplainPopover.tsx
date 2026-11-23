@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Maximize2, X } from 'lucide-react'
 import { IconButton } from '../common/actions'
 import { classes } from '../common/classes'

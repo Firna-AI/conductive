@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import type { OpenAgentForm } from '../components/settings/AgentList'
 import type { OrgAgentsTab } from '../components/settings/OrgAgents'
-import type { ReadOnlyCause } from '../components/settings/OrgSections'
+import type { ReadOnlyCause } from '../components/settings/readOnlyCause'
 import { shareNotSavedCause, type AgentLogins } from '../fixtures/logins'
 import {
   acmeOrgLogins,

@@ -1,6 +1,6 @@
 import { defineComponent } from '@mokly/mokly'
 import { StatusGlyph } from '../../../components/workspaces/StatusGlyph'
-import type { RunState } from '../../../fixtures/automationRuns'
+import type { RunState } from '../../../components/workspaces/activityStatus'
 import { activityStatuses } from './workspaceSchemas'
 
 /** The states of a workspace and of an automation run, as `RunState`. */

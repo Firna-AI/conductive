@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../../common/viewport'
 import { classes } from '../../common/classes'
 import { guideWithNeighbours } from './docsGuides'
 import type { DocsPage } from './docsPage'

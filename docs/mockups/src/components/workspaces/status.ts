@@ -1,5 +1,5 @@
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { ActivityStatus } from './activityStatus'
 
 /**
  * How a row title shows its state: strong for output that the user has not

@@ -1,7 +1,7 @@
 import { DropdownSelector } from '@firna/ui/dropdown'
 import { Input } from '@firna/ui/input'
 import { fonts } from '../../design/metrics'
-import type { ClockTime, ScheduleTrigger } from '../../fixtures/automations'
+import type { ClockTime, ScheduleTrigger } from './triggers'
 import { noop } from '../../noop'
 import { useControlSizes } from '../common/touch'
 import { twoDigits, weekdayLabels } from './triggerCopy'

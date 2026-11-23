@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { sourceRepositoryHref } from '../../../../../src/marketing/links'
 import { pricingLinkText } from '../../../../../src/marketing/pricing'
 import { githubMark } from '../../entries/components/common/GitHubMark.mockup'

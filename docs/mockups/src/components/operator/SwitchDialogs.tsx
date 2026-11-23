@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { SegmentedControl } from '@firna/ui/segmented'
 import { ArrowLeftRight, CircleStop } from 'lucide-react'
 import { noop } from '../../noop'

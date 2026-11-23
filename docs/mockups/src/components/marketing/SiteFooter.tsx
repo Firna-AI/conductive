@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { siteActionCopy } from '../../../../../src/marketing/access-copy'
 import { abuseAddress } from '../../../../../src/marketing/legal-text'
 import { pricingLinkText } from '../../../../../src/marketing/pricing'

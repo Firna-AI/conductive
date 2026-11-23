@@ -1,6 +1,6 @@
 import { Button } from '@firna/ui/button'
 import { ChevronDown, RotateCw } from 'lucide-react'
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { ActivityStatus } from '../workspaces/activityStatus'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
 import { Menu, type MenuEntry } from '../common/Menu'

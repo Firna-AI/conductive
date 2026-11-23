@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Trash2 } from 'lucide-react'
 import { deletedSecret } from '../../fixtures/secrets'
 import { paths } from '../../paths'

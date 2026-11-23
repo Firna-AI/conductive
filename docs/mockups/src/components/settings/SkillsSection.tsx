@@ -7,7 +7,7 @@ import { loadFailure } from '../../entries/components/common/LoadFailure.mockup'
 import { notice } from '../../entries/components/common/Notice.mockup'
 import { useControlSizes } from '../common/touch'
 import { detailList } from '../../entries/components/settings/DetailList.mockup'
-import type { ReadOnlyCause } from './OrgSections'
+import type { ReadOnlyCause } from './readOnlyCause'
 import {
   section,
   sectionText,

@@ -1,4 +1,4 @@
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { ActivityStatus } from './activityStatus'
 import { classes } from '../common/classes'
 import { activityPresentation } from './status'
 

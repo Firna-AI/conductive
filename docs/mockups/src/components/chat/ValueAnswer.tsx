@@ -1,10 +1,7 @@
 import { Input } from '@firna/ui/input'
 import { SegmentedControl, type SegmentOption } from '@firna/ui/segmented'
-import {
-  typedValue,
-  type SecretRunItem,
-  type ValueLifetime,
-} from '../../fixtures/secretRequests'
+import { typedValue, type SecretRunItem } from '../../fixtures/secretRequests'
+import { type ValueLifetime } from './secretGrant'
 import { noop } from '../../noop'
 import { classes } from '../common/classes'
 import { useControlSizes } from '../common/touch'

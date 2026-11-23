@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { MacAppSection } from '../../../../../src/marketing/features'
 import { macDownloadHref } from '../../../../../src/marketing/links'
 import { useOutsideHref } from '../common/ScreenLink'

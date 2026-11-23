@@ -1,8 +1,4 @@
-import type {
-  MemberGrant,
-  SecretGrant,
-  ValueLifetime,
-} from '../../fixtures/secretRequests'
+import type { MemberGrant, SecretGrant, ValueLifetime } from './secretGrant'
 
 /**
  * The words of a run with secrets: the request card above the composer,

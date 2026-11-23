@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { InputFrame } from '@firna/ui/input'
 import { ChevronDown, Search } from 'lucide-react'
 import { repositories } from '../../fixtures/repositories'

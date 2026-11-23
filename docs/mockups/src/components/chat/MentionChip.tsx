@@ -6,7 +6,7 @@ import {
   type LineRange,
 } from '../../../../../src/shared/line-target'
 import { shotViews } from '../../fixtures/answerFiles'
-import type { MentionEntry } from '../../fixtures/fileMentions'
+import type { MentionEntry } from './mentionEntry'
 import { CheckoutPicture, screenshotSize } from '../../fixtures/pictures'
 import { paths } from '../../paths'
 import inline from '../common/InlineText.module.css'

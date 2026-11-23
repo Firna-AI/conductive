@@ -1,3 +1,4 @@
+import type { ReadOnlyCause } from './readOnlyCause'
 import { Input } from '@firna/ui/input'
 import { noop } from '../../noop'
 import { paths } from '../../paths'
@@ -14,14 +15,6 @@ import styles from './OrgSections.module.css'
 
 export type SettingsTab =
   'general' | 'repositories' | 'computer' | 'agents' | 'secrets' | 'members'
-
-/**
- * Why the settings show without edit fields and actions: the person signed
- * in is a member who is not an admin, or the operator suspended the org. A
- * member's view says that only an admin can change a value. The notice of a
- * suspended org says why, so its sections say nothing more.
- */
-export type ReadOnlyCause = 'member' | 'suspended'
 
 /** The page of each tab of the org settings. */
 export const settingsLinks: Readonly<Record<SettingsTab, string>> = {

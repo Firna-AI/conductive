@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { FolderGit2 } from 'lucide-react'
 import { repositories, type RepositoryKey } from '../../fixtures/repositories'
 import { repositoryWork } from '../../fixtures/repositoryMove'

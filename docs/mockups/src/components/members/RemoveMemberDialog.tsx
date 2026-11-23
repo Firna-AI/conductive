@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { people, removedMember } from '../../fixtures/members'
 import { orgs } from '../../fixtures/orgs'
 import { workspaceList } from '../../fixtures/workspaces'

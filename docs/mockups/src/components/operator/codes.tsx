@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { TableCell, type TableColumn } from '@firna/ui/table'
 import {
   codeState,

@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { AutomationRow } from '../../fixtures/automationRows'
 import { offAfterFailedRuns, repositoryOf } from '../../fixtures/automations'
 import { classes } from '../common/classes'

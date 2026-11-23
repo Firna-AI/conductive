@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Table, type TableColumn } from '@firna/ui/table'
 import type { TargetStatus } from '../../fixtures/operatorDirectory'
 import type { UserStatus } from '../../fixtures/operatorUsers'

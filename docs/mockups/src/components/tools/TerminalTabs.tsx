@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { iconButton } from '../../entries/components/common/actions.mockup'
 import { classes } from '../common/classes'
 import { defined } from '../../defined'

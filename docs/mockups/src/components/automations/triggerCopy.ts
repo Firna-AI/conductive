@@ -5,7 +5,7 @@ import type {
   ScheduleTrigger,
   Trigger,
   Weekday,
-} from '../../fixtures/automations'
+} from './triggers'
 
 /** The pull request events, as the Add trigger menu names them. */
 export const eventLabels: Readonly<Record<PullRequestEvent, string>> = {

@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Square } from 'lucide-react'
 import { ActionButton } from '../common/actions'
 import { ConfirmDialog, DialogText } from '../common/ConfirmDialog'

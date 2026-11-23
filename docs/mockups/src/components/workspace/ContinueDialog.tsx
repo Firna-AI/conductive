@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { unpushedWork } from '../../fixtures/barActions'
 import { repositories } from '../../fixtures/repositories'
 import type { Workspace } from '../../fixtures/workspaces'

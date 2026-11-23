@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react'
 import type { PersonKey } from '../../fixtures/members'
-import type { Run, RunState } from '../../fixtures/automationRuns'
+import type { Run } from '../../fixtures/automationRuns'
+import type { RunState } from '../workspaces/activityStatus'
 import { repositoryOf, type Automation } from '../../fixtures/automations'
 import { orgs } from '../../fixtures/orgs'
 import { classes } from '../common/classes'

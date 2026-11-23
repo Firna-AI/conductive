@@ -1,4 +1,3 @@
-import type { ColorScheme } from '@mokly/mokly'
 import {
   createSharedUiTheme,
   darkSharedUiTheme,
@@ -7,6 +6,9 @@ import {
 } from '@firna/ui/theme'
 import { darkPalette, lightPalette } from './design/palette'
 import { control, fonts, metrics, radii } from './design/metrics'
+
+/** A colour scheme of the app. Mokly names its schemes the same way. */
+export type ColorScheme = 'light' | 'dark'
 
 /** The Firna theme of the design in a colour scheme. */
 export function themeFor(scheme: ColorScheme): SharedUiTheme {

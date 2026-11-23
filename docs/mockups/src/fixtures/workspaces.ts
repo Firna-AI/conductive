@@ -5,7 +5,7 @@ import { orgs, type Org } from './orgs'
 import { repositories } from './repositories'
 import type { Workspace } from './workspaceType'
 
-export type { ActivityStatus, Workspace } from './workspaceType'
+export type { Workspace } from './workspaceType'
 
 /**
  * The workspaces that a screen can show open. Postcode lookup for the

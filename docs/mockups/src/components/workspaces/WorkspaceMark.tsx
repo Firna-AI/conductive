@@ -1,5 +1,5 @@
 import type { GitHubSummary } from '../../../../../src/shared/generated/GitHubSummary'
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { ActivityStatus } from './activityStatus'
 import { classes } from '../common/classes'
 import { MarkGrid, ring, ringDelay, type MarkCell } from './MarkGrid'
 import styles from './WorkspaceMark.module.css'

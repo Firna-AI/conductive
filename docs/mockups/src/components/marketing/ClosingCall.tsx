@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { classes } from '../common/classes'
 import { SiteActions } from './SiteActions'
 import styles from './ClosingCall.module.css'

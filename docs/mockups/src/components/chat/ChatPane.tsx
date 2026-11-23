@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { ChatItem } from '../../fixtures/conversations'
 import type { PersonKey } from '../../fixtures/members'
 import type { StartingLog } from '../../fixtures/starting'

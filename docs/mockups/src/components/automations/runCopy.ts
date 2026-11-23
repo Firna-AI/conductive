@@ -2,10 +2,10 @@ import { agents, type AgentKey } from '../../fixtures/agents'
 import type { PersonKey } from '../../fixtures/members'
 import type {
   FailedRun,
-  RunState,
   RunTrigger,
   SkipReason,
 } from '../../fixtures/automationRuns'
+import type { RunState } from '../workspaces/activityStatus'
 import { paths } from '../../paths'
 import { activityPresentation } from '../workspaces/status'
 import { eventLabels, scheduleLabels } from './triggerCopy'

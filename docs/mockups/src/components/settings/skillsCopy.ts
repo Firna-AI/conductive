@@ -1,4 +1,4 @@
-import type { ReadOnlyCause } from './OrgSections'
+import type { ReadOnlyCause } from './readOnlyCause'
 
 /**
  * What the lookup of the saved repository found on GitHub. The lookup runs

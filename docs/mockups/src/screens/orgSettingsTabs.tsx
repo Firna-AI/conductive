@@ -10,10 +10,8 @@ import {
   leaveOrgSection,
   orgDetailsSection,
 } from '../entries/components/settings/OrgSections.mockup'
-import {
-  OrgColorSection,
-  type ReadOnlyCause,
-} from '../components/settings/OrgSections'
+import { OrgColorSection } from '../components/settings/OrgSections'
+import { type ReadOnlyCause } from '../components/settings/readOnlyCause'
 import { RepositoryEditToggle } from '../components/settings/RepositoryList'
 import { repositoryList } from '../entries/components/settings/RepositoryList.mockup'
 import { RepositoryOrderList } from '../components/settings/RepositoryOrderList'

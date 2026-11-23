@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { nameLabel } from '../../../../../src/shared/name-label'
 import { closedSessions } from '../../fixtures/sessions'
 import { paths } from '../../paths'

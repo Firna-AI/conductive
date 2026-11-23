@@ -1,4 +1,5 @@
-import { mentionEntries, type MentionEntry } from '../../fixtures/fileMentions'
+import { mentionEntries } from '../../fixtures/fileMentions'
+import { type MentionEntry } from './mentionEntry'
 import { entryName } from './entryPaths'
 
 /** The most rows that the list shows. A longer query narrows it. */

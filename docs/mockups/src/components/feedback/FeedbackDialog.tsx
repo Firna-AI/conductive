@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { CornerDownLeft, Info } from 'lucide-react'
 import { defined } from '../../defined'
 import type { FeedbackScreenshot } from '../../fixtures/feedback'

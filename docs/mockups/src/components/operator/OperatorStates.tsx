@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { StatTileRow } from '@firna/ui/chart'
 import { SkeletonBar, SkeletonGroup } from '@firna/ui/skeleton'
 import { Table } from '@firna/ui/table'

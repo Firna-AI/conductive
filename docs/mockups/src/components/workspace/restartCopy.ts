@@ -1,4 +1,4 @@
-import type { ActivityStatus } from '../../fixtures/workspaces'
+import type { ActivityStatus } from '../workspaces/activityStatus'
 
 /**
  * The states whose header state opens the menu with Restart. Starting

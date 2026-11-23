@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from './viewport'
 import { classes } from './classes'
 import { Sheet } from './Sheet'
 import styles from './ConfirmDialog.module.css'

@@ -1,5 +1,5 @@
 import type { RunnerReportKind } from '../../../shared/generated/RunnerReportKind'
-import { bannerStates } from '../../../../docs/mockups/src/fixtures/pullRequests'
+import { bannerStates } from '../../../../docs/mockups/src/components/workspace/barModel'
 import type { FileListKind } from '../../../files/navigation'
 import type { BannerState } from '../../../shared/github'
 import {

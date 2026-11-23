@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react'
-import type { RunState } from '../../fixtures/automationRuns'
+import type { RunState } from './activityStatus'
 import { classes } from '../common/classes'
 import { cells, MarkGrid, ring, ringDelay } from './MarkGrid'
 import styles from './StatusGlyph.module.css'

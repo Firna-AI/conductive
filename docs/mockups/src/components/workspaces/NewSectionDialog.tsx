@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Input } from '@firna/ui/input'
 import { noop } from '../../noop'
 import { actionButton } from '../../entries/components/common/actions.mockup'

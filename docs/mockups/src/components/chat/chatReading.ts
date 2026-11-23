@@ -11,11 +11,8 @@ import type { AnswerReading } from '../../../../../src/chat/markdown/answer-part
 import type { Attachment as AppAttachment } from '../../../../../src/shared/generated/Attachment'
 import type { FileEntry } from '../../../../../src/shared/generated/FileEntry'
 import type { Attachment } from '../../fixtures/attachments'
-import {
-  mentionEntries,
-  repositoryFolder,
-  type MentionEntry,
-} from '../../fixtures/fileMentions'
+import { mentionEntries, repositoryFolder } from '../../fixtures/fileMentions'
+import { type MentionEntry } from './mentionEntry'
 import { skills } from '../../fixtures/skills'
 import { entryName } from './entryPaths'
 import { webLinkOf, type RowLinks } from './workspaceLinks'

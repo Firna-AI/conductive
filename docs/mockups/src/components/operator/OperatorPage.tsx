@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { orgList } from '../../fixtures/orgs'
 import { paths } from '../../paths'
 import { linkTabs } from '../../entries/components/common/LinkTabs.mockup'

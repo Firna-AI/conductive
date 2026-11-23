@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { ModelListCheck } from '../../fixtures/endpointModels'
+import type { ModelListCheck } from './modelListCheck'
 import formStyles from './AgentConnectForm.module.css'
 import styles from './EndpointModels.module.css'
 

@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { DropdownSelector } from '@firna/ui/dropdown'
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
 import { noop } from '../../noop'

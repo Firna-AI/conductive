@@ -1,11 +1,11 @@
-import type { AgentKey } from '../../fixtures/agents'
+import type { Agent } from '../../../../../src/shared/generated/Agent'
 import styles from './OrgLoginLines.module.css'
 
 /**
  * For each agent, the names of the orgs whose org login serves the new
  * sessions of the person signed in, such as Acme for Claude.
  */
-export type OrgLoginUse = Readonly<Partial<Record<AgentKey, readonly string[]>>>
+export type OrgLoginUse = Readonly<Partial<Record<Agent, readonly string[]>>>
 
 /** The words of an org login that serves the person. The app takes them here. */
 const orgLoginCopy = {

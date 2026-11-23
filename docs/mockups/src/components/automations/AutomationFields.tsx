@@ -1,5 +1,5 @@
 import { useId, type ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Input } from '@firna/ui/input'
 import { Switch } from '@firna/ui/switch'
 import { ChevronDown } from 'lucide-react'

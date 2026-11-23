@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { MentionEntry } from '../../fixtures/fileMentions'
+import type { MentionEntry } from './mentionEntry'
 import a11y from '../common/a11y.module.css'
 import { ChipCopyText } from './ChipCopyText'
 import { ChipEndRemove, ChipIconCell, type ChipRemoval } from './ChipRemove'

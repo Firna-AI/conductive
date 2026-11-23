@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import type { PersonKey } from '../../fixtures/members'
 import type { Run } from '../../fixtures/automationRuns'
 import type { Automation } from '../../fixtures/automations'

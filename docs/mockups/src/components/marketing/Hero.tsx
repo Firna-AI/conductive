@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { screenFrame } from '../../entries/components/marketing/ScreenFrame.mockup'
 import type { FramedPicture } from '../../screens/marketingPictures'
 import { classes } from '../common/classes'

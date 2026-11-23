@@ -1,5 +1,5 @@
-import type { ActivityStatus } from '../../fixtures/workspaces'
-import type { StateCounts, WorkspaceStateKey } from '../../fixtures/operator'
+import type { ActivityStatus } from '../workspaces/activityStatus'
+import type { StateCounts, WorkspaceStateKey } from '../settings/statCounts'
 import { Section, SectionText } from '../settings/Section'
 import { StatusGlyph } from '../workspaces/StatusGlyph'
 import styles from './WorkspaceStates.module.css'

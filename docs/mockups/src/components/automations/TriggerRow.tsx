@@ -1,8 +1,8 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { ChevronDown, ChevronUp, Clock, GitPullRequest } from 'lucide-react'
 import { orgs } from '../../fixtures/orgs'
 import type { TriggerEdit } from '../../fixtures/automationTriggers'
-import type { Trigger } from '../../fixtures/automations'
+import type { Trigger } from './triggers'
 import { paths } from '../../paths'
 import {
   actionButton,

@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Copy } from 'lucide-react'
 import { Table, TableCell, type TableColumn } from '@firna/ui/table'
 import type { LongRun, RunOwner } from '../../fixtures/operatorRuns'

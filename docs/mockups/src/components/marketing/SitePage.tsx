@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { productSummary } from '../../../../../src/marketing/features'
 import { paths } from '../../paths'
 import { classes } from '../common/classes'

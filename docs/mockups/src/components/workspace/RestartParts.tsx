@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { RotateCw } from 'lucide-react'
 import { paths } from '../../paths'
 import { ActionButton } from '../common/actions'

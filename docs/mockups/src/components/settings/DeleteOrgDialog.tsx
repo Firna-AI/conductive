@@ -1,4 +1,4 @@
-import type { Viewport } from '@mokly/mokly'
+import type { Viewport } from '../common/viewport'
 import { Input } from '@firna/ui/input'
 import { deletedOrg, orgs } from '../../fixtures/orgs'
 import { noop } from '../../noop'
