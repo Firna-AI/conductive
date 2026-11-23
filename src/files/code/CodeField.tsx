@@ -1,9 +1,16 @@
-import { useMemo, useRef, type CSSProperties, type KeyboardEvent } from 'react'
+import {
+  useId,
+  useMemo,
+  useRef,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react'
 import { useFocusRing } from '@firna/ui/focusRing'
 import { codeKeyEdit, type CodeEdit, type CodeKey } from './code-keys'
 import { digitStyle, TokenSpans } from './CodeView'
 import { highlightLines } from './highlight'
 import { languageOf } from './languages'
+import a11y from '../ui/a11y.module.css'
 import styles from './CodeField.module.css'
 
 /**
@@ -57,6 +64,10 @@ export function CodeBlock(props: {
   )
 }
 
+/** The keys of a code field, which a screen reader reads with the field. */
+const codeFieldKeys =
+  'Tab indents and Shift+Tab outdents. To leave the field, press Escape, then Tab.'
+
 /** The key that a code field handles itself, or null for the browser. */
 function codeKeyOf(event: KeyboardEvent): CodeKey | null {
   if (event.altKey || event.ctrlKey || event.metaKey) return null
@@ -94,7 +105,8 @@ function applyEdit(area: HTMLTextAreaElement, edit: CodeEdit) {
  * `name` is a file name that picks the language, such as `install.sh`.
  * The field grows with its lines, and shows at least three. Long lines
  * wrap. Tab and Shift+Tab indent and outdent, and Enter keeps the indent
- * of the line. Escape, then Tab, moves the focus out of the field.
+ * of the line. Escape, then Tab, moves the focus out of the field. The
+ * field's description says so for a screen reader.
  */
 export function CodeField(props: {
   label: string
@@ -103,6 +115,7 @@ export function CodeField(props: {
   onChange: (value: string) => void
 }) {
   const focus = useFocusRing({ target: 'descendant' })
+  const keysHint = useId()
   const leaving = useRef(false)
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     const key = codeKeyOf(event)
@@ -125,6 +138,7 @@ export function CodeField(props: {
       <Lines hidden name={props.name} value={props.value} />
       <textarea
         {...focus.focusTargetDomProps}
+        aria-describedby={keysHint}
         aria-label={props.label}
         autoCapitalize="none"
         autoComplete="off"
@@ -140,6 +154,9 @@ export function CodeField(props: {
         spellCheck={false}
         value={props.value}
       />
+      <span className={a11y.hidden} id={keysHint}>
+        {codeFieldKeys}
+      </span>
     </div>
   )
 }

@@ -29,18 +29,21 @@ function shownLines(root: Element): string[] {
 }
 
 describe('CodeField', () => {
-  it('shows the lines in shell colours under the field, and follows each change', async () => {
+  it('shows the lines in shell colours under the field, describes its keys, and follows each change', async () => {
     const view = await mount(<Field value={'# start\nexport A="b"'} />)
     const area = view.container.querySelector('textarea')
     if (!area) throw new Error('The field is missing.')
     expect({
       label: area.getAttribute('aria-label'),
+      keys: document.getElementById(area.getAttribute('aria-describedby') ?? '')
+        ?.textContent,
       lines: shownLines(view.container),
       comment: view.container.querySelector(`.${styles.comment}`)?.textContent,
       keyword: view.container.querySelector(`.${styles.keyword}`)?.textContent,
       string: view.container.querySelector(`.${styles.string}`)?.textContent,
     }).toEqual({
       label: 'Startup script',
+      keys: 'Tab indents and Shift+Tab outdents. To leave the field, press Escape, then Tab.',
       lines: ['# start\n', 'export A="b"'],
       comment: '# start',
       keyword: 'export',

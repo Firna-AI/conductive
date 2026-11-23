@@ -17,7 +17,7 @@ export type CodeKey = 'indent' | 'outdent' | 'newline'
 
 /** The start of the line that holds `index`. */
 function lineStart(value: string, index: number): number {
-  return value.lastIndexOf('\n', index - 1) + 1
+  return index === 0 ? 0 : value.lastIndexOf('\n', index - 1) + 1
 }
 
 /** The end of the line that holds `index`, before its line break. */
@@ -69,9 +69,10 @@ function shiftSelection(
 /**
  * The edit that a key press makes in a code field, or null when the field
  * leaves the key to the browser. Tab indents: it inserts one indent step
- * at the caret, or indents every line of a selection over more than one
- * line. Shift+Tab outdents the lines of the caret or of the selection.
- * Enter starts the new line with the indent of the line of the caret.
+ * at the caret, or indents every line of a selection, so a selection
+ * never turns into spaces. Shift+Tab outdents the lines of the caret or
+ * of the selection. Enter starts the new line with the indent of the line
+ * of the caret.
  */
 export function codeKeyEdit(
   key: CodeKey,
@@ -86,8 +87,7 @@ export function codeKeyEdit(
     const caret = start + text.length
     return { from: start, to: end, text, selection: [caret, caret] }
   }
-  const multiline = value.slice(start, end).includes('\n')
-  if (key === 'indent' && !multiline) {
+  if (key === 'indent' && start === end) {
     const caret = start + indentUnit.length
     return { from: start, to: end, text: indentUnit, selection: [caret, caret] }
   }

@@ -26,8 +26,9 @@ describe('the keys of a code field', () => {
     expect(press('newline', '  a[b]c')).toBe('  a\n  |c')
   })
 
-  it('inserts an indent step at the caret, and indents each line of a selection over lines', () => {
+  it('inserts an indent step at the caret, and indents each line of a selection', () => {
     expect(press('indent', 'a|b')).toBe('a  |b')
+    expect(press('indent', 'x\n[echo hi]')).toBe('x\n[  echo hi]')
     expect(press('indent', 'x\n[a\n\nb]\ny')).toBe('x\n[  a\n\n  b]\ny')
     expect(press('indent', '[a\n]b')).toBe('[  a]\nb')
   })
@@ -35,6 +36,7 @@ describe('the keys of a code field', () => {
   it('outdents the line of the caret, or each line of a selection, by one step', () => {
     expect(press('outdent', '    ru|n')).toBe('  ru|n')
     expect(press('outdent', ' |run')).toBe('|run')
+    expect(press('outdent', '|\n  run')).toBeNull()
     expect(press('outdent', '[  a\n\tb\n c]')).toBe('[a\nb\nc]')
     expect(press('outdent', 'run|')).toBeNull()
   })

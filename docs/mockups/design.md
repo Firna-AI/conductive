@@ -385,7 +385,8 @@ sessions as tabs above the chat, and four tabs at the bottom.
   `components/files/code-field` and `components/files/code-block` show.
   The field grows with its lines and shows at least three. A long line
   wraps beside its number. Tab and Shift+Tab indent and outdent, Enter
-  keeps the indent, and Escape, then Tab, moves the focus on.
+  keeps the indent, and Escape, then Tab, moves the focus on. A screen
+  reader reads these keys with the field.
 - A new org has no image until its first build succeeds. Until then New
   workspace keeps Send off under a notice with the state of that build, as
   `app/new-workspace/first-build` shows. A notice of work that runs, such
