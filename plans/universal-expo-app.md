@@ -397,14 +397,17 @@ Depends on: none
 This milestone comes before Milestone 9. It has the number 27, so that the
 other numbers stay.
 
-- [ ] Add the converter script of decision 9 H under `tools/`, with
+- [x] Add the converter script of decision 9 H under `tools/`, with
       Lightning CSS and `css-to-react-native` as development dependencies.
-- [ ] Write theme lookups for each `var()` token, not fixed values.
-- [ ] List each rule that the script cannot convert: grid, pseudo-elements,
+      Branch: `calummoore/universal-expo-app-milestone-27-style-h8e6`.
+- [x] Write theme lookups for each `var()` token, not fixed values.
+      Branch: `calummoore/universal-expo-app-milestone-27-style-h8e6`.
+- [x] List each rule that the script cannot convert: grid, pseudo-elements,
       combinators, element selectors, hover, focus, container queries,
       `calc()`, `em`, `rem`, and each view that joins two classes on one
-      element.
-- [ ] Add tests for the script.
+      element. Branch: `calummoore/universal-expo-app-milestone-27-style-h8e6`.
+- [x] Add tests for the script.
+      Branch: `calummoore/universal-expo-app-milestone-27-style-h8e6`.
 
 ## Milestone 9: The base of the shared views
 
