@@ -3,6 +3,7 @@ import path from 'node:path'
 import { format } from 'prettier'
 
 import {
+  intersectTokenTypes,
   tokenTypes,
   type StyleValue,
   type Styles,
@@ -31,8 +32,7 @@ function classKey(name: string): string {
 }
 
 function code(value: StyleValue): string {
-  if (typeof value !== 'object' || Array.isArray(value))
-    return JSON.stringify(value)
+  if (typeof value !== 'object') return JSON.stringify(value)
   if (value.kind === 'token') return `t.${value.name}`
   if (value.kind === 'offset')
     return `{width: ${value.width}, height: ${value.height}}`
@@ -57,14 +57,25 @@ export async function renderDraft(
   for (const [name, style] of styles) {
     const entries: string[] = []
     for (const [key, value] of style) {
-      for (const [token, type] of tokenTypes(key, value)) types.set(token, type)
+      for (const [token, type] of tokenTypes(key, value)) {
+        const shared = intersectTokenTypes(types.get(token), type)
+        if (shared === undefined)
+          throw new Error(`Conflicting types for token ${token}.`)
+        types.set(token, shared)
+      }
       entries.push(`${key}: ${code(value)}`)
     }
     classes.push(`${classKey(name)}: {${entries.join(', ')}}`)
   }
-  const properties = [...types.keys()]
+  const properties = [...types]
+    .map(([name, type]) => {
+      const code =
+        typeof type === 'string'
+          ? type
+          : type.map((word) => JSON.stringify(word)).join(' | ')
+      return `readonly ${name}: ${code}`
+    })
     .sort()
-    .map((name) => `readonly ${name}: ${types.get(name)}`)
   const source = file.replace(/\*\//g, '* /').replace(/[\r\n]/g, ' ')
   const lines = [
     '/**',

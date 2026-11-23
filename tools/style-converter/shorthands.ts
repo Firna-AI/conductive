@@ -6,37 +6,10 @@ import {
   nativeLiteral,
   numericLength,
 } from './native-properties.ts'
+import { sideKeys } from './property-keys.ts'
 import type { Reason } from './reasons.ts'
 import { isColorKey, type StyleEntry } from './style-values.ts'
 import { cssNumber, type ValueSource } from './value-source.ts'
-
-const sides = ['Top', 'Right', 'Bottom', 'Left']
-
-export const groups: Readonly<Record<string, string[]>> = {
-  padding: sides.map((side) => `padding${side}`),
-  margin: sides.map((side) => `margin${side}`),
-  borderWidth: sides.map((side) => `border${side}Width`),
-  borderColor: sides.map((side) => `border${side}Color`),
-  borderRadius: [
-    'borderTopLeftRadius',
-    'borderTopRightRadius',
-    'borderBottomRightRadius',
-    'borderBottomLeftRadius',
-  ],
-  inset: ['top', 'right', 'bottom', 'left'],
-  gap: ['rowGap', 'columnGap'],
-}
-
-const axisGroups: Readonly<Record<string, string[]>> = {
-  marginBlock: ['marginTop', 'marginBottom'],
-  marginInline: ['marginLeft', 'marginRight'],
-  paddingBlock: ['paddingTop', 'paddingBottom'],
-  paddingInline: ['paddingLeft', 'paddingRight'],
-  marginHorizontal: ['marginLeft', 'marginRight'],
-  marginVertical: ['marginTop', 'marginBottom'],
-  paddingHorizontal: ['paddingLeft', 'paddingRight'],
-  paddingVertical: ['paddingTop', 'paddingBottom'],
-}
 
 function wordsOf(source: ValueSource): string[] {
   return splitCss(source.text, ' ').filter(Boolean)
@@ -61,8 +34,8 @@ export function sidesOf(
   key: string,
   source: ValueSource,
 ): StyleEntry[] | Reason | undefined {
-  const keys = Object.hasOwn(groups, key) ? groups[key] : axisGroups[key]
-  if (!Array.isArray(keys)) return undefined
+  const keys = sideKeys(key)
+  if (!keys) return undefined
   const words = wordsOf(source)
   if (words.length === 0 || words.length > keys.length) return 'parseValue'
   const [top, right = top, bottom = top, left = right] = words

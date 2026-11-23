@@ -35,6 +35,7 @@ function camelName(name: string): string {
 export type ValueSource = {
   text: string
   tokens: Map<string, Token>
+  variables: Set<string>
   reasons: Reason[]
 }
 
@@ -98,6 +99,7 @@ function closeParenthesis(parts: ReturnType<typeof cssTokens>, open: number) {
 export function readValue(property: string, value: string): ValueSource {
   const reasons = new Set<Reason>()
   const tokens = new Map<string, Token>()
+  const variables = new Set<string>()
   const parts = cssTokens(value)
   let text = ''
   let marker = '__style_token_'
@@ -130,6 +132,7 @@ export function readValue(property: string, value: string): ValueSource {
         if (token && close !== undefined) {
           const key = `${marker}${tokens.size}__`
           tokens.set(key, { kind: 'token', name: camelName(token[1]) })
+          variables.add(name)
           text += key
           index = close
           continue
@@ -161,7 +164,7 @@ export function readValue(property: string, value: string): ValueSource {
     }
     text += value.slice(offset, offset + part.length)
   }
-  return { text, tokens, reasons: [...reasons] }
+  return { text, tokens, variables, reasons: [...reasons] }
 }
 
 export function stringValue(text: string, source: ValueSource): StyleValue {

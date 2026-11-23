@@ -1,5 +1,6 @@
 import { getStylesForProperty } from 'css-to-react-native'
 
+import { keywordProperty } from './keyword-values.ts'
 import { isColorKey, scalarTokenType, type StyleValue } from './style-values.ts'
 import { cssNumber, readDimension } from './value-source.ts'
 
@@ -33,43 +34,12 @@ export const nativeKeys = new Set([
     .split(/\s+/),
 ])
 
-const itemAlign = 'flex-start flex-end center stretch baseline'
-const contentAlign =
-  'flex-start flex-end center space-between space-around space-evenly'
 const alignmentKeys = new Set([
   'alignContent',
   'alignItems',
   'alignSelf',
   'justifyContent',
 ])
-
-const keywords: Readonly<Record<string, string>> = {
-  alignContent: `${contentAlign} stretch`,
-  alignItems: itemAlign,
-  alignSelf: `${itemAlign} auto`,
-  backfaceVisibility: 'visible hidden',
-  borderStyle: 'solid dotted dashed',
-  boxSizing: 'border-box content-box',
-  cursor: 'auto pointer',
-  direction: 'ltr rtl',
-  display: 'flex none contents inline-flex',
-  flexDirection: 'row row-reverse column column-reverse',
-  flexWrap: 'wrap nowrap wrap-reverse',
-  fontStyle: 'normal italic',
-  isolation: 'auto isolate',
-  justifyContent: contentAlign,
-  mixBlendMode:
-    'normal multiply screen overlay darken lighten color-dodge color-burn hard-light soft-light difference exclusion hue saturation color luminosity',
-  objectFit: 'cover contain fill scale-down none',
-  outlineStyle: 'solid dotted dashed',
-  overflow: 'visible hidden scroll',
-  pointerEvents: 'auto none box-none box-only',
-  position: 'absolute relative static',
-  textAlign: 'auto left right center justify',
-  textDecorationStyle: 'solid double dotted dashed',
-  textTransform: 'none uppercase lowercase capitalize',
-  userSelect: 'auto none text contain all',
-}
 
 const autoDimensions =
   /^(width|height|top|right|bottom|left|start|end|flexBasis|margin[A-Z]\w*)$/
@@ -80,13 +50,6 @@ const pixelDimensions =
 const unitless = /^(flexGrow|flexShrink|opacity|zIndex)$/
 const negativeLengths =
   /^(top|right|bottom|left|start|end|margin[A-Z]\w*|letterSpacing|outlineOffset)$/
-const fontVariants = new Set([
-  'small-caps',
-  'oldstyle-nums',
-  'lining-nums',
-  'tabular-nums',
-  'proportional-nums',
-])
 
 export function numericLength(text: string): number | undefined {
   if (cssNumber.test(text) && Number(text) === 0) return 0
@@ -104,7 +67,7 @@ function lengthProperty(key: string): boolean {
 
 export function acceptsScalarToken(key: string): boolean {
   return (
-    scalarTokenType(key) === 'string' ||
+    scalarTokenType(key) !== 'number' ||
     lengthProperty(key) ||
     unitless.test(key) ||
     key === 'aspectRatio'
@@ -119,8 +82,13 @@ export function nativeLiteral(
   let value = text.toLowerCase()
   if (alignmentKeys.has(key) && (value === 'start' || value === 'end'))
     value = `flex-${value}`
-  const allowed = Object.hasOwn(keywords, key) ? keywords[key] : undefined
-  if (allowed) return allowed.split(' ').includes(value) ? value : undefined
+  if (key === 'textDecorationLine') {
+    const words = value.split(/\s+/).sort().join(' ')
+    value =
+      words === 'line-through underline' ? 'underline line-through' : words
+  }
+  const allowed = keywordProperty(key)
+  if (allowed) return allowed.values.includes(value) ? value : undefined
   if (isColorKey(key)) return value === 'transparent' ? value : undefined
 
   if (lengthProperty(key)) {
@@ -161,19 +129,5 @@ export function nativeLiteral(
     if (typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0)
       return ratio
     return undefined
-  }
-  if (key === 'fontWeight')
-    return /^(normal|bold|[1-9]00)$/.test(value) ? value : undefined
-  if (key === 'fontVariant') {
-    if (value === 'normal') return []
-    const words = value.split(/\s+/)
-    if (words.every((word) => fontVariants.has(word))) return words
-    return undefined
-  }
-  if (key === 'textDecorationLine') {
-    const words = value.split(/\s+/).sort().join(' ')
-    if (words === 'line-through underline') return 'underline line-through'
-    if (words === 'none' || words === 'line-through' || words === 'underline')
-      return words
   }
 }

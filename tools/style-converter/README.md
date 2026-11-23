@@ -64,16 +64,19 @@ local `Tokens` type. A function with no token reads takes no argument.
 
 The tool removes `--ui-` and uses camel case. For example, `--ui-pad-x`
 becomes `t.padX` and `--ui-font-mono` becomes `t.fontMono`. It drops the CSS
-fallback in `var(--ui-ink, fallback)`. Colour, font family, font weight,
-font style, text align, text transform, and tokens inside strings use
-`string`. The other token fields use `number`.
+fallback in `var(--ui-ink, fallback)`. Colour, font family, and tokens inside
+strings use `string`. Font weight, font style, text alignment, and text
+transform use the accepted keyword values of each property. The other
+token fields use `number`.
 
 Supply React Native values in `t`. Give a length as a number when the draft
 reads the token as a number. For a token inside a shadow string, supply a
 string that matches its part of the shadow syntax.
 
-- Convert `--ui-tracking-*` from `em` to a length based on the font size.
-- Multiply the font size by `--ui-leading-chat` to get a line height.
+- The report lists `--ui-tracking-*` uses with an `em` unit. Calculate the
+  letter spacing from the font size of each Text.
+- The report lists `--ui-leading-chat` uses in `line-height`. Multiply the
+  font size by the token value to get a native line height.
 - Supply the visible window height for `--ui-screen-height`, which uses `dvh` in CSS.
 - Select one font family for each `--ui-font-*` token that gives a CSS font list.
 
@@ -91,12 +94,16 @@ See [theme.ts](../../src/ui/theme.ts),
   reasons. List keyframes and other at-rules as whole items.
 - Keep source values and source lines. If the source and parser disagree,
   list the whole rule. If the parser cannot read a file, list its error.
-- Merge longhands for each class in source order. Use the later value.
-  Collapse equal sides or equal gaps after the merge.
-- When a listed declaration is in a top-level plain class rule, match its
-  lowercase property name to earlier declarations for that class. Remove the
-  draft values that still come from that property. Count the earlier
-  declaration as converted. Add a manual check at the listed line.
+- Merge longhands for each class. An `!important` value wins over a normal
+  value. For values with equal importance, use the later one. Collapse
+  equal sides or equal gaps after the merge.
+- When a listed declaration in a top-level plain class rule overrides draft
+  values, remove only the keys it replaces. The manual check names each
+  earlier declaration and says when the draft keeps some of its values.
+  Count the earlier declaration as converted.
+- When a later converted declaration replaces listed keys, add a manual
+  check at the later line. It says if any part of the listed declaration
+  still applies.
 - Expand padding, margin, borders, radii, gaps, and inset. Map the inline and
   block sides of margin and padding to physical sides for the app's left to
   right layout.
@@ -109,13 +116,15 @@ See [theme.ts](../../src/ui/theme.ts),
   tokens.
 - Use the CSS row default for a flex class with no direction. Map
   `inline-flex` to `flex` and add a check for the surrounding layout.
-- Drop `!important` from a converted declaration and add a check for style
-  order. Add a check for each class with text styles.
+- Apply `!important` during the merge. Omit the flag from the draft and add
+  a check for style order. Add a check for each class with text styles.
 - Use token lookups and transparent for colours. List fixed colours,
   `currentColor`, and other colour values.
 - List grid, calculations, unsupported units, unitless line heights,
   CSS-wide keywords, custom property assignments, and local variables.
   List unsupported functions, style names, and values.
+- List `font-variant` as manual work. React Native needs a mutable array
+  for font variants.
 
 The tool checks style names and the allowed values for properties such as
 `display`, `position`, and `overflow`. It maps `start` and `end` to
@@ -125,10 +134,10 @@ See [native-properties.ts](native-properties.ts).
 ## Report
 
 Open `<out>/report.md`. The summary counts modules, drafts, converted and
-listed declarations, classes that get the row default, manual checks, and
-class joins. It gives the number of files with joins. A declaration counts
-once for each selector that uses it. One listed declaration can count under
-more than one reason.
+listed declarations, classes that get the row default, manual checks, class
+joins, and unreadable class values. It gives the number of files with joins.
+A declaration counts once for each selector that uses it. One listed
+declaration can count under more than one reason.
 
 Each module has a **Not in the draft** list and a **Check by hand** list.
 The items give source lines and selectors. An item for a rule includes its
@@ -139,18 +148,27 @@ See [reasons.ts](reasons.ts).
 It detects template literals, `classes()`, `clsx()`, `cx()`, arrays with
 `.join(' ')`, and concatenation with `+`. A join has at least two class
 values and uses at least one member of a CSS Module default import.
-Other class values include identifiers, property accesses, and calls.
-Split string literals and static template text at whitespace. Count each
-word that matches `/^-?[_a-zA-Z][\w-]*$/` as one class value. The scan uses
-the larger branch of a conditional and the right side of `&&`.
+The scan counts each word in a string literal or static template text
+that matches `/^-?[_a-zA-Z][\w-]*$/` as one class value. It uses the larger
+branch of a readable `?:`, `||`, or `??`. It reads the right side of `&&`.
+It keeps each unreadable operand in a join as one value with its source text.
 It lists the outermost join and skips files that end in `.test.tsx`.
+
+**Class values to check by hand** gives the file, element line, and source
+expression for each JSX `className` value the scan cannot read. The scan
+can read strings, template literals with readable parts, object members,
+parameters, supported joins, choices between readable values, and constants
+with readable initializers. It treats `false`, `null`, and the global
+`undefined` as empty class values. Mutable variables and unknown calls go
+in the manual list.
 
 ## Limits
 
 The tool accepts token names by their `--ui-` prefix and name format.
 It does not check that a token exists. It lists token uses whose type the
-style cannot take. If a token needs two types in one module, the tool
-keeps its first type and lists the conflicting use.
+style cannot take. If a token needs two types in one module, the draft uses
+their common values. The tool lists a conflicting use if the types have no
+values in common.
 The list of React Native style names can miss newer names.
 
 ## Development
@@ -176,15 +194,21 @@ npm run exports:check
 - The declaration converter checks and converts one declaration. [declaration.ts](declaration.ts)
 - The value reader finds token calls and unsupported CSS values. [value-source.ts](value-source.ts)
 - The style checks use a list of supported names and values. [native-properties.ts](native-properties.ts)
+- The keyword table gives literal values and token types for style properties. [keyword-values.ts](keyword-values.ts)
 - The function checks cover transforms, filters, transform origins, and shadows. [native-functions.ts](native-functions.ts)
 - The shorthand converter expands CSS shorthands into React Native values. [shorthands.ts](shorthands.ts)
+- The property map gives the longhand keys that each declaration sets. [property-keys.ts](property-keys.ts)
 - The draft value types cover literals, token lookups, and templates. [style-values.ts](style-values.ts)
 - The merge applies longhands in order and collapses equal values. [merge.ts](merge.ts)
 - The draft writer formats a TypeScript module. [draft.ts](draft.ts)
-- The class join scan finds join expressions in TSX. [class-joins.ts](class-joins.ts)
+- The class join scan finds joins and unreadable JSX class values. [class-joins.ts](class-joins.ts)
+- The class reader reads class expressions and their bindings. [class-values.ts](class-values.ts)
 - The reason table gives the report labels and actions. [reasons.ts](reasons.ts)
 - The report writer counts the results and writes the Markdown. [report.ts](report.ts)
 - The conversion tests check the draft shape and converted styles. [convert-css.test.ts](convert-css.test.ts)
+- The cascade tests check shorthand overrides and importance. [cascade.test.ts](cascade.test.ts)
+- The draft token tests check keyword unions and manual font variants. [draft-tokens.test.ts](draft-tokens.test.ts)
+- The relative token tests check report reasons in plain and listed rules. [relative-tokens.test.ts](relative-tokens.test.ts)
 - The rule tests check the reasons and source lines for omissions. [listed-rules.test.ts](listed-rules.test.ts)
 - The join tests check class joins in TSX text. [class-joins.test.ts](class-joins.test.ts)
 - The report test checks the Markdown for a small run. [report.test.ts](report.test.ts)

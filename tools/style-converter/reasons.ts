@@ -29,6 +29,10 @@ export const reasons = {
     'Supply a length or another value React Native accepts.',
   ],
   lineHeight: ['Unitless line height', 'Use the font size × n.'],
+  fontVariant: [
+    'Font variant',
+    'Port font-variant by hand with a mutable font variant array.',
+  ],
   customProperty: [
     'Custom property',
     'Set the value in the theme or the view.',

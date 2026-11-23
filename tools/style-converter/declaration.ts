@@ -72,20 +72,30 @@ type ConvertedDeclaration =
 
 export function convertDeclaration(
   declaration: CssDeclaration,
+  tokenValues: ReadonlyMap<string, string>,
 ): ConvertedDeclaration {
   const { name, value } = declaration
   const key = getPropertyName(name)
   const source = readValue(name, value)
-  const reasons = source.reasons
+  const reasons = new Set(source.reasons)
+  if (key === 'fontVariant') reasons.add('fontVariant')
+  for (const variable of source.variables) {
+    const metric = tokenValues.get(variable)
+    if (metric === undefined) continue
+    for (const reason of readValue(name, metric.trim()).reasons) {
+      if (reason === 'em' || reason === 'rem' || reason === 'lineHeight')
+        reasons.add(reason)
+    }
+  }
   if (
     !nativeKeys.has(key) &&
     !extraKeys.has(key) &&
-    !reasons.includes('grid') &&
-    !reasons.includes('customProperty')
+    !reasons.has('grid') &&
+    !reasons.has('customProperty')
   ) {
-    reasons.push('property')
+    reasons.add('property')
   }
-  if (reasons.length) return { reasons }
+  if (reasons.size) return { reasons: [...reasons] }
   try {
     const entries = expand(key, source)
     return typeof entries === 'string'

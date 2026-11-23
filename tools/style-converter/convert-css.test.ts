@@ -152,9 +152,7 @@ test('leaves out converted values that a listed declaration overrides in a plain
 @media (width > 100px) { .tabs { display: grid } }
 .tabs:hover { max-width: none }`,
   )
-  expect(Object.fromEntries(classes?.get('mobileTabs') ?? [])).toEqual({
-    paddingTop: 3,
-  })
+  expect(Object.fromEntries(classes?.get('mobileTabs') ?? [])).toEqual({})
   expect(Object.fromEntries(classes?.get('tabs') ?? [])).toEqual({
     display: 'flex',
     flexDirection: 'row',
@@ -167,17 +165,22 @@ test('leaves out converted values that a listed declaration overrides in a plain
     {
       line: 8,
       selector: '.mobileTabs',
-      text: 'DISPLAY: grid overrides display from line 2. The draft leaves both out.',
+      text: 'DISPLAY: grid overrides display from display at line 2.',
     },
     {
       line: 9,
       selector: '.mobileTabs',
-      text: 'max-width: none overrides max-width from line 3. The draft leaves both out.',
+      text: 'max-width: none overrides maxWidth from max-width at line 3.',
     },
     {
       line: 10,
       selector: '.mobileTabs',
-      text: 'padding: 1em overrides padding from line 4. The draft leaves both out.',
+      text: 'padding: 1em overrides paddingTop from padding-top at line 7.',
+    },
+    {
+      line: 10,
+      selector: '.mobileTabs',
+      text: 'padding: 1em overrides paddingRight, paddingBottom, paddingLeft from padding at line 4.',
     },
   ])
 })
@@ -230,7 +233,10 @@ test('records inline flex, important and the final text keys for manual checks',
 }
 .a { color: transparent }`,
   )
-  expect(classes?.get('a')?.get('color')).toBe('transparent')
+  expect(classes?.get('a')?.get('color')).toEqual({
+    kind: 'token',
+    name: 'ink',
+  })
   expect(checks).toEqual([
     {
       line: 2,

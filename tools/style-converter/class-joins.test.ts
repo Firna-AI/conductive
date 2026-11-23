@@ -25,6 +25,11 @@ const cases: [string, string, string[][]][] = [
   ['template text', '`selected ${styles.row}`', [['selected', 'styles.row']]],
   ['template selector', '`.${styles.row}`', []],
   [
+    'unreadable operand',
+    'cx(styles.row, tag`active`)',
+    [['styles.row', 'tag`active`']],
+  ],
+  [
     'conditional argument',
     'classes(styles.row, editing && styles.editable)',
     [['styles.row', 'styles.editable']],
@@ -71,7 +76,7 @@ test.each(cases)(
   'reports the class values for %s',
   (_name, expression, values) => {
     const source = `${imports}const value = ${expression}\n`
-    expect(findClassJoins(file, source)).toEqual(
+    expect(findClassJoins(file, source).joins).toEqual(
       values.map((classes) => ({
         file: 'src/demo/Example.tsx',
         line: 3,
@@ -80,3 +85,41 @@ test.each(cases)(
     )
   },
 )
+
+test('lists a class variable that the view appends to at the JSX element line', () => {
+  const { checks } = findClassJoins(
+    file,
+    `${imports}function Row() {
+  let className = styles.row
+  className += ' ' + styles.editable
+  return (
+    <A
+      className={className}
+    />
+  )
+}
+`,
+  )
+  expect(checks).toEqual([
+    { file: 'src/demo/Example.tsx', line: 7, expression: 'className' },
+  ])
+})
+
+test('reads a constant class with an absent branch and a class fallback', () => {
+  const { joins, checks } = findClassJoins(
+    file,
+    `${imports}function Row(props: { className?: string }) {
+  const className = props.className ?? undefined
+  return <A className={classes(styles.row, className || styles.editable)} />
+}
+`,
+  )
+  expect(checks).toEqual([])
+  expect(joins).toEqual([
+    {
+      file: 'src/demo/Example.tsx',
+      line: 5,
+      values: ['styles.row', 'styles.editable'],
+    },
+  ])
+})

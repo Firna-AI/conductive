@@ -12,12 +12,19 @@ import {
 import path from 'node:path'
 import { parseArgs } from 'node:util'
 
-import { findClassJoins, type ClassJoin } from './class-joins.ts'
+import { metrics } from '../../src/ui/design/metrics.ts'
+import { findClassJoins, type ClassScan } from './class-joins.ts'
 import { convertCss } from './convert-css.ts'
 import { renderDraft } from './draft.ts'
 import { renderReport, type ModuleReport } from './report.ts'
 
 const usage = 'Usage: npm run styles:convert -- <area folder> --out <folder>'
+const tokenValues = new Map<string, string>(
+  Object.entries(metrics).map(([name, value]) => [
+    `--ui-${name.replace(/[A-Z]/g, (letter) => '-' + letter.toLowerCase())}`,
+    value,
+  ]),
+)
 
 function relative(file: string): string {
   return path.relative(process.cwd(), file).split(path.sep).join('/') || '.'
@@ -94,11 +101,15 @@ async function main() {
   ensureEmpty(out)
   const drafts: [string, string][] = []
   const modules: ModuleReport[] = []
-  const joins: ClassJoin[] = []
+  const scan: ClassScan = { joins: [], checks: [] }
   for (const file of sourceFiles(area)) {
     const name = relative(file)
     if (file.endsWith('.module.css')) {
-      const conversion = convertCss(name, readFileSync(file, 'utf8'))
+      const conversion = convertCss(
+        name,
+        readFileSync(file, 'utf8'),
+        tokenValues,
+      )
       modules.push(conversion)
       if (conversion.classes) {
         const draft = path
@@ -110,11 +121,13 @@ async function main() {
         ])
       }
     } else if (file.endsWith('.tsx') && !file.endsWith('.test.tsx')) {
-      joins.push(...findClassJoins(name, readFileSync(file, 'utf8')))
+      const found = findClassJoins(name, readFileSync(file, 'utf8'))
+      scan.joins.push(...found.joins)
+      scan.checks.push(...found.checks)
     }
   }
   const report = path.join(out, 'report.md')
-  const { text, summary } = renderReport(relative(area), modules, joins)
+  const { text, summary } = renderReport(relative(area), modules, scan)
   writeOutput(out, [[report, text], ...drafts])
   process.stdout.write(`${summary.join('\n')}\nReport ${relative(report)}\n`)
 }

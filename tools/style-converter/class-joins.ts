@@ -1,30 +1,11 @@
 import ts from 'typescript'
 
-export type ClassJoin = { file: string; line: number; values: string[] }
+import { classReader } from './class-values.ts'
 
-type ClassValue = { text: string; module: boolean }
-const joinCalls = new Set(['classes', 'clsx', 'cx'])
-const classNameWord = /^-?[_a-zA-Z][\w-]*$/
+type ClassJoin = { file: string; line: number; values: string[] }
+type ClassValueCheck = { file: string; line: number; expression: string }
 
-function unwrap(expression: ts.Expression): ts.Expression {
-  while (
-    ts.isParenthesizedExpression(expression) ||
-    ts.isAsExpression(expression) ||
-    ts.isSatisfiesExpression(expression) ||
-    ts.isNonNullExpression(expression)
-  ) {
-    expression = expression.expression
-  }
-  return expression
-}
-
-function accessor(
-  node: ts.Expression,
-): node is ts.PropertyAccessExpression | ts.ElementAccessExpression {
-  return (
-    ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)
-  )
-}
+export type ClassScan = { joins: ClassJoin[]; checks: ClassValueCheck[] }
 
 function checkBindings(tree: ts.SourceFile) {
   const host: ts.CompilerHost = {
@@ -61,20 +42,17 @@ function moduleImports(tree: ts.SourceFile): ts.Identifier[] {
   })
 }
 
-function larger(left: ClassValue[], right: ClassValue[]) {
-  if (left.length !== right.length)
-    return left.length > right.length ? left : right
-  return left.some((value) => value.module) ? left : right
+function classExpression(
+  attribute: ts.JsxAttribute,
+): ts.Expression | undefined {
+  if (!ts.isIdentifier(attribute.name) || attribute.name.text !== 'className')
+    return undefined
+  const value = attribute.initializer
+  if (!value || ts.isStringLiteral(value)) return undefined
+  return ts.isJsxExpression(value) ? value.expression : value
 }
 
-function classWords(text: string, source = text): ClassValue[] {
-  return text
-    .split(/\s+/)
-    .filter((word) => classNameWord.test(word))
-    .map((word) => ({ text: word === text ? source : word, module: false }))
-}
-
-export function findClassJoins(file: string, tsx: string): ClassJoin[] {
+export function findClassJoins(file: string, tsx: string): ClassScan {
   const tree = ts.createSourceFile(
     '/view.tsx',
     tsx,
@@ -82,94 +60,45 @@ export function findClassJoins(file: string, tsx: string): ClassJoin[] {
     true,
     ts.ScriptKind.TSX,
   )
+  const result: ClassScan = { joins: [], checks: [] }
   const imports = moduleImports(tree)
-  if (imports.length === 0) return []
+  if (imports.length === 0 && !tsx.includes('className')) return result
   const checker = checkBindings(tree)
   const modules = new Set(
     imports.map((name) => checker.getSymbolAtLocation(name)),
   )
   modules.delete(undefined)
-  const joins: ClassJoin[] = []
+  const { join, read } = classReader(tree, checker, modules)
+  const lineOf = (node: ts.Node) =>
+    tree.getLineAndCharacterOfPosition(node.getStart(tree)).line + 1
 
-  function join(node: ts.Expression): ClassValue[] | undefined {
-    if (ts.isTemplateExpression(node)) {
-      return [
-        ...classWords(node.head.text),
-        ...node.templateSpans.flatMap((span) => [
-          ...values(span.expression),
-          ...classWords(span.literal.text),
-        ]),
-      ]
-    }
-    if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind === ts.SyntaxKind.PlusToken
-    ) {
-      return [...values(node.left), ...values(node.right)]
-    }
-    if (!ts.isCallExpression(node)) return undefined
-    const callee = unwrap(node.expression)
-    if (ts.isIdentifier(callee) && joinCalls.has(callee.text))
-      return node.arguments.flatMap(values)
-    if (
-      ts.isPropertyAccessExpression(callee) &&
-      callee.name.text === 'join' &&
-      node.arguments.length === 1
-    ) {
-      const array = unwrap(callee.expression)
-      const separator = unwrap(node.arguments[0])
-      if (
-        ts.isArrayLiteralExpression(array) &&
-        ts.isStringLiteralLike(separator) &&
-        separator.text === ' '
-      ) {
-        return array.elements.flatMap(values)
-      }
+  function checkAttribute(attribute: ts.JsxAttribute) {
+    const expression = classExpression(attribute)
+    if (expression && !read(expression).readable) {
+      result.checks.push({
+        file,
+        line: lineOf(attribute.parent.parent),
+        expression: expression.getText(tree),
+      })
     }
   }
 
-  function values(expression: ts.Expression): ClassValue[] {
-    const node = unwrap(expression)
-    if (ts.isConditionalExpression(node))
-      return larger(values(node.whenTrue), values(node.whenFalse))
-    if (
-      ts.isBinaryExpression(node) &&
-      node.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
-    ) {
-      return values(node.right)
-    }
-    const joined = join(node)
-    if (joined) return joined
-    if (accessor(node)) {
-      const module = modules.has(
-        checker.getSymbolAtLocation(unwrap(node.expression)),
-      )
-      return [{ text: node.getText(tree), module }]
-    }
-    if (ts.isStringLiteralLike(node))
-      return classWords(node.text, node.getText(tree))
-    if (ts.isIdentifier(node) || ts.isCallExpression(node)) {
-      return [{ text: node.getText(tree), module: false }]
-    }
-    return []
-  }
-
-  function visit(node: ts.Node) {
-    if (ts.isExpression(node)) {
-      const found = join(node)
+  function visit(node: ts.Node, insideJoin = false) {
+    if (ts.isJsxAttribute(node)) checkAttribute(node)
+    if (!insideJoin && ts.isExpression(node)) {
+      const found = join(node)?.values
       if (found && found.length > 1 && found.some((value) => value.module)) {
-        const { line } = tree.getLineAndCharacterOfPosition(node.getStart(tree))
-        joins.push({
+        result.joins.push({
           file,
-          line: line + 1,
+          line: lineOf(node),
           values: found.map((value) => value.text),
         })
-        return
+        insideJoin = true
       }
     }
-    ts.forEachChild(node, visit)
+    ts.forEachChild(node, (child) => visit(child, insideJoin))
   }
 
   visit(tree)
-  return joins
+  return result
 }

@@ -1,4 +1,4 @@
-import type { ClassJoin } from './class-joins.ts'
+import type { ClassScan } from './class-joins.ts'
 import { reasons, type Reason } from './reasons.ts'
 
 type Location = { line: number; selector: string }
@@ -66,8 +66,9 @@ function listedLines(item: ListedItem): string[] {
 export function renderReport(
   area: string,
   modules: ModuleReport[],
-  joins: ClassJoin[],
+  scan: ClassScan,
 ): { text: string; summary: string[] } {
+  const { joins } = scan
   let listed = 0
   let converted = 0
   let drafts = 0
@@ -101,6 +102,7 @@ export function renderReport(
     `Classes with the row default ${rows}`,
     `Check by hand ${checks}`,
     `Joins ${joins.length} in ${files} ${files === 1 ? 'file' : 'files'}`,
+    `Class values to check by hand ${scan.checks.length}`,
   ]
   const table = Object.entries(reasons).flatMap(([key, [title, action]]) => {
     const entry = [...counts].find(([reason]) => reason === key)
@@ -145,5 +147,9 @@ export function renderReport(
     )
   }
   if (joins.length === 0) lines.push('None.')
+  lines.push('', '## Class values to check by hand', '')
+  for (const { file, line, expression } of scan.checks)
+    lines.push(`- ${inline(file)} · Line ${line} · ${inline(expression)}`)
+  if (scan.checks.length === 0) lines.push('None.')
   return { text: lines.join('\n') + '\n', summary }
 }

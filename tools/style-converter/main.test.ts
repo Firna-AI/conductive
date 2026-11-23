@@ -31,6 +31,10 @@ test('writes a new output tree and protects files and nonempty folders', () => {
       '.row { display: flex }',
     )
     writeFileSync(
+      join(root, 'area', 'sub', 'StatusText.tsx'),
+      "import s from './StatusText.module.css'\nexport const view = <div className={`${s.row} active`} />",
+    )
+    writeFileSync(
       join(root, 'area', 'sub', 'StatusText.test.tsx'),
       "import s from './StatusText.module.css'; cx(s.a, s.b)",
     )
@@ -59,14 +63,27 @@ test('writes a new output tree and protects files and nonempty folders', () => {
 
     const result = run('area', '--out', 'drafts')
     expect(result.status).toBe(0)
-    expect(result.stdout).toContain('Report drafts/report.md')
+    expect(result.stdout).toBe(`CSS Modules 1
+Drafts 1
+Declarations converted 1
+Declarations listed 0
+Classes with the row default 1
+Check by hand 0
+Joins 1 in 1 file
+Class values to check by hand 0
+Report drafts/report.md
+`)
     expect(readdirSync(out).sort()).toEqual(['report.md', 'sub'])
     const draft = readFileSync(join(out, 'sub', 'StatusText.styles.ts'), 'utf8')
     expect(draft).toContain('export function statusTextStyles()')
     expect(draft).toContain("flexDirection: 'row'")
-    expect(readFileSync(join(out, 'report.md'), 'utf8')).toContain(
-      '- Joins 0 in 0 files',
+    const report = readFileSync(join(out, 'report.md'), 'utf8')
+    expect(report).toContain('- Area `area`\n')
+    expect(report).toContain('## `area/sub/StatusText.module.css`\n')
+    expect(report).toContain(
+      '- `area/sub/StatusText.tsx` · Line 2 · `s.row`, `active`\n',
     )
+    expect(report).not.toContain('StatusText.test.tsx')
     const help = run('--help')
     expect(help.status).toBe(0)
     expect(help.stdout).toContain(

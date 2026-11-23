@@ -9,11 +9,11 @@ test('writes the counts, source lines, reasons and class join in the run report'
     'src/demo/Example.module.css',
     '.row {\n  display: flex;\n  width: calc(100% - 1em);\n}\n.row:hover { width: 10px }',
   )
-  const joins = findClassJoins(
+  const scan = findClassJoins(
     'src/demo/Example.tsx',
-    "import styles from './Example.module.css'\nclasses(styles.row, props.className)",
+    "import styles from './Example.module.css'\nclasses(styles.row, props.className)\nconst view = <div className={buildClass()} />",
   )
-  expect(renderReport('src/demo', [stylesheet], joins).text)
+  expect(renderReport('src/demo', [stylesheet], scan).text)
     .toBe(`# Style conversion report
 
 - Area \`src/demo\`
@@ -24,6 +24,7 @@ test('writes the counts, source lines, reasons and class join in the run report'
 - Classes with the row default 1
 - Check by hand 0
 - Joins 1 in 1 file
+- Class values to check by hand 1
 
 ## Listed declarations by reason
 
@@ -50,5 +51,9 @@ None.
 ## Views that join classes
 
 - \`src/demo/Example.tsx\` · Line 2 · \`styles.row\`, \`props.className\`
+
+## Class values to check by hand
+
+- \`src/demo/Example.tsx\` · Line 3 · \`buildClass()\`
 `)
 })

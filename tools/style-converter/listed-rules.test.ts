@@ -280,8 +280,12 @@ test('lists a solid side border that would use an earlier dashed border style', 
     },
   ])
   expect(Object.fromEntries(classes?.get('a') ?? [])).toEqual({
-    borderWidth: 1,
-    borderColor: 'transparent',
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderLeftWidth: 1,
+    borderRightColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderLeftColor: 'transparent',
     borderStyle: 'dashed',
   })
 })
