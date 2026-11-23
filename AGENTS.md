@@ -196,9 +196,15 @@ Apple silicon Mac jobs on Blacksmith.
 - The mockups in `docs/mockups/` are the visual spec. Their
   [README](docs/mockups/README.md) gives the design, the catalogue, and the
   Node versions that Mokly accepts.
-- Mockup screens live in `docs/mockups/src/screens/`, and their shared
-  parts in `docs/mockups/src/components/`. Check `@firna/ui` first, then
-  those parts, before you create a component.
+- The app owns the shared UI. Shared parts that the app uses live in
+  `src/ui/`, with their CSS Modules, the design tokens, the theme, and the
+  fonts. The mockups import them from there. The
+  [UI README](src/ui/README.md) gives the rules.
+- Mockup screens live in `docs/mockups/src/screens/`, and parts that only
+  the mockups use in `docs/mockups/src/components/`. When the app starts
+  to use such a part, move it to `src/ui/`.
+- Check `@firna/ui` first, then `src/ui/`, then the mockup parts, before
+  you create a component.
 - The screens of the app live under `src/`.
 
 ## Review focus

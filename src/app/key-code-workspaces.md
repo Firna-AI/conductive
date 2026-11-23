@@ -42,10 +42,10 @@ rules of Archive and Restore.
   workspace leaves the list.
 - `../shell/list/`: the workspace list. `WorkspaceRow.tsx` draws a row,
   with its Archive shortcut over the time on hover, and the Rename field
-  of `WorkspaceNameField.tsx`. Its list mark is the mockups' `WorkspaceMark`,
+  of `WorkspaceNameField.tsx`. Its list mark is the shared `WorkspaceMark`,
   with the words of `listMarkLabel`. A right click or the menu keys open the menu
   of a row. `useRowMenus.tsx` gives each row the actions that the person
-  can use, from `workspaceMenuItems` of the mockups, and draws the open
+  can use, from the shared `workspaceMenuItems`, and draws the open
   `RowMenu.tsx`. Every row offers Copy link, which copies `workspace.link`
   through `AppServices.copy` and gives its result in a toast. The Archive shortcut and Archive in the menu share one
   flow, `ShownWorkspaces.archive`, so a second press while it runs sends

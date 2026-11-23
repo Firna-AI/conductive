@@ -299,8 +299,9 @@ Capabilities control in a browser and in the Mac app, and the flow
 `user-flows/secret-request`.
 
 `components` holds the registered shared parts, in a folder named after
-their folder of `src/components/`, and `components/screens` for the
-registered helper parts of `src/screens/`. A shared part without a
+their folder of [`src/ui/components/`](../../src/ui/components/) or of
+`src/components/`, and `components/screens` for the registered helper
+parts of `src/screens/`. A shared part without a
 registration has no page there. Each part has its own page and at most four
 variants, such as `components/workspaces/workspace-mark`.
 [Registered parts](registered-parts.md) gives the rules.

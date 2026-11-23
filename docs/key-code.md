@@ -3,7 +3,7 @@
 - `docs/mockups/src/entries/`: the Mokly entries of the screens, and the
   user flows.
 - `docs/mockups/src/screens/`: one React component for each screen.
-- `docs/mockups/src/components/`: the parts that the screens share.
+- `docs/mockups/src/components/`: the parts that only the mockups use.
 - `docs/mockups/src/fixtures/`: the sample data of the screens.
 - `src/shared/brand.ts`: the product name, which every screen reads, and the GitHub repository of the releases.
 - `mokly.config.json`: the Mokly configuration.
@@ -34,6 +34,9 @@
   the workspace screen, Get started, and the settings. The
   [web app README](../src/app/README.md) also gives their rules and their
   key code.
+- `src/ui/`: the UI that the app shares with the mockups: the parts, their
+  CSS Modules, the design tokens, the theme, the global stylesheet, and the
+  fonts. Its [README](../src/ui/README.md) gives the rules.
 - `src/shared/`: the browser API contracts, route paths, and runner message types.
 - `src/test-support/`: the fake API, recorded chat and file events, and terminal fake.
 - `worker/test-support/`: local D1, fake GitHub, Boat, and E2B servers, and runner fakes.

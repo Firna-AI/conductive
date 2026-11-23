@@ -143,14 +143,15 @@ code that draws them.
   follow-up field.
 - Reusable code imports no fixture data and no fake. Fixtures, replays, and
   stateful fakes live in `dev/` and in test files only.
-- The parts reuse the mockup CSS modules and the mockup parts that are pure,
-  so the app and the mockups look the same. The shared CSS also limits a
+- The parts reuse the shared parts and CSS Modules of the
+  [shared UI](../ui/README.md) in `src/ui/`, which the mockups draw too. So
+  the app and the mockups look the same. The shared CSS also limits a
   long menu or sheet, which then scrolls. A mockup part that imports
   fixture data or has no handlers has an interactive version here.
-- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the mockups'
-  `src/components/chat/sizes.ts`. The attached files, the left-out output,
-  the mockups, and the composer of a new workspace share it. The chat keeps
-  no size formatter of its own.
+- Sizes, such as "12 KB" or "1.2 MB", come from `formatSize` in the shared
+  `src/ui/components/chat/sizes.ts`. The attached files, the left-out
+  output, the mockups, and the composer of a new workspace share it. The
+  chat keeps no size formatter of its own.
 - User-facing text follows the
   [names in the product](../../docs/protocol/agents-and-sessions.md#names-in-the-product):
   no "Claude Code", and no provider name.

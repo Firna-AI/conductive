@@ -146,14 +146,14 @@ Depends on: none
 State the new rule: the app owns the shared UI, and the mockups import
 it. The path mentions of each doc change in Milestone 3, with the move.
 
-- [ ] Change the "Product" section of `CLAUDE.md`: shared parts that the
+- [x] Change the "Product" section of `CLAUDE.md`: shared parts that the
       app uses live in `src/ui/`. Mockup-only parts stay in
       `docs/mockups/src/components/`. Change the `brand.ts` sentence of
       "Repository rules".
-- [ ] Write `src/ui/README.md`: what lives there, the folders, the rule
+- [x] Write `src/ui/README.md`: what lives there, the folders, the rule
       for a new shared part, and that `src/ui/` imports nothing from
       `docs/mockups/`.
-- [ ] Update the folder layout and "How a screen is built" in
+- [x] Update the folder layout and "How a screen is built" in
       `docs/mockups/README.md`, the shared-part rules in
       `docs/mockups/registered-parts.md`, `docs/key-code.md`, the reuse
       rules in `src/app/README.md` and `src/chat/README.md`.
@@ -188,7 +188,7 @@ Depends on: 1, 2. It does not wait for pull request #569 (decision 2).
 - [x] Update the paths in `astro.config.*`, `tools/marketing-pictures/`,
       the Knip config, `.github/workflows/desktop-ci.yml`, and each other
       config that names a moved path.
-- [ ] Update each relative link and each path mention in the Markdown
+- [x] Update each relative link and each path mention in the Markdown
       files. Check each changed relative link.
 - [ ] Run `npm run typecheck`, `npm run mockups:check`, `npm run lint`,
       and `npm run format:check`. Fix each error.
@@ -207,7 +207,7 @@ Depends on: 3
       `**/test-support/**`.
 - [x] Move each production import that the rule finds, such as
       `marketingPictureList.ts`, into the app.
-- [ ] Replace the README rule with a sentence that names the lint.
+- [x] Replace the README rule with a sentence that names the lint.
 - [x] Narrow `plans/follow-ups/fixture-import-check.md` to the chains
       that the lint does not find, with option C of decision 3. Delete
       `plans/follow-ups/desktop-ci-skips-mockup-styles.md`, which the

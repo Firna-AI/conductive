@@ -27,7 +27,7 @@ states the requirements. These parts read and draw the pictures:
   answer does. So the closed line shows the link and stays one line. The
   hidden copy of a line that starts with a table gets the state of a
   closed line, so it shows no picture.
-- `FilePicture`, in `links/FilePicture.tsx`, draws the mockups'
+- `FilePicture`, in `links/FilePicture.tsx`, draws the shared
   `AnswerPicture` with an opener: the link of `fileOpener`. So a plain
   press opens the file tab in each state, and a press with a modifier key
   stays with the browser. The title is the path. The alternative text and

@@ -177,7 +177,7 @@ the folder of this page.
 - `../shell/ui/Dialog.tsx` and `Sheet.tsx`: their optional `initial` names
   the part that takes the focus as they open. The Feedback dialog passes
   its message box. `Sheet` puts its content in the scrolling `.body` of
-  the mockup sheet.
+  the shared `Sheet.module.css`.
 - [feedbackCopy.ts](../ui/components/feedback/feedbackCopy.ts):
   the words of the row, the dialog, and the toast that the app and the
   mockups share. Its `sendLimitBody` gives the words of a send over the

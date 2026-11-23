@@ -243,9 +243,12 @@ the Help row of the palette opens.
   chat text and the file preview to a page of the app at this origin are
   [links of the app](../../docs/protocol/chat-links.md#links).
   Each opens its page in the same window.
-- The shell reuses the design tokens, the pure parts, and the CSS modules of
-  the [mockups](../../docs/mockups/README.md). It never imports a mockup
-  screen, a fixture, `paths.ts`, `ScreenLink`, or Mokly.
+- The shell reuses the design tokens, the parts, and the CSS Modules of
+  the [shared UI](../ui/README.md) in `src/ui/`. The
+  [mockups](../../docs/mockups/README.md) draw the same parts. The shell
+  imports nothing from `docs/mockups/`: no mockup screen, no fixture, no
+  `paths.ts`, and no `ScreenLink`. A lint rule rejects such an import
+  outside development code and tests. The shell never imports Mokly.
 - Components give refs and callbacks to their owners. Product code does
   not find an element that another component owns by a selector. The focus
   helpers of a menu, a sheet, and a dialog look only inside their own layer.

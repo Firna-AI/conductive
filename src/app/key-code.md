@@ -215,8 +215,7 @@ Each path is relative to `src/app/`, the folder of this page.
   share it.
 - `../shell/settings/SkillsSection.tsx`: the Skills section of an admin,
   with the field, the trust switch of `SkillsTrust.tsx`, Save repository,
-  and the list or its notices, from the pure parts and the words of the
-  mockups.
+  and the list or its notices, from the shared parts and words.
 - `../shell/settings/EnvVarsSection.tsx`, `EnvVarForms.tsx`, and
   `EnvVarMark.tsx`: the env var editor of an admin. The Secret switch of a
   row saves its mark at once, and Add variable starts secret. A new value

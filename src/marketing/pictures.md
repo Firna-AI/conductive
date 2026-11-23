@@ -7,7 +7,7 @@ page and the command that captures them.
 Each product picture is a still image of a real screen of the mockups.
 One list defines every picture:
 [`marketingPictureList.ts`](../ui/screens/marketingPictureList.ts),
-beside the marketing mockup. The marketing mockup, the site, and the
+in `src/ui/screens/`. The marketing mockup, the site, and the
 capture command all read it, so no copy of a picture can go stale. The
 list imports nothing, so the browser, the Worker, and Node can all import
 it. For each picture, it gives:

@@ -28,7 +28,7 @@ relative to `src/chat/`, the folder of this guide.
   draws the parts with their workspace and session chips, and their
   links through `WebLinkText.tsx`. A skill part draws as a `SkillChip` that
   opens nothing. Answers keep skill text as text. `FileChips.tsx` draws the file chips,
-  and each `AttachmentPart` as the mockups' `SentFileChip`.
+  and each `AttachmentPart` as the shared `SentFileChip`.
   `SessionLinkText` draws a session that the chat names by its IDs, such
   as the session whose agent stopped a turn, with the same session chip.
   [Chips of attached files](../../docs/protocol/file-mentions.md#chips-of-attached-files)
@@ -37,7 +37,7 @@ relative to `src/chat/`, the folder of this guide.
   `ChatText` gets no `opens`, or in a chat without `ChatMentions`.
   `LinkChip` of `LinkedText.tsx` and `FileLink` of `FileChips.tsx` draw
   the chips that answers share. `FilePicture.tsx` draws the Markdown image
-  of a picture file of an answer as the mockups' `AnswerPicture`, and
+  of a picture file of an answer as the shared `AnswerPicture`, and
   `picture-read.ts` reads and decodes its file, as
   [Pictures in answers](answer-pictures.md) says.
   `mention-copy.ts` makes
@@ -87,7 +87,7 @@ relative to `src/chat/`, the folder of this guide.
   prose styles that the file preview shares.
   `components/answer-drawing.tsx`: `answerDrawing`, the drawing of the app
   for the blocks of one message.
-- `../../docs/mockups/src/components/chat/`: the blocks that the chat
+- `../ui/components/chat/`: the blocks that the chat
   shares with the mockups. `AgentBlocks.tsx`: `AgentBlocks`, the blocks of
   an answer and of the body of an open message line. `LineBlocks.tsx`:
   `LineBlocks`, the blocks of a message line, as spans, with the named

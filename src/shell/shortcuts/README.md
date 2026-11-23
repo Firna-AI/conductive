@@ -167,8 +167,8 @@ return <TerminalTool screenRef={terminal} {...props} />
   `aria-keyshortcuts`. The phone layout gets no hint.
   A normal Linux browser tab has no working default org key, so its org
   tiles show no key. An installed app on Linux keeps Alt+digit.
-- A row of the palette ends with the key of its command, in the key chips
-  of the mockups. Its option names the key in `aria-keyshortcuts`.
+- A row of the palette ends with the key of its command, in the shared
+  key chips. Its option names the key in `aria-keyshortcuts`.
 - The Fast row of the model menu of a session shows the key of Fast mode
   between its label and its switch, in the same key chips, and names it in
   `aria-keyshortcuts`. The menus of New workspace, Preferences, and an
@@ -181,8 +181,8 @@ return <TerminalTool screenRef={terminal} {...props} />
   `title`, and `useAriaShortcut` names the key on it through its ref. A
   link takes `shortcutTip(label, hint)` as its `title`.
 - The label of the number in the workspace header shows the key of Copy
-  link in its tooltip only. The shared Copy link button of the mockups
-  takes no ref, so it names no key in `aria-keyshortcuts`.
+  link in its tooltip only. The shared Copy link button takes no ref, so
+  it names no key in `aria-keyshortcuts`.
 - The drawn hint of an org tile in the rail shows the name of the org and
   the key chips of its key. The link names the key in
   `aria-keyshortcuts`.
