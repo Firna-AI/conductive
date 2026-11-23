@@ -1,7 +1,7 @@
 import type { ChangeResult } from './settings-results'
 
 /** How long the bar shows a Stop that the Mac made and saved. */
-export const DONE_STOP_SHOWS_MS = 5_000
+const DONE_STOP_SHOWS_MS = 5_000
 
 /**
  * The result when it is a Stop that the Mac made and saved, else null. The
