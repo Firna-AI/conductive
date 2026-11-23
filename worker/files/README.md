@@ -33,6 +33,16 @@ Before any complete tree, the marked tree has revision zero and no cached entrie
 Only a complete snapshot clears the mark.
 A delta or an incomplete report keeps it.
 
+The stored projection has one of two layouts.
+The old layout stores each list as one JSON text in chunks.
+The bucket layout splits each list into 64 buckets by a hash of the item path, with an order text for the list order.
+The doc comment in [bucket-layout.ts](bucket-layout.ts) defines the bucket layout.
+A later Worker release writes the bucket layout.
+This module reads both layouts, so a Worker rollback from that release keeps working.
+Each write of the projection stores the old layout.
+When the stored projection has the bucket layout, the same atomic write removes its bucket and order keys.
+A damaged bucket layout gives the same HTTP 502 `file_unavailable` error as a damaged old layout.
+
 Runner file events reach this module through one of two integrations.
 The combined integration joins report parts in the runner transaction of the chat backend.
 The standalone integration takes only complete reports.
@@ -78,7 +88,7 @@ The chat backend's `runnerEventStored` hook is a notification after the commit a
 It must not apply a file report again.
 
 On this path, `files` serves the API from the same Durable Object storage.
-Its `tree` and `changes` methods read the complete projection.
+Its `tree` and `changes` methods each read only their own list of the projection.
 For each accepted runner socket, call `files.runner.attach(physicalConnectionId, send)` with a fresh ID.
 A ready runner socket that the workspace object restores after a wake attaches again with the same ID.
 Call `files.runner.detach(physicalConnectionId)` when that socket closes.
@@ -194,6 +204,10 @@ Chat history remains readable through its separate access path.
 Run `npm run test -- worker/files` from the repository root with Node 24.
 The tests that use `createFilesStorage` in `test-support/storage.ts` run SQLite Durable Object storage in Miniflare.
 Its `evict` evicts the object, so that a test can check a reload.
+This module does not write the bucket layout.
+So the `bucket-*.test.ts` files write it with `writeBucketProjection` in `test-support/bucket-builder.ts`.
+`test-support/bucket-record.ts` holds one fixed record with literal keys, symbols, and manifest values, so a change of the stored format fails a test.
+`bucket-rollback.test.ts` checks that each write changes a stored bucket layout back to the old layout in one atomic write.
 `report-storage.test.ts` uses the native SQLite storage of the production workspace object.
 It checks that a part stored as one value stays readable, and that each removal also removes the chunks.
 The API tests use local D1, the existing fake runner, and FakeBoat.
@@ -214,7 +228,9 @@ The D1 workspace schema holds the base branch.
 - [report-storage.ts](report-storage.ts) keeps the assembly state and the stored parts of each report kind, as part manifests and chunks. Its `storedReportKeys` lists each part key and chunk key that a removal needs.
 - [report-generation.ts](report-generation.ts) reads the newest stored revision and the incomplete revision of a report kind for repair checks.
 - [runner-input.ts](runner-input.ts) parses a runner file event with its revision and part fields.
-- [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically.
+- [storage.ts](storage.ts) adapts Durable Object storage and writes the chunks atomically. Its `saveFiles` writes the projection in the old layout. Its `readFilesManifest` and `readFileList` read the manifest and one list, in either layout.
+- [bucket-layout.ts](bucket-layout.ts) defines the bucket layout in its doc comment and parses the bucket manifest.
+- [bucket-read.ts](bucket-read.ts) reads one list of the bucket layout from its buckets and its order text.
 - [runner.ts](runner.ts) matches file and diff commands to their results.
 - [boat.ts](boat.ts) converts the provider's file read result for the browser.
 - [data.ts](data.ts) reads the workspace and repository relationship from D1, with the sandbox ID and its provider account.
