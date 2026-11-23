@@ -1,6 +1,6 @@
 # Agent wake-ups that survive a stop
 
-Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Wake-up decisions 4 and 5, and option D of decision 1, wait for Cal. Milestones 3 and later wait for [PR #627](https://github.com/Firna-AI/conductive/pull/627) to merge into `main`. The pull request that completes the work deletes this plan, as the `plans` skill says.
+Status: Active. On branch `calummoore/agent-scheduling-wake-future-nlp0`, no pull request yet. Cal chose 1 D, 4 B, and 5 B on 23 November 2026, and asked for the implementation. No decision is open. [PR #627](https://github.com/Firna-AI/conductive/pull/627) merged into `main` on 22 November 2026, and the branch took `main` at `c5616c6bf`. The pull request that completes the work deletes this plan, as the `plans` skill says.
 
 An agent can ask to continue its work later only with the built-in cron
 tools of the Claude agent program. Those wake-ups live in the agent
@@ -57,20 +57,19 @@ Replaced ways:
 Cal answered "1 = B", "2 = A", "3 = B" on 22 November 2026. The options
 check of the plan ran the same day. Its report is
 `.context/agent-wake/options-check.md`. It added options D, E, and F to
-decision 1 and recommends D. It also raised decisions 4 and 5. These
-three points wait for Cal. Until he answers, choice B of decision 1 stays
-in force, and the TODOs that the open points block say so.
+decision 1 and recommends D. It also raised decisions 4 and 5. Cal
+answered "1 = D", "4 = B", "5 = B" on 23 November 2026.
 
 ### Wake-up decision 1: How an agent continues later
 
 - **Root question:** How does an agent continue its work later, so that the cloud computer can stop meanwhile and the request still wakes it? The options check wrote this question, because "a stop" can also mean Stop in the chat.
-- **Chosen: B.** Add a Conductive wake-up call, and turn off `CronCreate`, `CronDelete`, `CronList`, and `ScheduleWakeup`. Reason: every wake-up then survives a stop, the computer can stop, and Claude and Codex follow one rule.
+- **First chosen: B, on 22 November 2026.** Add a Conductive wake-up call, and turn off `CronCreate`, `CronDelete`, `CronList`, and `ScheduleWakeup`. Reason: every wake-up then survives a stop, the computer can stop, and Claude and Codex follow one rule.
 - This removes functionality on `origin/main`: the in-turn wake-ups and their wait. Cal approved the removal with this answer. The bundled `/loop` skill stops working.
 - **Not chosen: A.** Add the call and keep the cron tools. Agents could still use them by habit, and those wake-ups still die.
 - **Not chosen: C.** Send `CronCreate` to the new call with `toolAliases`. It needs cron syntax and repeats. The SDK documents `toolAliases` only for names that the model emits by mistake. Decision 278 says that agents learn tools from their descriptions, so a familiar name helps little.
-- **Open: D.** As B, but keep the `session_crons` read of the Stop hook as a guard. The note names each such wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for it. Reason: a later SDK can add a scheduling tool under a new name, and `session_crons` lists every in-process wake-up. Effort: Small.
-- **Open: E.** As B, and send the four removed names to the Conductive calls with `toolAliases`. The gain is small. Effort: Small.
-- **Open: F.** As B, and add a Conductive `loop` skill that chains one-time wake-ups. Effort: Medium.
+- **Chosen: D, on 23 November 2026.** As B, but keep the `session_crons` read of the Stop hook as a guard. The note names each such wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for it. Reason: a later SDK can add a scheduling tool under a new name, and `session_crons` lists every in-process wake-up. Effort: Small.
+- **Not chosen: E.** As B, and send the four removed names to the Conductive calls with `toolAliases`. The gain is small. Effort: Small.
+- **Not chosen: F.** As B, and add a Conductive `loop` skill that chains one-time wake-ups. Effort: Medium.
 - **Left out:** change nothing, a runner that saves wake-ups on disk, a pause of the computer with its memory, a copy of `session_crons` to the Worker at the end of a turn, an automation for each wake-up, a time field on `send_message`, a wake-up that acts as the owner or as an app identity, a reminder that starts no turn, a timer in the provider or the Mac app, and Anthropic's cloud triggers. Short in-process wake-ups beside Worker wake-ups for long ones were left out too, because a restart still loses the short ones. The options report gives the reason for each.
 - **Recommendation:** D, from the options check. The first recommendation was B. D keeps B and adds a guard that still works when a tool name changes.
 
@@ -91,7 +90,7 @@ in force, and the TODOs that the open points block say so.
 
 ### Wake-up decision 4: A wake-up that can start no turn
 
-Open. Raised by the options check on 22 November 2026.
+Raised by the options check on 22 November 2026. Cal chose B on 23 November 2026.
 
 - **Root question:** What does a member see when a pending wake-up reaches its time and can start no turn?
 - **Background:** A wake-up can start no turn when the sender left the org, or when the login of the session is gone. The session then shows the pending wake-up until its time. A late secret request in the same case says what happens next, and names the action that gets the agent going again.
@@ -102,7 +101,7 @@ Open. Raised by the options check on 22 November 2026.
 
 ### Wake-up decision 5: What a Cancel leaves in the chat
 
-Open. Raised by the options check on 22 November 2026.
+Raised by the options check on 22 November 2026. Cal chose B on 23 November 2026.
 
 - **Root question:** How does the session record that a member cancelled a wake-up?
 - **Background:** A stop line names the member who pressed Stop, such as "Priya stopped the agent". The watch plan showed no line for a wake that was skipped, because no requirement needed it.
@@ -126,7 +125,7 @@ Open. Raised by the options check on 22 November 2026.
 - The Durable Object of the calling workspace keeps each wake-up under additive keys, with a new alarm source. No D1 migration is needed. Older Worker code ignores the keys.
 - At the time, the Worker sends the wake-up through the delivery path of watches: the late-answer admission, a stable message ID, retries, and the resume of a stopped computer.
 - The woken turn acts for the sender, under the login rules of that sender. A running turn at the time takes the wake-up as a message does, and keeps its own sender.
-- When no turn can start, the wake-up ends. Examples: a closed session, an archived workspace, a sender who left the org, or a login that is gone. What the chat then shows waits for decision 4.
+- When no turn can start, the wake-up ends. Examples: a closed session, an archived workspace, a sender who left the org, or a login that is gone. The pending wake-up then becomes a line that says that it could not start, and names the action that gets the agent going again, as a late secret request does (decision 4 B).
 - An org suspension pauses delivery, as for watches.
 - A wake-up that joins a waiting Claude turn keeps the deadline of that turn. Only a member message restarts the 30-day count, as background work requires. The runner command marks the wake-up with an additive field. An older runner ignores the field and restarts the count, until its update.
 
@@ -140,7 +139,7 @@ Open. Raised by the options check on 22 November 2026.
 
 - The adapter sets `disallowedTools` for the four cron tools. It also sets `CLAUDE_CODE_DISABLE_CRON=1`, which stops the scheduler. A real SDK run checks both, because the SDK does not document the variable.
 - The adapter sets `skillOverrides: { loop: 'off' }`, so that neither the model nor a member gets `/loop`.
-- The Stop hook and its note stay for background tasks. Under choice B, the cron set and the wake-up lines of the note go. Under option D of decision 1, they stay as the guard.
+- The Stop hook and its note stay for background tasks. The cron set and the `session_crons` read stay as the guard of decision 1 D. The note names each in-process wake-up once and asks the agent to set it again with the Conductive call. The runner logs a warning, and the turn does not wait for such a wake-up.
 - Stored data: an older run can have left durable jobs in `.claude/scheduled_tasks.json` in the repository folder. The switches stop these jobs, and the program never fires them. The pull request names this as a breaking change.
 
 ## Recorded design calls
@@ -157,7 +156,7 @@ All are orchestrator calls of 22 November 2026, from the options report, not use
 - Calls of one calling turn with the same text and the same time input give one wake-up, while that wake-up is pending. A call after it fired or was cancelled sets a new one. Reason: a retry after a lost reply is a new call, as watch decision 4 C says, and a chain inside one long turn must not stop without a word. The options check raised the pending rule.
 - A wake-up that joins a waiting turn keeps its deadline. Reason: background work lets only a member message restart the count, and a chain must not keep a forgotten dev server running without end. The options check raised this. PR #627 has the same gap for watch wakes.
 - An explicit Stop of the session drops the wake-ups that the session set before that Stop. The idle stop keeps them. Reason: watch decision 5 D, and Stop ends in-process wake-ups today.
-- A member may cancel a wake-up when the member may stop a turn of that session. Reason: Cancel stops later work as Stop does. The line that a Cancel leaves waits for decision 5.
+- A member may cancel a wake-up when the member may stop a turn of that session. Reason: Cancel stops later work as Stop does. A Cancel adds a line that names the member, such as "Priya cancelled a wake-up" (decision 5 B).
 - The woken turn uses the current model, effort, and fast mode of the session. Reason: a late answer does the same.
 - The tool text and the agent instructions say: set the wake-up, then end the reply. They say that background tasks and dev servers end when the computer stops. Reason: the computer can stop only after the turn ends.
 - Turn the cron tools off with `disallowedTools` and the environment variable together. Reason: `disallowedTools` is documented, and only the variable stops a durable job from an older run. The options check found that `CronList` and `CronDelete` stay on while that file holds jobs, unless `disallowedTools` removes them.
@@ -173,7 +172,7 @@ Use the `ui implementor` action. Draw the pending wake-up and the wake-up line, 
 
 - [ ] Add the pending wake-up to the session chat, with one and with three pending wake-ups, a long text, and Cancel.
 - [ ] Add the wake-up line in a new turn, and in a turn that runs.
-- [ ] Draw the end of a wake-up that can start no turn, and the end of a Cancel. Both wait for decisions 4 and 5.
+- [ ] Draw the end of a wake-up that can start no turn, and the end of a Cancel. Decisions 4 B and 5 B give their words.
 - [ ] Put the pure words in one module that the Worker and the chat can import later.
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that the mockups show.
@@ -240,7 +239,7 @@ Use the `non-ui implementor` action.
 
 - [ ] Set `disallowedTools` and `CLAUDE_CODE_DISABLE_CRON=1` in `runner/sdk-helper/src/providers/claude.ts`.
 - [ ] Set `skillOverrides: { loop: 'off' }`. Check in the SDK run that neither the model nor `/loop` gets the skill.
-- [ ] Under choice B, delete the cron set, the `session_crons` read, the wake-up lines of the note, and their tests. Under option D of decision 1, keep them as the guard: change the note text, log a warning, and wait for no such wake-up. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
+- [ ] Keep the cron set and the `session_crons` read as the guard of decision 1 D: change the note text, log a warning, and wait for no such wake-up. Update their tests. Search for `session_crons`, `CronDelete`, and `cron` in `runner/`, `crates/`, and `docs/`.
 - [ ] Keep the deadline of a waiting turn when the input is a wake-up, in `crates/cnd-runner/src/engine/`. Add the test with a paused clock.
 - [ ] Check with a real SDK run that the model sees no cron tool and that `session_crons` stays empty. Start the run with a durable job in `.claude/scheduled_tasks.json`, and check that it never fires. Save the result in `.context/agent-wake/`.
 - [ ] Check the pinned Codex 0.170.0 for a scheduling tool. Turn off each one that it has.
