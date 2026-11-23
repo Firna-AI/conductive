@@ -169,11 +169,42 @@ Replaced ways:
 - **Other options:** A, EAS for each pull request and each release. C, B
   with EAS Update. D, Linux checks on each pull request and releases on
   EAS, which was the recommendation. E, Xcode Cloud for iOS.
-- **Still open:** the check of each pull request on the phones, in
+- **Then asked:** the check of each pull request on the phones, in
   decision 13.
 
-The open decisions 11, 12, and 13 are in
-[universal-expo-app-decisions.md](universal-expo-app-decisions.md).
+The options checks of decisions 7 to 13 are in
+`.context/universal-expo-app/options-check.md` and
+`.context/universal-expo-app/options-check-2.md`.
+
+### 11. Choose how the work reaches main
+
+- **Chosen:** A, by the user on 23 November 2026. The branch of this plan
+  is its primary branch. Nested workspaces merge into it, and one pull
+  request merges it into `main` at the end.
+- **Other options:** B, a pull request to `main` for each milestone, which
+  was the first recommendation. C, a primary branch that merges into
+  `main` after each group of milestones, which was the recommendation after
+  the options check.
+- **Consequence:** the whole migration reaches production in one deploy.
+  Decision 7 E keeps each step working, so the primary branch can merge
+  `main` and pass the gate at any time.
+
+### 12. Stop new HTML views during the port
+
+- **Chosen:** A, by the user on 23 November 2026. No new rule. Each port
+  milestone also ports the views that other work added to its area.
+- **Other options:** B, a lint rule for the folders of each ported area,
+  which was the recommendation. C, a written rule in `CLAUDE.md` and the UI
+  README.
+
+### 13. Check each pull request on the phones
+
+- **Chosen:** A, by the user on 23 November 2026. No phone check runs on a
+  pull request. The release build of decision 10 finds each break.
+- **Other options:** B, an export and a type check on Linux. C, B with
+  native builds when the native inputs change. D, native builds on each
+  pull request. E, C with an Android start-up test, which was the
+  recommendation. F, C with native builds that do not block.
 
 ## Design calls
 
@@ -208,8 +239,8 @@ Each call is mine, made on 23 November 2026.
 - **Old copies keep working.** Store apps follow the same rule as the Mac
   app. An app below the minimum version shows "Update the app".
 - **Tests:** Vitest draws the shared views in happy-dom through the DOM
-  backend of `@firna/ui`. Decision 13 sets the phone check of each pull
-  request.
+  backend of `@firna/ui`. No phone check runs on a pull request, as
+  decision 13 A says. The release builds run the phone code first.
 - **Mockups:** Mokly draws the shared views through the DOM backend.
 - **Google Play:** the app ships from an organization account. Reason: a
   personal account created after 13 November 2023 needs a closed test with
@@ -237,10 +268,13 @@ Each call is mine, made on 23 November 2026.
 
 ## Milestone 0: The flow to main
 
-Depends on: decision 11
+Depends on: none
 
-- [ ] Under decision 11 A or C, create the primary branch, and add it to
-      the push trigger of `.github/workflows/ci.yml`.
+- [ ] Add the primary branch, `calummoore/expo-mobile-version-4fjt`, to
+      the push trigger of `.github/workflows/ci.yml`, as decision 11 A
+      says.
+- [ ] Merge `main` into the primary branch before each nested workspace
+      starts, with the `git-merge` skill.
 
 ## Milestone 1: Mockups
 
@@ -386,7 +420,6 @@ Depends on: 4, 27
 - [ ] Port the common parts of `src/ui/components/common/` and their
       mockups. Keep the look of each mockup.
 - [ ] Draw the ported parts in Mokly.
-- [ ] Add the rule of decision 12 for the folders of the ported parts.
 
 ## Milestones 10 to 20: Port each area of the app
 
@@ -394,11 +427,13 @@ Tags: ui
 
 Depends on: 9
 
-Each area is its own milestone, so that each one ships alone. Each one
+Each area is its own milestone, so that each one keeps the product working. Each one
 ports the views of the area, their shared parts in `src/ui/`, their mockup
-screens, and their tests. The look of each mockup stays. Each one runs the
-converter of Milestone 27 first, and ports the listed rules by hand. Each
-one compares the screenshots of its mockups before and after the port.
+screens, and their tests. It also ports each view that other work added to
+the area, as decision 12 A says. The look of each mockup stays. Each one
+runs the converter of Milestone 27 first, and ports the listed rules by
+hand. Each one compares the screenshots of its mockups before and after
+the port.
 
 - [ ] Milestone 10: the org rail, the workspace list, and the sections.
 - [ ] Milestone 11: the workspace bar, the tab row, and the GitHub banner.
@@ -432,7 +467,7 @@ Depends on: 5, 6, 9
 
 Tags: ui
 
-Depends on: 8, 10, 11, 12, 13, 18, 20, 21, decision 13
+Depends on: 8, 10, 11, 12, 13, 18, 20, 21
 
 The phone apps need the waitlist of Milestone 20 for a new user, and the
 deletion request of Milestone 8 for the store rules.
@@ -445,7 +480,8 @@ deletion request of Milestone 8 for the store rules.
       at each release, beside the Mac app, as decision 10 says. Keep the
       keys in a GitHub environment. Check that the Mac runner has Xcode
       26.4 or newer.
-- [ ] Add the phone check of each pull request, as decision 13 says.
+- [ ] Test the first release build of both apps on a device before the
+      upload. No pull request checks the phones, as decision 13 A says.
 - [ ] Submit both apps for review.
 
 ## Milestone 23: Expo Router on every platform
@@ -492,7 +528,7 @@ Depends on: every other milestone
       then apply the fix rule: fix the `fix now` findings, record
       follow-up items under `plans/follow-ups/` for the rest, re-review
       once, and report.
-- [ ] Delete this plan and its decisions file when the `plans` skill says,
+- [ ] Delete this plan when the `plans` skill says,
       under "Deleting the plan".
 - [ ] Open the pull request. Its description gives the decisions and the
       design calls of this plan with their dates, a permalink to this plan,
