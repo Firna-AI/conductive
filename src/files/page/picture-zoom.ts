@@ -24,7 +24,7 @@ export interface ViewPoint {
 
 export const fitZoom: PictureZoom = { kind: 'fit' }
 
-/** The room around a fitted picture, as the view of the mockups gives it. */
+/** The room around a fitted picture, as the shared `ImageView` gives it. */
 const viewPadding = 16
 
 /** The largest scale: eight times the own size of the picture. */

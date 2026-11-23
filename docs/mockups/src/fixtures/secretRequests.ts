@@ -23,12 +23,6 @@ import { workspaceSessions } from './sessions'
  * characters other than letters, digits, and underscores, so Save as
  * secret cannot add it.
  */
-/** A grant of the sample runs, by a sample member. */
-type SecretGrant = AnySecretGrant<PersonKey>
-
-/** A grant that a sample member gave. */
-export type MemberGrant = AnyMemberGrant<PersonKey>
-
 type RequestedSecret = {
   name: string
   description?: string
@@ -46,6 +40,9 @@ export type SecretRequest = {
   /** The command, which names each secret as an environment variable. */
   command: string
 }
+
+/** A grant of the sample runs, by a sample member. */
+type SecretGrant = AnySecretGrant<PersonKey>
 
 /**
  * A run as the chat shows it. `waiting` waits above the composer, while
@@ -65,6 +62,9 @@ type SecretRunState =
   | 'late-allowed'
   | 'late-denied'
   | 'not-answered'
+
+/** A grant that a sample member gave. */
+export type MemberGrant = AnyMemberGrant<PersonKey>
 
 /**
  * The login that a session keeps: the personal login of its starter, or

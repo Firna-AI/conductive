@@ -87,10 +87,10 @@ function Steps(props: { response: GetStartedResponse }) {
  * Claude or Codex. The step of the GitHub App comes from the API, and each
  * done step loads it again. The org step and the agent step follow the org
  * list and the account. The org step and the finish also show the first
- * build of the org, from its builds. The words are the mockup's, from one
- * copy module. While the user has a deleted org, Deleted orgs comes before
- * the steps, because a phone has no other way from here to the Account
- * page. Restore there opens the org.
+ * build of the org, from its builds. The words come from one shared copy
+ * module, `getStartedCopy`. While the user has a deleted org, Deleted orgs
+ * comes before the steps, because a phone has no other way from here to
+ * the Account page. Restore there opens the org.
  */
 export function GetStartedScreen(props: { user: User }) {
   const app = useApp()

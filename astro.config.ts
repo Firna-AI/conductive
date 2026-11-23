@@ -22,8 +22,8 @@ import {
 const siteSource = './src/marketing/'
 
 /**
- * The font of the site, from the mockups, as a path from the root of the
- * repository. The build gives it an address under the site folder.
+ * The font of the site, from `src/ui/fonts/`, as a path from the root of
+ * the repository. The build gives it an address under the site folder.
  */
 const fontPath = '/src/ui/fonts/InterVariable.woff2'
 

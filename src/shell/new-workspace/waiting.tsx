@@ -38,7 +38,7 @@ function formRepositoriesOf(
  * The notice over the composer of New workspace while the repository of
  * the form waits for its build, such as in a kept draft, or while no chosen
  * repository is ready, or `null`. It turns Send off, and the message stays.
- * `formWait` and `WaitingRepositoryNotice` of the mockups give what it
+ * The shared `formWait` and `WaitingRepositoryNotice` give what it
  * names, how it draws, and when an admin gets the link to the Cloud
  * computer tab. The link opens that tab through `open`.
  */

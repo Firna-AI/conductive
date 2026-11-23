@@ -58,7 +58,7 @@ function FileTabLabel(props: {
 /**
  * The closable tab of an open file or diff, for the tab row of the centre
  * column on desktop. It is a list item, so the shell puts it in the same
- * list as the session tabs, and it takes their styles from the mockups. The
+ * list as the session tabs, and it takes their styles from the shared UI. The
  * tab is a link to its own address. It shows the label of its path, or
  * "File" when no record names the file. The temporary tab shows its title
  * in italics, and a screen reader hears its name, then "temporary". A

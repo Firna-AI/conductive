@@ -28,7 +28,7 @@ function useChipFile(
 }
 
 /**
- * The chip of an attached file in the field: the pure chip of the mockups,
+ * The chip of an attached file in the field: the shared pure `DraftFileChip`,
  * with the live upload of its file. It redraws at each change of the file,
  * also while the field takes no change. The × removes the chip as one step
  * of undo, and Try again uploads a failed file again. Both do nothing while

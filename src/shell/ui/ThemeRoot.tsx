@@ -33,7 +33,7 @@ export function ThemeRoot(props: {
 }) {
   const system = useSyncExternalStore(subscribe, systemScheme, darkScheme)
   const scheme = props.scheme ?? system
-  // The brand parts of the mockups, such as the lockup, read the scheme
+  // The shared brand parts, such as the lockup, read the scheme
   // from the style of the page root, where the mockup renderer puts it.
   useLayoutEffect(() => {
     document.documentElement.style.colorScheme = scheme

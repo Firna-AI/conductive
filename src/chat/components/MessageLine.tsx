@@ -35,8 +35,8 @@ const plainLinks: ChatLinks = { links: { orgId: '', workspaces: null } }
  * and code of the message, and the line keeps its place. Another click cuts
  * it again. Closed, the line shows each line break as a space.
  *
- * The line draws its blocks with the `LineBlocks` of the mockups, and the
- * blocks under it with their `AgentBlocks`. A `<summary>` holds no
+ * The line draws its blocks with the shared `LineBlocks`, and the blocks
+ * under it with the shared `AgentBlocks`. A `<summary>` holds no
  * table. So the open line keeps the blocks before the first table, or
  * before the list or the quote that holds it, as `holdsTable` says. That
  * block and the blocks after it open under the line. When the line shows no

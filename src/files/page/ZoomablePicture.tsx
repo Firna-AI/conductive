@@ -65,7 +65,7 @@ function useBarFocus(bar: RefObject<HTMLDivElement | null>) {
 }
 
 /**
- * A picture over its zoom bar, as the mockups' `ImageView` and
+ * A picture over its zoom bar, as the shared `ImageView` and the mockups'
  * `PictureZoomBar` draw them. It fits its stage as it shows. The wheel and a
  * pinch zoom it about the pointer, a drag moves a zoomed picture, and a
  * double press zooms in, or fits a zoomed picture again. With `expand`,

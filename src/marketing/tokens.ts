@@ -12,8 +12,8 @@ function declarations(values: Readonly<Record<string, string>>): string {
 }
 
 /**
- * The design tokens of the mockups as `--ui-*` custom properties, with the
- * names that the mockup renderer writes. The site is dark first, as the
+ * The shared design tokens as `--ui-*` custom properties, with the names
+ * that the mockup renderer writes. The site is dark first, as the
  * design is. A visitor who prefers light gets the light scheme.
  */
 export function tokensCss(): string {

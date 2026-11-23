@@ -40,9 +40,9 @@ function Bars(props: {
 }
 
 /**
- * The notices of a failed repair under the workspace header: the mockups'
- * `LostUpdateBar` with a Dismiss that works. Each names the data that is
- * out of date and the time since its repair failed.
+ * The notices of a failed repair under the workspace header, as the shared
+ * `LostUpdateBar` draws them, with a Dismiss that works. Each names the
+ * data that is out of date and the time since its repair failed.
  */
 export function HeaderNoticeBars(props: { notices: HeaderNotices }) {
   const shown = useStore(props.notices.shown)

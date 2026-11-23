@@ -12,7 +12,7 @@ import { uiAttribute } from './mark-layout'
 const ui = { [uiAttribute]: '' }
 
 /**
- * The state of a mark, the mockups' `MarkGlyph`, as a button that opens the
+ * The state of a mark, the shared `MarkGlyph`, as a button that opens the
  * popover of its explanation, so Tab reaches each mark. It stands at the end
  * of its mark, or in the box at the top right of a message that the mark
  * covers whole, as the mockups' `WholeMark` draws it. Screen readers hear

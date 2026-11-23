@@ -10,7 +10,7 @@ import { answerDrawing } from './answer-drawing'
 /**
  * An answer of the agent: paragraphs, headings, lists, code, quotes, rules,
  * and tables, as `agentBlocks` reads them with the shared Markdown parser,
- * drawn by the `AgentBlocks` of the mockups. A heading is `h1` to
+ * drawn by the shared `AgentBlocks`. A heading is `h1` to
  * `h6`, at the level that the agent wrote, and its look comes from the
  * heading style that the file preview shares. Quotes, rules, bold text,
  * emphasis, strikethrough, and task boxes take the look of the shared
