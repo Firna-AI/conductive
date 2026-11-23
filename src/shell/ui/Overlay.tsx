@@ -12,6 +12,7 @@ import {
 import { createPortal } from 'react-dom'
 import { useModalLayer as useOpenModalLayer, type LayerOwner } from './layers'
 import { useLostFocus } from './lost-focus'
+import { usePressOutside } from './press-outside'
 import { requestScreenFocus } from './screen-focus'
 import styles from './ui.module.css'
 
@@ -74,31 +75,6 @@ export function Overlay(props: { children: ReactNode }) {
 
 /** The open layers that Escape can close, the newest last. */
 const escapeLayers: object[] = []
-
-/** Closes an open layer on a press outside `inside`. */
-export function usePressOutside(
-  open: boolean,
-  inside: RefObject<HTMLElement | null>,
-  close: () => void,
-  options: { modal?: boolean } = {},
-): void {
-  const modal = options.modal ?? false
-  const closeRef = useRef(close)
-  useEffect(() => {
-    closeRef.current = close
-  })
-  useEffect(() => {
-    if (!open) return
-    const onPointer = (event: PointerEvent) => {
-      const target = event.target
-      if (target instanceof Node && inside.current?.contains(target)) return
-      if (modal) event.preventDefault()
-      closeRef.current()
-    }
-    document.addEventListener('pointerdown', onPointer)
-    return () => document.removeEventListener('pointerdown', onPointer)
-  }, [open, inside, modal])
-}
 
 /**
  * Closes an open layer when an element outside `inside` takes the focus,
