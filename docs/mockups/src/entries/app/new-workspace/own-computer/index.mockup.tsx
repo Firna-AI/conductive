@@ -57,7 +57,7 @@ export const ownComputerChoice = defineScreen({
       description:
         'Cal picked build-02, which runs 4 of its 4 workspaces. A notice over the composer says that build-02 is full, and that the workspace starts when one of them stops. Send stays on.',
       rationale:
-        'Cal has not chosen yet what a start does on a full own computer. The mockups draw the recommendation: the start waits for a free place within the 20-minute limit of a start, as a start on an offline computer waits for its connection, so one rule covers every start.',
+        'Cal chose B of own computer decision 9 on 23 November 2026: the start waits for a free place within the 20-minute limit of a start, as a start on an offline computer waits for its connection, so one rule covers every start. A start that fails says that the computer is full. Not chosen: A, refuse the start at once. C, a queue with no time limit.',
       props: { computer: 'full' },
       useCasePaths: [],
     },

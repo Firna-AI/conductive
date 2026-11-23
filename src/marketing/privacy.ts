@@ -93,7 +93,9 @@ export const privacyDocument: LegalDocument = {
       blocks: [
         paragraph`When an admin deletes an org, ${productName} deletes its
           cloud computers and the org data in its own storage after 7 days,
-          unless an admin restores the org.`,
+          unless an admin restores the org. It then also revokes the access
+          of each own computer of the org. Files and images on those servers
+          stay there.`,
         paragraph`When the owner or an admin archives a workspace,
           ${productName} stops it and keeps its cloud computer or container
           for 14 days. It holds your code, your files, your agent sessions,

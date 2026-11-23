@@ -60,16 +60,24 @@ change is open. Its pull request keeps them after the merge.
 - The Worker keeps only a digest of the token.
 - A machine token works only for the host connection of its own machine.
   The gate of `api.conductive.build` accepts it only on `/v1/host`.
-- A machine token stops working when its machine gets a new token. The
-  token of a brief start of the
+- A machine token stops working when its machine gets a new token, and
+  at each stop of its machine (own computer decision 11 B). So the token
+  of a brief start of the
   [migration job](host-connection-migration.md#brief-starts) also stops at
   its stop.
+- A new host connection with the token replaces the open one, as for the
+  runner. Reason: a reconnect after a silent drop must not wait for the
+  old connection to time out.
+- Reason: a copy of the token then works only during one run of its
+  machine. A refusal of a second connection was rejected, because it
+  delays each reconnect.
 - No log, start step, saved snapshot, or reply to a browser holds a
   machine token. The runner and the start log hide it, as they hide the
   workspace token.
 - Risk: each process in the machine can read its machine token, as it can
   read the workspace token. With a copy, a program outside the machine can
-  open the host connection of that machine until the token stops working.
+  open the host connection of that machine until the machine stops or
+  gets a new token.
 
 ## Operations
 

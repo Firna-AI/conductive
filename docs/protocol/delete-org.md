@@ -17,6 +17,12 @@ says.
   sandbox costs no machine time.
 - A delete at once was rejected, because an admin could then delete the
   unpushed work of a member.
+- After the 7 days, the delete also revokes the token of each own
+  computer of the org and deletes their records, as a removal of one own
+  computer does (own computer decision 12 A). It deletes no file and no
+  image on those servers. Reason: a restore within the 7 days brings the
+  computers back, and the delete must not wait for a server that is
+  offline.
 - The delete also removes the saved snapshots of the org, with its org
   image on each provider account. After a switch, an older org image stays
   on the old account until this delete, as

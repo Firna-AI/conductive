@@ -41,7 +41,7 @@ export const dialogComputerChoice = defineScreen({
       description:
         'Cal picked build-02, which is full. The notice of the page shows above the footer, and Create stays on.',
       rationale:
-        'Cal has not chosen yet what a start does on a full own computer, so the dialog draws the recommendation of the page.',
+        'Cal chose B of own computer decision 9 on 23 November 2026, so the dialog draws the rule of the page.',
       props: { computer: 'full' },
     },
   ],

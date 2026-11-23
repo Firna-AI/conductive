@@ -46,8 +46,9 @@ says.
 - An offline own computer stays on in the menu. A notice over the composer
   says that the workspace starts when the computer connects, and Send
   stays on. Reason: a start on an offline computer waits for it.
-- Open: what a start does when its own computer is full. The own computers
-  plan holds it.
+- A full own computer stays on in the menu. A notice over the composer
+  says that the computer is full, and that the workspace starts when a
+  place is free. Send stays on.
 - While an own computer is chosen, the note under the pickers names it and
   its newest build.
 - A removed computer is not in the menu.
@@ -85,9 +86,26 @@ says.
 - Such a start fails at the 20-minute limit of a start, with Try again, as
   [Time limits of builds and starts](workspace-life.md#time-limits-of-builds-and-starts)
   says. Its saved message names the computer and the limit.
-- Open: what the running workspaces of an own computer show, and what
-  happens to their turns, when that computer loses its connection. The own
-  computers plan holds it.
+- A start on a full own computer waits for a free place on that computer
+  (own computer decision 9 B). It fails at the 20-minute limit of a start,
+  with Try again. Its saved message says that the computer is full, and
+  names the computer and the limit.
+- Reason: one rule then covers each start that waits for its computer, an
+  offline one or a full one, and the limit of a start still ends it. A
+  refusal at once and a queue with no time limit were rejected.
+- When an own computer loses its connection, each of its running
+  workspaces keeps its state for a grace time of 2 minutes (own computer
+  decision 10 B). During the grace time, the tools that need the computer
+  fail, and a turn keeps running on the computer.
+- When the computer connects again within the grace time, the workspaces
+  go on as before.
+- After the grace time, each such workspace shows the stopped state. Its
+  saved message says that the computer went offline. The app stops its
+  container when the computer connects again. A resume waits for the
+  computer, as a start on an offline computer does.
+- Reason: a short network gap then ends no work, and no new workspace
+  state is needed. A stop at once and a new "Computer offline" state were
+  rejected.
 - A workspace on an own computer stops after the stop time, as each
   workspace does, as [The stop](stop-and-resume.md#the-stop) says. Reason:
   the stop frees the server.

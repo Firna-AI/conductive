@@ -83,7 +83,9 @@ Replaced ways:
 
 Cal answered own computer decisions 1 to 7 on 22 November 2026, in the
 brainstorm of this branch. Cal answered own computer decision 8 on the
-same day, after the options check of decision 7 D.
+same day, after the options check of decision 7 D. Cal answered own
+computer decisions 9 to 13 on 23 November 2026. The Milestone 1 mockups
+and the Milestone 2 docs found them.
 
 ### Own computer decision 1: Where the agents of an own computer run
 
@@ -381,6 +383,68 @@ migration of the computers of the transition, which became option D.
   runner. The terminal shells keep running
   (`docs/protocol/restart-the-software.md:26-29`).
 
+### Own computer decision 9: A start on a full own computer
+
+- **Root question:** When a workspace must start on an own computer that
+  is at its limit, what does the member get?
+- **Options:** **A.** Refuse the start at once, with a message that names
+  the full computer. **B.** The start waits for a free place within the
+  20-minute start limit, then fails with Try again, as a start on an
+  offline computer does. **C.** A queue with no time limit. **Left out:**
+  stop the longest idle workspace, because it ends another member's work;
+  start over the limit, because it breaks the admin's limit.
+- **Choice:** B, on 23 November 2026, with one addition: the message of a
+  failed start says that the computer is full.
+- **Reason:** One rule covers each start that waits for its computer.
+
+### Own computer decision 10: Workspaces when their own computer goes offline
+
+- **Root question:** When an own computer loses its connection, what do
+  its running workspaces show, and what happens to their work?
+- **Options:** **A.** Stopped at once. **B.** A grace time of 2 minutes,
+  then stopped. **C.** A new "Computer offline" state with the containers
+  still running. **Left out:** a move to the cloud computer, because a
+  workspace never moves between computers; Ready with no sign, because
+  members cannot tell why the tools fail.
+- **Choice:** B, on 23 November 2026.
+- **Reason:** A short network gap ends no work, and no new state is needed.
+
+### Own computer decision 11: The life of a machine token
+
+- **Root question:** For how long, and for which connection, does a
+  machine token open the host connection?
+- **Options:** **A.** Until the machine gets a new token, and a new
+  connection replaces the old one. **B.** A, and the token also stops at
+  each stop of the machine. **C.** B, and the Worker refuses a second
+  connection while one is open. **Left out:** a token file that only root
+  reads, because agents use sudo.
+- **Choice:** B, on 23 November 2026.
+- **Reason:** A copy works only during one run of its machine, and a
+  reconnect does not wait for a timeout.
+
+### Own computer decision 12: The own computers of a deleted org
+
+- **Root question:** What does the delete of an org do to its own
+  computers?
+- **Options:** **A.** After the 7 days, revoke each computer token and
+  delete the records, and delete nothing on the servers. **B.** Also delete
+  each container and image, at once or at the next connection. **Left
+  out:** a revoke at the start of the delete, because a restore must bring
+  the computers back.
+- **Choice:** A, on 23 November 2026.
+- **Reason:** It matches the removal of one computer, and it waits for no
+  offline server.
+
+### Own computer decision 13: The new legal text
+
+- **Root question:** Is the new legal text right for the product and for
+  Firna Ltd?
+- **Options:** **A.** Approve the text. **B.** Name the sentences to
+  change. **C.** A lawyer reads it first.
+- **Choice:** A, on 23 November 2026. The recommendation was C. The text
+  is the one of commit `b77a52baa`, with the one Privacy sentence on the
+  own computers of a deleted org that decision 12 A adds.
+
 ## Design calls
 
 These are agent calls, made on 22 November 2026.
@@ -573,8 +637,8 @@ below. The legal pages and the guides change in the same milestone, as
       `terms-org.ts`, and the Privacy page in `src/marketing/privacy.ts`
       and `privacy-recipients.ts`, in full. Update each sentence that
       restates a changed fact. Set the effective date of the Terms.
-- [ ] Get Cal's approval of the new Terms and Privacy text before the
-      merge.
+- [x] Get Cal's approval of the new Terms and Privacy text before the
+      merge. Cal approved it on 23 November 2026, own computer decision 13.
 - [x] Read each guide in `src/marketing/docs/` in full. Update each
       sentence that restates a changed fact. Add a guide for own computers.
 - [x] Check each relative link of each changed Markdown file.
@@ -605,6 +669,8 @@ The host mode, the machine object, and the route. No consumer uses them yet.
       apply, because today it starts no stopped service
       (`image/install.md:186-187`).
 - [ ] Add the machine token at create and resume, and keep its hash.
+      Revoke it at each stop of the machine, and let a new connection with
+      the token replace the open one (own computer decision 11 B).
 - [ ] Add the `/v1/host` route and the machine object.
 - [ ] Add the operations and the streams to a fixed list of local ports.
 - [ ] Test each operation, a dropped connection, a wrong token, and an
@@ -664,6 +730,12 @@ The docs of Milestone 2 found two screens with no mockup.
       says that the files stay on that server, and gives no delete date.
       Agent call, 23 November 2026: the Remove question already says that
       the app deletes no file on the server.
+- [ ] Show the start that fails on a full own computer: its message says
+      that the computer is full, and names the computer and the limit, with
+      Try again (own computer decision 9 B).
+- [ ] Show a workspace that stopped after its own computer went offline:
+      its message says that the computer went offline (own computer
+      decision 10 B).
 - [ ] Run `npm run mockups:check`. Smoke-test the changed pages.
 - [ ] Update the design and the TODOs of this plan for each problem that
       the mockups show.
@@ -800,7 +872,12 @@ Depends on: 9, 11
 
 - [ ] Add the `own` provider kind over the computer object.
 - [ ] Build and refresh the org image on each own computer.
-- [ ] Apply the limit, the offline start, Archive, and removal.
+- [ ] Apply the limit, the offline start, Archive, and removal. A start on
+      a full computer waits within the start limit, and its failure says
+      that the computer is full (decision 9 B). Running workspaces of an
+      offline computer keep their state for 2 minutes, then stop
+      (decision 10 B). An org delete revokes the tokens of its computers
+      after the 7 days (decision 12 A).
 - [ ] Pass the computer choice through New workspace, sub-workspaces, the
       agent tools, and automations.
 - [ ] Add the counts of the operator section.

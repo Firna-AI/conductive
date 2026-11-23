@@ -239,8 +239,8 @@ connection, as [Host connection](host-connection.md) says. The
   Save is on only after a change.
 - A lower limit stops no running workspace. It applies to the next starts.
   Reason: a change of a setting must not end running work.
-- Open: what a start does when its own computer is full. The own computers
-  plan holds it.
+- A start on a full own computer waits for a free place, as
+  [Starts and stops](own-computers-workspaces.md#starts-and-stops) says.
 
 ## Risks
 
