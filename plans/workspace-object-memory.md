@@ -740,33 +740,35 @@ files README, so it does not wait for the reader release. The part code
 itself needs no reader change. Its branch merges into this branch only after
 Milestone 1 is committed here, so its protocol text comes first.
 
-- [ ] Check the numbers and the fields of each part when it arrives, as
+- [x] Check the numbers and the fields of each part when it arrives, as
       design call 16 says. Read no earlier part. Do not join the parts or
       check path uniqueness before the last part. Keep existing arrival
       checks for path syntax and entry shape at the runner boundary. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] Keep the fields of part 1 in the open report of the assembly state.
+- [x] Keep the fields of part 1 in the open report of the assembly state.
       Keep room for optional fields of the runner file report limits plan. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] At the last part, join the parts and check them, as design call 17
+- [x] At the last part, join the parts and check them, as design call 17
       says. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] Keep the check of an identical repeated part and the refusal of a
+- [x] Keep the check of an identical repeated part and the refusal of a
       conflicting one. Keep the atomic publication. Keep the cleanup after
       a replacement, a refusal, or a new stream. Keep the restart and
       resend behavior. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] Add tests: Branch: `calummoore/memory-runner-part-checks-2hfc`.
-  - [ ] A middle part reads no earlier stored part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-  - [ ] A middle part with another base branch, count, or summary is
+- [x] Add tests: Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [x] A middle part reads no earlier stored part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [x] A middle part with another base branch, count, or summary is
         refused, as today. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-  - [ ] A path in two parts is stored with its part and refuses the last
+  - [x] A path in two parts is stored with its part and refuses the last
         part. The stored parts go, and the last complete report stays. A
         repair request for the tree goes out. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-  - [ ] A state without the stored fields reads part 1 once. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-  - [ ] An empty report of more than one part is refused at its last part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] Update the [files README](../worker/files/README.md) for the time of
+  - [x] A state without the stored fields reads part 1 once. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+  - [x] An empty report of more than one part is refused at its last part. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+- [x] Update the [files README](../worker/files/README.md) for the time of
       each check. Branch: `calummoore/memory-runner-part-checks-2hfc`.
-- [ ] Run the targeted tests: `worker/files/report-storage.test.ts`,
+- [x] Run the targeted tests: `worker/files/report-storage.test.ts`,
       `worker/chat/runner-file-parts.test.ts`,
       `runner-files-durable.test.ts`, `runner-repair-parts.test.ts`,
       `runner-receipt-crash.test.ts`, and `runner-grown-reports.test.ts`. Branch: `calummoore/memory-runner-part-checks-2hfc`.
+Merged from PR #672 as `06249e778`. Its review record is in
+`.context/reviews/calummoore/memory-runner-part-checks-2hfc/`.
 
 ## Milestone 6: Bucketed projection writer
 
@@ -852,6 +854,10 @@ Depends on: 2, 3, 4, 5, and 6
 - [ ] Run the actual reader-release Worker against data from this writer.
       Check reload, connection reset, delta, unavailable, and repository
       move paths. Keep this rollback-format proof under `.context/`.
+- [ ] In the same rollback proof, start a multipart changes report on one
+      Worker version and finish it on the other, in both directions.
+      Include a middle part with another base branch, which each version
+      must refuse. Source: the review of PR #672.
 - [ ] Copy the evidence into `.context/workspace-object-memory/`. Compare
       the heap, the CPU, the storage rows, and the kept history with the
       figures of the recorded decisions. Add one line here that names the
