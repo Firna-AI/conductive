@@ -2,253 +2,21 @@
 
 This file holds the open decisions of
 [One Expo app for web, phones, and the Mac app](universal-expo-app.md).
-The plan deletes this file with itself. Each decision was added on
+The plan deletes this file with itself. Decisions 11 and 12 were added on
 23 November 2026, after the user chose decision 1 F. The options check ran
 on the same day. Its report is in
-`.context/universal-expo-app/options-check.md`. It added options 7 D, 7 E,
-7 F, 8 D, 9 D, 9 E, 10 D, 10 E, and 11 C, and it moved the recommendations
-of decisions 7, 9, 10, and 11.
+`.context/universal-expo-app/options-check.md`. It added option 11 C, and it
+moved the recommendation of decision 11 from B to C. The user chose
+decisions 7 to 10 on 23 November 2026. The plan records them. The user then
+asked about CSS converters, so decision 9 is here again. Decision 13 was
+added on the same day, from the answer to decision 10. A second options
+check of the same day added 9 F to 9 I, 13 E, and 13 F. Its record is in
+`.context/universal-expo-app/options-check-2.md`.
 
 Terms:
 
-- **React Native Web:** a library that draws React Native views as HTML
-  on the web.
-- **DOM backend:** the renderer of `@firna/ui` that draws each part as
-  plain HTML with inline styles on the web, in
-  `futex-ai/ui/src/primitives/dom/`. It replaced React Native Web in
-  `futex-ai/ui` #168.
-- **Primitives seam:** the private modules in `futex-ai/ui/src/primitives/`.
-  Through them each `@firna/ui` part reaches React Native on the phones and
-  the DOM backend on the web.
-- **Expo DOM component:** a web component that an Expo native app shows in
-  a web view inside a native screen.
-- **Bearer token:** a credential that a client sends in the
-  `Authorization` header. A browser never adds it on its own.
-- **EAS:** Expo Application Services, Expo's hosted service that builds,
-  signs, and submits native apps.
 - **Primary branch:** the integration branch of a plan. Workspace branches
   merge into it, and only it merges into `main`.
-
-## 7. Choose the order of the migration
-
-- **Severity:** High. **Effort:** Large.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** `vite.config.ts`, `desktop/vite.config.ts`, `src/App.tsx`,
-  `src/app/router.ts`.
-- **Background:** Decision 1 F moves the views to React Native and the web
-  build to Metro. Vite builds the web app and the Worker together today,
-  with the Cloudflare plugin. The app has its own router: `parseRoute` in
-  `src/app/router.ts`, behind the `Navigation` interface in
-  `src/app/navigation.ts`. Production deploys each push to `main`.
-- **Problem:** The moves can run in different orders. The order sets the
-  risk to the production web app and the date of the first phone app.
-- **Impact if no action:** The port milestones cannot start.
-- **Root question:** How does the code move to the one Expo app, so that
-  production stays safe at each step and the phone apps ship early?
-- **Options:**
-  - **A.** Port the views first, area by area, inside the Vite build.
-    Start the phone apps when the core areas are ported. Move the router
-    and the build to Expo last. The production build stays the same until
-    the end. Effort: Large.
-  - **B.** Move the web build and the router to Expo first, with the HTML
-    views as they are. Then port the views. Then ship the phone apps. One
-    early, large build change reaches production. Effort: Large.
-  - **C.** Start the phone apps first. Show each view that is not ported as
-    an Expo DOM component, with its data from native code. Then port the
-    views, and move the web build last. Each DOM component needs props that
-    cross the bridge, and its own fetch path. Effort: Large.
-  - **D.** Added by the options check. Do A, but switch the web build one
-    group of users at a time. CI builds the Expo web export beside the
-    Vite build. The Worker runs before the assets, so it serves the Expo
-    build to operators first, then to people who opt in. Cost: two web
-    builds in CI and in each deploy, and a switch in the Worker. Effort:
-    Large.
-  - **E.** Added by the options check. Do A, but keep the app's own router
-    on every platform. `parseRoute`, the `routes.*` builders, and the
-    `Navigation` interface stay. Expo Router gets one catch-all route, and
-    a `Navigation` over Expo Router serves the phones. The 806 `routes.`
-    calls in 243 files do not move. Cost: no file routes, typed routes, or
-    route-level code splitting from Expo Router. Effort: Large.
-  - **F.** Added by the options check. Port the core areas for the phones
-    first. At first only the phone apps draw the ported views. The web
-    keeps its HTML views until a later milestone switches each area. Cost:
-    each core area has two view sets until its switch, and they drift.
-    Effort: Large.
-- **Left out:** A move of all views at once, because each milestone must
-  keep the product working. An Expo shell around the live web app first,
-  because the user chose F over options C and E of decision 1. A separate
-  step to split the Worker build, because every option needs it.
-- **Wider fix:** None, because this item sets the order itself.
-- **Previous examples:** Mokly Cloud builds its web app with Expo Router,
-  in `mokly/packages/app/`. It draws HTML views over `@firna/ui`, so it is
-  an example of B.
-- **Related:** Decision 9 sets the renderer of the ported views. Decision
-  11 sets how each step reaches production. Under 11 A, the whole migration
-  reaches production in one deploy.
-- **Recommendation:** E. It keeps the order of A, and it removes the move
-  of every route, which is the largest risk to the addresses in chats,
-  GitHub comments, and emails. The first recommendation was A. The switch
-  by group of D can join E for its last step.
-- **Action:** ask the user, because the options trade production risk
-  against the date of the phone apps, and none is clearly best.
-
-## 8. Choose how the phone apps sign in
-
-- **Severity:** High. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Security.
-- **Location:** `worker/security/gate.ts:45-55`,
-  `worker/security/desktop-auth.ts`.
-- **Background:** The browser and the Mac app keep the sign-in in an
-  HttpOnly cookie. The gate accepts a write or a socket only from a trusted
-  `Origin`. The Mac main process sets that `Origin` and its own cookie. A
-  native request from a phone has no `Origin`. Sessions last at most
-  7 days. So a new revision of the Terms reaches each user within 7 days,
-  as decision 126 says in `docs/protocol/access-and-security.md:65-67`.
-- **Problem:** No rule says how a phone app proves the sign-in, or how the
-  gate accepts its requests.
-- **Impact if no action:** The phone apps cannot call the Worker.
-- **Root question:** How does a phone app prove the sign-in to the Worker,
-  and keep it safe on the phone?
-- **Options:**
-  - **A.** Sign in with GitHub in the system browser, with a one-use
-    handoff and a verifier, as on the Mac. The exchange gives a bearer
-    token. The app keeps it in the phone's secure storage. The gate accepts
-    a request with that token and no cookie, without the `Origin` rule.
-    Sessions last at most 7 days. Effort: Medium.
-  - **B.** Use the same handoff. The exchange sets a phone session cookie,
-    and native code sends a fixed `Origin` for the phone apps, as the Mac
-    main process does. On Android, React Native shares its cookie store
-    with the web views, so the cookie also reaches the composer and the
-    terminal. Effort: Medium.
-  - **C.** Do A, and add a refresh token that keeps a phone signed in for
-    up to 30 days of use. The person signs in less often. Each refresh
-    must check the revision of the Terms, or decision 126 no longer holds
-    for phones. Effort: Large.
-  - **D.** Added by the options check. Do A, and bind the session to a key
-    in the Secure Enclave or the Android Keystore. Each request carries a
-    signature with that key, as in DPoP, RFC 9449. A copied token then
-    fails on another device. Cost: a native signing module and a signature
-    check on each request. Effort: Large.
-- **Left out:**
-  - A token that a web view reads, because scripts in the web view could
-    read it. The Mac rule forbids that. The web views of the composer and
-    the terminal get no credential. Native code makes their requests.
-  - A sign-in that a signed-in browser approves, such as a QR code. It
-    fails for a person who has only a phone, and for App Review.
-  - GitHub sign-in inside a web view of the app. A is better on every
-    point, because the system browser holds the GitHub session and the
-    passkeys.
-  - A short access token with a refresh capped at 7 days. It gives no
-    fewer sign-ins than A, and the gate already reads the session on each
-    request.
-- **Wider fix:** None, because each option is a full sign-in design.
-- **Previous examples:** Decision 62, the Mac sign-in, in
-  `docs/protocol/desktop-sign-in.md`.
-- **Related:** Milestones 6 and 21 wait for the answer.
-- **Recommendation:** A. A bearer token is the common pattern for native
-  clients, it keeps decision 126, and it stays out of every web view.
-- **Action:** ask the user, because it adds a new credential at the
-  boundary of the Worker.
-
-## 9. Choose the style layer of the shared views
-
-- **Severity:** Medium. **Effort:** Large.
-- **Source:** Design.
-- **Category:** Code structure.
-- **Location:** `src/ui/`, with 185 CSS Modules. `src/` has 261 in all.
-- **Background:** The views use CSS Modules today. The CSS uses hover
-  rules, grid, container queries in 12 files, and CSS variables. React
-  Native styles have none of these. Every `@firna/ui` part in the app
-  already draws on the web through the DOM backend, not React Native Web.
-- **Problem:** No rule says what draws a shared view on each platform, or
-  how it gets its look, its hover state, and its phone and desktop layouts.
-- **Impact if no action:** The port milestones cannot start.
-- **Root question:** What draws the shared views on each platform, and how
-  do they get their look, hover state, and width layouts from one source?
-- **Options:**
-  - **A.** Use React Native styles with the tokens of `src/ui/design/`, and
-    draw them on the web through React Native Web. Hover comes from the
-    hovered state, and layout by width from the window size or `onLayout`.
-    It adds `react-native-web` to the web app, and the page then has two
-    renderers. Effort: Large.
-  - **B.** Add a style library that writes real CSS on the web, such as
-    Unistyles, NativeWind, or the Tamagui style core. It gives media
-    queries and hover on the web. Every view depends on it. Effort: Large.
-  - **C.** Keep CSS Modules in `.web.tsx` files, and write native styles
-    in `.native.tsx` files. Each view then has two style sources. Effort:
-    Large.
-  - **D.** Added by the options check. Write the shared views on the
-    primitives seam of `@firna/ui`, which `futex-ai/ui` exports as a public
-    entry. Styles are React Native styles with the tokens, as in A. On the
-    web the views draw through the DOM backend, as each `@firna/ui` part
-    does today. The web app, Vitest, and Mokly need no React Native Web.
-    Cost: a new public API in `futex-ai/ui`, inline styles that the chat
-    port must measure on long transcripts, and no Reanimated or Gesture
-    Handler views on the web. Effort: Large.
-  - **E.** Added by the options check. Write the shared views with React
-    Strict DOM: HTML-like elements with StyleX styles. On the web it writes
-    real CSS with hover, media queries, and variables. Cost: new Babel and
-    PostCSS steps in every build, version 0.0.54, and only part of CSS on
-    the phones. Effort: Large.
-- **Left out:** The Tamagui kit of parts, because `@firna/ui` gives those
-  parts.
-- **Wider fix:** D. It keeps one style source, and it uses the renderer of
-  the base library, so the shared views and the `@firna/ui` parts cannot
-  drift apart on the web.
-- **Previous examples:** `@firna/ui`, in `futex-ai/ui/src/primitives/`, and
-  its move from React Native Web to the DOM backend in `futex-ai/ui` #168.
-- **Related:** Decision 7 needs this answer before the port starts.
-- **Recommendation:** D. It gives one style source with the renderer that
-  the app already uses, and it adds no dependency to the app. The first
-  recommendation was A. A stays better if the views need Reanimated or
-  Gesture Handler on the web.
-- **Action:** ask the user, because the choice shapes every view, and the
-  options have real trade-offs.
-
-## 10. Choose where the phone apps build
-
-- **Severity:** Medium. **Effort:** Medium.
-- **Source:** Design.
-- **Category:** Process.
-- **Location:** `.github/workflows/`.
-- **Background:** CI already signs the Mac app on Blacksmith Mac runners.
-  A store app needs a check of each change, signing keys, a build for each
-  platform, and an upload to each store. About 30 to 80 pull requests
-  merge on most weekdays, and most change no native code.
-- **Problem:** No rule says how each change is checked on the phones, or
-  which service builds, signs, and uploads the releases and holds the keys.
-- **Impact if no action:** The phone apps cannot ship.
-- **Root question:** How is each change checked on the phones, how is each
-  release built, signed, and sent to the stores, and who holds the keys?
-- **Options:**
-  - **A.** Build each pull request and each release with EAS. Expo holds
-    the signing keys and uploads to the stores. It is a new service with a
-    cost for each build. Effort: Medium.
-  - **B.** Build in GitHub Actions. iOS builds on Mac runners, and Android
-    on Linux. GitHub secrets hold the keys. Expo SDK 58 needs Xcode 26.4 or
-    newer, so the Mac runner image may change. Effort: Large.
-  - **C.** Build in GitHub Actions, as B does, but send fixes to the
-    JavaScript through EAS Update only. Effort: Large.
-  - **D.** Added by the options check. Each pull request exports the iOS
-    and Android bundles on Linux, with no keys. A native build runs only
-    when the Expo fingerprint of the native inputs changes. Releases build,
-    sign, and upload on EAS, which holds the keys. The team can download
-    the keys, so the choice can be undone. Effort: Medium.
-  - **E.** Added by the options check. Build iOS in Xcode Cloud, Apple's
-    build service, and Android on Linux runners. Cost: two build systems,
-    and a script that installs Node in Xcode Cloud. Effort: Large.
-- **Left out:** Builds on a person's Mac, because each release then needs
-  that person.
-- **Wider fix:** None, because each option is a full release path.
-- **Previous examples:** The Mac signing jobs in `.github/workflows/`.
-- **Related:** Milestone 22 waits for the answer.
-- **Recommendation:** D. It keeps the small CI work of A for releases, a
-  fast check on each pull request, and a low EAS cost. The first
-  recommendation was A.
-- **Action:** ask the user, because it adds a service that holds the
-  signing keys and costs money.
 
 ## 11. Choose how the work reaches main
 
@@ -256,7 +24,7 @@ Terms:
 - **Source:** Design.
 - **Category:** Process.
 - **Location:** `.github/workflows/ci.yml:6`.
-- **Background:** This plan has 26 milestones and takes months. Each merge
+- **Background:** This plan has 27 milestones and takes months. Each merge
   to `main` deploys to production. 176 of the 433 commits on `main` since
   10 November change views or CSS Modules under `src/`.
 - **Problem:** One branch for months conflicts with each change on `main`,
@@ -280,8 +48,8 @@ Terms:
 - **Previous examples:** Decisions 141 and 143 of
   `plans/boat-native-remote-workspaces.md`. On 8 November 2026 the user
   chose 143 A, which is this item's C, over 143 B, which is this item's B.
-- **Related:** Every milestone waits for the answer. Decision 7 relies on
-  steps that reach production one at a time.
+- **Related:** Every milestone waits for the answer. Decision 7 E relies
+  on steps that reach production one at a time.
 - **Recommendation:** C. You chose it for the same question in decision
   143, and it keeps a combined gate with small batches. The first
   recommendation was B.
@@ -316,8 +84,149 @@ Terms:
 - **Wider fix:** B. It catches every new HTML view in a ported area.
 - **Previous examples:** Decision 3 B of the shared UI move in #661 added
   an ESLint rule that blocks app imports of `docs/mockups/`.
-- **Related:** Decision 7 sets when the first area is ported.
+- **Related:** Milestone 9 ports the first parts.
 - **Recommendation:** B. A rule catches each case, as the rule of #661
   does.
 - **Action:** ask the user, because it adds a new lint rule, and the
   always-on rules reserve that choice for the user.
+
+## 9. Choose the style layer of the shared views, asked again
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design. The user chose 9 D on 23 November 2026, then asked:
+  "Is there nothing that converts CSS to react native?" The options check
+  of the same day added options F to I.
+- **Category:** Code structure.
+- **Location:** the 261 CSS Modules in `src/`, and
+  `futex-ai/ui/src/primitives/dom/View.tsx:57-59`.
+- **Terms:**
+  - **`react-native-css`:** the style engine under NativeWind 5. It reads
+    `.css` files in Metro and applies them to React Native views at run
+    time. Its stable release is 3.0.7.
+  - **Lightning CSS:** the CSS parser that Expo and `react-native-css` use.
+  - **`css-to-react-native`:** a library that turns CSS declarations into
+    React Native style objects. It reads no selectors.
+- **Background:**
+  - Decision 9 D writes the shared views with React Native styles, on the
+    primitives seam of `@firna/ui`.
+  - Expo supports CSS Modules on the web only. On the phones a CSS Module
+    import gives an empty object.
+  - The phones use Yoga, a flexbox layout engine, with no grid. React
+    Native starts each view as a column, and CSS starts it as a row.
+  - 161 of the 261 modules hold a rule that the phones drop, such as
+    `display: grid` or `block`, the `>` combinator, element selectors,
+    `::before`, or `position: sticky`.
+  - 409 of the 641 flex rules, in 177 files, rely on the CSS row default.
+- **Problem:** The CSS Modules hold a lot of style work. D writes all of it
+  again by hand.
+- **Impact if no action:** D stands, and each port milestone rewrites the
+  styles of its area by hand.
+- **Root question:** What is the one style source of the shared views, and
+  what turns it into the look on the web and on the phones?
+- **Options:**
+  - **D.** Chosen. Write React Native styles by hand with the tokens.
+    Effort: Large.
+  - **F.** Keep the CSS Modules as the source. On the phones,
+    `react-native-css` compiles them in Metro.
+    - It needs a `futex-ai/ui` change, because the DOM `View` drops the
+      class of the caller today.
+    - It needs a Metro step of our own, because `react-native-css` has no
+      CSS Modules support.
+    - It needs Lightning CSS pinned to 1.30.1. Newer versions throw on our
+      `var()` tokens (`react-native-css` issue #470, open).
+    - It needs a rewrite of the 161 modules to the subset that the phones
+      accept, and a check that fails on a dropped rule.
+    - One person maintains most of the engine, and it is not tested on
+      Expo SDK 58.
+    - The web keeps real CSS. Effort: Large.
+  - **G.** Keep the CSS Modules as the source, and convert them at build
+    time with a Metro step of our own, with Lightning CSS and
+    `css-to-react-native`. The build fails on each rule that it cannot
+    convert. It needs the same CSS rewrite and `futex-ai/ui` change as F,
+    and we keep a compiler. Effort: Large.
+  - **H.** Do D, with a converter script under `tools/`. In each port
+    milestone, the script turns the CSS Modules of the area into React
+    Native style modules with the tokens. It lists each rule that it
+    cannot convert, and a person ports those rules by hand. Nothing stays
+    at run time. Effort: Medium.
+  - **I.** Ship the phone apps for phone screens only at first. iPad runs
+    the iPhone app. The phone views then need no hover and no desktop
+    width rules. Tablets show the phone layout until a later change.
+    Effort: Small.
+- **Left out:**
+  - `react-native-css-modules`, because its last release is from 2023 and
+    it supports no variables. G is the same idea, kept current.
+  - `css-to-react-native` alone, because it is a part of G and H.
+  - Expo's own CSS Modules, because they work on the web only.
+- **Wider fix:** H. It uses the converters once, as a tool, and adds no
+  dependency at run time.
+- **Previous examples:** None found.
+- **Related:** Milestones 3 and 9 wait for the answer. Under F or G, the
+  CSS Modules stay, Milestone 3 adds the `className` change, and Milestone
+  25 keeps the CSS Modules.
+- **Recommendation:** H. It keeps D, which you chose, and uses a converter
+  for the mechanical part of each port. F keeps the CSS files, but most of
+  them change anyway, and it depends on an engine with no CSS Modules
+  support.
+- **Action:** ask the user, because it can change decision 9 D, which the
+  user chose.
+
+## 13. Check each pull request on the phones
+
+- **Severity:** Medium. **Effort:** Medium.
+- **Source:** Design, from the answer to decision 10.
+- **Category:** Process.
+- **Location:** `.github/workflows/ci.yml`.
+- **Background:** On 23 November 2026 the user chose to release the phone
+  apps with the Mac app, in `.github/workflows/release.yml`. That answer
+  covers the release builds. The gate of each pull request runs on Linux
+  today. About 30 to 80 pull requests merge on most weekdays, and most of
+  them change no native code.
+- **Problem:** No rule says whether a pull request must prove that the
+  phone apps still build.
+- **Impact if no action:** A change can break the phone apps, and the break
+  shows only at the next release.
+- **Root question:** Which checks find a change that breaks the phone apps
+  before a release ships it, and which of them block a merge?
+- **Options:**
+  - **A.** Add no phone check. The release build finds each break. Effort:
+    Small.
+  - **B.** Add a job to the `Complete gate` that exports the iOS and
+    Android bundles on Linux, with no keys, and type-checks `expo/`. It
+    finds syntax errors, type errors, and imports that do not resolve. It
+    finds no native error and no crash at start. Effort: Medium.
+  - **C.** Do B. Also build both native apps when the Expo fingerprint of
+    the native inputs changes. The fingerprint is a hash, which a cache key
+    can use with no new CI permission. The iOS build runs on a Mac runner.
+    A skipped build must still pass the `Complete gate`. Effort: Medium.
+  - **D.** Build both native apps on each pull request. It finds each
+    native build error, but it adds a Mac job of about 20 minutes and about
+    $1.60 to each pull request. Effort: Medium.
+  - **E.** Added by the options check. Do C, and also start the Android app
+    in an emulator on Linux for each pull request. It reuses the last
+    native build from a cache and puts the new bundle into it. A Maestro
+    test checks the first screen. It finds a crash at start, a missing
+    native module, and web-only code that runs on the phones. It adds about
+    10 to 15 Linux minutes, and emulator jobs can fail at random. Effort:
+    Large.
+  - **F.** Added by the options check. Do C, but run the native builds in
+    a separate workflow that does not block a merge, as the Mac app checks
+    do. Only the export and the type check go in the `Complete gate`.
+    Effort: Medium.
+- **Left out:**
+  - EAS Build or Xcode Cloud for the checks, because they test another
+    build path than the release jobs.
+  - A nightly build, because releases ship up to five times a day.
+  - Native builds after each merge, because C finds the same breaks
+    before the merge.
+  - A device farm, because E finds crashes at start on Linux.
+- **Wider fix:** E. It is the only check that runs the phone code before a
+  release.
+- **Previous examples:** The Mac app checks in
+  `.github/workflows/desktop-ci.yml` and `desktop-mac-checks.yml`.
+- **Related:** Milestone 22 waits for the answer.
+- **Recommendation:** E. It runs the phone code of the shared views before
+  each merge, and it adds only Linux minutes. The first recommendation was
+  C.
+- **Action:** ask the user, because it adds a new check to the gate, and
+  the always-on rules reserve that choice for the user.

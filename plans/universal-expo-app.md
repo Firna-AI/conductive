@@ -38,9 +38,8 @@ Replaced ways:
 - The browser `Navigation` of `src/app/navigation.ts` → a `Navigation`
   over Expo Router, with one catch-all route. Consumers:
   `src/main.tsx` and `desktop/renderer/main.tsx`. Moved in Milestone 23.
-  Deleted in Milestone 25. This entry follows decision 7 E. Under 7 A to
-  D, every route of `src/app/router.ts` and each `routes.*` caller also
-  move to Expo Router.
+  Deleted in Milestone 25. `parseRoute` and the `routes.*` builders stay,
+  as decision 7 E says.
 - The Vite build of the web app → the Expo web export. Consumers: the
   `dev`, `build`, `build:bundle`, and `preview` scripts,
   `.github/workflows/deploy.yml`, `.github/workflows/ci.yml`,
@@ -107,7 +106,64 @@ Replaced ways:
   views in this plan covers the views that still redraw the markup of a
   mockup part, such as `src/shell/settings/SecretRow.tsx`.
 
-The open decisions 7 to 12 are in
+### 7. Choose the order of the migration
+
+- **Chosen:** E, by the user on 23 November 2026. The views move first,
+  area by area, inside the Vite build. The phone apps start when the core
+  areas are ported. The build moves to Expo last. The app keeps its own
+  router: `parseRoute`, the `routes.*` builders, and the `Navigation`
+  interface. Expo Router gets one catch-all route.
+- **Other options:** A, the same order with a move of every route to Expo
+  Router. B, the build and the router first. C, the phone apps first, with
+  Expo DOM components for the views that are not ported. D, A with a switch
+  of the web build by group of users. F, the core areas for the phones
+  first.
+- **Recommendation:** E, after the options check. The first one was A.
+
+### 8. Choose how the phone apps sign in
+
+- **Chosen:** C, by the user on 23 November 2026. GitHub sign-in runs in
+  the system browser with a one-use handoff and a verifier. The exchange
+  gives a bearer token and a refresh token, which the phone keeps in secure
+  storage. A refresh keeps the phone signed in for up to 30 days. Each
+  refresh checks the revision of the Terms.
+- **Other options:** A, a bearer token with a 7-day session, which was the
+  recommendation. B, a phone cookie with a fixed `Origin`. D, A with a
+  token bound to a device key.
+- **Changes:** the 7-day limit of `docs/protocol/access-and-security.md`
+  stays for the browser and the Mac app. Phones get 30 days.
+
+### 9. Choose the style layer of the shared views
+
+- **Chosen:** D, by the user on 23 November 2026. The shared views use the
+  primitives seam of `@firna/ui`, which `futex-ai/ui` exports as a public
+  entry. They use React Native styles with the tokens of `src/ui/design/`.
+  On the web they draw through the DOM backend of `@firna/ui`. The web app,
+  Vitest, and Mokly need no React Native Web.
+- **Other options:** A, React Native Web. B, a style library that writes
+  CSS. C, CSS Modules on the web and native styles on the phones. E, React
+  Strict DOM.
+- **Recommendation:** D, after the options check. The first one was A.
+- **Asked again:** on 23 November 2026 the user asked whether a tool
+  converts CSS to React Native. Option F, added then, keeps the CSS
+  Modules and compiles them for the phones with `react-native-css`. The
+  options check added G, H, and I. D stays chosen until the user answers.
+  The decisions file gives the item.
+
+### 10. Choose where the phone apps build
+
+- **Chosen** by the user on 23 November 2026: "release mobile with
+  desktop". The release workflow `.github/workflows/release.yml` builds,
+  signs, and uploads the phone apps at each release-please release, beside
+  the Mac app. This is my reading of the answer: the builds run in GitHub
+  Actions, and a GitHub environment holds the keys, as option B says.
+- **Other options:** A, EAS for each pull request and each release. C, B
+  with EAS Update. D, Linux checks on each pull request and releases on
+  EAS, which was the recommendation. E, Xcode Cloud for iOS.
+- **Still open:** the check of each pull request on the phones, in
+  decision 13.
+
+The open decisions 9 again, 11, 12, and 13 are in
 [universal-expo-app-decisions.md](universal-expo-app-decisions.md).
 
 ## Design calls
@@ -142,11 +198,10 @@ Each call is mine, made on 23 November 2026.
   `plans/boat-native-remote-workspaces.md` already made them the spec.
 - **Old copies keep working.** Store apps follow the same rule as the Mac
   app. An app below the minimum version shows "Update the app".
-- **Tests:** Vitest draws the shared views in happy-dom through the web
-  renderer of decision 9. Decision 10 sets the native checks of each pull
+- **Tests:** Vitest draws the shared views in happy-dom through the DOM
+  backend of `@firna/ui`. Decision 13 sets the phone check of each pull
   request.
-- **Mockups:** Mokly draws the shared views through the web renderer of
-  decision 9.
+- **Mockups:** Mokly draws the shared views through the DOM backend.
 - **Google Play:** the app ships from an organization account. Reason: a
   personal account created after 13 November 2023 needs a closed test with
   12 testers for 14 days first.
@@ -154,6 +209,19 @@ Each call is mine, made on 23 November 2026.
 - **Apple guideline 4.8:** the app submits with GitHub-only sign-in, as a
   client of a third-party service. If Apple refuses, this becomes a
   decision.
+- **Phone tokens.** The bearer token lasts 15 minutes. Each refresh gives
+  a new refresh token and ends the old one. A second use of an old refresh
+  token ends the session. A refresh token ends 30 days after the sign-in.
+  A refresh with a new revision of the Terms fails, and the phone shows
+  the sign-in with the agreement. A suspension ends the session at once.
+  Reason: the common pattern for native apps, and it keeps decision 126.
+- **A failed phone build at release skips only the phone upload.** The Mac
+  release goes on, and the release reports the failure. Reason: a phone
+  problem must not block the Mac app.
+- **Phone releases follow the Mac releases.** Each release uploads the
+  phone apps to TestFlight and to the internal track of Google Play. A
+  person then sends them to the stores, as a person publishes the draft
+  release of the Mac app. Reason: one version for every client.
 - **Store accounts:** the user gives the Apple and Google developer
   accounts, the publisher name, and a GitHub account with app access for
   App Review. Milestone 22 waits for them.
@@ -194,7 +262,8 @@ Depends on: 1
 
 - [ ] Write `docs/protocol/phone-app.md`: the platforms, the native parts,
       previews, updates, the minimum version, and old copies.
-- [ ] Write `docs/protocol/phone-sign-in.md` from decision 8.
+- [ ] Write `docs/protocol/phone-sign-in.md` from decision 8 C. Add the
+      30-day phone session to `docs/protocol/access-and-security.md`.
 - [ ] Write `docs/protocol/notifications.md` from decisions 2, 3, and 5.
 - [ ] Update `docs/protocol/secret-requests.md` for notices, from decision 2.
 - [ ] Update `docs/protocol/waitlist.md` and
@@ -219,8 +288,8 @@ Depends on: none
       The ranges of React Native SVG and Reanimated already accept Expo
       SDK 58. Run its checks and publish a release. Branch: in a nested
       workspace on `futex-ai/ui`.
-- [ ] Under decision 9 D, export the primitives seam as a public entry in
-      the same release.
+- [ ] Export the primitives seam as a public entry in the same release,
+      as decision 9 D says.
 
 ## Milestone 4: Move Conductive to the new `@firna/ui`
 
@@ -246,14 +315,17 @@ Depends on: 2
 
 ## Milestone 6: Phone sign-in in the Worker
 
-Depends on: 2, decision 8
+Depends on: 2
 
-- [ ] Add the phone handoff and exchange of decision 8, beside
+- [ ] Add the phone handoff and exchange of decision 8 C, beside
       `worker/security/desktop-auth.ts`.
-- [ ] Change the gate in `worker/security/gate.ts` for the phone credential
-      of decision 8. Keep the browser and Mac rules as they are.
+- [ ] Add the refresh route: rotation, reuse detection, the 30-day limit,
+      and the check of the Terms revision.
+- [ ] Accept the bearer token in `worker/security/gate.ts` for a request
+      with no cookie. Keep the browser and Mac rules as they are.
 - [ ] Serve the universal link files for app addresses.
-- [ ] Add tests for the exchange, the gate, and an expired credential.
+- [ ] Add tests for the exchange, the gate, the refresh, a reused refresh
+      token, a new Terms revision, and an expired credential.
 
 ## Milestone 7: Deletion requests in the Worker
 
@@ -279,11 +351,13 @@ Depends on: 1, 7
 
 Tags: ui
 
-Depends on: 4, decision 7, decision 9
+Depends on: 4
 
-- [ ] Add the web renderer of decision 9 to the web build, to Vitest, and
-      to Mokly.
-- [ ] Add the style layer of decision 9, with the tokens of `src/ui/design/`.
+- [ ] Write the shared views on the primitives seam of `@firna/ui`, as
+      decision 9 D says. On the web they draw through its DOM backend.
+- [ ] Give the views React Native styles with the tokens of
+      `src/ui/design/`. Give hover, width layouts, and container widths a
+      rule that every view uses.
 - [ ] Port the common parts of `src/ui/components/common/` and their
       mockups. Keep the look of each mockup.
 - [ ] Draw the ported parts in Mokly.
@@ -319,9 +393,9 @@ screens, and their tests. The look of each mockup stays.
 Depends on: 5, 6, 9
 
 - [ ] Create the `expo/` package with Expo SDK 58 and Expo Router.
-- [ ] Implement `AppServices` for the phones: requests with the credential
-      of decision 8, sockets, secure storage, focus, visibility, links, and
-      the clipboard.
+- [ ] Implement `AppServices` for the phones: requests with the bearer
+      token and the refresh of decision 8 C, sockets, secure storage,
+      focus, visibility, links, and the clipboard.
 - [ ] Register for push notices, and open the workspace of a tapped notice.
 - [ ] Open previews and the desktop stream in the in-app browser with the
       grant.
@@ -331,7 +405,7 @@ Depends on: 5, 6, 9
 
 Tags: ui
 
-Depends on: 8, 10, 11, 12, 13, 18, 20, 21, decision 10
+Depends on: 8, 10, 11, 12, 13, 18, 20, 21, decision 13
 
 The phone apps need the waitlist of Milestone 20 for a new user, and the
 deletion request of Milestone 8 for the store rules.
@@ -340,17 +414,19 @@ deletion request of Milestone 8 for the store rules.
       yet stay out of the phone apps until their milestone.
 - [ ] Add sign-in, the notice permission, "Update the app", and the
       offline screen, as the mockups show.
-- [ ] Build both apps in CI and ship them to TestFlight and the internal
-      Android track, as decision 10 says.
+- [ ] Build, sign, and upload both apps in `.github/workflows/release.yml`
+      at each release, beside the Mac app, as decision 10 says. Keep the
+      keys in a GitHub environment. Check that the Mac runner has Xcode
+      26.4 or newer.
+- [ ] Add the phone check of each pull request, as decision 13 says.
 - [ ] Submit both apps for review.
 
 ## Milestone 23: Expo Router on every platform
 
-Depends on: 10 to 20, decision 7
+Depends on: 10 to 20
 
-- [ ] Under decision 7 E, give Expo Router one catch-all route, and serve
-      `parseRoute` through a `Navigation` over Expo Router. Under 7 A to D,
-      move every route and each `routes.*` caller instead.
+- [ ] Give Expo Router one catch-all route, and serve `parseRoute` through
+      a `Navigation` over Expo Router, as decision 7 E says.
 - [ ] Keep each address. Move each test of the navigation.
 
 ## Milestone 24: The Expo web build
